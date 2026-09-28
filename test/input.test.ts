@@ -10,11 +10,11 @@ import { PlayerState } from "./helpers.ts"
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
 describe("input", () => {
-  it("dashes with Space (thumb) and casts nothing on Q anymore", () => {
+  it("dashes with Space (bound by physical key)", () => {
     const keyboard = Keyboard.actions(fakeWindow.host, keyBindings)
     const sim = createSimulation({ keyboard, pointer: Pointer.scripted([]), tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
     sim.runtime.tick(sim.setup)
-    fakeWindow.press(" ")
+    fakeWindow.press(" ", "Space")
     sim.runtime.tick(sim.fixedUpdate)
     expect(sim.runtime.inspect(PlayerState).dash.remaining).toBeGreaterThan(0)
   })
@@ -46,8 +46,23 @@ const fakeWindow = (() => {
       listeners.get(type)?.delete(listener)
     }
   }
-  const dispatch = (type: string, key: string) => {
-    for (const listener of listeners.get(type) ?? []) listener({ key, repeat: false, preventDefault: () => {} })
+  const dispatch = (type: string, key: string, code: string) => {
+    for (const listener of listeners.get(type) ?? []) listener({ key, code, repeat: false, preventDefault: () => {} })
   }
-  return { host, press: (key: string) => { dispatch("keydown", key); dispatch("keyup", key) } }
+  return {
+    host,
+    press: (key: string, code: string) => { dispatch("keydown", key, code); dispatch("keyup", key, code) },
+    down: (key: string, code: string) => dispatch("keydown", key, code),
+    up: (key: string, code: string) => dispatch("keyup", key, code)
+  }
 })()
+
+describe("physical key bindings", () => {
+  it("moves with the key in W's position whatever it types (AZERTY types z there)", () => {
+    const keyboard = Keyboard.actions(fakeWindow.host, keyBindings)
+    fakeWindow.down("z", "KeyW")
+    expect(keyboard.snapshot().up.held).toBe(true)
+    fakeWindow.up("z", "KeyW")
+    expect(keyboard.snapshot().up.held).toBe(false)
+  })
+})
