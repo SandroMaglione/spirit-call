@@ -1,0 +1,232 @@
+/**
+ * The closed world: every component, resource, event, and service the game
+ * uses. Gameplay data is in world coordinates (see `math/iso.ts`).
+ */
+import { Descriptor, Schema } from "@typeonce/bevy-ts"
+import type * as Entity from "@typeonce/bevy-ts/Entity"
+import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
+
+import type { KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource } from "./config/input.ts"
+import type { Tuning as TuningValue } from "./config/tuning.ts"
+import type { Vec2 } from "./math/vec.ts"
+import type { Box } from "./physics/shapes.ts"
+import type { RenderHostValue, RenderNode } from "./presentation/host-types.ts"
+
+export const Root = Schema.defineRoot("Shooter")
+
+// ── Components ────────────────────────────────────────────────────────────
+
+/** World position of the entity's center (actors: their feet). */
+export const Position = Descriptor.Component<Vec2>()("Shooter/Position")
+/** Position at the start of the current fixed step, for render interpolation. */
+export const PrevPosition = Descriptor.Component<Vec2>()("Shooter/PrevPosition")
+export const Velocity = Descriptor.Component<Vec2>()("Shooter/Velocity")
+/** Circle collider against walls. */
+export const Body = Descriptor.Component<{ readonly radius: number }>()("Shooter/Body")
+/** Static axis-aligned wall. */
+export const Wall = Descriptor.Component<Box>()("Shooter/Wall")
+
+export const Player = Descriptor.Tag("Shooter/Player")
+/** Unit direction the entity aims at. */
+export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
+
+export interface DashValue {
+  /** Time left in the current dash; 0 when not dashing. */
+  readonly remaining: number
+  /** Time until the next dash is available. */
+  readonly cooldown: number
+  /** Time left on a buffered dash press. */
+  readonly buffered: number
+  /** Unit direction of the current dash. */
+  readonly direction: Vec2
+}
+export const Dash = Descriptor.Component<DashValue>()("Shooter/Dash")
+
+/** Damage is ignored while `remaining > 0`. */
+export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
+
+// ── Combat ────────────────────────────────────────────────────────────────
+
+export type Faction = "player" | "enemy"
+
+/** Hit points. Reaching 0 kills the entity. */
+export const Health = Descriptor.Component<{ readonly current: number; readonly max: number }>()("Shooter/Health")
+
+/** The circle attacks of the other faction test against. */
+export const Hurtbox = Descriptor.Component<{ readonly radius: number; readonly faction: Faction }>()("Shooter/Hurtbox")
+
+/** Knockback velocity, added to movement and decaying over time. */
+export const Knockback = Descriptor.Component<Vec2>()("Shooter/Knockback")
+
+/** Time left on the white flash shown after being hit. */
+export const HitFlash = Descriptor.Component<{ readonly remaining: number }>()("Shooter/HitFlash")
+
+/** A player weapon: time until the next shot may fire (negative carries over). */
+export const Weapon = Descriptor.Component<{ readonly cooldown: number }>()("Shooter/Weapon")
+
+export interface ProjectileValue {
+  readonly faction: Faction
+  readonly radius: number
+  readonly damage: number
+  readonly knockback: number
+  /** Distance left before the projectile fizzles. */
+  readonly range: number
+  /** Further targets it may pass through. */
+  readonly pierce: number
+  /** Entity ids already hit, so a piercing shot hits each target once. */
+  readonly hit: ReadonlyArray<number>
+}
+export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Projectile")
+
+export type EnemyKind = "dummy"
+export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind }>()("Shooter/Enemy")
+
+/** Comes back at `at` after `delay` seconds when killed (training dummies). */
+export const Respawns = Descriptor.Component<{ readonly at: Vec2; readonly delay: number }>()("Shooter/Respawns")
+
+/** An enemy about to appear: its spawn warning is visible until `remaining` runs out. */
+export const PendingSpawn = Descriptor.Component<{ readonly kind: EnemyKind; readonly at: Vec2; readonly remaining: number; readonly duration: number }>()("Shooter/PendingSpawn")
+
+export type RenderableValue =
+  | { readonly kind: "player"; readonly radius: number }
+  | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number }
+  | { readonly kind: "projectile"; readonly faction: Faction; readonly radius: number }
+  | { readonly kind: "wall"; readonly box: Box; readonly placement: "back" | "front" | "sorted" }
+
+/** What the entity looks like; presence means "has a render node". */
+export const Renderable = Descriptor.Component<RenderableValue>()("Shooter/Renderable")
+
+// ── Events ────────────────────────────────────────────────────────────────
+
+export type DamageTarget = Entity.Handle<typeof Root, typeof Health>
+
+/** A request to damage an entity; `ApplyDamage` decides what happens. */
+export interface DamageValue {
+  readonly target: DamageTarget
+  readonly amount: number
+  /** Unit direction of the push. */
+  readonly direction: Vec2
+  readonly knockback: number
+  readonly faction: Faction
+}
+export const Damage = Descriptor.Event<DamageValue>()("Shooter/Damage")
+
+/** Damage that landed. */
+export const Hit = Descriptor.Event<{ readonly at: Vec2; readonly amount: number; readonly faction: Faction; readonly killed: boolean }>()("Shooter/Hit")
+
+/** An entity with health died. */
+export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
+
+/** A projectile stopped against a wall or ran out of range. */
+export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean }>()("Shooter/Impact")
+
+// ── Resources ─────────────────────────────────────────────────────────────
+
+export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
+
+export interface TimeValue {
+  /** Fixed step length. */
+  readonly dt: number
+  /** Simulated seconds since the run started. */
+  readonly elapsed: number
+  /** Number of fixed steps simulated. */
+  readonly step: number
+}
+export const Time = Descriptor.Resource<TimeValue>()("Shooter/Time")
+
+export const Keys = Descriptor.TransientResource<KeysSnapshot>()("Shooter/Keys")
+export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Shooter/PointerState")
+
+/** Player intent for this step, in world space. */
+export interface ControlsValue {
+  /** Movement direction: unit length or zero. */
+  readonly move: Vec2
+  /** Ground point under the cursor. */
+  readonly aimPoint: Vec2
+  readonly dashPressed: boolean
+  readonly fireHeld: boolean
+}
+export const Controls = Descriptor.Resource<ControlsValue>()("Shooter/Controls")
+
+export interface ViewportValue {
+  readonly width: number
+  readonly height: number
+}
+export const Viewport = Descriptor.Resource<ViewportValue>()("Shooter/Viewport")
+
+/** World point at the center of the screen, now and at the start of the step. */
+export interface CameraValue {
+  readonly x: number
+  readonly y: number
+  readonly prevX: number
+  readonly prevY: number
+}
+export const Camera = Descriptor.Resource<CameraValue>()("Shooter/Camera")
+
+export const Stats = Descriptor.Resource<{ readonly kills: number; readonly shots: number }>()("Shooter/Stats")
+
+// ── Services (host capabilities) ──────────────────────────────────────────
+
+export const KeyboardInput = Descriptor.Service<KeyboardSource>()("Shooter/KeyboardInput")
+export const PointerInput = Descriptor.Service<PointerSource>()("Shooter/PointerInput")
+
+/** What the fixed update reads from the host: the current viewport size. */
+export interface FrameContextValue {
+  readonly viewport: ViewportValue
+}
+export const FrameContext = Descriptor.Service<FrameContextValue>()("Shooter/FrameContext")
+
+/** Interpolation factor between the previous and current fixed step. */
+export interface RenderClockValue {
+  alpha: number
+  /** Real seconds since the previous displayed frame. */
+  frameSeconds: number
+}
+export const RenderClock = Descriptor.Service<RenderClockValue>()("Shooter/RenderClock")
+export const RenderHost = Descriptor.Service<RenderHostValue>()("Shooter/RenderHost")
+export const RenderNodes = Descriptor.Service<NodeRegistry.NodeRegistry<RenderNode>>()("Shooter/RenderNodes")
+
+// ── Game ──────────────────────────────────────────────────────────────────
+
+export const Game = Schema.bind(
+  Schema.fragment({
+    components: {
+      Position,
+      PrevPosition,
+      Velocity,
+      Body,
+      Wall,
+      Player,
+      Aim,
+      Dash,
+      Invulnerable,
+      Health,
+      Hurtbox,
+      Knockback,
+      HitFlash,
+      Weapon,
+      Projectile,
+      Enemy,
+      Respawns,
+      PendingSpawn,
+      Renderable
+    },
+    resources: {
+      Tuning,
+      Time,
+      Keys,
+      PointerState,
+      Controls,
+      Viewport,
+      Camera,
+      Stats
+    },
+    events: { Damage, Hit, Death, Impact }
+  }),
+  Root
+)
+
+/** Entities that belong to one run; despawned on restart. */
+export const RunScope = Game.EntityScope("Shooter/Run")
+/** The arena; lives as long as the runtime. */
+export const ArenaScope = Game.EntityScope("Shooter/Arena")

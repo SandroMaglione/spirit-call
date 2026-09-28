@@ -1,0 +1,29 @@
+{
+  "name": "top-down-team-shooter",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.17.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --pretty false",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm test",
+    "debug": "node --import tsx scripts/debug.ts"
+  },
+  "dependencies": {
+    "@typeonce/bevy-ts": "link:../../bevy-ts/packages/core",
+    "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
+    "@typeonce/bevy-ts-pixi": "link:../../bevy-ts/packages/pixi",
+    "pixi.js": "8.17.1"
+  },
+  "devDependencies": {
+    "@typeonce/bevy-ts-devtools": "link:../../bevy-ts/packages/devtools",
+    "@types/node": "25.5.0",
+    "tsx": "4.21.0",
+    "typescript": "7.0.2",
+    "vite": "8.0.3",
+    "vitest": "4.0.18"
+  }
+}

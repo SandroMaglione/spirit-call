@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top-down Team Shooter</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0d1117; overflow: hidden; }
+      #game { position: fixed; inset: 0; }
+      #game canvas { display: block; cursor: none; }
+      .hud {
+        position: absolute; inset: 0; pointer-events: none;
+        font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; color: #e6edf3;
+      }
+      .hud__panel { position: absolute; top: 16px; left: 16px; display: grid; gap: 6px; }
+      .hud__dash { font-size: 14px; letter-spacing: 0.08em; color: #4ecdc4; }
+      .hud__combat { font-size: 13px; color: #f7c948; }
+      .hud__stats { font-size: 12px; color: #7d8590; }
+      .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #7d8590; }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
