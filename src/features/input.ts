@@ -19,23 +19,20 @@ import {
   PointerState,
   Time,
   Tuning,
-  Viewport,
-  whileRunning
+  Viewport
 } from "../schema.ts"
 import type { ControlsValue } from "../schema.ts"
 
 export const CaptureKeys = Game.System("Shooter/CaptureKeys", {
   resources: { keys: Game.System.writeResource(Keys) },
-  services: { keyboard: Game.System.service(KeyboardInput) },
-  when: whileRunning
+  services: { keyboard: Game.System.service(KeyboardInput) }
 }, ({ resources, services }) => {
   resources.keys.set(services.keyboard.snapshot())
 })
 
 export const CapturePointer = Game.System("Shooter/CapturePointer", {
   resources: { pointer: Game.System.writeResource(PointerState) },
-  services: { pointer: Game.System.service(PointerInput) },
-  when: whileRunning
+  services: { pointer: Game.System.service(PointerInput) }
 }, ({ resources, services }) => {
   resources.pointer.set(services.pointer.snapshot())
 })
@@ -60,8 +57,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     controls: Game.System.writeResource(Controls),
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time)
-  },
-  when: whileRunning
+  }
 }, ({ resources }) => {
   const keys = resources.keys.get()
   const pointer = resources.pointer.get()

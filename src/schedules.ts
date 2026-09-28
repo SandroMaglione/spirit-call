@@ -3,8 +3,10 @@
  * they run headless in tests and debug scripts (see `simulation.ts`).
  * Rendering has its own schedule in `presentation/schedule.ts`.
  *
- * Gameplay systems carry `when: whilePlaying`, so the world freezes on the
- * game-over screen. Restarting enters `Playing` again, which runs `restart`.
+ * Gameplay runs in a `Game.Schedule.when(whilePlaying, ...)` group, so the
+ * world freezes on the game-over screen and during hit-stop; input capture
+ * pauses with hit-stop (`whileRunning`), so presses made meanwhile are kept.
+ * Restarting enters `Playing` again, which runs `restart`.
  */
 import { SpawnArena } from "./features/arena.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
@@ -18,7 +20,7 @@ import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
 import { CastUltimate, ThrowGrenade, UpdateGrenades } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { DirectWaves } from "./features/waves.ts"
-import { Flow, Game } from "./schema.ts"
+import { Flow, Game, whilePlaying, whileRunning } from "./schema.ts"
 
 /** Spawns what a run starts with. */
 const startRun = Game.Schedule(
@@ -46,15 +48,17 @@ const transitions = Game.Schedule.transitions(
   Game.Schedule.onEnter(Flow, "Playing", [restart])
 )
 
-/** One fixed simulation step. */
-export const fixedUpdate = Game.Schedule(
-  AdvanceTime,
-  TickHitStop,
-  CaptureViewport,
+/** Input into world data. Paused during hit-stop, so presses wait in the device. */
+const input = Game.Schedule.when(
+  whileRunning,
   CaptureKeys,
   CapturePointer,
-  ResolveControls,
-  RememberPositions,
+  ResolveControls
+)
+
+/** Everything that advances the run: frozen on game over and during hit-stop. */
+const gameplay = Game.Schedule.when(
+  whilePlaying,
   TrackRun,
   TickCombatTimers,
   ControlPlayer,
@@ -71,7 +75,17 @@ export const fixedUpdate = Game.Schedule(
   ApplyDamage,
   DetectGameOver,
   ProcessPendingSpawns,
-  DirectWaves,
+  DirectWaves
+)
+
+/** One fixed simulation step. */
+export const fixedUpdate = Game.Schedule(
+  AdvanceTime,
+  TickHitStop,
+  CaptureViewport,
+  input,
+  RememberPositions,
+  gameplay,
   QueueRestart,
   FollowCamera,
   Game.Schedule.applyStateTransitions(transitions),

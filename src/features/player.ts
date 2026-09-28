@@ -24,8 +24,7 @@ import {
   Time,
   Tuning,
   Velocity,
-  Weapon,
-  whilePlaying
+  Weapon
 } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { initialSkills } from "./skills.ts"
@@ -80,8 +79,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     controls: Game.System.readResource(Controls),
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time)
-  },
-  when: whilePlaying
+  }
 }, ({ queries, resources }) => {
   const controls = resources.controls.get()
   const tuning = resources.tuning.get()

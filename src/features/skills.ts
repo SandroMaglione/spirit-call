@@ -23,8 +23,7 @@ import {
   Skills,
   Time,
   Tuning,
-  Ultimate,
-  whilePlaying
+  Ultimate
 } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
 
@@ -34,8 +33,7 @@ export const ThrowGrenade = Game.System("Shooter/ThrowGrenade", {
   queries: {
     player: Game.Query({ selection: { position: Game.Query.read(Position), skills: Game.Query.write(Skills) }, with: [Player] })
   },
-  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  when: whilePlaying
+  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
 }, ({ queries, resources, commands }) => {
   const controls = resources.controls.get()
   const spec = resources.tuning.get().skills.grenade
@@ -61,8 +59,7 @@ export const ThrowGrenade = Game.System("Shooter/ThrowGrenade", {
 export const UpdateGrenades = Game.System("Shooter/UpdateGrenades", {
   queries: { grenades: Game.Query({ selection: { grenade: Game.Query.write(Grenade) } }) },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { explosion: Game.System.writeEvent(Explosion) },
-  when: whilePlaying
+  events: { explosion: Game.System.writeEvent(Explosion) }
 }, ({ queries, resources, events, commands }) => {
   const spec = resources.tuning.get().skills.grenade
   const dt = resources.time.get().dt
@@ -101,8 +98,7 @@ export const CastUltimate = Game.System("Shooter/CastUltimate", {
     projectiles: Game.Query({ selection: { position: Game.Query.read(Position), projectile: Game.Query.read(Projectile) } })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
-  events: { explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) },
-  when: whilePlaying
+  events: { explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) }
 }, ({ queries, resources, events, commands }) => {
   if (!resources.controls.get().ultimatePressed) return
   const spec = resources.tuning.get().ultimate

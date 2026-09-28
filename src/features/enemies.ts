@@ -29,8 +29,7 @@ import {
   Shield,
   Time,
   Tuning,
-  Velocity,
-  whilePlaying
+  Velocity
 } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
 
@@ -91,8 +90,7 @@ export const SpawnTrainingDummies = Game.System("Shooter/SpawnTrainingDummies", 
 /** Counts spawn warnings down and replaces each with its enemy. */
 export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", {
   queries: { pending: Game.Query({ selection: { pending: Game.Query.write(PendingSpawn) } }) },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  when: whilePlaying
+  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -136,8 +134,7 @@ export const SteerEnemies = (() => {
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
       player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] })
     },
-    resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-    when: whilePlaying
+    resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
   }, ({ queries, resources }) => {
     const tuning = resources.tuning.get()
     const dt = resources.time.get().dt

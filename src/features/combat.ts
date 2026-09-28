@@ -40,8 +40,7 @@ import {
   Time,
   Tuning,
   Velocity,
-  Weapon,
-  whilePlaying
+  Weapon
 } from "../schema.ts"
 import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -73,8 +72,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time),
     stats: Game.System.writeResource(Stats)
-  },
-  when: whilePlaying
+  }
 }, ({ queries, resources, commands }) => {
   const controls = resources.controls.get()
   const weapon = resources.tuning.get().weapon
@@ -153,8 +151,7 @@ export const MoveProjectiles = (() => {
       walls: Walls
     },
     resources: { time: Game.System.readResource(Time) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) },
-    when: whilePlaying
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) }
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
     const boxes = wallBoxes(queries.walls.each())
@@ -288,8 +285,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     death: Game.System.writeEvent(Death)
   },
   resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) },
-  nextMachines: { pace: Game.System.nextState(Pace) },
-  when: whilePlaying
+  nextMachines: { pace: Game.System.nextState(Pace) }
 }, ({ queries, events, resources, nextMachines, lookup, commands }) => {
   const tuning = resources.tuning.get()
   const dead = new Set<number>()
@@ -364,8 +360,7 @@ export const TickCombatTimers = Game.System("Shooter/TickCombatTimers", {
     invulnerable: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) } }),
     flashes: Game.Query({ selection: { flash: Game.Query.write(HitFlash) } })
   },
-  resources: { time: Game.System.readResource(Time) },
-  when: whilePlaying
+  resources: { time: Game.System.readResource(Time) }
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
   for (const { data } of queries.invulnerable.each()) {
@@ -381,8 +376,7 @@ export const TickCombatTimers = Game.System("Shooter/TickCombatTimers", {
 /** Knockback velocity decays exponentially (frame-rate independent). */
 export const DecayKnockback = Game.System("Shooter/DecayKnockback", {
   queries: { pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback) } }) },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  when: whilePlaying
+  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
 }, ({ queries, resources }) => {
   const factor = Math.exp(-resources.tuning.get().knockback.decay * resources.time.get().dt)
   for (const { data } of queries.pushed.each()) {

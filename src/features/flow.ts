@@ -2,12 +2,11 @@
  * The run lifecycle: playing until the player dies, a game-over screen, and
  * a restart that clears the run and starts over.
  */
-import { Death, Flow, Game, HitStop, Keys, Pace, PointerState, Rng, Run, RunScope, Stats, Time, Tuning, Waves, whilePlaying } from "../schema.ts"
+import { Death, Flow, Game, HitStop, Keys, Pace, PointerState, Rng, Run, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
 import { initialWaves } from "./waves.ts"
 
 export const TrackRun = Game.System("Shooter/TrackRun", {
-  resources: { run: Game.System.writeResource(Run), time: Game.System.readResource(Time) },
-  when: whilePlaying
+  resources: { run: Game.System.writeResource(Run), time: Game.System.readResource(Time) }
 }, ({ resources }) => {
   const dt = resources.time.get().dt
   resources.run.update((run) => ({ ...run, time: run.time + dt }))
@@ -17,8 +16,7 @@ export const TrackRun = Game.System("Shooter/TrackRun", {
 export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   events: { death: Game.System.readEvent(Death) },
   resources: { run: Game.System.writeResource(Run), time: Game.System.readResource(Time) },
-  nextMachines: { flow: Game.System.nextState(Flow) },
-  when: whilePlaying
+  nextMachines: { flow: Game.System.nextState(Flow) }
 }, ({ events, resources, nextMachines }) => {
   if (!events.death.all().some((death) => death.faction === "player")) return
   const now = resources.time.get().elapsed

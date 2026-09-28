@@ -9,7 +9,7 @@ import { Random } from "../math/rng.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Waves, whilePlaying } from "../schema.ts"
+import { Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Waves } from "../schema.ts"
 import type { EnemyKind, WavesValue } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -57,8 +57,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
     rng: Game.System.writeResource(Rng),
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time)
-  },
-  when: whilePlaying
+  }
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   if (!tuning.waves.enabled) return

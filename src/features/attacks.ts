@@ -27,8 +27,7 @@ import {
   Position,
   RunScope,
   Time,
-  Tuning,
-  whilePlaying
+  Tuning
 } from "../schema.ts"
 import type { AttackerValue, Faction } from "../schema.ts"
 import { makeProjectile } from "./combat.ts"
@@ -81,8 +80,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     walls: Walls
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage) },
-  when: whilePlaying
+  events: { damage: Game.System.writeEvent(Damage) }
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -189,8 +187,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     })
   },
   resources: { time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage) },
-  when: whilePlaying
+  events: { damage: Game.System.writeEvent(Damage) }
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const targets = queries.targets.each()
