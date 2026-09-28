@@ -19,16 +19,26 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       <div class="hud__stats" data-stats></div>
     </div>
     <div class="hud__banner" data-banner></div>
+    <div class="hud__skills">
+      <div class="hud__skill" data-skill="blast"><kbd>E</kbd><span>Blast</span><i data-cooldown></i></div>
+      <div class="hud__skill" data-skill="grenade"><kbd>F</kbd><span>Grenade</span><i data-cooldown></i></div>
+      <div class="hud__skill" data-skill="lance"><kbd>R</kbd><span>Lance</span><i data-cooldown></i></div>
+    </div>
     <div class="hud__gameover" data-gameover hidden>
       <div class="hud__gameover-title">YOU DIED</div>
       <div class="hud__gameover-stats" data-gameover-stats></div>
       <div class="hud__gameover-hint">Press R or click to restart</div>
     </div>
-    <div class="hud__hint">WASD move · Mouse aim · Left click shoot · Q dash (or Space / right click)</div>
+    <div class="hud__hint">WASD move · Mouse aim · Left click shoot · Q dash · E blast · F grenade · R lance (hold)</div>
   `
+  const slot = (id: string) => {
+    const element = root.querySelector<HTMLElement>(`[data-skill="${id}"]`)!
+    return { root: element, cooldown: element.querySelector<HTMLElement>("[data-cooldown]")! }
+  }
   return {
     root,
     refs: {
+      skills: { blast: slot("blast"), grenade: slot("grenade"), lance: slot("lance") },
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       dash: root.querySelector<HTMLElement>("[data-dash]")!,

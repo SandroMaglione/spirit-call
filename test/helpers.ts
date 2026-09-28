@@ -3,7 +3,7 @@ import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import { Aim, Dash, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
+import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
 export const PlayerState = Game.Inspector("Test/PlayerState", {
@@ -58,3 +58,10 @@ export const start = (options: StartOptions = {}) => {
   }
   return { ...sim, step, player: () => sim.runtime.inspect(PlayerState) }
 }
+
+/** Despawns every enemy (training dummies included). */
+export const ClearEnemies = Game.System("Test/ClearEnemies", {
+  queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+}, ({ queries, commands }) => {
+  for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+})

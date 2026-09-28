@@ -135,6 +135,55 @@ export const defaultTuning = {
     moveSpeedMultiplier: 0.9
   },
 
+  /**
+   * Player skills, aimed with the mouse. Keys: E blast, F grenade, R lance
+   * (see `config/input.ts`).
+   */
+  skills: {
+    /** An instant cone in front of the player: close-range burst with heavy knockback. */
+    blast: {
+      cooldown: 2.2,
+      reach: 130,
+      arcDegrees: 70,
+      damage: 22,
+      knockback: 520,
+      /** Push the player gets backwards when firing it. */
+      recoil: 260,
+      /** How long the cone stays dangerous. */
+      active: 0.08
+    },
+    /** Lobbed to the cursor over walls; explodes after landing. */
+    grenade: {
+      cooldown: 4,
+      /** Farthest throw; the cursor is clamped to this distance. */
+      maxRange: 360,
+      flightTime: 0.35,
+      /** Time between landing and exploding (its blast ring is visible meanwhile). */
+      fuse: 0.45,
+      radius: 95,
+      damage: 38,
+      knockback: 380
+    },
+    /** Hold to charge, release to fire a piercing shot; damage grows with charge. */
+    lance: {
+      cooldown: 3,
+      /** Releasing before this cancels the shot (no cooldown). */
+      minCharge: 0.25,
+      /** Charging past this adds nothing. */
+      maxCharge: 1.1,
+      minDamage: 18,
+      maxDamage: 70,
+      projectileSpeed: 1500,
+      projectileRadius: 9,
+      range: 1100,
+      /** Enemies it passes through after the first. */
+      pierce: 6,
+      knockback: 240,
+      /** Movement speed multiplier while charging. */
+      chargingMoveMultiplier: 0.55
+    }
+  },
+
   knockback: {
     /** Exponential decay rate of knockback velocity; total push = speed / decay. */
     decay: 11

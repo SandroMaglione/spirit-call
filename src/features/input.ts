@@ -20,6 +20,7 @@ import {
   Viewport,
   whileRunning
 } from "../schema.ts"
+import type { ControlsValue } from "../schema.ts"
 
 export const CaptureKeys = Game.System("Shooter/CaptureKeys", {
   resources: { keys: Game.System.writeResource(Keys) },
@@ -82,9 +83,18 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     move,
     aimPoint,
     dashPressed: keys.dash.pressed || pointer.secondary.pressed,
-    fireHeld: pointer.primary.held || pointer.primary.pressed
+    fireHeld: pointer.primary.held || pointer.primary.pressed,
+    skills: { blast: keys.blast, grenade: keys.grenade, lance: keys.lance }
   })
 })
 
 /** `aimPoint` starts at the player spawn, so nothing is aimed at before the mouse moves. */
-export const initialControls = (aimPoint: Vec2) => ({ move: zero, aimPoint, dashPressed: false, fireHeld: false })
+const idleKey = { held: false, pressed: false, released: false }
+
+export const initialControls = (aimPoint: Vec2): ControlsValue => ({
+  move: zero,
+  aimPoint,
+  dashPressed: false,
+  fireHeld: false,
+  skills: { blast: idleKey, grenade: idleKey, lance: idleKey }
+})

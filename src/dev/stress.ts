@@ -42,7 +42,7 @@ export const makeStress = (tuning: TuningValue, load: StressLoad) => {
       const angle = random.next() * Math.PI * 2
       const speed = 600 + random.next() * 600
       commands.spawnIn(RunScope, makeProjectile(inArena(), { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed }, {
-        faction: random.next() < 0.5 ? "player" : "enemy", radius: 5, damage: 1, knockback: 20, range: 1500, pierce: 0, hit: []
+        faction: random.next() < 0.5 ? "player" : "enemy", style: "bolt", radius: 5, damage: 1, knockback: 20, range: 1500, pierce: 0, hit: []
       }))
     }
   })

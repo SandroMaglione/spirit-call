@@ -33,6 +33,15 @@ export const view = {
   reticle: 0xf7c948,
   hitFlash: 0xffffff,
   playerProjectile: 0xb8fff7,
+  /** Charged lance shots. */
+  lance: 0xffd166,
+  lanceGlow: 2.2,
+  /** Player skill areas (blast cone, grenade blast). */
+  playerArea: 0x4ecdc4,
+  grenade: 0xd9fffb,
+  /** Peak height of a grenade's arc, in screen pixels. */
+  grenadeArc: 70,
+  explosionShake: 5,
   enemyProjectile: 0xff6b6b,
   /** Projectiles fly this high above their ground shadow. */
   projectileHeight: 18,

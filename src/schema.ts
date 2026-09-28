@@ -43,6 +43,26 @@ export interface DashValue {
 }
 export const Dash = Descriptor.Component<DashValue>()("Shooter/Dash")
 
+export type SkillId = keyof TuningValue["skills"]
+
+/** Cooldowns of the player's skills; `charge` is the time the lance has been charging, if it is. */
+export interface SkillsValue {
+  readonly blast: { readonly cooldown: number }
+  readonly grenade: { readonly cooldown: number }
+  readonly lance: { readonly cooldown: number; readonly charge: number | null }
+}
+export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
+
+/** A thrown grenade: flies from `from` to `to`, then its fuse runs down and it explodes. */
+export interface GrenadeValue {
+  readonly from: Vec2
+  readonly to: Vec2
+  readonly faction: Faction
+  /** Time since it was thrown. */
+  readonly elapsed: number
+}
+export const Grenade = Descriptor.Component<GrenadeValue>()("Shooter/Grenade")
+
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
 
@@ -65,8 +85,12 @@ export const HitFlash = Descriptor.Component<{ readonly remaining: number }>()("
 /** A player weapon: time until the next shot may fire (negative carries over). */
 export const Weapon = Descriptor.Component<{ readonly cooldown: number }>()("Shooter/Weapon")
 
+export type ProjectileStyle = "bolt" | "lance"
+
 export interface ProjectileValue {
   readonly faction: Faction
+  /** How it looks. */
+  readonly style: ProjectileStyle
   readonly radius: number
   readonly damage: number
   readonly knockback: number
@@ -122,7 +146,7 @@ export const PendingSpawn = Descriptor.Component<{ readonly kind: EnemyKind; rea
 export type RenderableValue =
   | { readonly kind: "player"; readonly radius: number }
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number }
-  | { readonly kind: "projectile"; readonly faction: Faction; readonly radius: number }
+  | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number }
   | { readonly kind: "wall"; readonly box: Box; readonly placement: "back" | "front" | "sorted" }
 
 /** What the entity looks like; presence means "has a render node". */
@@ -148,6 +172,9 @@ export const Hit = Descriptor.Event<{ readonly at: Vec2; readonly amount: number
 
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
+
+/** An area went off (grenade explosions), for effects. */
+export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction }>()("Shooter/Explosion")
 
 /** A projectile stopped against a wall or ran out of range. */
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean }>()("Shooter/Impact")
@@ -177,6 +204,8 @@ export interface ControlsValue {
   readonly aimPoint: Vec2
   readonly dashPressed: boolean
   readonly fireHeld: boolean
+  /** Skill keys this step. */
+  readonly skills: { readonly [Id in SkillId]: { readonly held: boolean; readonly pressed: boolean; readonly released: boolean } }
 }
 export const Controls = Descriptor.Resource<ControlsValue>()("Shooter/Controls")
 
@@ -252,6 +281,8 @@ export const Game = Schema.bind(
       Aim,
       Dash,
       Invulnerable,
+      Skills,
+      Grenade,
       Health,
       Hurtbox,
       Knockback,
@@ -280,7 +311,7 @@ export const Game = Schema.bind(
       Run,
       HitStop
     },
-    events: { Damage, Hit, Death, Impact }
+    events: { Damage, Hit, Death, Impact, Explosion }
   }),
   Root
 )

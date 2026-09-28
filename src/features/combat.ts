@@ -34,6 +34,7 @@ import {
   Renderable,
   Respawns,
   RunScope,
+  Skills,
   Stats,
   Time,
   Tuning,
@@ -51,7 +52,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
     [PrevPosition, at],
     [Velocity, velocity],
     [Projectile, projectile],
-    [Renderable, { kind: "projectile", faction: projectile.faction, radius: projectile.radius }]
+    [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius }]
   )
 
 /**
@@ -61,7 +62,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
 export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   queries: {
     shooters: Game.Query({
-      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), weapon: Game.Query.write(Weapon) },
+      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), weapon: Game.Query.write(Weapon), skills: Game.Query.read(Skills) },
       with: [Player]
     }),
     walls: Walls
@@ -81,7 +82,8 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   let shots = 0
   for (const { data } of queries.shooters.each()) {
     let cooldown = data.weapon.get().cooldown - dt
-    if (!controls.fireHeld) {
+    // Charging the lance takes the trigger hand: no primary fire meanwhile.
+    if (!controls.fireHeld || data.skills.get().lance.charge !== null) {
       data.weapon.set({ cooldown: Math.max(cooldown, 0) })
       continue
     }
@@ -94,6 +96,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
     while (cooldown <= 0) {
       commands.spawnIn(RunScope, makeProjectile(muzzle, scale(aim, weapon.projectileSpeed), {
         faction: "player",
+        style: "bolt",
         radius: weapon.projectileRadius,
         damage: weapon.damage,
         knockback: weapon.knockback,

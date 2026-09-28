@@ -19,7 +19,13 @@ export interface RenderAssets {
   readonly shadow: Texture
 }
 
+export interface SkillSlotRefs {
+  readonly root: HTMLElement
+  readonly cooldown: HTMLElement
+}
+
 export interface HudRefs {
+  readonly skills: { readonly blast: SkillSlotRefs; readonly grenade: SkillSlotRefs; readonly lance: SkillSlotRefs }
   readonly health: HTMLElement
   readonly healthText: HTMLElement
   readonly dash: HTMLElement

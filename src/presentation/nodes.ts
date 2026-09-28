@@ -6,7 +6,7 @@ import { Container, Graphics, Sprite } from "pixi.js"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import type { Box } from "../physics/shapes.ts"
-import type { EnemyKind, Faction, RenderableValue } from "../schema.ts"
+import type { EnemyKind, Faction, ProjectileStyle, RenderableValue } from "../schema.ts"
 import type { ProjectileNode, RenderAssets, RenderNode } from "./host-types.ts"
 
 /** Draws an extruded box, relative to the projection of its center. */
@@ -48,9 +48,10 @@ const drawActor = (radius: number, widthFactor: number, heightFactor: number, co
 
 export const enemyColor = (enemy: EnemyKind): number => view.enemies[enemy].color
 
-export const projectileColor = (faction: Faction): number => faction === "player" ? view.playerProjectile : view.enemyProjectile
+export const projectileColor = (faction: Faction, style: ProjectileStyle = "bolt"): number =>
+  style === "lance" ? view.lance : faction === "player" ? view.playerProjectile : view.enemyProjectile
 
-const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, faction: Faction, radius: number): ProjectileNode => {
+const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, faction: Faction, style: ProjectileStyle, radius: number): ProjectileNode => {
   const node = pool.pop() ?? (() => {
     const root = new Container()
     const shadow = new Sprite(assets.shadow)
@@ -62,8 +63,8 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
     return { kind: "projectile" as const, root, orb, shadow }
   })()
   const r = radius * projection.zoom
-  node.orb.tint = projectileColor(faction)
-  node.orb.scale.set((r * view.projectileGlow) / assets.discRadius)
+  node.orb.tint = projectileColor(faction, style)
+  node.orb.scale.set((r * (style === "lance" ? view.lanceGlow : view.projectileGlow)) / assets.discRadius)
   node.orb.position.set(0, -view.projectileHeight * projection.zoom)
   node.shadow.scale.set((r * 1.2) / assets.discRadius)
   node.root.alpha = 1
@@ -82,7 +83,7 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
       return { kind: "enemy", root, body }
     }
     case "projectile":
-      return projectileNode(assets, projectilePool, renderable.faction, renderable.radius)
+      return projectileNode(assets, projectilePool, renderable.faction, renderable.style, renderable.radius)
     case "wall": {
       const front = renderable.placement === "front"
       return { kind: "wall", root: drawWall(renderable.box, front ? view.frontWallHeight : view.wallHeight, front ? 0.85 : 1) }

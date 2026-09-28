@@ -23,6 +23,12 @@
       .hud__banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font-size: 44px; font-weight: 700; letter-spacing: 0.2em; color: #e6edf3; opacity: 0; text-shadow: 0 2px 12px #000; }
       .hud__banner.is-showing { animation: banner 1.8s ease-out forwards; }
       @keyframes banner { 0% { opacity: 0; transform: translate(-50%, 10px); } 15% { opacity: 1; transform: translate(-50%, 0); } 70% { opacity: 1; } 100% { opacity: 0; } }
+      .hud__skills { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+      .hud__skill { position: relative; width: 78px; padding: 8px 6px 6px; display: grid; justify-items: center; gap: 4px; background: rgba(13, 17, 23, 0.82); border: 1px solid #30363d; border-radius: 6px; overflow: hidden; font-size: 11px; color: #e6edf3; }
+      .hud__skill kbd { font: 700 14px inherit; color: #4ecdc4; }
+      .hud__skill.is-ready { border-color: #4ecdc4; box-shadow: 0 0 10px rgba(78, 205, 196, 0.35); }
+      .hud__skill.is-charging { border-color: #ffd166; box-shadow: 0 0 12px rgba(255, 209, 102, 0.5); }
+      .hud__skill i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(8, 10, 14, 0.72); pointer-events: none; }
       .hud__gameover { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; text-align: center; background: rgba(8, 10, 14, 0.62); }
       .hud__gameover[hidden] { display: none; }
       .hud__gameover-title { font-size: 56px; font-weight: 700; letter-spacing: 0.25em; color: #ff5d6c; }

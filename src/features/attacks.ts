@@ -109,7 +109,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
           const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
           const direction = { x: Math.cos(base + offset), y: Math.sin(base + offset) }
           commands.spawnIn(RunScope, makeProjectile(position, { x: direction.x * spec.projectileSpeed, y: direction.y * spec.projectileSpeed }, {
-            faction, radius: spec.projectileRadius, damage: spec.damage, knockback: spec.knockback, range: spec.range, pierce: 0, hit: []
+            faction, style: "bolt", radius: spec.projectileRadius, damage: spec.damage, knockback: spec.knockback, range: spec.range, pierce: 0, hit: []
           }))
         }
       } else {

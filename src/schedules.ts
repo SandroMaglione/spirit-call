@@ -15,6 +15,7 @@ import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./fe
 import { CaptureKeys, CapturePointer, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
+import { UpdateGrenades, UsePlayerSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { DirectWaves } from "./features/waves.ts"
 import { Flow, Game } from "./schema.ts"
@@ -57,7 +58,9 @@ export const fixedUpdate = Game.Schedule(
   TrackRun,
   TickCombatTimers,
   ControlPlayer,
+  UsePlayerSkills,
   FirePlayerWeapon,
+  UpdateGrenades,
   SteerEnemies,
   UpdateAttacks,
   IntegrateBodies,

@@ -5,8 +5,9 @@ import type { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
  * WASD, with actions on the keys around it (Q, E, R, F, Z, X, C). Movement is
  * screen-relative ("up" is up on screen).
  *
- * In use: Q dash (Space and right click also dash). Free for future actions:
- * E, R, F, Z, X, C (R only restarts on the game-over screen).
+ * In use: Q dash (Space and right click also dash), E blast, F grenade,
+ * R lance (hold to charge; R also restarts on the game-over screen).
+ * Free for future actions: Z, X, C.
  */
 export const keyBindings = {
   up: ["w", "ArrowUp"],
@@ -14,6 +15,9 @@ export const keyBindings = {
   left: ["a", "ArrowLeft"],
   right: ["d", "ArrowRight"],
   dash: ["q", " "],
+  blast: ["e"],
+  grenade: ["f"],
+  lance: ["r"],
   restart: ["r", "Enter"]
 } as const
 

@@ -7,6 +7,7 @@
  */
 import { RenderSync } from "@typeonce/bevy-ts-pixi"
 
+import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
@@ -17,7 +18,9 @@ import {
   Dash,
   Death,
   Enemy,
+  Explosion,
   Flow,
+  Grenade,
   Game,
   Health,
   Hit,
@@ -34,6 +37,7 @@ import {
   RenderNodes,
   Renderable,
   Run,
+  Skills,
   Stats,
   Tuning,
   Wall,
@@ -142,7 +146,8 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         aim: Game.Query.read(Aim),
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
-        flash: Game.Query.read(HitFlash)
+        flash: Game.Query.read(HitFlash),
+        skills: Game.Query.read(Skills)
       },
       with: [Player]
     })
@@ -173,6 +178,20 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     marks.moveTo(position.x + Math.cos(startAngle) * ring, position.y + Math.sin(startAngle) * ring)
       .arc(position.x, position.y, ring, startAngle, startAngle + progress * Math.PI * 2)
       .stroke({ width: 3, color: ready ? view.aim : 0x5b6b7d, alpha: ready ? 0.5 : 0.8 })
+
+    // Lance charge: a ring filling up and a bright line along the shot.
+    const charge = data.skills.get().lance.charge
+    if (charge !== null) {
+      const lance = tuning.skills.lance
+      const progress = Math.min(1, charge / lance.maxCharge)
+      const ready = charge >= lance.minCharge
+      const ringRadius = radius + 14
+      marks.moveTo(position.x + ringRadius, position.y)
+        .arc(position.x, position.y, ringRadius, 0, progress * Math.PI * 2)
+        .stroke({ width: 4, color: ready ? view.lance : 0x8a7a50, alpha: 0.9 })
+      marks.moveTo(tip.x, tip.y).lineTo(position.x + aim.x * lance.range, position.y + aim.y * lance.range)
+        .stroke({ width: 2 + progress * 3, color: view.lance, alpha: ready ? 0.35 + progress * 0.4 : 0.15 })
+    }
 
     const node = services.nodes.get(entity.id)
     if (node?.kind === "player") {
@@ -231,10 +250,11 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   queries: {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
     attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker) } }),
-    hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } })
+    hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
+    grenades: Game.Query({ selection: { grenade: Game.Query.read(Grenade) } })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
-  services: { host: Game.System.service(RenderHost) }
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ queries, resources, services }) => {
   const g = services.host.telegraphs
   g.clear()
@@ -259,7 +279,26 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     drawArea(g, area, progress, { color: view.telegraph, fill: 0.12, outline: 0.7 })
   }
   for (const { data } of queries.hitboxes.each()) {
-    drawArea(g, data.hitbox.get().area, 0, { color: view.telegraphLocked, fill: 0.55, outline: 1 })
+    const hitbox = data.hitbox.get()
+    drawArea(g, hitbox.area, 0, { color: hitbox.faction === "player" ? view.playerArea : view.telegraphLocked, fill: 0.55, outline: 1 })
+  }
+
+  // Grenades: an arc through the air (shadow on the floor, orb above it), then the fuse ring.
+  const spec = tuning.skills.grenade
+  const overlay = services.host.overlay
+  for (const { data } of queries.grenades.each()) {
+    const grenade = data.grenade.get()
+    const elapsed = grenade.elapsed + services.clock.alpha * engine.stepSeconds
+    const flight = Math.min(1, elapsed / spec.flightTime)
+    const fuse = Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse))
+    g.circle(grenade.to.x, grenade.to.y, spec.radius).stroke({ width: 2, color: view.playerArea, alpha: flight < 1 ? 0.35 : 0.9 })
+    if (fuse > 0) g.circle(grenade.to.x, grenade.to.y, spec.radius * fuse).fill({ color: view.playerArea, alpha: 0.25 })
+    const ground = { x: grenade.from.x + (grenade.to.x - grenade.from.x) * flight, y: grenade.from.y + (grenade.to.y - grenade.from.y) * flight }
+    g.circle(ground.x, ground.y, 7).fill({ color: view.shadow, alpha: 0.35 })
+    const screen = toScreen(projection, ground)
+    const height = 4 * view.grenadeArc * flight * (1 - flight) * projection.zoom
+    overlay.circle(screen.x, screen.y - height - 6, 6).fill({ color: view.grenade })
+    if (flight >= 1) overlay.circle(screen.x, screen.y - 6, 6).stroke({ width: 2, color: view.playerArea, alpha: 0.5 + 0.5 * Math.sin(elapsed * 40) })
   }
   for (const { data } of queries.pending.each()) {
     const pending = data.pending.get()
@@ -275,7 +314,8 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
   events: {
     hit: Game.System.readEvent(Hit),
     death: Game.System.readEvent(Death),
-    impact: Game.System.readEvent(Impact)
+    impact: Game.System.readEvent(Impact),
+    explosion: Game.System.readEvent(Explosion)
   },
   services: { host: Game.System.service(RenderHost) }
 }, ({ events, services }) => {
@@ -293,6 +333,12 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
     const at = toScreen(projection, death.at)
     const color = death.enemy === undefined ? view.player : enemyColor(death.enemy)
     fx.burst({ x: at.x, y: at.y - 16 }, { color, count: 18, speed: 320, size: 6, life: 0.55 })
+  }
+  for (const explosion of events.explosion.all()) {
+    const at = toScreen(projection, explosion.at)
+    fx.burst({ x: at.x, y: at.y - 10 }, { color: view.playerArea, count: 26, speed: 380, size: 6, life: 0.5 })
+    fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, view.explosionShake)
   }
   for (const impact of events.impact.all()) {
     const at = toScreen(projection, impact.at)
@@ -355,7 +401,7 @@ const DrawReticle = Game.System("Shooter/DrawReticle", {
 
 const SyncHud = Game.System("Shooter/SyncHud", {
   queries: {
-    player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health) }, with: [Player] }),
+    player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health), skills: Game.Query.read(Skills) }, with: [Player] }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   },
@@ -395,6 +441,17 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   const player = queries.player.singleOptional()
   const dash = player.ok && player.value !== undefined ? player.value.data.dash.get() : undefined
   const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: resources.tuning.get().player.hp }
+  if (player.ok && player.value !== undefined) {
+    const skills = player.value.data.skills.get()
+    const specs = resources.tuning.get().skills
+    for (const id of ["blast", "grenade", "lance"] as const) {
+      const slot = hud.skills[id]
+      const cooldown = skills[id].cooldown
+      slot.cooldown.style.height = `${Math.min(100, (100 * cooldown) / specs[id].cooldown)}%`
+      slot.root.classList.toggle("is-ready", cooldown <= 0)
+      slot.root.classList.toggle("is-charging", id === "lance" && skills.lance.charge !== null)
+    }
+  }
   hud.health.style.width = `${(100 * health.current) / health.max}%`
   hud.healthText.textContent = `${Math.ceil(health.current)} / ${health.max}`
   const remaining = queries.enemies.each().length + queries.pending.each().length + waves.queue.length

@@ -19,6 +19,7 @@ import {
   PrevPosition,
   Renderable,
   RunScope,
+  Skills,
   Time,
   Tuning,
   Velocity,
@@ -26,6 +27,7 @@ import {
   whilePlaying
 } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
+import { initialSkills } from "./skills.ts"
 
 export const makePlayer = (tuning: TuningValue, at: Vec2) =>
   Game.Command.spawn(
@@ -38,6 +40,7 @@ export const makePlayer = (tuning: TuningValue, at: Vec2) =>
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
     [Invulnerable, { remaining: 0 }],
     [Weapon, { cooldown: 0 }],
+    [Skills, initialSkills()],
     [Knockback, { x: 0, y: 0 }],
     [Hurtbox, { radius: tuning.player.hurtboxRadius, faction: "player" }],
     [Health, { current: tuning.player.hp, max: tuning.player.hp }],
@@ -66,7 +69,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         velocity: Game.Query.write(Velocity),
         aim: Game.Query.write(Aim),
         dash: Game.Query.write(Dash),
-        invulnerable: Game.Query.write(Invulnerable)
+        invulnerable: Game.Query.write(Invulnerable),
+        skills: Game.Query.read(Skills)
       },
       with: [Player]
     })
@@ -111,7 +115,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over.
       const carried = clampLength(data.velocity.get(), Math.max(tuning.player.moveSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
-      const speed = tuning.player.moveSpeed * (controls.fireHeld ? tuning.weapon.moveSpeedMultiplier : 1)
+      const charging = data.skills.get().lance.charge !== null
+      const speed = tuning.player.moveSpeed * (charging ? tuning.skills.lance.chargingMoveMultiplier : controls.fireHeld ? tuning.weapon.moveSpeedMultiplier : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
       data.velocity.set(moveToward(carried, target, rate * dt))
