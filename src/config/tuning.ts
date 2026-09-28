@@ -131,7 +131,13 @@ export const defaultTuning = {
     /** Fraction of incoming knockback applied. */
     knockbackTaken: 0.6,
     /** Invulnerability after taking a hit, so one mistake costs one hit. */
-    hitInvulnerability: 0.6
+    hitInvulnerability: 0.6,
+    /**
+     * After releasing every movement key, keep moving in the last direction
+     * this long, so a finger slipping off WASD for an instant does not stop
+     * the player. 0 disables it.
+     */
+    movementGrace: 0.08
   },
 
   dash: {
@@ -167,23 +173,8 @@ export const defaultTuning = {
     moveSpeedMultiplier: 0.9
   },
 
-  /**
-   * Player skills, aimed with the mouse. Keys: E blast, F grenade, R lance
-   * (see `config/input.ts`).
-   */
+  /** The player's special: right click throws a grenade at the cursor. */
   skills: {
-    /** An instant cone in front of the player: close-range burst with heavy knockback. */
-    blast: {
-      cooldown: 2.2,
-      reach: 130,
-      arcDegrees: 70,
-      damage: 22,
-      knockback: 520,
-      /** Push the player gets backwards when firing it. */
-      recoil: 260,
-      /** How long the cone stays dangerous. */
-      active: 0.08
-    },
     /** Lobbed to the cursor over walls; explodes after landing. */
     grenade: {
       cooldown: 4,
@@ -195,25 +186,24 @@ export const defaultTuning = {
       radius: 95,
       damage: 38,
       knockback: 380
-    },
-    /** Hold to charge, release to fire a piercing shot; damage grows with charge. */
-    lance: {
-      cooldown: 3,
-      /** Releasing before this cancels the shot (no cooldown). */
-      minCharge: 0.25,
-      /** Charging past this adds nothing. */
-      maxCharge: 1.1,
-      minDamage: 18,
-      maxDamage: 70,
-      projectileSpeed: 1500,
-      projectileRadius: 9,
-      range: 1100,
-      /** Enemies it passes through after the first. */
-      pierce: 6,
-      knockback: 240,
-      /** Movement speed multiplier while charging. */
-      chargingMoveMultiplier: 0.55
     }
+  },
+
+  /** Shift: a large blast around the player, powered by energy from dealing damage. */
+  ultimate: {
+    /** Energy needed to cast. */
+    energy: 100,
+    /** Energy gained per point of damage the player deals (the ultimate's own damage gives none). */
+    energyPerDamage: 0.1,
+    radius: 240,
+    damage: 60,
+    knockback: 760,
+    /** How long the blast stays dangerous. */
+    active: 0.1,
+    /** Invulnerability when cast, so it also works as an escape. */
+    invulnerability: 0.35,
+    /** Destroy enemy projectiles inside the radius. */
+    clearsProjectiles: true
   },
 
   knockback: {
@@ -344,7 +334,7 @@ export const defaultTuning = {
       attack: beam({ triggerRange: 900, windup: 1.3, aimLock: 0.35, active: 0.1, recovery: 0.6, cooldown: 1.8, length: 1000, width: 18, damage: 20, knockback: 260 }),
       respawnDelay: 0
     },
-    /** A frontal shield blocks all projectiles; flank it or use blast and grenade. */
+    /** A frontal shield blocks all projectiles; flank it or use the grenade and ultimate. */
     guardian: {
       hp: 90,
       radius: 20,

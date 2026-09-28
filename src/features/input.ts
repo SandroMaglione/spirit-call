@@ -17,6 +17,8 @@ import {
   Keys,
   PointerInput,
   PointerState,
+  Time,
+  Tuning,
   Viewport,
   whileRunning
 } from "../schema.ts"
@@ -55,7 +57,9 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     pointer: Game.System.readResource(PointerState),
     camera: Game.System.readResource(Camera),
     viewport: Game.System.readResource(Viewport),
-    controls: Game.System.writeResource(Controls)
+    controls: Game.System.writeResource(Controls),
+    tuning: Game.System.readResource(Tuning),
+    time: Game.System.readResource(Time)
   },
   when: whileRunning
 }, ({ resources }) => {
@@ -69,7 +73,16 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     x: (keys.right.held ? 1 : 0) - (keys.left.held ? 1 : 0),
     y: (keys.down.held ? 1 : 0) - (keys.up.held ? 1 : 0)
   }
-  const move = normalizeOr(screenDirectionToWorld(projection, screen), zero)
+  const held = normalizeOr(screenDirectionToWorld(projection, screen), zero)
+
+  // Movement grace: releasing every movement key keeps the last direction
+  // briefly, so a finger slipping off WASD for an instant does not stop us.
+  const previous = resources.controls.get()
+  const moving = held.x !== 0 || held.y !== 0
+  const lastMove = moving ? held : previous.lastMove
+  const move = moving ? held : previous.grace > 1e-9 ? lastMove : zero
+  // The grace covers the release step itself, then counts down.
+  const grace = moving ? resources.tuning.get().player.movementGrace : Math.max(0, previous.grace - resources.time.get().dt)
 
   // Until the pointer is over the game the browser reports it at (0, 0);
   // keep the previous aim point instead of aiming at the corner.
@@ -82,19 +95,23 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   resources.controls.set({
     move,
     aimPoint,
-    dashPressed: keys.dash.pressed || pointer.secondary.pressed,
+    dashPressed: keys.dash.pressed,
     fireHeld: pointer.primary.held || pointer.primary.pressed,
-    skills: { blast: keys.blast, grenade: keys.grenade, lance: keys.lance }
+    grenadePressed: pointer.secondary.pressed,
+    ultimatePressed: keys.ultimate.pressed,
+    lastMove,
+    grace
   })
 })
 
 /** `aimPoint` starts at the player spawn, so nothing is aimed at before the mouse moves. */
-const idleKey = { held: false, pressed: false, released: false }
-
 export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   move: zero,
   aimPoint,
   dashPressed: false,
   fireHeld: false,
-  skills: { blast: idleKey, grenade: idleKey, lance: idleKey }
+  grenadePressed: false,
+  ultimatePressed: false,
+  lastMove: zero,
+  grace: 0
 })

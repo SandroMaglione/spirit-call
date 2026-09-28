@@ -43,15 +43,14 @@ export interface DashValue {
 }
 export const Dash = Descriptor.Component<DashValue>()("Shooter/Dash")
 
-export type SkillId = keyof TuningValue["skills"]
-
-/** Cooldowns of the player's skills; `charge` is the time the lance has been charging, if it is. */
+/** Cooldowns of the player's skills. */
 export interface SkillsValue {
-  readonly blast: { readonly cooldown: number }
   readonly grenade: { readonly cooldown: number }
-  readonly lance: { readonly cooldown: number; readonly charge: number | null }
 }
 export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
+
+/** Energy toward the ultimate, filled by dealing damage. */
+export const Ultimate = Descriptor.Component<{ readonly energy: number }>()("Shooter/Ultimate")
 
 /** A thrown grenade: flies from `from` to `to`, then its fuse runs down and it explodes. */
 export interface GrenadeValue {
@@ -85,7 +84,7 @@ export const HitFlash = Descriptor.Component<{ readonly remaining: number }>()("
 /** A player weapon: time until the next shot may fire (negative carries over). */
 export const Weapon = Descriptor.Component<{ readonly cooldown: number }>()("Shooter/Weapon")
 
-export type ProjectileStyle = "bolt" | "lance"
+export type ProjectileStyle = "bolt"
 
 export interface ProjectileValue {
   readonly faction: Faction
@@ -139,6 +138,8 @@ export interface HitboxValue {
   readonly remaining: number
   /** Entity ids already hit, so each target is hit at most once. */
   readonly hit: ReadonlyArray<number>
+  /** Whether its damage fills the ultimate's energy (false for the ultimate itself). */
+  readonly charges: boolean
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
@@ -169,6 +170,8 @@ export interface DamageValue {
   readonly direction: Vec2
   readonly knockback: number
   readonly faction: Faction
+  /** Whether this damage fills the player's ultimate energy. */
+  readonly charges: boolean
 }
 export const Damage = Descriptor.Event<DamageValue>()("Shooter/Damage")
 
@@ -178,8 +181,8 @@ export const Hit = Descriptor.Event<{ readonly at: Vec2; readonly amount: number
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
 
-/** An area went off (grenade explosions), for effects. */
-export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction }>()("Shooter/Explosion")
+/** An area went off (grenade explosions, the ultimate), for effects. */
+export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction; readonly kind: "grenade" | "ultimate" }>()("Shooter/Explosion")
 
 /** A projectile stopped against a wall or a shield, or ran out of range. */
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
@@ -209,8 +212,12 @@ export interface ControlsValue {
   readonly aimPoint: Vec2
   readonly dashPressed: boolean
   readonly fireHeld: boolean
-  /** Skill keys this step. */
-  readonly skills: { readonly [Id in SkillId]: { readonly held: boolean; readonly pressed: boolean; readonly released: boolean } }
+  readonly grenadePressed: boolean
+  readonly ultimatePressed: boolean
+  /** Last non-zero movement direction, kept for the movement grace. */
+  readonly lastMove: Vec2
+  /** Time left in which released movement keeps going in `lastMove`. */
+  readonly grace: number
 }
 export const Controls = Descriptor.Resource<ControlsValue>()("Shooter/Controls")
 
@@ -287,6 +294,7 @@ export const Game = Schema.bind(
       Dash,
       Invulnerable,
       Skills,
+      Ultimate,
       Grenade,
       Health,
       Hurtbox,

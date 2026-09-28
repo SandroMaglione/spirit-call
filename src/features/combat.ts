@@ -35,8 +35,8 @@ import {
   Respawns,
   RunScope,
   Shield,
-  Skills,
   Stats,
+  Ultimate,
   Time,
   Tuning,
   Velocity,
@@ -63,7 +63,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
 export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   queries: {
     shooters: Game.Query({
-      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), weapon: Game.Query.write(Weapon), skills: Game.Query.read(Skills) },
+      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), weapon: Game.Query.write(Weapon) },
       with: [Player]
     }),
     walls: Walls
@@ -83,8 +83,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   let shots = 0
   for (const { data } of queries.shooters.each()) {
     let cooldown = data.weapon.get().cooldown - dt
-    // Charging the lance takes the trigger hand: no primary fire meanwhile.
-    if (!controls.fireHeld || data.skills.get().lance.charge !== null) {
+    if (!controls.fireHeld) {
       data.weapon.set({ cooldown: Math.max(cooldown, 0) })
       continue
     }
@@ -220,7 +219,8 @@ export const MoveProjectiles = (() => {
           amount: projectile.damage,
           direction,
           knockback: projectile.knockback,
-          faction: projectile.faction
+          faction: projectile.faction,
+          charges: projectile.faction === "player"
         })
         hit.push(contact.target.id)
         if (pierce === 0) {
@@ -281,6 +281,7 @@ const Damageable = Game.Query({
 
 /** Applies damage requests: the single place where hits become consequences. */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
+  queries: { ultimates: Game.Query({ selection: { ultimate: Game.Query.write(Ultimate) }, with: [Player] }) },
   events: {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
@@ -289,10 +290,11 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) },
   nextMachines: { pace: Game.System.nextState(Pace) },
   when: whilePlaying
-}, ({ events, resources, nextMachines, lookup, commands }) => {
+}, ({ queries, events, resources, nextMachines, lookup, commands }) => {
   const tuning = resources.tuning.get()
   const dead = new Set<number>()
   let kills = 0
+  let energy = 0
   let hitStop = 0
   for (const damage of events.damage.all()) {
     const found = lookup.getHandle(damage.target, Damageable)
@@ -304,6 +306,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
 
     const health = data.health.get()
     const current = Math.max(0, health.current - damage.amount)
+    // Damage the player deals fills the ultimate; only what actually landed counts.
+    if (damage.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.ultimate.energyPerDamage
     data.health.set({ current, max: health.max })
     data.flash.set({ remaining: tuning.feedback.hitFlash })
     // One mistake costs one hit: the player is briefly untouchable afterwards.
@@ -332,6 +336,11 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     }
   }
   if (kills > 0) resources.stats.update((stats) => ({ ...stats, kills: stats.kills + kills }))
+  if (energy > 0) {
+    for (const { data } of queries.ultimates.each()) {
+      data.ultimate.update(({ energy: current }) => ({ energy: Math.min(tuning.ultimate.energy, current + energy) }))
+    }
+  }
   if (hitStop > 0) {
     resources.hitStop.set({ remaining: hitStop })
     nextMachines.pace.set("Frozen")

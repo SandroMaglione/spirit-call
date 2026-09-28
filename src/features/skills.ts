@@ -1,83 +1,49 @@
 /**
- * Player skills (E blast, F grenade, R lance), aimed with the mouse.
+ * The player's special (right click: grenade) and ultimate (Shift: a large
+ * blast around the player).
  *
- * Skills reuse the combat pipeline: the blast is a player-faction `Hitbox`
- * (the same thing enemy swipes use), the grenade becomes one when it
- * explodes, and the lance is a piercing `Projectile`. Numbers live in
- * `tuning.skills`.
+ * Both reuse the combat pipeline: the grenade becomes a player-faction
+ * `Hitbox` when it explodes, and so does the ultimate. The ultimate is
+ * powered by energy from damage the player deals (`ApplyDamage` fills it).
+ * Numbers live in `tuning.skills` and `tuning.ultimate`.
  */
-import { clampLength, scale, sub } from "../math/vec.ts"
+import { clampLength, sub } from "../math/vec.ts"
 import {
-  Aim,
   Controls,
   Explosion,
   Game,
   Grenade,
   Hitbox,
-  Knockback,
+  Impact,
+  Invulnerable,
   Player,
   Position,
+  Projectile,
   RunScope,
   Skills,
   Time,
   Tuning,
+  Ultimate,
   whilePlaying
 } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
-import { makeProjectile } from "./combat.ts"
 
-export const initialSkills = (): SkillsValue => ({ blast: { cooldown: 0 }, grenade: { cooldown: 0 }, lance: { cooldown: 0, charge: null } })
+export const initialSkills = (): SkillsValue => ({ grenade: { cooldown: 0 } })
 
-/** Lance damage for a charge time: linear from `minDamage` at `minCharge` to `maxDamage` at `maxCharge`. */
-export const lanceDamage = (spec: { readonly minCharge: number; readonly maxCharge: number; readonly minDamage: number; readonly maxDamage: number }, charge: number): number => {
-  const t = Math.max(0, Math.min(1, (charge - spec.minCharge) / Math.max(1e-6, spec.maxCharge - spec.minCharge)))
-  return spec.minDamage + (spec.maxDamage - spec.minDamage) * t
-}
-
-export const UsePlayerSkills = Game.System("Shooter/UsePlayerSkills", {
+export const ThrowGrenade = Game.System("Shooter/ThrowGrenade", {
   queries: {
-    player: Game.Query({
-      selection: {
-        position: Game.Query.read(Position),
-        aim: Game.Query.read(Aim),
-        skills: Game.Query.write(Skills),
-        knockback: Game.Query.write(Knockback)
-      },
-      with: [Player]
-    })
+    player: Game.Query({ selection: { position: Game.Query.read(Position), skills: Game.Query.write(Skills) }, with: [Player] })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
   when: whilePlaying
 }, ({ queries, resources, commands }) => {
   const controls = resources.controls.get()
-  const specs = resources.tuning.get().skills
+  const spec = resources.tuning.get().skills.grenade
   const dt = resources.time.get().dt
-
   for (const { data } of queries.player.each()) {
-    const position = data.position.get()
-    const aim = data.aim.get()
-    const skills = data.skills.get()
-    let blast = Math.max(0, skills.blast.cooldown - dt)
-    let grenade = Math.max(0, skills.grenade.cooldown - dt)
-    let lance = Math.max(0, skills.lance.cooldown - dt)
-    let charge = skills.lance.charge
-
-    if (controls.skills.blast.pressed && blast <= 0) {
-      const spec = specs.blast
-      commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-        area: { kind: "cone", origin: position, direction: aim, radius: spec.reach, halfAngle: (spec.arcDegrees * Math.PI) / 360 },
-        faction: "player",
-        damage: spec.damage,
-        knockback: spec.knockback,
-        remaining: spec.active,
-        hit: []
-      }]))
-      data.knockback.update((current) => ({ x: current.x - aim.x * spec.recoil, y: current.y - aim.y * spec.recoil }))
-      blast = spec.cooldown
-    }
-
-    if (controls.skills.grenade.pressed && grenade <= 0) {
-      const spec = specs.grenade
+    let cooldown = Math.max(0, data.skills.get().grenade.cooldown - dt)
+    if (controls.grenadePressed && cooldown <= 0) {
+      const position = data.position.get()
       const offset = clampLength(sub(controls.aimPoint, position), spec.maxRange)
       commands.spawnIn(RunScope, Game.Command.spawn([Grenade, {
         from: position,
@@ -85,37 +51,9 @@ export const UsePlayerSkills = Game.System("Shooter/UsePlayerSkills", {
         faction: "player",
         elapsed: 0
       }]))
-      grenade = spec.cooldown
+      cooldown = spec.cooldown
     }
-
-    // Lance: press to start charging (when ready), release to fire.
-    const key = controls.skills.lance
-    const spec = specs.lance
-    if (charge === null) {
-      if (key.pressed && lance <= 0) charge = 0
-    }
-    if (charge !== null) {
-      if (key.held) charge = Math.min(spec.maxCharge, charge + dt)
-      else {
-        if (charge >= spec.minCharge) {
-          const muzzle = { x: position.x + aim.x * 12, y: position.y + aim.y * 12 }
-          commands.spawnIn(RunScope, makeProjectile(muzzle, scale(aim, spec.projectileSpeed), {
-            faction: "player",
-            style: "lance",
-            radius: spec.projectileRadius,
-            damage: lanceDamage(spec, charge),
-            knockback: spec.knockback,
-            range: spec.range,
-            pierce: spec.pierce,
-            hit: []
-          }))
-          lance = spec.cooldown
-        }
-        charge = null
-      }
-    }
-
-    data.skills.set({ blast: { cooldown: blast }, grenade: { cooldown: grenade }, lance: { cooldown: lance, charge } })
+    data.skills.set({ grenade: { cooldown } })
   }
 })
 
@@ -142,8 +80,55 @@ export const UpdateGrenades = Game.System("Shooter/UpdateGrenades", {
       damage: spec.damage,
       knockback: spec.knockback,
       remaining: 0.05,
-      hit: []
+      hit: [],
+      charges: true
     }]))
-    events.explosion.emit({ at: grenade.to, radius: spec.radius, faction: grenade.faction })
+    events.explosion.emit({ at: grenade.to, radius: spec.radius, faction: grenade.faction, kind: "grenade" })
+  }
+})
+
+/**
+ * Shift, at full energy: a large blast around the player that knocks
+ * everything back, clears enemy projectiles inside it, and grants a moment
+ * of invulnerability.
+ */
+export const CastUltimate = Game.System("Shooter/CastUltimate", {
+  queries: {
+    player: Game.Query({
+      selection: { position: Game.Query.read(Position), ultimate: Game.Query.write(Ultimate), invulnerable: Game.Query.write(Invulnerable) },
+      with: [Player]
+    }),
+    projectiles: Game.Query({ selection: { position: Game.Query.read(Position), projectile: Game.Query.read(Projectile) } })
+  },
+  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
+  events: { explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) },
+  when: whilePlaying
+}, ({ queries, resources, events, commands }) => {
+  if (!resources.controls.get().ultimatePressed) return
+  const spec = resources.tuning.get().ultimate
+  for (const { data } of queries.player.each()) {
+    if (data.ultimate.get().energy < spec.energy) continue
+    const at = data.position.get()
+    data.ultimate.set({ energy: 0 })
+    data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, spec.invulnerability) }))
+    commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+      area: { kind: "circle", center: at, radius: spec.radius },
+      faction: "player",
+      damage: spec.damage,
+      knockback: spec.knockback,
+      remaining: spec.active,
+      hit: [],
+      charges: false
+    }]))
+    events.explosion.emit({ at, radius: spec.radius, faction: "player", kind: "ultimate" })
+    if (spec.clearsProjectiles) {
+      for (const { entity, data: shot } of queries.projectiles.each()) {
+        if (shot.projectile.get().faction === "player") continue
+        const position = shot.position.get()
+        if ((position.x - at.x) ** 2 + (position.y - at.y) ** 2 > spec.radius * spec.radius) continue
+        commands.despawn(entity.id)
+        events.impact.emit({ at: position, faction: "enemy", wall: false, shielded: false })
+      }
+    }
   }
 })

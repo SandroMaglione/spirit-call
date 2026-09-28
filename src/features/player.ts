@@ -20,6 +20,7 @@ import {
   Renderable,
   RunScope,
   Skills,
+  Ultimate,
   Time,
   Tuning,
   Velocity,
@@ -41,6 +42,7 @@ export const makePlayer = (tuning: TuningValue, at: Vec2) =>
     [Invulnerable, { remaining: 0 }],
     [Weapon, { cooldown: 0 }],
     [Skills, initialSkills()],
+    [Ultimate, { energy: 0 }],
     [Knockback, { x: 0, y: 0 }],
     [Hurtbox, { radius: tuning.player.hurtboxRadius, faction: "player" }],
     [Health, { current: tuning.player.hp, max: tuning.player.hp }],
@@ -69,8 +71,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         velocity: Game.Query.write(Velocity),
         aim: Game.Query.write(Aim),
         dash: Game.Query.write(Dash),
-        invulnerable: Game.Query.write(Invulnerable),
-        skills: Game.Query.read(Skills)
+        invulnerable: Game.Query.write(Invulnerable)
       },
       with: [Player]
     })
@@ -115,8 +116,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over.
       const carried = clampLength(data.velocity.get(), Math.max(tuning.player.moveSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
-      const charging = data.skills.get().lance.charge !== null
-      const speed = tuning.player.moveSpeed * (charging ? tuning.skills.lance.chargingMoveMultiplier : controls.fireHeld ? tuning.weapon.moveSpeedMultiplier : 1)
+      const speed = tuning.player.moveSpeed * (controls.fireHeld ? tuning.weapon.moveSpeedMultiplier : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
       data.velocity.set(moveToward(carried, target, rate * dt))

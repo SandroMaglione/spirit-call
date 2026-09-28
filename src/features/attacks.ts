@@ -134,7 +134,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         hit = []
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area, faction, damage: spec.damage, knockback: spec.knockback, remaining: Math.max(spec.active, 1e-6), hit: []
+          area, faction, damage: spec.damage, knockback: spec.knockback, remaining: Math.max(spec.active, 1e-6), hit: [], charges: false
         }]))
       }
     }
@@ -155,7 +155,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
           amount: spec.damage,
           direction: pushDirection({ ...area, origin: position, length: 1 }, at),
           knockback: spec.knockback,
-          faction
+          faction,
+          charges: false
         })
       }
     }
@@ -209,7 +210,8 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
         amount: hitbox.damage,
         direction: pushDirection(hitbox.area, position),
         knockback: hitbox.knockback,
-        faction: hitbox.faction
+        faction: hitbox.faction,
+        charges: hitbox.charges
       })
     }
     const remaining = hitbox.remaining - dt

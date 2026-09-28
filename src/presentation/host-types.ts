@@ -25,7 +25,7 @@ export interface SkillSlotRefs {
 }
 
 export interface HudRefs {
-  readonly skills: { readonly blast: SkillSlotRefs; readonly grenade: SkillSlotRefs; readonly lance: SkillSlotRefs }
+  readonly skills: { readonly grenade: SkillSlotRefs; readonly ultimate: SkillSlotRefs }
   readonly health: HTMLElement
   readonly healthText: HTMLElement
   readonly dash: HTMLElement

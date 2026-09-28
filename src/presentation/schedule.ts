@@ -41,6 +41,7 @@ import {
   Shield,
   Skills,
   Stats,
+  Ultimate,
   Tuning,
   Wall,
   Waves
@@ -160,7 +161,7 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
         flash: Game.Query.read(HitFlash),
-        skills: Game.Query.read(Skills)
+        ultimate: Game.Query.read(Ultimate)
       },
       with: [Player]
     })
@@ -192,18 +193,9 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       .arc(position.x, position.y, ring, startAngle, startAngle + progress * Math.PI * 2)
       .stroke({ width: 3, color: ready ? view.aim : 0x5b6b7d, alpha: ready ? 0.5 : 0.8 })
 
-    // Lance charge: a ring filling up and a bright line along the shot.
-    const charge = data.skills.get().lance.charge
-    if (charge !== null) {
-      const lance = tuning.skills.lance
-      const progress = Math.min(1, charge / lance.maxCharge)
-      const ready = charge >= lance.minCharge
-      const ringRadius = radius + 14
-      marks.moveTo(position.x + ringRadius, position.y)
-        .arc(position.x, position.y, ringRadius, 0, progress * Math.PI * 2)
-        .stroke({ width: 4, color: ready ? view.lance : 0x8a7a50, alpha: 0.9 })
-      marks.moveTo(tip.x, tip.y).lineTo(position.x + aim.x * lance.range, position.y + aim.y * lance.range)
-        .stroke({ width: 2 + progress * 3, color: view.lance, alpha: ready ? 0.35 + progress * 0.4 : 0.15 })
+    // Ultimate ready: a faint ring showing what it would catch.
+    if (data.ultimate.get().energy >= tuning.ultimate.energy) {
+      marks.circle(position.x, position.y, tuning.ultimate.radius).stroke({ width: 3, color: view.ultimate, alpha: view.ultimateReadyAlpha })
     }
 
     const node = services.nodes.get(entity.id)
@@ -367,9 +359,12 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
   }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)
-    fx.burst({ x: at.x, y: at.y - 10 }, { color: view.playerArea, count: 26, speed: 380, size: 6, life: 0.5 })
+    const ultimate = explosion.kind === "ultimate"
+    const color = ultimate ? view.ultimate : view.playerArea
+    fx.ring(at, explosion.radius * projection.zoom, color, ultimate ? 0.45 : 0.3)
+    fx.burst({ x: at.x, y: at.y - 10 }, { color, count: ultimate ? 48 : 26, speed: ultimate ? 620 : 380, size: 6, life: 0.5 })
     fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })
-    services.host.feedback.shake = Math.max(services.host.feedback.shake, view.explosionShake)
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, ultimate ? view.ultimateShake : view.explosionShake)
   }
   for (const impact of events.impact.all()) {
     const at = toScreen(projection, impact.at)
@@ -432,7 +427,7 @@ const DrawReticle = Game.System("Shooter/DrawReticle", {
 
 const SyncHud = Game.System("Shooter/SyncHud", {
   queries: {
-    player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health), skills: Game.Query.read(Skills) }, with: [Player] }),
+    player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health), skills: Game.Query.read(Skills), ultimate: Game.Query.read(Ultimate) }, with: [Player] }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   },
@@ -473,15 +468,14 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   const dash = player.ok && player.value !== undefined ? player.value.data.dash.get() : undefined
   const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: resources.tuning.get().player.hp }
   if (player.ok && player.value !== undefined) {
-    const skills = player.value.data.skills.get()
-    const specs = resources.tuning.get().skills
-    for (const id of ["blast", "grenade", "lance"] as const) {
-      const slot = hud.skills[id]
-      const cooldown = skills[id].cooldown
-      slot.cooldown.style.height = `${Math.min(100, (100 * cooldown) / specs[id].cooldown)}%`
-      slot.root.classList.toggle("is-ready", cooldown <= 0)
-      slot.root.classList.toggle("is-charging", id === "lance" && skills.lance.charge !== null)
-    }
+    const specs = resources.tuning.get()
+    const grenade = player.value.data.skills.get().grenade.cooldown
+    hud.skills.grenade.cooldown.style.height = `${Math.min(100, (100 * grenade) / specs.skills.grenade.cooldown)}%`
+    hud.skills.grenade.root.classList.toggle("is-ready", grenade <= 0)
+    // The ultimate slot fills up with energy.
+    const energy = player.value.data.ultimate.get().energy
+    hud.skills.ultimate.cooldown.style.height = `${Math.max(0, 100 - (100 * energy) / specs.ultimate.energy)}%`
+    hud.skills.ultimate.root.classList.toggle("is-ready", energy >= specs.ultimate.energy)
   }
   hud.health.style.width = `${(100 * health.current) / health.max}%`
   hud.healthText.textContent = `${Math.ceil(health.current)} / ${health.max}`

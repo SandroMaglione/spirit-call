@@ -3,7 +3,7 @@
  * bursts. They live only in the renderer, advance in real time, and reuse
  * their display objects.
  */
-import { Container, Sprite, Text } from "pixi.js"
+import { Container, Graphics, Sprite, Text } from "pixi.js"
 
 import type { Vec2 } from "../math/vec.ts"
 import type { RenderAssets } from "./host-types.ts"
@@ -17,6 +17,16 @@ interface Particle {
   life: number
   maxLife: number
   size: number
+}
+
+interface Ring {
+  readonly graphic: Graphics
+  x: number
+  y: number
+  radius: number
+  color: number
+  life: number
+  maxLife: number
 }
 
 interface FloatingNumber {
@@ -34,10 +44,31 @@ export class Fx {
   private readonly freeParticles: Array<Particle> = []
   private readonly numbers: Array<FloatingNumber> = []
   private readonly freeNumbers: Array<FloatingNumber> = []
+  private readonly rings: Array<Ring> = []
+  private readonly freeRings: Array<Ring> = []
+  private readonly squash: number
 
-  constructor(layer: Container, assets: RenderAssets) {
+  constructor(layer: Container, assets: RenderAssets, squash: number) {
     this.layer = layer
     this.assets = assets
+    this.squash = squash
+  }
+
+  /** A shockwave on the floor expanding to `radius` (screen pixels, squashed like the floor). */
+  ring(at: Vec2, radius: number, color: number, life = 0.4): void {
+    const ring = this.freeRings.pop() ?? (() => {
+      const graphic = new Graphics()
+      this.layer.addChild(graphic)
+      return { graphic, x: 0, y: 0, radius: 0, color: 0, life: 0, maxLife: 1 }
+    })()
+    ring.x = at.x
+    ring.y = at.y
+    ring.radius = radius
+    ring.color = color
+    ring.life = life
+    ring.maxLife = life
+    ring.graphic.visible = true
+    this.rings.push(ring)
   }
 
   /** Particles thrown out from `at` (projected coordinates). */
@@ -74,6 +105,22 @@ export class Fx {
   }
 
   update(dt: number): void {
+    for (let index = this.rings.length - 1; index >= 0; index--) {
+      const ring = this.rings[index]!
+      ring.life -= dt
+      ring.graphic.clear()
+      if (ring.life <= 0) {
+        ring.graphic.visible = false
+        this.rings[index] = this.rings[this.rings.length - 1]!
+        this.rings.pop()
+        this.freeRings.push(ring)
+        continue
+      }
+      const t = 1 - ring.life / ring.maxLife
+      const radius = ring.radius * (0.25 + 0.75 * Math.sqrt(t))
+      ring.graphic.ellipse(ring.x, ring.y, radius, radius * this.squash).stroke({ width: 10 * (1 - t) + 2, color: ring.color, alpha: 1 - t })
+      ring.graphic.ellipse(ring.x, ring.y, radius, radius * this.squash).fill({ color: ring.color, alpha: 0.15 * (1 - t) })
+    }
     for (let index = this.particles.length - 1; index >= 0; index--) {
       const particle = this.particles[index]!
       particle.life -= dt
@@ -112,7 +159,7 @@ export class Fx {
   }
 
   get active(): number {
-    return this.particles.length + this.numbers.length
+    return this.particles.length + this.numbers.length + this.rings.length
   }
 
   private newParticle(): Particle {

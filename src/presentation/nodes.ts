@@ -48,8 +48,8 @@ const drawActor = (radius: number, widthFactor: number, heightFactor: number, co
 
 export const enemyColor = (enemy: EnemyKind): number => view.enemies[enemy].color
 
-export const projectileColor = (faction: Faction, style: ProjectileStyle = "bolt"): number =>
-  style === "lance" ? view.lance : faction === "player" ? view.playerProjectile : view.enemyProjectile
+export const projectileColor = (faction: Faction, _style: ProjectileStyle = "bolt"): number =>
+  faction === "player" ? view.playerProjectile : view.enemyProjectile
 
 const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, faction: Faction, style: ProjectileStyle, radius: number): ProjectileNode => {
   const node = pool.pop() ?? (() => {
@@ -64,7 +64,7 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
   })()
   const r = radius * projection.zoom
   node.orb.tint = projectileColor(faction, style)
-  node.orb.scale.set((r * (style === "lance" ? view.lanceGlow : view.projectileGlow)) / assets.discRadius)
+  node.orb.scale.set((r * view.projectileGlow) / assets.discRadius)
   node.orb.position.set(0, -view.projectileHeight * projection.zoom)
   node.shadow.scale.set((r * 1.2) / assets.discRadius)
   node.root.alpha = 1

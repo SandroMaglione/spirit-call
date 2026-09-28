@@ -20,16 +20,15 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     </div>
     <div class="hud__banner" data-banner></div>
     <div class="hud__skills">
-      <div class="hud__skill" data-skill="blast"><kbd>E</kbd><span>Blast</span><i data-cooldown></i></div>
-      <div class="hud__skill" data-skill="grenade"><kbd>F</kbd><span>Grenade</span><i data-cooldown></i></div>
-      <div class="hud__skill" data-skill="lance"><kbd>R</kbd><span>Lance</span><i data-cooldown></i></div>
+      <div class="hud__skill" data-skill="grenade"><kbd>RMB</kbd><span>Grenade</span><i data-cooldown></i></div>
+      <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span>Nova</span><i data-cooldown></i></div>
     </div>
     <div class="hud__gameover" data-gameover hidden>
       <div class="hud__gameover-title">YOU DIED</div>
       <div class="hud__gameover-stats" data-gameover-stats></div>
       <div class="hud__gameover-hint">Press R or click to restart</div>
     </div>
-    <div class="hud__hint">WASD move · Mouse aim · Left click shoot · Q dash · E blast · F grenade · R lance (hold)</div>
+    <div class="hud__hint">WASD move · Left click shoot · Right click grenade · Space dash · Shift ultimate</div>
   `
   const slot = (id: string) => {
     const element = root.querySelector<HTMLElement>(`[data-skill="${id}"]`)!
@@ -38,7 +37,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   return {
     root,
     refs: {
-      skills: { blast: slot("blast"), grenade: slot("grenade"), lance: slot("lance") },
+      skills: { grenade: slot("grenade"), ultimate: slot("ultimate") },
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       dash: root.querySelector<HTMLElement>("[data-dash]")!,
@@ -131,7 +130,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       telegraphs,
       actors,
       overlay,
-      fx: new Fx(fxLayer, assets),
+      fx: new Fx(fxLayer, assets, projection.squash),
       projectilePool,
       screen,
       reticle,

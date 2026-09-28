@@ -10,11 +10,11 @@ import { PlayerState } from "./helpers.ts"
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
 describe("input", () => {
-  it("dashes with Q, next to WASD", () => {
+  it("dashes with Space (thumb) and casts nothing on Q anymore", () => {
     const keyboard = Keyboard.actions(fakeWindow.host, keyBindings)
     const sim = createSimulation({ keyboard, pointer: Pointer.scripted([]), tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
     sim.runtime.tick(sim.setup)
-    fakeWindow.press("Q")
+    fakeWindow.press(" ")
     sim.runtime.tick(sim.fixedUpdate)
     expect(sim.runtime.inspect(PlayerState).dash.remaining).toBeGreaterThan(0)
   })
