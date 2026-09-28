@@ -4,12 +4,14 @@ import type { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
  * Keyboard actions. Everything is playable without a mouse:
  *
  * - WASD moves, screen-relative ("up" is up on the screen).
- * - Arrow keys (or IJKL, for laptops) aim in 8 directions and fire while
- *   held, independently of movement, so you can back away while shooting.
- * - Space dashes, Shift sprints (no shooting while sprinting).
+ * - Arrow keys (or IJKL, for laptops) steer the aim: it turns smoothly
+ *   toward the held direction and stays where it is on release, so it can
+ *   point anywhere, independently of movement.
+ * - Space fires along the aim, Shift dashes, E sprints (no shooting while
+ *   sprinting). Ctrl is avoided: browsers do not let pages block Ctrl+W.
  *
- * The mouse still works: moving it switches to cursor aiming (left click
- * fires, right click dashes); pressing an aim key switches back.
+ * The mouse still works: moving it over the game switches to cursor aiming
+ * (left click fires, right click dashes); an aim key switches back.
  */
 export const keyBindings = {
   up: ["w"],
@@ -20,8 +22,9 @@ export const keyBindings = {
   aimDown: ["ArrowDown", "k"],
   aimLeft: ["ArrowLeft", "j"],
   aimRight: ["ArrowRight", "l"],
-  dash: [" "],
-  sprint: ["Shift"],
+  fire: [" "],
+  dash: ["Shift"],
+  sprint: ["e"],
   restart: ["r", "Enter"]
 } as const
 

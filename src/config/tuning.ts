@@ -105,8 +105,11 @@ export const defaultTuning = {
   },
 
   controls: {
-    /** When not aiming with the keyboard, face the movement direction. */
-    faceMovement: true
+    /**
+     * Keyboard aim turn speed, in degrees per second on screen. The aim turns
+     * toward the held aim keys' direction and stays put on release.
+     */
+    aimTurnRate: 420
   },
 
   dash: {

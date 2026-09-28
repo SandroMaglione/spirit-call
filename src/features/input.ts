@@ -76,8 +76,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
 
   // Screen-relative movement and aim: "up" is up on the screen.
   const move = normalizeOr(screenDirectionToWorld(projection, screenAxis(keys.up.held, keys.down.held, keys.left.held, keys.right.held)), zero)
-  const aimKeys = [keys.aimUp, keys.aimDown, keys.aimLeft, keys.aimRight]
-  const aiming = aimKeys.some((key) => key.held || key.pressed)
+  const aiming = [keys.aimUp, keys.aimDown, keys.aimLeft, keys.aimRight].some((key) => key.held || key.pressed)
   const aimScreen = screenAxis(
     keys.aimUp.held || keys.aimUp.pressed,
     keys.aimDown.held || keys.aimDown.pressed,
@@ -97,14 +96,14 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     const offset = toWorld(projection, { x: pointer.position.x - viewport.width / 2, y: pointer.position.y - viewport.height / 2 })
     aim = { kind: "point", point: { x: camera.x + offset.x, y: camera.y + offset.y } }
   } else if (aimScreen.x !== 0 || aimScreen.y !== 0) {
-    aim = { kind: "direction", direction: normalizeOr(screenDirectionToWorld(projection, aimScreen), zero) }
+    aim = { kind: "steer", toward: normalizeOr(aimScreen, zero) }
   }
 
   resources.controls.set({
     scheme,
     move,
     aim,
-    fireHeld: scheme === "keyboard" ? aiming : pointer.primary.held || pointer.primary.pressed,
+    fireHeld: keys.fire.held || keys.fire.pressed || (scheme === "mouse" && (pointer.primary.held || pointer.primary.pressed)),
     dashPressed: keys.dash.pressed || pointer.secondary.pressed,
     sprintHeld: keys.sprint.held,
     pointerAt: pointer.position

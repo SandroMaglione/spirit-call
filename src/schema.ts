@@ -173,8 +173,11 @@ export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Sho
 /** Where the player wants to aim this step. */
 export type AimIntent =
   | { readonly kind: "none" }
-  /** Keyboard aim: the world direction (unit length) that projects onto one of 8 screen directions. */
-  | { readonly kind: "direction"; readonly direction: Vec2 }
+  /**
+   * Keyboard aim: turn the aim toward this screen direction (unit length,
+   * one of 8). The aim itself moves smoothly; see `AimPlayer`.
+   */
+  | { readonly kind: "steer"; readonly toward: Vec2 }
   /** Mouse aim: the ground point under the cursor. */
   | { readonly kind: "point"; readonly point: Vec2 }
 

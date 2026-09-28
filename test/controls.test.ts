@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest"
 import { keyBindings } from "../src/config/input.ts"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
+import { projection } from "../src/config/view.ts"
+import { toScreen } from "../src/math/iso.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Camera, Controls, Game, RunScope, Stats } from "../src/schema.ts"
@@ -29,30 +31,59 @@ const arena = (enemies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
 // Screen "up" in the isometric view is world north-west.
 const screenUp = { x: -SQRT1_2, y: -SQRT1_2 }
 
+/** Angle of a world aim direction as seen on screen, in degrees. */
+const screenAngle = (aim: Vec2): number => {
+  const screen = toScreen(projection, aim)
+  return (Math.atan2(screen.y, screen.x) * 180) / Math.PI
+}
+const turnPerStep = defaultTuning.controls.aimTurnRate * engine.stepSeconds
+
 describe("keyboard aiming", () => {
-  it("aims and fires in the screen direction of the held aim key", () => {
+  it("turns smoothly toward the held direction at the tuned rate, then settles on it", () => {
     const run = arena([], { keys: [{ frame: 0, press: ["aimUp"] }] })
-    run.step(30)
+    const start = screenAngle(run.player().aim)
+    run.step(1)
+    const first = screenAngle(run.player().aim)
+    expect(Math.abs(first - start)).toBeCloseTo(turnPerStep, 6)
+    run.step(60)
     const { aim, scheme } = run.player()
     expect(scheme).toBe("keyboard")
-    expect(aim.x).toBeCloseTo(screenUp.x, 6)
-    expect(aim.y).toBeCloseTo(screenUp.y, 6)
-    expect(run.runtime.inspect(ShotsFired)).toBeGreaterThan(1)
+    // Settled exactly on screen-up (world north-west).
+    expect(aim.x).toBeCloseTo(screenUp.x, 9)
+    expect(aim.y).toBeCloseTo(screenUp.y, 9)
   })
 
-  it("combines two aim keys into a diagonal", () => {
-    const run = arena([], { keys: [{ frame: 0, press: ["aimUp", "aimRight"] }] })
-    run.step(2)
-    // Screen up-right: mostly world north.
-    const { aim } = run.player()
-    expect(aim.y).toBeLessThan(-0.9)
+  it("stays at any angle where the key is released", () => {
+    // Starting aim is world east; screen-up is 90°+ away, so 5 steps stop mid-turn.
+    const run = arena([], { keys: [{ frame: 0, press: ["aimUp"] }, { frame: 5, release: ["aimUp"] }] })
+    run.step(5)
+    const midway = run.player().aim
+    run.step(60)
+    expect(run.player().aim).toEqual(midway)
+    const angle = screenAngle(midway)
+    // Not one of the 8 key directions.
+    expect([-180, -135, -90, -45, 0, 45, 90, 135, 180].some((snap) => Math.abs(angle - snap) < 1)).toBe(false)
   })
 
-  it("aims exactly where the key points, with no snapping toward enemies", () => {
-    // An enemy 10° off screen-up, well within reach of any assist.
-    const off = { x: Math.cos(Math.atan2(screenUp.y, screenUp.x) + 0.17) * 300, y: Math.sin(Math.atan2(screenUp.y, screenUp.x) + 0.17) * 300 }
-    const run = arena([off], { keys: [{ frame: 0, press: ["aimUp"] }] })
-    run.step(20)
+  it("takes the shorter way around", () => {
+    const run = arena([], { keys: [{ frame: 0, press: ["aimRight", "aimDown"] }] })
+    const start = screenAngle(run.player().aim)
+    run.step(1)
+    // Screen down-right is a few degrees clockwise from the starting aim (world east).
+    expect(screenAngle(run.player().aim) - start).toBeGreaterThan(0)
+  })
+
+  it("aims without firing; the fire key shoots along the current aim", () => {
+    const run = arena([], { keys: [{ frame: 0, press: ["aimLeft"] }, { frame: 30, press: ["fire"] }] })
+    run.step(30)
+    expect(run.runtime.inspect(ShotsFired)).toBe(0)
+    run.step(10)
+    expect(run.runtime.inspect(ShotsFired)).toBeGreaterThan(0)
+  })
+
+  it("keeps the aim while moving (aim and movement are independent)", () => {
+    const run = arena([], { keys: [{ frame: 0, press: ["aimUp"] }, { frame: 60, release: ["aimUp"], press: ["left"] }] })
+    run.step(90)
     const { aim } = run.player()
     expect(aim.x).toBeCloseTo(screenUp.x, 9)
     expect(aim.y).toBeCloseTo(screenUp.y, 9)
@@ -68,19 +99,18 @@ describe("keyboard aiming", () => {
     }
   })
 
-  it("faces the movement direction when not aiming", () => {
-    const run = arena([], { keys: [{ frame: 0, press: ["left"] }] })
-    run.step(5)
+  it("never snaps toward enemies (no aim assist)", () => {
+    const run = arena([{ x: -200, y: -260 }], { keys: [{ frame: 0, press: ["aimUp"] }] })
+    run.step(60)
     const { aim } = run.player()
-    // Screen left is world south-west.
-    expect(aim.x).toBeCloseTo(-SQRT1_2, 6)
-    expect(aim.y).toBeCloseTo(SQRT1_2, 6)
+    expect(aim.x).toBeCloseTo(screenUp.x, 9)
+    expect(aim.y).toBeCloseTo(screenUp.y, 9)
   })
 })
 
 describe("sprint", () => {
-  it("moves faster and does not shoot, even with an aim key held", () => {
-    const run = arena([], { keys: [{ frame: 0, press: ["right", "sprint", "aimUp"] }] })
+  it("moves faster and does not shoot, even with fire held", () => {
+    const run = arena([], { keys: [{ frame: 0, press: ["right", "sprint", "fire"] }] })
     run.step(30)
     const { velocity } = run.player()
     expect(Math.hypot(velocity.x, velocity.y)).toBeCloseTo(defaultTuning.player.moveSpeed * defaultTuning.player.sprintMultiplier, 6)
@@ -88,7 +118,7 @@ describe("sprint", () => {
   })
 
   it("shoots again as soon as sprint is released", () => {
-    const run = arena([], { keys: [{ frame: 0, press: ["right", "sprint", "aimUp"] }, { frame: 20, release: ["sprint"] }] })
+    const run = arena([], { keys: [{ frame: 0, press: ["right", "sprint", "fire"] }, { frame: 20, release: ["sprint"] }] })
     run.step(20 + Math.ceil(defaultTuning.weapon.fireInterval / engine.stepSeconds) + 2)
     expect(run.runtime.inspect(ShotsFired)).toBeGreaterThan(0)
   })

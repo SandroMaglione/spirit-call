@@ -30,6 +30,9 @@ export const view = {
   /** Body height of actors relative to their radius. */
   bodyHeightFactor: 2.4,
   aim: 0x4ecdc4,
+  /** Faint aim line beyond the chevron (0 alpha hides it). */
+  aimLineLength: 240,
+  aimLineAlpha: 0.22,
   reticle: 0xf7c948,
   hitFlash: 0xffffff,
   playerProjectile: 0xb8fff7,

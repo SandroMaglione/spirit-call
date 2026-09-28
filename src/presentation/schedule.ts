@@ -165,6 +165,10 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     const base = { x: position.x + aim.x * (radius + 16), y: position.y + aim.y * (radius + 16) }
     const side = { x: -aim.y * 12, y: aim.x * 12 }
     marks.poly([base.x + side.x, base.y + side.y, tip.x, tip.y, base.x - side.x, base.y - side.y]).fill({ color: view.aim, alpha: 0.7 })
+    // A faint line along the shots' ground path, so any angle is readable.
+    marks.moveTo(tip.x, tip.y)
+      .lineTo(tip.x + aim.x * view.aimLineLength, tip.y + aim.y * view.aimLineLength)
+      .stroke({ width: 2, color: view.aim, alpha: view.aimLineAlpha })
 
     // Dash readiness ring around the feet.
     const ready = dash.cooldown <= 0
