@@ -31,6 +31,9 @@ export const Player = Descriptor.Tag("Shooter/Player")
 /** Unit direction the entity aims at. */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
 
+/** The enemy keyboard aim assist locked onto this step (entity id), if any. */
+export const AimAssist = Descriptor.Component<{ readonly target: number | null }>()("Shooter/AimAssist")
+
 export interface DashValue {
   /** Time left in the current dash; 0 when not dashing. */
   readonly remaining: number
@@ -169,15 +172,34 @@ export const Time = Descriptor.Resource<TimeValue>()("Shooter/Time")
 export const Keys = Descriptor.TransientResource<KeysSnapshot>()("Shooter/Keys")
 export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Shooter/PointerState")
 
+/** Where the player wants to aim this step. */
+export type AimIntent =
+  | { readonly kind: "none" }
+  /**
+   * Keyboard aim: one of 8 screen directions (`screen`, unit length) and the
+   * world direction that projects onto it; aim assist refines it.
+   */
+  | { readonly kind: "direction"; readonly direction: Vec2; readonly screen: Vec2 }
+  /** Mouse aim: the ground point under the cursor. */
+  | { readonly kind: "point"; readonly point: Vec2 }
+
 /** Player intent for this step, in world space. */
 export interface ControlsValue {
+  /** The device last used to aim; switches automatically. */
+  readonly scheme: "keyboard" | "mouse"
   /** Movement direction: unit length or zero. */
   readonly move: Vec2
-  /** Ground point under the cursor. */
-  readonly aimPoint: Vec2
-  readonly dashPressed: boolean
+  readonly aim: AimIntent
   readonly fireHeld: boolean
+  readonly dashPressed: boolean
+  readonly sprintHeld: boolean
+  /** Pointer position at the previous capture, to notice mouse movement. */
+  readonly pointerAt: Vec2
 }
+
+/** Moving with sprint held: faster, and no shooting. */
+export const isSprinting = (controls: { readonly move: Vec2; readonly sprintHeld: boolean }): boolean =>
+  controls.sprintHeld && (controls.move.x !== 0 || controls.move.y !== 0)
 export const Controls = Descriptor.Resource<ControlsValue>()("Shooter/Controls")
 
 export interface ViewportValue {
@@ -250,6 +272,7 @@ export const Game = Schema.bind(
       Wall,
       Player,
       Aim,
+      AimAssist,
       Dash,
       Invulnerable,
       Health,

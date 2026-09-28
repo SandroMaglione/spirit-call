@@ -1,5 +1,5 @@
 import { add, clampLength, scale, sub } from "../math/vec.ts"
-import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
+import { Aim, Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
 
 /**
  * Follows the player with exponential smoothing, leading slightly toward
@@ -7,7 +7,7 @@ import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schem
  * the fixed step.
  */
 export const FollowCamera = Game.System("Shooter/FollowCamera", {
-  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) },
+  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim) }, with: [Player] }) },
   resources: {
     camera: Game.System.writeResource(Camera),
     controls: Game.System.readResource(Controls),
@@ -17,9 +17,14 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
 }, ({ queries, resources }) => {
   const player = queries.player.singleOptional()
   if (!player.ok || player.value === undefined) return
-  const tuning = resources.tuning.get().camera
+  const all = resources.tuning.get()
+  const tuning = all.camera
   const position = player.value.data.position.get()
-  const lead = clampLength(scale(sub(resources.controls.get().aimPoint, position), tuning.aimLead), tuning.maxAimLead)
+  // Look ahead toward the cursor, or along the keyboard aim while aiming.
+  const aim = resources.controls.get().aim
+  const lead = aim.kind === "point"
+    ? clampLength(scale(sub(aim.point, position), tuning.aimLead), tuning.maxAimLead)
+    : aim.kind === "direction" ? scale(player.value.data.aim.get(), all.controls.keyboardCameraLead) : { x: 0, y: 0 }
   const target = add(position, lead)
   const camera = resources.camera.get()
   const follow = 1 - Math.exp(-tuning.followRate * resources.time.get().dt)

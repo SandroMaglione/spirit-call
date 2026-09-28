@@ -14,7 +14,7 @@ export const initialResources = (tuning: Tuning, viewport: ViewportValue) => ({
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),
-  Controls: initialControls(),
+  Controls: initialControls({ x: viewport.width / 2, y: viewport.height / 2 }),
   Viewport: viewport,
   Stats: { kills: 0, shots: 0 },
   Waves: initialWaves(tuning),

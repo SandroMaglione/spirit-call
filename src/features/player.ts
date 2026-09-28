@@ -5,6 +5,7 @@ import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../mat
 import type { Vec2 } from "../math/vec.ts"
 import {
   Aim,
+  AimAssist,
   Body,
   Controls,
   Dash,
@@ -23,6 +24,7 @@ import {
   Tuning,
   Velocity,
   Weapon,
+  isSprinting,
   whilePlaying
 } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
@@ -35,6 +37,7 @@ export const makePlayer = (tuning: TuningValue, at: Vec2) =>
     [Velocity, { x: 0, y: 0 }],
     [Body, { radius: tuning.player.radius }],
     [Aim, { x: 1, y: 0 }],
+    [AimAssist, { target: null }],
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
     [Invulnerable, { remaining: 0 }],
     [Weapon, { cooldown: 0 }],
@@ -64,7 +67,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       selection: {
         position: Game.Query.read(Position),
         velocity: Game.Query.write(Velocity),
-        aim: Game.Query.write(Aim),
+        aim: Game.Query.read(Aim),
         dash: Game.Query.write(Dash),
         invulnerable: Game.Query.write(Invulnerable)
       },
@@ -84,9 +87,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
   const dashSpeed = tuning.dash.distance / tuning.dash.duration
 
   for (const { data } of queries.player.each()) {
-    const position = data.position.get()
-    const aim = normalizeOr(sub(controls.aimPoint, position), data.aim.get())
-    data.aim.set(aim)
+    const aim = data.aim.get()
 
     const dash = data.dash.get()
     let remaining = dash.remaining
@@ -111,7 +112,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over.
       const carried = clampLength(data.velocity.get(), Math.max(tuning.player.moveSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
-      const speed = tuning.player.moveSpeed * (controls.fireHeld ? tuning.weapon.moveSpeedMultiplier : 1)
+      const speed = tuning.player.moveSpeed * (isSprinting(controls) ? tuning.player.sprintMultiplier : controls.fireHeld ? tuning.weapon.moveSpeedMultiplier : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
       data.velocity.set(moveToward(carried, target, rate * dt))

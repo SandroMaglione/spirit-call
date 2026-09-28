@@ -24,7 +24,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       <div class="hud__gameover-stats" data-gameover-stats></div>
       <div class="hud__gameover-hint">Press R or click to restart</div>
     </div>
-    <div class="hud__hint">WASD move · Mouse aim · Left click shoot · Space / Right click dash</div>
+    <div class="hud__hint">WASD move · Arrows / IJKL aim + shoot · Space dash · Shift sprint · (mouse also works)</div>
   `
   return {
     root,

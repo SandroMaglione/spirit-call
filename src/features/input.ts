@@ -7,6 +7,7 @@
 import { projection } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
 import { normalizeOr, zero } from "../math/vec.ts"
+import type { Vec2 } from "../math/vec.ts"
 import {
   Camera,
   Controls,
@@ -19,6 +20,7 @@ import {
   Viewport,
   whileRunning
 } from "../schema.ts"
+import type { ControlsValue } from "../schema.ts"
 
 export const CaptureKeys = Game.System("Shooter/CaptureKeys", {
   resources: { keys: Game.System.writeResource(Keys) },
@@ -47,6 +49,17 @@ export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
   }
 })
 
+/** A screen-space direction from four held keys, or zero. */
+const screenAxis = (up: boolean, down: boolean, left: boolean, right: boolean) => ({
+  x: (right ? 1 : 0) - (left ? 1 : 0),
+  y: (down ? 1 : 0) - (up ? 1 : 0)
+})
+
+/**
+ * Turns this step's keyboard and pointer snapshots into world-space intent.
+ * The aiming device switches automatically: an aim key selects the keyboard,
+ * moving or clicking the mouse selects the mouse.
+ */
 export const ResolveControls = Game.System("Shooter/ResolveControls", {
   resources: {
     keys: Game.System.readResource(Keys),
@@ -59,27 +72,53 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
 }, ({ resources }) => {
   const keys = resources.keys.get()
   const pointer = resources.pointer.get()
-  const camera = resources.camera.get()
-  const viewport = resources.viewport.get()
+  const previous = resources.controls.get()
 
-  // Screen-relative movement: "up" moves up the screen.
-  const screen = {
-    x: (keys.right.held ? 1 : 0) - (keys.left.held ? 1 : 0),
-    y: (keys.down.held ? 1 : 0) - (keys.up.held ? 1 : 0)
+  // Screen-relative movement and aim: "up" is up on the screen.
+  const move = normalizeOr(screenDirectionToWorld(projection, screenAxis(keys.up.held, keys.down.held, keys.left.held, keys.right.held)), zero)
+  const aimKeys = [keys.aimUp, keys.aimDown, keys.aimLeft, keys.aimRight]
+  const aiming = aimKeys.some((key) => key.held || key.pressed)
+  const aimScreen = screenAxis(
+    keys.aimUp.held || keys.aimUp.pressed,
+    keys.aimDown.held || keys.aimDown.pressed,
+    keys.aimLeft.held || keys.aimLeft.pressed,
+    keys.aimRight.held || keys.aimRight.pressed
+  )
+
+  const pointerMoved = pointer.position.x !== previous.pointerAt.x || pointer.position.y !== previous.pointerAt.y
+  const scheme = aiming ? "keyboard" : pointerMoved || pointer.primary.pressed ? "mouse" : previous.scheme
+
+  let aim: ControlsValue["aim"] = { kind: "none" }
+  if (scheme === "mouse") {
+    const camera = resources.camera.get()
+    const viewport = resources.viewport.get()
+    const offset = toWorld(projection, { x: pointer.position.x - viewport.width / 2, y: pointer.position.y - viewport.height / 2 })
+    aim = { kind: "point", point: { x: camera.x + offset.x, y: camera.y + offset.y } }
+  } else if (aimScreen.x !== 0 || aimScreen.y !== 0) {
+    aim = {
+      kind: "direction",
+      direction: normalizeOr(screenDirectionToWorld(projection, aimScreen), zero),
+      screen: normalizeOr(aimScreen, zero)
+    }
   }
-  const move = normalizeOr(screenDirectionToWorld(projection, screen), zero)
-
-  const offset = toWorld(projection, {
-    x: pointer.position.x - viewport.width / 2,
-    y: pointer.position.y - viewport.height / 2
-  })
 
   resources.controls.set({
+    scheme,
     move,
-    aimPoint: { x: camera.x + offset.x, y: camera.y + offset.y },
+    aim,
+    fireHeld: scheme === "keyboard" ? aiming : pointer.primary.held || pointer.primary.pressed,
     dashPressed: keys.dash.pressed || pointer.secondary.pressed,
-    fireHeld: pointer.primary.held || pointer.primary.pressed
+    sprintHeld: keys.sprint.held,
+    pointerAt: pointer.position
   })
 })
 
-export const initialControls = () => ({ move: zero, aimPoint: zero, dashPressed: false, fireHeld: false })
+export const initialControls = (pointerAt: Vec2): ControlsValue => ({
+  scheme: "keyboard",
+  move: zero,
+  aim: { kind: "none" },
+  fireHeld: false,
+  dashPressed: false,
+  sprintHeld: false,
+  pointerAt
+})

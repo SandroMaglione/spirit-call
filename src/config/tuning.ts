@@ -99,7 +99,24 @@ export const defaultTuning = {
     /** Fraction of incoming knockback applied. */
     knockbackTaken: 0.6,
     /** Invulnerability after taking a hit, so one mistake costs one hit. */
-    hitInvulnerability: 0.6
+    hitInvulnerability: 0.6,
+    /** Speed multiplier while sprinting (Shift). The player cannot shoot while sprinting. */
+    sprintMultiplier: 1.4
+  },
+
+  controls: {
+    /**
+     * Keyboard aim assist: an aim direction snaps to the best visible enemy
+     * within this many degrees of it. 8 directions are 45° apart, so ≥ 22.5
+     * leaves no enemy unreachable. 0 disables the assist.
+     */
+    aimAssistDegrees: 24,
+    /** Farthest enemy the assist considers. */
+    aimAssistRange: 700,
+    /** When not aiming with the keyboard, face the movement direction. */
+    faceMovement: true,
+    /** Camera leads this far ahead in the keyboard aim direction while aiming. */
+    keyboardCameraLead: 80
   },
 
   dash: {

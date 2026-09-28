@@ -7,6 +7,7 @@
  * game-over screen. Restarting enters `Playing` again, which runs `restart`.
  */
 import { SpawnArena } from "./features/arena.ts"
+import { AimPlayer } from "./features/aim.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, FirePlayerWeapon, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
@@ -56,6 +57,7 @@ export const fixedUpdate = Game.Schedule(
   RememberPositions,
   TrackRun,
   TickCombatTimers,
+  AimPlayer,
   ControlPlayer,
   FirePlayerWeapon,
   SteerEnemies,
