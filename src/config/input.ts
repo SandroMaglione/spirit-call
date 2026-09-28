@@ -1,30 +1,19 @@
 import type { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 
 /**
- * Keyboard actions. Everything is playable without a mouse:
+ * Keyboard actions. The mouse aims (left click fires); the left hand stays on
+ * WASD, with actions on the keys around it (Q, E, R, F, Z, X, C). Movement is
+ * screen-relative ("up" is up on screen).
  *
- * - WASD moves, screen-relative ("up" is up on the screen).
- * - Arrow keys (or IJKL, for laptops) steer the aim: it turns smoothly
- *   toward the held direction and stays where it is on release, so it can
- *   point anywhere, independently of movement.
- * - Space fires along the aim, Shift dashes, E sprints (no shooting while
- *   sprinting). Ctrl is avoided: browsers do not let pages block Ctrl+W.
- *
- * The mouse still works: moving it over the game switches to cursor aiming
- * (left click fires, right click dashes); an aim key switches back.
+ * In use: Q dash (Space and right click also dash). Free for future actions:
+ * E, R, F, Z, X, C (R only restarts on the game-over screen).
  */
 export const keyBindings = {
-  up: ["w"],
-  down: ["s"],
-  left: ["a"],
-  right: ["d"],
-  aimUp: ["ArrowUp", "i"],
-  aimDown: ["ArrowDown", "k"],
-  aimLeft: ["ArrowLeft", "j"],
-  aimRight: ["ArrowRight", "l"],
-  fire: [" "],
-  dash: ["Shift"],
-  sprint: ["e"],
+  up: ["w", "ArrowUp"],
+  down: ["s", "ArrowDown"],
+  left: ["a", "ArrowLeft"],
+  right: ["d", "ArrowRight"],
+  dash: ["q", " "],
   restart: ["r", "Enter"]
 } as const
 

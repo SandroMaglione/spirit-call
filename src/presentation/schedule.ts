@@ -14,7 +14,6 @@ import {
   Aim,
   Attacker,
   Camera,
-  Controls,
   Dash,
   Death,
   Enemy,
@@ -165,10 +164,6 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     const base = { x: position.x + aim.x * (radius + 16), y: position.y + aim.y * (radius + 16) }
     const side = { x: -aim.y * 12, y: aim.x * 12 }
     marks.poly([base.x + side.x, base.y + side.y, tip.x, tip.y, base.x - side.x, base.y - side.y]).fill({ color: view.aim, alpha: 0.7 })
-    // A faint line along the shots' ground path, so any angle is readable.
-    marks.moveTo(tip.x, tip.y)
-      .lineTo(tip.x + aim.x * view.aimLineLength, tip.y + aim.y * view.aimLineLength)
-      .stroke({ width: 2, color: view.aim, alpha: view.aimLineAlpha })
 
     // Dash readiness ring around the feet.
     const ready = dash.cooldown <= 0
@@ -346,14 +341,12 @@ const FadeOccluders = Game.System("Shooter/FadeOccluders", {
   }
 })
 
-/** The mouse reticle, shown only while aiming with the mouse. */
 const DrawReticle = Game.System("Shooter/DrawReticle", {
-  resources: { controls: Game.System.readResource(Controls) },
   services: { host: Game.System.service(RenderHost) }
-}, ({ resources, services }) => {
+}, ({ services }) => {
   const { reticle, cursor } = services.host
   reticle.clear()
-  reticle.visible = cursor.over && resources.controls.get().scheme === "mouse"
+  reticle.visible = cursor.over
   if (!cursor.over) return
   const r = 12 * projection.zoom
   reticle.ellipse(cursor.x, cursor.y, r, r * projection.squash).stroke({ width: 2, color: view.reticle })

@@ -39,7 +39,6 @@ import {
   Tuning,
   Velocity,
   Weapon,
-  isSprinting,
   whilePlaying
 } from "../schema.ts"
 import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
@@ -82,8 +81,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   let shots = 0
   for (const { data } of queries.shooters.each()) {
     let cooldown = data.weapon.get().cooldown - dt
-    // No shooting while sprinting: sprint is for repositioning.
-    if (!controls.fireHeld || isSprinting(controls)) {
+    if (!controls.fireHeld) {
       data.weapon.set({ cooldown: Math.max(cooldown, 0) })
       continue
     }

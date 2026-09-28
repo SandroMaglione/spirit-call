@@ -3,7 +3,7 @@ import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import { Aim, Controls, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
+import { Aim, Dash, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
 export const PlayerState = Game.Inspector("Test/PlayerState", {
@@ -18,9 +18,8 @@ export const PlayerState = Game.Inspector("Test/PlayerState", {
       },
       with: [Player]
     })
-  },
-  resources: { controls: Game.System.readResource(Controls) }
-}, ({ queries, resources }) => {
+  }
+}, ({ queries }) => {
   const [player] = queries.player.each()
   if (player === undefined) throw new Error("no player")
   return {
@@ -28,8 +27,7 @@ export const PlayerState = Game.Inspector("Test/PlayerState", {
     velocity: player.data.velocity.get(),
     aim: player.data.aim.get(),
     dash: player.data.dash.get(),
-    invulnerable: player.data.invulnerable.get().remaining,
-    scheme: resources.controls.get().scheme
+    invulnerable: player.data.invulnerable.get().remaining
   }
 })
 
@@ -47,8 +45,7 @@ export interface StartOptions {
 export const start = (options: StartOptions = {}) => {
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
-    // Resting at the screen center: no mouse movement, so aiming starts on the keyboard.
-    pointer: Pointer.scripted(options.pointer ?? [], { x: 640, y: 360 }),
+    pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     tuning: withWaves(options.tuning ?? defaultTuning, options.waves ?? false)
   })
   const setup = sim.runtime.tick(sim.setup)
@@ -61,10 +58,3 @@ export const start = (options: StartOptions = {}) => {
   }
   return { ...sim, step, player: () => sim.runtime.inspect(PlayerState) }
 }
-
-/** Despawns every enemy (training dummies included). */
-export const ClearEnemies = Game.System("Test/ClearEnemies", {
-  queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
-}, ({ queries, commands }) => {
-  for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
-})

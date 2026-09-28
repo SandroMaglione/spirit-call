@@ -99,17 +99,7 @@ export const defaultTuning = {
     /** Fraction of incoming knockback applied. */
     knockbackTaken: 0.6,
     /** Invulnerability after taking a hit, so one mistake costs one hit. */
-    hitInvulnerability: 0.6,
-    /** Speed multiplier while sprinting (Shift). The player cannot shoot while sprinting. */
-    sprintMultiplier: 1.4
-  },
-
-  controls: {
-    /**
-     * Keyboard aim turn speed, in degrees per second on screen. The aim turns
-     * toward the held aim keys' direction and stays put on release.
-     */
-    aimTurnRate: 420
+    hitInvulnerability: 0.6
   },
 
   dash: {

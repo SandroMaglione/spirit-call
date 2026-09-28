@@ -19,9 +19,7 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
   if (!player.ok || player.value === undefined) return
   const tuning = resources.tuning.get().camera
   const position = player.value.data.position.get()
-  // Mouse aim looks ahead toward the cursor; keyboard aim keeps the camera on the player.
-  const aim = resources.controls.get().aim
-  const lead = aim.kind === "point" ? clampLength(scale(sub(aim.point, position), tuning.aimLead), tuning.maxAimLead) : { x: 0, y: 0 }
+  const lead = clampLength(scale(sub(resources.controls.get().aimPoint, position), tuning.aimLead), tuning.maxAimLead)
   const target = add(position, lead)
   const camera = resources.camera.get()
   const follow = 1 - Math.exp(-tuning.followRate * resources.time.get().dt)
