@@ -9,6 +9,7 @@ import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import type { KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { Vec2 } from "./math/vec.ts"
+import type { Area } from "./physics/areas.ts"
 import type { Box } from "./physics/shapes.ts"
 import type { RenderHostValue, RenderNode } from "./presentation/host-types.ts"
 
@@ -78,8 +79,39 @@ export interface ProjectileValue {
 }
 export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Projectile")
 
-export type EnemyKind = "dummy"
+export type EnemyKind = keyof TuningValue["enemies"]
 export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind }>()("Shooter/Enemy")
+
+export type AttackPhase = "ready" | "windup" | "active" | "recovery"
+
+/**
+ * An attack in progress. `area` is fixed when the windup starts (or when the
+ * aim locks, for aimed shots) and is exactly what the telegraph shows.
+ */
+export interface AttackerValue {
+  readonly phase: AttackPhase
+  /** Time spent in the current phase. */
+  readonly elapsed: number
+  /** Time left before a new attack may start. */
+  readonly cooldown: number
+  readonly area: Area | null
+}
+export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker")
+
+/** Movement state for enemy behaviors. */
+export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly strafeTimer: number }>()("Shooter/Brain")
+
+/** A damaging area that exists while an attack is active. */
+export interface HitboxValue {
+  readonly area: Area
+  readonly faction: Faction
+  readonly damage: number
+  readonly knockback: number
+  readonly remaining: number
+  /** Entity ids already hit, so each target is hit at most once. */
+  readonly hit: ReadonlyArray<number>
+}
+export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
 /** Comes back at `at` after `delay` seconds when killed (training dummies). */
 export const Respawns = Descriptor.Component<{ readonly at: Vec2; readonly delay: number }>()("Shooter/Respawns")
@@ -163,6 +195,23 @@ export interface CameraValue {
 }
 export const Camera = Descriptor.Resource<CameraValue>()("Shooter/Camera")
 
+export interface WavesValue {
+  /** Current wave, from 1; 0 before the first. */
+  readonly number: number
+  readonly phase: "break" | "spawning" | "fighting"
+  /** Break: time until the next wave. Spawning: time until the next spawn. */
+  readonly timer: number
+  /** Enemies of this wave still to spawn. */
+  readonly queue: ReadonlyArray<EnemyKind>
+}
+export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
+
+/** Deterministic random state (mulberry32), so runs replay exactly. */
+export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
+
+/** The current run: simulated time since it started, and when it ended. */
+export const Run = Descriptor.Resource<{ readonly time: number; readonly endedAt: number | null }>()("Shooter/Run")
+
 export const Stats = Descriptor.Resource<{ readonly kills: number; readonly shots: number }>()("Shooter/Stats")
 
 // ── Services (host capabilities) ──────────────────────────────────────────
@@ -207,6 +256,9 @@ export const Game = Schema.bind(
       Weapon,
       Projectile,
       Enemy,
+      Attacker,
+      Brain,
+      Hitbox,
       Respawns,
       PendingSpawn,
       Renderable
@@ -219,12 +271,21 @@ export const Game = Schema.bind(
       Controls,
       Viewport,
       Camera,
-      Stats
+      Stats,
+      Waves,
+      Rng,
+      Run
     },
     events: { Damage, Hit, Death, Impact }
   }),
   Root
 )
+
+/** Whether the run is going on or over. Gameplay systems run only while `Playing`. */
+export const Flow = Game.StateMachine("Shooter/Flow", ["Playing", "GameOver"])
+
+/** Run condition for systems that advance gameplay. */
+export const whilePlaying = [Game.Condition.inState(Flow, "Playing")] as const
 
 /** Entities that belong to one run; despawned on restart. */
 export const RunScope = Game.EntityScope("Shooter/Run")

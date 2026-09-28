@@ -44,6 +44,17 @@ export const view = {
   healthFill: 0xff5d6c,
   damageNumber: 0xffe08a,
   enemies: {
-    dummy: { color: 0xb86b77, widthFactor: 1.7, heightFactor: 2.1 }
-  }
+    dummy: { color: 0xb86b77, widthFactor: 1.7, heightFactor: 2.1 },
+    chaser: { color: 0xff7a45, widthFactor: 1.4, heightFactor: 2.2 },
+    shooter: { color: 0xb07cff, widthFactor: 1.5, heightFactor: 1.8 },
+    brute: { color: 0xc2413b, widthFactor: 1.8, heightFactor: 1.9 }
+  },
+  /** Enemy bodies pulse toward this color while winding up an attack. */
+  windupTint: 0xfff1b8,
+  telegraph: 0xff4d4d,
+  telegraphLocked: 0xffd166,
+  playerHurt: 0xff3b3b,
+  /** Screen shake when the player is hit, in pixels, decaying over `shakeDecay` per second. */
+  hurtShake: 10,
+  shakeDecay: 12
 }

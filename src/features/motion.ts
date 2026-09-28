@@ -4,7 +4,7 @@
 import { zero } from "../math/vec.ts"
 import { moveCircle } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Body, Game, Knockback, Position, PrevPosition, Time, Tuning, Velocity, Wall } from "../schema.ts"
+import { Body, Game, Knockback, Position, PrevPosition, Time, Tuning, Velocity, Wall, whilePlaying } from "../schema.ts"
 
 const Interpolated = Game.Query({
   selection: { position: Game.Query.read(Position), previous: Game.Query.write(PrevPosition) }
@@ -41,7 +41,8 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
     }),
     walls: Walls
   },
-  resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) }
+  resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) },
+  when: whilePlaying
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
   const decay = resources.tuning.get().knockback.decay

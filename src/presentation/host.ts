@@ -10,19 +10,35 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   const root = document.createElement("div")
   root.className = "hud"
   root.innerHTML = `
+    <div class="hud__vignette" data-vignette></div>
     <div class="hud__panel">
+      <div class="hud__health"><div class="hud__health-fill" data-health></div><span data-health-text></span></div>
       <div class="hud__dash" data-dash></div>
+      <div class="hud__wave" data-wave></div>
       <div class="hud__combat" data-combat></div>
       <div class="hud__stats" data-stats></div>
+    </div>
+    <div class="hud__banner" data-banner></div>
+    <div class="hud__gameover" data-gameover hidden>
+      <div class="hud__gameover-title">YOU DIED</div>
+      <div class="hud__gameover-stats" data-gameover-stats></div>
+      <div class="hud__gameover-hint">Press R or click to restart</div>
     </div>
     <div class="hud__hint">WASD move · Mouse aim · Left click shoot · Space / Right click dash</div>
   `
   return {
     root,
     refs: {
+      health: root.querySelector<HTMLElement>("[data-health]")!,
+      healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       dash: root.querySelector<HTMLElement>("[data-dash]")!,
+      wave: root.querySelector<HTMLElement>("[data-wave]")!,
       combat: root.querySelector<HTMLElement>("[data-combat]")!,
-      stats: root.querySelector<HTMLElement>("[data-stats]")!
+      stats: root.querySelector<HTMLElement>("[data-stats]")!,
+      banner: root.querySelector<HTMLElement>("[data-banner]")!,
+      vignette: root.querySelector<HTMLElement>("[data-vignette]")!,
+      gameOver: root.querySelector<HTMLElement>("[data-gameover]")!,
+      gameOverStats: root.querySelector<HTMLElement>("[data-gameover-stats]")!
     }
   }
 }
@@ -111,7 +127,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       reticle,
       cursor,
       hud: hud.refs,
-      stats: { fps: 60, steps: 0, sinceHud: 0 }
+      stats: { fps: 60, steps: 0, sinceHud: 0 },
+      feedback: { shake: 0, hurt: 0, bannerWave: 0 }
     },
     nodes,
     destroy() {

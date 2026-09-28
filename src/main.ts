@@ -4,7 +4,7 @@ import { keyBindings } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
-import { initialResources } from "./runtime.ts"
+import { initialMachines, initialResources } from "./runtime.ts"
 import {
   FrameContext,
   Game,
@@ -40,6 +40,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(RenderNodes, browser.nodes)
     ),
     resources: initialResources(tuning, frameContext.viewport),
+    machines: initialMachines(),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true
   })

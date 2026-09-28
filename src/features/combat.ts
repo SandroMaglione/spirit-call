@@ -36,7 +36,8 @@ import {
   Time,
   Tuning,
   Velocity,
-  Weapon
+  Weapon,
+  whilePlaying
 } from "../schema.ts"
 import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -68,7 +69,8 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time),
     stats: Game.System.writeResource(Stats)
-  }
+  },
+  when: whilePlaying
 }, ({ queries, resources, commands }) => {
   const controls = resources.controls.get()
   const weapon = resources.tuning.get().weapon
@@ -112,6 +114,8 @@ interface Target {
   y: number
   radius: number
   faction: Faction
+  /** Dashing or recently hit: shots pass through. */
+  invulnerable: boolean
 }
 
 /**
@@ -131,13 +135,14 @@ export const MoveProjectiles = (() => {
         selection: { position: Game.Query.write(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.write(Projectile) }
       }),
       targets: Game.Query({
-        selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) },
+        selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
         with: [Health]
       }),
       walls: Walls
     },
     resources: { time: Game.System.readResource(Time) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) }
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) },
+    when: whilePlaying
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
     const boxes = wallBoxes(queries.walls.each())
@@ -148,7 +153,8 @@ export const MoveProjectiles = (() => {
       const position = data.position.get()
       const hurtbox = data.hurtbox.get()
       grid.insert(targets.length, position.x, position.y, hurtbox.radius)
-      targets.push({ entity: entity.id, id: entity.id.value, x: position.x, y: position.y, radius: hurtbox.radius, faction: hurtbox.faction })
+      const invulnerable = data.invulnerable.present && data.invulnerable.get().remaining > 0
+      targets.push({ entity: entity.id, id: entity.id.value, x: position.x, y: position.y, radius: hurtbox.radius, faction: hurtbox.faction, invulnerable })
     }
 
     for (const { entity, data } of queries.projectiles.each()) {
@@ -172,7 +178,7 @@ export const MoveProjectiles = (() => {
       const maxY = Math.max(origin.y, origin.y + delta.y) + r
       grid.forEachIn(minX, minY, maxX, maxY, (index) => {
         const target = targets[index]!
-        if (target.faction === projectile.faction || projectile.hit.includes(target.id)) return
+        if (target.faction === projectile.faction || target.invulnerable || projectile.hit.includes(target.id)) return
         const time = sweepCircleCircle(origin, delta, r, target, target.radius)
         if (time !== undefined && time <= wallTime) contacts.push({ time, target })
       })
@@ -224,7 +230,7 @@ export const MoveProjectiles = (() => {
 })()
 
 const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined): number =>
-  enemy === undefined ? 1 : tuning.enemies[enemy].knockbackTaken
+  enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken
 
 const Damageable = Game.Query({
   selection: {
@@ -233,7 +239,8 @@ const Damageable = Game.Query({
     hurtbox: Game.Query.read(Hurtbox),
     flash: Game.Query.write(HitFlash),
     knockback: Game.Query.write(Knockback),
-    invulnerable: Game.Query.optional(Invulnerable),
+    invulnerable: Game.Query.write(Invulnerable),
+    player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns)
   }
@@ -246,7 +253,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death)
   },
-  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats) }
+  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats) },
+  when: whilePlaying
 }, ({ events, resources, lookup, commands }) => {
   const tuning = resources.tuning.get()
   const dead = new Set<number>()
@@ -256,13 +264,15 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     if (!found.ok || dead.has(found.value.entity.id.value)) continue
     const { entity, data } = found.value
     if (data.hurtbox.get().faction === damage.faction) continue
-    const invulnerable = data.invulnerable
-    if (invulnerable.present && invulnerable.get().remaining > 0) continue
+    const invulnerable = data.invulnerable.get().remaining
+    if (invulnerable > 0) continue
 
     const health = data.health.get()
     const current = Math.max(0, health.current - damage.amount)
     data.health.set({ current, max: health.max })
     data.flash.set({ remaining: tuning.feedback.hitFlash })
+    // One mistake costs one hit: the player is briefly untouchable afterwards.
+    if (data.player.present) data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const push = damage.knockback * knockbackTaken(tuning, enemy)
     data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
@@ -289,7 +299,8 @@ export const TickCombatTimers = Game.System("Shooter/TickCombatTimers", {
     invulnerable: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) } }),
     flashes: Game.Query({ selection: { flash: Game.Query.write(HitFlash) } })
   },
-  resources: { time: Game.System.readResource(Time) }
+  resources: { time: Game.System.readResource(Time) },
+  when: whilePlaying
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
   for (const { data } of queries.invulnerable.each()) {
@@ -305,7 +316,8 @@ export const TickCombatTimers = Game.System("Shooter/TickCombatTimers", {
 /** Knockback velocity decays exponentially (frame-rate independent). */
 export const DecayKnockback = Game.System("Shooter/DecayKnockback", {
   queries: { pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback) } }) },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
+  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
+  when: whilePlaying
 }, ({ queries, resources }) => {
   const factor = Math.exp(-resources.tuning.get().knockback.decay * resources.time.get().dt)
   for (const { data } of queries.pushed.each()) {

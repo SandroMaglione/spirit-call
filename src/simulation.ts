@@ -15,7 +15,7 @@
 import type { KeyboardSource, PointerSource } from "./config/input.ts"
 import { defaultTuning } from "./config/tuning.ts"
 import type { Tuning } from "./config/tuning.ts"
-import { initialResources } from "./runtime.ts"
+import { initialMachines, initialResources } from "./runtime.ts"
 import { FrameContext, Game, KeyboardInput, PointerInput } from "./schema.ts"
 import type { ViewportValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
@@ -40,6 +40,7 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(FrameContext, { viewport })
     ),
     resources: initialResources(tuning, viewport),
+    machines: initialMachines(),
     debug: true
   })
   runtime.debug.nameSchedules({ setup, fixedUpdate })

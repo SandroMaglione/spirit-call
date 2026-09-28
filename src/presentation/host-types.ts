@@ -20,9 +20,26 @@ export interface RenderAssets {
 }
 
 export interface HudRefs {
+  readonly health: HTMLElement
+  readonly healthText: HTMLElement
   readonly dash: HTMLElement
+  readonly wave: HTMLElement
   readonly combat: HTMLElement
   readonly stats: HTMLElement
+  readonly banner: HTMLElement
+  readonly vignette: HTMLElement
+  readonly gameOver: HTMLElement
+  readonly gameOverStats: HTMLElement
+}
+
+/** Render-side feedback state that decays in real time. */
+export interface FeedbackState {
+  /** Screen shake amplitude in pixels. */
+  shake: number
+  /** Hurt vignette opacity, 0..1. */
+  hurt: number
+  /** Last wave number shown in the banner. */
+  bannerWave: number
 }
 
 /** Frame statistics measured by the host loop. */
@@ -64,4 +81,5 @@ export interface RenderHostValue {
   readonly cursor: { x: number; y: number; over: boolean }
   readonly hud: HudRefs
   readonly stats: FrameStats
+  readonly feedback: FeedbackState
 }

@@ -6,7 +6,7 @@
 import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings } from "../src/config/input.ts"
-import { defaultTuning, engine } from "../src/config/tuning.ts"
+import { engine, tuningWith } from "../src/config/tuning.ts"
 import { makeProjectile } from "../src/features/combat.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Game, Projectile, RunScope } from "../src/schema.ts"
@@ -14,7 +14,7 @@ import { createSimulation } from "../src/simulation.ts"
 
 const enemies = Number(process.argv[2] ?? 300)
 const projectiles = Number(process.argv[3] ?? 2000)
-const tuning = { ...defaultTuning, enemies: { dummy: { ...defaultTuning.enemies.dummy, hp: 1e9 } } }
+const tuning = tuningWith({ waves: { enabled: false }, enemies: { dummy: { hp: 1e9 } } })
 
 let seed = 1
 const random = () => {
