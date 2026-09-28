@@ -30,6 +30,19 @@
       .hud__gameover-hint { font-size: 13px; color: #7d8590; }
       .hud__stats { font-size: 12px; color: #7d8590; }
       .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #7d8590; }
+      .tuning { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 320px; display: flex; flex-direction: column; background: rgba(13, 17, 23, 0.94); border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: 12px "IBM Plex Mono", ui-monospace, monospace; z-index: 10; }
+      .tuning[hidden] { display: none; }
+      .tuning__header { display: grid; gap: 6px; padding: 10px 12px; border-bottom: 1px solid #30363d; }
+      .tuning__hint { color: #7d8590; font-size: 11px; }
+      .tuning__actions { display: flex; gap: 6px; }
+      .tuning__actions button { font: inherit; color: inherit; background: #21262d; border: 1px solid #30363d; border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+      .tuning__body { overflow: auto; padding: 6px 12px 12px; }
+      .tuning__group { margin: 4px 0; }
+      .tuning__group summary { cursor: pointer; color: #4ecdc4; padding: 3px 0; }
+      .tuning__group .tuning__group { margin-left: 10px; }
+      .tuning__row { display: grid; grid-template-columns: 1fr 96px; align-items: center; gap: 8px; padding: 2px 0 2px 10px; }
+      .tuning__row.is-changed span { color: #f7c948; }
+      .tuning__row input[type="number"] { width: 96px; font: inherit; color: inherit; background: #0d1117; border: 1px solid #30363d; border-radius: 3px; padding: 2px 4px; }
     </style>
   </head>
   <body>

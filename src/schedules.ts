@@ -9,7 +9,7 @@
 import { SpawnArena } from "./features/arena.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
-import { ApplyDamage, DecayKnockback, FirePlayerWeapon, MoveProjectiles, TickCombatTimers } from "./features/combat.ts"
+import { ApplyDamage, DecayKnockback, FirePlayerWeapon, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
 import { CaptureKeys, CapturePointer, CaptureViewport, ResolveControls } from "./features/input.ts"
@@ -48,6 +48,7 @@ const transitions = Game.Schedule.transitions(
 /** One fixed simulation step. */
 export const fixedUpdate = Game.Schedule(
   AdvanceTime,
+  TickHitStop,
   CaptureViewport,
   CaptureKeys,
   CapturePointer,

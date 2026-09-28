@@ -50,6 +50,10 @@ export interface FrameStats {
   steps: number
   /** Real seconds accumulated since the HUD was last refreshed. */
   sinceHud: number
+  /** Smoothed milliseconds per displayed frame spent in fixed steps. */
+  simMs: number
+  /** Smoothed milliseconds per displayed frame spent in the render schedule (JS side, excluding GPU). */
+  drawMs: number
 }
 
 /**

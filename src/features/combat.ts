@@ -21,6 +21,8 @@ import {
   Health,
   Hit,
   HitFlash,
+  HitStop,
+  Pace,
   Hurtbox,
   Impact,
   Invulnerable,
@@ -253,12 +255,14 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death)
   },
-  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats) },
+  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) },
+  nextMachines: { pace: Game.System.nextState(Pace) },
   when: whilePlaying
-}, ({ events, resources, lookup, commands }) => {
+}, ({ events, resources, nextMachines, lookup, commands }) => {
   const tuning = resources.tuning.get()
   const dead = new Set<number>()
   let kills = 0
+  let hitStop = 0
   for (const damage of events.damage.all()) {
     const found = lookup.getHandle(damage.target, Damageable)
     if (!found.ok || dead.has(found.value.entity.id.value)) continue
@@ -272,7 +276,10 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     data.health.set({ current, max: health.max })
     data.flash.set({ remaining: tuning.feedback.hitFlash })
     // One mistake costs one hit: the player is briefly untouchable afterwards.
-    if (data.player.present) data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+    if (data.player.present) {
+      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+      hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
+    }
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const push = damage.knockback * knockbackTaken(tuning, enemy)
     data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
@@ -285,12 +292,30 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     dead.add(entity.id.value)
     events.death.emit({ at, faction: data.hurtbox.get().faction, enemy })
     commands.despawn(entity.id)
-    if (data.hurtbox.get().faction === "enemy") kills += 1
+    if (data.hurtbox.get().faction === "enemy") {
+      kills += 1
+      hitStop = Math.max(hitStop, tuning.feedback.hitStopOnKill)
+    }
     if (data.respawns.present && enemy !== undefined) {
       commands.spawnIn(RunScope, respawnOf(enemy, data.respawns.get()))
     }
   }
   if (kills > 0) resources.stats.update((stats) => ({ ...stats, kills: stats.kills + kills }))
+  if (hitStop > 0) {
+    resources.hitStop.set({ remaining: hitStop })
+    nextMachines.pace.set("Frozen")
+  }
+})
+
+/** Counts a hit-stop down and resumes the simulation when it is over. */
+export const TickHitStop = Game.System("Shooter/TickHitStop", {
+  resources: { hitStop: Game.System.writeResource(HitStop), time: Game.System.readResource(Time) },
+  nextMachines: { pace: Game.System.nextState(Pace) },
+  when: [Game.Condition.inState(Pace, "Frozen")]
+}, ({ resources, nextMachines }) => {
+  const remaining = resources.hitStop.get().remaining - resources.time.get().dt
+  resources.hitStop.set({ remaining: Math.max(0, remaining) })
+  if (remaining <= 1e-9) nextMachines.pace.set("Running")
 })
 
 /** Counts down short-lived combat timers. */

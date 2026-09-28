@@ -404,7 +404,7 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   hud.dash.textContent = dash === undefined ? "" : dash.cooldown <= 0 ? "DASH ready" : `DASH ${dash.cooldown.toFixed(2)}s`
   const combat = resources.stats.get()
   hud.combat.textContent = `kills ${combat.kills} · shots ${combat.shots}`
-  hud.stats.textContent = `${stats.fps.toFixed(0)} fps · ${services.host.actors.children.length} nodes · ${services.host.fx.active} fx`
+  hud.stats.textContent = `${stats.fps.toFixed(0)} fps · sim ${stats.simMs.toFixed(1)}ms · draw ${stats.drawMs.toFixed(1)}ms · ${services.host.actors.children.length} nodes · ${services.host.fx.active} fx`
 })
 
 export const frame = Game.Schedule(

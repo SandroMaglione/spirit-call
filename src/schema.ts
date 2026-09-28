@@ -206,6 +206,9 @@ export interface WavesValue {
 }
 export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
 
+/** Time left in the current hit-stop. */
+export const HitStop = Descriptor.Resource<{ readonly remaining: number }>()("Shooter/HitStop")
+
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
 
@@ -274,7 +277,8 @@ export const Game = Schema.bind(
       Stats,
       Waves,
       Rng,
-      Run
+      Run,
+      HitStop
     },
     events: { Damage, Hit, Death, Impact }
   }),
@@ -284,8 +288,17 @@ export const Game = Schema.bind(
 /** Whether the run is going on or over. Gameplay systems run only while `Playing`. */
 export const Flow = Game.StateMachine("Shooter/Flow", ["Playing", "GameOver"])
 
+/** Hit-stop: the simulation is `Frozen` for a few steps on impactful hits. */
+export const Pace = Game.StateMachine("Shooter/Pace", ["Running", "Frozen"])
+
+/**
+ * Run condition for input capture: skipped during hit-stop, so presses made
+ * meanwhile stay in the device and are seen when the game resumes.
+ */
+export const whileRunning = [Game.Condition.inState(Pace, "Running")] as const
+
 /** Run condition for systems that advance gameplay. */
-export const whilePlaying = [Game.Condition.inState(Flow, "Playing")] as const
+export const whilePlaying = [Game.Condition.inState(Flow, "Playing"), Game.Condition.inState(Pace, "Running")] as const
 
 /** Entities that belong to one run; despawned on restart. */
 export const RunScope = Game.EntityScope("Shooter/Run")

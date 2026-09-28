@@ -3,7 +3,6 @@
  * into resources once per fixed step, then turned into world-space intent
  * (`Controls`) that gameplay systems read.
  */
-import { InputCapture } from "@typeonce/bevy-ts-browser"
 
 import { projection } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
@@ -17,12 +16,25 @@ import {
   Keys,
   PointerInput,
   PointerState,
-  Viewport
+  Viewport,
+  whileRunning
 } from "../schema.ts"
 
-export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKeys", source: KeyboardInput, resource: Keys })
+export const CaptureKeys = Game.System("Shooter/CaptureKeys", {
+  resources: { keys: Game.System.writeResource(Keys) },
+  services: { keyboard: Game.System.service(KeyboardInput) },
+  when: whileRunning
+}, ({ resources, services }) => {
+  resources.keys.set(services.keyboard.snapshot())
+})
 
-export const CapturePointer = InputCapture.system(Game, { name: "Shooter/CapturePointer", source: PointerInput, resource: PointerState })
+export const CapturePointer = Game.System("Shooter/CapturePointer", {
+  resources: { pointer: Game.System.writeResource(PointerState) },
+  services: { pointer: Game.System.service(PointerInput) },
+  when: whileRunning
+}, ({ resources, services }) => {
+  resources.pointer.set(services.pointer.snapshot())
+})
 
 export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
   resources: { viewport: Game.System.writeResource(Viewport) },
@@ -42,7 +54,8 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     camera: Game.System.readResource(Camera),
     viewport: Game.System.readResource(Viewport),
     controls: Game.System.writeResource(Controls)
-  }
+  },
+  when: whileRunning
 }, ({ resources }) => {
   const keys = resources.keys.get()
   const pointer = resources.pointer.get()

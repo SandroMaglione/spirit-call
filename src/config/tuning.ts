@@ -142,7 +142,11 @@ export const defaultTuning = {
 
   feedback: {
     /** How long a hit target flashes white. */
-    hitFlash: 0.08
+    hitFlash: 0.08,
+    /** Hit-stop: the whole simulation pauses this long when an enemy dies (0 disables). */
+    hitStopOnKill: 0.045,
+    /** Hit-stop when the player takes a hit (0 disables). */
+    hitStopOnPlayerHit: 0.09
   },
 
   enemies: {
