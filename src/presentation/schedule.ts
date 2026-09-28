@@ -96,11 +96,14 @@ const drawArea = (g: Graphics, area: Area, progress: number, style: { readonly c
   }
 }
 
-/** Creates nodes for new renderables and destroys them on removal or despawn. */
+/**
+ * Creates nodes for new renderables (placed once from their position) and
+ * destroys them on removal or despawn. Moving nodes are placed every frame
+ * by `InterpolateActors`.
+ */
 const SyncNodes = RenderSync.system(Game, {
   name: "Shooter/SyncNodes",
   renderable: Renderable,
-  transform: Renderable,
   registry: RenderNodes,
   select: { position: Game.Query.read(Position) },
   services: { host: RenderHost },
@@ -131,20 +134,14 @@ const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
 })
 
-const InterpolateActors = Game.System("Shooter/InterpolateActors", {
-  queries: {
-    actors: Game.Query({
-      selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) },
-      with: [Renderable]
-    })
-  },
-  services: { nodes: Game.System.service(RenderNodes), clock: Game.System.service(RenderClock) }
-}, ({ queries, services }) => {
-  const alpha = services.clock.alpha
-  for (const { entity, data } of queries.actors.each()) {
-    const node = services.nodes.get(entity.id)
-    if (node === undefined) continue
-    const position = lerp(data.previous.get(), data.position.get(), alpha)
+/** Draws moving entities between their previous and current fixed-step positions. */
+const InterpolateActors = RenderSync.interpolate(Game, {
+  name: "Shooter/InterpolateActors",
+  registry: RenderNodes,
+  previous: PrevPosition,
+  current: Position,
+  clock: RenderClock,
+  place: (node, position) => {
     const screen = toScreen(projection, position)
     node.root.position.set(screen.x, screen.y)
     node.root.zIndex = depthOf(position)
