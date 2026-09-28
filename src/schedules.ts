@@ -4,8 +4,11 @@
  * Rendering has its own schedule in `presentation/schedule.ts`.
  *
  * Gameplay runs in a `Game.Schedule.when(whilePlaying, ...)` group, so the
- * world freezes on the game-over screen and during hit-stop; input capture
- * pauses with hit-stop (`whileRunning`), so presses made meanwhile are kept.
+ * world freezes on the game-over screen and during hit-stop (the `frozen`
+ * check); input capture pauses with hit-stop (`whileRunning`), so presses
+ * made meanwhile are kept. Game-over detection is gated on the flow only
+ * (`whileRunIsLive`), so it never misses the player's death to a hit-stop
+ * that the same hit started.
  * Restarting enters `Playing` again, which runs `restart`.
  */
 import { SpawnArena } from "./features/arena.ts"
@@ -20,7 +23,7 @@ import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
 import { CastUltimate, ThrowGrenade, UpdateGrenades } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { DirectWaves } from "./features/waves.ts"
-import { Flow, Game, whilePlaying, whileRunning } from "./schema.ts"
+import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema.ts"
 
 /** Spawns what a run starts with. */
 const startRun = Game.Schedule(
@@ -73,9 +76,14 @@ const gameplay = Game.Schedule.when(
   MoveProjectiles,
   ResolveHitboxes,
   ApplyDamage,
-  DetectGameOver,
   ProcessPendingSpawns,
   DirectWaves
+)
+
+/** Needs every Death event of the run, so it is never skipped by hit-stop. */
+const runOutcome = Game.Schedule.when(
+  whileRunIsLive,
+  DetectGameOver
 )
 
 /** One fixed simulation step. */
@@ -86,6 +94,7 @@ export const fixedUpdate = Game.Schedule(
   input,
   RememberPositions,
   gameplay,
+  runOutcome,
   QueueRestart,
   FollowCamera,
   Game.Schedule.applyStateTransitions(transitions),

@@ -2,7 +2,7 @@
  * The run lifecycle: playing until the player dies, a game-over screen, and
  * a restart that clears the run and starts over.
  */
-import { Death, Flow, Game, HitStop, Keys, Pace, PointerState, Rng, Run, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
+import { Death, Flow, Game, HitStop, Keys, PointerState, Rng, Run, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
 import { initialWaves } from "./waves.ts"
 
 export const TrackRun = Game.System("Shooter/TrackRun", {
@@ -50,16 +50,14 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     rng: Game.System.writeResource(Rng),
     run: Game.System.writeResource(Run),
     hitStop: Game.System.writeResource(HitStop)
-  },
-  nextMachines: { pace: Game.System.nextState(Pace) }
-}, ({ resources, nextMachines }) => {
+  }
+}, ({ resources }) => {
   const tuning = resources.tuning.get()
   resources.stats.set({ kills: 0, shots: 0 })
   resources.waves.set(initialWaves(tuning))
   resources.rng.set({ state: tuning.waves.seed })
   resources.run.set({ time: 0, endedAt: null })
   resources.hitStop.set({ remaining: 0 })
-  nextMachines.pace.set("Running")
 })
 
 /** Removes everything the previous run spawned (enemies, projectiles, hitboxes, spawn warnings). */

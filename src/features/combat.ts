@@ -22,7 +22,6 @@ import {
   Hit,
   HitFlash,
   HitStop,
-  Pace,
   Hurtbox,
   Impact,
   Invulnerable,
@@ -284,9 +283,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death)
   },
-  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) },
-  nextMachines: { pace: Game.System.nextState(Pace) }
-}, ({ queries, events, resources, nextMachines, lookup, commands }) => {
+  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) }
+}, ({ queries, events, resources, lookup, commands }) => {
   const tuning = resources.tuning.get()
   const dead = new Set<number>()
   let kills = 0
@@ -337,21 +335,15 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       data.ultimate.update(({ energy: current }) => ({ energy: Math.min(tuning.ultimate.energy, current + energy) }))
     }
   }
-  if (hitStop > 0) {
-    resources.hitStop.set({ remaining: hitStop })
-    nextMachines.pace.set("Frozen")
-  }
+  if (hitStop > 0) resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, hitStop) }))
 })
 
-/** Counts a hit-stop down and resumes the simulation when it is over. */
+/** Counts a hit-stop down; gameplay resumes once it reaches zero (see `frozen`). */
 export const TickHitStop = Game.System("Shooter/TickHitStop", {
-  resources: { hitStop: Game.System.writeResource(HitStop), time: Game.System.readResource(Time) },
-  nextMachines: { pace: Game.System.nextState(Pace) },
-  when: [Game.Condition.inState(Pace, "Frozen")]
-}, ({ resources, nextMachines }) => {
-  const remaining = resources.hitStop.get().remaining - resources.time.get().dt
-  resources.hitStop.set({ remaining: Math.max(0, remaining) })
-  if (remaining <= 1e-9) nextMachines.pace.set("Running")
+  resources: { hitStop: Game.System.writeResource(HitStop), time: Game.System.readResource(Time) }
+}, ({ resources }) => {
+  const remaining = resources.hitStop.get().remaining
+  if (remaining > 0) resources.hitStop.set({ remaining: Math.max(0, remaining - resources.time.get().dt) })
 })
 
 /** Counts down short-lived combat timers. */

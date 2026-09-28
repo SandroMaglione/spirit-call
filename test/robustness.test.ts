@@ -14,7 +14,7 @@ import { Dash, FrameContext, Game, HitStop, KeyboardInput, Player, PointerInput,
 import { defaultViewport } from "../src/simulation.ts"
 import { start } from "./helpers.ts"
 
-const Pace = Game.Inspector("Test/Pace", {
+const HitStopState = Game.Inspector("Test/HitStopState", {
   resources: { hitStop: Game.System.readResource(HitStop), time: Game.System.readResource(Time) },
   queries: { player: Game.Query({ selection: { dash: Game.Query.read(Dash) }, with: [Player] }) }
 }, ({ resources, queries }) => ({
@@ -32,18 +32,18 @@ describe("hit-stop", () => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
-    const frozenSteps = Math.ceil(0.1 / engine.stepSeconds)
-    const pace = () => run.runtime.debug.dump().machines["Shooter/Pace"]?.current
+    const frozen = () => run.runtime.inspect(HitStopState).hitStop > 1e-9
 
-    // Step 1 fires, step 2 hits and kills: the next steps are frozen.
-    run.step(3)
-    expect(pace()).toBe("Frozen")
+    // Step 1 fires, step 2 hits and kills: the freeze starts in that same step
+    // (the `frozen` check sees the hit-stop ApplyDamage just started).
+    run.step(2)
+    expect(frozen()).toBe(true)
     const frozenPlayer = run.player()
-    run.step(frozenSteps - 2)
-    expect(pace()).toBe("Frozen")
+    run.step(Math.floor(0.1 / engine.stepSeconds) - 2)
+    expect(frozen()).toBe(true)
     expect(run.player()).toEqual(frozenPlayer)
     run.step(3)
-    expect(pace()).toBe("Running")
+    expect(frozen()).toBe(false)
   })
 
   it("delivers a dash pressed during a hit-stop when the game resumes", () => {
@@ -147,3 +147,20 @@ describe("render sync under multi-rate ticking", () => {
     }
   })
 })
+
+describe("hit-stop and game over", () => {
+  it("still ends the run when the killing hit also starts a hit-stop", () => {
+    // The hit that kills the player starts a player-hit hit-stop in the same step.
+    // Game-over detection must not be skipped by it, or the Death event is lost.
+    const tuning = tuningWith({ player: { hp: 5 }, feedback: { hitStopOnPlayerHit: 0.2 } })
+    const run = start({ tuning })
+    const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
+      commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: 1000, y: 900 }))
+    })
+    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    const flow = () => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+    for (let step = 0; step < 300 && flow() === "Playing"; step++) run.step()
+    expect(flow()).toBe("GameOver")
+  })
+})
+

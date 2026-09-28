@@ -5,7 +5,7 @@ import type { Tuning } from "./config/tuning.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
-import { Flow, Game, Pace } from "./schema.ts"
+import { Flow, Game } from "./schema.ts"
 import type { ViewportValue } from "./schema.ts"
 
 /** Initial resources shared by the browser runtime and headless simulations. */
@@ -24,4 +24,4 @@ export const initialResources = (tuning: Tuning, viewport: ViewportValue) => ({
   Camera: { x: tuning.arena.width / 2, y: tuning.arena.height / 2, prevX: tuning.arena.width / 2, prevY: tuning.arena.height / 2 }
 })
 
-export const initialMachines = () => Game.Runtime.machines(Game.Runtime.machine(Flow, "Playing"), Game.Runtime.machine(Pace, "Running"))
+export const initialMachines = () => Game.Runtime.machines(Game.Runtime.machine(Flow, "Playing"))

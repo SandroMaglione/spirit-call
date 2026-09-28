@@ -333,17 +333,30 @@ export const Game = Schema.bind(
 /** Whether the run is going on or over. Gameplay systems run only while `Playing`. */
 export const Flow = Game.StateMachine("Shooter/Flow", ["Playing", "GameOver"])
 
-/** Hit-stop: the simulation is `Frozen` for a few steps on impactful hits. */
-export const Pace = Game.StateMachine("Shooter/Pace", ["Running", "Frozen"])
+/**
+ * Hit-stop: the simulation freezes while `HitStop.remaining` is above zero.
+ * The check sees a hit-stop started earlier in the same step, so the freeze
+ * takes effect immediately after the hit that caused it.
+ */
+export const frozen = Game.Condition.check("frozen", {
+  resources: { hitStop: Game.System.readResource(HitStop) }
+}, ({ resources }) => resources.hitStop.get().remaining > 1e-9)
 
 /**
  * Run condition for input capture: skipped during hit-stop, so presses made
  * meanwhile stay in the device and are seen when the game resumes.
  */
-export const whileRunning = [Game.Condition.inState(Pace, "Running")] as const
+export const whileRunning = [Game.Condition.not(frozen)] as const
 
-/** Run condition for systems that advance gameplay. */
-export const whilePlaying = [Game.Condition.inState(Flow, "Playing"), Game.Condition.inState(Pace, "Running")] as const
+/** Run condition for systems that advance gameplay: playing and not in a hit-stop. */
+export const whilePlaying = [Game.Condition.inState(Flow, "Playing"), Game.Condition.not(frozen)] as const
+
+/**
+ * Run condition for systems that must see every event of a run (game over):
+ * gated on the flow only, never on hit-stop. A hit-stop can start earlier in
+ * the same step, and a skipped system discards the events published meanwhile.
+ */
+export const whileRunIsLive = [Game.Condition.inState(Flow, "Playing")] as const
 
 /** Entities that belong to one run; despawned on restart. */
 export const RunScope = Game.EntityScope("Shooter/Run")
