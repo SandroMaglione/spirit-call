@@ -34,6 +34,7 @@ import {
   Renderable,
   Respawns,
   RunScope,
+  Shield,
   Skills,
   Stats,
   Time,
@@ -121,6 +122,8 @@ interface Target {
   faction: Faction
   /** Dashing or recently hit: shots pass through. */
   invulnerable: boolean
+  /** A frontal shield, if any: projectiles arriving within `cosHalfAngle` of `facing` are blocked. */
+  shield: { readonly facing: Vec2; readonly cosHalfAngle: number } | undefined
 }
 
 /**
@@ -140,7 +143,12 @@ export const MoveProjectiles = (() => {
         selection: { position: Game.Query.write(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.write(Projectile) }
       }),
       targets: Game.Query({
-        selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
+        selection: {
+          position: Game.Query.read(Position),
+          hurtbox: Game.Query.read(Hurtbox),
+          invulnerable: Game.Query.optional(Invulnerable),
+          shield: Game.Query.optional(Shield)
+        },
         with: [Health]
       }),
       walls: Walls
@@ -159,7 +167,8 @@ export const MoveProjectiles = (() => {
       const hurtbox = data.hurtbox.get()
       grid.insert(targets.length, position.x, position.y, hurtbox.radius)
       const invulnerable = data.invulnerable.present && data.invulnerable.get().remaining > 0
-      targets.push({ entity: entity.id, id: entity.id.value, x: position.x, y: position.y, radius: hurtbox.radius, faction: hurtbox.faction, invulnerable })
+      const shield = data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Math.cos(data.shield.get().halfAngle) } : undefined
+      targets.push({ entity: entity.id, id: entity.id.value, x: position.x, y: position.y, radius: hurtbox.radius, faction: hurtbox.faction, invulnerable, shield })
     }
 
     for (const { entity, data } of queries.projectiles.each()) {
@@ -193,7 +202,19 @@ export const MoveProjectiles = (() => {
       let pierce = projectile.pierce
       const hit = [...projectile.hit]
       let stopAt: number | undefined
+      let shieldedAt: number | undefined
       for (const contact of contacts) {
+        // A shield facing the shot absorbs it, pierce or not.
+        const shield = contact.target.shield
+        if (shield !== undefined) {
+          const hx = origin.x + delta.x * contact.time - contact.target.x
+          const hy = origin.y + delta.y * contact.time - contact.target.y
+          const length = Math.hypot(hx, hy) || 1
+          if ((hx * shield.facing.x + hy * shield.facing.y) / length >= shield.cosHalfAngle) {
+            shieldedAt = contact.time
+            break
+          }
+        }
         events.damage.emit({
           target: Game.Entity.handle(contact.target.entity, Health),
           amount: projectile.damage,
@@ -209,6 +230,13 @@ export const MoveProjectiles = (() => {
         pierce -= 1
       }
 
+      if (shieldedAt !== undefined) {
+        const at = { x: origin.x + delta.x * shieldedAt, y: origin.y + delta.y * shieldedAt }
+        data.position.set(at)
+        events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: true })
+        commands.despawn(entity.id)
+        continue
+      }
       if (stopAt !== undefined) {
         data.position.set({ x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
         commands.despawn(entity.id)
@@ -217,7 +245,7 @@ export const MoveProjectiles = (() => {
       if (wall !== undefined) {
         const at = { x: origin.x + delta.x * wall.time, y: origin.y + delta.y * wall.time }
         data.position.set(at)
-        events.impact.emit({ at, faction: projectile.faction, wall: true })
+        events.impact.emit({ at, faction: projectile.faction, wall: true, shielded: false })
         commands.despawn(entity.id)
         continue
       }
@@ -225,7 +253,7 @@ export const MoveProjectiles = (() => {
       data.position.set(at)
       const range = projectile.range - travel
       if (range <= 1e-6) {
-        events.impact.emit({ at, faction: projectile.faction, wall: false })
+        events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: false })
         commands.despawn(entity.id)
         continue
       }

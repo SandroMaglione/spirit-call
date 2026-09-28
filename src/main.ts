@@ -3,8 +3,7 @@ import { FixedLoop, Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 import { keyBindings } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
-import { ApplyTuningEdits, TuningEdits } from "./dev/tuning-edits.ts"
-import type { TuningEditsValue } from "./dev/tuning-edits.ts"
+import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
@@ -26,7 +25,7 @@ const start = async (mount: HTMLElement) => {
   const stressLoad = parseStress(window.location.search)
   const tuning = stressLoad === undefined ? loadSavedTuning() : stressTuning()
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
-  const tuningEdits: TuningEditsValue = { replace: undefined, edits: [] }
+  const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
   const { app } = browser.host
   const keyboard = Keyboard.actions(window, keyBindings)
@@ -46,7 +45,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(RenderClock, clock),
       Game.Runtime.service(RenderHost, browser.host),
       Game.Runtime.service(RenderNodes, browser.nodes),
-      Game.Runtime.service(TuningEdits, tuningEdits)
+      Game.Runtime.service(DevCommands, devCommands)
     ),
     resources: initialResources(tuning, frameContext.viewport),
     machines: initialMachines(),
@@ -56,10 +55,10 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(setup)
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
-  createTuningPanel(mount, tuning, tuningEdits)
+  createTuningPanel(mount, tuning, devCommands)
 
-  // One fixed step: live tuning edits, the simulation, and the (usually empty) stress top-up.
-  const step = Game.Schedule(ApplyTuningEdits, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
+  // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.
+  const step = Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
   // Dev handle for inspecting the running game from the console.
   Object.assign(window, { __game: { runtime, pointer, keyboard, host: browser.host } })
 

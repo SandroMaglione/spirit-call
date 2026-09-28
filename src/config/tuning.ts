@@ -56,7 +56,34 @@ export interface SlamAttack extends AttackTiming {
   readonly maxReach: number
 }
 
-export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack
+/**
+ * Charges along a lane toward where the target was when the windup started,
+ * damaging on contact. `active` is the charge duration; lane length is
+ * `speed × active`.
+ */
+export interface ChargeAttack extends AttackTiming {
+  readonly kind: "charge"
+  readonly speed: number
+  /** Lane width; contact reaches half of it from the attacker's center. */
+  readonly width: number
+}
+
+/** An instant beam along a lane (stopped by walls); the aim tracks until `aimLock` seconds before firing. */
+export interface BeamAttack extends AttackTiming {
+  readonly kind: "beam"
+  readonly aimLock: number
+  readonly length: number
+  readonly width: number
+}
+
+export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack
+
+/** A frontal shield that blocks projectiles hitting within `arcDegrees / 2` of where it faces. */
+export interface ShieldSpec {
+  readonly arcDegrees: number
+  /** How fast it turns toward the target, in degrees per second. */
+  readonly turnRate: number
+}
 
 export type Behavior =
   | { readonly kind: "idle" }
@@ -65,9 +92,14 @@ export type Behavior =
   /** Keep between `minDistance` and `maxDistance`, strafing sideways. */
   | { readonly kind: "kite"; readonly minDistance: number; readonly maxDistance: number; readonly strafeSeconds: number }
 
-const melee = (spec: Omit<MeleeAttack, "kind">): AttackSpec => ({ kind: "melee", ...spec })
-const volley = (spec: Omit<VolleyAttack, "kind">): AttackSpec => ({ kind: "volley", ...spec })
-const slam = (spec: Omit<SlamAttack, "kind">): AttackSpec => ({ kind: "slam", ...spec })
+const melee = (spec: Omit<MeleeAttack, "kind">): AttackSpec | null => ({ kind: "melee", ...spec })
+const volley = (spec: Omit<VolleyAttack, "kind">): AttackSpec | null => ({ kind: "volley", ...spec })
+const slam = (spec: Omit<SlamAttack, "kind">): AttackSpec | null => ({ kind: "slam", ...spec })
+const charge = (spec: Omit<ChargeAttack, "kind">): AttackSpec | null => ({ kind: "charge", ...spec })
+const beam = (spec: Omit<BeamAttack, "kind">): AttackSpec | null => ({ kind: "beam", ...spec })
+const noShield = (): ShieldSpec | null => null
+const shield = (spec: ShieldSpec): ShieldSpec | null => spec
+/** Every enemy's `attack` is nullable, so tuning (or a test) can switch it off. */
 const noAttack = (): AttackSpec | null => null
 const idle = (): Behavior => ({ kind: "idle" })
 const chase = (stopDistance: number): Behavior => ({ kind: "chase", stopDistance })
@@ -213,6 +245,9 @@ export const defaultTuning = {
       cost: 0,
       behavior: idle(),
       attack: noAttack(),
+      shield: noShield(),
+      /** Enemies spawned together per wave slot. */
+      group: 1,
       /** Delay before a destroyed dummy comes back (its spawn warning is shown meanwhile). */
       respawnDelay: 1.5
     },
@@ -226,6 +261,8 @@ export const defaultTuning = {
       acceleration: 1400,
       cost: 1,
       behavior: chase(52),
+      shield: noShield(),
+      group: 1,
       attack: melee({ triggerRange: 70, reach: 80, arcDegrees: 100, windup: 0.45, active: 0.1, recovery: 0.45, cooldown: 0.5, damage: 12, knockback: 280 }),
       respawnDelay: 0
     },
@@ -239,6 +276,8 @@ export const defaultTuning = {
       acceleration: 1000,
       cost: 2,
       behavior: kite({ minDistance: 250, maxDistance: 420, strafeSeconds: 1.6 }),
+      shield: noShield(),
+      group: 1,
       attack: volley({
         triggerRange: 560, aimLock: 0.3, windup: 0.75, active: 0, recovery: 0.35, cooldown: 1.3,
         count: 3, spreadDegrees: 14, projectileSpeed: 430, projectileRadius: 7, range: 820, damage: 10, knockback: 180
@@ -255,7 +294,69 @@ export const defaultTuning = {
       acceleration: 600,
       cost: 4,
       behavior: chase(120),
+      shield: noShield(),
+      group: 1,
       attack: slam({ triggerRange: 260, maxReach: 210, radius: 100, windup: 1.1, active: 0.12, recovery: 0.9, cooldown: 1.0, damage: 28, knockback: 460 }),
+      respawnDelay: 0
+    },
+    /** Tiny, fast, fragile; comes in packs. */
+    swarmer: {
+      hp: 12,
+      radius: 10,
+      hurtboxRadius: 11,
+      knockbackTaken: 1.4,
+      speed: 235,
+      acceleration: 1800,
+      cost: 1,
+      behavior: chase(34),
+      shield: noShield(),
+      group: 4,
+      attack: melee({ triggerRange: 44, reach: 50, arcDegrees: 80, windup: 0.3, active: 0.08, recovery: 0.35, cooldown: 0.5, damage: 5, knockback: 140 }),
+      respawnDelay: 0
+    },
+    /** Keeps mid-range, telegraphs a lane, then charges down it. Open to punishment afterwards. */
+    charger: {
+      hp: 70,
+      radius: 19,
+      hurtboxRadius: 20,
+      knockbackTaken: 0.5,
+      speed: 120,
+      acceleration: 900,
+      cost: 3,
+      behavior: kite({ minDistance: 180, maxDistance: 320, strafeSeconds: 2.2 }),
+      shield: noShield(),
+      group: 1,
+      attack: charge({ triggerRange: 380, windup: 0.8, active: 0.42, speed: 850, width: 44, recovery: 1.0, cooldown: 1.2, damage: 22, knockback: 520 }),
+      respawnDelay: 0
+    },
+    /** Stays far away; paints a tracking beam that locks, then fires instantly. Walls stop it. */
+    sniper: {
+      hp: 32,
+      radius: 14,
+      hurtboxRadius: 15,
+      knockbackTaken: 1.2,
+      speed: 120,
+      acceleration: 900,
+      cost: 3,
+      behavior: kite({ minDistance: 430, maxDistance: 680, strafeSeconds: 2.5 }),
+      shield: noShield(),
+      group: 1,
+      attack: beam({ triggerRange: 900, windup: 1.3, aimLock: 0.35, active: 0.1, recovery: 0.6, cooldown: 1.8, length: 1000, width: 18, damage: 20, knockback: 260 }),
+      respawnDelay: 0
+    },
+    /** A frontal shield blocks all projectiles; flank it or use blast and grenade. */
+    guardian: {
+      hp: 90,
+      radius: 20,
+      hurtboxRadius: 21,
+      knockbackTaken: 0.35,
+      speed: 110,
+      acceleration: 800,
+      cost: 3,
+      behavior: chase(70),
+      shield: shield({ arcDegrees: 130, turnRate: 150 }),
+      group: 1,
+      attack: melee({ triggerRange: 88, reach: 100, arcDegrees: 110, windup: 0.55, active: 0.1, recovery: 0.55, cooldown: 0.6, damage: 16, knockback: 360 }),
       respawnDelay: 0
     }
   },
@@ -281,13 +382,14 @@ export const defaultTuning = {
     spawnWarning: 1.0,
     /** Enemies never appear closer than this to the player. */
     minSpawnDistance: 340,
-    /** The first waves, exactly. */
+    /** The first waves, exactly (each entry spawns its enemy's `group`). New types show up early. */
     scripted: [
-      ["chaser", "chaser", "chaser"],
-      ["chaser", "chaser", "shooter", "shooter"],
-      ["chaser", "chaser", "chaser", "brute"],
-      ["shooter", "shooter", "chaser", "chaser", "chaser", "brute"]
-    ] as ReadonlyArray<ReadonlyArray<"chaser" | "shooter" | "brute">>,
+      ["chaser", "chaser", "swarmer"],
+      ["charger", "shooter", "chaser"],
+      ["guardian", "sniper", "chaser", "chaser"],
+      ["brute", "charger", "swarmer", "shooter"],
+      ["guardian", "sniper", "swarmer", "chaser", "chaser", "brute"]
+    ] as ReadonlyArray<ReadonlyArray<"chaser" | "shooter" | "brute" | "swarmer" | "charger" | "sniper" | "guardian">>,
     /** Afterwards: a random mix within this budget (enemy `cost`), growing per wave. */
     baseBudget: 6,
     budgetPerWave: 2,
@@ -318,7 +420,9 @@ export const defaultTuning = {
 
 export type Tuning = typeof defaultTuning
 
-type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] }
+type DeepPartial<T> = { [K in keyof T]?: DeepPartialValue<T[K]> }
+/** Distributes over unions, so nullable values (an enemy's `attack`) can be overridden with `null`. */
+type DeepPartialValue<V> = V extends ReadonlyArray<unknown> ? V : V extends object ? DeepPartial<V> : V
 
 /** The default tuning with some values replaced, for tests and experiments. */
 export const tuningWith = (overrides: DeepPartial<Tuning>): Tuning => {

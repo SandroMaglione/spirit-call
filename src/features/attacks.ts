@@ -36,10 +36,16 @@ import { Walls, wallBoxes } from "./motion.ts"
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180
 
-/** The area an attack from `origin` at `target` covers. */
-export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2): Area => {
+/** The area an attack from `origin` at `target` covers. Beams stop at the first wall. */
+export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: ReadonlyArray<Box> = []): Area => {
   const direction = normalizeOr(sub(target, origin), { x: 1, y: 0 })
   switch (spec.kind) {
+    case "charge":
+      return { kind: "lane", origin, direction, length: spec.speed * spec.active, halfWidth: spec.width / 2 }
+    case "beam": {
+      const blocked = sweepCircleBoxes(origin, { x: direction.x * spec.length, y: direction.y * spec.length }, 1, walls)
+      return { kind: "lane", origin, direction, length: spec.length * (blocked?.time ?? 1), halfWidth: spec.width / 2 }
+    }
     case "melee":
       return { kind: "cone", origin, direction, radius: spec.reach, halfAngle: toRadians(spec.arcDegrees) / 2 }
     case "slam": {
@@ -56,7 +62,11 @@ const hasLineOfSight = (from: Vec2, to: Vec2, radius: number, boxes: ReadonlyArr
 
 /** Whether an aimed attack's aim is locked (its telegraph no longer follows the target). */
 export const aimLocked = (spec: AttackSpec, attacker: Pick<AttackerValue, "phase" | "elapsed">): boolean =>
-  spec.kind !== "volley" || attacker.phase !== "windup" || attacker.elapsed >= spec.windup - spec.aimLock
+  (spec.kind !== "volley" && spec.kind !== "beam") || attacker.phase !== "windup" || attacker.elapsed >= spec.windup - spec.aimLock
+
+/** Radius used for the line-of-sight check before starting an attack, or undefined when none is needed. */
+const sightRadius = (spec: AttackSpec): number | undefined =>
+  spec.kind === "volley" ? spec.projectileRadius : spec.kind === "beam" || spec.kind === "charge" ? spec.width / 2 : undefined
 
 export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   queries: {
@@ -64,11 +74,16 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       selection: { position: Game.Query.read(Position), enemy: Game.Query.read(Enemy), attacker: Game.Query.write(Attacker) }
     }),
     player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
+    targets: Game.Query({
+      selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
+      with: [Health]
+    }),
     walls: Walls
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
+  events: { damage: Game.System.writeEvent(Damage) },
   when: whilePlaying
-}, ({ queries, resources, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
   const [player] = queries.player.each()
@@ -82,22 +97,24 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const position = data.position.get()
     const current = data.attacker.get()
     let { phase, area } = current
+    let hit = current.hit
     let elapsed = current.elapsed + dt
     let cooldown = Math.max(0, current.cooldown - dt)
 
     if (phase === "ready") {
       elapsed = 0
       const inRange = target !== undefined && Math.hypot(target.x - position.x, target.y - position.y) <= spec.triggerRange
-      const canSee = spec.kind !== "volley" || (target !== undefined && hasLineOfSight(position, target, spec.projectileRadius, boxes))
+      const sight = sightRadius(spec)
+      const canSee = sight === undefined || (target !== undefined && hasLineOfSight(position, target, sight, boxes))
       if (cooldown <= 0 && inRange && canSee && target !== undefined) {
         phase = "windup"
-        area = aimArea(spec, position, target)
+        area = aimArea(spec, position, target, boxes)
       }
     }
 
     // Aimed shots follow the target until the aim locks.
     if (phase === "windup" && target !== undefined && !aimLocked(spec, { phase, elapsed })) {
-      area = aimArea(spec, position, target)
+      area = aimArea(spec, position, target, boxes)
     }
 
     if (phase === "windup" && elapsed >= spec.windup && area !== null) {
@@ -112,10 +129,34 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
             faction, style: "bolt", radius: spec.projectileRadius, damage: spec.damage, knockback: spec.knockback, range: spec.range, pierce: 0, hit: []
           }))
         }
+      } else if (spec.kind === "charge") {
+        // The charge itself is the attack: contact damage while active (below).
+        hit = []
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           area, faction, damage: spec.damage, knockback: spec.knockback, remaining: Math.max(spec.active, 1e-6), hit: []
         }]))
+      }
+    }
+
+    // A charging attacker damages what it runs into, once per target per charge.
+    if (phase === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
+      for (const other of queries.targets.each()) {
+        const hurtbox = other.data.hurtbox.get()
+        if (hurtbox.faction === faction || hit.includes(other.entity.id.value)) continue
+        const invulnerable = other.data.invulnerable
+        if (invulnerable.present && invulnerable.get().remaining > 0) continue
+        const at = other.data.position.get()
+        const reach = spec.width / 2 + hurtbox.radius
+        if ((at.x - position.x) ** 2 + (at.y - position.y) ** 2 > reach * reach) continue
+        hit = [...hit, other.entity.id.value]
+        events.damage.emit({
+          target: Game.Entity.handle(other.entity.id, Health),
+          amount: spec.damage,
+          direction: pushDirection({ ...area, origin: position, length: 1 }, at),
+          knockback: spec.knockback,
+          faction
+        })
       }
     }
     if (phase === "active" && elapsed >= spec.active) {
@@ -129,7 +170,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       cooldown = spec.cooldown
     }
 
-    data.attacker.set({ phase, elapsed, cooldown, area })
+    data.attacker.set({ phase, elapsed, cooldown, area, hit })
   }
 })
 

@@ -11,6 +11,10 @@ import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
+/** A scripted wave's enemies, with each entry repeated by its group size (swarmers come in packs). */
+const expandWave = (wave: ReadonlyArray<EnemyKind>): Array<EnemyKind> =>
+  wave.flatMap((kind) => Array.from({ length: defaultTuning.enemies[kind].group }, () => kind)).sort()
+
 const World = Game.Inspector("Test/Enemies", {
   queries: {
     player: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health), invulnerable: Game.Query.read(Invulnerable) }, with: [Player] }),
@@ -156,7 +160,7 @@ describe("waves", () => {
     const { world } = firstWave()
     const now = world()
     expect(now.waves.number).toBe(1)
-    expect(now.enemies.map((enemy) => enemy.kind).sort()).toEqual([...defaultTuning.waves.scripted[0]!].sort())
+    expect(now.enemies.map((enemy) => enemy.kind).sort()).toEqual(expandWave(defaultTuning.waves.scripted[0]!))
     for (const enemy of now.enemies) {
       expect(Math.hypot(enemy.position.x - center.x, enemy.position.y - center.y)).toBeGreaterThan(defaultTuning.waves.minSpawnDistance - 200)
     }
@@ -175,6 +179,6 @@ describe("waves", () => {
     stepUntil(run, () => world().waves.number === 2)
     stepUntil(run, () => world().waves.phase === "fighting")
     const wave = [...world().pending.map((pending) => pending.kind), ...world().enemies.map((enemy) => enemy.kind)]
-    expect(wave.sort()).toEqual([...defaultTuning.waves.scripted[1]!].sort())
+    expect(wave.sort()).toEqual(expandWave(defaultTuning.waves.scripted[1]!))
   })
 })

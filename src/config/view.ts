@@ -56,8 +56,15 @@ export const view = {
     dummy: { color: 0xb86b77, widthFactor: 1.7, heightFactor: 2.1 },
     chaser: { color: 0xff7a45, widthFactor: 1.4, heightFactor: 2.2 },
     shooter: { color: 0xb07cff, widthFactor: 1.5, heightFactor: 1.8 },
-    brute: { color: 0xc2413b, widthFactor: 1.8, heightFactor: 1.9 }
+    brute: { color: 0xc2413b, widthFactor: 1.8, heightFactor: 1.9 },
+    swarmer: { color: 0xffb347, widthFactor: 1.5, heightFactor: 1.5 },
+    charger: { color: 0xe0527a, widthFactor: 1.7, heightFactor: 1.7 },
+    sniper: { color: 0x7cc4ff, widthFactor: 1.2, heightFactor: 2.6 },
+    guardian: { color: 0x8fa3b8, widthFactor: 1.8, heightFactor: 2.0 }
   },
+  /** Guardian shields. */
+  shield: 0xd6e4f0,
+  shieldBlock: 0xffffff,
   /** Enemy bodies pulse toward this color while winding up an attack. */
   windupTint: 0xfff1b8,
   telegraph: 0xff4d4d,

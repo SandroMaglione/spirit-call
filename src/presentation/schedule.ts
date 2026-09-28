@@ -14,6 +14,7 @@ import { lerp } from "../math/vec.ts"
 import {
   Aim,
   Attacker,
+  Body,
   Camera,
   Dash,
   Death,
@@ -37,6 +38,7 @@ import {
   RenderNodes,
   Renderable,
   Run,
+  Shield,
   Skills,
   Stats,
   Tuning,
@@ -79,6 +81,17 @@ const drawArea = (g: Graphics, area: Area, progress: number, style: { readonly c
     }
     case "line":
       return
+    case "lane": {
+      const side = { x: -area.direction.y * area.halfWidth, y: area.direction.x * area.halfWidth }
+      const strip = (length: number) => {
+        const end = { x: area.origin.x + area.direction.x * length, y: area.origin.y + area.direction.y * length }
+        return [area.origin.x + side.x, area.origin.y + side.y, end.x + side.x, end.y + side.y, end.x - side.x, end.y - side.y, area.origin.x - side.x, area.origin.y - side.y]
+      }
+      g.poly(strip(area.length)).fill({ color: style.color, alpha: style.fill })
+      g.poly(strip(area.length)).stroke({ width: 3, color: style.color, alpha: style.outline })
+      if (progress > 0) g.poly(strip(area.length * progress)).fill({ color: style.color, alpha: style.fill + 0.2 })
+      return
+    }
   }
 }
 
@@ -251,7 +264,10 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
     attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
-    grenades: Game.Query({ selection: { grenade: Game.Query.read(Grenade) } })
+    grenades: Game.Query({ selection: { grenade: Game.Query.read(Grenade) } }),
+    shields: Game.Query({
+      selection: { shield: Game.Query.read(Shield), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }
+    })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
@@ -276,7 +292,22 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       }
       continue
     }
-    drawArea(g, area, progress, { color: view.telegraph, fill: 0.12, outline: 0.7 })
+    // Beams track until their aim locks: dim while tracking, bright once locked.
+    const tracking = !aimLocked(spec, attacker)
+    drawArea(g, area, progress, tracking
+      ? { color: view.telegraph, fill: 0.05, outline: 0.35 }
+      : { color: spec.kind === "beam" ? view.telegraphLocked : view.telegraph, fill: 0.12, outline: 0.75 })
+  }
+
+  // Guardian shields: a bright arc on the side they face.
+  for (const { data } of queries.shields.each()) {
+    const shield = data.shield.get()
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const radius = data.body.get().radius + 9
+    const facing = Math.atan2(shield.facing.y, shield.facing.x)
+    g.moveTo(at.x + Math.cos(facing - shield.halfAngle) * radius, at.y + Math.sin(facing - shield.halfAngle) * radius)
+      .arc(at.x, at.y, radius, facing - shield.halfAngle, facing + shield.halfAngle)
+      .stroke({ width: 6, color: view.shield, alpha: 0.9 })
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
@@ -343,8 +374,8 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
   for (const impact of events.impact.all()) {
     const at = toScreen(projection, impact.at)
     fx.burst({ x: at.x, y: at.y - view.projectileHeight * projection.zoom }, {
-      color: impact.wall ? view.wallSpark : projectileColor(impact.faction),
-      count: impact.wall ? 5 : 3,
+      color: impact.shielded ? view.shieldBlock : impact.wall ? view.wallSpark : projectileColor(impact.faction),
+      count: impact.shielded ? 7 : impact.wall ? 5 : 3,
       speed: 140,
       size: 2.5,
       life: 0.18

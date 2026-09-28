@@ -119,8 +119,13 @@ export interface AttackerValue {
   /** Time left before a new attack may start. */
   readonly cooldown: number
   readonly area: Area | null
+  /** Entity ids a contact attack (charge) already hit during this activation. */
+  readonly hit: ReadonlyArray<number>
 }
 export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker")
+
+/** A frontal shield: blocks projectiles hitting within `halfAngle` (radians) of `facing`. */
+export const Shield = Descriptor.Component<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>()("Shooter/Shield")
 
 /** Movement state for enemy behaviors. */
 export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly strafeTimer: number }>()("Shooter/Brain")
@@ -176,8 +181,8 @@ export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fac
 /** An area went off (grenade explosions), for effects. */
 export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction }>()("Shooter/Explosion")
 
-/** A projectile stopped against a wall or ran out of range. */
-export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean }>()("Shooter/Impact")
+/** A projectile stopped against a wall or a shield, or ran out of range. */
+export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 
 // ── Resources ─────────────────────────────────────────────────────────────
 
@@ -291,6 +296,7 @@ export const Game = Schema.bind(
       Projectile,
       Enemy,
       Attacker,
+      Shield,
       Brain,
       Hitbox,
       Respawns,

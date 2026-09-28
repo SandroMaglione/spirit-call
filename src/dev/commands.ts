@@ -1,0 +1,106 @@
+/**
+ * Developer commands from the browser panel: live tuning edits, spawning a
+ * chosen enemy type, and clearing enemies. The panel queues them into the
+ * `DevCommands` service; `ApplyDevCommands` applies them at the start of the
+ * next fixed step.
+ *
+ * Tuning values read every step (speeds, timings, damage) take effect
+ * immediately; values copied at spawn (radius, HP) apply to entities spawned
+ * afterwards, so restart the run to see them everywhere.
+ */
+import { Descriptor } from "@typeonce/bevy-ts"
+
+import type { Tuning as TuningValue } from "../config/tuning.ts"
+import { makeGroupSpawns } from "../features/enemies.ts"
+import { Walls, wallBoxes } from "../features/motion.ts"
+import { circleOverlapsBox } from "../physics/collide.ts"
+import type { Box } from "../physics/shapes.ts"
+import type { Vec2 } from "../math/vec.ts"
+import { Random } from "../math/rng.ts"
+import { Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Tuning } from "../schema.ts"
+import type { EnemyKind } from "../schema.ts"
+
+export type TuningPath = ReadonlyArray<string>
+
+export interface DevCommandsValue {
+  /** A whole tuning to switch to (reset, load), applied before `edits`. */
+  replace: TuningValue | undefined
+  readonly edits: Array<{ readonly path: TuningPath; readonly value: number | boolean }>
+  /** Enemy types to spawn near the player (each with its group, behind a short spawn warning). */
+  readonly spawns: Array<EnemyKind>
+  /** Remove every enemy and pending spawn. */
+  clear: boolean
+}
+
+export const DevCommands = Descriptor.Service<DevCommandsValue>()("Shooter/DevCommands")
+
+export const emptyDevCommands = (): DevCommandsValue => ({ replace: undefined, edits: [], spawns: [], clear: false })
+
+/** Returns `tuning` with the value at `path` replaced. */
+export const setAt = (tuning: TuningValue, path: TuningPath, value: number | boolean): TuningValue => {
+  const write = (node: unknown, depth: number): unknown => {
+    if (depth === path.length) return value
+    const key = path[depth]!
+    const record = (typeof node === "object" && node !== null ? node : {}) as Record<string, unknown>
+    return { ...record, [key]: write(record[key], depth + 1) }
+  }
+  return write(tuning, 0) as TuningValue
+}
+
+/** Spawn warning time for dev spawns: short, so testing is quick. */
+const devSpawnWarning = 0.6
+
+/** A free spot about `distance` from `around`, inside the arena and clear of walls: on screen, not on top of the player. */
+const pickNearPoint = (tuning: TuningValue, kind: EnemyKind, around: Vec2, boxes: ReadonlyArray<Box>, random: Random, distance = 320): Vec2 => {
+  const margin = 60
+  const clearance = tuning.enemies[kind].radius * 3 + 12
+  let candidate = around
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const angle = random.next() * Math.PI * 2
+    candidate = {
+      x: Math.max(margin, Math.min(tuning.arena.width - margin, around.x + Math.cos(angle) * distance)),
+      y: Math.max(margin, Math.min(tuning.arena.height - margin, around.y + Math.sin(angle) * distance))
+    }
+    if (!boxes.some((box) => circleOverlapsBox(candidate, clearance, box))) return candidate
+  }
+  return candidate
+}
+
+export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
+  queries: {
+    player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
+    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
+    pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
+    walls: Walls
+  },
+  resources: { tuning: Game.System.writeResource(Tuning), rng: Game.System.writeResource(Rng) },
+  services: { commands: Game.System.service(DevCommands) }
+}, ({ queries, resources, services, commands }) => {
+  const queue = services.commands
+  if (queue.replace !== undefined || queue.edits.length > 0) {
+    let tuning: TuningValue = queue.replace ?? structuredClone(resources.tuning.get() as TuningValue)
+    for (const edit of queue.edits) tuning = setAt(tuning, edit.path, edit.value)
+    queue.replace = undefined
+    queue.edits.length = 0
+    resources.tuning.set(tuning)
+  }
+
+  if (queue.clear) {
+    queue.clear = false
+    for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+    for (const { entity } of queries.pending.each()) commands.despawn(entity.id)
+  }
+
+  if (queue.spawns.length > 0) {
+    const tuning = resources.tuning.get() as TuningValue
+    const player = queries.player.each()[0]?.data.position.get() ?? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
+    const boxes = wallBoxes(queries.walls.each())
+    const random = new Random(resources.rng.get().state)
+    for (const kind of queue.spawns) {
+      const at = pickNearPoint(tuning, kind, player, boxes, random)
+      for (const spawn of makeGroupSpawns(tuning, kind, at, devSpawnWarning)) commands.spawnIn(RunScope, spawn)
+    }
+    queue.spawns.length = 0
+    resources.rng.set({ state: random.state })
+  }
+})

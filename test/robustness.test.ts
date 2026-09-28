@@ -5,8 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { ApplyTuningEdits, setAt, TuningEdits } from "../src/dev/tuning-edits.ts"
-import type { TuningEditsValue } from "../src/dev/tuning-edits.ts"
+import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { initialMachines, initialResources } from "../src/runtime.ts"
@@ -65,13 +64,14 @@ describe("hit-stop", () => {
 
 describe("live tuning", () => {
   it("applies queued edits to the Tuning resource", () => {
-    const queue: TuningEditsValue = { replace: undefined, edits: [{ path: ["dash", "distance"], value: 999 }, { path: ["waves", "enabled"], value: false }] }
+    const queue = emptyDevCommands()
+    queue.edits.push({ path: ["dash", "distance"], value: 999 }, { path: ["waves", "enabled"], value: false })
     const runtime = Game.Runtime.make({
-      services: Game.Runtime.services(Game.Runtime.service(TuningEdits, queue)),
-      resources: { Tuning: defaultTuning }
+      services: Game.Runtime.services(Game.Runtime.service(DevCommands, queue)),
+      resources: { Tuning: defaultTuning, Rng: { state: 1 } }
     })
     const ReadTuning = Game.Inspector("Test/Tuning", { resources: { tuning: Game.System.readResource(Tuning) } }, ({ resources }) => resources.tuning.get())
-    runtime.tick(Game.Schedule(ApplyTuningEdits))
+    runtime.tick(Game.Schedule(ApplyDevCommands))
     const tuning = runtime.inspect(ReadTuning)
     expect(tuning.dash.distance).toBe(999)
     expect(tuning.waves.enabled).toBe(false)

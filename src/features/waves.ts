@@ -11,7 +11,7 @@ import { circleOverlapsBox } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Waves, whilePlaying } from "../schema.ts"
 import type { EnemyKind, WavesValue } from "../schema.ts"
-import { makePendingSpawn } from "./enemies.ts"
+import { makeGroupSpawns } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, phase: "break", timer: tuning.waves.firstDelay, queue: [] })
@@ -33,7 +33,7 @@ export const composeWave = (tuning: TuningValue, number: number, random: Random)
   return wave
 }
 
-const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec2 | undefined, boxes: ReadonlyArray<Box>, random: Random): Vec2 => {
+export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec2 | undefined, boxes: ReadonlyArray<Box>, random: Random): Vec2 => {
   const margin = 60
   const clearance = tuning.enemies[kind].radius + 12
   let candidate: Vec2 = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
@@ -84,7 +84,9 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       const boxes = wallBoxes(queries.walls.each())
       while (timer <= 0 && queue.length > 0) {
         const kind = queue.shift()!
-        commands.spawnIn(RunScope, makePendingSpawn(kind, pickSpawnPoint(tuning, kind, player, boxes, random), tuning.waves.spawnWarning))
+        for (const spawn of makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random), tuning.waves.spawnWarning)) {
+          commands.spawnIn(RunScope, spawn)
+        }
         timer += tuning.waves.spawnInterval
       }
       if (queue.length === 0) phase = "fighting"

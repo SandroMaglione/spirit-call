@@ -5,7 +5,7 @@
  */
 import { trainingDummies } from "../content/arena.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
+import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
@@ -26,6 +26,7 @@ import {
   Renderable,
   Respawns,
   RunScope,
+  Shield,
   Time,
   Tuning,
   Velocity,
@@ -35,7 +36,7 @@ import type { EnemyKind } from "../schema.ts"
 
 export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1) => {
   const stats = tuning.enemies[kind]
-  return Game.Command.spawn(
+  const draft = Game.Command.spawn(
     [Enemy, { kind }],
     [Position, at],
     [PrevPosition, at],
@@ -46,10 +47,24 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [Health, { current: stats.hp, max: stats.hp }],
     [HitFlash, { remaining: 0 }],
     [Invulnerable, { remaining: 0 }],
-    [Attacker, { phase: "ready", elapsed: 0, cooldown: 0, area: null }],
+    [Attacker, { phase: "ready", elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [Brain, { strafe, strafeTimer: 0 }],
     [Renderable, { kind: "enemy", enemy: kind, radius: stats.radius }]
   )
+  const shield = stats.shield
+  return shield === null
+    ? draft
+    : Game.Command.insert(draft, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (shield.arcDegrees * Math.PI) / 360, turnRate: (shield.turnRate * Math.PI) / 180 }])
+}
+
+/** Spawn warnings for one wave slot: the enemy's whole `group`, clustered around `at`. */
+export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, delay: number) => {
+  const count = tuning.enemies[kind].group
+  const spread = count === 1 ? 0 : tuning.enemies[kind].radius * 3
+  return Array.from({ length: count }, (_, index) => {
+    const angle = (index / count) * Math.PI * 2
+    return makePendingSpawn(kind, { x: at.x + Math.cos(angle) * spread, y: at.y + Math.sin(angle) * spread }, delay)
+  })
 }
 
 /** A spawn warning that becomes an enemy of `kind` at `at` after `delay`. */
@@ -118,6 +133,7 @@ export const SteerEnemies = (() => {
           attacker: Game.Query.read(Attacker)
         }
       }),
+      shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
       player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] })
     },
     resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
@@ -148,7 +164,15 @@ export const SteerEnemies = (() => {
       const stats = tuning.enemies[kind]
       const position = data.position.get()
       const radius = data.body.get().radius
-      const attacking = data.attacker.get().phase !== "ready"
+      const attacker = data.attacker.get()
+      const attacking = attacker.phase !== "ready"
+
+      // A charge moves straight down its lane at full speed, ignoring crowding.
+      const attack = stats.attack
+      if (attack !== null && attack.kind === "charge" && attacker.phase === "active" && attacker.area?.kind === "lane") {
+        data.velocity.set(scale(attacker.area.direction, attack.speed))
+        continue
+      }
 
       let desired: Vec2 = zero
       if (!attacking && target !== undefined) {
@@ -198,9 +222,25 @@ export const SteerEnemies = (() => {
         pushY += ny * overlap * tuning.crowd.separation
       })
 
-      const velocity = data.velocity.get()
+      // Leaving a charge drops the charge speed at once.
+      const velocity = clampLength(data.velocity.get(), Math.max(stats.speed, 1))
       const steered = moveToward(velocity, desired, Math.max(stats.acceleration, 1) * dt)
       data.velocity.set({ x: steered.x + pushX * dt * 10, y: steered.y + pushY * dt * 10 })
+    }
+
+    // Shields turn toward the player at their turn rate.
+    if (target !== undefined) {
+      for (const { data } of queries.shields.each()) {
+        const shield = data.shield.get()
+        const position = data.position.get()
+        const want = Math.atan2(target.y - position.y, target.x - position.x)
+        const have = Math.atan2(shield.facing.y, shield.facing.x)
+        let delta = want - have
+        while (delta > Math.PI) delta -= Math.PI * 2
+        while (delta < -Math.PI) delta += Math.PI * 2
+        const step = Math.max(-shield.turnRate * dt, Math.min(shield.turnRate * dt, delta))
+        data.shield.set({ ...shield, facing: { x: Math.cos(have + step), y: Math.sin(have + step) } })
+      }
     }
   })
 })()

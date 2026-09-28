@@ -8,8 +8,9 @@
  */
 import { defaultTuning } from "../config/tuning.ts"
 import type { Tuning } from "../config/tuning.ts"
-import { setAt } from "../dev/tuning-edits.ts"
-import type { TuningEditsValue, TuningPath } from "../dev/tuning-edits.ts"
+import { setAt } from "../dev/commands.ts"
+import type { DevCommandsValue, TuningPath } from "../dev/commands.ts"
+import type { EnemyKind } from "../schema.ts"
 
 const storageKey = "shooter.tuning"
 
@@ -43,7 +44,7 @@ const stepFor = (value: number): number => {
   return 0.005
 }
 
-export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: TuningEditsValue) => {
+export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: DevCommandsValue) => {
   let current = initial
   const overrides = new Map<string, { path: TuningPath; value: number | boolean }>()
   for (const saved of (() => {
@@ -66,9 +67,29 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: Tu
         <button data-reset>Reset</button>
       </div>
     </header>
+    <section class="tuning__spawn">
+      <strong>Spawn</strong>
+      <div class="tuning__spawn-buttons" data-spawn></div>
+    </section>
     <div class="tuning__body" data-body></div>
   `
   const body = root.querySelector<HTMLElement>("[data-body]")!
+
+  // One button per enemy type, plus clear; waves.enabled below toggles waves for a quiet sandbox.
+  const spawnButtons = root.querySelector<HTMLElement>("[data-spawn]")!
+  for (const kind of Object.keys(initial.enemies) as Array<EnemyKind>) {
+    const button = document.createElement("button")
+    button.textContent = kind
+    button.addEventListener("click", () => queue.spawns.push(kind))
+    spawnButtons.append(button)
+  }
+  const clear = document.createElement("button")
+  clear.textContent = "clear"
+  clear.className = "is-clear"
+  clear.addEventListener("click", () => {
+    queue.clear = true
+  })
+  spawnButtons.append(clear)
   const inputs = new Map<string, HTMLInputElement>()
 
   const persist = () => localStorage.setItem(storageKey, JSON.stringify([...overrides.values()]))
