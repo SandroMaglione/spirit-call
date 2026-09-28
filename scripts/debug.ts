@@ -13,6 +13,7 @@ import { Invariant, Session } from "@typeonce/bevy-ts-devtools"
 
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
+import { frame } from "../src/presentation/schedule.ts"
 import { Game, Player, Position } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
@@ -38,7 +39,13 @@ const InsideArena = Invariant.make("player inside arena", () => {
   return undefined
 })
 
-const session = Session.make(sim.runtime, { schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate }, invariants: [InsideArena] })
+// The render schedule needs Pixi services the headless runtime lacks: describe it
+// (so its event reads count in lints) without running it.
+const session = Session.make(sim.runtime, {
+  schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
+  describe: { frame },
+  invariants: [InsideArena]
+})
 
 console.log(session.run("setup"))
 console.log(session.run("fixedUpdate", { frames: 180 }))
