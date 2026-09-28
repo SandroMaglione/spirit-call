@@ -9,6 +9,7 @@
  * afterwards, so restart the run to see them everywhere.
  */
 import { Descriptor } from "@typeonce/bevy-ts"
+import type { ReadonlyValue } from "@typeonce/bevy-ts/Query"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { makeGroupSpawns } from "../features/enemies.ts"
@@ -37,7 +38,7 @@ export const DevCommands = Descriptor.Service<DevCommandsValue>()("Shooter/DevCo
 export const emptyDevCommands = (): DevCommandsValue => ({ replace: undefined, edits: [], spawns: [], clear: false })
 
 /** Returns `tuning` with the value at `path` replaced. */
-export const setAt = (tuning: TuningValue, path: TuningPath, value: number | boolean): TuningValue => {
+export const setAt = (tuning: ReadonlyValue<TuningValue>, path: TuningPath, value: number | boolean): TuningValue => {
   const write = (node: unknown, depth: number): unknown => {
     if (depth === path.length) return value
     const key = path[depth]!
@@ -51,7 +52,7 @@ export const setAt = (tuning: TuningValue, path: TuningPath, value: number | boo
 const devSpawnWarning = 0.6
 
 /** A free spot about `distance` from `around`, inside the arena and clear of walls: on screen, not on top of the player. */
-const pickNearPoint = (tuning: TuningValue, kind: EnemyKind, around: Vec2, boxes: ReadonlyArray<Box>, random: Random, distance = 320): Vec2 => {
+const pickNearPoint = (tuning: ReadonlyValue<TuningValue>, kind: EnemyKind, around: Vec2, boxes: ReadonlyArray<Box>, random: Random, distance = 320): Vec2 => {
   const margin = 60
   const clearance = tuning.enemies[kind].radius * 3 + 12
   let candidate = around
@@ -78,7 +79,8 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
 }, ({ queries, resources, services, commands }) => {
   const queue = services.commands
   if (queue.replace !== undefined || queue.edits.length > 0) {
-    let tuning: TuningValue = queue.replace ?? structuredClone(resources.tuning.get() as TuningValue)
+    // setAt copies along the edited path, so the current value is never mutated.
+    let tuning: ReadonlyValue<TuningValue> = queue.replace ?? resources.tuning.get()
     for (const edit of queue.edits) tuning = setAt(tuning, edit.path, edit.value)
     queue.replace = undefined
     queue.edits.length = 0
@@ -92,7 +94,7 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
   }
 
   if (queue.spawns.length > 0) {
-    const tuning = resources.tuning.get() as TuningValue
+    const tuning = resources.tuning.get()
     const player = queries.player.each()[0]?.data.position.get() ?? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
     const boxes = wallBoxes(queries.walls.each())
     const random = new Random(resources.rng.get().state)
