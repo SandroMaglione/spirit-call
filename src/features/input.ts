@@ -3,6 +3,7 @@
  * into resources once per fixed step, then turned into world-space intent
  * (`Controls`) that gameplay systems read.
  */
+import { InputCapture } from "@typeonce/bevy-ts-browser"
 
 import { projection } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
@@ -23,19 +24,9 @@ import {
 } from "../schema.ts"
 import type { ControlsValue } from "../schema.ts"
 
-export const CaptureKeys = Game.System("Shooter/CaptureKeys", {
-  resources: { keys: Game.System.writeResource(Keys) },
-  services: { keyboard: Game.System.service(KeyboardInput) }
-}, ({ resources, services }) => {
-  resources.keys.set(services.keyboard.snapshot())
-})
+export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKeys", source: KeyboardInput, resource: Keys })
 
-export const CapturePointer = Game.System("Shooter/CapturePointer", {
-  resources: { pointer: Game.System.writeResource(PointerState) },
-  services: { pointer: Game.System.service(PointerInput) }
-}, ({ resources, services }) => {
-  resources.pointer.set(services.pointer.snapshot())
-})
+export const CapturePointer = InputCapture.system(Game, { name: "Shooter/CapturePointer", source: PointerInput, resource: PointerState })
 
 export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
   resources: { viewport: Game.System.writeResource(Viewport) },
