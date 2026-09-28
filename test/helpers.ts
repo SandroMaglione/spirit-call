@@ -3,7 +3,7 @@ import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import { Aim, AimAssist, Controls, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
+import { Aim, Controls, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
 export const PlayerState = Game.Inspector("Test/PlayerState", {
@@ -14,8 +14,7 @@ export const PlayerState = Game.Inspector("Test/PlayerState", {
         velocity: Game.Query.read(Velocity),
         aim: Game.Query.read(Aim),
         dash: Game.Query.read(Dash),
-        invulnerable: Game.Query.read(Invulnerable),
-        assist: Game.Query.read(AimAssist)
+        invulnerable: Game.Query.read(Invulnerable)
       },
       with: [Player]
     })
@@ -30,7 +29,6 @@ export const PlayerState = Game.Inspector("Test/PlayerState", {
     aim: player.data.aim.get(),
     dash: player.data.dash.get(),
     invulnerable: player.data.invulnerable.get().remaining,
-    assist: player.data.assist.get().target,
     scheme: resources.controls.get().scheme
   }
 })

@@ -31,8 +31,6 @@ export const Player = Descriptor.Tag("Shooter/Player")
 /** Unit direction the entity aims at. */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
 
-/** The enemy keyboard aim assist locked onto this step (entity id), if any. */
-export const AimAssist = Descriptor.Component<{ readonly target: number | null }>()("Shooter/AimAssist")
 
 export interface DashValue {
   /** Time left in the current dash; 0 when not dashing. */
@@ -175,11 +173,8 @@ export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Sho
 /** Where the player wants to aim this step. */
 export type AimIntent =
   | { readonly kind: "none" }
-  /**
-   * Keyboard aim: one of 8 screen directions (`screen`, unit length) and the
-   * world direction that projects onto it; aim assist refines it.
-   */
-  | { readonly kind: "direction"; readonly direction: Vec2; readonly screen: Vec2 }
+  /** Keyboard aim: the world direction (unit length) that projects onto one of 8 screen directions. */
+  | { readonly kind: "direction"; readonly direction: Vec2 }
   /** Mouse aim: the ground point under the cursor. */
   | { readonly kind: "point"; readonly point: Vec2 }
 
@@ -272,7 +267,6 @@ export const Game = Schema.bind(
       Wall,
       Player,
       Aim,
-      AimAssist,
       Dash,
       Invulnerable,
       Health,

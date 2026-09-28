@@ -85,7 +85,9 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     keys.aimRight.held || keys.aimRight.pressed
   )
 
-  const pointerMoved = pointer.position.x !== previous.pointerAt.x || pointer.position.y !== previous.pointerAt.y
+  // Only a pointer actually over the game counts: before the first mouse
+  // event the browser reports (0, 0), which is not the player moving the mouse.
+  const pointerMoved = pointer.over && (pointer.position.x !== previous.pointerAt.x || pointer.position.y !== previous.pointerAt.y)
   const scheme = aiming ? "keyboard" : pointerMoved || pointer.primary.pressed ? "mouse" : previous.scheme
 
   let aim: ControlsValue["aim"] = { kind: "none" }
@@ -95,11 +97,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     const offset = toWorld(projection, { x: pointer.position.x - viewport.width / 2, y: pointer.position.y - viewport.height / 2 })
     aim = { kind: "point", point: { x: camera.x + offset.x, y: camera.y + offset.y } }
   } else if (aimScreen.x !== 0 || aimScreen.y !== 0) {
-    aim = {
-      kind: "direction",
-      direction: normalizeOr(screenDirectionToWorld(projection, aimScreen), zero),
-      screen: normalizeOr(aimScreen, zero)
-    }
+    aim = { kind: "direction", direction: normalizeOr(screenDirectionToWorld(projection, aimScreen), zero) }
   }
 
   resources.controls.set({

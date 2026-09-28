@@ -5,7 +5,6 @@ import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../mat
 import type { Vec2 } from "../math/vec.ts"
 import {
   Aim,
-  AimAssist,
   Body,
   Controls,
   Dash,
@@ -37,7 +36,6 @@ export const makePlayer = (tuning: TuningValue, at: Vec2) =>
     [Velocity, { x: 0, y: 0 }],
     [Body, { radius: tuning.player.radius }],
     [Aim, { x: 1, y: 0 }],
-    [AimAssist, { target: null }],
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
     [Invulnerable, { remaining: 0 }],
     [Weapon, { cooldown: 0 }],

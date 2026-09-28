@@ -12,7 +12,6 @@ import { depthOf, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
 import {
   Aim,
-  AimAssist,
   Attacker,
   Camera,
   Controls,
@@ -195,14 +194,12 @@ const DrawEnemies = Game.System("Shooter/DrawEnemies", {
         attacker: Game.Query.read(Attacker),
         renderable: Game.Query.read(Renderable)
       }
-    }),
-    assists: Game.Query({ selection: { assist: Game.Query.read(AimAssist) }, with: [Player] })
+    })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   services: { nodes: Game.System.service(RenderNodes), host: Game.System.service(RenderHost) }
 }, ({ queries, resources, services }) => {
   const tuning = resources.tuning.get()
-  const targets = new Set(queries.assists.each().map(({ data }) => data.assist.get().target))
   const overlay = services.host.overlay
   overlay.clear()
   for (const { entity, data } of queries.enemies.each()) {
@@ -214,15 +211,6 @@ const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     // Anticipation: the body brightens through the windup.
     const windup = spec !== null && attacker.phase === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
     node.body.tint = data.flash.get().remaining > 0 ? view.hitFlash : mixColor(enemyColor(kind), view.windupTint, windup * 0.75)
-    if (targets.has(entity.id.value)) {
-      // Aim-assist lock: a ring at the feet and a marker overhead.
-      const renderable = data.renderable.get()
-      const r = (renderable.kind === "enemy" ? renderable.radius : 16) * projection.zoom + 8
-      const { x, y } = node.root.position
-      overlay.ellipse(x, y, r, r * projection.squash).stroke({ width: 2, color: view.aim, alpha: 0.9 })
-      const top = y - r * view.enemies[kind].heightFactor - 18
-      overlay.poly([x - 6, top - 8, x + 6, top - 8, x, top]).fill({ color: view.aim, alpha: 0.9 })
-    }
     const health = data.health.get()
     if (health.current >= health.max) continue
     const renderable = data.renderable.get()

@@ -1,12 +1,13 @@
+import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { assistTarget } from "../src/features/aim.ts"
+import { keyBindings } from "../src/config/input.ts"
+
+import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { projection } from "../src/config/view.ts"
-import { screenDirectionToWorld, toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Game, RunScope, Stats } from "../src/schema.ts"
+import { Camera, Controls, Game, RunScope, Stats } from "../src/schema.ts"
+import { createSimulation } from "../src/simulation.ts"
 import { ClearEnemies, start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
@@ -25,22 +26,8 @@ const arena = (enemies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
   return run
 }
 
-/** `direction` rotated by `degrees`, scaled to `distance`. */
-const around = (direction: Vec2, degrees: number, distance: number): Vec2 => {
-  const angle = Math.atan2(direction.y, direction.x) + (degrees * Math.PI) / 180
-  return { x: Math.cos(angle) * distance, y: Math.sin(angle) * distance }
-}
-
 // Screen "up" in the isometric view is world north-west.
 const screenUp = { x: -SQRT1_2, y: -SQRT1_2 }
-
-/** A world offset that appears `degrees` away from screen direction `screen` (unit), at world `distance`. */
-const onScreenAround = (screen: Vec2, degrees: number, distance: number): Vec2 => {
-  const direction = around(screen, degrees, 1)
-  const world = screenDirectionToWorld(projection, direction)
-  const length = Math.hypot(world.x, world.y)
-  return { x: (world.x / length) * distance, y: (world.y / length) * distance }
-}
 
 describe("keyboard aiming", () => {
   it("aims and fires in the screen direction of the held aim key", () => {
@@ -61,36 +48,23 @@ describe("keyboard aiming", () => {
     expect(aim.y).toBeLessThan(-0.9)
   })
 
-  it("snaps to an enemy within the assist cone and ignores one outside it", () => {
-    const up = { x: 0, y: -1 }
-    const inside = onScreenAround(up, 18, 400)
-    const run = arena([inside, onScreenAround(up, 40, 300)], { keys: [{ frame: 0, press: ["aimUp"] }] })
-    run.step(2)
-    const { aim, assist } = run.player()
-    const expected = { x: inside.x / 400, y: inside.y / 400 }
-    expect(assist).not.toBeNull()
-    expect(aim.x).toBeCloseTo(expected.x, 6)
-    expect(aim.y).toBeCloseTo(expected.y, 6)
+  it("aims exactly where the key points, with no snapping toward enemies", () => {
+    // An enemy 10° off screen-up, well within reach of any assist.
+    const off = { x: Math.cos(Math.atan2(screenUp.y, screenUp.x) + 0.17) * 300, y: Math.sin(Math.atan2(screenUp.y, screenUp.x) + 0.17) * 300 }
+    const run = arena([off], { keys: [{ frame: 0, press: ["aimUp"] }] })
+    run.step(20)
+    const { aim } = run.player()
+    expect(aim.x).toBeCloseTo(screenUp.x, 9)
+    expect(aim.y).toBeCloseTo(screenUp.y, 9)
   })
 
-  it("does not lock onto enemies behind walls, and can be turned off", () => {
-    const walls = [{ minX: center.x - 200, minY: center.y - 300, maxX: center.x + 200, maxY: center.y - 280 }]
-    const behind = { id: 1, position: { x: center.x, y: center.y - 400 } }
-    // World north appears up-right on screen.
-    const projected = toScreen(projection, { x: 0, y: -1 })
-    const northOnScreen = { x: projected.x / Math.hypot(projected.x, projected.y), y: projected.y / Math.hypot(projected.x, projected.y) }
-    expect(assistTarget(defaultTuning, center, northOnScreen, [behind], walls)).toBeUndefined()
-    expect(assistTarget(defaultTuning, center, northOnScreen, [behind], [])).toEqual(behind)
-    expect(assistTarget(tuningWith({ controls: { aimAssistDegrees: 0 } }), center, northOnScreen, [behind], [])).toBeUndefined()
-  })
-
-  it("leaves no enemy unreachable: every direction around the player is covered by one of the 8 keys", () => {
-    // The 8 keys are 45° apart on screen; check every world direction.
-    const directions = [0, 45, 90, 135, 180, 225, 270, 315].map((degrees) => around({ x: 1, y: 0 }, degrees, 1))
-    for (let degrees = 0; degrees < 360; degrees += 0.5) {
-      const enemy = { id: 1, position: { x: center.x + Math.cos((degrees * Math.PI) / 180) * 300, y: center.y + Math.sin((degrees * Math.PI) / 180) * 300 } }
-      const reachable = directions.some((direction) => assistTarget(defaultTuning, center, direction, [enemy], []) !== undefined)
-      expect(reachable, `enemy at ${degrees}°`).toBe(true)
+  it("keeps the camera on the player while aiming with the keyboard", () => {
+    const CameraAt = Game.Inspector("Test/Camera", { resources: { camera: Game.System.readResource(Camera) } }, ({ resources }) => resources.camera.get())
+    const run = arena([], { keys: [{ frame: 0, press: ["aimRight"] }, { frame: 30, release: ["aimRight"], press: ["aimLeft"] }] })
+    for (let step = 0; step < 60; step++) {
+      run.step()
+      const camera = run.runtime.inspect(CameraAt)
+      expect(Math.hypot(camera.x - center.x, camera.y - center.y)).toBeLessThan(1e-6)
     }
   })
 
@@ -132,5 +106,17 @@ describe("switching devices", () => {
     expect(run.player().scheme).toBe("mouse")
     run.step(5)
     expect(run.player().scheme).toBe("keyboard")
+  })
+})
+
+describe("pointer before any mouse use", () => {
+  it("does not switch to mouse aim when the pointer reports (0, 0) without being over the game", () => {
+    // Like a browser before the first mouse event.
+    const untouched: Pointer.Pointer = { snapshot: () => Pointer.idle(), dispose: () => {} }
+    const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: untouched })
+    sim.runtime.tick(sim.setup)
+    for (let step = 0; step < 10; step++) sim.runtime.tick(sim.fixedUpdate)
+    const Scheme = Game.Inspector("Test/Scheme", { resources: { controls: Game.System.readResource(Controls) } }, ({ resources }) => resources.controls.get().scheme)
+    expect(sim.runtime.inspect(Scheme)).toBe("keyboard")
   })
 })

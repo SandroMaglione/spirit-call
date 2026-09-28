@@ -105,18 +105,8 @@ export const defaultTuning = {
   },
 
   controls: {
-    /**
-     * Keyboard aim assist: an aim direction snaps to the best visible enemy
-     * within this many degrees of it. 8 directions are 45° apart, so ≥ 22.5
-     * leaves no enemy unreachable. 0 disables the assist.
-     */
-    aimAssistDegrees: 24,
-    /** Farthest enemy the assist considers. */
-    aimAssistRange: 700,
     /** When not aiming with the keyboard, face the movement direction. */
-    faceMovement: true,
-    /** Camera leads this far ahead in the keyboard aim direction while aiming. */
-    keyboardCameraLead: 80
+    faceMovement: true
   },
 
   dash: {
