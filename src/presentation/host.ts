@@ -33,6 +33,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       <div class="hud__gameover-hint" data-gameover-hint>Press R or click to restart</div>
     </div>
     <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click attack · Space blade wave · Shift ultimate</div>
+    <button class="hud__mute" data-mute type="button" title="Sound (M)">🔊</button>
     <div class="pad" data-pad hidden>
       <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
       ${touchButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
@@ -52,6 +53,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       skills: { grenade: slot("grenade"), ultimate: slot("ultimate") },
       desktopOnly: [root.querySelector<HTMLElement>(".hud__skills")!, root.querySelector<HTMLElement>("[data-hint]")!],
       gameOverHint: root.querySelector<HTMLElement>("[data-gameover-hint]")!,
+      mute: root.querySelector<HTMLButtonElement>("[data-mute]")!,
       pad: {
         root: root.querySelector<HTMLElement>("[data-pad]")!,
         stick: root.querySelector<HTMLElement>("[data-stick]")!,

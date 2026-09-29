@@ -12,6 +12,7 @@ import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
 import type { Box } from "./physics/shapes.ts"
 import type { RenderHostValue, RenderNode } from "./presentation/host-types.ts"
+import type { SoundBoard } from "./presentation/sound.ts"
 
 export const Root = Schema.defineRoot("Shooter")
 
@@ -202,6 +203,8 @@ export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fac
 export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction; readonly kind: "grenade" | "ultimate" }>()("Shooter/Explosion")
 
 /** A projectile stopped against a wall or a shield, or ran out of range. */
+/** Something the player did, for feedback such as sound: one slash, shot, Blade Wave, grenade throw, or dash. */
+export const Action = Descriptor.Event<{ readonly kind: "slash" | "shot" | "wave" | "throw" | "dash"; readonly at: Vec2 }>()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 
 // ── Resources ─────────────────────────────────────────────────────────────
@@ -308,6 +311,8 @@ export interface RenderClockValue {
 }
 export const RenderClock = Descriptor.Service<RenderClockValue>()("Shooter/RenderClock")
 export const RenderHost = Descriptor.Service<RenderHostValue>()("Shooter/RenderHost")
+/** Game sounds (see presentation/sound.ts). */
+export const Sounds = Descriptor.Service<SoundBoard>()("Shooter/Sounds")
 export const RenderNodes = Descriptor.Service<NodeRegistry.NodeRegistry<RenderNode>>()("Shooter/RenderNodes")
 
 // ── Game ──────────────────────────────────────────────────────────────────
@@ -359,7 +364,7 @@ export const Game = Schema.bind(
       Run,
       HitStop
     },
-    events: { Damage, Hit, Death, Impact, Explosion }
+    events: { Damage, Hit, Death, Impact, Explosion, Action }
   }),
   Root
 )

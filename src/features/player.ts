@@ -4,6 +4,7 @@
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import {
+  Action,
   Aim,
   Body,
   Controls,
@@ -20,9 +21,9 @@ import {
   Renderable,
   RunScope,
   Skills,
-  Ultimate,
   Time,
   Tuning,
+  Ultimate,
   Velocity,
   Weapon
 } from "../schema.ts"
@@ -79,8 +80,9 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     controls: Game.System.readResource(Controls),
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time)
-  }
-}, ({ queries, resources }) => {
+  },
+  events: { action: Game.System.writeEvent(Action) }
+}, ({ queries, resources, events }) => {
   const controls = resources.controls.get()
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -101,6 +103,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     if (remaining <= 0 && buffered > 0 && cooldown <= 0) {
       direction = normalizeOr(controls.move, aim)
       remaining = tuning.dash.duration
+      events.action.emit({ kind: "dash", at: position })
       nextCooldown = tuning.dash.cooldown
       buffered = 0
       const invulnerable = data.invulnerable.get().remaining

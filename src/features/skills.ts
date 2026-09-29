@@ -11,6 +11,7 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { clampLength, normalizeOr, scale, sub } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
+  Action,
   Aim,
   Controls,
   Explosion,
@@ -43,8 +44,9 @@ export const UseSpecial = Game.System("Shooter/UseSpecial", {
     player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.write(Aim), skills: Game.Query.write(Skills) }, with: [Player] }),
     walls: Walls
   },
-  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
-}, ({ queries, resources, commands }) => {
+  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
+  events: { action: Game.System.writeEvent(Action) }
+}, ({ queries, resources, events, commands }) => {
   const controls = resources.controls.get()
   const skills = resources.tuning.get().skills
   const dt = resources.time.get().dt
@@ -67,6 +69,7 @@ export const UseSpecial = Game.System("Shooter/UseSpecial", {
           pushAlong: direction
         }]))
         data.aim.set(direction)
+        events.action.emit({ kind: "wave", at: position })
         cooldown = wave.cooldown
       } else {
         const offset = clampLength(sub(controls.skillAt, position), skills.grenade.maxRange)
@@ -76,6 +79,7 @@ export const UseSpecial = Game.System("Shooter/UseSpecial", {
           faction: "player",
           elapsed: 0
         }]))
+        events.action.emit({ kind: "throw", at: position })
         cooldown = skills.grenade.cooldown
       }
     }

@@ -12,6 +12,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
+  Action,
   Aim,
   Controls,
   Damage,
@@ -36,9 +37,9 @@ import {
   RunScope,
   Shield,
   Stats,
-  Ultimate,
   Time,
   Tuning,
+  Ultimate,
   Velocity,
   Weapon
 } from "../schema.ts"
@@ -72,8 +73,9 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time),
     stats: Game.System.writeResource(Stats)
-  }
-}, ({ queries, resources, commands }) => {
+  },
+  events: { action: Game.System.writeEvent(Action) }
+}, ({ queries, resources, events, commands }) => {
   const controls = resources.controls.get()
   const weapon = resources.tuning.get().weapon
   const slash = resources.tuning.get().slash
@@ -101,6 +103,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
           charges: true
         }]))
         shots += 1
+        events.action.emit({ kind: "slash", at: position })
         data.weapon.set({ cooldown: slash.interval, buffered: 0 })
       } else {
         data.weapon.set({ cooldown, buffered })
@@ -129,6 +132,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
       }))
       cooldown += weapon.fireInterval
       shots += 1
+      events.action.emit({ kind: "shot", at: muzzle })
     }
     data.weapon.set({ cooldown, buffered: 0 })
   }

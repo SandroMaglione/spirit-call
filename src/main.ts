@@ -7,6 +7,7 @@ import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
+import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import {
@@ -17,7 +18,8 @@ import {
   TouchInput,
   RenderClock,
   RenderHost,
-  RenderNodes
+  RenderNodes,
+  Sounds
 } from "./schema.ts"
 import type { FrameContextValue, RenderClockValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
@@ -37,6 +39,22 @@ const start = async (mount: HTMLElement) => {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
+  const sounds = createSoundBoard(window)
+  // Mute with M or the speaker button (remembered across visits).
+  const muteButton = browser.host.hud.mute
+  const showMute = () => {
+    muteButton.textContent = sounds.muted() ? "🔇" : "🔊"
+  }
+  const toggleMute = () => {
+    sounds.setMuted(!sounds.muted())
+    showMute()
+  }
+  showMute()
+  muteButton.addEventListener("pointerdown", (event) => event.stopPropagation())
+  muteButton.addEventListener("click", toggleMute)
+  window.addEventListener("keydown", (event) => {
+    if (event.code === "KeyM" && !(event.target instanceof HTMLInputElement)) toggleMute()
+  })
   const frameContext: FrameContextValue = {
     get viewport() {
       return { width: app.screen.width, height: app.screen.height }
@@ -52,6 +70,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(RenderClock, clock),
       Game.Runtime.service(RenderHost, browser.host),
       Game.Runtime.service(RenderNodes, browser.nodes),
+      Game.Runtime.service(Sounds, sounds),
       Game.Runtime.service(DevCommands, devCommands)
     ),
     resources: initialResources(tuning, frameContext.viewport),

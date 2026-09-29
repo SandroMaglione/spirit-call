@@ -13,9 +13,10 @@ import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import {
+  Action,
   Aim,
-  Attacker,
   AttackPhase,
+  Attacker,
   Body,
   Camera,
   Controls,
@@ -24,8 +25,8 @@ import {
   Enemy,
   Explosion,
   Flow,
-  Grenade,
   Game,
+  Grenade,
   Health,
   Hit,
   HitFlash,
@@ -44,10 +45,11 @@ import {
   Run,
   Shield,
   Skills,
+  Sounds,
   Stats,
-  Ultimate,
   TouchInput,
   Tuning,
+  Ultimate,
   Wall,
   Waves,
   Weapon
@@ -343,6 +345,36 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
 })
 
 /** Turns gameplay events into cosmetic effects. */
+/**
+ * Sounds for what happened since the last frame: the player's actions,
+ * hits (a heavier sound for kills, a harsh one when the player is hit),
+ * explosions, shots turned by shields, and the player's death.
+ */
+const PlaySounds = Game.System("Shooter/PlaySounds", {
+  events: {
+    action: Game.System.readEvent(Action),
+    hit: Game.System.readEvent(Hit),
+    death: Game.System.readEvent(Death),
+    impact: Game.System.readEvent(Impact),
+    explosion: Game.System.readEvent(Explosion)
+  },
+  services: { sounds: Game.System.service(Sounds) }
+}, ({ events, services }) => {
+  const sounds = services.sounds
+  for (const action of events.action.all()) sounds.play(action.kind)
+  for (const hit of events.hit.all()) {
+    if (hit.faction === "player") sounds.play("hurt")
+    else sounds.play(hit.killed ? "kill" : "hit")
+  }
+  for (const death of events.death.all()) {
+    if (death.faction === "player") sounds.play("death")
+  }
+  for (const impact of events.impact.all()) {
+    if (impact.shielded) sounds.play("block")
+  }
+  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "ultimate" ? "nova" : "boom")
+})
+
 const SpawnFx = Game.System("Shooter/SpawnFx", {
   events: {
     hit: Game.System.readEvent(Hit),
@@ -600,7 +632,7 @@ const SyncHud = Game.System("Shooter/SyncHud", {
     tuning: Game.System.readResource(Tuning)
   },
   machines: { flow: Game.System.machine(Flow) },
-  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
 }, ({ queries, resources, machines, services }) => {
   const hud = services.host.hud
   const waves = resources.waves.get()
@@ -608,6 +640,7 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   if (waves.number !== feedback.bannerWave) {
     feedback.bannerWave = waves.number
     if (waves.number > 0) {
+      services.sounds.play("waveStart")
       hud.banner.textContent = `WAVE ${waves.number}`
       hud.banner.classList.remove("is-showing")
       void hud.banner.offsetWidth // restart the CSS animation
@@ -660,6 +693,7 @@ export const frame = Game.Schedule(
   DrawEnemies,
   DrawTelegraphs,
   DrawTouchAim,
+  PlaySounds,
   SpawnFx,
   UpdateFx,
   FadeOccluders,

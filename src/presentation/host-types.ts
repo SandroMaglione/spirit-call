@@ -46,6 +46,8 @@ export interface HudRefs {
   /** The keyboard skill bar and key hint, hidden while playing with touch. */
   readonly desktopOnly: ReadonlyArray<HTMLElement>
   readonly gameOverHint: HTMLElement
+  /** Sound on/off. */
+  readonly mute: HTMLButtonElement
   readonly pad: TouchPadRefs
   readonly health: HTMLElement
   readonly healthText: HTMLElement
