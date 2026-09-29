@@ -56,12 +56,40 @@ describe("sword slash", () => {
     expect(run.runtime.inspect(World).slashes).toBe(Math.floor(seconds / slash.interval - 1e-9) + 1)
   })
 
-  it("leads the camera toward the facing on touch", () => {
+  it("keeps the camera centered on the player on touch", () => {
     const run = arena([], 1)
     run.step(120)
     const { camera, player } = run.runtime.inspect(World)
-    // Facing world +x: the camera settles facingLead ahead of the player.
-    expect(camera.x - player.x).toBeCloseTo(defaultTuning.camera.facingLead, 1)
-    expect(camera.y - player.y).toBeCloseTo(0, 1)
+    expect(camera.x).toBeCloseTo(player.x, 1)
+    expect(camera.y).toBeCloseTo(player.y, 1)
+  })
+
+  it("drives enemies back: a slash pushes about knockback / decay, and a walking enemy is staggered instead of walking back in", () => {
+    const pushed = arena([{ x: 80, y: 0 }], 1)
+    pushed.step(40)
+    const [dummy] = pushed.runtime.inspect(World).enemies
+    expect(dummy!.position.x - center.x - 80).toBeCloseTo(slash.knockback / defaultTuning.knockback.decay, 0)
+
+    // A chaser right in front: after one slash it ends up out of reach for a while.
+    const run = start({ touch: [{ frame: 0, press: ["attack"] }, { frame: 1, release: ["attack"] }] })
+    const Place = Game.System("Test/PlaceChaser", {
+      queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+    }, ({ queries, commands }) => {
+      for (const { entity } of queries.dummies.each()) commands.despawn(entity.id)
+      commands.spawnIn(RunScope, makeEnemy(defaultTuning, "chaser", { x: center.x + 70, y: center.y }))
+    })
+    run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
+    run.step(18)
+    const chaser = run.runtime.inspect(World).enemies[0]!
+    expect(chaser.health).toBe(defaultTuning.enemies.chaser.hp - slash.damage)
+    expect(chaser.position.x - center.x).toBeGreaterThan(slash.reach)
+  })
+
+  it("recharges between slashes: tapping faster than the interval does not slash faster", () => {
+    const seconds = 2
+    const taps = Array.from({ length: Math.round(seconds / engine.stepSeconds / 3) }, (_, index) => ({ frame: index * 3, press: ["attack" as const], release: ["attack" as const] }))
+    const run = start({ touch: taps })
+    run.step(Math.round(seconds / engine.stepSeconds))
+    expect(run.runtime.inspect(World).slashes).toBe(Math.floor(seconds / slash.interval - 1e-9) + 1)
   })
 })

@@ -48,7 +48,8 @@ import {
   TouchInput,
   Tuning,
   Wall,
-  Waves
+  Waves,
+  Weapon
 } from "../schema.ts"
 import type { Area } from "../physics/areas.ts"
 import { aimLocked } from "../features/attacks.ts"
@@ -469,7 +470,7 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
  */
 const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   queries: {
-    player: Game.Query({ selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), ultimate: Game.Query.read(Ultimate) }, with: [Player] })
+    player: Game.Query({ selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), ultimate: Game.Query.read(Ultimate), weapon: Game.Query.read(Weapon) }, with: [Player] })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), touch: Game.System.service(TouchInput) }
@@ -505,7 +506,8 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const tuning = resources.tuning.get()
   const [player] = queries.player.each()
   const fill = {
-    attack: 0,
+    // The sword recharges between slashes; the gun fires too fast to show.
+    attack: player === undefined || !tuning.slash.enabled ? 0 : player.data.weapon.get().cooldown / tuning.slash.interval,
     skill: player === undefined ? 0 : player.data.skills.get().grenade.cooldown / tuning.skills.grenade.cooldown,
     dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
     ultimate: player === undefined ? 1 : 1 - player.data.ultimate.get().energy / tuning.ultimate.energy

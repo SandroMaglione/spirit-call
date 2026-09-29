@@ -33,13 +33,13 @@ export type PointerSnapshot = Pointer.Snapshot
 export type PointerSource = Pointer.Pointer
 
 /**
- * On-screen controls for touch screens, Genshin Impact style: a floating stick
- * in the bottom-left area moves; swiping anywhere else turns the player (a
- * horizontal swipe rotates the facing, see `Tuning.touch.swipeTurn`). On the
- * right, like Stella Sora, a large attack button (hold to fire where you face)
- * with the skill, dash, and ultimate around it. The skill aims by dragging:
- * drag to pick where the grenade lands, release to throw; a tap throws it
- * where you face.
+ * On-screen controls for touch screens: a floating stick on the left half
+ * moves; on the right, like Stella Sora, a large attack pad with the skill,
+ * dash, and ultimate around it. The attack pad is a second stick (Brawl Stars
+ * style): drag it toward a direction to face there and attack; the facing
+ * stays after release, and a tap attacks where the player already faces. The
+ * skill aims the same way: drag to pick where the grenade lands, release to
+ * throw; a tap throws it where you face.
  */
 export const touchButtons = ["attack", "skill", "dash", "ultimate"] as const
 export type TouchButton = (typeof touchButtons)[number]
@@ -52,11 +52,10 @@ export const touchLayout = ({ width, height }: Touch.Size): Touch.Layout<TouchBu
   const px = (value: number) => value * scale
   const attack = { x: width - px(90), y: height - px(90) }
   return {
-    // A small bottom-left area for the thumb; the whole rest of the screen (not on a button) swipes.
-    stick: { region: { left: 0, top: height - px(240), width: px(260), height: px(240) }, radius: px(55), deadZone: 0.12 },
-    swipe: { region: { left: 0, top: 0, width, height } },
+    // Below the top-left HUD, left half of the screen.
+    stick: { region: { left: 0, top: height * 0.25, width: width / 2, height: height * 0.75 }, radius: px(55), deadZone: 0.12 },
     buttons: {
-      attack: { center: attack, radius: px(58) },
+      attack: { center: attack, radius: px(58), aimRadius: px(80), aimDeadZone: 0.25 },
       skill: { center: { x: attack.x - px(122), y: attack.y + px(18) }, radius: px(40), aimRadius: px(90) },
       dash: { center: { x: attack.x - px(98), y: attack.y - px(88) }, radius: px(36) },
       ultimate: { center: { x: attack.x + px(4), y: attack.y - px(128) }, radius: px(38) }

@@ -131,7 +131,8 @@ export const SteerEnemies = (() => {
           enemy: Game.Query.read(Enemy),
           brain: Game.Query.write(Brain),
           attacker: Game.Query.read(Attacker),
-          phase: Game.Query.read(AttackPhase)
+          phase: Game.Query.read(AttackPhase),
+          knockback: Game.Query.read(Knockback)
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
@@ -172,6 +173,12 @@ export const SteerEnemies = (() => {
       const attack = stats.attack
       if (attack !== null && attack.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
         data.velocity.set(scale(attacker.area.direction, attack.speed))
+        continue
+      }
+
+      // Staggered: while a hit's push is strong, the enemy slides with it instead of walking.
+      if (length(data.knockback.get()) > tuning.knockback.staggerSpeed) {
+        data.velocity.set(zero)
         continue
       }
 

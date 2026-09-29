@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
-import { screenDirectionToWorld, toScreen } from "../src/math/iso.ts"
+import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Controls, Game, Grenade, Player, Position, Projectile, Ultimate, Velocity } from "../src/schema.ts"
@@ -11,12 +11,7 @@ import { start, withGun } from "./helpers.ts"
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
 const world = (screen: Vec2): Vec2 => normalizeOr(screenDirectionToWorld(projection, screen), { x: 0, y: 0 })
-/** A world direction turned by `degrees` as seen on screen (clockwise positive), via its screen angle. */
-const turned = (direction: Vec2, degrees: number): Vec2 => {
-  const screen = toScreen(projection, direction)
-  const angle = Math.atan2(screen.y, screen.x) + (degrees * Math.PI) / 180
-  return world({ x: Math.cos(angle), y: Math.sin(angle) })
-}
+
 
 const World = Game.Inspector("Test/Touch", {
   queries: {
@@ -49,40 +44,38 @@ describe("touch controls", () => {
     expect(run.runtime.inspect(World).device).toBe("touch")
   })
 
-  it("turns with a horizontal swipe (right is clockwise on screen) and fires where the player faces", () => {
-    // Swipe right by 90 degrees' worth; the player starts facing world +x.
-    const pixels = 90 / defaultTuning.touch.swipeTurn
-    const run = start({ tuning: withGun(defaultTuning), touch: [{ frame: 0, swipe: { x: pixels, y: 0 } }, { frame: 2, press: ["attack"] }] })
-    run.step(1)
-    const expected = turned({ x: 1, y: 0 }, 90)
-    expect(run.player().aim.x).toBeCloseTo(expected.x, 6)
-    expect(run.player().aim.y).toBeCloseTo(expected.y, 6)
+  it("faces and attacks toward the attack pad's drag", () => {
+    const run = start({ tuning: withGun(defaultTuning), touch: [{ frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } }] })
     run.step(8)
+    const up = world({ x: 0, y: -1 })
+    expect(run.player().aim.x).toBeCloseTo(up.x, 6)
+    expect(run.player().aim.y).toBeCloseTo(up.y, 6)
     const shot = run.runtime.inspect(World).projectiles[0]!.velocity
     const speed = Math.hypot(shot.x, shot.y)
-    expect(shot.x / speed).toBeCloseTo(expected.x, 6)
-    expect(shot.y / speed).toBeCloseTo(expected.y, 6)
+    expect(shot.x / speed).toBeCloseTo(up.x, 6)
+    expect(shot.y / speed).toBeCloseTo(up.y, 6)
   })
 
-  it("keeps facing where the last swipe left it, whatever the stick does", () => {
+  it("keeps facing where the last attack drag pointed, whatever the stick does", () => {
     const run = start({
       tuning: withGun(defaultTuning),
       touch: [
-        { frame: 0, swipe: { x: -45 / defaultTuning.touch.swipeTurn, y: 0 } },
-        { frame: 2, stick: { x: -1, y: 0 } },
+        { frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } },
+        { frame: 3, release: ["attack"] },
+        { frame: 5, stick: { x: -1, y: 0 } },
         { frame: 30, press: ["attack"] }
       ]
     })
-    const expected = turned({ x: 1, y: 0 }, -45)
+    const up = world({ x: 0, y: -1 })
     run.step(29)
     expect(run.player().velocity.x).toBeLessThan(0)
-    expect(run.player().aim.x).toBeCloseTo(expected.x, 6)
-    expect(run.player().aim.y).toBeCloseTo(expected.y, 6)
+    expect(run.player().aim.x).toBeCloseTo(up.x, 6)
+    expect(run.player().aim.y).toBeCloseTo(up.y, 6)
     run.step(5)
     const shot = run.runtime.inspect(World).projectiles.at(-1)!.velocity
     const speed = Math.hypot(shot.x, shot.y)
-    expect(shot.x / speed).toBeCloseTo(expected.x, 6)
-    expect(shot.y / speed).toBeCloseTo(expected.y, 6)
+    expect(shot.x / speed).toBeCloseTo(up.x, 6)
+    expect(shot.y / speed).toBeCloseTo(up.y, 6)
   })
 
   it("throws the grenade on release: to the dragged spot, or ahead for a tap; a cancelled drag throws nothing", () => {
