@@ -353,10 +353,19 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
 })
 
+/** The swing of each combo move, climbing in pitch through the chain. */
+const comboSounds = {
+  first: { name: "slash", pitch: 1 },
+  second: { name: "slash", pitch: 1.08 },
+  third: { name: "thrust", pitch: 1.14 },
+  finisher: { name: "spin", pitch: 1.2 }
+} as const
+
 /**
- * Sounds for what happened since the last frame: the player's actions,
- * hits (a heavier sound for kills, a harsh one when the player is hit),
- * explosions, shots turned by shields, and the player's death.
+ * Sounds for what happened since the last frame: the player's actions (each
+ * combo move its own swing), blows landing (heavier for heavy blows and
+ * kills, harsh when the player is hit), explosions, blows turned by shields,
+ * and the player's death. Each is panned by where it happened on screen.
  */
 const PlaySounds = Game.System("Shooter/PlaySounds", {
   events: {
@@ -366,21 +375,33 @@ const PlaySounds = Game.System("Shooter/PlaySounds", {
     impact: Game.System.readEvent(Impact),
     explosion: Game.System.readEvent(Explosion)
   },
-  services: { sounds: Game.System.service(Sounds) }
-}, ({ events, services }) => {
+  resources: { camera: Game.System.readResource(Camera) },
+  services: { sounds: Game.System.service(Sounds), host: Game.System.service(RenderHost) }
+}, ({ events, resources, services }) => {
   const sounds = services.sounds
-  for (const action of events.action.all()) sounds.play(action.kind)
+  const camera = resources.camera.get()
+  const screen = services.host.app.screen
+  const zoom = viewZoom(screen)
+  /** Left-right position on screen, softened so nothing plays fully in one ear. */
+  const pan = (at: Vec2): number => {
+    const x = toScreen(projection, { x: at.x - camera.x, y: at.y - camera.y }).x * zoom
+    return Math.max(-1, Math.min(1, x / (screen.width / 2))) * 0.6
+  }
+  for (const action of events.action.all()) {
+    if (action.kind === "slash") sounds.play(comboSounds[action.step].name, { pitch: comboSounds[action.step].pitch })
+    else sounds.play(action.kind)
+  }
   for (const hit of events.hit.all()) {
     if (hit.faction === "player") sounds.play("hurt")
-    else sounds.play(hit.killed ? "kill" : "hit")
+    else sounds.play(hit.killed ? "kill" : hit.heavy ? "heavyHit" : "hit", { pan: pan(hit.at) })
   }
   for (const death of events.death.all()) {
     if (death.faction === "player") sounds.play("death")
   }
   for (const impact of events.impact.all()) {
-    if (impact.shielded) sounds.play("block")
+    if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }
-  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "ultimate" ? "nova" : "boom")
+  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "ultimate" ? "nova" : "boom", { pan: pan(explosion.at) })
 })
 
 /** A world direction as a unit direction on screen. */
