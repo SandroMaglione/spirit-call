@@ -198,6 +198,22 @@ describe("sword slash", () => {
     expect(spin.runtime.inspect(World).enemies[0]!.health).toBe(hp - finisher.damage)
   })
 
+  it("lunges forward with each move, stopping short of an enemy straight ahead", () => {
+    // Nothing ahead: a tap carries the player the first move's full lunge along the facing (+x).
+    const open = arena([], 1, { tuning: noAssist })
+    open.step(30)
+    expect(open.runtime.inspect(World).player.x - center.x).toBeCloseTo(first.lunge, 0)
+    expect(open.runtime.inspect(World).player.y).toBeCloseTo(center.y, 6)
+
+    // A dummy just ahead: the lunge ends `lungeStop` short of it, edge to edge.
+    const clearance = defaultTuning.enemies.dummy.hurtboxRadius + defaultTuning.player.radius
+    const close = arena([at(0, clearance + slash.lungeStop + 5)], 1, { tuning: noAssist })
+    close.step(30)
+    const moved = close.runtime.inspect(World).player.x - center.x
+    expect(moved).toBeGreaterThan(3)
+    expect(moved).toBeLessThan(first.lunge - 5)
+  })
+
   it("pauses the game for each blow's own hit-stop, longest for the finisher", () => {
     /** Steps until the dummy is first hurt, then reads the hit-stop started by that blow. */
     const hitStopOnHit = (run: ReturnType<typeof arena>) => {

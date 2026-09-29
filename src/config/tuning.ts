@@ -89,6 +89,8 @@ interface MoveBase {
   readonly hitStop: number
   /** A heavy blow: bigger impact effects (camera kick, zoom punch, larger numbers, deeper sound). */
   readonly heavy: boolean
+  /** How far the move carries the player forward (world units; see `slash.lungeStop`). */
+  readonly lunge: number
 }
 
 /** One move of the sword combo: a sweeping arc, a narrow thrust, or a full spin around the player. */
@@ -228,14 +230,16 @@ export const defaultTuning = {
     comboWindow: 0.8,
     /** How long each move's hitbox stays out (seconds). */
     active: 0.08,
+    /** A lunge stops this far short of an enemy straight ahead (edge to edge), so it closes in without running into it. */
+    lungeStop: 12,
     /** A side slash, light push so enemies stay in reach for the next move. */
-    first: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.26, hitStop: 0.03, heavy: false }),
+    first: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.26, hitStop: 0.03, heavy: false, lunge: 16 }),
     /** The backhand, back across. */
-    second: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.24, hitStop: 0.03, heavy: false }),
+    second: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.24, hitStop: 0.03, heavy: false, lunge: 16 }),
     /** A narrow thrust with more reach. */
-    third: thrustMove({ reach: 175, width: 56, damage: 24, knockback: 620, recovery: 0.3, hitStop: 0.045, heavy: false }),
+    third: thrustMove({ reach: 175, width: 56, damage: 24, knockback: 620, recovery: 0.3, hitStop: 0.045, heavy: false, lunge: 34 }),
     /** A spin all around, launching enemies away; long recovery. */
-    finisher: spinMove({ reach: 140, damage: 40, knockback: 1150, recovery: 0.7, hitStop: 0.09, heavy: true })
+    finisher: spinMove({ reach: 140, damage: 40, knockback: 1150, recovery: 0.7, hitStop: 0.09, heavy: true, lunge: 10 })
   },
 
   /** On-screen touch controls (see `touchLayout` in config/input.ts). */

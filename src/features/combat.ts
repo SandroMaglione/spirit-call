@@ -97,12 +97,42 @@ const moveArea = (move: ComboMove, position: Vec2, aim: Vec2): Pick<HitboxValue,
   }
 }
 
+/**
+ * How far a move lunges from `position` along `aim`: its `lunge`, cut short
+ * so the player stops `lungeStop` short of an enemy straight ahead.
+ */
+const lungeDistance = (
+  move: ComboMove,
+  tuning: TuningValue,
+  position: Vec2,
+  aim: Vec2,
+  enemies: ReadonlyArray<{ readonly position: Vec2; readonly radius: number }>
+): number => {
+  let distance = move.lunge
+  for (const enemy of enemies) {
+    const dx = enemy.position.x - position.x
+    const dy = enemy.position.y - position.y
+    const along = dx * aim.x + dy * aim.y
+    const clearance = enemy.radius + tuning.player.radius
+    if (along <= 0 || Math.abs(dx * aim.y - dy * aim.x) > clearance) continue
+    distance = Math.min(distance, Math.max(0, along - clearance - tuning.slash.lungeStop))
+  }
+  return distance
+}
+
 export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   queries: {
     shooters: Game.Query({
-      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), weapon: Game.Query.write(Weapon), combo: Game.Query.write(Combo) },
+      selection: {
+        position: Game.Query.read(Position),
+        aim: Game.Query.read(Aim),
+        weapon: Game.Query.write(Weapon),
+        combo: Game.Query.write(Combo),
+        knockback: Game.Query.write(Knockback)
+      },
       with: [Player]
     }),
+    enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] }),
     walls: Walls
   },
   resources: {
@@ -149,6 +179,11 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
           hitStop: move.hitStop,
           heavy: move.heavy
         }]))
+        // The lunge: an impulse that carries the player `lungeDistance` forward
+        // (knockback travels its speed / decay before it dies out).
+        const enemies = queries.enemies.each().map(({ data: enemy }) => ({ position: enemy.position.get(), radius: enemy.hurtbox.get().radius }))
+        const lunge = lungeDistance(move, resources.tuning.get(), position, aim, enemies) * resources.tuning.get().knockback.decay
+        if (lunge > 0) data.knockback.update((current) => ({ x: current.x + aim.x * lunge, y: current.y + aim.y * lunge }))
         shots += 1
         events.action.emit({ kind: "slash", at: position, step, direction: aim })
         data.weapon.set({ cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0 })
