@@ -3,6 +3,7 @@ import type { Application, Container, Graphics, Sprite, Texture } from "pixi.js"
 import type { TouchButton } from "../config/input.ts"
 
 import type { Fx } from "./fx.ts"
+import type { SlashTrails } from "./trails.ts"
 
 export type ProjectileNode = { readonly kind: "projectile"; readonly root: Container; readonly orb: Sprite; readonly shadow: Sprite }
 
@@ -71,6 +72,12 @@ export interface FeedbackState {
   bannerWave: number
   /** The slash area's visibility (0..1) and seconds since it was last needed. */
   slashCue: { alpha: number; idle: number }
+  /** Camera kick in screen pixels, decaying (heavy blows). */
+  kick: { x: number; y: number }
+  /** Zoom punch, 0..1, decaying (heavy blows). */
+  punch: number
+  /** Recoil of recently hit bodies, by entity id: age, duration, screen direction, and strength. */
+  readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
 }
 
 /** Frame statistics measured by the host loop. */
@@ -95,6 +102,8 @@ export interface FrameStats {
  *   transform is the isometric projection, so circles drawn there appear as
  *   ellipses on the floor.
  * - `actors` holds upright things placed at projected points, painter-sorted.
+ * - `trails` (slash trails) has the floor's projection, lifted to waist
+ *   height and drawn above actors.
  * - `overlay` is drawn above actors in projected coordinates (health bars).
  * - `screen` is not moved by the camera (reticle).
  */
@@ -108,6 +117,7 @@ export interface RenderHostValue {
   readonly actors: Container
   readonly overlay: Graphics
   readonly fx: Fx
+  readonly trails: SlashTrails
   readonly screen: Container
   readonly reticle: Graphics
   /** Projectile nodes kept for reuse instead of being destroyed. */

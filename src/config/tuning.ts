@@ -85,6 +85,10 @@ interface MoveBase {
   readonly knockback: number
   /** No next move for this many seconds after this one. */
   readonly recovery: number
+  /** Hit-stop when it lands: the simulation pauses this long (0 disables). */
+  readonly hitStop: number
+  /** A heavy blow: bigger impact effects (camera kick, zoom punch, larger numbers, deeper sound). */
+  readonly heavy: boolean
 }
 
 /** One move of the sword combo: a sweeping arc, a narrow thrust, or a full spin around the player. */
@@ -225,13 +229,13 @@ export const defaultTuning = {
     /** How long each move's hitbox stays out (seconds). */
     active: 0.08,
     /** A side slash, light push so enemies stay in reach for the next move. */
-    first: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.26 }),
+    first: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.26, hitStop: 0.03, heavy: false }),
     /** The backhand, back across. */
-    second: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.24 }),
+    second: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.24, hitStop: 0.03, heavy: false }),
     /** A narrow thrust with more reach. */
-    third: thrustMove({ reach: 175, width: 56, damage: 24, knockback: 620, recovery: 0.3 }),
+    third: thrustMove({ reach: 175, width: 56, damage: 24, knockback: 620, recovery: 0.3, hitStop: 0.045, heavy: false }),
     /** A spin all around, launching enemies away; long recovery. */
-    finisher: spinMove({ reach: 140, damage: 40, knockback: 1150, recovery: 0.7 })
+    finisher: spinMove({ reach: 140, damage: 40, knockback: 1150, recovery: 0.7, hitStop: 0.09, heavy: true })
   },
 
   /** On-screen touch controls (see `touchLayout` in config/input.ts). */
@@ -265,7 +269,9 @@ export const defaultTuning = {
       damage: 34,
       knockback: 950,
       /** How long the cut's hitbox stays out (seconds). */
-      active: 0.12
+      active: 0.12,
+      /** Hit-stop when it lands (seconds, 0 disables). */
+      hitStop: 0.06
     },
     /** Lobbed to the cursor over walls; explodes after landing. */
     grenade: {
@@ -312,7 +318,7 @@ export const defaultTuning = {
     /** How long a hit target flashes white. */
     hitFlash: 0.08,
     /** Hit-stop: the whole simulation pauses this long when an enemy dies (0 disables). */
-    hitStopOnKill: 0.045,
+    hitStopOnKill: 0.07,
     /** Hit-stop when the player takes a hit (0 disables). */
     hitStopOnPlayerHit: 0.09
   },

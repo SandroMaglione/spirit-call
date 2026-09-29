@@ -5,6 +5,7 @@ import { touchButtons } from "../config/input.ts"
 import type { TouchButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { Fx } from "./fx.ts"
+import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderAssets, RenderHostValue, RenderNode } from "./host-types.ts"
 import { drawFloor } from "./nodes.ts"
 
@@ -107,9 +108,18 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
 
   const actors = new Container()
   actors.sortableChildren = true
+  // Slash trails: the floor's projection, lifted to waist height, over the actors.
+  const air = new Container()
+  air.scale.set(projection.zoom, projection.zoom * projection.squash)
+  air.position.set(0, -view.slashTrail.height * projection.zoom)
+  const airRotated = new Container()
+  airRotated.rotation = Math.PI / 4
+  air.addChild(airRotated)
+  const trails = new Graphics()
+  airRotated.addChild(trails)
   const overlay = new Graphics()
   const fxLayer = new Container()
-  world.addChild(ground, actors, overlay, fxLayer)
+  world.addChild(ground, actors, air, overlay, fxLayer)
 
   const screen = new Container()
   const reticle = new Graphics()
@@ -153,13 +163,14 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       actors,
       overlay,
       fx: new Fx(fxLayer, assets, projection.squash),
+      trails: new SlashTrails(trails),
       projectilePool,
       screen,
       reticle,
       cursor,
       hud: hud.refs,
       stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
-      feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 } }
+      feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, recoil: new Map() }
     },
     nodes,
     destroy() {

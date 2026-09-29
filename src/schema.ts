@@ -179,6 +179,10 @@ export interface HitboxValue {
   readonly charges: boolean
   /** Push every target this way instead of away from the area (the Blade Wave drives enemies along the cut). */
   readonly pushAlong?: Vec2
+  /** Hit-stop when it lands on an enemy (seconds). */
+  readonly hitStop?: number
+  /** A heavy blow, for bigger impact effects. */
+  readonly heavy?: boolean
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
@@ -211,11 +215,26 @@ export interface DamageValue {
   readonly faction: Faction
   /** Whether this damage fills the player's ultimate energy. */
   readonly charges: boolean
+  /** Hit-stop when it lands on an enemy (seconds). */
+  readonly hitStop?: number
+  /** A heavy blow, for bigger impact effects. */
+  readonly heavy?: boolean
 }
 export const Damage = Descriptor.Event<DamageValue>()("Shooter/Damage")
 
-/** Damage that landed. */
-export const Hit = Descriptor.Event<{ readonly at: Vec2; readonly amount: number; readonly faction: Faction; readonly killed: boolean }>()("Shooter/Hit")
+/**
+ * Damage that landed on `entity` (its id) at `at`, pushing it along
+ * `direction`. `heavy` blows get bigger impact effects.
+ */
+export const Hit = Descriptor.Event<{
+  readonly entity: number
+  readonly at: Vec2
+  readonly direction: Vec2
+  readonly amount: number
+  readonly faction: Faction
+  readonly killed: boolean
+  readonly heavy: boolean
+}>()("Shooter/Hit")
 
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")

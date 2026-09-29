@@ -145,7 +145,9 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
           knockback: move.knockback,
           remaining: slash.active,
           hit: [],
-          charges: true
+          charges: true,
+          hitStop: move.hitStop,
+          heavy: move.heavy
         }]))
         shots += 1
         events.action.emit({ kind: "slash", at: position, step, direction: aim })
@@ -388,9 +390,20 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const push = damage.knockback * knockbackTaken(tuning, enemy)
     data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
 
+    // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
+    if (enemy !== undefined && damage.hitStop !== undefined) hitStop = Math.max(hitStop, damage.hitStop)
+
     const at = data.position.get()
     const killed = current <= 0
-    events.hit.emit({ at, amount: damage.amount, faction: data.hurtbox.get().faction, killed })
+    events.hit.emit({
+      entity: entity.id.value,
+      at,
+      direction: damage.direction,
+      amount: damage.amount,
+      faction: data.hurtbox.get().faction,
+      killed,
+      heavy: damage.heavy ?? false
+    })
     if (!killed) continue
 
     dead.add(entity.id.value)

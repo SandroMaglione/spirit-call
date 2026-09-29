@@ -28,6 +28,46 @@ export const view = {
    * `gap` beyond the body), with an arrow of length `arrow` on it.
    */
   facingRing: { gap: 20, alpha: 0.2, arrow: 12, arrowAlpha: 0.75 },
+  /**
+   * Slash trails (see presentation/trails.ts), drawn `height` screen pixels
+   * above the floor. Arcs sweep over `sweepSeconds` then fade over
+   * `fadeSeconds`; the finisher's spin and the thrust have their own timing.
+   */
+  slashTrail: {
+    height: 22,
+    core: 0xf2fffd,
+    edge: 0x7fe6de,
+    alpha: 0.55,
+    sweepSeconds: 0.075,
+    fadeSeconds: 0.16,
+    spinSweepSeconds: 0.14,
+    spinFadeSeconds: 0.2,
+    thrustSeconds: 0.05
+  },
+  /**
+   * Landing a blow. Every hit shakes the screen a little (`shake`, more for
+   * `heavyShake`/`killShake`) and flashes and throws sparks along the push;
+   * heavy blows also kick the camera along the blow (`kick` pixels) and
+   * punch the zoom in by `zoomPunch`. Hit enemies squash, lean away, and
+   * shift back (`recoil`), and kick up dust while sliding faster than
+   * `dustSpeed` (world units per second).
+   */
+  impact: {
+    shake: 2.5,
+    heavyShake: 7,
+    killShake: 4,
+    kick: 10,
+    kickDecay: 16,
+    zoomPunch: 0.045,
+    punchDecay: 9,
+    /** Impact height above the target's feet, in screen pixels before zoom. */
+    height: 20,
+    spark: 0xfff4d6,
+    recoil: { seconds: 0.16, heavySeconds: 0.26, squash: 0.22, lean: 0.2, shift: 7 },
+    dustSpeed: 220,
+    dust: 0x8a94a3,
+    heavyNumber: 0xffb347
+  },
   background: 0x0d1117,
   floor: 0x1b222c,
   floorGrid: 0x2a3441,

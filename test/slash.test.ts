@@ -6,7 +6,7 @@ import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { Camera, Combo, Enemy, Game, Health, Player, Position, RunScope, Stats } from "../src/schema.ts"
+import { Camera, Combo, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -28,6 +28,10 @@ const World = Game.Inspector("Test/Slash", {
   slashes: resources.stats.get().shots,
   camera: resources.camera.get()
 }))
+
+const HitStopLeft = Game.Inspector("Test/HitStopLeft", {
+  resources: { hitStop: Game.System.readResource(HitStop) }
+}, ({ resources }) => resources.hitStop.get().remaining)
 
 const ComboState = Game.Inspector("Test/Combo", {
   queries: { player: Game.Query({ selection: { combo: Game.Query.read(Combo) }, with: [Player] }) }
@@ -192,5 +196,26 @@ describe("sword slash", () => {
     const spin = arena([at(180, 70)], 1, { tuning: noAssist, touch: presses(4) })
     spin.step(presses(4).at(-1)!.frame + 3)
     expect(spin.runtime.inspect(World).enemies[0]!.health).toBe(hp - finisher.damage)
+  })
+
+  it("pauses the game for each blow's own hit-stop, longest for the finisher", () => {
+    /** Steps until the dummy is first hurt, then reads the hit-stop started by that blow. */
+    const hitStopOnHit = (run: ReturnType<typeof arena>) => {
+      for (let frame = 0; frame < 200; frame++) {
+        run.step()
+        if (run.runtime.inspect(World).enemies[0]!.health < hp) return run.runtime.inspect(HitStopLeft)
+      }
+      throw new Error("never hit")
+    }
+    const opening = hitStopOnHit(arena([at(0, 70)], 1, { tuning: noAssist }))
+    expect(opening).toBeGreaterThan(first.hitStop - 2 * engine.stepSeconds)
+    expect(opening).toBeLessThanOrEqual(first.hitStop)
+
+    // Only the finisher's spin reaches a dummy behind the player.
+    const frames = [0]
+    for (const move of [slash.first, slash.second, slash.third]) frames.push(frames.at(-1)! + steps(move.recovery) + 1)
+    const finisher = hitStopOnHit(arena([at(180, 70)], 1, { tuning: noAssist, touch: frames.map((frame) => ({ frame, press: ["attack" as const], release: ["attack" as const] })) }))
+    expect(finisher).toBeGreaterThan(slash.finisher.hitStop - 2 * engine.stepSeconds)
+    expect(slash.finisher.hitStop).toBeGreaterThan(first.hitStop)
   })
 })

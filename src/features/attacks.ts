@@ -217,7 +217,9 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
         direction: hitbox.pushAlong ?? pushDirection(hitbox.area, position),
         knockback: hitbox.knockback,
         faction: hitbox.faction,
-        charges: hitbox.charges
+        charges: hitbox.charges,
+        ...(hitbox.hitStop === undefined ? {} : { hitStop: hitbox.hitStop }),
+        ...(hitbox.heavy === undefined ? {} : { heavy: hitbox.heavy })
       })
     }
     const remaining = hitbox.remaining - dt

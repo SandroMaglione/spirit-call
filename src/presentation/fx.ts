@@ -1,7 +1,7 @@
 /**
- * Cosmetic effects driven by gameplay events: damage numbers, sparks, and
- * bursts. They live only in the renderer, advance in real time, and reuse
- * their display objects.
+ * Cosmetic effects driven by gameplay events: damage numbers, sparks,
+ * impact flashes, dust, and bursts. They live only in the renderer, advance
+ * in real time, and reuse their display objects.
  */
 import { Container, Graphics, Sprite, Text } from "pixi.js"
 
@@ -17,6 +17,20 @@ interface Particle {
   life: number
   maxLife: number
   size: number
+  /** Downward pull (negative rises, like dust). */
+  gravity: number
+  drag: number
+  /** Drawn this many times longer than wide, along its velocity (streaks). */
+  stretch: number
+  alpha: number
+}
+
+/** A bright disc that swells and fades at an impact. */
+interface Flash {
+  readonly sprite: Sprite
+  radius: number
+  life: number
+  maxLife: number
 }
 
 interface Ring {
@@ -33,8 +47,22 @@ interface FloatingNumber {
   readonly text: Text
   x: number
   y: number
+  /** Sideways drift (pixels over its life), along the blow. */
+  drift: number
+  /** Resting scale; it pops in larger. */
+  size: number
   life: number
   maxLife: number
+}
+
+interface ParticleOptions {
+  readonly color: number
+  readonly size: number
+  readonly life: number
+  readonly gravity?: number
+  readonly drag?: number
+  readonly stretch?: number
+  readonly alpha?: number
 }
 
 export class Fx {
@@ -46,6 +74,8 @@ export class Fx {
   private readonly freeNumbers: Array<FloatingNumber> = []
   private readonly rings: Array<Ring> = []
   private readonly freeRings: Array<Ring> = []
+  private readonly flashes: Array<Flash> = []
+  private readonly freeFlashes: Array<Flash> = []
   private readonly squash: number
 
   constructor(layer: Container, assets: RenderAssets, squash: number) {
@@ -72,39 +102,90 @@ export class Fx {
   }
 
   /** Particles thrown out from `at` (projected coordinates). */
-  burst(at: Vec2, options: { readonly color: number; readonly count: number; readonly speed: number; readonly size: number; readonly life: number }): void {
+  burst(at: Vec2, options: ParticleOptions & { readonly count: number; readonly speed: number }): void {
     for (let index = 0; index < options.count; index++) {
       const angle = (index / options.count) * Math.PI * 2 + Math.random() * 0.6
       const speed = options.speed * (0.5 + Math.random() * 0.7)
-      const particle = this.freeParticles.pop() ?? this.newParticle()
-      particle.x = at.x
-      particle.y = at.y
       // Squashed vertically, like the floor they fly over.
-      particle.vx = Math.cos(angle) * speed
-      particle.vy = Math.sin(angle) * speed * 0.5 - options.speed * 0.25
-      particle.life = options.life * (0.7 + Math.random() * 0.5)
-      particle.maxLife = particle.life
-      particle.size = options.size
-      particle.sprite.tint = options.color
-      particle.sprite.visible = true
-      this.particles.push(particle)
+      this.emit(at, Math.cos(angle) * speed, Math.sin(angle) * speed * 0.5 - options.speed * 0.25, options)
     }
   }
 
-  /** A number rising from `at` (projected coordinates). */
-  number(at: Vec2, value: number, color: number): void {
+  /**
+   * Streaks thrown along `direction` (a unit vector on screen), within
+   * `spread` radians of it: sparks flying off a blow.
+   */
+  sparks(at: Vec2, direction: Vec2, options: ParticleOptions & { readonly count: number; readonly speed: number; readonly spread: number }): void {
+    const base = Math.atan2(direction.y, direction.x)
+    for (let index = 0; index < options.count; index++) {
+      const angle = base + (Math.random() * 2 - 1) * options.spread
+      const speed = options.speed * (0.45 + Math.random() * 0.75)
+      this.emit(at, Math.cos(angle) * speed, Math.sin(angle) * speed, { drag: 7, gravity: 380, ...options })
+    }
+  }
+
+  /** A few slow, rising puffs of dust at `at`, kicked back along `direction`. */
+  dust(at: Vec2, direction: Vec2, color: number): void {
+    const speed = 30 + Math.random() * 40
+    this.emit(
+      { x: at.x + (Math.random() - 0.5) * 10, y: at.y + (Math.random() - 0.5) * 4 },
+      -direction.x * speed,
+      -direction.y * speed * 0.5 - 12,
+      { color, size: 4 + Math.random() * 3, life: 0.35 + Math.random() * 0.2, gravity: -40, drag: 3, alpha: 0.45 }
+    )
+  }
+
+  /** A bright flash at `at` that swells to `radius` and fades over `life` seconds. */
+  flash(at: Vec2, radius: number, color: number, life: number): void {
+    const flash = this.freeFlashes.pop() ?? (() => {
+      const sprite = new Sprite(this.assets.disc)
+      sprite.anchor.set(0.5)
+      sprite.blendMode = "add"
+      this.layer.addChild(sprite)
+      return { sprite, radius: 0, life: 0, maxLife: 1 }
+    })()
+    flash.sprite.position.set(at.x, at.y)
+    flash.sprite.tint = color
+    flash.sprite.visible = true
+    flash.radius = radius
+    flash.life = life
+    flash.maxLife = life
+    this.flashes.push(flash)
+  }
+
+  /**
+   * A number rising from `at` (projected coordinates) that pops in larger
+   * than its resting `size` and drifts sideways by `drift` pixels.
+   */
+  number(at: Vec2, value: number, color: number, options: { readonly size?: number; readonly drift?: number; readonly life?: number } = {}): void {
     const entry = this.freeNumbers.pop() ?? this.newNumber()
     entry.text.text = String(Math.round(value))
     entry.text.tint = color
     entry.text.visible = true
     entry.x = at.x + (Math.random() - 0.5) * 12
     entry.y = at.y
-    entry.life = 0.6
-    entry.maxLife = 0.6
+    entry.drift = options.drift ?? 0
+    entry.size = options.size ?? 1
+    entry.life = options.life ?? 0.6
+    entry.maxLife = entry.life
     this.numbers.push(entry)
   }
 
   update(dt: number): void {
+    for (let index = this.flashes.length - 1; index >= 0; index--) {
+      const flash = this.flashes[index]!
+      flash.life -= dt
+      if (flash.life <= 0) {
+        flash.sprite.visible = false
+        this.flashes[index] = this.flashes[this.flashes.length - 1]!
+        this.flashes.pop()
+        this.freeFlashes.push(flash)
+        continue
+      }
+      const t = 1 - flash.life / flash.maxLife
+      flash.sprite.scale.set((flash.radius * (0.45 + 0.55 * Math.sqrt(t))) / this.assets.discRadius)
+      flash.sprite.alpha = (1 - t) * (1 - t)
+    }
     for (let index = this.rings.length - 1; index >= 0; index--) {
       const ring = this.rings[index]!
       ring.life -= dt
@@ -131,15 +212,24 @@ export class Fx {
         this.freeParticles.push(particle)
         continue
       }
-      const drag = Math.exp(-6 * dt)
+      const drag = Math.exp(-particle.drag * dt)
       particle.vx *= drag
-      particle.vy = particle.vy * drag + 260 * dt
+      particle.vy = particle.vy * drag + particle.gravity * dt
       particle.x += particle.vx * dt
       particle.y += particle.vy * dt
       const t = particle.life / particle.maxLife
+      const size = (particle.size * (0.4 + 0.6 * t)) / this.assets.discRadius
       particle.sprite.position.set(particle.x, particle.y)
-      particle.sprite.scale.set((particle.size * (0.4 + 0.6 * t)) / this.assets.discRadius)
-      particle.sprite.alpha = t
+      if (particle.stretch > 1) {
+        // Streaks point along their motion and shorten as they slow.
+        const speed = Math.hypot(particle.vx, particle.vy)
+        particle.sprite.rotation = Math.atan2(particle.vy, particle.vx)
+        particle.sprite.scale.set(size * Math.max(1, particle.stretch * Math.min(1, speed / 250)), size * 0.6)
+      } else {
+        particle.sprite.rotation = 0
+        particle.sprite.scale.set(size)
+      }
+      particle.sprite.alpha = t * particle.alpha
     }
     for (let index = this.numbers.length - 1; index >= 0; index--) {
       const entry = this.numbers[index]!
@@ -152,21 +242,41 @@ export class Fx {
         continue
       }
       const t = 1 - entry.life / entry.maxLife
-      entry.text.position.set(entry.x, entry.y - 40 - t * 34)
+      // Jumps up fast then hangs; pops in at 1.8x and settles by 15% of its life.
+      const rise = 1 - (1 - t) * (1 - t)
+      entry.text.position.set(entry.x + entry.drift * rise, entry.y - 40 - rise * 38)
       entry.text.alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4
-      entry.text.scale.set(t < 0.12 ? 1.3 - t * 2.5 : 1)
+      entry.text.scale.set(entry.size * (t < 0.15 ? 1.8 - (t / 0.15) * 0.8 : 1))
     }
   }
 
   get active(): number {
-    return this.particles.length + this.numbers.length + this.rings.length
+    return this.particles.length + this.numbers.length + this.rings.length + this.flashes.length
   }
 
   private newParticle(): Particle {
     const sprite = new Sprite(this.assets.disc)
     sprite.anchor.set(0.5)
     this.layer.addChild(sprite)
-    return { sprite, x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 1 }
+    return { sprite, x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 1, gravity: 0, drag: 0, stretch: 1, alpha: 1 }
+  }
+
+  private emit(at: Vec2, vx: number, vy: number, options: ParticleOptions): void {
+    const particle = this.freeParticles.pop() ?? this.newParticle()
+    particle.x = at.x
+    particle.y = at.y
+    particle.vx = vx
+    particle.vy = vy
+    particle.life = options.life * (0.7 + Math.random() * 0.5)
+    particle.maxLife = particle.life
+    particle.size = options.size
+    particle.gravity = options.gravity ?? 260
+    particle.drag = options.drag ?? 6
+    particle.stretch = options.stretch ?? 1
+    particle.alpha = options.alpha ?? 1
+    particle.sprite.tint = options.color
+    particle.sprite.visible = true
+    this.particles.push(particle)
   }
 
   private newNumber(): FloatingNumber {
@@ -176,6 +286,6 @@ export class Fx {
     })
     text.anchor.set(0.5)
     this.layer.addChild(text)
-    return { text, x: 0, y: 0, life: 0, maxLife: 1 }
+    return { text, x: 0, y: 0, drift: 0, size: 1, life: 0, maxLife: 1 }
   }
 }

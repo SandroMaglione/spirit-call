@@ -66,7 +66,9 @@ export const UseSpecial = Game.System("Shooter/UseSpecial", {
           remaining: wave.active,
           hit: [],
           charges: true,
-          pushAlong: direction
+          pushAlong: direction,
+          hitStop: wave.hitStop,
+          heavy: true
         }]))
         data.aim.set(direction)
         events.action.emit({ kind: "wave", at: position })
@@ -149,7 +151,8 @@ export const CastUltimate = Game.System("Shooter/CastUltimate", {
       knockback: spec.knockback,
       remaining: spec.active,
       hit: [],
-      charges: false
+      charges: false,
+      heavy: true
     }]))
     events.explosion.emit({ at, radius: spec.radius, faction: "player", kind: "ultimate" })
     if (spec.clearsProjectiles) {
