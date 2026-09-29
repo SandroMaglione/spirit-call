@@ -45,7 +45,8 @@ export const Dash = Descriptor.Component<DashValue>()("Shooter/Dash")
 
 /** Cooldowns of the player's skills. */
 export interface SkillsValue {
-  readonly grenade: { readonly cooldown: number }
+  /** The special skill (Blade Wave, or the grenade): time until it can be used again. */
+  readonly special: { readonly cooldown: number }
 }
 export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
 
@@ -145,6 +146,8 @@ export interface HitboxValue {
   readonly hit: ReadonlyArray<number>
   /** Whether its damage fills the ultimate's energy (false for the ultimate itself). */
   readonly charges: boolean
+  /** Push every target this way instead of away from the area (the Blade Wave drives enemies along the cut). */
+  readonly pushAlong?: Vec2
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
@@ -218,17 +221,17 @@ export interface ControlsValue {
   readonly move: Vec2
   /** Ground point the player aims at: under the cursor, or along the touch aim. */
   readonly aimPoint: Vec2
-  /** Where a grenade thrown this step lands (before the range clamp). */
-  readonly grenadeAt: Vec2
-  /** While the touch skill is dragged, where the grenade would land; `null` otherwise. */
-  readonly grenadeAiming: Vec2 | null
+  /** Where the special skill used this step is aimed: the grenade's landing spot, or a point along the Blade Wave. */
+  readonly skillAt: Vec2
+  /** While the touch skill is dragged, where it is aimed (as `skillAt`); `null` otherwise. */
+  readonly skillAiming: Vec2 | null
   /** On touch, the enemy (entity id) an attack now would turn toward, or `null`. */
   readonly assistTarget: number | null
   readonly dashPressed: boolean
   /** An attack was pressed this step: one slash per press (the gun fires while `fireHeld`). */
   readonly attackPressed: boolean
   readonly fireHeld: boolean
-  readonly grenadePressed: boolean
+  readonly skillPressed: boolean
   readonly ultimatePressed: boolean
   /** Last non-zero movement direction, kept for the movement grace. */
   readonly lastMove: Vec2

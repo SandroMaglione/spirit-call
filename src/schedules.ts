@@ -20,7 +20,7 @@ import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./fe
 import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
-import { CastUltimate, ThrowGrenade, UpdateGrenades } from "./features/skills.ts"
+import { CastUltimate, UpdateGrenades, UseSpecial } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { DirectWaves } from "./features/waves.ts"
 import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema.ts"
@@ -67,7 +67,7 @@ const gameplay = Game.Schedule.when(
   TickCombatTimers,
   ControlPlayer,
   CastUltimate,
-  ThrowGrenade,
+  UseSpecial,
   FirePlayerWeapon,
   UpdateGrenades,
   SteerEnemies,

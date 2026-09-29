@@ -214,7 +214,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
       events.damage.emit({
         target: Game.Entity.handle(target.entity.id, Health),
         amount: hitbox.damage,
-        direction: pushDirection(hitbox.area, position),
+        direction: hitbox.pushAlong ?? pushDirection(hitbox.area, position),
         knockback: hitbox.knockback,
         faction: hitbox.faction,
         charges: hitbox.charges

@@ -212,6 +212,21 @@ export const defaultTuning = {
 
   /** The player's special: Space throws a grenade at the cursor. */
   skills: {
+    /**
+     * The sword's special: a long straight cut in the aimed direction that
+     * hits everything along it once, stops at walls, and drives enemies back.
+     * Off: the grenade below.
+     */
+    wave: {
+      enabled: true,
+      cooldown: 3.5,
+      length: 320,
+      width: 70,
+      damage: 34,
+      knockback: 950,
+      /** How long the cut's hitbox stays out (seconds). */
+      active: 0.12
+    },
     /** Lobbed to the cursor over walls; explodes after landing. */
     grenade: {
       cooldown: 4,

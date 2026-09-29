@@ -7,8 +7,11 @@
  * powered by energy from damage the player deals (`ApplyDamage` fills it).
  * Numbers live in `tuning.skills` and `tuning.ultimate`.
  */
-import { clampLength, sub } from "../math/vec.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
+import { clampLength, normalizeOr, scale, sub } from "../math/vec.ts"
+import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
+  Aim,
   Controls,
   Explosion,
   Game,
@@ -26,34 +29,62 @@ import {
   Ultimate
 } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
+import { Walls, wallBoxes } from "./motion.ts"
 
-export const initialSkills = (): SkillsValue => ({ grenade: { cooldown: 0 } })
+export const initialSkills = (): SkillsValue => ({ special: { cooldown: 0 } })
 
-export const ThrowGrenade = Game.System("Shooter/ThrowGrenade", {
+/**
+ * The special skill: the Blade Wave (a straight cut toward `skillAt`, stopped
+ * by walls, turning the player that way), or the grenade (lobbed to `skillAt`,
+ * clamped to its range, over walls).
+ */
+export const UseSpecial = Game.System("Shooter/UseSpecial", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), skills: Game.Query.write(Skills) }, with: [Player] })
+    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.write(Aim), skills: Game.Query.write(Skills) }, with: [Player] }),
+    walls: Walls
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
 }, ({ queries, resources, commands }) => {
   const controls = resources.controls.get()
-  const spec = resources.tuning.get().skills.grenade
+  const skills = resources.tuning.get().skills
   const dt = resources.time.get().dt
   for (const { data } of queries.player.each()) {
-    let cooldown = Math.max(0, data.skills.get().grenade.cooldown - dt)
-    if (controls.grenadePressed && cooldown <= 0) {
+    let cooldown = Math.max(0, data.skills.get().special.cooldown - dt)
+    if (controls.skillPressed && cooldown <= 0) {
       const position = data.position.get()
-      const offset = clampLength(sub(controls.grenadeAt, position), spec.maxRange)
-      commands.spawnIn(RunScope, Game.Command.spawn([Grenade, {
-        from: position,
-        to: { x: position.x + offset.x, y: position.y + offset.y },
-        faction: "player",
-        elapsed: 0
-      }]))
-      cooldown = spec.cooldown
+      if (skills.wave.enabled) {
+        const wave = skills.wave
+        const direction = normalizeOr(sub(controls.skillAt, position), data.aim.get())
+        const blocked = sweepCircleBoxes(position, scale(direction, wave.length), wave.width / 4, wallBoxes(queries.walls.each()))
+        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+          area: { kind: "lane", origin: position, direction, length: wave.length * (blocked?.time ?? 1), halfWidth: wave.width / 2 },
+          faction: "player",
+          damage: wave.damage,
+          knockback: wave.knockback,
+          remaining: wave.active,
+          hit: [],
+          charges: true,
+          pushAlong: direction
+        }]))
+        data.aim.set(direction)
+        cooldown = wave.cooldown
+      } else {
+        const offset = clampLength(sub(controls.skillAt, position), skills.grenade.maxRange)
+        commands.spawnIn(RunScope, Game.Command.spawn([Grenade, {
+          from: position,
+          to: { x: position.x + offset.x, y: position.y + offset.y },
+          faction: "player",
+          elapsed: 0
+        }]))
+        cooldown = skills.grenade.cooldown
+      }
     }
-    data.skills.set({ grenade: { cooldown } })
+    data.skills.set({ special: { cooldown } })
   }
 })
+
+/** Cooldown of the special skill in use. */
+export const specialCooldown = (skills: TuningValue["skills"]): number => (skills.wave.enabled ? skills.wave.cooldown : skills.grenade.cooldown)
 
 /** Grenades fly to their target, sit out the fuse, then explode into a circular hitbox. */
 export const UpdateGrenades = Game.System("Shooter/UpdateGrenades", {

@@ -7,7 +7,7 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Enemy, Game, Grenade, Health, Player, Position, Projectile, RunScope, Skills, Ultimate } from "../src/schema.ts"
-import { ClearEnemies, start } from "./helpers.ts"
+import { ClearEnemies, start, withGrenade } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -53,11 +53,38 @@ const FillEnergy = Game.System("Test/FillEnergy", {
 })
 
 const hp = defaultTuning.enemies.dummy.hp
+const grenadeTuning = withGrenade(defaultTuning)
 const throwGrenade = (frame: number) => ({ frame, press: ["skill" as const], release: ["skill" as const] })
+
+describe("Blade Wave (Space)", () => {
+  const wave = defaultTuning.skills.wave
+  const cut = (frame: number) => ({ frame, press: ["skill" as const], release: ["skill" as const] })
+
+  it("cuts everything along its line toward the cursor, once each, and nothing beside it", () => {
+    const run = range([{ x: 100, y: 0 }, { x: 260, y: 0 }, { x: 150, y: 120 }], { x: 200, y: 0 }, { keys: [cut(1)] })
+    run.step(4)
+    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - wave.damage, hp - wave.damage, hp])
+    expect(run.player().aim.x).toBeCloseTo(1, 6)
+  })
+
+  it("drives what it hits back along the cut", () => {
+    const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)] })
+    run.step(40)
+    const [dummy] = run.world().enemies
+    expect(dummy!.position.x - center.x - 100).toBeCloseTo(wave.knockback / defaultTuning.knockback.decay, 0)
+  })
+
+  it("respects its cooldown", () => {
+    const again = steps(wave.cooldown) - 10
+    const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1), cut(again)] })
+    run.step(again + 3)
+    expect(run.world().enemies[0]!.health).toBe(hp - wave.damage)
+  })
+})
 
 describe("grenade (Space)", () => {
   it("lands at the cursor (clamped to max range), over walls", () => {
-    const run = range([], { x: 0, y: -2000 }, { keys: [throwGrenade(1)] })
+    const run = range([], { x: 0, y: -2000 }, { tuning: grenadeTuning, keys: [throwGrenade(1)] })
     run.step(3)
     const [grenade] = run.world().grenades
     expect(grenade!.to.x).toBeCloseTo(center.x, 6)
@@ -66,7 +93,7 @@ describe("grenade (Space)", () => {
 
   it("damages everything within its radius, once, after the fuse", () => {
     const spec = defaultTuning.skills.grenade
-    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { keys: [throwGrenade(1)] })
+    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { tuning: grenadeTuning, keys: [throwGrenade(1)] })
     run.step(steps(spec.flightTime + spec.fuse) - 2)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp])
     run.step(6)
@@ -76,14 +103,14 @@ describe("grenade (Space)", () => {
 
   it("respects its cooldown", () => {
     const again = steps(defaultTuning.skills.grenade.cooldown) - 10
-    const run = range([], { x: 200, y: 0 }, { keys: [throwGrenade(1), throwGrenade(again)] })
+    const run = range([], { x: 200, y: 0 }, { tuning: grenadeTuning, keys: [throwGrenade(1), throwGrenade(again)] })
     run.step(again + 2)
-    expect(run.world().skills.grenade.cooldown).toBeGreaterThan(0)
+    expect(run.world().skills.special.cooldown).toBeGreaterThan(0)
     expect(run.world().grenades).toEqual([])
   })
 
   it("does not dash", () => {
-    const run = range([], { x: 200, y: 0 }, { keys: [throwGrenade(1)] })
+    const run = range([], { x: 200, y: 0 }, { tuning: grenadeTuning, keys: [throwGrenade(1)] })
     run.step(3)
     expect(run.player().dash.remaining).toBe(0)
   })

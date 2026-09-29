@@ -25,7 +25,7 @@ describe("input", () => {
 
     const GrenadeCooldown = Game.Inspector("Test/GrenadeCooldown", {
       queries: { player: Game.Query({ selection: { skills: Game.Query.read(Skills) }, with: [Player] }) }
-    }, ({ queries }) => queries.player.each()[0]!.data.skills.get().grenade.cooldown)
+    }, ({ queries }) => queries.player.each()[0]!.data.skills.get().special.cooldown)
     expect(sim.runtime.inspect(GrenadeCooldown)).toBe(0)
     fakeWindow.press(" ", "Space")
     sim.runtime.tick(sim.fixedUpdate)

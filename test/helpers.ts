@@ -46,6 +46,9 @@ export const doubleTap = (direction: Direction, frame: number, options: { readon
 /** The gun instead of the sword (the default weapon), for tests about shooting. */
 export const withGun = (tuning: Tuning): Tuning => ({ ...tuning, slash: { ...tuning.slash, enabled: false } })
 
+/** The grenade instead of the Blade Wave (the default special), for tests about the grenade. */
+export const withGrenade = (tuning: Tuning): Tuning => ({ ...tuning, skills: { ...tuning.skills, wave: { ...tuning.skills.wave, enabled: false } } })
+
 const withWaves = (tuning: Tuning, enabled: boolean): Tuning => ({ ...tuning, waves: { ...tuning.waves, enabled } })
 
 export interface StartOptions {

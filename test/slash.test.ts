@@ -73,6 +73,14 @@ describe("attack assist (touch)", () => {
     expect(Math.atan2(aim.y, aim.x) * 180 / Math.PI).toBeCloseTo(30, 0)
   })
 
+  it("aims a tapped Blade Wave at the same pick", () => {
+    const run = arena([at(180, 100)], 1, { touch: [{ frame: 0, press: ["skill"], release: ["skill"] }] })
+    run.step(3)
+    expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp - defaultTuning.skills.wave.damage)
+    const aim = run.player().aim
+    expect(Math.abs(Math.atan2(aim.y, aim.x) * 180 / Math.PI)).toBeCloseTo(180, 0)
+  })
+
   it("can be turned off: the slash keeps the facing", () => {
     const off = arena([at(40, 90)], 1, { tuning: noAssist })
     off.step(3)

@@ -11,7 +11,7 @@ import { touchButtons } from "../config/input.ts"
 import { engine } from "../config/tuning.ts"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
-import { lerp } from "../math/vec.ts"
+import { lerp, normalizeOr } from "../math/vec.ts"
 import {
   Aim,
   Attacker,
@@ -54,6 +54,7 @@ import {
 } from "../schema.ts"
 import type { Area } from "../physics/areas.ts"
 import { aimLocked } from "../features/attacks.ts"
+import { specialCooldown } from "../features/skills.ts"
 import type { Graphics } from "pixi.js"
 import { createNode, enemyColor, projectileColor, wallDepth } from "./nodes.ts"
 
@@ -487,10 +488,14 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     const reach = Math.min(tuning.weapon.range, 320) / (Math.hypot(dx, dy) || 1)
     g.moveTo(at.x, at.y).lineTo(at.x + dx * reach, at.y + dy * reach).stroke({ width: 3, color: view.reticle, alpha: 0.45 })
   }
-  if (controls.grenadeAiming !== null) {
+  if (controls.skillAiming !== null && tuning.skills.wave.enabled) {
+    const wave = tuning.skills.wave
+    const direction = normalizeOr({ x: controls.skillAiming.x - at.x, y: controls.skillAiming.y - at.y }, { x: 1, y: 0 })
+    drawArea(g, { kind: "lane", origin: at, direction, length: wave.length, halfWidth: wave.width / 2 }, 0, { color: view.reticle, fill: 0.08, outline: 0.6 })
+  } else if (controls.skillAiming !== null) {
     const spec = tuning.skills.grenade
-    const dx = controls.grenadeAiming.x - at.x
-    const dy = controls.grenadeAiming.y - at.y
+    const dx = controls.skillAiming.x - at.x
+    const dy = controls.skillAiming.y - at.y
     const clamp = Math.min(1, spec.maxRange / (Math.hypot(dx, dy) || 1))
     const target = { x: at.x + dx * clamp, y: at.y + dy * clamp }
     g.moveTo(at.x, at.y).lineTo(target.x, target.y).stroke({ width: 2, color: view.reticle, alpha: 0.35 })
@@ -543,10 +548,11 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const fill = {
     // The sword recharges between slashes; the gun fires too fast to show.
     attack: player === undefined || !tuning.slash.enabled ? 0 : player.data.weapon.get().cooldown / tuning.slash.interval,
-    skill: player === undefined ? 0 : player.data.skills.get().grenade.cooldown / tuning.skills.grenade.cooldown,
+    skill: player === undefined ? 0 : player.data.skills.get().special.cooldown / specialCooldown(tuning.skills),
     dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
     ultimate: player === undefined ? 1 : 1 - player.data.ultimate.get().energy / tuning.ultimate.energy
   }
+  setText(pad.buttons.skill.root.querySelector("span"), tuning.skills.wave.enabled ? "WAVE" : "GRENADE")
   for (const name of touchButtons) {
     const zone = live.layout.buttons[name]
     const refs = pad.buttons[name]
@@ -562,6 +568,11 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     }
   }
 })
+
+/** Sets an element's text only when it changes. */
+const setText = (element: Element | null, text: string): void => {
+  if (element !== null && element.textContent !== text) element.textContent = text
+}
 
 const DrawReticle = Game.System("Shooter/DrawReticle", {
   resources: { controls: Game.System.readResource(Controls) },
@@ -620,9 +631,10 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: resources.tuning.get().player.hp }
   if (player.ok && player.value !== undefined) {
     const specs = resources.tuning.get()
-    const grenade = player.value.data.skills.get().grenade.cooldown
-    hud.skills.grenade.cooldown.style.height = `${Math.min(100, (100 * grenade) / specs.skills.grenade.cooldown)}%`
-    hud.skills.grenade.root.classList.toggle("is-ready", grenade <= 0)
+    setText(hud.skills.grenade.root.querySelector("span"), specs.skills.wave.enabled ? "Blade Wave" : "Grenade")
+    const special = player.value.data.skills.get().special.cooldown
+    hud.skills.grenade.cooldown.style.height = `${Math.min(100, (100 * special) / specialCooldown(specs.skills))}%`
+    hud.skills.grenade.root.classList.toggle("is-ready", special <= 0)
     // The ultimate slot fills up with energy.
     const energy = player.value.data.ultimate.get().energy
     hud.skills.ultimate.cooldown.style.height = `${Math.max(0, 100 - (100 * energy) / specs.ultimate.energy)}%`

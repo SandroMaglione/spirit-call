@@ -6,7 +6,7 @@ import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Controls, Game, Grenade, Player, Position, Projectile, Ultimate, Velocity } from "../src/schema.ts"
-import { start, withGun } from "./helpers.ts"
+import { start, withGun, withGrenade } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
@@ -68,9 +68,17 @@ describe("touch controls", () => {
     expect(run.player().aim.y).toBeCloseTo(left.y, 6)
   })
 
+  it("aims a dragged Blade Wave along the drag", () => {
+    const dragged = start({ touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 0, y: -1 } } }, { frame: 2, release: ["skill"] }] })
+    dragged.step(3)
+    const up = world({ x: 0, y: -1 })
+    expect(dragged.player().aim.x).toBeCloseTo(up.x, 6)
+    expect(dragged.player().aim.y).toBeCloseTo(up.y, 6)
+  })
+
   it("throws the grenade on release: to the dragged spot, or ahead for a tap; a cancelled drag throws nothing", () => {
     const spec = defaultTuning.skills.grenade
-    const dragged = start({ touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 0, y: -0.5 } } }, { frame: 3, release: ["skill"] }] })
+    const dragged = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 0, y: -0.5 } } }, { frame: 3, release: ["skill"] }] })
     dragged.step(3)
     expect(dragged.runtime.inspect(World).grenades).toEqual([])
     dragged.step(1)
@@ -79,12 +87,13 @@ describe("touch controls", () => {
     expect(thrown!.to.x).toBeCloseTo(center.x + up.x * spec.maxRange * 0.5, 6)
     expect(thrown!.to.y).toBeCloseTo(center.y + up.y * spec.maxRange * 0.5, 6)
 
-    const tapped = start({ touch: [{ frame: 0, press: ["skill"], release: ["skill"] }] })
+    // Assist off: the training dummies near the spawn would otherwise draw a tapped throw.
+    const tapped = start({ tuning: withGrenade(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["skill"], release: ["skill"] }] })
     tapped.step(1)
     const [tap] = tapped.runtime.inspect(World).grenades
     expect(Math.hypot(tap!.to.x - center.x, tap!.to.y - center.y)).toBeCloseTo(spec.maxRange * defaultTuning.touch.tapThrowRange, 6)
 
-    const cancelled = start({ touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 1, y: 0 } } }, { frame: 3, cancel: ["skill"] }] })
+    const cancelled = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 1, y: 0 } } }, { frame: 3, cancel: ["skill"] }] })
     cancelled.step(6)
     expect(cancelled.runtime.inspect(World).grenades).toEqual([])
   })

@@ -137,13 +137,13 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     device,
     move,
     aimPoint,
-    grenadeAt: aimPoint,
-    grenadeAiming: null,
+    skillAt: aimPoint,
+    skillAiming: null,
     assistTarget: null,
     dashPressed,
     attackPressed: pointer.primary.pressed,
     fireHeld: pointer.primary.held || pointer.primary.pressed,
-    grenadePressed: keys.skill.pressed,
+    skillPressed: keys.skill.pressed,
     ultimatePressed: keys.ultimate.pressed,
     lastMove,
     lastTap,
@@ -211,7 +211,7 @@ const resolveTouch = (
 ): ControlsValue => {
   // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
   if (player === undefined) {
-    return { ...previous, device: "touch", move: zero, grenadeAiming: null, assistTarget: null, dashPressed: false, attackPressed: false, fireHeld: false, grenadePressed: false, ultimatePressed: false, grace: 0 }
+    return { ...previous, device: "touch", move: zero, skillAiming: null, assistTarget: null, dashPressed: false, attackPressed: false, fireHeld: false, skillPressed: false, ultimatePressed: false, grace: 0 }
   }
   const tilt = length(touch.stick.vector)
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
@@ -228,22 +228,27 @@ const resolveTouch = (
     : target !== undefined ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, heading) : heading
   const aimPoint = { x: origin.x + ahead.x * tuning.touch.aimDistance, y: origin.y + ahead.y * tuning.touch.aimDistance }
   const range = tuning.skills.grenade.maxRange
+  // Where a tapped skill goes: the assist's pick, else the facing.
+  const tapDirection = target !== undefined ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, ahead) : ahead
   const throwTo = (aim: Vec2 | null): Vec2 => {
-    const direction = aim === null ? ahead : worldDirection(aim, ahead)
-    const distance = aim === null ? range * tuning.touch.tapThrowRange : range * length(aim)
+    const direction = aim === null ? tapDirection : worldDirection(aim, ahead)
+    // The Blade Wave only needs a direction: aim at its full length.
+    const distance = tuning.skills.wave.enabled
+      ? tuning.skills.wave.length
+      : aim === null ? range * tuning.touch.tapThrowRange : range * length(aim)
     return { x: origin.x + direction.x * distance, y: origin.y + direction.y * distance }
   }
   return {
     device: "touch",
     move,
     aimPoint,
-    grenadeAt: throwTo(skill.aim),
-    grenadeAiming: skill.held && skill.aim !== null ? throwTo(skill.aim) : null,
+    skillAt: throwTo(skill.aim),
+    skillAiming: skill.held && skill.aim !== null ? throwTo(skill.aim) : null,
     assistTarget: target?.id ?? null,
     dashPressed: touch.buttons.dash.pressed,
     attackPressed: attack.pressed,
     fireHeld: attacking,
-    grenadePressed: skill.released && !skill.cancelled,
+    skillPressed: skill.released && !skill.cancelled,
     ultimatePressed: touch.buttons.ultimate.pressed,
     lastMove: moving ? normalizeOr(move, zero) : previous.lastMove,
     lastTap: null,
@@ -256,13 +261,13 @@ export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   device: "desktop",
   move: zero,
   aimPoint,
-  grenadeAt: aimPoint,
-  grenadeAiming: null,
+  skillAt: aimPoint,
+  skillAiming: null,
   assistTarget: null,
   dashPressed: false,
   attackPressed: false,
   fireHeld: false,
-  grenadePressed: false,
+  skillPressed: false,
   ultimatePressed: false,
   lastMove: zero,
   lastTap: null,

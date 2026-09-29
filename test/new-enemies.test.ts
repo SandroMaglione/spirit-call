@@ -9,7 +9,7 @@ import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, start } from "./helpers.ts"
+import { ClearEnemies, start, withGrenade } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -151,7 +151,7 @@ describe("guardian", () => {
 
   it("does not stop explosions: a grenade hits it from the front", () => {
     const run = duel("guardian", { x: 250, y: 0 }, {
-      tuning: still,
+      tuning: withGrenade(still),
       pointer: [{ frame: 0, move: cursorAt({ x: 250, y: 0 }) }],
       keys: [{ frame: turnSteps, press: ["skill"], release: ["skill"] }]
     })
