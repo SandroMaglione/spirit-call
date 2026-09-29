@@ -6,7 +6,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Enemy, Game, Health, PendingSpawn, Position, Projectile, Stats } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { start, withGun } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Combat", {
   queries: {
@@ -33,7 +33,7 @@ const aimAt = (offset: { readonly x: number; readonly y: number }) => {
 }
 
 const shootNorth = (tuning: Tuning, frames: number) => start({
-  tuning,
+  tuning: withGun(tuning),
   pointer: [
     { frame: 0, move: aimAt({ x: 0, y: -200 }), press: ["primary"] },
     { frame: frames, release: ["primary"] }
@@ -54,7 +54,7 @@ describe("projectiles", () => {
   it("stop at walls: a pillar between the player and a target absorbs the shot", () => {
     // Shoot south-east toward the pillar at (0.72, 0.72) and the far wall.
     const tuning = tuningWith({ weapon: { projectileSpeed: 1_000_000, range: 100_000, fireInterval: 10 } })
-    const run = start({ tuning, pointer: [{ frame: 0, move: aimAt({ x: 200, y: 200 }), press: ["primary"], release: ["primary"] }] })
+    const run = start({ tuning: withGun(tuning), pointer: [{ frame: 0, move: aimAt({ x: 200, y: 200 }), press: ["primary"], release: ["primary"] }] })
     run.step(2)
     const [shot] = run.runtime.inspect(World).projectiles
     // Despawned after hitting; nothing got through.
@@ -74,7 +74,7 @@ describe("projectiles", () => {
     const tuning = tuningWith({ weapon: { pierce: 5, projectileSpeed: 1_000_000, range: 100_000, fireInterval: 10 } })
     // South-west: toward the dummies at (0.4, 0.62) and nothing else.
     const target = { x: trainingDummies[2]!.x * tuning.arena.width - center.x, y: trainingDummies[2]!.y * tuning.arena.height - center.y }
-    const run = start({ tuning, pointer: [{ frame: 0, move: aimAt(target), press: ["primary"], release: ["primary"] }] })
+    const run = start({ tuning: withGun(tuning), pointer: [{ frame: 0, move: aimAt(target), press: ["primary"], release: ["primary"] }] })
     run.step(3)
     const damaged = run.runtime.inspect(World).enemies.filter((enemy) => enemy.health < tuning.enemies.dummy.hp)
     expect(damaged.map((enemy) => enemy.health)).toEqual([tuning.enemies.dummy.hp - tuning.weapon.damage])

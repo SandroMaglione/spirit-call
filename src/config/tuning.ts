@@ -175,12 +175,28 @@ export const defaultTuning = {
     moveSpeedMultiplier: 0.9
   },
 
+  /** The sword: holding fire slashes the area in front of the player instead of shooting. */
+  slash: {
+    /** Slash instead of shooting (off: the gun above). */
+    enabled: true,
+    /** Seconds between slashes while fire is held. */
+    interval: 0.3,
+    /** How far the slash reaches from the player's center. */
+    reach: 120,
+    /** Width of the slashed arc, in degrees, centered on the facing. */
+    arcDegrees: 140,
+    damage: 22,
+    knockback: 340,
+    /** How long the slash's hitbox stays out (seconds). */
+    active: 0.08
+  },
+
   /** On-screen touch controls (see `touchLayout` in config/input.ts). */
   touch: {
     /** How far ahead of the player the touch aim point sits (world units); only its direction matters for shooting. */
     aimDistance: 260,
     /** Degrees the facing turns per pixel of horizontal swipe (right turns clockwise on screen). */
-    swipeTurn: 0.45,
+    swipeTurn: 1.1,
     /** A tapped skill (no drag) throws this fraction of max range, straight ahead. */
     tapThrowRange: 0.6
   },
@@ -409,7 +425,9 @@ export const defaultTuning = {
     /** Camera leads toward the aim point by this fraction of the cursor offset. */
     aimLead: 0.12,
     /** Upper bound for the aim lead, in world units. */
-    maxAimLead: 90
+    maxAimLead: 90,
+    /** On touch, the camera leads this far (world units) in the direction the player faces. */
+    facingLead: 170
   },
 
   arena: {

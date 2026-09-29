@@ -25,7 +25,7 @@ const HitStopState = Game.Inspector("Test/HitStopState", {
 
 describe("hit-stop", () => {
   it("freezes gameplay for the tuned time on a kill, without losing input pressed meanwhile", () => {
-    const tuning = tuningWith({ feedback: { hitStopOnKill: 0.1 }, weapon: { damage: 1000, fireInterval: 10, projectileSpeed: 1_000_000, range: 100_000 } })
+    const tuning = tuningWith({ feedback: { hitStopOnKill: 0.1 }, weapon: { damage: 1000, fireInterval: 10, projectileSpeed: 1_000_000, range: 100_000 }, slash: { enabled: false } })
     // A dummy right in front of the player dies to the first shot.
     const run = start({ tuning, pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }] })
     const Spawn = Game.System("Test/SpawnTarget", {}, ({ commands }) => {
@@ -47,7 +47,7 @@ describe("hit-stop", () => {
   })
 
   it("delivers a dash pressed during a hit-stop when the game resumes", () => {
-    const tuning = tuningWith({ feedback: { hitStopOnKill: 0.2 }, weapon: { damage: 1000, fireInterval: 10, projectileSpeed: 1_000_000, range: 100_000 } })
+    const tuning = tuningWith({ feedback: { hitStopOnKill: 0.2 }, weapon: { damage: 1000, fireInterval: 10, projectileSpeed: 1_000_000, range: 100_000 }, slash: { enabled: false } })
     const run = start({
       tuning,
       pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }],

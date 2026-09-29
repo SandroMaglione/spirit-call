@@ -22,6 +22,7 @@ import {
   Hit,
   HitFlash,
   HitStop,
+  Hitbox,
   Hurtbox,
   Impact,
   Invulnerable,
@@ -75,6 +76,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
 }, ({ queries, resources, commands }) => {
   const controls = resources.controls.get()
   const weapon = resources.tuning.get().weapon
+  const slash = resources.tuning.get().slash
   const dt = resources.time.get().dt
   const boxes = wallBoxes(queries.walls.each())
   let shots = 0
@@ -86,6 +88,24 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
     }
     const position = data.position.get()
     const aim = data.aim.get()
+    if (slash.enabled) {
+      // The sword: a cone in front of the player, through the combat pipeline like enemy melee.
+      while (cooldown <= 0) {
+        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+          area: { kind: "cone", origin: position, direction: aim, radius: slash.reach, halfAngle: (slash.arcDegrees * Math.PI) / 360 },
+          faction: "player",
+          damage: slash.damage,
+          knockback: slash.knockback,
+          remaining: slash.active,
+          hit: [],
+          charges: true
+        }]))
+        cooldown += slash.interval
+        shots += 1
+      }
+      data.weapon.set({ cooldown })
+      continue
+    }
     // The muzzle is in front of the player; a wall in between stops the shot there.
     const reach = scale(aim, weapon.muzzleOffset)
     const blocked = sweepCircleBoxes(position, reach, weapon.projectileRadius, boxes)

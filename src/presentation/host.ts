@@ -8,7 +8,7 @@ import { Fx } from "./fx.ts"
 import type { HudRefs, ProjectileNode, RenderAssets, RenderHostValue, RenderNode } from "./host-types.ts"
 import { drawFloor } from "./nodes.ts"
 
-const padLabels: Record<TouchButton, string> = { attack: "FIRE", skill: "GRENADE", dash: "DASH", ultimate: "NOVA" }
+const padLabels: Record<TouchButton, string> = { attack: "ATTACK", skill: "GRENADE", dash: "DASH", ultimate: "NOVA" }
 
 const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => {
   const root = document.createElement("div")
@@ -32,7 +32,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       <div class="hud__gameover-stats" data-gameover-stats></div>
       <div class="hud__gameover-hint" data-gameover-hint>Press R or click to restart</div>
     </div>
-    <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click shoot · Space grenade · Shift ultimate</div>
+    <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click attack · Space grenade · Shift ultimate</div>
     <div class="pad" data-pad hidden>
       <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
       ${touchButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}

@@ -1,4 +1,4 @@
-import { add, clampLength, scale, sub } from "../math/vec.ts"
+import { add, clampLength, normalizeOr, scale, sub, zero } from "../math/vec.ts"
 import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
 
 /**
@@ -19,7 +19,11 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
   if (!player.ok || player.value === undefined) return
   const tuning = resources.tuning.get().camera
   const position = player.value.data.position.get()
-  const lead = clampLength(scale(sub(resources.controls.get().aimPoint, position), tuning.aimLead), tuning.maxAimLead)
+  const controls = resources.controls.get()
+  // Mouse: lead a little toward the cursor. Touch: lead toward the facing, to see what is ahead.
+  const lead = controls.device === "touch"
+    ? scale(normalizeOr(sub(controls.aimPoint, position), zero), tuning.facingLead)
+    : clampLength(scale(sub(controls.aimPoint, position), tuning.aimLead), tuning.maxAimLead)
   const target = add(position, lead)
   const camera = resources.camera.get()
   const follow = 1 - Math.exp(-tuning.followRate * resources.time.get().dt)

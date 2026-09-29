@@ -6,7 +6,7 @@ import { screenDirectionToWorld, toScreen } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Controls, Game, Grenade, Player, Position, Projectile, Ultimate, Velocity } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { start, withGun } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
@@ -52,7 +52,7 @@ describe("touch controls", () => {
   it("turns with a horizontal swipe (right is clockwise on screen) and fires where the player faces", () => {
     // Swipe right by 90 degrees' worth; the player starts facing world +x.
     const pixels = 90 / defaultTuning.touch.swipeTurn
-    const run = start({ touch: [{ frame: 0, swipe: { x: pixels, y: 0 } }, { frame: 2, press: ["attack"] }] })
+    const run = start({ tuning: withGun(defaultTuning), touch: [{ frame: 0, swipe: { x: pixels, y: 0 } }, { frame: 2, press: ["attack"] }] })
     run.step(1)
     const expected = turned({ x: 1, y: 0 }, 90)
     expect(run.player().aim.x).toBeCloseTo(expected.x, 6)
@@ -66,6 +66,7 @@ describe("touch controls", () => {
 
   it("keeps facing where the last swipe left it, whatever the stick does", () => {
     const run = start({
+      tuning: withGun(defaultTuning),
       touch: [
         { frame: 0, swipe: { x: -45 / defaultTuning.touch.swipeTurn, y: 0 } },
         { frame: 2, stick: { x: -1, y: 0 } },

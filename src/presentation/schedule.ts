@@ -419,22 +419,33 @@ const FadeOccluders = Game.System("Shooter/FadeOccluders", {
 })
 
 /**
- * Touch aiming, drawn on the floor: while firing, a line along the aim; while
- * dragging the grenade, where it will land (clamped to its range) and its
- * blast radius.
+ * Where the player faces, drawn on the floor: with the sword, the outline of
+ * the slash in front of the player (brighter while slashing). On touch, also
+ * a line along the aim while shooting, and, while the grenade is dragged,
+ * where it will land (clamped to its range) and its blast radius.
  */
 const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
-  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) }, with: [Player] }) },
+  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim) }, with: [Player] }) },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ queries, resources, services }) => {
   const controls = resources.controls.get()
   const [player] = queries.player.each()
-  if (controls.device !== "touch" || player === undefined) return
+  if (player === undefined) return
   const g = services.host.telegraphs
   const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
   const tuning = resources.tuning.get()
-  if (controls.fireHeld) {
+  if (tuning.slash.enabled) {
+    const aim = player.data.aim.get()
+    const halfAngle = (tuning.slash.arcDegrees * Math.PI) / 360
+    drawArea(g, { kind: "cone", origin: at, direction: aim, radius: tuning.slash.reach, halfAngle }, 0, {
+      color: view.playerArea,
+      fill: controls.fireHeld ? 0.1 : 0.04,
+      outline: controls.fireHeld ? 0.5 : 0.25
+    })
+  }
+  if (controls.device !== "touch") return
+  if (controls.fireHeld && !tuning.slash.enabled) {
     const dx = controls.aimPoint.x - at.x
     const dy = controls.aimPoint.y - at.y
     const reach = Math.min(tuning.weapon.range, 320) / (Math.hypot(dx, dy) || 1)

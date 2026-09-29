@@ -52,8 +52,8 @@ export const touchLayout = ({ width, height }: Touch.Size): Touch.Layout<TouchBu
   const px = (value: number) => value * scale
   const attack = { x: width - px(90), y: height - px(90) }
   return {
-    // Bottom-left area for the thumb; anywhere else (not on a button) swipes.
-    stick: { region: { left: 0, top: height * 0.35, width: width * 0.45, height: height * 0.65 }, radius: px(55), deadZone: 0.12 },
+    // A small bottom-left area for the thumb; the whole rest of the screen (not on a button) swipes.
+    stick: { region: { left: 0, top: height - px(240), width: px(260), height: px(240) }, radius: px(55), deadZone: 0.12 },
     swipe: { region: { left: 0, top: 0, width, height } },
     buttons: {
       attack: { center: attack, radius: px(58) },

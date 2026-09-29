@@ -123,7 +123,7 @@ describe("sniper", () => {
 describe("guardian", () => {
   const hp = defaultTuning.enemies.guardian.hp
   // A guardian that stands still (and does not attack), so only its shield is under test.
-  const still = tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attack: null } } })
+  const still = tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attack: null } }, slash: { enabled: false } })
   const spec = defaultTuning.enemies.guardian.shield!
   const turnSteps = steps(180 / spec.turnRate) + 5
 
