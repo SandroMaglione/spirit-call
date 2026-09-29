@@ -82,7 +82,8 @@ export const Knockback = Descriptor.Component<Vec2>()("Shooter/Knockback")
 export const HitFlash = Descriptor.Component<{ readonly remaining: number }>()("Shooter/HitFlash")
 
 /** A player weapon: time until the next shot may fire (negative carries over). */
-export const Weapon = Descriptor.Component<{ readonly cooldown: number }>()("Shooter/Weapon")
+/** Time until the next shot or slash, and how long a slash pressed early stays queued. */
+export const Weapon = Descriptor.Component<{ readonly cooldown: number; readonly buffered: number }>()("Shooter/Weapon")
 
 export type ProjectileStyle = "bolt"
 
@@ -224,6 +225,8 @@ export interface ControlsValue {
   /** On touch, the enemy (entity id) an attack now would turn toward, or `null`. */
   readonly assistTarget: number | null
   readonly dashPressed: boolean
+  /** An attack was pressed this step: one slash per press (the gun fires while `fireHeld`). */
+  readonly attackPressed: boolean
   readonly fireHeld: boolean
   readonly grenadePressed: boolean
   readonly ultimatePressed: boolean

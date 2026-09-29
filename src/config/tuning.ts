@@ -175,12 +175,14 @@ export const defaultTuning = {
     moveSpeedMultiplier: 0.9
   },
 
-  /** The sword: holding fire slashes the area in front of the player instead of shooting. */
+  /** The sword: each attack press slashes the area in front of the player instead of shooting. */
   slash: {
     /** Slash instead of shooting (off: the gun above). */
     enabled: true,
-    /** Recharge after each slash: no new slash for this many seconds, held or tapped. */
+    /** Recharge after each slash: no new slash for this many seconds. */
     interval: 0.55,
+    /** A press this long before the recharge ends still slashes, as soon as it can. */
+    inputBuffer: 0.15,
     /** How far the slash reaches from the player's center. */
     reach: 120,
     /** Width of the slashed arc, in degrees, centered on the facing. */
@@ -199,13 +201,13 @@ export const defaultTuning = {
     /** A tapped skill (no drag) throws this fraction of max range, straight ahead. */
     tapThrowRange: 0.6,
     /**
-     * Attack assist on touch (tap or hold ATTACK without dragging): the attack
-     * turns toward the nearest enemy within this many degrees either side of
-     * where the player faces or moves, and within the attack's reach plus
-     * `extraReach`. It never extends reach. 0 turns it off; dragging ATTACK
-     * always aims by hand. The mouse is never assisted.
+     * Attack assist on touch: each ATTACK tap turns the player toward the best
+     * enemy in any direction within the attack's reach plus `range`, scored by
+     * distance to its edge, plus `behindPenalty` units for one directly behind
+     * (less for one to the side), minus `stickiness` for the last target. It
+     * never extends reach. The mouse is never assisted.
      */
-    assist: { coneDegrees: 50, extraReach: 40 }
+    assist: { enabled: true, range: 70, behindPenalty: 60, stickiness: 30 }
   },
 
   /** The player's special: Space throws a grenade at the cursor. */

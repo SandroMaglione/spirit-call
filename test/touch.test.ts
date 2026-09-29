@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning } from "../src/config/tuning.ts"
+import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
@@ -44,25 +44,26 @@ describe("touch controls", () => {
     expect(run.runtime.inspect(World).device).toBe("touch")
   })
 
-  it("faces and attacks toward the attack pad's drag", () => {
-    const run = start({ tuning: withGun(defaultTuning), touch: [{ frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } }] })
+  it("with the gun, holding ATTACK fires along the facing", () => {
+    // Assist off: the training dummies near the spawn would otherwise draw the aim.
+    const run = start({ tuning: withGun(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["attack"] }] })
     run.step(8)
-    const up = world({ x: 0, y: -1 })
-    expect(run.player().aim.x).toBeCloseTo(up.x, 6)
-    expect(run.player().aim.y).toBeCloseTo(up.y, 6)
-    const shot = run.runtime.inspect(World).projectiles[0]!.velocity
-    const speed = Math.hypot(shot.x, shot.y)
-    expect(shot.x / speed).toBeCloseTo(up.x, 6)
-    expect(shot.y / speed).toBeCloseTo(up.y, 6)
+    const shots = run.runtime.inspect(World).projectiles
+    expect(shots.length).toBeGreaterThan(1)
+    const velocity = shots[0]!.velocity
+    expect(velocity.y).toBeCloseTo(0, 6)
+    expect(velocity.x).toBeGreaterThan(0)
   })
 
-  it("faces where the stick moves, and keeps the facing when standing still", () => {
-    const run = start({ touch: [{ frame: 0, stick: { x: -1, y: 0 } }, { frame: 10, stick: null }] })
-    const left = world({ x: -1, y: 0 })
-    run.step(10)
-    expect(run.player().aim.x).toBeCloseTo(left.x, 6)
-    expect(run.player().aim.y).toBeCloseTo(left.y, 6)
+  it("does not turn while moving; a tap with nobody near slashes toward the movement", () => {
+    const run = start({
+      tuning: tuningWith({ touch: { assist: { enabled: false } } }),
+      touch: [{ frame: 0, stick: { x: -1, y: 0 } }, { frame: 20, press: ["attack"], release: ["attack"] }]
+    })
     run.step(20)
+    expect(run.player().aim).toEqual({ x: 1, y: 0 })
+    run.step(1)
+    const left = world({ x: -1, y: 0 })
     expect(run.player().aim.x).toBeCloseTo(left.x, 6)
     expect(run.player().aim.y).toBeCloseTo(left.y, 6)
   })

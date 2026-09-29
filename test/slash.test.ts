@@ -46,19 +46,23 @@ const arena = (
   return run
 }
 
-const noAssist = tuningWith({ touch: { assist: { coneDegrees: 0 } } })
+const noAssist = tuningWith({ touch: { assist: { enabled: false } } })
 /** An offset `distance` from the player, `degrees` off world +x (the starting facing). */
 const at = (degrees: number, distance: number) => ({ x: Math.cos((degrees * Math.PI) / 180) * distance, y: Math.sin((degrees * Math.PI) / 180) * distance })
 
 describe("attack assist (touch)", () => {
-  it("turns an undragged attack toward the nearest enemy in the cone, ignoring enemies behind", () => {
-    const run = arena([at(40, 90), at(180, 60)], 1)
+  it("turns a tap toward the nearest enemy in any direction, even behind", () => {
+    const run = arena([at(180, 70)], 1)
     run.step(3)
-    const [side, behind] = run.runtime.inspect(World).enemies
-    expect(side!.health).toBe(hp - slash.damage)
-    expect(behind!.health).toBe(hp)
+    expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp - slash.damage)
     const aim = run.player().aim
-    expect(Math.atan2(aim.y, aim.x) * 180 / Math.PI).toBeCloseTo(40, 0)
+    expect(Math.abs(Math.atan2(aim.y, aim.x) * 180 / Math.PI)).toBeCloseTo(180, 0)
+  })
+
+  it("prefers what is in front when distances are close", () => {
+    const run = arena([at(0, 100), at(180, 80)], 1)
+    run.step(3)
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - slash.damage, hp])
   })
 
   it("never extends reach: it turns toward an enemy just out of reach but does not hit it", () => {
@@ -69,11 +73,7 @@ describe("attack assist (touch)", () => {
     expect(Math.atan2(aim.y, aim.x) * 180 / Math.PI).toBeCloseTo(30, 0)
   })
 
-  it("is off for a dragged attack, and with a zero cone", () => {
-    // Drag up on screen: the slash goes there, not at the enemy in front.
-    const dragged = arena([at(0, 80)], 1, { touch: [{ frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } }, { frame: 1, release: ["attack"] }] })
-    dragged.step(3)
-    expect(dragged.runtime.inspect(World).enemies[0]!.health).toBe(hp)
+  it("can be turned off: the slash keeps the facing", () => {
     const off = arena([at(40, 90)], 1, { tuning: noAssist })
     off.step(3)
     expect(off.player().aim).toEqual({ x: 1, y: 0 })
@@ -94,11 +94,20 @@ describe("sword slash", () => {
     expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - slash.damage, hp - slash.damage])
   })
 
-  it("slashes at the tuned interval while fire is held", () => {
-    const seconds = 2
-    const run = arena([], Math.round(seconds / engine.stepSeconds))
-    run.step(Math.round(seconds / engine.stepSeconds))
-    expect(run.runtime.inspect(World).slashes).toBe(Math.floor(seconds / slash.interval - 1e-9) + 1)
+  it("slashes once per press: holding does not repeat, and a press during the recharge is buffered", () => {
+    const held = arena([], 120)
+    held.step(120)
+    expect(held.runtime.inspect(World).slashes).toBe(1)
+
+    const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+    // Pressed again 0.1 s before the recharge ends: the second slash comes right when it ends.
+    const buffered = arena([], 1, { touch: [{ frame: 0, press: ["attack"], release: ["attack"] }, { frame: steps(slash.interval - 0.1), press: ["attack"], release: ["attack"] }] })
+    buffered.step(steps(slash.interval) + 2)
+    expect(buffered.runtime.inspect(World).slashes).toBe(2)
+    // Pressed too early (outside the buffer): dropped.
+    const early = arena([], 1, { touch: [{ frame: 0, press: ["attack"], release: ["attack"] }, { frame: steps(0.2), press: ["attack"], release: ["attack"] }] })
+    early.step(steps(slash.interval) + 10)
+    expect(early.runtime.inspect(World).slashes).toBe(1)
   })
 
   it("keeps the camera centered on the player on touch", () => {

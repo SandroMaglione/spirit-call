@@ -81,16 +81,16 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   const boxes = wallBoxes(queries.walls.each())
   let shots = 0
   for (const { data } of queries.shooters.each()) {
-    let cooldown = data.weapon.get().cooldown - dt
-    if (!controls.fireHeld) {
-      data.weapon.set({ cooldown: Math.max(cooldown, 0) })
-      continue
-    }
     const position = data.position.get()
     const aim = data.aim.get()
     if (slash.enabled) {
-      // The sword: a cone in front of the player, through the combat pipeline like enemy melee.
-      while (cooldown <= 0) {
+      // The sword: one slash per press, a cone in front of the player, through
+      // the combat pipeline like enemy melee. A press during the recharge is
+      // kept for `inputBuffer` seconds.
+      const current = data.weapon.get()
+      const cooldown = Math.max(0, current.cooldown - dt)
+      const buffered = controls.attackPressed ? slash.inputBuffer : Math.max(0, current.buffered - dt)
+      if (buffered > 0 && cooldown <= 0) {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           area: { kind: "cone", origin: position, direction: aim, radius: slash.reach, halfAngle: (slash.arcDegrees * Math.PI) / 360 },
           faction: "player",
@@ -100,10 +100,16 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
           hit: [],
           charges: true
         }]))
-        cooldown += slash.interval
         shots += 1
+        data.weapon.set({ cooldown: slash.interval, buffered: 0 })
+      } else {
+        data.weapon.set({ cooldown, buffered })
       }
-      data.weapon.set({ cooldown })
+      continue
+    }
+    let cooldown = data.weapon.get().cooldown - dt
+    if (!controls.fireHeld) {
+      data.weapon.set({ cooldown: Math.max(cooldown, 0), buffered: 0 })
       continue
     }
     // The muzzle is in front of the player; a wall in between stops the shot there.
@@ -124,7 +130,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
       cooldown += weapon.fireInterval
       shots += 1
     }
-    data.weapon.set({ cooldown })
+    data.weapon.set({ cooldown, buffered: 0 })
   }
   if (shots > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + shots }))
 })
