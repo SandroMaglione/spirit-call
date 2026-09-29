@@ -105,14 +105,18 @@ export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Proje
 export type EnemyKind = keyof TuningValue["enemies"]
 export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind }>()("Shooter/Enemy")
 
-export type AttackPhase = "ready" | "windup" | "active" | "recovery"
+/** Where an enemy is in its telegraphed attack cycle. */
+export const AttackPhase = Descriptor.State("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
+  transitions: { ready: ["windup"], windup: ["active"], active: ["recovery"], recovery: ["ready"] }
+})
+export type AttackPhase = (typeof AttackPhase.states)[number]
 
 /**
- * An attack in progress. `area` is fixed when the windup starts (or when the
- * aim locks, for aimed shots) and is exactly what the telegraph shows.
+ * An attack in progress (its phase is `AttackPhase`). `area` is fixed when the
+ * windup starts (or when the aim locks, for aimed shots) and is exactly what
+ * the telegraph shows.
  */
 export interface AttackerValue {
-  readonly phase: AttackPhase
   /** Time spent in the current phase. */
   readonly elapsed: number
   /** Time left before a new attack may start. */
@@ -304,6 +308,7 @@ export const Game = Schema.bind(
       Projectile,
       Enemy,
       Attacker,
+      AttackPhase,
       Shield,
       Brain,
       Hitbox,

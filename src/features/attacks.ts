@@ -6,6 +6,9 @@
  * firing) and stored on the `Attacker`, so the telegraph drawn during the
  * windup is exactly what lands. A skilled player can always see an attack
  * coming and get out of it.
+ *
+ * The phase is the `AttackPhase` state component; its moves follow the cycle
+ * above, which the type checker enforces.
  */
 import type { AttackSpec } from "../config/tuning.ts"
 import { clampLength, normalizeOr, sub } from "../math/vec.ts"
@@ -16,6 +19,7 @@ import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import {
   Attacker,
+  AttackPhase,
   Damage,
   Enemy,
   Game,
@@ -29,7 +33,7 @@ import {
   Time,
   Tuning
 } from "../schema.ts"
-import type { AttackerValue, Faction } from "../schema.ts"
+import type { Faction } from "../schema.ts"
 import { makeProjectile } from "./combat.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
@@ -60,8 +64,8 @@ const hasLineOfSight = (from: Vec2, to: Vec2, radius: number, boxes: ReadonlyArr
   sweepCircleBoxes(from, sub(to, from), radius, boxes) === undefined
 
 /** Whether an aimed attack's aim is locked (its telegraph no longer follows the target). */
-export const aimLocked = (spec: AttackSpec, attacker: Pick<AttackerValue, "phase" | "elapsed">): boolean =>
-  (spec.kind !== "volley" && spec.kind !== "beam") || attacker.phase !== "windup" || attacker.elapsed >= spec.windup - spec.aimLock
+export const aimLocked = (spec: AttackSpec, phase: AttackPhase, elapsed: number): boolean =>
+  (spec.kind !== "volley" && spec.kind !== "beam") || phase !== "windup" || elapsed >= spec.windup - spec.aimLock
 
 /** Radius used for the line-of-sight check before starting an attack, or undefined when none is needed. */
 const sightRadius = (spec: AttackSpec): number | undefined =>
@@ -70,7 +74,12 @@ const sightRadius = (spec: AttackSpec): number | undefined =>
 export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   queries: {
     attackers: Game.Query({
-      selection: { position: Game.Query.read(Position), enemy: Game.Query.read(Enemy), attacker: Game.Query.write(Attacker) }
+      selection: {
+        position: Game.Query.read(Position),
+        enemy: Game.Query.read(Enemy),
+        attacker: Game.Query.write(Attacker),
+        phase: Game.Query.write(AttackPhase)
+      }
     }),
     player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
     targets: Game.Query({
@@ -94,30 +103,30 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (spec === null) continue
     const position = data.position.get()
     const current = data.attacker.get()
-    let { phase, area } = current
-    let hit = current.hit
+    const phase = data.phase
+    let { area, hit } = current
     let elapsed = current.elapsed + dt
     let cooldown = Math.max(0, current.cooldown - dt)
 
-    if (phase === "ready") {
+    if (phase.get() === "ready") {
       elapsed = 0
       const inRange = target !== undefined && Math.hypot(target.x - position.x, target.y - position.y) <= spec.triggerRange
       const sight = sightRadius(spec)
       const canSee = sight === undefined || (target !== undefined && hasLineOfSight(position, target, sight, boxes))
       if (cooldown <= 0 && inRange && canSee && target !== undefined) {
-        phase = "windup"
+        phase.transition("ready", "windup")
         area = aimArea(spec, position, target, boxes)
       }
     }
 
     // Aimed shots follow the target until the aim locks.
-    if (phase === "windup" && target !== undefined && !aimLocked(spec, { phase, elapsed })) {
+    if (phase.get() === "windup" && target !== undefined && !aimLocked(spec, "windup", elapsed)) {
       area = aimArea(spec, position, target, boxes)
     }
 
-    if (phase === "windup" && elapsed >= spec.windup && area !== null) {
+    if (phase.get() === "windup" && elapsed >= spec.windup && area !== null) {
       elapsed -= spec.windup
-      phase = "active"
+      phase.transition("windup", "active")
       if (spec.kind === "volley" && area.kind === "line") {
         const base = Math.atan2(area.direction.y, area.direction.x)
         for (let shot = 0; shot < spec.count; shot++) {
@@ -138,7 +147,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     }
 
     // A charging attacker damages what it runs into, once per target per charge.
-    if (phase === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
+    if (phase.get() === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
       for (const other of queries.targets.each()) {
         const hurtbox = other.data.hurtbox.get()
         if (hurtbox.faction === faction || hit.includes(other.entity.id.value)) continue
@@ -158,18 +167,18 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         })
       }
     }
-    if (phase === "active" && elapsed >= spec.active) {
+    if (phase.get() === "active" && elapsed >= spec.active) {
       elapsed -= spec.active
-      phase = "recovery"
+      phase.transition("active", "recovery")
     }
-    if (phase === "recovery" && elapsed >= spec.recovery) {
-      phase = "ready"
+    if (phase.get() === "recovery" && elapsed >= spec.recovery) {
+      phase.transition("recovery", "ready")
       elapsed = 0
       area = null
       cooldown = spec.cooldown
     }
 
-    data.attacker.set({ phase, elapsed, cooldown, area, hit })
+    data.attacker.set({ elapsed, cooldown, area, hit })
   }
 })
 

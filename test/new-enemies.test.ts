@@ -7,7 +7,7 @@ import { aimArea } from "../src/features/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Attacker, Enemy, Game, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
+import { Attacker, AttackPhase, Enemy, Game, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ClearEnemies, start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -19,7 +19,7 @@ const World = Game.Inspector("Test/NewEnemies", {
   queries: {
     player: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health) }, with: [Player] }),
     enemies: Game.Query({
-      selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), health: Game.Query.read(Health), attacker: Game.Query.read(Attacker), shield: Game.Query.optional(Shield) }
+      selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), health: Game.Query.read(Health), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), shield: Game.Query.optional(Shield) }
     }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   }
@@ -30,7 +30,7 @@ const World = Game.Inspector("Test/NewEnemies", {
     kind: data.enemy.get().kind,
     position: data.position.get(),
     health: data.health.get().current,
-    attacker: data.attacker.get(),
+    attacker: { ...data.attacker.get(), phase: data.phase.get() },
     facing: data.shield.present ? data.shield.get().facing : undefined
   })),
   pending: queries.pending.each().map(({ data }) => data.pending.get())

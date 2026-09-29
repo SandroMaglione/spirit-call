@@ -10,6 +10,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
   Attacker,
+  AttackPhase,
   Body,
   Brain,
   Enemy,
@@ -46,7 +47,8 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [Health, { current: stats.hp, max: stats.hp }],
     [HitFlash, { remaining: 0 }],
     [Invulnerable, { remaining: 0 }],
-    [Attacker, { phase: "ready", elapsed: 0, cooldown: 0, area: null, hit: [] }],
+    [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
+    [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0 }],
     [Renderable, { kind: "enemy", enemy: kind, radius: stats.radius }]
   )
@@ -128,7 +130,8 @@ export const SteerEnemies = (() => {
           body: Game.Query.read(Body),
           enemy: Game.Query.read(Enemy),
           brain: Game.Query.write(Brain),
-          attacker: Game.Query.read(Attacker)
+          attacker: Game.Query.read(Attacker),
+          phase: Game.Query.read(AttackPhase)
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
@@ -162,11 +165,12 @@ export const SteerEnemies = (() => {
       const position = data.position.get()
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
-      const attacking = attacker.phase !== "ready"
+      const phase = data.phase.get()
+      const attacking = phase !== "ready"
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
       const attack = stats.attack
-      if (attack !== null && attack.kind === "charge" && attacker.phase === "active" && attacker.area?.kind === "lane") {
+      if (attack !== null && attack.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
         data.velocity.set(scale(attacker.area.direction, attack.speed))
         continue
       }

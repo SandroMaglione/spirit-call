@@ -14,6 +14,7 @@ import { lerp } from "../math/vec.ts"
 import {
   Aim,
   Attacker,
+  AttackPhase,
   Body,
   Camera,
   Dash,
@@ -212,6 +213,7 @@ const DrawEnemies = Game.System("Shooter/DrawEnemies", {
         health: Game.Query.read(Health),
         flash: Game.Query.read(HitFlash),
         attacker: Game.Query.read(Attacker),
+        phase: Game.Query.read(AttackPhase),
         renderable: Game.Query.read(Renderable)
       }
     })
@@ -229,7 +231,7 @@ const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     const attacker = data.attacker.get()
     const spec = tuning.enemies[kind].attack
     // Anticipation: the body brightens through the windup.
-    const windup = spec !== null && attacker.phase === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
+    const windup = spec !== null && data.phase.get() === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
     node.body.tint = data.flash.get().remaining > 0 ? view.hitFlash : mixColor(enemyColor(kind), view.windupTint, windup * 0.75)
     const health = data.health.get()
     if (health.current >= health.max) continue
@@ -251,7 +253,7 @@ const DrawEnemies = Game.System("Shooter/DrawEnemies", {
 const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   queries: {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
-    attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker) } }),
+    attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     grenades: Game.Query({ selection: { grenade: Game.Query.read(Grenade) } }),
     shields: Game.Query({
@@ -267,11 +269,11 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   for (const { data } of queries.attackers.each()) {
     const attacker = data.attacker.get()
     const spec = tuning.enemies[data.enemy.get().kind].attack
-    if (spec === null || attacker.area === null || attacker.phase !== "windup") continue
+    if (spec === null || attacker.area === null || data.phase.get() !== "windup") continue
     const progress = Math.min(1, attacker.elapsed / spec.windup)
     const area = attacker.area
     if (area.kind === "line" && spec.kind === "volley") {
-      const locked = aimLocked(spec, attacker)
+      const locked = aimLocked(spec, "windup", attacker.elapsed)
       const base = Math.atan2(area.direction.y, area.direction.x)
       for (let shot = 0; shot < spec.count; shot++) {
         const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
@@ -282,7 +284,7 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       continue
     }
     // Beams track until their aim locks: dim while tracking, bright once locked.
-    const tracking = !aimLocked(spec, attacker)
+    const tracking = !aimLocked(spec, "windup", attacker.elapsed)
     drawArea(g, area, progress, tracking
       ? { color: view.telegraph, fill: 0.05, outline: 0.35 }
       : { color: spec.kind === "beam" ? view.telegraphLocked : view.telegraph, fill: 0.12, outline: 0.75 })

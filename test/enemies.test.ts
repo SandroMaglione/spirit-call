@@ -4,7 +4,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Attacker, Enemy, Game, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
+import { Attacker, AttackPhase, Enemy, Game, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -18,7 +18,7 @@ const expandWave = (wave: ReadonlyArray<EnemyKind>): Array<EnemyKind> =>
 const World = Game.Inspector("Test/Enemies", {
   queries: {
     player: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health), invulnerable: Game.Query.read(Invulnerable) }, with: [Player] }),
-    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), attacker: Game.Query.read(Attacker) } }),
+    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   },
   resources: { waves: Game.System.readResource(Waves), stats: Game.System.readResource(Stats) }
@@ -30,7 +30,7 @@ const World = Game.Inspector("Test/Enemies", {
       health: player.data.health.get().current,
       invulnerable: player.data.invulnerable.get().remaining
     },
-    enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), attacker: data.attacker.get() })),
+    enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), attacker: { ...data.attacker.get(), phase: data.phase.get() } })),
     pending: queries.pending.each().map(({ data }) => data.pending.get()),
     waves: resources.waves.get(),
     stats: resources.stats.get()
