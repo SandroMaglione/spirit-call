@@ -25,7 +25,8 @@ import {
   Tuning,
   Ultimate,
   Velocity,
-  Weapon
+  Weapon,
+  Combo
 } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { initialSkills } from "./skills.ts"
@@ -40,7 +41,8 @@ export const makePlayer = (tuning: TuningValue, at: Vec2) =>
     [Aim, { x: 1, y: 0 }],
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
     [Invulnerable, { remaining: 0 }],
-    [Weapon, { cooldown: 0, buffered: 0 }],
+    [Weapon, { cooldown: 0, recovery: 0, buffered: 0, comboTimer: 0 }],
+    [Combo, "ready"],
     [Skills, initialSkills()],
     [Ultimate, { energy: 0 }],
     [Knockback, { x: 0, y: 0 }],

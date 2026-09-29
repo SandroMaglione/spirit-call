@@ -173,7 +173,7 @@ export const assistTargetOf = (
 ): AssistCandidate | undefined => {
   const assist = tuning.touch.assist
   if (!assist.enabled) return undefined
-  const reach = (tuning.slash.enabled ? tuning.slash.reach : tuning.weapon.range) + assist.range
+  const reach = (tuning.slash.enabled ? tuning.slash.first.reach : tuning.weapon.range) + assist.range
   let best: AssistCandidate | undefined
   let bestScore = Number.POSITIVE_INFINITY
   for (const enemy of enemies) {

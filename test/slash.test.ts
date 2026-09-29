@@ -6,12 +6,15 @@ import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { Camera, Enemy, Game, Health, Player, Position, RunScope, Stats } from "../src/schema.ts"
+import { Camera, Combo, Enemy, Game, Health, Player, Position, RunScope, Stats } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const slash = defaultTuning.slash
+const first = slash.first
+const firstArc = first.shape === "arc" ? first.arcDegrees : 0
 const hp = defaultTuning.enemies.dummy.hp
+const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
 
 const World = Game.Inspector("Test/Slash", {
   queries: {
@@ -25,6 +28,10 @@ const World = Game.Inspector("Test/Slash", {
   slashes: resources.stats.get().shots,
   camera: resources.camera.get()
 }))
+
+const ComboState = Game.Inspector("Test/Combo", {
+  queries: { player: Game.Query({ selection: { combo: Game.Query.read(Combo) }, with: [Player] }) }
+}, ({ queries }) => queries.player.each()[0]!.data.combo.get())
 
 /** Replaces the training dummies with dummies at `offsets` from the player. Facing starts at world +x. */
 const arena = (
@@ -54,7 +61,7 @@ describe("attack assist (touch)", () => {
   it("turns a tap toward the nearest enemy in any direction, even behind", () => {
     const run = arena([at(180, 70)], 1)
     run.step(3)
-    expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp - slash.damage)
+    expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp - first.damage)
     const aim = run.player().aim
     expect(Math.abs(Math.atan2(aim.y, aim.x) * 180 / Math.PI)).toBeCloseTo(180, 0)
   })
@@ -62,11 +69,11 @@ describe("attack assist (touch)", () => {
   it("prefers what is in front when distances are close", () => {
     const run = arena([at(0, 100), at(180, 80)], 1)
     run.step(3)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - slash.damage, hp])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.damage, hp])
   })
 
   it("never extends reach: it turns toward an enemy just out of reach but does not hit it", () => {
-    const run = arena([at(30, slash.reach + defaultTuning.enemies.dummy.hurtboxRadius + 15)], 1)
+    const run = arena([at(30, first.reach + defaultTuning.enemies.dummy.hurtboxRadius + 15)], 1)
     run.step(3)
     expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp)
     const aim = run.player().aim
@@ -90,16 +97,16 @@ describe("attack assist (touch)", () => {
 
 describe("sword slash", () => {
   it("hits what is in front within reach, not what is behind or too far", () => {
-    const run = arena([{ x: 80, y: 0 }, { x: -80, y: 0 }, { x: slash.reach + 60, y: 0 }], 1)
+    const run = arena([{ x: 80, y: 0 }, { x: -80, y: 0 }, { x: first.reach + 60, y: 0 }], 1)
     run.step(3)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - slash.damage, hp, hp])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.damage, hp, hp])
   })
 
   it("hits several targets in the arc with one slash, once each", () => {
-    const side = Math.sin((slash.arcDegrees * Math.PI) / 360 - 0.2) * 70
+    const side = Math.sin((firstArc * Math.PI) / 360 - 0.2) * 70
     const run = arena([{ x: 70, y: side }, { x: 70, y: -side }], 1, { tuning: noAssist })
     run.step(6)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - slash.damage, hp - slash.damage])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.damage, hp - first.damage])
   })
 
   it("slashes once per press: holding does not repeat, and a press during the recharge is buffered", () => {
@@ -107,14 +114,13 @@ describe("sword slash", () => {
     held.step(120)
     expect(held.runtime.inspect(World).slashes).toBe(1)
 
-    const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
     // Pressed again 0.1 s before the recharge ends: the second slash comes right when it ends.
-    const buffered = arena([], 1, { touch: [{ frame: 0, press: ["attack"], release: ["attack"] }, { frame: steps(slash.interval - 0.1), press: ["attack"], release: ["attack"] }] })
-    buffered.step(steps(slash.interval) + 2)
+    const buffered = arena([], 1, { touch: [{ frame: 0, press: ["attack"], release: ["attack"] }, { frame: steps(first.recovery - 0.1), press: ["attack"], release: ["attack"] }] })
+    buffered.step(steps(first.recovery) + 2)
     expect(buffered.runtime.inspect(World).slashes).toBe(2)
-    // Pressed too early (outside the buffer): dropped.
-    const early = arena([], 1, { touch: [{ frame: 0, press: ["attack"], release: ["attack"] }, { frame: steps(0.2), press: ["attack"], release: ["attack"] }] })
-    early.step(steps(slash.interval) + 10)
+    // Pressed too early (before the buffer opens): dropped.
+    const early = arena([], 1, { touch: [{ frame: 0, press: ["attack"], release: ["attack"] }, { frame: steps(first.recovery - slash.inputBuffer - 0.05), press: ["attack"], release: ["attack"] }] })
+    early.step(steps(first.recovery) + 10)
     expect(early.runtime.inspect(World).slashes).toBe(1)
   })
 
@@ -130,7 +136,7 @@ describe("sword slash", () => {
     const pushed = arena([{ x: 80, y: 0 }], 1)
     pushed.step(40)
     const [dummy] = pushed.runtime.inspect(World).enemies
-    expect(dummy!.position.x - center.x - 80).toBeCloseTo(slash.knockback / defaultTuning.knockback.decay, 0)
+    expect(dummy!.position.x - center.x - 80).toBeCloseTo(first.knockback / defaultTuning.knockback.decay, 0)
 
     // A chaser right in front: after one slash it ends up out of reach for a while.
     const run = start({ touch: [{ frame: 0, press: ["attack"] }, { frame: 1, release: ["attack"] }] })
@@ -143,15 +149,48 @@ describe("sword slash", () => {
     run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
     run.step(18)
     const chaser = run.runtime.inspect(World).enemies[0]!
-    expect(chaser.health).toBe(defaultTuning.enemies.chaser.hp - slash.damage)
-    expect(chaser.position.x - center.x).toBeGreaterThan(slash.reach)
+    expect(chaser.health).toBe(defaultTuning.enemies.chaser.hp - first.damage)
+    // Staggered: it slid back with the push instead of walking back in.
+    expect(chaser.position.x - center.x).toBeGreaterThan(70 + (first.knockback / defaultTuning.knockback.decay) * 0.8)
   })
 
-  it("recharges between slashes: tapping faster than the interval does not slash faster", () => {
-    const seconds = 2
-    const taps = Array.from({ length: Math.round(seconds / engine.stepSeconds / 3) }, (_, index) => ({ frame: index * 3, press: ["attack" as const], release: ["attack" as const] }))
-    const run = start({ touch: taps })
-    run.step(Math.round(seconds / engine.stepSeconds))
-    expect(run.runtime.inspect(World).slashes).toBe(Math.floor(seconds / slash.interval - 1e-9) + 1)
+  it("chains the combo on presses in rhythm: arc, arc, thrust, finisher spin, then starts over", () => {
+    // Press right when each move's recovery ends (the input buffer holds an early press).
+    const frames = [0]
+    for (const move of [slash.first, slash.second, slash.third, slash.finisher]) frames.push(frames.at(-1)! + steps(move.recovery) + 1)
+    const run = arena([], 1, { touch: frames.map((frame) => ({ frame, press: ["attack" as const], release: ["attack" as const] })) })
+    const combos: Array<string> = []
+    for (let frame = 0; frame <= frames.at(-1)! + 2; frame++) {
+      run.step()
+      const combo = run.runtime.inspect(ComboState)
+      if (combos.at(-1) !== combo) combos.push(combo)
+    }
+    expect(combos).toEqual(["first", "second", "third", "finisher", "ready", "first"])
+    expect(run.runtime.inspect(World).slashes).toBe(5)
+  })
+
+  it("starts over when the next press comes after the combo window", () => {
+    const late = steps(first.recovery + slash.comboWindow) + 5
+    const run = arena([], 1, { touch: [{ frame: 0, press: ["attack"], release: ["attack"] }, { frame: late, press: ["attack"], release: ["attack"] }] })
+    run.step(late + 2)
+    expect(run.runtime.inspect(ComboState)).toBe("first")
+  })
+
+  it("gives each move its shape: the thrust reaches farther in a line, the spin hits all around and launches", () => {
+    const finisher = slash.finisher
+    // Run the combo to the thrust, then to the finisher, with a dummy placed for each.
+    const presses = (count: number) => {
+      const frames = [0]
+      for (const move of [slash.first, slash.second, slash.third].slice(0, count - 1)) frames.push(frames.at(-1)! + steps(move.recovery) + 1)
+      return frames.map((frame) => ({ frame, press: ["attack" as const], release: ["attack" as const] }))
+    }
+    // The thrust: a dummy at 160 (beyond the arcs' 120) is only hit by the third move.
+    const thrust = arena([at(0, slash.third.reach - 15)], 1, { touch: presses(3) })
+    thrust.step(presses(3).at(-1)!.frame + 3)
+    expect(thrust.runtime.inspect(World).enemies[0]!.health).toBeLessThan(hp)
+    // The spin: a dummy behind the player is hit by the finisher only.
+    const spin = arena([at(180, 70)], 1, { tuning: noAssist, touch: presses(4) })
+    spin.step(presses(4).at(-1)!.frame + 3)
+    expect(spin.runtime.inspect(World).enemies[0]!.health).toBe(hp - finisher.damage)
   })
 })

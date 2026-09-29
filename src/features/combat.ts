@@ -6,7 +6,8 @@
  * damage does: invulnerability, health, hit flash, knockback, and death.
  * Status effects and damage modifiers plug in there.
  */
-import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type * as Query from "@typeonce/bevy-ts/Query"
+import type { ComboMove, Tuning as TuningValue } from "../config/tuning.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
@@ -14,6 +15,7 @@ import { SpatialGrid } from "../physics/grid.ts"
 import {
   Action,
   Aim,
+  Combo,
   Controls,
   Damage,
   Death,
@@ -43,7 +45,7 @@ import {
   Velocity,
   Weapon
 } from "../schema.ts"
-import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
+import type { ComboStep, EnemyKind, Faction, HitboxValue, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { respawnOf } from "./enemies.ts"
 
@@ -60,10 +62,45 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
  * Fires the player's weapon while the fire button is held. The cooldown
  * carries its remainder, so the fire rate is exact at any step length.
  */
+/** Moves the combo on by one move from where it is, and returns that move. */
+const advanceCombo = (combo: { get(): (typeof Combo.states)[number]; transition: Query.StateWriteCell<(typeof Combo.states)[number], (typeof Combo)["transitions"]>["transition"] }): ComboStep => {
+  switch (combo.get()) {
+    case "ready":
+      combo.transition("ready", "first")
+      return "first"
+    case "first":
+      combo.transition("first", "second")
+      return "second"
+    case "second":
+      combo.transition("second", "third")
+      return "third"
+    case "third":
+      combo.transition("third", "finisher")
+      return "finisher"
+    case "finisher":
+      // The finisher's recovery returns the combo to ready before the next press.
+      combo.transition("finisher", "ready")
+      combo.transition("ready", "first")
+      return "first"
+  }
+}
+
+/** The area a combo move covers from `position` facing `aim`. */
+const moveArea = (move: ComboMove, position: Vec2, aim: Vec2): Pick<HitboxValue, "area"> & { readonly pushAlong?: Vec2 } => {
+  switch (move.shape) {
+    case "arc":
+      return { area: { kind: "cone", origin: position, direction: aim, radius: move.reach, halfAngle: (move.arcDegrees * Math.PI) / 360 } }
+    case "thrust":
+      return { area: { kind: "lane", origin: position, direction: aim, length: move.reach, halfWidth: move.width / 2 }, pushAlong: aim }
+    case "spin":
+      return { area: { kind: "circle", center: position, radius: move.reach } }
+  }
+}
+
 export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
   queries: {
     shooters: Game.Query({
-      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), weapon: Game.Query.write(Weapon) },
+      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), weapon: Game.Query.write(Weapon), combo: Game.Query.write(Combo) },
       with: [Player]
     }),
     walls: Walls
@@ -86,33 +123,41 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
     const position = data.position.get()
     const aim = data.aim.get()
     if (slash.enabled) {
-      // The sword: one slash per press, a cone in front of the player, through
-      // the combat pipeline like enemy melee. A press during the recharge is
-      // kept for `inputBuffer` seconds.
+      // The sword: each press is the next move of the combo (see `Tuning.slash`),
+      // through the combat pipeline like enemy melee. A press during a recovery
+      // is kept for `inputBuffer` seconds.
       const current = data.weapon.get()
       const cooldown = Math.max(0, current.cooldown - dt)
       const buffered = controls.attackPressed ? slash.inputBuffer : Math.max(0, current.buffered - dt)
+      // Time idle since the recovery ended; the combo lapses after `comboWindow`, and ends with the finisher.
+      const comboTimer = cooldown > 0 ? 0 : current.comboTimer + dt
+      const previous = data.combo.get()
+      if (previous !== "ready" && cooldown <= 0 && (previous === "finisher" || comboTimer > slash.comboWindow)) {
+        data.combo.transition(previous, "ready")
+      }
       if (buffered > 0 && cooldown <= 0) {
+        const step = advanceCombo(data.combo)
+        const move = slash[step]
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area: { kind: "cone", origin: position, direction: aim, radius: slash.reach, halfAngle: (slash.arcDegrees * Math.PI) / 360 },
+          ...moveArea(move, position, aim),
           faction: "player",
-          damage: slash.damage,
-          knockback: slash.knockback,
+          damage: move.damage,
+          knockback: move.knockback,
           remaining: slash.active,
           hit: [],
           charges: true
         }]))
         shots += 1
-        events.action.emit({ kind: "slash", at: position })
-        data.weapon.set({ cooldown: slash.interval, buffered: 0 })
+        events.action.emit({ kind: "slash", at: position, step, direction: aim })
+        data.weapon.set({ cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0 })
       } else {
-        data.weapon.set({ cooldown, buffered })
+        data.weapon.set({ cooldown, recovery: current.recovery, buffered, comboTimer })
       }
       continue
     }
     let cooldown = data.weapon.get().cooldown - dt
     if (!controls.fireHeld) {
-      data.weapon.set({ cooldown: Math.max(cooldown, 0), buffered: 0 })
+      data.weapon.set({ ...data.weapon.get(), cooldown: Math.max(cooldown, 0), buffered: 0 })
       continue
     }
     // The muzzle is in front of the player; a wall in between stops the shot there.
@@ -134,7 +179,7 @@ export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
       shots += 1
       events.action.emit({ kind: "shot", at: muzzle })
     }
-    data.weapon.set({ cooldown, buffered: 0 })
+    data.weapon.set({ ...data.weapon.get(), cooldown, buffered: 0 })
   }
   if (shots > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + shots }))
 })

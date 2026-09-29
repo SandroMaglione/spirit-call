@@ -188,7 +188,7 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
 
     // Stella Sora-style facing: a subtle ring at the sword's reach, with a small arrow on it.
     const aim = data.aim.get()
-    const around = tuning.slash.enabled ? tuning.slash.reach : radius + view.facingRing.gap
+    const around = tuning.slash.enabled ? tuning.slash.first.reach : radius + view.facingRing.gap
     marks.circle(position.x, position.y, around).stroke({ width: 2, color: view.aim, alpha: view.facingRing.alpha })
     const tip = { x: position.x + aim.x * (around + view.facingRing.arrow), y: position.y + aim.y * (around + view.facingRing.arrow) }
     const base = { x: position.x + aim.x * around, y: position.y + aim.y * around }
@@ -480,7 +480,7 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   const tuning = resources.tuning.get()
   if (tuning.slash.enabled) {
     const cue = services.host.feedback.slashCue
-    const range = tuning.slash.reach + tuning.touch.assist.range
+    const range = tuning.slash.first.reach + tuning.touch.assist.range
     const nearby = queries.enemies.each().some(({ data }) => {
       const enemy = data.position.get()
       return Math.hypot(enemy.x - at.x, enemy.y - at.y) - data.hurtbox.get().radius <= range
@@ -495,8 +495,10 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
       if (cue.idle > view.slashCue.lingerSeconds) cue.alpha = Math.max(0, cue.alpha - seconds / view.slashCue.fadeOutSeconds)
     }
     if (cue.alpha > 0) {
-      const halfAngle = (tuning.slash.arcDegrees * Math.PI) / 360
-      drawArea(g, { kind: "cone", origin: at, direction: player.data.aim.get(), radius: tuning.slash.reach, halfAngle }, 0, {
+      // The opening move's reach and arc (the combo's other moves differ).
+      const first = tuning.slash.first
+      const halfAngle = first.shape === "arc" ? (first.arcDegrees * Math.PI) / 360 : Math.PI
+      drawArea(g, { kind: "cone", origin: at, direction: player.data.aim.get(), radius: first.reach, halfAngle }, 0, {
         color: view.playerArea,
         fill: (recharging ? 0.1 : 0.05) * cue.alpha,
         outline: (recharging ? 0.5 : 0.3) * cue.alpha
@@ -579,7 +581,7 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const [player] = queries.player.each()
   const fill = {
     // The sword recharges between slashes; the gun fires too fast to show.
-    attack: player === undefined || !tuning.slash.enabled ? 0 : player.data.weapon.get().cooldown / tuning.slash.interval,
+    attack: player === undefined || !tuning.slash.enabled ? 0 : recharge(player.data.weapon.get()),
     skill: player === undefined ? 0 : player.data.skills.get().special.cooldown / specialCooldown(tuning.skills),
     dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
     ultimate: player === undefined ? 1 : 1 - player.data.ultimate.get().energy / tuning.ultimate.energy
@@ -600,6 +602,10 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     }
   }
 })
+
+/** How much of the current move's recovery is left, 0..1. */
+const recharge = (weapon: { readonly cooldown: number; readonly recovery: number }): number =>
+  weapon.recovery <= 0 ? 0 : weapon.cooldown / weapon.recovery
 
 /** Sets an element's text only when it changes. */
 const setText = (element: Element | null, text: string): void => {

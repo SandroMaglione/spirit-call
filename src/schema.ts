@@ -84,8 +84,29 @@ export const Knockback = Descriptor.Component<Vec2>()("Shooter/Knockback")
 export const HitFlash = Descriptor.Component<{ readonly remaining: number }>()("Shooter/HitFlash")
 
 /** A player weapon: time until the next shot may fire (negative carries over). */
-/** Time until the next shot or slash, and how long a slash pressed early stays queued. */
-export const Weapon = Descriptor.Component<{ readonly cooldown: number; readonly buffered: number }>()("Shooter/Weapon")
+/**
+ * Time until the next shot or move (`cooldown`, of `recovery` in total), how
+ * long a press made early stays queued, and seconds since the last move's
+ * recovery ended (for the combo window).
+ */
+export const Weapon = Descriptor.Component<{
+  readonly cooldown: number
+  readonly recovery: number
+  readonly buffered: number
+  readonly comboTimer: number
+}>()("Shooter/Weapon")
+
+/** The move of the sword combo the player did last ("ready": none, a new combo starts). */
+export const Combo = Descriptor.State("Shooter/Combo", ["ready", "first", "second", "third", "finisher"] as const, {
+  transitions: {
+    ready: ["first"],
+    first: ["second", "ready"],
+    second: ["third", "ready"],
+    third: ["finisher", "ready"],
+    finisher: ["ready"]
+  }
+})
+export type ComboStep = Exclude<(typeof Combo.states)[number], "ready">
 
 export type ProjectileStyle = "bolt"
 
@@ -203,8 +224,11 @@ export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fac
 export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction; readonly kind: "grenade" | "ultimate" }>()("Shooter/Explosion")
 
 /** A projectile stopped against a wall or a shield, or ran out of range. */
-/** Something the player did, for feedback such as sound: one slash, shot, Blade Wave, grenade throw, or dash. */
-export const Action = Descriptor.Event<{ readonly kind: "slash" | "shot" | "wave" | "throw" | "dash"; readonly at: Vec2 }>()("Shooter/Action")
+/** Something the player did, for feedback such as sound: one combo move, shot, Blade Wave, grenade throw, or dash. */
+export const Action = Descriptor.Event<
+  | { readonly kind: "slash"; readonly at: Vec2; readonly step: ComboStep; readonly direction: Vec2 }
+  | { readonly kind: "shot" | "wave" | "throw" | "dash"; readonly at: Vec2 }
+>()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 
 // ── Resources ─────────────────────────────────────────────────────────────
@@ -337,6 +361,7 @@ export const Game = Schema.bind(
       Knockback,
       HitFlash,
       Weapon,
+      Combo,
       Projectile,
       Enemy,
       Attacker,

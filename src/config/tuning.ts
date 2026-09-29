@@ -78,6 +78,25 @@ export interface BeamAttack extends AttackTiming {
 
 export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack
 
+/** What every combo move has: reach from the player's center, damage, push, and the recharge after it. */
+interface MoveBase {
+  readonly reach: number
+  readonly damage: number
+  readonly knockback: number
+  /** No next move for this many seconds after this one. */
+  readonly recovery: number
+}
+
+/** One move of the sword combo: a sweeping arc, a narrow thrust, or a full spin around the player. */
+export type ComboMove =
+  | (MoveBase & { readonly shape: "arc"; readonly arcDegrees: number })
+  | (MoveBase & { readonly shape: "thrust"; readonly width: number })
+  | (MoveBase & { readonly shape: "spin" })
+
+const arcMove = (spec: Omit<Extract<ComboMove, { shape: "arc" }>, "shape">): ComboMove => ({ shape: "arc", ...spec })
+const thrustMove = (spec: Omit<Extract<ComboMove, { shape: "thrust" }>, "shape">): ComboMove => ({ shape: "thrust", ...spec })
+const spinMove = (spec: Omit<Extract<ComboMove, { shape: "spin" }>, "shape">): ComboMove => ({ shape: "spin", ...spec })
+
 /** A frontal shield that blocks projectiles hitting within `arcDegrees / 2` of where it faces. */
 export interface ShieldSpec {
   readonly arcDegrees: number
@@ -191,23 +210,28 @@ export const defaultTuning = {
     moveSpeedMultiplier: 0.9
   },
 
-  /** The sword: each attack press slashes the area in front of the player instead of shooting. */
+  /**
+   * The sword: each attack press is the next move of a combo, instead of a
+   * shot. Presses in rhythm chain first -> second -> third -> finisher; after
+   * a move's recovery, a press within `comboWindow` continues the chain, a
+   * later one starts over. The finisher's long recovery ends the chain.
+   */
   slash: {
     /** Slash instead of shooting (off: the gun above). */
     enabled: true,
-    /** Recharge after each slash: no new slash for this many seconds. */
-    interval: 0.55,
-    /** A press this long before the recharge ends still slashes, as soon as it can. */
+    /** A press this long before the recovery ends still attacks, as soon as it can. */
     inputBuffer: 0.15,
-    /** How far the slash reaches from the player's center. */
-    reach: 120,
-    /** Width of the slashed arc, in degrees, centered on the facing. */
-    arcDegrees: 140,
-    damage: 22,
-    /** Push speed; with the knockback decay a slash drives a normal enemy back about 80 units. */
-    knockback: 880,
-    /** How long the slash's hitbox stays out (seconds). */
-    active: 0.08
+    comboWindow: 0.8,
+    /** How long each move's hitbox stays out (seconds). */
+    active: 0.08,
+    /** A side slash, light push so enemies stay in reach for the next move. */
+    first: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.26 }),
+    /** The backhand, back across. */
+    second: arcMove({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.24 }),
+    /** A narrow thrust with more reach. */
+    third: thrustMove({ reach: 175, width: 56, damage: 24, knockback: 620, recovery: 0.3 }),
+    /** A spin all around, launching enemies away; long recovery. */
+    finisher: spinMove({ reach: 140, damage: 40, knockback: 1150, recovery: 0.7 })
   },
 
   /** On-screen touch controls (see `touchLayout` in config/input.ts). */
