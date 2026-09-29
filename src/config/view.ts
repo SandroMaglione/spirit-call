@@ -16,7 +16,7 @@ export const view = {
    * screen's short side over `referenceShortSide`, clamped to [`minZoom`, 1].
    * Desktop windows are taller than the reference and keep zoom 1.
    */
-  camera: { referenceShortSide: 700, minZoom: 0.55 },
+  camera: { referenceShortSide: 760, minZoom: 0.45 },
   background: 0x0d1117,
   floor: 0x1b222c,
   floorGrid: 0x2a3441,

@@ -9,7 +9,7 @@ import { directions, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { projection, viewZoom } from "../config/view.ts"
-import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
+import { screenDirectionToWorld, toScreen, toWorld } from "../math/iso.ts"
 import { length, normalizeOr, scale, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import {
@@ -40,7 +40,7 @@ export const CaptureTouch = InputCapture.system(Game, { name: "Shooter/CaptureTo
 
 /** Whether the on-screen controls were used this step. */
 const touchUsed = (touch: TouchSnapshot): boolean =>
-  touch.stick.active || touchButtons.some((name) => touch.buttons[name].held || touch.buttons[name].pressed || touch.buttons[name].released)
+  touch.stick.active || touch.swipe.active || touchButtons.some((name) => touch.buttons[name].held || touch.buttons[name].pressed || touch.buttons[name].released)
 
 /** Whether the keyboard or mouse buttons were used this step (moving the mouse alone does not switch). */
 const desktopUsed = (keys: KeysSnapshot, pointer: PointerSnapshot): boolean =>
@@ -145,13 +145,24 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   })
 })
 
+/** Turns a world direction by `degrees` as seen on screen (positive is clockwise). */
+const turnOnScreen = (direction: Vec2, degrees: number): Vec2 => {
+  const screen = toScreen(projection, direction)
+  const angle = (degrees * Math.PI) / 180
+  const turned = {
+    x: screen.x * Math.cos(angle) - screen.y * Math.sin(angle),
+    y: screen.x * Math.sin(angle) + screen.y * Math.cos(angle)
+  }
+  return worldDirection(turned, direction)
+}
+
 /**
  * Touch controls into intent. The stick only moves (analog); it never turns
- * the player. The facing changes only by dragging the attack button, and
- * stays when the button is released. Holding attack fires along the facing
- * (the drag while dragging). The skill throws on release: to the dragged spot
- * (drag length scales the range) or, for a tap, along the facing at
- * `tapThrowRange`. Cancelled touches throw nothing.
+ * the player. Swiping anywhere else turns the facing (horizontal distance
+ * times `swipeTurn` degrees), and the facing stays until the next swipe.
+ * Holding attack fires along the facing. The skill throws on release: to the
+ * dragged spot (drag length scales the range) or, for a tap, along the facing
+ * at `tapThrowRange`. Cancelled touches throw nothing.
  */
 const resolveTouch = (
   touch: TouchSnapshot,
@@ -167,10 +178,9 @@ const resolveTouch = (
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
   const moving = tilt > 0
   const origin = player.position
-  const ahead = player.aim
+  const ahead = touch.swipe.delta.x === 0 ? player.aim : turnOnScreen(player.aim, touch.swipe.delta.x * tuning.touch.swipeTurn)
   const { attack, skill } = touch.buttons
-  const aimDirection = attack.aim === null ? ahead : worldDirection(attack.aim, ahead)
-  const aimPoint = { x: origin.x + aimDirection.x * tuning.touch.aimDistance, y: origin.y + aimDirection.y * tuning.touch.aimDistance }
+  const aimPoint = { x: origin.x + ahead.x * tuning.touch.aimDistance, y: origin.y + ahead.y * tuning.touch.aimDistance }
   const range = tuning.skills.grenade.maxRange
   const throwTo = (aim: Vec2 | null): Vec2 => {
     const direction = aim === null ? ahead : worldDirection(aim, ahead)

@@ -179,6 +179,8 @@ export const defaultTuning = {
   touch: {
     /** How far ahead of the player the touch aim point sits (world units); only its direction matters for shooting. */
     aimDistance: 260,
+    /** Degrees the facing turns per pixel of horizontal swipe (right turns clockwise on screen). */
+    swipeTurn: 0.45,
     /** A tapped skill (no drag) throws this fraction of max range, straight ahead. */
     tapThrowRange: 0.6
   },

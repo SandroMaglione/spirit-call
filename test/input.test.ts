@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { Camera, Controls, Game, Player, Skills } from "../src/schema.ts"
-import { projection, viewZoom } from "../src/config/view.ts"
+import { projection, view, viewZoom } from "../src/config/view.ts"
 import { toWorld } from "../src/math/iso.ts"
 import { createSimulation } from "../src/simulation.ts"
 import { PlayerState } from "./helpers.ts"
@@ -74,7 +74,8 @@ describe("camera zoom", () => {
   it("zooms out on small screens and keeps the mouse aim under the cursor", () => {
     const phone = { width: 844, height: 390 }
     const zoom = viewZoom(phone)
-    expect(zoom).toBeCloseTo(390 / 700, 9)
+    expect(zoom).toBeCloseTo(Math.max(view.camera.minZoom, 390 / view.camera.referenceShortSide), 9)
+    expect(zoom).toBeLessThan(0.6)
     expect(viewZoom({ width: 1280, height: 800 })).toBe(1)
     // The cursor 100 px right of the screen center is 100 / zoom screen units away in the world.
     const sim = createSimulation({
