@@ -17,6 +17,12 @@ export const view = {
    * Desktop windows are taller than the reference and keep zoom 1.
    */
   camera: { referenceShortSide: 760, minZoom: 0.45 },
+  /**
+   * The slash area shows while an enemy is in attack-assist range or a slash
+   * recharges, fades in over `fadeInSeconds`, and after `lingerSeconds`
+   * without either fades out over `fadeOutSeconds`.
+   */
+  slashCue: { fadeInSeconds: 0.12, lingerSeconds: 0.6, fadeOutSeconds: 0.4 },
   background: 0x0d1117,
   floor: 0x1b222c,
   floorGrid: 0x2a3441,

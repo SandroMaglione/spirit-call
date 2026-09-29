@@ -163,7 +163,6 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       selection: {
         position: Game.Query.read(Position),
         previous: Game.Query.read(PrevPosition),
-        aim: Game.Query.read(Aim),
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
         flash: Game.Query.read(HitFlash),
@@ -180,15 +179,8 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
   const tuning = resources.tuning.get()
   for (const { entity, data } of queries.player.each()) {
     const position = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-    const aim = data.aim.get()
     const dash = data.dash.get()
     const radius = tuning.player.radius
-
-    // Aim chevron on the floor.
-    const tip = { x: position.x + aim.x * (radius + 46), y: position.y + aim.y * (radius + 46) }
-    const base = { x: position.x + aim.x * (radius + 16), y: position.y + aim.y * (radius + 16) }
-    const side = { x: -aim.y * 12, y: aim.x * 12 }
-    marks.poly([base.x + side.x, base.y + side.y, tip.x, tip.y, base.x - side.x, base.y - side.y]).fill({ color: view.aim, alpha: 0.7 })
 
     // Dash readiness ring around the feet.
     const ready = dash.cooldown <= 0
@@ -421,14 +413,17 @@ const FadeOccluders = Game.System("Shooter/FadeOccluders", {
 })
 
 /**
- * Where the player faces, drawn on the floor: with the sword, the outline of
- * the slash in front of the player (brighter while slashing). On touch, also
- * a line along the aim while shooting, and, while the grenade is dragged,
- * where it will land (clamped to its range) and its blast radius.
+ * Attack cues, drawn on the floor. With the sword, the slash area in front of
+ * the player, only while it matters: an enemy within the attack assist's
+ * range, or a slash still recharging; otherwise it lingers briefly and fades
+ * (`view.slashCue`), so a facing that nothing depends on is not on screen. On
+ * touch, also the assist's pick (a ring), a line along the aim while
+ * shooting, and, while the grenade is dragged, where it will land (clamped to
+ * its range) and its blast radius.
  */
 const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim) }, with: [Player] }),
+    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim), weapon: Game.Query.read(Weapon) }, with: [Player] }),
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
@@ -441,13 +436,29 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
   const tuning = resources.tuning.get()
   if (tuning.slash.enabled) {
-    const aim = player.data.aim.get()
-    const halfAngle = (tuning.slash.arcDegrees * Math.PI) / 360
-    drawArea(g, { kind: "cone", origin: at, direction: aim, radius: tuning.slash.reach, halfAngle }, 0, {
-      color: view.playerArea,
-      fill: controls.fireHeld ? 0.1 : 0.04,
-      outline: controls.fireHeld ? 0.5 : 0.25
+    const cue = services.host.feedback.slashCue
+    const range = tuning.slash.reach + tuning.touch.assist.range
+    const nearby = queries.enemies.each().some(({ data }) => {
+      const enemy = data.position.get()
+      return Math.hypot(enemy.x - at.x, enemy.y - at.y) - data.hurtbox.get().radius <= range
     })
+    const recharging = player.data.weapon.get().cooldown > 0
+    const seconds = services.clock.frameSeconds
+    if (nearby || recharging) {
+      cue.idle = 0
+      cue.alpha = Math.min(1, cue.alpha + seconds / view.slashCue.fadeInSeconds)
+    } else {
+      cue.idle += seconds
+      if (cue.idle > view.slashCue.lingerSeconds) cue.alpha = Math.max(0, cue.alpha - seconds / view.slashCue.fadeOutSeconds)
+    }
+    if (cue.alpha > 0) {
+      const halfAngle = (tuning.slash.arcDegrees * Math.PI) / 360
+      drawArea(g, { kind: "cone", origin: at, direction: player.data.aim.get(), radius: tuning.slash.reach, halfAngle }, 0, {
+        color: view.playerArea,
+        fill: (recharging ? 0.1 : 0.05) * cue.alpha,
+        outline: (recharging ? 0.5 : 0.3) * cue.alpha
+      })
+    }
   }
   if (controls.device !== "touch") return
   // The enemy an attack now would turn toward (attack assist), ringed on the floor.

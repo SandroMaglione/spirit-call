@@ -157,7 +157,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       cursor,
       hud: hud.refs,
       stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
-      feedback: { shake: 0, hurt: 0, bannerWave: 0 }
+      feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 } }
     },
     nodes,
     destroy() {

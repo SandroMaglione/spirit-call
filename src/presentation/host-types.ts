@@ -67,6 +67,8 @@ export interface FeedbackState {
   hurt: number
   /** Last wave number shown in the banner. */
   bannerWave: number
+  /** The slash area's visibility (0..1) and seconds since it was last needed. */
+  slashCue: { alpha: number; idle: number }
 }
 
 /** Frame statistics measured by the host loop. */
