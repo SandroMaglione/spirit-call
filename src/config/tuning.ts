@@ -122,7 +122,7 @@ export const defaultTuning = {
     /** Radius enemy attacks test against; smaller than the body, so near misses read as misses. */
     hurtboxRadius: 11,
     /** Top running speed. */
-    moveSpeed: 270,
+    moveSpeed: 320,
     /** How fast the player reaches top speed. */
     acceleration: 3200,
     /** How fast the player stops when input is released. */

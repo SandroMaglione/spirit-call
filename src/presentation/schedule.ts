@@ -163,6 +163,7 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       selection: {
         position: Game.Query.read(Position),
         previous: Game.Query.read(PrevPosition),
+        aim: Game.Query.read(Aim),
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
         flash: Game.Query.read(HitFlash),
@@ -181,6 +182,15 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     const position = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
     const dash = data.dash.get()
     const radius = tuning.player.radius
+
+    // Stella Sora-style facing: a subtle ring around the feet, with a small arrow on it.
+    const aim = data.aim.get()
+    const around = radius + view.facingRing.gap
+    marks.circle(position.x, position.y, around).stroke({ width: 2, color: view.aim, alpha: view.facingRing.alpha })
+    const tip = { x: position.x + aim.x * (around + view.facingRing.arrow), y: position.y + aim.y * (around + view.facingRing.arrow) }
+    const base = { x: position.x + aim.x * around, y: position.y + aim.y * around }
+    const side = { x: -aim.y * view.facingRing.arrow * 0.7, y: aim.x * view.facingRing.arrow * 0.7 }
+    marks.poly([base.x + side.x, base.y + side.y, tip.x, tip.y, base.x - side.x, base.y - side.y]).fill({ color: view.aim, alpha: view.facingRing.arrowAlpha })
 
     // Dash readiness ring around the feet.
     const ready = dash.cooldown <= 0
