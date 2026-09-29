@@ -5,6 +5,7 @@
  */
 import { InputCapture } from "@typeonce/bevy-ts-browser"
 
+import { directions } from "../config/input.ts"
 import { projection } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
 import { normalizeOr, zero } from "../math/vec.ts"
@@ -79,14 +80,32 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   })
   const aimPoint = pointer.over ? { x: camera.x + offset.x, y: camera.y + offset.y } : resources.controls.get().aimPoint
 
+  // Double tap to dash: a second press of the same movement key within the
+  // window. The dash goes where the player is moving, so tapping D twice
+  // while holding W dashes diagonally.
+  const now = resources.time.get().elapsed
+  const window = resources.tuning.get().dash.doubleTapWindow
+  let lastTap = previous.lastTap
+  let dashPressed = false
+  for (const direction of directions) {
+    if (!keys[direction].pressed) continue
+    if (lastTap !== null && lastTap.direction === direction && now - lastTap.at <= window) {
+      dashPressed = true
+      lastTap = null
+    } else {
+      lastTap = { direction, at: now }
+    }
+  }
+
   resources.controls.set({
     move,
     aimPoint,
-    dashPressed: keys.dash.pressed,
+    dashPressed,
     fireHeld: pointer.primary.held || pointer.primary.pressed,
-    grenadePressed: pointer.secondary.pressed,
+    grenadePressed: keys.skill.pressed,
     ultimatePressed: keys.ultimate.pressed,
     lastMove,
+    lastTap,
     grace
   })
 })
@@ -100,5 +119,6 @@ export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   grenadePressed: false,
   ultimatePressed: false,
   lastMove: zero,
+  lastTap: null,
   grace: 0
 })

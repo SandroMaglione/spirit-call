@@ -1,6 +1,7 @@
 import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings } from "../src/config/input.ts"
+import type { Direction } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
@@ -30,6 +31,17 @@ export const PlayerState = Game.Inspector("Test/PlayerState", {
     invulnerable: player.data.invulnerable.get().remaining
   }
 })
+
+/**
+ * A double tap of a movement key, which dashes: taps on `frame` and
+ * `frame + 2`, so the dash starts on step `frame + 3`. With `hold` the key
+ * stays down from the second tap (dashing while moving); otherwise both taps
+ * are instant, the player does not move, and the dash goes toward the cursor.
+ */
+export const doubleTap = (direction: Direction, frame: number, options: { readonly hold?: boolean } = {}): Keyboard.Timeline<typeof keyBindings> =>
+  options.hold === true
+    ? [{ frame, press: [direction] }, { frame: frame + 1, release: [direction] }, { frame: frame + 2, press: [direction] }]
+    : [{ frame, press: [direction], release: [direction] }, { frame: frame + 2, press: [direction], release: [direction] }]
 
 const withWaves = (tuning: Tuning, enabled: boolean): Tuning => ({ ...tuning, waves: { ...tuning.waves, enabled } })
 

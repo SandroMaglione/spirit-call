@@ -1,5 +1,5 @@
 /**
- * The player's special (right click: grenade) and ultimate (Shift: a large
+ * The player's special (Space: grenade) and ultimate (Shift: a large
  * blast around the player).
  *
  * Both reuse the combat pipeline: the grenade becomes a player-faction

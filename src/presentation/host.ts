@@ -20,7 +20,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     </div>
     <div class="hud__banner" data-banner></div>
     <div class="hud__skills">
-      <div class="hud__skill" data-skill="grenade"><kbd>RMB</kbd><span>Grenade</span><i data-cooldown></i></div>
+      <div class="hud__skill" data-skill="grenade"><kbd>Space</kbd><span>Grenade</span><i data-cooldown></i></div>
       <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span>Nova</span><i data-cooldown></i></div>
     </div>
     <div class="hud__gameover" data-gameover hidden>
@@ -28,7 +28,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       <div class="hud__gameover-stats" data-gameover-stats></div>
       <div class="hud__gameover-hint">Press R or click to restart</div>
     </div>
-    <div class="hud__hint">WASD move · Left click shoot · Right click grenade · Space dash · Shift ultimate</div>
+    <div class="hud__hint">WASD move · double-tap to dash · Left click shoot · Space grenade · Shift ultimate</div>
   `
   const slot = (id: string) => {
     const element = root.querySelector<HTMLElement>(`[data-skill="${id}"]`)!

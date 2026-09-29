@@ -53,11 +53,11 @@ const FillEnergy = Game.System("Test/FillEnergy", {
 })
 
 const hp = defaultTuning.enemies.dummy.hp
-const throwGrenade = (frame: number) => ({ frame, press: ["secondary" as const], release: ["secondary" as const] })
+const throwGrenade = (frame: number) => ({ frame, press: ["skill" as const], release: ["skill" as const] })
 
-describe("grenade (right click)", () => {
+describe("grenade (Space)", () => {
   it("lands at the cursor (clamped to max range), over walls", () => {
-    const run = range([], { x: 0, y: -2000 }, { pointer: [throwGrenade(1)] })
+    const run = range([], { x: 0, y: -2000 }, { keys: [throwGrenade(1)] })
     run.step(3)
     const [grenade] = run.world().grenades
     expect(grenade!.to.x).toBeCloseTo(center.x, 6)
@@ -66,7 +66,7 @@ describe("grenade (right click)", () => {
 
   it("damages everything within its radius, once, after the fuse", () => {
     const spec = defaultTuning.skills.grenade
-    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { pointer: [throwGrenade(1)] })
+    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { keys: [throwGrenade(1)] })
     run.step(steps(spec.flightTime + spec.fuse) - 2)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp])
     run.step(6)
@@ -76,14 +76,14 @@ describe("grenade (right click)", () => {
 
   it("respects its cooldown", () => {
     const again = steps(defaultTuning.skills.grenade.cooldown) - 10
-    const run = range([], { x: 200, y: 0 }, { pointer: [throwGrenade(1), throwGrenade(again)] })
+    const run = range([], { x: 200, y: 0 }, { keys: [throwGrenade(1), throwGrenade(again)] })
     run.step(again + 2)
     expect(run.world().skills.grenade.cooldown).toBeGreaterThan(0)
     expect(run.world().grenades).toEqual([])
   })
 
-  it("no longer dashes on right click", () => {
-    const run = range([], { x: 200, y: 0 }, { pointer: [throwGrenade(1)] })
+  it("does not dash", () => {
+    const run = range([], { x: 200, y: 0 }, { keys: [throwGrenade(1)] })
     run.step(3)
     expect(run.player().dash.remaining).toBe(0)
   })

@@ -6,7 +6,7 @@ import { Descriptor, Schema } from "@typeonce/bevy-ts"
 import type * as Entity from "@typeonce/bevy-ts/Entity"
 import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 
-import type { KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource } from "./config/input.ts"
+import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
@@ -220,6 +220,8 @@ export interface ControlsValue {
   readonly ultimatePressed: boolean
   /** Last non-zero movement direction, kept for the movement grace. */
   readonly lastMove: Vec2
+  /** The last movement key pressed and when (`Time.elapsed`), to detect a double tap. */
+  readonly lastTap: { readonly direction: Direction; readonly at: number } | null
   /** Time left in which released movement keeps going in `lastMove`. */
   readonly grace: number
 }

@@ -24,7 +24,9 @@ import { createSimulation } from "../src/simulation.ts"
 const sim = createSimulation({
   keyboard: Keyboard.scripted(keyBindings, [
     { frame: 0, press: ["down"] },
-    { frame: 30, press: ["dash"], release: ["dash"] },
+    // Double-tap down to dash (down stays held from the second tap).
+    { frame: 28, release: ["down"] },
+    { frame: 30, press: ["down"] },
     { frame: 120, release: ["down"] }
   ]),
   pointer: Pointer.scripted([{ frame: 0, move: { x: 900, y: 300 } }])

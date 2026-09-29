@@ -3,20 +3,31 @@ import { describe, expect, it } from "vitest"
 
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import { Camera, Game } from "../src/schema.ts"
+import { Camera, Game, Player, Skills } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 import { PlayerState } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
 describe("input", () => {
-  it("dashes with Space (bound by physical key)", () => {
+  it("dashes on a double tap of a movement key and throws the grenade with Space (physical keys)", () => {
     const keyboard = Keyboard.actions(fakeWindow.host, keyBindings)
     const sim = createSimulation({ keyboard, pointer: Pointer.scripted([]), tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
     sim.runtime.tick(sim.setup)
-    fakeWindow.press(" ", "Space")
+    fakeWindow.press("w", "KeyW")
+    sim.runtime.tick(sim.fixedUpdate)
+    expect(sim.runtime.inspect(PlayerState).dash.remaining).toBe(0)
+    fakeWindow.press("w", "KeyW")
     sim.runtime.tick(sim.fixedUpdate)
     expect(sim.runtime.inspect(PlayerState).dash.remaining).toBeGreaterThan(0)
+
+    const GrenadeCooldown = Game.Inspector("Test/GrenadeCooldown", {
+      queries: { player: Game.Query({ selection: { skills: Game.Query.read(Skills) }, with: [Player] }) }
+    }, ({ queries }) => queries.player.each()[0]!.data.skills.get().grenade.cooldown)
+    expect(sim.runtime.inspect(GrenadeCooldown)).toBe(0)
+    fakeWindow.press(" ", "Space")
+    sim.runtime.tick(sim.fixedUpdate)
+    expect(sim.runtime.inspect(GrenadeCooldown)).toBeGreaterThan(0)
   })
 
   it("ignores the pointer until it is over the game: no aiming or camera drift toward (0, 0)", () => {

@@ -2,7 +2,7 @@ import { FixedLoop } from "@typeonce/bevy-ts-browser"
 import { describe, expect, it } from "vitest"
 
 import { engine } from "../src/config/tuning.ts"
-import { start } from "./helpers.ts"
+import { doubleTap, start } from "./helpers.ts"
 
 /**
  * Drives the simulation through the same fixed-step loop the browser uses,
@@ -12,9 +12,9 @@ const runAt = (hz: number, steps: number) => {
   const run = start({
     keys: [
       { frame: 0, press: ["up", "right"] },
-      { frame: 20, press: ["dash"], release: ["dash"] },
+      ...doubleTap("right", 18, { hold: true }),
       { frame: 50, release: ["up"] },
-      { frame: 90, press: ["dash"], release: ["dash"] },
+      ...doubleTap("right", 88, { hold: true }),
       { frame: 140, release: ["right"] }
     ],
     pointer: [{ frame: 70, move: { x: 300, y: 500 } }]

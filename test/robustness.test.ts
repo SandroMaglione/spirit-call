@@ -12,7 +12,7 @@ import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
 import { Dash, FrameContext, Game, HitStop, KeyboardInput, Player, PointerInput, Renderable, RunScope, Time, Tuning } from "../src/schema.ts"
 import { defaultViewport } from "../src/simulation.ts"
-import { start } from "./helpers.ts"
+import { doubleTap, start } from "./helpers.ts"
 
 const HitStopState = Game.Inspector("Test/HitStopState", {
   resources: { hitStop: Game.System.readResource(HitStop), time: Game.System.readResource(Time) },
@@ -51,7 +51,7 @@ describe("hit-stop", () => {
     const run = start({
       tuning,
       pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }],
-      keys: [{ frame: 4, press: ["dash"], release: ["dash"] }]
+      keys: doubleTap("right", 2)
     })
     const Spawn = Game.System("Test/SpawnTarget", {}, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
@@ -86,7 +86,8 @@ describe("determinism", () => {
   it("replays a 40 s run with waves and input to the identical world", () => {
     const keys = Array.from({ length: 40 }, (_, second) => [
       { frame: second * 60, press: [(["up", "right", "down", "left"] as const)[second % 4]!] },
-      { frame: second * 60 + 30, press: ["dash" as const], release: ["dash" as const] },
+      { frame: second * 60 + 27, release: [(["up", "right", "down", "left"] as const)[second % 4]!] },
+      ...doubleTap((["up", "right", "down", "left"] as const)[second % 4]!, second * 60 + 28, { hold: true }),
       { frame: second * 60 + 55, release: [(["up", "right", "down", "left"] as const)[second % 4]!] }
     ]).flat()
     const pointer = Array.from({ length: 80 }, (_, half) => ({

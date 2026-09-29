@@ -152,7 +152,8 @@ describe("guardian", () => {
   it("does not stop explosions: a grenade hits it from the front", () => {
     const run = duel("guardian", { x: 250, y: 0 }, {
       tuning: still,
-      pointer: [{ frame: 0, move: cursorAt({ x: 250, y: 0 }) }, { frame: turnSteps, press: ["secondary"], release: ["secondary"] }]
+      pointer: [{ frame: 0, move: cursorAt({ x: 250, y: 0 }) }],
+      keys: [{ frame: turnSteps, press: ["skill"], release: ["skill"] }]
     })
     run.step(turnSteps + steps(defaultTuning.skills.grenade.flightTime + defaultTuning.skills.grenade.fuse) + 4)
     expect(run.world().enemies[0]!.facing!.x).toBeLessThan(-0.99)

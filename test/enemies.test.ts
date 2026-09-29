@@ -6,7 +6,7 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { doubleTap, start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -82,14 +82,14 @@ describe("telegraphed attacks", () => {
     const windupAt = stepUntil(dry, () => dry.world().enemies[0]?.attacker.phase === "windup")
     // React 0.2 s into the telegraph: dash screen-down (world +x+y, away from the cone's axis).
     const react = windupAt + Math.round(0.2 / engine.stepSeconds)
-    const run = duel("chaser", { x: 300, y: 0 }, { keys: [{ frame: react - 1, press: ["down", "dash"] }, { frame: react + 20, release: ["down", "dash"] }] })
+    const run = duel("chaser", { x: 300, y: 0 }, { keys: [...doubleTap("down", react - 3, { hold: true }), { frame: react + 20, release: ["down"] }] })
     run.step(windupAt + 60)
     expect(run.world().player!.health).toBe(defaultTuning.player.hp)
   })
 
   it("dash invulnerability negates damage even without moving out", () => {
     const tuning = tuningWith({ dash: { distance: 0.01, invulnerability: 5, cooldown: 10 } })
-    const run = duel("chaser", { x: 200, y: 0 }, { tuning, keys: [{ frame: 0, press: ["dash"], release: ["dash"] }] })
+    const run = duel("chaser", { x: 200, y: 0 }, { tuning, keys: doubleTap("right", 0) })
     run.step(180)
     expect(run.world().enemies[0]!.attacker.phase).not.toBe("ready")
     expect(run.world().player!.health).toBe(tuning.player.hp)

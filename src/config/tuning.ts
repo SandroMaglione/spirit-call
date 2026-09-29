@@ -151,6 +151,8 @@ export const defaultTuning = {
     invulnerability: 0.18,
     /** A dash pressed this long before it is available still happens. */
     inputBuffer: 0.12,
+    /** Two presses of the same movement key this close together (seconds) dash. */
+    doubleTapWindow: 0.25,
     /** Fraction of dash speed kept as velocity when the dash ends. */
     exitSpeedFactor: 0.35
   },
@@ -173,7 +175,7 @@ export const defaultTuning = {
     moveSpeedMultiplier: 0.9
   },
 
-  /** The player's special: right click throws a grenade at the cursor. */
+  /** The player's special: Space throws a grenade at the cursor. */
   skills: {
     /** Lobbed to the cursor over walls; explodes after landing. */
     grenade: {

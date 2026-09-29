@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
-import { toScreen } from "../src/math/iso.ts"
-import { distance } from "../src/math/vec.ts"
-import { start } from "./helpers.ts"
+import { screenDirectionToWorld, toScreen } from "../src/math/iso.ts"
+import { distance, normalizeOr } from "../src/math/vec.ts"
+import { doubleTap, start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
@@ -40,9 +40,9 @@ describe("movement", () => {
 
 describe("dash", () => {
   it("covers exactly the dash distance, toward the cursor when standing still", () => {
-    const run = start({ keys: [{ frame: 0, press: ["dash"], release: ["dash"] }] })
+    const run = start({ keys: doubleTap("right", 0) })
     const dashSteps = Math.ceil(defaultTuning.dash.duration / engine.stepSeconds)
-    run.step(dashSteps)
+    run.step(2 + dashSteps)
     const { position, aim } = run.player()
     // The cursor is to the right of the screen center, i.e. world south-east.
     expect(aim.x).toBeGreaterThan(0)
@@ -50,17 +50,41 @@ describe("dash", () => {
   })
 
   it("dashes in the movement direction when moving", () => {
-    const run = start({ keys: [{ frame: 0, press: ["left", "dash"] }] })
-    run.step(1)
+    const run = start({ keys: doubleTap("left", 0, { hold: true }) })
+    run.step(3)
     const { dash } = run.player()
     // Screen left is world (-1, +1).
+    expect(dash.remaining).toBeGreaterThan(0)
     expect(dash.direction.x).toBeCloseTo(-Math.SQRT1_2, 6)
     expect(dash.direction.y).toBeCloseTo(Math.SQRT1_2, 6)
   })
 
+  it("dashes diagonally when double-tapping one key while holding another", () => {
+    const run = start({ keys: [{ frame: 0, press: ["up"] }, ...doubleTap("right", 10, { hold: true })] })
+    run.step(13)
+    const { dash } = run.player()
+    const upRight = normalizeOr(screenDirectionToWorld(projection, { x: 1, y: -1 }), { x: 0, y: 0 })
+    expect(dash.remaining).toBeGreaterThan(0)
+    expect(dash.direction.x).toBeCloseTo(upRight.x, 6)
+    expect(dash.direction.y).toBeCloseTo(upRight.y, 6)
+  })
+
+  it("needs two presses of the same key within the double-tap window", () => {
+    const slow = Math.ceil(defaultTuning.dash.doubleTapWindow / engine.stepSeconds) + 2
+    const single = start({ keys: [{ frame: 0, press: ["right"] }, { frame: 1, release: ["right"] }] })
+    single.step(20)
+    expect(single.player().dash.cooldown).toBe(0)
+    const tooSlow = start({ keys: [{ frame: 0, press: ["right"], release: ["right"] }, { frame: slow, press: ["right"], release: ["right"] }] })
+    tooSlow.step(slow + 5)
+    expect(tooSlow.player().dash.cooldown).toBe(0)
+    const differentKeys = start({ keys: [{ frame: 0, press: ["right"], release: ["right"] }, { frame: 2, press: ["up"], release: ["up"] }] })
+    differentKeys.step(10)
+    expect(differentKeys.player().dash.cooldown).toBe(0)
+  })
+
   it("grants invulnerability for the configured window", () => {
-    const run = start({ keys: [{ frame: 0, press: ["dash"], release: ["dash"] }] })
-    run.step(1)
+    const run = start({ keys: doubleTap("right", 0) })
+    run.step(3)
     expect(run.player().invulnerable).toBeCloseTo(defaultTuning.dash.invulnerability, 6)
     const steps = Math.ceil(defaultTuning.dash.invulnerability / engine.stepSeconds)
     run.step(steps)
@@ -70,13 +94,9 @@ describe("dash", () => {
   it("respects the cooldown and buffers an early press", () => {
     const cooldownSteps = Math.round(defaultTuning.dash.cooldown / engine.stepSeconds)
     const early = cooldownSteps - 3 // within the input buffer
-    const run = start({
-      keys: [
-        { frame: 0, press: ["dash"], release: ["dash"] },
-        { frame: early, press: ["dash"], release: ["dash"] }
-      ]
-    })
-    run.step(early + 1)
+    // The first dash starts on step 3; the second double tap completes `early` steps later.
+    const run = start({ keys: [...doubleTap("right", 0), ...doubleTap("right", early)] })
+    run.step(early + 3)
     expect(run.player().dash.remaining).toBe(0)
     run.step(4)
     expect(run.player().dash.remaining).toBeGreaterThan(0)
@@ -89,9 +109,9 @@ describe("dash", () => {
     const run = start({
       tuning,
       pointer: [{ frame: 0, move: { x: 640 + north.x, y: 360 + north.y } }],
-      keys: [{ frame: 0, press: ["dash"], release: ["dash"] }]
+      keys: doubleTap("right", 0)
     })
-    run.step(10)
+    run.step(12)
     const { position } = run.player()
     const pillarBottom = 0.16 * tuning.arena.height + 25
     expect(position.y).toBeGreaterThanOrEqual(pillarBottom + tuning.player.radius - 0.1)
