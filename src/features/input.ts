@@ -194,13 +194,12 @@ export const assistTargetOf = (
 }
 
 /**
- * Touch controls into intent. The stick moves (analog) without turning the
- * player. Each ATTACK tap slashes once and turns the player then, toward the
- * enemy the assist picks (see `Tuning.touch.assist`), else toward where they
- * move, else keeping the facing; so the facing never swings between taps.
- * The skill throws on release: to the dragged spot (drag length scales the
- * range) or, for a tap, along the facing at `tapThrowRange`. Cancelled
- * touches throw nothing.
+ * Touch controls into intent. The stick moves (analog) and turns the player
+ * where it points; standing still keeps the facing. Each ATTACK tap slashes
+ * once, turning toward the enemy the assist picks (see `Tuning.touch.assist`),
+ * else along the facing. The skill has no assist: a drag aims it by hand, a
+ * tap uses the facing (the Blade Wave's direction; the grenade lands at
+ * `tapThrowRange` of its range). Cancelled touches do nothing.
  */
 const resolveTouch = (
   touch: TouchSnapshot,
@@ -222,14 +221,14 @@ const resolveTouch = (
   // The pick is shown by a ring at all times, so what the ring marks is what a tap hits.
   const target = assistTargetOf(origin, heading, enemies, previous.assistTarget, tuning)
   const attacking = attack.held || attack.pressed
-  // The facing changes only when an attack is pressed.
-  const ahead = !attack.pressed
-    ? player.aim
-    : target !== undefined ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, heading) : heading
+  // The player faces where the stick moves; an attack turns toward the assist's pick.
+  const ahead = attack.pressed && target !== undefined
+    ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, heading)
+    : heading
   const aimPoint = { x: origin.x + ahead.x * tuning.touch.aimDistance, y: origin.y + ahead.y * tuning.touch.aimDistance }
   const range = tuning.skills.grenade.maxRange
-  // Where a tapped skill goes: the assist's pick, else the facing.
-  const tapDirection = target !== undefined ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, ahead) : ahead
+  // A tapped skill goes where the player faces (no assist on skills).
+  const tapDirection = ahead
   const throwTo = (aim: Vec2 | null): Vec2 => {
     const direction = aim === null ? tapDirection : worldDirection(aim, ahead)
     // The Blade Wave only needs a direction: aim at its full length.

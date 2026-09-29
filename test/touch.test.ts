@@ -55,15 +55,13 @@ describe("touch controls", () => {
     expect(velocity.x).toBeGreaterThan(0)
   })
 
-  it("does not turn while moving; a tap with nobody near slashes toward the movement", () => {
-    const run = start({
-      tuning: tuningWith({ touch: { assist: { enabled: false } } }),
-      touch: [{ frame: 0, stick: { x: -1, y: 0 } }, { frame: 20, press: ["attack"], release: ["attack"] }]
-    })
-    run.step(20)
-    expect(run.player().aim).toEqual({ x: 1, y: 0 })
-    run.step(1)
+  it("faces where the stick moves, and keeps the facing when standing still", () => {
+    const run = start({ touch: [{ frame: 0, stick: { x: -1, y: 0 } }, { frame: 10, stick: null }] })
     const left = world({ x: -1, y: 0 })
+    run.step(10)
+    expect(run.player().aim.x).toBeCloseTo(left.x, 6)
+    expect(run.player().aim.y).toBeCloseTo(left.y, 6)
+    run.step(20)
     expect(run.player().aim.x).toBeCloseTo(left.x, 6)
     expect(run.player().aim.y).toBeCloseTo(left.y, 6)
   })

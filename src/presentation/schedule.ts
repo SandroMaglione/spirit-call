@@ -186,9 +186,9 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     const dash = data.dash.get()
     const radius = tuning.player.radius
 
-    // Stella Sora-style facing: a subtle ring around the feet, with a small arrow on it.
+    // Stella Sora-style facing: a subtle ring at the sword's reach, with a small arrow on it.
     const aim = data.aim.get()
-    const around = radius + view.facingRing.gap
+    const around = tuning.slash.enabled ? tuning.slash.reach : radius + view.facingRing.gap
     marks.circle(position.x, position.y, around).stroke({ width: 2, color: view.aim, alpha: view.facingRing.alpha })
     const tip = { x: position.x + aim.x * (around + view.facingRing.arrow), y: position.y + aim.y * (around + view.facingRing.arrow) }
     const base = { x: position.x + aim.x * around, y: position.y + aim.y * around }

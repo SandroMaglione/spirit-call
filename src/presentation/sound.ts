@@ -63,8 +63,12 @@ const tone = (voice: Voice, type: OscillatorType, from: number, to: number, dura
   oscillator.stop(start + duration + 0.02)
 }
 
-/** A noise burst through a filter whose frequency glides from `from` to `to` Hz. */
-const noise = (voice: Voice, filter: BiquadFilterType, from: number, to: number, duration: number, gain: number, q = 1, delay = 0): void => {
+/**
+ * A noise burst through a filter whose frequency glides from `from` to `to`
+ * Hz. `attack` is how long it takes to swell to full volume: short for
+ * impacts, longer for the rush of air of a swing.
+ */
+const noise = (voice: Voice, filter: BiquadFilterType, from: number, to: number, duration: number, gain: number, q = 1, delay = 0, attack?: number): void => {
   const { context, at } = voice
   const start = at + delay
   const source = context.createBufferSource()
@@ -76,7 +80,7 @@ const noise = (voice: Voice, filter: BiquadFilterType, from: number, to: number,
   shape.frequency.exponentialRampToValueAtTime(Math.max(1, to * voice.pitch), start + duration)
   const envelope = context.createGain()
   envelope.gain.setValueAtTime(0.0001, start)
-  envelope.gain.exponentialRampToValueAtTime(gain * voice.volume, start + Math.min(0.012, duration / 4))
+  envelope.gain.exponentialRampToValueAtTime(gain * voice.volume, start + (attack ?? Math.min(0.012, duration / 4)))
   envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration)
   source.connect(shape).connect(envelope).connect(voice.out)
   source.start(start, Math.random() * 0.5)
@@ -84,10 +88,14 @@ const noise = (voice: Voice, filter: BiquadFilterType, from: number, to: number,
 }
 
 const voices: Record<SoundName, (voice: Voice) => void> = {
-  // Airy whoosh with a short metallic edge.
+  // A sword swing: air rushing past the blade (a narrow band of noise sweeping
+  // from high to low, swelling then falling away), a softer body of air under
+  // it, and a faint detuned ring of the blade itself.
   slash: (v) => {
-    noise(v, "bandpass", 3200, 700, 0.14, 0.55, 1.4)
-    tone(v, "triangle", 1400, 500, 0.07, 0.07)
+    noise(v, "bandpass", 6500, 1300, 0.21, 0.75, 2.4, 0, 0.035)
+    noise(v, "lowpass", 2200, 450, 0.17, 0.22, 0.7, 0.01, 0.03)
+    tone(v, "sine", 3300, 3180, 0.3, 0.03, 0.02)
+    tone(v, "sine", 3345, 3220, 0.3, 0.025, 0.02)
   },
   // A longer, rising cut with a ringing tail.
   wave: (v) => {

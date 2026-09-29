@@ -88,7 +88,7 @@ const start = async (mount: HTMLElement) => {
   // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
   const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, app, browser.nodes)
   // Dev handle for inspecting the running game from the console.
-  Object.assign(window, { __game: { runtime, pointer, keyboard, touch, host: browser.host, monitor } })
+  Object.assign(window, { __game: { runtime, pointer, keyboard, touch, sounds, host: browser.host, monitor } })
 
   const stats = browser.host.stats
   let simMs = 0

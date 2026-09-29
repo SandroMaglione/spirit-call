@@ -23,7 +23,10 @@ export const view = {
    * without either fades out over `fadeOutSeconds`.
    */
   slashCue: { fadeInSeconds: 0.12, lingerSeconds: 0.6, fadeOutSeconds: 0.4 },
-  /** The facing ring around the player's feet: `gap` beyond the body, and the arrow's length on it. */
+  /**
+   * The facing ring around the player: at the sword's reach (with the gun,
+   * `gap` beyond the body), with an arrow of length `arrow` on it.
+   */
   facingRing: { gap: 20, alpha: 0.2, arrow: 12, arrowAlpha: 0.75 },
   background: 0x0d1117,
   floor: 0x1b222c,
