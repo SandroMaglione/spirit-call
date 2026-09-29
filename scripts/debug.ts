@@ -6,6 +6,9 @@
  * Scripts keyboard and pointer input, runs the simulation in a devtools
  * session with invariants checked after every step, and prints the run
  * result, the report, and the latest changes to the player's position.
+ * Runs list the warnings they raise (NaN or infinite writes, entity counts
+ * that keep growing, ...); the report adds read-before-write lints and the
+ * current entity counts.
  * Copy it and change the timelines, invariants, and questions.
  */
 import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
