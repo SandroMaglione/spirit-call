@@ -30,6 +30,7 @@ import {
   Hit,
   HitFlash,
   Hitbox,
+  Hurtbox,
   Impact,
   Invulnerable,
   PendingSpawn,
@@ -426,7 +427,10 @@ const FadeOccluders = Game.System("Shooter/FadeOccluders", {
  * where it will land (clamped to its range) and its blast radius.
  */
 const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
-  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim) }, with: [Player] }) },
+  queries: {
+    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim) }, with: [Player] }),
+    enemies: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
+  },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ queries, resources, services }) => {
@@ -446,6 +450,16 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     })
   }
   if (controls.device !== "touch") return
+  // The enemy an attack now would turn toward (attack assist), ringed on the floor.
+  if (controls.assistTarget !== null) {
+    for (const { entity, data } of queries.enemies.each()) {
+      if (entity.id.value !== controls.assistTarget) continue
+      const target = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+      const radius = data.hurtbox.get().radius + 8
+      g.circle(target.x, target.y, radius).fill({ color: view.reticle, alpha: controls.fireHeld ? 0.18 : 0.08 })
+      g.circle(target.x, target.y, radius).stroke({ width: 3, color: view.reticle, alpha: controls.fireHeld ? 0.95 : 0.6 })
+    }
+  }
   if (controls.fireHeld && !tuning.slash.enabled) {
     const dx = controls.aimPoint.x - at.x
     const dy = controls.aimPoint.y - at.y

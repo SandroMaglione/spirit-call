@@ -56,26 +56,15 @@ describe("touch controls", () => {
     expect(shot.y / speed).toBeCloseTo(up.y, 6)
   })
 
-  it("keeps facing where the last attack drag pointed, whatever the stick does", () => {
-    const run = start({
-      tuning: withGun(defaultTuning),
-      touch: [
-        { frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } },
-        { frame: 3, release: ["attack"] },
-        { frame: 5, stick: { x: -1, y: 0 } },
-        { frame: 30, press: ["attack"] }
-      ]
-    })
-    const up = world({ x: 0, y: -1 })
-    run.step(29)
-    expect(run.player().velocity.x).toBeLessThan(0)
-    expect(run.player().aim.x).toBeCloseTo(up.x, 6)
-    expect(run.player().aim.y).toBeCloseTo(up.y, 6)
-    run.step(5)
-    const shot = run.runtime.inspect(World).projectiles.at(-1)!.velocity
-    const speed = Math.hypot(shot.x, shot.y)
-    expect(shot.x / speed).toBeCloseTo(up.x, 6)
-    expect(shot.y / speed).toBeCloseTo(up.y, 6)
+  it("faces where the stick moves, and keeps the facing when standing still", () => {
+    const run = start({ touch: [{ frame: 0, stick: { x: -1, y: 0 } }, { frame: 10, stick: null }] })
+    const left = world({ x: -1, y: 0 })
+    run.step(10)
+    expect(run.player().aim.x).toBeCloseTo(left.x, 6)
+    expect(run.player().aim.y).toBeCloseTo(left.y, 6)
+    run.step(20)
+    expect(run.player().aim.x).toBeCloseTo(left.x, 6)
+    expect(run.player().aim.y).toBeCloseTo(left.y, 6)
   })
 
   it("throws the grenade on release: to the dragged spot, or ahead for a tap; a cancelled drag throws nothing", () => {

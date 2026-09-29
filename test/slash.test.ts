@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, engine } from "../src/config/tuning.ts"
+import type { Touch } from "@typeonce/bevy-ts-browser"
+
+import type { TouchButton } from "../src/config/input.ts"
+import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
+import type { Tuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Camera, Enemy, Game, Health, Player, Position, RunScope, Stats } from "../src/schema.ts"
 import { start } from "./helpers.ts"
@@ -23,8 +27,15 @@ const World = Game.Inspector("Test/Slash", {
 }))
 
 /** Replaces the training dummies with dummies at `offsets` from the player. Facing starts at world +x. */
-const arena = (offsets: ReadonlyArray<{ readonly x: number; readonly y: number }>, frames: number) => {
-  const run = start({ touch: [{ frame: 0, press: ["attack"] }, { frame: frames, release: ["attack"] }] })
+const arena = (
+  offsets: ReadonlyArray<{ readonly x: number; readonly y: number }>,
+  frames: number,
+  options: { readonly tuning?: Tuning; readonly touch?: Touch.Timeline<TouchButton> } = {}
+) => {
+  const run = start({
+    ...(options.tuning === undefined ? {} : { tuning: options.tuning }),
+    touch: options.touch ?? [{ frame: 0, press: ["attack"] }, { frame: frames, release: ["attack"] }]
+  })
   const Place = Game.System("Test/PlaceDummies", {
     queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
   }, ({ queries, commands }) => {
@@ -35,6 +46,40 @@ const arena = (offsets: ReadonlyArray<{ readonly x: number; readonly y: number }
   return run
 }
 
+const noAssist = tuningWith({ touch: { assist: { coneDegrees: 0 } } })
+/** An offset `distance` from the player, `degrees` off world +x (the starting facing). */
+const at = (degrees: number, distance: number) => ({ x: Math.cos((degrees * Math.PI) / 180) * distance, y: Math.sin((degrees * Math.PI) / 180) * distance })
+
+describe("attack assist (touch)", () => {
+  it("turns an undragged attack toward the nearest enemy in the cone, ignoring enemies behind", () => {
+    const run = arena([at(40, 90), at(180, 60)], 1)
+    run.step(3)
+    const [side, behind] = run.runtime.inspect(World).enemies
+    expect(side!.health).toBe(hp - slash.damage)
+    expect(behind!.health).toBe(hp)
+    const aim = run.player().aim
+    expect(Math.atan2(aim.y, aim.x) * 180 / Math.PI).toBeCloseTo(40, 0)
+  })
+
+  it("never extends reach: it turns toward an enemy just out of reach but does not hit it", () => {
+    const run = arena([at(30, slash.reach + defaultTuning.enemies.dummy.hurtboxRadius + 15)], 1)
+    run.step(3)
+    expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp)
+    const aim = run.player().aim
+    expect(Math.atan2(aim.y, aim.x) * 180 / Math.PI).toBeCloseTo(30, 0)
+  })
+
+  it("is off for a dragged attack, and with a zero cone", () => {
+    // Drag up on screen: the slash goes there, not at the enemy in front.
+    const dragged = arena([at(0, 80)], 1, { touch: [{ frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } }, { frame: 1, release: ["attack"] }] })
+    dragged.step(3)
+    expect(dragged.runtime.inspect(World).enemies[0]!.health).toBe(hp)
+    const off = arena([at(40, 90)], 1, { tuning: noAssist })
+    off.step(3)
+    expect(off.player().aim).toEqual({ x: 1, y: 0 })
+  })
+})
+
 describe("sword slash", () => {
   it("hits what is in front within reach, not what is behind or too far", () => {
     const run = arena([{ x: 80, y: 0 }, { x: -80, y: 0 }, { x: slash.reach + 60, y: 0 }], 1)
@@ -44,7 +89,7 @@ describe("sword slash", () => {
 
   it("hits several targets in the arc with one slash, once each", () => {
     const side = Math.sin((slash.arcDegrees * Math.PI) / 360 - 0.2) * 70
-    const run = arena([{ x: 70, y: side }, { x: 70, y: -side }], 1)
+    const run = arena([{ x: 70, y: side }, { x: 70, y: -side }], 1, { tuning: noAssist })
     run.step(6)
     expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - slash.damage, hp - slash.damage])
   })

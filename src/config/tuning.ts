@@ -197,7 +197,15 @@ export const defaultTuning = {
     /** How far ahead of the player the touch aim point sits (world units); only its direction matters for shooting. */
     aimDistance: 260,
     /** A tapped skill (no drag) throws this fraction of max range, straight ahead. */
-    tapThrowRange: 0.6
+    tapThrowRange: 0.6,
+    /**
+     * Attack assist on touch (tap or hold ATTACK without dragging): the attack
+     * turns toward the nearest enemy within this many degrees either side of
+     * where the player faces or moves, and within the attack's reach plus
+     * `extraReach`. It never extends reach. 0 turns it off; dragging ATTACK
+     * always aims by hand. The mouse is never assisted.
+     */
+    assist: { coneDegrees: 50, extraReach: 40 }
   },
 
   /** The player's special: Space throws a grenade at the cursor. */

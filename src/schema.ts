@@ -221,6 +221,8 @@ export interface ControlsValue {
   readonly grenadeAt: Vec2
   /** While the touch skill is dragged, where the grenade would land; `null` otherwise. */
   readonly grenadeAiming: Vec2 | null
+  /** On touch, the enemy (entity id) an attack now would turn toward, or `null`. */
+  readonly assistTarget: number | null
   readonly dashPressed: boolean
   readonly fireHeld: boolean
   readonly grenadePressed: boolean

@@ -16,8 +16,10 @@ import {
   Aim,
   Camera,
   Controls,
+  Enemy,
   FrameContext,
   Game,
+  Hurtbox,
   KeyboardInput,
   Keys,
   Player,
@@ -62,7 +64,8 @@ export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
 
 export const ResolveControls = Game.System("Shooter/ResolveControls", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim) }, with: [Player] })
+    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim) }, with: [Player] }),
+    enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
   },
   resources: {
     keys: Game.System.readResource(Keys),
@@ -82,7 +85,8 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   const device = touchUsed(touch) ? "touch" : desktopUsed(keys, pointer) ? "desktop" : previous.device
   if (device === "touch") {
     const [player] = queries.player.each()
-    resources.controls.set(resolveTouch(touch, previous, player === undefined ? undefined : { position: player.data.position.get(), aim: player.data.aim.get() }, resources.tuning.get()))
+    const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, position: data.position.get(), radius: data.hurtbox.get().radius }))
+    resources.controls.set(resolveTouch(touch, previous, player === undefined ? undefined : { position: player.data.position.get(), aim: player.data.aim.get() }, enemies, resources.tuning.get()))
     return
   }
   const camera = resources.camera.get()
@@ -135,6 +139,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     aimPoint,
     grenadeAt: aimPoint,
     grenadeAiming: null,
+    assistTarget: null,
     dashPressed,
     fireHeld: pointer.primary.held || pointer.primary.pressed,
     grenadePressed: keys.skill.pressed,
@@ -145,30 +150,79 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   })
 })
 
+interface AssistCandidate {
+  readonly id: number
+  readonly position: Vec2
+  readonly radius: number
+}
+
 /**
- * Touch controls into intent. The stick only moves (analog); it never turns
- * the player. Dragging the attack pad turns the facing toward the drag and
- * attacks; the facing stays after release, and holding without dragging
- * attacks along it. The skill throws on release: to the dragged spot (drag
- * length scales the range) or, for a tap, along the facing at
- * `tapThrowRange`. Cancelled touches throw nothing.
+ * The enemy an assisted attack from `origin` along `direction` turns toward:
+ * the nearest one within the cone and the attack's reach (plus `extraReach`),
+ * measured to its edge. The previous target is kept while it stays within a
+ * wider cone, so the attack does not flicker between neighbors.
+ */
+export const assistTargetOf = (
+  origin: Vec2,
+  direction: Vec2,
+  enemies: ReadonlyArray<AssistCandidate>,
+  previous: number | null,
+  tuning: TuningValue
+): AssistCandidate | undefined => {
+  const cone = (tuning.touch.assist.coneDegrees * Math.PI) / 180
+  if (cone <= 0) return undefined
+  const reach = (tuning.slash.enabled ? tuning.slash.reach : tuning.weapon.range) + tuning.touch.assist.extraReach
+  let best: AssistCandidate | undefined
+  let bestDistance = Number.POSITIVE_INFINITY
+  for (const enemy of enemies) {
+    const dx = enemy.position.x - origin.x
+    const dy = enemy.position.y - origin.y
+    const center = Math.hypot(dx, dy)
+    const distance = center - enemy.radius
+    if (distance > reach) continue
+    const cos = center < 1e-6 ? 1 : (dx * direction.x + dy * direction.y) / center
+    const sticky = enemy.id === previous
+    if (Math.acos(Math.max(-1, Math.min(1, cos))) > (sticky ? cone * 1.5 : cone)) continue
+    // The current target wins ties within a body's width.
+    const score = sticky ? distance - enemy.radius * 2 : distance
+    if (score < bestDistance) {
+      best = enemy
+      bestDistance = score
+    }
+  }
+  return best
+}
+
+/**
+ * Touch controls into intent. The stick moves (analog), and the player faces
+ * where they move; standing still keeps the facing. ATTACK without dragging
+ * turns toward the nearest enemy in a cone around the facing (see
+ * `Tuning.touch.assist`), or attacks straight ahead; dragging ATTACK aims by
+ * hand. The skill throws on release: to the dragged spot (drag length scales
+ * the range) or, for a tap, along the facing at `tapThrowRange`. Cancelled
+ * touches throw nothing.
  */
 const resolveTouch = (
   touch: TouchSnapshot,
   previous: ControlsValue,
   player: { readonly position: Vec2; readonly aim: Vec2 } | undefined,
+  enemies: ReadonlyArray<AssistCandidate>,
   tuning: TuningValue
 ): ControlsValue => {
   // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
   if (player === undefined) {
-    return { ...previous, device: "touch", move: zero, grenadeAiming: null, dashPressed: false, fireHeld: false, grenadePressed: false, ultimatePressed: false, grace: 0 }
+    return { ...previous, device: "touch", move: zero, grenadeAiming: null, assistTarget: null, dashPressed: false, fireHeld: false, grenadePressed: false, ultimatePressed: false, grace: 0 }
   }
   const tilt = length(touch.stick.vector)
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
   const moving = tilt > 0
   const origin = player.position
   const { attack, skill } = touch.buttons
-  const ahead = attack.aim === null ? player.aim : worldDirection(attack.aim, player.aim)
+  // Facing: the manual drag, else where the player moves, else unchanged.
+  const facing = attack.aim !== null ? worldDirection(attack.aim, player.aim) : moving ? normalizeOr(move, player.aim) : player.aim
+  const target = attack.aim === null ? assistTargetOf(origin, facing, enemies, previous.assistTarget, tuning) : undefined
+  const attacking = attack.held || attack.pressed
+  const ahead = attacking && target !== undefined ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, facing) : facing
   const aimPoint = { x: origin.x + ahead.x * tuning.touch.aimDistance, y: origin.y + ahead.y * tuning.touch.aimDistance }
   const range = tuning.skills.grenade.maxRange
   const throwTo = (aim: Vec2 | null): Vec2 => {
@@ -182,8 +236,9 @@ const resolveTouch = (
     aimPoint,
     grenadeAt: throwTo(skill.aim),
     grenadeAiming: skill.held && skill.aim !== null ? throwTo(skill.aim) : null,
+    assistTarget: target?.id ?? null,
     dashPressed: touch.buttons.dash.pressed,
-    fireHeld: attack.held || attack.pressed,
+    fireHeld: attacking,
     grenadePressed: skill.released && !skill.cancelled,
     ultimatePressed: touch.buttons.ultimate.pressed,
     lastMove: moving ? normalizeOr(move, zero) : previous.lastMove,
@@ -199,6 +254,7 @@ export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   aimPoint,
   grenadeAt: aimPoint,
   grenadeAiming: null,
+  assistTarget: null,
   dashPressed: false,
   fireHeld: false,
   grenadePressed: false,
