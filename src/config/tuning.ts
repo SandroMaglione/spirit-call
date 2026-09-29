@@ -91,6 +91,20 @@ export type Behavior =
   | { readonly kind: "chase"; readonly stopDistance: number }
   /** Keep between `minDistance` and `maxDistance`, strafing sideways. */
   | { readonly kind: "kite"; readonly minDistance: number; readonly maxDistance: number; readonly strafeSeconds: number }
+  /**
+   * Take turns: circle the target about `orbit` away until given one of the
+   * few engagement slots (`crowd.engagers`), then close in and attack (like
+   * chase, to `stopDistance`), then back off for `retreatSeconds` and circle
+   * again. An engagement that lands no attack within `engageSeconds` ends too.
+   */
+  | {
+    readonly kind: "skirmish"
+    readonly stopDistance: number
+    readonly orbit: number
+    readonly retreatSeconds: number
+    readonly engageSeconds: number
+    readonly strafeSeconds: number
+  }
 
 const melee = (spec: Omit<MeleeAttack, "kind">): AttackSpec | null => ({ kind: "melee", ...spec })
 const volley = (spec: Omit<VolleyAttack, "kind">): AttackSpec | null => ({ kind: "volley", ...spec })
@@ -104,6 +118,8 @@ const noAttack = (): AttackSpec | null => null
 const idle = (): Behavior => ({ kind: "idle" })
 const chase = (stopDistance: number): Behavior => ({ kind: "chase", stopDistance })
 const kite = (spec: { minDistance: number; maxDistance: number; strafeSeconds: number }): Behavior => ({ kind: "kite", ...spec })
+const skirmish = (spec: { stopDistance: number; orbit: number; retreatSeconds: number; engageSeconds: number; strafeSeconds: number }): Behavior =>
+  ({ kind: "skirmish", ...spec })
 
 /** Fixed-step timing. Changing these needs a reload. */
 export const engine = {
@@ -307,7 +323,7 @@ export const defaultTuning = {
       speed: 185,
       acceleration: 1400,
       cost: 1,
-      behavior: chase(52),
+      behavior: skirmish({ stopDistance: 52, orbit: 230, retreatSeconds: 0.9, engageSeconds: 3, strafeSeconds: 1.8 }),
       shield: noShield(),
       group: 1,
       attack: melee({ triggerRange: 70, reach: 80, arcDegrees: 100, windup: 0.45, active: 0.1, recovery: 0.45, cooldown: 0.5, damage: 12, knockback: 280 }),
@@ -355,7 +371,7 @@ export const defaultTuning = {
       speed: 235,
       acceleration: 1800,
       cost: 1,
-      behavior: chase(34),
+      behavior: skirmish({ stopDistance: 34, orbit: 190, retreatSeconds: 0.6, engageSeconds: 2.5, strafeSeconds: 1.2 }),
       shield: noShield(),
       group: 4,
       attack: melee({ triggerRange: 44, reach: 50, arcDegrees: 80, windup: 0.3, active: 0.08, recovery: 0.35, cooldown: 0.5, damage: 5, knockback: 140 }),
@@ -400,7 +416,7 @@ export const defaultTuning = {
       speed: 110,
       acceleration: 800,
       cost: 3,
-      behavior: chase(70),
+      behavior: skirmish({ stopDistance: 70, orbit: 260, retreatSeconds: 1.1, engageSeconds: 3.5, strafeSeconds: 2.2 }),
       shield: shield({ arcDegrees: 130, turnRate: 150 }),
       group: 1,
       attack: melee({ triggerRange: 88, reach: 100, arcDegrees: 110, windup: 0.55, active: 0.1, recovery: 0.55, cooldown: 0.6, damage: 16, knockback: 360 }),
@@ -413,7 +429,13 @@ export const defaultTuning = {
     /** Push strength when two bodies overlap (speed per unit of overlap). */
     separation: 14,
     /** Extra personal space around each body. */
-    spacing: 6
+    spacing: 6,
+    /** How many skirmishing enemies may close in on the player at once; the rest circle at a distance. */
+    engagers: 2,
+    /** A circling enemy waits at least this long (seconds) before taking a free slot. */
+    minOrbitSeconds: 0.6,
+    /** Circling speed as a fraction of the enemy's speed. */
+    orbitSpeed: 0.7
   },
 
   waves: {

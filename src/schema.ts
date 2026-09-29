@@ -133,7 +133,16 @@ export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker"
 export const Shield = Descriptor.Component<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>()("Shooter/Shield")
 
 /** Movement state for enemy behaviors. */
-export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly strafeTimer: number }>()("Shooter/Brain")
+export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly strafeTimer: number; readonly modeTimer: number }>()("Shooter/Brain")
+
+/**
+ * What a skirmishing enemy is doing (see the `skirmish` behavior): circling,
+ * closing in to attack (holding one of the few engagement slots), or backing
+ * off after an attack.
+ */
+export const EnemyMode = Descriptor.State("Shooter/EnemyMode", ["orbit", "engage", "retreat"] as const, {
+  transitions: { orbit: ["engage"], engage: ["retreat"], retreat: ["orbit"] }
+})
 
 /** A damaging area that exists while an attack is active. */
 export interface HitboxValue {
@@ -329,6 +338,7 @@ export const Game = Schema.bind(
       AttackPhase,
       Shield,
       Brain,
+      EnemyMode,
       Hitbox,
       Respawns,
       PendingSpawn,

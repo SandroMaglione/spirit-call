@@ -90,8 +90,10 @@ describe("telegraphed attacks", () => {
   it("dash invulnerability negates damage even without moving out", () => {
     const tuning = tuningWith({ dash: { distance: 0.01, invulnerability: 5, cooldown: 10 } })
     const run = duel("chaser", { x: 200, y: 0 }, { tuning, keys: doubleTap("right", 0) })
-    run.step(180)
-    expect(run.world().enemies[0]!.attacker.phase).not.toBe("ready")
+    // The chaser closes in and attacks while the player is still invulnerable.
+    const activeAt = stepUntil(run, () => run.world().enemies[0]?.attacker.phase === "active")
+    expect(activeAt).toBeLessThan(Math.round(5 / engine.stepSeconds))
+    run.step(30)
     expect(run.world().player!.health).toBe(tuning.player.hp)
   })
 

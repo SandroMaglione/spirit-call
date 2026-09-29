@@ -14,6 +14,7 @@ import {
   Body,
   Brain,
   Enemy,
+  EnemyMode,
   Game,
   Health,
   HitFlash,
@@ -49,7 +50,8 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [Invulnerable, { remaining: 0 }],
     [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
-    [Brain, { strafe, strafeTimer: 0 }],
+    [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
+    [EnemyMode, "orbit"],
     [Renderable, { kind: "enemy", enemy: kind, radius: stats.radius }]
   )
   const shield = stats.shield
@@ -132,7 +134,8 @@ export const SteerEnemies = (() => {
           brain: Game.Query.write(Brain),
           attacker: Game.Query.read(Attacker),
           phase: Game.Query.read(AttackPhase),
-          knockback: Game.Query.read(Knockback)
+          knockback: Game.Query.read(Knockback),
+          mode: Game.Query.write(EnemyMode)
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
@@ -160,6 +163,30 @@ export const SteerEnemies = (() => {
       bodies.push({ x: target.x, y: target.y, r, id: player.entity.id.value })
     }
 
+    // Engagement slots: free ones go to the circling skirmishers nearest the player.
+    if (target !== undefined) {
+      let engaged = 0
+      const waiting: Array<{
+        readonly distance: number
+        readonly mode: (typeof enemies)[number]["data"]["mode"]
+        readonly brain: (typeof enemies)[number]["data"]["brain"]
+      }> = []
+      for (const { data } of enemies) {
+        if (tuning.enemies[data.enemy.get().kind].behavior.kind !== "skirmish") continue
+        const mode = data.mode.get()
+        if (mode === "engage") engaged += 1
+        else if (mode === "orbit" && data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds) {
+          const position = data.position.get()
+          waiting.push({ distance: Math.hypot(position.x - target.x, position.y - target.y), mode: data.mode, brain: data.brain })
+        }
+      }
+      waiting.sort((left, right) => left.distance - right.distance)
+      for (const candidate of waiting.slice(0, Math.max(0, tuning.crowd.engagers - engaged))) {
+        candidate.mode.transition("orbit", "engage")
+        candidate.brain.update((brain) => ({ ...brain, modeTimer: 0 }))
+      }
+    }
+
     for (const { entity, data } of enemies) {
       const kind = data.enemy.get().kind
       const stats = tuning.enemies[kind]
@@ -176,6 +203,22 @@ export const SteerEnemies = (() => {
         continue
       }
 
+      // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
+      const behavior = stats.behavior
+      if (behavior.kind === "skirmish") {
+        const brain = data.brain.get()
+        let modeTimer = brain.modeTimer + dt
+        const mode = data.mode.get()
+        if (mode === "engage" && (phase === "recovery" || modeTimer > behavior.engageSeconds)) {
+          data.mode.transition("engage", "retreat")
+          modeTimer = 0
+        } else if (mode === "retreat" && modeTimer >= behavior.retreatSeconds) {
+          data.mode.transition("retreat", "orbit")
+          modeTimer = 0
+        }
+        data.brain.set({ ...brain, modeTimer })
+      }
+
       // Staggered: while a hit's push is strong, the enemy slides with it instead of walking.
       if (length(data.knockback.get()) > tuning.knockback.staggerSpeed) {
         data.velocity.set(zero)
@@ -187,7 +230,6 @@ export const SteerEnemies = (() => {
         const toward = sub(target, position)
         const distance = length(toward)
         const direction = normalizeOr(toward, zero)
-        const behavior = stats.behavior
         switch (behavior.kind) {
           case "idle":
             break
@@ -202,10 +244,37 @@ export const SteerEnemies = (() => {
               strafe = strafe === 1 ? -1 : 1
               strafeTimer = behavior.strafeSeconds
             }
-            data.brain.set({ strafe, strafeTimer })
+            data.brain.set({ ...brain, strafe, strafeTimer })
             const side = { x: -direction.y * strafe, y: direction.x * strafe }
             const radial = distance < behavior.minDistance ? -1 : distance > behavior.maxDistance ? 1 : 0
             desired = scale(normalizeOr({ x: direction.x * radial + side.x * 0.8, y: direction.y * radial + side.y * 0.8 }, zero), stats.speed)
+            break
+          }
+          case "skirmish": {
+            const brain = data.brain.get()
+            let strafeTimer = brain.strafeTimer - dt
+            let strafe = brain.strafe
+            if (strafeTimer <= 0) {
+              strafe = strafe === 1 ? -1 : 1
+              strafeTimer = behavior.strafeSeconds
+            }
+            data.brain.set({ ...brain, strafe, strafeTimer })
+            const side = { x: -direction.y * strafe, y: direction.x * strafe }
+            switch (data.mode.get()) {
+              case "engage":
+                if (distance > behavior.stopDistance) desired = scale(direction, stats.speed)
+                break
+              case "retreat":
+                desired = scale(normalizeOr({ x: -direction.x + side.x * 0.5, y: -direction.y + side.y * 0.5 }, zero), stats.speed)
+                break
+              case "orbit": {
+                // Circle the target, drifting back to the ring.
+                const band = 35
+                const radial = distance < behavior.orbit - band ? -1 : distance > behavior.orbit + band ? 1 : 0
+                desired = scale(normalizeOr({ x: direction.x * radial + side.x, y: direction.y * radial + side.y }, zero), stats.speed * tuning.crowd.orbitSpeed)
+                break
+              }
+            }
             break
           }
         }
