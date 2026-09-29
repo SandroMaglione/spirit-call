@@ -8,7 +8,7 @@ import { InputCapture } from "@typeonce/bevy-ts-browser"
 import { directions, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { projection } from "../config/view.ts"
+import { projection, viewZoom } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
 import { length, normalizeOr, scale, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -105,9 +105,10 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
 
   // Until the pointer is over the game the browser reports it at (0, 0);
   // keep the previous aim point instead of aiming at the corner.
+  const zoom = viewZoom(viewport)
   const offset = toWorld(projection, {
-    x: pointer.position.x - viewport.width / 2,
-    y: pointer.position.y - viewport.height / 2
+    x: (pointer.position.x - viewport.width / 2) / zoom,
+    y: (pointer.position.y - viewport.height / 2) / zoom
   })
   const aimPoint = pointer.over ? { x: camera.x + offset.x, y: camera.y + offset.y } : resources.controls.get().aimPoint
 
@@ -145,10 +146,11 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
 })
 
 /**
- * Touch controls into intent. The stick moves (analog); holding attack fires,
- * toward the drag if the button is dragged, else straight ahead (the movement
- * direction, or the facing when standing). The skill throws on release: to
- * the dragged spot (drag length scales the range) or, for a tap, ahead at
+ * Touch controls into intent. The stick only moves (analog); it never turns
+ * the player. The facing changes only by dragging the attack button, and
+ * stays when the button is released. Holding attack fires along the facing
+ * (the drag while dragging). The skill throws on release: to the dragged spot
+ * (drag length scales the range) or, for a tap, along the facing at
  * `tapThrowRange`. Cancelled touches throw nothing.
  */
 const resolveTouch = (
@@ -165,7 +167,7 @@ const resolveTouch = (
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
   const moving = tilt > 0
   const origin = player.position
-  const ahead = moving ? normalizeOr(move, zero) : player.aim
+  const ahead = player.aim
   const { attack, skill } = touch.buttons
   const aimDirection = attack.aim === null ? ahead : worldDirection(attack.aim, ahead)
   const aimPoint = { x: origin.x + aimDirection.x * tuning.touch.aimDistance, y: origin.y + aimDirection.y * tuning.touch.aimDistance }

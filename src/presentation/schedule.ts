@@ -9,7 +9,7 @@ import { RenderSync } from "@typeonce/bevy-ts-pixi"
 
 import { touchButtons } from "../config/input.ts"
 import { engine } from "../config/tuning.ts"
-import { projection, view } from "../config/view.ts"
+import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
 import {
@@ -134,7 +134,10 @@ const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   const shakeY = (Math.random() * 2 - 1) * feedback.shake
   const center = toScreen(projection, lerp({ x: camera.prevX, y: camera.prevY }, camera, services.clock.alpha))
   const screen = services.host.app.screen
-  services.host.world.position.set(Math.round(screen.width / 2 - center.x + shakeX), Math.round(screen.height / 2 - center.y + shakeY))
+  // Phones zoom out (see view.camera); the camera stays centered on the player.
+  const zoom = viewZoom(screen)
+  services.host.world.scale.set(zoom)
+  services.host.world.position.set(Math.round(screen.width / 2 - center.x * zoom + shakeX), Math.round(screen.height / 2 - center.y * zoom + shakeY))
   services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
 })
 

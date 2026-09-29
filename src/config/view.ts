@@ -11,6 +11,12 @@ export const projection: Projection = {
 }
 
 export const view = {
+  /**
+   * Small screens (phones) zoom out to show more of the arena: the zoom is the
+   * screen's short side over `referenceShortSide`, clamped to [`minZoom`, 1].
+   * Desktop windows are taller than the reference and keep zoom 1.
+   */
+  camera: { referenceShortSide: 700, minZoom: 0.55 },
   background: 0x0d1117,
   floor: 0x1b222c,
   floorGrid: 0x2a3441,
@@ -75,3 +81,7 @@ export const view = {
   hurtShake: 10,
   shakeDecay: 12
 }
+
+/** The camera zoom for a screen size (see `view.camera`). */
+export const viewZoom = (screen: { readonly width: number; readonly height: number }): number =>
+  Math.min(1, Math.max(view.camera.minZoom, Math.min(screen.width, screen.height) / view.camera.referenceShortSide))

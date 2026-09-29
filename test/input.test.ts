@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest"
 
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import { Camera, Game, Player, Skills } from "../src/schema.ts"
+import { Camera, Controls, Game, Player, Skills } from "../src/schema.ts"
+import { projection, viewZoom } from "../src/config/view.ts"
+import { toWorld } from "../src/math/iso.ts"
 import { createSimulation } from "../src/simulation.ts"
 import { PlayerState } from "./helpers.ts"
 
@@ -67,6 +69,31 @@ const fakeWindow = (() => {
     up: (key: string, code: string) => dispatch("keyup", key, code)
   }
 })()
+
+describe("camera zoom", () => {
+  it("zooms out on small screens and keeps the mouse aim under the cursor", () => {
+    const phone = { width: 844, height: 390 }
+    const zoom = viewZoom(phone)
+    expect(zoom).toBeCloseTo(390 / 700, 9)
+    expect(viewZoom({ width: 1280, height: 800 })).toBe(1)
+    // The cursor 100 px right of the screen center is 100 / zoom screen units away in the world.
+    const sim = createSimulation({
+      keyboard: Keyboard.scripted(keyBindings, []),
+      pointer: Pointer.scripted([{ frame: 0, move: { x: phone.width / 2 + 100, y: phone.height / 2 } }]),
+      viewport: phone,
+      tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } }
+    })
+    const AimPoint = Game.Inspector("Test/ZoomAim", { resources: { controls: Game.System.readResource(Controls), camera: Game.System.readResource(Camera) } }, ({ resources }) => ({ aim: resources.controls.get().aimPoint, camera: resources.camera.get() }))
+    sim.runtime.tick(sim.setup)
+    // Controls convert the cursor with the camera as it was when the step started.
+    const { camera } = sim.runtime.inspect(AimPoint)
+    sim.runtime.tick(sim.fixedUpdate)
+    const { aim } = sim.runtime.inspect(AimPoint)
+    const expected = toWorld(projection, { x: 100 / zoom, y: 0 })
+    expect(aim.x - camera.x).toBeCloseTo(expected.x, 6)
+    expect(aim.y - camera.y).toBeCloseTo(expected.y, 6)
+  })
+})
 
 describe("physical key bindings", () => {
   it("moves with the key in W's position whatever it types (AZERTY types z there)", () => {

@@ -43,7 +43,7 @@ describe("touch controls", () => {
     expect(run.runtime.inspect(World).device).toBe("touch")
   })
 
-  it("fires while attack is held, toward the drag, or straight ahead for a tap-and-hold", () => {
+  it("fires toward the drag while attack is held", () => {
     const dragged = start({ touch: [{ frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } }] })
     dragged.step(10)
     const shots = dragged.runtime.inspect(World).projectiles
@@ -52,13 +52,29 @@ describe("touch controls", () => {
     const velocity = shots[0]!.velocity
     expect(velocity.x / Math.hypot(velocity.x, velocity.y)).toBeCloseTo(up.x, 6)
     expect(velocity.y / Math.hypot(velocity.x, velocity.y)).toBeCloseTo(up.y, 6)
+  })
 
-    // Moving left and holding attack without dragging fires left.
-    const ahead = start({ touch: [{ frame: 0, stick: { x: -1, y: 0 }, press: ["attack"] }] })
-    ahead.step(10)
-    const left = world({ x: -1, y: 0 })
-    const shot = ahead.runtime.inspect(World).projectiles.at(-1)!.velocity
-    expect(shot.x / Math.hypot(shot.x, shot.y)).toBeCloseTo(left.x, 6)
+  it("keeps facing where the last fire drag pointed, whatever the stick does", () => {
+    // Drag fire up, release, then run left and fire again without dragging.
+    const run = start({
+      touch: [
+        { frame: 0, press: ["attack"], aim: { attack: { x: 0, y: -1 } } },
+        { frame: 3, release: ["attack"] },
+        { frame: 5, stick: { x: -1, y: 0 } },
+        { frame: 30, press: ["attack"] }
+      ]
+    })
+    const up = world({ x: 0, y: -1 })
+    run.step(29)
+    // Running left for 24 steps did not turn the player.
+    expect(run.player().aim.x).toBeCloseTo(up.x, 6)
+    expect(run.player().aim.y).toBeCloseTo(up.y, 6)
+    expect(run.player().velocity.x).toBeLessThan(0)
+    run.step(5)
+    const shot = run.runtime.inspect(World).projectiles.at(-1)!.velocity
+    const speed = Math.hypot(shot.x, shot.y)
+    expect(shot.x / speed).toBeCloseTo(up.x, 6)
+    expect(shot.y / speed).toBeCloseTo(up.y, 6)
   })
 
   it("throws the grenade on release: to the dragged spot, or ahead for a tap; a cancelled drag throws nothing", () => {
