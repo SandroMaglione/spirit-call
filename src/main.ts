@@ -4,6 +4,7 @@ import { keyBindings } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
+import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
@@ -59,8 +60,10 @@ const start = async (mount: HTMLElement) => {
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.
   const step = Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
+  // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
+  const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, app, browser.nodes)
   // Dev handle for inspecting the running game from the console.
-  Object.assign(window, { __game: { runtime, pointer, keyboard, host: browser.host } })
+  Object.assign(window, { __game: { runtime, pointer, keyboard, host: browser.host, monitor } })
 
   const stats = browser.host.stats
   let simMs = 0
