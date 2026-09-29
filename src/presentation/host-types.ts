@@ -1,5 +1,7 @@
 import type { Application, Container, Graphics, Sprite, Texture } from "pixi.js"
 
+import type { TouchButton } from "../config/input.ts"
+
 import type { Fx } from "./fx.ts"
 
 export type ProjectileNode = { readonly kind: "projectile"; readonly root: Container; readonly orb: Sprite; readonly shadow: Sprite }
@@ -24,8 +26,27 @@ export interface SkillSlotRefs {
   readonly cooldown: HTMLElement
 }
 
+/** One on-screen touch button: the circle, its cooldown fill, and the drag-aim marker. */
+export interface TouchButtonRefs {
+  readonly root: HTMLElement
+  readonly cooldown: HTMLElement
+  readonly aim: HTMLElement
+}
+
+/** The on-screen touch controls, positioned every frame from `Touch.view()`. */
+export interface TouchPadRefs {
+  readonly root: HTMLElement
+  readonly stick: HTMLElement
+  readonly knob: HTMLElement
+  readonly buttons: { readonly [K in TouchButton]: TouchButtonRefs }
+}
+
 export interface HudRefs {
   readonly skills: { readonly grenade: SkillSlotRefs; readonly ultimate: SkillSlotRefs }
+  /** The keyboard skill bar and key hint, hidden while playing with touch. */
+  readonly desktopOnly: ReadonlyArray<HTMLElement>
+  readonly gameOverHint: HTMLElement
+  readonly pad: TouchPadRefs
   readonly health: HTMLElement
   readonly healthText: HTMLElement
   readonly dash: HTMLElement

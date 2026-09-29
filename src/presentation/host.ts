@@ -1,10 +1,14 @@
 import { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import { Application, Container, Graphics } from "pixi.js"
 
+import { touchButtons } from "../config/input.ts"
+import type { TouchButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { Fx } from "./fx.ts"
 import type { HudRefs, ProjectileNode, RenderAssets, RenderHostValue, RenderNode } from "./host-types.ts"
 import { drawFloor } from "./nodes.ts"
+
+const padLabels: Record<TouchButton, string> = { attack: "FIRE", skill: "GRENADE", dash: "DASH", ultimate: "NOVA" }
 
 const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => {
   const root = document.createElement("div")
@@ -26,18 +30,34 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <div class="hud__gameover" data-gameover hidden>
       <div class="hud__gameover-title">YOU DIED</div>
       <div class="hud__gameover-stats" data-gameover-stats></div>
-      <div class="hud__gameover-hint">Press R or click to restart</div>
+      <div class="hud__gameover-hint" data-gameover-hint>Press R or click to restart</div>
     </div>
-    <div class="hud__hint">WASD move · double-tap to dash · Left click shoot · Space grenade · Shift ultimate</div>
+    <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click shoot · Space grenade · Shift ultimate</div>
+    <div class="pad" data-pad hidden>
+      <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
+      ${touchButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
+    </div>
   `
   const slot = (id: string) => {
     const element = root.querySelector<HTMLElement>(`[data-skill="${id}"]`)!
     return { root: element, cooldown: element.querySelector<HTMLElement>("[data-cooldown]")! }
   }
+  const padButton = (name: TouchButton) => {
+    const button = root.querySelector<HTMLElement>(`[data-button="${name}"]`)!
+    return { root: button, cooldown: button.querySelector<HTMLElement>("[data-cooldown]")!, aim: root.querySelector<HTMLElement>(`[data-aim="${name}"]`)! }
+  }
   return {
     root,
     refs: {
       skills: { grenade: slot("grenade"), ultimate: slot("ultimate") },
+      desktopOnly: [root.querySelector<HTMLElement>(".hud__skills")!, root.querySelector<HTMLElement>("[data-hint]")!],
+      gameOverHint: root.querySelector<HTMLElement>("[data-gameover-hint]")!,
+      pad: {
+        root: root.querySelector<HTMLElement>("[data-pad]")!,
+        stick: root.querySelector<HTMLElement>("[data-stick]")!,
+        knob: root.querySelector<HTMLElement>("[data-knob]")!,
+        buttons: { attack: padButton("attack"), skill: padButton("skill"), dash: padButton("dash"), ultimate: padButton("ultimate") }
+      },
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       dash: root.querySelector<HTMLElement>("[data-dash]")!,

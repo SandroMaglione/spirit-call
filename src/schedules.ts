@@ -17,7 +17,7 @@ import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, FirePlayerWeapon, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
-import { CaptureKeys, CapturePointer, CaptureViewport, ResolveControls } from "./features/input.ts"
+import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
 import { CastUltimate, ThrowGrenade, UpdateGrenades } from "./features/skills.ts"
@@ -56,6 +56,7 @@ const input = Game.Schedule.when(
   whileRunning,
   CaptureKeys,
   CapturePointer,
+  CaptureTouch,
   ResolveControls
 )
 

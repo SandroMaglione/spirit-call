@@ -1,6 +1,6 @@
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
+import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
-import { keyBindings } from "./config/input.ts"
+import { keyBindings, touchButtons } from "./config/input.ts"
 import type { Tuning } from "./config/tuning.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
@@ -14,6 +14,7 @@ export const initialResources = (tuning: Tuning, viewport: ViewportValue) => ({
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),
+  TouchState: Touch.idle(touchButtons),
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   Viewport: viewport,
   Stats: { kills: 0, shots: 0 },

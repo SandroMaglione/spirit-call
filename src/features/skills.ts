@@ -42,7 +42,7 @@ export const ThrowGrenade = Game.System("Shooter/ThrowGrenade", {
     let cooldown = Math.max(0, data.skills.get().grenade.cooldown - dt)
     if (controls.grenadePressed && cooldown <= 0) {
       const position = data.position.get()
-      const offset = clampLength(sub(controls.aimPoint, position), spec.maxRange)
+      const offset = clampLength(sub(controls.grenadeAt, position), spec.maxRange)
       commands.spawnIn(RunScope, Game.Command.spawn([Grenade, {
         from: position,
         to: { x: position.x + offset.x, y: position.y + offset.y },

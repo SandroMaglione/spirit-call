@@ -6,7 +6,7 @@ import { Descriptor, Schema } from "@typeonce/bevy-ts"
 import type * as Entity from "@typeonce/bevy-ts/Entity"
 import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 
-import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource } from "./config/input.ts"
+import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
@@ -207,13 +207,20 @@ export const Time = Descriptor.Resource<TimeValue>()("Shooter/Time")
 
 export const Keys = Descriptor.TransientResource<KeysSnapshot>()("Shooter/Keys")
 export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Shooter/PointerState")
+export const TouchState = Descriptor.TransientResource<TouchSnapshot>()("Shooter/TouchState")
 
 /** Player intent for this step, in world space. */
 export interface ControlsValue {
-  /** Movement direction: unit length or zero. */
+  /** The input in use: keyboard and mouse, or the on-screen touch controls (whichever was used last). */
+  readonly device: "desktop" | "touch"
+  /** Movement direction and strength: length 1 on the keyboard, 0 to 1 on the touch stick. */
   readonly move: Vec2
-  /** Ground point under the cursor. */
+  /** Ground point the player aims at: under the cursor, or along the touch aim. */
   readonly aimPoint: Vec2
+  /** Where a grenade thrown this step lands (before the range clamp). */
+  readonly grenadeAt: Vec2
+  /** While the touch skill is dragged, where the grenade would land; `null` otherwise. */
+  readonly grenadeAiming: Vec2 | null
   readonly dashPressed: boolean
   readonly fireHeld: boolean
   readonly grenadePressed: boolean
@@ -268,6 +275,7 @@ export const Stats = Descriptor.Resource<{ readonly kills: number; readonly shot
 
 export const KeyboardInput = Descriptor.Service<KeyboardSource>()("Shooter/KeyboardInput")
 export const PointerInput = Descriptor.Service<PointerSource>()("Shooter/PointerInput")
+export const TouchInput = Descriptor.Service<TouchSource>()("Shooter/TouchInput")
 
 /** What the fixed update reads from the host: the current viewport size. */
 export interface FrameContextValue {
@@ -323,6 +331,7 @@ export const Game = Schema.bind(
       Time,
       Keys,
       PointerState,
+      TouchState,
       Controls,
       Viewport,
       Camera,

@@ -175,6 +175,14 @@ export const defaultTuning = {
     moveSpeedMultiplier: 0.9
   },
 
+  /** On-screen touch controls (see `touchLayout` in config/input.ts). */
+  touch: {
+    /** How far ahead of the player the touch aim point sits (world units); only its direction matters for shooting. */
+    aimDistance: 260,
+    /** A tapped skill (no drag) throws this fraction of max range, straight ahead. */
+    tapThrowRange: 0.6
+  },
+
   /** The player's special: Space throws a grenade at the cursor. */
   skills: {
     /** Lobbed to the cursor over walls; explodes after landing. */

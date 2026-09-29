@@ -7,6 +7,7 @@
  */
 import { RenderSync } from "@typeonce/bevy-ts-pixi"
 
+import { touchButtons } from "../config/input.ts"
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
@@ -17,6 +18,7 @@ import {
   AttackPhase,
   Body,
   Camera,
+  Controls,
   Dash,
   Death,
   Enemy,
@@ -43,6 +45,7 @@ import {
   Skills,
   Stats,
   Ultimate,
+  TouchInput,
   Tuning,
   Wall,
   Waves
@@ -412,12 +415,110 @@ const FadeOccluders = Game.System("Shooter/FadeOccluders", {
   }
 })
 
+/**
+ * Touch aiming, drawn on the floor: while firing, a line along the aim; while
+ * dragging the grenade, where it will land (clamped to its range) and its
+ * blast radius.
+ */
+const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
+  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) }, with: [Player] }) },
+  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ queries, resources, services }) => {
+  const controls = resources.controls.get()
+  const [player] = queries.player.each()
+  if (controls.device !== "touch" || player === undefined) return
+  const g = services.host.telegraphs
+  const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
+  const tuning = resources.tuning.get()
+  if (controls.fireHeld) {
+    const dx = controls.aimPoint.x - at.x
+    const dy = controls.aimPoint.y - at.y
+    const reach = Math.min(tuning.weapon.range, 320) / (Math.hypot(dx, dy) || 1)
+    g.moveTo(at.x, at.y).lineTo(at.x + dx * reach, at.y + dy * reach).stroke({ width: 3, color: view.reticle, alpha: 0.45 })
+  }
+  if (controls.grenadeAiming !== null) {
+    const spec = tuning.skills.grenade
+    const dx = controls.grenadeAiming.x - at.x
+    const dy = controls.grenadeAiming.y - at.y
+    const clamp = Math.min(1, spec.maxRange / (Math.hypot(dx, dy) || 1))
+    const target = { x: at.x + dx * clamp, y: at.y + dy * clamp }
+    g.moveTo(at.x, at.y).lineTo(target.x, target.y).stroke({ width: 2, color: view.reticle, alpha: 0.35 })
+    g.circle(target.x, target.y, spec.radius).fill({ color: view.reticle, alpha: 0.08 }).stroke({ width: 2, color: view.reticle, alpha: 0.6 })
+  }
+})
+
+/**
+ * The on-screen touch controls: the stick under the thumb (or a faint hint
+ * where it usually is), the buttons with their cooldowns, and the drag marker
+ * of an aiming button. Keyboard-only HUD parts hide while playing by touch.
+ */
+const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
+  queries: {
+    player: Game.Query({ selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), ultimate: Game.Query.read(Ultimate) }, with: [Player] })
+  },
+  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
+  services: { host: Game.System.service(RenderHost), touch: Game.System.service(TouchInput) }
+}, ({ queries, resources, services }) => {
+  const hud = services.host.hud
+  const pad = hud.pad
+  const touchMode = resources.controls.get().device === "touch"
+  if (pad.root.hidden === touchMode) {
+    pad.root.hidden = !touchMode
+    for (const element of hud.desktopOnly) element.hidden = touchMode
+    hud.gameOverHint.textContent = touchMode ? "Tap a button to restart" : "Press R or click to restart"
+  }
+  if (!touchMode) return
+  const live = services.touch.view()
+  const place = (element: HTMLElement, x: number, y: number, radius: number) => {
+    element.style.transform = `translate(${x - radius}px, ${y - radius}px)`
+    element.style.width = element.style.height = `${radius * 2}px`
+  }
+  const stickRadius = live.layout.stick.radius
+  if (live.stick === null) {
+    // Where the thumb usually rests: a hint of the floating stick.
+    const region = live.layout.stick.region
+    const rest = { x: region.left + stickRadius * 2, y: region.top + region.height - stickRadius * 2 }
+    place(pad.stick, rest.x, rest.y, stickRadius)
+    place(pad.knob, stickRadius, stickRadius, stickRadius * 0.45)
+    pad.stick.classList.remove("is-active")
+  } else {
+    place(pad.stick, live.stick.origin.x, live.stick.origin.y, stickRadius)
+    place(pad.knob, stickRadius + live.stick.knob.x - live.stick.origin.x, stickRadius + live.stick.knob.y - live.stick.origin.y, stickRadius * 0.45)
+    pad.stick.classList.add("is-active")
+  }
+
+  const tuning = resources.tuning.get()
+  const [player] = queries.player.each()
+  const fill = {
+    attack: 0,
+    skill: player === undefined ? 0 : player.data.skills.get().grenade.cooldown / tuning.skills.grenade.cooldown,
+    dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
+    ultimate: player === undefined ? 1 : 1 - player.data.ultimate.get().energy / tuning.ultimate.energy
+  }
+  for (const name of touchButtons) {
+    const zone = live.layout.buttons[name]
+    const refs = pad.buttons[name]
+    const state = live.buttons[name]
+    place(refs.root, zone.center.x, zone.center.y, zone.radius)
+    refs.root.classList.toggle("is-held", state.held)
+    refs.root.classList.toggle("is-ready", fill[name] <= 0)
+    refs.cooldown.style.height = `${Math.max(0, Math.min(100, fill[name] * 100))}%`
+    const aim = state.aim
+    refs.aim.hidden = aim === null || zone.aimRadius === undefined
+    if (aim !== null && zone.aimRadius !== undefined) {
+      place(refs.aim, zone.center.x + aim.x * zone.aimRadius, zone.center.y + aim.y * zone.aimRadius, 14)
+    }
+  }
+})
+
 const DrawReticle = Game.System("Shooter/DrawReticle", {
+  resources: { controls: Game.System.readResource(Controls) },
   services: { host: Game.System.service(RenderHost) }
-}, ({ services }) => {
+}, ({ resources, services }) => {
   const { reticle, cursor } = services.host
   reticle.clear()
-  reticle.visible = cursor.over
+  reticle.visible = cursor.over && resources.controls.get().device === "desktop"
   if (!cursor.over) return
   const r = 12 * projection.zoom
   reticle.ellipse(cursor.x, cursor.y, r, r * projection.squash).stroke({ width: 2, color: view.reticle })
@@ -495,9 +596,11 @@ export const frame = Game.Schedule(
   DrawPlayer,
   DrawEnemies,
   DrawTelegraphs,
+  DrawTouchAim,
   SpawnFx,
   UpdateFx,
   FadeOccluders,
   DrawReticle,
-  SyncHud
+  SyncHud,
+  SyncTouchPad
 )

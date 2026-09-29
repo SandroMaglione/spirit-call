@@ -5,21 +5,28 @@
  */
 import { InputCapture } from "@typeonce/bevy-ts-browser"
 
-import { directions } from "../config/input.ts"
+import { directions, touchButtons } from "../config/input.ts"
+import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { projection } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
-import { normalizeOr, zero } from "../math/vec.ts"
+import { length, normalizeOr, scale, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import {
+  Aim,
   Camera,
   Controls,
   FrameContext,
   Game,
   KeyboardInput,
   Keys,
+  Player,
   PointerInput,
   PointerState,
+  Position,
   Time,
+  TouchInput,
+  TouchState,
   Tuning,
   Viewport
 } from "../schema.ts"
@@ -28,6 +35,19 @@ import type { ControlsValue } from "../schema.ts"
 export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKeys", source: KeyboardInput, resource: Keys })
 
 export const CapturePointer = InputCapture.system(Game, { name: "Shooter/CapturePointer", source: PointerInput, resource: PointerState })
+
+export const CaptureTouch = InputCapture.system(Game, { name: "Shooter/CaptureTouch", source: TouchInput, resource: TouchState })
+
+/** Whether the on-screen controls were used this step. */
+const touchUsed = (touch: TouchSnapshot): boolean =>
+  touch.stick.active || touchButtons.some((name) => touch.buttons[name].held || touch.buttons[name].pressed || touch.buttons[name].released)
+
+/** Whether the keyboard or mouse buttons were used this step (moving the mouse alone does not switch). */
+const desktopUsed = (keys: KeysSnapshot, pointer: PointerSnapshot): boolean =>
+  Object.values(keys).some((action) => action.held || action.pressed) || pointer.primary.pressed || pointer.secondary.pressed
+
+/** A screen-space direction (y down) as a unit world direction, or `fallback` when it is zero. */
+const worldDirection = (screen: Vec2, fallback: Vec2): Vec2 => normalizeOr(screenDirectionToWorld(projection, screen), fallback)
 
 export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
   resources: { viewport: Game.System.writeResource(Viewport) },
@@ -41,18 +61,30 @@ export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
 })
 
 export const ResolveControls = Game.System("Shooter/ResolveControls", {
+  queries: {
+    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim) }, with: [Player] })
+  },
   resources: {
     keys: Game.System.readResource(Keys),
     pointer: Game.System.readResource(PointerState),
+    touch: Game.System.readResource(TouchState),
     camera: Game.System.readResource(Camera),
     viewport: Game.System.readResource(Viewport),
     controls: Game.System.writeResource(Controls),
     tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time)
   }
-}, ({ resources }) => {
+}, ({ queries, resources }) => {
   const keys = resources.keys.get()
   const pointer = resources.pointer.get()
+  const touch = resources.touch.get()
+  const previous = resources.controls.get()
+  const device = touchUsed(touch) ? "touch" : desktopUsed(keys, pointer) ? "desktop" : previous.device
+  if (device === "touch") {
+    const [player] = queries.player.each()
+    resources.controls.set(resolveTouch(touch, previous, player === undefined ? undefined : { position: player.data.position.get(), aim: player.data.aim.get() }, resources.tuning.get()))
+    return
+  }
   const camera = resources.camera.get()
   const viewport = resources.viewport.get()
 
@@ -65,7 +97,6 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
 
   // Movement grace: releasing every movement key keeps the last direction
   // briefly, so a finger slipping off WASD for an instant does not stop us.
-  const previous = resources.controls.get()
   const moving = held.x !== 0 || held.y !== 0
   const lastMove = moving ? held : previous.lastMove
   const move = moving ? held : previous.grace > 1e-9 ? lastMove : zero
@@ -98,8 +129,11 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   }
 
   resources.controls.set({
+    device,
     move,
     aimPoint,
+    grenadeAt: aimPoint,
+    grenadeAiming: null,
     dashPressed,
     fireHeld: pointer.primary.held || pointer.primary.pressed,
     grenadePressed: keys.skill.pressed,
@@ -110,10 +144,60 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   })
 })
 
+/**
+ * Touch controls into intent. The stick moves (analog); holding attack fires,
+ * toward the drag if the button is dragged, else straight ahead (the movement
+ * direction, or the facing when standing). The skill throws on release: to
+ * the dragged spot (drag length scales the range) or, for a tap, ahead at
+ * `tapThrowRange`. Cancelled touches throw nothing.
+ */
+const resolveTouch = (
+  touch: TouchSnapshot,
+  previous: ControlsValue,
+  player: { readonly position: Vec2; readonly aim: Vec2 } | undefined,
+  tuning: TuningValue
+): ControlsValue => {
+  // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
+  if (player === undefined) {
+    return { ...previous, device: "touch", move: zero, grenadeAiming: null, dashPressed: false, fireHeld: false, grenadePressed: false, ultimatePressed: false, grace: 0 }
+  }
+  const tilt = length(touch.stick.vector)
+  const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
+  const moving = tilt > 0
+  const origin = player.position
+  const ahead = moving ? normalizeOr(move, zero) : player.aim
+  const { attack, skill } = touch.buttons
+  const aimDirection = attack.aim === null ? ahead : worldDirection(attack.aim, ahead)
+  const aimPoint = { x: origin.x + aimDirection.x * tuning.touch.aimDistance, y: origin.y + aimDirection.y * tuning.touch.aimDistance }
+  const range = tuning.skills.grenade.maxRange
+  const throwTo = (aim: Vec2 | null): Vec2 => {
+    const direction = aim === null ? ahead : worldDirection(aim, ahead)
+    const distance = aim === null ? range * tuning.touch.tapThrowRange : range * length(aim)
+    return { x: origin.x + direction.x * distance, y: origin.y + direction.y * distance }
+  }
+  return {
+    device: "touch",
+    move,
+    aimPoint,
+    grenadeAt: throwTo(skill.aim),
+    grenadeAiming: skill.held && skill.aim !== null ? throwTo(skill.aim) : null,
+    dashPressed: touch.buttons.dash.pressed,
+    fireHeld: attack.held || attack.pressed,
+    grenadePressed: skill.released && !skill.cancelled,
+    ultimatePressed: touch.buttons.ultimate.pressed,
+    lastMove: moving ? normalizeOr(move, zero) : previous.lastMove,
+    lastTap: null,
+    grace: 0
+  }
+}
+
 /** `aimPoint` starts at the player spawn, so nothing is aimed at before the mouse moves. */
 export const initialControls = (aimPoint: Vec2): ControlsValue => ({
+  device: "desktop",
   move: zero,
   aimPoint,
+  grenadeAt: aimPoint,
+  grenadeAiming: null,
   dashPressed: false,
   fireHeld: false,
   grenadePressed: false,

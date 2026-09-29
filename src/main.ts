@@ -1,6 +1,6 @@
-import { FixedLoop, Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
+import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
-import { keyBindings } from "./config/input.ts"
+import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
@@ -14,6 +14,7 @@ import {
   Game,
   KeyboardInput,
   PointerInput,
+  TouchInput,
   RenderClock,
   RenderHost,
   RenderNodes
@@ -31,6 +32,10 @@ const start = async (mount: HTMLElement) => {
   const { app } = browser.host
   const keyboard = Keyboard.actions(window, keyBindings)
   const pointer = Pointer.track(app.canvas, window)
+  // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
+  const touch = Touch.track(app.canvas, window, touchLayout, {
+    pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
+  })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
   const frameContext: FrameContextValue = {
     get viewport() {
@@ -42,6 +47,7 @@ const start = async (mount: HTMLElement) => {
     services: Game.Runtime.services(
       Game.Runtime.service(KeyboardInput, keyboard),
       Game.Runtime.service(PointerInput, pointer),
+      Game.Runtime.service(TouchInput, touch),
       Game.Runtime.service(FrameContext, frameContext),
       Game.Runtime.service(RenderClock, clock),
       Game.Runtime.service(RenderHost, browser.host),
@@ -63,7 +69,7 @@ const start = async (mount: HTMLElement) => {
   // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
   const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, app, browser.nodes)
   // Dev handle for inspecting the running game from the console.
-  Object.assign(window, { __game: { runtime, pointer, keyboard, host: browser.host, monitor } })
+  Object.assign(window, { __game: { runtime, pointer, keyboard, touch, host: browser.host, monitor } })
 
   const stats = browser.host.stats
   let simMs = 0
