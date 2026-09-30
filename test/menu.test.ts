@@ -23,7 +23,7 @@ describe("menu requests", () => {
   it("enter the arena from the menu with the chosen build and challenge, in a fresh run", () => {
     const run = start({ flow: "Menu" })
     const build = { character: "gunner" as const, weapon: "bloodthirst" as const, skills: { special: "bladeWave" as const } }
-    run.requests.pending.push({ kind: "start", build, challenge: "crossfire" })
+    run.requests.pending.push({ kind: "start", build, challenge: "crossfire", enemyLevel: 1 })
     run.step()
     const screen = run.runtime.inspect(Screen)
     expect(flowOf(run)).toBe("Playing")
@@ -46,7 +46,7 @@ describe("menu requests", () => {
     run.step()
     expect(flowOf(run)).toBe("Menu")
 
-    run.requests.pending.push({ kind: "start", build: { character: "swordsman", weapon: "crescendo", skills: {} }, challenge: "swarm" })
+    run.requests.pending.push({ kind: "start", build: { character: "swordsman", weapon: "crescendo", skills: {} }, challenge: "swarm", enemyLevel: 1 })
     run.step()
     expect(flowOf(run)).toBe("Playing")
     expect(run.runtime.inspect(Screen).challenge).toBe("swarm")

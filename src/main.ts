@@ -5,7 +5,7 @@ import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
-import { buildFromQuery, challengeFromQuery } from "./dev/build.ts"
+import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery } from "./dev/build.ts"
 import { startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
@@ -49,6 +49,7 @@ const start = async (mount: HTMLElement) => {
   const build = quickStart ? buildFromQuery(tuning, window.location.search, lastBuild) : lastBuild
   const selectedChallenge = tuning.quests[account.selection.quest].challenge
   const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selectedChallenge) : selectedChallenge
+  const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, 1) : 1
   /** The quest being played: runs are recorded against it; `null` for a dev quick start, which plays no quest. */
   let playing: QuestId | null = null
   const uiRequests = emptyUiRequests()
@@ -78,7 +79,8 @@ const start = async (mount: HTMLElement) => {
         if (selected === undefined) return
         playing = quest
         uiStore.quest.value = quest
-        uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), challenge: tuning.quests[quest].challenge })
+        const spec = tuning.quests[quest]
+        uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), challenge: spec.challenge, enemyLevel: spec.enemyLevel })
       })
     },
     equip: shell.equip,
@@ -135,7 +137,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(UiRequests, uiRequests),
       Game.Runtime.service(UiStoreService, uiStore)
     ),
-    resources: initialResources(tuning, frameContext.viewport, build, challenge),
+    resources: initialResources(tuning, frameContext.viewport, build, challenge, enemyLevel),
     machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true

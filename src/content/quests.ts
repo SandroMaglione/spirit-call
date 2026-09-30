@@ -1,7 +1,7 @@
 /**
  * Quests: what the player takes on, around the arena's challenges. A quest
- * plays one challenge (its objective and waves) and adds what the arena does
- * not know about: where it sits (the main line's chapters, or the secondary
+ * plays one challenge (its objective and waves) at an enemy level, and adds
+ * what the arena does not know about: where it sits (the main line's chapters, or the secondary
  * quests), what opens it (an account level, and for the main line the quest
  * before it), and what clearing it the first time gives. Several quests can
  * play the same challenge.
@@ -35,6 +35,8 @@ export interface QuestSpec {
   /** The main line's chapter (an id of `chapters`); `null` for secondary quests. */
   readonly chapter: string | null
   readonly challenge: ChallengeId
+  /** The level of its enemies (fixed; never scaled to the player). */
+  readonly enemyLevel: number
   /** The account level needed to start it. */
   readonly level: number
   /** A quest to clear first (the main line's order; an id of `quests`), or `null`. */
@@ -62,6 +64,7 @@ export const quests = {
     line: "main",
     chapter: "one",
     challenge: "swarm",
+    enemyLevel: 1,
     level: 1,
     after: null,
     rewards: { experience: 60, currencies: { crystals: 100, gold: 300 }, unlocks: [character("gunner")] }
@@ -71,6 +74,7 @@ export const quests = {
     line: "main",
     chapter: "one",
     challenge: "crossfire",
+    enemyLevel: 3,
     level: 2,
     after: "theSwarm",
     rewards: { experience: 90, currencies: { crystals: 100, gold: 400 }, unlocks: [weapon("executioner")] }
@@ -80,6 +84,7 @@ export const quests = {
     line: "main",
     chapter: "one",
     challenge: "brute",
+    enemyLevel: 5,
     level: 3,
     after: "crossfire",
     rewards: { experience: 140, currencies: { crystals: 150, gold: 600 }, unlocks: [weapon("crescendo"), weapon("echoSaber")] }
@@ -89,6 +94,7 @@ export const quests = {
     line: "secondary",
     chapter: null,
     challenge: "endless",
+    enemyLevel: 4,
     level: 2,
     after: null,
     rewards: { experience: 80, currencies: { crystals: 50, gold: 400 }, unlocks: [weapon("bloodthirst")] }

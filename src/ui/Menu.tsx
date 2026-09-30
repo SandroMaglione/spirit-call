@@ -96,7 +96,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     return (
       <Card key={id} selected={id === quest.value} locked={lock !== undefined} onSelect={() => (quest.value = id)} title={spec.name}>
         <span class="card__tag">
-          {describeObjective(challenge.objective, challenge.waves.scripted.length)} · Lv {spec.level}
+          {describeObjective(challenge.objective, challenge.waves.scripted.length)} · Enemies Lv {spec.enemyLevel}
         </span>
         <span class="card__text">{challenge.description}</span>
         {lock !== undefined && <span class="card__why">{lock}</span>}

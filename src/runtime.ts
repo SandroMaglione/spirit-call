@@ -12,16 +12,18 @@ import { Flow, Game } from "./schema.ts"
 import type { BuildValue, ViewportValue } from "./schema.ts"
 
 /** Initial resources shared by the browser runtime and headless simulations. */
-/** Initial resources; `build` and `challenge` are who enters the arena and what they face. */
+/** Initial resources; `build`, `challenge`, and `enemyLevel` are who enters the arena and what they face. */
 export const initialResources = (
   tuning: Tuning,
   viewport: ViewportValue,
   build: BuildValue = defaultBuild,
-  challenge: ChallengeId = defaultChallenge
+  challenge: ChallengeId = defaultChallenge,
+  enemyLevel = 1
 ) => ({
   Tuning: tuning,
   Build: build,
   Challenge: challenge,
+  EnemyLevel: enemyLevel,
   TriggeredEffects: [],
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),

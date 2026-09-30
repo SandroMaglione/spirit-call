@@ -6,7 +6,7 @@ import { touchButtons } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
-import { Build, Challenge, Controls, Dash, Enemy, Energy, Flow, Game, Health, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
+import { Build, Challenge, Controls, Dash, Enemy, EnemyLevel, Energy, Flow, Game, Health, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -113,7 +113,8 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     run: Game.System.readResource(Run),
     tuning: Game.System.readResource(Tuning),
     build: Game.System.readResource(Build),
-    challenge: Game.System.readResource(Challenge)
+    challenge: Game.System.readResource(Challenge),
+    enemyLevel: Game.System.readResource(EnemyLevel)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
@@ -158,7 +159,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
   const remaining = queries.enemies.each().length + queries.pending.each().length + waves.queue.length
   hud.wave.textContent = !resources.tuning.get().waves.enabled
     ? "training"
-    : `${challenge.name} · ${challengeProgress(challenge, waves, resources.run.get().time, remaining)}`
+    : `${challenge.name} · Lv ${resources.enemyLevel.get()} · ${challengeProgress(challenge, waves, resources.run.get().time, remaining)}`
   hud.dash.textContent = dash === undefined ? "" : dash.cooldown <= 0 ? "DASH ready" : `DASH ${dash.cooldown.toFixed(2)}s`
   const combat = resources.stats.get()
   hud.combat.textContent = `kills ${combat.kills} · shots ${combat.shots}`

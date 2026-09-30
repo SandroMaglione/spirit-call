@@ -355,6 +355,13 @@ export const Build = Descriptor.Resource<BuildValue>()("Shooter/Build")
 export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
 
 /**
+ * The level of every enemy in the run: fixed by the quest or tier being
+ * played, never scaled to the player. An enemy of level n has the stats a
+ * character of level n would (see `enemyStats`).
+ */
+export const EnemyLevel = Descriptor.Resource<number>()("Shooter/EnemyLevel")
+
+/**
  * Triggered passive effects waiting to be carried out (see
  * `features/passives.ts`). A queue rather than events, so an effect set off
  * by a kill survives the hit-stop that kill starts.
@@ -540,6 +547,7 @@ export const Game = Schema.bind(
       Tuning,
       Build,
       Challenge,
+      EnemyLevel,
       TriggeredEffects,
       Time,
       Keys,

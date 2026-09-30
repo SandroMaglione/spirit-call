@@ -9,12 +9,12 @@
 import { Descriptor } from "@typeonce/bevy-ts"
 
 import type { ChallengeId } from "../content/challenges.ts"
-import { Build, Challenge, Flow, Game } from "../schema.ts"
+import { Build, Challenge, EnemyLevel, Flow, Game } from "../schema.ts"
 import type { BuildValue } from "../schema.ts"
 
 export type UiRequest =
   /** Enter the arena with this build to face this challenge. */
-  | { readonly kind: "start"; readonly build: BuildValue; readonly challenge: ChallengeId }
+  | { readonly kind: "start"; readonly build: BuildValue; readonly challenge: ChallengeId; readonly enemyLevel: number }
   /** From the results: the same challenge again, with the same build. */
   | { readonly kind: "retry" }
   /** From the results: back to the menu. */
@@ -30,7 +30,7 @@ export const emptyUiRequests = (): UiRequestsValue => ({ pending: [] })
 
 /** Applies queued UI requests; a request that does not fit the current screen is dropped. */
 export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
-  resources: { build: Game.System.writeResource(Build), challenge: Game.System.writeResource(Challenge) },
+  resources: { build: Game.System.writeResource(Build), challenge: Game.System.writeResource(Challenge), enemyLevel: Game.System.writeResource(EnemyLevel) },
   machines: { flow: Game.System.machine(Flow) },
   nextMachines: { flow: Game.System.nextState(Flow) },
   services: { requests: Game.System.service(UiRequests) }
@@ -44,6 +44,7 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
         if (flow !== "Menu" && !onResults) break
         resources.build.set(request.build)
         resources.challenge.set(request.challenge)
+        resources.enemyLevel.set(request.enemyLevel)
         // Entering `Playing` restarts the run with the new build (see `restart`).
         nextMachines.flow.set("Playing")
         break

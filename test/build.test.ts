@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
-import { buildFromQuery, challengeFromQuery } from "../src/dev/build.ts"
+import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery } from "../src/dev/build.ts"
 import { defaultChallenge } from "../src/features/challenges.ts"
 import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel, weaponAtk, withWeapon } from "../src/features/build.ts"
 
@@ -65,7 +65,11 @@ describe("builds", () => {
     expect(buildFromQuery(defaultTuning, "?character=wizard&ultimate=toString")).toEqual(defaultBuild)
     // Without build parts in the URL, the fallback (the profile's last build) stands.
     const last = { character: "gunner" as const, weapon: "executioner" as const, skills: {} }
-    expect(buildFromQuery(defaultTuning, "?challenge=swarm", last)).toBe(last)
+    expect(buildFromQuery(defaultTuning, "?challenge=swarm", last)).toEqual(last)
+    expect(buildFromQuery(defaultTuning, "?level=12&weaponLevel=3", last)).toEqual({ ...last, level: 12, weaponLevel: 3 })
+    expect(buildFromQuery(defaultTuning, "?level=0&weaponLevel=2.5", last)).toEqual(last)
+    expect(enemyLevelFromQuery("?enemyLevel=9", 1)).toBe(9)
+    expect(enemyLevelFromQuery("?enemyLevel=nine", 4)).toBe(4)
     expect(challengeFromQuery(defaultTuning, "", "brute")).toBe("brute")
     expect(challengeFromQuery(defaultTuning, "?challenge=swarm")).toBe("swarm")
     expect(challengeFromQuery(defaultTuning, "?challenge=nope")).toBe(defaultChallenge)
