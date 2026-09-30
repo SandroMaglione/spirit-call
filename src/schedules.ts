@@ -14,7 +14,7 @@
 import { SpawnArena } from "./features/arena.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
-import { ApplyDamage, DecayKnockback, FirePlayerWeapon, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
+import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
 import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
@@ -22,6 +22,7 @@ import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
 import { CastCuts, CastLobs, CastNovas, UpdateLobbed, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
+import { UseBasicAttack } from "./features/weapons.ts"
 import { DirectWaves } from "./features/waves.ts"
 import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema.ts"
 
@@ -71,7 +72,7 @@ const gameplay = Game.Schedule.when(
   CastCuts,
   CastLobs,
   CastNovas,
-  FirePlayerWeapon,
+  UseBasicAttack,
   UpdateLobbed,
   SteerEnemies,
   UpdateAttacks,

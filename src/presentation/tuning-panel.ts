@@ -33,6 +33,10 @@ export const loadSavedTuning = (): Tuning => {
 const valueAt = (node: unknown, path: TuningPath): unknown =>
   path.reduce<unknown>((current, key) => (typeof current === "object" && current !== null ? (current as Record<string, unknown>)[key] : undefined), node)
 
+/** A list whose items are groups of values (a combo's moves), shown as numbered groups; other lists are not editable. */
+const isListOfRecords = (list: ReadonlyArray<unknown>): boolean =>
+  list.length > 0 && list.every((item) => typeof item === "object" && item !== null && !Array.isArray(item))
+
 /** Step size for a number input, from the default's magnitude. */
 const stepFor = (value: number): number => {
   const magnitude = Math.abs(value)
@@ -95,7 +99,7 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
   const persist = () => localStorage.setItem(storageKey, JSON.stringify([...overrides.values()]))
 
   const render = (node: unknown, path: Array<string>, container: HTMLElement): void => {
-    if (typeof node !== "object" || node === null || Array.isArray(node)) return
+    if (typeof node !== "object" || node === null || (Array.isArray(node) && !isListOfRecords(node))) return
     for (const [key, value] of Object.entries(node)) {
       const at = [...path, key]
       if (typeof value === "number" || typeof value === "boolean") {
@@ -128,7 +132,7 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
         inputs.set(id, input)
         row.append(name, input)
         container.append(row)
-      } else if (typeof value === "object" && value !== null && !Array.isArray(value) && !("kind" in value && Object.keys(value).length === 1)) {
+      } else if (typeof value === "object" && value !== null && (Array.isArray(value) ? isListOfRecords(value) : !("kind" in value && Object.keys(value).length === 1))) {
         const group = document.createElement("details")
         group.className = "tuning__group"
         group.open = path.length === 0 && ["player", "dash", "weapon", "feedback"].includes(key)

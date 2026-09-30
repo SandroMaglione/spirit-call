@@ -1,22 +1,17 @@
 /**
- * Weapons, projectiles, and the damage pipeline.
+ * Projectiles and the damage pipeline.
  *
- * Anything that hurts (projectiles now; melee swings and area attacks later)
- * emits a `Damage` event. `ApplyDamage` is the one place that decides what
+ * Anything that hurts (projectiles, hitboxes of attacks and skills) emits a
+ * `Damage` event. `ApplyDamage` is the one place that decides what
  * damage does: invulnerability, health, hit flash, knockback, and death.
  * Status effects and damage modifiers plug in there.
  */
-import type * as Query from "@typeonce/bevy-ts/Query"
-import type { ComboMove, Tuning as TuningValue } from "../config/tuning.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
-  Action,
-  Aim,
-  Combo,
-  Controls,
   Damage,
   Death,
   Enemy,
@@ -42,10 +37,9 @@ import {
   Stats,
   Time,
   Tuning,
-  Velocity,
-  Weapon
+  Velocity
 } from "../schema.ts"
-import type { ComboStep, EnemyKind, Faction, HitboxValue, ProjectileValue } from "../schema.ts"
+import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { respawnOf } from "./enemies.ts"
 
@@ -57,169 +51,6 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
     [Projectile, projectile],
     [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius }]
   )
-
-/**
- * Fires the player's weapon while the fire button is held. The cooldown
- * carries its remainder, so the fire rate is exact at any step length.
- */
-/** Moves the combo on by one move from where it is, and returns that move. */
-const advanceCombo = (combo: { get(): (typeof Combo.states)[number]; transition: Query.StateWriteCell<(typeof Combo.states)[number], (typeof Combo)["transitions"]>["transition"] }): ComboStep => {
-  switch (combo.get()) {
-    case "ready":
-      combo.transition("ready", "first")
-      return "first"
-    case "first":
-      combo.transition("first", "second")
-      return "second"
-    case "second":
-      combo.transition("second", "third")
-      return "third"
-    case "third":
-      combo.transition("third", "finisher")
-      return "finisher"
-    case "finisher":
-      // The finisher's recovery returns the combo to ready before the next press.
-      combo.transition("finisher", "ready")
-      combo.transition("ready", "first")
-      return "first"
-  }
-}
-
-/** The area a combo move covers from `position` facing `aim`. */
-const moveArea = (move: ComboMove, position: Vec2, aim: Vec2): Pick<HitboxValue, "area"> & { readonly pushAlong?: Vec2 } => {
-  switch (move.shape) {
-    case "arc":
-      return { area: { kind: "cone", origin: position, direction: aim, radius: move.reach, halfAngle: (move.arcDegrees * Math.PI) / 360 } }
-    case "thrust":
-      return { area: { kind: "lane", origin: position, direction: aim, length: move.reach, halfWidth: move.width / 2 }, pushAlong: aim }
-    case "spin":
-      return { area: { kind: "circle", center: position, radius: move.reach } }
-  }
-}
-
-/**
- * How far a move lunges from `position` along `aim`: its `lunge`, cut short
- * so the player stops `lungeStop` short of an enemy straight ahead.
- */
-const lungeDistance = (
-  move: ComboMove,
-  tuning: TuningValue,
-  position: Vec2,
-  aim: Vec2,
-  enemies: ReadonlyArray<{ readonly position: Vec2; readonly radius: number }>
-): number => {
-  let distance = move.lunge
-  for (const enemy of enemies) {
-    const dx = enemy.position.x - position.x
-    const dy = enemy.position.y - position.y
-    const along = dx * aim.x + dy * aim.y
-    const clearance = enemy.radius + tuning.player.radius
-    if (along <= 0 || Math.abs(dx * aim.y - dy * aim.x) > clearance) continue
-    distance = Math.min(distance, Math.max(0, along - clearance - tuning.slash.lungeStop))
-  }
-  return distance
-}
-
-export const FirePlayerWeapon = Game.System("Shooter/FirePlayerWeapon", {
-  queries: {
-    shooters: Game.Query({
-      selection: {
-        position: Game.Query.read(Position),
-        aim: Game.Query.read(Aim),
-        weapon: Game.Query.write(Weapon),
-        combo: Game.Query.write(Combo),
-        knockback: Game.Query.write(Knockback)
-      },
-      with: [Player]
-    }),
-    enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] }),
-    walls: Walls
-  },
-  resources: {
-    controls: Game.System.readResource(Controls),
-    tuning: Game.System.readResource(Tuning),
-    time: Game.System.readResource(Time),
-    stats: Game.System.writeResource(Stats)
-  },
-  events: { action: Game.System.writeEvent(Action) }
-}, ({ queries, resources, events, commands }) => {
-  const controls = resources.controls.get()
-  const weapon = resources.tuning.get().weapon
-  const slash = resources.tuning.get().slash
-  const dt = resources.time.get().dt
-  const boxes = wallBoxes(queries.walls.each())
-  let shots = 0
-  for (const { data } of queries.shooters.each()) {
-    const position = data.position.get()
-    const aim = data.aim.get()
-    if (slash.enabled) {
-      // The sword: each press is the next move of the combo (see `Tuning.slash`),
-      // through the combat pipeline like enemy melee. A press during a recovery
-      // is kept for `inputBuffer` seconds.
-      const current = data.weapon.get()
-      const cooldown = Math.max(0, current.cooldown - dt)
-      const buffered = controls.attackPressed ? slash.inputBuffer : Math.max(0, current.buffered - dt)
-      // Time idle since the recovery ended; the combo lapses after `comboWindow`, and ends with the finisher.
-      const comboTimer = cooldown > 0 ? 0 : current.comboTimer + dt
-      const previous = data.combo.get()
-      if (previous !== "ready" && cooldown <= 0 && (previous === "finisher" || comboTimer > slash.comboWindow)) {
-        data.combo.transition(previous, "ready")
-      }
-      if (buffered > 0 && cooldown <= 0) {
-        const step = advanceCombo(data.combo)
-        const move = slash[step]
-        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          ...moveArea(move, position, aim),
-          faction: "player",
-          damage: move.damage,
-          knockback: move.knockback,
-          remaining: slash.active,
-          hit: [],
-          charges: true,
-          hitStop: move.hitStop,
-          heavy: move.heavy
-        }]))
-        // The lunge: an impulse that carries the player `lungeDistance` forward
-        // (knockback travels its speed / decay before it dies out).
-        const enemies = queries.enemies.each().map(({ data: enemy }) => ({ position: enemy.position.get(), radius: enemy.hurtbox.get().radius }))
-        const lunge = lungeDistance(move, resources.tuning.get(), position, aim, enemies) * resources.tuning.get().knockback.decay
-        if (lunge > 0) data.knockback.update((current) => ({ x: current.x + aim.x * lunge, y: current.y + aim.y * lunge }))
-        shots += 1
-        events.action.emit({ kind: "slash", at: position, step, direction: aim })
-        data.weapon.set({ cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0 })
-      } else {
-        data.weapon.set({ cooldown, recovery: current.recovery, buffered, comboTimer })
-      }
-      continue
-    }
-    let cooldown = data.weapon.get().cooldown - dt
-    if (!controls.fireHeld) {
-      data.weapon.set({ ...data.weapon.get(), cooldown: Math.max(cooldown, 0), buffered: 0 })
-      continue
-    }
-    // The muzzle is in front of the player; a wall in between stops the shot there.
-    const reach = scale(aim, weapon.muzzleOffset)
-    const blocked = sweepCircleBoxes(position, reach, weapon.projectileRadius, boxes)
-    const muzzle = { x: position.x + reach.x * (blocked?.time ?? 1), y: position.y + reach.y * (blocked?.time ?? 1) }
-    while (cooldown <= 0) {
-      commands.spawnIn(RunScope, makeProjectile(muzzle, scale(aim, weapon.projectileSpeed), {
-        faction: "player",
-        style: "bolt",
-        radius: weapon.projectileRadius,
-        damage: weapon.damage,
-        knockback: weapon.knockback,
-        range: weapon.range,
-        pierce: weapon.pierce,
-        hit: []
-      }))
-      cooldown += weapon.fireInterval
-      shots += 1
-      events.action.emit({ kind: "shot", at: muzzle })
-    }
-    data.weapon.set({ ...data.weapon.get(), cooldown, buffered: 0 })
-  }
-  if (shots > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + shots }))
-})
 
 interface Target {
   entity: Parameters<typeof Game.Entity.handle>[0]
@@ -328,7 +159,9 @@ export const MoveProjectiles = (() => {
           direction,
           knockback: projectile.knockback,
           faction: projectile.faction,
-          charges: projectile.faction === "player"
+          charges: projectile.faction === "player",
+          ...(projectile.hitStop === undefined ? {} : { hitStop: projectile.hitStop }),
+          ...(projectile.heavy === undefined ? {} : { heavy: projectile.heavy })
         })
         hit.push(contact.target.id)
         if (pierce === 0) {

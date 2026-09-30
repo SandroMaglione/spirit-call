@@ -7,7 +7,7 @@ import type * as Entity from "@typeonce/bevy-ts/Entity"
 import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
-import type { LobEffect, SkillEffect, SkillId, SkillSlot, Tuning as TuningValue } from "./config/tuning.ts"
+import type { AttackId, AttackMove, LobEffect, SkillEffect, SkillId, SkillSlot, Tuning as TuningValue } from "./config/tuning.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
 import type { Box } from "./physics/shapes.ts"
@@ -88,30 +88,26 @@ export const Knockback = Descriptor.Component<Vec2>()("Shooter/Knockback")
 /** Time left on the white flash shown after being hit. */
 export const HitFlash = Descriptor.Component<{ readonly remaining: number }>()("Shooter/HitFlash")
 
-/** A player weapon: time until the next shot may fire (negative carries over). */
 /**
- * Time until the next shot or move (`cooldown`, of `recovery` in total), how
- * long a press made early stays queued, and seconds since the last move's
- * recovery ended (for the combo window).
+ * The basic attack in use (see `Tuning.attacks`) and where it is: the time
+ * until the next move (`cooldown`, of `recovery` in total), how long an early
+ * press stays queued, the combo so far, and the charge of the power attack.
  */
-export const Weapon = Descriptor.Component<{
+export interface WeaponValue {
+  readonly attack: AttackId
   readonly cooldown: number
   readonly recovery: number
   readonly buffered: number
+  /** Seconds since the last move's recovery ended (for the combo window). */
   readonly comboTimer: number
-}>()("Shooter/Weapon")
-
-/** The move of the sword combo the player did last ("ready": none, a new combo starts). */
-export const Combo = Descriptor.State("Shooter/Combo", ["ready", "first", "second", "third", "finisher"] as const, {
-  transitions: {
-    ready: ["first"],
-    first: ["second", "ready"],
-    second: ["third", "ready"],
-    third: ["finisher", "ready"],
-    finisher: ["ready"]
-  }
-})
-export type ComboStep = Exclude<(typeof Combo.states)[number], "ready">
+  /** The combo move done last (an index into the combo); -1 when the next press starts the combo. */
+  readonly step: number
+  /** Seconds the attack button has been held since it was pressed; 0 while it is up. */
+  readonly held: number
+  /** A fully charged power attack was released and goes off once the recovery ends. */
+  readonly powerQueued: boolean
+}
+export const Weapon = Descriptor.Component<WeaponValue>()("Shooter/Weapon")
 
 export type ProjectileStyle = "bolt"
 
@@ -128,6 +124,10 @@ export interface ProjectileValue {
   readonly pierce: number
   /** Entity ids already hit, so a piercing shot hits each target once. */
   readonly hit: ReadonlyArray<number>
+  /** Hit-stop when it lands on an enemy (seconds). */
+  readonly hitStop?: number
+  /** A heavy blow, for bigger impact effects. */
+  readonly heavy?: boolean
 }
 export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Projectile")
 
@@ -266,10 +266,14 @@ export const Cast = Descriptor.Event<{
 }>()("Shooter/Cast")
 
 /** A projectile stopped against a wall or a shield, or ran out of range. */
-/** Something the player did, for feedback such as sound: one combo move, shot, or dash (skills are `Cast`). */
+/**
+ * Something the player did, for feedback such as sound: a move of the basic
+ * attack (`step` in the combo, or the power attack), a power attack charged
+ * to full, or a dash. Skills are `Cast`.
+ */
 export const Action = Descriptor.Event<
-  | { readonly kind: "slash"; readonly at: Vec2; readonly step: ComboStep; readonly direction: Vec2 }
-  | { readonly kind: "shot" | "dash"; readonly at: Vec2 }
+  | { readonly kind: "attack"; readonly at: Vec2; readonly direction: Vec2; readonly move: AttackMove; readonly step: number; readonly power: boolean }
+  | { readonly kind: "charged" | "dash"; readonly at: Vec2 }
 >()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 
@@ -314,9 +318,10 @@ export interface ControlsValue {
   /** On touch, the enemy (entity id) an attack now would turn toward, or `null`. */
   readonly assistTarget: number | null
   readonly dashPressed: boolean
-  /** An attack was pressed this step: one slash per press (the gun fires while `fireHeld`). */
+  /** The attack button went down this step: one combo move per press. */
   readonly attackPressed: boolean
-  readonly fireHeld: boolean
+  /** The attack button is down (holding it after a press charges the power attack). */
+  readonly attackHeld: boolean
   /** Last non-zero movement direction, kept for the movement grace. */
   readonly lastMove: Vec2
   /** The last movement key pressed and when (`Time.elapsed`), to detect a double tap. */
@@ -409,7 +414,6 @@ export const Game = Schema.bind(
       Knockback,
       HitFlash,
       Weapon,
-      Combo,
       Projectile,
       Enemy,
       Attacker,

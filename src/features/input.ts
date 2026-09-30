@@ -7,7 +7,7 @@ import { InputCapture } from "@typeonce/bevy-ts-browser"
 
 import { directions, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
-import type { SkillEffect, SkillSlot, Tuning as TuningValue } from "../config/tuning.ts"
+import type { BasicAttackSpec, SkillEffect, SkillSlot, Tuning as TuningValue } from "../config/tuning.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
 import { length, normalizeOr, scale, zero } from "../math/vec.ts"
@@ -31,10 +31,12 @@ import {
   TouchInput,
   TouchState,
   Tuning,
-  Viewport
+  Viewport,
+  Weapon
 } from "../schema.ts"
 import type { ControlsValue, SkillControl, SkillsValue } from "../schema.ts"
 import { bySlot, skillAim } from "./skills.ts"
+import { moveReach } from "./weapons.ts"
 
 export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKeys", source: KeyboardInput, resource: Keys })
 
@@ -66,7 +68,10 @@ export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
 
 export const ResolveControls = Game.System("Shooter/ResolveControls", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.read(Skills) }, with: [Player] }),
+    player: Game.Query({
+      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.read(Skills), weapon: Game.Query.read(Weapon) },
+      with: [Player]
+    }),
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
   },
   resources: {
@@ -88,7 +93,9 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   if (device === "touch") {
     const [player] = queries.player.each()
     const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, position: data.position.get(), radius: data.hurtbox.get().radius }))
-    const state = player === undefined ? undefined : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get() }
+    const state = player === undefined
+      ? undefined
+      : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get(), attack: resources.tuning.get().attacks[player.data.weapon.get().attack] }
     resources.controls.set(resolveTouch(touch, previous, state, enemies, resources.tuning.get()))
     return
   }
@@ -145,7 +152,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     assistTarget: null,
     dashPressed,
     attackPressed: pointer.primary.pressed,
-    fireHeld: pointer.primary.held || pointer.primary.pressed,
+    attackHeld: pointer.primary.held,
     lastMove,
     lastTap,
     grace
@@ -160,7 +167,8 @@ interface AssistCandidate {
 
 /**
  * The enemy an assisted attack from `origin` turns toward: the best-scored
- * enemy in any direction within the attack's reach plus `range`. The score is
+ * enemy in any direction within the reach of the attack's first move plus
+ * `range`. The score is
  * the distance to its edge, plus up to `behindPenalty` for enemies away from
  * `preferred` (the full penalty directly behind), minus `stickiness` for the
  * previous target, so the pick is stable and favors what is in front.
@@ -170,11 +178,12 @@ export const assistTargetOf = (
   preferred: Vec2,
   enemies: ReadonlyArray<AssistCandidate>,
   previous: number | null,
+  attack: BasicAttackSpec,
   tuning: TuningValue
 ): AssistCandidate | undefined => {
   const assist = tuning.touch.assist
-  if (!assist.enabled) return undefined
-  const reach = (tuning.slash.enabled ? tuning.slash.first.reach : tuning.weapon.range) + assist.range
+  if (!assist.enabled || attack.combo.length === 0) return undefined
+  const reach = moveReach(attack.combo[0]!) + assist.range
   let best: AssistCandidate | undefined
   let bestScore = Number.POSITIVE_INFINITY
   for (const enemy of enemies) {
@@ -201,20 +210,20 @@ const idleSkills = (at: Vec2): ControlsValue["skills"] => bySlot(() => ({ presse
  * Touch controls into intent. The stick moves (analog) and turns the player
  * where it points; standing still keeps the facing. Each ATTACK tap slashes
  * once, turning toward the enemy the assist picks (see `Tuning.touch.assist`),
- * else along the facing. Skills have no assist: each skill button uses the
+ * else along the facing; so does releasing a charged power attack. Skills have no assist: each skill button uses the
  * skill in its slot, aimed by the skill's kind (see `touchSkill`). Cancelled
  * touches do nothing.
  */
 const resolveTouch = (
   touch: TouchSnapshot,
   previous: ControlsValue,
-  player: { readonly position: Vec2; readonly aim: Vec2; readonly skills: SkillsValue } | undefined,
+  player: { readonly position: Vec2; readonly aim: Vec2; readonly skills: SkillsValue; readonly attack: BasicAttackSpec } | undefined,
   enemies: ReadonlyArray<AssistCandidate>,
   tuning: TuningValue
 ): ControlsValue => {
   // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
   if (player === undefined) {
-    return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, fireHeld: false, grace: 0 }
+    return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, attackHeld: false, grace: 0 }
   }
   const tilt = length(touch.stick.vector)
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
@@ -223,10 +232,9 @@ const resolveTouch = (
   const { attack } = touch.buttons
   const heading = moving ? normalizeOr(move, player.aim) : player.aim
   // The pick is shown by a ring at all times, so what the ring marks is what a tap hits.
-  const target = assistTargetOf(origin, heading, enemies, previous.assistTarget, tuning)
-  const attacking = attack.held || attack.pressed
-  // The player faces where the stick moves; an attack turns toward the assist's pick.
-  const ahead = attack.pressed && target !== undefined
+  const target = assistTargetOf(origin, heading, enemies, previous.assistTarget, player.attack, tuning)
+  // The player faces where the stick moves; an attack (or releasing a charge) turns toward the assist's pick.
+  const ahead = (attack.pressed || attack.released) && target !== undefined
     ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, heading)
     : heading
   const aimPoint = { x: origin.x + ahead.x * tuning.touch.aimDistance, y: origin.y + ahead.y * tuning.touch.aimDistance }
@@ -238,7 +246,7 @@ const resolveTouch = (
     assistTarget: target?.id ?? null,
     dashPressed: touch.buttons.dash.pressed,
     attackPressed: attack.pressed,
-    fireHeld: attacking,
+    attackHeld: attack.held,
     lastMove: moving ? normalizeOr(move, zero) : previous.lastMove,
     lastTap: null,
     grace: 0
@@ -277,7 +285,7 @@ export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   assistTarget: null,
   dashPressed: false,
   attackPressed: false,
-  fireHeld: false,
+  attackHeld: false,
   lastMove: zero,
   lastTap: null,
   grace: 0

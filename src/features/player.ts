@@ -25,11 +25,11 @@ import {
   Time,
   Tuning,
   Velocity,
-  Weapon,
-  Combo
+  Weapon
 } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { initialSkills } from "./skills.ts"
+import { charging, initialWeapon } from "./weapons.ts"
 
 export const makePlayer = (tuning: TuningValue, at: Vec2) =>
   Game.Command.spawn(
@@ -41,8 +41,7 @@ export const makePlayer = (tuning: TuningValue, at: Vec2) =>
     [Aim, { x: 1, y: 0 }],
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
     [Invulnerable, { remaining: 0 }],
-    [Weapon, { cooldown: 0, recovery: 0, buffered: 0, comboTimer: 0 }],
-    [Combo, "ready"],
+    [Weapon, initialWeapon(tuning)],
     [Skills, initialSkills(tuning)],
     [Energy, { current: 0 }],
     [Knockback, { x: 0, y: 0 }],
@@ -73,7 +72,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         velocity: Game.Query.write(Velocity),
         aim: Game.Query.write(Aim),
         dash: Game.Query.write(Dash),
-        invulnerable: Game.Query.write(Invulnerable)
+        invulnerable: Game.Query.write(Invulnerable),
+        weapon: Game.Query.read(Weapon)
       },
       with: [Player]
     })
@@ -119,7 +119,10 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over.
       const carried = clampLength(data.velocity.get(), Math.max(tuning.player.moveSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
-      const speed = tuning.player.moveSpeed * (controls.fireHeld ? tuning.weapon.moveSpeedMultiplier : 1)
+      // Charging a power attack slows the player down.
+      const weapon = data.weapon.get()
+      const power = tuning.attacks[weapon.attack].power
+      const speed = tuning.player.moveSpeed * (power !== null && charging(tuning.attacks[weapon.attack], weapon) ? power.moveSpeedMultiplier : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
       data.velocity.set(moveToward(carried, target, rate * dt))

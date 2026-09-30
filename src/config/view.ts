@@ -24,8 +24,8 @@ export const view = {
    */
   slashCue: { fadeInSeconds: 0.12, lingerSeconds: 0.6, fadeOutSeconds: 0.4 },
   /**
-   * The facing ring around the player: at the sword's reach (with the gun,
-   * `gap` beyond the body), with an arrow of length `arrow` on it.
+   * The facing ring around the player: at a melee attack's reach (with
+   * projectiles, `gap` beyond the body), with an arrow of length `arrow` on it.
    */
   facingRing: { gap: 20, alpha: 0.2, arrow: 12, arrowAlpha: 0.75 },
   /**
@@ -33,6 +33,8 @@ export const view = {
    * above the floor. Arcs sweep over `sweepSeconds` then fade over
    * `fadeSeconds`; the finisher's spin and the thrust have their own timing.
    */
+  /** The ring filling around the player while a power attack charges. */
+  charge: { gap: 14, width: 3, fullWidth: 5, filling: 0x7fe6de, full: 0xfff4d6 },
   slashTrail: {
     height: 22,
     core: 0xf2fffd,

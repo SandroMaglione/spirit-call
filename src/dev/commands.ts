@@ -42,6 +42,8 @@ export const setAt = (tuning: ReadonlyValue<TuningValue>, path: TuningPath, valu
   const write = (node: unknown, depth: number): unknown => {
     if (depth === path.length) return value
     const key = path[depth]!
+    // Lists (an attack's combo) stay lists.
+    if (Array.isArray(node)) return node.map((item, index) => (String(index) === key ? write(item, depth + 1) : item))
     const record = (typeof node === "object" && node !== null ? node : {}) as Record<string, unknown>
     return { ...record, [key]: write(record[key], depth + 1) }
   }

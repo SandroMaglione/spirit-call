@@ -9,7 +9,7 @@ import { RenderSync } from "@typeonce/bevy-ts-pixi"
 
 import { touchButtons } from "../config/input.ts"
 import { engine, skillSlots } from "../config/tuning.ts"
-import type { SkillEffect, SkillSpec, Tuning as TuningValue } from "../config/tuning.ts"
+import type { AttackMove, SkillEffect, SkillSpec, Tuning as TuningValue } from "../config/tuning.ts"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
@@ -62,6 +62,7 @@ import type { SkillsValue } from "../schema.ts"
 import type { Area } from "../physics/areas.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { bySlot, lobTarget, skillRecharge } from "../features/skills.ts"
+import { chargeOf } from "../features/weapons.ts"
 import type { Graphics } from "pixi.js"
 import type { RenderHostValue } from "./host-types.ts"
 import { createNode, enemyColor, projectileColor, wallDepth } from "./nodes.ts"
@@ -184,7 +185,8 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         invulnerable: Game.Query.read(Invulnerable),
         flash: Game.Query.read(HitFlash),
         skills: Game.Query.read(Skills),
-        energy: Game.Query.read(Energy)
+        energy: Game.Query.read(Energy),
+        weapon: Game.Query.read(Weapon)
       },
       with: [Player]
     })
@@ -200,9 +202,12 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     const dash = data.dash.get()
     const radius = tuning.player.radius
 
-    // Stella Sora-style facing: a subtle ring at the sword's reach, with a small arrow on it.
+    // Stella Sora-style facing: a subtle ring at a melee attack's reach (close around a gun), with a small arrow on it.
     const aim = data.aim.get()
-    const around = tuning.slash.enabled ? tuning.slash.first.reach : radius + view.facingRing.gap
+    const weapon = data.weapon.get()
+    const attack = tuning.attacks[weapon.attack]
+    const first = attack.combo[0]
+    const around = first !== undefined && first.shape !== "shot" ? first.reach : radius + view.facingRing.gap
     marks.circle(position.x, position.y, around).stroke({ width: 2, color: view.aim, alpha: view.facingRing.alpha })
     const tip = { x: position.x + aim.x * (around + view.facingRing.arrow), y: position.y + aim.y * (around + view.facingRing.arrow) }
     const base = { x: position.x + aim.x * around, y: position.y + aim.y * around }
@@ -217,6 +222,16 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     marks.moveTo(position.x + Math.cos(startAngle) * ring, position.y + Math.sin(startAngle) * ring)
       .arc(position.x, position.y, ring, startAngle, startAngle + progress * Math.PI * 2)
       .stroke({ width: 3, color: ready ? view.aim : 0x5b6b7d, alpha: ready ? 0.5 : 0.8 })
+
+    // Charging the power attack: a ring filling up around the feet, brighter and thicker once full.
+    const charge = attack.power === null ? 0 : chargeOf(attack.power, weapon.held)
+    if (charge > 0) {
+      const full = charge >= 1
+      const chargeRing = radius + view.charge.gap
+      marks.moveTo(position.x + Math.cos(startAngle) * chargeRing, position.y + Math.sin(startAngle) * chargeRing)
+        .arc(position.x, position.y, chargeRing, startAngle, startAngle + charge * Math.PI * 2)
+        .stroke({ width: full ? view.charge.fullWidth : view.charge.width, color: full ? view.charge.full : view.charge.filling, alpha: full ? 0.95 : 0.7 })
+    }
 
     // A nova ready to use: a faint ring showing what it would catch.
     const skills = data.skills.get()
@@ -362,13 +377,10 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
 })
 
-/** The swing of each combo move, climbing in pitch through the chain. */
-const comboSounds = {
-  first: { name: "slash", pitch: 1 },
-  second: { name: "slash", pitch: 1.08 },
-  third: { name: "thrust", pitch: 1.14 },
-  finisher: { name: "spin", pitch: 1.2 }
-} as const
+/** The sound of each kind of move. It climbs in pitch through the combo (`comboPitchStep` per move); a power move goes deeper. */
+const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrust: "thrust", spin: "spin", shot: "shot" }
+const comboPitchStep = 0.067
+const powerPitch = 0.85
 
 /** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`). */
 const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", lob: "throw", nova: null }
@@ -401,7 +413,7 @@ const PlaySounds = Game.System("Shooter/PlaySounds", {
     return Math.max(-1, Math.min(1, x / (screen.width / 2))) * 0.6
   }
   for (const action of events.action.all()) {
-    if (action.kind === "slash") sounds.play(comboSounds[action.step].name, { pitch: comboSounds[action.step].pitch })
+    if (action.kind === "attack") sounds.play(moveSounds[action.move.shape], { pitch: action.power ? powerPitch : 1 + action.step * comboPitchStep })
     else sounds.play(action.kind)
   }
   for (const cast of events.cast.all()) {
@@ -445,7 +457,10 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
   const feedback = services.host.feedback
   const impact = view.impact
   for (const action of events.action.all()) {
-    if (action.kind === "slash") services.host.trails.add(resources.tuning.get().slash[action.step], action.step, action.direction)
+    // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
+    if (action.kind === "attack" && action.move.shape !== "shot") {
+      services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
+    }
   }
   for (const hit of events.hit.all()) {
     const at = toScreen(projection, hit.at)
@@ -591,13 +606,13 @@ const FadeOccluders = Game.System("Shooter/FadeOccluders", {
 })
 
 /**
- * Attack cues, drawn on the floor. With the sword, the slash area in front of
- * the player, only while it matters: an enemy within the attack assist's
- * range, or a slash still recharging; otherwise it lingers briefly and fades
- * (`view.slashCue`), so a facing that nothing depends on is not on screen. On
- * touch, also the assist's pick (a ring), a line along the aim while
- * shooting, and, while a skill button is dragged, what the skill will cover
- * (see `drawSkillAim`).
+ * Attack cues, drawn on the floor. With a melee attack, the opening move's
+ * area in front of the player, only while it matters: an enemy within the
+ * attack assist's range, or a move still recharging; otherwise it lingers
+ * briefly and fades (`view.slashCue`), so a facing that nothing depends on is
+ * not on screen. On touch, also the assist's pick (a ring), a line along the
+ * aim while holding a projectile attack, and, while a skill button is
+ * dragged, what the skill will cover (see `drawSkillAim`).
  */
 const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   queries: {
@@ -616,9 +631,10 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   const g = services.host.telegraphs
   const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
   const tuning = resources.tuning.get()
-  if (tuning.slash.enabled) {
+  const first = tuning.attacks[player.data.weapon.get().attack].combo[0]
+  if (first !== undefined && first.shape !== "shot") {
     const cue = services.host.feedback.slashCue
-    const range = tuning.slash.first.reach + tuning.touch.assist.range
+    const range = first.reach + tuning.touch.assist.range
     const nearby = queries.enemies.each().some(({ data }) => {
       const enemy = data.position.get()
       return Math.hypot(enemy.x - at.x, enemy.y - at.y) - data.hurtbox.get().radius <= range
@@ -634,7 +650,6 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     }
     if (cue.alpha > 0) {
       // The opening move's reach and arc (the combo's other moves differ).
-      const first = tuning.slash.first
       const halfAngle = first.shape === "arc" ? (first.arcDegrees * Math.PI) / 360 : Math.PI
       drawArea(g, { kind: "cone", origin: at, direction: player.data.aim.get(), radius: first.reach, halfAngle }, 0, {
         color: view.playerArea,
@@ -650,14 +665,14 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
       if (entity.id.value !== controls.assistTarget) continue
       const target = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
       const radius = data.hurtbox.get().radius + 8
-      g.circle(target.x, target.y, radius).fill({ color: view.reticle, alpha: controls.fireHeld ? 0.18 : 0.08 })
-      g.circle(target.x, target.y, radius).stroke({ width: 3, color: view.reticle, alpha: controls.fireHeld ? 0.95 : 0.6 })
+      g.circle(target.x, target.y, radius).fill({ color: view.reticle, alpha: controls.attackHeld ? 0.18 : 0.08 })
+      g.circle(target.x, target.y, radius).stroke({ width: 3, color: view.reticle, alpha: controls.attackHeld ? 0.95 : 0.6 })
     }
   }
-  if (controls.fireHeld && !tuning.slash.enabled) {
+  if (controls.attackHeld && first?.shape === "shot") {
     const dx = controls.aimPoint.x - at.x
     const dy = controls.aimPoint.y - at.y
-    const reach = Math.min(tuning.weapon.range, 320) / (Math.hypot(dx, dy) || 1)
+    const reach = Math.min(first.range, 320) / (Math.hypot(dx, dy) || 1)
     g.moveTo(at.x, at.y).lineTo(at.x + dx * reach, at.y + dy * reach).stroke({ width: 3, color: view.reticle, alpha: 0.45 })
   }
   const skills = player.data.skills.get()
@@ -731,8 +746,8 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const [player] = queries.player.each()
   const slots = player === undefined ? undefined : skillStatus(tuning, player.data.skills.get(), player.data.energy.get().current)
   const fill = {
-    // The sword recharges between slashes; the gun fires too fast to show.
-    attack: player === undefined || !tuning.slash.enabled ? 0 : recharge(player.data.weapon.get()),
+    // The attack recharges between moves.
+    attack: player === undefined ? 0 : recharge(player.data.weapon.get()),
     special: slots?.special.recharge ?? 0,
     dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
     ultimate: slots?.ultimate.recharge ?? 1

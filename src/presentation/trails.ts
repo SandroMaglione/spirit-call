@@ -1,7 +1,7 @@
 /**
- * Slash trails: the path of each combo move, swept through the air around
- * the player. Side slashes sweep a crescent across their arc (the backhand
- * the other way), the thrust shoots a narrow spear of light out to its
+ * Slash trails: the path of each melee move, swept through the air around
+ * the player. Side slashes sweep a crescent across their arc (a backhand
+ * the other way), a thrust shoots a narrow spear of light out to its
  * reach, and the finisher sweeps a full circle. The head leads and the tail
  * chases it, so the trail reads as motion rather than as an area.
  *
@@ -11,13 +11,12 @@
  */
 import type { Graphics } from "pixi.js"
 
-import type { ComboMove } from "../config/tuning.ts"
+import type { MeleeMove } from "../config/tuning.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
-import type { ComboStep } from "../schema.ts"
 
 interface Trail {
-  readonly move: ComboMove
+  readonly move: MeleeMove
   readonly angle: number
   /** Which way an arc sweeps: 1 or -1. */
   readonly sweep: number
@@ -37,9 +36,9 @@ export class SlashTrails {
     this.graphics = graphics
   }
 
-  /** Starts the trail of a combo move facing `direction`. */
-  add(move: ComboMove, step: ComboStep, direction: Vec2): void {
-    this.trails.push({ move, angle: Math.atan2(direction.y, direction.x), sweep: step === "second" ? -1 : 1, heavy: move.heavy, age: 0 })
+  /** Starts the trail of a melee move facing `direction`; `sweep` -1 swings an arc the other way (a backhand). */
+  add(move: MeleeMove, sweep: 1 | -1, direction: Vec2): void {
+    this.trails.push({ move, angle: Math.atan2(direction.y, direction.x), sweep, heavy: move.heavy, age: 0 })
   }
 
   /** Ages the trails and redraws them around `origin` (the player, when there is one). */

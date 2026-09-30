@@ -44,12 +44,12 @@ describe("touch controls", () => {
     expect(run.runtime.inspect(World).device).toBe("touch")
   })
 
-  it("with the gun, holding ATTACK fires along the facing", () => {
+  it("with the gun, each ATTACK tap fires along the facing", () => {
     // Assist off: the training dummies near the spawn would otherwise draw the aim.
-    const run = start({ tuning: withGun(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["attack"] }] })
+    const run = start({ tuning: withGun(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["attack"], release: ["attack"] }] })
     run.step(8)
     const shots = run.runtime.inspect(World).projectiles
-    expect(shots.length).toBeGreaterThan(1)
+    expect(shots).toHaveLength(1)
     const velocity = shots[0]!.velocity
     expect(velocity.y).toBeCloseTo(0, 6)
     expect(velocity.x).toBeGreaterThan(0)
@@ -146,6 +146,6 @@ describe("touch controls", () => {
     run.step(30)
     const after = run.runtime.inspect(AimPoint)
     expect(after.aimPoint).toEqual(before)
-    expect(after.fireHeld).toBe(false)
+    expect(after.attackHeld).toBe(false)
   })
 })

@@ -9,7 +9,7 @@ import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, start, withGrenade } from "./helpers.ts"
+import { ClearEnemies, gunShot, start, withGrenade, withGun } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -123,7 +123,7 @@ describe("sniper", () => {
 describe("guardian", () => {
   const hp = defaultTuning.enemies.guardian.hp
   // A guardian that stands still (and does not attack), so only its shield is under test.
-  const still = tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attack: null } }, slash: { enabled: false } })
+  const still = withGun(tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attack: null } } }))
   const spec = defaultTuning.enemies.guardian.shield!
   const turnSteps = steps(180 / spec.turnRate) + 5
 
@@ -146,7 +146,7 @@ describe("guardian", () => {
       pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }), press: ["primary"] }, { frame: 1, release: ["primary"] }]
     })
     run.step(10)
-    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.weapon.damage)
+    expect(run.world().enemies[0]!.health).toBe(hp - gunShot.damage)
   })
 
   it("does not stop explosions: a grenade hits it from the front", () => {

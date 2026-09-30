@@ -3,7 +3,7 @@ import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 import { keyBindings, touchButtons } from "../src/config/input.ts"
 import type { Direction, TouchButton } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import type { Tuning } from "../src/config/tuning.ts"
+import type { ShotMove, Tuning } from "../src/config/tuning.ts"
 import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
@@ -43,8 +43,22 @@ export const doubleTap = (direction: Direction, frame: number, options: { readon
     ? [{ frame, press: [direction] }, { frame: frame + 1, release: [direction] }, { frame: frame + 2, press: [direction] }]
     : [{ frame, press: [direction], release: [direction] }, { frame: frame + 2, press: [direction], release: [direction] }]
 
-/** The gun instead of the sword (the default weapon), for tests about shooting. */
-export const withGun = (tuning: Tuning): Tuning => ({ ...tuning, slash: { ...tuning.slash, enabled: false } })
+/** The gun's opening shot: what a single press fires. */
+export const gunShot = defaultTuning.attacks.gun.combo[0] as ShotMove
+
+/**
+ * The gun instead of the sword (the default attack), for tests about
+ * shooting; `shot` overrides its opening shot.
+ */
+export const withGun = (tuning: Tuning, shot: Partial<Omit<ShotMove, "shape">> = {}): Tuning => {
+  const gun = tuning.attacks.gun
+  const [first, ...rest] = gun.combo
+  return {
+    ...tuning,
+    player: { ...tuning.player, loadout: { ...tuning.player.loadout, attack: "gun" } },
+    attacks: { ...tuning.attacks, gun: { ...gun, combo: [{ ...(first as ShotMove), ...shot }, ...rest] } }
+  }
+}
 
 /** The grenade instead of the Blade Wave in the special slot, for tests about the grenade. */
 export const withGrenade = (tuning: Tuning): Tuning => ({ ...tuning, player: { ...tuning.player, loadout: { ...tuning.player.loadout, special: "grenade" } } })

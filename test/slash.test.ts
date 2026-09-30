@@ -4,14 +4,16 @@ import type { Touch } from "@typeonce/bevy-ts-browser"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import type { Tuning } from "../src/config/tuning.ts"
+import type { MeleeMove, Tuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { Camera, Combo, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats } from "../src/schema.ts"
+import { Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, Weapon } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const slash = defaultTuning.slash
-const first = slash.first
+const sword = defaultTuning.attacks.sword
+const [first, second, third, finisher] = sword.combo as [MeleeMove, MeleeMove, MeleeMove, MeleeMove]
+/** The sword with its combo moves by name. */
+const slash = { ...sword, first, second, third, finisher }
 const firstArc = first.shape === "arc" ? first.arcDegrees : 0
 const hp = defaultTuning.enemies.dummy.hp
 const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
@@ -33,9 +35,10 @@ const HitStopLeft = Game.Inspector("Test/HitStopLeft", {
   resources: { hitStop: Game.System.readResource(HitStop) }
 }, ({ resources }) => resources.hitStop.get().remaining)
 
+/** The sword move done last, by name ("ready": none, the next press starts the combo). */
 const ComboState = Game.Inspector("Test/Combo", {
-  queries: { player: Game.Query({ selection: { combo: Game.Query.read(Combo) }, with: [Player] }) }
-}, ({ queries }) => queries.player.each()[0]!.data.combo.get())
+  queries: { player: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }) }
+}, ({ queries }) => ["first", "second", "third", "finisher"][queries.player.each()[0]!.data.weapon.get().step] ?? "ready")
 
 /** Replaces the training dummies with dummies at `offsets` from the player. Facing starts at world +x. */
 const arena = (
