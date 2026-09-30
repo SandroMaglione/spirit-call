@@ -197,9 +197,11 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       use(spec.power.move, -1, true)
       continue
     }
-    if (cooldown <= 0 && buffered > 0) {
-      const next = step + 1 < spec.combo.length ? step + 1 : 0
-      use(spec.combo[next]!, next, false)
+    const next = step + 1 < spec.combo.length ? step + 1 : 0
+    const move = spec.combo[next]
+    // An empty combo (content that breaks `validateContent`) never attacks.
+    if (cooldown <= 0 && buffered > 0 && move !== undefined) {
+      use(move, next, false)
       continue
     }
     data.weapon.set({ ...current, cooldown, buffered, comboTimer, step, held, powerQueued })
