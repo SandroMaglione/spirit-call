@@ -20,6 +20,7 @@ import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
+import { randomId } from "./ids.ts"
 
 export interface App {
   /** The account as loaded when the game started. */
@@ -39,7 +40,7 @@ export interface App {
 
 /** Starts the app runtime over `localStorage` and loads the account and settings. */
 export const startApp = async (tuning: Tuning): Promise<App> => {
-  const stores = Layer.mergeAll(accountLayer({ tuning, starter: newAccount, newId: () => crypto.randomUUID() }), settingsLayer)
+  const stores = Layer.mergeAll(accountLayer({ tuning, starter: newAccount, newId: () => randomId() }), settingsLayer)
   const runtime = ManagedRuntime.make(stores.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)))
   const { accounts, settings } = await runtime.runPromise(Effect.gen(function*() {
     return { accounts: yield* AccountStore, settings: yield* SettingsStore }

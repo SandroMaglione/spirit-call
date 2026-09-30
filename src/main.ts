@@ -166,4 +166,11 @@ const start = async (mount: HTMLElement) => {
 
 const mount = document.querySelector<HTMLElement>("#game")
 if (mount === null) throw new Error("Missing #game element")
-void start(mount)
+start(mount).catch((error: unknown) => {
+  // A failure while starting would otherwise leave a blank page: say so, with what went wrong.
+  console.error("The game could not start", error)
+  const message = document.createElement("pre")
+  message.className = "boot-error"
+  message.textContent = `The game could not start.\n\n${error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error)}`
+  mount.append(message)
+})
