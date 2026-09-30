@@ -102,10 +102,20 @@ It is a personal project, not a commercial one.
 
 ## Structure
 
-- **Quests** (grouped in chapters or not) are where you gather resources and
-  improve your kit, preparing for what is harder.
-- **Core challenges** are the hardcore sections: the goals you are aiming to
-  beat, where preparation and skill are tested fully.
+The game has two areas.
+
+- **Quests**: where you gather resources and improve your kit, preparing for
+  what is harder. A **main quest** line, plus **secondary quests** that can
+  be temporary and take various formats, while keeping the quest shape
+  (chapters, a clear end).
+- **Hardcore**: every mode about surviving, tanky bosses that are hard to
+  beat in any case, and the more grinding challenges. These are the goals you
+  are aiming to beat, where preparation and skill are tested fully. It is
+  organized in **tiers** of mostly the same kind of content, each harder in
+  every way (enemy levels, modifiers, and attack patterns), so lower tiers
+  are within reach of a low-level team. A tier's resources are given the
+  first time it is cleared; a **periodic reset** makes them available again,
+  possibly in a different format.
 - **Currency** exists, at least for the gacha.
 - **Replay value comes from rising difficulty**: lasting longer, or enemies
   hitting harder and coming in greater numbers. It never comes from
@@ -136,6 +146,8 @@ Decided so far (the rest is in the open questions):
   resources spent on them (which lets a new or benched character catch up).
 - **The stat band is to be set later**: roughly 4x between level 1 and the
   maximum sounds right, to confirm once there is content to measure it on.
+- **Growth stays simple:** character levels and **weapon levels**. A closed
+  set of accessories may come later, only if the collecting side gets dull.
 
 ## Rules of thumb for design and implementation
 
@@ -154,14 +166,12 @@ Decided so far (the rest is in the open questions):
 
 Decided directions are above; these are not decided yet.
 
-1. **The rest of progression.** Draft direction (in discussion): hardcore
-   content in tiers, so lower tiers are within reach of a low-level team;
-   growth in several dimensions (levels, weapons, and what is equipped); and
-   the gacha giving resources, equipment, or new characters, with duplicates
-   of a character unlocking an add-on (from a skin to a unique weapon that
-   is not much stronger). Still to settle: what tiers change and reward,
-   which growth dimensions exist, which modes there are, and the exact stat
-   band.
+1. **The gacha and currencies.** Draft direction (in discussion): the gacha
+   gives resources, equipment, or new characters, and duplicates of a
+   character unlock an add-on (from a skin to a unique weapon that is not
+   much stronger). Still to settle: what can be pulled and what is earned
+   directly, what duplicates give, how generous it is, and which currencies
+   exist.
 2. **Elements and statuses.** Which elements or statuses exist, what each
    does, and whether they combine (reactions) or stay independent.
 3. **Enemy strengths and weaknesses.** How enemies resist or suffer effects,
@@ -172,7 +182,6 @@ Decided directions are above; these are not decided yet.
 5. **What the gacha gives and how.** What is obtained randomly versus
    earned directly, how generous it is, and what each duplicate gives,
    without raising the ceiling of power.
-6. **What currencies and resources exist,** what each is for, and where each
-   comes from.
-7. **The shape of the core challenges**: a tower, boss fights, endless
-   survival with rising difficulty, or a mix.
+6. **Temporary content without pressure.** Secondary quests can be temporary
+   and hardcore rewards reset periodically: how to keep that from becoming
+   something you must not miss.
