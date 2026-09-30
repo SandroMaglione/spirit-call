@@ -8,7 +8,8 @@
 import { RenderSync } from "@typeonce/bevy-ts-pixi"
 
 import { touchButtons } from "../config/input.ts"
-import { engine } from "../config/tuning.ts"
+import { engine, skillSlots } from "../config/tuning.ts"
+import type { SkillEffect, SkillSpec, Tuning as TuningValue } from "../config/tuning.ts"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
@@ -20,14 +21,15 @@ import {
   Attacker,
   Body,
   Camera,
+  Cast,
   Controls,
   Dash,
   Death,
   Enemy,
+  Energy,
   Explosion,
   Flow,
   Game,
-  Grenade,
   Health,
   Hit,
   HitFlash,
@@ -36,6 +38,7 @@ import {
   Impact,
   Invulnerable,
   Knockback,
+  Lobbed,
   PendingSpawn,
   Player,
   Position,
@@ -51,17 +54,18 @@ import {
   Stats,
   TouchInput,
   Tuning,
-  Ultimate,
   Wall,
   Waves,
   Weapon
 } from "../schema.ts"
+import type { SkillsValue } from "../schema.ts"
 import type { Area } from "../physics/areas.ts"
 import { aimLocked } from "../features/attacks.ts"
-import { specialCooldown } from "../features/skills.ts"
+import { bySlot, lobTarget, skillRecharge } from "../features/skills.ts"
 import type { Graphics } from "pixi.js"
 import type { RenderHostValue } from "./host-types.ts"
 import { createNode, enemyColor, projectileColor, wallDepth } from "./nodes.ts"
+import type { SoundName } from "./sound.ts"
 
 /** Linear blend of two 0xRRGGBB colors. */
 const mixColor = (from: number, to: number, t: number): number => {
@@ -179,7 +183,8 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
         flash: Game.Query.read(HitFlash),
-        ultimate: Game.Query.read(Ultimate)
+        skills: Game.Query.read(Skills),
+        energy: Game.Query.read(Energy)
       },
       with: [Player]
     })
@@ -213,9 +218,13 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       .arc(position.x, position.y, ring, startAngle, startAngle + progress * Math.PI * 2)
       .stroke({ width: 3, color: ready ? view.aim : 0x5b6b7d, alpha: ready ? 0.5 : 0.8 })
 
-    // Ultimate ready: a faint ring showing what it would catch.
-    if (data.ultimate.get().energy >= tuning.ultimate.energy) {
-      marks.circle(position.x, position.y, tuning.ultimate.radius).stroke({ width: 3, color: view.ultimate, alpha: view.ultimateReadyAlpha })
+    // A nova ready to use: a faint ring showing what it would catch.
+    const skills = data.skills.get()
+    const energy = data.energy.get().current
+    for (const slot of skillSlots) {
+      const spec = tuning.skills[skills[slot].skill]
+      if (spec.effect.kind !== "nova" || skillRecharge(spec, skills[slot].cooldown, energy) > 0) continue
+      marks.circle(position.x, position.y, spec.effect.radius).stroke({ width: 3, color: view.ultimate, alpha: view.ultimateReadyAlpha })
     }
 
     const node = services.nodes.get(entity.id)
@@ -277,7 +286,7 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
     attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
-    grenades: Game.Query({ selection: { grenade: Game.Query.read(Grenade) } }),
+    lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
     shields: Game.Query({
       selection: { shield: Game.Query.read(Shield), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }
     })
@@ -327,17 +336,17 @@ const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     drawArea(g, hitbox.area, 0, { color: hitbox.faction === "player" ? view.playerArea : view.telegraphLocked, fill: 0.55, outline: 1 })
   }
 
-  // Grenades: an arc through the air (shadow on the floor, orb above it), then the fuse ring.
-  const spec = tuning.skills.grenade
+  // Lobbed skills: an arc through the air (shadow on the floor, orb above it), then the fuse ring.
   const overlay = services.host.overlay
-  for (const { data } of queries.grenades.each()) {
-    const grenade = data.grenade.get()
-    const elapsed = grenade.elapsed + services.clock.alpha * engine.stepSeconds
+  for (const { data } of queries.lobbed.each()) {
+    const lobbed = data.lobbed.get()
+    const spec = lobbed.effect
+    const elapsed = lobbed.elapsed + services.clock.alpha * engine.stepSeconds
     const flight = Math.min(1, elapsed / spec.flightTime)
     const fuse = Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse))
-    g.circle(grenade.to.x, grenade.to.y, spec.radius).stroke({ width: 2, color: view.playerArea, alpha: flight < 1 ? 0.35 : 0.9 })
-    if (fuse > 0) g.circle(grenade.to.x, grenade.to.y, spec.radius * fuse).fill({ color: view.playerArea, alpha: 0.25 })
-    const ground = { x: grenade.from.x + (grenade.to.x - grenade.from.x) * flight, y: grenade.from.y + (grenade.to.y - grenade.from.y) * flight }
+    g.circle(lobbed.to.x, lobbed.to.y, spec.radius).stroke({ width: 2, color: view.playerArea, alpha: flight < 1 ? 0.35 : 0.9 })
+    if (fuse > 0) g.circle(lobbed.to.x, lobbed.to.y, spec.radius * fuse).fill({ color: view.playerArea, alpha: 0.25 })
+    const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
     g.circle(ground.x, ground.y, 7).fill({ color: view.shadow, alpha: 0.35 })
     const screen = toScreen(projection, ground)
     const height = 4 * view.grenadeArc * flight * (1 - flight) * projection.zoom
@@ -361,6 +370,9 @@ const comboSounds = {
   finisher: { name: "spin", pitch: 1.2 }
 } as const
 
+/** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`). */
+const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", lob: "throw", nova: null }
+
 /**
  * Sounds for what happened since the last frame: the player's actions (each
  * combo move its own swing), blows landing (heavier for heavy blows and
@@ -370,6 +382,7 @@ const comboSounds = {
 const PlaySounds = Game.System("Shooter/PlaySounds", {
   events: {
     action: Game.System.readEvent(Action),
+    cast: Game.System.readEvent(Cast),
     hit: Game.System.readEvent(Hit),
     death: Game.System.readEvent(Death),
     impact: Game.System.readEvent(Impact),
@@ -391,6 +404,10 @@ const PlaySounds = Game.System("Shooter/PlaySounds", {
     if (action.kind === "slash") sounds.play(comboSounds[action.step].name, { pitch: comboSounds[action.step].pitch })
     else sounds.play(action.kind)
   }
+  for (const cast of events.cast.all()) {
+    const sound = castSounds[cast.effect.kind]
+    if (sound !== null) sounds.play(sound, { pan: pan(cast.from) })
+  }
   for (const hit of events.hit.all()) {
     if (hit.faction === "player") sounds.play("hurt")
     else sounds.play(hit.killed ? "kill" : hit.heavy ? "heavyHit" : "hit", { pan: pan(hit.at) })
@@ -401,7 +418,7 @@ const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }
-  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "ultimate" ? "nova" : "boom", { pan: pan(explosion.at) })
+  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "nova" ? "nova" : "boom", { pan: pan(explosion.at) })
 })
 
 /** A world direction as a unit direction on screen. */
@@ -468,12 +485,12 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
   }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)
-    const ultimate = explosion.kind === "ultimate"
-    const color = ultimate ? view.ultimate : view.playerArea
-    fx.ring(at, explosion.radius * projection.zoom, color, ultimate ? 0.45 : 0.3)
-    fx.burst({ x: at.x, y: at.y - 10 }, { color, count: ultimate ? 48 : 26, speed: ultimate ? 620 : 380, size: 6, life: 0.5 })
+    const nova = explosion.kind === "nova"
+    const color = nova ? view.ultimate : view.playerArea
+    fx.ring(at, explosion.radius * projection.zoom, color, nova ? 0.45 : 0.3)
+    fx.burst({ x: at.x, y: at.y - 10 }, { color, count: nova ? 48 : 26, speed: nova ? 620 : 380, size: 6, life: 0.5 })
     fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })
-    services.host.feedback.shake = Math.max(services.host.feedback.shake, ultimate ? view.ultimateShake : view.explosionShake)
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, nova ? view.ultimateShake : view.explosionShake)
   }
   for (const impact of events.impact.all()) {
     const at = toScreen(projection, impact.at)
@@ -579,12 +596,15 @@ const FadeOccluders = Game.System("Shooter/FadeOccluders", {
  * range, or a slash still recharging; otherwise it lingers briefly and fades
  * (`view.slashCue`), so a facing that nothing depends on is not on screen. On
  * touch, also the assist's pick (a ring), a line along the aim while
- * shooting, and, while the grenade is dragged, where it will land (clamped to
- * its range) and its blast radius.
+ * shooting, and, while a skill button is dragged, what the skill will cover
+ * (see `drawSkillAim`).
  */
 const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim), weapon: Game.Query.read(Weapon) }, with: [Player] }),
+    player: Game.Query({
+      selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim), weapon: Game.Query.read(Weapon), skills: Game.Query.read(Skills) },
+      with: [Player]
+    }),
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
@@ -640,20 +660,32 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     const reach = Math.min(tuning.weapon.range, 320) / (Math.hypot(dx, dy) || 1)
     g.moveTo(at.x, at.y).lineTo(at.x + dx * reach, at.y + dy * reach).stroke({ width: 3, color: view.reticle, alpha: 0.45 })
   }
-  if (controls.skillAiming !== null && tuning.skills.wave.enabled) {
-    const wave = tuning.skills.wave
-    const direction = normalizeOr({ x: controls.skillAiming.x - at.x, y: controls.skillAiming.y - at.y }, { x: 1, y: 0 })
-    drawArea(g, { kind: "lane", origin: at, direction, length: wave.length, halfWidth: wave.width / 2 }, 0, { color: view.reticle, fill: 0.08, outline: 0.6 })
-  } else if (controls.skillAiming !== null) {
-    const spec = tuning.skills.grenade
-    const dx = controls.skillAiming.x - at.x
-    const dy = controls.skillAiming.y - at.y
-    const clamp = Math.min(1, spec.maxRange / (Math.hypot(dx, dy) || 1))
-    const target = { x: at.x + dx * clamp, y: at.y + dy * clamp }
-    g.moveTo(at.x, at.y).lineTo(target.x, target.y).stroke({ width: 2, color: view.reticle, alpha: 0.35 })
-    g.circle(target.x, target.y, spec.radius).fill({ color: view.reticle, alpha: 0.08 }).stroke({ width: 2, color: view.reticle, alpha: 0.6 })
+  const skills = player.data.skills.get()
+  for (const slot of skillSlots) {
+    const aiming = controls.skills[slot].aiming
+    if (aiming !== null) drawSkillAim(g, tuning.skills[skills[slot].skill].effect, at, aiming)
   }
 })
+
+/** What a skill used from `at` toward `aiming` will cover: a cut's lane, or where a lob lands and its blast. */
+const drawSkillAim = (g: Graphics, effect: SkillEffect, at: Vec2, aiming: Vec2): void => {
+  switch (effect.kind) {
+    case "cut": {
+      const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })
+      drawArea(g, { kind: "lane", origin: at, direction, length: effect.length, halfWidth: effect.width / 2 }, 0, { color: view.reticle, fill: 0.08, outline: 0.6 })
+      return
+    }
+    case "lob": {
+      const target = lobTarget(effect, at, aiming)
+      g.moveTo(at.x, at.y).lineTo(target.x, target.y).stroke({ width: 2, color: view.reticle, alpha: 0.35 })
+      g.circle(target.x, target.y, effect.radius).fill({ color: view.reticle, alpha: 0.08 }).stroke({ width: 2, color: view.reticle, alpha: 0.6 })
+      return
+    }
+    case "nova":
+      g.circle(at.x, at.y, effect.radius).fill({ color: view.reticle, alpha: 0.08 }).stroke({ width: 2, color: view.reticle, alpha: 0.6 })
+      return
+  }
+}
 
 /**
  * The on-screen touch controls: the stick under the thumb (or a faint hint
@@ -662,7 +694,7 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
  */
 const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   queries: {
-    player: Game.Query({ selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), ultimate: Game.Query.read(Ultimate), weapon: Game.Query.read(Weapon) }, with: [Player] })
+    player: Game.Query({ selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), weapon: Game.Query.read(Weapon) }, with: [Player] })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), touch: Game.System.service(TouchInput) }
@@ -697,14 +729,17 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
 
   const tuning = resources.tuning.get()
   const [player] = queries.player.each()
+  const slots = player === undefined ? undefined : skillStatus(tuning, player.data.skills.get(), player.data.energy.get().current)
   const fill = {
     // The sword recharges between slashes; the gun fires too fast to show.
     attack: player === undefined || !tuning.slash.enabled ? 0 : recharge(player.data.weapon.get()),
-    skill: player === undefined ? 0 : player.data.skills.get().special.cooldown / specialCooldown(tuning.skills),
+    special: slots?.special.recharge ?? 0,
     dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
-    ultimate: player === undefined ? 1 : 1 - player.data.ultimate.get().energy / tuning.ultimate.energy
+    ultimate: slots?.ultimate.recharge ?? 1
   }
-  setText(pad.buttons.skill.root.querySelector("span"), tuning.skills.wave.enabled ? "WAVE" : "GRENADE")
+  if (slots !== undefined) {
+    for (const slot of skillSlots) setText(pad.buttons[slot].root.querySelector("span"), slots[slot].spec.label)
+  }
   for (const name of touchButtons) {
     const zone = live.layout.buttons[name]
     const refs = pad.buttons[name]
@@ -720,6 +755,13 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     }
   }
 })
+
+/** Each slot's skill and how far it is from ready (0..1, see `skillRecharge`). */
+const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =>
+  bySlot((slot) => {
+    const spec: SkillSpec = tuning.skills[skills[slot].skill]
+    return { spec, recharge: skillRecharge(spec, skills[slot].cooldown, energy) }
+  })
 
 /** How much of the current move's recovery is left, 0..1. */
 const recharge = (weapon: { readonly cooldown: number; readonly recovery: number }): number =>
@@ -745,7 +787,7 @@ const DrawReticle = Game.System("Shooter/DrawReticle", {
 
 const SyncHud = Game.System("Shooter/SyncHud", {
   queries: {
-    player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health), skills: Game.Query.read(Skills), ultimate: Game.Query.read(Ultimate) }, with: [Player] }),
+    player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy) }, with: [Player] }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   },
@@ -787,15 +829,14 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   const dash = player.ok && player.value !== undefined ? player.value.data.dash.get() : undefined
   const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: resources.tuning.get().player.hp }
   if (player.ok && player.value !== undefined) {
-    const specs = resources.tuning.get()
-    setText(hud.skills.grenade.root.querySelector("span"), specs.skills.wave.enabled ? "Blade Wave" : "Grenade")
-    const special = player.value.data.skills.get().special.cooldown
-    hud.skills.grenade.cooldown.style.height = `${Math.min(100, (100 * special) / specialCooldown(specs.skills))}%`
-    hud.skills.grenade.root.classList.toggle("is-ready", special <= 0)
-    // The ultimate slot fills up with energy.
-    const energy = player.value.data.ultimate.get().energy
-    hud.skills.ultimate.cooldown.style.height = `${Math.max(0, 100 - (100 * energy) / specs.ultimate.energy)}%`
-    hud.skills.ultimate.root.classList.toggle("is-ready", energy >= specs.ultimate.energy)
+    // Each slot drains as its cooldown runs down and as energy fills up.
+    const slots = skillStatus(resources.tuning.get(), player.value.data.skills.get(), player.value.data.energy.get().current)
+    for (const slot of skillSlots) {
+      const refs = hud.skills[slot]
+      setText(refs.root.querySelector("span"), slots[slot].spec.name)
+      refs.cooldown.style.height = `${100 * slots[slot].recharge}%`
+      refs.root.classList.toggle("is-ready", slots[slot].recharge <= 0)
+    }
   }
   hud.health.style.width = `${(100 * health.current) / health.max}%`
   hud.healthText.textContent = `${Math.ceil(health.current)} / ${health.max}`

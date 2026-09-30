@@ -1,168 +1,241 @@
 /**
- * The player's special (Space: grenade) and ultimate (Shift: a large
- * blast around the player).
+ * Skills: Space uses the special slot, Shift the ultimate slot (see
+ * `Tuning.player.loadout`; the skills themselves are in `Tuning.skills`).
  *
- * Both reuse the combat pipeline: the grenade becomes a player-faction
- * `Hitbox` when it explodes, and so does the ultimate. The ultimate is
- * powered by energy from damage the player deals (`ApplyDamage` fills it).
- * Numbers live in `tuning.skills` and `tuning.ultimate`.
+ * `UseSkills` checks each slot's input, cooldown, and energy cost and emits a
+ * `Cast`. One system per effect kind carries casts out, reusing the combat
+ * pipeline: every effect lands as a `Hitbox`. So a new skill is data, a new
+ * kind of effect is one more system here, and anything that emits `Cast`
+ * (a future enemy caster) gets the same effects.
+ *
+ * Energy fills from damage the player deals (`ApplyDamage`), except damage
+ * from skills that cost energy.
  */
-import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { LobEffect, SkillEffect, SkillSlot, SkillSpec, Tuning as TuningValue } from "../config/tuning.ts"
 import { clampLength, normalizeOr, scale, sub } from "../math/vec.ts"
+import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
-  Action,
   Aim,
+  Cast,
   Controls,
+  Energy,
   Explosion,
   Game,
-  Grenade,
   Hitbox,
   Impact,
   Invulnerable,
+  Lobbed,
   Player,
   Position,
   Projectile,
   RunScope,
   Skills,
   Time,
-  Tuning,
-  Ultimate
+  Tuning
 } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
-export const initialSkills = (): SkillsValue => ({ special: { cooldown: 0 } })
+/** A value for each skill slot. Listing the slots here (not iterating `skillSlots`) keeps the result typed per slot. */
+export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in SkillSlot]: T } => ({ special: each("special"), ultimate: each("ultimate") })
+
+export const initialSkills = (tuning: TuningValue): SkillsValue => bySlot((slot) => ({ skill: tuning.player.loadout[slot], cooldown: 0 }))
 
 /**
- * The special skill: the Blade Wave (a straight cut toward `skillAt`, stopped
- * by walls, turning the player that way), or the grenade (lobbed to `skillAt`,
- * clamped to its range, over walls).
+ * How a skill is aimed: along a direction (reaching `reach`), at a point
+ * within `range`, or not at all (it goes off around the caster).
  */
-export const UseSpecial = Game.System("Shooter/UseSpecial", {
+export type SkillAim =
+  | { readonly kind: "direction"; readonly reach: number }
+  | { readonly kind: "point"; readonly range: number }
+  | { readonly kind: "self" }
+
+export const skillAim = (effect: SkillEffect): SkillAim => {
+  switch (effect.kind) {
+    case "cut":
+      return { kind: "direction", reach: effect.length }
+    case "lob":
+      return { kind: "point", range: effect.maxRange }
+    case "nova":
+      return { kind: "self" }
+  }
+}
+
+/** Where a lobbed effect thrown from `from` toward `at` lands: `at`, clamped to its range. */
+export const lobTarget = (effect: LobEffect, from: Vec2, at: Vec2): Vec2 => {
+  const offset = clampLength(sub(at, from), effect.maxRange)
+  return { x: from.x + offset.x, y: from.y + offset.y }
+}
+
+/** How far a slot is from ready, 0 (ready) to 1: the larger of the cooldown left and the energy missing. */
+export const skillRecharge = (spec: SkillSpec, cooldown: number, energy: number): number => {
+  const waiting = spec.cooldown > 0 ? cooldown / spec.cooldown : 0
+  const missing = spec.energy > 0 ? Math.max(0, 1 - energy / spec.energy) : 0
+  return Math.min(1, Math.max(waiting, missing))
+}
+
+/**
+ * Uses the skill of each slot pressed this step, once it is off cooldown and
+ * the player has the energy for it.
+ */
+export const UseSkills = Game.System("Shooter/UseSkills", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.write(Aim), skills: Game.Query.write(Skills) }, with: [Player] }),
-    walls: Walls
+    player: Game.Query({
+      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.write(Skills), energy: Game.Query.write(Energy) },
+      with: [Player]
+    })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { action: Game.System.writeEvent(Action) }
-}, ({ queries, resources, events, commands }) => {
+  events: { cast: Game.System.writeEvent(Cast) }
+}, ({ queries, resources, events }) => {
   const controls = resources.controls.get()
-  const skills = resources.tuning.get().skills
+  const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
-  for (const { data } of queries.player.each()) {
-    let cooldown = Math.max(0, data.skills.get().special.cooldown - dt)
-    if (controls.skillPressed && cooldown <= 0) {
-      const position = data.position.get()
-      if (skills.wave.enabled) {
-        const wave = skills.wave
-        const direction = normalizeOr(sub(controls.skillAt, position), data.aim.get())
-        const blocked = sweepCircleBoxes(position, scale(direction, wave.length), wave.width / 4, wallBoxes(queries.walls.each()))
-        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area: { kind: "lane", origin: position, direction, length: wave.length * (blocked?.time ?? 1), halfWidth: wave.width / 2 },
-          faction: "player",
-          damage: wave.damage,
-          knockback: wave.knockback,
-          remaining: wave.active,
-          hit: [],
-          charges: true,
-          pushAlong: direction,
-          hitStop: wave.hitStop,
-          heavy: true
-        }]))
-        data.aim.set(direction)
-        events.action.emit({ kind: "wave", at: position })
-        cooldown = wave.cooldown
-      } else {
-        const offset = clampLength(sub(controls.skillAt, position), skills.grenade.maxRange)
-        commands.spawnIn(RunScope, Game.Command.spawn([Grenade, {
-          from: position,
-          to: { x: position.x + offset.x, y: position.y + offset.y },
-          faction: "player",
-          elapsed: 0
-        }]))
-        events.action.emit({ kind: "throw", at: position })
-        cooldown = skills.grenade.cooldown
-      }
-    }
-    data.skills.set({ special: { cooldown } })
+  for (const { entity, data } of queries.player.each()) {
+    const from = data.position.get()
+    const slots = data.skills.get()
+    let energy = data.energy.get().current
+    data.skills.set(bySlot((slot) => {
+      const { skill } = slots[slot]
+      const spec: SkillSpec = tuning.skills[skill]
+      const cooldown = Math.max(0, slots[slot].cooldown - dt)
+      const input = controls.skills[slot]
+      if (!input.pressed || cooldown > 0 || energy < spec.energy) return { skill, cooldown }
+      energy -= spec.energy
+      events.cast.emit({
+        caster: Game.Entity.handle(entity.id, Position),
+        faction: "player",
+        skill,
+        effect: spec.effect,
+        from,
+        at: input.at,
+        direction: normalizeOr(sub(input.at, from), data.aim.get()),
+        charges: spec.energy === 0
+      })
+      return { skill, cooldown: spec.cooldown }
+    }))
+    data.energy.set({ current: energy })
   }
 })
 
-/** Cooldown of the special skill in use. */
-export const specialCooldown = (skills: TuningValue["skills"]): number => (skills.wave.enabled ? skills.wave.cooldown : skills.grenade.cooldown)
+/** Casters that turn toward what they cut. */
+const Turning = Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.write(Aim) } })
 
-/** Grenades fly to their target, sit out the fuse, then explode into a circular hitbox. */
-export const UpdateGrenades = Game.System("Shooter/UpdateGrenades", {
-  queries: { grenades: Game.Query({ selection: { grenade: Game.Query.write(Grenade) } }) },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
+/** Cuts: a lane toward the aim that hits everything along it once, shortened by walls. */
+export const CastCuts = Game.System("Shooter/CastCuts", {
+  queries: { walls: Walls },
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ queries, events, lookup, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "cut") continue
+    const { from, direction } = cast
+    const blocked = sweepCircleBoxes(from, scale(direction, effect.length), effect.width / 4, wallBoxes(queries.walls.each()))
+    commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+      area: { kind: "lane", origin: from, direction, length: effect.length * (blocked?.time ?? 1), halfWidth: effect.width / 2 },
+      faction: cast.faction,
+      damage: effect.damage,
+      knockback: effect.knockback,
+      remaining: effect.active,
+      hit: [],
+      charges: cast.charges,
+      pushAlong: direction,
+      hitStop: effect.hitStop,
+      heavy: effect.heavy
+    }]))
+    const caster = lookup.getHandle(cast.caster, Turning)
+    if (caster.ok) caster.value.data.aim.set(direction)
+  }
+})
+
+/** Lobbed skills: thrown toward the aim, clamped to their range, over walls. */
+export const CastLobs = Game.System("Shooter/CastLobs", {
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ events, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "lob") continue
+    commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, {
+      from: cast.from,
+      to: lobTarget(effect, cast.from, cast.at),
+      faction: cast.faction,
+      effect,
+      charges: cast.charges,
+      elapsed: 0
+    }]))
+  }
+})
+
+/** Lobbed skills fly to their target, sit out the fuse, then explode into a circular hitbox. */
+export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
+  queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.write(Lobbed) } }) },
+  resources: { time: Game.System.readResource(Time) },
   events: { explosion: Game.System.writeEvent(Explosion) }
 }, ({ queries, resources, events, commands }) => {
-  const spec = resources.tuning.get().skills.grenade
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.grenades.each()) {
-    const grenade = data.grenade.get()
-    const elapsed = grenade.elapsed + dt
-    if (elapsed < spec.flightTime + spec.fuse) {
-      data.grenade.set({ ...grenade, elapsed })
+  for (const { entity, data } of queries.lobbed.each()) {
+    const lobbed = data.lobbed.get()
+    const { effect } = lobbed
+    const elapsed = lobbed.elapsed + dt
+    if (elapsed < effect.flightTime + effect.fuse) {
+      data.lobbed.set({ ...lobbed, elapsed })
       continue
     }
     commands.despawn(entity.id)
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-      area: { kind: "circle", center: grenade.to, radius: spec.radius },
-      faction: grenade.faction,
-      damage: spec.damage,
-      knockback: spec.knockback,
+      area: { kind: "circle", center: lobbed.to, radius: effect.radius },
+      faction: lobbed.faction,
+      damage: effect.damage,
+      knockback: effect.knockback,
       remaining: 0.05,
       hit: [],
-      charges: true
+      charges: lobbed.charges,
+      hitStop: effect.hitStop,
+      heavy: effect.heavy
     }]))
-    events.explosion.emit({ at: grenade.to, radius: spec.radius, faction: grenade.faction, kind: "grenade" })
+    events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast" })
   }
 })
 
+/** Casters made briefly invulnerable by a nova. */
+const Shielded = Game.Query({ selection: { position: Game.Query.read(Position), invulnerable: Game.Query.write(Invulnerable) } })
+
 /**
- * Shift, at full energy: a large blast around the player that knocks
- * everything back, clears enemy projectiles inside it, and grants a moment
- * of invulnerability.
+ * Novas: a blast around the caster that knocks everything back, grants a
+ * moment of invulnerability, and can clear the other side's projectiles
+ * inside it.
  */
-export const CastUltimate = Game.System("Shooter/CastUltimate", {
-  queries: {
-    player: Game.Query({
-      selection: { position: Game.Query.read(Position), ultimate: Game.Query.write(Ultimate), invulnerable: Game.Query.write(Invulnerable) },
-      with: [Player]
-    }),
-    projectiles: Game.Query({ selection: { position: Game.Query.read(Position), projectile: Game.Query.read(Projectile) } })
-  },
-  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
-  events: { explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) }
-}, ({ queries, resources, events, commands }) => {
-  if (!resources.controls.get().ultimatePressed) return
-  const spec = resources.tuning.get().ultimate
-  for (const { data } of queries.player.each()) {
-    if (data.ultimate.get().energy < spec.energy) continue
-    const at = data.position.get()
-    data.ultimate.set({ energy: 0 })
-    data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, spec.invulnerability) }))
+export const CastNovas = Game.System("Shooter/CastNovas", {
+  queries: { projectiles: Game.Query({ selection: { position: Game.Query.read(Position), projectile: Game.Query.read(Projectile) } }) },
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) }
+}, ({ queries, events, lookup, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "nova") continue
+    const at = cast.from
+    const caster = lookup.getHandle(cast.caster, Shielded)
+    if (caster.ok) caster.value.data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, effect.invulnerability) }))
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-      area: { kind: "circle", center: at, radius: spec.radius },
-      faction: "player",
-      damage: spec.damage,
-      knockback: spec.knockback,
-      remaining: spec.active,
+      area: { kind: "circle", center: at, radius: effect.radius },
+      faction: cast.faction,
+      damage: effect.damage,
+      knockback: effect.knockback,
+      remaining: effect.active,
       hit: [],
-      charges: false,
-      heavy: true
+      charges: cast.charges,
+      hitStop: effect.hitStop,
+      heavy: effect.heavy
     }]))
-    events.explosion.emit({ at, radius: spec.radius, faction: "player", kind: "ultimate" })
-    if (spec.clearsProjectiles) {
-      for (const { entity, data: shot } of queries.projectiles.each()) {
-        if (shot.projectile.get().faction === "player") continue
-        const position = shot.position.get()
-        if ((position.x - at.x) ** 2 + (position.y - at.y) ** 2 > spec.radius * spec.radius) continue
-        commands.despawn(entity.id)
-        events.impact.emit({ at: position, faction: "enemy", wall: false, shielded: false })
-      }
+    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova" })
+    if (!effect.clearsProjectiles) continue
+    for (const { entity, data } of queries.projectiles.each()) {
+      const projectile = data.projectile.get()
+      if (projectile.faction === cast.faction) continue
+      const position = data.position.get()
+      if ((position.x - at.x) ** 2 + (position.y - at.y) ** 2 > effect.radius * effect.radius) continue
+      commands.despawn(entity.id)
+      events.impact.emit({ at: position, faction: projectile.faction, wall: false, shielded: false })
     }
   }
 })

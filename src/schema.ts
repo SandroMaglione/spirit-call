@@ -7,7 +7,7 @@ import type * as Entity from "@typeonce/bevy-ts/Entity"
 import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
-import type { Tuning as TuningValue } from "./config/tuning.ts"
+import type { LobEffect, SkillEffect, SkillId, SkillSlot, Tuning as TuningValue } from "./config/tuning.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
 import type { Box } from "./physics/shapes.ts"
@@ -44,25 +44,30 @@ export interface DashValue {
 }
 export const Dash = Descriptor.Component<DashValue>()("Shooter/Dash")
 
-/** Cooldowns of the player's skills. */
-export interface SkillsValue {
-  /** The special skill (Blade Wave, or the grenade): time until it can be used again. */
-  readonly special: { readonly cooldown: number }
+/** A skill slot: the skill in it and the time until it can be used again. */
+export interface SkillSlotValue {
+  readonly skill: SkillId
+  readonly cooldown: number
 }
+/** The character's skill slots (see `Tuning.player.loadout`). */
+export type SkillsValue = { readonly [Slot in SkillSlot]: SkillSlotValue }
 export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
 
-/** Energy toward the ultimate, filled by dealing damage. */
-export const Ultimate = Descriptor.Component<{ readonly energy: number }>()("Shooter/Ultimate")
+/** Energy for skills that cost it (the Nova), filled by dealing damage. */
+export const Energy = Descriptor.Component<{ readonly current: number }>()("Shooter/Energy")
 
-/** A thrown grenade: flies from `from` to `to`, then its fuse runs down and it explodes. */
-export interface GrenadeValue {
+/** A lobbed skill (the grenade): flies from `from` to `to`, then its fuse runs down and it explodes. */
+export interface LobbedValue {
   readonly from: Vec2
   readonly to: Vec2
   readonly faction: Faction
+  readonly effect: LobEffect
+  /** Whether its damage fills energy. */
+  readonly charges: boolean
   /** Time since it was thrown. */
   readonly elapsed: number
 }
-export const Grenade = Descriptor.Component<GrenadeValue>()("Shooter/Grenade")
+export const Lobbed = Descriptor.Component<LobbedValue>()("Shooter/Lobbed")
 
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
@@ -175,7 +180,7 @@ export interface HitboxValue {
   readonly remaining: number
   /** Entity ids already hit, so each target is hit at most once. */
   readonly hit: ReadonlyArray<number>
-  /** Whether its damage fills the ultimate's energy (false for the ultimate itself). */
+  /** Whether its damage fills the player's energy (false for skills that cost energy). */
   readonly charges: boolean
   /** Push every target this way instead of away from the area (the Blade Wave drives enemies along the cut). */
   readonly pushAlong?: Vec2
@@ -213,7 +218,7 @@ export interface DamageValue {
   readonly direction: Vec2
   readonly knockback: number
   readonly faction: Faction
-  /** Whether this damage fills the player's ultimate energy. */
+  /** Whether this damage fills the player's energy. */
   readonly charges: boolean
   /** Hit-stop when it lands on an enemy (seconds). */
   readonly hitStop?: number
@@ -239,14 +244,32 @@ export const Hit = Descriptor.Event<{
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
 
-/** An area went off (grenade explosions, the ultimate), for effects. */
-export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction; readonly kind: "grenade" | "ultimate" }>()("Shooter/Explosion")
+/** An area went off (a lobbed skill's blast, a nova), for effects. */
+export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction; readonly kind: "blast" | "nova" }>()("Shooter/Explosion")
+
+/**
+ * A skill was used: its effect goes off from `from`, aimed at `at` (along
+ * `direction`). One system per effect kind carries it out (see
+ * `features/skills.ts`), so the same event serves any caster.
+ */
+export const Cast = Descriptor.Event<{
+  readonly caster: Entity.Handle<typeof Root, typeof Position>
+  readonly faction: Faction
+  readonly skill: SkillId
+  readonly effect: SkillEffect
+  readonly from: Vec2
+  readonly at: Vec2
+  /** Unit direction from `from` toward `at` (the caster's aim when they coincide). */
+  readonly direction: Vec2
+  /** Whether its damage fills energy. */
+  readonly charges: boolean
+}>()("Shooter/Cast")
 
 /** A projectile stopped against a wall or a shield, or ran out of range. */
-/** Something the player did, for feedback such as sound: one combo move, shot, Blade Wave, grenade throw, or dash. */
+/** Something the player did, for feedback such as sound: one combo move, shot, or dash (skills are `Cast`). */
 export const Action = Descriptor.Event<
   | { readonly kind: "slash"; readonly at: Vec2; readonly step: ComboStep; readonly direction: Vec2 }
-  | { readonly kind: "shot" | "wave" | "throw" | "dash"; readonly at: Vec2 }
+  | { readonly kind: "shot" | "dash"; readonly at: Vec2 }
 >()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 
@@ -268,6 +291,16 @@ export const Keys = Descriptor.TransientResource<KeysSnapshot>()("Shooter/Keys")
 export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Shooter/PointerState")
 export const TouchState = Descriptor.TransientResource<TouchSnapshot>()("Shooter/TouchState")
 
+/** One skill slot's input for this step. */
+export interface SkillControl {
+  /** Use the skill this step. */
+  readonly pressed: boolean
+  /** Where it is aimed: a lobbed skill's landing spot, a point along a cut, or the player for a nova. */
+  readonly at: Vec2
+  /** While its touch button is dragged, where it is aimed (as `at`); `null` otherwise. */
+  readonly aiming: Vec2 | null
+}
+
 /** Player intent for this step, in world space. */
 export interface ControlsValue {
   /** The input in use: keyboard and mouse, or the on-screen touch controls (whichever was used last). */
@@ -276,18 +309,14 @@ export interface ControlsValue {
   readonly move: Vec2
   /** Ground point the player aims at: under the cursor, or along the touch aim. */
   readonly aimPoint: Vec2
-  /** Where the special skill used this step is aimed: the grenade's landing spot, or a point along the Blade Wave. */
-  readonly skillAt: Vec2
-  /** While the touch skill is dragged, where it is aimed (as `skillAt`); `null` otherwise. */
-  readonly skillAiming: Vec2 | null
+  /** Each skill slot's input this step. */
+  readonly skills: { readonly [Slot in SkillSlot]: SkillControl }
   /** On touch, the enemy (entity id) an attack now would turn toward, or `null`. */
   readonly assistTarget: number | null
   readonly dashPressed: boolean
   /** An attack was pressed this step: one slash per press (the gun fires while `fireHeld`). */
   readonly attackPressed: boolean
   readonly fireHeld: boolean
-  readonly skillPressed: boolean
-  readonly ultimatePressed: boolean
   /** Last non-zero movement direction, kept for the movement grace. */
   readonly lastMove: Vec2
   /** The last movement key pressed and when (`Time.elapsed`), to detect a double tap. */
@@ -373,8 +402,8 @@ export const Game = Schema.bind(
       Dash,
       Invulnerable,
       Skills,
-      Ultimate,
-      Grenade,
+      Energy,
+      Lobbed,
       Health,
       Hurtbox,
       Knockback,
@@ -408,7 +437,7 @@ export const Game = Schema.bind(
       Run,
       HitStop
     },
-    events: { Damage, Hit, Death, Impact, Explosion, Action }
+    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast }
   }),
   Root
 )

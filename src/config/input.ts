@@ -4,9 +4,9 @@ import type { Pointer, Touch } from "@typeonce/bevy-ts-browser"
 /**
  * Keyboard actions. The mouse aims and left click fires. Double-tapping a
  * movement key dashes (see `Tuning.dash.doubleTapWindow`), Space (thumb)
- * throws the grenade, Shift (pinky) casts the ultimate: nothing frequent
- * lifts a finger off WASD. Movement is screen-relative ("up" is up on
- * screen).
+ * uses the special skill, Shift (pinky) the ultimate (the skill slots of the
+ * same names): nothing frequent lifts a finger off WASD. Movement is
+ * screen-relative ("up" is up on screen).
  *
  * Movement and actions bind by physical key (`Keyboard.code`), so they stay
  * under the hand on any layout (WASD is ZQSD on AZERTY) and modifiers held
@@ -17,7 +17,7 @@ export const keyBindings = {
   down: [Keyboard.code("KeyS"), "ArrowDown"],
   left: [Keyboard.code("KeyA"), "ArrowLeft"],
   right: [Keyboard.code("KeyD"), "ArrowRight"],
-  skill: [Keyboard.code("Space")],
+  special: [Keyboard.code("Space")],
   ultimate: [Keyboard.code("ShiftLeft"), Keyboard.code("ShiftRight")],
   restart: ["r", "Enter"]
 } as const
@@ -35,12 +35,13 @@ export type PointerSource = Pointer.Pointer
 /**
  * On-screen controls for touch screens: a floating stick on the left half
  * moves; on the right, like Stella Sora, a large attack button with the
- * skill, dash, and ultimate around it. Each ATTACK tap slashes, turning toward
- * the enemy the attack assist picks (see `Tuning.touch.assist`). The skill
- * aims by dragging: drag to pick where the grenade lands, release to throw; a
- * tap throws it where you face.
+ * special, dash, and ultimate around it. Each ATTACK tap slashes, turning toward
+ * the enemy the attack assist picks (see `Tuning.touch.assist`). The special
+ * and ultimate buttons use the skills in those slots. An aimed skill aims by
+ * dragging (drag to pick where it goes, release to use it; a tap uses it
+ * where you face); a skill around the player goes off on touch.
  */
-export const touchButtons = ["attack", "skill", "dash", "ultimate"] as const
+export const touchButtons = ["attack", "special", "dash", "ultimate"] as const
 export type TouchButton = (typeof touchButtons)[number]
 export type TouchSnapshot = Touch.Snapshot<TouchButton>
 export type TouchSource = Touch.Touch<TouchButton>
@@ -55,7 +56,7 @@ export const touchLayout = ({ width, height }: Touch.Size): Touch.Layout<TouchBu
     stick: { region: { left: 0, top: height * 0.25, width: width / 2, height: height * 0.75 }, radius: px(55), deadZone: 0.12 },
     buttons: {
       attack: { center: attack, radius: px(58) },
-      skill: { center: { x: attack.x - px(122), y: attack.y + px(18) }, radius: px(40), aimRadius: px(90) },
+      special: { center: { x: attack.x - px(122), y: attack.y + px(18) }, radius: px(40), aimRadius: px(90) },
       dash: { center: { x: attack.x - px(98), y: attack.y - px(88) }, radius: px(36) },
       ultimate: { center: { x: attack.x + px(4), y: attack.y - px(128) }, radius: px(38) }
     }

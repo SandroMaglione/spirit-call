@@ -7,7 +7,7 @@ import { InputCapture } from "@typeonce/bevy-ts-browser"
 
 import { directions, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
-import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { SkillEffect, SkillSlot, Tuning as TuningValue } from "../config/tuning.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
 import { length, normalizeOr, scale, zero } from "../math/vec.ts"
@@ -26,13 +26,15 @@ import {
   PointerInput,
   PointerState,
   Position,
+  Skills,
   Time,
   TouchInput,
   TouchState,
   Tuning,
   Viewport
 } from "../schema.ts"
-import type { ControlsValue } from "../schema.ts"
+import type { ControlsValue, SkillControl, SkillsValue } from "../schema.ts"
+import { bySlot, skillAim } from "./skills.ts"
 
 export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKeys", source: KeyboardInput, resource: Keys })
 
@@ -64,7 +66,7 @@ export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
 
 export const ResolveControls = Game.System("Shooter/ResolveControls", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim) }, with: [Player] }),
+    player: Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.read(Skills) }, with: [Player] }),
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
   },
   resources: {
@@ -86,7 +88,8 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   if (device === "touch") {
     const [player] = queries.player.each()
     const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, position: data.position.get(), radius: data.hurtbox.get().radius }))
-    resources.controls.set(resolveTouch(touch, previous, player === undefined ? undefined : { position: player.data.position.get(), aim: player.data.aim.get() }, enemies, resources.tuning.get()))
+    const state = player === undefined ? undefined : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get() }
+    resources.controls.set(resolveTouch(touch, previous, state, enemies, resources.tuning.get()))
     return
   }
   const camera = resources.camera.get()
@@ -137,14 +140,12 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     device,
     move,
     aimPoint,
-    skillAt: aimPoint,
-    skillAiming: null,
+    // Skills aim at the cursor; the skill decides what that means (see `UseSkills`).
+    skills: bySlot((slot) => ({ pressed: keys[slot].pressed, at: aimPoint, aiming: null })),
     assistTarget: null,
     dashPressed,
     attackPressed: pointer.primary.pressed,
     fireHeld: pointer.primary.held || pointer.primary.pressed,
-    skillPressed: keys.skill.pressed,
-    ultimatePressed: keys.ultimate.pressed,
     lastMove,
     lastTap,
     grace
@@ -193,30 +194,33 @@ export const assistTargetOf = (
   return best
 }
 
+/** No skill used or aimed this step. */
+const idleSkills = (at: Vec2): ControlsValue["skills"] => bySlot(() => ({ pressed: false, at, aiming: null }))
+
 /**
  * Touch controls into intent. The stick moves (analog) and turns the player
  * where it points; standing still keeps the facing. Each ATTACK tap slashes
  * once, turning toward the enemy the assist picks (see `Tuning.touch.assist`),
- * else along the facing. The skill has no assist: a drag aims it by hand, a
- * tap uses the facing (the Blade Wave's direction; the grenade lands at
- * `tapThrowRange` of its range). Cancelled touches do nothing.
+ * else along the facing. Skills have no assist: each skill button uses the
+ * skill in its slot, aimed by the skill's kind (see `touchSkill`). Cancelled
+ * touches do nothing.
  */
 const resolveTouch = (
   touch: TouchSnapshot,
   previous: ControlsValue,
-  player: { readonly position: Vec2; readonly aim: Vec2 } | undefined,
+  player: { readonly position: Vec2; readonly aim: Vec2; readonly skills: SkillsValue } | undefined,
   enemies: ReadonlyArray<AssistCandidate>,
   tuning: TuningValue
 ): ControlsValue => {
   // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
   if (player === undefined) {
-    return { ...previous, device: "touch", move: zero, skillAiming: null, assistTarget: null, dashPressed: false, attackPressed: false, fireHeld: false, skillPressed: false, ultimatePressed: false, grace: 0 }
+    return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, fireHeld: false, grace: 0 }
   }
   const tilt = length(touch.stick.vector)
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
   const moving = tilt > 0
   const origin = player.position
-  const { attack, skill } = touch.buttons
+  const { attack } = touch.buttons
   const heading = moving ? normalizeOr(move, player.aim) : player.aim
   // The pick is shown by a ring at all times, so what the ring marks is what a tap hits.
   const target = assistTargetOf(origin, heading, enemies, previous.assistTarget, tuning)
@@ -226,32 +230,41 @@ const resolveTouch = (
     ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, heading)
     : heading
   const aimPoint = { x: origin.x + ahead.x * tuning.touch.aimDistance, y: origin.y + ahead.y * tuning.touch.aimDistance }
-  const range = tuning.skills.grenade.maxRange
-  // A tapped skill goes where the player faces (no assist on skills).
-  const tapDirection = ahead
-  const throwTo = (aim: Vec2 | null): Vec2 => {
-    const direction = aim === null ? tapDirection : worldDirection(aim, ahead)
-    // The Blade Wave only needs a direction: aim at its full length.
-    const distance = tuning.skills.wave.enabled
-      ? tuning.skills.wave.length
-      : aim === null ? range * tuning.touch.tapThrowRange : range * length(aim)
-    return { x: origin.x + direction.x * distance, y: origin.y + direction.y * distance }
-  }
   return {
     device: "touch",
     move,
     aimPoint,
-    skillAt: throwTo(skill.aim),
-    skillAiming: skill.held && skill.aim !== null ? throwTo(skill.aim) : null,
+    skills: bySlot((slot) => touchSkill(touch, slot, tuning.skills[player.skills[slot].skill].effect, origin, ahead, tuning)),
     assistTarget: target?.id ?? null,
     dashPressed: touch.buttons.dash.pressed,
     attackPressed: attack.pressed,
     fireHeld: attacking,
-    skillPressed: skill.released && !skill.cancelled,
-    ultimatePressed: touch.buttons.ultimate.pressed,
     lastMove: moving ? normalizeOr(move, zero) : previous.lastMove,
     lastTap: null,
     grace: 0
+  }
+}
+
+/**
+ * A skill button into the slot's input. A skill around the player goes off
+ * on touch. An aimed one goes on release: a drag aims it (a direction for a
+ * cut, which reaches its full length; a point for a lob, as far as the drag
+ * is long); a tap uses it where the player faces (a lob lands at
+ * `tapThrowRange` of its range).
+ */
+const touchSkill = (touch: TouchSnapshot, slot: SkillSlot, effect: SkillEffect, origin: Vec2, ahead: Vec2, tuning: TuningValue): SkillControl => {
+  const button = touch.buttons[slot]
+  const aim = skillAim(effect)
+  if (aim.kind === "self") return { pressed: button.pressed, at: origin, aiming: null }
+  const toward = (drag: Vec2 | null): Vec2 => {
+    const direction = drag === null ? ahead : worldDirection(drag, ahead)
+    const distance = aim.kind === "direction" ? aim.reach : drag === null ? aim.range * tuning.touch.tapThrowRange : aim.range * length(drag)
+    return { x: origin.x + direction.x * distance, y: origin.y + direction.y * distance }
+  }
+  return {
+    pressed: button.released && !button.cancelled,
+    at: toward(button.aim),
+    aiming: button.held && button.aim !== null ? toward(button.aim) : null
   }
 }
 
@@ -260,14 +273,11 @@ export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   device: "desktop",
   move: zero,
   aimPoint,
-  skillAt: aimPoint,
-  skillAiming: null,
+  skills: idleSkills(aimPoint),
   assistTarget: null,
   dashPressed: false,
   attackPressed: false,
   fireHeld: false,
-  skillPressed: false,
-  ultimatePressed: false,
   lastMove: zero,
   lastTap: null,
   grace: 0

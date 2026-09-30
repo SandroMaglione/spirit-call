@@ -153,11 +153,11 @@ describe("guardian", () => {
     const run = duel("guardian", { x: 250, y: 0 }, {
       tuning: withGrenade(still),
       pointer: [{ frame: 0, move: cursorAt({ x: 250, y: 0 }) }],
-      keys: [{ frame: turnSteps, press: ["skill"], release: ["skill"] }]
+      keys: [{ frame: turnSteps, press: ["special"], release: ["special"] }]
     })
-    run.step(turnSteps + steps(defaultTuning.skills.grenade.flightTime + defaultTuning.skills.grenade.fuse) + 4)
+    run.step(turnSteps + steps(defaultTuning.skills.grenade.effect.flightTime + defaultTuning.skills.grenade.effect.fuse) + 4)
     expect(run.world().enemies[0]!.facing!.x).toBeLessThan(-0.99)
-    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.skills.grenade.damage)
+    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.skills.grenade.effect.damage)
   })
 })
 

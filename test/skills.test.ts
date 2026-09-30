@@ -4,9 +4,10 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { makeProjectile } from "../src/features/combat.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
+import { CastCuts } from "../src/features/skills.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Enemy, Game, Grenade, Health, Player, Position, Projectile, RunScope, Skills, Ultimate } from "../src/schema.ts"
+import { Cast, Enemy, Energy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
 import { ClearEnemies, start, withGrenade } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
@@ -16,15 +17,15 @@ const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const World = Game.Inspector("Test/Skills", {
   queries: {
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health) }, with: [Enemy] }),
-    player: Game.Query({ selection: { skills: Game.Query.read(Skills), ultimate: Game.Query.read(Ultimate) }, with: [Player] }),
-    grenades: Game.Query({ selection: { grenade: Game.Query.read(Grenade) } }),
+    player: Game.Query({ selection: { skills: Game.Query.read(Skills), energy: Game.Query.read(Energy) }, with: [Player] }),
+    grenades: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
     projectiles: Game.Query({ selection: { projectile: Game.Query.read(Projectile) } })
   }
 }, ({ queries }) => ({
   enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current })),
   skills: queries.player.each()[0]!.data.skills.get(),
-  energy: queries.player.each()[0]!.data.ultimate.get().energy,
-  grenades: queries.grenades.each().map(({ data }) => data.grenade.get()),
+  energy: queries.player.each()[0]!.data.energy.get().current,
+  grenades: queries.grenades.each().map(({ data }) => data.lobbed.get()),
   projectiles: queries.projectiles.each().map(({ data }) => data.projectile.get())
 }))
 
@@ -45,20 +46,20 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
-/** Fills the player's ultimate energy, as if enough damage had been dealt. */
+/** Fills the player's energy, as if enough damage had been dealt. */
 const FillEnergy = Game.System("Test/FillEnergy", {
-  queries: { player: Game.Query({ selection: { ultimate: Game.Query.write(Ultimate) }, with: [Player] }) }
+  queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.ultimate.set({ energy: defaultTuning.ultimate.energy })
+  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
 })
 
 const hp = defaultTuning.enemies.dummy.hp
 const grenadeTuning = withGrenade(defaultTuning)
-const throwGrenade = (frame: number) => ({ frame, press: ["skill" as const], release: ["skill" as const] })
+const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
 describe("Blade Wave (Space)", () => {
-  const wave = defaultTuning.skills.wave
-  const cut = (frame: number) => ({ frame, press: ["skill" as const], release: ["skill" as const] })
+  const wave = defaultTuning.skills.bladeWave.effect
+  const cut = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
   it("cuts everything along its line toward the cursor, once each, and nothing beside it", () => {
     const run = range([{ x: 100, y: 0 }, { x: 260, y: 0 }, { x: 150, y: 120 }], { x: 200, y: 0 }, { keys: [cut(1)] })
@@ -75,7 +76,7 @@ describe("Blade Wave (Space)", () => {
   })
 
   it("respects its cooldown", () => {
-    const again = steps(wave.cooldown) - 10
+    const again = steps(defaultTuning.skills.bladeWave.cooldown) - 10
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1), cut(again)] })
     run.step(again + 3)
     expect(run.world().enemies[0]!.health).toBe(hp - wave.damage)
@@ -88,11 +89,11 @@ describe("grenade (Space)", () => {
     run.step(3)
     const [grenade] = run.world().grenades
     expect(grenade!.to.x).toBeCloseTo(center.x, 6)
-    expect(center.y - grenade!.to.y).toBeCloseTo(defaultTuning.skills.grenade.maxRange, 6)
+    expect(center.y - grenade!.to.y).toBeCloseTo(defaultTuning.skills.grenade.effect.maxRange, 6)
   })
 
   it("damages everything within its radius, once, after the fuse", () => {
-    const spec = defaultTuning.skills.grenade
+    const spec = defaultTuning.skills.grenade.effect
     const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { tuning: grenadeTuning, keys: [throwGrenade(1)] })
     run.step(steps(spec.flightTime + spec.fuse) - 2)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp])
@@ -116,15 +117,15 @@ describe("grenade (Space)", () => {
   })
 })
 
-describe("ultimate (Shift)", () => {
-  const spec = defaultTuning.ultimate
+describe("Nova (Shift)", () => {
+  const spec = defaultTuning.skills.nova.effect
 
   it("fills with energy from damage the player deals", () => {
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { pointer: [{ frame: 1, press: ["primary"] }, { frame: 4, release: ["primary"] }] })
     run.step(20)
     const dealt = hp - run.world().enemies[0]!.health
     expect(dealt).toBeGreaterThan(0)
-    expect(run.world().energy).toBeCloseTo(dealt * spec.energyPerDamage, 9)
+    expect(run.world().energy).toBeCloseTo(dealt * defaultTuning.energy.perDamage, 9)
   })
 
   it("does nothing without full energy", () => {
@@ -161,6 +162,55 @@ describe("ultimate (Shift)", () => {
     run.step(2)
     expect(run.world().projectiles).toHaveLength(1)
     expect(run.player().invulnerable).toBeGreaterThan(0)
+  })
+})
+
+describe("loadout", () => {
+  const ultimate = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
+  const special = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
+
+  it("puts any skill in any slot: the grenade on Shift, on its cooldown, with no energy needed", () => {
+    const tuning = tuningWith({ player: { loadout: { ultimate: "grenade" } } })
+    const run = range([], { x: 200, y: 0 }, { tuning, keys: [ultimate(1)] })
+    run.step(3)
+    expect(run.world().grenades).toHaveLength(1)
+    const slot = run.world().skills.ultimate
+    expect(slot.skill).toBe("grenade")
+    expect(slot.cooldown).toBeGreaterThan(defaultTuning.skills.grenade.cooldown - 0.1)
+  })
+
+  it("keeps a skill's energy cost in any slot: the Nova on Space needs full energy", () => {
+    const tuning = tuningWith({ player: { loadout: { special: "nova" } }, enemies: { dummy: { hp: 1000 } } })
+    const inside = { x: defaultTuning.skills.nova.effect.radius - 20, y: 0 }
+    const empty = range([inside], { x: 200, y: 0 }, { tuning, keys: [special(1)] })
+    empty.step(3)
+    expect(empty.world().enemies[0]!.health).toBe(1000)
+
+    const full = range([inside], { x: 200, y: 0 }, { tuning, keys: [special(1)] })
+    full.runtime.tick(Game.Schedule(FillEnergy))
+    full.step(3)
+    expect(full.world().enemies[0]!.health).toBe(1000 - defaultTuning.skills.nova.effect.damage)
+    expect(full.world().energy).toBe(0)
+  })
+
+  it("carries out a cast from any caster: an enemy's Blade Wave hits the player", () => {
+    const PlayerHealth = Game.Inspector("Test/PlayerHealth", {
+      queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) }
+    }, ({ queries }) => queries.player.each()[0]!.data.health.get().current)
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 })
+    const EnemyCasts = Game.System("Test/EnemyCasts", {
+      queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) },
+      events: { cast: Game.System.writeEvent(Cast) }
+    }, ({ queries, events }) => {
+      for (const { entity, data } of queries.enemies.each()) {
+        const from = data.position.get()
+        const effect = defaultTuning.skills.bladeWave.effect
+        events.cast.emit({ caster: Game.Entity.handle(entity.id, Position), faction: "enemy", skill: "bladeWave", effect, from, at: center, direction: { x: -1, y: 0 }, charges: false })
+      }
+    })
+    run.runtime.tick(Game.Schedule(EnemyCasts, CastCuts, Game.Schedule.applyDeferred()))
+    run.step(2)
+    expect(run.runtime.inspect(PlayerHealth)).toBe(defaultTuning.player.hp - defaultTuning.skills.bladeWave.effect.damage)
   })
 })
 

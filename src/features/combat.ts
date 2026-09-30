@@ -20,6 +20,7 @@ import {
   Damage,
   Death,
   Enemy,
+  Energy,
   Game,
   Health,
   Hit,
@@ -41,7 +42,6 @@ import {
   Stats,
   Time,
   Tuning,
-  Ultimate,
   Velocity,
   Weapon
 } from "../schema.ts"
@@ -389,7 +389,7 @@ const Damageable = Game.Query({
 
 /** Applies damage requests: the single place where hits become consequences. */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
-  queries: { ultimates: Game.Query({ selection: { ultimate: Game.Query.write(Ultimate) }, with: [Player] }) },
+  queries: { energies: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) },
   events: {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
@@ -412,8 +412,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
 
     const health = data.health.get()
     const current = Math.max(0, health.current - damage.amount)
-    // Damage the player deals fills the ultimate; only what actually landed counts.
-    if (damage.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.ultimate.energyPerDamage
+    // Damage the player deals fills energy; only what actually landed counts.
+    if (damage.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
     data.flash.set({ remaining: tuning.feedback.hitFlash })
     // One mistake costs one hit: the player is briefly untouchable afterwards.
@@ -454,8 +454,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   }
   if (kills > 0) resources.stats.update((stats) => ({ ...stats, kills: stats.kills + kills }))
   if (energy > 0) {
-    for (const { data } of queries.ultimates.each()) {
-      data.ultimate.update(({ energy: current }) => ({ energy: Math.min(tuning.ultimate.energy, current + energy) }))
+    for (const { data } of queries.energies.each()) {
+      data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + energy) }))
     }
   }
   if (hitStop > 0) resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, hitStop) }))

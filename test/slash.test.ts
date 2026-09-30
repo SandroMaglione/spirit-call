@@ -86,9 +86,9 @@ describe("attack assist (touch)", () => {
 
   it("does not aim skills: a tapped Blade Wave goes where the player faces", () => {
     // An enemy behind would draw an attack, but not the wave.
-    const run = arena([at(180, 100), at(0, 150)], 1, { touch: [{ frame: 0, press: ["skill"], release: ["skill"] }] })
+    const run = arena([at(180, 100), at(0, 150)], 1, { touch: [{ frame: 0, press: ["special"], release: ["special"] }] })
     run.step(3)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp, hp - defaultTuning.skills.wave.damage])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp, hp - defaultTuning.skills.bladeWave.effect.damage])
     expect(run.player().aim).toEqual({ x: 1, y: 0 })
   })
 

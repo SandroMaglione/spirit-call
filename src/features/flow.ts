@@ -40,7 +40,7 @@ export const QueueRestart = Game.System("Shooter/QueueRestart", {
   const endedAt = resources.run.get().endedAt
   if (endedAt === null || resources.time.get().elapsed - endedAt < resources.tuning.get().flow.restartDelay) return
   const touch = resources.touch.get().buttons
-  const tapped = touch.attack.pressed || touch.skill.pressed || touch.dash.pressed || touch.ultimate.pressed
+  const tapped = touch.attack.pressed || touch.special.pressed || touch.dash.pressed || touch.ultimate.pressed
   if (resources.keys.get().restart.pressed || resources.pointer.get().primary.pressed || tapped) nextMachines.flow.set("Playing")
 })
 

@@ -9,7 +9,8 @@ import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderAssets, RenderHostValue, RenderNode } from "./host-types.ts"
 import { drawFloor } from "./nodes.ts"
 
-const padLabels: Record<TouchButton, string> = { attack: "ATTACK", skill: "WAVE", dash: "DASH", ultimate: "NOVA" }
+/** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
+const padLabels: Record<TouchButton, string> = { attack: "ATTACK", special: "", dash: "DASH", ultimate: "" }
 
 const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => {
   const root = document.createElement("div")
@@ -25,15 +26,15 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     </div>
     <div class="hud__banner" data-banner></div>
     <div class="hud__skills">
-      <div class="hud__skill" data-skill="grenade"><kbd>Space</kbd><span>Blade Wave</span><i data-cooldown></i></div>
-      <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span>Nova</span><i data-cooldown></i></div>
+      <div class="hud__skill" data-skill="special"><kbd>Space</kbd><span></span><i data-cooldown></i></div>
+      <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span></span><i data-cooldown></i></div>
     </div>
     <div class="hud__gameover" data-gameover hidden>
       <div class="hud__gameover-title">YOU DIED</div>
       <div class="hud__gameover-stats" data-gameover-stats></div>
       <div class="hud__gameover-hint" data-gameover-hint>Press R or click to restart</div>
     </div>
-    <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click attack · Space blade wave · Shift ultimate</div>
+    <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click attack · Space special · Shift ultimate</div>
     <button class="hud__mute" data-mute type="button" title="Sound (M)">🔊</button>
     <div class="pad" data-pad hidden>
       <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
@@ -51,7 +52,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   return {
     root,
     refs: {
-      skills: { grenade: slot("grenade"), ultimate: slot("ultimate") },
+      skills: { special: slot("special"), ultimate: slot("ultimate") },
       desktopOnly: [root.querySelector<HTMLElement>(".hud__skills")!, root.querySelector<HTMLElement>("[data-hint]")!],
       gameOverHint: root.querySelector<HTMLElement>("[data-gameover-hint]")!,
       mute: root.querySelector<HTMLButtonElement>("[data-mute]")!,
@@ -59,7 +60,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
         root: root.querySelector<HTMLElement>("[data-pad]")!,
         stick: root.querySelector<HTMLElement>("[data-stick]")!,
         knob: root.querySelector<HTMLElement>("[data-knob]")!,
-        buttons: { attack: padButton("attack"), skill: padButton("skill"), dash: padButton("dash"), ultimate: padButton("ultimate") }
+        buttons: { attack: padButton("attack"), special: padButton("special"), dash: padButton("dash"), ultimate: padButton("ultimate") }
       },
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,

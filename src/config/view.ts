@@ -90,10 +90,10 @@ export const view = {
   reticle: 0xf7c948,
   hitFlash: 0xffffff,
   playerProjectile: 0xb8fff7,
-  /** Player skill areas (grenade blast, ultimate). */
+  /** Player skill areas (lobbed blasts, novas). */
   playerArea: 0x4ecdc4,
   ultimate: 0xffd166,
-  /** Faint ring at the ultimate's radius while it is ready. */
+  /** Faint ring at a nova's radius while it is ready. */
   ultimateReadyAlpha: 0.22,
   ultimateShake: 12,
   grenade: 0xd9fffb,

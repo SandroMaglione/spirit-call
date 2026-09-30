@@ -5,7 +5,7 @@ import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Controls, Game, Grenade, Player, Position, Projectile, Ultimate, Velocity } from "../src/schema.ts"
+import { Controls, Energy, Game, Lobbed, Player, Position, Projectile, Velocity } from "../src/schema.ts"
 import { start, withGun, withGrenade } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -16,21 +16,21 @@ const world = (screen: Vec2): Vec2 => normalizeOr(screenDirectionToWorld(project
 const World = Game.Inspector("Test/Touch", {
   queries: {
     projectiles: Game.Query({ selection: { velocity: Game.Query.read(Velocity) }, with: [Projectile] }),
-    grenades: Game.Query({ selection: { grenade: Game.Query.read(Grenade) } }),
+    grenades: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
     player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })
   },
   resources: { controls: Game.System.readResource(Controls) }
 }, ({ queries, resources }) => ({
   projectiles: queries.projectiles.each().map(({ data }) => ({ velocity: data.velocity.get() })),
-  grenades: queries.grenades.each().map(({ data }) => data.grenade.get()),
+  grenades: queries.grenades.each().map(({ data }) => data.lobbed.get()),
   position: queries.player.each()[0]!.data.position.get(),
   device: resources.controls.get().device
 }))
 
 const Charge = Game.System("Test/ChargeUltimate", {
-  queries: { player: Game.Query({ selection: { ultimate: Game.Query.write(Ultimate) }, with: [Player] }) }
+  queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.ultimate.set({ energy: defaultTuning.ultimate.energy })
+  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
 })
 
 describe("touch controls", () => {
@@ -67,7 +67,7 @@ describe("touch controls", () => {
   })
 
   it("aims a dragged Blade Wave along the drag", () => {
-    const dragged = start({ touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 0, y: -1 } } }, { frame: 2, release: ["skill"] }] })
+    const dragged = start({ touch: [{ frame: 0, press: ["special"], aim: { special: { x: 0, y: -1 } } }, { frame: 2, release: ["special"] }] })
     dragged.step(3)
     const up = world({ x: 0, y: -1 })
     expect(dragged.player().aim.x).toBeCloseTo(up.x, 6)
@@ -75,8 +75,8 @@ describe("touch controls", () => {
   })
 
   it("throws the grenade on release: to the dragged spot, or ahead for a tap; a cancelled drag throws nothing", () => {
-    const spec = defaultTuning.skills.grenade
-    const dragged = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 0, y: -0.5 } } }, { frame: 3, release: ["skill"] }] })
+    const spec = defaultTuning.skills.grenade.effect
+    const dragged = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["special"], aim: { special: { x: 0, y: -0.5 } } }, { frame: 3, release: ["special"] }] })
     dragged.step(3)
     expect(dragged.runtime.inspect(World).grenades).toEqual([])
     dragged.step(1)
@@ -86,12 +86,12 @@ describe("touch controls", () => {
     expect(thrown!.to.y).toBeCloseTo(center.y + up.y * spec.maxRange * 0.5, 6)
 
     // Assist off: the training dummies near the spawn would otherwise draw a tapped throw.
-    const tapped = start({ tuning: withGrenade(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["skill"], release: ["skill"] }] })
+    const tapped = start({ tuning: withGrenade(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["special"], release: ["special"] }] })
     tapped.step(1)
     const [tap] = tapped.runtime.inspect(World).grenades
     expect(Math.hypot(tap!.to.x - center.x, tap!.to.y - center.y)).toBeCloseTo(spec.maxRange * defaultTuning.touch.tapThrowRange, 6)
 
-    const cancelled = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["skill"], aim: { skill: { x: 1, y: 0 } } }, { frame: 3, cancel: ["skill"] }] })
+    const cancelled = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["special"], aim: { special: { x: 1, y: 0 } } }, { frame: 3, cancel: ["special"] }] })
     cancelled.step(6)
     expect(cancelled.runtime.inspect(World).grenades).toEqual([])
   })
@@ -108,7 +108,22 @@ describe("touch controls", () => {
     const nova = start({ touch: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
     nova.runtime.tick(Game.Schedule(Charge))
     nova.step(2)
-    expect(nova.player().invulnerable).toBeCloseTo(defaultTuning.ultimate.invulnerability, 6)
+    expect(nova.player().invulnerable).toBeCloseTo(defaultTuning.skills.nova.effect.invulnerability, 6)
+  })
+
+  it("uses each button's skill by its kind: a Nova on the special button goes off on touch, a grenade on the ultimate button on release", () => {
+    const nova = start({ tuning: tuningWith({ player: { loadout: { special: "nova" } } }), touch: [{ frame: 1, press: ["special"] }] })
+    nova.runtime.tick(Game.Schedule(Charge))
+    nova.step(2)
+    expect(nova.player().invulnerable).toBeCloseTo(defaultTuning.skills.nova.effect.invulnerability, 6)
+
+    const spec = defaultTuning.skills.grenade.effect
+    const thrown = start({ tuning: tuningWith({ player: { loadout: { ultimate: "grenade" } }, touch: { assist: { enabled: false } } }), touch: [{ frame: 0, press: ["ultimate"] }, { frame: 2, release: ["ultimate"] }] })
+    thrown.step(2)
+    expect(thrown.runtime.inspect(World).grenades).toEqual([])
+    thrown.step(1)
+    const [grenade] = thrown.runtime.inspect(World).grenades
+    expect(Math.hypot(grenade!.to.x - center.x, grenade!.to.y - center.y)).toBeCloseTo(spec.maxRange * defaultTuning.touch.tapThrowRange, 6)
   })
 
   it("switches back to keyboard and mouse as soon as they are used", () => {

@@ -1,6 +1,7 @@
 import type { Application, Container, Graphics, Sprite, Texture } from "pixi.js"
 
 import type { TouchButton } from "../config/input.ts"
+import type { SkillSlot } from "../config/tuning.ts"
 
 import type { Fx } from "./fx.ts"
 import type { SlashTrails } from "./trails.ts"
@@ -43,7 +44,7 @@ export interface TouchPadRefs {
 }
 
 export interface HudRefs {
-  readonly skills: { readonly grenade: SkillSlotRefs; readonly ultimate: SkillSlotRefs }
+  readonly skills: { readonly [Slot in SkillSlot]: SkillSlotRefs }
   /** The keyboard skill bar and key hint, hidden while playing with touch. */
   readonly desktopOnly: ReadonlyArray<HTMLElement>
   readonly gameOverHint: HTMLElement
