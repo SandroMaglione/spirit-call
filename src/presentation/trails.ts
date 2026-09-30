@@ -11,7 +11,7 @@
  */
 import type { Graphics } from "pixi.js"
 
-import type { MeleeMove } from "../config/tuning.ts"
+import type { MeleeMove } from "../content/attacks.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 

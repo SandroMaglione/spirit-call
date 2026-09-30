@@ -7,7 +7,10 @@ import type * as Entity from "@typeonce/bevy-ts/Entity"
 import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
-import type { AttackId, AttackMove, LobEffect, SkillEffect, SkillId, SkillSlot, Tuning as TuningValue } from "./config/tuning.ts"
+import type { Tuning as TuningValue } from "./config/tuning.ts"
+import type { AttackId, AttackMove } from "./content/attacks.ts"
+import type { EnemyKind } from "./content/enemies.ts"
+import type { LobEffect, SkillEffect, SkillId, SkillSlot } from "./content/skills.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
 import type { Box } from "./physics/shapes.ts"
@@ -131,7 +134,7 @@ export interface ProjectileValue {
 }
 export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Projectile")
 
-export type EnemyKind = keyof TuningValue["enemies"]
+export type { EnemyKind }
 export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind }>()("Shooter/Enemy")
 
 /** Where an enemy is in its telegraphed attack cycle. */

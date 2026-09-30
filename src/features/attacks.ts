@@ -10,7 +10,7 @@
  * The phase is the `AttackPhase` state component; its moves follow the cycle
  * above, which the type checker enforces.
  */
-import type { AttackSpec } from "../config/tuning.ts"
+import type { AttackSpec } from "../content/enemies.ts"
 import { clampLength, normalizeOr, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { Area } from "../physics/areas.ts"

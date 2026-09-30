@@ -12,7 +12,8 @@
  * both go through the combat pipeline like everything else. A move's lunge
  * is an impulse on the player's knockback.
  */
-import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack, Tuning as TuningValue } from "../config/tuning.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"

@@ -8,8 +8,11 @@
 import { RenderSync } from "@typeonce/bevy-ts-pixi"
 
 import { touchButtons } from "../config/input.ts"
-import { engine, skillSlots } from "../config/tuning.ts"
-import type { AttackMove, SkillEffect, SkillSpec, Tuning as TuningValue } from "../config/tuning.ts"
+import { engine } from "../config/tuning.ts"
+import { skillSlots } from "../content/skills.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { AttackMove } from "../content/attacks.ts"
+import type { SkillEffect, SkillSpec } from "../content/skills.ts"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"

@@ -11,7 +11,8 @@
  * Energy fills from damage the player deals (`ApplyDamage`), except damage
  * from skills that cost energy.
  */
-import type { LobEffect, SkillEffect, SkillSlot, SkillSpec, Tuning as TuningValue } from "../config/tuning.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { LobEffect, SkillEffect, SkillSlot, SkillSpec } from "../content/skills.ts"
 import { clampLength, normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"

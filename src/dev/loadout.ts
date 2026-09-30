@@ -3,7 +3,9 @@
  * skills without editing the tuning: `?attack=gun&special=grenade&ultimate=nova`.
  * Unknown ids are ignored, so a typo keeps the default.
  */
-import type { AttackId, Loadout, SkillId, Tuning } from "../config/tuning.ts"
+import type { Loadout, Tuning } from "../config/tuning.ts"
+import type { AttackId } from "../content/attacks.ts"
+import type { SkillId } from "../content/skills.ts"
 
 export const withLoadoutFromQuery = (tuning: Tuning, search: string): Tuning => {
   const query = new URLSearchParams(search)
