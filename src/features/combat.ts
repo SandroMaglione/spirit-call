@@ -156,17 +156,7 @@ export const MoveProjectiles = (() => {
             break
           }
         }
-        events.damage.emit({
-          target: Game.Entity.handle(contact.target.entity, Health),
-          amount: projectile.damage,
-          direction,
-          knockback: projectile.knockback,
-          faction: projectile.faction,
-          charges: projectile.faction === "player",
-          ...(projectile.source === undefined ? {} : { source: projectile.source }),
-          ...(projectile.hitStop === undefined ? {} : { hitStop: projectile.hitStop }),
-          ...(projectile.heavy === undefined ? {} : { heavy: projectile.heavy })
-        })
+        events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: projectile.faction, direction, blow: projectile.blow })
         hit.push(contact.target.id)
         if (pierce === 0) {
           stopAt = contact.time
@@ -252,13 +242,14 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const invulnerable = data.invulnerable.get().remaining
     if (invulnerable > 0) continue
 
+    const { blow } = damage
     const health = data.health.get()
-    const holder = damage.source === undefined ? undefined : lookup.getHandle(damage.source.attacker, PassiveHolders)
-    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), damage.source?.move, health) : 0
-    const amount = damageTaken(tuning, damage.amount * (1 + bonus / 100), data.stats.get().def)
+    const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
+    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, health) : 0
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100), data.stats.get().def)
     const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.
-    if (damage.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
+    if (blow.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
     data.flash.set({ remaining: tuning.feedback.hitFlash })
     // One mistake costs one hit: the player is briefly untouchable afterwards.
@@ -267,23 +258,23 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
     }
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
-    const push = damage.knockback * knockbackTaken(tuning, enemy)
+    const push = blow.knockback * knockbackTaken(tuning, enemy)
     data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
 
     // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
-    if (enemy !== undefined && damage.hitStop !== undefined) hitStop = Math.max(hitStop, damage.hitStop)
+    if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
 
     const at = data.position.get()
     const killed = current <= 0
     events.hit.emit({
-      source: damage.source ?? null,
+      source: blow.source,
       entity: entity.id.value,
       at,
       direction: damage.direction,
       amount,
       faction: data.hurtbox.get().faction,
       killed,
-      heavy: damage.heavy ?? false
+      heavy: blow.heavy
     })
     if (!killed) continue
 

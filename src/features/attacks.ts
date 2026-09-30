@@ -20,6 +20,7 @@ import type { Box } from "../physics/shapes.ts"
 import {
   Attacker,
   AttackPhase,
+  blow,
   CombatStats,
   Damage,
   Enemy,
@@ -104,7 +105,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   for (const { data } of queries.attackers.each()) {
     const spec = tuning.enemies[data.enemy.get().kind].attack
     if (spec === null) continue
-    const damage = damageDealt(data.stats.get().atk, spec.power)
+    // Enemy blows fill no energy and have no passives behind them.
+    const struck = blow({ damage: damageDealt(data.stats.get().atk, spec.power), knockback: spec.knockback })
     const position = data.position.get()
     const current = data.attacker.get()
     const phase = data.phase
@@ -137,7 +139,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
           const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
           const direction = { x: Math.cos(base + offset), y: Math.sin(base + offset) }
           commands.spawnIn(RunScope, makeProjectile(position, { x: direction.x * spec.projectileSpeed, y: direction.y * spec.projectileSpeed }, {
-            faction, style: "bolt", radius: spec.projectileRadius, damage, knockback: spec.knockback, range: spec.range, pierce: 0, hit: []
+            faction, style: "bolt", radius: spec.projectileRadius, blow: struck, range: spec.range, pierce: 0, hit: []
           }))
         }
       } else if (spec.kind === "charge") {
@@ -145,7 +147,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         hit = []
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area, faction, damage, knockback: spec.knockback, remaining: Math.max(spec.active, 1e-6), hit: [], charges: false
+          area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: []
         }]))
       }
     }
@@ -161,14 +163,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         const reach = spec.width / 2 + hurtbox.radius
         if ((at.x - position.x) ** 2 + (at.y - position.y) ** 2 > reach * reach) continue
         hit = [...hit, other.entity.id.value]
-        events.damage.emit({
-          target: Game.Entity.handle(other.entity.id, Health),
-          amount: damage,
-          direction: pushDirection({ ...area, origin: position, length: 1 }, at),
-          knockback: spec.knockback,
-          faction,
-          charges: false
-        })
+        events.damage.emit({ target: Game.Entity.handle(other.entity.id, Health), faction, direction: pushDirection({ ...area, origin: position, length: 1 }, at), blow: struck })
       }
     }
     if (phase.get() === "active" && elapsed >= spec.active) {
@@ -217,14 +212,9 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
       hit.push(target.entity.id.value)
       events.damage.emit({
         target: Game.Entity.handle(target.entity.id, Health),
-        amount: hitbox.damage,
-        direction: hitbox.pushAlong ?? pushDirection(hitbox.area, position),
-        knockback: hitbox.knockback,
         faction: hitbox.faction,
-        charges: hitbox.charges,
-        ...(hitbox.source === undefined ? {} : { source: hitbox.source }),
-        ...(hitbox.hitStop === undefined ? {} : { hitStop: hitbox.hitStop }),
-        ...(hitbox.heavy === undefined ? {} : { heavy: hitbox.heavy })
+        direction: hitbox.pushAlong ?? pushDirection(hitbox.area, position),
+        blow: hitbox.blow
       })
     }
     const remaining = hitbox.remaining - dt

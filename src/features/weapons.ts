@@ -19,8 +19,8 @@ import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Action, Aim, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
-import type { DamageSource, HitboxValue, MoveContext, WeaponValue } from "../schema.ts"
+import { Action, Aim, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
+import type { HitboxValue, MoveContext, WeaponValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -147,7 +147,14 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
       const context: MoveContext = { step: nextStep, finisher: !power && nextStep === spec.combo.length - 1, power }
       // Blows remember who dealt them and with which move, for the wielder's passives.
-      const source: DamageSource = { attacker: Game.Entity.handle(entity.id, Position), move: context }
+      const struck = blow({
+        damage: damageDealt(atk, move.power),
+        knockback: move.knockback,
+        charges: true,
+        hitStop: move.hitStop,
+        heavy: move.heavy,
+        source: { attacker: Game.Entity.handle(entity.id, Position), move: context }
+      })
       if (move.shape === "shot") {
         const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))
         const base = Math.atan2(aim.y, aim.x)
@@ -158,28 +165,19 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
             faction: "player",
             style: "bolt",
             radius: move.radius,
-            damage: damageDealt(atk, move.power),
-            knockback: move.knockback,
+            blow: struck,
             range: move.range,
             pierce: move.pierce,
-            hit: [],
-            source,
-            hitStop: move.hitStop,
-            heavy: move.heavy
+            hit: []
           }))
         }
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           ...moveArea(move, position, aim),
           faction: "player",
-          damage: damageDealt(atk, move.power),
-          knockback: move.knockback,
+          blow: struck,
           remaining: spec.active,
-          hit: [],
-          charges: true,
-          source,
-          hitStop: move.hitStop,
-          heavy: move.heavy
+          hit: []
         }]))
       }
       // The lunge: an impulse that carries the player `lungeDistance` along the aim

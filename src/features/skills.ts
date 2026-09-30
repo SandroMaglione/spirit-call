@@ -19,6 +19,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
   Aim,
+  blow,
   Cast,
   CombatStats,
   Controls,
@@ -37,7 +38,7 @@ import {
   Time,
   Tuning
 } from "../schema.ts"
-import type { SkillsValue } from "../schema.ts"
+import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
@@ -131,6 +132,17 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
   }
 })
 
+/** The blow of `effect` cast by `cast`'s caster: its power from their ATK, their passives behind it. */
+const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
+  blow({
+    damage: damageDealt(cast.atk, effect.power),
+    knockback: effect.knockback,
+    charges: cast.charges,
+    hitStop: effect.hitStop,
+    heavy: effect.heavy,
+    source: { attacker: cast.caster }
+  })
+
 /** Casters that turn toward what they cut. */
 const Turning = Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.write(Aim) } })
 
@@ -147,15 +159,10 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "lane", origin: from, direction, length: effect.length * (blocked?.time ?? 1), halfWidth: effect.width / 2 },
       faction: cast.faction,
-      damage: damageDealt(cast.atk, effect.power),
-      source: { attacker: cast.caster },
-      knockback: effect.knockback,
+      blow: castBlow(cast, effect),
       remaining: effect.active,
       hit: [],
-      charges: cast.charges,
-      pushAlong: direction,
-      hitStop: effect.hitStop,
-      heavy: effect.heavy
+      pushAlong: direction
     }]))
     const caster = lookup.getHandle(cast.caster, Turning)
     if (caster.ok) caster.value.data.aim.set(direction)
@@ -174,9 +181,7 @@ export const CastLobs = Game.System("Shooter/CastLobs", {
       to: lobTarget(effect, cast.from, cast.at),
       faction: cast.faction,
       effect,
-      damage: damageDealt(cast.atk, effect.power),
-      charges: cast.charges,
-      source: { attacker: cast.caster },
+      blow: castBlow(cast, effect),
       elapsed: 0
     }]))
   }
@@ -201,14 +206,9 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: lobbed.to, radius: effect.radius },
       faction: lobbed.faction,
-      damage: lobbed.damage,
-      ...(lobbed.source === undefined ? {} : { source: lobbed.source }),
-      knockback: effect.knockback,
+      blow: lobbed.blow,
       remaining: 0.05,
-      hit: [],
-      charges: lobbed.charges,
-      hitStop: effect.hitStop,
-      heavy: effect.heavy
+      hit: []
     }]))
     events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast", heavy: effect.heavy })
   }
@@ -235,14 +235,9 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: at, radius: effect.radius },
       faction: cast.faction,
-      damage: damageDealt(cast.atk, effect.power),
-      source: { attacker: cast.caster },
-      knockback: effect.knockback,
+      blow: castBlow(cast, effect),
       remaining: effect.active,
-      hit: [],
-      charges: cast.charges,
-      hitStop: effect.hitStop,
-      heavy: effect.heavy
+      hit: []
     }]))
     events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy })
     if (!effect.clearsProjectiles) continue

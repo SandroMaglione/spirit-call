@@ -114,7 +114,7 @@ describe("gun", () => {
     run.step(steps(full + 0.05) + 2)
     const bolts = run.world().projectiles.filter((projectile) => projectile.pierce === bolt.pierce)
     expect(bolts).toHaveLength(1)
-    expect(bolts[0]!.heavy).toBe(true)
+    expect(bolts[0]!.blow.heavy).toBe(true)
     run.step(60)
     // The opening shot has no recoil; the bolt's pushes the player back its full `lunge`.
     expect(run.world().player.x - center.x).toBeCloseTo(bolt.lunge, 0)

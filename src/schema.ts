@@ -69,12 +69,8 @@ export interface LobbedValue {
   readonly to: Vec2
   readonly faction: Faction
   readonly effect: LobEffect
-  /** Damage of the blast, before the targets' DEF. */
-  readonly damage: number
-  /** Whether its damage fills energy. */
-  readonly charges: boolean
-  /** Who threw it, for their passives. */
-  readonly source?: DamageSource
+  /** The blast's blow (its damage from the thrower's ATK when thrown). */
+  readonly blow: Blow
   /** Time since it was thrown. */
   readonly elapsed: number
 }
@@ -101,6 +97,29 @@ export interface DamageSource {
   readonly attacker: Entity.Handle<typeof Root, typeof Position>
   readonly move?: MoveContext
 }
+
+/**
+ * What a blow carries from the hitbox or projectile that deals it to where it
+ * lands (see `ApplyDamage`). Every field is always set, with a neutral value
+ * when it does not apply; `blow()` fills those in.
+ */
+export interface Blow {
+  /** Damage before the attacker's passive bonuses and the target's DEF. */
+  readonly damage: number
+  /** Push given to the target, as an initial speed that decays (see `Tuning.knockback`). */
+  readonly knockback: number
+  /** Whether its damage fills the player's energy. */
+  readonly charges: boolean
+  /** Hit-stop when it lands on an enemy (seconds, 0 for none). */
+  readonly hitStop: number
+  /** A heavy blow, for bigger impact effects. */
+  readonly heavy: boolean
+  /** Who dealt it and with which move, for their passives; `null` when no passives apply. */
+  readonly source: DamageSource | null
+}
+
+/** A blow of `damage` and `knockback`; the other fields default to none. */
+export const blow = (spec: Pick<Blow, "damage" | "knockback"> & Partial<Blow>): Blow => ({ charges: false, hitStop: 0, heavy: false, source: null, ...spec })
 
 /** The passives of what an entity has equipped (see `content/passives.ts`). */
 export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives")
@@ -152,19 +171,13 @@ export interface ProjectileValue {
   /** How it looks. */
   readonly style: ProjectileStyle
   readonly radius: number
-  readonly damage: number
-  readonly knockback: number
+  readonly blow: Blow
   /** Distance left before the projectile fizzles. */
   readonly range: number
   /** Further targets it may pass through. */
   readonly pierce: number
   /** Entity ids already hit, so a piercing shot hits each target once. */
   readonly hit: ReadonlyArray<number>
-  readonly source?: DamageSource
-  /** Hit-stop when it lands on an enemy (seconds). */
-  readonly hitStop?: number
-  /** A heavy blow, for bigger impact effects. */
-  readonly heavy?: boolean
 }
 export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Projectile")
 
@@ -212,20 +225,12 @@ export const EnemyMode = Descriptor.State("Shooter/EnemyMode", ["orbit", "engage
 export interface HitboxValue {
   readonly area: Area
   readonly faction: Faction
-  readonly damage: number
-  readonly knockback: number
+  readonly blow: Blow
   readonly remaining: number
   /** Entity ids already hit, so each target is hit at most once. */
   readonly hit: ReadonlyArray<number>
-  /** Whether its damage fills the player's energy (false for skills that cost energy). */
-  readonly charges: boolean
   /** Push every target this way instead of away from the area (the Blade Wave drives enemies along the cut). */
   readonly pushAlong?: Vec2
-  readonly source?: DamageSource
-  /** Hit-stop when it lands on an enemy (seconds). */
-  readonly hitStop?: number
-  /** A heavy blow, for bigger impact effects. */
-  readonly heavy?: boolean
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
@@ -251,19 +256,11 @@ export type DamageTarget = Entity.Handle<typeof Root, typeof Health>
 /** A request to damage an entity; `ApplyDamage` decides what happens. */
 export interface DamageValue {
   readonly target: DamageTarget
-  readonly amount: number
+  /** The faction dealing it: it never hurts its own side. */
+  readonly faction: Faction
   /** Unit direction of the push. */
   readonly direction: Vec2
-  readonly knockback: number
-  readonly faction: Faction
-  /** Whether this damage fills the player's energy. */
-  readonly charges: boolean
-  /** Who dealt it and how, for their passives (damage bonuses apply in `ApplyDamage`). */
-  readonly source?: DamageSource
-  /** Hit-stop when it lands on an enemy (seconds). */
-  readonly hitStop?: number
-  /** A heavy blow, for bigger impact effects. */
-  readonly heavy?: boolean
+  readonly blow: Blow
 }
 export const Damage = Descriptor.Event<DamageValue>()("Shooter/Damage")
 
@@ -304,7 +301,7 @@ export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: numbe
  * `direction`). One system per effect kind carries it out (see
  * `features/skills.ts`), so the same event serves any caster.
  */
-export const Cast = Descriptor.Event<{
+export interface CastValue {
   readonly caster: Entity.Handle<typeof Root, typeof Position>
   readonly faction: Faction
   /** The caster's ATK: the effect deals its `power` as a percentage of it. */
@@ -318,7 +315,8 @@ export const Cast = Descriptor.Event<{
   readonly direction: Vec2
   /** Whether its damage fills energy. */
   readonly charges: boolean
-}>()("Shooter/Cast")
+}
+export const Cast = Descriptor.Event<CastValue>()("Shooter/Cast")
 
 /** A projectile stopped against a wall or a shield, or ran out of range. */
 /**

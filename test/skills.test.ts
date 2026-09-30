@@ -7,7 +7,7 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Cast, Enemy, Energy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
+import { blow, Cast, Enemy, Energy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
 import { ClearEnemies, grenadier, playerLoss, start, swordsman, swordsmanWith } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
@@ -153,7 +153,7 @@ describe("Nova (Shift)", () => {
   it("clears enemy projectiles inside its radius and grants a moment of invulnerability", () => {
     const run = range([], { x: 200, y: 0 }, { keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
     const Bolts = Game.System("Test/Bolts", {}, ({ commands }) => {
-      const bolt = { faction: "enemy" as const, style: "bolt" as const, radius: 7, damage: 10, knockback: 0, range: 5, pierce: 0, hit: [] }
+      const bolt = { faction: "enemy" as const, style: "bolt" as const, radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 5, pierce: 0, hit: [] }
       commands.spawnIn(RunScope, makeProjectile({ x: center.x + 150, y: center.y }, { x: 0, y: 0 }, bolt))
       commands.spawnIn(RunScope, makeProjectile({ x: center.x + spec.radius + 100, y: center.y }, { x: 0, y: 0 }, bolt))
     })
