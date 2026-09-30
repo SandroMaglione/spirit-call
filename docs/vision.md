@@ -116,7 +116,9 @@ The game has two areas.
   are within reach of a low-level team. A tier's resources are given the
   first time it is cleared; a **periodic reset** makes them available again,
   possibly in a different format.
-- **Currency** exists, at least for the gacha.
+- **Nothing is missable.** Temporary content rotates back later, and
+  periodic resets only restock rewards: anything skipped can be had another
+  time, so there is never pressure to log in.
 - **Replay value comes from rising difficulty**: lasting longer, or enemies
   hitting harder and coming in greater numbers. It never comes from
   mechanics that push toward power creep.
@@ -148,6 +150,22 @@ Decided so far (the rest is in the open questions):
   maximum sounds right, to confirm once there is content to measure it on.
 - **Growth stays simple:** character levels and **weapon levels**. A closed
   set of accessories may come later, only if the collecting side gets dull.
+- **Two currencies:** one for pulls, one for upgrades (leveling characters
+  and weapons), so it is always clear where each comes from.
+
+## The gacha
+
+- **Every pull is meaningful.** The opposite of pools where most results
+  are thrown away: fewer results per pull (even a single one), but each one
+  worth having. The pool holds only things that matter, and a result you
+  already own still turns into progress (see duplicates).
+- **What it can give:** characters (the main excitement: a new way to play),
+  weapons, resources, and cosmetics.
+- **Duplicates never add raw power.** Direction (details to settle): a
+  duplicate character unlocks a skin, then a signature weapon (an add-on,
+  not much stronger), and further ones convert into currency.
+- It sits inside the stat band like everything else: pulls help reach the
+  cap sooner and bring new playstyles, never a higher ceiling.
 
 ## Rules of thumb for design and implementation
 
@@ -166,12 +184,12 @@ Decided so far (the rest is in the open questions):
 
 Decided directions are above; these are not decided yet.
 
-1. **The gacha and currencies.** Draft direction (in discussion): the gacha
-   gives resources, equipment, or new characters, and duplicates of a
-   character unlock an add-on (from a skin to a unique weapon that is not
-   much stronger). Still to settle: what can be pulled and what is earned
-   directly, what duplicates give, how generous it is, and which currencies
-   exist.
+1. **Progression details**, to settle while building: the stat band (about
+   4x), where each currency comes from, how generous pulls are and how bad
+   luck is protected (a guarantee after a number of pulls, or a way to get a
+   specific thing directly), the exact duplicate rewards, the formats of
+   secondary quests, and how pulls stay meaningful once a player owns most
+   things.
 2. **Elements and statuses.** Which elements or statuses exist, what each
    does, and whether they combine (reactions) or stay independent.
 3. **Enemy strengths and weaknesses.** How enemies resist or suffer effects,
@@ -179,9 +197,3 @@ Decided directions are above; these are not decided yet.
 4. **Team rules.** How switching works on the touch controls, whether health
    is per character, what happens when one falls, and how off-field
    characters contribute (if at all).
-5. **What the gacha gives and how.** What is obtained randomly versus
-   earned directly, how generous it is, and what each duplicate gives,
-   without raising the ceiling of power.
-6. **Temporary content without pressure.** Secondary quests can be temporary
-   and hardcore rewards reset periodically: how to keep that from becoming
-   something you must not miss.
