@@ -2,8 +2,8 @@
  * Rules content must follow that its types cannot express: references that
  * must point at existing entries (the tuning panel can edit content live),
  * combos with at least one move, weapons that fit their character,
- * challenges that can be won, quests that can be reached, level curves
- * that rise, and a new account that can play.
+ * challenges that can be won, quests that can be reached, hardcore tiers
+ * that get harder, level curves that rise, and a new account that can play.
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
@@ -166,6 +166,26 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       seen.add(before)
     }
   }
+
+  for (const [id, track] of Object.entries(tuning.tracks)) {
+    const where = `hardcore track ${id}`
+    if (!has(tuning.challenges, track.challenge)) problems.push(`${where}: unknown challenge ${track.challenge}`)
+    if (!(Number.isInteger(track.level) && track.level >= 1 && track.level <= tuning.progression.account.curve.maxLevel)) {
+      problems.push(`${where}: level must be a whole number from 1 to the account's maximum (is ${track.level})`)
+    }
+    if (track.tiers.length === 0) problems.push(`${where}: needs at least one tier`)
+    track.tiers.forEach((tier, index) => {
+      const at = `${where} tier ${index + 1}`
+      if (!(Number.isInteger(tier.enemyLevel) && tier.enemyLevel >= 1 && tier.enemyLevel <= tuning.progression.character.curve.maxLevel)) {
+        problems.push(`${at}: enemyLevel must be a whole number from 1 to the characters' maximum level (is ${tier.enemyLevel})`)
+      }
+      const before = track.tiers[index - 1]
+      if (before !== undefined && tier.enemyLevel <= before.enemyLevel) problems.push(`${at}: enemies must be a higher level than the tier before (${tier.enemyLevel} after ${before.enemyLevel})`)
+      if (!(tier.rewards.experience >= 0)) problems.push(`${at}: experience must not be negative (is ${tier.rewards.experience})`)
+      checkAmounts(problems, at, tuning, tier.rewards.currencies)
+    })
+  }
+  positive(problems, "hardcore reset", { days: tuning.reset.days })
 
   const starter = newAccount
   const where = "the new account"

@@ -17,6 +17,7 @@ import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { currencies } from "../content/currencies.ts"
 import { enemies } from "../content/enemies.ts"
+import { reset, tracks } from "../content/hardcore.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, quests } from "../content/quests.ts"
 import { skills } from "../content/skills.ts"
@@ -65,6 +66,10 @@ export const defaultTuning = {
   /** Every quest, by id, and the main line's chapters (see content/quests.ts). */
   quests,
   chapters,
+
+  /** Hardcore tracks in tiers, and the periodic reset of their rewards (see content/hardcore.ts). */
+  tracks,
+  reset,
 
   /** Every weapon, by id; a character wields one of its type. */
   weapons,

@@ -7,7 +7,7 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 
-import { describeAmounts, describeUnlock } from "./describe.ts"
+import { describeAmounts, describePlay, describeUnlock } from "./describe.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
 export const Results = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
@@ -21,8 +21,8 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   }, [])
   if (result === null) return null
   const tuning = store.tuning.value
-  const quest = store.quest.value
-  const name = quest === null ? tuning.challenges[result.challenge].name : tuning.quests[quest].name
+  const play = store.play.value
+  const name = play === null ? tuning.challenges[result.challenge].name : describePlay(tuning, play)
   return (
     <div class={`results${result.cleared ? " is-cleared" : ""}`}>
       <div class="results__title">{result.cleared ? "CLEARED" : "YOU DIED"}</div>
@@ -46,7 +46,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
         </div>
       )}
       {earned?.rewards != null && earned.rewards.unlocks.length > 0 && (
-        <div class="results__unlocked">First clear! Unlocked: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</div>
+        <div class="results__unlocked">Unlocked: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</div>
       )}
       {earned?.rewards != null && describeAmounts(tuning, earned.rewards.currencies) !== "" && (
         <div class="results__currencies">{describeAmounts(tuning, earned.rewards.currencies, "+")}</div>

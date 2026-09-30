@@ -44,11 +44,17 @@ export const StoredAccountV1 = Schema.Struct({
 const Totals = Schema.Struct({ runs: Schema.Number, clears: Schema.Number, kills: Schema.Number, secondsPlayed: Schema.Number })
 
 const QuestProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Number, firstClearedAt: Schema.NullOr(Schema.Number) })
+const TierProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Number, firstClearedAt: Schema.NullOr(Schema.Number), rewardedPeriod: Schema.NullOr(Schema.Number) })
+const Play = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("quest"), quest: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal("tier"), track: Schema.String, tier: Schema.Number })
+])
 
 /**
  * Version 2: quests instead of owned challenges (each quest's progress, and a
  * quest selected), account experience, lifetime totals over every run, the
- * currencies held, each character's experience, and each weapon's level.
+ * currencies held, each character's experience, each weapon's level, and
+ * each hardcore tier's progress.
  */
 export const StoredAccountV2 = Schema.Struct({
   version: Schema.Literal(2),
@@ -64,7 +70,9 @@ export const StoredAccountV2 = Schema.Struct({
   }),
   equipment: Schema.Record(Schema.String, Equipment),
   quests: Schema.Record(Schema.String, QuestProgress),
-  selection: Schema.Struct({ character: Schema.String, quest: Schema.String })
+  /** By track, then by tier number. */
+  hardcore: Schema.Record(Schema.String, Schema.Record(Schema.String, TierProgress)),
+  selection: Schema.Struct({ character: Schema.String, play: Play })
 })
 
 /** Any account version ever saved. */
@@ -75,8 +83,8 @@ export type StoredAccountLatest = typeof StoredAccountLatest.Type
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
   switch (stored.version) {
     case 1:
-      // Challenges were owned; quests now open by level and order, so owning them goes away. The
-      // selected quest is left empty: loading falls back to the starter's (see `fromStored`).
+      // Challenges were owned; quests now open by level and order, so owning them goes away. What
+      // was selected is left empty: loading falls back to the starter's quest (see `fromStored`).
       return migrateAccount({
         version: 2,
         id: stored.id,
@@ -91,7 +99,8 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
         },
         equipment: stored.equipment,
         quests: {},
-        selection: { character: stored.selection.character, quest: "" }
+        hardcore: {},
+        selection: { character: stored.selection.character, play: { kind: "quest", quest: "" } }
       })
     case 2:
       return stored

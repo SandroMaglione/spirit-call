@@ -48,5 +48,9 @@
   "currencies": [
     "crystals",
     "gold"
+  ],
+  "tracks": [
+    "gauntlet",
+    "siege"
   ]
 }

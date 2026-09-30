@@ -23,11 +23,10 @@ import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts } from "../content/currencies.ts"
-import type { QuestId } from "../content/quests.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import type { RunResultValue } from "../schema.ts"
 import { createAccount, earn, equip, recordRun, select, train, unlock, upgrade } from "./account.ts"
-import type { Account, Checked, Earned, Equipment, Item, Refusal } from "./account.ts"
+import type { Account, Checked, Earned, Equipment, Item, Play, Refusal } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
 import { LatestAccountJson, LegacyProfileJson, migrateAccount, StoredAccountJson } from "./stored.ts"
@@ -46,8 +45,8 @@ export interface AccountStoreShape {
   readonly notes: ReadonlyArray<string>
   /** Equips an owned character with owned items (the weapon of its type). */
   readonly equip: (character: CharacterId, equipment: Equipment) => Effect.Effect<Account, AccountRefused | AccountSaveError>
-  /** Selects an owned character and an open quest: what the arena is entered with. */
-  readonly select: (character: CharacterId, quest: QuestId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Selects an owned character and an open quest or tier: what the arena is entered with. */
+  readonly select: (character: CharacterId, play: Play) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
   /** Takes an owned character to its next level with gold. */
@@ -57,10 +56,10 @@ export interface AccountStoreShape {
   /** Adds `amounts` of currency (a reward, or a dev tool). */
   readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
   /**
-   * Records a run that ended (the arena's `RunResult`) of `quest` (`null` for
-   * a run outside quests): the account after it, and what it earned.
+   * Records a run that ended (the arena's `RunResult`) of `play` (`null` for
+   * a run of nothing): the account after it, and what it earned.
    */
-  readonly recordRun: (quest: QuestId | null, result: RunResultValue) => Effect.Effect<{ readonly account: Account; readonly earned: Earned }, AccountSaveError>
+  readonly recordRun: (play: Play | null, result: RunResultValue) => Effect.Effect<{ readonly account: Account; readonly earned: Earned }, AccountSaveError>
 }
 
 export class AccountStore extends Context.Service<AccountStore, AccountStoreShape>()("Shooter/AccountStore") {}
@@ -135,15 +134,15 @@ export const layer = (options: AccountOptions) =>
         get: Ref.get(current),
         notes: loaded.notes,
         equip: (character, equipment) => change((account) => equip(options.tuning, account, character, equipment)),
-        select: (character, quest) => change((account) => select(options.tuning, account, character, quest)),
+        select: (character, play) => change((account) => select(options.tuning, account, character, play)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
         earn: (amounts) => apply((account) => earn(account, amounts)),
         train: (character) => change((account) => train(options.tuning, account, character)),
         upgrade: (weapon) => change((account) => upgrade(options.tuning, account, weapon)),
-        recordRun: (quest, result) =>
+        recordRun: (play, result) =>
           Effect.gen(function*() {
             const now = yield* Clock.currentTimeMillis
-            const recorded = recordRun(options.tuning, yield* Ref.get(current), quest, result, now)
+            const recorded = recordRun(options.tuning, yield* Ref.get(current), play, result, now)
             yield* Ref.set(current, recorded.account)
             yield* save(recorded.account)
             return recorded

@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, questLock, recordRun, runExperience, select, spend, train, trainingCost, unlock, upgrade, upgradeCost } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, runExperience, select, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
+import type { Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
+import type { TrackId } from "../src/content/hardcore.ts"
+import type { QuestId } from "../src/content/quests.ts"
 
 const fresh = () => createAccount(defaultTuning, newAccount, "account-1", 1000)
+const quest = (id: QuestId): Play => ({ kind: "quest", quest: id })
+const tier = (track: TrackId, number: number): Play => ({ kind: "tier", track, tier: number })
 
 describe("account rules", () => {
   it("a new account owns exactly the starter set, with its characters equipped with their own gear", () => {
@@ -12,7 +17,7 @@ describe("account rules", () => {
     expect(Object.keys(account.owned.characters)).toEqual(newAccount.characters)
     expect(Object.keys(account.owned.weapons)).toEqual(newAccount.weapons)
     expect(Object.keys(account.owned.skills).sort()).toEqual([...newAccount.skills].sort())
-    expect(account.selection).toEqual(newAccount.selection)
+    expect(account.selection).toEqual({ character: newAccount.selection.character, play: quest(newAccount.selection.quest) })
     expect(account.equipment.swordsman).toEqual({ weapon: defaultTuning.characters.swordsman.weapon, skills: defaultTuning.characters.swordsman.skills })
     expect(owns(account, { kind: "character", id: "gunner" })).toBe(false)
   })
@@ -62,26 +67,26 @@ describe("account rules", () => {
   })
 
   it("selects only an owned character and an open quest", () => {
-    expect(select(defaultTuning, fresh(), "gunner", "theSwarm")).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
-    expect(select(defaultTuning, fresh(), "swordsman", "crossfire")).toEqual({ ok: false, refusal: { kind: "questLocked", quest: "crossfire", lock: { kind: "after", quest: "theSwarm" } } })
-    expect(select(defaultTuning, fresh(), "swordsman", "holdTheLine")).toEqual({ ok: false, refusal: { kind: "questLocked", quest: "holdTheLine", lock: { kind: "level", level: 2 } } })
-    const selected = select(defaultTuning, fresh(), "swordsman", "theSwarm")
-    expect(selected.ok && selected.value.selection).toEqual({ character: "swordsman", quest: "theSwarm" })
+    expect(select(defaultTuning, fresh(), "gunner", quest("theSwarm"))).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
+    expect(select(defaultTuning, fresh(), "swordsman", quest("crossfire"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("crossfire"), lock: { kind: "after", quest: "theSwarm" } } })
+    expect(select(defaultTuning, fresh(), "swordsman", quest("holdTheLine"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("holdTheLine"), lock: { kind: "level", level: 2 } } })
+    const selected = select(defaultTuning, fresh(), "swordsman", quest("theSwarm"))
+    expect(selected.ok && selected.value.selection).toEqual({ character: "swordsman", play: quest("theSwarm") })
   })
 
   it("counts runs of a quest, and gives its rewards on the first clear only", () => {
     const run = { cleared: false, challenge: "swarm" as const, characters: ["swordsman" as const], wave: 2, kills: 5, time: 40 }
-    const lost = recordRun(defaultTuning, fresh(), "theSwarm", run, 2000)
+    const lost = recordRun(defaultTuning, fresh(), quest("theSwarm"), run, 2000)
     expect(lost.account.quests.theSwarm).toEqual({ attempts: 1, clears: 0, firstClearedAt: null })
     expect(lost.earned.rewards).toBeNull()
-    const won = recordRun(defaultTuning, lost.account, "theSwarm", { ...run, cleared: true }, 3000)
+    const won = recordRun(defaultTuning, lost.account, quest("theSwarm"), { ...run, cleared: true }, 3000)
     const rewards = defaultTuning.quests.theSwarm.rewards
     expect(won.earned.rewards).toEqual(rewards)
     expect(won.earned.experience).toBe(recordRun(defaultTuning, fresh(), null, { ...run, cleared: true }, 0).earned.experience + rewards.experience)
     expect(won.account.quests.theSwarm).toEqual({ attempts: 2, clears: 1, firstClearedAt: 3000 })
     expect(owns(won.account, { kind: "character", id: "gunner" })).toBe(true)
     expect(won.account.wallet).toEqual(rewards.currencies)
-    const again = recordRun(defaultTuning, won.account, "theSwarm", { ...run, cleared: true }, 4000)
+    const again = recordRun(defaultTuning, won.account, quest("theSwarm"), { ...run, cleared: true }, 4000)
     expect(again.earned.rewards).toBeNull()
     expect(again.account.quests.theSwarm).toEqual({ attempts: 3, clears: 2, firstClearedAt: 3000 })
   })
@@ -137,9 +142,44 @@ describe("account rules", () => {
     expect(upgrade(defaultTuning, maxed, "trainingBlade")).toEqual({ ok: false, refusal: { kind: "maxLevel", item: { kind: "weapon", id: "trainingBlade" } } })
   })
 
+  it("opens a hardcore track at its account level, and each tier once the one before is cleared", () => {
+    const gauntlet = defaultTuning.tracks.gauntlet
+    const run = { cleared: true, challenge: gauntlet.challenge, characters: ["swordsman" as const], wave: 3, kills: 0, time: 90 }
+    expect(playLock(defaultTuning, fresh(), tier("gauntlet", 1))).toEqual({ kind: "level", level: gauntlet.level })
+    const leveled = { ...fresh(), experience: 1e6 }
+    expect(playLock(defaultTuning, leveled, tier("gauntlet", 1))).toBeNull()
+    expect(playLock(defaultTuning, leveled, tier("gauntlet", 2))).toEqual({ kind: "tier", track: "gauntlet", tier: 1 })
+    expect(playLock(defaultTuning, leveled, tier("gauntlet", 99))).not.toBeNull()
+    const lost = recordRun(defaultTuning, leveled, tier("gauntlet", 1), { ...run, cleared: false }, 2000).account
+    expect(playLock(defaultTuning, lost, tier("gauntlet", 2))).not.toBeNull()
+    const cleared = recordRun(defaultTuning, lost, tier("gauntlet", 1), run, 3000).account
+    expect(playLock(defaultTuning, cleared, tier("gauntlet", 2))).toBeNull()
+    expect(encounterOf(defaultTuning, tier("gauntlet", 2))).toEqual({ challenge: gauntlet.challenge, enemyLevel: gauntlet.tiers[1]!.enemyLevel })
+    expect(encounterOf(defaultTuning, quest("crossfire"))).toEqual({ challenge: "crossfire", enemyLevel: defaultTuning.quests.crossfire.enemyLevel })
+  })
+
+  it("gives a tier's rewards on its first clear in each period, again after the reset", () => {
+    const week = defaultTuning.reset.days * 24 * 60 * 60 * 1000
+    const monday = defaultTuning.reset.anchor + 10 * week
+    const rewards = defaultTuning.tracks.gauntlet.tiers[0]!.rewards
+    const run = { cleared: true, challenge: "endless" as const, characters: ["swordsman" as const], wave: 3, kills: 0, time: 90 }
+    const leveled = { ...fresh(), experience: 1e6 }
+    const first = recordRun(defaultTuning, leveled, tier("gauntlet", 1), run, monday + 1000)
+    expect(first.earned.rewards).toEqual({ ...rewards, unlocks: [] })
+    expect(first.account.wallet).toEqual(rewards.currencies)
+    expect(first.account.hardcore.gauntlet?.[1]).toEqual({ attempts: 1, clears: 1, firstClearedAt: monday + 1000, rewardedPeriod: 10 })
+    const sameWeek = recordRun(defaultTuning, first.account, tier("gauntlet", 1), run, monday + week - 1)
+    expect(sameWeek.earned.rewards).toBeNull()
+    expect(tierRewardsAvailable(defaultTuning, sameWeek.account, "gauntlet", 1, monday + week - 1)).toBe(false)
+    expect(nextReset(defaultTuning.reset, monday + 1000)).toBe(monday + week)
+    const nextWeek = recordRun(defaultTuning, sameWeek.account, tier("gauntlet", 1), run, monday + week)
+    expect(nextWeek.earned.rewards).toEqual({ ...rewards, unlocks: [] })
+    expect(nextWeek.account.hardcore.gauntlet?.[1]).toMatchObject({ attempts: 3, clears: 3, firstClearedAt: monday + 1000, rewardedPeriod: 11 })
+  })
+
   it("opens the main line in order, and other quests by account level", () => {
     const run = { cleared: true, challenge: "swarm" as const, characters: ["swordsman" as const], wave: 3, kills: 0, time: 60 }
-    const cleared = recordRun(defaultTuning, fresh(), "theSwarm", run, 2000).account
+    const cleared = recordRun(defaultTuning, fresh(), quest("theSwarm"), run, 2000).account
     expect(questLock(defaultTuning, fresh(), "crossfire")).toEqual({ kind: "after", quest: "theSwarm" })
     expect(accountLevel(defaultTuning, cleared).level).toBeGreaterThanOrEqual(2)
     expect(questLock(defaultTuning, cleared, "crossfire")).toBeNull()

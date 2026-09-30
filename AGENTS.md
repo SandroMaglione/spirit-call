@@ -18,9 +18,15 @@ checked against it; open questions are asked, not guessed.
 ## How the code is organized
 
 - `src/content/`: the game's content as data (characters, weapons and their
-  passives, attacks, skills, enemies, challenges, the starter set).
-  Adding content is mostly adding entries; new kinds (a new effect,
-  condition, or objective) extend the vocabulary in one place.
+  passives, attacks, skills, enemies, challenges, quests, hardcore tracks,
+  currencies, progression numbers, the starter set). Adding content is
+  mostly adding entries; new kinds (a new effect, condition, or objective)
+  extend the vocabulary in one place.
+- The arena is a black box to everything around it: it is entered with a
+  build (character and weapon at their levels, skills), a challenge, and an
+  enemy level, and reports a `RunResult`. Quests, hardcore tiers, levels,
+  currencies, and rewards live in the account and the shell, never in the
+  simulation.
 - Simulation (`src/features/`, `src/schema.ts`, `src/schedules.ts`, physics,
   math, config): the ECS. Deterministic (time and randomness come from the
   world's `Time` and `Rng`), headless, and tested without a browser.

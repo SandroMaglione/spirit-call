@@ -1,17 +1,19 @@
 /**
- * The menu: pick a quest (the main line by chapter, then the secondary
- * quests) and a character, equip it (a weapon of its type and a skill per
- * slot), then enter the arena (the button, or Enter). What the account does
- * not own, and quests not open yet, are shown locked (a quest says why).
- * Equipment is saved on the character at once; the quest and character are
- * remembered on entering. Starts from the account's last selection.
+ * The menu: pick what to play (a quest: the main line by chapter, then the
+ * secondary quests; or a hardcore tier) and a character, equip it (a weapon
+ * of its type and a skill per slot), then enter the arena (the button, or
+ * Enter). What the account does not own, and what is not open yet, are
+ * shown locked (a quest or tier says why). Equipment is saved on the
+ * character at once; what was played and the character are remembered on
+ * entering. Starts from the account's last selection.
  */
 import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
 
-import { buildOf, characterLevel, equipmentOf, owns, questLock, weaponLevel } from "../account/account.ts"
-import type { Item } from "../account/account.ts"
+import { buildOf, characterLevel, encounterOf, equipmentOf, nextReset, owns, playLock, samePlay, tierProgress, tierRewardsAvailable, weaponLevel } from "../account/account.ts"
+import type { Item, Play } from "../account/account.ts"
+import type { TierRewards, TrackId } from "../content/hardcore.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import type { QuestId } from "../content/quests.ts"
 import { skillSlots } from "../content/skills.ts"
@@ -21,7 +23,19 @@ import { resolveBuild, statsAtLevel, weaponAtk } from "../features/build.ts"
 import { AccountBar } from "./AccountBar.tsx"
 import { CharacterLevel } from "./CharacterLevel.tsx"
 import { WeaponLevel } from "./WeaponLevel.tsx"
-import { describeBonus, describeObjective, describePassive, describeRewards, describeSkill, statNames, statOrder } from "./describe.ts"
+import {
+  describeAmounts,
+  describeBonus,
+  describeLock,
+  describeObjective,
+  describePassive,
+  describePlay,
+  describeRewards,
+  describeSkill,
+  describeTimeUntil,
+  statNames,
+  statOrder
+} from "./describe.ts"
 import { weaponsFor } from "./draft.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
@@ -75,33 +89,46 @@ const StatLine = ({ stats }: { readonly stats: Stats }) => (
 export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const tuning = store.tuning.value
   const account = store.account.value
-  const quest = useSignal<QuestId>(account.selection.quest)
+  const play = useSignal<Play>(account.selection.play)
   const character = useSignal<CharacterId>(account.selection.character)
   const equipment = equipmentOf(tuning, account, character.value)
   const final = resolveBuild(tuning, buildOf(tuning, account, character.value))
   const locked = (item: Item) => !owns(account, item)
-  const enter = () => actions.enter(character.value, quest.value)
-  /** Why a quest is not open yet, in a few words; `undefined` when it is. */
-  const lockOf = (id: QuestId): string | undefined => {
-    const lock = questLock(tuning, account, id)
-    if (lock === null) return undefined
-    return lock.kind === "level" ? `Needs account Lv ${lock.level}` : `Clear ${tuning.quests[lock.quest].name} first`
-  }
-  /** A quest's card: its challenge's objective, its level, and its first-clear rewards (or that it is cleared). */
-  const questCard = (id: QuestId) => {
-    const spec = tuning.quests[id]
-    const challenge = tuning.challenges[spec.challenge]
-    const lock = lockOf(id)
-    const cleared = (account.quests[id]?.firstClearedAt ?? null) !== null
+  const enter = () => actions.enter(character.value, play.value)
+  const now = Date.now()
+  /** A card for something to play: its challenge's objective and enemy level, why it is locked, and what clearing it gives. */
+  const playCard = (candidate: Play, key: string, title: string, reward: ComponentChildren) => {
+    const encounter = encounterOf(tuning, candidate)
+    const challenge = tuning.challenges[encounter.challenge]
+    const lock = playLock(tuning, account, candidate)
     return (
-      <Card key={id} selected={id === quest.value} locked={lock !== undefined} onSelect={() => (quest.value = id)} title={spec.name}>
+      <Card key={key} selected={samePlay(candidate, play.value)} locked={lock !== null} onSelect={() => (play.value = candidate)} title={title}>
         <span class="card__tag">
-          {describeObjective(challenge.objective, challenge.waves.scripted.length)} · Enemies Lv {spec.enemyLevel}
+          {describeObjective(challenge.objective, challenge.waves.scripted.length)} · Enemies Lv {encounter.enemyLevel}
         </span>
         <span class="card__text">{challenge.description}</span>
-        {lock !== undefined && <span class="card__why">{lock}</span>}
-        {cleared ? <span class="card__cleared">Cleared</span> : <span class="card__reward">First clear: {describeRewards(tuning, spec.rewards)}</span>}
+        {lock !== null && <span class="card__why">{describeLock(tuning, lock)}</span>}
+        {reward}
       </Card>
+    )
+  }
+  /** A quest's card: its first-clear rewards, or that it is cleared. */
+  const questCard = (id: QuestId) => {
+    const spec = tuning.quests[id]
+    const cleared = (account.quests[id]?.firstClearedAt ?? null) !== null
+    return playCard({ kind: "quest", quest: id }, id, spec.name, cleared ? <span class="card__cleared">Cleared</span> : <span class="card__reward">First clear: {describeRewards(tuning, spec.rewards)}</span>)
+  }
+  /** A hardcore tier's card: its rewards for this period, or that they are collected until the reset. */
+  const tierCard = (track: TrackId, tier: number, rewards: TierRewards) => {
+    const available = tierRewardsAvailable(tuning, account, track, tier, now)
+    const cleared = (tierProgress(account, track, tier)?.firstClearedAt ?? null) !== null
+    return playCard(
+      { kind: "tier", track, tier },
+      `${track}-${tier}`,
+      `Tier ${tier}${cleared ? " ✓" : ""}`,
+      available
+        ? <span class="card__reward">Clear: +{rewards.experience} XP · {describeAmounts(tuning, rewards.currencies)}</span>
+        : <span class="card__cleared">Collected · resets in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span>
     )
   }
   const questIds = ids(tuning.quests)
@@ -135,6 +162,11 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
           </Section>
         ))}
         <Section title="Secondary quests">{questIds.filter((id) => tuning.quests[id].line === "secondary").map(questCard)}</Section>
+        {ids(tuning.tracks).map((track) => (
+          <Section key={track} title={`Hardcore · ${tuning.tracks[track].name}`}>
+            {tuning.tracks[track].tiers.map((spec, index) => tierCard(track, index + 1, spec.rewards))}
+          </Section>
+        ))}
         <Section title="Character">
           {ids(tuning.characters).map((id) => {
             const spec = tuning.characters[id]
@@ -187,7 +219,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
           <StatLine stats={final.stats} />
         </span>
         <button type="button" class="menu__start" onClick={enter}>
-          Enter · {tuning.quests[quest.value].name}
+          Enter · {describePlay(tuning, play.value)}
         </button>
       </footer>
     </div>

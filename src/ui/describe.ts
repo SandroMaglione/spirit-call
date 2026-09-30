@@ -1,8 +1,9 @@
 /**
  * Plain-language descriptions of content, generated from its data, so new
- * content describes itself: objectives, stats, weapon bonuses, passives, and
- * skills.
+ * content describes itself: objectives, stats, weapon bonuses, passives,
+ * skills, rewards, and what something is and why it is locked.
  */
+import type { Lock, Play } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { Objective } from "../content/challenges.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
@@ -120,3 +121,29 @@ export const describeRewards = (tuning: Tuning, rewards: Rewards): string =>
   [`+${rewards.experience} XP`, describeAmounts(tuning, rewards.currencies), ...rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock))]
     .filter((part) => part !== "")
     .join(" · ")
+
+/** What `play` is called: a quest's name, or a track's name and tier. */
+export const describePlay = (tuning: Tuning, play: Play): string =>
+  play.kind === "quest" ? tuning.quests[play.quest].name : `${tuning.tracks[play.track].name} · Tier ${play.tier}`
+
+/** Why something is locked, in a few words. */
+export const describeLock = (tuning: Tuning, lock: Lock): string => {
+  switch (lock.kind) {
+    case "level":
+      return `Needs account Lv ${lock.level}`
+    case "after":
+      return `Clear ${tuning.quests[lock.quest].name} first`
+    case "tier":
+      return `Clear Tier ${lock.tier} first`
+  }
+}
+
+/** How long until `time` from `now`, roughly: "3d 4h", "5h 20m", "12m". */
+export const describeTimeUntil = (time: number, now: number): string => {
+  const minutes = Math.max(0, Math.ceil((time - now) / 60_000))
+  const days = Math.floor(minutes / (24 * 60))
+  const hours = Math.floor((minutes % (24 * 60)) / 60)
+  if (days > 0) return `${days}d ${hours}h`
+  if (hours > 0) return `${hours}h ${minutes % 60}m`
+  return `${minutes}m`
+}

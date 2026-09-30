@@ -25,6 +25,21 @@ describe("content", () => {
       "challenge endless: clearing every wave can never happen with endless waves"
     ])
   })
+  it("reports hardcore tiers that do not get harder or refer to nothing", () => {
+    const gauntlet = defaultTuning.tracks.gauntlet
+    const broken: Tuning = {
+      ...defaultTuning,
+      tracks: {
+        ...defaultTuning.tracks,
+        gauntlet: { ...gauntlet, tiers: [gauntlet.tiers[0]!, { ...gauntlet.tiers[0]!, rewards: { experience: 10, currencies: { gems: 5 } as never } }] }
+      }
+    }
+    expect(validateContent(broken)).toEqual([
+      `hardcore track gauntlet tier 2: enemies must be a higher level than the tier before (${gauntlet.tiers[0]!.enemyLevel} after ${gauntlet.tiers[0]!.enemyLevel})`,
+      "hardcore track gauntlet tier 2: unknown currency gems"
+    ])
+  })
+
   it("reports quests that cannot be reached or refer to nothing", () => {
     const quests = defaultTuning.quests
     const broken: Tuning = {

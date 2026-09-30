@@ -12,7 +12,8 @@ import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
-import { buildOf } from "./account/account.ts"
+import { buildOf, encounterOf } from "./account/account.ts"
+import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
@@ -31,7 +32,6 @@ import {
   Sounds
 } from "./schema.ts"
 import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
-import type { QuestId } from "./content/quests.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
 const start = async (mount: HTMLElement) => {
@@ -47,11 +47,11 @@ const start = async (mount: HTMLElement) => {
   const flow = quickStart ? "Playing" : "Menu"
   const lastBuild = buildOf(tuning, account, account.selection.character)
   const build = quickStart ? buildFromQuery(tuning, window.location.search, lastBuild) : lastBuild
-  const selectedChallenge = tuning.quests[account.selection.quest].challenge
-  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selectedChallenge) : selectedChallenge
-  const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, 1) : 1
-  /** The quest being played: runs are recorded against it; `null` for a dev quick start, which plays no quest. */
-  let playing: QuestId | null = null
+  const selected = encounterOf(tuning, account.selection.play)
+  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
+  const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, selected.enemyLevel) : selected.enemyLevel
+  /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
+  let playing: Play | null = null
   const uiRequests = emptyUiRequests()
   const uiStore = createUiStore({ tuning, build, challenge, flow, account, notices: shell.notes })
   shell.onAccount((next) => {
@@ -73,14 +73,13 @@ const start = async (mount: HTMLElement) => {
   })
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
-    enter: (character, quest) => {
-      // Entering is remembered on the account; a character not owned or a quest not open is refused, and nothing starts.
-      void shell.select(character, quest).then((selected) => {
+    enter: (character, play) => {
+      // Entering is remembered on the account; a character not owned or something not open is refused, and nothing starts.
+      void shell.select(character, play).then((selected) => {
         if (selected === undefined) return
-        playing = quest
-        uiStore.quest.value = quest
-        const spec = tuning.quests[quest]
-        uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), challenge: spec.challenge, enemyLevel: spec.enemyLevel })
+        playing = play
+        uiStore.play.value = play
+        uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), ...encounterOf(tuning, play) })
       })
     },
     equip: shell.equip,

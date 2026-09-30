@@ -4,13 +4,14 @@
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
+import type { TrackId } from "../content/hardcore.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { createAccount, defaultEquipment, equip, owns, select, unlock } from "./account.ts"
-import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, QuestProgress, Unlocked } from "./account.ts"
+import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, Play, QuestProgress, TierProgress, Unlocked } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -28,9 +29,9 @@ const keep = <Id extends string, V>(ids: Record<Id, unknown>, saved: Readonly<Re
 /**
  * The account a (migrated) save describes. Content that no longer exists is
  * dropped; equipment that is no longer valid goes back to the character's
- * own; a selection of a character not owned or a quest not open goes back to
- * the starter's; and an account left with no character gets the starter's
- * back. `dropped` says what was removed, for a notice.
+ * own; a selection of a character not owned or of something not open goes
+ * back to the starter's; and an account left with no character gets the
+ * starter's back. `dropped` says what was removed, for a notice.
  */
 export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAccountLatest, now: number): { readonly account: Account; readonly dropped: ReadonlyArray<string> } => {
   const dropped: Array<string> = []
@@ -40,6 +41,17 @@ export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAc
     skills: keep<SkillId, Unlocked>(tuning.skills, stored.owned.skills, "skill", dropped)
   }
   const quests = keep<QuestId, QuestProgress>(tuning.quests, stored.quests, "quest", dropped)
+  const hardcore: { [Id in TrackId]?: { readonly [tier: number]: TierProgress } } = {}
+  for (const [track, tiers] of Object.entries(keep<TrackId, Readonly<Record<string, TierProgress>>>(tuning.tracks, stored.hardcore, "hardcore track", dropped)) as Array<[TrackId, Readonly<Record<string, TierProgress>>]>) {
+    const kept: { [tier: number]: TierProgress } = {}
+    for (const [tier, progress] of Object.entries(tiers)) {
+      const number = Number(tier)
+      if (Number.isInteger(number) && number >= 1 && number <= tuning.tracks[track].tiers.length) kept[number] = progress
+      else dropped.push(`${tuning.tracks[track].name} tier ${tier}`)
+    }
+    hardcore[track] = kept
+  }
+  const starterSelection: Account["selection"] = { character: starter.selection.character, play: { kind: "quest", quest: starter.selection.quest } }
   let account: Account = {
     id: stored.id,
     createdAt: stored.createdAt,
@@ -49,7 +61,8 @@ export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAc
     owned,
     equipment: {},
     quests,
-    selection: starter.selection
+    hardcore,
+    selection: starterSelection
   }
 
   // Never left with nothing to play: the starter's characters come back.
@@ -71,17 +84,25 @@ export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAc
     if (reset.ok) account = reset.value
   }
 
-  const { character, quest } = stored.selection
-  const selected = known(tuning.characters, character) && known(tuning.quests, quest) ? select(tuning, account, character, quest) : undefined
+  const { character } = stored.selection
+  const play = playFrom(tuning, stored.selection.play)
+  const selected = known(tuning.characters, character) && play !== undefined ? select(tuning, account, character, play) : undefined
   if (selected?.ok === true) account = selected.value
   else {
-    // A save from before quests has none selected: that is not something lost.
-    if (quest !== "") dropped.push("the last selection")
+    // A save from before quests has nothing selected: that is not something lost.
+    const nothing = stored.selection.play.kind === "quest" && stored.selection.play.quest === ""
+    if (!nothing) dropped.push("the last selection")
     const keptCharacter = known(tuning.characters, character) && owns(account, { kind: "character", id: character })
     const fallbackCharacter = keptCharacter ? character : owns(account, { kind: "character", id: starter.selection.character }) ? starter.selection.character : (Object.keys(account.owned.characters)[0] as CharacterId)
-    account = { ...account, selection: { character: fallbackCharacter, quest: starter.selection.quest } }
+    account = { ...account, selection: { ...starterSelection, character: fallbackCharacter } }
   }
   return { account, dropped }
+}
+
+/** A saved selection with typed ids, or `undefined` when it names no content. */
+const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"]): Play | undefined => {
+  if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest } : undefined
+  return known(tuning.tracks, saved.track) ? { kind: "tier", track: saved.track, tier: saved.tier } : undefined
 }
 
 const unlockIfMissing = (tuning: Tuning, account: Account, item: Item, now: number): Account =>
@@ -109,6 +130,7 @@ export const toStored = (account: Account): StoredAccountLatest => ({
   owned: account.owned,
   equipment: account.equipment,
   quests: account.quests,
+  hardcore: account.hardcore,
   selection: account.selection
 })
 
