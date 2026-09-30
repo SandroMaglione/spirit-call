@@ -14,6 +14,7 @@ import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { QuestId } from "../content/quests.ts"
+import type { WeaponId } from "../content/weapons.ts"
 import type { BuildValue, FlowState, RunResultValue } from "../schema.ts"
 
 export interface UiStore {
@@ -67,6 +68,8 @@ export interface UiActions {
   readonly equip: (character: CharacterId, equipment: Equipment) => void
   /** Take an owned character to its next level with gold (saved at once). */
   readonly train: (character: CharacterId) => void
+  /** Take an owned weapon a level higher with gold (saved at once). */
+  readonly upgrade: (weapon: WeaponId) => void
   /** From the results: the same challenge again. */
   readonly retry: () => void
   /** From the results: back to the menu. */

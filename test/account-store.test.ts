@@ -129,7 +129,7 @@ describe("account store", () => {
     const result = await withAccount({ [accountKey]: saved }, (store) => Effect.map(store.get, (account) => ({ account, notes: store.notes })))
     expect(result.account.id).toBe("old")
     expect(Object.keys(result.account.owned.characters)).toEqual(["swordsman"])
-    expect(result.account.owned.weapons).toEqual({ trainingBlade: { unlockedAt: 5, copies: 1 } })
+    expect(result.account.owned.weapons).toEqual({ trainingBlade: { unlockedAt: 5, copies: 1, level: 1 } })
     expect(result.account.equipment.swordsman?.weapon).toBe("trainingBlade")
     expect(result.account.selection).toEqual({ character: "swordsman", quest: newAccount.selection.quest })
     expect(result.notes[0]).toContain("character wizard")

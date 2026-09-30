@@ -18,7 +18,7 @@ import { bySlot } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import type { BuildValue, RunResultValue } from "../schema.ts"
-import { levelOf } from "./progression.ts"
+import { experienceFor, levelOf } from "./progression.ts"
 import type { LevelProgress } from "./progression.ts"
 
 /** When something was unlocked (epoch milliseconds). */
@@ -31,9 +31,10 @@ export interface OwnedCharacter extends Unlocked {
   readonly experience: number
 }
 
-/** A weapon owned: `copies` counts duplicates, for refinement later. */
+/** A weapon owned: its level (bought with gold, see `upgrade`), and `copies` counting duplicates. */
 export interface OwnedWeapon extends Unlocked {
   readonly copies: number
+  readonly level: number
 }
 
 export interface Owned {
@@ -127,7 +128,7 @@ export const unlock = (tuning: Tuning, account: Account, item: Item, now: number
     }
     case "weapon": {
       const current = owned.weapons[item.id]
-      const weapon: OwnedWeapon = current === undefined ? { unlockedAt: now, copies: 1 } : { ...current, copies: current.copies + 1 }
+      const weapon: OwnedWeapon = current === undefined ? { unlockedAt: now, copies: 1, level: 1 } : { ...current, copies: current.copies + 1 }
       return { ...account, owned: { ...owned, weapons: { ...owned.weapons, [item.id]: weapon } } }
     }
     case "skill":
@@ -241,6 +242,29 @@ export const train = (tuning: Tuning, account: Account, character: CharacterId):
   return { ok: true, value: addCharacterExperience(paid.value, character, progress.needed - progress.into) }
 }
 
+/** `weapon`'s level in `account` (1 when not owned). */
+export const weaponLevel = (account: Account, weapon: WeaponId): number => account.owned.weapons[weapon]?.level ?? 1
+
+/** The gold that takes `weapon` to its next level, or `null` at the maximum level. */
+export const upgradeCost = (tuning: Tuning, account: Account, weapon: WeaponId): Amounts | null => {
+  const level = weaponLevel(account, weapon)
+  const cost = tuning.progression.weapon.cost
+  return level >= cost.maxLevel ? null : { gold: experienceFor(cost, level) }
+}
+
+/** `account` with `weapon` a level higher, paid with gold, if it owns it and it is not at the maximum. */
+export const upgrade = (tuning: Tuning, account: Account, weapon: WeaponId): Checked<Account> => {
+  const item: Item = { kind: "weapon", id: weapon }
+  const owned = account.owned.weapons[weapon]
+  if (owned === undefined) return refuse({ kind: "notOwned", item })
+  const cost = upgradeCost(tuning, account, weapon)
+  if (cost === null) return refuse({ kind: "maxLevel", item })
+  const paid = spend(account, cost)
+  if (!paid.ok) return paid
+  const weapons = { ...paid.value.owned.weapons, [weapon]: { ...owned, level: owned.level + 1 } }
+  return { ok: true, value: { ...paid.value, owned: { ...paid.value.owned, weapons } } }
+}
+
 /** `account` with `character` equipped with `equipment`, if it owns all of it and the weapon fits. */
 export const equip = (tuning: Tuning, account: Account, character: CharacterId, equipment: Equipment): Checked<Account> => {
   const needed: Array<Item> = [{ kind: "character", id: character }, { kind: "weapon", id: equipment.weapon }, ...Object.values(equipment.skills).map((id) => ({ kind: "skill" as const, id }))]
@@ -339,8 +363,14 @@ export const recordRun = (
 export const equipmentOf = (tuning: Tuning, account: Account, character: CharacterId): Equipment =>
   account.equipment[character] ?? defaultEquipment(tuning, character)
 
-/** The build `character` enters the arena with: at its level, as equipped. */
+/** The build `character` enters the arena with: at its level, as equipped, with the weapon at its level. */
 export const buildOf = (tuning: Tuning, account: Account, character: CharacterId): BuildValue => {
   const equipment = equipmentOf(tuning, account, character)
-  return { character, level: characterLevel(tuning, account, character).level, weapon: equipment.weapon, skills: bySlot((slot) => equipment.skills[slot]) }
+  return {
+    character,
+    level: characterLevel(tuning, account, character).level,
+    weapon: equipment.weapon,
+    weaponLevel: weaponLevel(account, equipment.weapon),
+    skills: bySlot((slot) => equipment.skills[slot])
+  }
 }

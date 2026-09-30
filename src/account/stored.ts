@@ -19,7 +19,8 @@ import * as Schema from "effect/Schema"
 
 const Unlocked = Schema.Struct({ unlockedAt: Schema.Number })
 const OwnedCharacter = Schema.Struct({ unlockedAt: Schema.Number, experience: Schema.Number })
-const OwnedWeapon = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number })
+const OwnedWeaponV1 = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number })
+const OwnedWeapon = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number, level: Schema.Number })
 const Equipment = Schema.Struct({
   weapon: Schema.String,
   skills: Schema.Struct({ special: Schema.String, ultimate: Schema.String })
@@ -32,7 +33,7 @@ export const StoredAccountV1 = Schema.Struct({
   createdAt: Schema.Number,
   owned: Schema.Struct({
     characters: Schema.Record(Schema.String, Unlocked),
-    weapons: Schema.Record(Schema.String, OwnedWeapon),
+    weapons: Schema.Record(Schema.String, OwnedWeaponV1),
     skills: Schema.Record(Schema.String, Unlocked),
     challenges: Schema.Record(Schema.String, Unlocked)
   }),
@@ -47,7 +48,7 @@ const QuestProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Nu
 /**
  * Version 2: quests instead of owned challenges (each quest's progress, and a
  * quest selected), account experience, lifetime totals over every run, the
- * currencies held, and each character's experience.
+ * currencies held, each character's experience, and each weapon's level.
  */
 export const StoredAccountV2 = Schema.Struct({
   version: Schema.Literal(2),
@@ -85,7 +86,7 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
         wallet: {},
         owned: {
           characters: Object.fromEntries(Object.entries(stored.owned.characters).map(([id, owned]) => [id, { ...owned, experience: 0 }])),
-          weapons: stored.owned.weapons,
+          weapons: Object.fromEntries(Object.entries(stored.owned.weapons).map(([id, owned]) => [id, { ...owned, level: 1 }])),
           skills: stored.owned.skills
         },
         equipment: stored.equipment,

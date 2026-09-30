@@ -345,6 +345,8 @@ export interface BuildValue {
   readonly level?: number
   /** A weapon of the character's type in place of its own. */
   readonly weapon?: WeaponId
+  /** The weapon's level (1 when missing). */
+  readonly weaponLevel?: number
   readonly skills: { readonly [Slot in SkillSlot]?: SkillId }
 }
 export const Build = Descriptor.Resource<BuildValue>()("Shooter/Build")

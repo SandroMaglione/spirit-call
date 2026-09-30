@@ -84,6 +84,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const { progression } = tuning
   checkCurve(problems, "account levels", progression.account.curve)
   checkCurve(problems, "character levels", progression.character.curve)
+  checkCurve(problems, "weapon level costs", progression.weapon.cost)
   if (!(progression.stats.band >= 1)) problems.push(`stat curve: band must be 1 or more, or levels would weaken (is ${progression.stats.band})`)
   positive(problems, "stat curve", { shape: progression.stats.shape })
 

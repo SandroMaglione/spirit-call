@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, questLock, recordRun, runExperience, select, spend, train, trainingCost, unlock } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, questLock, recordRun, runExperience, select, spend, train, trainingCost, unlock, upgrade, upgradeCost } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 
@@ -28,7 +28,7 @@ describe("account rules", () => {
 
   it("a weapon owned again gains a copy", () => {
     const account = unlock(defaultTuning, fresh(), { kind: "weapon", id: "trainingBlade" }, 2000)
-    expect(account.owned.weapons.trainingBlade).toEqual({ unlockedAt: 1000, copies: 2 })
+    expect(account.owned.weapons.trainingBlade).toEqual({ unlockedAt: 1000, copies: 2, level: 1 })
   })
 
   it("equips only owned things, and only weapons of the character's type", () => {
@@ -119,6 +119,22 @@ describe("account rules", () => {
     expect(train(defaultTuning, account, "gunner")).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
     const maxed = { ...account, owned: { ...account.owned, characters: { swordsman: { unlockedAt: 1000, experience: 1e9 } } } }
     expect(train(defaultTuning, maxed, "swordsman")).toEqual({ ok: false, refusal: { kind: "maxLevel", item: { kind: "character", id: "swordsman" } } })
+  })
+
+  it("upgrades an owned weapon a level with gold, and enters with it at that level", () => {
+    const cost = defaultTuning.progression.weapon.cost
+    const account = earn(fresh(), { gold: cost.base + cost.base + cost.growth })
+    expect(upgradeCost(defaultTuning, account, "trainingBlade")).toEqual({ gold: cost.base })
+    const once = upgrade(defaultTuning, account, "trainingBlade")
+    const twice = once.ok ? upgrade(defaultTuning, once.value, "trainingBlade") : once
+    expect(twice.ok && twice.value.owned.weapons.trainingBlade?.level).toBe(3)
+    expect(twice.ok && twice.value.wallet.gold).toBe(0)
+    expect(twice.ok && buildOf(defaultTuning, twice.value, "swordsman").weaponLevel).toBe(3)
+    expect(twice.ok && upgrade(defaultTuning, twice.value, "trainingBlade")).toMatchObject({ ok: false, refusal: { kind: "notEnough", currency: "gold" } })
+    expect(upgrade(defaultTuning, account, "crescendo")).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "weapon", id: "crescendo" } } })
+    const maxed = { ...account, owned: { ...account.owned, weapons: { trainingBlade: { unlockedAt: 1000, copies: 1, level: cost.maxLevel } } } }
+    expect(upgradeCost(defaultTuning, maxed, "trainingBlade")).toBeNull()
+    expect(upgrade(defaultTuning, maxed, "trainingBlade")).toEqual({ ok: false, refusal: { kind: "maxLevel", item: { kind: "weapon", id: "trainingBlade" } } })
   })
 
   it("opens the main line in order, and other quests by account level", () => {

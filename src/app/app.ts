@@ -21,6 +21,7 @@ import { newAccount } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts } from "../content/currencies.ts"
 import type { QuestId } from "../content/quests.ts"
+import type { WeaponId } from "../content/weapons.ts"
 import type { RunResultValue } from "../schema.ts"
 import { randomId } from "./ids.ts"
 
@@ -38,6 +39,8 @@ export interface App {
   readonly equip: (character: CharacterId, equipment: Equipment) => void
   /** Takes a character to its next level with gold (refused without enough, or at the maximum). */
   readonly train: (character: CharacterId) => void
+  /** Takes a weapon a level higher with gold (refused without enough, or at the maximum). */
+  readonly upgrade: (weapon: WeaponId) => void
   /** Selects what to enter the arena with; the account after it, or `undefined` when refused (not owned, or the quest not open). */
   readonly select: (character: CharacterId, quest: QuestId) => Promise<Account | undefined>
   /** Owns every character, weapon, and skill, and adds plenty of each currency (a dev tool). */
@@ -75,6 +78,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     },
     equip: (character, equipment) => void run(accounts.equip(character, equipment)),
     train: (character) => void run(accounts.train(character)),
+    upgrade: (weapon) => void run(accounts.upgrade(weapon)),
     select: (character, quest) => run(accounts.select(character, quest)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (quest, result) => attempt(accounts.recordRun(quest, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),

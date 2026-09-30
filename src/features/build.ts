@@ -46,19 +46,24 @@ export const statsAtLevel = (tuning: TuningValue, base: Stats, level: number): S
   return { hp: Math.round(base.hp * scale), atk: Math.round(base.atk * scale), def: Math.round(base.def * scale), speed: base.speed }
 }
 
+/** `weapon`'s ATK at level `level` (to a whole number). */
+export const weaponAtk = (tuning: TuningValue, weapon: WeaponSpec, level: number): number =>
+  Math.round(weapon.atk * levelScale(tuning.progression.stats, level, tuning.progression.weapon.cost.maxLevel))
+
 /** The build the game starts with: the first character, with its own weapon and skills. */
 export const defaultBuild: BuildValue = { character: "swordsman", skills: {} }
 
 /**
  * Final stats and kit of `build`: the character's stats at its level, with
- * its weapon (the equipped one if it is of the character's type, else the
- * character's own) and equipped skills in place of its defaults.
+ * its weapon at its level (the equipped one if it is of the character's
+ * type, else the character's own) and equipped skills in place of its
+ * defaults.
  */
 export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBuild => {
   const character = tuning.characters[build.character]
   const weapon = build.weapon !== undefined && tuning.weapons[build.weapon].type === character.weaponType ? build.weapon : character.weapon
   return {
-    stats: withWeapon(statsAtLevel(tuning, character.stats, build.level ?? 1), tuning.weapons[weapon]),
+    stats: withWeapon(statsAtLevel(tuning, character.stats, build.level ?? 1), tuning.weapons[weapon], weaponAtk(tuning, tuning.weapons[weapon], build.weaponLevel ?? 1)),
     radius: character.radius,
     hurtboxRadius: character.hurtboxRadius,
     attack: character.attack,
@@ -68,9 +73,9 @@ export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBu
   }
 }
 
-/** `base` with `weapon`'s ATK added, then its bonus stat raised by its percentage (rounded to a whole number). */
-export const withWeapon = (base: Stats, weapon: WeaponSpec): Stats => {
-  const stats = { ...base, atk: base.atk + weapon.atk }
+/** `base` with `weapon`'s ATK (`atk`, its level's) added, then its bonus stat raised by its percentage (rounded to a whole number). */
+export const withWeapon = (base: Stats, weapon: WeaponSpec, atk = weapon.atk): Stats => {
+  const stats = { ...base, atk: base.atk + atk }
   if (weapon.bonus === null) return stats
   return { ...stats, [weapon.bonus.stat]: Math.round(stats[weapon.bonus.stat] * (1 + weapon.bonus.percent / 100)) }
 }

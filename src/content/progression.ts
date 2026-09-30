@@ -51,5 +51,14 @@ export const progression = {
     run: { attempt: 10, clear: 40, perKill: 2 } satisfies RunEarnings,
     /** Gold for each point of experience bought. */
     goldPerExperience: 2
+  },
+  /**
+   * Each weapon's level: bought with gold only, along `cost` (a level curve
+   * in gold: level n to n + 1 costs `base + growth × (n − 1)`). A level
+   * raises the weapon's ATK along the stat curve; its bonus and passives
+   * stay as they are.
+   */
+  weapon: {
+    cost: { maxLevel: 20, base: 100, growth: 60 } satisfies LevelCurve
   }
 }

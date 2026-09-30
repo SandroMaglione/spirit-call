@@ -10,16 +10,17 @@ import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
 
-import { buildOf, characterLevel, equipmentOf, owns, questLock } from "../account/account.ts"
+import { buildOf, characterLevel, equipmentOf, owns, questLock, weaponLevel } from "../account/account.ts"
 import type { Item } from "../account/account.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import type { QuestId } from "../content/quests.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
-import { resolveBuild, statsAtLevel } from "../features/build.ts"
+import { resolveBuild, statsAtLevel, weaponAtk } from "../features/build.ts"
 import { AccountBar } from "./AccountBar.tsx"
 import { CharacterLevel } from "./CharacterLevel.tsx"
+import { WeaponLevel } from "./WeaponLevel.tsx"
 import { describeBonus, describeObjective, describePassive, describeRewards, describeSkill, statNames, statOrder } from "./describe.ts"
 import { weaponsFor } from "./draft.ts"
 import type { UiActions, UiStore } from "./store.ts"
@@ -155,7 +156,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
             return (
               <Card key={id} selected={id === equipment.weapon} locked={locked({ kind: "weapon", id })} onSelect={() => equipWeapon(id)} title={spec.name}>
                 <span class="card__tag">
-                  +{spec.atk} ATK{spec.bonus === null ? "" : ` · ${describeBonus(spec.bonus)}`}
+                  Lv {weaponLevel(account, id)} · +{weaponAtk(tuning, spec, weaponLevel(account, id))} ATK{spec.bonus === null ? "" : ` · ${describeBonus(spec.bonus)}`}
                 </span>
                 {spec.passives.map((passive, index) => (
                   <span key={index} class="card__text">
@@ -166,6 +167,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
             )
           })}
         </Section>
+        {owns(account, { kind: "weapon", id: equipment.weapon }) && <WeaponLevel store={store} actions={actions} weapon={equipment.weapon} />}
         {skillSlots.map((slot) => (
           <Section key={slot} title={`${slotLabels[slot].name} (${slotLabels[slot].key})`}>
             {ids(tuning.skills).map((id) => {

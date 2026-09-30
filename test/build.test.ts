@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { buildFromQuery, challengeFromQuery } from "../src/dev/build.ts"
 import { defaultChallenge } from "../src/features/challenges.ts"
-import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel, withWeapon } from "../src/features/build.ts"
+import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel, weaponAtk, withWeapon } from "../src/features/build.ts"
 
 describe("builds", () => {
   it("resolve to the character's stats and kit, with its own weapon and equipped skills over its defaults", () => {
@@ -42,6 +42,16 @@ describe("builds", () => {
     expect(top).toEqual({ hp: base.hp * 4, atk: base.atk * 4, def: base.def * 4, speed: base.speed })
     const build = resolveBuild(defaultTuning, { character: "swordsman", level: maxLevel, skills: {} })
     expect(build.stats).toEqual(withWeapon(top, defaultTuning.weapons.trainingBlade))
+  })
+
+  it("raise the weapon's ATK with its level, along the same curve, keeping its bonus", () => {
+    const crescendo = defaultTuning.weapons.crescendo
+    const maxLevel = defaultTuning.progression.weapon.cost.maxLevel
+    expect(weaponAtk(defaultTuning, crescendo, 1)).toBe(crescendo.atk)
+    expect(weaponAtk(defaultTuning, crescendo, maxLevel)).toBe(crescendo.atk * 4)
+    const base = defaultTuning.characters.swordsman.stats
+    const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "crescendo", weaponLevel: maxLevel, skills: {} })
+    expect(build.stats.atk).toBe(Math.round((base.atk + crescendo.atk * 4) * 1.1))
   })
 
   it("keep the character's own weapon when the equipped one is of another type", () => {
