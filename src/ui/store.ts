@@ -1,15 +1,18 @@
 /**
  * What the UI shows, as signals: a mirror of game state that `SyncUi` keeps
  * up to date every frame (it only writes when something changed, so
- * components re-render only then). The UI never changes game state here; it
- * queues requests (see `features/menu.ts`).
+ * components re-render only then), and the account, which the app shell
+ * updates after every change. The UI never changes this state itself; it
+ * calls its actions (see `UiActions`).
  */
 import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
+import type { Account, Equipment } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
+import type { CharacterId } from "../content/characters.ts"
 import type { BuildValue, FlowState, RunResultValue } from "../schema.ts"
 
 export interface UiStore {
@@ -18,9 +21,11 @@ export interface UiStore {
   readonly device: Signal<"desktop" | "touch">
   /** The content (characters, weapons, skills, challenges) and its numbers. */
   readonly tuning: Signal<Tuning>
-  /** The last build and challenge played: the menu starts from them. */
+  /** The build and challenge of the run going on, or of the last one. */
   readonly build: Signal<BuildValue>
   readonly challenge: Signal<ChallengeId>
+  /** The player's account: what it owns, each character's equipment, and the last selection (the menu starts from it). */
+  readonly account: Signal<Account>
   /** How the last run ended; `null` while one is going on (see `RunResult`). */
   readonly result: Signal<RunResultValue | null>
   /** Messages for the player (what loading the profile had to fix), until dismissed. */
@@ -32,6 +37,7 @@ export const createUiStore = (initial: {
   readonly build: BuildValue
   readonly challenge: ChallengeId
   readonly flow: FlowState
+  readonly account: Account
   readonly notices: ReadonlyArray<string>
 }): UiStore => ({
   flow: signal(initial.flow),
@@ -39,8 +45,21 @@ export const createUiStore = (initial: {
   tuning: signal(initial.tuning),
   build: signal(initial.build),
   challenge: signal(initial.challenge),
+  account: signal(initial.account),
   result: signal(null),
   notices: signal(initial.notices)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
+
+/** What the UI can ask for: plain functions (the app wires them to the game and the account). */
+export interface UiActions {
+  /** Enter the arena with `character` (as equipped) to face `challenge`. */
+  readonly enter: (character: CharacterId, challenge: ChallengeId) => void
+  /** Equip an owned character (saved at once). */
+  readonly equip: (character: CharacterId, equipment: Equipment) => void
+  /** From the results: the same challenge again. */
+  readonly retry: () => void
+  /** From the results: back to the menu. */
+  readonly menu: () => void
+}

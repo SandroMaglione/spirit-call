@@ -5,7 +5,7 @@ import { survive } from "../src/content/challenges.ts"
 import { withWeapon } from "../src/features/build.ts"
 import { Build, Challenge, CombatStats, Game, Player } from "../src/schema.ts"
 import { describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
-import { draftFrom, toBuild, weaponsFor, withCharacter } from "../src/ui/draft.ts"
+import { weaponsFor } from "../src/ui/draft.ts"
 import { start } from "./helpers.ts"
 
 const Screen = Game.Inspector("Test/Screen", {
@@ -53,13 +53,10 @@ describe("menu requests", () => {
   })
 })
 
-describe("menu drafts", () => {
-  it("switching character resets the weapon and skills to its own, and weapons fit its type", () => {
-    const draft = withCharacter(defaultTuning, "gunner")
-    expect(draft.weapon).toBe(defaultTuning.characters.gunner.weapon)
-    expect(draft.skills).toEqual(defaultTuning.characters.gunner.skills)
+describe("menu helpers", () => {
+  it("offers a character only weapons of its type", () => {
     expect(weaponsFor(defaultTuning, "gunner").every((id) => defaultTuning.weapons[id].type === "gun")).toBe(true)
-    expect(draftFrom(defaultTuning, toBuild(draft))).toEqual(draft)
+    expect(weaponsFor(defaultTuning, "swordsman")).toContain("crescendo")
   })
 
   it("describes content from its data", () => {

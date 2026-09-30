@@ -24,6 +24,6 @@ describe("project lint rules", () => {
     expect(count("features/violations.ts: deterministic-simulation")).toBe(4)
     expect(count("ui/violations.ts: layer-boundaries")).toBe(2)
     expect(count("content/violations.ts: layer-boundaries")).toBe(1)
-    expect(found.filter((line) => line.startsWith("profile/"))).toEqual([])
+    expect(found.filter((line) => line.startsWith("account/"))).toEqual([])
   })
 })

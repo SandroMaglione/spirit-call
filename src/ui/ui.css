@@ -260,3 +260,26 @@ body:has(.menu) .btm-toggle {
   font-weight: 700;
   cursor: pointer;
 }
+
+/* Not owned yet: shown, but it cannot be picked. */
+.card.is-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.card.is-locked:hover {
+  border-color: #30363d;
+}
+
+.card__lock {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #30363d;
+  color: #9da7b1;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}

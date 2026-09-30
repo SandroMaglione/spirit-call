@@ -1,0 +1,39 @@
+{
+  "characters": [
+    "swordsman",
+    "gunner"
+  ],
+  "weapons": [
+    "trainingBlade",
+    "crescendo",
+    "echoSaber",
+    "trainingPistol",
+    "executioner",
+    "bloodthirst"
+  ],
+  "skills": [
+    "bladeWave",
+    "grenade",
+    "nova"
+  ],
+  "challenges": [
+    "swarm",
+    "crossfire",
+    "brute",
+    "endless"
+  ],
+  "attacks": [
+    "sword",
+    "gun"
+  ],
+  "enemies": [
+    "dummy",
+    "chaser",
+    "shooter",
+    "brute",
+    "swarmer",
+    "charger",
+    "sniper",
+    "guardian"
+  ]
+}

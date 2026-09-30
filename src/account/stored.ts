@@ -1,0 +1,102 @@
+/**
+ * What is saved on this device, as JSON: the account and the device
+ * settings, each under its own key. Content is referred to by its id (the
+ * keys in `src/content/`, which must never change once shipped: see
+ * `test/content-ids.test.ts`).
+ *
+ * Every version ever saved keeps its schema here. Loading decodes any of them
+ * and `migrate…` brings it to the latest, one version at a time, so an old
+ * save always opens. To change a shape: add a version schema, add it to the
+ * union, write its step in the migration, and point the latest at it. To
+ * give existing accounts something new (a starter item added later), do it
+ * in that migration step. Ids are plain strings here; which still exist is
+ * checked after decoding (see `fromStored`), so removed content is dropped
+ * instead of failing the save.
+ */
+import * as Schema from "effect/Schema"
+
+// ── Account ───────────────────────────────────────────────────────────────
+
+const Unlocked = Schema.Struct({ unlockedAt: Schema.Number })
+const OwnedWeapon = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number })
+const Equipment = Schema.Struct({
+  weapon: Schema.String,
+  skills: Schema.Struct({ special: Schema.String, ultimate: Schema.String })
+})
+
+/** Version 1: what the account owns, each character's equipment, and the last selection. */
+export const StoredAccountV1 = Schema.Struct({
+  version: Schema.Literal(1),
+  id: Schema.String,
+  createdAt: Schema.Number,
+  owned: Schema.Struct({
+    characters: Schema.Record(Schema.String, Unlocked),
+    weapons: Schema.Record(Schema.String, OwnedWeapon),
+    skills: Schema.Record(Schema.String, Unlocked),
+    challenges: Schema.Record(Schema.String, Unlocked)
+  }),
+  equipment: Schema.Record(Schema.String, Equipment),
+  selection: Schema.Struct({ character: Schema.String, challenge: Schema.String })
+})
+
+/** Any account version ever saved. */
+export const StoredAccount = Schema.Union([StoredAccountV1])
+export const StoredAccountLatest = StoredAccountV1
+export type StoredAccountLatest = typeof StoredAccountLatest.Type
+
+export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
+  switch (stored.version) {
+    case 1:
+      return stored
+  }
+}
+
+export const StoredAccountJson = Schema.fromJsonString(StoredAccount)
+export const LatestAccountJson = Schema.fromJsonString(StoredAccountLatest)
+
+// ── Device settings ───────────────────────────────────────────────────────
+
+/** Version 1: sound on or off. */
+export const StoredSettingsV1 = Schema.Struct({
+  version: Schema.Literal(1),
+  muted: Schema.Boolean
+})
+
+export const StoredSettings = Schema.Union([StoredSettingsV1])
+export const StoredSettingsLatest = StoredSettingsV1
+export type StoredSettingsLatest = typeof StoredSettingsLatest.Type
+
+export const migrateSettings = (stored: typeof StoredSettings.Type): StoredSettingsLatest => {
+  switch (stored.version) {
+    case 1:
+      return stored
+  }
+}
+
+export const StoredSettingsJson = Schema.fromJsonString(StoredSettings)
+export const LatestSettingsJson = Schema.fromJsonString(StoredSettingsLatest)
+
+// ── Before accounts ───────────────────────────────────────────────────────
+
+const StoredBuildV1 = Schema.Struct({
+  character: Schema.String,
+  weapon: Schema.optionalKey(Schema.String),
+  skills: Schema.Struct({
+    special: Schema.optionalKey(Schema.String),
+    ultimate: Schema.optionalKey(Schema.String)
+  })
+})
+
+/**
+ * The profile saved before accounts (under `shooter.profile`): the last build
+ * and challenge, and the mute setting. A device that has one gets an account
+ * and settings made from it (see `accountFromLegacy`).
+ */
+export const LegacyProfileV1 = Schema.Struct({
+  version: Schema.Literal(1),
+  selection: Schema.Struct({ build: StoredBuildV1, challenge: Schema.String }),
+  settings: Schema.Struct({ muted: Schema.Boolean })
+})
+export type LegacyProfileV1 = typeof LegacyProfileV1.Type
+
+export const LegacyProfileJson = Schema.fromJsonString(LegacyProfileV1)

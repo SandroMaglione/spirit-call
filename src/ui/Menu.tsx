@@ -1,21 +1,25 @@
 /**
- * The menu: pick a challenge, a character, its weapon, and a skill per slot,
- * then enter the arena (the button, or Enter). Starts from the last build
- * and challenge played.
+ * The menu: pick a challenge and a character, equip it (a weapon of its type
+ * and a skill per slot), then enter the arena (the button, or Enter). What
+ * the account does not own is shown locked. Equipment is saved on the
+ * character at once; the challenge and character are remembered on entering.
+ * Starts from the account's last selection.
  */
 import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
 
+import { buildOf, equipmentOf, owns } from "../account/account.ts"
+import type { Item } from "../account/account.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
+import type { WeaponId } from "../content/weapons.ts"
 import { resolveBuild } from "../features/build.ts"
-import type { UiRequest } from "../features/menu.ts"
 import { describeBonus, describeObjective, describePassive, describeSkill, statNames, statOrder } from "./describe.ts"
-import { draftFrom, toBuild, weaponsFor, withCharacter } from "./draft.ts"
-import type { UiStore } from "./store.ts"
+import { weaponsFor } from "./draft.ts"
+import type { UiActions, UiStore } from "./store.ts"
 
 const ids = <Id extends string>(record: Record<Id, unknown>): Array<Id> => Object.keys(record) as Array<Id>
 
@@ -31,9 +35,25 @@ const Section = ({ title, children }: { readonly title: string; readonly childre
   </section>
 )
 
-const Card = ({ selected, onSelect, title, children }: { readonly selected: boolean; readonly onSelect: () => void; readonly title: string; readonly children?: ComponentChildren }) => (
-  <button type="button" class={`card${selected ? " is-selected" : ""}`} aria-pressed={selected} onClick={onSelect}>
-    <span class="card__title">{title}</span>
+/** A choice; a locked one (not owned) cannot be picked. */
+const Card = ({ selected, locked, onSelect, title, children }: {
+  readonly selected: boolean
+  readonly locked: boolean
+  readonly onSelect: () => void
+  readonly title: string
+  readonly children?: ComponentChildren
+}) => (
+  <button
+    type="button"
+    class={`card${selected ? " is-selected" : ""}${locked ? " is-locked" : ""}`}
+    aria-pressed={selected}
+    disabled={locked}
+    onClick={onSelect}
+  >
+    <span class="card__title">
+      {title}
+      {locked && <span class="card__lock">Locked</span>}
+    </span>
     {children}
   </button>
 )
@@ -48,28 +68,26 @@ const StatLine = ({ stats }: { readonly stats: Stats }) => (
   </span>
 )
 
-export const Menu = ({ store, request }: { readonly store: UiStore; readonly request: (request: UiRequest) => void }) => {
+export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const tuning = store.tuning.value
-  const challenge = useSignal<ChallengeId>(store.challenge.value)
-  const draft = useSignal(draftFrom(tuning, store.build.value))
-  const build = toBuild(draft.value)
-  const final = resolveBuild(tuning, build)
-  const start = () => request({ kind: "start", build: toBuild(draft.value), challenge: challenge.value })
+  const account = store.account.value
+  const challenge = useSignal<ChallengeId>(account.selection.challenge)
+  const character = useSignal<CharacterId>(account.selection.character)
+  const equipment = equipmentOf(tuning, account, character.value)
+  const final = resolveBuild(tuning, buildOf(tuning, account, character.value))
+  const locked = (item: Item) => !owns(account, item)
+  const enter = () => actions.enter(character.value, challenge.value)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Enter") start()
+      if (event.key === "Enter") enter()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   })
 
-  const pickCharacter = (character: CharacterId) => {
-    draft.value = withCharacter(tuning, character)
-  }
-  const pickSkill = (slot: SkillSlot, skill: SkillId) => {
-    draft.value = { ...draft.value, skills: { ...draft.value.skills, [slot]: skill } }
-  }
+  const equipWeapon = (weapon: WeaponId) => actions.equip(character.value, { ...equipment, weapon })
+  const equipSkill = (slot: SkillSlot, skill: SkillId) => actions.equip(character.value, { ...equipment, skills: { ...equipment.skills, [slot]: skill } })
 
   return (
     <div class="menu">
@@ -86,7 +104,7 @@ export const Menu = ({ store, request }: { readonly store: UiStore; readonly req
           {ids(tuning.challenges).map((id) => {
             const spec = tuning.challenges[id]
             return (
-              <Card key={id} selected={id === challenge.value} onSelect={() => (challenge.value = id)} title={spec.name}>
+              <Card key={id} selected={id === challenge.value} locked={locked({ kind: "challenge", id })} onSelect={() => (challenge.value = id)} title={spec.name}>
                 <span class="card__tag">{describeObjective(spec.objective, spec.waves.scripted.length)}</span>
                 <span class="card__text">{spec.description}</span>
               </Card>
@@ -97,7 +115,7 @@ export const Menu = ({ store, request }: { readonly store: UiStore; readonly req
           {ids(tuning.characters).map((id) => {
             const spec = tuning.characters[id]
             return (
-              <Card key={id} selected={id === draft.value.character} onSelect={() => pickCharacter(id)} title={spec.name}>
+              <Card key={id} selected={id === character.value} locked={locked({ kind: "character", id })} onSelect={() => (character.value = id)} title={spec.name}>
                 <span class="card__tag">{spec.weaponType}</span>
                 <StatLine stats={spec.stats} />
               </Card>
@@ -105,10 +123,10 @@ export const Menu = ({ store, request }: { readonly store: UiStore; readonly req
           })}
         </Section>
         <Section title="Weapon">
-          {weaponsFor(tuning, draft.value.character).map((id) => {
+          {weaponsFor(tuning, character.value).map((id) => {
             const spec = tuning.weapons[id]
             return (
-              <Card key={id} selected={id === draft.value.weapon} onSelect={() => (draft.value = { ...draft.value, weapon: id })} title={spec.name}>
+              <Card key={id} selected={id === equipment.weapon} locked={locked({ kind: "weapon", id })} onSelect={() => equipWeapon(id)} title={spec.name}>
                 <span class="card__tag">
                   +{spec.atk} ATK{spec.bonus === null ? "" : ` · ${describeBonus(spec.bonus)}`}
                 </span>
@@ -126,7 +144,7 @@ export const Menu = ({ store, request }: { readonly store: UiStore; readonly req
             {ids(tuning.skills).map((id) => {
               const spec = tuning.skills[id]
               return (
-                <Card key={id} selected={id === draft.value.skills[slot]} onSelect={() => pickSkill(slot, id)} title={spec.name}>
+                <Card key={id} selected={id === equipment.skills[slot]} locked={locked({ kind: "skill", id })} onSelect={() => equipSkill(slot, id)} title={spec.name}>
                   <span class="card__text">{describeSkill(spec)}</span>
                 </Card>
               )
@@ -136,10 +154,10 @@ export const Menu = ({ store, request }: { readonly store: UiStore; readonly req
       </div>
       <footer class="menu__footer">
         <span class="menu__summary">
-          <b>{tuning.characters[draft.value.character].name}</b> · {tuning.weapons[final.weapon].name}
+          <b>{tuning.characters[character.value].name}</b> · {tuning.weapons[final.weapon].name}
           <StatLine stats={final.stats} />
         </span>
-        <button type="button" class="menu__start" onClick={start}>
+        <button type="button" class="menu__start" onClick={enter}>
           Enter · {tuning.challenges[challenge.value].name}
         </button>
       </footer>

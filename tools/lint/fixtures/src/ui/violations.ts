@@ -1,4 +1,4 @@
-// Lint fixture: the UI may not use Effect or reach into the profile.
+// Lint fixture: the UI may not use Effect or reach into the account store.
 import * as Schema from "effect/Schema"
-import { defaultProfile } from "../profile/profile.ts"
-export const probe = [Schema, defaultProfile]
+import { AccountStore } from "../account/store.ts"
+export const probe = [Schema, AccountStore]

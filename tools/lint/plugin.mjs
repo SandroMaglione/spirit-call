@@ -4,7 +4,8 @@
  * - `shooter/layer-boundaries`: each part of `src` may only import the parts
  *   and packages listed for it in `layers` below (type-only imports of other
  *   parts are free: they do not ship). This keeps the simulation free of
- *   rendering, UI, and Effect, and the UI free of Effect and the profile.
+ *   rendering, UI, and Effect, and the UI free of Effect and of storing the
+ *   account (it may use the account's pure rules).
  * - `shooter/no-effect-barrel`: import Effect by module (`effect/Schema`),
  *   never from a package root (`effect`), which pulls in far more code.
  * - `shooter/deterministic-simulation`: no wall clocks, timers, or
@@ -25,8 +26,10 @@ const layers = [
     parts: ["content", "simulation"],
     packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-browser"]
   },
-  { name: "profile", paths: ["src/profile/", "src/app/"], parts: ["content", "simulation", "profile"], packages: ["effect", "@effect/"] },
-  { name: "ui", paths: ["src/ui/"], parts: ["content", "simulation", "ui"], packages: ["preact", "@preact/", "@typeonce/bevy-ts"] },
+  // The account's rules are pure (no Effect), so the UI can use them; storing the account is the Effect side.
+  { name: "account rules", paths: ["src/account/account.ts"], parts: ["content", "simulation", "account rules"], packages: [] },
+  { name: "persistence", paths: ["src/account/", "src/app/"], parts: ["content", "simulation", "account rules", "persistence"], packages: ["effect", "@effect/"] },
+  { name: "ui", paths: ["src/ui/"], parts: ["content", "simulation", "account rules", "ui"], packages: ["preact", "@preact/", "@typeonce/bevy-ts"] },
   {
     name: "presentation",
     paths: ["src/presentation/"],

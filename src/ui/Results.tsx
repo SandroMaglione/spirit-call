@@ -7,10 +7,9 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 
-import type { UiRequest } from "../features/menu.ts"
-import type { UiStore } from "./store.ts"
+import type { UiActions, UiStore } from "./store.ts"
 
-export const Results = ({ store, request }: { readonly store: UiStore; readonly request: (request: UiRequest) => void }) => {
+export const Results = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const result = store.result.value
   const ready = useSignal(false)
   const delay = store.tuning.value.flow.restartDelay
@@ -27,10 +26,10 @@ export const Results = ({ store, request }: { readonly store: UiStore; readonly 
         {challenge.name} · wave {result.wave} · {result.kills} kills · {result.time.toFixed(1)}s
       </div>
       <div class="results__actions">
-        <button type="button" class="results__button is-primary" disabled={!ready.value} onClick={() => request({ kind: "retry" })}>
+        <button type="button" class="results__button is-primary" disabled={!ready.value} onClick={actions.retry}>
           Play again
         </button>
-        <button type="button" class="results__button" disabled={!ready.value} onClick={() => request({ kind: "menu" })}>
+        <button type="button" class="results__button" disabled={!ready.value} onClick={actions.menu}>
           Menu
         </button>
       </div>

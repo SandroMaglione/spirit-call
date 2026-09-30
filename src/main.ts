@@ -7,9 +7,11 @@ import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.
 import { buildFromQuery, challengeFromQuery } from "./dev/build.ts"
 import { startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
-import type { UiRequest } from "./features/menu.ts"
+
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
+import type { UiActions } from "./ui/store.ts"
+import { buildOf } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
@@ -34,19 +36,32 @@ const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(window.location.search)
   const tuning = stressLoad === undefined ? loadSavedTuning() : stressTuning()
-  // The profile loads first: the menu starts from the last build and challenge entered.
+  // The account loads first (created on the first visit): the menu starts from its last selection.
   const shell = await startApp(tuning)
-  // `?character=gunner&special=bladeWave` and `?challenge=swarm` override them (see dev/build.ts).
-  const build = buildFromQuery(tuning, window.location.search, shell.profile.selection.build)
-  const challenge = challengeFromQuery(tuning, window.location.search, shell.profile.selection.challenge)
-  // The game opens on the menu; `?play` skips it.
-  const flow = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined ? "Playing" : "Menu"
+  const { account } = shell
+  // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
+  // entering with the account's selection or the URL's `?character=gunner&weapon=…&challenge=swarm` (see dev/build.ts).
+  const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
+  const flow = quickStart ? "Playing" : "Menu"
+  const lastBuild = buildOf(tuning, account, account.selection.character)
+  const build = quickStart ? buildFromQuery(tuning, window.location.search, lastBuild) : lastBuild
+  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, account.selection.challenge) : account.selection.challenge
   const uiRequests = emptyUiRequests()
-  const uiStore = createUiStore({ tuning, build, challenge, flow, notices: shell.notes })
-  /** UI requests go to the game; entering the arena is also remembered in the profile. */
-  const request = (request: UiRequest) => {
-    if (request.kind === "start") shell.rememberSelection(request.build, request.challenge)
-    uiRequests.pending.push(request)
+  const uiStore = createUiStore({ tuning, build, challenge, flow, account, notices: shell.notes })
+  shell.onAccount((next) => {
+    uiStore.account.value = next
+  })
+  /** What the UI can ask for: arena changes go to the game, account changes to the account. */
+  const uiActions: UiActions = {
+    enter: (character, challenge) => {
+      // Entering is remembered on the account; what it does not own is refused and nothing starts.
+      void shell.select(character, challenge).then((selected) => {
+        if (selected !== undefined) uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), challenge })
+      })
+    },
+    equip: shell.equip,
+    retry: () => uiRequests.pending.push({ kind: "retry" }),
+    menu: () => uiRequests.pending.push({ kind: "menu" })
   }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
@@ -59,7 +74,7 @@ const start = async (mount: HTMLElement) => {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
-  const sounds = createSoundBoard(window, { muted: shell.profile.settings.muted })
+  const sounds = createSoundBoard(window, { muted: shell.settings.muted })
   // Mute with M or the speaker button (remembered in the profile).
   const muteButton = browser.host.hud.mute
   const showMute = () => {
@@ -104,8 +119,8 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(setup)
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
-  mountUi(mount, uiStore, request)
-  createTuningPanel(mount, tuning, devCommands)
+  mountUi(mount, uiStore, uiActions)
+  createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.
   const step = Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())

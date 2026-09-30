@@ -1,11 +1,13 @@
 /**
  * Rules content must follow that its types cannot express: references that
  * must point at existing entries (the tuning panel can edit content live),
- * combos with at least one move, weapons that fit their character, and
- * challenges that can be won. `validateContent` lists every broken rule; a
- * test checks the shipped content, and tools can check edited content.
+ * combos with at least one move, weapons that fit their character,
+ * challenges that can be won, and a new account that can play.
+ * `validateContent` lists every broken rule; a test checks the shipped
+ * content, and tools can check edited content.
  */
 import type { Tuning } from "../config/tuning.ts"
+import { newAccount } from "./account.ts"
 import type { AttackMove } from "./attacks.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { SkillEffect } from "./skills.ts"
@@ -114,6 +116,20 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }
+
+  const starter = newAccount
+  const where = "the new account"
+  for (const [kind, ids, record] of [
+    ["character", starter.characters, tuning.characters],
+    ["weapon", starter.weapons, tuning.weapons],
+    ["skill", starter.skills, tuning.skills],
+    ["challenge", starter.challenges, tuning.challenges]
+  ] as const) {
+    for (const id of ids) if (!has(record, id)) problems.push(`${where}: unknown ${kind} ${id}`)
+  }
+  if (starter.characters.length === 0 || starter.challenges.length === 0) problems.push(`${where}: needs at least one character and one challenge`)
+  if (!starter.characters.includes(starter.selection.character)) problems.push(`${where}: selects ${starter.selection.character}, which it does not own`)
+  if (!starter.challenges.includes(starter.selection.challenge)) problems.push(`${where}: selects ${starter.selection.challenge}, which it does not own`)
 
   return problems
 }
