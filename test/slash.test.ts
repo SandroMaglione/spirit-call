@@ -69,7 +69,7 @@ describe("attack assist (touch)", () => {
   it("turns a tap toward the nearest enemy in any direction, even behind", () => {
     const run = arena([at(180, 70)], 1)
     run.step(3)
-    expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp - first.damage)
+    expect(run.runtime.inspect(World).enemies[0]!.health).toBe(hp - first.power)
     const aim = run.player().aim
     expect(Math.abs(Math.atan2(aim.y, aim.x) * 180 / Math.PI)).toBeCloseTo(180, 0)
   })
@@ -77,7 +77,7 @@ describe("attack assist (touch)", () => {
   it("prefers what is in front when distances are close", () => {
     const run = arena([at(0, 100), at(180, 80)], 1)
     run.step(3)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.damage, hp])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.power, hp])
   })
 
   it("never extends reach: it turns toward an enemy just out of reach but does not hit it", () => {
@@ -92,7 +92,7 @@ describe("attack assist (touch)", () => {
     // An enemy behind would draw an attack, but not the wave.
     const run = arena([at(180, 100), at(0, 150)], 1, { touch: [{ frame: 0, press: ["special"], release: ["special"] }] })
     run.step(3)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp, hp - defaultTuning.skills.bladeWave.effect.damage])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp, hp - defaultTuning.skills.bladeWave.effect.power])
     expect(run.player().aim).toEqual({ x: 1, y: 0 })
   })
 
@@ -107,14 +107,14 @@ describe("sword slash", () => {
   it("hits what is in front within reach, not what is behind or too far", () => {
     const run = arena([{ x: 80, y: 0 }, { x: -80, y: 0 }, { x: first.reach + 60, y: 0 }], 1)
     run.step(3)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.damage, hp, hp])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.power, hp, hp])
   })
 
   it("hits several targets in the arc with one slash, once each", () => {
     const side = Math.sin((firstArc * Math.PI) / 360 - 0.2) * 70
     const run = arena([{ x: 70, y: side }, { x: 70, y: -side }], 1, { tuning: noAssist })
     run.step(6)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.damage, hp - first.damage])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp - first.power, hp - first.power])
   })
 
   it("slashes once per press: holding does not repeat, and a press during the recharge is buffered", () => {
@@ -157,7 +157,7 @@ describe("sword slash", () => {
     run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
     run.step(18)
     const chaser = run.runtime.inspect(World).enemies[0]!
-    expect(chaser.health).toBe(defaultTuning.enemies.chaser.hp - first.damage)
+    expect(chaser.health).toBe(defaultTuning.enemies.chaser.hp - first.power)
     // Staggered: it slid back with the push instead of walking back in.
     expect(chaser.position.x - center.x).toBeGreaterThan(70 + (first.knockback / defaultTuning.knockback.decay) * 0.8)
   })
@@ -199,7 +199,7 @@ describe("sword slash", () => {
     // The spin: a dummy behind the player is hit by the finisher only.
     const spin = arena([at(180, 70)], 1, { tuning: noAssist, touch: presses(4) })
     spin.step(presses(4).at(-1)!.frame + 3)
-    expect(spin.runtime.inspect(World).enemies[0]!.health).toBe(hp - finisher.damage)
+    expect(spin.runtime.inspect(World).enemies[0]!.health).toBe(hp - finisher.power)
   })
 
   it("lunges forward with each move, stopping short of an enemy straight ahead", () => {
@@ -210,7 +210,7 @@ describe("sword slash", () => {
     expect(open.runtime.inspect(World).player.y).toBeCloseTo(center.y, 6)
 
     // A dummy just ahead: the lunge ends `lungeStop` short of it, edge to edge.
-    const clearance = defaultTuning.enemies.dummy.hurtboxRadius + defaultTuning.player.radius
+    const clearance = defaultTuning.enemies.dummy.hurtboxRadius + defaultTuning.characters.swordsman.radius
     const close = arena([at(0, clearance + slash.lungeStop + 5)], 1, { tuning: noAssist })
     close.step(30)
     const moved = close.runtime.inspect(World).player.x - center.x

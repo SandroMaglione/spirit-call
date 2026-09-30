@@ -20,7 +20,7 @@ import { defaultTuning } from "./config/tuning.ts"
 import type { Tuning } from "./config/tuning.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import { FrameContext, Game, KeyboardInput, PointerInput, TouchInput } from "./schema.ts"
-import type { ViewportValue } from "./schema.ts"
+import type { BuildValue, ViewportValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
 export interface SimulationOptions {
@@ -29,6 +29,8 @@ export interface SimulationOptions {
   /** On-screen touch controls. Defaults to untouched scripted controls. */
   readonly touch?: TouchSource
   readonly tuning?: Tuning
+  /** Who enters the arena. Defaults to `defaultBuild`. */
+  readonly build?: BuildValue
   /** Defaults to 1280×720. */
   readonly viewport?: ViewportValue
 }
@@ -45,7 +47,7 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(TouchInput, options.touch ?? Touch.scripted(touchButtons, [])),
       Game.Runtime.service(FrameContext, { viewport })
     ),
-    resources: initialResources(tuning, viewport),
+    resources: initialResources(tuning, viewport, options.build),
     machines: initialMachines(),
     debug: true
   })

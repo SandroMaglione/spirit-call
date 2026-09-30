@@ -8,7 +8,7 @@ import { CastCuts } from "../src/features/skills.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Cast, Enemy, Energy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { ClearEnemies, start, withGrenade } from "./helpers.ts"
+import { ClearEnemies, grenadier, playerLoss, start, swordsman, swordsmanWith } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -54,7 +54,6 @@ const FillEnergy = Game.System("Test/FillEnergy", {
 })
 
 const hp = defaultTuning.enemies.dummy.hp
-const grenadeTuning = withGrenade(defaultTuning)
 const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
 describe("Blade Wave (Space)", () => {
@@ -64,7 +63,7 @@ describe("Blade Wave (Space)", () => {
   it("cuts everything along its line toward the cursor, once each, and nothing beside it", () => {
     const run = range([{ x: 100, y: 0 }, { x: 260, y: 0 }, { x: 150, y: 120 }], { x: 200, y: 0 }, { keys: [cut(1)] })
     run.step(4)
-    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - wave.damage, hp - wave.damage, hp])
+    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - wave.power, hp - wave.power, hp])
     expect(run.player().aim.x).toBeCloseTo(1, 6)
   })
 
@@ -79,13 +78,13 @@ describe("Blade Wave (Space)", () => {
     const again = steps(defaultTuning.skills.bladeWave.cooldown) - 10
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1), cut(again)] })
     run.step(again + 3)
-    expect(run.world().enemies[0]!.health).toBe(hp - wave.damage)
+    expect(run.world().enemies[0]!.health).toBe(hp - wave.power)
   })
 })
 
 describe("grenade (Space)", () => {
   it("lands at the cursor (clamped to max range), over walls", () => {
-    const run = range([], { x: 0, y: -2000 }, { tuning: grenadeTuning, keys: [throwGrenade(1)] })
+    const run = range([], { x: 0, y: -2000 }, { build: grenadier, keys: [throwGrenade(1)] })
     run.step(3)
     const [grenade] = run.world().grenades
     expect(grenade!.to.x).toBeCloseTo(center.x, 6)
@@ -94,24 +93,24 @@ describe("grenade (Space)", () => {
 
   it("damages everything within its radius, once, after the fuse", () => {
     const spec = defaultTuning.skills.grenade.effect
-    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { tuning: grenadeTuning, keys: [throwGrenade(1)] })
+    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
     run.step(steps(spec.flightTime + spec.fuse) - 2)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp])
     run.step(6)
-    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - spec.damage, hp])
+    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - spec.power, hp])
     expect(run.world().grenades).toEqual([])
   })
 
   it("respects its cooldown", () => {
     const again = steps(defaultTuning.skills.grenade.cooldown) - 10
-    const run = range([], { x: 200, y: 0 }, { tuning: grenadeTuning, keys: [throwGrenade(1), throwGrenade(again)] })
+    const run = range([], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1), throwGrenade(again)] })
     run.step(again + 2)
     expect(run.world().skills.special.cooldown).toBeGreaterThan(0)
     expect(run.world().grenades).toEqual([])
   })
 
   it("does not dash", () => {
-    const run = range([], { x: 200, y: 0 }, { tuning: grenadeTuning, keys: [throwGrenade(1)] })
+    const run = range([], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
     run.step(3)
     expect(run.player().dash.remaining).toBe(0)
   })
@@ -143,7 +142,7 @@ describe("Nova (Shift)", () => {
     run.runtime.tick(Game.Schedule(FillEnergy))
     run.step(4)
     const [inside, outside] = run.world().enemies
-    expect(inside!.health).toBe(1000 - spec.damage)
+    expect(inside!.health).toBe(1000 - spec.power)
     expect(outside!.health).toBe(1000)
     expect(run.world().energy).toBe(0)
     run.step(30)
@@ -165,13 +164,12 @@ describe("Nova (Shift)", () => {
   })
 })
 
-describe("loadout", () => {
+describe("builds", () => {
   const ultimate = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
   const special = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
   it("puts any skill in any slot: the grenade on Shift, on its cooldown, with no energy needed", () => {
-    const tuning = tuningWith({ player: { loadout: { ultimate: "grenade" } } })
-    const run = range([], { x: 200, y: 0 }, { tuning, keys: [ultimate(1)] })
+    const run = range([], { x: 200, y: 0 }, { build: swordsmanWith({ ultimate: "grenade" }), keys: [ultimate(1)] })
     run.step(3)
     expect(run.world().grenades).toHaveLength(1)
     const slot = run.world().skills.ultimate
@@ -180,16 +178,17 @@ describe("loadout", () => {
   })
 
   it("keeps a skill's energy cost in any slot: the Nova on Space needs full energy", () => {
-    const tuning = tuningWith({ player: { loadout: { special: "nova" } }, enemies: { dummy: { hp: 1000 } } })
+    const tuning = tuningWith({ enemies: { dummy: { hp: 1000 } } })
+    const build = swordsmanWith({ special: "nova" })
     const inside = { x: defaultTuning.skills.nova.effect.radius - 20, y: 0 }
-    const empty = range([inside], { x: 200, y: 0 }, { tuning, keys: [special(1)] })
+    const empty = range([inside], { x: 200, y: 0 }, { tuning, build, keys: [special(1)] })
     empty.step(3)
     expect(empty.world().enemies[0]!.health).toBe(1000)
 
-    const full = range([inside], { x: 200, y: 0 }, { tuning, keys: [special(1)] })
+    const full = range([inside], { x: 200, y: 0 }, { tuning, build, keys: [special(1)] })
     full.runtime.tick(Game.Schedule(FillEnergy))
     full.step(3)
-    expect(full.world().enemies[0]!.health).toBe(1000 - defaultTuning.skills.nova.effect.damage)
+    expect(full.world().enemies[0]!.health).toBe(1000 - defaultTuning.skills.nova.effect.power)
     expect(full.world().energy).toBe(0)
   })
 
@@ -205,12 +204,12 @@ describe("loadout", () => {
       for (const { entity, data } of queries.enemies.each()) {
         const from = data.position.get()
         const effect = defaultTuning.skills.bladeWave.effect
-        events.cast.emit({ caster: Game.Entity.handle(entity.id, Position), faction: "enemy", skill: "bladeWave", effect, from, at: center, direction: { x: -1, y: 0 }, charges: false })
+        events.cast.emit({ caster: Game.Entity.handle(entity.id, Position), faction: "enemy", atk: defaultTuning.enemies.dummy.atk, skill: "bladeWave", effect, from, at: center, direction: { x: -1, y: 0 }, charges: false })
       }
     })
     run.runtime.tick(Game.Schedule(EnemyCasts, CastCuts, Game.Schedule.applyDeferred()))
     run.step(2)
-    expect(run.runtime.inspect(PlayerHealth)).toBe(defaultTuning.player.hp - defaultTuning.skills.bladeWave.effect.damage)
+    expect(run.runtime.inspect(PlayerHealth)).toBe(swordsman.hp - playerLoss(defaultTuning, "dummy", defaultTuning.skills.bladeWave.effect.power))
   })
 })
 
@@ -221,9 +220,9 @@ describe("movement grace", () => {
     const run = range([], { x: 200, y: 0 }, { keys: [{ frame: 0, press: ["right"] }, { frame: 30, release: ["right"] }] })
     run.step(31)
     const moving = run.player().velocity
-    expect(Math.hypot(moving.x, moving.y)).toBeCloseTo(defaultTuning.player.moveSpeed, 6)
+    expect(Math.hypot(moving.x, moving.y)).toBeCloseTo(swordsman.speed, 6)
     run.step(steps(grace) - 1)
-    expect(Math.hypot(run.player().velocity.x, run.player().velocity.y)).toBeCloseTo(defaultTuning.player.moveSpeed, 6)
+    expect(Math.hypot(run.player().velocity.x, run.player().velocity.y)).toBeCloseTo(swordsman.speed, 6)
     run.step(30)
     expect(run.player().velocity).toEqual({ x: 0, y: 0 })
   })
@@ -235,12 +234,12 @@ describe("movement grace", () => {
       run.step()
       if (step > 10) slowest = Math.min(slowest, Math.hypot(run.player().velocity.x, run.player().velocity.y))
     }
-    expect(slowest).toBeCloseTo(defaultTuning.player.moveSpeed, 6)
+    expect(slowest).toBeCloseTo(swordsman.speed, 6)
   })
 
   it("can be turned off", () => {
     const run = range([], { x: 200, y: 0 }, { tuning: tuningWith({ player: { movementGrace: 0 } }), keys: [{ frame: 0, press: ["right"] }, { frame: 30, release: ["right"] }] })
     run.step(32)
-    expect(Math.hypot(run.player().velocity.x, run.player().velocity.y)).toBeLessThan(defaultTuning.player.moveSpeed)
+    expect(Math.hypot(run.player().velocity.x, run.player().velocity.y)).toBeLessThan(swordsman.speed)
   })
 })

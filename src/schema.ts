@@ -9,6 +9,7 @@ import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
+import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot } from "./content/skills.ts"
 import type { Vec2 } from "./math/vec.ts"
@@ -52,7 +53,7 @@ export interface SkillSlotValue {
   readonly skill: SkillId
   readonly cooldown: number
 }
-/** The character's skill slots (see `Tuning.player.loadout`). */
+/** The character's skill slots (see `resolveBuild`). */
 export type SkillsValue = { readonly [Slot in SkillSlot]: SkillSlotValue }
 export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
 
@@ -65,6 +66,8 @@ export interface LobbedValue {
   readonly to: Vec2
   readonly faction: Faction
   readonly effect: LobEffect
+  /** Damage of the blast, before the targets' DEF. */
+  readonly damage: number
   /** Whether its damage fills energy. */
   readonly charges: boolean
   /** Time since it was thrown. */
@@ -78,6 +81,13 @@ export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>
 // ── Combat ────────────────────────────────────────────────────────────────
 
 export type Faction = "player" | "enemy"
+
+/**
+ * The stats combat reads (see `content/characters.ts`): ATK scales damage
+ * dealt, DEF reduces damage taken, `speed` is the running speed. A player's
+ * are its build's final stats; an enemy's come from its kind.
+ */
+export const CombatStats = Descriptor.Component<CharacterStats>()("Shooter/CombatStats")
 
 /** Hit points. Reaching 0 kills the entity. */
 export const Health = Descriptor.Component<{ readonly current: number; readonly max: number }>()("Shooter/Health")
@@ -258,6 +268,8 @@ export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: 
 export const Cast = Descriptor.Event<{
   readonly caster: Entity.Handle<typeof Root, typeof Position>
   readonly faction: Faction
+  /** The caster's ATK: the effect deals its `power` as a percentage of it. */
+  readonly atk: number
   readonly skill: SkillId
   readonly effect: SkillEffect
   readonly from: Vec2
@@ -283,6 +295,17 @@ export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fa
 // ── Resources ─────────────────────────────────────────────────────────────
 
 export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
+
+/**
+ * What enters the arena: a character, and the skills equipped over its
+ * defaults (equipment goes here too). `resolveBuild` turns it into final
+ * stats and kit when the player spawns.
+ */
+export interface BuildValue {
+  readonly character: CharacterId
+  readonly skills: { readonly [Slot in SkillSlot]?: SkillId }
+}
+export const Build = Descriptor.Resource<BuildValue>()("Shooter/Build")
 
 export interface TimeValue {
   /** Fixed step length. */
@@ -409,6 +432,7 @@ export const Game = Schema.bind(
       Aim,
       Dash,
       Invulnerable,
+      CombatStats,
       Skills,
       Energy,
       Lobbed,
@@ -431,6 +455,7 @@ export const Game = Schema.bind(
     },
     resources: {
       Tuning,
+      Build,
       Time,
       Keys,
       PointerState,

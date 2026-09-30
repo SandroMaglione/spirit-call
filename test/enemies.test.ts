@@ -6,7 +6,7 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { doubleTap, start } from "./helpers.ts"
+import { doubleTap, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -68,11 +68,11 @@ describe("telegraphed attacks", () => {
     // The telegraph is a cone aimed at the player, covering them.
     const area = run.world().enemies[0]!.attacker.area
     expect(area?.kind).toBe("cone")
-    expect(run.world().player!.health).toBe(defaultTuning.player.hp)
+    expect(run.world().player!.health).toBe(swordsman.hp)
 
     run.step(Math.ceil(defaultTuning.enemies.chaser.attack!.windup / engine.stepSeconds) + 2)
     const hit = run.world().player!
-    expect(hit.health).toBe(defaultTuning.player.hp - defaultTuning.enemies.chaser.attack!.damage)
+    expect(hit.health).toBe(swordsman.hp - playerLoss(defaultTuning, "chaser", defaultTuning.enemies.chaser.attack!.power))
     expect(hit.invulnerable).toBeGreaterThan(0)
     expect(windupAt).toBeGreaterThan(0)
   })
@@ -84,7 +84,7 @@ describe("telegraphed attacks", () => {
     const react = windupAt + Math.round(0.2 / engine.stepSeconds)
     const run = duel("chaser", { x: 300, y: 0 }, { keys: [...doubleTap("down", react - 3, { hold: true }), { frame: react + 20, release: ["down"] }] })
     run.step(windupAt + 60)
-    expect(run.world().player!.health).toBe(defaultTuning.player.hp)
+    expect(run.world().player!.health).toBe(swordsman.hp)
   })
 
   it("dash invulnerability negates damage even without moving out", () => {
@@ -94,7 +94,7 @@ describe("telegraphed attacks", () => {
     const activeAt = stepUntil(run, () => run.world().enemies[0]?.attacker.phase === "active")
     expect(activeAt).toBeLessThan(Math.round(5 / engine.stepSeconds))
     run.step(30)
-    expect(run.world().player!.health).toBe(tuning.player.hp)
+    expect(run.world().player!.health).toBe(tuning.characters.swordsman.stats.hp)
   })
 
   it("a brute's slam lands where the player stood when the windup began", () => {
@@ -128,7 +128,7 @@ describe("telegraphed attacks", () => {
 
 describe("game over and restart", () => {
   it("freezes the world when the player dies and restarts cleanly", () => {
-    const tuning = tuningWith({ player: { hp: 5 } })
+    const tuning = tuningWith({ characters: { swordsman: { stats: { hp: 5 } } } })
     const restartAt = 400
     const run = duel("chaser", { x: 150, y: 0 }, { tuning, keys: [{ frame: restartAt, press: ["restart"], release: ["restart"] }] })
     stepUntil(run, () => run.world().player === undefined)
@@ -141,7 +141,7 @@ describe("game over and restart", () => {
     stepUntil(run, () => run.world().player !== undefined)
     expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Playing")
     const fresh = run.world()
-    expect(fresh.player!.health).toBe(tuning.player.hp)
+    expect(fresh.player!.health).toBe(tuning.characters.swordsman.stats.hp)
     expect(fresh.player!.position).toEqual(center)
     expect(fresh.stats).toEqual({ kills: 0, shots: 0 })
     // The duel chaser belonged to the old run; training mode has no dummies here.

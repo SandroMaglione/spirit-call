@@ -2,15 +2,17 @@ import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchButtons } from "./config/input.ts"
 import type { Tuning } from "./config/tuning.ts"
+import { defaultBuild } from "./features/build.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
 import { Flow, Game } from "./schema.ts"
-import type { ViewportValue } from "./schema.ts"
+import type { BuildValue, ViewportValue } from "./schema.ts"
 
 /** Initial resources shared by the browser runtime and headless simulations. */
-export const initialResources = (tuning: Tuning, viewport: ViewportValue) => ({
+export const initialResources = (tuning: Tuning, viewport: ViewportValue, build: BuildValue = defaultBuild) => ({
   Tuning: tuning,
+  Build: build,
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),

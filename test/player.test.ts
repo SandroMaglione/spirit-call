@@ -15,13 +15,13 @@ describe("movement", () => {
     const { position, velocity } = run.player()
     expect(position.x).toBeLessThan(center.x)
     expect(position.x - center.x).toBeCloseTo(position.y - center.y, 6)
-    expect(Math.hypot(velocity.x, velocity.y)).toBeCloseTo(defaultTuning.player.moveSpeed, 6)
+    expect(Math.hypot(velocity.x, velocity.y)).toBeCloseTo(defaultTuning.characters.swordsman.stats.speed, 6)
   })
 
   it("accelerates to full speed quickly and stops quickly", () => {
     const run = start({ keys: [{ frame: 0, press: ["right"] }, { frame: 30, release: ["right"] }] })
     run.step(10)
-    expect(Math.hypot(run.player().velocity.x, run.player().velocity.y)).toBeCloseTo(defaultTuning.player.moveSpeed, 6)
+    expect(Math.hypot(run.player().velocity.x, run.player().velocity.y)).toBeCloseTo(defaultTuning.characters.swordsman.stats.speed, 6)
     run.step(30)
     expect(run.player().velocity).toEqual({ x: 0, y: 0 })
   })
@@ -30,7 +30,7 @@ describe("movement", () => {
     const run = start({ keys: [{ frame: 0, press: ["down", "right"] }] })
     run.step(60 * 10)
     const { position } = run.player()
-    const r = defaultTuning.player.radius
+    const r = defaultTuning.characters.swordsman.radius
     expect(position.x).toBeLessThanOrEqual(defaultTuning.arena.width - r)
     expect(position.y).toBeLessThanOrEqual(defaultTuning.arena.height - r)
     expect(position.x).toBeGreaterThanOrEqual(r)
@@ -114,7 +114,7 @@ describe("dash", () => {
     run.step(12)
     const { position } = run.player()
     const pillarBottom = 0.16 * tuning.arena.height + 25
-    expect(position.y).toBeGreaterThanOrEqual(pillarBottom + tuning.player.radius - 0.1)
+    expect(position.y).toBeGreaterThanOrEqual(pillarBottom + tuning.characters.swordsman.radius - 0.1)
     expect(position.x).toBeCloseTo(center.x, 3)
   })
 })

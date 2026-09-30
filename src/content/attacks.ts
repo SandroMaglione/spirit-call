@@ -10,9 +10,10 @@
 // optional power attack, released once full. Moves are melee areas or
 // projectiles, so the same combo machinery drives a sword and a gun.
 
-/** What every move has: damage, push, and the recovery before the next move. */
+/** What every move has: power, push, and the recovery before the next move. */
 interface MoveBase {
-  readonly damage: number
+  /** Damage, as a percentage of the attacker's ATK (100: exactly its ATK). */
+  readonly power: number
   readonly knockback: number
   /** No next move for this many seconds after this one. */
   readonly recovery: number
@@ -94,10 +95,10 @@ export const attacks = {
   sword: basicAttack({
     name: "Sword",
     combo: [
-      arc({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.26, hitStop: 0.03, heavy: false, lunge: 16 }),
-      arc({ reach: 120, arcDegrees: 140, damage: 18, knockback: 480, recovery: 0.24, hitStop: 0.03, heavy: false, lunge: 16 }),
-      thrust({ reach: 175, width: 56, damage: 24, knockback: 620, recovery: 0.3, hitStop: 0.045, heavy: false, lunge: 34 }),
-      spin({ reach: 140, damage: 40, knockback: 1150, recovery: 0.7, hitStop: 0.09, heavy: true, lunge: 10 })
+      arc({ reach: 120, arcDegrees: 140, power: 18, knockback: 480, recovery: 0.26, hitStop: 0.03, heavy: false, lunge: 16 }),
+      arc({ reach: 120, arcDegrees: 140, power: 18, knockback: 480, recovery: 0.24, hitStop: 0.03, heavy: false, lunge: 16 }),
+      thrust({ reach: 175, width: 56, power: 24, knockback: 620, recovery: 0.3, hitStop: 0.045, heavy: false, lunge: 34 }),
+      spin({ reach: 140, power: 40, knockback: 1150, recovery: 0.7, hitStop: 0.09, heavy: true, lunge: 10 })
     ],
     comboWindow: 0.8,
     inputBuffer: 0.15,
@@ -107,16 +108,16 @@ export const attacks = {
       holdDelay: 0.2,
       chargeTime: 0.55,
       moveSpeedMultiplier: 0.55,
-      move: thrust({ reach: 230, width: 72, damage: 55, knockback: 1100, recovery: 0.5, hitStop: 0.1, heavy: true, lunge: 110 })
+      move: thrust({ reach: 230, width: 72, power: 55, knockback: 1100, recovery: 0.5, hitStop: 0.1, heavy: true, lunge: 110 })
     }
   }),
   /** The gun: two quick shots and a spread; the power attack is a slow, piercing bolt that kicks back. */
   gun: basicAttack({
     name: "Gun",
     combo: [
-      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, damage: 10, knockback: 150, recovery: 0.13, hitStop: 0, heavy: false, lunge: 0 }),
-      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, damage: 10, knockback: 150, recovery: 0.13, hitStop: 0, heavy: false, lunge: 0 }),
-      shot({ count: 3, spreadDegrees: 16, speed: 950, radius: 5, range: 620, pierce: 0, damage: 10, knockback: 220, recovery: 0.32, hitStop: 0, heavy: false, lunge: -8 })
+      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0, heavy: false, lunge: 0 }),
+      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0, heavy: false, lunge: 0 }),
+      shot({ count: 3, spreadDegrees: 16, speed: 950, radius: 5, range: 620, pierce: 0, power: 10, knockback: 220, recovery: 0.32, hitStop: 0, heavy: false, lunge: -8 })
     ],
     comboWindow: 0.5,
     inputBuffer: 0.12,
@@ -126,7 +127,7 @@ export const attacks = {
       holdDelay: 0.2,
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
-      move: shot({ count: 1, spreadDegrees: 0, speed: 1400, radius: 9, range: 950, pierce: 4, damage: 38, knockback: 620, recovery: 0.45, hitStop: 0.05, heavy: true, lunge: -40 })
+      move: shot({ count: 1, spreadDegrees: 0, speed: 1400, radius: 9, range: 950, pierce: 4, power: 38, knockback: 620, recovery: 0.45, hitStop: 0.05, heavy: true, lunge: -40 })
     }
   })
 }

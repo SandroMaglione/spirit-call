@@ -8,7 +8,8 @@ import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove, ShotMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, Game, Health, Player, Position, Projectile, RunScope, Stats, Weapon } from "../src/schema.ts"
-import { ClearEnemies, start, withGun } from "./helpers.ts"
+import type { BuildValue } from "../src/schema.ts"
+import { ClearEnemies, gunner, start, swordsman } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
@@ -34,8 +35,8 @@ const World = Game.Inspector("Test/Weapons", {
 }))
 
 /** Touch play with the assist off (so the facing stays world +x) and only the dummies at `offsets` (along +x). */
-const range = (offsets: ReadonlyArray<number>, touch: Touch.Timeline<TouchButton>, tuning: Tuning = defaultTuning) => {
-  const run = start({ tuning: { ...tuning, touch: tuningWith({ touch: { assist: { enabled: false } } }).touch }, touch })
+const range = (offsets: ReadonlyArray<number>, touch: Touch.Timeline<TouchButton>, build?: BuildValue, tuning: Tuning = defaultTuning) => {
+  const run = start({ tuning: { ...tuning, touch: tuningWith({ touch: { assist: { enabled: false } } }).touch }, touch, ...(build === undefined ? {} : { build }) })
   const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
     for (const x of offsets) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + x, y: center.y }))
   })
@@ -67,7 +68,7 @@ describe("power attack", () => {
     expect(run.world().enemies).toEqual([hp])
     run.step(steps(0.1) + 4)
     expect(run.world().moves).toBe(2)
-    expect(run.world().enemies).toEqual([hp - power.damage])
+    expect(run.world().enemies).toEqual([hp - power.power])
     // The power move ends the combo.
     expect(run.world().weapon.step).toBe(-1)
   })
@@ -92,15 +93,14 @@ describe("power attack", () => {
     run.step(10)
     const after = run.world().player
     const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
-    expect(speed).toBeCloseTo(defaultTuning.player.moveSpeed * swordPower.moveSpeedMultiplier, 0)
+    expect(speed).toBeCloseTo(swordsman.speed * swordPower.moveSpeedMultiplier, 0)
   })
 })
 
 describe("gun", () => {
-  const tuning = withGun(defaultTuning)
 
   it("fires its combo shot by shot: single shots, then a spread", () => {
-    const run = range([], taps(gun.combo), tuning)
+    const run = range([], taps(gun.combo), gunner)
     run.step(steps(gun.combo.slice(0, -1).reduce((total, move) => total + move.recovery, 0)) + gun.combo.length + 1)
     const expected = gun.combo.reduce((total, move) => total + (move as ShotMove).count, 0)
     expect(run.world().moves).toBe(gun.combo.length)
@@ -110,7 +110,7 @@ describe("gun", () => {
   it("charges a piercing bolt that kicks the player back", () => {
     const bolt = gunPower.move as ShotMove
     const full = gunPower.holdDelay + gunPower.chargeTime
-    const run = range([], hold(full + 0.05), tuning)
+    const run = range([], hold(full + 0.05), gunner)
     run.step(steps(full + 0.05) + 2)
     const bolts = run.world().projectiles.filter((projectile) => projectile.pierce === bolt.pierce)
     expect(bolts).toHaveLength(1)
@@ -118,5 +118,25 @@ describe("gun", () => {
     run.step(60)
     // The opening shot has no recoil; the bolt's pushes the player back its full `lunge`.
     expect(run.world().player.x - center.x).toBeCloseTo(bolt.lunge, 0)
+  })
+})
+
+describe("stats in play", () => {
+  it("scale damage by the character's ATK", () => {
+    const first = sword.combo[0] as MeleeMove
+    const strong = tuningWith({ characters: { swordsman: { stats: { atk: 150 } } } })
+    const run = range([60], taps([first]), undefined, strong)
+    run.step(4)
+    expect(run.world().enemies).toEqual([hp - first.power * 1.5])
+  })
+
+  it("run at the character's speed", () => {
+    const run = range([], [{ frame: 0, stick: { x: 1, y: 0 } }], gunner)
+    run.step(30)
+    const before = run.world().player
+    run.step(10)
+    const after = run.world().player
+    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
+    expect(speed).toBeCloseTo(defaultTuning.characters.gunner.stats.speed, 0)
   })
 })

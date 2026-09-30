@@ -12,7 +12,7 @@ import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
 import { Dash, FrameContext, Game, HitStop, KeyboardInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning } from "../src/schema.ts"
 import { defaultViewport } from "../src/simulation.ts"
-import { doubleTap, start, withGun } from "./helpers.ts"
+import { doubleTap, gunner, start, withGun } from "./helpers.ts"
 
 const HitStopState = Game.Inspector("Test/HitStopState", {
   resources: { hitStop: Game.System.readResource(HitStop), time: Game.System.readResource(Time) },
@@ -25,9 +25,9 @@ const HitStopState = Game.Inspector("Test/HitStopState", {
 
 describe("hit-stop", () => {
   it("freezes gameplay for the tuned time on a kill, without losing input pressed meanwhile", () => {
-    const tuning = withGun(tuningWith({ feedback: { hitStopOnKill: 0.1 } }), { damage: 1000, speed: 1_000_000, range: 100_000 })
+    const tuning = withGun(tuningWith({ feedback: { hitStopOnKill: 0.1 } }), { power: 1000, speed: 1_000_000, range: 100_000 })
     // A dummy right in front of the player dies to the first shot.
-    const run = start({ tuning, pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }] })
+    const run = start({ tuning, build: gunner, pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }] })
     const Spawn = Game.System("Test/SpawnTarget", {}, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
@@ -47,9 +47,8 @@ describe("hit-stop", () => {
   })
 
   it("delivers a dash pressed during a hit-stop when the game resumes", () => {
-    const tuning = withGun(tuningWith({ feedback: { hitStopOnKill: 0.2 } }), { damage: 1000, speed: 1_000_000, range: 100_000 })
-    const run = start({
-      tuning,
+    const tuning = withGun(tuningWith({ feedback: { hitStopOnKill: 0.2 } }), { power: 1000, speed: 1_000_000, range: 100_000 })
+    const run = start({ tuning, build: gunner,
       pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }],
       keys: doubleTap("right", 2)
     })
@@ -78,7 +77,7 @@ describe("live tuning", () => {
     expect(tuning.dash.duration).toBe(defaultTuning.dash.duration)
     expect(queue.edits).toEqual([])
     expect(defaultTuning.dash.distance).not.toBe(999)
-    expect(setAt(defaultTuning, ["player", "hp"], 5).player.hp).toBe(5)
+    expect(setAt(defaultTuning, ["characters", "swordsman", "stats", "hp"], 5).characters.swordsman.stats.hp).toBe(5)
   })
 })
 
@@ -154,7 +153,7 @@ describe("hit-stop and game over", () => {
   it("still ends the run when the killing hit also starts a hit-stop", () => {
     // The hit that kills the player starts a player-hit hit-stop in the same step.
     // Game-over detection must not be skipped by it, or the Death event is lost.
-    const tuning = tuningWith({ player: { hp: 5 }, feedback: { hitStopOnPlayerHit: 0.2 } })
+    const tuning = tuningWith({ characters: { swordsman: { stats: { hp: 5 } } }, feedback: { hitStopOnPlayerHit: 0.2 } })
     const run = start({ tuning })
     const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: 1000, y: 900 }))

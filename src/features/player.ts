@@ -1,5 +1,6 @@
 /**
- * The controlled character: running, aiming, and dashing.
+ * The controlled character: spawned from the `Build` (see `resolveBuild`),
+ * running at its speed, aiming, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -7,6 +8,8 @@ import {
   Action,
   Aim,
   Body,
+  Build,
+  CombatStats,
   Controls,
   Dash,
   Energy,
@@ -27,35 +30,37 @@ import {
   Velocity,
   Weapon
 } from "../schema.ts"
-import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { ResolvedBuild } from "./build.ts"
+import { resolveBuild } from "./build.ts"
 import { initialSkills } from "./skills.ts"
 import { charging, initialWeapon } from "./weapons.ts"
 
-export const makePlayer = (tuning: TuningValue, at: Vec2) =>
+export const makePlayer = (build: ResolvedBuild, at: Vec2) =>
   Game.Command.spawn(
     [Player, {}],
     [Position, at],
     [PrevPosition, at],
     [Velocity, { x: 0, y: 0 }],
-    [Body, { radius: tuning.player.radius }],
+    [Body, { radius: build.radius }],
     [Aim, { x: 1, y: 0 }],
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
     [Invulnerable, { remaining: 0 }],
-    [Weapon, initialWeapon(tuning)],
-    [Skills, initialSkills(tuning)],
+    [CombatStats, build.stats],
+    [Weapon, initialWeapon(build)],
+    [Skills, initialSkills(build)],
     [Energy, { current: 0 }],
     [Knockback, { x: 0, y: 0 }],
-    [Hurtbox, { radius: tuning.player.hurtboxRadius, faction: "player" }],
-    [Health, { current: tuning.player.hp, max: tuning.player.hp }],
+    [Hurtbox, { radius: build.hurtboxRadius, faction: "player" }],
+    [Health, { current: build.stats.hp, max: build.stats.hp }],
     [HitFlash, { remaining: 0 }],
-    [Renderable, { kind: "player", radius: tuning.player.radius }]
+    [Renderable, { kind: "player", radius: build.radius }]
   )
 
 export const SpawnPlayer = Game.System("Shooter/SpawnPlayer", {
-  resources: { tuning: Game.System.readResource(Tuning) }
+  resources: { tuning: Game.System.readResource(Tuning), build: Game.System.readResource(Build) }
 }, ({ resources, commands }) => {
   const tuning = resources.tuning.get()
-  commands.spawnIn(RunScope, makePlayer(tuning, { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }))
+  commands.spawnIn(RunScope, makePlayer(resolveBuild(tuning, resources.build.get()), { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }))
 })
 
 /**
@@ -73,7 +78,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         aim: Game.Query.write(Aim),
         dash: Game.Query.write(Dash),
         invulnerable: Game.Query.write(Invulnerable),
-        weapon: Game.Query.read(Weapon)
+        weapon: Game.Query.read(Weapon),
+        stats: Game.Query.read(CombatStats)
       },
       with: [Player]
     })
@@ -118,11 +124,12 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       data.velocity.set(scale(direction, dashSpeed * covered / dt))
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over.
-      const carried = clampLength(data.velocity.get(), Math.max(tuning.player.moveSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
+      const runSpeed = data.stats.get().speed
+      const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
       // Charging a power attack slows the player down.
       const weapon = data.weapon.get()
       const power = tuning.attacks[weapon.attack].power
-      const speed = tuning.player.moveSpeed * (power !== null && charging(tuning.attacks[weapon.attack], weapon) ? power.moveSpeedMultiplier : 1)
+      const speed = runSpeed * (power !== null && charging(tuning.attacks[weapon.attack], weapon) ? power.moveSpeedMultiplier : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
       data.velocity.set(moveToward(carried, target, rate * dt))

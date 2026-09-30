@@ -9,7 +9,7 @@ import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, gunShot, start, withGrenade, withGun } from "./helpers.ts"
+import { ClearEnemies, gunShot, gunner, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -72,7 +72,7 @@ describe("charger", () => {
     const after = run.world().enemies[0]!.position
     // It covered most of the lane at charge speed.
     expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(spec.kind === "charge" ? spec.speed * spec.active * 0.7 : 0)
-    expect(run.world().player).toBe(defaultTuning.player.hp - spec.damage)
+    expect(run.world().player).toBe(swordsman.hp - playerLoss(defaultTuning, "charger", spec.power))
   })
 
   it("misses a player who sidesteps out of the lane during the windup", () => {
@@ -81,7 +81,7 @@ describe("charger", () => {
     // The lane points world west from the charger; step screen-down (world south-east) out of it.
     const run = duel("charger", { x: 300, y: 0 }, { keys: [{ frame: windupAt, press: ["down"] }, { frame: windupAt + 25, release: ["down"] }] })
     stepUntil(run, () => run.world().enemies[0]!.attacker.phase === "recovery")
-    expect(run.world().player).toBe(defaultTuning.player.hp)
+    expect(run.world().player).toBe(swordsman.hp)
   })
 })
 
@@ -91,7 +91,7 @@ describe("sniper", () => {
   it("fires a beam that hits the player standing in its lane", () => {
     const run = duel("sniper", { x: 500, y: 0 })
     stepUntil(run, () => run.world().enemies[0]!.attacker.phase === "recovery")
-    expect(run.world().player).toBe(defaultTuning.player.hp - spec.damage)
+    expect(run.world().player).toBe(swordsman.hp - playerLoss(defaultTuning, "sniper", spec.power))
   })
 
   it("stops its beam at walls", () => {
@@ -123,13 +123,14 @@ describe("sniper", () => {
 describe("guardian", () => {
   const hp = defaultTuning.enemies.guardian.hp
   // A guardian that stands still (and does not attack), so only its shield is under test.
-  const still = withGun(tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attack: null } } }))
+  const still = tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attack: null } } })
   const spec = defaultTuning.enemies.guardian.shield!
   const turnSteps = steps(180 / spec.turnRate) + 5
 
   it("turns its shield toward the player and blocks shots from the front", () => {
     const run = duel("guardian", { x: 260, y: 0 }, {
       tuning: still,
+      build: gunner,
       pointer: [{ frame: turnSteps, move: cursorAt({ x: 260, y: 0 }), press: ["primary"] }, { frame: turnSteps + 20, release: ["primary"] }]
     })
     run.step(turnSteps)
@@ -143,21 +144,23 @@ describe("guardian", () => {
     // It spawns facing world east, away from the player; shoot its back before it turns around.
     const run = duel("guardian", { x: 120, y: 0 }, {
       tuning: still,
+      build: gunner,
       pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }), press: ["primary"] }, { frame: 1, release: ["primary"] }]
     })
     run.step(10)
-    expect(run.world().enemies[0]!.health).toBe(hp - gunShot.damage)
+    expect(run.world().enemies[0]!.health).toBe(hp - gunShot.power)
   })
 
   it("does not stop explosions: a grenade hits it from the front", () => {
     const run = duel("guardian", { x: 250, y: 0 }, {
-      tuning: withGrenade(still),
+      tuning: still,
+      build: gunner,
       pointer: [{ frame: 0, move: cursorAt({ x: 250, y: 0 }) }],
       keys: [{ frame: turnSteps, press: ["special"], release: ["special"] }]
     })
     run.step(turnSteps + steps(defaultTuning.skills.grenade.effect.flightTime + defaultTuning.skills.grenade.effect.fuse) + 4)
     expect(run.world().enemies[0]!.facing!.x).toBeLessThan(-0.99)
-    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.skills.grenade.effect.damage)
+    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.skills.grenade.effect.power)
   })
 })
 

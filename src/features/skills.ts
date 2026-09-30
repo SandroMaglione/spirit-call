@@ -1,6 +1,8 @@
 /**
- * Skills: Space uses the special slot, Shift the ultimate slot (see
- * `Tuning.player.loadout`; the skills themselves are in `Tuning.skills`).
+ * Skills: Space uses the special slot, Shift the ultimate slot (the build
+ * decides what is in them, see `resolveBuild`; the skills themselves are in
+ * `Tuning.skills`). Effects deal their `power` as a percentage of the
+ * caster's ATK.
  *
  * `UseSkills` checks each slot's input, cooldown, and energy cost and emits a
  * `Cast`. One system per effect kind carries casts out, reusing the combat
@@ -11,14 +13,14 @@
  * Energy fills from damage the player deals (`ApplyDamage`), except damage
  * from skills that cost energy.
  */
-import type { Tuning as TuningValue } from "../config/tuning.ts"
-import type { LobEffect, SkillEffect, SkillSlot, SkillSpec } from "../content/skills.ts"
+import type { LobEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import { clampLength, normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
   Aim,
   Cast,
+  CombatStats,
   Controls,
   Energy,
   Explosion,
@@ -36,12 +38,14 @@ import {
   Tuning
 } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
+import { damageDealt } from "./build.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 /** A value for each skill slot. Listing the slots here (not iterating `skillSlots`) keeps the result typed per slot. */
 export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in SkillSlot]: T } => ({ special: each("special"), ultimate: each("ultimate") })
 
-export const initialSkills = (tuning: TuningValue): SkillsValue => bySlot((slot) => ({ skill: tuning.player.loadout[slot], cooldown: 0 }))
+export const initialSkills = (build: { readonly skills: { readonly [Slot in SkillSlot]: SkillId } }): SkillsValue =>
+  bySlot((slot) => ({ skill: build.skills[slot], cooldown: 0 }))
 
 /**
  * How a skill is aimed: along a direction (reaching `reach`), at a point
@@ -83,7 +87,13 @@ export const skillRecharge = (spec: SkillSpec, cooldown: number, energy: number)
 export const UseSkills = Game.System("Shooter/UseSkills", {
   queries: {
     player: Game.Query({
-      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.write(Skills), energy: Game.Query.write(Energy) },
+      selection: {
+        position: Game.Query.read(Position),
+        aim: Game.Query.read(Aim),
+        skills: Game.Query.write(Skills),
+        energy: Game.Query.write(Energy),
+        stats: Game.Query.read(CombatStats)
+      },
       with: [Player]
     })
   },
@@ -107,6 +117,7 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
       events.cast.emit({
         caster: Game.Entity.handle(entity.id, Position),
         faction: "player",
+        atk: data.stats.get().atk,
         skill,
         effect: spec.effect,
         from,
@@ -136,7 +147,7 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "lane", origin: from, direction, length: effect.length * (blocked?.time ?? 1), halfWidth: effect.width / 2 },
       faction: cast.faction,
-      damage: effect.damage,
+      damage: damageDealt(cast.atk, effect.power),
       knockback: effect.knockback,
       remaining: effect.active,
       hit: [],
@@ -162,6 +173,7 @@ export const CastLobs = Game.System("Shooter/CastLobs", {
       to: lobTarget(effect, cast.from, cast.at),
       faction: cast.faction,
       effect,
+      damage: damageDealt(cast.atk, effect.power),
       charges: cast.charges,
       elapsed: 0
     }]))
@@ -187,7 +199,7 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: lobbed.to, radius: effect.radius },
       faction: lobbed.faction,
-      damage: effect.damage,
+      damage: lobbed.damage,
       knockback: effect.knockback,
       remaining: 0.05,
       hit: [],
@@ -220,7 +232,7 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: at, radius: effect.radius },
       faction: cast.faction,
-      damage: effect.damage,
+      damage: damageDealt(cast.atk, effect.power),
       knockback: effect.knockback,
       remaining: effect.active,
       hit: [],

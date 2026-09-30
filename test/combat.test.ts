@@ -6,7 +6,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Enemy, Game, Health, PendingSpawn, Position, Projectile, Stats } from "../src/schema.ts"
-import { gunShot, start, withGun } from "./helpers.ts"
+import { gunShot, gunner, start, withGun } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Combat", {
   queries: {
@@ -35,9 +35,10 @@ const aimAt = (offset: { readonly x: number; readonly y: number }) => {
 /** Fast shots that reach anything on the map in one step. */
 const instant = { speed: 1_000_000, range: 100_000 }
 
-/** Shoots north from the spawn; `tuning` picks the weapon (see `withGun`). */
+/** Shoots north from the spawn with the gunner. */
 const shootNorth = (tuning: Tuning, frames: number) => start({
   tuning,
+  build: gunner,
   pointer: [
     { frame: 0, move: aimAt({ x: 0, y: -200 }), press: ["primary"] },
     { frame: frames, release: ["primary"] }
@@ -51,14 +52,14 @@ describe("projectiles", () => {
     run.step(3)
     const world = run.runtime.inspect(World)
     const target = world.enemies.find((enemy) => Math.abs(enemy.position.x - dummy.x) < 1)
-    expect(target?.health).toBe(tuning.enemies.dummy.hp - gunShot.damage)
+    expect(target?.health).toBe(tuning.enemies.dummy.hp - gunShot.power)
     expect(world.projectiles).toEqual([])
   })
 
   it("stop at walls: a pillar between the player and a target absorbs the shot", () => {
     // Shoot south-east toward the pillar at (0.72, 0.72) and the far wall.
     const tuning = withGun(defaultTuning, instant)
-    const run = start({ tuning, pointer: [{ frame: 0, move: aimAt({ x: 200, y: 200 }), press: ["primary"], release: ["primary"] }] })
+    const run = start({ tuning, build: gunner, pointer: [{ frame: 0, move: aimAt({ x: 200, y: 200 }), press: ["primary"], release: ["primary"] }] })
     run.step(2)
     const [shot] = run.runtime.inspect(World).projectiles
     // Despawned after hitting; nothing got through.
@@ -70,16 +71,16 @@ describe("projectiles", () => {
     const tuning = withGun(defaultTuning, { ...instant, pierce: 5 })
     // South-west: toward the dummies at (0.4, 0.62) and nothing else.
     const target = { x: trainingDummies[2]!.x * tuning.arena.width - center.x, y: trainingDummies[2]!.y * tuning.arena.height - center.y }
-    const run = start({ tuning, pointer: [{ frame: 0, move: aimAt(target), press: ["primary"], release: ["primary"] }] })
+    const run = start({ tuning, build: gunner, pointer: [{ frame: 0, move: aimAt(target), press: ["primary"], release: ["primary"] }] })
     run.step(3)
     const damaged = run.runtime.inspect(World).enemies.filter((enemy) => enemy.health < tuning.enemies.dummy.hp)
-    expect(damaged.map((enemy) => enemy.health)).toEqual([tuning.enemies.dummy.hp - gunShot.damage])
+    expect(damaged.map((enemy) => enemy.health)).toEqual([tuning.enemies.dummy.hp - gunShot.power])
   })
 })
 
 describe("damage", () => {
   it("kills a dummy after enough hits, shows its spawn warning, and brings it back", () => {
-    const tuning = withGun(defaultTuning, { damage: 1000 })
+    const tuning = withGun(defaultTuning, { power: 1000 })
     const run = shootNorth(tuning, 1)
     run.step(30)
     let world = run.runtime.inspect(World)

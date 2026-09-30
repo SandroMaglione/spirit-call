@@ -6,7 +6,7 @@ import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Controls, Energy, Game, Lobbed, Player, Position, Projectile, Velocity } from "../src/schema.ts"
-import { start, withGun, withGrenade } from "./helpers.ts"
+import { grenadier, gunner, start, swordsman, swordsmanWith } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
@@ -39,14 +39,14 @@ describe("touch controls", () => {
     run.step(30)
     const { velocity } = run.player()
     const right = world({ x: 1, y: 0 })
-    expect(Math.hypot(velocity.x, velocity.y)).toBeCloseTo(defaultTuning.player.moveSpeed * 0.5, 6)
+    expect(Math.hypot(velocity.x, velocity.y)).toBeCloseTo(swordsman.speed * 0.5, 6)
     expect(velocity.x / Math.hypot(velocity.x, velocity.y)).toBeCloseTo(right.x, 6)
     expect(run.runtime.inspect(World).device).toBe("touch")
   })
 
   it("with the gun, each ATTACK tap fires along the facing", () => {
     // Assist off: the training dummies near the spawn would otherwise draw the aim.
-    const run = start({ tuning: withGun(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["attack"], release: ["attack"] }] })
+    const run = start({ tuning: tuningWith({ touch: { assist: { enabled: false } } }), build: gunner, touch: [{ frame: 0, press: ["attack"], release: ["attack"] }] })
     run.step(8)
     const shots = run.runtime.inspect(World).projectiles
     expect(shots).toHaveLength(1)
@@ -76,7 +76,7 @@ describe("touch controls", () => {
 
   it("throws the grenade on release: to the dragged spot, or ahead for a tap; a cancelled drag throws nothing", () => {
     const spec = defaultTuning.skills.grenade.effect
-    const dragged = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["special"], aim: { special: { x: 0, y: -0.5 } } }, { frame: 3, release: ["special"] }] })
+    const dragged = start({ build: grenadier, touch: [{ frame: 0, press: ["special"], aim: { special: { x: 0, y: -0.5 } } }, { frame: 3, release: ["special"] }] })
     dragged.step(3)
     expect(dragged.runtime.inspect(World).grenades).toEqual([])
     dragged.step(1)
@@ -86,12 +86,12 @@ describe("touch controls", () => {
     expect(thrown!.to.y).toBeCloseTo(center.y + up.y * spec.maxRange * 0.5, 6)
 
     // Assist off: the training dummies near the spawn would otherwise draw a tapped throw.
-    const tapped = start({ tuning: withGrenade(tuningWith({ touch: { assist: { enabled: false } } })), touch: [{ frame: 0, press: ["special"], release: ["special"] }] })
+    const tapped = start({ tuning: tuningWith({ touch: { assist: { enabled: false } } }), build: grenadier, touch: [{ frame: 0, press: ["special"], release: ["special"] }] })
     tapped.step(1)
     const [tap] = tapped.runtime.inspect(World).grenades
     expect(Math.hypot(tap!.to.x - center.x, tap!.to.y - center.y)).toBeCloseTo(spec.maxRange * defaultTuning.touch.tapThrowRange, 6)
 
-    const cancelled = start({ tuning: withGrenade(defaultTuning), touch: [{ frame: 0, press: ["special"], aim: { special: { x: 1, y: 0 } } }, { frame: 3, cancel: ["special"] }] })
+    const cancelled = start({ build: grenadier, touch: [{ frame: 0, press: ["special"], aim: { special: { x: 1, y: 0 } } }, { frame: 3, cancel: ["special"] }] })
     cancelled.step(6)
     expect(cancelled.runtime.inspect(World).grenades).toEqual([])
   })
@@ -112,13 +112,13 @@ describe("touch controls", () => {
   })
 
   it("uses each button's skill by its kind: a Nova on the special button goes off on touch, a grenade on the ultimate button on release", () => {
-    const nova = start({ tuning: tuningWith({ player: { loadout: { special: "nova" } } }), touch: [{ frame: 1, press: ["special"] }] })
+    const nova = start({ build: swordsmanWith({ special: "nova" }), touch: [{ frame: 1, press: ["special"] }] })
     nova.runtime.tick(Game.Schedule(Charge))
     nova.step(2)
     expect(nova.player().invulnerable).toBeCloseTo(defaultTuning.skills.nova.effect.invulnerability, 6)
 
     const spec = defaultTuning.skills.grenade.effect
-    const thrown = start({ tuning: tuningWith({ player: { loadout: { ultimate: "grenade" } }, touch: { assist: { enabled: false } } }), touch: [{ frame: 0, press: ["ultimate"] }, { frame: 2, release: ["ultimate"] }] })
+    const thrown = start({ tuning: tuningWith({ touch: { assist: { enabled: false } } }), build: swordsmanWith({ ultimate: "grenade" }), touch: [{ frame: 0, press: ["ultimate"] }, { frame: 2, release: ["ultimate"] }] })
     thrown.step(2)
     expect(thrown.runtime.inspect(World).grenades).toEqual([])
     thrown.step(1)

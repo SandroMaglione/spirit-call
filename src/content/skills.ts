@@ -6,13 +6,14 @@
 // ── Skill shapes ──────────────────────────────────────────────────────────
 //
 // A skill is an effect plus what it costs to use: a cooldown, energy, or
-// both. Each character slot holds one skill (see `player.loadout`), and any
-// skill works in any slot. A new kind of effect is a new case here and a
+// both. Each skill slot holds one skill (a character's own, or one the
+// build equips; see `resolveBuild`), and any skill works in any slot. A new kind of effect is a new case here and a
 // system that carries it out (see `features/skills.ts`).
 
 /** What every effect has when it lands. */
 interface EffectBase {
-  readonly damage: number
+  /** Damage, as a percentage of the attacker's ATK (100: exactly its ATK). */
+  readonly power: number
   readonly knockback: number
   /** Hit-stop when it lands on an enemy (seconds, 0 disables). */
   readonly hitStop: number
@@ -82,7 +83,7 @@ export const skills = {
     label: "WAVE",
     cooldown: 3.5,
     energy: 0,
-    effect: cut({ length: 320, width: 70, damage: 34, knockback: 950, active: 0.12, hitStop: 0.06, heavy: true })
+    effect: cut({ length: 320, width: 70, power: 34, knockback: 950, active: 0.12, hitStop: 0.06, heavy: true })
   }),
   /** Lobbed to the cursor over walls; explodes after landing. */
   grenade: skill({
@@ -90,7 +91,7 @@ export const skills = {
     label: "GRENADE",
     cooldown: 4,
     energy: 0,
-    effect: lob({ maxRange: 360, flightTime: 0.35, fuse: 0.45, radius: 95, damage: 38, knockback: 380, hitStop: 0, heavy: false })
+    effect: lob({ maxRange: 360, flightTime: 0.35, fuse: 0.45, radius: 95, power: 38, knockback: 380, hitStop: 0, heavy: false })
   }),
   /** A large blast around the player, powered by energy from dealing damage. */
   nova: skill({
@@ -98,7 +99,7 @@ export const skills = {
     label: "NOVA",
     cooldown: 0,
     energy: 100,
-    effect: nova({ radius: 240, damage: 60, knockback: 760, active: 0.1, invulnerability: 0.35, clearsProjectiles: true, hitStop: 0, heavy: true })
+    effect: nova({ radius: 240, power: 60, knockback: 760, active: 0.1, invulnerability: 0.35, clearsProjectiles: true, hitStop: 0, heavy: true })
   })
 }
 

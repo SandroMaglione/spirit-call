@@ -22,7 +22,8 @@ interface AttackTiming {
   readonly recovery: number
   /** Extra wait after recovery before the next attack can start. */
   readonly cooldown: number
-  readonly damage: number
+  /** Damage, as a percentage of the attacker's ATK (100: exactly its ATK). */
+  readonly power: number
   readonly knockback: number
 }
 
@@ -120,6 +121,10 @@ const skirmish = (spec: { stopDistance: number; orbit: number; retreatSeconds: n
 export const enemies = {
   dummy: {
     hp: 60,
+    /** Its attacks deal their `power` as a percentage of this. */
+    atk: 100,
+    /** Reduces damage taken (see `Tuning.combat.defenseScale`). */
+    def: 0,
     /** Collision radius against walls. */
     radius: 18,
     /** Radius player attacks test against. */
@@ -141,6 +146,8 @@ export const enemies = {
   /** Runs at you and swipes in a cone. */
   chaser: {
     hp: 40,
+    atk: 100,
+    def: 0,
     radius: 15,
     hurtboxRadius: 16,
     knockbackTaken: 1,
@@ -150,12 +157,14 @@ export const enemies = {
     behavior: skirmish({ stopDistance: 52, orbit: 230, retreatSeconds: 0.9, engageSeconds: 3, strafeSeconds: 1.8 }),
     shield: noShield(),
     group: 1,
-    attack: melee({ triggerRange: 70, reach: 80, arcDegrees: 100, windup: 0.45, active: 0.1, recovery: 0.45, cooldown: 0.5, damage: 12, knockback: 280 }),
+    attack: melee({ triggerRange: 70, reach: 80, arcDegrees: 100, windup: 0.45, active: 0.1, recovery: 0.45, cooldown: 0.5, power: 12, knockback: 280 }),
     respawnDelay: 0
   },
   /** Keeps its distance and shoots aimed bolts. */
   shooter: {
     hp: 28,
+    atk: 100,
+    def: 0,
     radius: 14,
     hurtboxRadius: 15,
     knockbackTaken: 1.2,
@@ -167,13 +176,15 @@ export const enemies = {
     group: 1,
     attack: volley({
       triggerRange: 560, aimLock: 0.3, windup: 0.75, active: 0, recovery: 0.35, cooldown: 1.3,
-      count: 3, spreadDegrees: 14, projectileSpeed: 430, projectileRadius: 7, range: 820, damage: 10, knockback: 180
+      count: 3, spreadDegrees: 14, projectileSpeed: 430, projectileRadius: 7, range: 820, power: 10, knockback: 180
     }),
     respawnDelay: 0
   },
   /** Slow and heavy; slams a large circle where you stood. */
   brute: {
     hp: 150,
+    atk: 100,
+    def: 0,
     radius: 25,
     hurtboxRadius: 26,
     knockbackTaken: 0.2,
@@ -183,12 +194,14 @@ export const enemies = {
     behavior: chase(120),
     shield: noShield(),
     group: 1,
-    attack: slam({ triggerRange: 260, maxReach: 210, radius: 100, windup: 1.1, active: 0.12, recovery: 0.9, cooldown: 1.0, damage: 28, knockback: 460 }),
+    attack: slam({ triggerRange: 260, maxReach: 210, radius: 100, windup: 1.1, active: 0.12, recovery: 0.9, cooldown: 1.0, power: 28, knockback: 460 }),
     respawnDelay: 0
   },
   /** Tiny, fast, fragile; comes in packs. */
   swarmer: {
     hp: 12,
+    atk: 100,
+    def: 0,
     radius: 10,
     hurtboxRadius: 11,
     knockbackTaken: 1.4,
@@ -198,12 +211,14 @@ export const enemies = {
     behavior: skirmish({ stopDistance: 34, orbit: 190, retreatSeconds: 0.6, engageSeconds: 2.5, strafeSeconds: 1.2 }),
     shield: noShield(),
     group: 4,
-    attack: melee({ triggerRange: 44, reach: 50, arcDegrees: 80, windup: 0.3, active: 0.08, recovery: 0.35, cooldown: 0.5, damage: 5, knockback: 140 }),
+    attack: melee({ triggerRange: 44, reach: 50, arcDegrees: 80, windup: 0.3, active: 0.08, recovery: 0.35, cooldown: 0.5, power: 5, knockback: 140 }),
     respawnDelay: 0
   },
   /** Keeps mid-range, telegraphs a lane, then charges down it. Open to punishment afterwards. */
   charger: {
     hp: 70,
+    atk: 100,
+    def: 0,
     radius: 19,
     hurtboxRadius: 20,
     knockbackTaken: 0.5,
@@ -213,12 +228,14 @@ export const enemies = {
     behavior: kite({ minDistance: 180, maxDistance: 320, strafeSeconds: 2.2 }),
     shield: noShield(),
     group: 1,
-    attack: charge({ triggerRange: 380, windup: 0.8, active: 0.42, speed: 850, width: 44, recovery: 1.0, cooldown: 1.2, damage: 22, knockback: 520 }),
+    attack: charge({ triggerRange: 380, windup: 0.8, active: 0.42, speed: 850, width: 44, recovery: 1.0, cooldown: 1.2, power: 22, knockback: 520 }),
     respawnDelay: 0
   },
   /** Stays far away; paints a tracking beam that locks, then fires instantly. Walls stop it. */
   sniper: {
     hp: 32,
+    atk: 100,
+    def: 0,
     radius: 14,
     hurtboxRadius: 15,
     knockbackTaken: 1.2,
@@ -228,12 +245,14 @@ export const enemies = {
     behavior: kite({ minDistance: 430, maxDistance: 680, strafeSeconds: 2.5 }),
     shield: noShield(),
     group: 1,
-    attack: beam({ triggerRange: 900, windup: 1.3, aimLock: 0.35, active: 0.1, recovery: 0.6, cooldown: 1.8, length: 1000, width: 18, damage: 20, knockback: 260 }),
+    attack: beam({ triggerRange: 900, windup: 1.3, aimLock: 0.35, active: 0.1, recovery: 0.6, cooldown: 1.8, length: 1000, width: 18, power: 20, knockback: 260 }),
     respawnDelay: 0
   },
   /** A frontal shield blocks all projectiles; flank it or use the grenade and ultimate. */
   guardian: {
     hp: 90,
+    atk: 100,
+    def: 0,
     radius: 20,
     hurtboxRadius: 21,
     knockbackTaken: 0.35,
@@ -243,7 +262,7 @@ export const enemies = {
     behavior: skirmish({ stopDistance: 70, orbit: 260, retreatSeconds: 1.1, engageSeconds: 3.5, strafeSeconds: 2.2 }),
     shield: shield({ arcDegrees: 130, turnRate: 150 }),
     group: 1,
-    attack: melee({ triggerRange: 88, reach: 100, arcDegrees: 110, windup: 0.55, active: 0.1, recovery: 0.55, cooldown: 0.6, damage: 16, knockback: 360 }),
+    attack: melee({ triggerRange: 88, reach: 100, arcDegrees: 110, windup: 0.55, active: 0.1, recovery: 0.55, cooldown: 0.6, power: 16, knockback: 360 }),
     respawnDelay: 0
   }
 }

@@ -5,7 +5,10 @@ import type { Direction, TouchButton } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
+import type { EnemyKind } from "../src/content/enemies.ts"
+import { damageDealt, damageTaken } from "../src/features/build.ts"
 import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
+import type { BuildValue } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
 export const PlayerState = Game.Inspector("Test/PlayerState", {
@@ -47,22 +50,28 @@ export const doubleTap = (direction: Direction, frame: number, options: { readon
 /** The gun's opening shot: what a single press fires. */
 export const gunShot = defaultTuning.attacks.gun.combo[0] as ShotMove
 
-/**
- * The gun instead of the sword (the default attack), for tests about
- * shooting; `shot` overrides its opening shot.
- */
+/** The swordsman (the default character) with `skills` equipped over its own. */
+export const swordsmanWith = (skills: BuildValue["skills"]): BuildValue => ({ character: "swordsman", skills })
+
+/** The gunner: the gun, and the grenade as its special. */
+export const gunner: BuildValue = { character: "gunner", skills: {} }
+
+/** The swordsman with the grenade instead of the Blade Wave, for tests about the grenade. */
+export const grenadier = swordsmanWith({ special: "grenade" })
+
+/** The swordsman's stats: the default player's. */
+export const swordsman = defaultTuning.characters.swordsman.stats
+
+/** What the default player loses to an enemy attack of `power` (enemies' ATK and the swordsman's DEF applied). */
+export const playerLoss = (tuning: Tuning, kind: EnemyKind, power: number): number =>
+  damageTaken(tuning, damageDealt(tuning.enemies[kind].atk, power), tuning.characters.swordsman.stats.def)
+
+/** The gun with `shot` overriding its opening shot, for tests about shooting (with `gunner`). */
 export const withGun = (tuning: Tuning, shot: Partial<Omit<ShotMove, "shape">> = {}): Tuning => {
   const gun = tuning.attacks.gun
   const [first, ...rest] = gun.combo
-  return {
-    ...tuning,
-    player: { ...tuning.player, loadout: { ...tuning.player.loadout, attack: "gun" } },
-    attacks: { ...tuning.attacks, gun: { ...gun, combo: [{ ...(first as ShotMove), ...shot }, ...rest] } }
-  }
+  return { ...tuning, attacks: { ...tuning.attacks, gun: { ...gun, combo: [{ ...(first as ShotMove), ...shot }, ...rest] } } }
 }
-
-/** The grenade instead of the Blade Wave in the special slot, for tests about the grenade. */
-export const withGrenade = (tuning: Tuning): Tuning => ({ ...tuning, player: { ...tuning.player, loadout: { ...tuning.player.loadout, special: "grenade" } } })
 
 const withWaves = (tuning: Tuning, enabled: boolean): Tuning => ({ ...tuning, waves: { ...tuning.waves, enabled } })
 
@@ -71,6 +80,8 @@ export interface StartOptions {
   readonly pointer?: Pointer.Timeline
   readonly touch?: Touch.Timeline<TouchButton>
   readonly tuning?: Tuning
+  /** Who enters the arena. Defaults to the swordsman. */
+  readonly build?: BuildValue
   /** Run waves instead of training dummies. Defaults to false. */
   readonly waves?: boolean
 }
@@ -81,7 +92,8 @@ export const start = (options: StartOptions = {}) => {
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
-    tuning: withWaves(options.tuning ?? defaultTuning, options.waves ?? false)
+    tuning: withWaves(options.tuning ?? defaultTuning, options.waves ?? false),
+    ...(options.build === undefined ? {} : { build: options.build })
   })
   const setup = sim.runtime.tick(sim.setup)
   if (!setup.ok) throw new Error("setup failed")

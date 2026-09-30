@@ -23,6 +23,7 @@ import {
   AttackPhase,
   Attacker,
   Body,
+  Build,
   Camera,
   Cast,
   Controls,
@@ -66,6 +67,7 @@ import type { Area } from "../physics/areas.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { bySlot, lobTarget, skillRecharge } from "../features/skills.ts"
 import { chargeOf, moveArea } from "../features/weapons.ts"
+import { resolveBuild } from "../features/build.ts"
 import type { Graphics } from "pixi.js"
 import type { RenderHostValue } from "./host-types.ts"
 import { createNode, enemyColor, projectileColor, wallDepth } from "./nodes.ts"
@@ -189,7 +191,8 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         flash: Game.Query.read(HitFlash),
         skills: Game.Query.read(Skills),
         energy: Game.Query.read(Energy),
-        weapon: Game.Query.read(Weapon)
+        weapon: Game.Query.read(Weapon),
+        body: Game.Query.read(Body)
       },
       with: [Player]
     })
@@ -203,7 +206,7 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
   for (const { entity, data } of queries.player.each()) {
     const position = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
     const dash = data.dash.get()
-    const radius = tuning.player.radius
+    const radius = data.body.get().radius
 
     // Stella Sora-style facing: a subtle ring at a melee attack's reach (close around a gun), with a small arrow on it.
     const aim = data.aim.get()
@@ -844,7 +847,8 @@ const SyncHud = Game.System("Shooter/SyncHud", {
     stats: Game.System.readResource(Stats),
     waves: Game.System.readResource(Waves),
     run: Game.System.readResource(Run),
-    tuning: Game.System.readResource(Tuning)
+    tuning: Game.System.readResource(Tuning),
+    build: Game.System.readResource(Build)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
@@ -876,7 +880,7 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   stats.sinceHud = 0
   const player = queries.player.singleOptional()
   const dash = player.ok && player.value !== undefined ? player.value.data.dash.get() : undefined
-  const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: resources.tuning.get().player.hp }
+  const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: resolveBuild(resources.tuning.get(), resources.build.get()).stats.hp }
   if (player.ok && player.value !== undefined) {
     // Each slot drains as its cooldown runs down and as energy fills up.
     const slots = skillStatus(resources.tuning.get(), player.value.data.skills.get(), player.value.data.energy.get().current)

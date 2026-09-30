@@ -8,17 +8,13 @@
  * `engine` is read once by the host when the loop starts. `defaultTuning` is
  * loaded into the `Tuning` resource, so systems read it through the ECS, tests
  * can run with overrides (`tuningWith`), and a live tweak panel can edit it.
- * The content (attacks, skills, enemies) lives in `src/content/` and is part
+ * The content (characters, attacks, skills, enemies) lives in `src/content/` and is part
  * of the tuning, so its numbers are live-tunable too.
  */
 import { attacks } from "../content/attacks.ts"
-import type { AttackId } from "../content/attacks.ts"
+import { characters } from "../content/characters.ts"
 import { enemies } from "../content/enemies.ts"
 import { skills } from "../content/skills.ts"
-import type { SkillId, SkillSlot } from "../content/skills.ts"
-
-/** What a character fights with: a basic attack, and the skill in each slot. */
-export type Loadout = { readonly attack: AttackId } & { readonly [Slot in SkillSlot]: SkillId }
 
 /** Fixed-step timing. Changing these needs a reload. */
 export const engine = {
@@ -31,18 +27,12 @@ export const engine = {
 }
 
 export const defaultTuning = {
+  /** How every character moves and takes hits; each character's own numbers are in `characters`. */
   player: {
-    /** Collision radius of the body against walls. */
-    radius: 16,
-    /** Radius enemy attacks test against; smaller than the body, so near misses read as misses. */
-    hurtboxRadius: 11,
-    /** Top running speed. */
-    moveSpeed: 320,
-    /** How fast the player reaches top speed. */
+    /** How fast the player reaches top speed (the character's `speed`). */
     acceleration: 3200,
     /** How fast the player stops when input is released. */
     deceleration: 4200,
-    hp: 100,
     /** Fraction of incoming knockback applied. */
     knockbackTaken: 0.6,
     /** Invulnerability after taking a hit, so one mistake costs one hit. */
@@ -54,9 +44,19 @@ export const defaultTuning = {
      */
     movementGrace: 0.08,
     /** Shots leave this far in front of the player's center. */
-    muzzleOffset: 12,
-    /** The basic attack and skills when the run starts (ids of `attacks` and `skills`). */
-    loadout: { attack: "sword", special: "bladeWave", ultimate: "nova" } as Loadout
+    muzzleOffset: 12
+  },
+
+  /** Every character, by id; the `Build` resource picks the one in the arena. */
+  characters,
+
+  /**
+   * Damage: an attack deals its `power` as a percentage of the attacker's
+   * ATK, and the target's DEF scales it by `defenseScale / (defenseScale +
+   * DEF)`: DEF equal to `defenseScale` halves it.
+   */
+  combat: {
+    defenseScale: 100
   },
 
   dash: {
@@ -76,7 +76,7 @@ export const defaultTuning = {
     exitSpeedFactor: 0.35
   },
 
-  /** Every basic attack, by id; `player.loadout.attack` picks the one in use. */
+  /** Every basic attack, by id; each character has one (its weapon). */
   attacks,
 
   /** On-screen touch controls (see `touchLayout` in config/input.ts). */
@@ -95,7 +95,7 @@ export const defaultTuning = {
     assist: { enabled: true, range: 70, behindPenalty: 60, stickiness: 30 }
   },
 
-  /** Every skill, by id; `player.loadout` picks the ones in use. */
+  /** Every skill, by id; a character starts with one per slot, and a build can equip others. */
   skills,
 
   /** Energy, spent by skills that cost it (the Nova). */

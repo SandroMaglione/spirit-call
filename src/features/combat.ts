@@ -12,6 +12,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
+  CombatStats,
   Damage,
   Death,
   Enemy,
@@ -41,6 +42,7 @@ import {
 } from "../schema.ts"
 import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
+import { damageTaken } from "./build.ts"
 import { respawnOf } from "./enemies.ts"
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
@@ -214,13 +216,17 @@ const Damageable = Game.Query({
     flash: Game.Query.write(HitFlash),
     knockback: Game.Query.write(Knockback),
     invulnerable: Game.Query.write(Invulnerable),
+    stats: Game.Query.read(CombatStats),
     player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns)
   }
 })
 
-/** Applies damage requests: the single place where hits become consequences. */
+/**
+ * Applies damage requests: the single place where hits become consequences.
+ * The target's DEF reduces each request's amount (see `damageTaken`).
+ */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: { energies: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) },
   events: {
@@ -243,8 +249,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const invulnerable = data.invulnerable.get().remaining
     if (invulnerable > 0) continue
 
+    const amount = damageTaken(tuning, damage.amount, data.stats.get().def)
     const health = data.health.get()
-    const current = Math.max(0, health.current - damage.amount)
+    const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.
     if (damage.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
@@ -267,7 +274,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       entity: entity.id.value,
       at,
       direction: damage.direction,
-      amount: damage.amount,
+      amount,
       faction: data.hurtbox.get().faction,
       killed,
       heavy: damage.heavy ?? false

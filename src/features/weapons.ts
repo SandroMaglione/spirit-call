@@ -1,6 +1,7 @@
 /**
  * The player's basic attack (see `Tuning.attacks`; the one in use is on the
- * player's `Weapon`, from `Tuning.player.loadout`).
+ * player's `Weapon`: its character's). Moves deal their `power` as a
+ * percentage of the player's ATK.
  *
  * Each press does the next move of the combo; presses in rhythm chain
  * through it, and a press made during a recovery is kept for `inputBuffer`.
@@ -13,18 +14,19 @@
  * is an impulse on the player's knockback.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
+import type { AttackId, AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Action, Aim, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
+import { Action, Aim, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
 import type { HitboxValue, WeaponValue } from "../schema.ts"
+import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
-export const initialWeapon = (tuning: TuningValue): WeaponValue => ({
-  attack: tuning.player.loadout.attack,
+export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue => ({
+  attack: build.attack,
   cooldown: 0,
   recovery: 0,
   buffered: 0,
@@ -59,13 +61,13 @@ export const moveArea = (move: MeleeMove, position: Vec2, aim: Vec2): Pick<Hitbo
 
 /**
  * How far a move lunges from `position` along `aim`: its `lunge`, cut short
- * so the player stops `lungeStop` short of an enemy straight ahead. A recoil
- * (negative lunge) is never cut short.
+ * so the player (of body `radius`) stops `lungeStop` short of an enemy
+ * straight ahead. A recoil (negative lunge) is never cut short.
  */
 const lungeDistance = (
   move: AttackMove,
   spec: BasicAttackSpec,
-  tuning: TuningValue,
+  radius: number,
   position: Vec2,
   aim: Vec2,
   enemies: ReadonlyArray<{ readonly position: Vec2; readonly radius: number }>
@@ -76,7 +78,7 @@ const lungeDistance = (
     const dx = enemy.position.x - position.x
     const dy = enemy.position.y - position.y
     const along = dx * aim.x + dy * aim.y
-    const clearance = enemy.radius + tuning.player.radius
+    const clearance = enemy.radius + radius
     if (along <= 0 || Math.abs(dx * aim.y - dy * aim.x) > clearance) continue
     distance = Math.min(distance, Math.max(0, along - clearance - spec.lungeStop))
   }
@@ -97,7 +99,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         position: Game.Query.read(Position),
         aim: Game.Query.read(Aim),
         weapon: Game.Query.write(Weapon),
-        knockback: Game.Query.write(Knockback)
+        knockback: Game.Query.write(Knockback),
+        body: Game.Query.read(Body),
+        stats: Game.Query.read(CombatStats)
       },
       with: [Player]
     }),
@@ -120,6 +124,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const position = data.position.get()
     const aim = data.aim.get()
     const current = data.weapon.get()
+    const atk = data.stats.get().atk
     const spec: BasicAttackSpec = tuning.attacks[current.attack]
     const cooldown = Math.max(0, current.cooldown - dt)
     const buffered = controls.attackPressed ? spec.inputBuffer : Math.max(0, current.buffered - dt)
@@ -150,7 +155,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
             faction: "player",
             style: "bolt",
             radius: move.radius,
-            damage: move.damage,
+            damage: damageDealt(atk, move.power),
             knockback: move.knockback,
             range: move.range,
             pierce: move.pierce,
@@ -163,7 +168,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           ...moveArea(move, position, aim),
           faction: "player",
-          damage: move.damage,
+          damage: damageDealt(atk, move.power),
           knockback: move.knockback,
           remaining: spec.active,
           hit: [],
@@ -175,7 +180,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       // The lunge: an impulse that carries the player `lungeDistance` along the aim
       // (knockback travels its speed / decay before it dies out).
       const enemies = queries.enemies.each().map(({ data: enemy }) => ({ position: enemy.position.get(), radius: enemy.hurtbox.get().radius }))
-      const lunge = lungeDistance(move, spec, tuning, position, aim, enemies) * tuning.knockback.decay
+      const lunge = lungeDistance(move, spec, data.body.get().radius, position, aim, enemies) * tuning.knockback.decay
       if (lunge !== 0) data.knockback.update((knockback) => ({ x: knockback.x + aim.x * lunge, y: knockback.y + aim.y * lunge }))
       moves += 1
       events.action.emit({ kind: "attack", at: position, direction: aim, move, step: nextStep, power })

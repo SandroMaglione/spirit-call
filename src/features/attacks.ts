@@ -20,6 +20,7 @@ import type { Box } from "../physics/shapes.ts"
 import {
   Attacker,
   AttackPhase,
+  CombatStats,
   Damage,
   Enemy,
   Game,
@@ -34,6 +35,7 @@ import {
   Tuning
 } from "../schema.ts"
 import type { Faction } from "../schema.ts"
+import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
@@ -78,7 +80,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         position: Game.Query.read(Position),
         enemy: Game.Query.read(Enemy),
         attacker: Game.Query.write(Attacker),
-        phase: Game.Query.write(AttackPhase)
+        phase: Game.Query.write(AttackPhase),
+        stats: Game.Query.read(CombatStats)
       }
     }),
     player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
@@ -101,6 +104,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   for (const { data } of queries.attackers.each()) {
     const spec = tuning.enemies[data.enemy.get().kind].attack
     if (spec === null) continue
+    const damage = damageDealt(data.stats.get().atk, spec.power)
     const position = data.position.get()
     const current = data.attacker.get()
     const phase = data.phase
@@ -133,7 +137,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
           const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
           const direction = { x: Math.cos(base + offset), y: Math.sin(base + offset) }
           commands.spawnIn(RunScope, makeProjectile(position, { x: direction.x * spec.projectileSpeed, y: direction.y * spec.projectileSpeed }, {
-            faction, style: "bolt", radius: spec.projectileRadius, damage: spec.damage, knockback: spec.knockback, range: spec.range, pierce: 0, hit: []
+            faction, style: "bolt", radius: spec.projectileRadius, damage, knockback: spec.knockback, range: spec.range, pierce: 0, hit: []
           }))
         }
       } else if (spec.kind === "charge") {
@@ -141,7 +145,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         hit = []
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area, faction, damage: spec.damage, knockback: spec.knockback, remaining: Math.max(spec.active, 1e-6), hit: [], charges: false
+          area, faction, damage, knockback: spec.knockback, remaining: Math.max(spec.active, 1e-6), hit: [], charges: false
         }]))
       }
     }
@@ -159,7 +163,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         hit = [...hit, other.entity.id.value]
         events.damage.emit({
           target: Game.Entity.handle(other.entity.id, Health),
-          amount: spec.damage,
+          amount: damage,
           direction: pushDirection({ ...area, origin: position, length: 1 }, at),
           knockback: spec.knockback,
           faction,
