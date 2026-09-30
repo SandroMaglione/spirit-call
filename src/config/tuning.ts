@@ -8,11 +8,12 @@
  * `engine` is read once by the host when the loop starts. `defaultTuning` is
  * loaded into the `Tuning` resource, so systems read it through the ECS, tests
  * can run with overrides (`tuningWith`), and a live tweak panel can edit it.
- * The content (characters, weapons, attacks, skills, enemies) lives in
+ * The content (characters, weapons, attacks, skills, enemies, challenges) lives in
  * `src/content/` and is part of the tuning, so its numbers are live-tunable
  * too.
  */
 import { attacks } from "../content/attacks.ts"
+import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { enemies } from "../content/enemies.ts"
 import { skills } from "../content/skills.ts"
@@ -146,8 +147,12 @@ export const defaultTuning = {
     orbitSpeed: 0.7
   },
 
+  /** Every challenge, by id; the `Challenge` resource picks the one in the arena. */
+  challenges,
+
+  /** Wave timing, for every challenge (each challenge has its own waves). */
   waves: {
-    /** Off: training dummies instead of waves. */
+    /** Off: training dummies instead of the challenge. */
     enabled: true,
     /** Delay before the first wave. */
     firstDelay: 1.2,
@@ -159,17 +164,6 @@ export const defaultTuning = {
     spawnWarning: 1.0,
     /** Enemies never appear closer than this to the player. */
     minSpawnDistance: 340,
-    /** The first waves, exactly (each entry spawns its enemy's `group`). New types show up early. */
-    scripted: [
-      ["chaser", "chaser", "swarmer"],
-      ["charger", "shooter", "chaser"],
-      ["guardian", "sniper", "chaser", "chaser"],
-      ["brute", "charger", "swarmer", "shooter"],
-      ["guardian", "sniper", "swarmer", "chaser", "chaser", "brute"]
-    ] as ReadonlyArray<ReadonlyArray<"chaser" | "shooter" | "brute" | "swarmer" | "charger" | "sniper" | "guardian">>,
-    /** Afterwards: a random mix within this budget (enemy `cost`), growing per wave. */
-    baseBudget: 6,
-    budgetPerWave: 2,
     seed: 1337
   },
 

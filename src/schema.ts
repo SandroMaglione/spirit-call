@@ -9,6 +9,7 @@ import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
+import type { ChallengeId } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
@@ -348,6 +349,9 @@ export interface BuildValue {
 }
 export const Build = Descriptor.Resource<BuildValue>()("Shooter/Build")
 
+/** The challenge being played (see `content/challenges.ts`). */
+export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
+
 /**
  * Triggered passive effects waiting to be carried out (see
  * `features/passives.ts`). A queue rather than events, so an effect set off
@@ -424,7 +428,8 @@ export const Camera = Descriptor.Resource<CameraValue>()("Shooter/Camera")
 export interface WavesValue {
   /** Current wave, from 1; 0 before the first. */
   readonly number: number
-  readonly phase: "break" | "spawning" | "fighting"
+  /** `complete`: every wave of the challenge's plan was cleared. */
+  readonly phase: "break" | "spawning" | "fighting" | "complete"
   /** Break: time until the next wave. Spawning: time until the next spawn. */
   readonly timer: number
   /** Enemies of this wave still to spawn. */
@@ -438,8 +443,12 @@ export const HitStop = Descriptor.Resource<{ readonly remaining: number }>()("Sh
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
 
-/** The current run: simulated time since it started, and when it ended. */
-export const Run = Descriptor.Resource<{ readonly time: number; readonly endedAt: number | null }>()("Shooter/Run")
+/** The current run: simulated time since it started, and when it ended (`Time.elapsed`). */
+export interface RunValue {
+  readonly time: number
+  readonly endedAt: number | null
+}
+export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 
 export const Stats = Descriptor.Resource<{ readonly kills: number; readonly shots: number }>()("Shooter/Stats")
 
@@ -506,6 +515,7 @@ export const Game = Schema.bind(
     resources: {
       Tuning,
       Build,
+      Challenge,
       TriggeredEffects,
       Time,
       Keys,
@@ -525,8 +535,11 @@ export const Game = Schema.bind(
   Root
 )
 
-/** Whether the run is going on or over. Gameplay systems run only while `Playing`. */
-export const Flow = Game.StateMachine("Shooter/Flow", ["Playing", "GameOver"])
+/**
+ * Whether the run is going on or over: lost (`GameOver`) or won (`Cleared`).
+ * Gameplay systems run only while `Playing`.
+ */
+export const Flow = Game.StateMachine("Shooter/Flow", ["Playing", "GameOver", "Cleared"])
 
 /**
  * Hit-stop: the simulation freezes while `HitStop.remaining` is above zero.

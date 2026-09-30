@@ -26,6 +26,7 @@ import {
   Build,
   Camera,
   Cast,
+  Challenge,
   Controls,
   Dash,
   Death,
@@ -63,7 +64,8 @@ import {
   Waves,
   Weapon
 } from "../schema.ts"
-import type { SkillsValue } from "../schema.ts"
+import type { SkillsValue, WavesValue } from "../schema.ts"
+import type { ChallengeSpec } from "../content/challenges.ts"
 import type { Area } from "../physics/areas.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { bySlot, lobTarget, skillRecharge } from "../features/skills.ts"
@@ -823,6 +825,15 @@ const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =
     return { spec, recharge: skillRecharge(spec, skills[slot].cooldown, energy) }
   })
 
+/** Progress toward a challenge's objective, for the HUD: the wave out of the total, or the time left to survive. */
+const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number, remaining: number): string => {
+  const total = challenge.objective.kind === "clearWaves" ? `/${challenge.waves.scripted.length}` : ""
+  const wave = waves.number === 0
+    ? "get ready"
+    : waves.phase === "break" || waves.phase === "complete" ? `wave ${waves.number}${total} cleared` : `wave ${waves.number}${total} · ${remaining} left`
+  return challenge.objective.kind === "survive" ? `survive ${Math.max(0, Math.ceil(challenge.objective.seconds - time))}s · ${wave}` : wave
+}
+
 /** How much of the current move's recovery is left, 0..1. */
 const recharge = (weapon: { readonly cooldown: number; readonly recovery: number }): number =>
   weapon.recovery <= 0 ? 0 : weapon.cooldown / weapon.recovery
@@ -856,7 +867,8 @@ const SyncHud = Game.System("Shooter/SyncHud", {
     waves: Game.System.readResource(Waves),
     run: Game.System.readResource(Run),
     tuning: Game.System.readResource(Tuning),
-    build: Game.System.readResource(Build)
+    build: Game.System.readResource(Build),
+    challenge: Game.System.readResource(Challenge)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
@@ -864,22 +876,28 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   const hud = services.host.hud
   const waves = resources.waves.get()
   const feedback = services.host.feedback
+  const challenge = resources.tuning.get().challenges[resources.challenge.get()]
   if (waves.number !== feedback.bannerWave) {
     feedback.bannerWave = waves.number
     if (waves.number > 0) {
       services.sounds.play("waveStart")
-      hud.banner.textContent = `WAVE ${waves.number}`
+      hud.banner.textContent = challenge.objective.kind === "clearWaves" ? `WAVE ${waves.number} / ${challenge.waves.scripted.length}` : `WAVE ${waves.number}`
       hud.banner.classList.remove("is-showing")
       void hud.banner.offsetWidth // restart the CSS animation
       hud.banner.classList.add("is-showing")
     }
   }
-  const over = machines.flow.get() === "GameOver"
+  // The results screen: won (the objective met) or lost (the player died).
+  const flow = machines.flow.get()
+  const over = flow !== "Playing"
   if (hud.gameOver.hidden === over) {
     hud.gameOver.hidden = !over
+    const cleared = flow === "Cleared"
+    hud.gameOver.classList.toggle("is-cleared", cleared)
+    hud.gameOverTitle.textContent = cleared ? "CLEARED" : "YOU DIED"
     const run = resources.run.get()
     const combat = resources.stats.get()
-    hud.gameOverStats.textContent = `Wave ${waves.number} · ${combat.kills} kills · ${run.time.toFixed(1)}s`
+    hud.gameOverStats.textContent = `${challenge.name} · wave ${waves.number} · ${combat.kills} kills · ${run.time.toFixed(1)}s`
   }
 
   const stats = services.host.stats
@@ -904,7 +922,7 @@ const SyncHud = Game.System("Shooter/SyncHud", {
   const remaining = queries.enemies.each().length + queries.pending.each().length + waves.queue.length
   hud.wave.textContent = !resources.tuning.get().waves.enabled
     ? "training"
-    : waves.number === 0 ? "get ready" : waves.phase === "break" ? `wave ${waves.number} cleared` : `wave ${waves.number} · ${remaining} left`
+    : `${challenge.name} · ${challengeProgress(challenge, waves, resources.run.get().time, remaining)}`
   hud.dash.textContent = dash === undefined ? "" : dash.cooldown <= 0 ? "DASH ready" : `DASH ${dash.cooldown.toFixed(2)}s`
   const combat = resources.stats.get()
   hud.combat.textContent = `kills ${combat.kills} · shots ${combat.shots}`

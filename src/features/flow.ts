@@ -1,6 +1,7 @@
 /**
- * The run lifecycle: playing until the player dies, a game-over screen, and
- * a restart that clears the run and starts over.
+ * The run lifecycle: playing until the player dies (`GameOver`) or clears
+ * the challenge (`Cleared`, see `CheckObjective`), a results screen, and a
+ * restart that clears the run and starts over.
  */
 import { Death, Flow, Game, HitStop, Keys, PointerState, Rng, Run, RunScope, Stats, Time, TouchState, Tuning, Waves } from "../schema.ts"
 import { initialWaves } from "./waves.ts"
@@ -24,7 +25,7 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   nextMachines.flow.set("GameOver")
 })
 
-/** On the game-over screen, restart with R/Enter or a click (after a short delay). */
+/** On the results screen (lost or won), restart with R/Enter or a click (after a short delay). */
 export const QueueRestart = Game.System("Shooter/QueueRestart", {
   resources: {
     keys: Game.System.readResource(Keys),
@@ -35,7 +36,7 @@ export const QueueRestart = Game.System("Shooter/QueueRestart", {
     tuning: Game.System.readResource(Tuning)
   },
   nextMachines: { flow: Game.System.nextState(Flow) },
-  when: [Game.Condition.inState(Flow, "GameOver")]
+  when: [Game.Condition.not(Game.Condition.inState(Flow, "Playing"))]
 }, ({ resources, nextMachines }) => {
   const endedAt = resources.run.get().endedAt
   if (endedAt === null || resources.time.get().elapsed - endedAt < resources.tuning.get().flow.restartDelay) return

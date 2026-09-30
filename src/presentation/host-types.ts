@@ -59,7 +59,9 @@ export interface HudRefs {
   readonly stats: HTMLElement
   readonly banner: HTMLElement
   readonly vignette: HTMLElement
+  /** The results screen, lost or won. */
   readonly gameOver: HTMLElement
+  readonly gameOverTitle: HTMLElement
   readonly gameOverStats: HTMLElement
 }
 

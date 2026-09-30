@@ -16,6 +16,7 @@ import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
+import { CheckObjective } from "./features/challenges.ts"
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
 import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
@@ -90,11 +91,13 @@ const gameplay = Game.Schedule.when(
 
 /**
  * Needs every Death and Hit event of the run, so it is never skipped by
- * hit-stop: game over, and the passives that kills and moves set off.
+ * hit-stop: game over (checked before the objective, so dying on the step it
+ * is met still loses), and the passives that kills and moves set off.
  */
 const runOutcome = Game.Schedule.when(
   whileRunIsLive,
   DetectGameOver,
+  CheckObjective,
   TriggerPassives
 )
 

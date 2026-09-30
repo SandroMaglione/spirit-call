@@ -5,6 +5,7 @@ import type { Direction, TouchButton } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
+import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { damageDealt, damageTaken } from "../src/features/build.ts"
 import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
@@ -82,6 +83,8 @@ export interface StartOptions {
   readonly tuning?: Tuning
   /** Who enters the arena. Defaults to the swordsman. */
   readonly build?: BuildValue
+  /** What they face (with `waves`). Defaults to the default challenge. */
+  readonly challenge?: ChallengeId
   /** Run waves instead of training dummies. Defaults to false. */
   readonly waves?: boolean
 }
@@ -93,7 +96,8 @@ export const start = (options: StartOptions = {}) => {
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
     tuning: withWaves(options.tuning ?? defaultTuning, options.waves ?? false),
-    ...(options.build === undefined ? {} : { build: options.build })
+    ...(options.build === undefined ? {} : { build: options.build }),
+    ...(options.challenge === undefined ? {} : { challenge: options.challenge })
   })
   const setup = sim.runtime.tick(sim.setup)
   if (!setup.ok) throw new Error("setup failed")

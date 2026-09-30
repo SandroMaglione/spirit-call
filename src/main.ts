@@ -4,7 +4,7 @@ import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
-import { buildFromQuery } from "./dev/build.ts"
+import { buildFromQuery, challengeFromQuery } from "./dev/build.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
@@ -31,6 +31,8 @@ const start = async (mount: HTMLElement) => {
   const tuning = stressLoad === undefined ? loadSavedTuning() : stressTuning()
   // `?character=gunner&special=bladeWave` enters with another build (see dev/build.ts).
   const build = buildFromQuery(tuning, window.location.search)
+  // `?challenge=swarm` plays another challenge.
+  const challenge = challengeFromQuery(tuning, window.location.search)
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
@@ -76,7 +78,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(Sounds, sounds),
       Game.Runtime.service(DevCommands, devCommands)
     ),
-    resources: initialResources(tuning, frameContext.viewport, build),
+    resources: initialResources(tuning, frameContext.viewport, build, challenge),
     machines: initialMachines(),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true

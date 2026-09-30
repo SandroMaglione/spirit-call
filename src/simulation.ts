@@ -13,6 +13,7 @@
  * ```
  */
 import { Touch } from "@typeonce/bevy-ts-browser"
+import type { ChallengeId } from "./content/challenges.ts"
 
 import { touchButtons } from "./config/input.ts"
 import type { KeyboardSource, PointerSource, TouchSource } from "./config/input.ts"
@@ -31,6 +32,8 @@ export interface SimulationOptions {
   readonly tuning?: Tuning
   /** Who enters the arena. Defaults to `defaultBuild`. */
   readonly build?: BuildValue
+  /** What they face. Defaults to `defaultChallenge`. */
+  readonly challenge?: ChallengeId
   /** Defaults to 1280×720. */
   readonly viewport?: ViewportValue
 }
@@ -47,7 +50,7 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(TouchInput, options.touch ?? Touch.scripted(touchButtons, [])),
       Game.Runtime.service(FrameContext, { viewport })
     ),
-    resources: initialResources(tuning, viewport, options.build),
+    resources: initialResources(tuning, viewport, options.build, options.challenge),
     machines: initialMachines(),
     debug: true
   })

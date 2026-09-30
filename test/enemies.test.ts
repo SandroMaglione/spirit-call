@@ -178,7 +178,7 @@ describe("waves", () => {
     const { world } = firstWave()
     const now = world()
     expect(now.waves.number).toBe(1)
-    expect(now.enemies.map((enemy) => enemy.kind).sort()).toEqual(expandWave(defaultTuning.waves.scripted[0]!))
+    expect(now.enemies.map((enemy) => enemy.kind).sort()).toEqual(expandWave(defaultTuning.challenges.endless.waves.scripted[0]!))
     for (const enemy of now.enemies) {
       expect(Math.hypot(enemy.position.x - center.x, enemy.position.y - center.y)).toBeGreaterThan(defaultTuning.waves.minSpawnDistance - 200)
     }
@@ -197,6 +197,6 @@ describe("waves", () => {
     stepUntil(run, () => world().waves.number === 2)
     stepUntil(run, () => world().waves.phase === "fighting")
     const wave = [...world().pending.map((pending) => pending.kind), ...world().enemies.map((enemy) => enemy.kind)]
-    expect(wave.sort()).toEqual(expandWave(defaultTuning.waves.scripted[1]!))
+    expect(wave.sort()).toEqual(expandWave(defaultTuning.challenges.endless.waves.scripted[1]!))
   })
 })

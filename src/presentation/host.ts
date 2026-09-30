@@ -30,7 +30,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span></span><i data-cooldown></i></div>
     </div>
     <div class="hud__gameover" data-gameover hidden>
-      <div class="hud__gameover-title">YOU DIED</div>
+      <div class="hud__gameover-title" data-gameover-title>YOU DIED</div>
       <div class="hud__gameover-stats" data-gameover-stats></div>
       <div class="hud__gameover-hint" data-gameover-hint>Press R or click to restart</div>
     </div>
@@ -71,6 +71,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       banner: root.querySelector<HTMLElement>("[data-banner]")!,
       vignette: root.querySelector<HTMLElement>("[data-vignette]")!,
       gameOver: root.querySelector<HTMLElement>("[data-gameover]")!,
+      gameOverTitle: root.querySelector<HTMLElement>("[data-gameover-title]")!,
       gameOverStats: root.querySelector<HTMLElement>("[data-gameover-stats]")!
     }
   }

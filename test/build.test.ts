@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
-import { buildFromQuery } from "../src/dev/build.ts"
+import { buildFromQuery, challengeFromQuery } from "../src/dev/build.ts"
+import { defaultChallenge } from "../src/features/challenges.ts"
 import { damageDealt, damageTaken, defaultBuild, resolveBuild, withWeapon } from "../src/features/build.ts"
 
 describe("builds", () => {
@@ -34,6 +35,8 @@ describe("builds", () => {
     expect(buildFromQuery(defaultTuning, "?character=gunner&special=bladeWave")).toEqual({ character: "gunner", skills: { special: "bladeWave" } })
     expect(buildFromQuery(defaultTuning, "?character=gunner&weapon=bloodthirst")).toEqual({ character: "gunner", weapon: "bloodthirst", skills: {} })
     expect(buildFromQuery(defaultTuning, "?character=wizard&ultimate=toString")).toEqual(defaultBuild)
+    expect(challengeFromQuery(defaultTuning, "?challenge=swarm")).toBe("swarm")
+    expect(challengeFromQuery(defaultTuning, "?challenge=nope")).toBe(defaultChallenge)
   })
 })
 

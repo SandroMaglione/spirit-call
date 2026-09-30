@@ -1,27 +1,33 @@
 /**
  * The wave director: a short break, then a wave of enemies spawned one by
  * one behind spawn warnings, then the next break once every enemy is gone.
- * The first waves are scripted; later ones are random mixes within a growing
- * budget, drawn from the seeded `Rng`, so a run replays exactly.
+ * The waves are the challenge's plan (see `content/challenges.ts`): its
+ * scripted waves, then (if the plan is endless) random mixes within a growing
+ * budget, drawn from the seeded `Rng`, so a run replays exactly. A plan that
+ * ends is `complete` once its last wave is cleared.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { WavePlan } from "../content/challenges.ts"
 import { Random } from "../math/rng.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Waves } from "../schema.ts"
+import { Challenge, Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Waves } from "../schema.ts"
 import type { EnemyKind, WavesValue } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, phase: "break", timer: tuning.waves.firstDelay, queue: [] })
 
-/** The enemies of wave `number` (from 1). */
-export const composeWave = (tuning: TuningValue, number: number, random: Random): Array<EnemyKind> => {
-  const scripted = tuning.waves.scripted[number - 1]
-  if (scripted !== undefined) return [...scripted]
+/** Whether `plan` has a wave `number` (from 1). */
+export const hasWave = (plan: WavePlan, number: number): boolean => plan.endless !== null || number <= plan.scripted.length
+
+/** The enemies of wave `number` (from 1) of `plan`; call only when it `hasWave`. */
+export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random): Array<EnemyKind> => {
+  const scripted = plan.scripted[number - 1]
+  if (scripted !== undefined || plan.endless === null) return [...(scripted ?? [])]
   const kinds = (Object.keys(tuning.enemies) as Array<EnemyKind>).filter((kind) => tuning.enemies[kind].cost > 0)
-  let budget = tuning.waves.baseBudget + tuning.waves.budgetPerWave * (number - 1)
+  let budget = plan.endless.baseBudget + plan.endless.budgetPerWave * (number - 1)
   const wave: Array<EnemyKind> = []
   for (;;) {
     const affordable = kinds.filter((kind) => tuning.enemies[kind].cost <= budget)
@@ -56,11 +62,13 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
     waves: Game.System.writeResource(Waves),
     rng: Game.System.writeResource(Rng),
     tuning: Game.System.readResource(Tuning),
+    challenge: Game.System.readResource(Challenge),
     time: Game.System.readResource(Time)
   }
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   if (!tuning.waves.enabled) return
+  const plan = tuning.challenges[resources.challenge.get()].waves
   const dt = resources.time.get().dt
   const waves = resources.waves.get()
   const random = new Random(resources.rng.get().state)
@@ -70,9 +78,11 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   switch (phase) {
     case "break":
       timer -= dt
-      if (timer <= 0) {
+      if (!hasWave(plan, number + 1)) {
+        phase = "complete"
+      } else if (timer <= 0) {
         number += 1
-        queue = composeWave(tuning, number, random)
+        queue = composeWave(tuning, plan, number, random)
         phase = "spawning"
         timer = 0
       }
@@ -93,9 +103,12 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
     }
     case "fighting":
       if (queries.enemies.each().length === 0 && queries.pending.each().length === 0) {
-        phase = "break"
+        // The last wave of a plan that ends completes it at once.
+        phase = hasWave(plan, number + 1) ? "break" : "complete"
         timer = tuning.waves.breakDuration
       }
+      break
+    case "complete":
       break
   }
 
