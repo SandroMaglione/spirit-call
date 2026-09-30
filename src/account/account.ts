@@ -12,6 +12,7 @@ import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
+import type { RunEarnings } from "../content/progression.ts"
 import type { QuestId, Rewards, Unlock } from "../content/quests.ts"
 import { bySlot } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
@@ -25,13 +26,18 @@ export interface Unlocked {
   readonly unlockedAt: number
 }
 
+/** A character owned, and its experience (its level comes from it, see `characterLevel`). */
+export interface OwnedCharacter extends Unlocked {
+  readonly experience: number
+}
+
 /** A weapon owned: `copies` counts duplicates, for refinement later. */
 export interface OwnedWeapon extends Unlocked {
   readonly copies: number
 }
 
 export interface Owned {
-  readonly characters: { readonly [Id in CharacterId]?: Unlocked }
+  readonly characters: { readonly [Id in CharacterId]?: OwnedCharacter }
   readonly weapons: { readonly [Id in WeaponId]?: OwnedWeapon }
   readonly skills: { readonly [Id in SkillId]?: Unlocked }
 }
@@ -112,7 +118,7 @@ export const unlock = (tuning: Tuning, account: Account, item: Item, now: number
       const equipment = defaultEquipment(tuning, item.id)
       let next: Account = {
         ...account,
-        owned: { ...owned, characters: { ...owned.characters, [item.id]: { unlockedAt: now } } },
+        owned: { ...owned, characters: { ...owned.characters, [item.id]: { unlockedAt: now, experience: 0 } } },
         equipment: { ...account.equipment, [item.id]: equipment }
       }
       if (!owns(next, { kind: "weapon", id: equipment.weapon })) next = unlock(tuning, next, { kind: "weapon", id: equipment.weapon }, now)
@@ -160,6 +166,17 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
 /** The account's level, from its experience. */
 export const accountLevel = (tuning: Tuning, account: Account): LevelProgress => levelOf(tuning.progression.account.curve, account.experience)
 
+/** `character`'s level in `account`, from its experience (level 1 when not owned). */
+export const characterLevel = (tuning: Tuning, account: Account, character: CharacterId): LevelProgress =>
+  levelOf(tuning.progression.character.curve, account.owned.characters[character]?.experience ?? 0)
+
+/** `account` with `experience` added to `character` (when owned). */
+const addCharacterExperience = (account: Account, character: CharacterId, experience: number): Account => {
+  const current = account.owned.characters[character]
+  if (current === undefined) return account
+  return { ...account, owned: { ...account.owned, characters: { ...account.owned.characters, [character]: { ...current, experience: current.experience + experience } } } }
+}
+
 /** `amounts` added to `account`'s wallet. */
 export const earn = (account: Account, amounts: Amounts): Account => {
   const wallet: { [Id in CurrencyId]?: number } = { ...account.wallet }
@@ -188,6 +205,7 @@ export type Refusal =
   | { readonly kind: "wrongWeaponType"; readonly character: CharacterId; readonly weapon: WeaponId }
   | { readonly kind: "questLocked"; readonly quest: QuestId; readonly lock: QuestLock }
   | { readonly kind: "notEnough"; readonly currency: CurrencyId; readonly needed: number; readonly held: number }
+  | { readonly kind: "maxLevel"; readonly item: Item }
 
 export type Checked<A> = { readonly ok: true; readonly value: A } | { readonly ok: false; readonly refusal: Refusal }
 
@@ -202,6 +220,25 @@ export const spend = (account: Account, amounts: Amounts): Checked<Account> => {
     wallet[currency] = held - needed
   }
   return { ok: true, value: { ...account, wallet } }
+}
+
+/** The gold that takes `character` to its next level from where it is, or `null` at the maximum level. */
+export const trainingCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
+  const progress = characterLevel(tuning, account, character)
+  if (progress.needed === 0) return null
+  return { gold: Math.ceil((progress.needed - progress.into) * tuning.progression.character.goldPerExperience) }
+}
+
+/** `account` with `character` taken to its next level with gold, if it owns it, it is not at the maximum, and the gold is there. */
+export const train = (tuning: Tuning, account: Account, character: CharacterId): Checked<Account> => {
+  const item: Item = { kind: "character", id: character }
+  if (!owns(account, item)) return refuse({ kind: "notOwned", item })
+  const cost = trainingCost(tuning, account, character)
+  if (cost === null) return refuse({ kind: "maxLevel", item })
+  const paid = spend(account, cost)
+  if (!paid.ok) return paid
+  const progress = characterLevel(tuning, account, character)
+  return { ok: true, value: addCharacterExperience(paid.value, character, progress.needed - progress.into) }
 }
 
 /** `account` with `character` equipped with `equipment`, if it owns all of it and the weapon fits. */
@@ -223,21 +260,27 @@ export const select = (tuning: Tuning, account: Account, character: CharacterId,
   return { ok: true, value: { ...account, selection: { character, quest } } }
 }
 
+/** Levels before and after something. */
+export interface LevelChange {
+  readonly before: number
+  readonly after: number
+}
+
 /** What a run earned, for the results screen. */
 export interface Earned {
   /** Account experience from the run, and from a first clear's rewards. */
   readonly experience: number
   /** The account level before and after the run. */
-  readonly level: { readonly before: number; readonly after: number }
+  readonly level: LevelChange
+  /** Experience each character that fought earned, and its level before and after. */
+  readonly characters: ReadonlyArray<{ readonly character: CharacterId; readonly experience: number; readonly level: LevelChange }>
   /** A quest's first-clear rewards, when this run cleared it the first time. */
   readonly rewards: Rewards | null
 }
 
-/** Account experience a run earns: something for trying, more for clearing, a little per kill. */
-export const runExperience = (tuning: Tuning, result: RunResultValue): number => {
-  const earns = tuning.progression.account.run
-  return earns.attempt + (result.cleared ? earns.clear : 0) + result.kills * earns.perKill
-}
+/** Experience a run earns with `earns` (the account's, or each character's): something for trying, more for clearing, a little per kill. */
+export const runExperience = (earns: RunEarnings, result: RunResultValue): number =>
+  earns.attempt + (result.cleared ? earns.clear : 0) + result.kills * earns.perKill
 
 /**
  * `account` after a run that ended with `result`, and what the run earned.
@@ -252,7 +295,7 @@ export const recordRun = (
   result: RunResultValue,
   now: number
 ): { readonly account: Account; readonly earned: Earned } => {
-  let experience = runExperience(tuning, result)
+  let experience = runExperience(tuning.progression.account.run, result)
   let next: Account = {
     ...account,
     totals: {
@@ -279,15 +322,25 @@ export const recordRun = (
     }
   }
   next = { ...next, experience: account.experience + experience }
-  return { account: next, earned: { experience, level: { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }, rewards } }
+  // Each character that fought grows (only once, if it was in the team twice).
+  const characterExperience = runExperience(tuning.progression.character.run, result)
+  const characters: Array<Earned["characters"][number]> = []
+  for (const character of new Set(result.characters)) {
+    if (!owns(next, { kind: "character", id: character })) continue
+    const before = characterLevel(tuning, next, character).level
+    next = addCharacterExperience(next, character, characterExperience)
+    characters.push({ character, experience: characterExperience, level: { before, after: characterLevel(tuning, next, character).level } })
+  }
+  const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
+  return { account: next, earned: { experience, level, characters, rewards } }
 }
 
 /** `character`'s equipment in `account` (its own when it has none saved). */
 export const equipmentOf = (tuning: Tuning, account: Account, character: CharacterId): Equipment =>
   account.equipment[character] ?? defaultEquipment(tuning, character)
 
-/** The build `character` enters the arena with. */
+/** The build `character` enters the arena with: at its level, as equipped. */
 export const buildOf = (tuning: Tuning, account: Account, character: CharacterId): BuildValue => {
   const equipment = equipmentOf(tuning, account, character)
-  return { character, weapon: equipment.weapon, skills: bySlot((slot) => equipment.skills[slot]) }
+  return { character, level: characterLevel(tuning, account, character).level, weapon: equipment.weapon, skills: bySlot((slot) => equipment.skills[slot]) }
 }

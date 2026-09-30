@@ -10,15 +10,16 @@ import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
 
-import { buildOf, equipmentOf, owns, questLock } from "../account/account.ts"
+import { buildOf, characterLevel, equipmentOf, owns, questLock } from "../account/account.ts"
 import type { Item } from "../account/account.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import type { QuestId } from "../content/quests.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
-import { resolveBuild } from "../features/build.ts"
+import { resolveBuild, statsAtLevel } from "../features/build.ts"
 import { AccountBar } from "./AccountBar.tsx"
+import { CharacterLevel } from "./CharacterLevel.tsx"
 import { describeBonus, describeObjective, describePassive, describeRewards, describeSkill, statNames, statOrder } from "./describe.ts"
 import { weaponsFor } from "./draft.ts"
 import type { UiActions, UiStore } from "./store.ts"
@@ -136,14 +137,18 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
         <Section title="Character">
           {ids(tuning.characters).map((id) => {
             const spec = tuning.characters[id]
+            const level = characterLevel(tuning, account, id).level
             return (
               <Card key={id} selected={id === character.value} locked={locked({ kind: "character", id })} onSelect={() => (character.value = id)} title={spec.name}>
-                <span class="card__tag">{spec.weaponType}</span>
-                <StatLine stats={spec.stats} />
+                <span class="card__tag">
+                  {spec.weaponType} · Lv {level}
+                </span>
+                <StatLine stats={statsAtLevel(tuning, spec.stats, level)} />
               </Card>
             )
           })}
         </Section>
+        <CharacterLevel store={store} actions={actions} character={character.value} />
         <Section title="Weapon">
           {weaponsFor(tuning, character.value).map((id) => {
             const spec = tuning.weapons[id]

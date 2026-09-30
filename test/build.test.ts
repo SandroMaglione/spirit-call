@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { buildFromQuery, challengeFromQuery } from "../src/dev/build.ts"
 import { defaultChallenge } from "../src/features/challenges.ts"
-import { damageDealt, damageTaken, defaultBuild, resolveBuild, withWeapon } from "../src/features/build.ts"
+import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel, withWeapon } from "../src/features/build.ts"
 
 describe("builds", () => {
   it("resolve to the character's stats and kit, with its own weapon and equipped skills over its defaults", () => {
@@ -24,6 +24,24 @@ describe("builds", () => {
     expect(build.passives).toBe(crescendo.passives)
     const echo = resolveBuild(defaultTuning, { character: "swordsman", weapon: "echoSaber", skills: {} })
     expect(echo.stats.def).toBe(Math.round(base.def * 1.2))
+  })
+
+  it("follow one stat curve: level 1 is the base, the maximum level `band` times it", () => {
+    const curve = { band: 4, shape: 1 }
+    expect(levelScale(curve, 1, 40)).toBe(1)
+    expect(levelScale(curve, 40, 40)).toBe(4)
+    expect(levelScale(curve, 99, 40)).toBe(4)
+    expect(levelScale(curve, 20.5, 40)).toBeCloseTo(2.5)
+    expect(levelScale({ band: 4, shape: 2 }, 20.5, 40)).toBeCloseTo(1.75)
+  })
+
+  it("scale the character's HP, ATK, and DEF with its level, before the weapon", () => {
+    const base = defaultTuning.characters.swordsman.stats
+    const maxLevel = defaultTuning.progression.character.curve.maxLevel
+    const top = statsAtLevel(defaultTuning, base, maxLevel)
+    expect(top).toEqual({ hp: base.hp * 4, atk: base.atk * 4, def: base.def * 4, speed: base.speed })
+    const build = resolveBuild(defaultTuning, { character: "swordsman", level: maxLevel, skills: {} })
+    expect(build.stats).toEqual(withWeapon(top, defaultTuning.weapons.trainingBlade))
   })
 
   it("keep the character's own weapon when the equipped one is of another type", () => {

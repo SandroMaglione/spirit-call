@@ -65,6 +65,8 @@ export interface UiActions {
   readonly enter: (character: CharacterId, quest: QuestId) => void
   /** Equip an owned character (saved at once). */
   readonly equip: (character: CharacterId, equipment: Equipment) => void
+  /** Take an owned character to its next level with gold (saved at once). */
+  readonly train: (character: CharacterId) => void
   /** From the results: the same challenge again. */
   readonly retry: () => void
   /** From the results: back to the menu. */

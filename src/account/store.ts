@@ -25,7 +25,7 @@ import type { CharacterId } from "../content/characters.ts"
 import type { Amounts } from "../content/currencies.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { RunResultValue } from "../schema.ts"
-import { createAccount, earn, equip, recordRun, select, unlock } from "./account.ts"
+import { createAccount, earn, equip, recordRun, select, train, unlock } from "./account.ts"
 import type { Account, Checked, Earned, Equipment, Item, Refusal } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
@@ -49,6 +49,8 @@ export interface AccountStoreShape {
   readonly select: (character: CharacterId, quest: QuestId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
+  /** Takes an owned character to its next level with gold. */
+  readonly train: (character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Adds `amounts` of currency (a reward, or a dev tool). */
   readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
   /**
@@ -133,6 +135,7 @@ export const layer = (options: AccountOptions) =>
         select: (character, quest) => change((account) => select(options.tuning, account, character, quest)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
         earn: (amounts) => apply((account) => earn(account, amounts)),
+        train: (character) => change((account) => train(options.tuning, account, character)),
         recordRun: (quest, result) =>
           Effect.gen(function*() {
             const now = yield* Clock.currentTimeMillis

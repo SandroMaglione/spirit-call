@@ -82,6 +82,7 @@ const start = async (mount: HTMLElement) => {
       })
     },
     equip: shell.equip,
+    train: shell.train,
     retry: () => uiRequests.pending.push({ kind: "retry" }),
     menu: () => uiRequests.pending.push({ kind: "menu" })
   }

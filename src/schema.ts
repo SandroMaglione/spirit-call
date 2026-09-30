@@ -335,12 +335,14 @@ export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fa
 export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
 
 /**
- * What enters the arena: a character, and the weapon and skills equipped
- * over its defaults. `resolveBuild` turns it into final
+ * What enters the arena: a character at its level, and the weapon and
+ * skills equipped over its defaults. `resolveBuild` turns it into final
  * stats and kit when the player spawns.
  */
 export interface BuildValue {
   readonly character: CharacterId
+  /** The character's level (1 when missing). */
+  readonly level?: number
   /** A weapon of the character's type in place of its own. */
   readonly weapon?: WeaponId
   readonly skills: { readonly [Slot in SkillSlot]?: SkillId }

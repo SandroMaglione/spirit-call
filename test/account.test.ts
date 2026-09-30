@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, createAccount, earn, equip, equipmentOf, owns, questLock, recordRun, select, spend, unlock } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, questLock, recordRun, runExperience, select, spend, train, trainingCost, unlock } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 
@@ -23,7 +23,7 @@ describe("account rules", () => {
     expect(owns(account, { kind: "weapon", id: gunner.weapon })).toBe(true)
     expect(owns(account, { kind: "skill", id: gunner.skills.special })).toBe(true)
     expect(account.equipment.gunner).toEqual({ weapon: gunner.weapon, skills: gunner.skills })
-    expect(account.owned.characters.gunner).toEqual({ unlockedAt: 2000 })
+    expect(account.owned.characters.gunner).toEqual({ unlockedAt: 2000, experience: 0 })
   })
 
   it("a weapon owned again gains a copy", () => {
@@ -92,6 +92,33 @@ describe("account rules", () => {
     const paid = spend(account, { gold: 120 })
     expect(paid.ok && paid.value.wallet).toEqual({ gold: 30, crystals: 5 })
     expect(spend(account, { gold: 10, crystals: 6 })).toEqual({ ok: false, refusal: { kind: "notEnough", currency: "crystals", needed: 6, held: 5 } })
+  })
+
+  it("grows the characters that fought, and says when they level up", () => {
+    const run = { cleared: true, challenge: "swarm" as const, characters: ["swordsman" as const, "gunner" as const], wave: 3, kills: 10, time: 60 }
+    const curve = defaultTuning.progression.character.curve
+    const almost = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: curve.base - 1 } } } }
+    const { account, earned } = recordRun(defaultTuning, almost, null, run, 2000)
+    const gained = runExperience(defaultTuning.progression.character.run, run)
+    // The gunner is not owned, so only the swordsman grows.
+    expect(earned.characters).toEqual([{ character: "swordsman", experience: gained, level: { before: 1, after: 2 } }])
+    expect(account.owned.characters.swordsman?.experience).toBe(curve.base - 1 + gained)
+    expect(buildOf(defaultTuning, account, "swordsman").level).toBe(characterLevel(defaultTuning, account, "swordsman").level)
+  })
+
+  it("trains a character to its next level with gold", () => {
+    const rate = defaultTuning.progression.character.goldPerExperience
+    const curve = defaultTuning.progression.character.curve
+    const account = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: 30 } } } }
+    const cost = (curve.base - 30) * rate
+    expect(trainingCost(defaultTuning, account, "swordsman")).toEqual({ gold: cost })
+    expect(train(defaultTuning, account, "swordsman")).toEqual({ ok: false, refusal: { kind: "notEnough", currency: "gold", needed: cost, held: 0 } })
+    const trained = train(defaultTuning, earn(account, { gold: cost + 5 }), "swordsman")
+    expect(trained.ok && characterLevel(defaultTuning, trained.value, "swordsman")).toEqual({ level: 2, into: 0, needed: curve.base + curve.growth })
+    expect(trained.ok && trained.value.wallet.gold).toBe(5)
+    expect(train(defaultTuning, account, "gunner")).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
+    const maxed = { ...account, owned: { ...account.owned, characters: { swordsman: { unlockedAt: 1000, experience: 1e9 } } } }
+    expect(train(defaultTuning, maxed, "swordsman")).toEqual({ ok: false, refusal: { kind: "maxLevel", item: { kind: "character", id: "swordsman" } } })
   })
 
   it("opens the main line in order, and other quests by account level", () => {

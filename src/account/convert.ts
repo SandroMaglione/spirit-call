@@ -10,7 +10,7 @@ import type { CurrencyId } from "../content/currencies.ts"
 import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { createAccount, defaultEquipment, equip, owns, select, unlock } from "./account.ts"
-import type { Account, Equipment, Item, Owned, OwnedWeapon, QuestProgress, Unlocked } from "./account.ts"
+import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, QuestProgress, Unlocked } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -35,7 +35,7 @@ const keep = <Id extends string, V>(ids: Record<Id, unknown>, saved: Readonly<Re
 export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAccountLatest, now: number): { readonly account: Account; readonly dropped: ReadonlyArray<string> } => {
   const dropped: Array<string> = []
   const owned: Owned = {
-    characters: keep<CharacterId, Unlocked>(tuning.characters, stored.owned.characters, "character", dropped),
+    characters: keep<CharacterId, OwnedCharacter>(tuning.characters, stored.owned.characters, "character", dropped),
     weapons: keep<WeaponId, OwnedWeapon>(tuning.weapons, stored.owned.weapons, "weapon", dropped),
     skills: keep<SkillId, Unlocked>(tuning.skills, stored.owned.skills, "skill", dropped)
   }

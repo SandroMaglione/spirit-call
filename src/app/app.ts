@@ -36,6 +36,8 @@ export interface App {
   /** Calls `listener` with the account after every change. */
   readonly onAccount: (listener: (account: Account) => void) => void
   readonly equip: (character: CharacterId, equipment: Equipment) => void
+  /** Takes a character to its next level with gold (refused without enough, or at the maximum). */
+  readonly train: (character: CharacterId) => void
   /** Selects what to enter the arena with; the account after it, or `undefined` when refused (not owned, or the quest not open). */
   readonly select: (character: CharacterId, quest: QuestId) => Promise<Account | undefined>
   /** Owns every character, weapon, and skill, and adds plenty of each currency (a dev tool). */
@@ -72,6 +74,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
       listeners.push(listener)
     },
     equip: (character, equipment) => void run(accounts.equip(character, equipment)),
+    train: (character) => void run(accounts.train(character)),
     select: (character, quest) => run(accounts.select(character, quest)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (quest, result) => attempt(accounts.recordRun(quest, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),

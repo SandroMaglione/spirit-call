@@ -2,8 +2,8 @@
  * Rules content must follow that its types cannot express: references that
  * must point at existing entries (the tuning panel can edit content live),
  * combos with at least one move, weapons that fit their character,
- * challenges that can be won, quests that can be reached, and a new account
- * that can play.
+ * challenges that can be won, quests that can be reached, level curves
+ * that rise, and a new account that can play.
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
@@ -11,6 +11,7 @@ import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import type { AttackMove } from "./attacks.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
+import type { LevelCurve } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
 
 const has = (record: object, id: string): boolean => Object.hasOwn(record, id)
@@ -62,6 +63,13 @@ const checkPassive = (problems: Array<string>, where: string, passive: Passive):
 }
 
 /** Every rule the content in `tuning` breaks, as readable messages; empty when all is well. */
+/** A level curve that rises and ends. */
+const checkCurve = (problems: Array<string>, where: string, curve: LevelCurve): void => {
+  if (!(Number.isInteger(curve.maxLevel) && curve.maxLevel >= 1)) problems.push(`${where}: maxLevel must be a whole number from 1 (is ${curve.maxLevel})`)
+  positive(problems, where, { base: curve.base })
+  if (!(curve.growth >= 0)) problems.push(`${where}: growth must not be negative (is ${curve.growth})`)
+}
+
 /** Amounts of currency: known currencies, in whole positive numbers. */
 const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, amounts: Readonly<Record<string, number | undefined>>): void => {
   for (const [id, amount] of Object.entries(amounts)) {
@@ -72,6 +80,12 @@ const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, am
 
 export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
+
+  const { progression } = tuning
+  checkCurve(problems, "account levels", progression.account.curve)
+  checkCurve(problems, "character levels", progression.character.curve)
+  if (!(progression.stats.band >= 1)) problems.push(`stat curve: band must be 1 or more, or levels would weaken (is ${progression.stats.band})`)
+  positive(problems, "stat curve", { shape: progression.stats.shape })
 
   for (const [id, attack] of Object.entries(tuning.attacks)) {
     if (attack.combo.length === 0) problems.push(`attack ${id}: the combo needs at least one move`)
