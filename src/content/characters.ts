@@ -1,13 +1,15 @@
 /**
- * Characters: base stats, body, their own moveset (the weapon is the
- * character's), and the skills they start with. Numbers are live-tunable:
- * they are part of the `Tuning` resource.
+ * Characters: base stats, body, their own moveset, the type of weapon they
+ * wield (and the one they start with), and the skills they start with.
+ * Numbers are live-tunable: they are part of the `Tuning` resource.
  *
  * What enters the arena is a `Build` (a character plus what is equipped on
- * it), resolved into final stats and kit by `resolveBuild`.
+ * it), resolved into final stats and kit by `resolveBuild`. Base stats are
+ * before the weapon: a character's ATK is mostly its weapon's.
  */
 import type { AttackId } from "./attacks.ts"
 import type { SkillId, SkillSlot } from "./skills.ts"
+import type { WeaponId, WeaponType } from "./weapons.ts"
 
 /** The stats combat reads. Characters and enemies both have them. */
 export interface Stats {
@@ -29,8 +31,12 @@ export interface CharacterSpec {
   readonly radius: number
   /** Radius enemy attacks test against; smaller than the body, so near misses read as misses. */
   readonly hurtboxRadius: number
-  /** The character's moveset: its weapon (see `content/attacks.ts`). */
+  /** The character's moveset (see `content/attacks.ts`). */
   readonly attack: AttackId
+  /** The weapons it can wield. */
+  readonly weaponType: WeaponType
+  /** The weapon it wields unless the build equips another of its type. */
+  readonly weapon: WeaponId
   /** The skill in each slot unless the build equips another. */
   readonly skills: { readonly [Slot in SkillSlot]: SkillId }
 }
@@ -42,19 +48,23 @@ export const characters = {
   /** Close range: sturdy, with the sword combo and the Blade Wave. */
   swordsman: character({
     name: "Swordsman",
-    stats: { hp: 100, atk: 100, def: 20, speed: 320 },
+    stats: { hp: 100, atk: 80, def: 20, speed: 320 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "sword",
+    weaponType: "sword",
+    weapon: "trainingBlade",
     skills: { special: "bladeWave", ultimate: "nova" }
   }),
   /** Range: quicker and frailer, with the gun and grenades. */
   gunner: character({
     name: "Gunner",
-    stats: { hp: 85, atk: 100, def: 10, speed: 340 },
+    stats: { hp: 85, atk: 80, def: 10, speed: 340 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "gun",
+    weaponType: "gun",
+    weapon: "trainingPistol",
     skills: { special: "grenade", ultimate: "nova" }
   })
 }

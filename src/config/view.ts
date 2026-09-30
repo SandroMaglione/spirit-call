@@ -117,6 +117,8 @@ export const view = {
   healthBack: 0x0d1117,
   healthFill: 0xff5d6c,
   damageNumber: 0xffe08a,
+  /** Health restored by a passive (Bloodthirst). */
+  healNumber: 0x7ee08a,
   enemies: {
     dummy: { color: 0xb86b77, widthFactor: 1.7, heightFactor: 2.1 },
     chaser: { color: 0xff7a45, widthFactor: 1.4, heightFactor: 2.2 },

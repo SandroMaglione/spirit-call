@@ -11,7 +11,9 @@ import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
 import type { EnemyKind } from "./content/enemies.ts"
+import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot } from "./content/skills.ts"
+import type { WeaponId } from "./content/weapons.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
 import type { Box } from "./physics/shapes.ts"
@@ -70,6 +72,8 @@ export interface LobbedValue {
   readonly damage: number
   /** Whether its damage fills energy. */
   readonly charges: boolean
+  /** Who threw it, for their passives. */
+  readonly source?: DamageSource
   /** Time since it was thrown. */
   readonly elapsed: number
 }
@@ -81,6 +85,24 @@ export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>
 // ── Combat ────────────────────────────────────────────────────────────────
 
 export type Faction = "player" | "enemy"
+
+/** Which move of the basic attack something came from: its index in the combo (-1 for the power move). */
+export interface MoveContext {
+  readonly step: number
+  /** The last move of the combo. */
+  readonly finisher: boolean
+  /** The charged power move. */
+  readonly power: boolean
+}
+
+/** Who dealt a blow (so their passives apply), and with which move of their basic attack (none: a skill). */
+export interface DamageSource {
+  readonly attacker: Entity.Handle<typeof Root, typeof Position>
+  readonly move?: MoveContext
+}
+
+/** The passives of what an entity has equipped (see `content/passives.ts`). */
+export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives")
 
 /**
  * The stats combat reads (see `content/characters.ts`): ATK scales damage
@@ -137,6 +159,7 @@ export interface ProjectileValue {
   readonly pierce: number
   /** Entity ids already hit, so a piercing shot hits each target once. */
   readonly hit: ReadonlyArray<number>
+  readonly source?: DamageSource
   /** Hit-stop when it lands on an enemy (seconds). */
   readonly hitStop?: number
   /** A heavy blow, for bigger impact effects. */
@@ -197,6 +220,7 @@ export interface HitboxValue {
   readonly charges: boolean
   /** Push every target this way instead of away from the area (the Blade Wave drives enemies along the cut). */
   readonly pushAlong?: Vec2
+  readonly source?: DamageSource
   /** Hit-stop when it lands on an enemy (seconds). */
   readonly hitStop?: number
   /** A heavy blow, for bigger impact effects. */
@@ -233,6 +257,8 @@ export interface DamageValue {
   readonly faction: Faction
   /** Whether this damage fills the player's energy. */
   readonly charges: boolean
+  /** Who dealt it and how, for their passives (damage bonuses apply in `ApplyDamage`). */
+  readonly source?: DamageSource
   /** Hit-stop when it lands on an enemy (seconds). */
   readonly hitStop?: number
   /** A heavy blow, for bigger impact effects. */
@@ -242,9 +268,11 @@ export const Damage = Descriptor.Event<DamageValue>()("Shooter/Damage")
 
 /**
  * Damage that landed on `entity` (its id) at `at`, pushing it along
- * `direction`. `heavy` blows get bigger impact effects.
+ * `direction`. `heavy` blows get bigger impact effects. `source` is who dealt
+ * it (for their passives), when known.
  */
 export const Hit = Descriptor.Event<{
+  readonly source: DamageSource | null
   readonly entity: number
   readonly at: Vec2
   readonly direction: Vec2
@@ -258,7 +286,17 @@ export const Hit = Descriptor.Event<{
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
 
 /** An area went off (a lobbed skill's blast, a nova), for effects. */
-export const Explosion = Descriptor.Event<{ readonly at: Vec2; readonly radius: number; readonly faction: Faction; readonly kind: "blast" | "nova" }>()("Shooter/Explosion")
+export const Explosion = Descriptor.Event<{
+  readonly at: Vec2
+  readonly radius: number
+  readonly faction: Faction
+  readonly kind: "blast" | "nova"
+  /** A heavy one (the Nova) gets the big effects; a light one (a weapon's shockwave) a smaller ring. */
+  readonly heavy: boolean
+}>()("Shooter/Explosion")
+
+/** Health restored to an entity at `at` (a weapon's passive), for effects. */
+export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: number }>()("Shooter/Heal")
 
 /**
  * A skill was used: its effect goes off from `from`, aimed at `at` (along
@@ -270,7 +308,8 @@ export const Cast = Descriptor.Event<{
   readonly faction: Faction
   /** The caster's ATK: the effect deals its `power` as a percentage of it. */
   readonly atk: number
-  readonly skill: SkillId
+  /** The skill used; `null` for an effect set off by a passive. */
+  readonly skill: SkillId | null
   readonly effect: SkillEffect
   readonly from: Vec2
   readonly at: Vec2
@@ -287,7 +326,7 @@ export const Cast = Descriptor.Event<{
  * to charge or charged to full, or a dash. Skills are `Cast`.
  */
 export const Action = Descriptor.Event<
-  | { readonly kind: "attack"; readonly at: Vec2; readonly direction: Vec2; readonly move: AttackMove; readonly step: number; readonly power: boolean }
+  | ({ readonly kind: "attack"; readonly at: Vec2; readonly direction: Vec2; readonly move: AttackMove } & MoveContext)
   | { readonly kind: "charging" | "charged" | "dash"; readonly at: Vec2 }
 >()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
@@ -297,15 +336,25 @@ export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fa
 export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
 
 /**
- * What enters the arena: a character, and the skills equipped over its
- * defaults (equipment goes here too). `resolveBuild` turns it into final
+ * What enters the arena: a character, and the weapon and skills equipped
+ * over its defaults. `resolveBuild` turns it into final
  * stats and kit when the player spawns.
  */
 export interface BuildValue {
   readonly character: CharacterId
+  /** A weapon of the character's type in place of its own. */
+  readonly weapon?: WeaponId
   readonly skills: { readonly [Slot in SkillSlot]?: SkillId }
 }
 export const Build = Descriptor.Resource<BuildValue>()("Shooter/Build")
+
+/**
+ * Triggered passive effects waiting to be carried out (see
+ * `features/passives.ts`). A queue rather than events, so an effect set off
+ * by a kill survives the hit-stop that kill starts.
+ */
+export type TriggeredEffectsValue = ReadonlyArray<{ readonly holder: Entity.Handle<typeof Root, typeof Position>; readonly effect: TriggeredEffect }>
+export const TriggeredEffects = Descriptor.Resource<TriggeredEffectsValue>()("Shooter/TriggeredEffects")
 
 export interface TimeValue {
   /** Fixed step length. */
@@ -433,6 +482,7 @@ export const Game = Schema.bind(
       Dash,
       Invulnerable,
       CombatStats,
+      Passives,
       Skills,
       Energy,
       Lobbed,
@@ -456,6 +506,7 @@ export const Game = Schema.bind(
     resources: {
       Tuning,
       Build,
+      TriggeredEffects,
       Time,
       Keys,
       PointerState,
@@ -469,7 +520,7 @@ export const Game = Schema.bind(
       Run,
       HitStop
     },
-    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast }
+    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast, Heal }
   }),
   Root
 )

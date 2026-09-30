@@ -70,9 +70,10 @@ export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
 export const skillSlots = ["special", "ultimate"] as const
 export type SkillSlot = (typeof skillSlots)[number]
 
-const cut = (spec: Omit<CutEffect, "kind">): CutEffect => ({ kind: "cut", ...spec })
-const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
-const nova = (spec: Omit<NovaEffect, "kind">): NovaEffect => ({ kind: "nova", ...spec })
+/** Effect builders, also used by passives that set off a skill effect. */
+export const cut = (spec: Omit<CutEffect, "kind">): CutEffect => ({ kind: "cut", ...spec })
+export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
+export const nova = (spec: Omit<NovaEffect, "kind">): NovaEffect => ({ kind: "nova", ...spec })
 const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<Effect> => spec
 
 /** Every skill, by id. */

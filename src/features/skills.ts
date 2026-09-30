@@ -148,6 +148,7 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
       area: { kind: "lane", origin: from, direction, length: effect.length * (blocked?.time ?? 1), halfWidth: effect.width / 2 },
       faction: cast.faction,
       damage: damageDealt(cast.atk, effect.power),
+      source: { attacker: cast.caster },
       knockback: effect.knockback,
       remaining: effect.active,
       hit: [],
@@ -175,6 +176,7 @@ export const CastLobs = Game.System("Shooter/CastLobs", {
       effect,
       damage: damageDealt(cast.atk, effect.power),
       charges: cast.charges,
+      source: { attacker: cast.caster },
       elapsed: 0
     }]))
   }
@@ -200,6 +202,7 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
       area: { kind: "circle", center: lobbed.to, radius: effect.radius },
       faction: lobbed.faction,
       damage: lobbed.damage,
+      ...(lobbed.source === undefined ? {} : { source: lobbed.source }),
       knockback: effect.knockback,
       remaining: 0.05,
       hit: [],
@@ -207,7 +210,7 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
       hitStop: effect.hitStop,
       heavy: effect.heavy
     }]))
-    events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast" })
+    events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast", heavy: effect.heavy })
   }
 })
 
@@ -233,6 +236,7 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
       area: { kind: "circle", center: at, radius: effect.radius },
       faction: cast.faction,
       damage: damageDealt(cast.atk, effect.power),
+      source: { attacker: cast.caster },
       knockback: effect.knockback,
       remaining: effect.active,
       hit: [],
@@ -240,7 +244,7 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
       hitStop: effect.hitStop,
       heavy: effect.heavy
     }]))
-    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova" })
+    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy })
     if (!effect.clearsProjectiles) continue
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()

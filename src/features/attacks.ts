@@ -222,6 +222,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
         knockback: hitbox.knockback,
         faction: hitbox.faction,
         charges: hitbox.charges,
+        ...(hitbox.source === undefined ? {} : { source: hitbox.source }),
         ...(hitbox.hitStop === undefined ? {} : { hitStop: hitbox.hitStop }),
         ...(hitbox.heavy === undefined ? {} : { heavy: hitbox.heavy })
       })

@@ -8,13 +8,15 @@
  * `engine` is read once by the host when the loop starts. `defaultTuning` is
  * loaded into the `Tuning` resource, so systems read it through the ECS, tests
  * can run with overrides (`tuningWith`), and a live tweak panel can edit it.
- * The content (characters, attacks, skills, enemies) lives in `src/content/` and is part
- * of the tuning, so its numbers are live-tunable too.
+ * The content (characters, weapons, attacks, skills, enemies) lives in
+ * `src/content/` and is part of the tuning, so its numbers are live-tunable
+ * too.
  */
 import { attacks } from "../content/attacks.ts"
 import { characters } from "../content/characters.ts"
 import { enemies } from "../content/enemies.ts"
 import { skills } from "../content/skills.ts"
+import { weapons } from "../content/weapons.ts"
 
 /** Fixed-step timing. Changing these needs a reload. */
 export const engine = {
@@ -49,6 +51,9 @@ export const defaultTuning = {
 
   /** Every character, by id; the `Build` resource picks the one in the arena. */
   characters,
+
+  /** Every weapon, by id; a character wields one of its type. */
+  weapons,
 
   /**
    * Damage: an attack deals its `power` as a percentage of the attacker's

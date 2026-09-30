@@ -124,7 +124,8 @@ describe("gun", () => {
 describe("stats in play", () => {
   it("scale damage by the character's ATK", () => {
     const first = sword.combo[0] as MeleeMove
-    const strong = tuningWith({ characters: { swordsman: { stats: { atk: 150 } } } })
+    // 130 base plus the training blade's 20: 150.
+    const strong = tuningWith({ characters: { swordsman: { stats: { atk: 130 } } } })
     const run = range([60], taps([first]), undefined, strong)
     run.step(4)
     expect(run.world().enemies).toEqual([hp - first.power * 1.5])

@@ -20,7 +20,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
-import type { HitboxValue, WeaponValue } from "../schema.ts"
+import type { DamageSource, HitboxValue, MoveContext, WeaponValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -120,7 +120,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
   let moves = 0
-  for (const { data } of queries.player.each()) {
+  for (const { entity, data } of queries.player.each()) {
     const position = data.position.get()
     const aim = data.aim.get()
     const current = data.weapon.get()
@@ -145,6 +145,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     }
 
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
+      const context: MoveContext = { step: nextStep, finisher: !power && nextStep === spec.combo.length - 1, power }
+      // Blows remember who dealt them and with which move, for the wielder's passives.
+      const source: DamageSource = { attacker: Game.Entity.handle(entity.id, Position), move: context }
       if (move.shape === "shot") {
         const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))
         const base = Math.atan2(aim.y, aim.x)
@@ -160,6 +163,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
             range: move.range,
             pierce: move.pierce,
             hit: [],
+            source,
             hitStop: move.hitStop,
             heavy: move.heavy
           }))
@@ -173,6 +177,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
           remaining: spec.active,
           hit: [],
           charges: true,
+          source,
           hitStop: move.hitStop,
           heavy: move.heavy
         }]))
@@ -183,7 +188,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       const lunge = lungeDistance(move, spec, data.body.get().radius, position, aim, enemies) * tuning.knockback.decay
       if (lunge !== 0) data.knockback.update((knockback) => ({ x: knockback.x + aim.x * lunge, y: knockback.y + aim.y * lunge }))
       moves += 1
-      events.action.emit({ kind: "attack", at: position, direction: aim, move, step: nextStep, power })
+      events.action.emit({ kind: "attack", at: position, direction: aim, move, ...context })
       data.weapon.set({ ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false })
     }
 

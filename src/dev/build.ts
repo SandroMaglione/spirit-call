@@ -1,12 +1,13 @@
 /**
- * Picks the build from the page URL, to try characters and skills without a
- * menu: `?character=gunner&special=bladeWave&ultimate=nova`. Unknown ids are
- * ignored, so a typo keeps the default.
+ * Picks the build from the page URL, to try characters, weapons, and skills
+ * without a menu: `?character=gunner&weapon=bloodthirst&special=bladeWave`.
+ * Unknown ids are ignored, so a typo keeps the default.
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { CharacterId } from "../content/characters.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
+import type { WeaponId } from "../content/weapons.ts"
 import { defaultBuild } from "../features/build.ts"
 import type { BuildValue } from "../schema.ts"
 
@@ -19,5 +20,10 @@ export const buildFromQuery = (tuning: Tuning, search: string): BuildValue => {
     const skill = query.get(slot)
     if (known<SkillId>(tuning.skills, skill)) skills[slot] = skill
   }
-  return { character: known<CharacterId>(tuning.characters, character) ? character : defaultBuild.character, skills }
+  const weapon = query.get("weapon")
+  return {
+    character: known<CharacterId>(tuning.characters, character) ? character : defaultBuild.character,
+    ...(known<WeaponId>(tuning.weapons, weapon) ? { weapon } : {}),
+    skills
+  }
 }

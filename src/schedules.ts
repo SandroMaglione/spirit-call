@@ -19,6 +19,7 @@ import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./feat
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
 import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
+import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
 import { CastCuts, CastLobs, CastNovas, UpdateLobbed, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
@@ -67,8 +68,10 @@ const gameplay = Game.Schedule.when(
   TrackRun,
   TickCombatTimers,
   ControlPlayer,
-  // Casts are carried out right after they are made, in the same step.
+  // Casts (from skills, and from passives queued last step) are carried out
+  // right after they are made, in the same step.
   UseSkills,
+  ApplyTriggeredEffects,
   CastCuts,
   CastLobs,
   CastNovas,
@@ -85,10 +88,14 @@ const gameplay = Game.Schedule.when(
   DirectWaves
 )
 
-/** Needs every Death event of the run, so it is never skipped by hit-stop. */
+/**
+ * Needs every Death and Hit event of the run, so it is never skipped by
+ * hit-stop: game over, and the passives that kills and moves set off.
+ */
 const runOutcome = Game.Schedule.when(
   whileRunIsLive,
-  DetectGameOver
+  DetectGameOver,
+  TriggerPassives
 )
 
 /** One fixed simulation step. */

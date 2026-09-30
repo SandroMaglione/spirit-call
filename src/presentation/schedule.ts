@@ -35,6 +35,7 @@ import {
   Flow,
   Game,
   Health,
+  Heal,
   Hit,
   HitFlash,
   Hitbox,
@@ -443,7 +444,8 @@ const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }
-  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "nova" ? "nova" : "boom", { pan: pan(explosion.at) })
+  // The Nova's deep boom; lighter blasts (a grenade, a weapon's shockwave) a shorter one.
+  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : "boom", { pan: pan(explosion.at) })
 })
 
 /** A world direction as a unit direction on screen. */
@@ -461,7 +463,8 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
     hit: Game.System.readEvent(Hit),
     death: Game.System.readEvent(Death),
     impact: Game.System.readEvent(Impact),
-    explosion: Game.System.readEvent(Explosion)
+    explosion: Game.System.readEvent(Explosion),
+    heal: Game.System.readEvent(Heal)
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost) }
@@ -515,6 +518,11 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
       })
     }
   }
+  for (const heal of events.heal.all()) {
+    const at = toScreen(projection, heal.at)
+    fx.number(at, heal.amount, view.healNumber, { size: 1.1, drift: 0, life: 0.8 })
+    fx.burst({ x: at.x, y: at.y - impact.height * projection.zoom }, { color: view.healNumber, count: 10, speed: 160, size: 4, life: 0.45 })
+  }
   for (const death of events.death.all()) {
     const at = toScreen(projection, death.at)
     const color = death.enemy === undefined ? view.player : enemyColor(death.enemy)
@@ -522,7 +530,7 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
   }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)
-    const nova = explosion.kind === "nova"
+    const nova = explosion.kind === "nova" && explosion.heavy
     const color = nova ? view.ultimate : view.playerArea
     fx.ring(at, explosion.radius * projection.zoom, color, nova ? 0.45 : 0.3)
     fx.burst({ x: at.x, y: at.y - 10 }, { color, count: nova ? 48 : 26, speed: nova ? 620 : 380, size: 6, life: 0.5 })

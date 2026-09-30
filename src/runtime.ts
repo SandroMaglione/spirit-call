@@ -13,6 +13,7 @@ import type { BuildValue, ViewportValue } from "./schema.ts"
 export const initialResources = (tuning: Tuning, viewport: ViewportValue, build: BuildValue = defaultBuild) => ({
   Tuning: tuning,
   Build: build,
+  TriggeredEffects: [],
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),

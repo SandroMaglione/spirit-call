@@ -44,6 +44,7 @@ import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
 import { respawnOf } from "./enemies.ts"
+import { damageBonusPercent, PassiveHolders } from "./passives.ts"
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
   Game.Command.spawn(
@@ -162,6 +163,7 @@ export const MoveProjectiles = (() => {
           knockback: projectile.knockback,
           faction: projectile.faction,
           charges: projectile.faction === "player",
+          ...(projectile.source === undefined ? {} : { source: projectile.source }),
           ...(projectile.hitStop === undefined ? {} : { hitStop: projectile.hitStop }),
           ...(projectile.heavy === undefined ? {} : { heavy: projectile.heavy })
         })
@@ -225,7 +227,8 @@ const Damageable = Game.Query({
 
 /**
  * Applies damage requests: the single place where hits become consequences.
- * The target's DEF reduces each request's amount (see `damageTaken`).
+ * The attacker's passives raise each request's amount (see
+ * `damageBonusPercent`), then the target's DEF reduces it (see `damageTaken`).
  */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: { energies: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) },
@@ -249,8 +252,10 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const invulnerable = data.invulnerable.get().remaining
     if (invulnerable > 0) continue
 
-    const amount = damageTaken(tuning, damage.amount, data.stats.get().def)
     const health = data.health.get()
+    const holder = damage.source === undefined ? undefined : lookup.getHandle(damage.source.attacker, PassiveHolders)
+    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), damage.source?.move, health) : 0
+    const amount = damageTaken(tuning, damage.amount * (1 + bonus / 100), data.stats.get().def)
     const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.
     if (damage.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
@@ -271,6 +276,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const at = data.position.get()
     const killed = current <= 0
     events.hit.emit({
+      source: damage.source ?? null,
       entity: entity.id.value,
       at,
       direction: damage.direction,
