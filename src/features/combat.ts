@@ -22,7 +22,6 @@ import {
   Hit,
   HitFlash,
   HitStop,
-  Hitbox,
   Hurtbox,
   Impact,
   Invulnerable,

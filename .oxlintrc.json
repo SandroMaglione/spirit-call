@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "oxc", "eslint", "unicorn"],
+  "jsPlugins": ["./tools/lint/plugin.mjs"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "rules": {
+    "shooter/layer-boundaries": "error",
+    "shooter/no-effect-barrel": "error",
+    "shooter/deterministic-simulation": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-import-type-side-effects": "error",
+    "import/no-duplicates": "error",
+    "import/no-cycle": "error",
+    "import/no-self-import": "error",
+    "eslint/no-console": ["error", { "allow": ["warn", "error"] }],
+    "eslint/no-underscore-dangle": ["error", { "allow": ["_tag"] }],
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
+    "unicorn/no-array-fill-with-reference-type": "off",
+    "unicorn/no-array-sort": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "oxc/no-map-spread": "off",
+    "eslint/no-shadow": "off"
+  },
+  "overrides": [
+    {
+      "files": ["test/**", "scripts/**"],
+      "rules": {
+        "eslint/no-console": "off",
+        "eslint/no-unmodified-loop-condition": "off",
+        "shooter/deterministic-simulation": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["dist/**", "node_modules/**"]
+}

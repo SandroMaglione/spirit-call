@@ -13,6 +13,7 @@
  * Energy fills from damage the player deals (`ApplyDamage`), except damage
  * from skills that cost energy.
  */
+import { bySlot } from "../content/skills.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import { clampLength, normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -41,9 +42,6 @@ import {
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { Walls, wallBoxes } from "./motion.ts"
-
-/** A value for each skill slot. Listing the slots here (not iterating `skillSlots`) keeps the result typed per slot. */
-export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in SkillSlot]: T } => ({ special: each("special"), ultimate: each("ultimate") })
 
 export const initialSkills = (build: { readonly skills: { readonly [Slot in SkillSlot]: SkillId } }): SkillsValue =>
   bySlot((slot) => ({ skill: build.skills[slot], cooldown: 0 }))

@@ -3,7 +3,8 @@
  * impact flashes, dust, and bursts. They live only in the renderer, advance
  * in real time, and reuse their display objects.
  */
-import { Container, Graphics, Sprite, Text } from "pixi.js"
+import { Graphics, Sprite, Text } from "pixi.js"
+import type { Container } from "pixi.js"
 
 import type { Vec2 } from "../math/vec.ts"
 import type { RenderAssets } from "./host-types.ts"

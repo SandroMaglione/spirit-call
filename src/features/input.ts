@@ -9,6 +9,7 @@ import { directions, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { BasicAttackSpec } from "../content/attacks.ts"
+import { bySlot } from "../content/skills.ts"
 import type { SkillEffect, SkillSlot } from "../content/skills.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
@@ -37,7 +38,7 @@ import {
   Weapon
 } from "../schema.ts"
 import type { ControlsValue, SkillControl, SkillsValue } from "../schema.ts"
-import { bySlot, skillAim } from "./skills.ts"
+import { skillAim } from "./skills.ts"
 import { moveReach } from "./weapons.ts"
 
 export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKeys", source: KeyboardInput, resource: Keys })

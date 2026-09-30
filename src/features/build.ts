@@ -13,10 +13,10 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { AttackId } from "../content/attacks.ts"
 import type { Stats } from "../content/characters.ts"
 import type { Passive } from "../content/passives.ts"
+import { bySlot } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId, WeaponSpec } from "../content/weapons.ts"
 import type { BuildValue } from "../schema.ts"
-import { bySlot } from "./skills.ts"
 
 export interface ResolvedBuild {
   readonly stats: Stats

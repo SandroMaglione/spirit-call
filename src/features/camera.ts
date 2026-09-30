@@ -1,4 +1,4 @@
-import { add, clampLength, normalizeOr, scale, sub, zero } from "../math/vec.ts"
+import { add, clampLength, scale, sub, zero } from "../math/vec.ts"
 import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
 
 /**

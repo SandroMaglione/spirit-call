@@ -3,13 +3,13 @@
  * slots, the wave banner, and the touch pad.
  */
 import { touchButtons } from "../config/input.ts"
-import { skillSlots } from "../content/skills.ts"
+import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import { Build, Challenge, Controls, Dash, Enemy, Energy, Flow, Game, Health, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
-import { bySlot, skillRecharge } from "../features/skills.ts"
+import { skillRecharge } from "../features/skills.ts"
 import { resolveBuild } from "../features/build.ts"
 import { setText } from "./draw.ts"
 

@@ -70,6 +70,9 @@ export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
 export const skillSlots = ["special", "ultimate"] as const
 export type SkillSlot = (typeof skillSlots)[number]
 
+/** A value for each skill slot. Listing the slots here (not iterating `skillSlots`) keeps the result typed per slot. */
+export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in SkillSlot]: T } => ({ special: each("special"), ultimate: each("ultimate") })
+
 /** Effect builders, also used by passives that set off a skill effect. */
 export const cut = (spec: Omit<CutEffect, "kind">): CutEffect => ({ kind: "cut", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })

@@ -8,8 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --pretty false",
+    "lint": "oxlint src test tools/lint/plugin.mjs",
     "test": "vitest run",
-    "check": "pnpm typecheck && pnpm test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
     "debug": "node --import tsx scripts/debug.ts"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@typeonce/bevy-ts-devtools": "link:../../bevy-ts/packages/devtools",
     "@types/node": "25.5.0",
+    "oxlint": "1.86.0",
     "tsx": "4.21.0",
     "typescript": "7.0.2",
     "vite": "8.0.3",

@@ -6,7 +6,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Death, Enemy, Explosion, Game, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Tuning } from "../schema.ts"
+import { Action, Death, Enemy, Explosion, Game, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
 import type { RenderHostValue } from "./host-types.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
 
@@ -28,9 +28,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     explosion: Game.System.readEvent(Explosion),
     heal: Game.System.readEvent(Heal)
   },
-  resources: { tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost) }
-}, ({ events, resources, services }) => {
+}, ({ events, services }) => {
   const fx = services.host.fx
   const feedback = services.host.feedback
   const impact = view.impact
