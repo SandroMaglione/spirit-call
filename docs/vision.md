@@ -122,6 +122,21 @@ It is a personal project, not a commercial one.
   level; it differs in effects and playstyle, not in numbers.
 - Enemy levels are fixed per quest or tier; they never scale to the player.
 
+## Progression
+
+Decided so far (the rest is in the open questions):
+
+- **Two kinds of level.** The **account level** rises by playing, in every
+  mode, and paces the game: later quests **require** an account level. The
+  gate is there to encourage trying the other modes rather than grinding
+  quests one after another; it is about progress, not power, so it never
+  checks the characters' levels (a skilled player can enter with a
+  low-level team). Each **character has her own level**, which gives stats.
+- **Characters grow two ways:** experience from fighting with them, and
+  resources spent on them (which lets a new or benched character catch up).
+- **The stat band is to be set later**: roughly 4x between level 1 and the
+  maximum sounds right, to confirm once there is content to measure it on.
+
 ## Rules of thumb for design and implementation
 
 - A new character, weapon, or effect must be beatable content's peer, never
@@ -139,15 +154,14 @@ It is a personal project, not a commercial one.
 
 Decided directions are above; these are not decided yet.
 
-1. **Progression without power creep.** Draft direction (in discussion): a
-   leveling system, with later quests requiring higher levels; hardcore
+1. **The rest of progression.** Draft direction (in discussion): hardcore
    content in tiers, so lower tiers are within reach of a low-level team;
    growth in several dimensions (levels, weapons, and what is equipped); and
    the gacha giving resources, equipment, or new characters, with duplicates
    of a character unlocking an add-on (from a skin to a unique weapon that
-   is not much stronger). Still to settle: what levels up (account,
-   characters), how, the size of the stat band, how quests gate, what tiers
-   reward, and which growth dimensions exist.
+   is not much stronger). Still to settle: what tiers change and reward,
+   which growth dimensions exist, which modes there are, and the exact stat
+   band.
 2. **Elements and statuses.** Which elements or statuses exist, what each
    does, and whether they combine (reactions) or stay independent.
 3. **Enemy strengths and weaknesses.** How enemies resist or suffer effects,
