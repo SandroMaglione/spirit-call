@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildOf, createAccount, equip, equipmentOf, owns, select, unlock } from "../src/account/account.ts"
+import { buildOf, createAccount, equip, equipmentOf, owns, recordRun, select, unlock } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 
@@ -41,6 +41,12 @@ describe("account rules", () => {
     const withCrescendo = unlock(defaultTuning, account, { kind: "weapon", id: "crescendo" }, 2000)
     const equipped = equip(defaultTuning, withCrescendo, "swordsman", { ...own, weapon: "crescendo" })
     expect(equipped.ok && buildOf(defaultTuning, equipped.value, "swordsman").weapon).toBe("crescendo")
+  })
+
+  it("adds every run to the lifetime totals", () => {
+    const run = { cleared: true, challenge: "swarm" as const, characters: ["swordsman" as const], wave: 3, kills: 12, time: 95.5 }
+    const account = recordRun(recordRun(fresh(), run), { ...run, cleared: false, kills: 3, time: 20 })
+    expect(account.totals).toEqual({ runs: 2, clears: 1, kills: 15, secondsPlayed: 115.5 })
   })
 
   it("selects only an owned character and challenge", () => {

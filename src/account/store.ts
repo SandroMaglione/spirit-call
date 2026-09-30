@@ -23,7 +23,8 @@ import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
-import { createAccount, equip, select, unlock } from "./account.ts"
+import type { RunResultValue } from "../schema.ts"
+import { createAccount, equip, recordRun, select, unlock } from "./account.ts"
 import type { Account, Checked, Equipment, Item, Refusal } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
@@ -47,6 +48,8 @@ export interface AccountStoreShape {
   readonly select: (character: CharacterId, challenge: ChallengeId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
+  /** Records a run that ended (the arena's `RunResult`). */
+  readonly recordRun: (result: RunResultValue) => Effect.Effect<Account, AccountSaveError>
 }
 
 export class AccountStore extends Context.Service<AccountStore, AccountStoreShape>()("Shooter/AccountStore") {}
@@ -99,6 +102,15 @@ export const layer = (options: AccountOptions) =>
       // Saved back at once: a new account, or one migrated or repaired, is kept as it is now.
       yield* save(loaded.account).pipe(Effect.ignore)
 
+      /** Applies a change that is always allowed, and saves it. */
+      const apply = (change: (account: Account, now: number) => Account) =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const next = change(yield* Ref.get(current), now)
+          yield* Ref.set(current, next)
+          return yield* save(next)
+        })
+
       /** Applies a checked change, saving it when allowed. */
       const change = (apply: (account: Account) => Checked<Account>) =>
         Effect.gen(function*() {
@@ -113,11 +125,8 @@ export const layer = (options: AccountOptions) =>
         notes: loaded.notes,
         equip: (character, equipment) => change((account) => equip(options.tuning, account, character, equipment)),
         select: (character, challenge) => change((account) => select(account, character, challenge)),
-        unlock: (items) =>
-          Clock.currentTimeMillis.pipe(
-            Effect.flatMap((now) => change((account) => ({ ok: true, value: items.reduce((next, item) => unlock(options.tuning, next, item, now), account) }))),
-            Effect.catchTag("AccountRefused", (error) => Effect.die(error))
-          )
+        unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
+        recordRun: (result) => apply((account) => recordRun(account, result))
       })
     })
   )

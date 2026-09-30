@@ -456,6 +456,8 @@ export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 export interface RunResultValue {
   readonly cleared: boolean
   readonly challenge: ChallengeId
+  /** The characters that fought (for their experience). */
+  readonly characters: ReadonlyArray<CharacterId>
   /** The wave reached. */
   readonly wave: number
   readonly kills: number

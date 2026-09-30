@@ -4,8 +4,8 @@
  * restart that clears the run and starts over.
  */
 import type { ChallengeId } from "../content/challenges.ts"
-import { Challenge, Death, Flow, Game, HitStop, Keys, Rng, Run, RunResult, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
-import type { RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
+import { Build, Challenge, Death, Flow, Game, HitStop, Keys, Rng, Run, RunResult, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
+import type { BuildValue, RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
 import { initialWaves } from "./waves.ts"
 
 export const TrackRun = Game.System("Shooter/TrackRun", {
@@ -16,9 +16,10 @@ export const TrackRun = Game.System("Shooter/TrackRun", {
 })
 
 /** How a run that ends now went. */
-export const runResultOf = (cleared: boolean, challenge: ChallengeId, run: RunValue, waves: WavesValue, stats: StatsValue): RunResultValue => ({
+export const runResultOf = (cleared: boolean, challenge: ChallengeId, build: BuildValue, run: RunValue, waves: WavesValue, stats: StatsValue): RunResultValue => ({
   cleared,
   challenge,
+  characters: [build.character],
   wave: waves.number,
   kills: stats.kills,
   time: run.time
@@ -31,6 +32,7 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
     run: Game.System.writeResource(Run),
     result: Game.System.writeResource(RunResult),
     challenge: Game.System.readResource(Challenge),
+    build: Game.System.readResource(Build),
     waves: Game.System.readResource(Waves),
     stats: Game.System.readResource(Stats),
     time: Game.System.readResource(Time)
@@ -40,7 +42,7 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   if (!events.death.all().some((death) => death.faction === "player")) return
   const run = { ...resources.run.get(), endedAt: resources.time.get().elapsed }
   resources.run.set(run)
-  resources.result.set(runResultOf(false, resources.challenge.get(), run, resources.waves.get(), resources.stats.get()))
+  resources.result.set(runResultOf(false, resources.challenge.get(), resources.build.get(), run, resources.waves.get(), resources.stats.get()))
   nextMachines.flow.set("GameOver")
 })
 

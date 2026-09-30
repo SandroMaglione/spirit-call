@@ -39,14 +39,25 @@ export const StoredAccountV1 = Schema.Struct({
   selection: Schema.Struct({ character: Schema.String, challenge: Schema.String })
 })
 
+const Totals = Schema.Struct({ runs: Schema.Number, clears: Schema.Number, kills: Schema.Number, secondsPlayed: Schema.Number })
+
+/** Version 2: adds lifetime totals over every run. */
+export const StoredAccountV2 = Schema.Struct({
+  ...StoredAccountV1.fields,
+  version: Schema.Literal(2),
+  totals: Totals
+})
+
 /** Any account version ever saved. */
-export const StoredAccount = Schema.Union([StoredAccountV1])
-export const StoredAccountLatest = StoredAccountV1
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2])
+export const StoredAccountLatest = StoredAccountV2
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
   switch (stored.version) {
     case 1:
+      return migrateAccount({ ...stored, version: 2, totals: { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 } })
+    case 2:
       return stored
   }
 }

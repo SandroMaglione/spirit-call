@@ -20,6 +20,7 @@ import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { RunResultValue } from "../schema.ts"
 import { randomId } from "./ids.ts"
 
 export interface App {
@@ -35,6 +36,8 @@ export interface App {
   readonly select: (character: CharacterId, challenge: ChallengeId) => Promise<Account | undefined>
   /** Owns every character, weapon, skill, and challenge (a dev tool). */
   readonly unlockEverything: () => void
+  /** Records a run that ended (the arena's result). */
+  readonly recordRun: (result: RunResultValue) => Promise<Account | undefined>
   readonly setMuted: (muted: boolean) => void
 }
 
@@ -66,6 +69,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     equip: (character, equipment) => void run(accounts.equip(character, equipment)),
     select: (character, challenge) => run(accounts.select(character, challenge)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning))),
+    recordRun: (result) => run(accounts.recordRun(result)),
     setMuted: (muted) => {
       runtime.runFork(settings.update((current) => ({ ...current, muted })).pipe(
         Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),

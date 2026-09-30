@@ -39,7 +39,7 @@ export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAc
     skills: keep<SkillId, Unlocked>(tuning.skills, stored.owned.skills, "skill", dropped),
     challenges: keep<ChallengeId, Unlocked>(tuning.challenges, stored.owned.challenges, "challenge", dropped)
   }
-  let account: Account = { id: stored.id, createdAt: stored.createdAt, owned, equipment: {}, selection: starter.selection }
+  let account: Account = { id: stored.id, createdAt: stored.createdAt, totals: stored.totals, owned, equipment: {}, selection: starter.selection }
 
   // Never left with nothing to play: the starter's characters and challenges come back.
   if (Object.keys(owned.characters).length === 0) account = starter.characters.reduce((next, id) => unlock(tuning, next, { kind: "character", id }, now), account)
@@ -89,9 +89,10 @@ const equipmentFrom = (tuning: Tuning, character: CharacterId, saved: StoredAcco
 
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 1,
+  version: 2,
   id: account.id,
   createdAt: account.createdAt,
+  totals: account.totals,
   owned: account.owned,
   equipment: account.equipment,
   selection: account.selection

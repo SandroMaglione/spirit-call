@@ -1,3 +1,4 @@
+import { effect } from "@preact/signals"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchLayout } from "./config/input.ts"
@@ -29,7 +30,7 @@ import {
   RenderNodes,
   Sounds
 } from "./schema.ts"
-import type { FrameContextValue, RenderClockValue } from "./schema.ts"
+import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
 const start = async (mount: HTMLElement) => {
@@ -50,6 +51,14 @@ const start = async (mount: HTMLElement) => {
   const uiStore = createUiStore({ tuning, build, challenge, flow, account, notices: shell.notes })
   shell.onAccount((next) => {
     uiStore.account.value = next
+  })
+  // Every run that ends is reported to the account once, as its result appears (the arena records it, see `RunResult`).
+  let reported: RunResultValue | null = null
+  effect(() => {
+    const result = uiStore.result.value
+    if (result === null || result === reported) return
+    reported = result
+    void shell.recordRun(result)
   })
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {

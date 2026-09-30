@@ -14,7 +14,7 @@ import type { CharacterId } from "../content/characters.ts"
 import { bySlot } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
-import type { BuildValue } from "../schema.ts"
+import type { BuildValue, RunResultValue } from "../schema.ts"
 
 /** When something was unlocked (epoch milliseconds). */
 export interface Unlocked {
@@ -39,10 +39,22 @@ export interface Equipment {
   readonly skills: { readonly [Slot in SkillSlot]: SkillId }
 }
 
+/** Lifetime totals over every run. */
+export interface Totals {
+  readonly runs: number
+  readonly clears: number
+  readonly kills: number
+  /** Seconds spent in runs. */
+  readonly secondsPlayed: number
+}
+
+export const noTotals: Totals = { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 }
+
 export interface Account {
   readonly id: string
   /** Epoch milliseconds. */
   readonly createdAt: number
+  readonly totals: Totals
   readonly owned: Owned
   /** Each owned character's equipment. */
   readonly equipment: { readonly [Id in CharacterId]?: Equipment }
@@ -121,6 +133,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
   const empty: Account = {
     id,
     createdAt: now,
+    totals: noTotals,
     owned: { characters: {}, weapons: {}, skills: {}, challenges: {} },
     equipment: {},
     selection: starter.selection
@@ -160,6 +173,17 @@ export const select = (account: Account, character: CharacterId, challenge: Chal
   if (!owns(account, { kind: "challenge", id: challenge })) return refuse({ kind: "notOwned", item: { kind: "challenge", id: challenge } })
   return { ok: true, value: { ...account, selection: { character, challenge } } }
 }
+
+/** `account` after a run that ended with `result`. */
+export const recordRun = (account: Account, result: RunResultValue): Account => ({
+  ...account,
+  totals: {
+    runs: account.totals.runs + 1,
+    clears: account.totals.clears + (result.cleared ? 1 : 0),
+    kills: account.totals.kills + result.kills,
+    secondsPlayed: account.totals.secondsPlayed + result.time
+  }
+})
 
 /** `character`'s equipment in `account` (its own when it has none saved). */
 export const equipmentOf = (tuning: Tuning, account: Account, character: CharacterId): Equipment =>

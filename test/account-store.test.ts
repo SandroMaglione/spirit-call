@@ -41,7 +41,7 @@ describe("account store", () => {
     expect(result.account.id).toBe("account-1")
     expect(Object.keys(result.account.owned.characters)).toEqual(newAccount.characters)
     expect(result.notes).toEqual([])
-    expect(result.saved).toMatchObject({ version: 1, id: "account-1", selection: newAccount.selection })
+    expect(result.saved).toMatchObject({ version: 2, id: "account-1", selection: newAccount.selection })
   })
 
   it("keeps changes across visits", async () => {
@@ -56,6 +56,26 @@ describe("account store", () => {
     expect(reloaded.equipment.swordsman).toEqual({ weapon: "crescendo", skills: { special: "nova", ultimate: "bladeWave" } })
     expect(reloaded.selection).toEqual({ character: "swordsman", challenge: "endless" })
     expect(reloaded.owned.weapons.crescendo?.copies).toBe(1)
+  })
+
+  it("records runs, and opens a save from before totals (version 1) with none", async () => {
+    const v1 = JSON.stringify({
+      version: 1,
+      id: "old",
+      createdAt: 5,
+      owned: { characters: { swordsman: { unlockedAt: 5 } }, weapons: { trainingBlade: { unlockedAt: 5, copies: 1 } }, skills: { bladeWave: { unlockedAt: 5 }, nova: { unlockedAt: 5 } }, challenges: { swarm: { unlockedAt: 5 } } },
+      equipment: {},
+      selection: { character: "swordsman", challenge: "swarm" }
+    })
+    const result = await withAccount({ [accountKey]: v1 }, (store, kv) =>
+      Effect.gen(function*() {
+        const before = (yield* store.get).totals
+        yield* store.recordRun({ cleared: true, challenge: "swarm", characters: ["swordsman"], wave: 3, kills: 9, time: 60 })
+        return { before, saved: yield* savedJson(kv, accountKey) }
+      }))
+    expect(result.before).toEqual({ runs: 0, clears: 0, kills: 0, secondsPlayed: 0 })
+    expect(result.saved.version).toBe(2)
+    expect(result.saved.totals).toEqual({ runs: 1, clears: 1, kills: 9, secondsPlayed: 60 })
   })
 
   it("refuses what the account does not own, changing nothing", async () => {
