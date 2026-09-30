@@ -33,8 +33,13 @@ export const view = {
    * above the floor. Arcs sweep over `sweepSeconds` then fade over
    * `fadeSeconds`; the finisher's spin and the thrust have their own timing.
    */
-  /** The ring filling around the player while a power attack charges. */
-  charge: { gap: 14, width: 3, fullWidth: 5, filling: 0x7fe6de, full: 0xfff4d6 },
+  /**
+   * Charging a power attack: its area on the floor fills up with the charge
+   * (like an enemy telegraph), a ring fills around the feet, and the body
+   * glows (`glow` of the way to `full`), pulsing `pulseHz` times a second once
+   * full. A shot's area is a lane `shotPreview` long.
+   */
+  charge: { gap: 12, width: 4, fullWidth: 6, filling: 0x7fe6de, full: 0xfff4d6, glow: 0.55, pulseHz: 6, shotPreview: 420 },
   slashTrail: {
     height: 22,
     core: 0xf2fffd,

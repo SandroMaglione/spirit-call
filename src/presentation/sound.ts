@@ -39,7 +39,9 @@ export type SoundName =
   | "boom"
   | "throw"
   | "shot"
+  | "charging"
   | "charged"
+  | "power"
   | "block"
   | "waveStart"
 
@@ -255,6 +257,17 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
   }],
   throw: [{ reverb: 0.1 }, (v) => swish(v, { low: 700, peak: 1500, duration: 0.14, peakAt: 0.4, q: 1.2, gain: 0.25 })],
   shot: [{ reverb: 0.05, interval: 0.05 }, (v) => tone(v, "square", 880, 420, 0.05, 0.07)],
+  // Charging a power attack: air drawn in, rising.
+  charging: [{ reverb: 0.2 }, (v) => {
+    swish(v, { low: 300, peak: 2400, duration: 0.6, peakAt: 0.95, q: 1.4, gain: 0.16 })
+    tone(v, "sine", 180, 420, 0.6, 0.05, 0, 0.3)
+  }],
+  // A power attack released: a heavy whoosh over a deep punch.
+  power: [{ reverb: 0.35, heavy: true }, (v) => {
+    swish(v, { low: 250, peak: 2200, duration: 0.3, peakAt: 0.25, q: 0.9, gain: 0.5 })
+    tone(v, "sine", 120, 40, 0.35, 0.6, 0, 0.003)
+    noise(v, "lowpass", 1800, 200, 0.25, 0.3)
+  }],
   // A power attack charged to full: a bright ring with a rising glint.
   charged: [{ reverb: 0.3 }, (v) => {
     metal(v, 1480, 0.35, 0.05)

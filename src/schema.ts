@@ -268,12 +268,12 @@ export const Cast = Descriptor.Event<{
 /** A projectile stopped against a wall or a shield, or ran out of range. */
 /**
  * Something the player did, for feedback such as sound: a move of the basic
- * attack (`step` in the combo, or the power attack), a power attack charged
- * to full, or a dash. Skills are `Cast`.
+ * attack (`step` in the combo, or the power attack), a power attack starting
+ * to charge or charged to full, or a dash. Skills are `Cast`.
  */
 export const Action = Descriptor.Event<
   | { readonly kind: "attack"; readonly at: Vec2; readonly direction: Vec2; readonly move: AttackMove; readonly step: number; readonly power: boolean }
-  | { readonly kind: "charged" | "dash"; readonly at: Vec2 }
+  | { readonly kind: "charging" | "charged" | "dash"; readonly at: Vec2 }
 >()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 

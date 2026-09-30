@@ -62,7 +62,7 @@ import type { SkillsValue } from "../schema.ts"
 import type { Area } from "../physics/areas.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { bySlot, lobTarget, skillRecharge } from "../features/skills.ts"
-import { chargeOf } from "../features/weapons.ts"
+import { chargeOf, moveArea } from "../features/weapons.ts"
 import type { Graphics } from "pixi.js"
 import type { RenderHostValue } from "./host-types.ts"
 import { createNode, enemyColor, projectileColor, wallDepth } from "./nodes.ts"
@@ -244,7 +244,12 @@ const DrawPlayer = Game.System("Shooter/DrawPlayer", {
 
     const node = services.nodes.get(entity.id)
     if (node?.kind === "player") {
-      node.body.tint = data.flash.get().remaining > 0 ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : view.player
+      // Charging glows toward the full-charge color; once full it pulses.
+      const pulse = charge >= 1 ? 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.charge.pulseHz * Math.PI * 2) : 0
+      const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
+      node.body.tint = data.flash.get().remaining > 0
+        ? view.hitFlash
+        : dash.remaining > 0 ? view.playerDashing : mixColor(view.player, view.charge.full, glow)
       node.root.alpha = data.invulnerable.get().remaining > 0 ? 0.55 : 1
     }
   }
@@ -413,8 +418,10 @@ const PlaySounds = Game.System("Shooter/PlaySounds", {
     return Math.max(-1, Math.min(1, x / (screen.width / 2))) * 0.6
   }
   for (const action of events.action.all()) {
-    if (action.kind === "attack") sounds.play(moveSounds[action.move.shape], { pitch: action.power ? powerPitch : 1 + action.step * comboPitchStep })
-    else sounds.play(action.kind)
+    if (action.kind === "attack") {
+      sounds.play(moveSounds[action.move.shape], { pitch: action.power ? powerPitch : 1 + action.step * comboPitchStep })
+      if (action.power) sounds.play("power")
+    } else sounds.play(action.kind)
   }
   for (const cast of events.cast.all()) {
     const sound = castSounds[cast.effect.kind]
@@ -457,6 +464,15 @@ const SpawnFx = Game.System("Shooter/SpawnFx", {
   const feedback = services.host.feedback
   const impact = view.impact
   for (const action of events.action.all()) {
+    // Full charge: a flash and a ring at the player; releasing it: a bigger flash and a jolt.
+    if (action.kind === "charged" || (action.kind === "attack" && action.power)) {
+      const at = toScreen(projection, action.at)
+      const body = { x: at.x, y: at.y - impact.height * projection.zoom }
+      const release = action.kind === "attack"
+      fx.flash(body, release ? 54 : 36, view.charge.full, release ? 0.16 : 0.12)
+      fx.ring(at, (release ? 70 : 44) * projection.zoom, view.charge.full, release ? 0.3 : 0.25)
+      if (release) feedback.shake = Math.max(feedback.shake, impact.shake)
+    }
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
     if (action.kind === "attack" && action.move.shape !== "shot") {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
@@ -657,6 +673,21 @@ const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
         outline: (recharging ? 0.5 : 0.3) * cue.alpha
       })
     }
+  }
+  // Charging: the power move's area fills up with the charge, bright once full.
+  const weapon = player.data.weapon.get()
+  const power = tuning.attacks[weapon.attack].power
+  const charge = power === null ? 0 : chargeOf(power, weapon.held)
+  if (power !== null && charge > 0) {
+    const aim = player.data.aim.get()
+    const move = power.move
+    const area = move.shape === "shot"
+      ? { kind: "lane" as const, origin: at, direction: aim, length: Math.min(move.range, view.charge.shotPreview), halfWidth: move.radius * 2 }
+      : moveArea(move, at, aim).area
+    const full = charge >= 1
+    drawArea(g, area, full ? 1 : charge, full
+      ? { color: view.charge.full, fill: 0.14, outline: 0.9 }
+      : { color: view.playerArea, fill: 0.06, outline: 0.35 })
   }
   if (controls.device !== "touch") return
   // The enemy an attack now would turn toward (attack assist), ringed on the floor.

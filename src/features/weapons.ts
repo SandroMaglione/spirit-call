@@ -45,7 +45,7 @@ export const charging = (spec: BasicAttackSpec, weapon: WeaponValue): boolean =>
 export const moveReach = (move: AttackMove): number => (move.shape === "shot" ? move.range : move.reach)
 
 /** The area a melee move covers from `position` facing `aim`. */
-const moveArea = (move: MeleeMove, position: Vec2, aim: Vec2): Pick<HitboxValue, "area"> & { readonly pushAlong?: Vec2 } => {
+export const moveArea = (move: MeleeMove, position: Vec2, aim: Vec2): Pick<HitboxValue, "area"> & { readonly pushAlong?: Vec2 } => {
   switch (move.shape) {
     case "arc":
       return { area: { kind: "cone", origin: position, direction: aim, radius: move.reach, halfAngle: (move.arcDegrees * Math.PI) / 360 } }
@@ -132,8 +132,10 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const held = controls.attackPressed ? dt : controls.attackHeld && current.held > 0 ? current.held + dt : 0
     if (spec.power !== null) {
       const before = chargeOf(spec.power, current.held)
+      const after = chargeOf(spec.power, held)
       if (held === 0 && before >= 1) powerQueued = true
-      if (before < 1 && chargeOf(spec.power, held) >= 1) events.action.emit({ kind: "charged", at: position })
+      if (before <= 0 && after > 0) events.action.emit({ kind: "charging", at: position })
+      if (before < 1 && after >= 1) events.action.emit({ kind: "charged", at: position })
     }
 
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
