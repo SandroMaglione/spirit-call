@@ -71,6 +71,7 @@ import { aimLocked } from "../features/attacks.ts"
 import { bySlot, lobTarget, skillRecharge } from "../features/skills.ts"
 import { chargeOf, moveArea } from "../features/weapons.ts"
 import { resolveBuild } from "../features/build.ts"
+import { SyncUi } from "../ui/sync.ts"
 import type { Graphics } from "pixi.js"
 import type { RenderHostValue } from "./host-types.ts"
 import { createNode, enemyColor, projectileColor, wallDepth } from "./nodes.ts"
@@ -767,7 +768,6 @@ const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   if (pad.root.hidden === touchMode) {
     pad.root.hidden = !touchMode
     for (const element of hud.desktopOnly) element.hidden = touchMode
-    hud.gameOverHint.textContent = touchMode ? "Tap a button to restart" : "Press R or click to restart"
   }
   if (!touchMode) return
   const live = services.touch.view()
@@ -887,18 +887,9 @@ const SyncHud = Game.System("Shooter/SyncHud", {
       hud.banner.classList.add("is-showing")
     }
   }
-  // The results screen: won (the objective met) or lost (the player died).
-  const flow = machines.flow.get()
-  const over = flow !== "Playing"
-  if (hud.gameOver.hidden === over) {
-    hud.gameOver.hidden = !over
-    const cleared = flow === "Cleared"
-    hud.gameOver.classList.toggle("is-cleared", cleared)
-    hud.gameOverTitle.textContent = cleared ? "CLEARED" : "YOU DIED"
-    const run = resources.run.get()
-    const combat = resources.stats.get()
-    hud.gameOverStats.textContent = `${challenge.name} · wave ${waves.number} · ${combat.kills} kills · ${run.time.toFixed(1)}s`
-  }
+  // The HUD belongs to the arena: hidden while the menu is open (the results screen is in src/ui).
+  const inMenu = machines.flow.get() === "Menu"
+  if (hud.root.hidden !== inMenu) hud.root.hidden = inMenu
 
   const stats = services.host.stats
   stats.sinceHud += services.clock.frameSeconds
@@ -944,5 +935,6 @@ export const frame = Game.Schedule(
   FadeOccluders,
   DrawReticle,
   SyncHud,
-  SyncTouchPad
+  SyncTouchPad,
+  SyncUi
 )

@@ -44,10 +44,11 @@ export interface TouchPadRefs {
 }
 
 export interface HudRefs {
+  /** The whole HUD, hidden while the menu is open. */
+  readonly root: HTMLElement
   readonly skills: { readonly [Slot in SkillSlot]: SkillSlotRefs }
   /** The keyboard skill bar and key hint, hidden while playing with touch. */
   readonly desktopOnly: ReadonlyArray<HTMLElement>
-  readonly gameOverHint: HTMLElement
   /** Sound on/off. */
   readonly mute: HTMLButtonElement
   readonly pad: TouchPadRefs
@@ -59,10 +60,6 @@ export interface HudRefs {
   readonly stats: HTMLElement
   readonly banner: HTMLElement
   readonly vignette: HTMLElement
-  /** The results screen, lost or won. */
-  readonly gameOver: HTMLElement
-  readonly gameOverTitle: HTMLElement
-  readonly gameOverStats: HTMLElement
 }
 
 /** Render-side feedback state that decays in real time. */

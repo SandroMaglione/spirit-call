@@ -18,6 +18,7 @@ import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHit
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
+import { ApplyUiRequests } from "./features/menu.ts"
 import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
@@ -110,6 +111,8 @@ export const fixedUpdate = Game.Schedule(
   RememberPositions,
   gameplay,
   runOutcome,
+  // Screen changes (menu requests, results shortcuts) apply with this step's transitions.
+  ApplyUiRequests,
   QueueRestart,
   FollowCamera,
   Game.Schedule.applyStateTransitions(transitions),

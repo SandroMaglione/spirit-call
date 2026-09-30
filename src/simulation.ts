@@ -19,6 +19,7 @@ import { touchButtons } from "./config/input.ts"
 import type { KeyboardSource, PointerSource, TouchSource } from "./config/input.ts"
 import { defaultTuning } from "./config/tuning.ts"
 import type { Tuning } from "./config/tuning.ts"
+import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import { FrameContext, Game, KeyboardInput, PointerInput, TouchInput } from "./schema.ts"
 import type { BuildValue, ViewportValue } from "./schema.ts"
@@ -34,6 +35,8 @@ export interface SimulationOptions {
   readonly build?: BuildValue
   /** What they face. Defaults to `defaultChallenge`. */
   readonly challenge?: ChallengeId
+  /** Where the game starts: the menu, or (the default) playing. */
+  readonly flow?: "Menu" | "Playing"
   /** Defaults to 1280×720. */
   readonly viewport?: ViewportValue
 }
@@ -43,17 +46,20 @@ export const defaultViewport: ViewportValue = { width: 1280, height: 720 }
 export const createSimulation = (options: SimulationOptions) => {
   const tuning = options.tuning ?? defaultTuning
   const viewport = options.viewport ?? defaultViewport
+  // What a menu would ask for; tests queue requests here (see `features/menu.ts`).
+  const requests = emptyUiRequests()
   const runtime = Game.Runtime.make({
     services: Game.Runtime.services(
       Game.Runtime.service(KeyboardInput, options.keyboard),
       Game.Runtime.service(PointerInput, options.pointer),
       Game.Runtime.service(TouchInput, options.touch ?? Touch.scripted(touchButtons, [])),
-      Game.Runtime.service(FrameContext, { viewport })
+      Game.Runtime.service(FrameContext, { viewport }),
+      Game.Runtime.service(UiRequests, requests)
     ),
     resources: initialResources(tuning, viewport, options.build, options.challenge),
-    machines: initialMachines(),
+    machines: initialMachines(options.flow),
     debug: true
   })
   runtime.debug.nameSchedules({ setup, fixedUpdate })
-  return { runtime, setup, fixedUpdate }
+  return { runtime, setup, fixedUpdate, requests }
 }

@@ -8,6 +8,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
+import { emptyUiRequests, UiRequests } from "../src/features/menu.ts"
 import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
 import { Dash, FrameContext, Game, HitStop, KeyboardInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning } from "../src/schema.ts"
@@ -129,7 +130,8 @@ describe("render sync under multi-rate ticking", () => {
         Game.Runtime.service(PointerInput, Pointer.scripted([])),
         Game.Runtime.service(TouchInput, Touch.scripted(touchButtons, [])),
         Game.Runtime.service(FrameContext, { viewport: defaultViewport }),
-        Game.Runtime.service(TestNodes, registry)
+        Game.Runtime.service(TestNodes, registry),
+        Game.Runtime.service(UiRequests, emptyUiRequests())
       ),
       resources: initialResources(tuning, defaultViewport),
       machines: initialMachines()

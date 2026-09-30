@@ -1,0 +1,235 @@
+/* Screens around the arena (src/ui): the menu and the results. */
+
+.ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #e6edf3;
+}
+
+.ui > * {
+  pointer-events: auto;
+}
+
+/* ── Menu ──────────────────────────────────────────────────────────────── */
+
+.menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 10, 14, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.menu__body {
+  flex: 1;
+  overflow-y: auto;
+  /* The page blocks touch gestures for the game; the menu scrolls. */
+  touch-action: pan-y;
+  padding: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 8px max(18px, env(safe-area-inset-left));
+}
+
+.menu__section {
+  margin: 0 auto 14px;
+  max-width: 1100px;
+}
+
+.menu__title {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7d8590;
+}
+
+.menu__row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  touch-action: pan-x pan-y;
+  padding-bottom: 4px;
+}
+
+.menu__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px max(18px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  border-top: 1px solid #30363d;
+  background: rgba(13, 17, 23, 0.95);
+}
+
+.menu__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-size: 13px;
+  color: #c9d1d9;
+}
+
+.menu__start {
+  flex-shrink: 0;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 8px;
+  background: #4ecdc4;
+  color: #0d1117;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.menu__start:hover {
+  background: #7fe6de;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────── */
+
+.card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 200px;
+  padding: 10px 12px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: rgba(22, 27, 34, 0.9);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 100ms, background 100ms;
+}
+
+.card:hover {
+  border-color: #58656f;
+}
+
+.card.is-selected {
+  border-color: #4ecdc4;
+  background: rgba(78, 205, 196, 0.12);
+}
+
+.card__title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.card__tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffd166;
+}
+
+.card__text {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #9da7b1;
+}
+
+.stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 11px;
+  color: #c9d1d9;
+}
+
+.stats__item b {
+  color: #7d8590;
+  font-weight: 700;
+}
+
+/* Small landscape phones: tighter cards so a row shows several. */
+@media (max-height: 480px) {
+  .menu__body {
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+  .menu__section {
+    margin-bottom: 8px;
+  }
+  .card {
+    width: 170px;
+    padding: 7px 10px;
+  }
+  .menu__start {
+    padding: 10px 16px;
+  }
+}
+
+/* ── Results ───────────────────────────────────────────────────────────── */
+
+.results {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  background: rgba(8, 10, 14, 0.62);
+}
+
+.results__title {
+  font-size: clamp(36px, 9vh, 56px);
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: #ff5d6c;
+}
+
+.results.is-cleared .results__title {
+  color: #7ee08a;
+}
+
+.results__stats {
+  font-size: 16px;
+}
+
+.results__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.results__button {
+  min-width: 140px;
+  padding: 12px 20px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: rgba(22, 27, 34, 0.9);
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.results__button.is-primary {
+  border-color: #4ecdc4;
+  background: #4ecdc4;
+  color: #0d1117;
+}
+
+.results__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.results__hint {
+  font-size: 13px;
+  color: #7d8590;
+}
+
+/* The dev monitor's corner button would cover the menu's footer; Backslash still opens it. */
+body:has(.menu) .btm-toggle {
+  display: none;
+}

@@ -3,7 +3,7 @@
  * the challenge (`Cleared`, see `CheckObjective`), a results screen, and a
  * restart that clears the run and starts over.
  */
-import { Death, Flow, Game, HitStop, Keys, PointerState, Rng, Run, RunScope, Stats, Time, TouchState, Tuning, Waves } from "../schema.ts"
+import { Death, Flow, Game, HitStop, Keys, Rng, Run, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
 import { initialWaves } from "./waves.ts"
 
 export const TrackRun = Game.System("Shooter/TrackRun", {
@@ -25,24 +25,26 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   nextMachines.flow.set("GameOver")
 })
 
-/** On the results screen (lost or won), restart with R/Enter or a click (after a short delay). */
+/**
+ * Keyboard shortcuts on the results screen (lost or won), after a short
+ * delay: R/Enter plays again, Esc goes back to the menu. Clicks and taps go
+ * to the results screen's buttons (src/ui).
+ */
 export const QueueRestart = Game.System("Shooter/QueueRestart", {
   resources: {
     keys: Game.System.readResource(Keys),
-    pointer: Game.System.readResource(PointerState),
-    touch: Game.System.readResource(TouchState),
     run: Game.System.readResource(Run),
     time: Game.System.readResource(Time),
     tuning: Game.System.readResource(Tuning)
   },
   nextMachines: { flow: Game.System.nextState(Flow) },
-  when: [Game.Condition.not(Game.Condition.inState(Flow, "Playing"))]
+  when: [Game.Condition.or(Game.Condition.inState(Flow, "GameOver"), Game.Condition.inState(Flow, "Cleared"))]
 }, ({ resources, nextMachines }) => {
   const endedAt = resources.run.get().endedAt
   if (endedAt === null || resources.time.get().elapsed - endedAt < resources.tuning.get().flow.restartDelay) return
-  const touch = resources.touch.get().buttons
-  const tapped = touch.attack.pressed || touch.special.pressed || touch.dash.pressed || touch.ultimate.pressed
-  if (resources.keys.get().restart.pressed || resources.pointer.get().primary.pressed || tapped) nextMachines.flow.set("Playing")
+  const keys = resources.keys.get()
+  if (keys.restart.pressed) nextMachines.flow.set("Playing")
+  else if (keys.menu.pressed) nextMachines.flow.set("Menu")
 })
 
 /** First system of a restart: fresh run state. */

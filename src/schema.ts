@@ -536,10 +536,13 @@ export const Game = Schema.bind(
 )
 
 /**
- * Whether the run is going on or over: lost (`GameOver`) or won (`Cleared`).
- * Gameplay systems run only while `Playing`.
+ * Where the game is: the menu (picking a challenge and a build), a run going
+ * on, or a run over: lost (`GameOver`) or won (`Cleared`). Gameplay systems
+ * run only while `Playing`.
  */
-export const Flow = Game.StateMachine("Shooter/Flow", ["Playing", "GameOver", "Cleared"])
+export const flowStates = ["Menu", "Playing", "GameOver", "Cleared"] as const
+export type FlowState = (typeof flowStates)[number]
+export const Flow = Game.StateMachine("Shooter/Flow", flowStates)
 
 /**
  * Hit-stop: the simulation freezes while `HitStop.remaining` is above zero.

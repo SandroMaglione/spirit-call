@@ -37,4 +37,5 @@ export const initialResources = (
   Camera: { x: tuning.arena.width / 2, y: tuning.arena.height / 2, prevX: tuning.arena.width / 2, prevY: tuning.arena.height / 2 }
 })
 
-export const initialMachines = () => Game.Runtime.machines(Game.Runtime.machine(Flow, "Playing"))
+/** The browser starts in the menu; headless runs start playing. */
+export const initialMachines = (flow: "Menu" | "Playing" = "Playing") => Game.Runtime.machines(Game.Runtime.machine(Flow, flow))

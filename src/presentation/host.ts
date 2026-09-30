@@ -29,11 +29,6 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       <div class="hud__skill" data-skill="special"><kbd>Space</kbd><span></span><i data-cooldown></i></div>
       <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span></span><i data-cooldown></i></div>
     </div>
-    <div class="hud__gameover" data-gameover hidden>
-      <div class="hud__gameover-title" data-gameover-title>YOU DIED</div>
-      <div class="hud__gameover-stats" data-gameover-stats></div>
-      <div class="hud__gameover-hint" data-gameover-hint>Press R or click to restart</div>
-    </div>
     <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click attack · Space special · Shift ultimate</div>
     <button class="hud__mute" data-mute type="button" title="Sound (M)">🔊</button>
     <div class="pad" data-pad hidden>
@@ -52,9 +47,9 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   return {
     root,
     refs: {
+      root,
       skills: { special: slot("special"), ultimate: slot("ultimate") },
       desktopOnly: [root.querySelector<HTMLElement>(".hud__skills")!, root.querySelector<HTMLElement>("[data-hint]")!],
-      gameOverHint: root.querySelector<HTMLElement>("[data-gameover-hint]")!,
       mute: root.querySelector<HTMLButtonElement>("[data-mute]")!,
       pad: {
         root: root.querySelector<HTMLElement>("[data-pad]")!,
@@ -69,10 +64,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       combat: root.querySelector<HTMLElement>("[data-combat]")!,
       stats: root.querySelector<HTMLElement>("[data-stats]")!,
       banner: root.querySelector<HTMLElement>("[data-banner]")!,
-      vignette: root.querySelector<HTMLElement>("[data-vignette]")!,
-      gameOver: root.querySelector<HTMLElement>("[data-gameover]")!,
-      gameOverTitle: root.querySelector<HTMLElement>("[data-gameover-title]")!,
-      gameOverStats: root.querySelector<HTMLElement>("[data-gameover-stats]")!
+      vignette: root.querySelector<HTMLElement>("[data-vignette]")!
     }
   }
 }

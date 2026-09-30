@@ -85,6 +85,8 @@ export interface StartOptions {
   readonly build?: BuildValue
   /** What they face (with `waves`). Defaults to the default challenge. */
   readonly challenge?: ChallengeId
+  /** Start on the menu instead of playing. */
+  readonly flow?: "Menu" | "Playing"
   /** Run waves instead of training dummies. Defaults to false. */
   readonly waves?: boolean
 }
@@ -97,7 +99,8 @@ export const start = (options: StartOptions = {}) => {
     touch: Touch.scripted(touchButtons, options.touch ?? []),
     tuning: withWaves(options.tuning ?? defaultTuning, options.waves ?? false),
     ...(options.build === undefined ? {} : { build: options.build }),
-    ...(options.challenge === undefined ? {} : { challenge: options.challenge })
+    ...(options.challenge === undefined ? {} : { challenge: options.challenge }),
+    ...(options.flow === undefined ? {} : { flow: options.flow })
   })
   const setup = sim.runtime.tick(sim.setup)
   if (!setup.ok) throw new Error("setup failed")

@@ -5,6 +5,9 @@ import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { buildFromQuery, challengeFromQuery } from "./dev/build.ts"
+import { emptyUiRequests, UiRequests } from "./features/menu.ts"
+import { mountUi } from "./ui/mount.tsx"
+import { createUiStore, UiStoreService } from "./ui/store.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
@@ -33,6 +36,10 @@ const start = async (mount: HTMLElement) => {
   const build = buildFromQuery(tuning, window.location.search)
   // `?challenge=swarm` plays another challenge.
   const challenge = challengeFromQuery(tuning, window.location.search)
+  // The game opens on the menu (which starts from the URL's build and challenge); `?play` skips it.
+  const flow = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined ? "Playing" : "Menu"
+  const uiRequests = emptyUiRequests()
+  const uiStore = createUiStore({ tuning, build, challenge, flow })
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
@@ -76,16 +83,19 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(RenderHost, browser.host),
       Game.Runtime.service(RenderNodes, browser.nodes),
       Game.Runtime.service(Sounds, sounds),
-      Game.Runtime.service(DevCommands, devCommands)
+      Game.Runtime.service(DevCommands, devCommands),
+      Game.Runtime.service(UiRequests, uiRequests),
+      Game.Runtime.service(UiStoreService, uiStore)
     ),
     resources: initialResources(tuning, frameContext.viewport, build, challenge),
-    machines: initialMachines(),
+    machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true
   })
   runtime.tick(setup)
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
+  mountUi(mount, uiStore, uiRequests)
   createTuningPanel(mount, tuning, devCommands)
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.

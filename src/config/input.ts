@@ -19,7 +19,8 @@ export const keyBindings = {
   right: [Keyboard.code("KeyD"), "ArrowRight"],
   special: [Keyboard.code("Space")],
   ultimate: [Keyboard.code("ShiftLeft"), Keyboard.code("ShiftRight")],
-  restart: ["r", "Enter"]
+  restart: ["r", "Enter"],
+  menu: ["Escape"]
 } as const
 
 export type KeyBindings = typeof keyBindings
