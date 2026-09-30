@@ -9,7 +9,7 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, Equipment } from "../account/account.ts"
+import type { Account, Earned, Equipment } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
@@ -28,6 +28,8 @@ export interface UiStore {
   readonly account: Signal<Account>
   /** How the last run ended; `null` while one is going on (see `RunResult`). */
   readonly result: Signal<RunResultValue | null>
+  /** What the last run earned the account, once recorded; `null` until then. */
+  readonly earned: Signal<Earned | null>
   /** Messages for the player (what loading the profile had to fix), until dismissed. */
   readonly notices: Signal<ReadonlyArray<string>>
 }
@@ -47,6 +49,7 @@ export const createUiStore = (initial: {
   challenge: signal(initial.challenge),
   account: signal(initial.account),
   result: signal(null),
+  earned: signal(null),
   notices: signal(initial.notices)
 })
 

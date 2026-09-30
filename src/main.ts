@@ -56,9 +56,15 @@ const start = async (mount: HTMLElement) => {
   let reported: RunResultValue | null = null
   effect(() => {
     const result = uiStore.result.value
-    if (result === null || result === reported) return
+    if (result === null) {
+      uiStore.earned.value = null
+      return
+    }
+    if (result === reported) return
     reported = result
-    void shell.recordRun(result)
+    void shell.recordRun(result).then((earned) => {
+      uiStore.earned.value = earned ?? null
+    })
   })
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {

@@ -25,7 +25,7 @@ import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { RunResultValue } from "../schema.ts"
 import { createAccount, equip, recordRun, select, unlock } from "./account.ts"
-import type { Account, Checked, Equipment, Item, Refusal } from "./account.ts"
+import type { Account, Checked, Earned, Equipment, Item, Refusal } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
 import { LatestAccountJson, LegacyProfileJson, migrateAccount, StoredAccountJson } from "./stored.ts"
@@ -48,8 +48,8 @@ export interface AccountStoreShape {
   readonly select: (character: CharacterId, challenge: ChallengeId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
-  /** Records a run that ended (the arena's `RunResult`). */
-  readonly recordRun: (result: RunResultValue) => Effect.Effect<Account, AccountSaveError>
+  /** Records a run that ended (the arena's `RunResult`): the account after it, and what it earned. */
+  readonly recordRun: (result: RunResultValue) => Effect.Effect<{ readonly account: Account; readonly earned: Earned }, AccountSaveError>
 }
 
 export class AccountStore extends Context.Service<AccountStore, AccountStoreShape>()("Shooter/AccountStore") {}
@@ -126,7 +126,13 @@ export const layer = (options: AccountOptions) =>
         equip: (character, equipment) => change((account) => equip(options.tuning, account, character, equipment)),
         select: (character, challenge) => change((account) => select(account, character, challenge)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
-        recordRun: (result) => apply((account) => recordRun(account, result))
+        recordRun: (result) =>
+          Effect.gen(function*() {
+            const recorded = recordRun(options.tuning, yield* Ref.get(current), result)
+            yield* Ref.set(current, recorded.account)
+            yield* save(recorded.account)
+            return recorded
+          })
       })
     })
   )

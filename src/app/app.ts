@@ -12,7 +12,7 @@ import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
 
 import { everything } from "../account/account.ts"
-import type { Account, Equipment } from "../account/account.ts"
+import type { Account, Earned, Equipment } from "../account/account.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { AccountStore, layer as accountLayer } from "../account/store.ts"
@@ -36,8 +36,8 @@ export interface App {
   readonly select: (character: CharacterId, challenge: ChallengeId) => Promise<Account | undefined>
   /** Owns every character, weapon, skill, and challenge (a dev tool). */
   readonly unlockEverything: () => void
-  /** Records a run that ended (the arena's result). */
-  readonly recordRun: (result: RunResultValue) => Promise<Account | undefined>
+  /** Records a run that ended (the arena's result); what it earned, or `undefined` if it could not be saved. */
+  readonly recordRun: (result: RunResultValue) => Promise<Earned | undefined>
   readonly setMuted: (muted: boolean) => void
 }
 
@@ -52,13 +52,14 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
   const announce = (account: Account) => {
     for (const listener of listeners) listener(account)
   }
-  /** Runs an account action; its result is announced, a refusal or failed save logged. */
-  const run = <E>(action: Effect.Effect<Account, E>): Promise<Account | undefined> =>
+  /** Runs an account action: the account it leaves is announced; a refusal or failed save is logged and gives `undefined`. */
+  const attempt = <A, E>(action: Effect.Effect<A, E>, accountOf: (value: A) => Account): Promise<A | undefined> =>
     runtime.runPromise(action.pipe(
-      Effect.tap((account) => Effect.sync(() => announce(account))),
+      Effect.tap((value) => Effect.sync(() => announce(accountOf(value)))),
       Effect.tapError((error) => Effect.logWarning("Account action failed", error)),
       Effect.orElseSucceed(() => undefined)
     ))
+  const run = <E>(action: Effect.Effect<Account, E>) => attempt(action, (account) => account)
   return {
     account: await runtime.runPromise(accounts.get),
     settings: await runtime.runPromise(settings.get),
@@ -69,7 +70,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     equip: (character, equipment) => void run(accounts.equip(character, equipment)),
     select: (character, challenge) => run(accounts.select(character, challenge)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning))),
-    recordRun: (result) => run(accounts.recordRun(result)),
+    recordRun: (result) => attempt(accounts.recordRun(result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
     setMuted: (muted) => {
       runtime.runFork(settings.update((current) => ({ ...current, muted })).pipe(
         Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),

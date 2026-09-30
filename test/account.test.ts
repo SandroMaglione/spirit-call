@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildOf, createAccount, equip, equipmentOf, owns, recordRun, select, unlock } from "../src/account/account.ts"
+import { accountLevel, buildOf, createAccount, equip, equipmentOf, owns, recordRun, select, unlock } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 
@@ -43,10 +43,23 @@ describe("account rules", () => {
     expect(equipped.ok && buildOf(defaultTuning, equipped.value, "swordsman").weapon).toBe("crescendo")
   })
 
-  it("adds every run to the lifetime totals", () => {
+  it("adds every run to the lifetime totals and the account's experience", () => {
     const run = { cleared: true, challenge: "swarm" as const, characters: ["swordsman" as const], wave: 3, kills: 12, time: 95.5 }
-    const account = recordRun(recordRun(fresh(), run), { ...run, cleared: false, kills: 3, time: 20 })
-    expect(account.totals).toEqual({ runs: 2, clears: 1, kills: 15, secondsPlayed: 115.5 })
+    const first = recordRun(defaultTuning, fresh(), run)
+    const second = recordRun(defaultTuning, first.account, { ...run, cleared: false, kills: 3, time: 20 })
+    expect(second.account.totals).toEqual({ runs: 2, clears: 1, kills: 15, secondsPlayed: 115.5 })
+    const earns = defaultTuning.progression.account.run
+    expect(first.earned.experience).toBe(earns.attempt + earns.clear + 12 * earns.perKill)
+    expect(second.account.experience).toBe(first.earned.experience + second.earned.experience)
+  })
+
+  it("levels the account up from experience, and says so", () => {
+    const curve = defaultTuning.progression.account.curve
+    const run = { cleared: true, challenge: "swarm" as const, characters: ["swordsman" as const], wave: 3, kills: 0, time: 60 }
+    const almost = { ...fresh(), experience: curve.base - 1 }
+    const { account, earned } = recordRun(defaultTuning, almost, run)
+    expect(earned.level).toEqual({ before: 1, after: 2 })
+    expect(accountLevel(defaultTuning, account).level).toBe(2)
   })
 
   it("selects only an owned character and challenge", () => {

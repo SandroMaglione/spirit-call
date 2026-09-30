@@ -16,6 +16,7 @@ import { attacks } from "../content/attacks.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { enemies } from "../content/enemies.ts"
+import { progression } from "../content/progression.ts"
 import { skills } from "../content/skills.ts"
 import { weapons } from "../content/weapons.ts"
 
@@ -52,6 +53,9 @@ export const defaultTuning = {
 
   /** Every character, by id; the `Build` resource picks the one in the arena. */
   characters,
+
+  /** Levels and what runs earn (see content/progression.ts). */
+  progression,
 
   /** Every weapon, by id; a character wields one of its type. */
   weapons,

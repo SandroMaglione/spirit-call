@@ -14,6 +14,8 @@ import type { CharacterId } from "../content/characters.ts"
 import { bySlot } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
+import { levelOf } from "./progression.ts"
+import type { LevelProgress } from "./progression.ts"
 import type { BuildValue, RunResultValue } from "../schema.ts"
 
 /** When something was unlocked (epoch milliseconds). */
@@ -54,6 +56,8 @@ export interface Account {
   readonly id: string
   /** Epoch milliseconds. */
   readonly createdAt: number
+  /** Total account experience; the account level comes from it (see `accountLevel`). */
+  readonly experience: number
   readonly totals: Totals
   readonly owned: Owned
   /** Each owned character's equipment. */
@@ -133,6 +137,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
   const empty: Account = {
     id,
     createdAt: now,
+    experience: 0,
     totals: noTotals,
     owned: { characters: {}, weapons: {}, skills: {}, challenges: {} },
     equipment: {},
@@ -174,16 +179,37 @@ export const select = (account: Account, character: CharacterId, challenge: Chal
   return { ok: true, value: { ...account, selection: { character, challenge } } }
 }
 
-/** `account` after a run that ended with `result`. */
-export const recordRun = (account: Account, result: RunResultValue): Account => ({
-  ...account,
-  totals: {
-    runs: account.totals.runs + 1,
-    clears: account.totals.clears + (result.cleared ? 1 : 0),
-    kills: account.totals.kills + result.kills,
-    secondsPlayed: account.totals.secondsPlayed + result.time
+/** The account's level, from its experience. */
+export const accountLevel = (tuning: Tuning, account: Account): LevelProgress => levelOf(tuning.progression.account.curve, account.experience)
+
+/** What a run earned, for the results screen. */
+export interface Earned {
+  readonly experience: number
+  /** The account level before and after the run. */
+  readonly level: { readonly before: number; readonly after: number }
+}
+
+/** Account experience a run earns: something for trying, more for clearing, a little per kill. */
+export const runExperience = (tuning: Tuning, result: RunResultValue): number => {
+  const earns = tuning.progression.account.run
+  return earns.attempt + (result.cleared ? earns.clear : 0) + result.kills * earns.perKill
+}
+
+/** `account` after a run that ended with `result`, and what the run earned. */
+export const recordRun = (tuning: Tuning, account: Account, result: RunResultValue): { readonly account: Account; readonly earned: Earned } => {
+  const experience = runExperience(tuning, result)
+  const next: Account = {
+    ...account,
+    experience: account.experience + experience,
+    totals: {
+      runs: account.totals.runs + 1,
+      clears: account.totals.clears + (result.cleared ? 1 : 0),
+      kills: account.totals.kills + result.kills,
+      secondsPlayed: account.totals.secondsPlayed + result.time
+    }
   }
-})
+  return { account: next, earned: { experience, level: { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level } } }
+}
 
 /** `character`'s equipment in `account` (its own when it has none saved). */
 export const equipmentOf = (tuning: Tuning, account: Account, character: CharacterId): Equipment =>

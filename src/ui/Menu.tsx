@@ -17,6 +17,7 @@ import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { resolveBuild } from "../features/build.ts"
+import { AccountBar } from "./AccountBar.tsx"
 import { describeBonus, describeObjective, describePassive, describeSkill, statNames, statOrder } from "./describe.ts"
 import { weaponsFor } from "./draft.ts"
 import type { UiActions, UiStore } from "./store.ts"
@@ -92,6 +93,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
   return (
     <div class="menu">
       <div class="menu__body">
+        <AccountBar store={store} />
         {store.notices.value.map((notice, index) => (
           <div key={index} class="menu__notice" role="status">
             <span>{notice}</span>
