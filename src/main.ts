@@ -4,6 +4,7 @@ import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
+import { withLoadoutFromQuery } from "./dev/loadout.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
@@ -27,7 +28,8 @@ import { fixedUpdate, setup } from "./schedules.ts"
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(window.location.search)
-  const tuning = stressLoad === undefined ? loadSavedTuning() : stressTuning()
+  // `?attack=gun&special=grenade` starts with another loadout (see dev/loadout.ts).
+  const tuning = withLoadoutFromQuery(stressLoad === undefined ? loadSavedTuning() : stressTuning(), window.location.search)
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
