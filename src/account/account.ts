@@ -11,6 +11,7 @@
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { Amounts, CurrencyId } from "../content/currencies.ts"
 import type { QuestId, Rewards, Unlock } from "../content/quests.ts"
 import { bySlot } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
@@ -67,6 +68,8 @@ export interface Account {
   /** Total account experience; the account level comes from it (see `accountLevel`). */
   readonly experience: number
   readonly totals: Totals
+  /** Currency held. */
+  readonly wallet: Amounts
   readonly owned: Owned
   /** Each owned character's equipment. */
   readonly equipment: { readonly [Id in CharacterId]?: Equipment }
@@ -140,6 +143,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     createdAt: now,
     experience: 0,
     totals: noTotals,
+    wallet: {},
     owned: { characters: {}, weapons: {}, skills: {} },
     equipment: {},
     quests: {},
@@ -155,6 +159,13 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
 
 /** The account's level, from its experience. */
 export const accountLevel = (tuning: Tuning, account: Account): LevelProgress => levelOf(tuning.progression.account.curve, account.experience)
+
+/** `amounts` added to `account`'s wallet. */
+export const earn = (account: Account, amounts: Amounts): Account => {
+  const wallet: { [Id in CurrencyId]?: number } = { ...account.wallet }
+  for (const [id, amount] of Object.entries(amounts) as Array<[CurrencyId, number]>) wallet[id] = (wallet[id] ?? 0) + amount
+  return { ...account, wallet }
+}
 
 /** Why a quest cannot be started yet: the account level it needs, or the quest to clear first. */
 export type QuestLock =
@@ -176,10 +187,22 @@ export type Refusal =
   | { readonly kind: "notOwned"; readonly item: Item }
   | { readonly kind: "wrongWeaponType"; readonly character: CharacterId; readonly weapon: WeaponId }
   | { readonly kind: "questLocked"; readonly quest: QuestId; readonly lock: QuestLock }
+  | { readonly kind: "notEnough"; readonly currency: CurrencyId; readonly needed: number; readonly held: number }
 
 export type Checked<A> = { readonly ok: true; readonly value: A } | { readonly ok: false; readonly refusal: Refusal }
 
 const refuse = <A>(refusal: Refusal): Checked<A> => ({ ok: false, refusal })
+
+/** `account` with `amounts` paid from its wallet, if it holds enough of each. */
+export const spend = (account: Account, amounts: Amounts): Checked<Account> => {
+  const wallet: { [Id in CurrencyId]?: number } = { ...account.wallet }
+  for (const [currency, needed] of Object.entries(amounts) as Array<[CurrencyId, number]>) {
+    const held = wallet[currency] ?? 0
+    if (held < needed) return refuse({ kind: "notEnough", currency, needed, held })
+    wallet[currency] = held - needed
+  }
+  return { ok: true, value: { ...account, wallet } }
+}
 
 /** `account` with `character` equipped with `equipment`, if it owns all of it and the weapon fits. */
 export const equip = (tuning: Tuning, account: Account, character: CharacterId, equipment: Equipment): Checked<Account> => {
@@ -252,7 +275,7 @@ export const recordRun = (
     if (firstClear) {
       rewards = tuning.quests[quest].rewards
       experience += rewards.experience
-      next = rewards.unlocks.reduce((owner, item) => unlock(tuning, owner, item, now), next)
+      next = rewards.unlocks.reduce((owner, item) => unlock(tuning, owner, item, now), earn(next, rewards.currencies))
     }
   }
   next = { ...next, experience: account.experience + experience }

@@ -19,9 +19,13 @@ import { AccountStore, layer as accountLayer } from "../account/store.ts"
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { Amounts } from "../content/currencies.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { RunResultValue } from "../schema.ts"
 import { randomId } from "./ids.ts"
+
+/** What the dev tool adds: enough to level anything while testing. */
+const plenty: Amounts = { crystals: 10_000, gold: 100_000 }
 
 export interface App {
   /** The account as loaded when the game started. */
@@ -34,7 +38,7 @@ export interface App {
   readonly equip: (character: CharacterId, equipment: Equipment) => void
   /** Selects what to enter the arena with; the account after it, or `undefined` when refused (not owned, or the quest not open). */
   readonly select: (character: CharacterId, quest: QuestId) => Promise<Account | undefined>
-  /** Owns every character, weapon, skill, and challenge (a dev tool). */
+  /** Owns every character, weapon, and skill, and adds plenty of each currency (a dev tool). */
   readonly unlockEverything: () => void
   /** Records a run of `quest` (`null` outside quests) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
   readonly recordRun: (quest: QuestId | null, result: RunResultValue) => Promise<Earned | undefined>
@@ -69,7 +73,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     },
     equip: (character, equipment) => void run(accounts.equip(character, equipment)),
     select: (character, quest) => run(accounts.select(character, quest)),
-    unlockEverything: () => void run(accounts.unlock(everything(tuning))),
+    unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (quest, result) => attempt(accounts.recordRun(quest, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
     setMuted: (muted) => {
       runtime.runFork(settings.update((current) => ({ ...current, muted })).pipe(

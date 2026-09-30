@@ -62,6 +62,14 @@ const checkPassive = (problems: Array<string>, where: string, passive: Passive):
 }
 
 /** Every rule the content in `tuning` breaks, as readable messages; empty when all is well. */
+/** Amounts of currency: known currencies, in whole positive numbers. */
+const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, amounts: Readonly<Record<string, number | undefined>>): void => {
+  for (const [id, amount] of Object.entries(amounts)) {
+    if (!has(tuning.currencies, id)) problems.push(`${where}: unknown currency ${id}`)
+    else if (amount === undefined || !(Number.isInteger(amount) && amount > 0)) problems.push(`${where}: ${id} must be a whole number above 0 (is ${amount})`)
+  }
+}
+
 export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
 
@@ -129,6 +137,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
     if (quest.after !== null && !has(tuning.quests, quest.after)) problems.push(`${where}: comes after unknown quest ${quest.after}`)
     for (const item of quest.rewards.unlocks) if (!has(unlockKinds[item.kind], item.id)) problems.push(`${where}: rewards unknown ${item.kind} ${item.id}`)
+    checkAmounts(problems, where, tuning, quest.rewards.currencies)
     // The main line's order must end: following `after` never comes back around.
     const seen = new Set<string>([id])
     for (let before = quest.after; before !== null && has(tuning.quests, before); before = tuning.quests[before as keyof typeof tuning.quests].after) {

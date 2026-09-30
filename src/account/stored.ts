@@ -45,7 +45,8 @@ const QuestProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Nu
 
 /**
  * Version 2: quests instead of owned challenges (each quest's progress, and a
- * quest selected), account experience, and lifetime totals over every run.
+ * quest selected), account experience, lifetime totals over every run, and
+ * the currencies held.
  */
 export const StoredAccountV2 = Schema.Struct({
   version: Schema.Literal(2),
@@ -53,6 +54,7 @@ export const StoredAccountV2 = Schema.Struct({
   createdAt: Schema.Number,
   experience: Schema.Number,
   totals: Totals,
+  wallet: Schema.Record(Schema.String, Schema.Number),
   owned: Schema.Struct({
     characters: Schema.Record(Schema.String, Unlocked),
     weapons: Schema.Record(Schema.String, OwnedWeapon),
@@ -79,6 +81,7 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
         createdAt: stored.createdAt,
         experience: 0,
         totals: { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 },
+        wallet: {},
         owned: { characters: stored.owned.characters, weapons: stored.owned.weapons, skills: stored.owned.skills },
         equipment: stored.equipment,
         quests: {},

@@ -10,6 +10,7 @@
  */
 import type { ChallengeId } from "./challenges.ts"
 import type { CharacterId } from "./characters.ts"
+import type { Amounts } from "./currencies.ts"
 import type { SkillId } from "./skills.ts"
 import type { WeaponId } from "./weapons.ts"
 
@@ -23,6 +24,7 @@ export type Unlock =
 export interface Rewards {
   /** Account experience, on top of what the run itself earns. */
   readonly experience: number
+  readonly currencies: Amounts
   readonly unlocks: ReadonlyArray<Unlock>
 }
 
@@ -62,7 +64,7 @@ export const quests = {
     challenge: "swarm",
     level: 1,
     after: null,
-    rewards: { experience: 60, unlocks: [character("gunner")] }
+    rewards: { experience: 60, currencies: { crystals: 100, gold: 300 }, unlocks: [character("gunner")] }
   }),
   crossfire: quest({
     name: "Crossfire",
@@ -71,7 +73,7 @@ export const quests = {
     challenge: "crossfire",
     level: 2,
     after: "theSwarm",
-    rewards: { experience: 90, unlocks: [weapon("executioner")] }
+    rewards: { experience: 90, currencies: { crystals: 100, gold: 400 }, unlocks: [weapon("executioner")] }
   }),
   theBrute: quest({
     name: "The Brute",
@@ -80,7 +82,7 @@ export const quests = {
     challenge: "brute",
     level: 3,
     after: "crossfire",
-    rewards: { experience: 140, unlocks: [weapon("crescendo"), weapon("echoSaber")] }
+    rewards: { experience: 140, currencies: { crystals: 150, gold: 600 }, unlocks: [weapon("crescendo"), weapon("echoSaber")] }
   }),
   holdTheLine: quest({
     name: "Hold the Line",
@@ -89,7 +91,7 @@ export const quests = {
     challenge: "endless",
     level: 2,
     after: null,
-    rewards: { experience: 80, unlocks: [weapon("bloodthirst")] }
+    rewards: { experience: 80, currencies: { crystals: 50, gold: 400 }, unlocks: [weapon("bloodthirst")] }
   })
 }
 

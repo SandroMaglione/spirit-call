@@ -22,9 +22,10 @@ import * as Ref from "effect/Ref"
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { Amounts } from "../content/currencies.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { RunResultValue } from "../schema.ts"
-import { createAccount, equip, recordRun, select, unlock } from "./account.ts"
+import { createAccount, earn, equip, recordRun, select, unlock } from "./account.ts"
 import type { Account, Checked, Earned, Equipment, Item, Refusal } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
@@ -48,6 +49,8 @@ export interface AccountStoreShape {
   readonly select: (character: CharacterId, quest: QuestId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
+  /** Adds `amounts` of currency (a reward, or a dev tool). */
+  readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
   /**
    * Records a run that ended (the arena's `RunResult`) of `quest` (`null` for
    * a run outside quests): the account after it, and what it earned.
@@ -129,6 +132,7 @@ export const layer = (options: AccountOptions) =>
         equip: (character, equipment) => change((account) => equip(options.tuning, account, character, equipment)),
         select: (character, quest) => change((account) => select(options.tuning, account, character, quest)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
+        earn: (amounts) => apply((account) => earn(account, amounts)),
         recordRun: (quest, result) =>
           Effect.gen(function*() {
             const now = yield* Clock.currentTimeMillis

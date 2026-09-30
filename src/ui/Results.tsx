@@ -7,7 +7,7 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 
-import { describeUnlock } from "./describe.ts"
+import { describeAmounts, describeUnlock } from "./describe.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
 export const Results = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
@@ -37,6 +37,9 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       )}
       {earned?.rewards != null && earned.rewards.unlocks.length > 0 && (
         <div class="results__unlocked">First clear! Unlocked: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</div>
+      )}
+      {earned?.rewards != null && describeAmounts(tuning, earned.rewards.currencies) !== "" && (
+        <div class="results__currencies">{describeAmounts(tuning, earned.rewards.currencies, "+")}</div>
       )}
       <div class="results__actions">
         <button type="button" class="results__button is-primary" disabled={!ready.value} onClick={actions.retry}>

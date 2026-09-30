@@ -20,7 +20,8 @@ const current: Record<string, ReadonlyArray<string>> = {
   attacks: Object.keys(defaultTuning.attacks),
   enemies: Object.keys(defaultTuning.enemies),
   quests: Object.keys(defaultTuning.quests),
-  chapters: Object.keys(defaultTuning.chapters)
+  chapters: Object.keys(defaultTuning.chapters),
+  currencies: Object.keys(defaultTuning.currencies)
 }
 
 describe("content ids", () => {

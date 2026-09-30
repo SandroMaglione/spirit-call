@@ -15,6 +15,7 @@
 import { attacks } from "../content/attacks.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
+import { currencies } from "../content/currencies.ts"
 import { enemies } from "../content/enemies.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, quests } from "../content/quests.ts"
@@ -57,6 +58,9 @@ export const defaultTuning = {
 
   /** Levels and what runs earn (see content/progression.ts). */
   progression,
+
+  /** The pull and upgrade currencies (see content/currencies.ts). */
+  currencies,
 
   /** Every quest, by id, and the main line's chapters (see content/quests.ts). */
   quests,

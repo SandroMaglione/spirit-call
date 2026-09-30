@@ -5,6 +5,7 @@
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { Objective } from "../content/challenges.ts"
+import type { Amounts, CurrencyId } from "../content/currencies.ts"
 import type { Stats } from "../content/characters.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
 import type { Rewards, Unlock } from "../content/quests.ts"
@@ -107,6 +108,15 @@ export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
   }
 }
 
+/** Amounts of currency, like "100 Crystals · 300 Gold" (each after `sign`, like "+"). */
+export const describeAmounts = (tuning: Tuning, amounts: Amounts, sign = ""): string =>
+  (Object.entries(amounts) as Array<[CurrencyId, number]>)
+    .filter(([, amount]) => amount > 0)
+    .map(([id, amount]) => `${sign}${amount} ${tuning.currencies[id].name}`)
+    .join(" · ")
+
 /** What a first clear gives, in a few words. */
 export const describeRewards = (tuning: Tuning, rewards: Rewards): string =>
-  [`+${rewards.experience} XP`, ...rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock))].join(" · ")
+  [`+${rewards.experience} XP`, describeAmounts(tuning, rewards.currencies), ...rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock))]
+    .filter((part) => part !== "")
+    .join(" · ")

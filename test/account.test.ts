@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, createAccount, equip, equipmentOf, owns, questLock, recordRun, select, unlock } from "../src/account/account.ts"
+import { accountLevel, buildOf, createAccount, earn, equip, equipmentOf, owns, questLock, recordRun, select, spend, unlock } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 
@@ -80,9 +80,18 @@ describe("account rules", () => {
     expect(won.earned.experience).toBe(recordRun(defaultTuning, fresh(), null, { ...run, cleared: true }, 0).earned.experience + rewards.experience)
     expect(won.account.quests.theSwarm).toEqual({ attempts: 2, clears: 1, firstClearedAt: 3000 })
     expect(owns(won.account, { kind: "character", id: "gunner" })).toBe(true)
+    expect(won.account.wallet).toEqual(rewards.currencies)
     const again = recordRun(defaultTuning, won.account, "theSwarm", { ...run, cleared: true }, 4000)
     expect(again.earned.rewards).toBeNull()
     expect(again.account.quests.theSwarm).toEqual({ attempts: 3, clears: 2, firstClearedAt: 3000 })
+  })
+
+  it("spends currency only when the wallet holds enough of each", () => {
+    const account = earn(earn(fresh(), { gold: 100 }), { gold: 50, crystals: 5 })
+    expect(account.wallet).toEqual({ gold: 150, crystals: 5 })
+    const paid = spend(account, { gold: 120 })
+    expect(paid.ok && paid.value.wallet).toEqual({ gold: 30, crystals: 5 })
+    expect(spend(account, { gold: 10, crystals: 6 })).toEqual({ ok: false, refusal: { kind: "notEnough", currency: "crystals", needed: 6, held: 5 } })
   })
 
   it("opens the main line in order, and other quests by account level", () => {

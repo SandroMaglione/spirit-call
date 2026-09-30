@@ -44,5 +44,9 @@
   ],
   "chapters": [
     "one"
+  ],
+  "currencies": [
+    "crystals",
+    "gold"
   ]
 }

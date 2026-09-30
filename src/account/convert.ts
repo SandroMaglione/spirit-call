@@ -6,6 +6,7 @@ import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { CurrencyId } from "../content/currencies.ts"
 import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { createAccount, defaultEquipment, equip, owns, select, unlock } from "./account.ts"
@@ -44,6 +45,7 @@ export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAc
     createdAt: stored.createdAt,
     experience: stored.experience,
     totals: stored.totals,
+    wallet: keep<CurrencyId, number>(tuning.currencies, stored.wallet, "currency", dropped),
     owned,
     equipment: {},
     quests,
@@ -103,6 +105,7 @@ export const toStored = (account: Account): StoredAccountLatest => ({
   createdAt: account.createdAt,
   experience: account.experience,
   totals: account.totals,
+  wallet: account.wallet,
   owned: account.owned,
   equipment: account.equipment,
   quests: account.quests,

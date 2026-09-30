@@ -318,6 +318,48 @@ body:has(.menu) .btm-toggle {
   color: #7d8590;
 }
 
+.account-bar__level,
+.account-bar__numbers {
+  white-space: nowrap;
+}
+
+/* The currencies held, at the bar's right end. */
+.account-bar__wallet {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.currency {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.currency i {
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+}
+
+.currency--crystals i {
+  background: #8fb8ff;
+}
+
+.currency--gold i {
+  border-radius: 50%;
+  transform: none;
+  background: #ffd166;
+}
+
+.results__currencies {
+  font-size: 14px;
+  font-weight: 700;
+  color: #8fb8ff;
+}
+
 /* What the run earned, on the results screen. */
 .results__earned {
   display: flex;

@@ -57,6 +57,7 @@ describe("account store", () => {
     expect(reloaded.equipment.swordsman).toEqual({ weapon: "crescendo", skills: { special: "nova", ultimate: "bladeWave" } })
     expect(reloaded.selection).toEqual({ character: "gunner", quest: "holdTheLine" })
     expect(reloaded.quests.theSwarm?.clears).toBe(1)
+    expect(reloaded.wallet).toEqual(defaultTuning.quests.theSwarm.rewards.currencies)
     expect(reloaded.owned.weapons.crescendo?.copies).toBe(1)
   })
 
