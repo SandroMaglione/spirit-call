@@ -48,8 +48,17 @@ It is a personal project, not a commercial one.
 ## Non-goals
 
 - **No power creep.** A skilled player can clear everything, including the
-  hardest content, with early characters and basic weapons. Newer or rarer
-  things bring new options and playstyles, not a requirement to keep up.
+  hardest content, with early characters and basic weapons, even at a low
+  level (in the extreme, by avoiding every attack for a long time). Newer or
+  rarer things bring new options and playstyles, not a requirement to keep
+  up.
+- **No damage races (DPS checks).** Nothing fails you for not dealing damage
+  fast enough: no clear-within-a-time goals, no enrage or healing timers, no
+  shields that must be broken in a window, no enemies spawning on a timer
+  regardless of how fast you kill them, and no rewards or records for
+  clearing fast. These turn difficulty into a numbers requirement, which is
+  power creep. Timers that do not reward damage are fine (survive for a
+  while).
 - **No story focus.** The game is about dungeons, swarms of enemies, and
   beating challenges. Attachment to characters comes from how they play,
   look, and feel (the excitement of getting one, as in gacha games), not
@@ -102,6 +111,17 @@ It is a personal project, not a commercial one.
   hitting harder and coming in greater numbers. It never comes from
   mechanics that push toward power creep.
 
+## What makes "skill is enough" work
+
+- Every hit in hard content is avoidable with perfect play: readable
+  warnings, a fair way out, no unavoidable damage.
+- Stats scale within a narrow band: the strongest build is a few times
+  stronger than the weakest, not orders of magnitude, so a skilled low-level
+  clear is long but possible. The band's size is a deliberate number.
+- New content follows the same stat curves as old content of its rarity and
+  level; it differs in effects and playstyle, not in numbers.
+- Enemy levels are fixed per quest or tier; they never scale to the player.
+
 ## Rules of thumb for design and implementation
 
 - A new character, weapon, or effect must be beatable content's peer, never
@@ -119,10 +139,15 @@ It is a personal project, not a commercial one.
 
 Decided directions are above; these are not decided yet.
 
-1. **Progression without power creep.** What does "improving your kit" mean
-   if power must not creep? Candidates: unlocks only (new characters,
-   weapons, kit options), bounded growth (levels up to a cap that the hardest
-   content assumes), or growth that the hardest content normalizes.
+1. **Progression without power creep.** Draft direction (in discussion): a
+   leveling system, with later quests requiring higher levels; hardcore
+   content in tiers, so lower tiers are within reach of a low-level team;
+   growth in several dimensions (levels, weapons, and what is equipped); and
+   the gacha giving resources, equipment, or new characters, with duplicates
+   of a character unlocking an add-on (from a skin to a unique weapon that
+   is not much stronger). Still to settle: what levels up (account,
+   characters), how, the size of the stat band, how quests gate, what tiers
+   reward, and which growth dimensions exist.
 2. **Elements and statuses.** Which elements or statuses exist, what each
    does, and whether they combine (reactions) or stay independent.
 3. **Enemy strengths and weaknesses.** How enemies resist or suffer effects,
@@ -131,7 +156,8 @@ Decided directions are above; these are not decided yet.
    is per character, what happens when one falls, and how off-field
    characters contribute (if at all).
 5. **What the gacha gives and how.** What is obtained randomly versus
-   earned directly, and what a duplicate gives, without adding power creep.
+   earned directly, how generous it is, and what each duplicate gives,
+   without raising the ceiling of power.
 6. **What currencies and resources exist,** what each is for, and where each
    comes from.
 7. **The shape of the core challenges**: a tower, boss fights, endless
