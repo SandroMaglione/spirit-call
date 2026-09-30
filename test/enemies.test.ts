@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
@@ -139,6 +139,27 @@ describe("enemy stats", () => {
     const after = run.world().enemies[0]!.position
     const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
     expect(speed).toBeCloseTo(defaultTuning.enemies.chaser.speed / 2, 0)
+  })
+})
+
+describe("enemy levels", () => {
+  it("scale HP, ATK, and DEF along the characters' stat curve, not speed", () => {
+    const chaser = defaultTuning.enemies.chaser
+    const top = defaultTuning.progression.character.curve.maxLevel
+    expect(enemyStats(defaultTuning, "chaser", 1)).toEqual({ hp: chaser.hp, atk: chaser.atk, def: chaser.def, speed: chaser.speed })
+    expect(enemyStats(defaultTuning, "chaser", top)).toEqual({ hp: chaser.hp * 4, atk: chaser.atk * 4, def: chaser.def * 4, speed: chaser.speed })
+  })
+
+  it("spawn every enemy of a run at the level the arena was entered with", () => {
+    const Enemies = Game.Inspector("Test/EnemyStats", {
+      queries: { enemies: Game.Query({ selection: { stats: Game.Query.read(CombatStats), kind: Game.Query.read(Enemy) } }) }
+    }, ({ queries }) => queries.enemies.each().map(({ data }) => ({ kind: data.kind.get().kind, stats: data.stats.get() })))
+    const run = start({ flow: "Menu", waves: true })
+    run.requests.pending.push({ kind: "start", build: { character: "swordsman", skills: {} }, challenge: "swarm", enemyLevel: 12 })
+    run.step(240)
+    const spawned = run.runtime.inspect(Enemies)
+    expect(spawned.length).toBeGreaterThan(0)
+    for (const enemy of spawned) expect(enemy.stats).toEqual(enemyStats(defaultTuning, enemy.kind, 12))
   })
 })
 

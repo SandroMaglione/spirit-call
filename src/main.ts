@@ -1,17 +1,19 @@
+import { effect } from "@preact/signals"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
-import { buildFromQuery, challengeFromQuery } from "./dev/build.ts"
+import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery } from "./dev/build.ts"
 import { startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
-import { buildOf } from "./account/account.ts"
+import { buildOf, encounterOf } from "./account/account.ts"
+import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
@@ -29,7 +31,7 @@ import {
   RenderNodes,
   Sounds
 } from "./schema.ts"
-import type { FrameContextValue, RenderClockValue } from "./schema.ts"
+import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
 const start = async (mount: HTMLElement) => {
@@ -45,21 +47,44 @@ const start = async (mount: HTMLElement) => {
   const flow = quickStart ? "Playing" : "Menu"
   const lastBuild = buildOf(tuning, account, account.selection.character)
   const build = quickStart ? buildFromQuery(tuning, window.location.search, lastBuild) : lastBuild
-  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, account.selection.challenge) : account.selection.challenge
+  const selected = encounterOf(tuning, account.selection.play)
+  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
+  const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, selected.enemyLevel) : selected.enemyLevel
+  /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
+  let playing: Play | null = null
   const uiRequests = emptyUiRequests()
   const uiStore = createUiStore({ tuning, build, challenge, flow, account, notices: shell.notes })
   shell.onAccount((next) => {
     uiStore.account.value = next
   })
+  // Every run that ends is reported to the account once, as its result appears (the arena records it, see `RunResult`).
+  let reported: RunResultValue | null = null
+  effect(() => {
+    const result = uiStore.result.value
+    if (result === null) {
+      uiStore.earned.value = null
+      return
+    }
+    if (result === reported) return
+    reported = result
+    void shell.recordRun(playing, result).then((earned) => {
+      uiStore.earned.value = earned ?? null
+    })
+  })
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
-    enter: (character, challenge) => {
-      // Entering is remembered on the account; what it does not own is refused and nothing starts.
-      void shell.select(character, challenge).then((selected) => {
-        if (selected !== undefined) uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), challenge })
+    enter: (character, play) => {
+      // Entering is remembered on the account; a character not owned or something not open is refused, and nothing starts.
+      void shell.select(character, play).then((selected) => {
+        if (selected === undefined) return
+        playing = play
+        uiStore.play.value = play
+        uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), ...encounterOf(tuning, play) })
       })
     },
     equip: shell.equip,
+    train: shell.train,
+    upgrade: shell.upgrade,
     retry: () => uiRequests.pending.push({ kind: "retry" }),
     menu: () => uiRequests.pending.push({ kind: "menu" })
   }
@@ -111,7 +136,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(UiRequests, uiRequests),
       Game.Runtime.service(UiStoreService, uiStore)
     ),
-    resources: initialResources(tuning, frameContext.viewport, build, challenge),
+    resources: initialResources(tuning, frameContext.viewport, build, challenge, enemyLevel),
     machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true

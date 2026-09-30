@@ -18,7 +18,9 @@ import * as Schema from "effect/Schema"
 // ── Account ───────────────────────────────────────────────────────────────
 
 const Unlocked = Schema.Struct({ unlockedAt: Schema.Number })
-const OwnedWeapon = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number })
+const OwnedCharacter = Schema.Struct({ unlockedAt: Schema.Number, experience: Schema.Number })
+const OwnedWeaponV1 = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number })
+const OwnedWeapon = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number, level: Schema.Number })
 const Equipment = Schema.Struct({
   weapon: Schema.String,
   skills: Schema.Struct({ special: Schema.String, ultimate: Schema.String })
@@ -31,7 +33,7 @@ export const StoredAccountV1 = Schema.Struct({
   createdAt: Schema.Number,
   owned: Schema.Struct({
     characters: Schema.Record(Schema.String, Unlocked),
-    weapons: Schema.Record(Schema.String, OwnedWeapon),
+    weapons: Schema.Record(Schema.String, OwnedWeaponV1),
     skills: Schema.Record(Schema.String, Unlocked),
     challenges: Schema.Record(Schema.String, Unlocked)
   }),
@@ -39,14 +41,68 @@ export const StoredAccountV1 = Schema.Struct({
   selection: Schema.Struct({ character: Schema.String, challenge: Schema.String })
 })
 
+const Totals = Schema.Struct({ runs: Schema.Number, clears: Schema.Number, kills: Schema.Number, secondsPlayed: Schema.Number })
+
+const QuestProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Number, firstClearedAt: Schema.NullOr(Schema.Number) })
+const TierProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Number, firstClearedAt: Schema.NullOr(Schema.Number), rewardedPeriod: Schema.NullOr(Schema.Number) })
+const Play = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("quest"), quest: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal("tier"), track: Schema.String, tier: Schema.Number })
+])
+
+/**
+ * Version 2: quests instead of owned challenges (each quest's progress, and a
+ * quest selected), account experience, lifetime totals over every run, the
+ * currencies held, each character's experience, each weapon's level, and
+ * each hardcore tier's progress.
+ */
+export const StoredAccountV2 = Schema.Struct({
+  version: Schema.Literal(2),
+  id: Schema.String,
+  createdAt: Schema.Number,
+  experience: Schema.Number,
+  totals: Totals,
+  wallet: Schema.Record(Schema.String, Schema.Number),
+  owned: Schema.Struct({
+    characters: Schema.Record(Schema.String, OwnedCharacter),
+    weapons: Schema.Record(Schema.String, OwnedWeapon),
+    skills: Schema.Record(Schema.String, Unlocked)
+  }),
+  equipment: Schema.Record(Schema.String, Equipment),
+  quests: Schema.Record(Schema.String, QuestProgress),
+  /** By track, then by tier number. */
+  hardcore: Schema.Record(Schema.String, Schema.Record(Schema.String, TierProgress)),
+  selection: Schema.Struct({ character: Schema.String, play: Play })
+})
+
 /** Any account version ever saved. */
-export const StoredAccount = Schema.Union([StoredAccountV1])
-export const StoredAccountLatest = StoredAccountV1
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2])
+export const StoredAccountLatest = StoredAccountV2
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
   switch (stored.version) {
     case 1:
+      // Challenges were owned; quests now open by level and order, so owning them goes away. What
+      // was selected is left empty: loading falls back to the starter's quest (see `fromStored`).
+      return migrateAccount({
+        version: 2,
+        id: stored.id,
+        createdAt: stored.createdAt,
+        experience: 0,
+        totals: { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 },
+        wallet: {},
+        owned: {
+          characters: Object.fromEntries(Object.entries(stored.owned.characters).map(([id, owned]) => [id, { ...owned, experience: 0 }])),
+          weapons: Object.fromEntries(Object.entries(stored.owned.weapons).map(([id, owned]) => [id, { ...owned, level: 1 }])),
+          skills: stored.owned.skills
+        },
+        equipment: stored.equipment,
+        quests: {},
+        hardcore: {},
+        selection: { character: stored.selection.character, play: { kind: "quest", quest: "" } }
+      })
+    case 2:
       return stored
   }
 }

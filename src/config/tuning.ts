@@ -15,7 +15,11 @@
 import { attacks } from "../content/attacks.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
+import { currencies } from "../content/currencies.ts"
 import { enemies } from "../content/enemies.ts"
+import { reset, tracks } from "../content/hardcore.ts"
+import { progression } from "../content/progression.ts"
+import { chapters, quests } from "../content/quests.ts"
 import { skills } from "../content/skills.ts"
 import { weapons } from "../content/weapons.ts"
 
@@ -52,6 +56,20 @@ export const defaultTuning = {
 
   /** Every character, by id; the `Build` resource picks the one in the arena. */
   characters,
+
+  /** Levels and what runs earn (see content/progression.ts). */
+  progression,
+
+  /** The pull and upgrade currencies (see content/currencies.ts). */
+  currencies,
+
+  /** Every quest, by id, and the main line's chapters (see content/quests.ts). */
+  quests,
+  chapters,
+
+  /** Hardcore tracks in tiers, and the periodic reset of their rewards (see content/hardcore.ts). */
+  tracks,
+  reset,
 
   /** Every weapon, by id; a character wields one of its type. */
   weapons,

@@ -18,7 +18,11 @@ const current: Record<string, ReadonlyArray<string>> = {
   skills: Object.keys(defaultTuning.skills),
   challenges: Object.keys(defaultTuning.challenges),
   attacks: Object.keys(defaultTuning.attacks),
-  enemies: Object.keys(defaultTuning.enemies)
+  enemies: Object.keys(defaultTuning.enemies),
+  quests: Object.keys(defaultTuning.quests),
+  chapters: Object.keys(defaultTuning.chapters),
+  currencies: Object.keys(defaultTuning.currencies),
+  tracks: Object.keys(defaultTuning.tracks)
 }
 
 describe("content ids", () => {

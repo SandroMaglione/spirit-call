@@ -335,20 +335,31 @@ export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fa
 export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
 
 /**
- * What enters the arena: a character, and the weapon and skills equipped
- * over its defaults. `resolveBuild` turns it into final
+ * What enters the arena: a character at its level, and the weapon and
+ * skills equipped over its defaults. `resolveBuild` turns it into final
  * stats and kit when the player spawns.
  */
 export interface BuildValue {
   readonly character: CharacterId
+  /** The character's level (1 when missing). */
+  readonly level?: number
   /** A weapon of the character's type in place of its own. */
   readonly weapon?: WeaponId
+  /** The weapon's level (1 when missing). */
+  readonly weaponLevel?: number
   readonly skills: { readonly [Slot in SkillSlot]?: SkillId }
 }
 export const Build = Descriptor.Resource<BuildValue>()("Shooter/Build")
 
 /** The challenge being played (see `content/challenges.ts`). */
 export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
+
+/**
+ * The level of every enemy in the run: fixed by the quest or tier being
+ * played, never scaled to the player. An enemy of level n has the stats a
+ * character of level n would (see `enemyStats`).
+ */
+export const EnemyLevel = Descriptor.Resource<number>()("Shooter/EnemyLevel")
 
 /**
  * Triggered passive effects waiting to be carried out (see
@@ -456,6 +467,8 @@ export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 export interface RunResultValue {
   readonly cleared: boolean
   readonly challenge: ChallengeId
+  /** The characters that fought (for their experience). */
+  readonly characters: ReadonlyArray<CharacterId>
   /** The wave reached. */
   readonly wave: number
   readonly kills: number
@@ -534,6 +547,7 @@ export const Game = Schema.bind(
       Tuning,
       Build,
       Challenge,
+      EnemyLevel,
       TriggeredEffects,
       Time,
       Keys,

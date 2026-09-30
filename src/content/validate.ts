@@ -2,7 +2,8 @@
  * Rules content must follow that its types cannot express: references that
  * must point at existing entries (the tuning panel can edit content live),
  * combos with at least one move, weapons that fit their character,
- * challenges that can be won, and a new account that can play.
+ * challenges that can be won, quests that can be reached, hardcore tiers
+ * that get harder, level curves that rise, and a new account that can play.
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
@@ -10,6 +11,7 @@ import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import type { AttackMove } from "./attacks.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
+import type { LevelCurve } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
 
 const has = (record: object, id: string): boolean => Object.hasOwn(record, id)
@@ -61,8 +63,30 @@ const checkPassive = (problems: Array<string>, where: string, passive: Passive):
 }
 
 /** Every rule the content in `tuning` breaks, as readable messages; empty when all is well. */
+/** A level curve that rises and ends. */
+const checkCurve = (problems: Array<string>, where: string, curve: LevelCurve): void => {
+  if (!(Number.isInteger(curve.maxLevel) && curve.maxLevel >= 1)) problems.push(`${where}: maxLevel must be a whole number from 1 (is ${curve.maxLevel})`)
+  positive(problems, where, { base: curve.base })
+  if (!(curve.growth >= 0)) problems.push(`${where}: growth must not be negative (is ${curve.growth})`)
+}
+
+/** Amounts of currency: known currencies, in whole positive numbers. */
+const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, amounts: Readonly<Record<string, number | undefined>>): void => {
+  for (const [id, amount] of Object.entries(amounts)) {
+    if (!has(tuning.currencies, id)) problems.push(`${where}: unknown currency ${id}`)
+    else if (amount === undefined || !(Number.isInteger(amount) && amount > 0)) problems.push(`${where}: ${id} must be a whole number above 0 (is ${amount})`)
+  }
+}
+
 export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
+
+  const { progression } = tuning
+  checkCurve(problems, "account levels", progression.account.curve)
+  checkCurve(problems, "character levels", progression.character.curve)
+  checkCurve(problems, "weapon level costs", progression.weapon.cost)
+  if (!(progression.stats.band >= 1)) problems.push(`stat curve: band must be 1 or more, or levels would weaken (is ${progression.stats.band})`)
+  positive(problems, "stat curve", { shape: progression.stats.shape })
 
   for (const [id, attack] of Object.entries(tuning.attacks)) {
     if (attack.combo.length === 0) problems.push(`attack ${id}: the combo needs at least one move`)
@@ -117,19 +141,66 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }
 
+  const unlockKinds = { character: tuning.characters, weapon: tuning.weapons, skill: tuning.skills }
+  for (const [id, quest] of Object.entries(tuning.quests)) {
+    const where = `quest ${id}`
+    if (!has(tuning.challenges, quest.challenge)) problems.push(`${where}: unknown challenge ${quest.challenge}`)
+    if (quest.line === "main" && (quest.chapter === null || !has(tuning.chapters, quest.chapter))) problems.push(`${where}: a main quest needs a known chapter`)
+    if (quest.line === "secondary" && quest.chapter !== null) problems.push(`${where}: a secondary quest belongs to no chapter`)
+    if (!(Number.isInteger(quest.level) && quest.level >= 1 && quest.level <= tuning.progression.account.curve.maxLevel)) {
+      problems.push(`${where}: level must be a whole number from 1 to the account's maximum (is ${quest.level})`)
+    }
+    if (!(Number.isInteger(quest.enemyLevel) && quest.enemyLevel >= 1 && quest.enemyLevel <= tuning.progression.character.curve.maxLevel)) {
+      problems.push(`${where}: enemyLevel must be a whole number from 1 to the characters' maximum level (is ${quest.enemyLevel})`)
+    }
+    if (quest.after !== null && !has(tuning.quests, quest.after)) problems.push(`${where}: comes after unknown quest ${quest.after}`)
+    for (const item of quest.rewards.unlocks) if (!has(unlockKinds[item.kind], item.id)) problems.push(`${where}: rewards unknown ${item.kind} ${item.id}`)
+    checkAmounts(problems, where, tuning, quest.rewards.currencies)
+    // The main line's order must end: following `after` never comes back around.
+    const seen = new Set<string>([id])
+    for (let before = quest.after; before !== null && has(tuning.quests, before); before = tuning.quests[before as keyof typeof tuning.quests].after) {
+      if (seen.has(before)) {
+        problems.push(`${where}: its order loops back through ${before}`)
+        break
+      }
+      seen.add(before)
+    }
+  }
+
+  for (const [id, track] of Object.entries(tuning.tracks)) {
+    const where = `hardcore track ${id}`
+    if (!has(tuning.challenges, track.challenge)) problems.push(`${where}: unknown challenge ${track.challenge}`)
+    if (!(Number.isInteger(track.level) && track.level >= 1 && track.level <= tuning.progression.account.curve.maxLevel)) {
+      problems.push(`${where}: level must be a whole number from 1 to the account's maximum (is ${track.level})`)
+    }
+    if (track.tiers.length === 0) problems.push(`${where}: needs at least one tier`)
+    track.tiers.forEach((tier, index) => {
+      const at = `${where} tier ${index + 1}`
+      if (!(Number.isInteger(tier.enemyLevel) && tier.enemyLevel >= 1 && tier.enemyLevel <= tuning.progression.character.curve.maxLevel)) {
+        problems.push(`${at}: enemyLevel must be a whole number from 1 to the characters' maximum level (is ${tier.enemyLevel})`)
+      }
+      const before = track.tiers[index - 1]
+      if (before !== undefined && tier.enemyLevel <= before.enemyLevel) problems.push(`${at}: enemies must be a higher level than the tier before (${tier.enemyLevel} after ${before.enemyLevel})`)
+      if (!(tier.rewards.experience >= 0)) problems.push(`${at}: experience must not be negative (is ${tier.rewards.experience})`)
+      checkAmounts(problems, at, tuning, tier.rewards.currencies)
+    })
+  }
+  positive(problems, "hardcore reset", { days: tuning.reset.days })
+
   const starter = newAccount
   const where = "the new account"
   for (const [kind, ids, record] of [
     ["character", starter.characters, tuning.characters],
     ["weapon", starter.weapons, tuning.weapons],
-    ["skill", starter.skills, tuning.skills],
-    ["challenge", starter.challenges, tuning.challenges]
+    ["skill", starter.skills, tuning.skills]
   ] as const) {
     for (const id of ids) if (!has(record, id)) problems.push(`${where}: unknown ${kind} ${id}`)
   }
-  if (starter.characters.length === 0 || starter.challenges.length === 0) problems.push(`${where}: needs at least one character and one challenge`)
+  if (starter.characters.length === 0) problems.push(`${where}: needs at least one character`)
   if (!starter.characters.includes(starter.selection.character)) problems.push(`${where}: selects ${starter.selection.character}, which it does not own`)
-  if (!starter.challenges.includes(starter.selection.challenge)) problems.push(`${where}: selects ${starter.selection.challenge}, which it does not own`)
+  const first = has(tuning.quests, starter.selection.quest) ? tuning.quests[starter.selection.quest] : undefined
+  if (first === undefined) problems.push(`${where}: selects unknown quest ${starter.selection.quest}`)
+  else if (first.level > 1 || first.after !== null) problems.push(`${where}: selects quest ${starter.selection.quest}, which a new account cannot start`)
 
   return problems
 }

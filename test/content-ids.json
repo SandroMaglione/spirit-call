@@ -35,5 +35,22 @@
     "charger",
     "sniper",
     "guardian"
+  ],
+  "quests": [
+    "theSwarm",
+    "crossfire",
+    "theBrute",
+    "holdTheLine"
+  ],
+  "chapters": [
+    "one"
+  ],
+  "currencies": [
+    "crystals",
+    "gold"
+  ],
+  "tracks": [
+    "gauntlet",
+    "siege"
   ]
 }

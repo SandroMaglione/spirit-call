@@ -21,10 +21,12 @@ import * as Ref from "effect/Ref"
 
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
-import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
-import { createAccount, equip, select, unlock } from "./account.ts"
-import type { Account, Checked, Equipment, Item, Refusal } from "./account.ts"
+import type { Amounts } from "../content/currencies.ts"
+import type { WeaponId } from "../content/weapons.ts"
+import type { RunResultValue } from "../schema.ts"
+import { createAccount, earn, equip, recordRun, select, train, unlock, upgrade } from "./account.ts"
+import type { Account, Checked, Earned, Equipment, Item, Play, Refusal } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
 import { LatestAccountJson, LegacyProfileJson, migrateAccount, StoredAccountJson } from "./stored.ts"
@@ -43,10 +45,21 @@ export interface AccountStoreShape {
   readonly notes: ReadonlyArray<string>
   /** Equips an owned character with owned items (the weapon of its type). */
   readonly equip: (character: CharacterId, equipment: Equipment) => Effect.Effect<Account, AccountRefused | AccountSaveError>
-  /** Selects an owned character and challenge: what the arena is entered with. */
-  readonly select: (character: CharacterId, challenge: ChallengeId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Selects an owned character and an open quest or tier: what the arena is entered with. */
+  readonly select: (character: CharacterId, play: Play) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
+  /** Takes an owned character to its next level with gold. */
+  readonly train: (character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Takes an owned weapon a level higher with gold. */
+  readonly upgrade: (weapon: WeaponId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Adds `amounts` of currency (a reward, or a dev tool). */
+  readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
+  /**
+   * Records a run that ended (the arena's `RunResult`) of `play` (`null` for
+   * a run of nothing): the account after it, and what it earned.
+   */
+  readonly recordRun: (play: Play | null, result: RunResultValue) => Effect.Effect<{ readonly account: Account; readonly earned: Earned }, AccountSaveError>
 }
 
 export class AccountStore extends Context.Service<AccountStore, AccountStoreShape>()("Shooter/AccountStore") {}
@@ -99,6 +112,15 @@ export const layer = (options: AccountOptions) =>
       // Saved back at once: a new account, or one migrated or repaired, is kept as it is now.
       yield* save(loaded.account).pipe(Effect.ignore)
 
+      /** Applies a change that is always allowed, and saves it. */
+      const apply = (change: (account: Account, now: number) => Account) =>
+        Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const next = change(yield* Ref.get(current), now)
+          yield* Ref.set(current, next)
+          return yield* save(next)
+        })
+
       /** Applies a checked change, saving it when allowed. */
       const change = (apply: (account: Account) => Checked<Account>) =>
         Effect.gen(function*() {
@@ -112,12 +134,19 @@ export const layer = (options: AccountOptions) =>
         get: Ref.get(current),
         notes: loaded.notes,
         equip: (character, equipment) => change((account) => equip(options.tuning, account, character, equipment)),
-        select: (character, challenge) => change((account) => select(account, character, challenge)),
-        unlock: (items) =>
-          Clock.currentTimeMillis.pipe(
-            Effect.flatMap((now) => change((account) => ({ ok: true, value: items.reduce((next, item) => unlock(options.tuning, next, item, now), account) }))),
-            Effect.catchTag("AccountRefused", (error) => Effect.die(error))
-          )
+        select: (character, play) => change((account) => select(options.tuning, account, character, play)),
+        unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
+        earn: (amounts) => apply((account) => earn(account, amounts)),
+        train: (character) => change((account) => train(options.tuning, account, character)),
+        upgrade: (weapon) => change((account) => upgrade(options.tuning, account, weapon)),
+        recordRun: (play, result) =>
+          Effect.gen(function*() {
+            const now = yield* Clock.currentTimeMillis
+            const recorded = recordRun(options.tuning, yield* Ref.get(current), play, result, now)
+            yield* Ref.set(current, recorded.account)
+            yield* save(recorded.account)
+            return recorded
+          })
       })
     })
   )

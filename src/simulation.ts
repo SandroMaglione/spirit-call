@@ -35,6 +35,8 @@ export interface SimulationOptions {
   readonly build?: BuildValue
   /** What they face. Defaults to `defaultChallenge`. */
   readonly challenge?: ChallengeId
+  /** The enemies' level. Defaults to 1. */
+  readonly enemyLevel?: number
   /** Where the game starts: the menu, or (the default) playing. */
   readonly flow?: "Menu" | "Playing"
   /** Defaults to 1280×720. */
@@ -56,7 +58,7 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(FrameContext, { viewport }),
       Game.Runtime.service(UiRequests, requests)
     ),
-    resources: initialResources(tuning, viewport, options.build, options.challenge),
+    resources: initialResources(tuning, viewport, options.build, options.challenge, options.enemyLevel),
     machines: initialMachines(options.flow),
     debug: true
   })

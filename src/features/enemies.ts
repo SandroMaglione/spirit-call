@@ -8,6 +8,7 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
+import { levelScale } from "./build.ts"
 import {
   Attacker,
   AttackPhase,
@@ -15,6 +16,7 @@ import {
   Brain,
   CombatStats,
   Enemy,
+  EnemyLevel,
   EnemyMode,
   Game,
   Health,
@@ -36,8 +38,17 @@ import {
 } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
 
-export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1) => {
+/** `kind`'s HP, ATK, and DEF at `level`, along the characters' stat curve (see `levelScale`); speed as it is. */
+export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number): { readonly hp: number; readonly atk: number; readonly def: number; readonly speed: number } => {
+  const spec = tuning.enemies[kind]
+  const scaled = levelScale(tuning.progression.stats, level, tuning.progression.character.curve.maxLevel)
+  return { hp: Math.round(spec.hp * scaled), atk: Math.round(spec.atk * scaled), def: Math.round(spec.def * scaled), speed: spec.speed }
+}
+
+/** An enemy of `kind` at `level` (see `EnemyLevel`). */
+export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1) => {
   const stats = tuning.enemies[kind]
+  const { hp, atk, def, speed } = enemyStats(tuning, kind, level)
   const draft = Game.Command.spawn(
     [Enemy, { kind }],
     [Position, at],
@@ -46,8 +57,8 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [Knockback, { x: 0, y: 0 }],
     [Body, { radius: stats.radius }],
     [Hurtbox, { radius: stats.hurtboxRadius, faction: "enemy" }],
-    [Health, { current: stats.hp, max: stats.hp }],
-    [CombatStats, { hp: stats.hp, atk: stats.atk, def: stats.def, speed: stats.speed }],
+    [Health, { current: hp, max: hp }],
+    [CombatStats, { hp, atk, def, speed }],
     [HitFlash, { remaining: 0 }],
     [Invulnerable, { remaining: 0 }],
     [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
@@ -96,10 +107,11 @@ export const SpawnTrainingDummies = Game.System("Shooter/SpawnTrainingDummies", 
 /** Counts spawn warnings down and replaces each with its enemy. */
 export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", {
   queries: { pending: Game.Query({ selection: { pending: Game.Query.write(PendingSpawn) } }) },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
+  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), level: Game.System.readResource(EnemyLevel) }
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
+  const level = resources.level.get()
   for (const { entity, data } of queries.pending.each()) {
     const pending = data.pending.get()
     const remaining = pending.remaining - dt
@@ -109,7 +121,7 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
     }
     commands.despawn(entity.id)
     // Alternate strafing directions so groups of shooters spread out.
-    const draft = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1)
+    const draft = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level)
     commands.spawnIn(RunScope, pending.kind === "dummy"
       ? Game.Command.insert(draft, [Respawns, { at: pending.at, delay: tuning.enemies.dummy.respawnDelay }])
       : draft)
