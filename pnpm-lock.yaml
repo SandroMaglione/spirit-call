@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@effect/platform-browser':
+        specifier: 4.0.0-rc.118
+        version: 4.0.0-rc.118(effect@4.0.0-rc.118)
       '@preact/signals':
         specifier: 2.11.2
         version: 2.11.2(preact@10.29.8)
@@ -20,6 +23,9 @@ importers:
       '@typeonce/bevy-ts-pixi':
         specifier: link:../../bevy-ts/packages/pixi
         version: link:../../bevy-ts/packages/pixi
+      effect:
+        specifier: 4.0.0-rc.118
+        version: 4.0.0-rc.118
       pixi.js:
         specifier: 8.17.1
         version: 8.17.1
@@ -47,6 +53,11 @@ importers:
         version: 4.0.18(@types/node@25.5.0)(lightningcss@1.33.0)(tsx@4.21.0)
 
 packages:
+
+  '@effect/platform-browser@4.0.0-rc.118':
+    resolution: {integrity: sha512-X0UnkYh76kFU8/qpqh5FNgqDEuZI1GWA/ZxvA9NOUBYN/e3mBJCzjWHa1XeRwtn7xSiKlZcY/vyReLFbbjcHlg==}
+    peerDependencies:
+      effect: ^4.0.0-rc.118
 
   '@emnapi/core@1.11.3':
     resolution: {integrity: sha512-zLpS5asjEb7lq8jYLq37N6XKaE41DIexlY1rF/z4/tIl3wo13Sqm28fRyfIsKZD+NZ8mM5RoKkpW/rBcuoSZSg==}
@@ -808,6 +819,9 @@ packages:
   earcut@3.2.3:
     resolution: {integrity: sha512-vnS4AVwp1KHAF13i1vp1/2D5evWy3k5u/iW/B81QVsUZtV8cv2tU0b2VNFlqvh4kYwrFMDdjPCfAmfyJW9y14Q==}
 
+  effect@4.0.0-rc.118:
+    resolution: {integrity: sha512-hxhpCd+swzrtu9lnyPpEFre2ODQzJ9qxgyL1oHIEY8NKnW4PxTbM1XzplMZXiAsLD62HO+KJc41Nqxr9T791ZQ==}
+
   es-module-lexer@1.7.0:
     resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
 
@@ -1151,6 +1165,10 @@ packages:
     hasBin: true
 
 snapshots:
+
+  '@effect/platform-browser@4.0.0-rc.118(effect@4.0.0-rc.118)':
+    dependencies:
+      effect: 4.0.0-rc.118
 
   '@emnapi/core@1.11.3':
     dependencies:
@@ -1606,6 +1624,8 @@ snapshots:
   detect-libc@2.1.2: {}
 
   earcut@3.2.3: {}
+
+  effect@4.0.0-rc.118: {}
 
   es-module-lexer@1.7.0: {}
 

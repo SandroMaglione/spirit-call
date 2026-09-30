@@ -233,3 +233,30 @@
 body:has(.menu) .btm-toggle {
   display: none;
 }
+
+/* A message about the profile (what loading it had to fix). */
+.menu__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1100px;
+  margin: 0 auto 12px;
+  padding: 8px 12px;
+  border: 1px solid #ffd166;
+  border-radius: 8px;
+  background: rgba(255, 209, 102, 0.1);
+  font-size: 12px;
+}
+
+.menu__notice button {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border: 1px solid #ffd166;
+  border-radius: 6px;
+  background: transparent;
+  color: #ffd166;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

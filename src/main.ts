@@ -5,7 +5,9 @@ import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { buildFromQuery, challengeFromQuery } from "./dev/build.ts"
+import { startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
+import type { UiRequest } from "./features/menu.ts"
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import { attachMonitor } from "./dev/monitor.ts"
@@ -32,14 +34,20 @@ const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(window.location.search)
   const tuning = stressLoad === undefined ? loadSavedTuning() : stressTuning()
-  // `?character=gunner&special=bladeWave` enters with another build (see dev/build.ts).
-  const build = buildFromQuery(tuning, window.location.search)
-  // `?challenge=swarm` plays another challenge.
-  const challenge = challengeFromQuery(tuning, window.location.search)
-  // The game opens on the menu (which starts from the URL's build and challenge); `?play` skips it.
+  // The profile loads first: the menu starts from the last build and challenge entered.
+  const shell = await startApp(tuning)
+  // `?character=gunner&special=bladeWave` and `?challenge=swarm` override them (see dev/build.ts).
+  const build = buildFromQuery(tuning, window.location.search, shell.profile.selection.build)
+  const challenge = challengeFromQuery(tuning, window.location.search, shell.profile.selection.challenge)
+  // The game opens on the menu; `?play` skips it.
   const flow = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined ? "Playing" : "Menu"
   const uiRequests = emptyUiRequests()
-  const uiStore = createUiStore({ tuning, build, challenge, flow })
+  const uiStore = createUiStore({ tuning, build, challenge, flow, notices: shell.notes })
+  /** UI requests go to the game; entering the arena is also remembered in the profile. */
+  const request = (request: UiRequest) => {
+    if (request.kind === "start") shell.rememberSelection(request.build, request.challenge)
+    uiRequests.pending.push(request)
+  }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
@@ -51,14 +59,15 @@ const start = async (mount: HTMLElement) => {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
-  const sounds = createSoundBoard(window)
-  // Mute with M or the speaker button (remembered across visits).
+  const sounds = createSoundBoard(window, { muted: shell.profile.settings.muted })
+  // Mute with M or the speaker button (remembered in the profile).
   const muteButton = browser.host.hud.mute
   const showMute = () => {
     muteButton.textContent = sounds.muted() ? "🔇" : "🔊"
   }
   const toggleMute = () => {
     sounds.setMuted(!sounds.muted())
+    shell.setMuted(sounds.muted())
     showMute()
   }
   showMute()
@@ -95,7 +104,7 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(setup)
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
-  mountUi(mount, uiStore, uiRequests)
+  mountUi(mount, uiStore, request)
   createTuningPanel(mount, tuning, devCommands)
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.

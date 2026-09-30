@@ -35,6 +35,10 @@ describe("builds", () => {
     expect(buildFromQuery(defaultTuning, "?character=gunner&special=bladeWave")).toEqual({ character: "gunner", skills: { special: "bladeWave" } })
     expect(buildFromQuery(defaultTuning, "?character=gunner&weapon=bloodthirst")).toEqual({ character: "gunner", weapon: "bloodthirst", skills: {} })
     expect(buildFromQuery(defaultTuning, "?character=wizard&ultimate=toString")).toEqual(defaultBuild)
+    // Without build parts in the URL, the fallback (the profile's last build) stands.
+    const last = { character: "gunner" as const, weapon: "executioner" as const, skills: {} }
+    expect(buildFromQuery(defaultTuning, "?challenge=swarm", last)).toBe(last)
+    expect(challengeFromQuery(defaultTuning, "", "brute")).toBe("brute")
     expect(challengeFromQuery(defaultTuning, "?challenge=swarm")).toBe("swarm")
     expect(challengeFromQuery(defaultTuning, "?challenge=nope")).toBe(defaultChallenge)
   })

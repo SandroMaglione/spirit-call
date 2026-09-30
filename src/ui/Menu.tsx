@@ -74,6 +74,14 @@ export const Menu = ({ store, request }: { readonly store: UiStore; readonly req
   return (
     <div class="menu">
       <div class="menu__body">
+        {store.notices.value.map((notice, index) => (
+          <div key={index} class="menu__notice" role="status">
+            <span>{notice}</span>
+            <button type="button" onClick={() => (store.notices.value = store.notices.value.filter((_, other) => other !== index))}>
+              OK
+            </button>
+          </div>
+        ))}
         <Section title="Challenge">
           {ids(tuning.challenges).map((id) => {
             const spec = tuning.challenges[id]

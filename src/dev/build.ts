@@ -1,6 +1,7 @@
 /**
- * Picks the build and the challenge from the page URL, to try them without a
- * menu: `?character=gunner&weapon=bloodthirst&special=bladeWave` and
+ * Picks the build and the challenge from the page URL, over the profile's
+ * last ones, to try them without the menu:
+ * `?character=gunner&weapon=bloodthirst&special=bladeWave` and
  * `?challenge=swarm`. Unknown ids are ignored, so a typo keeps the default.
  */
 import type { Tuning } from "../config/tuning.ts"
@@ -15,13 +16,18 @@ import type { BuildValue } from "../schema.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string | null): value is Id => value !== null && Object.hasOwn(ids, value)
 
-export const challengeFromQuery = (tuning: Tuning, search: string): ChallengeId => {
+/** The URL's challenge, or `fallback` when it names none. */
+export const challengeFromQuery = (tuning: Tuning, search: string, fallback: ChallengeId = defaultChallenge): ChallengeId => {
   const challenge = new URLSearchParams(search).get("challenge")
-  return known<ChallengeId>(tuning.challenges, challenge) ? challenge : defaultChallenge
+  return known<ChallengeId>(tuning.challenges, challenge) ? challenge : fallback
 }
 
-export const buildFromQuery = (tuning: Tuning, search: string): BuildValue => {
+const buildKeys = ["character", "weapon", ...skillSlots] as const
+
+/** The URL's build (missing parts are the defaults), or `fallback` when it names no part of one. */
+export const buildFromQuery = (tuning: Tuning, search: string, fallback: BuildValue = defaultBuild): BuildValue => {
   const query = new URLSearchParams(search)
+  if (!buildKeys.some((key) => query.has(key))) return fallback
   const character = query.get("character")
   const skills: { [Slot in SkillSlot]?: SkillId } = {}
   for (const slot of skillSlots) {

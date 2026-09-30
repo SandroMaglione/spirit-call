@@ -23,15 +23,24 @@ export interface UiStore {
   readonly challenge: Signal<ChallengeId>
   /** How the last run ended; `null` while one is going on (see `RunResult`). */
   readonly result: Signal<RunResultValue | null>
+  /** Messages for the player (what loading the profile had to fix), until dismissed. */
+  readonly notices: Signal<ReadonlyArray<string>>
 }
 
-export const createUiStore = (initial: { readonly tuning: Tuning; readonly build: BuildValue; readonly challenge: ChallengeId; readonly flow: FlowState }): UiStore => ({
+export const createUiStore = (initial: {
+  readonly tuning: Tuning
+  readonly build: BuildValue
+  readonly challenge: ChallengeId
+  readonly flow: FlowState
+  readonly notices: ReadonlyArray<string>
+}): UiStore => ({
   flow: signal(initial.flow),
   device: signal("desktop"),
   tuning: signal(initial.tuning),
   build: signal(initial.build),
   challenge: signal(initial.challenge),
-  result: signal(null)
+  result: signal(null),
+  notices: signal(initial.notices)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")

@@ -57,11 +57,9 @@ const fakeAudio = () => {
 
 const host = () => {
   const listeners = new Map<string, () => void>()
-  const storage = new Map<string, string>()
   return {
     window: {
-      addEventListener: (type: string, listener: () => void) => listeners.set(type, listener),
-      localStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value) }
+      addEventListener: (type: string, listener: () => void) => listeners.set(type, listener)
     } as unknown as Window,
     press: () => listeners.get("pointerdown")?.()
   }

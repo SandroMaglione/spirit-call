@@ -6,7 +6,7 @@
  */
 import { render } from "preact"
 
-import type { UiRequest, UiRequestsValue } from "../features/menu.ts"
+import type { UiRequest } from "../features/menu.ts"
 import { Menu } from "./Menu.tsx"
 import { Results } from "./Results.tsx"
 import type { UiStore } from "./store.ts"
@@ -24,10 +24,10 @@ const App = ({ store, request }: { readonly store: UiStore; readonly request: (r
   }
 }
 
-/** Renders the UI into a layer over `parent`. */
-export const mountUi = (parent: HTMLElement, store: UiStore, requests: UiRequestsValue): void => {
+/** Renders the UI into a layer over `parent`; `request` passes the UI's requests on (to the game, and the profile). */
+export const mountUi = (parent: HTMLElement, store: UiStore, request: (request: UiRequest) => void): void => {
   const root = document.createElement("div")
   root.className = "ui"
   parent.append(root)
-  render(<App store={store} request={(request) => requests.pending.push(request)} />, root)
+  render(<App store={store} request={request} />, root)
 }

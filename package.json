@@ -13,10 +13,12 @@
     "debug": "node --import tsx scripts/debug.ts"
   },
   "dependencies": {
+    "@effect/platform-browser": "4.0.0-rc.118",
     "@preact/signals": "2.11.2",
     "@typeonce/bevy-ts": "link:../../bevy-ts/packages/core",
     "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
     "@typeonce/bevy-ts-pixi": "link:../../bevy-ts/packages/pixi",
+    "effect": "4.0.0-rc.118",
     "pixi.js": "8.17.1",
     "preact": "10.29.8"
   },

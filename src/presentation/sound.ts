@@ -22,7 +22,8 @@
  * rate-limited and vary their pitch slightly.
  *
  * Browsers start audio suspended: the board unlocks on the first pointer or
- * key press. Mute is remembered in localStorage.
+ * key press. Mute starts from `options.muted`; remembering it is the
+ * profile's job (see `profile/store.ts`).
  */
 export type SoundName =
   | "slash"
@@ -68,7 +69,6 @@ const reverbLevel = 0.9
 /** Heavy sounds turn the others down to this, recovering over `duckRecovery` seconds. */
 const duckDepth = 0.45
 const duckRecovery = 0.18
-const storageKey = "shooter.muted"
 
 interface Voice {
   readonly context: AudioContext
@@ -333,9 +333,9 @@ interface Mixer {
  * The browser's sound board. `unlockHost` (usually `window`) resumes audio on
  * the first pointer or key press, as browsers require.
  */
-export const createSoundBoard = (unlockHost: Window): SoundBoard => {
+export const createSoundBoard = (unlockHost: Window, options: { readonly muted?: boolean } = {}): SoundBoard => {
   let mixer: Mixer | undefined
-  let muted = unlockHost.localStorage.getItem(storageKey) === "1"
+  let muted = options.muted ?? false
   const last = new Map<SoundName, number>()
 
   const ensure = (): Mixer | undefined => {
@@ -413,7 +413,6 @@ export const createSoundBoard = (unlockHost: Window): SoundBoard => {
     muted: () => muted,
     setMuted(next) {
       muted = next
-      unlockHost.localStorage.setItem(storageKey, next ? "1" : "0")
     }
   }
 }
