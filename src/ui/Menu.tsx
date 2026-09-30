@@ -1,24 +1,25 @@
 /**
- * The menu: pick a challenge and a character, equip it (a weapon of its type
- * and a skill per slot), then enter the arena (the button, or Enter). What
- * the account does not own is shown locked. Equipment is saved on the
- * character at once; the challenge and character are remembered on entering.
- * Starts from the account's last selection.
+ * The menu: pick a quest (the main line by chapter, then the secondary
+ * quests) and a character, equip it (a weapon of its type and a skill per
+ * slot), then enter the arena (the button, or Enter). What the account does
+ * not own, and quests not open yet, are shown locked (a quest says why).
+ * Equipment is saved on the character at once; the quest and character are
+ * remembered on entering. Starts from the account's last selection.
  */
 import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
 
-import { buildOf, equipmentOf, owns } from "../account/account.ts"
+import { buildOf, equipmentOf, owns, questLock } from "../account/account.ts"
 import type { Item } from "../account/account.ts"
-import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
+import type { QuestId } from "../content/quests.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { resolveBuild } from "../features/build.ts"
 import { AccountBar } from "./AccountBar.tsx"
-import { describeBonus, describeObjective, describePassive, describeSkill, statNames, statOrder } from "./describe.ts"
+import { describeBonus, describeObjective, describePassive, describeRewards, describeSkill, statNames, statOrder } from "./describe.ts"
 import { weaponsFor } from "./draft.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
@@ -36,7 +37,7 @@ const Section = ({ title, children }: { readonly title: string; readonly childre
   </section>
 )
 
-/** A choice; a locked one (not owned) cannot be picked. */
+/** A choice; a locked one (not owned, or not open yet) cannot be picked. */
 const Card = ({ selected, locked, onSelect, title, children }: {
   readonly selected: boolean
   readonly locked: boolean
@@ -72,12 +73,36 @@ const StatLine = ({ stats }: { readonly stats: Stats }) => (
 export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const tuning = store.tuning.value
   const account = store.account.value
-  const challenge = useSignal<ChallengeId>(account.selection.challenge)
+  const quest = useSignal<QuestId>(account.selection.quest)
   const character = useSignal<CharacterId>(account.selection.character)
   const equipment = equipmentOf(tuning, account, character.value)
   const final = resolveBuild(tuning, buildOf(tuning, account, character.value))
   const locked = (item: Item) => !owns(account, item)
-  const enter = () => actions.enter(character.value, challenge.value)
+  const enter = () => actions.enter(character.value, quest.value)
+  /** Why a quest is not open yet, in a few words; `undefined` when it is. */
+  const lockOf = (id: QuestId): string | undefined => {
+    const lock = questLock(tuning, account, id)
+    if (lock === null) return undefined
+    return lock.kind === "level" ? `Needs account Lv ${lock.level}` : `Clear ${tuning.quests[lock.quest].name} first`
+  }
+  /** A quest's card: its challenge's objective, its level, and its first-clear rewards (or that it is cleared). */
+  const questCard = (id: QuestId) => {
+    const spec = tuning.quests[id]
+    const challenge = tuning.challenges[spec.challenge]
+    const lock = lockOf(id)
+    const cleared = (account.quests[id]?.firstClearedAt ?? null) !== null
+    return (
+      <Card key={id} selected={id === quest.value} locked={lock !== undefined} onSelect={() => (quest.value = id)} title={spec.name}>
+        <span class="card__tag">
+          {describeObjective(challenge.objective, challenge.waves.scripted.length)} · Lv {spec.level}
+        </span>
+        <span class="card__text">{challenge.description}</span>
+        {lock !== undefined && <span class="card__why">{lock}</span>}
+        {cleared ? <span class="card__cleared">Cleared</span> : <span class="card__reward">First clear: {describeRewards(tuning, spec.rewards)}</span>}
+      </Card>
+    )
+  }
+  const questIds = ids(tuning.quests)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -102,17 +127,12 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
             </button>
           </div>
         ))}
-        <Section title="Challenge">
-          {ids(tuning.challenges).map((id) => {
-            const spec = tuning.challenges[id]
-            return (
-              <Card key={id} selected={id === challenge.value} locked={locked({ kind: "challenge", id })} onSelect={() => (challenge.value = id)} title={spec.name}>
-                <span class="card__tag">{describeObjective(spec.objective, spec.waves.scripted.length)}</span>
-                <span class="card__text">{spec.description}</span>
-              </Card>
-            )
-          })}
-        </Section>
+        {ids(tuning.chapters).map((chapter) => (
+          <Section key={chapter} title={`Main quest · ${tuning.chapters[chapter].name}`}>
+            {questIds.filter((id) => tuning.quests[id].chapter === chapter).map(questCard)}
+          </Section>
+        ))}
+        <Section title="Secondary quests">{questIds.filter((id) => tuning.quests[id].line === "secondary").map(questCard)}</Section>
         <Section title="Character">
           {ids(tuning.characters).map((id) => {
             const spec = tuning.characters[id]
@@ -160,7 +180,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
           <StatLine stats={final.stats} />
         </span>
         <button type="button" class="menu__start" onClick={enter}>
-          Enter · {tuning.challenges[challenge.value].name}
+          Enter · {tuning.quests[quest.value].name}
         </button>
       </footer>
     </div>

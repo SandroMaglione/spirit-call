@@ -25,4 +25,23 @@ describe("content", () => {
       "challenge endless: clearing every wave can never happen with endless waves"
     ])
   })
+  it("reports quests that cannot be reached or refer to nothing", () => {
+    const quests = defaultTuning.quests
+    const broken: Tuning = {
+      ...defaultTuning,
+      quests: {
+        ...quests,
+        theSwarm: { ...quests.theSwarm, after: "theBrute" },
+        holdTheLine: { ...quests.holdTheLine, chapter: "one", level: 0 }
+      }
+    }
+    expect(validateContent(broken)).toEqual([
+      "quest theSwarm: its order loops back through theSwarm",
+      "quest crossfire: its order loops back through crossfire",
+      "quest theBrute: its order loops back through theBrute",
+      "quest holdTheLine: a secondary quest belongs to no chapter",
+      "quest holdTheLine: level must be a whole number from 1 to the account's maximum (is 0)",
+      "the new account: selects quest theSwarm, which a new account cannot start"
+    ])
+  })
 })

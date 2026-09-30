@@ -3,9 +3,11 @@
  * content describes itself: objectives, stats, weapon bonuses, passives, and
  * skills.
  */
+import type { Tuning } from "../config/tuning.ts"
 import type { Objective } from "../content/challenges.ts"
 import type { Stats } from "../content/characters.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
+import type { Rewards, Unlock } from "../content/quests.ts"
 import type { SkillEffect, SkillSpec } from "../content/skills.ts"
 import type { StatBonus } from "../content/weapons.ts"
 
@@ -92,3 +94,19 @@ export const describeSkill = (skill: SkillSpec): string => {
   const effect = describeEffect(skill.effect)
   return `${effect.charAt(0).toUpperCase()}${effect.slice(1)}${cost === "" ? "" : ` · ${cost}`}`
 }
+
+/** The name of something a reward unlocks. */
+export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
+  switch (unlock.kind) {
+    case "character":
+      return tuning.characters[unlock.id].name
+    case "weapon":
+      return tuning.weapons[unlock.id].name
+    case "skill":
+      return tuning.skills[unlock.id].name
+  }
+}
+
+/** What a first clear gives, in a few words. */
+export const describeRewards = (tuning: Tuning, rewards: Rewards): string =>
+  [`+${rewards.experience} XP`, ...rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock))].join(" · ")

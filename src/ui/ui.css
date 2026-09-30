@@ -330,3 +330,30 @@ body:has(.menu) .btm-toggle {
 .results__level-up {
   color: #7ee08a;
 }
+
+/* A quest's first-clear rewards, or that it is cleared. */
+.card__reward {
+  font-size: 11px;
+  color: #7ee08a;
+}
+
+.card__cleared {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7d8590;
+}
+
+.results__unlocked {
+  font-size: 14px;
+  font-weight: 700;
+  color: #7ee08a;
+}
+
+/* Why a locked quest is not open yet. */
+.card__why {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e0b25a;
+}

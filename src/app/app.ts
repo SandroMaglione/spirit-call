@@ -18,8 +18,8 @@ import type { Settings } from "../account/settings.ts"
 import { AccountStore, layer as accountLayer } from "../account/store.ts"
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
-import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { QuestId } from "../content/quests.ts"
 import type { RunResultValue } from "../schema.ts"
 import { randomId } from "./ids.ts"
 
@@ -32,12 +32,12 @@ export interface App {
   /** Calls `listener` with the account after every change. */
   readonly onAccount: (listener: (account: Account) => void) => void
   readonly equip: (character: CharacterId, equipment: Equipment) => void
-  /** Selects what to enter the arena with; the account after it, or `undefined` when refused (not owned). */
-  readonly select: (character: CharacterId, challenge: ChallengeId) => Promise<Account | undefined>
+  /** Selects what to enter the arena with; the account after it, or `undefined` when refused (not owned, or the quest not open). */
+  readonly select: (character: CharacterId, quest: QuestId) => Promise<Account | undefined>
   /** Owns every character, weapon, skill, and challenge (a dev tool). */
   readonly unlockEverything: () => void
-  /** Records a run that ended (the arena's result); what it earned, or `undefined` if it could not be saved. */
-  readonly recordRun: (result: RunResultValue) => Promise<Earned | undefined>
+  /** Records a run of `quest` (`null` outside quests) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
+  readonly recordRun: (quest: QuestId | null, result: RunResultValue) => Promise<Earned | undefined>
   readonly setMuted: (muted: boolean) => void
 }
 
@@ -68,9 +68,9 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
       listeners.push(listener)
     },
     equip: (character, equipment) => void run(accounts.equip(character, equipment)),
-    select: (character, challenge) => run(accounts.select(character, challenge)),
+    select: (character, quest) => run(accounts.select(character, quest)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning))),
-    recordRun: (result) => attempt(accounts.recordRun(result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
+    recordRun: (quest, result) => attempt(accounts.recordRun(quest, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
     setMuted: (muted) => {
       runtime.runFork(settings.update((current) => ({ ...current, muted })).pipe(
         Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),

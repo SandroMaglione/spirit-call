@@ -49,12 +49,14 @@ describe("account store", () => {
       Effect.gen(function*() {
         yield* store.unlock([{ kind: "weapon", id: "crescendo" }])
         yield* store.equip("swordsman", { weapon: "crescendo", skills: { special: "nova", ultimate: "bladeWave" } })
-        yield* store.select("swordsman", "endless")
+        yield* store.recordRun("theSwarm", { cleared: true, challenge: "swarm", characters: ["swordsman"], wave: 3, kills: 9, time: 60 })
+        yield* store.select("gunner", "holdTheLine")
         return yield* kv.get(accountKey)
       }))
     const reloaded = await withAccount({ [accountKey]: saved! }, (store) => store.get)
     expect(reloaded.equipment.swordsman).toEqual({ weapon: "crescendo", skills: { special: "nova", ultimate: "bladeWave" } })
-    expect(reloaded.selection).toEqual({ character: "swordsman", challenge: "endless" })
+    expect(reloaded.selection).toEqual({ character: "gunner", quest: "holdTheLine" })
+    expect(reloaded.quests.theSwarm?.clears).toBe(1)
     expect(reloaded.owned.weapons.crescendo?.copies).toBe(1)
   })
 
@@ -70,7 +72,7 @@ describe("account store", () => {
     const result = await withAccount({ [accountKey]: v1 }, (store, kv) =>
       Effect.gen(function*() {
         const before = (yield* store.get).totals
-        yield* store.recordRun({ cleared: true, challenge: "swarm", characters: ["swordsman"], wave: 3, kills: 9, time: 60 })
+        yield* store.recordRun(null, { cleared: true, challenge: "swarm", characters: ["swordsman"], wave: 3, kills: 9, time: 60 })
         return { before, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.before).toEqual({ runs: 0, clears: 0, kills: 0, secondsPlayed: 0 })
@@ -81,7 +83,7 @@ describe("account store", () => {
   it("refuses what the account does not own, changing nothing", async () => {
     const result = await withAccount({}, (store) =>
       Effect.gen(function*() {
-        const refused = yield* store.select("gunner", "swarm").pipe(Effect.flip)
+        const refused = yield* store.select("gunner", "theSwarm").pipe(Effect.flip)
         const wrongType = yield* store.unlock([{ kind: "weapon", id: "executioner" }]).pipe(
           Effect.andThen(store.equip("swordsman", { weapon: "executioner", skills: { special: "bladeWave", ultimate: "nova" } })),
           Effect.flip
@@ -96,7 +98,7 @@ describe("account store", () => {
   it("turns the profile saved before accounts into the account, keeping what it owns of it", async () => {
     const account = await withAccount({ [legacyProfileKey]: legacyProfile }, (store) => store.get)
     expect(account.equipment.swordsman).toEqual({ weapon: "trainingBlade", skills: { special: "nova", ultimate: "nova" } })
-    expect(account.selection).toEqual({ character: "swordsman", challenge: "endless" })
+    expect(account.selection).toEqual({ character: "swordsman", quest: newAccount.selection.quest })
   })
 
   it("keeps an unreadable account aside and starts a new one, saying so", async () => {
@@ -128,7 +130,7 @@ describe("account store", () => {
     expect(Object.keys(result.account.owned.characters)).toEqual(["swordsman"])
     expect(result.account.owned.weapons).toEqual({ trainingBlade: { unlockedAt: 5, copies: 1 } })
     expect(result.account.equipment.swordsman?.weapon).toBe("trainingBlade")
-    expect(result.account.selection).toEqual({ character: "swordsman", challenge: "swarm" })
+    expect(result.account.selection).toEqual({ character: "swordsman", quest: newAccount.selection.quest })
     expect(result.notes[0]).toContain("character wizard")
     expect(result.notes[0]).toContain("weapon laserSword")
   })
@@ -144,7 +146,7 @@ describe("account store", () => {
     const failure = await Effect.runPromise(
       Effect.gen(function*() {
         const store = yield* AccountStore
-        return yield* store.select("swordsman", "endless").pipe(Effect.flip)
+        return yield* store.select("swordsman", "theSwarm").pipe(Effect.flip)
       }).pipe(Effect.provide(accountLayer(options)), Effect.provide(failing))
     )
     expect(failure._tag).toBe("AccountSaveError")

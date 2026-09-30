@@ -41,12 +41,26 @@ export const StoredAccountV1 = Schema.Struct({
 
 const Totals = Schema.Struct({ runs: Schema.Number, clears: Schema.Number, kills: Schema.Number, secondsPlayed: Schema.Number })
 
-/** Version 2: adds account experience and lifetime totals over every run. */
+const QuestProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Number, firstClearedAt: Schema.NullOr(Schema.Number) })
+
+/**
+ * Version 2: quests instead of owned challenges (each quest's progress, and a
+ * quest selected), account experience, and lifetime totals over every run.
+ */
 export const StoredAccountV2 = Schema.Struct({
-  ...StoredAccountV1.fields,
   version: Schema.Literal(2),
+  id: Schema.String,
+  createdAt: Schema.Number,
   experience: Schema.Number,
-  totals: Totals
+  totals: Totals,
+  owned: Schema.Struct({
+    characters: Schema.Record(Schema.String, Unlocked),
+    weapons: Schema.Record(Schema.String, OwnedWeapon),
+    skills: Schema.Record(Schema.String, Unlocked)
+  }),
+  equipment: Schema.Record(Schema.String, Equipment),
+  quests: Schema.Record(Schema.String, QuestProgress),
+  selection: Schema.Struct({ character: Schema.String, quest: Schema.String })
 })
 
 /** Any account version ever saved. */
@@ -57,7 +71,19 @@ export type StoredAccountLatest = typeof StoredAccountLatest.Type
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
   switch (stored.version) {
     case 1:
-      return migrateAccount({ ...stored, version: 2, experience: 0, totals: { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 } })
+      // Challenges were owned; quests now open by level and order, so owning them goes away. The
+      // selected quest is left empty: loading falls back to the starter's (see `fromStored`).
+      return migrateAccount({
+        version: 2,
+        id: stored.id,
+        createdAt: stored.createdAt,
+        experience: 0,
+        totals: { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 },
+        owned: { characters: stored.owned.characters, weapons: stored.owned.weapons, skills: stored.owned.skills },
+        equipment: stored.equipment,
+        quests: {},
+        selection: { character: stored.selection.character, quest: "" }
+      })
     case 2:
       return stored
   }

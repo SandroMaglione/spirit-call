@@ -31,6 +31,7 @@ import {
   Sounds
 } from "./schema.ts"
 import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
+import type { QuestId } from "./content/quests.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
 const start = async (mount: HTMLElement) => {
@@ -46,7 +47,10 @@ const start = async (mount: HTMLElement) => {
   const flow = quickStart ? "Playing" : "Menu"
   const lastBuild = buildOf(tuning, account, account.selection.character)
   const build = quickStart ? buildFromQuery(tuning, window.location.search, lastBuild) : lastBuild
-  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, account.selection.challenge) : account.selection.challenge
+  const selectedChallenge = tuning.quests[account.selection.quest].challenge
+  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selectedChallenge) : selectedChallenge
+  /** The quest being played: runs are recorded against it; `null` for a dev quick start, which plays no quest. */
+  let playing: QuestId | null = null
   const uiRequests = emptyUiRequests()
   const uiStore = createUiStore({ tuning, build, challenge, flow, account, notices: shell.notes })
   shell.onAccount((next) => {
@@ -62,16 +66,19 @@ const start = async (mount: HTMLElement) => {
     }
     if (result === reported) return
     reported = result
-    void shell.recordRun(result).then((earned) => {
+    void shell.recordRun(playing, result).then((earned) => {
       uiStore.earned.value = earned ?? null
     })
   })
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
-    enter: (character, challenge) => {
-      // Entering is remembered on the account; what it does not own is refused and nothing starts.
-      void shell.select(character, challenge).then((selected) => {
-        if (selected !== undefined) uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), challenge })
+    enter: (character, quest) => {
+      // Entering is remembered on the account; a character not owned or a quest not open is refused, and nothing starts.
+      void shell.select(character, quest).then((selected) => {
+        if (selected === undefined) return
+        playing = quest
+        uiStore.quest.value = quest
+        uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), challenge: tuning.quests[quest].challenge })
       })
     },
     equip: shell.equip,

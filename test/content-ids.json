@@ -35,5 +35,14 @@
     "charger",
     "sniper",
     "guardian"
+  ],
+  "quests": [
+    "theSwarm",
+    "crossfire",
+    "theBrute",
+    "holdTheLine"
+  ],
+  "chapters": [
+    "one"
   ]
 }

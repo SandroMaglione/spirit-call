@@ -17,6 +17,7 @@ import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { enemies } from "../content/enemies.ts"
 import { progression } from "../content/progression.ts"
+import { chapters, quests } from "../content/quests.ts"
 import { skills } from "../content/skills.ts"
 import { weapons } from "../content/weapons.ts"
 
@@ -56,6 +57,10 @@ export const defaultTuning = {
 
   /** Levels and what runs earn (see content/progression.ts). */
   progression,
+
+  /** Every quest, by id, and the main line's chapters (see content/quests.ts). */
+  quests,
+  chapters,
 
   /** Every weapon, by id; a character wields one of its type. */
   weapons,

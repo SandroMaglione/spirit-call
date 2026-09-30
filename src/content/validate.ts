@@ -2,7 +2,8 @@
  * Rules content must follow that its types cannot express: references that
  * must point at existing entries (the tuning panel can edit content live),
  * combos with at least one move, weapons that fit their character,
- * challenges that can be won, and a new account that can play.
+ * challenges that can be won, quests that can be reached, and a new account
+ * that can play.
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
@@ -117,19 +118,42 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }
 
+  const unlockKinds = { character: tuning.characters, weapon: tuning.weapons, skill: tuning.skills }
+  for (const [id, quest] of Object.entries(tuning.quests)) {
+    const where = `quest ${id}`
+    if (!has(tuning.challenges, quest.challenge)) problems.push(`${where}: unknown challenge ${quest.challenge}`)
+    if (quest.line === "main" && (quest.chapter === null || !has(tuning.chapters, quest.chapter))) problems.push(`${where}: a main quest needs a known chapter`)
+    if (quest.line === "secondary" && quest.chapter !== null) problems.push(`${where}: a secondary quest belongs to no chapter`)
+    if (!(Number.isInteger(quest.level) && quest.level >= 1 && quest.level <= tuning.progression.account.curve.maxLevel)) {
+      problems.push(`${where}: level must be a whole number from 1 to the account's maximum (is ${quest.level})`)
+    }
+    if (quest.after !== null && !has(tuning.quests, quest.after)) problems.push(`${where}: comes after unknown quest ${quest.after}`)
+    for (const item of quest.rewards.unlocks) if (!has(unlockKinds[item.kind], item.id)) problems.push(`${where}: rewards unknown ${item.kind} ${item.id}`)
+    // The main line's order must end: following `after` never comes back around.
+    const seen = new Set<string>([id])
+    for (let before = quest.after; before !== null && has(tuning.quests, before); before = tuning.quests[before as keyof typeof tuning.quests].after) {
+      if (seen.has(before)) {
+        problems.push(`${where}: its order loops back through ${before}`)
+        break
+      }
+      seen.add(before)
+    }
+  }
+
   const starter = newAccount
   const where = "the new account"
   for (const [kind, ids, record] of [
     ["character", starter.characters, tuning.characters],
     ["weapon", starter.weapons, tuning.weapons],
-    ["skill", starter.skills, tuning.skills],
-    ["challenge", starter.challenges, tuning.challenges]
+    ["skill", starter.skills, tuning.skills]
   ] as const) {
     for (const id of ids) if (!has(record, id)) problems.push(`${where}: unknown ${kind} ${id}`)
   }
-  if (starter.characters.length === 0 || starter.challenges.length === 0) problems.push(`${where}: needs at least one character and one challenge`)
+  if (starter.characters.length === 0) problems.push(`${where}: needs at least one character`)
   if (!starter.characters.includes(starter.selection.character)) problems.push(`${where}: selects ${starter.selection.character}, which it does not own`)
-  if (!starter.challenges.includes(starter.selection.challenge)) problems.push(`${where}: selects ${starter.selection.challenge}, which it does not own`)
+  const first = has(tuning.quests, starter.selection.quest) ? tuning.quests[starter.selection.quest] : undefined
+  if (first === undefined) problems.push(`${where}: selects unknown quest ${starter.selection.quest}`)
+  else if (first.level > 1 || first.after !== null) problems.push(`${where}: selects quest ${starter.selection.quest}, which a new account cannot start`)
 
   return problems
 }
