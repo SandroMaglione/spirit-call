@@ -132,6 +132,7 @@ export const SteerEnemies = (() => {
           position: Game.Query.read(Position),
           velocity: Game.Query.write(Velocity),
           body: Game.Query.read(Body),
+          stats: Game.Query.read(CombatStats),
           enemy: Game.Query.read(Enemy),
           brain: Game.Query.write(Brain),
           attacker: Game.Query.read(Attacker),
@@ -191,7 +192,9 @@ export const SteerEnemies = (() => {
 
     for (const { entity, data } of enemies) {
       const kind = data.enemy.get().kind
-      const stats = tuning.enemies[kind]
+      const spec = tuning.enemies[kind]
+      // Speed is a stat, so what changes stats (levels, slows) changes it.
+      const speed = data.stats.get().speed
       const position = data.position.get()
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
@@ -199,14 +202,14 @@ export const SteerEnemies = (() => {
       const attacking = phase !== "ready"
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
-      const attack = stats.attack
+      const attack = spec.attack
       if (attack !== null && attack.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
         data.velocity.set(scale(attacker.area.direction, attack.speed))
         continue
       }
 
       // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
-      const behavior = stats.behavior
+      const behavior = spec.behavior
       if (behavior.kind === "skirmish") {
         const brain = data.brain.get()
         let modeTimer = brain.modeTimer + dt
@@ -236,7 +239,7 @@ export const SteerEnemies = (() => {
           case "idle":
             break
           case "chase":
-            if (distance > behavior.stopDistance) desired = scale(direction, stats.speed)
+            if (distance > behavior.stopDistance) desired = scale(direction, speed)
             break
           case "kite": {
             const brain = data.brain.get()
@@ -249,7 +252,7 @@ export const SteerEnemies = (() => {
             data.brain.set({ ...brain, strafe, strafeTimer })
             const side = { x: -direction.y * strafe, y: direction.x * strafe }
             const radial = distance < behavior.minDistance ? -1 : distance > behavior.maxDistance ? 1 : 0
-            desired = scale(normalizeOr({ x: direction.x * radial + side.x * 0.8, y: direction.y * radial + side.y * 0.8 }, zero), stats.speed)
+            desired = scale(normalizeOr({ x: direction.x * radial + side.x * 0.8, y: direction.y * radial + side.y * 0.8 }, zero), speed)
             break
           }
           case "skirmish": {
@@ -264,16 +267,16 @@ export const SteerEnemies = (() => {
             const side = { x: -direction.y * strafe, y: direction.x * strafe }
             switch (data.mode.get()) {
               case "engage":
-                if (distance > behavior.stopDistance) desired = scale(direction, stats.speed)
+                if (distance > behavior.stopDistance) desired = scale(direction, speed)
                 break
               case "retreat":
-                desired = scale(normalizeOr({ x: -direction.x + side.x * 0.5, y: -direction.y + side.y * 0.5 }, zero), stats.speed)
+                desired = scale(normalizeOr({ x: -direction.x + side.x * 0.5, y: -direction.y + side.y * 0.5 }, zero), speed)
                 break
               case "orbit": {
                 // Circle the target, drifting back to the ring.
                 const band = 35
                 const radial = distance < behavior.orbit - band ? -1 : distance > behavior.orbit + band ? 1 : 0
-                desired = scale(normalizeOr({ x: direction.x * radial + side.x, y: direction.y * radial + side.y }, zero), stats.speed * tuning.crowd.orbitSpeed)
+                desired = scale(normalizeOr({ x: direction.x * radial + side.x, y: direction.y * radial + side.y }, zero), speed * tuning.crowd.orbitSpeed)
                 break
               }
             }
@@ -302,8 +305,8 @@ export const SteerEnemies = (() => {
       })
 
       // Leaving a charge drops the charge speed at once.
-      const velocity = clampLength(data.velocity.get(), Math.max(stats.speed, 1))
-      const steered = moveToward(velocity, desired, Math.max(stats.acceleration, 1) * dt)
+      const velocity = clampLength(data.velocity.get(), Math.max(speed, 1))
+      const steered = moveToward(velocity, desired, Math.max(spec.acceleration, 1) * dt)
       data.velocity.set({ x: steered.x + pushX * dt * 10, y: steered.y + pushY * dt * 10 })
     }
 

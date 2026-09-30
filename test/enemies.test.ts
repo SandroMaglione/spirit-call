@@ -4,7 +4,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Attacker, AttackPhase, Enemy, Game, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
+import { Attacker, AttackPhase, CombatStats, Enemy, Game, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { doubleTap, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -123,6 +123,22 @@ describe("telegraphed attacks", () => {
     const locked = direction()
     run.step(3)
     expect(direction()).toEqual(locked)
+  })
+})
+
+describe("enemy stats", () => {
+  it("walk at the speed in their stats, so what changes stats changes it", () => {
+    const run = duel("chaser", { x: 400, y: 0 })
+    const Slow = Game.System("Test/Slow", { queries: { enemies: Game.Query({ selection: { stats: Game.Query.write(CombatStats) }, with: [Enemy] }) } }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) data.stats.update((stats) => ({ ...stats, speed: stats.speed / 2 }))
+    })
+    run.runtime.tick(Game.Schedule(Slow))
+    run.step(40)
+    const before = run.world().enemies[0]!.position
+    run.step(10)
+    const after = run.world().enemies[0]!.position
+    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
+    expect(speed).toBeCloseTo(defaultTuning.enemies.chaser.speed / 2, 0)
   })
 })
 
