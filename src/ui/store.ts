@@ -10,17 +10,7 @@ import { Descriptor } from "@typeonce/bevy-ts"
 
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
-import type { BuildValue, FlowState } from "../schema.ts"
-
-/** How a run ended, for the results screen. */
-export interface RunResult {
-  readonly cleared: boolean
-  readonly challenge: ChallengeId
-  readonly wave: number
-  readonly kills: number
-  /** Seconds the run lasted. */
-  readonly time: number
-}
+import type { BuildValue, FlowState, RunResultValue } from "../schema.ts"
 
 export interface UiStore {
   readonly flow: Signal<FlowState>
@@ -31,8 +21,8 @@ export interface UiStore {
   /** The last build and challenge played: the menu starts from them. */
   readonly build: Signal<BuildValue>
   readonly challenge: Signal<ChallengeId>
-  /** Set while the results screen is up. */
-  readonly result: Signal<RunResult | null>
+  /** How the last run ended; `null` while one is going on (see `RunResult`). */
+  readonly result: Signal<RunResultValue | null>
 }
 
 export const createUiStore = (initial: { readonly tuning: Tuning; readonly build: BuildValue; readonly challenge: ChallengeId; readonly flow: FlowState }): UiStore => ({

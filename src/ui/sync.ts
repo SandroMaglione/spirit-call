@@ -5,7 +5,7 @@
  */
 import { batch } from "@preact/signals"
 
-import { Build, Challenge, Controls, Flow, Game, Run, Stats, Tuning, Waves } from "../schema.ts"
+import { Build, Challenge, Controls, Flow, Game, RunResult, Tuning } from "../schema.ts"
 import { UiStoreService } from "./store.ts"
 
 export const SyncUi = Game.System("Shooter/SyncUi", {
@@ -14,9 +14,7 @@ export const SyncUi = Game.System("Shooter/SyncUi", {
     build: Game.System.readResource(Build),
     challenge: Game.System.readResource(Challenge),
     controls: Game.System.readResource(Controls),
-    run: Game.System.readResource(Run),
-    stats: Game.System.readResource(Stats),
-    waves: Game.System.readResource(Waves)
+    result: Game.System.readResource(RunResult)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { store: Game.System.service(UiStoreService) }
@@ -29,18 +27,6 @@ export const SyncUi = Game.System("Shooter/SyncUi", {
     store.tuning.value = resources.tuning.get()
     store.build.value = resources.build.get()
     store.challenge.value = resources.challenge.get()
-    const over = flow === "GameOver" || flow === "Cleared"
-    if (!over) {
-      store.result.value = null
-    } else if (store.result.value === null) {
-      // Taken once as the results screen opens: the run is frozen from then on.
-      store.result.value = {
-        cleared: flow === "Cleared",
-        challenge: resources.challenge.get(),
-        wave: resources.waves.get().number,
-        kills: resources.stats.get().kills,
-        time: resources.run.get().time
-      }
-    }
+    store.result.value = resources.result.get()
   })
 })

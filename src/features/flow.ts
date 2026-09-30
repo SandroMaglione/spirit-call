@@ -3,7 +3,9 @@
  * the challenge (`Cleared`, see `CheckObjective`), a results screen, and a
  * restart that clears the run and starts over.
  */
-import { Death, Flow, Game, HitStop, Keys, Rng, Run, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
+import type { ChallengeId } from "../content/challenges.ts"
+import { Challenge, Death, Flow, Game, HitStop, Keys, Rng, Run, RunResult, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
+import type { RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
 import { initialWaves } from "./waves.ts"
 
 export const TrackRun = Game.System("Shooter/TrackRun", {
@@ -13,15 +15,32 @@ export const TrackRun = Game.System("Shooter/TrackRun", {
   resources.run.update((run) => ({ ...run, time: run.time + dt }))
 })
 
-/** The player's death ends the run. */
+/** How a run that ends now went. */
+export const runResultOf = (cleared: boolean, challenge: ChallengeId, run: RunValue, waves: WavesValue, stats: StatsValue): RunResultValue => ({
+  cleared,
+  challenge,
+  wave: waves.number,
+  kills: stats.kills,
+  time: run.time
+})
+
+/** The player's death ends the run, lost. */
 export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   events: { death: Game.System.readEvent(Death) },
-  resources: { run: Game.System.writeResource(Run), time: Game.System.readResource(Time) },
+  resources: {
+    run: Game.System.writeResource(Run),
+    result: Game.System.writeResource(RunResult),
+    challenge: Game.System.readResource(Challenge),
+    waves: Game.System.readResource(Waves),
+    stats: Game.System.readResource(Stats),
+    time: Game.System.readResource(Time)
+  },
   nextMachines: { flow: Game.System.nextState(Flow) }
 }, ({ events, resources, nextMachines }) => {
   if (!events.death.all().some((death) => death.faction === "player")) return
-  const now = resources.time.get().elapsed
-  resources.run.update((run) => ({ ...run, endedAt: now }))
+  const run = { ...resources.run.get(), endedAt: resources.time.get().elapsed }
+  resources.run.set(run)
+  resources.result.set(runResultOf(false, resources.challenge.get(), run, resources.waves.get(), resources.stats.get()))
   nextMachines.flow.set("GameOver")
 })
 
@@ -55,6 +74,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     waves: Game.System.writeResource(Waves),
     rng: Game.System.writeResource(Rng),
     run: Game.System.writeResource(Run),
+    result: Game.System.writeResource(RunResult),
     hitStop: Game.System.writeResource(HitStop)
   }
 }, ({ resources }) => {
@@ -63,6 +83,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.waves.set(initialWaves(tuning))
   resources.rng.set({ state: tuning.waves.seed })
   resources.run.set({ time: 0, endedAt: null })
+  resources.result.set(null)
   resources.hitStop.set({ remaining: 0 })
 })
 

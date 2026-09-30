@@ -448,7 +448,27 @@ export interface RunValue {
 }
 export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 
-export const Stats = Descriptor.Resource<{ readonly kills: number; readonly shots: number }>()("Shooter/Stats")
+/**
+ * How the last run ended, recorded by the game as it ends (see
+ * `DetectGameOver` and `CheckObjective`); `null` while a run is going on.
+ * The results screen shows it; rewards will be decided from it.
+ */
+export interface RunResultValue {
+  readonly cleared: boolean
+  readonly challenge: ChallengeId
+  /** The wave reached. */
+  readonly wave: number
+  readonly kills: number
+  /** Seconds the run lasted. */
+  readonly time: number
+}
+export const RunResult = Descriptor.Resource<RunResultValue | null>()("Shooter/RunResult")
+
+export interface StatsValue {
+  readonly kills: number
+  readonly shots: number
+}
+export const Stats = Descriptor.Resource<StatsValue>()("Shooter/Stats")
 
 // ── Services (host capabilities) ──────────────────────────────────────────
 
@@ -526,6 +546,7 @@ export const Game = Schema.bind(
       Waves,
       Rng,
       Run,
+      RunResult,
       HitStop
     },
     events: { Damage, Hit, Death, Impact, Explosion, Action, Cast, Heal }

@@ -4,7 +4,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Attacker, AttackPhase, CombatStats, Enemy, Game, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
+import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { doubleTap, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -149,6 +149,8 @@ describe("game over and restart", () => {
     const run = duel("chaser", { x: 150, y: 0 }, { tuning, keys: [{ frame: restartAt, press: ["restart"], release: ["restart"] }] })
     stepUntil(run, () => run.world().player === undefined)
     expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("GameOver")
+    const Result = Game.Inspector("Test/Result", { resources: { result: Game.System.readResource(RunResult) } }, ({ resources }) => resources.result.get())
+    expect(run.runtime.inspect(Result)).toMatchObject({ cleared: false })
 
     const frozen = run.world().enemies
     run.step(30)

@@ -4,7 +4,7 @@ import { defaultTuning, engine } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ChallengeSpec } from "../src/content/challenges.ts"
 import { clearWaves, survive } from "../src/content/challenges.ts"
-import { Enemy, Game, Invulnerable, Player, Waves } from "../src/schema.ts"
+import { Enemy, Game, Invulnerable, Player, RunResult, Waves } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
@@ -27,6 +27,7 @@ const Shield = Game.System("Test/Shield", { queries: { player: Game.Query({ sele
 })
 
 const WavesNow = Game.Inspector("Test/WavesNow", { resources: { waves: Game.System.readResource(Waves) } }, ({ resources }) => resources.waves.get())
+const ResultNow = Game.Inspector("Test/ResultNow", { resources: { result: Game.System.readResource(RunResult) } }, ({ resources }) => resources.result.get())
 
 /** The swarm challenge (replaced by the test's) with waves on. */
 const play = (tuning: Tuning, options: Pick<StartOptions, "keys"> = {}) => {
@@ -38,7 +39,7 @@ const play = (tuning: Tuning, options: Pick<StartOptions, "keys"> = {}) => {
       run.step()
     }
   }
-  return { ...run, flow, tick, waves: () => run.runtime.inspect(WavesNow) }
+  return { ...run, flow, tick, waves: () => run.runtime.inspect(WavesNow), result: () => run.runtime.inspect(ResultNow) }
 }
 
 describe("challenges", () => {
@@ -50,6 +51,8 @@ describe("challenges", () => {
     expect(run.flow()).toBe("Cleared")
     expect(run.waves().number).toBe(2)
     expect(run.waves().phase).toBe("complete")
+    // The game records how it went, for the results screen (and rewards).
+    expect(run.result()).toMatchObject({ cleared: true, challenge: "swarm", wave: 2 })
   })
 
   it("clear-waves: not cleared while enemies of the last wave are alive", () => {
@@ -76,5 +79,6 @@ describe("challenges", () => {
     run.tick(restartAt - steps(1), false)
     expect(run.flow()).toBe("Playing")
     expect(run.waves().number).toBe(0)
+    expect(run.result()).toBeNull()
   })
 })

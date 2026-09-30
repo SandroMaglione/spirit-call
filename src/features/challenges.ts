@@ -4,8 +4,9 @@
  * `DetectGameOver`). Training (waves off) has no objective.
  */
 import type { Objective } from "../content/challenges.ts"
-import { Challenge, Flow, Game, Run, Time, Tuning, Waves } from "../schema.ts"
+import { Challenge, Flow, Game, Run, RunResult, Stats, Time, Tuning, Waves } from "../schema.ts"
 import type { RunValue, WavesValue } from "../schema.ts"
+import { runResultOf } from "./flow.ts"
 
 /** The challenge id the game starts with. */
 export const defaultChallenge = "endless" as const
@@ -24,6 +25,8 @@ export const objectiveMet = (objective: Objective, waves: WavesValue, run: RunVa
 export const CheckObjective = Game.System("Shooter/CheckObjective", {
   resources: {
     run: Game.System.writeResource(Run),
+    result: Game.System.writeResource(RunResult),
+    stats: Game.System.readResource(Stats),
     waves: Game.System.readResource(Waves),
     challenge: Game.System.readResource(Challenge),
     tuning: Game.System.readResource(Tuning),
@@ -35,6 +38,8 @@ export const CheckObjective = Game.System("Shooter/CheckObjective", {
   const run = resources.run.get()
   if (!tuning.waves.enabled || run.endedAt !== null) return
   if (!objectiveMet(tuning.challenges[resources.challenge.get()].objective, resources.waves.get(), run)) return
-  resources.run.set({ ...run, endedAt: resources.time.get().elapsed })
+  const ended = { ...run, endedAt: resources.time.get().elapsed }
+  resources.run.set(ended)
+  resources.result.set(runResultOf(true, resources.challenge.get(), ended, resources.waves.get(), resources.stats.get()))
   nextMachines.flow.set("Cleared")
 })

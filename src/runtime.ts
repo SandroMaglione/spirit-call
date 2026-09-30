@@ -33,6 +33,7 @@ export const initialResources = (
   Waves: initialWaves(tuning),
   Rng: { state: tuning.waves.seed },
   Run: { time: 0, endedAt: null },
+  RunResult: null,
   HitStop: { remaining: 0 },
   Camera: { x: tuning.arena.width / 2, y: tuning.arena.height / 2, prevX: tuning.arena.width / 2, prevY: tuning.arena.height / 2 }
 })
