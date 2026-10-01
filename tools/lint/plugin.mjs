@@ -20,6 +20,8 @@ import path from "node:path"
  */
 const layers = [
   { name: "content", paths: ["src/content/"], parts: ["content"], packages: [] },
+  // Pixel art as data (palette, grids, frames): no rendering library, so scripts can draw it too.
+  { name: "art", paths: ["src/art/"], parts: ["art"], packages: [] },
   {
     name: "simulation",
     paths: ["src/features/", "src/physics/", "src/math/", "src/config/", "src/schema.ts", "src/schedules.ts", "src/simulation.ts", "src/runtime.ts"],
@@ -33,10 +35,10 @@ const layers = [
   {
     name: "presentation",
     paths: ["src/presentation/"],
-    parts: ["content", "simulation", "presentation", "ui", "dev"],
+    parts: ["content", "simulation", "presentation", "ui", "dev", "art"],
     packages: ["pixi.js", "@typeonce/bevy-ts", "@typeonce/bevy-ts-pixi", "@typeonce/bevy-ts-browser"]
   },
-  { name: "dev", paths: ["src/dev/"], parts: ["content", "simulation", "dev"], packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-devtools", "@typeonce/bevy-ts-pixi", "pixi.js"] },
+  { name: "dev", paths: ["src/dev/"], parts: ["content", "simulation", "dev", "art"], packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-devtools", "@typeonce/bevy-ts-pixi", "pixi.js"] },
   { name: "entry", paths: ["src/main.ts"], parts: "*", packages: "*" }
 ]
 

@@ -12,7 +12,9 @@
     "lint": "oxlint src test tools/lint/plugin.mjs",
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
-    "debug": "node --import tsx scripts/debug.ts"
+    "debug": "node --import tsx scripts/debug.ts",
+    "shot": "node --import tsx scripts/screenshot.ts",
+    "art:sheet": "node --import tsx scripts/art-sheet.ts"
   },
   "dependencies": {
     "@effect/platform-browser": "4.0.0-rc.118",
