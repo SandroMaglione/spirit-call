@@ -74,7 +74,8 @@ It is a personal project, not a commercial one.
 ## Platform and controls
 
 - **Phone first.** The touch controls (a stick on the left; attack, special,
-  dash, and ultimate buttons on the right) are the reference; keyboard and
+  dash, and ultimate buttons on the right, the team's switch buttons above
+  them) are the reference; keyboard and
   mouse are supported too. A mechanic that does not fit the touch layout
   needs a very good reason.
 - Runs are around four minutes; menus and preparation should be quick on a
@@ -116,8 +117,27 @@ The rules are in `docs/elements.md`; in short:
 
 - **Three characters, switching** between them during a fight; one is on the
   field at a time. Each brings her own effects, so a team mixes them (for
-  example one applies an element, another heals).
-- No entrance attack when switching in, for now.
+  example one applies an element, another heals). A team can be smaller
+  (an early account owns only one or two characters).
+- **Switching is immediate**, with a short wait between switches (a
+  second), and gives no protection: dodging is the dash's job. One button
+  per character, stacked on the right above the other buttons on touch;
+  1, 2, 3 on the keyboard. No entrance attack, for now.
+- A switch **interrupts** what the character was doing (an attack, a combo,
+  a charge); not possible mid-dash. What she already released finishes on
+  its own (a grenade lands, a disc keeps cutting); a disc on its way back
+  disappears if its thrower is no longer on the field.
+- The incoming character appears where the last one stood, facing the same
+  way, with none of her push.
+- **Each character keeps her own** health, skill cooldowns, ultimate
+  energy, and state (see `docs/elements.md`). Cooldowns run on the bench;
+  benched characters gain a share of the energy the one on the field earns.
+  A weapon's effects work only while its character is on the field.
+- **Falling.** When the character on the field falls, the next one in order
+  comes in, with a moment of protection (she did not choose the moment). The
+  run is lost when the whole team has fallen. Reviving is for later.
+- **One team is saved**, set up in the menu (its order is the 1, 2, 3 and
+  who starts); several saved teams may come later.
 
 ## Structure
 
@@ -163,8 +183,10 @@ Decided so far (the rest is in the open questions):
   quests one after another; it is about progress, not power, so it never
   checks the characters' levels (a skilled player can enter with a
   low-level team). Each **character has her own level**, which gives stats.
-- **Characters grow two ways:** experience from fighting with them, and
-  resources spent on them (which lets a new or benched character catch up).
+- **Characters grow by resources spent on them**, not by fighting with
+  them (as in Genshin): nobody falls behind for sitting on the bench, and a
+  new character catches up the same way. Playing earns the resources, and
+  account experience.
 - **The stat band is to be set later**: roughly 4x between level 1 and the
   maximum sounds right, to confirm once there is content to measure it on.
 - **Growth stays simple:** character levels and **weapon levels**. A closed
@@ -209,7 +231,6 @@ Decided directions are above; these are not decided yet.
    specific thing directly), the exact duplicate rewards, the formats of
    secondary quests, and how pulls stay meaningful once a player owns most
    things.
-2. **Team rules.** How switching works on the touch controls, whether health
-   is per character, what happens when one falls, and how off-field
-   characters contribute (if at all).
-3. **Element details**: the open questions at the end of `docs/elements.md`.
+2. **Element details**: the open questions at the end of `docs/elements.md`.
+3. **Team details**, for later: reviving a fallen character, several saved
+   teams, and whether off-field characters contribute more than energy.
