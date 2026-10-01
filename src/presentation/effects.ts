@@ -7,7 +7,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Body, Death, ElementState, Enemy, Explosion, Game, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
+import { Action, Body, Death, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { RenderHostValue } from "./host-types.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
@@ -101,7 +101,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)
     const nova = explosion.kind === "nova" && explosion.heavy
-    const color = nova ? view.ultimate : view.playerArea
+    const color = nova ? view.ultimate : explosion.element === null ? view.playerArea : view.elements[explosion.element]
     fx.ring(at, explosion.radius * projection.zoom, color, nova ? 0.45 : 0.3)
     fx.burst({ x: at.x, y: at.y - 10 }, { color, count: nova ? 48 : 26, speed: nova ? 620 : 380, size: 6, life: 0.5 })
     fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })
@@ -151,12 +151,13 @@ const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind): void => {
   }
 }
 
-/** Motes off bodies in a state: embers rising off burning ones, drops falling off soaked ones. */
+/** Motes off bodies in a state (embers rising off burning ones, drops falling off soaked ones), and embers off fire pools. */
 export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
   queries: {
     bodies: Game.Query({
       selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body), state: Game.Query.read(ElementState) }
-    })
+    }),
+    pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } })
   },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ queries, services }) => {
@@ -169,6 +170,15 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
     const from = { x: at.x + (Math.random() - 0.5) * r * 1.6, y: at.y - Math.random() * r * view.bodyHeightFactor }
     if (state.id === "burning") services.host.fx.mote(from, (Math.random() - 0.5) * 30, -60 - Math.random() * 50, { color: view.states.burning, size: 3 + Math.random() * 2, life: 0.5, gravity: -80, drag: 1 })
     else services.host.fx.mote(from, (Math.random() - 0.5) * 16, 10, { color: view.states.soaked, size: 2.5, life: 0.45, gravity: 520, drag: 0.5 })
+  }
+  for (const { data } of queries.pools.each()) {
+    const pool = data.ground.get()
+    // More embers off a bigger fire.
+    if (pool.element !== "fire" || Math.random() >= chance * (pool.radius / 40)) continue
+    const angle = Math.random() * Math.PI * 2
+    const distance = Math.sqrt(Math.random()) * pool.radius
+    const from = toScreen(projection, { x: pool.center.x + Math.cos(angle) * distance, y: pool.center.y + Math.sin(angle) * distance })
+    services.host.fx.mote(from, (Math.random() - 0.5) * 20, -50 - Math.random() * 60, { color: view.states.burning, size: 3 + Math.random() * 3, life: 0.6, gravity: -60, drag: 1 })
   }
 })
 

@@ -153,6 +153,23 @@ export interface ActiveState {
 /** The state a body is in, if any: one at a time, since water and fire cancel each other. */
 export const ElementState = Descriptor.Component<{ readonly current: ActiveState | null }>()("Shooter/ElementState")
 
+/**
+ * An element left on the ground (a fire pool, a puddle), a circle of
+ * `radius` around `center`: everyone standing in it takes it, whichever side
+ * left it (see `features/ground.ts`). Its burns come from `atk`; `charges`:
+ * left by the player, so they fill energy.
+ */
+export interface GroundValue {
+  readonly element: ElementId
+  readonly center: Vec2
+  readonly radius: number
+  readonly remaining: number
+  readonly duration: number
+  readonly atk: number
+  readonly charges: boolean
+}
+export const Ground = Descriptor.Component<GroundValue>()("Shooter/Ground")
+
 /** The passives of what an entity has equipped (see `content/passives.ts`). */
 export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives")
 
@@ -336,6 +353,8 @@ export const Explosion = Descriptor.Event<{
   readonly kind: "blast" | "nova"
   /** A heavy one (the Nova) gets the big effects; a light one (a weapon's shockwave) a smaller ring. */
   readonly heavy: boolean
+  /** Its element, if any, for its color and sound. */
+  readonly element: ElementId | null
 }>()("Shooter/Explosion")
 
 /** Health restored to an entity at `at` (a weapon's passive), for effects. */
@@ -571,6 +590,7 @@ export const Game = Schema.bind(
       Skills,
       Energy,
       ElementState,
+      Ground,
       Lobbed,
       Health,
       Hurtbox,

@@ -16,6 +16,7 @@ import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { TickStates } from "./features/elements.ts"
+import { UpdateGround } from "./features/ground.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
@@ -86,6 +87,7 @@ const gameplay = Game.Schedule.when(
   DecayKnockback,
   MoveProjectiles,
   ResolveHitboxes,
+  UpdateGround,
   TickStates,
   ApplyDamage,
   ProcessPendingSpawns,

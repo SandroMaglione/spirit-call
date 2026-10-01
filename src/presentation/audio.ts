@@ -76,6 +76,8 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }
-  // The Nova's deep boom; lighter blasts (a grenade, a weapon's shockwave) a shorter one.
-  for (const explosion of events.explosion.all()) sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : "boom", { pan: pan(explosion.at) })
+  // The Nova's deep boom; lighter blasts (a grenade, a weapon's shockwave) a shorter one; water bursts with a splash.
+  for (const explosion of events.explosion.all()) {
+    sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : explosion.element === "water" ? "splash" : "boom", { pan: pan(explosion.at) })
+  }
 })

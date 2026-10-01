@@ -4,9 +4,10 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { afflict, elementDamageFactor, stateSpeed } from "../src/features/elements.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
+import { makeGround } from "../src/features/ground.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { ElementState, Enemy, Energy, Game, Health, Invulnerable, Player, Position, RunScope } from "../src/schema.ts"
+import { ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Player, Position, RunScope } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { ClearEnemies, grenadier, start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -25,11 +26,13 @@ const World = Game.Inspector("Test/Elements", {
     player: Game.Query({
       selection: { health: Game.Query.read(Health), state: Game.Query.read(ElementState), energy: Game.Query.read(Energy), invulnerable: Game.Query.read(Invulnerable) },
       with: [Player]
-    })
+    }),
+    pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } })
   }
 }, ({ queries }) => {
   const [player] = queries.player.each()
   return {
+    pools: queries.pools.each().map(({ data }) => data.ground.get()),
     enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current, state: data.state.get().current })),
     player: {
       health: player!.data.health.get().current,
@@ -63,7 +66,16 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
     })
     run.runtime.tick(Game.Schedule(Put))
   }
-  return { ...run, world: () => run.runtime.inspect(World), putIn }
+  /** Leaves pools of `element` at offsets from the player. */
+  const pour = (pools: ReadonlyArray<{ readonly element: "fire" | "water"; readonly at: Vec2; readonly radius?: number; readonly seconds?: number }>) => {
+    const Pour = Game.System("Test/Pour", {}, ({ commands }) => {
+      for (const pool of pools) {
+        commands.spawnIn(RunScope, makeGround({ element: pool.element, radius: pool.radius ?? 80, seconds: pool.seconds ?? 5 }, { x: center.x + pool.at.x, y: center.y + pool.at.y }, 100, true))
+      }
+    })
+    run.runtime.tick(Game.Schedule(Pour, Game.Schedule.applyDeferred()))
+  }
+  return { ...run, world: () => run.runtime.inspect(World), putIn, pour }
 }
 
 const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
@@ -106,7 +118,9 @@ describe("afflict", () => {
 
 describe("the grenade's fire", () => {
   it("sets what it hits burning; the burn ticks down and wears off", () => {
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
+    // Without its fire pool, which would keep the dummy burning.
+    const noPool = tuningWith({ skills: { grenade: { effect: { leaves: null } } } })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)], tuning: noPool })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const hit = tuning.enemies.dummy.hp - (atk * grenade.power) / 100
     const [dummy] = run.world().enemies
@@ -186,5 +200,56 @@ describe("soaked", () => {
     run.putIn(burning(6, 10))
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     expect(run.world().enemies[0]!.state?.id).toBe("soaked")
+  })
+})
+
+describe("ground", () => {
+  it("the grenade leaves a fire pool where it explodes, which runs out", () => {
+    const run = range([], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
+    run.step(steps(grenade.flightTime + grenade.fuse) + 4)
+    const [pool] = run.world().pools
+    expect(pool!.element).toBe("fire")
+    // Where the cursor points (within the camera's lead).
+    expect(Math.abs(pool!.center.x - center.x - 200)).toBeLessThan(30)
+    expect(pool!.radius).toBe(grenade.leaves!.radius)
+    run.step(steps(grenade.leaves!.seconds))
+    expect(run.world().pools).toEqual([])
+  })
+
+  it("burns everyone standing in a fire pool, the player who left it too", () => {
+    const run = range([{ x: 300, y: 0 }], { x: 300, y: 0 })
+    run.pour([{ element: "fire", at: { x: 0, y: 0 } }, { element: "fire", at: { x: 300, y: 0 } }])
+    run.step(steps(1))
+    const world = run.world()
+    expect(world.player.state?.id).toBe("burning")
+    expect(world.player.health).toBeLessThan(tuning.characters.swordsman.stats.hp)
+    expect(world.enemies[0]!.state?.id).toBe("burning")
+  })
+
+  it("leaves a body that is invulnerable (dashing) alone", () => {
+    const run = range([], { x: 300, y: 0 })
+    const Shield = Game.System("Test/Invulnerable", { queries: { player: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) }, with: [Player] }) } }, ({ queries }) => {
+      for (const { data } of queries.player.each()) data.invulnerable.set({ remaining: 1 })
+    })
+    run.runtime.tick(Game.Schedule(Shield))
+    run.pour([{ element: "fire", at: { x: 0, y: 0 } }])
+    run.step(10)
+    expect(run.world().player.state).toBeNull()
+  })
+
+  it("soaks and slows everyone standing in a puddle, putting a burning one out", () => {
+    const run = range([], { x: 300, y: 0 })
+    run.putIn(burning(6, 10), "player")
+    run.pour([{ element: "water", at: { x: 0, y: 0 } }])
+    run.step(2)
+    expect(run.world().player.state?.id).toBe("soaked")
+  })
+
+  it("water puts out the fire pools it touches", () => {
+    const run = range([], { x: 300, y: 0 })
+    run.pour([{ element: "fire", at: { x: 400, y: 0 } }, { element: "water", at: { x: 520, y: 0 }, radius: 60 }, { element: "fire", at: { x: -400, y: 0 } }])
+    run.step(2)
+    expect(run.world().pools.map((pool) => pool.element).sort()).toEqual(["fire", "water"])
+    expect(run.world().pools.find((pool) => pool.element === "fire")!.center.x - center.x).toBeCloseTo(-400, 6)
   })
 })

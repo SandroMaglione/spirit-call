@@ -114,6 +114,25 @@ export const skills = {
       leaves: { element: "fire", radius: 80, seconds: 3 }
     })
   }),
+  /** A burst of water lobbed to the cursor: it soaks what it hits and leaves a puddle that slows anyone in it. */
+  splash: skill({
+    name: "Splash",
+    label: "SPLASH",
+    cooldown: 4,
+    energy: 0,
+    effect: lob({
+      maxRange: 340,
+      flightTime: 0.25,
+      fuse: 0.08,
+      radius: 100,
+      power: 24,
+      element: "water",
+      knockback: 260,
+      hitStop: 0,
+      heavy: false,
+      leaves: { element: "water", radius: 115, seconds: 5 }
+    })
+  }),
   /** A large blast around the player, powered by energy from dealing damage. */
   nova: skill({
     name: "Nova",

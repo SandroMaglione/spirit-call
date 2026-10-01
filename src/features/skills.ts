@@ -41,6 +41,7 @@ import {
 } from "../schema.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
+import { makeGround } from "./ground.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const initialSkills = (build: { readonly skills: { readonly [Slot in SkillSlot]: SkillId } }): SkillsValue =>
@@ -186,7 +187,7 @@ export const CastLobs = Game.System("Shooter/CastLobs", {
   }
 })
 
-/** Lobbed skills fly to their target, sit out the fuse, then explode into a circular hitbox. */
+/** Lobbed skills fly to their target, sit out the fuse, then explode into a circular hitbox, leaving their pool, if any. */
 export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
   queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.write(Lobbed) } }) },
   resources: { time: Game.System.readResource(Time) },
@@ -209,7 +210,8 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
       remaining: 0.05,
       hit: []
     }]))
-    events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast", heavy: effect.heavy })
+    if (effect.leaves !== null) commands.spawnIn(RunScope, makeGround(effect.leaves, lobbed.to, lobbed.blow.element?.atk ?? 0, lobbed.faction === "player"))
+    events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast", heavy: effect.heavy, element: effect.element })
   }
 })
 
@@ -238,7 +240,7 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
       remaining: effect.active,
       hit: []
     }]))
-    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy })
+    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element })
     if (!effect.clearsProjectiles) continue
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()

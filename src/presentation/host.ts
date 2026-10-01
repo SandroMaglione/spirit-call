@@ -19,6 +19,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <div class="hud__vignette" data-vignette></div>
     <div class="hud__panel">
       <div class="hud__health"><div class="hud__health-fill" data-health></div><span data-health-text></span></div>
+      <div class="hud__state" data-state hidden></div>
       <div class="hud__dash" data-dash></div>
       <div class="hud__wave" data-wave></div>
       <div class="hud__combat" data-combat></div>
@@ -59,6 +60,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       },
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
+      state: root.querySelector<HTMLElement>("[data-state]")!,
       dash: root.querySelector<HTMLElement>("[data-dash]")!,
       wave: root.querySelector<HTMLElement>("[data-wave]")!,
       combat: root.querySelector<HTMLElement>("[data-combat]")!,
