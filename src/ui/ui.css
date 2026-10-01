@@ -393,6 +393,50 @@ body:has(.menu) .btm-toggle {
   color: #7ee08a;
 }
 
+/* An enemy of the selected quest: information, not a choice. */
+.card--info {
+  cursor: default;
+}
+
+.card--info:hover {
+  border-color: #30363d;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* An enemy's affinity for an element, in the element's color: solid when weak, outlined when it resists, struck when immune. */
+.chip {
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.chip--fire { color: #ff7b2e; }
+.chip--water { color: #4aa8ff; }
+.chip--wind { color: #c9fff1; }
+
+.chip--weak.chip--fire { background: #ff7b2e; color: #0d1117; border-color: #ff7b2e; }
+.chip--weak.chip--water { background: #4aa8ff; color: #0d1117; border-color: #4aa8ff; }
+.chip--weak.chip--wind { background: #c9fff1; color: #0d1117; border-color: #c9fff1; }
+
+.chip--immune {
+  opacity: 0.75;
+  text-decoration: line-through;
+}
+
+.menu__note {
+  align-self: center;
+  font-size: 12px;
+  color: #7d8590;
+}
+
 /* Why a locked quest is not open yet. */
 .card__why {
   font-size: 11px;

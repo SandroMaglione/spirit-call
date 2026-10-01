@@ -25,6 +25,14 @@ describe("content", () => {
       "challenge endless: clearing every wave can never happen with endless waves"
     ])
   })
+  it("reports enemies that would make an element required", () => {
+    const broken: Tuning = {
+      ...defaultTuning,
+      enemies: { ...defaultTuning.enemies, brute: { ...defaultTuning.enemies.brute, elements: { wind: "immune", fire: "immune" } } }
+    }
+    expect(validateContent(broken)).toEqual(["enemy brute: immune to more than one element"])
+  })
+
   it("reports hardcore tiers that do not get harder or refer to nothing", () => {
     const gauntlet = defaultTuning.tracks.gauntlet
     const broken: Tuning = {

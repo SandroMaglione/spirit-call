@@ -45,7 +45,7 @@ import {
 import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
-import { afflict, elementDamageFactor } from "./elements.ts"
+import { affinityOf, afflict, durationFactor, elementDamageFactor } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { damageBonusPercent, PassiveHolders } from "./passives.ts"
 
@@ -259,13 +259,14 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
     const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, health) : 0
     const state = data.state.get().current
-    const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state)
+    const enemy = data.enemy.present ? data.enemy.get().kind : undefined
+    const affinity = blow.element === null ? undefined : affinityOf(tuning, enemy, blow.element.id)
+    const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state, affinity)
     const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor, data.stats.get().def)
     const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.
     if (blow.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
-    const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     if (!blow.periodic) {
       data.flash.set({ remaining: tuning.feedback.hitFlash })
       // One mistake costs one hit: the player is briefly untouchable afterwards.
@@ -295,11 +296,12 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     })
     // The blow's element takes hold of a body that survives it (a burn only burns); wind drives it.
     if (!killed && blow.element !== null && !blow.periodic) {
-      const afflicted = afflict(tuning, state, blow.element, blow.charges)
+      const afflicted = afflict(tuning, state, blow.element, blow.charges, affinity)
       data.state.set({ current: afflicted.state })
       if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction })
-      const windable = blow.element.id === "wind" ? lookup.getHandle(Game.Entity.handle(entity.id, Gust), Windable) : undefined
-      if (windable?.ok === true) windable.value.data.gust.set({ remaining: tuning.elements.wind.seconds })
+      const gust = blow.element.id === "wind" ? tuning.elements.wind.seconds * durationFactor(tuning, affinity) : 0
+      const windable = gust > 0 ? lookup.getHandle(Game.Entity.handle(entity.id, Gust), Windable) : undefined
+      if (windable?.ok === true) windable.value.data.gust.set({ remaining: gust })
     }
     if (!killed) continue
 

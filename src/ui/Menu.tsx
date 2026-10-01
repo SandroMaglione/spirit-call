@@ -1,8 +1,9 @@
 /**
  * The menu: pick what to play (a quest: the main line by chapter, then the
- * secondary quests; or a hardcore tier) and a character, equip it (a weapon
- * of its type and a skill per slot), then enter the arena (the button, or
- * Enter). What the account does not own, and what is not open yet, are
+ * secondary quests; or a hardcore tier), see the enemies it holds and how
+ * each takes the elements, and a character (with her element), equip it (a
+ * weapon of its type and a skill per slot), then enter the arena (the
+ * button, or Enter). What the account does not own, and what is not open yet, are
  * shown locked (a quest or tier says why). Equipment is saved on the
  * character at once; what was played and the character are remembered on
  * entering. Starts from the account's last selection.
@@ -15,6 +16,8 @@ import { buildOf, characterLevel, encounterOf, equipmentOf, nextReset, owns, pla
 import type { Item, Play } from "../account/account.ts"
 import type { TierRewards, TrackId } from "../content/hardcore.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
+import { elements } from "../content/elements.ts"
+import type { EnemyKind } from "../content/enemies.ts"
 import type { QuestId } from "../content/quests.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
@@ -24,6 +27,9 @@ import { AccountBar } from "./AccountBar.tsx"
 import { CharacterLevel } from "./CharacterLevel.tsx"
 import { WeaponLevel } from "./WeaponLevel.tsx"
 import {
+  affinityList,
+  affinityNames,
+  challengeEnemies,
   describeAmounts,
   describeBonus,
   describeLock,
@@ -86,6 +92,24 @@ const StatLine = ({ stats }: { readonly stats: Stats }) => (
   </span>
 )
 
+/** An enemy the selected quest holds: what it does, and how it takes each element. */
+const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKind }) => {
+  const spec = store.tuning.value.enemies[kind]
+  return (
+    <div class="card card--info">
+      <span class="card__title">{spec.name}</span>
+      <span class="card__text">{spec.description}</span>
+      <span class="chips">
+        {affinityList(spec.elements).map(({ element, affinity }) => (
+          <span key={element} class={`chip chip--${element} chip--${affinity}`}>
+            {affinityNames[affinity]} {elements[element].name}
+          </span>
+        ))}
+      </span>
+    </div>
+  )
+}
+
 export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const tuning = store.tuning.value
   const account = store.account.value
@@ -132,6 +156,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     )
   }
   const questIds = ids(tuning.quests)
+  const selectedChallenge = tuning.challenges[encounterOf(tuning, play.value).challenge]
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -167,14 +192,19 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
             {tuning.tracks[track].tiers.map((spec, index) => tierCard(track, index + 1, spec.rewards))}
           </Section>
         ))}
+        <Section title={`Enemies · ${describePlay(tuning, play.value)}`}>
+          {challengeEnemies(selectedChallenge).map((kind) => <Foe key={kind} store={store} kind={kind} />)}
+          {selectedChallenge.waves.endless !== null && <span class="menu__note">…then ever-growing random waves</span>}
+        </Section>
         <Section title="Character">
           {ids(tuning.characters).map((id) => {
             const spec = tuning.characters[id]
             const level = characterLevel(tuning, account, id).level
+            const element = tuning.skills[spec.skills.special].effect.element
             return (
               <Card key={id} selected={id === character.value} locked={locked({ kind: "character", id })} onSelect={() => (character.value = id)} title={spec.name}>
                 <span class="card__tag">
-                  {spec.weaponType} · Lv {level}
+                  {spec.weaponType}{element === null ? "" : ` · ${elements[element].name}`} · Lv {level}
                 </span>
                 <StatLine stats={statsAtLevel(tuning, spec.stats, level)} />
               </Card>

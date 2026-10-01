@@ -3,12 +3,15 @@
  * must point at existing entries (the tuning panel can edit content live),
  * combos with at least one move, weapons that fit their character,
  * challenges that can be won, quests that can be reached, hardcore tiers
- * that get harder, level curves that rise, and a new account that can play.
+ * that get harder, level curves that rise, a new account that can play, and
+ * enemies that every team can answer (no element is ever required: an
+ * enemy is immune to one element at most).
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
+import { elements } from "./elements.ts"
 import type { AttackMove } from "./attacks.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { LevelCurve } from "./progression.ts"
@@ -29,12 +32,17 @@ const checkMove = (problems: Array<string>, where: string, move: AttackMove): vo
 }
 
 const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect): void => {
+  if (effect.element !== null && !has(elements, effect.element)) problems.push(`${where}: unknown element ${effect.element}`)
   switch (effect.kind) {
     case "cut":
       positive(problems, where, { length: effect.length, width: effect.width, active: effect.active })
       return
     case "lob":
       positive(problems, where, { maxRange: effect.maxRange, radius: effect.radius })
+      if (effect.leaves !== null) {
+        positive(problems, `${where} pool`, { radius: effect.leaves.radius, seconds: effect.leaves.seconds })
+        if (!has(elements, effect.leaves.element)) problems.push(`${where}: leaves unknown element ${effect.leaves.element}`)
+      }
       return
     case "nova":
       positive(problems, where, { radius: effect.radius, active: effect.active })
@@ -120,8 +128,16 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
   }
 
+  const affinities = new Set(["weak", "resists", "immune"])
   for (const [id, enemy] of Object.entries(tuning.enemies)) {
     positive(problems, `enemy ${id}`, { hp: enemy.hp, radius: enemy.radius, hurtboxRadius: enemy.hurtboxRadius, group: enemy.group })
+    const traits = Object.entries(enemy.elements)
+    for (const [element, affinity] of traits) {
+      if (!has(elements, element)) problems.push(`enemy ${id}: unknown element ${element}`)
+      if (affinity === undefined || !affinities.has(affinity)) problems.push(`enemy ${id}: ${element} must be weak, resists, or immune (is ${affinity})`)
+    }
+    // Every enemy has at least two answers, so no element (no character) is required against it.
+    if (traits.filter(([, affinity]) => affinity === "immune").length > 1) problems.push(`enemy ${id}: immune to more than one element`)
   }
 
   const cheapest = Math.min(...Object.values(tuning.enemies).map((enemy) => enemy.cost).filter((cost) => cost > 0))

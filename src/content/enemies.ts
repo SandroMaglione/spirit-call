@@ -1,9 +1,11 @@
 /**
  * Enemies: what each kind is made of (health, body, movement, behavior,
- * attack, an optional shield) and its `cost` in a wave's budget (0: never in
- * random waves). Numbers are live-tunable: they are part of the `Tuning`
- * resource.
+ * attack, an optional shield), how it takes each element (`elements`: weak,
+ * resists, or immune; see docs/elements.md), and its `cost` in a wave's
+ * budget (0: never in random waves). Numbers are live-tunable: they are part
+ * of the `Tuning` resource.
  */
+import type { Affinity, ElementId } from "./elements.ts"
 
 // ── Attack and behavior shapes ────────────────────────────────────────────
 //
@@ -107,6 +109,10 @@ const volley = (spec: Omit<VolleyAttack, "kind">): AttackSpec | null => ({ kind:
 const slam = (spec: Omit<SlamAttack, "kind">): AttackSpec | null => ({ kind: "slam", ...spec })
 const charge = (spec: Omit<ChargeAttack, "kind">): AttackSpec | null => ({ kind: "charge", ...spec })
 const beam = (spec: Omit<BeamAttack, "kind">): AttackSpec | null => ({ kind: "beam", ...spec })
+/** How an enemy takes each element; missing: as it is. */
+export type Affinities = { readonly [Element in ElementId]?: Affinity }
+
+const affinities = (spec: Affinities): Affinities => spec
 const noShield = (): ShieldSpec | null => null
 const shield = (spec: ShieldSpec): ShieldSpec | null => spec
 /** Every enemy's `attack` is nullable, so tuning (or a test) can switch it off. */
@@ -120,6 +126,12 @@ const skirmish = (spec: { stopDistance: number; orbit: number; retreatSeconds: n
 /** Every enemy kind. */
 export const enemies = {
   dummy: {
+    /** Shown in menus. */
+    name: "Training Dummy",
+    /** What it does, in a few words, for the quest's enemy list. */
+    description: "Stands still and takes hits.",
+    /** How it takes each element (see docs/elements.md). */
+    elements: affinities({}),
     hp: 60,
     /** Its attacks deal their `power` as a percentage of this. */
     atk: 100,
@@ -145,6 +157,9 @@ export const enemies = {
   },
   /** Runs at you and swipes in a cone. */
   chaser: {
+    name: "Chaser",
+    description: "Runs at you and swipes.",
+    elements: affinities({ water: "weak" }),
     hp: 40,
     atk: 100,
     def: 0,
@@ -162,6 +177,9 @@ export const enemies = {
   },
   /** Keeps its distance and shoots aimed bolts. */
   shooter: {
+    name: "Shooter",
+    description: "Keeps its distance and shoots.",
+    elements: affinities({ wind: "weak" }),
     hp: 28,
     atk: 100,
     def: 0,
@@ -182,6 +200,9 @@ export const enemies = {
   },
   /** Slow and heavy; slams a large circle where you stood. */
   brute: {
+    name: "Brute",
+    description: "Slow and heavy; slams where you stood.",
+    elements: affinities({ wind: "immune", water: "weak" }),
     hp: 150,
     atk: 100,
     def: 0,
@@ -199,6 +220,9 @@ export const enemies = {
   },
   /** Tiny, fast, fragile; comes in packs. */
   swarmer: {
+    name: "Swarmer",
+    description: "Tiny and fast; comes in packs.",
+    elements: affinities({ fire: "weak" }),
     hp: 12,
     atk: 100,
     def: 0,
@@ -216,6 +240,9 @@ export const enemies = {
   },
   /** Keeps mid-range, telegraphs a lane, then charges down it. Open to punishment afterwards. */
   charger: {
+    name: "Charger",
+    description: "Charges down a lane it telegraphs.",
+    elements: affinities({ water: "weak" }),
     hp: 70,
     atk: 100,
     def: 0,
@@ -233,6 +260,9 @@ export const enemies = {
   },
   /** Stays far away; paints a tracking beam that locks, then fires instantly. Walls stop it. */
   sniper: {
+    name: "Sniper",
+    description: "Locks a beam on you from afar.",
+    elements: affinities({ wind: "weak" }),
     hp: 32,
     atk: 100,
     def: 0,
@@ -250,6 +280,9 @@ export const enemies = {
   },
   /** A frontal shield blocks all projectiles; flank it or use the grenade and ultimate. */
   guardian: {
+    name: "Guardian",
+    description: "Its shield blocks shots from the front.",
+    elements: affinities({ fire: "weak", wind: "resists" }),
     hp: 90,
     atk: 100,
     def: 0,

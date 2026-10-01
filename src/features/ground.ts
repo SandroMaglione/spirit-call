@@ -8,8 +8,8 @@
  */
 import type { GroundSpec } from "../content/elements.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { ElementState, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"
-import { afflict } from "./elements.ts"
+import { ElementState, Enemy, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"
+import { affinityOf, afflict } from "./elements.ts"
 
 /** A pool of `spec`'s element around `center`, its burns from `atk`; `charges`: left by the player. */
 export const makeGround = (spec: GroundSpec, center: Vec2, atk: number, charges: boolean) =>
@@ -33,7 +33,8 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
         position: Game.Query.read(Position),
         hurtbox: Game.Query.read(Hurtbox),
         invulnerable: Game.Query.read(Invulnerable),
-        state: Game.Query.write(ElementState)
+        state: Game.Query.write(ElementState),
+        enemy: Game.Query.optional(Enemy)
       },
       with: [Health]
     })
@@ -79,7 +80,8 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
       const ground = pool.data.ground.get()
       if (!inPool(ground, at, radius)) continue
       const before = data.state.get().current
-      const afflicted = afflict(tuning, before, { id: ground.element, atk: ground.atk }, ground.charges)
+      const affinity = affinityOf(tuning, data.enemy.present ? data.enemy.get().kind : undefined, ground.element)
+      const afflicted = afflict(tuning, before, { id: ground.element, atk: ground.atk }, ground.charges, affinity)
       data.state.set({ current: afflicted.state })
       if (afflicted.reaction !== null && afflicted.state?.id !== before?.id) events.reaction.emit({ at, kind: afflicted.reaction })
     }

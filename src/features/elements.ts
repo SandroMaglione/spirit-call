@@ -7,11 +7,15 @@
  * one state at most. `TickStates` runs the states down: burning bodies take
  * a burn every tick (damage from no side, so it hurts anyone, the player
  * included) and set the bodies they touch burning too.
+ *
+ * An enemy kind's affinity for an element (see `content/enemies.ts`) scales
+ * its damage and how long its effect lasts; an immune enemy takes the damage
+ * but not the effect.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { Affinity, ElementId } from "../content/elements.ts"
-import { blow, Body, Damage, ElementState, Game, Health, Position, Reaction, Time, Tuning } from "../schema.ts"
-import type { ActiveState, ElementHit, ReactionKind } from "../schema.ts"
+import { blow, Body, Damage, ElementState, Enemy, Game, Health, Position, Reaction, Time, Tuning } from "../schema.ts"
+import type { ActiveState, ElementHit, EnemyKind, ReactionKind } from "../schema.ts"
 
 /** What an element does to a body: its new state, and the reaction to show, if any. */
 export interface Afflicted {
@@ -19,8 +23,12 @@ export interface Afflicted {
   readonly reaction: ReactionKind | null
 }
 
+/** How a body takes `element`: an enemy by its kind's affinity; the player as it is. */
+export const affinityOf = (tuning: TuningValue, enemy: EnemyKind | undefined, element: ElementId): Affinity | undefined =>
+  enemy === undefined ? undefined : tuning.enemies[enemy].elements[element]
+
 /** How long an element's effect lasts on a body of `affinity` (as a factor; 0: immune). */
-const durationFactor = (tuning: TuningValue, affinity: Affinity | undefined): number =>
+export const durationFactor = (tuning: TuningValue, affinity: Affinity | undefined): number =>
   affinity === undefined ? 1 : tuning.elements.affinity[affinity].duration
 
 /**
@@ -81,7 +89,7 @@ export const stateSpeed = (tuning: TuningValue, state: { readonly current: Activ
 export const TickStates = Game.System("Shooter/TickStates", {
   queries: {
     bodies: Game.Query({
-      selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), state: Game.Query.write(ElementState) },
+      selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), state: Game.Query.write(ElementState), enemy: Game.Query.optional(Enemy) },
       with: [Health]
     })
   },
@@ -120,10 +128,11 @@ export const TickStates = Game.System("Shooter/TickStates", {
     }
   }
 
-  // Fire spreads to the bodies burning ones touch.
+  // Fire spreads to the bodies burning ones touch (unless they are immune to it).
   if (fires.length === 0) return
   for (const { data } of all) {
     if (data.state.get().current !== null) continue
+    if (durationFactor(tuning, affinityOf(tuning, data.enemy.present ? data.enemy.get().kind : undefined, "fire")) <= 0) continue
     const position = data.position.get()
     const r = data.body.get().radius
     const fire = fires.find((other) => (other.x - position.x) ** 2 + (other.y - position.y) ** 2 <= (other.r + r + rules.contact) ** 2)

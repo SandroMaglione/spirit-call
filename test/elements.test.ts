@@ -372,3 +372,42 @@ describe("wind", () => {
     expect(chaser!.position.x - center.x).toBeCloseTo(200, 6)
   })
 })
+
+describe("affinities", () => {
+  const noPool = (elements: object) => tuningWith({ skills: { grenade: { effect: { leaves: null } } }, enemies: { dummy: { elements } } })
+  const blast = (atk * grenade.power) / 100
+
+  it("an enemy weak to an element takes more of its damage, and its effect lasts longer", () => {
+    const weak = noPool({ fire: "weak" })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)], tuning: weak })
+    run.step(steps(grenade.flightTime + grenade.fuse) + 4)
+    const [dummy] = run.world().enemies
+    expect(dummy!.health).toBeCloseTo(tuning.enemies.dummy.hp - blast * rules.affinity.weak.damage, 6)
+    expect(dummy!.state!.remaining).toBeGreaterThan(rules.burning.seconds)
+  })
+
+  it("an immune enemy takes the damage, but not the effect", () => {
+    const immune = noPool({ fire: "immune" })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)], tuning: immune })
+    run.step(steps(grenade.flightTime + grenade.fuse) + 4)
+    const [dummy] = run.world().enemies
+    expect(dummy!.health).toBeCloseTo(tuning.enemies.dummy.hp - blast, 6)
+    expect(dummy!.state).toBeNull()
+  })
+
+  it("an enemy immune to wind is pushed by its blow, but not driven", () => {
+    const immune = tuningWith({ enemies: { dummy: { elements: { wind: "immune" } } } })
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [{ frame: 1, press: ["special"], release: ["special"] }], tuning: immune })
+    run.step(4)
+    const [dummy] = run.world().enemies
+    expect(dummy!.health).toBeLessThan(tuning.enemies.dummy.hp)
+    expect(dummy!.gust).toBe(0)
+  })
+
+  it("the brute is immune to wind, and every enemy answers to at least two elements", () => {
+    expect(tuning.enemies.brute.elements.wind).toBe("immune")
+    for (const enemy of Object.values(tuning.enemies)) {
+      expect(Object.values(enemy.elements).filter((affinity) => affinity === "immune").length).toBeLessThanOrEqual(1)
+    }
+  })
+})

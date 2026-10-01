@@ -160,7 +160,8 @@ describe("guardian", () => {
     })
     run.step(turnSteps + steps(defaultTuning.skills.grenade.effect.flightTime + defaultTuning.skills.grenade.effect.fuse) + 4)
     expect(run.world().enemies[0]!.facing!.x).toBeLessThan(-0.99)
-    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.skills.grenade.effect.power)
+    // The guardian is weak to the grenade's fire.
+    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.skills.grenade.effect.power * defaultTuning.elements.affinity.weak.damage)
   })
 })
 

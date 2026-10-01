@@ -9,9 +9,9 @@
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { scale } from "../math/vec.ts"
 import { areaTouchesCircle } from "../physics/areas.ts"
-import { Body, ElementState, Game, Ground, Gust, Health, Hitbox, Knockback, Position, PrevPosition, Reaction, Stunned, Time, Tuning } from "../schema.ts"
+import { Body, ElementState, Enemy, Game, Ground, Gust, Health, Hitbox, Knockback, Position, PrevPosition, Reaction, Stunned, Time, Tuning } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
-import { afflict } from "./elements.ts"
+import { affinityOf, afflict, durationFactor } from "./elements.ts"
 
 /**
  * Runs gusts and stuns down; stuns driven bodies slammed into a wall (they
@@ -32,7 +32,7 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
       }
     }),
     bodies: Game.Query({
-      selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), state: Game.Query.write(ElementState) },
+      selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), state: Game.Query.write(ElementState), enemy: Game.Query.optional(Enemy) },
       with: [Health]
     })
   },
@@ -70,9 +70,11 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
   }
   if (gusting.size === 0) return
 
-  // Driven bodies share their state with the bodies they touch.
+  // Driven bodies share their state with the bodies they touch (that are not immune to it).
   const contact = tuning.elements.burning.contact
   const bodies = queries.bodies.each()
+  const takes = (body: (typeof bodies)[number], state: ActiveState): boolean =>
+    durationFactor(tuning, affinityOf(tuning, body.data.enemy.present ? body.data.enemy.get().kind : undefined, state.id === "burning" ? "fire" : "water")) > 0
   for (const driven of bodies) {
     if (!gusting.has(driven.entity.id.value)) continue
     const at = driven.data.position.get()
@@ -85,15 +87,19 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
       const theirs = other.data.state.get().current
       if (mine?.id === theirs?.id) continue
       if (mine !== null && theirs === null) {
+        if (!takes(other, mine)) continue
         other.data.state.set({ current: carried(tuning, mine) })
         events.reaction.emit({ at: there, kind: "carry" })
       } else if (mine === null && theirs !== null) {
+        if (!takes(driven, theirs)) continue
         driven.data.state.set({ current: carried(tuning, theirs) })
         events.reaction.emit({ at, kind: "carry" })
       } else if (mine !== null && theirs !== null) {
         // Fire meets water: the water puts the fire out.
         const [burning, soaked] = mine.id === "burning" ? [driven, other] : [other, driven]
-        const water = afflict(tuning, burning.data.state.get().current, { id: "water", atk: 0 }, soaked.data.state.get().current?.charges ?? false)
+        const affinity = affinityOf(tuning, burning.data.enemy.present ? burning.data.enemy.get().kind : undefined, "water")
+        const water = afflict(tuning, burning.data.state.get().current, { id: "water", atk: 0 }, soaked.data.state.get().current?.charges ?? false, affinity)
+        if (water.state === burning.data.state.get().current) continue
         burning.data.state.set({ current: water.state })
         events.reaction.emit({ at: burning.data.position.get(), kind: "steam" })
       }
