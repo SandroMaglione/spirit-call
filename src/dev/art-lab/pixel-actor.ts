@@ -1,13 +1,18 @@
 /**
- * Style A of the art lab: pixel sprites (see `src/art/`) as Pixi textures,
- * scaled up by a whole number with nearest-neighbor filtering.
+ * Pixel sprites (see `src/art/`) as Pixi textures, scaled up with
+ * nearest-neighbor filtering so their pixels stay crisp.
  */
 import { CanvasSource, Container, Sprite as PixiSprite, Texture } from "pixi.js"
 
 import type { Canvas } from "../../art/pixel.ts"
 import { toRgba } from "../../art/pixel.ts"
 import type { Animation, Facing, Sprite } from "../../art/sprite.ts"
-import type { VectorActor } from "./vector.ts"
+
+export interface Actor {
+  readonly root: Container
+  /** Poses the actor at `time` seconds, facing the camera or away, standing or running. */
+  pose(time: number, facing: Facing, running: boolean): void
+}
 
 /** A canvas as a texture with crisp pixels. */
 export const pixelTexture = (source: Canvas): Texture => {
@@ -18,8 +23,8 @@ export const pixelTexture = (source: Canvas): Texture => {
   return new Texture({ source: new CanvasSource({ resource: element, scaleMode: "nearest" }) })
 }
 
-/** A pixel sprite posed like a vector actor: the frame for the animation, facing, and time. */
-export const pixelActor = (sprite: Sprite, scale: number): VectorActor => {
+/** A pixel sprite, showing the frame for the animation, facing, and time; drawn at its pixel size. */
+export const pixelActor = (sprite: Sprite): Actor => {
   const textures = Object.fromEntries((["idle", "run"] as const).map((animation) => [
     animation,
     Object.fromEntries((["front", "back"] as const).map((facing) => [facing, sprite.frames[animation][facing].map(pixelTexture)]))
@@ -27,7 +32,7 @@ export const pixelActor = (sprite: Sprite, scale: number): VectorActor => {
   const root = new Container()
   const body = new PixiSprite(textures.idle.front[0]!)
   body.anchor.set(sprite.anchor.x / sprite.width, sprite.anchor.y / sprite.height)
-  body.scale.set(scale)
+  body.scale.set(sprite.pixelSize)
   body.roundPixels = true
   root.addChild(body)
   return {

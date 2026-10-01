@@ -96,6 +96,7 @@ export const chaser: Sprite = {
   width: SIZE,
   height: SIZE,
   anchor: { x: 16, y: 28 },
+  pixelSize: 2,
   fps: { idle: 3, run: 12 },
   frames: {
     idle: { front: front.idle, back: back.idle },

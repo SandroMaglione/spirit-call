@@ -15,6 +15,8 @@ export interface Sprite {
   readonly height: number
   /** The point the sprite stands on (between the feet), in pixels from the top-left. */
   readonly anchor: { readonly x: number; readonly y: number }
+  /** Screen pixels per art pixel at zoom 1: sprites of any resolution stand at the size of the body they draw. */
+  readonly pixelSize: number
   /** Frames per second of each animation. */
   readonly fps: { readonly [A in Animation]: number }
   readonly frames: { readonly [A in Animation]: { readonly [F in Facing]: ReadonlyArray<Canvas> } }

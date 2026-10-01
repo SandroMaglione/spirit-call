@@ -1,40 +1,37 @@
 /**
- * The art lab (`/art-lab.html`): art styles side by side in the game's view
- * (projection, camera zoom, floor, pillars, a telegraph), to judge them at
- * the size they are played at. Not part of the game build.
+ * The art lab (`/art-lab.html`): pixel art in the game's view (projection,
+ * camera zoom, floor, pillars, a telegraph), to judge it at the size it is
+ * played at. Not part of the game build.
  *
- * - `?style=pixel|vector|capsule`: one style over a whole arena scene.
- * - `?style=compare`: the three styles next to each other.
+ * - `?style=normal|small|capsule`: the Swordsman drawn as the 28-pixel
+ *   sprite, the 22-pixel one, or today's capsule, in an arena with Chasers
+ *   (still capsules).
+ * - `?style=compare`: the three next to each other, standing and running.
  * - `?zoom=2`: a fixed camera zoom (default: the game's zoom for the screen).
  * - `?time=1.3`: freeze the animations at a time (for screenshots).
- * - `?big`: actors drawn 1.5 times larger (pixels 3× instead of 2×).
  */
 import { Application, Container, Graphics, Sprite, Text } from "pixi.js"
 
-import { chaser } from "../../art/chaser.ts"
 import { floorTiles, floorVariant, TILE_HEIGHT, TILE_WIDTH } from "../../art/floor.ts"
-import { swordsman } from "../../art/swordsman.ts"
+import { swordsman, swordsmanSmall } from "../../art/swordsman.ts"
 import { projection, view, viewZoom } from "../../config/view.ts"
 import { depthOf, toScreen, toWorld } from "../../math/iso.ts"
 import type { Vec2 } from "../../math/vec.ts"
 import { pixelActor, pixelTexture } from "./pixel-actor.ts"
-import { vectorChaser, vectorSwordsman } from "./vector.ts"
-import type { VectorActor } from "./vector.ts"
+import type { Actor } from "./pixel-actor.ts"
 
-type Style = "pixel" | "vector" | "capsule"
+type Style = "normal" | "small" | "capsule"
 type Kind = "swordsman" | "chaser"
 
 const params = new URLSearchParams(window.location.search)
 const styleParam = params.get("style") ?? "compare"
 const frozen = params.get("time") === null ? undefined : Number(params.get("time"))
 
-/** Actors drawn larger than their bodies (`?big`). */
-const ACTOR_SCALE = params.has("big") ? 1.5 : 1
-/** Screen pixels (at zoom 1) per art pixel. */
+/** Screen pixels (at zoom 1) per pixel of the floor tiles. */
 const PIXEL_SCALE = 2
 
 /** The current placeholder: a white capsule tinted (see presentation/nodes.ts). */
-const capsuleActor = (kind: Kind): VectorActor => {
+const capsuleActor = (kind: Kind): Actor => {
   const radius = kind === "swordsman" ? 16 : 15
   const look = kind === "swordsman" ? { color: view.player, width: 1.5, height: view.bodyHeightFactor } : view.enemies.chaser
   const widthFactor = "widthFactor" in look ? look.widthFactor : look.width
@@ -47,15 +44,10 @@ const capsuleActor = (kind: Kind): VectorActor => {
   return { root, pose: () => {} }
 }
 
-const makeActor = (style: Style, kind: Kind): VectorActor => {
-  switch (style) {
-    case "pixel":
-      return pixelActor(kind === "swordsman" ? swordsman : chaser, PIXEL_SCALE * ACTOR_SCALE)
-    case "vector":
-      return kind === "swordsman" ? vectorSwordsman() : vectorChaser()
-    case "capsule":
-      return capsuleActor(kind)
-  }
+/** Only the Swordsman has art for now: everyone else stays a capsule. */
+const makeActor = (style: Style, kind: Kind): Actor => {
+  if (kind !== "swordsman" || style === "capsule") return capsuleActor(kind)
+  return pixelActor(style === "normal" ? swordsman : swordsmanSmall)
 }
 
 /** Something on the floor: where it stands, how it moves, and what it faces. */
@@ -86,19 +78,19 @@ const arenaScene = (style: Style): Array<Placed> => [
   { kind: "chaser", style, at: circling({ x: -200, y: 120 }, 40, 2.6, 1), running: true }
 ]
 
-/** The three styles in columns, each with a Swordsman and a Chaser, standing (top) and running (bottom); laid out in screen pixels. */
-const compareScene = (): Array<Placed> => (["capsule", "vector", "pixel"] as const).flatMap((style, column) => {
+/** The three in columns: facing the camera and away, standing (top) and running (bottom); laid out in screen pixels. */
+const compareScene = (): Array<Placed> => (["capsule", "normal", "small"] as const).flatMap((style, column) => {
   const cell = (dx: number, dy: number) => toWorld(projection, { x: (column - 1) * COLUMN + dx, y: dy })
   return [
-    { kind: "swordsman", style, at: still(cell(-32, -20)), running: false, lookAt: cell(-32, 100) },
-    { kind: "chaser", style, at: still(cell(32, -20)), running: false, lookAt: cell(32, 100) },
-    { kind: "swordsman", style, at: still(cell(-32, 70)), running: true, lookAt: cell(-200, -100) },
-    { kind: "chaser", style, at: still(cell(32, 70)), running: true, lookAt: cell(100, 100) }
+    { kind: "swordsman", style, at: still(cell(-24, -20)), running: false, lookAt: cell(100, 100) },
+    { kind: "swordsman", style, at: still(cell(24, -20)), running: false, lookAt: cell(124, -120) },
+    { kind: "swordsman", style, at: still(cell(-24, 50)), running: true, lookAt: cell(-200, 150) },
+    { kind: "swordsman", style, at: still(cell(24, 50)), running: true, lookAt: cell(124, -50) }
   ] satisfies Array<Placed>
 })
 
 /** Screen pixels between the compare columns. */
-const COLUMN = 200
+const COLUMN = 130
 
 const start = async () => {
   const mount = document.getElementById("lab")!
@@ -109,7 +101,7 @@ const start = async () => {
   const world = new Container()
   app.stage.addChild(world)
 
-  const pixelFloor = styleParam === "pixel"
+  const pixelFloor = styleParam !== "capsule"
   if (pixelFloor) {
     const textures = floorTiles.map(pixelTexture)
     const floor = new Container()
@@ -178,7 +170,6 @@ const start = async () => {
   const shadow = (radius: number) => new Graphics().ellipse(0, 0, radius * projection.zoom, radius * projection.zoom * projection.squash).fill({ color: view.shadow, alpha: 0.35 })
   const live = scene.map((placed) => {
     const actor = makeActor(placed.style, placed.kind)
-    if (placed.style === "vector") actor.root.scale.set(ACTOR_SCALE)
     const holder = new Container()
     holder.addChild(shadow(placed.kind === "swordsman" ? 16 : 15), actor.root)
     actors.addChild(holder)
@@ -186,10 +177,10 @@ const start = async () => {
   })
 
   if (styleParam === "compare") {
-    for (const [column, name] of ["current", "B: vector", "A: pixel"].entries()) {
+    for (const [column, name] of ["capsule", "28 px", "22 px"].entries()) {
       const label = new Text({ text: name, style: { fill: 0xe6edf3, fontFamily: "ui-monospace, monospace", fontSize: 12 } })
       label.anchor.set(0.5)
-      label.position.set((column - 1) * COLUMN, -110)
+      label.position.set((column - 1) * COLUMN, -80)
       world.addChild(label)
     }
   }

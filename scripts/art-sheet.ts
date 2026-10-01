@@ -12,14 +12,14 @@ import { chaser } from "../src/art/chaser.ts"
 import { canvas, draw, get, set, TRANSPARENT } from "../src/art/pixel.ts"
 import type { Canvas } from "../src/art/pixel.ts"
 import type { Sprite } from "../src/art/sprite.ts"
-import { swordsman } from "../src/art/swordsman.ts"
+import { swordsman, swordsmanSmall } from "../src/art/swordsman.ts"
 
 const args = process.argv.slice(2)
 const scaleAt = args.indexOf("--scale")
 const scale = scaleAt === -1 ? 8 : Number(args[scaleAt + 1])
 const out = args.find((arg, index) => !arg.startsWith("--") && args[index - 1] !== "--scale") ?? "art-sheet.png"
 
-const sprites: Record<string, Sprite> = { swordsman, chaser }
+const sprites: Record<string, Sprite> = { swordsman, swordsmanSmall, chaser }
 const floor = 0x232a36
 const gap = 4
 
