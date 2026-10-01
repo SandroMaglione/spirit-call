@@ -1,23 +1,27 @@
 /**
- * Telegraphs on the floor: enemy attack windups, shields, active hitboxes,
- * lobbed skills, and spawn warnings.
+ * Telegraphs on the floor: pools of elements, enemy attack windups,
+ * shields, active hitboxes, lobbed skills, thrown discs, and spawn warnings.
  */
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Enemy, Game, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Tuning } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Tuning } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { drawArea } from "./draw.ts"
 
 /**
- * Everything dangerous, drawn on the floor: attack windups (the exact area
- * that will be hit, filling up until it lands), active hitboxes, aim lines of
- * shooters (brighter once the aim locks), and spawn warnings.
+ * Everything dangerous, drawn on the floor: pools of elements (under
+ * everything else, flickering for fire and rippling for water, fading as
+ * they run out), attack windups (the exact area that will be hit, filling up
+ * until it lands), active hitboxes, aim lines of shooters (brighter once the
+ * aim locks), and spawn warnings.
  */
 export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   queries: {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
+    pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
+    discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
@@ -31,6 +35,21 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   const g = services.host.telegraphs
   g.clear()
   const tuning = resources.tuning.get()
+  const now = performance.now() / 1000
+  for (const { data } of queries.pools.each()) {
+    const pool = data.ground.get()
+    const color = view.elements[pool.element]
+    const fade = Math.min(1, pool.remaining / view.pools.fadeSeconds)
+    const pulse = pool.element === "fire" ? 0.75 + 0.25 * Math.sin(now * 13 + pool.center.x) * Math.sin(now * 7.3 + pool.center.y) : 1
+    g.circle(pool.center.x, pool.center.y, pool.radius).fill({ color, alpha: view.pools.fill * pulse * fade })
+    g.circle(pool.center.x, pool.center.y, pool.radius).stroke({ width: 3, color, alpha: view.pools.outline * fade })
+    if (pool.element === "water") {
+      const ripple = (now * 0.8 + pool.center.x * 0.01) % 1
+      g.circle(pool.center.x, pool.center.y, pool.radius * ripple).stroke({ width: 2, color, alpha: 0.45 * (1 - ripple) * fade })
+    } else {
+      g.circle(pool.center.x, pool.center.y, pool.radius * 0.6).fill({ color: view.pools.fireCore, alpha: 0.18 * pulse * fade })
+    }
+  }
   for (const { data } of queries.attackers.each()) {
     const attacker = data.attacker.get()
     const spec = tuning.enemies[data.enemy.get().kind].attack
@@ -67,7 +86,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
-    drawArea(g, hitbox.area, 0, { color: hitbox.faction === "player" ? view.playerArea : view.telegraphLocked, fill: 0.55, outline: 1 })
+    const color = hitbox.faction === "enemy" ? view.telegraphLocked : hitbox.blow.element === null ? view.playerArea : view.elements[hitbox.blow.element.id]
+    drawArea(g, hitbox.area, 0, { color, fill: 0.55, outline: 1 })
   }
 
   // Lobbed skills: an arc through the air (shadow on the floor, orb above it), then the fuse ring.
@@ -78,14 +98,27 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const elapsed = lobbed.elapsed + services.clock.alpha * engine.stepSeconds
     const flight = Math.min(1, elapsed / spec.flightTime)
     const fuse = Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse))
-    g.circle(lobbed.to.x, lobbed.to.y, spec.radius).stroke({ width: 2, color: view.playerArea, alpha: flight < 1 ? 0.35 : 0.9 })
-    if (fuse > 0) g.circle(lobbed.to.x, lobbed.to.y, spec.radius * fuse).fill({ color: view.playerArea, alpha: 0.25 })
+    const color = spec.element === null ? view.playerArea : view.elements[spec.element]
+    g.circle(lobbed.to.x, lobbed.to.y, spec.radius).stroke({ width: 2, color, alpha: flight < 1 ? 0.35 : 0.9 })
+    if (fuse > 0) g.circle(lobbed.to.x, lobbed.to.y, spec.radius * fuse).fill({ color, alpha: 0.25 })
     const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
     g.circle(ground.x, ground.y, 7).fill({ color: view.shadow, alpha: 0.35 })
     const screen = toScreen(projection, ground)
     const height = 4 * view.grenadeArc * flight * (1 - flight) * projection.zoom
-    overlay.circle(screen.x, screen.y - height - 6, 6).fill({ color: view.grenade })
-    if (flight >= 1) overlay.circle(screen.x, screen.y - 6, 6).stroke({ width: 2, color: view.playerArea, alpha: 0.5 + 0.5 * Math.sin(elapsed * 40) })
+    overlay.circle(screen.x, screen.y - height - 6, 6).fill({ color: spec.element === null ? view.grenade : view.elements[spec.element] })
+    if (flight >= 1) overlay.circle(screen.x, screen.y - 6, 6).stroke({ width: 2, color, alpha: 0.5 + 0.5 * Math.sin(elapsed * 40) })
+  }
+  // Discs: a ring spinning under each, wide while it hovers (where it hits).
+  for (const { data } of queries.discs.each()) {
+    const disc = data.disc.get()
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const turn = now * view.disc.turnsPerSecond * Math.PI * 2
+    // While hovering, out to where it hits a body of average size.
+    const radius = disc.phase === "hover" ? disc.radius + 16 : disc.radius * 1.5
+    g.moveTo(at.x + Math.cos(turn) * radius, at.y + Math.sin(turn) * radius)
+      .arc(at.x, at.y, radius, turn, turn + Math.PI * 1.4)
+      .stroke({ width: disc.phase === "hover" ? 4 : 3, color: view.disc.ring, alpha: disc.phase === "hover" ? 0.9 : 0.6 })
+    if (disc.phase === "hover") g.circle(at.x, at.y, radius).fill({ color: view.disc.ring, alpha: 0.12 })
   }
   for (const { data } of queries.pending.each()) {
     const pending = data.pending.get()

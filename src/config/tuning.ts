@@ -16,6 +16,7 @@ import { attacks } from "../content/attacks.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { currencies } from "../content/currencies.ts"
+import { elementRules } from "../content/elements.ts"
 import { enemies } from "../content/enemies.ts"
 import { reset, tracks } from "../content/hardcore.ts"
 import { progression } from "../content/progression.ts"
@@ -121,6 +122,9 @@ export const defaultTuning = {
 
   /** Every skill, by id; a character starts with one per slot, and a build can equip others. */
   skills,
+
+  /** States (burning, soaked), wind, and how elements interact (see content/elements.ts). */
+  elements: elementRules,
 
   /** Energy, spent by skills that cost it (the Nova). */
   energy: {

@@ -2,6 +2,7 @@
  * Aim cues: the attack area, the touch assist pick, skill aiming previews,
  * the power attack charge, and the mouse reticle.
  */
+import { isMelee } from "../content/attacks.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillEffect } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
@@ -40,7 +41,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
   const tuning = resources.tuning.get()
   const first = tuning.attacks[player.data.weapon.get().attack].combo[0]
-  if (first !== undefined && first.shape !== "shot") {
+  if (first !== undefined && isMelee(first)) {
     const cue = services.host.feedback.slashCue
     const range = first.reach + tuning.touch.assist.range
     const nearby = queries.enemies.each().some(({ data }) => {
@@ -73,9 +74,12 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   if (power !== null && charge > 0) {
     const aim = player.data.aim.get()
     const move = power.move
-    const area = move.shape === "shot"
-      ? { kind: "lane" as const, origin: at, direction: aim, length: Math.min(move.range, view.charge.shotPreview), halfWidth: move.radius * 2 }
-      : moveArea(move, at, aim).area
+    const area = isMelee(move)
+      ? moveArea(move, at, aim).area
+      : move.shape === "disc" && move.hover > 0
+        // A hovering disc: the circle it will spin in, where it stops.
+        ? { kind: "circle" as const, center: { x: at.x + aim.x * move.range, y: at.y + aim.y * move.range }, radius: move.radius * 2.5 }
+        : { kind: "lane" as const, origin: at, direction: aim, length: Math.min(move.range, view.charge.shotPreview), halfWidth: move.radius * 2 }
     const full = charge >= 1
     drawArea(g, area, full ? 1 : charge, full
       ? { color: view.charge.full, fill: 0.14, outline: 0.9 }
@@ -92,7 +96,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
       g.circle(target.x, target.y, radius).stroke({ width: 3, color: view.reticle, alpha: controls.attackHeld ? 0.95 : 0.6 })
     }
   }
-  if (controls.attackHeld && first?.shape === "shot") {
+  if (controls.attackHeld && first !== undefined && !isMelee(first)) {
     const dx = controls.aimPoint.x - at.x
     const dy = controls.aimPoint.y - at.y
     const reach = Math.min(first.range, 320) / (Math.hypot(dx, dy) || 1)

@@ -155,6 +155,25 @@ export const unlock = (tuning: Tuning, account: Account, item: Item, now: number
   }
 }
 
+/**
+ * `account` owning every unlock of the quests it has cleared, and what that
+ * gave: rewards added to a quest after it was cleared (new content) are
+ * given when the account loads, so nothing is missed.
+ */
+export const withClearedRewards = (tuning: Tuning, account: Account, now: number): { readonly account: Account; readonly granted: ReadonlyArray<Item> } => {
+  let next = account
+  const granted: Array<Item> = []
+  for (const [id, progress] of Object.entries(account.quests) as Array<[QuestId, QuestProgress | undefined]>) {
+    if ((progress?.firstClearedAt ?? null) === null) continue
+    for (const item of tuning.quests[id].rewards.unlocks) {
+      if (owns(next, item)) continue
+      next = unlock(tuning, next, item, now)
+      granted.push(item)
+    }
+  }
+  return { account: next, granted }
+}
+
 /** Every item in the content, for unlocking everything (a dev tool). */
 export const everything = (tuning: Tuning): ReadonlyArray<Item> => [
   ...(Object.keys(tuning.characters) as Array<CharacterId>).map((id) => ({ kind: "character" as const, id })),

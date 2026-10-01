@@ -1,11 +1,15 @@
 /**
  * Plain-language descriptions of content, generated from its data, so new
  * content describes itself: objectives, stats, weapon bonuses, passives,
- * skills, rewards, and what something is and why it is locked.
+ * skills (with their element), enemies' affinities, rewards, and what
+ * something is and why it is locked.
  */
 import type { Lock, Play } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
-import type { Objective } from "../content/challenges.ts"
+import type { ChallengeSpec, Objective } from "../content/challenges.ts"
+import { elements } from "../content/elements.ts"
+import type { Affinities, Affinity, ElementId } from "../content/elements.ts"
+import type { EnemyKind } from "../content/enemies.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
 import type { Stats } from "../content/characters.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
@@ -60,15 +64,21 @@ const describeTrigger = (trigger: Trigger): string => {
   }
 }
 
+/** An element as a word before a noun ("fire "), or nothing. */
+const elementWord = (element: ElementId | null): string => (element === null ? "" : `${elements[element].name.toLowerCase()} `)
+
+/** What each element leaves on the ground. */
+const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire pool", water: "a puddle", wind: "a gust" }
+
 /** A skill effect in a few words. */
 export const describeEffect = (effect: SkillEffect): string => {
   switch (effect.kind) {
     case "cut":
-      return `a cutting wave (${effect.power}% ATK)`
+      return `a cutting ${elementWord(effect.element)}wave (${effect.power}% ATK)`
     case "lob":
-      return `a lobbed blast (${effect.power}% ATK)`
+      return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":
-      return `a shockwave around you (${effect.power}% ATK)`
+      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)`
   }
 }
 
@@ -96,6 +106,20 @@ export const describeSkill = (skill: SkillSpec): string => {
   const effect = describeEffect(skill.effect)
   return `${effect.charAt(0).toUpperCase()}${effect.slice(1)}${cost === "" ? "" : ` · ${cost}`}`
 }
+
+/** How the menu names an affinity. */
+export const affinityNames: { readonly [Kind in Affinity]: string } = { weak: "Weak", resists: "Resists", immune: "Immune" }
+
+/** An enemy's affinities, strongest first: what it is weak to, what it resists, what it is immune to. */
+export const affinityList = (traits: Affinities): ReadonlyArray<{ readonly element: ElementId; readonly affinity: Affinity }> => {
+  const order: ReadonlyArray<Affinity> = ["weak", "resists", "immune"]
+  return (Object.entries(traits) as Array<[ElementId, Affinity]>)
+    .map(([element, affinity]) => ({ element, affinity }))
+    .sort((left, right) => order.indexOf(left.affinity) - order.indexOf(right.affinity))
+}
+
+/** The enemy kinds a challenge holds, in the order they first appear. */
+export const challengeEnemies = (challenge: ChallengeSpec): ReadonlyArray<EnemyKind> => [...new Set(challenge.waves.scripted.flat())]
 
 /** The name of something a reward unlocks. */
 export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {

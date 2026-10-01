@@ -8,12 +8,10 @@ import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
 import type { NovaEffect } from "../src/content/skills.ts"
 import { damageDealt, resolveBuild } from "../src/features/build.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
-import { Enemy, Game, Health, Player, RunScope } from "../src/schema.ts"
+import { Enemy, Game, Health, Player } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { ClearEnemies, start } from "./helpers.ts"
+import { placeDummies, start } from "./helpers.ts"
 
-const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
 const sword = defaultTuning.attacks.sword
 
@@ -41,10 +39,7 @@ const setHealth = (enemies: number | undefined, player?: number) => Game.System(
 /** Touch play (assist off, facing world +x) with `build` and dummies at `offsets` from the player. */
 const arena = (build: BuildValue, offsets: ReadonlyArray<{ x: number; y: number }>, touch: Touch.Timeline<TouchButton>, tuning: Tuning = defaultTuning) => {
   const run = start({ tuning: { ...tuning, touch: tuningWith({ touch: { assist: { enabled: false } } }).touch }, build, touch })
-  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
-    for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
-  })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  run.runtime.tick(placeDummies(offsets, tuning))
   return { ...run, world: () => run.runtime.inspect(Healths) }
 }
 

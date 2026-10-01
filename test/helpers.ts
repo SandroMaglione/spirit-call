@@ -2,13 +2,17 @@ import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchButtons } from "../src/config/input.ts"
 import type { Direction, TouchButton } from "../src/config/input.ts"
-import { defaultTuning } from "../src/config/tuning.ts"
+import { defaultTuning, engine } from "../src/config/tuning.ts"
+import { projection } from "../src/config/view.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { damageDealt, damageTaken } from "../src/features/build.ts"
-import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, Velocity } from "../src/schema.ts"
+import { makeEnemy } from "../src/features/enemies.ts"
+import { toScreen } from "../src/math/iso.ts"
+import type { Vec2 } from "../src/math/vec.ts"
+import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, RunScope, Velocity } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
@@ -119,3 +123,23 @@ export const ClearEnemies = Game.System("Test/ClearEnemies", {
 }, ({ queries, commands }) => {
   for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
 })
+
+/** The center of the default arena, where the player spawns. */
+export const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
+
+/** Fixed steps covering `seconds` (rounded up). */
+export const steps = (seconds: number): number => Math.ceil(seconds / engine.stepSeconds)
+
+/** The cursor (screen) pointing at a world offset from the player at spawn, in the default viewport. */
+export const cursorAt = (offset: Vec2): Vec2 => {
+  const screen = toScreen(projection, offset)
+  return { x: 640 + screen.x, y: 360 + screen.y }
+}
+
+/** A schedule that replaces every enemy with training dummies (of `tuning`) at offsets from the player's spawn. */
+export const placeDummies = (offsets: ReadonlyArray<Vec2>, tuning: Tuning = defaultTuning) => {
+  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
+    for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
+  })
+  return Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())
+}

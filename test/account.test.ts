@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, runExperience, select, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, runExperience, select, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -29,6 +29,16 @@ describe("account rules", () => {
     expect(owns(account, { kind: "skill", id: gunner.skills.special })).toBe(true)
     expect(account.equipment.gunner).toEqual({ weapon: gunner.weapon, skills: gunner.skills })
     expect(account.owned.characters.gunner).toEqual({ unlockedAt: 2000, experience: 0 })
+  })
+
+  it("gives the rewards a cleared quest gained since, once (new content is not missed)", () => {
+    const cleared = { ...fresh(), quests: { theBrute: { attempts: 1, clears: 1, firstClearedAt: 1500 } } }
+    const { account, granted } = withClearedRewards(defaultTuning, cleared, 3000)
+    expect(granted).toEqual(defaultTuning.quests.theBrute.rewards.unlocks)
+    expect(owns(account, { kind: "character", id: "tidecaller" })).toBe(true)
+    expect(account.equipment.tidecaller).toEqual({ weapon: "trainingDisc", skills: defaultTuning.characters.tidecaller.skills })
+    expect(withClearedRewards(defaultTuning, account, 4000).granted).toEqual([])
+    expect(withClearedRewards(defaultTuning, fresh(), 4000).granted).toEqual([])
   })
 
   it("a weapon owned again gains a copy", () => {

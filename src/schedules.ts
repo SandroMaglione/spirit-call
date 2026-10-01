@@ -15,6 +15,10 @@ import { SpawnArena } from "./features/arena.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
+import { MoveDiscs } from "./features/discs.ts"
+import { TickStates } from "./features/elements.ts"
+import { UpdateGround } from "./features/ground.ts"
+import { BlowPools, DriveWithWind } from "./features/wind.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
@@ -64,7 +68,14 @@ const input = Game.Schedule.when(
   ResolveControls
 )
 
-/** Everything that advances the run: frozen on game over and during hit-stop. */
+/**
+ * Everything that advances the run: frozen on game over and during hit-stop.
+ * The order matters; each group feeds the next within the same step:
+ * intent (controls, skills, attacks), then movement, then everything that
+ * hurts, then the one place that applies it (`ApplyDamage`), then spawns.
+ * What is spawned by commands (hitboxes, pools, discs) takes part from the
+ * next step.
+ */
 const gameplay = Game.Schedule.when(
   whilePlaying,
   TrackRun,
@@ -79,12 +90,22 @@ const gameplay = Game.Schedule.when(
   CastNovas,
   UseBasicAttack,
   UpdateLobbed,
+  // Movement: enemies decide (stunned ones stand still), bodies move with their push.
   SteerEnemies,
   UpdateAttacks,
   IntegrateBodies,
+  // Right after moving and before pushes die down (and the wind's drive runs
+  // down with them): it compares how far a driven body moved with its push.
+  DriveWithWind,
   DecayKnockback,
+  // Everything that hurts emits `Damage`: things in flight, hitboxes, then
+  // pools and states (pools set states; states burn).
   MoveProjectiles,
+  MoveDiscs,
   ResolveHitboxes,
+  BlowPools,
+  UpdateGround,
+  TickStates,
   ApplyDamage,
   ProcessPendingSpawns,
   DirectWaves

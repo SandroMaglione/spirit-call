@@ -66,6 +66,17 @@ export const characters = {
     weaponType: "gun",
     weapon: "trainingPistol",
     skills: { special: "grenade", ultimate: "nova" }
+  }),
+  /** Middle range: discs that cut there and back, and water that soaks and slows. */
+  tidecaller: character({
+    name: "Tidecaller",
+    stats: { hp: 92, atk: 80, def: 15, speed: 330 },
+    radius: 16,
+    hurtboxRadius: 11,
+    attack: "disc",
+    weaponType: "disc",
+    weapon: "trainingDisc",
+    skills: { special: "splash", ultimate: "nova" }
   })
 }
 

@@ -129,6 +129,26 @@ export const view = {
     sniper: { color: 0x7cc4ff, widthFactor: 1.2, heightFactor: 2.6 },
     guardian: { color: 0x8fa3b8, widthFactor: 1.8, heightFactor: 2.0 }
   },
+  /**
+   * Elements and states: each element's color (hits, pools, numbers); bodies
+   * in a state are tinted `tint` of the way toward its color and shed motes
+   * (embers rising, drops falling) about `motes` times a second.
+   */
+  elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1 },
+  states: { burning: 0xff7b2e, soaked: 0x4aa8ff, tint: 0.5, motes: 14 },
+  /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
+  pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6 },
+  /**
+   * Thrown discs: drawn flat, `size` times their radius, `height` pixels over
+   * the floor, with a spinning ring around them (out to where they hit while
+   * they hover).
+   */
+  disc: { color: 0x9fe8ff, ring: 0x4aa8ff, turnsPerSecond: 3, size: 1, height: 8 },
+  /** The puff of water putting fire out. */
+  steam: 0xe6edf3,
+  /** A body slammed into a wall by wind, and stunned: its color, and the stars circling over its head. */
+  stun: 0xffe066,
+  stunStars: { radius: 12, turnsPerSecond: 1.2 },
   /** Guardian shields. */
   shield: 0xd6e4f0,
   shieldBlock: 0xffffff,

@@ -54,6 +54,8 @@ export interface HudRefs {
   readonly pad: TouchPadRefs
   readonly health: HTMLElement
   readonly healthText: HTMLElement
+  /** The player's state (burning, soaked), hidden when in none. */
+  readonly state: HTMLElement
   readonly dash: HTMLElement
   readonly wave: HTMLElement
   readonly combat: HTMLElement

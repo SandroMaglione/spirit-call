@@ -45,6 +45,10 @@
       .hud__health { position: relative; width: 240px; height: 18px; background: rgba(13, 17, 23, 0.8); border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
       .hud__health-fill { position: absolute; inset: 0; width: 100%; background: linear-gradient(90deg, #ff3b3b, #ff7a6b); transition: width 120ms ease-out; }
       .hud__health span { position: relative; display: block; text-align: center; font-size: 12px; line-height: 18px; color: #fff; text-shadow: 0 1px 2px #000; }
+      .hud__state { justify-self: start; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #0d1117; }
+      .hud__state[hidden] { display: none; }
+      .hud__state--burning { background: #ff7b2e; }
+      .hud__state--soaked { background: #4aa8ff; }
       .hud__vignette { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 160px 40px rgba(255, 40, 40, 0.9); }
       .hud__banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font-size: 44px; font-weight: 700; letter-spacing: 0.2em; color: #e6edf3; opacity: 0; text-shadow: 0 2px 12px #000; }
       .hud__banner.is-showing { animation: banner 1.8s ease-out forwards; }

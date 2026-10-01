@@ -87,7 +87,7 @@ export const quests = {
     enemyLevel: 5,
     level: 3,
     after: "crossfire",
-    rewards: { experience: 140, currencies: { crystals: 150, gold: 600 }, unlocks: [weapon("crescendo"), weapon("echoSaber")] }
+    rewards: { experience: 140, currencies: { crystals: 150, gold: 600 }, unlocks: [character("tidecaller"), weapon("crescendo"), weapon("echoSaber"), weapon("undertow")] }
   }),
   holdTheLine: quest({
     name: "Hold the Line",

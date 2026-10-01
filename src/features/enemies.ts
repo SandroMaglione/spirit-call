@@ -8,30 +8,29 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
+import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
+import { stateSpeed } from "./elements.ts"
 import {
   Attacker,
   AttackPhase,
   Body,
   Brain,
   CombatStats,
+  ElementState,
   Enemy,
   EnemyLevel,
   EnemyMode,
   Game,
-  Health,
-  HitFlash,
-  Hurtbox,
-  Invulnerable,
   Knockback,
   PendingSpawn,
   Player,
   Position,
-  PrevPosition,
   Renderable,
   Respawns,
   RunScope,
   Shield,
+  Stunned,
   Time,
   Tuning,
   Velocity
@@ -49,18 +48,9 @@ export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number):
 export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1) => {
   const stats = tuning.enemies[kind]
   const { hp, atk, def, speed } = enemyStats(tuning, kind, level)
-  const draft = Game.Command.spawn(
+  const draft = Game.Command.insert(
+    makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius, hurtboxRadius: stats.hurtboxRadius, affinities: stats.elements }),
     [Enemy, { kind }],
-    [Position, at],
-    [PrevPosition, at],
-    [Velocity, { x: 0, y: 0 }],
-    [Knockback, { x: 0, y: 0 }],
-    [Body, { radius: stats.radius }],
-    [Hurtbox, { radius: stats.hurtboxRadius, faction: "enemy" }],
-    [Health, { current: hp, max: hp }],
-    [CombatStats, { hp, atk, def, speed }],
-    [HitFlash, { remaining: 0 }],
-    [Invulnerable, { remaining: 0 }],
     [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
@@ -150,7 +140,9 @@ export const SteerEnemies = (() => {
           attacker: Game.Query.read(Attacker),
           phase: Game.Query.read(AttackPhase),
           knockback: Game.Query.read(Knockback),
-          mode: Game.Query.write(EnemyMode)
+          mode: Game.Query.write(EnemyMode),
+          state: Game.Query.read(ElementState),
+          stunned: Game.Query.read(Stunned)
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
@@ -205,18 +197,25 @@ export const SteerEnemies = (() => {
     for (const { entity, data } of enemies) {
       const kind = data.enemy.get().kind
       const spec = tuning.enemies[kind]
-      // Speed is a stat, so what changes stats (levels, slows) changes it.
-      const speed = data.stats.get().speed
+      // Speed is a stat, so what changes stats (levels) changes it; soaked enemies are slowed, charges included.
+      const slowed = stateSpeed(tuning, data.state.get())
+      const speed = data.stats.get().speed * slowed
       const position = data.position.get()
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
       const phase = data.phase.get()
       const attacking = phase !== "ready"
 
+      // Stunned: it stands where it is (a push still slides it).
+      if (data.stunned.get().remaining > 0) {
+        data.velocity.set(zero)
+        continue
+      }
+
       // A charge moves straight down its lane at full speed, ignoring crowding.
       const attack = spec.attack
       if (attack !== null && attack.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
-        data.velocity.set(scale(attacker.area.direction, attack.speed))
+        data.velocity.set(scale(attacker.area.direction, attack.speed * slowed))
         continue
       }
 

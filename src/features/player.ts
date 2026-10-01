@@ -7,22 +7,17 @@ import type { Vec2 } from "../math/vec.ts"
 import {
   Action,
   Aim,
-  Body,
   Build,
   CombatStats,
   Controls,
   Dash,
+  ElementState,
   Energy,
   Game,
-  Health,
-  HitFlash,
-  Hurtbox,
   Invulnerable,
-  Knockback,
   Passives,
   Player,
   Position,
-  PrevPosition,
   Renderable,
   RunScope,
   Skills,
@@ -32,29 +27,23 @@ import {
   Weapon
 } from "../schema.ts"
 import type { ResolvedBuild } from "./build.ts"
+import { makeBody } from "./bodies.ts"
 import { resolveBuild } from "./build.ts"
+import { stateSpeed } from "./elements.ts"
 import { initialSkills } from "./skills.ts"
 import { charging, initialWeapon } from "./weapons.ts"
 
+/** The player: a body (taking every element as it is) with the build's kit. */
 export const makePlayer = (build: ResolvedBuild, at: Vec2) =>
-  Game.Command.spawn(
+  Game.Command.insert(
+    makeBody({ at, faction: "player", stats: build.stats, radius: build.radius, hurtboxRadius: build.hurtboxRadius, affinities: {} }),
     [Player, {}],
-    [Position, at],
-    [PrevPosition, at],
-    [Velocity, { x: 0, y: 0 }],
-    [Body, { radius: build.radius }],
     [Aim, { x: 1, y: 0 }],
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
-    [Invulnerable, { remaining: 0 }],
-    [CombatStats, build.stats],
     [Passives, build.passives],
     [Weapon, initialWeapon(build)],
     [Skills, initialSkills(build)],
     [Energy, { current: 0 }],
-    [Knockback, { x: 0, y: 0 }],
-    [Hurtbox, { radius: build.hurtboxRadius, faction: "player" }],
-    [Health, { current: build.stats.hp, max: build.stats.hp }],
-    [HitFlash, { remaining: 0 }],
     [Renderable, { kind: "player", radius: build.radius }]
   )
 
@@ -81,7 +70,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         dash: Game.Query.write(Dash),
         invulnerable: Game.Query.write(Invulnerable),
         weapon: Game.Query.read(Weapon),
-        stats: Game.Query.read(CombatStats)
+        stats: Game.Query.read(CombatStats),
+        state: Game.Query.read(ElementState)
       },
       with: [Player]
     })
@@ -125,8 +115,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       remaining -= covered
       data.velocity.set(scale(direction, dashSpeed * covered / dt))
     } else {
-      // Leaving a dash keeps some momentum, then normal running takes over.
-      const runSpeed = data.stats.get().speed
+      // Leaving a dash keeps some momentum, then normal running takes over (slower when soaked).
+      const runSpeed = data.stats.get().speed * stateSpeed(tuning, data.state.get())
       const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
       // Charging a power attack slows the player down.
       const weapon = data.weapon.get()

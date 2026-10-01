@@ -1,21 +1,24 @@
 /**
  * Projectiles and the damage pipeline.
  *
- * Anything that hurts (projectiles, hitboxes of attacks and skills) emits a
- * `Damage` event. `ApplyDamage` is the one place that decides what
- * damage does: invulnerability, health, hit flash, knockback, and death.
- * Status effects and damage modifiers plug in there.
+ * Anything that hurts (projectiles, hitboxes of attacks and skills, burns)
+ * emits a `Damage` event. `ApplyDamage` is the one place that decides what
+ * damage does: invulnerability, health, hit flash, knockback, death, and
+ * the element it applies (see `features/elements.ts`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { circleOverlapsBox, sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
+import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
   CombatStats,
   Damage,
   Death,
+  ElementAffinities,
+  ElementState,
   Enemy,
+  Gust,
   Energy,
   Game,
   Health,
@@ -30,20 +33,23 @@ import {
   Position,
   PrevPosition,
   Projectile,
+  Reaction,
   Renderable,
   Respawns,
   RunScope,
-  Shield,
   Stats,
   Time,
   Tuning,
   Velocity
 } from "../schema.ts"
-import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
-import { Walls, wallBoxes } from "./motion.ts"
+import type { EnemyKind, ProjectileValue } from "../schema.ts"
+import { pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
+import { afflict, durationFactor, elementDamageFactor } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { damageBonusPercent, PassiveHolders } from "./passives.ts"
+import { shieldBlocks, sweepTargets, targetOf, Targets } from "./targets.ts"
+import type { Target } from "./targets.ts"
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
   Game.Command.spawn(
@@ -54,44 +60,23 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
     [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius }]
   )
 
-interface Target {
-  entity: Parameters<typeof Game.Entity.handle>[0]
-  id: number
-  x: number
-  y: number
-  radius: number
-  faction: Faction
-  /** Dashing or recently hit: shots pass through. */
-  invulnerable: boolean
-  /** A frontal shield, if any: projectiles arriving within `cosHalfAngle` of `facing` are blocked. */
-  shield: { readonly facing: Vec2; readonly cosHalfAngle: number } | undefined
-}
-
 /**
  * Moves projectiles along swept segments. Each step, a projectile's path from
  * its current position to its next one is tested against walls and against
- * the hurtboxes of the other faction; the earliest contacts win, so nothing
- * fast can pass through what it should hit.
+ * the hurtboxes of the other faction (see `sweepTargets`); the earliest
+ * contacts win, so nothing fast can pass through what it should hit.
  */
 export const MoveProjectiles = (() => {
   const grid = new SpatialGrid(96)
   const targets: Array<Target> = []
-  const contacts: Array<{ time: number; target: Target }> = []
+  const nearby: Array<Target> = []
 
   return Game.System("Shooter/MoveProjectiles", {
     queries: {
       projectiles: Game.Query({
         selection: { position: Game.Query.write(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.write(Projectile) }
       }),
-      targets: Game.Query({
-        selection: {
-          position: Game.Query.read(Position),
-          hurtbox: Game.Query.read(Hurtbox),
-          invulnerable: Game.Query.optional(Invulnerable),
-          shield: Game.Query.optional(Shield)
-        },
-        with: [Health]
-      }),
+      targets: Targets,
       walls: Walls
     },
     resources: { time: Game.System.readResource(Time) },
@@ -103,12 +88,9 @@ export const MoveProjectiles = (() => {
     grid.clear()
     targets.length = 0
     for (const { entity, data } of queries.targets.each()) {
-      const position = data.position.get()
-      const hurtbox = data.hurtbox.get()
-      grid.insert(targets.length, position.x, position.y, hurtbox.radius)
-      const invulnerable = data.invulnerable.present && data.invulnerable.get().remaining > 0
-      const shield = data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Math.cos(data.shield.get().halfAngle) } : undefined
-      targets.push({ entity: entity.id, id: entity.id.value, x: position.x, y: position.y, radius: hurtbox.radius, faction: hurtbox.faction, invulnerable, shield })
+      const target = targetOf(entity.id, data)
+      grid.insert(targets.length, target.at.x, target.at.y, target.radius)
+      targets.push(target)
     }
 
     for (const { entity, data } of queries.projectiles.each()) {
@@ -123,37 +105,27 @@ export const MoveProjectiles = (() => {
       // Earliest wall contact along the path (or right away if it starts inside one).
       const inWall = boxes.some((box) => circleOverlapsBox(origin, r, box))
       const wall = inWall ? { time: 0 } : sweepCircleBoxes(origin, delta, r, boxes)
-      const wallTime = wall?.time ?? Infinity
 
-      contacts.length = 0
-      const minX = Math.min(origin.x, origin.x + delta.x) - r
-      const maxX = Math.max(origin.x, origin.x + delta.x) + r
-      const minY = Math.min(origin.y, origin.y + delta.y) - r
-      const maxY = Math.max(origin.y, origin.y + delta.y) + r
-      grid.forEachIn(minX, minY, maxX, maxY, (index) => {
-        const target = targets[index]!
-        if (target.faction === projectile.faction || target.invulnerable || projectile.hit.includes(target.id)) return
-        const time = sweepCircleCircle(origin, delta, r, target, target.radius)
-        if (time !== undefined && time <= wallTime) contacts.push({ time, target })
-      })
-      contacts.sort((a, b) => a.time - b.time)
+      nearby.length = 0
+      grid.forEachIn(
+        Math.min(origin.x, origin.x + delta.x) - r,
+        Math.min(origin.y, origin.y + delta.y) - r,
+        Math.max(origin.x, origin.x + delta.x) + r,
+        Math.max(origin.y, origin.y + delta.y) + r,
+        (index) => void nearby.push(targets[index]!)
+      )
+      const contacts = sweepTargets(origin, delta, r, nearby, projectile.faction, projectile.hit, wall?.time ?? Infinity)
 
       const direction = speed > 0 ? scale(velocity, 1 / speed) : { x: 0, y: 0 }
       let pierce = projectile.pierce
       const hit = [...projectile.hit]
       let stopAt: number | undefined
-      let shieldedAt: number | undefined
+      let shieldedAt: Vec2 | undefined
       for (const contact of contacts) {
         // A shield facing the shot absorbs it, pierce or not.
-        const shield = contact.target.shield
-        if (shield !== undefined) {
-          const hx = origin.x + delta.x * contact.time - contact.target.x
-          const hy = origin.y + delta.y * contact.time - contact.target.y
-          const length = Math.hypot(hx, hy) || 1
-          if ((hx * shield.facing.x + hy * shield.facing.y) / length >= shield.cosHalfAngle) {
-            shieldedAt = contact.time
-            break
-          }
+        if (shieldBlocks(contact.target, contact.at)) {
+          shieldedAt = contact.at
+          break
         }
         events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: projectile.faction, direction, blow: projectile.blow })
         hit.push(contact.target.id)
@@ -165,9 +137,8 @@ export const MoveProjectiles = (() => {
       }
 
       if (shieldedAt !== undefined) {
-        const at = { x: origin.x + delta.x * shieldedAt, y: origin.y + delta.y * shieldedAt }
-        data.position.set(at)
-        events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: true })
+        data.position.set(shieldedAt)
+        events.impact.emit({ at: shieldedAt, faction: projectile.faction, wall: false, shielded: true })
         commands.despawn(entity.id)
         continue
       }
@@ -208,6 +179,9 @@ const Damageable = Game.Query({
     knockback: Game.Query.write(Knockback),
     invulnerable: Game.Query.write(Invulnerable),
     stats: Game.Query.read(CombatStats),
+    state: Game.Query.write(ElementState),
+    affinities: Game.Query.read(ElementAffinities),
+    gust: Game.Query.write(Gust),
     player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns)
@@ -217,14 +191,19 @@ const Damageable = Game.Query({
 /**
  * Applies damage requests: the single place where hits become consequences.
  * The attacker's passives raise each request's amount (see
- * `damageBonusPercent`), then the target's DEF reduces it (see `damageTaken`).
+ * `damageBonusPercent`), its element scales it (see `elementDamageFactor`),
+ * then the target's DEF reduces it (see `damageTaken`). A blow's element
+ * then applies to a target that survives (see `afflict`). Burns (periodic
+ * blows) land through invulnerability and give none, with no hit-stop or
+ * push.
  */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: { energies: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) },
   events: {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
-    death: Game.System.writeEvent(Death)
+    death: Game.System.writeEvent(Death),
+    reaction: Game.System.writeEvent(Reaction)
   },
   resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) }
 }, ({ queries, events, resources, lookup, commands }) => {
@@ -238,30 +217,34 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     if (!found.ok || dead.has(found.value.entity.id.value)) continue
     const { entity, data } = found.value
     if (data.hurtbox.get().faction === damage.faction) continue
-    const invulnerable = data.invulnerable.get().remaining
-    if (invulnerable > 0) continue
-
     const { blow } = damage
+    const invulnerable = data.invulnerable.get().remaining
+    if (invulnerable > 0 && !blow.periodic) continue
+
     const health = data.health.get()
     const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
     const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, health) : 0
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100), data.stats.get().def)
+    const state = data.state.get().current
+    const enemy = data.enemy.present ? data.enemy.get().kind : undefined
+    const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
+    const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state, affinity)
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor, data.stats.get().def)
     const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.
     if (blow.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
-    data.flash.set({ remaining: tuning.feedback.hitFlash })
-    // One mistake costs one hit: the player is briefly untouchable afterwards.
-    if (data.player.present) {
-      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
-      hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
+    if (!blow.periodic) {
+      data.flash.set({ remaining: tuning.feedback.hitFlash })
+      // One mistake costs one hit: the player is briefly untouchable afterwards.
+      if (data.player.present) {
+        data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+        hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
+      }
+      const push = blow.knockback * knockbackTaken(tuning, enemy)
+      data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
+      // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
+      if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
     }
-    const enemy = data.enemy.present ? data.enemy.get().kind : undefined
-    const push = blow.knockback * knockbackTaken(tuning, enemy)
-    data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
-
-    // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
-    if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
 
     const at = data.position.get()
     const killed = current <= 0
@@ -273,8 +256,18 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       amount,
       faction: data.hurtbox.get().faction,
       killed,
-      heavy: blow.heavy
+      heavy: blow.heavy,
+      periodic: blow.periodic,
+      element: blow.element?.id ?? null
     })
+    // The blow's element takes hold of a body that survives it (a burn only burns); wind drives it.
+    if (!killed && blow.element !== null && !blow.periodic) {
+      const afflicted = afflict(tuning, state, blow.element, blow.charges, affinity)
+      data.state.set({ current: afflicted.state })
+      if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction })
+      const gust = blow.element.id === "wind" ? tuning.elements.wind.seconds * durationFactor(tuning, affinity) : 0
+      if (gust > 0) data.gust.set({ remaining: gust })
+    }
     if (!killed) continue
 
     dead.add(entity.id.value)
@@ -324,16 +317,24 @@ export const TickCombatTimers = Game.System("Shooter/TickCombatTimers", {
   }
 })
 
-/** Knockback velocity decays exponentially (frame-rate independent). */
+/**
+ * Knockback velocity decays exponentially (frame-rate independent), slower
+ * while wind drives the body (see `pushDecay`); the wind's drive runs down
+ * here too, after the step's movement used it.
+ */
 export const DecayKnockback = Game.System("Shooter/DecayKnockback", {
-  queries: { pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback) } }) },
+  queries: { pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback), gust: Game.Query.write(Gust) } }) },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
 }, ({ queries, resources }) => {
-  const factor = Math.exp(-resources.tuning.get().knockback.decay * resources.time.get().dt)
+  const tuning = resources.tuning.get()
+  const dt = resources.time.get().dt
   for (const { data } of queries.pushed.each()) {
+    const gust = data.gust.get()
     const current = data.knockback.get()
-    if (current.x === 0 && current.y === 0) continue
-    const next = scale(current, factor)
-    data.knockback.set(Math.hypot(next.x, next.y) < 0.5 ? { x: 0, y: 0 } : next)
+    if (current.x !== 0 || current.y !== 0) {
+      const next = scale(current, Math.exp(-pushDecay(tuning, gust) * dt))
+      data.knockback.set(Math.hypot(next.x, next.y) < 0.5 ? { x: 0, y: 0 } : next)
+    }
+    if (gust.remaining > 0) data.gust.set({ remaining: Math.max(0, gust.remaining - dt) })
   }
 })

@@ -45,6 +45,11 @@ export type SoundName =
   | "power"
   | "block"
   | "waveStart"
+  | "ignite"
+  | "splash"
+  | "sizzle"
+  | "slam"
+  | "disc"
 
 export interface PlayOptions {
   /** Loudness factor, 1 by default. */
@@ -279,6 +284,35 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     click(v, 0.5)
     metal(v, 1250, 0.5, 0.16)
     noise(v, "bandpass", 3500, 2500, 0.06, 0.2, 3)
+  }],
+  // Catching fire: a soft rush of flame with a crackle.
+  ignite: [{ reverb: 0.2, interval: 0.08 }, (v) => {
+    noise(v, "bandpass", 700, 1800, 0.35, 0.3, 0.8, 0, 0.05)
+    crunch(v, 2600, 1800, 0.06, 0.12, 0.05)
+    crunch(v, 3200, 2000, 0.05, 0.1, 0.14)
+  }],
+  // Getting soaked: a splash, a low gulp and a spray.
+  splash: [{ reverb: 0.2, interval: 0.08 }, (v) => {
+    tone(v, "sine", 420, 160, 0.12, 0.25, 0, 0.004)
+    noise(v, "bandpass", 2400, 900, 0.25, 0.3, 1.2)
+  }],
+  // Water meeting fire: a hiss of steam.
+  sizzle: [{ reverb: 0.3, interval: 0.1 }, (v) => {
+    noise(v, "highpass", 5200, 3000, 0.45, 0.32, 0.7, 0, 0.02)
+    noise(v, "bandpass", 1600, 700, 0.3, 0.12, 1)
+  }],
+  // A body slammed into a wall: a deep thud and a crack of stone.
+  slam: [{ reverb: 0.35, heavy: true, interval: 0.06 }, (v) => {
+    click(v, 0.5)
+    tone(v, "sine", 90, 30, 0.4, 0.9, 0, 0.002)
+    crunch(v, 800, 220, 0.2, 0.5)
+    noise(v, "lowpass", 1200, 100, 0.4, 0.35)
+  }],
+  // A disc thrown: a spinning whir rising and falling, with a faint metallic hum.
+  disc: [{ reverb: 0.15, interval: 0.04 }, (v) => {
+    swish(v, { low: 900, peak: 2600, duration: 0.22, peakAt: 0.3, q: 2.5, gain: 0.45 })
+    swish(v, { low: 1400, peak: 3200, duration: 0.18, peakAt: 0.6, q: 4, gain: 0.2, delay: 0.06 })
+    tone(v, "triangle", 620, 540, 0.2, 0.04)
   }],
   // A new wave: two rising notes.
   waveStart: [{ reverb: 0.4 }, (v) => {

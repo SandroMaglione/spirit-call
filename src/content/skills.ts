@@ -3,6 +3,8 @@
  * live-tunable: they are part of the `Tuning` resource.
  */
 
+import type { ElementId, GroundSpec } from "./elements.ts"
+
 // ── Skill shapes ──────────────────────────────────────────────────────────
 //
 // A skill is an effect plus what it costs to use: a cooldown, energy, or
@@ -14,6 +16,8 @@
 interface EffectBase {
   /** Damage, as a percentage of the attacker's ATK (100: exactly its ATK). */
   readonly power: number
+  /** The element it applies to what it hits (see `content/elements.ts`), or `null`. */
+  readonly element: ElementId | null
   readonly knockback: number
   /** Hit-stop when it lands on an enemy (seconds, 0 disables). */
   readonly hitStop: number
@@ -38,6 +42,8 @@ export interface LobEffect extends EffectBase {
   /** Time between landing and exploding (its blast ring is visible meanwhile). */
   readonly fuse: number
   readonly radius: number
+  /** Its element left on the ground where it explodes, or `null`. */
+  readonly leaves: GroundSpec | null
 }
 
 /** A blast around the caster that knocks everything back and grants a moment of invulnerability. */
@@ -81,21 +87,51 @@ const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<E
 
 /** Every skill, by id. */
 export const skills = {
-  /** The sword's special: a long cut that drives enemies back. */
+  /** The sword's special: a long, wide cut of wind that drives enemies back in a glide. */
   bladeWave: skill({
     name: "Blade Wave",
     label: "WAVE",
     cooldown: 3.5,
     energy: 0,
-    effect: cut({ length: 320, width: 70, power: 34, knockback: 950, active: 0.12, hitStop: 0.06, heavy: true })
+    effect: cut({ length: 320, width: 120, power: 34, element: "wind", knockback: 900, active: 0.12, hitStop: 0.06, heavy: true })
   }),
-  /** Lobbed to the cursor over walls; explodes after landing. */
+  /** Lobbed to the cursor over walls; explodes after landing, setting what it hits on fire and leaving a fire pool. */
   grenade: skill({
     name: "Grenade",
     label: "GRENADE",
     cooldown: 4,
     energy: 0,
-    effect: lob({ maxRange: 360, flightTime: 0.35, fuse: 0.45, radius: 95, power: 38, knockback: 380, hitStop: 0, heavy: false })
+    effect: lob({
+      maxRange: 360,
+      flightTime: 0.35,
+      fuse: 0.45,
+      radius: 95,
+      power: 38,
+      element: "fire",
+      knockback: 380,
+      hitStop: 0,
+      heavy: false,
+      leaves: { element: "fire", radius: 80, seconds: 3 }
+    })
+  }),
+  /** A burst of water lobbed to the cursor: it soaks what it hits and leaves a puddle that slows anyone in it. */
+  splash: skill({
+    name: "Splash",
+    label: "SPLASH",
+    cooldown: 4,
+    energy: 0,
+    effect: lob({
+      maxRange: 340,
+      flightTime: 0.25,
+      fuse: 0.08,
+      radius: 100,
+      power: 24,
+      element: "water",
+      knockback: 260,
+      hitStop: 0,
+      heavy: false,
+      leaves: { element: "water", radius: 115, seconds: 5 }
+    })
   }),
   /** A large blast around the player, powered by energy from dealing damage. */
   nova: skill({
@@ -103,7 +139,7 @@ export const skills = {
     label: "NOVA",
     cooldown: 0,
     energy: 100,
-    effect: nova({ radius: 240, power: 60, knockback: 760, active: 0.1, invulnerability: 0.35, clearsProjectiles: true, hitStop: 0, heavy: true })
+    effect: nova({ radius: 240, power: 60, element: null, knockback: 760, active: 0.1, invulnerability: 0.35, clearsProjectiles: true, hitStop: 0, heavy: true })
   })
 }
 

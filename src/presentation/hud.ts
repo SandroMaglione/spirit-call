@@ -6,7 +6,8 @@ import { touchButtons } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
-import { Build, Challenge, Controls, Dash, Enemy, EnemyLevel, Energy, Flow, Game, Health, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
+import type { StateId } from "../content/elements.ts"
+import { Build, Challenge, Controls, Dash, ElementState, Enemy, EnemyLevel, Energy, Flow, Game, Health, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -81,6 +82,9 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   }
 })
 
+/** How the HUD names the player's state. */
+const stateNames: Record<StateId, string> = { burning: "BURNING", soaked: "SOAKED" }
+
 /** Each slot's skill and how far it is from ready (0..1, see `skillRecharge`). */
 const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =>
   bySlot((slot) => {
@@ -103,7 +107,10 @@ const recharge = (weapon: { readonly cooldown: number; readonly recovery: number
 
 export const SyncHud = Game.System("Shooter/SyncHud", {
   queries: {
-    player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy) }, with: [Player] }),
+    player: Game.Query({
+      selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), state: Game.Query.read(ElementState) },
+      with: [Player]
+    }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   },
@@ -153,6 +160,13 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
       refs.cooldown.style.height = `${100 * slots[slot].recharge}%`
       refs.root.classList.toggle("is-ready", slots[slot].recharge <= 0)
     }
+  }
+  // The player's state, under the health bar.
+  const state = player.ok && player.value !== undefined ? player.value.data.state.get().current : null
+  hud.state.hidden = state === null
+  if (state !== null) {
+    setText(hud.state, `${stateNames[state.id]} ${state.remaining.toFixed(1)}s`)
+    hud.state.className = `hud__state hud__state--${state.id}`
   }
   hud.health.style.width = `${(100 * health.current) / health.max}%`
   hud.healthText.textContent = `${Math.ceil(health.current)} / ${health.max}`
