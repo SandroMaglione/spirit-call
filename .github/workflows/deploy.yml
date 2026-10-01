@@ -52,7 +52,7 @@ jobs:
           # Alchemy reads the pull request number from PULL_REQUEST, and an
           # empty value is not a number, so it is only set on pull requests
           if [ -n "$PR" ]; then export PULL_REQUEST="$PR"; fi
-          pnpm alchemy provider check-env
+          pnpm alchemy provider check-env --provider Cloudflare --provider GitHub
           pnpm alchemy deploy --stage "$STAGE" --yes --no-input
 
   cleanup:
