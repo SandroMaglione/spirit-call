@@ -54,6 +54,9 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     if (action.kind === "attack") {
       sounds.play(moveSounds[action.move.shape], { pitch: action.power ? powerPitch : 1 + action.step * comboPitchStep })
       if (action.power) sounds.play("power")
+    } else if (action.kind === "switch") {
+      // A fall is heard through the death; the one coming in after it, softer.
+      sounds.play("switch", { volume: action.fell ? 0.6 : 1 })
     } else sounds.play(action.kind)
   }
   for (const cast of events.cast.all()) {

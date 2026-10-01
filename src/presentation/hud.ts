@@ -2,16 +2,15 @@
  * The in-arena HUD (plain DOM): health, dash, challenge progress, skill
  * slots, the wave banner, and the touch pad.
  */
-import { touchButtons } from "../config/input.ts"
+import { actionButtons } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import type { StateId } from "../content/elements.ts"
-import { Build, Challenge, Controls, Dash, ElementState, Enemy, EnemyLevel, Energy, Flow, Game, Health, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
+import { Challenge, Controls, Dash, ElementState, Enemy, EnemyLevel, Energy, Flow, Game, Health, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
-import { resolveBuild } from "../features/build.ts"
 import { setText } from "./draw.ts"
 
 /**
@@ -66,7 +65,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   if (slots !== undefined) {
     for (const slot of skillSlots) setText(pad.buttons[slot].root.querySelector("span"), slots[slot].spec.label)
   }
-  for (const name of touchButtons) {
+  for (const name of actionButtons) {
     const zone = live.layout.buttons[name]
     const refs = pad.buttons[name]
     const state = live.buttons[name]
@@ -119,7 +118,6 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     waves: Game.System.readResource(Waves),
     run: Game.System.readResource(Run),
     tuning: Game.System.readResource(Tuning),
-    build: Game.System.readResource(Build),
     challenge: Game.System.readResource(Challenge),
     enemyLevel: Game.System.readResource(EnemyLevel)
   },
@@ -150,7 +148,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
   stats.sinceHud = 0
   const player = queries.player.singleOptional()
   const dash = player.ok && player.value !== undefined ? player.value.data.dash.get() : undefined
-  const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: resolveBuild(resources.tuning.get(), resources.build.get()).stats.hp }
+  const health = player.ok && player.value !== undefined ? player.value.data.health.get() : { current: 0, max: 1 }
   if (player.ok && player.value !== undefined) {
     // Each slot drains as its cooldown runs down and as energy fills up.
     const slots = skillStatus(resources.tuning.get(), player.value.data.skills.get(), player.value.data.energy.get().current)

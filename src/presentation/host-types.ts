@@ -1,6 +1,6 @@
 import type { Application, Container, Graphics, Sprite, Texture } from "pixi.js"
 
-import type { TouchButton } from "../config/input.ts"
+import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
 
 import type { Fx } from "./fx.ts"
@@ -40,7 +40,7 @@ export interface TouchPadRefs {
   readonly root: HTMLElement
   readonly stick: HTMLElement
   readonly knob: HTMLElement
-  readonly buttons: { readonly [K in TouchButton]: TouchButtonRefs }
+  readonly buttons: { readonly [K in ActionButton]: TouchButtonRefs }
 }
 
 export interface HudRefs {

@@ -50,7 +50,7 @@ describe("account store", () => {
       Effect.gen(function*() {
         yield* store.unlock([{ kind: "weapon", id: "crescendo" }])
         yield* store.equip("swordsman", { weapon: "crescendo", skills: { special: "nova", ultimate: "bladeWave" } })
-        yield* store.recordRun({ kind: "quest", quest: "theSwarm" }, { cleared: true, challenge: "swarm", characters: ["swordsman"], wave: 3, kills: 9, time: 60 })
+        yield* store.recordRun({ kind: "quest", quest: "theSwarm" }, { cleared: true, challenge: "swarm", wave: 3, kills: 9, time: 60 })
         yield* store.select("gunner", { kind: "quest", quest: "holdTheLine" })
         return yield* kv.get(accountKey)
       }))
@@ -74,7 +74,7 @@ describe("account store", () => {
     const result = await withAccount({ [accountKey]: v1 }, (store, kv) =>
       Effect.gen(function*() {
         const before = (yield* store.get).totals
-        yield* store.recordRun(null, { cleared: true, challenge: "swarm", characters: ["swordsman"], wave: 3, kills: 9, time: 60 })
+        yield* store.recordRun(null, { cleared: true, challenge: "swarm", wave: 3, kills: 9, time: 60 })
         return { before, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.before).toEqual({ runs: 0, clears: 0, kills: 0, secondsPlayed: 0 })

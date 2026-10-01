@@ -1,8 +1,8 @@
 import { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import { Application, Container, Graphics } from "pixi.js"
 
-import { touchButtons } from "../config/input.ts"
-import type { TouchButton } from "../config/input.ts"
+import { actionButtons } from "../config/input.ts"
+import type { ActionButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
@@ -10,7 +10,7 @@ import type { HudRefs, ProjectileNode, RenderAssets, RenderHostValue, RenderNode
 import { drawFloor } from "./nodes.ts"
 
 /** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
-const padLabels: Record<TouchButton, string> = { attack: "ATTACK", special: "", dash: "DASH", ultimate: "" }
+const padLabels: Record<ActionButton, string> = { attack: "ATTACK", special: "", dash: "DASH", ultimate: "" }
 
 const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => {
   const root = document.createElement("div")
@@ -34,14 +34,14 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <button class="hud__mute" data-mute type="button" title="Sound (M)">🔊</button>
     <div class="pad" data-pad hidden>
       <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
-      ${touchButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
+      ${actionButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
     </div>
   `
   const slot = (id: string) => {
     const element = root.querySelector<HTMLElement>(`[data-skill="${id}"]`)!
     return { root: element, cooldown: element.querySelector<HTMLElement>("[data-cooldown]")! }
   }
-  const padButton = (name: TouchButton) => {
+  const padButton = (name: ActionButton) => {
     const button = root.querySelector<HTMLElement>(`[data-button="${name}"]`)!
     return { root: button, cooldown: button.querySelector<HTMLElement>("[data-cooldown]")!, aim: root.querySelector<HTMLElement>(`[data-aim="${name}"]`)! }
   }

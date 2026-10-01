@@ -35,16 +35,6 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           {earned.level.after > earned.level.before && <b class="results__level-up">Account level {earned.level.after}!</b>}
         </div>
       )}
-      {earned !== null && earned.characters.length > 0 && (
-        <div class="results__characters">
-          {earned.characters.map((grown) => (
-            <span key={grown.character}>
-              {tuning.characters[grown.character].name} +{grown.experience} XP
-              {grown.level.after > grown.level.before && <b class="results__level-up"> Lv {grown.level.after}!</b>}
-            </span>
-          ))}
-        </div>
-      )}
       {earned?.rewards != null && earned.rewards.unlocks.length > 0 && (
         <div class="results__unlocked">Unlocked: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</div>
       )}

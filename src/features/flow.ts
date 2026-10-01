@@ -1,11 +1,11 @@
 /**
- * The run lifecycle: playing until the player dies (`GameOver`) or clears
- * the challenge (`Cleared`, see `CheckObjective`), a results screen, and a
- * restart that clears the run and starts over.
+ * The run lifecycle: playing until the whole team has fallen (`GameOver`)
+ * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
+ * screen, and a restart that clears the run and starts over.
  */
 import type { ChallengeId } from "../content/challenges.ts"
-import { Build, Challenge, Death, Flow, Game, HitStop, Keys, Rng, Run, RunResult, RunScope, Stats, Time, Tuning, Waves } from "../schema.ts"
-import type { BuildValue, RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
+import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Rng, Run, RunResult, RunScope, Stats, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import type { RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
 import { initialWaves } from "./waves.ts"
 
 export const TrackRun = Game.System("Shooter/TrackRun", {
@@ -16,33 +16,31 @@ export const TrackRun = Game.System("Shooter/TrackRun", {
 })
 
 /** How a run that ends now went. */
-export const runResultOf = (cleared: boolean, challenge: ChallengeId, build: BuildValue, run: RunValue, waves: WavesValue, stats: StatsValue): RunResultValue => ({
+export const runResultOf = (cleared: boolean, challenge: ChallengeId, run: RunValue, waves: WavesValue, stats: StatsValue): RunResultValue => ({
   cleared,
   challenge,
-  characters: [build.character],
   wave: waves.number,
   kills: stats.kills,
   time: run.time
 })
 
-/** The player's death ends the run, lost. */
+/** The whole team fallen ends the run, lost (one falling brings in the next, see `SwitchCharacter`). */
 export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
-  events: { death: Game.System.readEvent(Death) },
+  queries: { members: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Member] }) },
   resources: {
     run: Game.System.writeResource(Run),
     result: Game.System.writeResource(RunResult),
     challenge: Game.System.readResource(Challenge),
-    build: Game.System.readResource(Build),
     waves: Game.System.readResource(Waves),
     stats: Game.System.readResource(Stats),
     time: Game.System.readResource(Time)
   },
   nextMachines: { flow: Game.System.nextState(Flow) }
-}, ({ events, resources, nextMachines }) => {
-  if (!events.death.all().some((death) => death.faction === "player")) return
+}, ({ queries, resources, nextMachines }) => {
+  if (queries.members.each().some(({ data }) => data.health.get().current > 0)) return
   const run = { ...resources.run.get(), endedAt: resources.time.get().elapsed }
   resources.run.set(run)
-  resources.result.set(runResultOf(false, resources.challenge.get(), resources.build.get(), run, resources.waves.get(), resources.stats.get()))
+  resources.result.set(runResultOf(false, resources.challenge.get(), run, resources.waves.get(), resources.stats.get()))
   nextMachines.flow.set("GameOver")
 })
 
@@ -77,7 +75,8 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     rng: Game.System.writeResource(Rng),
     run: Game.System.writeResource(Run),
     result: Game.System.writeResource(RunResult),
-    hitStop: Game.System.writeResource(HitStop)
+    hitStop: Game.System.writeResource(HitStop),
+    teamSwitch: Game.System.writeResource(TeamSwitch)
   }
 }, ({ resources }) => {
   const tuning = resources.tuning.get()
@@ -87,6 +86,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.run.set({ time: 0, endedAt: null })
   resources.result.set(null)
   resources.hitStop.set({ remaining: 0 })
+  resources.teamSwitch.set({ cooldown: 0 })
 })
 
 /** Removes everything the previous run spawned (enemies, projectiles, hitboxes, spawn warnings). */

@@ -28,7 +28,7 @@ export interface Unlocked {
   readonly unlockedAt: number
 }
 
-/** A character owned, and its experience (its level comes from it, see `characterLevel`). */
+/** A character owned, and its experience (its level comes from it, see `characterLevel`; gained by training, see `train`). */
 export interface OwnedCharacter extends Unlocked {
   readonly experience: number
 }
@@ -370,13 +370,11 @@ export interface Earned {
   readonly experience: number
   /** The account level before and after the run. */
   readonly level: LevelChange
-  /** Experience each character that fought earned, and its level before and after. */
-  readonly characters: ReadonlyArray<{ readonly character: CharacterId; readonly experience: number; readonly level: LevelChange }>
   /** A quest's first-clear rewards, or a tier's rewards for the period, when this run earned them. */
   readonly rewards: Rewards | null
 }
 
-/** Experience a run earns with `earns` (the account's, or each character's): something for trying, more for clearing, a little per kill. */
+/** Account experience a run earns with `earns`: something for trying, more for clearing, a little per kill. */
 export const runExperience = (earns: RunEarnings, result: RunResultValue): number =>
   earns.attempt + (result.cleared ? earns.clear : 0) + result.kills * earns.perKill
 
@@ -392,7 +390,8 @@ const counted = (progress: QuestProgress, result: RunResultValue, now: number): 
  * A run counts toward what it played: clearing a quest the first time gives
  * its rewards, and clearing a hardcore tier gives its rewards the first
  * time in each period. A run of nothing (a dev quick start) only adds to
- * the totals and experience.
+ * the totals and experience. Characters do not grow from runs: they are
+ * trained with gold (see `train`), so none falls behind on the bench.
  */
 export const recordRun = (
   tuning: Tuning,
@@ -433,17 +432,8 @@ export const recordRun = (
     next = rewards.unlocks.reduce((owner, item) => unlock(tuning, owner, item, now), earn(next, rewards.currencies))
   }
   next = { ...next, experience: account.experience + experience }
-  // Each character that fought grows (only once, if it was in the team twice).
-  const characterExperience = runExperience(tuning.progression.character.run, result)
-  const characters: Array<Earned["characters"][number]> = []
-  for (const character of new Set(result.characters)) {
-    if (!owns(next, { kind: "character", id: character })) continue
-    const before = characterLevel(tuning, next, character).level
-    next = addCharacterExperience(next, character, characterExperience)
-    characters.push({ character, experience: characterExperience, level: { before, after: characterLevel(tuning, next, character).level } })
-  }
   const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
-  return { account: next, earned: { experience, level, characters, rewards } }
+  return { account: next, earned: { experience, level, rewards } }
 }
 
 /** `character`'s equipment in `account` (its own when it has none saved). */

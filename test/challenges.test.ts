@@ -52,7 +52,7 @@ describe("challenges", () => {
     expect(run.waves().number).toBe(2)
     expect(run.waves().phase).toBe("complete")
     // The game records how it went, for the results screen (and rewards).
-    expect(run.result()).toMatchObject({ cleared: true, challenge: "swarm", characters: ["swordsman"], wave: 2 })
+    expect(run.result()).toMatchObject({ cleared: true, challenge: "swarm", wave: 2 })
   })
 
   it("clear-waves: not cleared while enemies of the last wave are alive", () => {

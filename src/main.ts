@@ -5,7 +5,7 @@ import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
-import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery } from "./dev/build.ts"
+import { challengeFromQuery, enemyLevelFromQuery, teamFromQuery } from "./dev/build.ts"
 import { startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
@@ -42,18 +42,18 @@ const start = async (mount: HTMLElement) => {
   const shell = await startApp(tuning)
   const { account } = shell
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
-  // entering with the account's selection or the URL's `?character=gunner&weapon=…&challenge=swarm` (see dev/build.ts).
+  // entering with the account's selection or the URL's `?team=gunner,swordsman&weapon=…&challenge=swarm` (see dev/build.ts).
   const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
-  const lastBuild = buildOf(tuning, account, account.selection.character)
-  const build = quickStart ? buildFromQuery(tuning, window.location.search, lastBuild) : lastBuild
+  const lastTeam = [buildOf(tuning, account, account.selection.character)]
+  const team = quickStart ? teamFromQuery(tuning, window.location.search, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam
   const selected = encounterOf(tuning, account.selection.play)
   const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
   const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, selected.enemyLevel) : selected.enemyLevel
   /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
   let playing: Play | null = null
   const uiRequests = emptyUiRequests()
-  const uiStore = createUiStore({ tuning, build, challenge, flow, account, notices: shell.notes })
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, notices: shell.notes })
   shell.onAccount((next) => {
     uiStore.account.value = next
   })
@@ -79,7 +79,7 @@ const start = async (mount: HTMLElement) => {
         if (selected === undefined) return
         playing = play
         uiStore.play.value = play
-        uiRequests.pending.push({ kind: "start", build: buildOf(tuning, selected, character), ...encounterOf(tuning, play) })
+        uiRequests.pending.push({ kind: "start", team: [buildOf(tuning, selected, character)], ...encounterOf(tuning, play) })
       })
     },
     equip: shell.equip,
@@ -136,7 +136,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(UiRequests, uiRequests),
       Game.Runtime.service(UiStoreService, uiStore)
     ),
-    resources: initialResources(tuning, frameContext.viewport, build, challenge, enemyLevel),
+    resources: initialResources(tuning, frameContext.viewport, team, challenge, enemyLevel),
     machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true

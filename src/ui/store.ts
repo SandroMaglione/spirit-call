@@ -22,8 +22,8 @@ export interface UiStore {
   readonly device: Signal<"desktop" | "touch">
   /** The content (characters, weapons, skills, challenges) and its numbers. */
   readonly tuning: Signal<Tuning>
-  /** The build and challenge of the run going on, or of the last one. */
-  readonly build: Signal<BuildValue>
+  /** The team and challenge of the run going on, or of the last one. */
+  readonly team: Signal<ReadonlyArray<BuildValue>>
   readonly challenge: Signal<ChallengeId>
   /** The player's account: what it owns, each character's equipment, and the last selection (the menu starts from it). */
   readonly account: Signal<Account>
@@ -39,7 +39,7 @@ export interface UiStore {
 
 export const createUiStore = (initial: {
   readonly tuning: Tuning
-  readonly build: BuildValue
+  readonly team: ReadonlyArray<BuildValue>
   readonly challenge: ChallengeId
   readonly flow: FlowState
   readonly account: Account
@@ -48,7 +48,7 @@ export const createUiStore = (initial: {
   flow: signal(initial.flow),
   device: signal("desktop"),
   tuning: signal(initial.tuning),
-  build: signal(initial.build),
+  team: signal(initial.team),
   challenge: signal(initial.challenge),
   account: signal(initial.account),
   play: signal(null),
