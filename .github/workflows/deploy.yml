@@ -1,6 +1,8 @@
 # Checks and deploys the game to Cloudflare (deploy/alchemy.run.ts):
 # main deploys `prod`, every pull request deploys a `pr-<n>` preview (its
 # address is commented on the PR), and closing the PR destroys the preview.
+# It can also be started by hand or by another workflow (bevy-ts.yml), which
+# deploys `prod` from main.
 # Builds use the published bevy-ts release in package.json `bevyTsRelease`.
 # The Cloudflare secrets come from deploy/stacks/github.ts.
 name: Deploy
@@ -10,6 +12,7 @@ on:
     branches: [main]
   pull_request:
     types: [opened, reopened, synchronize, closed]
+  workflow_dispatch:
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -20,7 +23,8 @@ env:
 
 jobs:
   deploy:
-    if: github.event.action != 'closed'
+    # Started by hand, it only deploys from main (it deploys prod)
+    if: github.event.action != 'closed' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read

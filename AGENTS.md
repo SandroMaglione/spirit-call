@@ -21,7 +21,9 @@ effects, enemy traits).
   preview per pull request, building against the published bevy-ts release
   in package.json `bevyTsRelease` (bump it after each bevy-ts release the
   game needs; `scripts/use-published-bevy-ts.ts` does the swap). Its
-  Cloudflare secrets come from `deploy/stacks/github.ts`.
+  Cloudflare secrets come from `deploy/stacks/github.ts`. The bump is
+  automatic: `.github/workflows/bevy-ts.yml` checks npm hourly, checks the
+  game against a new release, commits the bump to main, and deploys prod.
 - `?play` in the URL skips the menu (with `?character=`, `?weapon=`,
   `?challenge=` for a quick start); backquote opens the tuning panel
   (live numbers, spawns, "Unlock all").
