@@ -1,6 +1,6 @@
 import type { Application, Container, Graphics, Sprite, Texture } from "pixi.js"
 
-import type { TouchButton } from "../config/input.ts"
+import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
 
 import type { Fx } from "./fx.ts"
@@ -40,7 +40,22 @@ export interface TouchPadRefs {
   readonly root: HTMLElement
   readonly stick: HTMLElement
   readonly knob: HTMLElement
-  readonly buttons: { readonly [K in TouchButton]: TouchButtonRefs }
+  readonly buttons: { readonly [K in ActionButton]: TouchButtonRefs }
+}
+
+/** One team member's switch button: her face (key, state dot), name, and health. */
+export interface TeamMemberRefs {
+  readonly root: HTMLElement
+  readonly face: HTMLElement
+  readonly state: HTMLElement
+  readonly name: HTMLElement
+  readonly health: HTMLElement
+}
+
+/** The team, one entry per slot: a column on the right, placed on the touch switch buttons on touch screens. */
+export interface TeamRefs {
+  readonly root: HTMLElement
+  readonly members: ReadonlyArray<TeamMemberRefs>
 }
 
 export interface HudRefs {
@@ -52,14 +67,15 @@ export interface HudRefs {
   /** Sound on/off. */
   readonly mute: HTMLButtonElement
   readonly pad: TouchPadRefs
+  /** What is being played (top left, small): its name and level, and how far the run is. */
+  readonly quest: HTMLElement
+  readonly progress: HTMLElement
+  /** The character on the field (bottom center): her name, health, and state (burning, soaked; hidden when in none). */
+  readonly name: HTMLElement
   readonly health: HTMLElement
   readonly healthText: HTMLElement
-  /** The player's state (burning, soaked), hidden when in none. */
   readonly state: HTMLElement
-  readonly dash: HTMLElement
-  readonly wave: HTMLElement
-  readonly combat: HTMLElement
-  readonly stats: HTMLElement
+  readonly team: TeamRefs
   readonly banner: HTMLElement
   readonly vignette: HTMLElement
 }

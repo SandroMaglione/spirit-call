@@ -1,58 +1,11 @@
 /**
- * The controlled character: spawned from the `Build` (see `resolveBuild`),
- * running at its speed, aiming, and dashing.
+ * The controlled character (the team member on the field, see
+ * `features/team.ts`): running at her speed, aiming, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import {
-  Action,
-  Aim,
-  Build,
-  CombatStats,
-  Controls,
-  Dash,
-  ElementState,
-  Energy,
-  Game,
-  Invulnerable,
-  Passives,
-  Player,
-  Position,
-  Renderable,
-  RunScope,
-  Skills,
-  Time,
-  Tuning,
-  Velocity,
-  Weapon
-} from "../schema.ts"
-import type { ResolvedBuild } from "./build.ts"
-import { makeBody } from "./bodies.ts"
-import { resolveBuild } from "./build.ts"
+import { Action, Aim, CombatStats, Controls, Dash, ElementState, Game, Invulnerable, Player, Position, Time, Tuning, Velocity, Weapon } from "../schema.ts"
 import { stateSpeed } from "./elements.ts"
-import { initialSkills } from "./skills.ts"
-import { charging, initialWeapon } from "./weapons.ts"
-
-/** The player: a body (taking every element as it is) with the build's kit. */
-export const makePlayer = (build: ResolvedBuild, at: Vec2) =>
-  Game.Command.insert(
-    makeBody({ at, faction: "player", stats: build.stats, radius: build.radius, hurtboxRadius: build.hurtboxRadius, affinities: {} }),
-    [Player, {}],
-    [Aim, { x: 1, y: 0 }],
-    [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
-    [Passives, build.passives],
-    [Weapon, initialWeapon(build)],
-    [Skills, initialSkills(build)],
-    [Energy, { current: 0 }],
-    [Renderable, { kind: "player", radius: build.radius }]
-  )
-
-export const SpawnPlayer = Game.System("Shooter/SpawnPlayer", {
-  resources: { tuning: Game.System.readResource(Tuning), build: Game.System.readResource(Build) }
-}, ({ resources, commands }) => {
-  const tuning = resources.tuning.get()
-  commands.spawnIn(RunScope, makePlayer(resolveBuild(tuning, resources.build.get()), { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }))
-})
+import { charging } from "./weapons.ts"
 
 /**
  * Turns controls into aim and velocity. A dash moves the player a fixed

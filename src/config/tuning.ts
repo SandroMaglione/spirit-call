@@ -55,7 +55,17 @@ export const defaultTuning = {
     muzzleOffset: 12
   },
 
-  /** Every character, by id; the `Build` resource picks the one in the arena. */
+  /** Switching between the team's characters (see features/team.ts). */
+  team: {
+    /** Seconds after a switch before the next one. */
+    switchCooldown: 1,
+    /** The share of the energy the character on the field earns that each one on the bench gains. */
+    benchEnergyShare: 0.6,
+    /** Invulnerability for the character who comes in when the last one falls: she did not choose the moment. */
+    fallProtection: 1
+  },
+
+  /** Every character, by id; the `Team` resource picks the ones in the arena. */
   characters,
 
   /** Levels and what runs earn (see content/progression.ts). */

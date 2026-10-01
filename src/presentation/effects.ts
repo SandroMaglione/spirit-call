@@ -47,6 +47,13 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       fx.ring(at, (release ? 70 : 44) * projection.zoom, view.charge.full, release ? 0.3 : 0.25)
       if (release) feedback.shake = Math.max(feedback.shake, impact.shake)
     }
+    // A character comes in: a flash and a ring in her color.
+    if (action.kind === "switch") {
+      const at = toScreen(projection, action.at)
+      const color = view.characters[action.character]
+      fx.flash({ x: at.x, y: at.y - impact.height * projection.zoom }, 40, color, 0.14)
+      fx.ring(at, 56 * projection.zoom, color, 0.35)
+    }
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
     if (action.kind === "attack" && isMelee(action.move)) {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)

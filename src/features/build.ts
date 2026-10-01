@@ -1,8 +1,8 @@
 /**
  * Builds and the damage formula.
  *
- * A `Build` (a character plus the weapon and skills equipped on it) resolves
- * into the final stats, kit, and passives the player spawns with. The weapon
+ * A build (a character plus the weapon and skills equipped on it) resolves
+ * into the final stats, kit, and passives she enters the arena with. The weapon
  * adds its ATK to the character's, then its bonus raises one stat by a
  * percentage.
  *
@@ -11,7 +11,7 @@
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { AttackId } from "../content/attacks.ts"
-import type { Stats } from "../content/characters.ts"
+import type { CharacterId, Stats } from "../content/characters.ts"
 import type { StatCurve } from "../content/progression.ts"
 import type { Passive } from "../content/passives.ts"
 import { bySlot } from "../content/skills.ts"
@@ -20,6 +20,7 @@ import type { WeaponId, WeaponSpec } from "../content/weapons.ts"
 import type { BuildValue } from "../schema.ts"
 
 export interface ResolvedBuild {
+  readonly character: CharacterId
   readonly stats: Stats
   readonly radius: number
   readonly hurtboxRadius: number
@@ -53,6 +54,9 @@ export const weaponAtk = (tuning: TuningValue, weapon: WeaponSpec, level: number
 /** The build the game starts with: the first character, with its own weapon and skills. */
 export const defaultBuild: BuildValue = { character: "swordsman", skills: {} }
 
+/** The team the game starts with: the default build alone. */
+export const defaultTeam: ReadonlyArray<BuildValue> = [defaultBuild]
+
 /**
  * Final stats and kit of `build`: the character's stats at its level, with
  * its weapon at its level (the equipped one if it is of the character's
@@ -63,6 +67,7 @@ export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBu
   const character = tuning.characters[build.character]
   const weapon = build.weapon !== undefined && tuning.weapons[build.weapon].type === character.weaponType ? build.weapon : character.weapon
   return {
+    character: build.character,
     stats: withWeapon(statsAtLevel(tuning, character.stats, build.level ?? 1), tuning.weapons[weapon], weaponAtk(tuning, tuning.weapons[weapon], build.weaponLevel ?? 1)),
     radius: character.radius,
     hurtboxRadius: character.hurtboxRadius,

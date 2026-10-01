@@ -80,12 +80,19 @@ export const stateSpeed = (tuning: TuningValue, state: { readonly current: Activ
  * Runs states down: burning bodies take a burn every tick (from no side:
  * it hurts anyone) and set burning the bodies they touch that are in no
  * state, for the time the fire has left (so a fire passed around a pack
- * burns out together). Spreading goes one body further each step.
+ * burns out together). Spreading goes one body further each step. A team
+ * member on the bench has no body: her state runs down (and burns) all the
+ * same, but she touches no one.
  */
 export const TickStates = Game.System("Shooter/TickStates", {
   queries: {
     bodies: Game.Query({
-      selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), state: Game.Query.write(ElementState), affinities: Game.Query.read(ElementAffinities) },
+      selection: {
+        position: Game.Query.optional(Position),
+        body: Game.Query.optional(Body),
+        state: Game.Query.write(ElementState),
+        affinities: Game.Query.read(ElementAffinities)
+      },
       with: [Health]
     })
   },
@@ -118,7 +125,7 @@ export const TickStates = Game.System("Shooter/TickStates", {
     }
     const next = remaining <= 0 ? null : { ...current, remaining, nextTick }
     data.state.set({ current: next })
-    if (next?.id === "burning") {
+    if (next?.id === "burning" && data.position.present && data.body.present) {
       const position = data.position.get()
       fires.push({ x: position.x, y: position.y, r: data.body.get().radius, state: next })
     }
@@ -127,7 +134,7 @@ export const TickStates = Game.System("Shooter/TickStates", {
   // Fire spreads to the bodies burning ones touch (unless they are immune to it).
   if (fires.length === 0) return
   for (const { data } of all) {
-    if (data.state.get().current !== null) continue
+    if (!data.position.present || !data.body.present || data.state.get().current !== null) continue
     if (durationFactor(tuning, data.affinities.get().fire) <= 0) continue
     const position = data.position.get()
     const r = data.body.get().radius

@@ -36,7 +36,16 @@ export const Body = Descriptor.Component<{ readonly radius: number }>()("Shooter
 /** Static axis-aligned wall. */
 export const Wall = Descriptor.Component<Box>()("Shooter/Wall")
 
+/** The character on the field: the one with a body, that the controls move (see `features/team.ts`). */
 export const Player = Descriptor.Tag("Shooter/Player")
+
+/**
+ * A member of the player's team (see `features/team.ts`): her `slot` in the
+ * team (0 first, also her switch key) and who she is. She keeps her own
+ * health, stats, state, energy, skills, and weapon for the whole run, on the
+ * field or on the bench.
+ */
+export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId }>()("Shooter/Member")
 /** Unit direction the entity aims at. */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
 
@@ -190,8 +199,8 @@ export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/
 
 /**
  * The stats combat reads (see `content/characters.ts`): ATK scales damage
- * dealt, DEF reduces damage taken, `speed` is the running speed. A player's
- * are its build's final stats; an enemy's come from its kind.
+ * dealt, DEF reduces damage taken, `speed` is the running speed. A team
+ * member's are her build's final stats; an enemy's come from its kind.
  */
 export const CombatStats = Descriptor.Component<CharacterStats>()("Shooter/CombatStats")
 
@@ -331,7 +340,7 @@ export const Respawns = Descriptor.Component<{ readonly at: Vec2; readonly delay
 export const PendingSpawn = Descriptor.Component<{ readonly kind: EnemyKind; readonly at: Vec2; readonly remaining: number; readonly duration: number }>()("Shooter/PendingSpawn")
 
 export type RenderableValue =
-  | { readonly kind: "player"; readonly radius: number }
+  | { readonly kind: "player"; readonly character: CharacterId; readonly radius: number }
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number }
   | { readonly kind: "wall"; readonly box: Box; readonly placement: "back" | "front" | "sorted" }
@@ -432,6 +441,8 @@ export const Cast = Descriptor.Event<CastValue>()("Shooter/Cast")
 export const Action = Descriptor.Event<
   | ({ readonly kind: "attack"; readonly at: Vec2; readonly direction: Vec2; readonly move: AttackMove } & MoveContext)
   | { readonly kind: "charging" | "charged" | "dash"; readonly at: Vec2 }
+  /** `character` came onto the field (`fell`: because the last one fell). */
+  | { readonly kind: "switch"; readonly at: Vec2; readonly character: CharacterId; readonly fell: boolean }
 >()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 
@@ -440,9 +451,9 @@ export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fa
 export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
 
 /**
- * What enters the arena: a character at its level, and the weapon and
- * skills equipped over its defaults. `resolveBuild` turns it into final
- * stats and kit when the player spawns.
+ * A character as she enters the arena: at her level, with the weapon and
+ * skills equipped over her defaults. `resolveBuild` turns it into final
+ * stats and kit when the team spawns.
  */
 export interface BuildValue {
   readonly character: CharacterId
@@ -454,7 +465,11 @@ export interface BuildValue {
   readonly weaponLevel?: number
   readonly skills: { readonly [Slot in SkillSlot]?: SkillId }
 }
-export const Build = Descriptor.Resource<BuildValue>()("Shooter/Build")
+/** Who enters the arena: one to three characters (see `teamSize`), in team order; the first starts on the field. */
+export const Team = Descriptor.Resource<ReadonlyArray<BuildValue>>()("Shooter/Team")
+
+/** Time until the team can switch again (see `Tuning.team.switchCooldown`). */
+export const TeamSwitch = Descriptor.Resource<{ readonly cooldown: number }>()("Shooter/TeamSwitch")
 
 /** The challenge being played (see `content/challenges.ts`). */
 export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
@@ -515,6 +530,8 @@ export interface ControlsValue {
   readonly attackPressed: boolean
   /** The attack button is down (holding it after a press charges the power attack). */
   readonly attackHeld: boolean
+  /** The team slot whose switch was pressed this step (0 first), or `null`. */
+  readonly switchTo: number | null
   /** Last non-zero movement direction, kept for the movement grace. */
   readonly lastMove: Vec2
   /** The last movement key pressed and when (`Time.elapsed`), to detect a double tap. */
@@ -572,8 +589,6 @@ export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 export interface RunResultValue {
   readonly cleared: boolean
   readonly challenge: ChallengeId
-  /** The characters that fought (for their experience). */
-  readonly characters: ReadonlyArray<CharacterId>
   /** The wave reached. */
   readonly wave: number
   readonly kills: number
@@ -623,6 +638,7 @@ export const Game = Schema.bind(
       Body,
       Wall,
       Player,
+      Member,
       Aim,
       Dash,
       Invulnerable,
@@ -656,7 +672,8 @@ export const Game = Schema.bind(
     },
     resources: {
       Tuning,
-      Build,
+      Team,
+      TeamSwitch,
       Challenge,
       EnemyLevel,
       TriggeredEffects,
@@ -680,7 +697,7 @@ export const Game = Schema.bind(
 )
 
 /**
- * Where the game is: the menu (picking a challenge and a build), a run going
+ * Where the game is: the menu (picking what to play and the team), a run going
  * on, or a run over: lost (`GameOver`) or won (`Cleared`). Gameplay systems
  * run only while `Playing`.
  */

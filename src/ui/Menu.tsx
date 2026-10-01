@@ -1,11 +1,12 @@
 /**
  * The menu: pick what to play (a quest: the main line by chapter, then the
  * secondary quests; or a hardcore tier), see the enemies it holds and how
- * each takes the elements, and a character (with her element), equip it (a
- * weapon of its type and a skill per slot), then enter the arena (the
- * button, or Enter). What the account does not own, and what is not open yet, are
- * shown locked (a quest or tier says why). Equipment is saved on the
- * character at once; what was played and the character are remembered on
+ * each takes the elements, set up the team (up to three, in order: pick a
+ * slot, then a character for it), equip the one in the slot being edited (a
+ * weapon of her type and a skill per slot), then enter the arena (the
+ * button, or Enter). What the account does not own, and what is not open
+ * yet, are shown locked (a quest or tier says why). Equipment is saved on
+ * the character at once; what was played and the team are remembered on
  * entering. Starts from the account's last selection.
  */
 import { useSignal } from "@preact/signals"
@@ -13,8 +14,10 @@ import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
 
 import { buildOf, characterLevel, encounterOf, equipmentOf, nextReset, owns, playLock, samePlay, tierProgress, tierRewardsAvailable, weaponLevel } from "../account/account.ts"
+import { view } from "../config/view.ts"
 import type { Item, Play } from "../account/account.ts"
 import type { TierRewards, TrackId } from "../content/hardcore.ts"
+import { teamSize } from "../content/characters.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import { elements } from "../content/elements.ts"
 import type { EnemyKind } from "../content/enemies.ts"
@@ -42,7 +45,8 @@ import {
   statNames,
   statOrder
 } from "./describe.ts"
-import { weaponsFor } from "./draft.ts"
+import { placeInTeam, removeFromTeam, weaponsFor } from "./draft.ts"
+import type { TeamDraft } from "./draft.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
 const ids = <Id extends string>(record: Record<Id, unknown>): Array<Id> => Object.keys(record) as Array<Id>
@@ -110,15 +114,25 @@ const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKin
   )
 }
 
+/** A character's color, as CSS. */
+const colorOf = (character: CharacterId): string => `#${view.characters[character].toString(16).padStart(6, "0")}`
+
 export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const tuning = store.tuning.value
   const account = store.account.value
   const play = useSignal<Play>(account.selection.play)
-  const character = useSignal<CharacterId>(account.selection.character)
-  const equipment = equipmentOf(tuning, account, character.value)
-  const final = resolveBuild(tuning, buildOf(tuning, account, character.value))
+  const draft = useSignal<TeamDraft>({ team: account.selection.team, focus: 0 })
+  const { team, focus } = draft.value
+  // The one being equipped: the slot being edited, or the last member while the empty slot is picked.
+  const character: CharacterId = team[Math.min(focus, team.length - 1)]!
+  const equipment = equipmentOf(tuning, account, character)
   const locked = (item: Item) => !owns(account, item)
-  const enter = () => actions.enter(character.value, play.value)
+  const enter = () => actions.enter(team, play.value)
+  /** A character's tag: her weapon type, element, and level. */
+  const tagOf = (id: CharacterId) => {
+    const element = tuning.skills[tuning.characters[id].skills.special].effect.element
+    return `${tuning.characters[id].weaponType}${element === null ? "" : ` · ${elements[element].name}`} · Lv ${characterLevel(tuning, account, id).level}`
+  }
   const now = Date.now()
   /** A card for something to play: its challenge's objective and enemy level, why it is locked, and what clearing it gives. */
   const playCard = (candidate: Play, key: string, title: string, reward: ComponentChildren) => {
@@ -166,8 +180,8 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     return () => window.removeEventListener("keydown", onKey)
   })
 
-  const equipWeapon = (weapon: WeaponId) => actions.equip(character.value, { ...equipment, weapon })
-  const equipSkill = (slot: SkillSlot, skill: SkillId) => actions.equip(character.value, { ...equipment, skills: { ...equipment.skills, [slot]: skill } })
+  const equipWeapon = (weapon: WeaponId) => actions.equip(character, { ...equipment, weapon })
+  const equipSkill = (slot: SkillSlot, skill: SkillId) => actions.equip(character, { ...equipment, skills: { ...equipment.skills, [slot]: skill } })
 
   return (
     <div class="menu">
@@ -196,24 +210,51 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
           {challengeEnemies(selectedChallenge).map((kind) => <Foe key={kind} store={store} kind={kind} />)}
           {selectedChallenge.waves.endless !== null && <span class="menu__note">…then ever-growing random waves</span>}
         </Section>
-        <Section title="Character">
+        <Section title="Team · pick a slot, then a character for it">
+          {Array.from({ length: teamSize }, (_, slot) => {
+            const member = team[slot]
+            // Slots fill in order: the one after the last member is open, the rest wait.
+            const open = slot <= team.length
+            return (
+              <div key={slot} class={`slot${slot === focus ? " is-selected" : ""}${member === undefined ? " is-empty" : ""}`}>
+                <button type="button" class="slot__pick" disabled={!open} aria-pressed={slot === focus} onClick={() => (draft.value = { team, focus: slot })}>
+                  <span class="slot__key">{slot + 1}{slot === 0 && member !== undefined ? " · starts" : ""}</span>
+                  {member === undefined
+                    ? <span class="slot__empty">{open ? "Empty · pick a character" : "Empty"}</span>
+                    : (
+                      <>
+                        <span class="slot__name" style={{ color: colorOf(member) }}>{tuning.characters[member].name}</span>
+                        <span class="card__tag">{tagOf(member)}</span>
+                      </>
+                    )}
+                </button>
+                {member !== undefined && team.length > 1 && (
+                  <button type="button" class="slot__remove" title="Remove from the team" onClick={() => (draft.value = removeFromTeam(draft.value, slot))}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </Section>
+        <Section title={`Characters · for slot ${Math.min(focus, teamSize - 1) + 1}`}>
           {ids(tuning.characters).map((id) => {
             const spec = tuning.characters[id]
             const level = characterLevel(tuning, account, id).level
-            const element = tuning.skills[spec.skills.special].effect.element
+            const slot = team.indexOf(id)
             return (
-              <Card key={id} selected={id === character.value} locked={locked({ kind: "character", id })} onSelect={() => (character.value = id)} title={spec.name}>
+              <Card key={id} selected={slot >= 0} locked={locked({ kind: "character", id })} onSelect={() => (draft.value = placeInTeam(draft.value, id))} title={spec.name}>
                 <span class="card__tag">
-                  {spec.weaponType}{element === null ? "" : ` · ${elements[element].name}`} · Lv {level}
+                  {slot >= 0 ? `In slot ${slot + 1} · ` : ""}{tagOf(id)}
                 </span>
                 <StatLine stats={statsAtLevel(tuning, spec.stats, level)} />
               </Card>
             )
           })}
         </Section>
-        <CharacterLevel store={store} actions={actions} character={character.value} />
-        <Section title="Weapon">
-          {weaponsFor(tuning, character.value).map((id) => {
+        <CharacterLevel store={store} actions={actions} character={character} />
+        <Section title={`Weapon · ${tuning.characters[character].name}`}>
+          {weaponsFor(tuning, character).map((id) => {
             const spec = tuning.weapons[id]
             return (
               <Card key={id} selected={id === equipment.weapon} locked={locked({ kind: "weapon", id })} onSelect={() => equipWeapon(id)} title={spec.name}>
@@ -231,7 +272,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
         </Section>
         {owns(account, { kind: "weapon", id: equipment.weapon }) && <WeaponLevel store={store} actions={actions} weapon={equipment.weapon} />}
         {skillSlots.map((slot) => (
-          <Section key={slot} title={`${slotLabels[slot].name} (${slotLabels[slot].key})`}>
+          <Section key={slot} title={`${slotLabels[slot].name} (${slotLabels[slot].key}) · ${tuning.characters[character].name}`}>
             {ids(tuning.skills).map((id) => {
               const spec = tuning.skills[id]
               return (
@@ -245,8 +286,11 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       </div>
       <footer class="menu__footer">
         <span class="menu__summary">
-          <b>{tuning.characters[character.value].name}</b> · {tuning.weapons[final.weapon].name}
-          <StatLine stats={final.stats} />
+          {team.map((member, slot) => (
+            <span key={member} class="menu__member">
+              <b style={{ color: colorOf(member) }}>{slot + 1} {tuning.characters[member].name}</b> {tuning.weapons[resolveBuild(tuning, buildOf(tuning, account, member)).weapon].name}
+            </span>
+          ))}
         </span>
         <button type="button" class="menu__start" onClick={enter}>
           Enter · {describePlay(tuning, play.value)}

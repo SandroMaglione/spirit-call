@@ -1,0 +1,251 @@
+import { describe, expect, it } from "vitest"
+
+import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
+import { nextAlive } from "../src/features/team.ts"
+import type { Vec2 } from "../src/math/vec.ts"
+import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, TeamSwitch, Weapon } from "../src/schema.ts"
+import type { ActiveState, BuildValue } from "../src/schema.ts"
+import { cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
+import type { StartOptions } from "./helpers.ts"
+
+const tuning = defaultTuning
+const swordsman: BuildValue = { character: "swordsman", skills: {} }
+const gunner: BuildValue = { character: "gunner", skills: {} }
+const tidecaller: BuildValue = { character: "tidecaller", skills: {} }
+
+const TeamState = Game.Inspector("Test/Team", {
+  queries: {
+    members: Game.Query({
+      selection: {
+        member: Game.Query.read(Member),
+        health: Game.Query.read(Health),
+        energy: Game.Query.read(Energy),
+        skills: Game.Query.read(Skills),
+        state: Game.Query.read(ElementState),
+        weapon: Game.Query.read(Weapon),
+        position: Game.Query.optional(Position),
+        invulnerable: Game.Query.optional(Invulnerable),
+        player: Game.Query.optional(Player)
+      }
+    }),
+    discs: Game.Query({ selection: { disc: Game.Query.read(Disc) } })
+  },
+  resources: { teamSwitch: Game.System.readResource(TeamSwitch) }
+}, ({ queries, resources }) => ({
+  members: queries.members.each()
+    .map(({ data }) => ({
+      ...data.member.get(),
+      health: data.health.get().current,
+      energy: data.energy.get().current,
+      special: data.skills.get().special.cooldown,
+      state: data.state.get().current,
+      step: data.weapon.get().step,
+      position: data.position.present ? data.position.get() : undefined,
+      invulnerable: data.invulnerable.present ? data.invulnerable.get().remaining : undefined,
+      onField: data.player.present
+    }))
+    .sort((left, right) => left.slot - right.slot),
+  discs: queries.discs.each().length,
+  switchCooldown: resources.teamSwitch.get().cooldown
+}))
+
+/** A run with `team`; `world()` is the team's state, `field()` the one on the field. */
+const run = (team: ReadonlyArray<BuildValue>, options: StartOptions = {}) => {
+  const started = start({ ...options, team })
+  const world = () => started.runtime.inspect(TeamState)
+  return { ...started, world, field: () => world().members.find((member) => member.onField) }
+}
+
+/** A schedule that sets the member in `slot` in `state` (burning or soaked). */
+const putIn = (slot: number, state: ActiveState) => {
+  const Put = Game.System("Test/PutInState", {
+    queries: { members: Game.Query({ selection: { member: Game.Query.read(Member), state: Game.Query.write(ElementState) } }) }
+  }, ({ queries }) => {
+    for (const { data } of queries.members.each()) if (data.member.get().slot === slot) data.state.set({ current: state })
+  })
+  return Game.Schedule(Put)
+}
+
+/** A fire that burns `dps` for `seconds`. */
+const fire = (dps: number, seconds = 30): ActiveState => ({ id: "burning", remaining: seconds, dps, nextTick: 0.01, charges: false })
+
+const flowOf = (started: ReturnType<typeof start>) => started.runtime.debug.dump().machines["Shooter/Flow"]?.current
+
+describe("a team in the arena", () => {
+  it("starts with the first one on the field and the others on the bench, with no body", () => {
+    const team = run([swordsman, gunner, tidecaller])
+    const [first, second, third] = team.world().members
+    expect(first).toMatchObject({ slot: 0, character: "swordsman", onField: true })
+    expect(first?.position).toBeDefined()
+    expect(second).toMatchObject({ slot: 1, character: "gunner", onField: false, position: undefined })
+    expect(third).toMatchObject({ slot: 2, character: "tidecaller", onField: false, position: undefined })
+  })
+
+  it("holds three at most", () => {
+    const team = run([swordsman, gunner, tidecaller, swordsman])
+    expect(team.world().members.map((member) => member.character)).toEqual(["swordsman", "gunner", "tidecaller"])
+  })
+})
+
+describe("switching", () => {
+  it("brings in a slot's character where the body stood, and takes the last one off the field", () => {
+    const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["right"] }, { frame: 20, press: ["team2"], release: ["team2"] }] })
+    team.step(20)
+    const before = team.field()!.position!
+    team.step()
+    const [first, second] = team.world().members
+    expect(first?.onField).toBe(false)
+    expect(first?.position).toBeUndefined()
+    expect(second?.onField).toBe(true)
+    // Where the body was after its last step on the field, give or take that step's movement.
+    expect(Math.hypot(second!.position!.x - before.x, second!.position!.y - before.y)).toBeLessThan(tuning.characters.swordsman.stats.speed / 60 + 1)
+  })
+
+  it("interrupts what the outgoing one was doing: her combo starts over", () => {
+    const team = run([swordsman, gunner], {
+      pointer: [{ frame: 0, move: cursorAt({ x: 100, y: 0 }) }, { frame: 1, press: ["primary"], release: ["primary"] }],
+      keys: [{ frame: 3, press: ["team2"], release: ["team2"] }]
+    })
+    team.step(3)
+    expect(team.world().members[0]?.step).toBe(0)
+    team.step()
+    expect(team.world().members[0]?.step).toBe(-1)
+  })
+
+  it("waits between switches", () => {
+    const wait = tuning.team.switchCooldown
+    const team = run([swordsman, gunner], {
+      keys: [
+        { frame: 0, press: ["team2"], release: ["team2"] },
+        { frame: 5, press: ["team1"], release: ["team1"] },
+        { frame: steps(wait) + 5, press: ["team1"], release: ["team1"] }
+      ]
+    })
+    team.step(10)
+    expect(team.field()?.slot).toBe(1)
+    team.step(steps(wait))
+    expect(team.field()?.slot).toBe(0)
+  })
+
+  it("never mid-dash", () => {
+    const team = run([swordsman, gunner], { keys: [...doubleTap("right", 0), { frame: 3, press: ["team2"], release: ["team2"] }] })
+    team.step(5)
+    expect(team.field()?.slot).toBe(0)
+  })
+
+  it("does nothing for an empty slot", () => {
+    const team = run([swordsman], { keys: [{ frame: 0, press: ["team2"], release: ["team2"] }] })
+    team.step(3)
+    expect(team.field()?.slot).toBe(0)
+  })
+
+  it("works from the touch buttons", () => {
+    const team = run([swordsman, gunner, tidecaller], { touch: [{ frame: 0, press: ["team3"], release: ["team3"] }] })
+    team.step(2)
+    expect(team.field()?.character).toBe("tidecaller")
+  })
+})
+
+describe("the bench", () => {
+  it("runs skill cooldowns down", () => {
+    const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["special"], release: ["special"] }, { frame: 2, press: ["team2"], release: ["team2"] }] })
+    team.step(3)
+    const benched = team.world().members[0]!.special
+    expect(benched).toBeGreaterThan(0)
+    team.step(60)
+    expect(team.world().members[0]!.special).toBeCloseTo(Math.max(0, benched - 1), 1)
+  })
+
+  it("gains a share of the energy the one on the field earns", () => {
+    const team = run([swordsman, gunner], { pointer: [{ frame: 0, move: cursorAt({ x: 50, y: 0 }) }, { frame: 2, press: ["primary"], release: ["primary"] }] })
+    team.runtime.tick(placeDummies([{ x: 50, y: 0 }]))
+    team.step(40)
+    const [field, bench] = team.world().members
+    expect(field!.energy).toBeGreaterThan(0)
+    expect(bench!.energy).toBeCloseTo(field!.energy * tuning.team.benchEnergyShare, 6)
+  })
+
+  it("keeps a character's state: a fire she carries off keeps burning, and can make her fall there", () => {
+    const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["team2"], release: ["team2"] }] })
+    team.step()
+    team.runtime.tick(putIn(0, fire(40)))
+    team.step(30)
+    const burning = team.world().members[0]!
+    expect(burning.onField).toBe(false)
+    expect(burning.state?.id).toBe("burning")
+    expect(burning.health).toBeLessThan(tuning.characters.swordsman.stats.hp)
+    team.step(steps(10))
+    const fallen = team.world().members[0]!
+    expect(fallen.health).toBe(0)
+    expect(fallen.state).toBeNull()
+    // The run goes on with the one on the field.
+    expect(flowOf(team)).toBe("Playing")
+    expect(team.field()?.slot).toBe(1)
+  })
+
+  it("can't bring a fallen character back in", () => {
+    const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["team2"], release: ["team2"] }, { frame: 600, press: ["team1"], release: ["team1"] }] })
+    team.step()
+    team.runtime.tick(putIn(0, fire(400)))
+    team.step(605)
+    expect(team.world().members[0]!.health).toBe(0)
+    expect(team.field()?.slot).toBe(1)
+  })
+})
+
+describe("falling", () => {
+  it("brings in the next one alive in order, protected for a moment; the run is lost when the whole team has fallen", () => {
+    const team = run([swordsman, gunner, tidecaller])
+    team.runtime.tick(putIn(0, fire(400)))
+    let guard = 0
+    while (team.world().members[0]!.health > 0 && guard++ < 600) team.step()
+    team.step()
+    const incoming = team.field()!
+    expect(incoming.slot).toBe(1)
+    expect(incoming.invulnerable).toBeGreaterThan(tuning.team.fallProtection - 0.1)
+    expect(flowOf(team)).toBe("Playing")
+
+    team.runtime.tick(putIn(1, fire(400)))
+    team.runtime.tick(putIn(2, fire(400)))
+    guard = 0
+    while (flowOf(team) === "Playing" && guard++ < 1200) team.step()
+    expect(flowOf(team)).toBe("GameOver")
+    expect(team.field()).toBeUndefined()
+  })
+
+  it("goes around the order to find who is left", () => {
+    const members = [{ slot: 0, alive: true }, { slot: 1, alive: false }, { slot: 2, alive: false }]
+    expect(nextAlive(members, 2)?.slot).toBe(0)
+    expect(nextAlive(members, 0)).toBeUndefined()
+    expect(nextAlive([{ slot: 0, alive: true }, { slot: 1, alive: true }, { slot: 2, alive: true }], 1)?.slot).toBe(2)
+  })
+})
+
+describe("what a character leaves behind", () => {
+  it("a disc on its way back to a thrower who left the field is dropped", () => {
+    const aim: Vec2 = { x: 200, y: 0 }
+    const team = run([tidecaller, swordsman], {
+      pointer: [{ frame: 0, move: cursorAt(aim) }, { frame: 1, press: ["primary"], release: ["primary"] }],
+      keys: [{ frame: 3, press: ["team2"], release: ["team2"] }]
+    })
+    team.step(4)
+    expect(team.world().discs).toBe(1)
+    // Out to its range, then it would come back: there is no one to come back to.
+    const out = tuning.attacks.disc.combo[0]!
+    team.step(steps(("range" in out ? out.range : 0) / ("speed" in out ? out.speed : 1)) + 5)
+    expect(team.world().discs).toBe(0)
+  })
+
+})
+
+describe("tuning", () => {
+  it("is live: the wait between switches comes from the tuning", () => {
+    const quick = tuningWith({ team: { switchCooldown: 0.1 } })
+    const team = run([swordsman, gunner], {
+      tuning: quick,
+      keys: [{ frame: 0, press: ["team2"], release: ["team2"] }, { frame: 10, press: ["team1"], release: ["team1"] }]
+    })
+    team.step(12)
+    expect(team.field()?.slot).toBe(0)
+  })
+})

@@ -10,6 +10,7 @@
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
+import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
 import type { RunEarnings } from "../content/progression.ts"
@@ -28,7 +29,7 @@ export interface Unlocked {
   readonly unlockedAt: number
 }
 
-/** A character owned, and its experience (its level comes from it, see `characterLevel`). */
+/** A character owned, and its experience (its level comes from it, see `characterLevel`; gained by training, see `train`). */
 export interface OwnedCharacter extends Unlocked {
   readonly experience: number
 }
@@ -101,8 +102,8 @@ export interface Account {
   readonly quests: { readonly [Id in QuestId]?: QuestProgress }
   /** Each hardcore tier attempted so far, by track and tier number. */
   readonly hardcore: { readonly [Id in TrackId]?: { readonly [tier: number]: TierProgress } }
-  /** What the menu starts from: the last character entered, and what for. */
-  readonly selection: { readonly character: CharacterId; readonly play: Play }
+  /** What the menu starts from: the team last entered with (in order; see `teamSize`), and what for. */
+  readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly play: Play }
 }
 
 /** Something that can be owned. */
@@ -193,7 +194,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     equipment: {},
     quests: {},
     hardcore: {},
-    selection: { character: starter.selection.character, play: { kind: "quest", quest: starter.selection.quest } }
+    selection: { team: [starter.selection.character], play: { kind: "quest", quest: starter.selection.quest } }
   }
   const items: Array<Item> = [
     ...starter.weapons.map((id) => ({ kind: "weapon" as const, id })),
@@ -277,6 +278,8 @@ export const tierRewardsAvailable = (tuning: Tuning, account: Account, track: Tr
 /** Why an action was refused. */
 export type Refusal =
   | { readonly kind: "notOwned"; readonly item: Item }
+  /** A team of none, of more than `teamSize`, or with someone twice. */
+  | { readonly kind: "badTeam"; readonly team: ReadonlyArray<CharacterId> }
   | { readonly kind: "wrongWeaponType"; readonly character: CharacterId; readonly weapon: WeaponId }
   | { readonly kind: "locked"; readonly play: Play; readonly lock: Lock }
   | { readonly kind: "notEnough"; readonly currency: CurrencyId; readonly needed: number; readonly held: number }
@@ -350,12 +353,18 @@ export const equip = (tuning: Tuning, account: Account, character: CharacterId, 
   return { ok: true, value: { ...account, equipment: { ...account.equipment, [character]: equipment } } }
 }
 
-/** `account` with `character` and `play` selected, if it owns the character and `play` is open. */
-export const select = (tuning: Tuning, account: Account, character: CharacterId, play: Play): Checked<Account> => {
-  if (!owns(account, { kind: "character", id: character })) return refuse({ kind: "notOwned", item: { kind: "character", id: character } })
+/** Whether `team` is a team: one to `teamSize` characters, each once. */
+export const validTeam = (team: ReadonlyArray<CharacterId>): boolean =>
+  team.length >= 1 && team.length <= teamSize && new Set(team).size === team.length
+
+/** `account` with `team` and `play` selected, if it is a team the account owns and `play` is open. */
+export const select = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, play: Play): Checked<Account> => {
+  if (!validTeam(team)) return refuse({ kind: "badTeam", team })
+  const missing = team.find((character) => !owns(account, { kind: "character", id: character }))
+  if (missing !== undefined) return refuse({ kind: "notOwned", item: { kind: "character", id: missing } })
   const lock = playLock(tuning, account, play)
   if (lock !== null) return refuse({ kind: "locked", play, lock })
-  return { ok: true, value: { ...account, selection: { character, play } } }
+  return { ok: true, value: { ...account, selection: { team, play } } }
 }
 
 /** Levels before and after something. */
@@ -370,13 +379,11 @@ export interface Earned {
   readonly experience: number
   /** The account level before and after the run. */
   readonly level: LevelChange
-  /** Experience each character that fought earned, and its level before and after. */
-  readonly characters: ReadonlyArray<{ readonly character: CharacterId; readonly experience: number; readonly level: LevelChange }>
   /** A quest's first-clear rewards, or a tier's rewards for the period, when this run earned them. */
   readonly rewards: Rewards | null
 }
 
-/** Experience a run earns with `earns` (the account's, or each character's): something for trying, more for clearing, a little per kill. */
+/** Account experience a run earns with `earns`: something for trying, more for clearing, a little per kill. */
 export const runExperience = (earns: RunEarnings, result: RunResultValue): number =>
   earns.attempt + (result.cleared ? earns.clear : 0) + result.kills * earns.perKill
 
@@ -392,7 +399,8 @@ const counted = (progress: QuestProgress, result: RunResultValue, now: number): 
  * A run counts toward what it played: clearing a quest the first time gives
  * its rewards, and clearing a hardcore tier gives its rewards the first
  * time in each period. A run of nothing (a dev quick start) only adds to
- * the totals and experience.
+ * the totals and experience. Characters do not grow from runs: they are
+ * trained with gold (see `train`), so none falls behind on the bench.
  */
 export const recordRun = (
   tuning: Tuning,
@@ -433,17 +441,8 @@ export const recordRun = (
     next = rewards.unlocks.reduce((owner, item) => unlock(tuning, owner, item, now), earn(next, rewards.currencies))
   }
   next = { ...next, experience: account.experience + experience }
-  // Each character that fought grows (only once, if it was in the team twice).
-  const characterExperience = runExperience(tuning.progression.character.run, result)
-  const characters: Array<Earned["characters"][number]> = []
-  for (const character of new Set(result.characters)) {
-    if (!owns(next, { kind: "character", id: character })) continue
-    const before = characterLevel(tuning, next, character).level
-    next = addCharacterExperience(next, character, characterExperience)
-    characters.push({ character, experience: characterExperience, level: { before, after: characterLevel(tuning, next, character).level } })
-  }
   const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
-  return { account: next, earned: { experience, level, characters, rewards } }
+  return { account: next, earned: { experience, level, rewards } }
 }
 
 /** `character`'s equipment in `account` (its own when it has none saved). */
@@ -461,3 +460,7 @@ export const buildOf = (tuning: Tuning, account: Account, character: CharacterId
     skills: bySlot((slot) => equipment.skills[slot])
   }
 }
+
+/** The builds `team` enters the arena with, in order (see `buildOf`). */
+export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>): ReadonlyArray<BuildValue> =>
+  team.map((character) => buildOf(tuning, account, character))

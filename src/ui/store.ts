@@ -22,8 +22,8 @@ export interface UiStore {
   readonly device: Signal<"desktop" | "touch">
   /** The content (characters, weapons, skills, challenges) and its numbers. */
   readonly tuning: Signal<Tuning>
-  /** The build and challenge of the run going on, or of the last one. */
-  readonly build: Signal<BuildValue>
+  /** The team and challenge of the run going on, or of the last one. */
+  readonly team: Signal<ReadonlyArray<BuildValue>>
   readonly challenge: Signal<ChallengeId>
   /** The player's account: what it owns, each character's equipment, and the last selection (the menu starts from it). */
   readonly account: Signal<Account>
@@ -39,7 +39,7 @@ export interface UiStore {
 
 export const createUiStore = (initial: {
   readonly tuning: Tuning
-  readonly build: BuildValue
+  readonly team: ReadonlyArray<BuildValue>
   readonly challenge: ChallengeId
   readonly flow: FlowState
   readonly account: Account
@@ -48,7 +48,7 @@ export const createUiStore = (initial: {
   flow: signal(initial.flow),
   device: signal("desktop"),
   tuning: signal(initial.tuning),
-  build: signal(initial.build),
+  team: signal(initial.team),
   challenge: signal(initial.challenge),
   account: signal(initial.account),
   play: signal(null),
@@ -61,8 +61,8 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
-  /** Enter the arena with `character` (as equipped) to play `play`. */
-  readonly enter: (character: CharacterId, play: Play) => void
+  /** Enter the arena with `team` (in order, each as equipped) to play `play`. */
+  readonly enter: (team: ReadonlyArray<CharacterId>, play: Play) => void
   /** Equip an owned character (saved at once). */
   readonly equip: (character: CharacterId, equipment: Equipment) => void
   /** Take an owned character to its next level with gold (saved at once). */

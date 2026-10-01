@@ -3,6 +3,7 @@
  * live in `tuning.ts`; the projection is also used to turn screen input
  * (movement keys, the cursor) into world directions.
  */
+import type { CharacterId } from "../content/characters.ts"
 import type { Projection } from "../math/iso.ts"
 
 export const projection: Projection = {
@@ -89,6 +90,8 @@ export const view = {
   /** Pillars standing in front of the player are drawn this transparent. */
   occluderAlpha: 0.35,
   player: 0x4ecdc4,
+  /** Each character's body color, so a switch is seen at once (and her switch button matches). */
+  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff } satisfies Record<CharacterId, number>,
   playerDashing: 0xd9fffb,
   shadow: 0x000000,
   /** Body height of actors relative to their radius. */

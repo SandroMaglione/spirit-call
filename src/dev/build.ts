@@ -1,18 +1,19 @@
 /**
- * Picks the build and the challenge from the page URL, over the account's
- * last ones, to try them without the menu:
- * `?character=gunner&weapon=bloodthirst&special=bladeWave`, levels with
- * `?level=20&weaponLevel=10`, and `?challenge=swarm&enemyLevel=15`. Unknown
- * ids and levels that are not whole numbers from 1 are ignored, so a typo
- * keeps the default.
+ * Picks the team and the challenge from the page URL, over the account's
+ * last ones, to try them without the menu: `?team=swordsman,tidecaller`,
+ * the first one's build with `?character=gunner&weapon=bloodthirst&special=bladeWave`,
+ * everyone's levels with `?level=20&weaponLevel=10`, and
+ * `?challenge=swarm&enemyLevel=15`. Unknown ids and levels that are not
+ * whole numbers from 1 are ignored, so a typo keeps the default.
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
+import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
-import { defaultBuild } from "../features/build.ts"
+import { defaultBuild, defaultTeam } from "../features/build.ts"
 import { defaultChallenge } from "../features/challenges.ts"
 import type { BuildValue } from "../schema.ts"
 
@@ -58,4 +59,21 @@ export const buildFromQuery = (tuning: Tuning, search: string, fallback: BuildVa
     ...(known<WeaponId>(tuning.weapons, weapon) ? { weapon } : {}),
     skills
   })
+}
+
+/**
+ * The URL's team: the characters of `?team=` (each as `buildFor` has her, at
+ * most `teamSize`, each once), or `fallback`; the first one's build changed
+ * by the URL (see `buildFromQuery`), and everyone's levels.
+ */
+export const teamFromQuery = (
+  tuning: Tuning,
+  search: string,
+  fallback: ReadonlyArray<BuildValue> = defaultTeam,
+  buildFor: (character: CharacterId) => BuildValue = (character) => ({ character, skills: {} })
+): ReadonlyArray<BuildValue> => {
+  const query = new URLSearchParams(search)
+  const named = [...new Set((query.get("team") ?? "").split(","))].filter((id): id is CharacterId => known<CharacterId>(tuning.characters, id)).slice(0, teamSize)
+  const [first = defaultBuild, ...rest] = named.length > 0 ? named.map(buildFor) : fallback
+  return [buildFromQuery(tuning, search, first), ...rest.map((build) => withLevels(query, build))]
 }

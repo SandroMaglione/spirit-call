@@ -5,7 +5,7 @@
  */
 import { InputCapture } from "@typeonce/bevy-ts-browser"
 
-import { directions, touchButtons } from "../config/input.ts"
+import { directions, teamButtons, teamKeys, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { BasicAttackSpec } from "../content/attacks.ts"
@@ -54,6 +54,12 @@ const touchUsed = (touch: TouchSnapshot): boolean =>
 /** Whether the keyboard or mouse buttons were used this step (moving the mouse alone does not switch). */
 const desktopUsed = (keys: KeysSnapshot, pointer: PointerSnapshot): boolean =>
   Object.values(keys).some((action) => action.held || action.pressed) || pointer.primary.pressed || pointer.secondary.pressed
+
+/** The first team slot whose switch went down this step (`switches` are the slots' keys or buttons, in order), or `null`. */
+const switchPressed = (switches: ReadonlyArray<{ readonly pressed: boolean }>): number | null => {
+  const slot = switches.findIndex((input) => input.pressed)
+  return slot < 0 ? null : slot
+}
 
 /** A screen-space direction (y down) as a unit world direction, or `fallback` when it is zero. */
 const worldDirection = (screen: Vec2, fallback: Vec2): Vec2 => normalizeOr(screenDirectionToWorld(projection, screen), fallback)
@@ -156,6 +162,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     dashPressed,
     attackPressed: pointer.primary.pressed,
     attackHeld: pointer.primary.held,
+    switchTo: switchPressed(teamKeys.map((key) => keys[key])),
     lastMove,
     lastTap,
     grace
@@ -226,7 +233,7 @@ const resolveTouch = (
 ): ControlsValue => {
   // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
   if (player === undefined) {
-    return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, attackHeld: false, grace: 0 }
+    return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, attackHeld: false, switchTo: null, grace: 0 }
   }
   const tilt = length(touch.stick.vector)
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
@@ -250,6 +257,7 @@ const resolveTouch = (
     dashPressed: touch.buttons.dash.pressed,
     attackPressed: attack.pressed,
     attackHeld: attack.held,
+    switchTo: switchPressed(teamButtons.map((name) => touch.buttons[name])),
     lastMove: moving ? normalizeOr(move, zero) : previous.lastMove,
     lastTap: null,
     grace: 0
@@ -289,6 +297,7 @@ export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   dashPressed: false,
   attackPressed: false,
   attackHeld: false,
+  switchTo: null,
   lastMove: zero,
   lastTap: null,
   grace: 0

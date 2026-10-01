@@ -26,7 +26,8 @@ const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite
  * Sounds for what happened since the last frame: the player's actions (each
  * combo move its own swing), blows landing (heavier for heavy blows and
  * kills, harsh when the player is hit), explosions, blows turned by shields,
- * and the player's death. Each is panned by where it happened on screen.
+ * a character falling, and switches. Each is panned by where it happened on
+ * screen.
  */
 export const PlaySounds = Game.System("Shooter/PlaySounds", {
   events: {
@@ -54,6 +55,9 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     if (action.kind === "attack") {
       sounds.play(moveSounds[action.move.shape], { pitch: action.power ? powerPitch : 1 + action.step * comboPitchStep })
       if (action.power) sounds.play("power")
+    } else if (action.kind === "switch") {
+      // A fall is heard through the death; the one coming in after it, softer.
+      sounds.play("switch", { volume: action.fell ? 0.6 : 1 })
     } else sounds.play(action.kind)
   }
   for (const cast of events.cast.all()) {

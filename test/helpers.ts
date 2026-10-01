@@ -87,6 +87,8 @@ export interface StartOptions {
   readonly tuning?: Tuning
   /** Who enters the arena. Defaults to the swordsman. */
   readonly build?: BuildValue
+  /** A whole team instead (`build` is ignored). */
+  readonly team?: ReadonlyArray<BuildValue>
   /** What they face (with `waves`). Defaults to the default challenge. */
   readonly challenge?: ChallengeId
   /** Start on the menu instead of playing. */
@@ -103,6 +105,7 @@ export const start = (options: StartOptions = {}) => {
     touch: Touch.scripted(touchButtons, options.touch ?? []),
     tuning: withWaves(options.tuning ?? defaultTuning, options.waves ?? false),
     ...(options.build === undefined ? {} : { build: options.build }),
+    ...(options.team === undefined ? {} : { team: options.team }),
     ...(options.challenge === undefined ? {} : { challenge: options.challenge }),
     ...(options.flow === undefined ? {} : { flow: options.flow })
   })

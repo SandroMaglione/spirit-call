@@ -3,13 +3,17 @@
  * wield (and the one they start with), and the skills they start with.
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  *
- * What enters the arena is a `Build` (a character plus what is equipped on
- * it), resolved into final stats and kit by `resolveBuild`. Base stats are
- * before the weapon: a character's ATK is mostly its weapon's.
+ * What enters the arena is a team of builds (a character plus what is
+ * equipped on it), each resolved into final stats and kit by
+ * `resolveBuild`. Base stats are before the weapon: a character's ATK is
+ * mostly its weapon's.
  */
 import type { AttackId } from "./attacks.ts"
 import type { SkillId, SkillSlot } from "./skills.ts"
 import type { WeaponId, WeaponType } from "./weapons.ts"
+
+/** The most characters a team holds (one on the field, the others on the bench). */
+export const teamSize = 3
 
 /** The stats combat reads. Characters and enemies both have them. */
 export interface Stats {

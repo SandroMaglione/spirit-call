@@ -41,14 +41,13 @@ export const progression = {
     run: { attempt: 10, clear: 40, perKill: 1 } satisfies RunEarnings
   },
   /**
-   * Each character's own level: from fighting with it, or from gold spent on
-   * it (so a new or benched character can catch up). Enemies share these
-   * levels: an enemy of level n has the stats a character of level n would.
+   * Each character's own level: from gold spent on her (training), not from
+   * fighting, so nobody falls behind on the bench (see docs/vision.md,
+   * "Progression"). Enemies share these levels: an enemy of level n has the
+   * stats a character of level n would.
    */
   character: {
     curve: { maxLevel: 40, base: 80, growth: 40 } satisfies LevelCurve,
-    /** What a run earns each character that fought in it. */
-    run: { attempt: 10, clear: 40, perKill: 2 } satisfies RunEarnings,
     /** Gold for each point of experience bought. */
     goldPerExperience: 2
   },

@@ -31,7 +31,9 @@ export interface SimulationOptions {
   /** On-screen touch controls. Defaults to untouched scripted controls. */
   readonly touch?: TouchSource
   readonly tuning?: Tuning
-  /** Who enters the arena. Defaults to `defaultBuild`. */
+  /** Who enters the arena, in order. Defaults to `defaultTeam`. */
+  readonly team?: ReadonlyArray<BuildValue>
+  /** A team of one: who enters the arena (ignored with `team`). */
   readonly build?: BuildValue
   /** What they face. Defaults to `defaultChallenge`. */
   readonly challenge?: ChallengeId
@@ -58,7 +60,7 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(FrameContext, { viewport }),
       Game.Runtime.service(UiRequests, requests)
     ),
-    resources: initialResources(tuning, viewport, options.build, options.challenge, options.enemyLevel),
+    resources: initialResources(tuning, viewport, options.team ?? (options.build === undefined ? undefined : [options.build]), options.challenge, options.enemyLevel),
     machines: initialMachines(options.flow),
     debug: true
   })

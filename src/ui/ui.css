@@ -72,6 +72,10 @@
   color: #c9d1d9;
 }
 
+.menu__member b {
+  margin-right: 4px;
+}
+
 .menu__start {
   flex-shrink: 0;
   padding: 12px 22px;
@@ -88,6 +92,80 @@
 
 .menu__start:hover {
   background: #7fe6de;
+}
+
+/* ── Team slots ────────────────────────────────────────────────────────── */
+
+.slot {
+  position: relative;
+  flex: 0 0 auto;
+  width: 200px;
+}
+
+.slot__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-height: 74px;
+  padding: 10px 12px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: rgba(22, 27, 34, 0.9);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.slot.is-empty .slot__pick {
+  border-style: dashed;
+}
+
+.slot.is-selected .slot__pick {
+  border-color: #4ecdc4;
+  background: rgba(78, 205, 196, 0.12);
+}
+
+.slot__pick:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.slot__key {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7d8590;
+}
+
+.slot__name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.slot__empty {
+  font-size: 12px;
+  color: #7d8590;
+}
+
+.slot__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #21262d;
+  color: #9da7b1;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.slot__remove:hover {
+  color: #ff7b72;
 }
 
 /* ── Cards ─────────────────────────────────────────────────────────────── */
@@ -471,24 +549,8 @@ body:has(.menu) .btm-toggle {
   letter-spacing: 0.08em;
 }
 
-.level__track {
-  flex: 1 1 120px;
-  height: 6px;
-  border-radius: 3px;
-  background: #30363d;
-  overflow: hidden;
-}
 
-.level__track i {
-  display: block;
-  height: 100%;
-  background: #7ee0d2;
-}
 
-.level__numbers {
-  color: #7d8590;
-  white-space: nowrap;
-}
 
 .level__next {
   flex-basis: 100%;
