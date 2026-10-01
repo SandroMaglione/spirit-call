@@ -65,7 +65,7 @@ const host = () => {
   }
 }
 
-const names: ReadonlyArray<SoundName> = ["slash", "thrust", "spin", "wave", "hit", "heavyHit", "kill", "hurt", "death", "dash", "nova", "boom", "throw", "shot", "charging", "charged", "power", "block", "waveStart"]
+const names: ReadonlyArray<SoundName> = ["slash", "thrust", "spin", "wave", "hit", "heavyHit", "kill", "hurt", "death", "dash", "nova", "boom", "throw", "shot", "charging", "charged", "power", "block", "waveStart", "ignite", "splash", "sizzle", "slam"]
 
 afterEach(() => {
   vi.unstubAllGlobals()

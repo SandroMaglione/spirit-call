@@ -1,15 +1,21 @@
 /**
  * Actors: the player (facing, dash, charge, and nova rings; body tint) and
- * enemies (hit flash, windup tint, health bars).
+ * enemies (hit flash, windup tint, health bars). Bodies in a state (burning,
+ * soaked) are tinted toward its color.
  */
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Skills, Tuning, Weapon } from "../schema.ts"
+import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Skills, Tuning, Weapon } from "../schema.ts"
+import type { ActiveState } from "../schema.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
 import { enemyColor } from "./nodes.ts"
 import { mixColor } from "./draw.ts"
+
+/** `color` tinted toward the color of `state`, if any. */
+export const stateTint = (color: number, state: ActiveState | null): number =>
+  state === null ? color : mixColor(color, view.states[state.id], view.states.tint)
 
 export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
   queries: {
@@ -24,7 +30,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         skills: Game.Query.read(Skills),
         energy: Game.Query.read(Energy),
         weapon: Game.Query.read(Weapon),
-        body: Game.Query.read(Body)
+        body: Game.Query.read(Body),
+        state: Game.Query.read(ElementState)
       },
       with: [Player]
     })
@@ -87,7 +94,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
       node.body.tint = data.flash.get().remaining > 0
         ? view.hitFlash
-        : dash.remaining > 0 ? view.playerDashing : mixColor(view.player, view.charge.full, glow)
+        : dash.remaining > 0 ? view.playerDashing : mixColor(stateTint(view.player, data.state.get().current), view.charge.full, glow)
       node.root.alpha = data.invulnerable.get().remaining > 0 ? 0.55 : 1
     }
   }
@@ -103,7 +110,8 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
         flash: Game.Query.read(HitFlash),
         attacker: Game.Query.read(Attacker),
         phase: Game.Query.read(AttackPhase),
-        renderable: Game.Query.read(Renderable)
+        renderable: Game.Query.read(Renderable),
+        state: Game.Query.read(ElementState)
       }
     })
   },
@@ -121,7 +129,7 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     const spec = tuning.enemies[kind].attack
     // Anticipation: the body brightens through the windup.
     const windup = spec !== null && data.phase.get() === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
-    node.body.tint = data.flash.get().remaining > 0 ? view.hitFlash : mixColor(enemyColor(kind), view.windupTint, windup * 0.75)
+    node.body.tint = data.flash.get().remaining > 0 ? view.hitFlash : mixColor(stateTint(enemyColor(kind), data.state.get().current), view.windupTint, windup * 0.75)
     const health = data.health.get()
     if (health.current >= health.max) continue
     const renderable = data.renderable.get()

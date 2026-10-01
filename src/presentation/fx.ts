@@ -136,6 +136,11 @@ export class Fx {
     )
   }
 
+  /** One particle drifting from `at` (projected coordinates) at (`vx`, `vy`) pixels per second: embers rising off a fire, drops falling off a soaked body. */
+  mote(at: Vec2, vx: number, vy: number, options: ParticleOptions): void {
+    this.emit(at, vx, vy, options)
+  }
+
   /** A bright flash at `at` that swells to `radius` and fades over `life` seconds. */
   flash(at: Vec2, radius: number, color: number, life: number): void {
     const flash = this.freeFlashes.pop() ?? (() => {

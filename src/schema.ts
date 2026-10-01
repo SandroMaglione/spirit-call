@@ -11,6 +11,7 @@ import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
 import type { ChallengeId } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
+import type { ElementId, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot } from "./content/skills.ts"
@@ -116,10 +117,41 @@ export interface Blow {
   readonly heavy: boolean
   /** Who dealt it and with which move, for their passives; `null` when no passives apply. */
   readonly source: DamageSource | null
+  /** The element it applies, and the ATK of whoever applied it (a burn's damage comes from it); `null` for none. */
+  readonly element: ElementHit | null
+  /**
+   * Damage over time (a burn): it lands through invulnerability, and gives
+   * none, no hit-stop, and no push; its element only scales its damage.
+   */
+  readonly periodic: boolean
+}
+
+/** An element carried by a blow (see `content/elements.ts`). */
+export interface ElementHit {
+  readonly id: ElementId
+  readonly atk: number
 }
 
 /** A blow of `damage` and `knockback`; the other fields default to none. */
-export const blow = (spec: Pick<Blow, "damage" | "knockback"> & Partial<Blow>): Blow => ({ charges: false, hitStop: 0, heavy: false, source: null, ...spec })
+export const blow = (spec: Pick<Blow, "damage" | "knockback"> & Partial<Blow>): Blow =>
+  ({ charges: false, hitStop: 0, heavy: false, source: null, element: null, periodic: false, ...spec })
+
+/**
+ * A state lasting on a body (see `content/elements.ts`): burning (taking
+ * `dps` damage per second, a burn every `tick` seconds, the next in
+ * `nextTick`) or soaked (slowed). `charges`: set by the player, so its burns
+ * fill energy.
+ */
+export interface ActiveState {
+  readonly id: StateId
+  readonly remaining: number
+  readonly dps: number
+  readonly nextTick: number
+  readonly charges: boolean
+}
+
+/** The state a body is in, if any: one at a time, since water and fire cancel each other. */
+export const ElementState = Descriptor.Component<{ readonly current: ActiveState | null }>()("Shooter/ElementState")
 
 /** The passives of what an entity has equipped (see `content/passives.ts`). */
 export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives")
@@ -256,8 +288,8 @@ export type DamageTarget = Entity.Handle<typeof Root, typeof Health>
 /** A request to damage an entity; `ApplyDamage` decides what happens. */
 export interface DamageValue {
   readonly target: DamageTarget
-  /** The faction dealing it: it never hurts its own side. */
-  readonly faction: Faction
+  /** The faction dealing it: it never hurts its own side. `null`: no side (a burn, the ground), it hurts everyone. */
+  readonly faction: Faction | null
   /** Unit direction of the push. */
   readonly direction: Vec2
   readonly blow: Blow
@@ -278,7 +310,20 @@ export const Hit = Descriptor.Event<{
   readonly faction: Faction
   readonly killed: boolean
   readonly heavy: boolean
+  /** Damage over time (a burn), for lighter effects. */
+  readonly periodic: boolean
+  /** The element of the blow, if any (for the color of its number). */
+  readonly element: ElementId | null
 }>()("Shooter/Hit")
+
+/**
+ * Elements meeting on a body or on the ground, for effects: a body catching
+ * fire or getting soaked, water putting fire out (`steam`), fire fizzling on
+ * a soaked body, wind carrying a state to another body, and a body slammed
+ * into a wall (`stun`).
+ */
+export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun"
+export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind }>()("Shooter/Reaction")
 
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
@@ -525,6 +570,7 @@ export const Game = Schema.bind(
       Passives,
       Skills,
       Energy,
+      ElementState,
       Lobbed,
       Health,
       Hurtbox,
@@ -563,7 +609,7 @@ export const Game = Schema.bind(
       RunResult,
       HitStop
     },
-    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast, Heal }
+    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast, Heal, Reaction }
   }),
   Root
 )

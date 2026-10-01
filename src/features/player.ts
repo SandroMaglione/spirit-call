@@ -12,6 +12,7 @@ import {
   CombatStats,
   Controls,
   Dash,
+  ElementState,
   Energy,
   Game,
   Health,
@@ -33,6 +34,7 @@ import {
 } from "../schema.ts"
 import type { ResolvedBuild } from "./build.ts"
 import { resolveBuild } from "./build.ts"
+import { stateSpeed } from "./elements.ts"
 import { initialSkills } from "./skills.ts"
 import { charging, initialWeapon } from "./weapons.ts"
 
@@ -55,6 +57,7 @@ export const makePlayer = (build: ResolvedBuild, at: Vec2) =>
     [Hurtbox, { radius: build.hurtboxRadius, faction: "player" }],
     [Health, { current: build.stats.hp, max: build.stats.hp }],
     [HitFlash, { remaining: 0 }],
+    [ElementState, { current: null }],
     [Renderable, { kind: "player", radius: build.radius }]
   )
 
@@ -81,7 +84,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         dash: Game.Query.write(Dash),
         invulnerable: Game.Query.write(Invulnerable),
         weapon: Game.Query.read(Weapon),
-        stats: Game.Query.read(CombatStats)
+        stats: Game.Query.read(CombatStats),
+        state: Game.Query.read(ElementState)
       },
       with: [Player]
     })
@@ -125,8 +129,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       remaining -= covered
       data.velocity.set(scale(direction, dashSpeed * covered / dt))
     } else {
-      // Leaving a dash keeps some momentum, then normal running takes over.
-      const runSpeed = data.stats.get().speed
+      // Leaving a dash keeps some momentum, then normal running takes over (slower when soaked).
+      const runSpeed = data.stats.get().speed * stateSpeed(tuning, data.state.get())
       const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
       // Charging a power attack slows the player down.
       const weapon = data.weapon.get()

@@ -7,7 +7,8 @@ import type { SkillEffect } from "../content/skills.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Camera, Cast, Death, Explosion, Game, Hit, Impact, RenderHost, Sounds } from "../schema.ts"
+import { Action, Camera, Cast, Death, Explosion, Game, Hit, Impact, Reaction, RenderHost, Sounds } from "../schema.ts"
+import type { ReactionKind } from "../schema.ts"
 import type { SoundName } from "./sound.ts"
 
 /** The sound of each kind of move. It climbs in pitch through the combo (`comboPitchStep` per move); a power move goes deeper. */
@@ -17,6 +18,9 @@ const powerPitch = 0.85
 
 /** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`). */
 const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", lob: "throw", nova: null }
+
+/** The sound of elements meeting (wind carrying a state is heard as the blow that pushed it). */
+const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite", soak: "splash", steam: "sizzle", fizzle: "sizzle", carry: null, stun: "slam" }
 
 /**
  * Sounds for what happened since the last frame: the player's actions (each
@@ -31,7 +35,8 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     hit: Game.System.readEvent(Hit),
     death: Game.System.readEvent(Death),
     impact: Game.System.readEvent(Impact),
-    explosion: Game.System.readEvent(Explosion)
+    explosion: Game.System.readEvent(Explosion),
+    reaction: Game.System.readEvent(Reaction)
   },
   resources: { camera: Game.System.readResource(Camera) },
   services: { sounds: Game.System.service(Sounds), host: Game.System.service(RenderHost) }
@@ -55,7 +60,13 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     const sound = castSounds[cast.effect.kind]
     if (sound !== null) sounds.play(sound, { pan: pan(cast.from) })
   }
+  for (const reaction of events.reaction.all()) {
+    const sound = reactionSounds[reaction.kind]
+    if (sound !== null) sounds.play(sound, { pan: pan(reaction.at), volume: reaction.kind === "fizzle" ? 0.5 : 1 })
+  }
   for (const hit of events.hit.all()) {
+    // Burns are heard through their crackle, not as blows.
+    if (hit.periodic) continue
     if (hit.faction === "player") sounds.play("hurt")
     else sounds.play(hit.killed ? "kill" : hit.heavy ? "heavyHit" : "hit", { pan: pan(hit.at) })
   }

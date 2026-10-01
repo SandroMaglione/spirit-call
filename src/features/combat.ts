@@ -1,10 +1,10 @@
 /**
  * Projectiles and the damage pipeline.
  *
- * Anything that hurts (projectiles, hitboxes of attacks and skills) emits a
- * `Damage` event. `ApplyDamage` is the one place that decides what
- * damage does: invulnerability, health, hit flash, knockback, and death.
- * Status effects and damage modifiers plug in there.
+ * Anything that hurts (projectiles, hitboxes of attacks and skills, burns)
+ * emits a `Damage` event. `ApplyDamage` is the one place that decides what
+ * damage does: invulnerability, health, hit flash, knockback, death, and
+ * the element it applies (see `features/elements.ts`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { scale } from "../math/vec.ts"
@@ -15,6 +15,7 @@ import {
   CombatStats,
   Damage,
   Death,
+  ElementState,
   Enemy,
   Energy,
   Game,
@@ -30,6 +31,7 @@ import {
   Position,
   PrevPosition,
   Projectile,
+  Reaction,
   Renderable,
   Respawns,
   RunScope,
@@ -42,6 +44,7 @@ import {
 import type { EnemyKind, Faction, ProjectileValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
+import { afflict, elementDamageFactor } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { damageBonusPercent, PassiveHolders } from "./passives.ts"
 
@@ -208,6 +211,7 @@ const Damageable = Game.Query({
     knockback: Game.Query.write(Knockback),
     invulnerable: Game.Query.write(Invulnerable),
     stats: Game.Query.read(CombatStats),
+    state: Game.Query.write(ElementState),
     player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns)
@@ -217,14 +221,19 @@ const Damageable = Game.Query({
 /**
  * Applies damage requests: the single place where hits become consequences.
  * The attacker's passives raise each request's amount (see
- * `damageBonusPercent`), then the target's DEF reduces it (see `damageTaken`).
+ * `damageBonusPercent`), its element scales it (see `elementDamageFactor`),
+ * then the target's DEF reduces it (see `damageTaken`). A blow's element
+ * then applies to a target that survives (see `afflict`). Burns (periodic
+ * blows) land through invulnerability and give none, with no hit-stop or
+ * push.
  */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: { energies: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) },
   events: {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
-    death: Game.System.writeEvent(Death)
+    death: Game.System.writeEvent(Death),
+    reaction: Game.System.writeEvent(Reaction)
   },
   resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) }
 }, ({ queries, events, resources, lookup, commands }) => {
@@ -238,30 +247,33 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     if (!found.ok || dead.has(found.value.entity.id.value)) continue
     const { entity, data } = found.value
     if (data.hurtbox.get().faction === damage.faction) continue
-    const invulnerable = data.invulnerable.get().remaining
-    if (invulnerable > 0) continue
-
     const { blow } = damage
+    const invulnerable = data.invulnerable.get().remaining
+    if (invulnerable > 0 && !blow.periodic) continue
+
     const health = data.health.get()
     const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
     const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, health) : 0
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100), data.stats.get().def)
+    const state = data.state.get().current
+    const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state)
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor, data.stats.get().def)
     const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.
     if (blow.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
-    data.flash.set({ remaining: tuning.feedback.hitFlash })
-    // One mistake costs one hit: the player is briefly untouchable afterwards.
-    if (data.player.present) {
-      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
-      hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
-    }
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
-    const push = blow.knockback * knockbackTaken(tuning, enemy)
-    data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
-
-    // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
-    if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
+    if (!blow.periodic) {
+      data.flash.set({ remaining: tuning.feedback.hitFlash })
+      // One mistake costs one hit: the player is briefly untouchable afterwards.
+      if (data.player.present) {
+        data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+        hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
+      }
+      const push = blow.knockback * knockbackTaken(tuning, enemy)
+      data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
+      // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
+      if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
+    }
 
     const at = data.position.get()
     const killed = current <= 0
@@ -273,8 +285,16 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       amount,
       faction: data.hurtbox.get().faction,
       killed,
-      heavy: blow.heavy
+      heavy: blow.heavy,
+      periodic: blow.periodic,
+      element: blow.element?.id ?? null
     })
+    // The blow's element takes hold of a body that survives it (a burn only burns).
+    if (!killed && blow.element !== null && !blow.periodic) {
+      const afflicted = afflict(tuning, state, blow.element, blow.charges)
+      data.state.set({ current: afflicted.state })
+      if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction })
+    }
     if (!killed) continue
 
     dead.add(entity.id.value)

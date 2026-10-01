@@ -9,12 +9,14 @@ import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "
 import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import { levelScale } from "./build.ts"
+import { stateSpeed } from "./elements.ts"
 import {
   Attacker,
   AttackPhase,
   Body,
   Brain,
   CombatStats,
+  ElementState,
   Enemy,
   EnemyLevel,
   EnemyMode,
@@ -61,6 +63,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [CombatStats, { hp, atk, def, speed }],
     [HitFlash, { remaining: 0 }],
     [Invulnerable, { remaining: 0 }],
+    [ElementState, { current: null }],
     [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
@@ -150,7 +153,8 @@ export const SteerEnemies = (() => {
           attacker: Game.Query.read(Attacker),
           phase: Game.Query.read(AttackPhase),
           knockback: Game.Query.read(Knockback),
-          mode: Game.Query.write(EnemyMode)
+          mode: Game.Query.write(EnemyMode),
+          state: Game.Query.read(ElementState)
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
@@ -205,8 +209,9 @@ export const SteerEnemies = (() => {
     for (const { entity, data } of enemies) {
       const kind = data.enemy.get().kind
       const spec = tuning.enemies[kind]
-      // Speed is a stat, so what changes stats (levels, slows) changes it.
-      const speed = data.stats.get().speed
+      // Speed is a stat, so what changes stats (levels) changes it; soaked enemies are slowed, charges included.
+      const slowed = stateSpeed(tuning, data.state.get())
+      const speed = data.stats.get().speed * slowed
       const position = data.position.get()
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
@@ -216,7 +221,7 @@ export const SteerEnemies = (() => {
       // A charge moves straight down its lane at full speed, ignoring crowding.
       const attack = spec.attack
       if (attack !== null && attack.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
-        data.velocity.set(scale(attacker.area.direction, attack.speed))
+        data.velocity.set(scale(attacker.area.direction, attack.speed * slowed))
         continue
       }
 

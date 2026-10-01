@@ -50,7 +50,7 @@ export const weapons = {
     atk: 25,
     bonus: bonus("def", 20),
     passives: [
-      on(doing(finisher()), cast(nova({ radius: 150, power: 30, knockback: 700, active: 0.08, invulnerability: 0, clearsProjectiles: false, hitStop: 0.03, heavy: false })))
+      on(doing(finisher()), cast(nova({ radius: 150, power: 30, element: null, knockback: 700, active: 0.08, invulnerability: 0, clearsProjectiles: false, hitStop: 0.03, heavy: false })))
     ]
   }),
   /** The gunner's first gun: stats only. */

@@ -138,7 +138,8 @@ const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
     charges: cast.charges,
     hitStop: effect.hitStop,
     heavy: effect.heavy,
-    source: { attacker: cast.caster }
+    source: { attacker: cast.caster },
+    element: effect.element === null ? null : { id: effect.element, atk: cast.atk }
   })
 
 /** Casters that turn toward what they cut. */

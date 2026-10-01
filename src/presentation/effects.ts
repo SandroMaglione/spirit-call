@@ -1,12 +1,14 @@
 /**
  * Cosmetic effects from gameplay events: slash trails, hit sparks and
- * numbers, recoil, dust, explosions, and heals.
+ * numbers, recoil, dust, explosions, heals, and elements (reactions, and
+ * motes off bodies in a state).
  */
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Death, Enemy, Explosion, Game, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
+import { Action, Body, Death, ElementState, Enemy, Explosion, Game, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
+import type { ReactionKind } from "../schema.ts"
 import type { RenderHostValue } from "./host-types.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
 
@@ -26,7 +28,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     death: Game.System.readEvent(Death),
     impact: Game.System.readEvent(Impact),
     explosion: Game.System.readEvent(Explosion),
-    heal: Game.System.readEvent(Heal)
+    heal: Game.System.readEvent(Heal),
+    reaction: Game.System.readEvent(Reaction)
   },
   services: { host: Game.System.service(RenderHost) }
 }, ({ events, services }) => {
@@ -52,6 +55,12 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     const at = toScreen(projection, hit.at)
     const body = { x: at.x, y: at.y - impact.height * projection.zoom }
     const direction = screenDirection(hit.direction)
+    // A burn: a small number in the fire's color, and for the player a faint vignette, without the jolt of a blow.
+    if (hit.periodic) {
+      fx.number(at, hit.amount, view.elements.fire, { size: 0.8, life: 0.5 })
+      if (hit.faction === "player") feedback.hurt = Math.max(feedback.hurt, 0.35)
+      continue
+    }
     if (hit.faction === "player") {
       feedback.shake = Math.max(feedback.shake, view.hurtShake)
       feedback.hurt = 1
@@ -98,6 +107,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })
     services.host.feedback.shake = Math.max(services.host.feedback.shake, nova ? view.ultimateShake : view.explosionShake)
   }
+  for (const reaction of events.reaction.all()) react(services.host, toScreen(projection, reaction.at), reaction.kind)
   for (const impact of events.impact.all()) {
     const at = toScreen(projection, impact.at)
     fx.burst({ x: at.x, y: at.y - view.projectileHeight * projection.zoom }, {
@@ -107,6 +117,58 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       size: 2.5,
       life: 0.18
     })
+  }
+})
+
+/** The effect of elements meeting at `at` (projected coordinates). */
+const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind): void => {
+  const fx = host.fx
+  const body = { x: at.x, y: at.y - view.impact.height * projection.zoom }
+  switch (kind) {
+    case "ignite":
+      fx.flash(body, 30, view.elements.fire, 0.14)
+      fx.burst(body, { color: view.elements.fire, count: 10, speed: 160, size: 3.5, life: 0.4, gravity: -260 })
+      return
+    case "soak":
+      fx.burst(body, { color: view.elements.water, count: 12, speed: 200, size: 3.5, life: 0.4, gravity: 420 })
+      return
+    case "steam":
+      fx.flash(body, 40, view.steam, 0.2)
+      fx.burst(body, { color: view.steam, count: 16, speed: 120, size: 7, life: 0.8, gravity: -200, drag: 3, alpha: 0.6 })
+      return
+    case "fizzle":
+      fx.burst(body, { color: view.steam, count: 6, speed: 90, size: 5, life: 0.5, gravity: -160, drag: 3, alpha: 0.5 })
+      return
+    case "carry":
+      fx.burst(body, { color: view.elements.wind, count: 8, speed: 220, size: 3, life: 0.3 })
+      return
+    case "stun":
+      fx.flash(body, 44, view.stun, 0.16)
+      fx.ring(at, 50 * projection.zoom, view.stun, 0.35)
+      fx.burst(body, { color: view.stun, count: 12, speed: 260, size: 3.5, life: 0.35 })
+      host.feedback.shake = Math.max(host.feedback.shake, view.impact.heavyShake)
+      return
+  }
+}
+
+/** Motes off bodies in a state: embers rising off burning ones, drops falling off soaked ones. */
+export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
+  queries: {
+    bodies: Game.Query({
+      selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body), state: Game.Query.read(ElementState) }
+    })
+  },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ queries, services }) => {
+  const chance = services.clock.frameSeconds * view.states.motes
+  for (const { data } of queries.bodies.each()) {
+    const state = data.state.get().current
+    if (state === null || Math.random() >= chance) continue
+    const at = toScreen(projection, lerp(data.previous.get(), data.position.get(), services.clock.alpha))
+    const r = data.body.get().radius * projection.zoom
+    const from = { x: at.x + (Math.random() - 0.5) * r * 1.6, y: at.y - Math.random() * r * view.bodyHeightFactor }
+    if (state.id === "burning") services.host.fx.mote(from, (Math.random() - 0.5) * 30, -60 - Math.random() * 50, { color: view.states.burning, size: 3 + Math.random() * 2, life: 0.5, gravity: -80, drag: 1 })
+    else services.host.fx.mote(from, (Math.random() - 0.5) * 16, 10, { color: view.states.soaked, size: 2.5, life: 0.45, gravity: 520, drag: 0.5 })
   }
 })
 
