@@ -441,8 +441,8 @@ export const Cast = Descriptor.Event<CastValue>()("Shooter/Cast")
 export const Action = Descriptor.Event<
   | ({ readonly kind: "attack"; readonly at: Vec2; readonly direction: Vec2; readonly move: AttackMove } & MoveContext)
   | { readonly kind: "charging" | "charged" | "dash"; readonly at: Vec2 }
-  /** Another character came onto the field (`fell`: because the last one fell). */
-  | { readonly kind: "switch"; readonly at: Vec2; readonly fell: boolean }
+  /** `character` came onto the field (`fell`: because the last one fell). */
+  | { readonly kind: "switch"; readonly at: Vec2; readonly character: CharacterId; readonly fell: boolean }
 >()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 

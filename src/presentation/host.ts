@@ -1,7 +1,7 @@
 import { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import { Application, Container, Graphics } from "pixi.js"
 
-import { actionButtons } from "../config/input.ts"
+import { actionButtons, teamButtons } from "../config/input.ts"
 import type { ActionButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { Fx } from "./fx.ts"
@@ -17,20 +17,21 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   root.className = "hud"
   root.innerHTML = `
     <div class="hud__vignette" data-vignette></div>
-    <div class="hud__panel">
-      <div class="hud__health"><div class="hud__health-fill" data-health></div><span data-health-text></span></div>
-      <div class="hud__state" data-state hidden></div>
-      <div class="hud__dash" data-dash></div>
-      <div class="hud__wave" data-wave></div>
-      <div class="hud__combat" data-combat></div>
-      <div class="hud__stats" data-stats></div>
+    <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__quest-progress" data-progress></div></div>
+    <div class="hud__vitals">
+      <div class="hud__who"><b data-name></b><span class="hud__state" data-state hidden></span></div>
+      <div class="hud__health"><div class="hud__health-fill" data-health></div></div>
+      <span class="hud__health-text" data-health-text></span>
+    </div>
+    <div class="team" data-team>
+      ${teamButtons.map((_, slot) => `<div class="team__member" data-member="${slot}" hidden><div class="team__face" data-face><kbd>${slot + 1}</kbd><i data-member-state></i></div><div class="team__info"><span data-member-name></span><b class="team__hp"><i data-member-hp></i></b></div></div>`).join("")}
     </div>
     <div class="hud__banner" data-banner></div>
     <div class="hud__skills">
       <div class="hud__skill" data-skill="special"><kbd>Space</kbd><span></span><i data-cooldown></i></div>
       <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span></span><i data-cooldown></i></div>
     </div>
-    <div class="hud__hint" data-hint>WASD move · double-tap to dash · Left click attack · Space special · Shift ultimate</div>
+    <div class="hud__hint" data-hint>WASD move · double-tap dash · Click attack · Space special · Shift ultimate · 1–3 switch</div>
     <button class="hud__mute" data-mute type="button" title="Sound (M)">🔊</button>
     <div class="pad" data-pad hidden>
       <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
@@ -58,13 +59,25 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
         knob: root.querySelector<HTMLElement>("[data-knob]")!,
         buttons: { attack: padButton("attack"), special: padButton("special"), dash: padButton("dash"), ultimate: padButton("ultimate") }
       },
+      quest: root.querySelector<HTMLElement>("[data-quest]")!,
+      progress: root.querySelector<HTMLElement>("[data-progress]")!,
+      name: root.querySelector<HTMLElement>("[data-name]")!,
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       state: root.querySelector<HTMLElement>("[data-state]")!,
-      dash: root.querySelector<HTMLElement>("[data-dash]")!,
-      wave: root.querySelector<HTMLElement>("[data-wave]")!,
-      combat: root.querySelector<HTMLElement>("[data-combat]")!,
-      stats: root.querySelector<HTMLElement>("[data-stats]")!,
+      team: {
+        root: root.querySelector<HTMLElement>("[data-team]")!,
+        members: teamButtons.map((_, slot) => {
+          const member = root.querySelector<HTMLElement>(`[data-member="${slot}"]`)!
+          return {
+            root: member,
+            face: member.querySelector<HTMLElement>("[data-face]")!,
+            state: member.querySelector<HTMLElement>("[data-member-state]")!,
+            name: member.querySelector<HTMLElement>("[data-member-name]")!,
+            health: member.querySelector<HTMLElement>("[data-member-hp]")!
+          }
+        })
+      },
       banner: root.querySelector<HTMLElement>("[data-banner]")!,
       vignette: root.querySelector<HTMLElement>("[data-vignette]")!
     }

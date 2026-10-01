@@ -200,5 +200,5 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   commands.insert(field.entity.id, [Weapon, initialWeapon({ attack: field.data.weapon.get().attack })])
   commands.insert(incoming.entity, ...fieldParts(tuning, incoming.character, at, carried))
   resources.teamSwitch.set({ cooldown: tuning.team.switchCooldown })
-  events.action.emit({ kind: "switch", at, fell })
+  events.action.emit({ kind: "switch", at, character: incoming.character, fell })
 })

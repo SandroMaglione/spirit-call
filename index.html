@@ -38,14 +38,18 @@
         position: absolute; inset: 0; pointer-events: none;
         font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; color: #e6edf3;
       }
-      .hud__panel { position: absolute; top: 16px; left: 16px; display: grid; gap: 6px; }
-      .hud__dash { font-size: 14px; letter-spacing: 0.08em; color: #4ecdc4; }
-      .hud__combat { font-size: 13px; color: #f7c948; }
-      .hud__wave { font-size: 13px; color: #e6edf3; }
-      .hud__health { position: relative; width: 240px; height: 18px; background: rgba(13, 17, 23, 0.8); border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
+      /* What is being played: small and out of the way, top left. */
+      .hud__quest { position: absolute; top: 12px; left: 14px; display: grid; gap: 2px; text-shadow: 0 1px 3px #000; }
+      .hud__quest-name { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #7d8590; }
+      .hud__quest-progress { font-size: 12px; color: #c9d1d9; }
+      /* The character on the field, bottom center (above the skill bar on a keyboard). */
+      .hud__vitals { position: absolute; bottom: 116px; left: 50%; transform: translateX(-50%); display: grid; justify-items: center; gap: 4px; width: 220px; text-shadow: 0 1px 3px #000; }
+      .hud[data-device="touch"] .hud__vitals { bottom: 12px; width: 180px; }
+      .hud__who { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+      .hud__health { position: relative; width: 100%; height: 7px; background: rgba(13, 17, 23, 0.8); border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
       .hud__health-fill { position: absolute; inset: 0; width: 100%; background: linear-gradient(90deg, #ff3b3b, #ff7a6b); transition: width 120ms ease-out; }
-      .hud__health span { position: relative; display: block; text-align: center; font-size: 12px; line-height: 18px; color: #fff; text-shadow: 0 1px 2px #000; }
-      .hud__state { justify-self: start; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #0d1117; }
+      .hud__health-text { font-size: 10px; color: #c9d1d9; }
+      .hud__state { padding: 1px 6px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: #0d1117; text-shadow: none; }
       .hud__state[hidden] { display: none; }
       .hud__state--burning { background: #ff7b2e; }
       .hud__state--soaked { background: #4aa8ff; }
@@ -60,9 +64,33 @@
       .hud__skill--ultimate kbd { color: #ffd166; }
       .hud__skill--ultimate.is-ready { border-color: #ffd166; box-shadow: 0 0 14px rgba(255, 209, 102, 0.6); }
       .hud__skill i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(8, 10, 14, 0.72); pointer-events: none; }
-      .hud__stats { font-size: 12px; color: #7d8590; }
+      /* The team: a column on the right; on touch, each face sits on its switch button. */
+      .team { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: grid; gap: 10px; }
+      .team.is-touch { inset: 0; transform: none; display: block; }
+      .team.is-touch .team__member { position: absolute; }
+      .team__member { --color: #4ecdc4; display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; transition: opacity 150ms; }
+      .team__face { position: relative; box-sizing: border-box; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--color); background: rgba(13, 17, 23, 0.72); transition: opacity 150ms, box-shadow 150ms; }
+      .team__face::before { content: attr(data-initial); font-size: 16px; font-weight: 700; color: var(--color); }
+      .team__face kbd { position: absolute; top: -5px; left: -5px; min-width: 14px; padding: 0 3px; border-radius: 4px; background: #21262d; border: 1px solid #30363d; font: 700 10px/14px inherit; color: #e6edf3; text-align: center; }
+      .team.is-touch .team__face kbd { display: none; }
+      /* On touch only the face and a health bar under it: names would run into the buttons below. */
+      .team.is-touch .team__member { flex-direction: column; gap: 3px; }
+      .team.is-touch .team__info span { display: none; }
+      .team.is-touch .team__hp { width: 34px; }
+      .team__face i { position: absolute; right: -2px; bottom: -2px; width: 10px; height: 10px; border-radius: 50%; display: none; border: 1px solid #0d1117; }
+      .team__face i.team__state--burning { display: block; background: #ff7b2e; }
+      .team__face i.team__state--soaked { display: block; background: #4aa8ff; }
+      .team__info { display: grid; justify-items: end; gap: 3px; font-size: 10px; color: #c9d1d9; text-shadow: 0 1px 3px #000; }
+      .team__hp { display: block; width: 56px; height: 4px; border-radius: 2px; background: rgba(13, 17, 23, 0.8); overflow: hidden; }
+      .team__hp i { display: block; height: 100%; background: #7ee08a; transition: width 120ms ease-out; }
+      .team__member.is-field .team__face { box-shadow: 0 0 0 3px rgba(230, 237, 243, 0.55); }
+      .team__member.is-field .team__info { color: #ffffff; }
+      .team__member.is-ready .team__face { box-shadow: 0 0 12px 2px rgba(255, 209, 102, 0.75); }
+      .team__member.is-field.is-ready .team__face { box-shadow: 0 0 0 3px rgba(230, 237, 243, 0.55), 0 0 12px 2px rgba(255, 209, 102, 0.75); }
+      .team__member.is-waiting .team__face { opacity: 0.5; }
+      .team__member.is-fallen { opacity: 0.35; filter: grayscale(1); }
       .hud__mute { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); pointer-events: auto; font-size: 18px; line-height: 1; padding: 6px 8px; background: rgba(13, 17, 23, 0.6); border: 1px solid #30363d; border-radius: 6px; cursor: pointer; }
-      .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #7d8590; }
+      .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #7d8590; white-space: nowrap; }
       .tuning { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 320px; display: flex; flex-direction: column; background: rgba(13, 17, 23, 0.94); border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: 12px "IBM Plex Mono", ui-monospace, monospace; z-index: 10; }
       .tuning[hidden] { display: none; }
       .tuning__header { display: grid; gap: 6px; padding: 10px 12px; border-bottom: 1px solid #30363d; }

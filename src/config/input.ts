@@ -65,7 +65,7 @@ export const touchLayout = ({ width, height }: Touch.Size): Touch.Layout<TouchBu
   const px = (value: number) => value * scale
   const attack = { x: width - px(90), y: height - px(90) }
   // The switch buttons: a column at the right edge from the top, clear of the ultimate below it.
-  const team = (slot: number) => ({ center: { x: width - px(30), y: px(36) + slot * px(54) }, radius: px(24) })
+  const team = (slot: number) => ({ center: { x: width - px(28), y: px(28) + slot * px(50) }, radius: px(21) })
   return {
     // Below the top-left HUD, left half of the screen.
     stick: { region: { left: 0, top: height * 0.25, width: width / 2, height: height * 0.75 }, radius: px(55), deadZone: 0.12 },
