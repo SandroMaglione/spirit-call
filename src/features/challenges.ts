@@ -1,7 +1,7 @@
 /**
  * Challenge objectives: the run is won (`Cleared`) once the challenge's
- * objective is met, and lost (`GameOver`) when the player dies first (see
- * `DetectGameOver`). Training (waves off) has no objective.
+ * objective is met, and lost (`GameOver`) when the whole team falls first
+ * (see `DetectGameOver`). Training (waves off) has no objective.
  */
 import type { Objective } from "../content/challenges.ts"
 import { Challenge, Flow, Game, Run, RunResult, Stats, Time, Tuning, Waves } from "../schema.ts"

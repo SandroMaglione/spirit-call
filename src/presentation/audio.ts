@@ -26,7 +26,8 @@ const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite
  * Sounds for what happened since the last frame: the player's actions (each
  * combo move its own swing), blows landing (heavier for heavy blows and
  * kills, harsh when the player is hit), explosions, blows turned by shields,
- * and the player's death. Each is panned by where it happened on screen.
+ * a character falling, and switches. Each is panned by where it happened on
+ * screen.
  */
 export const PlaySounds = Game.System("Shooter/PlaySounds", {
   events: {
