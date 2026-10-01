@@ -12,7 +12,7 @@ import type { ReactionKind } from "../schema.ts"
 import type { SoundName } from "./sound.ts"
 
 /** The sound of each kind of move. It climbs in pitch through the combo (`comboPitchStep` per move); a power move goes deeper. */
-const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrust: "thrust", spin: "spin", shot: "shot" }
+const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrust: "thrust", spin: "spin", shot: "shot", disc: "disc" }
 const comboPitchStep = 0.067
 const powerPitch = 0.85
 

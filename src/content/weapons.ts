@@ -9,7 +9,7 @@ import { cast, combo, damageBonus, doing, finisher, heal, kill, on, targetHealth
 import type { Passive } from "./passives.ts"
 import { nova } from "./skills.ts"
 
-export type WeaponType = "sword" | "gun"
+export type WeaponType = "sword" | "gun" | "disc"
 
 /** A percentage raise of one stat, on top of the character's (and, for ATK, the weapon's) base. */
 export interface StatBonus {
@@ -58,7 +58,19 @@ export const weapons = {
   /** Executioner: finishes off the wounded. */
   executioner: weapon({ name: "Executioner", type: "gun", atk: 30, bonus: bonus("speed", 8), passives: [damageBonus(50, targetHealthBelow(0.3))] }),
   /** Bloodthirst: every kill heals the wielder. */
-  bloodthirst: weapon({ name: "Bloodthirst", type: "gun", atk: 25, bonus: bonus("hp", 15), passives: [on(kill(), heal(5))] })
+  bloodthirst: weapon({ name: "Bloodthirst", type: "gun", atk: 25, bonus: bonus("hp", 15), passives: [on(kill(), heal(5))] }),
+  /** The Tidecaller's first disc: stats only. */
+  trainingDisc: weapon({ name: "Training Disc", type: "disc", atk: 20, bonus: noBonus(), passives: [] }),
+  /** Undertow: the combo's finisher also soaks everything around the wielder. */
+  undertow: weapon({
+    name: "Undertow",
+    type: "disc",
+    atk: 25,
+    bonus: bonus("hp", 10),
+    passives: [
+      on(doing(finisher()), cast(nova({ radius: 140, power: 15, element: "water", knockback: 380, active: 0.08, invulnerability: 0, clearsProjectiles: false, hitStop: 0.02, heavy: false })))
+    ]
+  })
 }
 
 export type WeaponId = keyof typeof weapons

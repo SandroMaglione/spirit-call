@@ -12,6 +12,7 @@
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import { elements } from "./elements.ts"
+import { isMelee } from "./attacks.ts"
 import type { AttackMove } from "./attacks.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { LevelCurve } from "./progression.ts"
@@ -27,8 +28,9 @@ const positive = (problems: Array<string>, where: string, values: Record<string,
 
 const checkMove = (problems: Array<string>, where: string, move: AttackMove): void => {
   positive(problems, where, { recovery: move.recovery })
-  if (move.shape === "shot") positive(problems, where, { count: move.count, speed: move.speed, range: move.range, radius: move.radius })
-  else positive(problems, where, { reach: move.reach })
+  if (isMelee(move)) positive(problems, where, { reach: move.reach })
+  else positive(problems, where, { count: move.count, speed: move.speed, range: move.range, radius: move.radius })
+  if (move.shape === "disc" && move.hover > 0) positive(problems, where, { hoverTick: move.hoverTick })
 }
 
 const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect): void => {

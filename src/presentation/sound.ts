@@ -49,6 +49,7 @@ export type SoundName =
   | "splash"
   | "sizzle"
   | "slam"
+  | "disc"
 
 export interface PlayOptions {
   /** Loudness factor, 1 by default. */
@@ -306,6 +307,12 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     tone(v, "sine", 90, 30, 0.4, 0.9, 0, 0.002)
     crunch(v, 800, 220, 0.2, 0.5)
     noise(v, "lowpass", 1200, 100, 0.4, 0.35)
+  }],
+  // A disc thrown: a spinning whir rising and falling, with a faint metallic hum.
+  disc: [{ reverb: 0.15, interval: 0.04 }, (v) => {
+    swish(v, { low: 900, peak: 2600, duration: 0.22, peakAt: 0.3, q: 2.5, gain: 0.45 })
+    swish(v, { low: 1400, peak: 3200, duration: 0.18, peakAt: 0.6, q: 4, gain: 0.2, delay: 0.06 })
+    tone(v, "triangle", 620, 540, 0.2, 0.04)
   }],
   // A new wave: two rising notes.
   waveStart: [{ reverb: 0.4 }, (v) => {

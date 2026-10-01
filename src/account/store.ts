@@ -72,6 +72,18 @@ export interface AccountOptions {
   readonly newId: () => string
 }
 
+/** What an item is called, for notices. */
+const itemName = (tuning: Tuning, item: Item): string => {
+  switch (item.kind) {
+    case "character":
+      return tuning.characters[item.id].name
+    case "weapon":
+      return tuning.weapons[item.id].name
+    case "skill":
+      return tuning.skills[item.id].name
+  }
+}
+
 /** Loads the device's account, creating it on the first visit. */
 const load = (store: KeyValueStore.KeyValueStore, { tuning, starter, newId }: AccountOptions) =>
   Effect.gen(function*() {
@@ -89,8 +101,11 @@ const load = (store: KeyValueStore.KeyValueStore, { tuning, starter, newId }: Ac
           notes: ["Your saved account could not be read; a new one was started (the old one is kept on this device)."]
         }
       case "Read": {
-        const { account, dropped } = fromStored(tuning, starter, migrateAccount(saved.value), now)
-        const notes = dropped.length === 0 ? [] : [`Some saved things no longer exist and were reset: ${dropped.join(", ")}.`]
+        const { account, dropped, granted } = fromStored(tuning, starter, migrateAccount(saved.value), now)
+        const notes = [
+          ...(granted.length === 0 ? [] : [`New rewards for quests you already cleared: ${granted.map((item) => itemName(tuning, item)).join(", ")}.`]),
+          ...(dropped.length === 0 ? [] : [`Some saved things no longer exist and were reset: ${dropped.join(", ")}.`])
+        ]
         return { account, notes }
       }
     }

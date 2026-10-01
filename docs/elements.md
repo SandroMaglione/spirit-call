@@ -78,7 +78,8 @@ middle range). Thunder and Rock come with later characters.
 - **They affect everyone standing in them**, enemies and the player alike,
   including the character who made them: a fire pool burns her too, a
   puddle soaks and slows her too. Player-made areas appear where she aims, so
-  they are a known risk to place well, not a surprise.
+  they are a known risk to place well, not a surprise. A dash carries a
+  body through a pool unharmed (a burn it already has keeps burning).
 - They react like bodies do: water puts out a fire pool, thunder shocks a
   puddle, wind blows a pool along. A Burning character can step into a
   puddle to put herself out.
@@ -104,7 +105,8 @@ middle range). Thunder and Rock come with later characters.
 - A quest shows the enemies it holds, with their weaknesses and immunities,
   before you enter.
 
-A first sketch for the current enemies, to settle while building:
+A first sketch for the current enemies (their affinities are in
+`src/content/enemies.ts`):
 
 | Enemy | Answers |
 |---|---|

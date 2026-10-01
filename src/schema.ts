@@ -225,7 +225,7 @@ export interface WeaponValue {
 }
 export const Weapon = Descriptor.Component<WeaponValue>()("Shooter/Weapon")
 
-export type ProjectileStyle = "bolt"
+export type ProjectileStyle = "bolt" | "disc"
 
 export interface ProjectileValue {
   readonly faction: Faction
@@ -241,6 +241,32 @@ export interface ProjectileValue {
   readonly hit: ReadonlyArray<number>
 }
 export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Projectile")
+
+/**
+ * A thrown disc (see `features/discs.ts` and `DiscMove`): flying `out` along
+ * `direction`, hovering in place, or flying `back` to its `thrower`. It
+ * hits each target once per leg (`hit`, cleared when it turns back and on
+ * every hover tick).
+ */
+export interface DiscValue {
+  readonly thrower: Entity.Handle<typeof Root, typeof Position>
+  readonly faction: Faction
+  readonly radius: number
+  readonly blow: Blow
+  readonly speed: number
+  readonly direction: Vec2
+  readonly phase: "out" | "hover" | "back"
+  /** Distance left on the way out. */
+  readonly range: number
+  /** Seconds left hovering (once it hovers), and between hits meanwhile, the next in `nextTick`. */
+  readonly hover: number
+  readonly hoverTick: number
+  readonly nextTick: number
+  /** Seconds on the way back; a disc that cannot reach its thrower is dropped after a while. */
+  readonly back: number
+  readonly hit: ReadonlyArray<number>
+}
+export const Disc = Descriptor.Component<DiscValue>()("Shooter/Disc")
 
 export type { EnemyKind }
 export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind }>()("Shooter/Enemy")
@@ -612,6 +638,7 @@ export const Game = Schema.bind(
       HitFlash,
       Weapon,
       Projectile,
+      Disc,
       Enemy,
       Attacker,
       AttackPhase,

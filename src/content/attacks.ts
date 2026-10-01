@@ -8,7 +8,8 @@
 // A basic attack is a combo: each press does the next move, and presses in
 // rhythm chain through them. Holding the button after a press charges an
 // optional power attack, released once full. Moves are melee areas or
-// projectiles, so the same combo machinery drives a sword and a gun.
+// projectiles (shots, or discs that come back), so the same combo machinery
+// drives a sword, a gun, and a disc.
 
 /** What every move has: power, push, and the recovery before the next move. */
 interface MoveBase {
@@ -47,7 +48,28 @@ export interface ShotMove extends MoveBase {
   readonly pierce: number
 }
 
-export type AttackMove = MeleeMove | ShotMove
+/**
+ * Discs thrown along the aim (`count` of them, spread over `spreadDegrees`):
+ * each flies out `range`, hovers spinning in place for `hover` seconds
+ * (hitting what it touches every `hoverTick`), then flies back to the
+ * thrower. It passes through enemies, hitting each once on the way out and
+ * once on the way back; a wall or a shield turns it back early.
+ */
+export interface DiscMove extends MoveBase {
+  readonly shape: "disc"
+  readonly count: number
+  readonly spreadDegrees: number
+  readonly speed: number
+  readonly radius: number
+  readonly range: number
+  readonly hover: number
+  readonly hoverTick: number
+}
+
+export type AttackMove = MeleeMove | ShotMove | DiscMove
+
+/** Whether a move is a melee move (an area around the attacker), not something thrown or shot. */
+export const isMelee = (move: AttackMove): move is MeleeMove => move.shape === "arc" || move.shape === "thrust" || move.shape === "spin"
 
 /**
  * Hold the attack button after a press to charge; release once full for the
@@ -83,6 +105,7 @@ const arc = (spec: Omit<Extract<MeleeMove, { shape: "arc" }>, "shape">): AttackM
 const thrust = (spec: Omit<Extract<MeleeMove, { shape: "thrust" }>, "shape">): AttackMove => ({ shape: "thrust", ...spec })
 const spin = (spec: Omit<Extract<MeleeMove, { shape: "spin" }>, "shape">): AttackMove => ({ shape: "spin", ...spec })
 const shot = (spec: Omit<ShotMove, "shape">): AttackMove => ({ shape: "shot", ...spec })
+const disc = (spec: Omit<DiscMove, "shape">): AttackMove => ({ shape: "disc", ...spec })
 const basicAttack = (spec: BasicAttackSpec): BasicAttackSpec => spec
 
 /** Every basic attack, by id. */
@@ -128,6 +151,29 @@ export const attacks = {
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
       move: shot({ count: 1, spreadDegrees: 0, speed: 1400, radius: 9, range: 950, pierce: 4, power: 38, knockback: 620, recovery: 0.45, hitStop: 0.05, heavy: true, lunge: -40 })
+    }
+  }),
+  /**
+   * The disc: two throws that cut through a line of enemies there and back,
+   * then a pair thrown in a V. The power attack sends a disc to hover and
+   * spin where it is aimed, hitting everything around it, before it returns.
+   */
+  disc: basicAttack({
+    name: "Disc",
+    combo: [
+      disc({ count: 1, spreadDegrees: 0, speed: 900, radius: 13, range: 300, hover: 0, hoverTick: 0, power: 9, knockback: 200, recovery: 0.3, hitStop: 0.02, heavy: false, lunge: 0 }),
+      disc({ count: 1, spreadDegrees: 0, speed: 900, radius: 13, range: 300, hover: 0, hoverTick: 0, power: 9, knockback: 200, recovery: 0.3, hitStop: 0.02, heavy: false, lunge: 0 }),
+      disc({ count: 2, spreadDegrees: 26, speed: 950, radius: 13, range: 330, hover: 0, hoverTick: 0, power: 8, knockback: 260, recovery: 0.55, hitStop: 0.03, heavy: false, lunge: -6 })
+    ],
+    comboWindow: 0.6,
+    inputBuffer: 0.12,
+    active: 0.08,
+    lungeStop: 12,
+    power: {
+      holdDelay: 0.2,
+      chargeTime: 0.6,
+      moveSpeedMultiplier: 0.6,
+      move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 9, knockback: 30, recovery: 0.5, hitStop: 0.03, heavy: true, lunge: -12 })
     }
   })
 }

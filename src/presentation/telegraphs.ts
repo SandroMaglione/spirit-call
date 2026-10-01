@@ -1,12 +1,12 @@
 /**
  * Telegraphs on the floor: pools of elements, enemy attack windups,
- * shields, active hitboxes, lobbed skills, and spawn warnings.
+ * shields, active hitboxes, lobbed skills, thrown discs, and spawn warnings.
  */
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Tuning } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Tuning } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { drawArea } from "./draw.ts"
 
@@ -21,6 +21,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   queries: {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
+    discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
@@ -106,6 +107,18 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const height = 4 * view.grenadeArc * flight * (1 - flight) * projection.zoom
     overlay.circle(screen.x, screen.y - height - 6, 6).fill({ color: spec.element === null ? view.grenade : view.elements[spec.element] })
     if (flight >= 1) overlay.circle(screen.x, screen.y - 6, 6).stroke({ width: 2, color, alpha: 0.5 + 0.5 * Math.sin(elapsed * 40) })
+  }
+  // Discs: a ring spinning under each, wide while it hovers (where it hits).
+  for (const { data } of queries.discs.each()) {
+    const disc = data.disc.get()
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const turn = now * view.disc.turnsPerSecond * Math.PI * 2
+    // While hovering, out to where it hits a body of average size.
+    const radius = disc.phase === "hover" ? disc.radius + 16 : disc.radius * 1.5
+    g.moveTo(at.x + Math.cos(turn) * radius, at.y + Math.sin(turn) * radius)
+      .arc(at.x, at.y, radius, turn, turn + Math.PI * 1.4)
+      .stroke({ width: disc.phase === "hover" ? 4 : 3, color: view.disc.ring, alpha: disc.phase === "hover" ? 0.9 : 0.6 })
+    if (disc.phase === "hover") g.circle(at.x, at.y, radius).fill({ color: view.disc.ring, alpha: 0.12 })
   }
   for (const { data } of queries.pending.each()) {
     const pending = data.pending.get()

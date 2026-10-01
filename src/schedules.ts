@@ -15,6 +15,7 @@ import { SpawnArena } from "./features/arena.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
+import { MoveDiscs } from "./features/discs.ts"
 import { TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
 import { BlowPools, DriveWithWind } from "./features/wind.ts"
@@ -88,6 +89,7 @@ const gameplay = Game.Schedule.when(
   DriveWithWind,
   DecayKnockback,
   MoveProjectiles,
+  MoveDiscs,
   ResolveHitboxes,
   BlowPools,
   UpdateGround,

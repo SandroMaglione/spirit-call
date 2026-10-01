@@ -138,6 +138,12 @@ export const view = {
   states: { burning: 0xff7b2e, soaked: 0x4aa8ff, tint: 0.5, motes: 14 },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6 },
+  /**
+   * Thrown discs: drawn flat, `size` times their radius, `height` pixels over
+   * the floor, with a spinning ring around them (out to where they hit while
+   * they hover).
+   */
+  disc: { color: 0x9fe8ff, ring: 0x4aa8ff, turnsPerSecond: 3, size: 1, height: 8 },
   /** The puff of water putting fire out. */
   steam: 0xe6edf3,
   /** A body slammed into a wall by wind, and stunned: its color, and the stars circling over its head. */

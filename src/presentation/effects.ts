@@ -3,6 +3,7 @@
  * numbers, recoil, dust, explosions, heals, and elements (reactions, and
  * motes off bodies in a state).
  */
+import { isMelee } from "../content/attacks.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
@@ -47,7 +48,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       if (release) feedback.shake = Math.max(feedback.shake, impact.shake)
     }
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
-    if (action.kind === "attack" && action.move.shape !== "shot") {
+    if (action.kind === "attack" && isMelee(action.move)) {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
     }
   }

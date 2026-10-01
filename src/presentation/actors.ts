@@ -3,6 +3,7 @@
  * enemies (hit flash, windup tint, health bars, stars over stunned ones).
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
+import { isMelee } from "../content/attacks.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { lerp } from "../math/vec.ts"
@@ -52,7 +53,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     const weapon = data.weapon.get()
     const attack = tuning.attacks[weapon.attack]
     const first = attack.combo[0]
-    const around = first !== undefined && first.shape !== "shot" ? first.reach : radius + view.facingRing.gap
+    const around = first !== undefined && isMelee(first) ? first.reach : radius + view.facingRing.gap
     marks.circle(position.x, position.y, around).stroke({ width: 2, color: view.aim, alpha: view.facingRing.alpha })
     const tip = { x: position.x + aim.x * (around + view.facingRing.arrow), y: position.y + aim.y * (around + view.facingRing.arrow) }
     const base = { x: position.x + aim.x * around, y: position.y + aim.y * around }

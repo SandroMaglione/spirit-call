@@ -1,7 +1,8 @@
 {
   "characters": [
     "swordsman",
-    "gunner"
+    "gunner",
+    "tidecaller"
   ],
   "weapons": [
     "trainingBlade",
@@ -9,7 +10,9 @@
     "echoSaber",
     "trainingPistol",
     "executioner",
-    "bloodthirst"
+    "bloodthirst",
+    "trainingDisc",
+    "undertow"
   ],
   "skills": [
     "bladeWave",
@@ -25,7 +28,8 @@
   ],
   "attacks": [
     "sword",
-    "gun"
+    "gun",
+    "disc"
   ],
   "enemies": [
     "dummy",

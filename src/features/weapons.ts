@@ -9,11 +9,13 @@
  * has one); releasing it at full charge queues the power move, which goes
  * off once the current recovery ends and starts the combo over.
  *
- * Melee moves spawn a `Hitbox` and projectile moves spawn projectiles, so
- * both go through the combat pipeline like everything else. A move's lunge
+ * Melee moves spawn a `Hitbox`, shots spawn projectiles, and disc throws
+ * spawn discs (see `features/discs.ts`), so all go through the combat
+ * pipeline like everything else. A move's lunge
  * is an impulse on the player's knockback.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
+import { isMelee } from "../content/attacks.ts"
 import type { AttackId, AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -23,6 +25,7 @@ import { Action, Aim, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hu
 import type { HitboxValue, MoveContext, WeaponValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
+import { makeDisc } from "./discs.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue => ({
@@ -44,8 +47,8 @@ export const chargeOf = (power: PowerAttack, held: number): number =>
 export const charging = (spec: BasicAttackSpec, weapon: WeaponValue): boolean =>
   spec.power !== null && chargeOf(spec.power, weapon.held) > 0
 
-/** How far a move reaches from the player's center: a melee move's reach, a projectile's range. */
-export const moveReach = (move: AttackMove): number => (move.shape === "shot" ? move.range : move.reach)
+/** How far a move reaches from the player's center: a melee move's reach, a projectile's or a disc's range. */
+export const moveReach = (move: AttackMove): number => (isMelee(move) ? move.reach : move.range)
 
 /** The area a melee move covers from `position` facing `aim`. */
 export const moveArea = (move: MeleeMove, position: Vec2, aim: Vec2): Pick<HitboxValue, "area"> & { readonly pushAlong?: Vec2 } => {
@@ -168,6 +171,28 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
             blow: struck,
             range: move.range,
             pierce: move.pierce,
+            hit: []
+          }))
+        }
+      } else if (move.shape === "disc") {
+        const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))
+        const base = Math.atan2(aim.y, aim.x)
+        const spread = (move.spreadDegrees * Math.PI) / 180
+        for (let index = 0; index < move.count; index++) {
+          const angle = base + (move.count === 1 ? 0 : (index / (move.count - 1) - 0.5) * spread)
+          commands.spawnIn(RunScope, makeDisc(muzzle, {
+            thrower: Game.Entity.handle(entity.id, Position),
+            faction: "player",
+            radius: move.radius,
+            blow: struck,
+            speed: move.speed,
+            direction: { x: Math.cos(angle), y: Math.sin(angle) },
+            phase: "out",
+            range: move.range,
+            hover: move.hover,
+            hoverTick: move.hoverTick,
+            nextTick: 0,
+            back: 0,
             hit: []
           }))
         }

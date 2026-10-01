@@ -10,7 +10,7 @@ import type { CharacterId } from "../content/characters.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
-import { createAccount, defaultEquipment, equip, owns, select, unlock } from "./account.ts"
+import { createAccount, defaultEquipment, equip, owns, select, unlock, withClearedRewards } from "./account.ts"
 import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, Play, QuestProgress, TierProgress, Unlocked } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
@@ -31,9 +31,16 @@ const keep = <Id extends string, V>(ids: Record<Id, unknown>, saved: Readonly<Re
  * dropped; equipment that is no longer valid goes back to the character's
  * own; a selection of a character not owned or of something not open goes
  * back to the starter's; and an account left with no character gets the
- * starter's back. `dropped` says what was removed, for a notice.
+ * starter's back. Rewards added to quests it had already cleared are given
+ * (see `withClearedRewards`). `dropped` says what was removed and `granted`
+ * what was given, for a notice.
  */
-export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAccountLatest, now: number): { readonly account: Account; readonly dropped: ReadonlyArray<string> } => {
+export const fromStored = (
+  tuning: Tuning,
+  starter: StarterSet,
+  stored: StoredAccountLatest,
+  now: number
+): { readonly account: Account; readonly dropped: ReadonlyArray<string>; readonly granted: ReadonlyArray<Item> } => {
   const dropped: Array<string> = []
   const owned: Owned = {
     characters: keep<CharacterId, OwnedCharacter>(tuning.characters, stored.owned.characters, "character", dropped),
@@ -67,6 +74,8 @@ export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAc
 
   // Never left with nothing to play: the starter's characters come back.
   if (Object.keys(owned.characters).length === 0) account = starter.characters.reduce((next, id) => unlock(tuning, next, { kind: "character", id }, now), account)
+  const rewarded = withClearedRewards(tuning, account, now)
+  account = rewarded.account
 
   for (const character of Object.keys(account.owned.characters) as Array<CharacterId>) {
     const saved = stored.equipment[character]
@@ -96,7 +105,7 @@ export const fromStored = (tuning: Tuning, starter: StarterSet, stored: StoredAc
     const fallbackCharacter = keptCharacter ? character : owns(account, { kind: "character", id: starter.selection.character }) ? starter.selection.character : (Object.keys(account.owned.characters)[0] as CharacterId)
     account = { ...account, selection: { ...starterSelection, character: fallbackCharacter } }
   }
-  return { account, dropped }
+  return { account, dropped, granted: rewarded.granted }
 }
 
 /** A saved selection with typed ids, or `undefined` when it names no content. */
