@@ -13,6 +13,15 @@ effects, enemy traits).
   same network (plain HTTP there is not a secure context: no
   `crypto.randomUUID`, clipboard, and similar).
 - `pnpm check`: typecheck, lint, and tests. Run it before every commit.
+- Deploying (Cloudflare, with Alchemy): `deploy/` is its own package
+  (`pnpm --dir deploy install`) holding `deploy/alchemy.run.ts`. From
+  `deploy/`, `pnpm alchemy deploy` builds and deploys your own stage
+  (`live_<user>`); `pnpm alchemy destroy` removes it. CI
+  (`.github/workflows/deploy.yml`) deploys `prod` from main and a `pr-<n>`
+  preview per pull request, building against the published bevy-ts release
+  in package.json `bevyTsRelease` (bump it after each bevy-ts release the
+  game needs; `scripts/use-published-bevy-ts.ts` does the swap). Its
+  Cloudflare secrets come from `deploy/stacks/github.ts`.
 - `?play` in the URL skips the menu (with `?character=`, `?weapon=`,
   `?challenge=` for a quick start); backquote opens the tuning panel
   (live numbers, spawns, "Unlock all").
