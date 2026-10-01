@@ -21,6 +21,7 @@ import {
   EnemyLevel,
   EnemyMode,
   Game,
+  Gust,
   Health,
   HitFlash,
   Hurtbox,
@@ -34,6 +35,7 @@ import {
   Respawns,
   RunScope,
   Shield,
+  Stunned,
   Time,
   Tuning,
   Velocity
@@ -64,6 +66,8 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [HitFlash, { remaining: 0 }],
     [Invulnerable, { remaining: 0 }],
     [ElementState, { current: null }],
+    [Gust, { remaining: 0 }],
+    [Stunned, { remaining: 0 }],
     [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
@@ -154,7 +158,8 @@ export const SteerEnemies = (() => {
           phase: Game.Query.read(AttackPhase),
           knockback: Game.Query.read(Knockback),
           mode: Game.Query.write(EnemyMode),
-          state: Game.Query.read(ElementState)
+          state: Game.Query.read(ElementState),
+          stunned: Game.Query.read(Stunned)
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
@@ -217,6 +222,12 @@ export const SteerEnemies = (() => {
       const attacker = data.attacker.get()
       const phase = data.phase.get()
       const attacking = phase !== "ready"
+
+      // Stunned: it stands where it is (a push still slides it).
+      if (data.stunned.get().remaining > 0) {
+        data.velocity.set(zero)
+        continue
+      }
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
       const attack = spec.attack

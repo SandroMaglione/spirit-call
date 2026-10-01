@@ -140,8 +140,9 @@ export const view = {
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6 },
   /** The puff of water putting fire out. */
   steam: 0xe6edf3,
-  /** A body slammed into a wall by wind, and stunned. */
+  /** A body slammed into a wall by wind, and stunned: its color, and the stars circling over its head. */
   stun: 0xffe066,
+  stunStars: { radius: 12, turnsPerSecond: 1.2 },
   /** Guardian shields. */
   shield: 0xd6e4f0,
   shieldBlock: 0xffffff,

@@ -58,13 +58,15 @@ export const elementRules = {
   },
   /**
    * Wind: a body hit by it is driven for `seconds`: meanwhile it carries its
-   * state to bodies it is pushed into, and is stunned if slammed into a wall
-   * while still moving faster than `slamSpeed`.
+   * state to bodies it is pushed into, and is stunned for `stunSeconds` if
+   * slammed into a wall while still moving faster than `slamSpeed`. Pools it
+   * sweeps over are blown along at `poolSpeed` (decaying like knockback).
    */
   wind: {
     seconds: 0.6,
     slamSpeed: 150,
-    stunSeconds: 1.4
+    stunSeconds: 1.4,
+    poolSpeed: 1200
   },
   /** Damage factors of the interactions: fire on a soaked body fizzles. */
   reactions: {

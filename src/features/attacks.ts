@@ -8,7 +8,8 @@
  * coming and get out of it.
  *
  * The phase is the `AttackPhase` state component; its moves follow the cycle
- * above, which the type checker enforces.
+ * above, which the type checker enforces. A stunned enemy's attack is put
+ * on hold where it is.
  */
 import type { AttackSpec } from "../content/enemies.ts"
 import { clampLength, normalizeOr, sub } from "../math/vec.ts"
@@ -32,6 +33,7 @@ import {
   Player,
   Position,
   RunScope,
+  Stunned,
   Time,
   Tuning
 } from "../schema.ts"
@@ -82,7 +84,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         enemy: Game.Query.read(Enemy),
         attacker: Game.Query.write(Attacker),
         phase: Game.Query.write(AttackPhase),
-        stats: Game.Query.read(CombatStats)
+        stats: Game.Query.read(CombatStats),
+        stunned: Game.Query.read(Stunned)
       }
     }),
     player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
@@ -104,7 +107,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
 
   for (const { data } of queries.attackers.each()) {
     const spec = tuning.enemies[data.enemy.get().kind].attack
-    if (spec === null) continue
+    // A stunned enemy's attack waits, its telegraph still showing, until the stun wears off.
+    if (spec === null || data.stunned.get().remaining > 0) continue
     // Enemy blows fill no energy and have no passives behind them.
     const struck = blow({ damage: damageDealt(data.stats.get().atk, spec.power), knockback: spec.knockback })
     const position = data.position.get()

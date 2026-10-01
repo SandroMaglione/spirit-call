@@ -85,7 +85,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
-    drawArea(g, hitbox.area, 0, { color: hitbox.faction === "player" ? view.playerArea : view.telegraphLocked, fill: 0.55, outline: 1 })
+    const color = hitbox.faction === "enemy" ? view.telegraphLocked : hitbox.blow.element === null ? view.playerArea : view.elements[hitbox.blow.element.id]
+    drawArea(g, hitbox.area, 0, { color, fill: 0.55, outline: 1 })
   }
 
   // Lobbed skills: an arc through the air (shadow on the floor, orb above it), then the fuse ring.

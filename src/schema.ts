@@ -163,12 +163,24 @@ export interface GroundValue {
   readonly element: ElementId
   readonly center: Vec2
   readonly radius: number
+  /** Velocity it is blown along by wind, decaying like knockback. */
+  readonly drift: Vec2
   readonly remaining: number
   readonly duration: number
   readonly atk: number
   readonly charges: boolean
 }
 export const Ground = Descriptor.Component<GroundValue>()("Shooter/Ground")
+
+/**
+ * Driven by wind for `remaining` seconds (see `features/wind.ts`): the body
+ * carries its state to bodies it is pushed into, and is stunned if slammed
+ * into a wall.
+ */
+export const Gust = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Gust")
+
+/** Stunned for `remaining` seconds: the enemy neither moves nor goes on with its attack. */
+export const Stunned = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Stunned")
 
 /** The passives of what an entity has equipped (see `content/passives.ts`). */
 export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives")
@@ -591,6 +603,8 @@ export const Game = Schema.bind(
       Energy,
       ElementState,
       Ground,
+      Gust,
+      Stunned,
       Lobbed,
       Health,
       Hurtbox,

@@ -17,6 +17,7 @@ import {
   Death,
   ElementState,
   Enemy,
+  Gust,
   Energy,
   Game,
   Health,
@@ -199,6 +200,9 @@ export const MoveProjectiles = (() => {
   })
 })()
 
+/** Bodies wind can drive (see `features/wind.ts`). */
+const Windable = Game.Query({ selection: { gust: Game.Query.write(Gust) } })
+
 const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined): number =>
   enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken
 
@@ -289,11 +293,13 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       periodic: blow.periodic,
       element: blow.element?.id ?? null
     })
-    // The blow's element takes hold of a body that survives it (a burn only burns).
+    // The blow's element takes hold of a body that survives it (a burn only burns); wind drives it.
     if (!killed && blow.element !== null && !blow.periodic) {
       const afflicted = afflict(tuning, state, blow.element, blow.charges)
       data.state.set({ current: afflicted.state })
       if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction })
+      const windable = blow.element.id === "wind" ? lookup.getHandle(Game.Entity.handle(entity.id, Gust), Windable) : undefined
+      if (windable?.ok === true) windable.value.data.gust.set({ remaining: tuning.elements.wind.seconds })
     }
     if (!killed) continue
 

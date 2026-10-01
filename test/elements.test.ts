@@ -7,7 +7,7 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Player, Position, RunScope } from "../src/schema.ts"
+import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { ClearEnemies, grenadier, start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -22,7 +22,16 @@ const atk = tuning.characters.swordsman.stats.atk + tuning.weapons.trainingBlade
 
 const World = Game.Inspector("Test/Elements", {
   queries: {
-    enemies: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health), state: Game.Query.read(ElementState) }, with: [Enemy] }),
+    enemies: Game.Query({
+      selection: {
+        position: Game.Query.read(Position),
+        health: Game.Query.read(Health),
+        state: Game.Query.read(ElementState),
+        gust: Game.Query.read(Gust),
+        stunned: Game.Query.read(Stunned)
+      },
+      with: [Enemy]
+    }),
     player: Game.Query({
       selection: { health: Game.Query.read(Health), state: Game.Query.read(ElementState), energy: Game.Query.read(Energy), invulnerable: Game.Query.read(Invulnerable) },
       with: [Player]
@@ -33,7 +42,13 @@ const World = Game.Inspector("Test/Elements", {
   const [player] = queries.player.each()
   return {
     pools: queries.pools.each().map(({ data }) => data.ground.get()),
-    enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current, state: data.state.get().current })),
+    enemies: queries.enemies.each().map(({ data }) => ({
+      position: data.position.get(),
+      health: data.health.get().current,
+      state: data.state.get().current,
+      gust: data.gust.get().remaining,
+      stunned: data.stunned.get().remaining
+    })),
     player: {
       health: player!.data.health.get().current,
       state: player!.data.state.get().current,
@@ -251,5 +266,109 @@ describe("ground", () => {
     run.step(2)
     expect(run.world().pools.map((pool) => pool.element).sort()).toEqual(["fire", "water"])
     expect(run.world().pools.find((pool) => pool.element === "fire")!.center.x - center.x).toBeCloseTo(-400, 6)
+  })
+})
+
+describe("wind", () => {
+  const cut = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
+
+  /** Drives the dummy at `at` (world) with a push of `push`, as a wind blow would. */
+  const drive = (run: ReturnType<typeof range>, push: Vec2) => {
+    const Drive = Game.System("Test/Drive", {
+      queries: { enemies: Game.Query({ selection: { gust: Game.Query.write(Gust), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
+    }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) {
+        data.gust.set({ remaining: rules.wind.seconds })
+        data.knockback.set(push)
+      }
+    })
+    run.runtime.tick(Game.Schedule(Drive))
+  }
+
+  it("the Blade Wave drives what it hits", () => {
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)] })
+    run.step(4)
+    expect(run.world().enemies[0]!.gust).toBeGreaterThan(0)
+  })
+
+  it("stuns a driven body slammed into a wall, which then stands still", () => {
+    // The pillar north of the center: its south face is at 288 + 25.
+    const pillar = { x: 0, y: 0.16 * tuning.arena.height + 25 - center.y }
+    const run = range([{ x: 0, y: pillar.y + tuning.enemies.dummy.radius + 20 }], { x: 200, y: 0 })
+    drive(run, { x: 0, y: -900 })
+    run.step(10)
+    const [dummy] = run.world().enemies
+    expect(dummy!.stunned).toBeGreaterThan(rules.wind.stunSeconds - 0.3)
+    expect(dummy!.gust).toBe(0)
+    run.step(steps(rules.wind.stunSeconds))
+    expect(run.world().enemies[0]!.stunned).toBe(0)
+  })
+
+  it("does not stun a body driven in the open", () => {
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 })
+    drive(run, { x: 900, y: 0 })
+    run.step(30)
+    expect(run.world().enemies[0]!.stunned).toBe(0)
+  })
+
+  it("carries a driven body's state to the bodies it is pushed into", () => {
+    const run = range([{ x: 150, y: 0 }, { x: 260, y: 0 }], { x: 200, y: 0 })
+    const First = Game.System("Test/LightFirst", {
+      queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), state: Game.Query.write(ElementState), gust: Game.Query.write(Gust), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
+    }, ({ queries }) => {
+      for (const { data } of queries.bodies.each()) {
+        if (data.position.get().x - center.x > 200) continue
+        data.state.set({ current: soaked(3) })
+        data.gust.set({ remaining: rules.wind.seconds })
+        data.knockback.set({ x: 1500, y: 0 })
+      }
+    })
+    run.runtime.tick(Game.Schedule(First))
+    run.step(20)
+    expect(run.world().enemies.map((enemy) => enemy.state?.id)).toEqual(["soaked", "soaked"])
+  })
+
+  it("puts out a burning body a soaked one is driven into", () => {
+    const run = range([{ x: 150, y: 0 }, { x: 260, y: 0 }], { x: 200, y: 0 })
+    const Light = Game.System("Test/Light", {
+      queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), state: Game.Query.write(ElementState), gust: Game.Query.write(Gust), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
+    }, ({ queries }) => {
+      for (const { data } of queries.bodies.each()) {
+        const first = data.position.get().x - center.x < 200
+        data.state.set({ current: first ? soaked(3) : burning(6, 3) })
+        if (first) {
+          data.gust.set({ remaining: rules.wind.seconds })
+          data.knockback.set({ x: 1500, y: 0 })
+        }
+      }
+    })
+    run.runtime.tick(Game.Schedule(Light))
+    run.step(20)
+    expect(run.world().enemies.map((enemy) => enemy.state?.id)).toEqual(["soaked", "soaked"])
+  })
+
+  it("blows the pools it sweeps over along its push", () => {
+    const run = range([], { x: 200, y: 0 }, { keys: [cut(1)] })
+    run.pour([{ element: "fire", at: { x: 150, y: 0 }, radius: 50 }])
+    run.step(40)
+    // Blown for as long as the cut sweeps over it, then drifting to a stop.
+    const [pool] = run.world().pools
+    expect(pool!.center.x - center.x - 150).toBeGreaterThan(rules.wind.poolSpeed / tuning.knockback.decay)
+    expect(pool!.center.y - center.y).toBeCloseTo(0, 6)
+  })
+
+  it("leaves a stunned enemy's attack on hold", () => {
+    const run = range([], { x: 200, y: 0 })
+    const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
+      commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 200, y: center.y }))
+    })
+    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    const Stun = Game.System("Test/Stun", { queries: { enemies: Game.Query({ selection: { stunned: Game.Query.write(Stunned) }, with: [Enemy] }) } }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) data.stunned.set({ remaining: 1 })
+    })
+    run.runtime.tick(Game.Schedule(Stun))
+    run.step(30)
+    const [chaser] = run.world().enemies
+    expect(chaser!.position.x - center.x).toBeCloseTo(200, 6)
   })
 })
