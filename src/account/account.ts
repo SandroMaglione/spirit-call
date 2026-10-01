@@ -10,6 +10,7 @@
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
+import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
 import type { RunEarnings } from "../content/progression.ts"
@@ -101,8 +102,8 @@ export interface Account {
   readonly quests: { readonly [Id in QuestId]?: QuestProgress }
   /** Each hardcore tier attempted so far, by track and tier number. */
   readonly hardcore: { readonly [Id in TrackId]?: { readonly [tier: number]: TierProgress } }
-  /** What the menu starts from: the last character entered, and what for. */
-  readonly selection: { readonly character: CharacterId; readonly play: Play }
+  /** What the menu starts from: the team last entered with (in order; see `teamSize`), and what for. */
+  readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly play: Play }
 }
 
 /** Something that can be owned. */
@@ -193,7 +194,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     equipment: {},
     quests: {},
     hardcore: {},
-    selection: { character: starter.selection.character, play: { kind: "quest", quest: starter.selection.quest } }
+    selection: { team: [starter.selection.character], play: { kind: "quest", quest: starter.selection.quest } }
   }
   const items: Array<Item> = [
     ...starter.weapons.map((id) => ({ kind: "weapon" as const, id })),
@@ -277,6 +278,8 @@ export const tierRewardsAvailable = (tuning: Tuning, account: Account, track: Tr
 /** Why an action was refused. */
 export type Refusal =
   | { readonly kind: "notOwned"; readonly item: Item }
+  /** A team of none, of more than `teamSize`, or with someone twice. */
+  | { readonly kind: "badTeam"; readonly team: ReadonlyArray<CharacterId> }
   | { readonly kind: "wrongWeaponType"; readonly character: CharacterId; readonly weapon: WeaponId }
   | { readonly kind: "locked"; readonly play: Play; readonly lock: Lock }
   | { readonly kind: "notEnough"; readonly currency: CurrencyId; readonly needed: number; readonly held: number }
@@ -350,12 +353,18 @@ export const equip = (tuning: Tuning, account: Account, character: CharacterId, 
   return { ok: true, value: { ...account, equipment: { ...account.equipment, [character]: equipment } } }
 }
 
-/** `account` with `character` and `play` selected, if it owns the character and `play` is open. */
-export const select = (tuning: Tuning, account: Account, character: CharacterId, play: Play): Checked<Account> => {
-  if (!owns(account, { kind: "character", id: character })) return refuse({ kind: "notOwned", item: { kind: "character", id: character } })
+/** Whether `team` is a team: one to `teamSize` characters, each once. */
+export const validTeam = (team: ReadonlyArray<CharacterId>): boolean =>
+  team.length >= 1 && team.length <= teamSize && new Set(team).size === team.length
+
+/** `account` with `team` and `play` selected, if it is a team the account owns and `play` is open. */
+export const select = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, play: Play): Checked<Account> => {
+  if (!validTeam(team)) return refuse({ kind: "badTeam", team })
+  const missing = team.find((character) => !owns(account, { kind: "character", id: character }))
+  if (missing !== undefined) return refuse({ kind: "notOwned", item: { kind: "character", id: missing } })
   const lock = playLock(tuning, account, play)
   if (lock !== null) return refuse({ kind: "locked", play, lock })
-  return { ok: true, value: { ...account, selection: { character, play } } }
+  return { ok: true, value: { ...account, selection: { team, play } } }
 }
 
 /** Levels before and after something. */
@@ -451,3 +460,7 @@ export const buildOf = (tuning: Tuning, account: Account, character: CharacterId
     skills: bySlot((slot) => equipment.skills[slot])
   }
 }
+
+/** The builds `team` enters the arena with, in order (see `buildOf`). */
+export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>): ReadonlyArray<BuildValue> =>
+  team.map((character) => buildOf(tuning, account, character))

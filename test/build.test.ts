@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
-import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery } from "../src/dev/build.ts"
+import type { CharacterId } from "../src/content/characters.ts"
+import type { BuildValue } from "../src/schema.ts"
+import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery, teamFromQuery } from "../src/dev/build.ts"
 import { defaultChallenge } from "../src/features/challenges.ts"
 import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel, weaponAtk, withWeapon } from "../src/features/build.ts"
 
@@ -57,6 +59,16 @@ describe("builds", () => {
   it("keep the character's own weapon when the equipped one is of another type", () => {
     const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "executioner", skills: {} })
     expect(build.weapon).toBe(defaultTuning.characters.swordsman.weapon)
+  })
+
+  it("a team comes from the URL: its characters by id (each once, three at most), the first one's build and everyone's levels", () => {
+    // The account's builds: the gunner has another weapon equipped.
+    const buildFor = (character: CharacterId): BuildValue => (character === "gunner" ? { character, weapon: "bloodthirst", skills: {} } : { character, skills: {} })
+    expect(teamFromQuery(defaultTuning, "?team=gunner,wizard,swordsman,gunner", [defaultBuild], buildFor)).toEqual([buildFor("gunner"), buildFor("swordsman")])
+    expect(teamFromQuery(defaultTuning, "?team=tidecaller,gunner,swordsman,tidecaller").map((build) => build.character)).toEqual(["tidecaller", "gunner", "swordsman"])
+    expect(teamFromQuery(defaultTuning, "?team=gunner,swordsman&level=7", [defaultBuild], buildFor).map((build) => build.level)).toEqual([7, 7])
+    // Without a team, the fallback stands, its first one changed by the URL.
+    expect(teamFromQuery(defaultTuning, "?special=grenade", [defaultBuild, buildFor("gunner")])).toEqual([{ character: "swordsman", skills: { special: "grenade" } }, buildFor("gunner")])
   })
 
   it("come from the URL: character and skills by id, ignoring unknown ones", () => {

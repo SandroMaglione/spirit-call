@@ -75,9 +75,16 @@ export const StoredAccountV2 = Schema.Struct({
   selection: Schema.Struct({ character: Schema.String, play: Play })
 })
 
+/** Version 3: a team selected (its characters in order) instead of one character. */
+export const StoredAccountV3 = Schema.Struct({
+  ...StoredAccountV2.fields,
+  version: Schema.Literal(3),
+  selection: Schema.Struct({ team: Schema.Array(Schema.String), play: Play })
+})
+
 /** Any account version ever saved. */
-export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2])
-export const StoredAccountLatest = StoredAccountV2
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3])
+export const StoredAccountLatest = StoredAccountV3
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
@@ -103,6 +110,9 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
         selection: { character: stored.selection.character, play: { kind: "quest", quest: "" } }
       })
     case 2:
+      // A team now: the character selected leads it alone.
+      return migrateAccount({ ...stored, version: 3, selection: { team: [stored.selection.character], play: stored.selection.play } })
+    case 3:
       return stored
   }
 }

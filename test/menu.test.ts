@@ -5,7 +5,7 @@ import { survive } from "../src/content/challenges.ts"
 import { withWeapon } from "../src/features/build.ts"
 import { Challenge, CombatStats, Game, Player, Team } from "../src/schema.ts"
 import { describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
-import { weaponsFor } from "../src/ui/draft.ts"
+import { placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
 import { start } from "./helpers.ts"
 
 const Screen = Game.Inspector("Test/Screen", {
@@ -54,6 +54,19 @@ describe("menu requests", () => {
 })
 
 describe("menu helpers", () => {
+  it("sets up a team like Genshin: a slot, then a character for it", () => {
+    // A newcomer in the empty slot joins at the end.
+    expect(placeInTeam({ team: ["swordsman"], focus: 1 }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1 })
+    // In a filled slot she takes its place; one already in the team swaps places.
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0 }, "tidecaller")).toEqual({ team: ["tidecaller", "gunner"], focus: 0 })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0 }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0 })
+    // Picking one already in the team for the empty slot just goes to her.
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2 }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0 })
+    // Removing moves the others up, and never empties the team.
+    expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2 }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1 })
+    expect(removeFromTeam({ team: ["swordsman"], focus: 0 }, 0)).toEqual({ team: ["swordsman"], focus: 0 })
+  })
+
   it("offers a character only weapons of its type", () => {
     expect(weaponsFor(defaultTuning, "gunner").every((id) => defaultTuning.weapons[id].type === "gun")).toBe(true)
     expect(weaponsFor(defaultTuning, "swordsman")).toContain("crescendo")

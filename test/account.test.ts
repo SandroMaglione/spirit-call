@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, select, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -17,7 +17,7 @@ describe("account rules", () => {
     expect(Object.keys(account.owned.characters)).toEqual(newAccount.characters)
     expect(Object.keys(account.owned.weapons)).toEqual(newAccount.weapons)
     expect(Object.keys(account.owned.skills).sort()).toEqual([...newAccount.skills].sort())
-    expect(account.selection).toEqual({ character: newAccount.selection.character, play: quest(newAccount.selection.quest) })
+    expect(account.selection).toEqual({ team: [newAccount.selection.character], play: quest(newAccount.selection.quest) })
     expect(account.equipment.swordsman).toEqual({ weapon: defaultTuning.characters.swordsman.weapon, skills: defaultTuning.characters.swordsman.skills })
     expect(owns(account, { kind: "character", id: "gunner" })).toBe(false)
   })
@@ -76,12 +76,23 @@ describe("account rules", () => {
     expect(accountLevel(defaultTuning, account).level).toBe(2)
   })
 
-  it("selects only an owned character and an open quest", () => {
-    expect(select(defaultTuning, fresh(), "gunner", quest("theSwarm"))).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
-    expect(select(defaultTuning, fresh(), "swordsman", quest("crossfire"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("crossfire"), lock: { kind: "after", quest: "theSwarm" } } })
-    expect(select(defaultTuning, fresh(), "swordsman", quest("holdTheLine"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("holdTheLine"), lock: { kind: "level", level: 2 } } })
-    const selected = select(defaultTuning, fresh(), "swordsman", quest("theSwarm"))
-    expect(selected.ok && selected.value.selection).toEqual({ character: "swordsman", play: quest("theSwarm") })
+  it("selects only a team of owned characters and an open quest", () => {
+    expect(select(defaultTuning, fresh(), ["swordsman", "gunner"], quest("theSwarm"))).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
+    expect(select(defaultTuning, fresh(), ["swordsman"], quest("crossfire"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("crossfire"), lock: { kind: "after", quest: "theSwarm" } } })
+    expect(select(defaultTuning, fresh(), ["swordsman"], quest("holdTheLine"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("holdTheLine"), lock: { kind: "level", level: 2 } } })
+    const selected = select(defaultTuning, fresh(), ["swordsman"], quest("theSwarm"))
+    expect(selected.ok && selected.value.selection).toEqual({ team: ["swordsman"], play: quest("theSwarm") })
+  })
+
+  it("selects a team of one to three, each once, in order", () => {
+    const everyone = ["swordsman", "gunner", "tidecaller"] as const
+    const owning = everyone.reduce((account, id) => unlock(defaultTuning, account, { kind: "character", id }, 0), fresh())
+    expect(select(defaultTuning, owning, [], quest("theSwarm"))).toEqual({ ok: false, refusal: { kind: "badTeam", team: [] } })
+    expect(select(defaultTuning, owning, ["gunner", "gunner"], quest("theSwarm"))).toMatchObject({ ok: false, refusal: { kind: "badTeam" } })
+    expect(select(defaultTuning, owning, [...everyone, "swordsman"], quest("theSwarm"))).toMatchObject({ ok: false, refusal: { kind: "badTeam" } })
+    const selected = select(defaultTuning, owning, ["tidecaller", "swordsman", "gunner"], quest("theSwarm"))
+    expect(selected.ok && selected.value.selection.team).toEqual(["tidecaller", "swordsman", "gunner"])
+    expect(selected.ok && teamOf(defaultTuning, selected.value, selected.value.selection.team).map((build) => build.character)).toEqual(["tidecaller", "swordsman", "gunner"])
   })
 
   it("counts runs of a quest, and gives its rewards on the first clear only", () => {

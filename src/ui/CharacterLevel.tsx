@@ -1,7 +1,7 @@
 /**
- * The selected character's level: experience toward the next one (from
- * fighting with it), what the next level gives, and training to it with gold
- * (so a new or benched character can catch up).
+ * The character being equipped: her level, what the next one gives, and
+ * training to it with gold. Characters grow only this way (not from
+ * fighting), so nobody falls behind on the bench.
  */
 import { characterLevel, owns, train, trainingCost } from "../account/account.ts"
 import type { CharacterId } from "../content/characters.ts"
@@ -26,12 +26,6 @@ export const CharacterLevel = ({ store, actions, character }: { readonly store: 
       </span>
       {cost !== null && (
         <>
-          <span class="level__track" role="progressbar" aria-valuemin={0} aria-valuemax={progress.needed} aria-valuenow={progress.into}>
-            <i style={{ width: `${(100 * progress.into) / progress.needed}%` }} />
-          </span>
-          <span class="level__numbers">
-            {Math.floor(progress.into)} / {progress.needed} XP
-          </span>
           <span class="level__next">
             Next:{" "}
             {statOrder

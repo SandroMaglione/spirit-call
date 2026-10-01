@@ -40,8 +40,8 @@ export interface App {
   readonly train: (character: CharacterId) => void
   /** Takes a weapon a level higher with gold (refused without enough, or at the maximum). */
   readonly upgrade: (weapon: WeaponId) => void
-  /** Selects what to enter the arena with; the account after it, or `undefined` when refused (not owned, or not open). */
-  readonly select: (character: CharacterId, play: Play) => Promise<Account | undefined>
+  /** Selects the team to enter the arena with and what for; the account after it, or `undefined` when refused (not owned, or not open). */
+  readonly select: (team: ReadonlyArray<CharacterId>, play: Play) => Promise<Account | undefined>
   /** Owns every character, weapon, and skill, and adds plenty of each currency (a dev tool). */
   readonly unlockEverything: () => void
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
@@ -78,7 +78,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     equip: (character, equipment) => void run(accounts.equip(character, equipment)),
     train: (character) => void run(accounts.train(character)),
     upgrade: (weapon) => void run(accounts.upgrade(weapon)),
-    select: (character, play) => run(accounts.select(character, play)),
+    select: (team, play) => run(accounts.select(team, play)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (play, result) => attempt(accounts.recordRun(play, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
     setMuted: (muted) => {

@@ -12,7 +12,7 @@ import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
-import { buildOf, encounterOf } from "./account/account.ts"
+import { buildOf, encounterOf, teamOf } from "./account/account.ts"
 import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
@@ -45,7 +45,7 @@ const start = async (mount: HTMLElement) => {
   // entering with the account's selection or the URL's `?team=gunner,swordsman&weapon=…&challenge=swarm` (see dev/build.ts).
   const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
-  const lastTeam = [buildOf(tuning, account, account.selection.character)]
+  const lastTeam = teamOf(tuning, account, account.selection.team)
   const team = quickStart ? teamFromQuery(tuning, window.location.search, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam
   const selected = encounterOf(tuning, account.selection.play)
   const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
@@ -73,13 +73,13 @@ const start = async (mount: HTMLElement) => {
   })
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
-    enter: (character, play) => {
+    enter: (team, play) => {
       // Entering is remembered on the account; a character not owned or something not open is refused, and nothing starts.
-      void shell.select(character, play).then((selected) => {
+      void shell.select(team, play).then((selected) => {
         if (selected === undefined) return
         playing = play
         uiStore.play.value = play
-        uiRequests.pending.push({ kind: "start", team: [buildOf(tuning, selected, character)], ...encounterOf(tuning, play) })
+        uiRequests.pending.push({ kind: "start", team: teamOf(tuning, selected, team), ...encounterOf(tuning, play) })
       })
     },
     equip: shell.equip,

@@ -61,8 +61,8 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
-  /** Enter the arena with `character` (as equipped) to play `play`. */
-  readonly enter: (character: CharacterId, play: Play) => void
+  /** Enter the arena with `team` (in order, each as equipped) to play `play`. */
+  readonly enter: (team: ReadonlyArray<CharacterId>, play: Play) => void
   /** Equip an owned character (saved at once). */
   readonly equip: (character: CharacterId, equipment: Equipment) => void
   /** Take an owned character to its next level with gold (saved at once). */
