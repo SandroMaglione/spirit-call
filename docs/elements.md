@@ -56,6 +56,9 @@ middle range). Thunder and Rock come with later characters.
 - Since water and fire cancel each other, a body has at most one state.
 - **Thunder, wind, and rock act at once**: they leave no state of their own,
   and react with whatever state is already there.
+- **A wind push glides**: a body driven by wind slides further and slows down
+  gradually, rather than being knocked back, so it can be steered into
+  walls and into other bodies.
 
 ## Interactions
 

@@ -1,20 +1,15 @@
 import type { Pointer } from "@typeonce/bevy-ts-browser"
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { projection } from "../src/config/view.ts"
+import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { DiscMove } from "../src/content/attacks.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
-import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Disc, Enemy, Game, Health, RunScope } from "../src/schema.ts"
+import { Disc, Enemy, Game, Health } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { ClearEnemies, start } from "./helpers.ts"
+import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
-const center = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const tidecaller: BuildValue = { character: "tidecaller", skills: {} }
 const attack = tuning.attacks.disc
 const first = attack.combo[0] as DiscMove
@@ -33,11 +28,6 @@ const World = Game.Inspector("Test/Discs", {
   discs: queries.discs.each().map(({ data }) => data.disc.get())
 }))
 
-const cursorAt = (offset: Vec2) => {
-  const screen = toScreen(projection, offset)
-  return { x: 640 + screen.x, y: 360 + screen.y }
-}
-
 /** The Tidecaller with only the listed dummies (offsets from her), aiming at `aim`, the attack pressed on `presses` (held for `hold` seconds). */
 const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, presses: ReadonlyArray<number>, hold = 0, options: StartOptions = {}) => {
   const pointer: Pointer.Timeline = [
@@ -47,10 +37,7 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, presses: ReadonlyArray<n
       : [{ frame, press: ["primary"], release: ["primary"] }])
   ]
   const run = start({ ...options, build: tidecaller, pointer })
-  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
-    for (const offset of dummies) commands.spawnIn(RunScope, makeEnemy(options.tuning ?? tuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
-  })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  run.runtime.tick(placeDummies(dummies, options.tuning))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -87,8 +74,8 @@ describe("disc", () => {
     const run = range([{ x: power.range, y: 0 }], { x: 200, y: 0 }, [1], hold, { tuning: sturdy })
     run.step(steps(hold) + steps(power.range / power.speed) + 4)
     expect(run.world().discs[0]!.phase).toBe("hover")
-    // Its whole hover (each hit pausing the game for its hit-stop).
-    run.step(steps(power.hover + (power.hover / power.hoverTick + 1) * power.hitStop) + 2)
+    // Its whole hover: its hits grind without hit-stop, so it lasts exactly its time.
+    run.step(steps(power.hover) + 2)
     const hits = Math.round((1000 - run.world().enemies[0]!) / ((atk * power.power) / 100))
     expect(hits).toBeGreaterThanOrEqual(Math.floor(power.hover / power.hoverTick))
     expect(run.world().discs[0]?.phase).toBe("back")

@@ -87,13 +87,13 @@ const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<E
 
 /** Every skill, by id. */
 export const skills = {
-  /** The sword's special: a long cut of wind that drives enemies back. */
+  /** The sword's special: a long, wide cut of wind that drives enemies back in a glide. */
   bladeWave: skill({
     name: "Blade Wave",
     label: "WAVE",
     cooldown: 3.5,
     energy: 0,
-    effect: cut({ length: 320, width: 70, power: 34, element: "wind", knockback: 950, active: 0.12, hitStop: 0.06, heavy: true })
+    effect: cut({ length: 320, width: 120, power: 34, element: "wind", knockback: 900, active: 0.12, hitStop: 0.06, heavy: true })
   }),
   /** Lobbed to the cursor over walls; explodes after landing, setting what it hits on fire and leaving a fire pool. */
   grenade: skill({

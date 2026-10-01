@@ -1,18 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { projection } from "../src/config/view.ts"
+import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { makeProjectile } from "../src/features/combat.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
 import { CastCuts } from "../src/features/skills.ts"
-import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Cast, Enemy, Energy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { ClearEnemies, grenadier, playerLoss, start, swordsman, swordsmanWith } from "./helpers.ts"
+import { center, cursorAt, grenadier, placeDummies, playerLoss, start, steps, swordsman, swordsmanWith } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
-const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 
 const World = Game.Inspector("Test/Skills", {
   queries: {
@@ -30,19 +25,12 @@ const World = Game.Inspector("Test/Skills", {
 }))
 
 /** Cursor position (screen) that points at a world offset from the player at spawn. */
-const cursorAt = (offset: Vec2) => {
-  const screen = toScreen(projection, offset)
-  return { x: 640 + screen.x, y: 360 + screen.y }
-}
 
 /** Training mode with only the listed dummies (offsets from the player), aiming at `aim`. */
 const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = {}) => {
   const tuning = options.tuning ?? defaultTuning
   const run = start({ ...options, pointer: [{ frame: 0, move: cursorAt(aim) }, ...(options.pointer ?? [])] })
-  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
-    for (const offset of dummies) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
-  })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  run.runtime.tick(placeDummies(dummies, tuning))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -67,11 +55,16 @@ describe("Blade Wave (Space)", () => {
     expect(run.player().aim.x).toBeCloseTo(1, 6)
   })
 
-  it("drives what it hits back along the cut", () => {
+  it("drives what it hits back along the cut in a glide: the wind's push dies down slowly while it drives", () => {
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)] })
-    run.step(40)
+    run.step(120)
     const [dummy] = run.world().enemies
-    expect(dummy!.position.x - center.x - 100).toBeCloseTo(wave.knockback / defaultTuning.knockback.decay, 0)
+    // Gliding at the wind's decay while driven, then at the usual one.
+    const { decay, seconds } = defaultTuning.elements.wind
+    const left = Math.exp(-decay * seconds)
+    const glide = (wave.knockback / decay) * (1 - left) + (wave.knockback * left) / defaultTuning.knockback.decay
+    expect(dummy!.position.x - center.x - 100).toBeCloseTo(glide, -1)
+    expect(glide).toBeGreaterThan(2 * (wave.knockback / defaultTuning.knockback.decay))
   })
 
   it("respects its cooldown", () => {

@@ -4,7 +4,8 @@
 import { zero } from "../math/vec.ts"
 import { moveCircle } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Body, Game, Knockback, Position, PrevPosition, Time, Tuning, Velocity, Wall } from "../schema.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
+import { Body, Game, Gust, Knockback, Position, PrevPosition, Time, Tuning, Velocity, Wall } from "../schema.ts"
 
 const Interpolated = Game.Query({
   selection: { position: Game.Query.read(Position), previous: Game.Query.write(PrevPosition) }
@@ -24,10 +25,18 @@ export const Walls = Game.Query({ selection: { wall: Game.Query.read(Wall) } })
 export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box } } }>): Array<Box> =>
   walls.map((match) => match.data.wall.get())
 
+/** How fast a body's push dies down: slower while wind drives it (a glide), else `knockback.decay`. */
+export const pushDecay = (tuning: TuningValue, gust: { readonly remaining: number } | undefined): number =>
+  gust !== undefined && gust.remaining > 0 ? tuning.elements.wind.decay : tuning.knockback.decay
+
+/** The share of a push's speed a body covers over a step of `dt`, as its push dies down at `decay`. */
+export const pushShare = (decay: number, dt: number): number => (decay > 0 ? (1 - Math.exp(-decay * dt)) / (decay * dt) : 1)
+
 /**
  * Moves every body by its velocity plus knockback, stopping and sliding at
- * walls. Knockback decays exponentially and its displacement over the step is
- * integrated exactly, so the total push is `speed / decay` at any step length.
+ * walls. Knockback decays exponentially (see `pushDecay`) and its
+ * displacement over the step is integrated exactly, so the total push is
+ * `speed / decay` at any step length.
  */
 export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
   queries: {
@@ -36,7 +45,8 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
         position: Game.Query.write(Position),
         velocity: Game.Query.read(Velocity),
         body: Game.Query.read(Body),
-        knockback: Game.Query.optional(Knockback)
+        knockback: Game.Query.optional(Knockback),
+        gust: Game.Query.optional(Gust)
       }
     }),
     walls: Walls
@@ -44,12 +54,12 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) }
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
-  const decay = resources.tuning.get().knockback.decay
-  const knockbackShare = decay > 0 ? (1 - Math.exp(-decay * dt)) / (decay * dt) : 1
+  const tuning = resources.tuning.get()
   const boxes = wallBoxes(queries.walls.each())
   for (const { data } of queries.bodies.each()) {
     const velocity = data.velocity.get()
     const knockback = data.knockback.present ? data.knockback.get() : zero
+    const knockbackShare = pushShare(pushDecay(tuning, data.gust.present ? data.gust.get() : undefined), dt)
     const vx = velocity.x + knockback.x * knockbackShare
     const vy = velocity.y + knockback.y * knockbackShare
     if (vx === 0 && vy === 0) continue

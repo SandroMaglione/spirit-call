@@ -5,14 +5,15 @@
  * there and back; a wall or a shield facing it turns it back early. On the
  * way back it flies over walls (it always finds its thrower) and is caught
  * on reaching them. Hits go through the combat pipeline (`Damage`) like
- * every other blow.
+ * every other blow, tested like shots (see `features/targets.ts`).
  */
 import { normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
-import { Damage, Disc, Game, Health, Hurtbox, Impact, Invulnerable, Position, PrevPosition, Renderable, Shield, Time } from "../schema.ts"
+import { sweepCircleBoxes } from "../physics/collide.ts"
+import { Damage, Disc, Game, Health, Impact, Position, PrevPosition, Renderable, Time } from "../schema.ts"
 import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
+import { shieldBlocks, sweepTargets, targetOf, Targets } from "./targets.ts"
 
 /** A disc leaving `at`, rendered like a projectile. */
 export const makeDisc = (at: Vec2, disc: DiscValue) =>
@@ -29,20 +30,10 @@ const Throwers = Game.Query({ selection: { position: Game.Query.read(Position) }
 /** A disc not caught after this long on its way back is dropped. */
 const maxBackSeconds = 3
 
-/** Whether a frontal shield facing `facing` (within `cosHalfAngle`) stands between a target at `target` and a hit from `from`. */
-const shielded = (shield: { readonly facing: Vec2; readonly halfAngle: number } | undefined, target: Vec2, from: Vec2): boolean => {
-  if (shield === undefined) return false
-  const toward = normalizeOr(sub(from, target), shield.facing)
-  return toward.x * shield.facing.x + toward.y * shield.facing.y >= Math.cos(shield.halfAngle)
-}
-
 export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
   queries: {
     discs: Game.Query({ selection: { position: Game.Query.write(Position), disc: Game.Query.write(Disc) } }),
-    targets: Game.Query({
-      selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable), shield: Game.Query.optional(Shield) },
-      with: [Health]
-    }),
+    targets: Targets,
     walls: Walls
   },
   resources: { time: Game.System.readResource(Time) },
@@ -50,37 +41,21 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
 }, ({ queries, resources, events, lookup, commands }) => {
   const dt = resources.time.get().dt
   const boxes = wallBoxes(queries.walls.each())
-  const targets = queries.targets.each().map(({ entity, data }) => ({
-    entity: entity.id,
-    id: entity.id.value,
-    at: data.position.get(),
-    radius: data.hurtbox.get().radius,
-    faction: data.hurtbox.get().faction,
-    invulnerable: data.invulnerable.present && data.invulnerable.get().remaining > 0,
-    shield: data.shield.present ? data.shield.get() : undefined
-  }))
+  const targets = queries.targets.each().map(({ entity, data }) => targetOf(entity.id, data))
 
   for (const { entity, data } of queries.discs.each()) {
     let disc = data.disc.get()
     const origin = data.position.get()
     const hit = [...disc.hit]
-    /** Hits everything of the other side along `delta` from `origin` (up to `until`, a fraction of it), once each; `true` when a shield turns it back. */
+    /** Hits everything it meets along `delta` (up to `until`, a fraction of it), once each; `true` when a shield turns it back. */
     const sweep = (delta: Vec2, until: number, push: Vec2): boolean => {
-      const contacts = targets
-        .filter((target) => target.faction !== disc.faction && !target.invulnerable && !hit.includes(target.id))
-        .flatMap((target) => {
-          const time = sweepCircleCircle(origin, delta, disc.radius, target.at, target.radius)
-          return time !== undefined && time <= until ? [{ time, target }] : []
-        })
-        .sort((left, right) => left.time - right.time)
-      for (const { time, target } of contacts) {
-        const at = { x: origin.x + delta.x * time, y: origin.y + delta.y * time }
-        if (shielded(target.shield, target.at, at)) {
-          events.impact.emit({ at, faction: disc.faction, wall: false, shielded: true })
+      for (const contact of sweepTargets(origin, delta, disc.radius, targets, disc.faction, hit, until)) {
+        if (shieldBlocks(contact.target, contact.at)) {
+          events.impact.emit({ at: contact.at, faction: disc.faction, wall: false, shielded: true })
           return true
         }
-        hit.push(target.id)
-        events.damage.emit({ target: Game.Entity.handle(target.entity, Health), faction: disc.faction, direction: push, blow: disc.blow })
+        hit.push(contact.target.id)
+        events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: disc.faction, direction: push, blow: disc.blow })
       }
       return false
     }
@@ -103,18 +78,18 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         break
       }
       case "hover": {
-        // Spinning in place: everything it touches is hit again every tick.
+        // Spinning in place: everything it touches is hit again every tick, without the
+        // hit-stop of a throw (a steady grind, not a stutter).
         let nextTick = disc.nextTick - dt
         let ticked = hit
         if (nextTick <= 1e-9) {
           ticked = []
-          for (const target of targets) {
-            if (target.faction === disc.faction || target.invulnerable) continue
-            const reach = disc.radius + target.radius
-            if ((target.at.x - origin.x) ** 2 + (target.at.y - origin.y) ** 2 > reach * reach) continue
-            if (shielded(target.shield, target.at, origin)) continue
-            ticked.push(target.id)
-            events.damage.emit({ target: Game.Entity.handle(target.entity, Health), faction: disc.faction, direction: normalizeOr(sub(target.at, origin), disc.direction), blow: disc.blow })
+          const grind = { ...disc.blow, hitStop: 0 }
+          for (const contact of sweepTargets(origin, { x: 0, y: 0 }, disc.radius, targets, disc.faction, [])) {
+            if (shieldBlocks(contact.target, origin)) continue
+            ticked.push(contact.target.id)
+            const push = normalizeOr(sub(contact.target.at, origin), disc.direction)
+            events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: disc.faction, direction: push, blow: grind })
           }
           nextTick += disc.hoverTick
         }

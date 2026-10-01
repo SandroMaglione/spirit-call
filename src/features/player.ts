@@ -7,7 +7,6 @@ import type { Vec2 } from "../math/vec.ts"
 import {
   Action,
   Aim,
-  Body,
   Build,
   CombatStats,
   Controls,
@@ -15,15 +14,10 @@ import {
   ElementState,
   Energy,
   Game,
-  Health,
-  HitFlash,
-  Hurtbox,
   Invulnerable,
-  Knockback,
   Passives,
   Player,
   Position,
-  PrevPosition,
   Renderable,
   RunScope,
   Skills,
@@ -33,31 +27,23 @@ import {
   Weapon
 } from "../schema.ts"
 import type { ResolvedBuild } from "./build.ts"
+import { makeBody } from "./bodies.ts"
 import { resolveBuild } from "./build.ts"
 import { stateSpeed } from "./elements.ts"
 import { initialSkills } from "./skills.ts"
 import { charging, initialWeapon } from "./weapons.ts"
 
+/** The player: a body (taking every element as it is) with the build's kit. */
 export const makePlayer = (build: ResolvedBuild, at: Vec2) =>
-  Game.Command.spawn(
+  Game.Command.insert(
+    makeBody({ at, faction: "player", stats: build.stats, radius: build.radius, hurtboxRadius: build.hurtboxRadius, affinities: {} }),
     [Player, {}],
-    [Position, at],
-    [PrevPosition, at],
-    [Velocity, { x: 0, y: 0 }],
-    [Body, { radius: build.radius }],
     [Aim, { x: 1, y: 0 }],
     [Dash, { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }],
-    [Invulnerable, { remaining: 0 }],
-    [CombatStats, build.stats],
     [Passives, build.passives],
     [Weapon, initialWeapon(build)],
     [Skills, initialSkills(build)],
     [Energy, { current: 0 }],
-    [Knockback, { x: 0, y: 0 }],
-    [Hurtbox, { radius: build.hurtboxRadius, faction: "player" }],
-    [Health, { current: build.stats.hp, max: build.stats.hp }],
-    [HitFlash, { remaining: 0 }],
-    [ElementState, { current: null }],
     [Renderable, { kind: "player", radius: build.radius }]
   )
 

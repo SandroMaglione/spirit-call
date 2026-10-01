@@ -11,7 +11,7 @@ import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
 import type { ChallengeId } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
-import type { ElementId, StateId } from "./content/elements.ts"
+import type { Affinities, ElementId, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot } from "./content/skills.ts"
@@ -153,6 +153,9 @@ export interface ActiveState {
 /** The state a body is in, if any: one at a time, since water and fire cancel each other. */
 export const ElementState = Descriptor.Component<{ readonly current: ActiveState | null }>()("Shooter/ElementState")
 
+/** How the body takes each element (an enemy's kind's; none for the player), fixed when it spawns. */
+export const ElementAffinities = Descriptor.Component<Affinities>()("Shooter/ElementAffinities")
+
 /**
  * An element left on the ground (a fire pool, a puddle), a circle of
  * `radius` around `center`: everyone standing in it takes it, whichever side
@@ -179,7 +182,7 @@ export const Ground = Descriptor.Component<GroundValue>()("Shooter/Ground")
  */
 export const Gust = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Gust")
 
-/** Stunned for `remaining` seconds: the enemy neither moves nor goes on with its attack. */
+/** Stunned for `remaining` seconds: an enemy neither moves nor goes on with its attack. */
 export const Stunned = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Stunned")
 
 /** The passives of what an entity has equipped (see `content/passives.ts`). */
@@ -628,6 +631,7 @@ export const Game = Schema.bind(
       Skills,
       Energy,
       ElementState,
+      ElementAffinities,
       Ground,
       Gust,
       Stunned,

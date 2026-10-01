@@ -8,6 +8,7 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
+import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { stateSpeed } from "./elements.ts"
 import {
@@ -21,16 +22,10 @@ import {
   EnemyLevel,
   EnemyMode,
   Game,
-  Gust,
-  Health,
-  HitFlash,
-  Hurtbox,
-  Invulnerable,
   Knockback,
   PendingSpawn,
   Player,
   Position,
-  PrevPosition,
   Renderable,
   Respawns,
   RunScope,
@@ -53,21 +48,9 @@ export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number):
 export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1) => {
   const stats = tuning.enemies[kind]
   const { hp, atk, def, speed } = enemyStats(tuning, kind, level)
-  const draft = Game.Command.spawn(
+  const draft = Game.Command.insert(
+    makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius, hurtboxRadius: stats.hurtboxRadius, affinities: stats.elements }),
     [Enemy, { kind }],
-    [Position, at],
-    [PrevPosition, at],
-    [Velocity, { x: 0, y: 0 }],
-    [Knockback, { x: 0, y: 0 }],
-    [Body, { radius: stats.radius }],
-    [Hurtbox, { radius: stats.hurtboxRadius, faction: "enemy" }],
-    [Health, { current: hp, max: hp }],
-    [CombatStats, { hp, atk, def, speed }],
-    [HitFlash, { remaining: 0 }],
-    [Invulnerable, { remaining: 0 }],
-    [ElementState, { current: null }],
-    [Gust, { remaining: 0 }],
-    [Stunned, { remaining: 0 }],
     [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],

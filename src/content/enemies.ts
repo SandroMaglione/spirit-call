@@ -5,7 +5,7 @@
  * budget (0: never in random waves). Numbers are live-tunable: they are part
  * of the `Tuning` resource.
  */
-import type { Affinity, ElementId } from "./elements.ts"
+import type { Affinities } from "./elements.ts"
 
 // ── Attack and behavior shapes ────────────────────────────────────────────
 //
@@ -109,9 +109,6 @@ const volley = (spec: Omit<VolleyAttack, "kind">): AttackSpec | null => ({ kind:
 const slam = (spec: Omit<SlamAttack, "kind">): AttackSpec | null => ({ kind: "slam", ...spec })
 const charge = (spec: Omit<ChargeAttack, "kind">): AttackSpec | null => ({ kind: "charge", ...spec })
 const beam = (spec: Omit<BeamAttack, "kind">): AttackSpec | null => ({ kind: "beam", ...spec })
-/** How an enemy takes each element; missing: as it is. */
-export type Affinities = { readonly [Element in ElementId]?: Affinity }
-
 const affinities = (spec: Affinities): Affinities => spec
 const noShield = (): ShieldSpec | null => null
 const shield = (spec: ShieldSpec): ShieldSpec | null => spec

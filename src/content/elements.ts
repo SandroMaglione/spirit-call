@@ -35,6 +35,9 @@ export const elements: { readonly [Id in ElementId]: ElementSpec } = {
 /** How strongly an enemy kind takes an element (none: as it is). */
 export type Affinity = "weak" | "resists" | "immune"
 
+/** How a body takes each element; missing: as it is. */
+export type Affinities = { readonly [Element in ElementId]?: Affinity }
+
 /**
  * The numbers behind elements, states, and their interactions (see
  * `features/elements.ts`).
@@ -57,16 +60,19 @@ export const elementRules = {
     slow: 0.35
   },
   /**
-   * Wind: a body hit by it is driven for `seconds`: meanwhile it carries its
-   * state to bodies it is pushed into, and is stunned for `stunSeconds` if
-   * slammed into a wall while still moving faster than `slamSpeed`. Pools it
-   * sweeps over are blown along at `poolSpeed` (decaying like knockback).
+   * Wind: a body hit by it is driven for `seconds`: its push dies down
+   * slower (`decay`, against `knockback.decay`), so it glides away rather
+   * than being knocked back; meanwhile it carries its state to bodies it is
+   * pushed into, and is stunned for `stunSeconds` if slammed into a wall
+   * while still moving faster than `slamSpeed`. A pool a wind blow sweeps
+   * over is blown along at `poolSpeed`, dying down the same way.
    */
   wind: {
-    seconds: 0.6,
+    seconds: 0.75,
+    decay: 4.5,
     slamSpeed: 150,
     stunSeconds: 1.4,
-    poolSpeed: 1200
+    poolSpeed: 600
   },
   /** Damage factors of the interactions: fire on a soaked body fizzles. */
   reactions: {

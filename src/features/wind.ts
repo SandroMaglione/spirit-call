@@ -9,16 +9,17 @@
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { scale } from "../math/vec.ts"
 import { areaTouchesCircle } from "../physics/areas.ts"
-import { Body, ElementState, Enemy, Game, Ground, Gust, Health, Hitbox, Knockback, Position, PrevPosition, Reaction, Stunned, Time, Tuning } from "../schema.ts"
+import { Body, ElementAffinities, ElementState, Game, Ground, Gust, Health, Hitbox, Knockback, Position, PrevPosition, Reaction, Stunned, Time, Tuning } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
-import { affinityOf, afflict, durationFactor } from "./elements.ts"
+import { afflict, durationFactor } from "./elements.ts"
+import { pushShare } from "./motion.ts"
 
 /**
- * Runs gusts and stuns down; stuns driven bodies slammed into a wall (they
- * moved much less than their push would carry them, while still fast); and
- * lets driven bodies share their state with the bodies they touch. Runs
- * right after bodies move, before knockback decays, so it sees the push
- * that moved them.
+ * Runs stuns down; stuns driven bodies slammed into a wall (they moved much
+ * less than their push would carry them, while still fast); and lets driven
+ * bodies share their state with the bodies they touch. Runs right after
+ * bodies move, before knockback decays (and the drive runs down, see
+ * `DecayKnockback`), so it sees the push that moved them.
  */
 export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
   queries: {
@@ -32,7 +33,7 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
       }
     }),
     bodies: Game.Query({
-      selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), state: Game.Query.write(ElementState), enemy: Game.Query.optional(Enemy) },
+      selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), state: Game.Query.write(ElementState), affinities: Game.Query.read(ElementAffinities) },
       with: [Health]
     })
   },
@@ -42,9 +43,8 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
   const tuning = resources.tuning.get()
   const rules = tuning.elements.wind
   const dt = resources.time.get().dt
-  const decay = tuning.knockback.decay
-  // The share of the push's speed actually covered over a step (see `IntegrateBodies`).
-  const share = decay > 0 ? (1 - Math.exp(-decay * dt)) / (decay * dt) : 1
+  // The share of a driven body's push covered over the step (see `IntegrateBodies`).
+  const share = pushShare(rules.decay, dt)
 
   const gusting = new Set<number>()
   for (const { entity, data } of queries.driven.each()) {
@@ -65,7 +65,6 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
       events.reaction.emit({ at: position, kind: "stun" })
       continue
     }
-    data.gust.set({ remaining: Math.max(0, gust - dt) })
     gusting.add(entity.id.value)
   }
   if (gusting.size === 0) return
@@ -74,7 +73,7 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
   const contact = tuning.elements.burning.contact
   const bodies = queries.bodies.each()
   const takes = (body: (typeof bodies)[number], state: ActiveState): boolean =>
-    durationFactor(tuning, affinityOf(tuning, body.data.enemy.present ? body.data.enemy.get().kind : undefined, state.id === "burning" ? "fire" : "water")) > 0
+    durationFactor(tuning, body.data.affinities.get()[state.id === "burning" ? "fire" : "water"]) > 0
   for (const driven of bodies) {
     if (!gusting.has(driven.entity.id.value)) continue
     const at = driven.data.position.get()
@@ -97,8 +96,7 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
       } else if (mine !== null && theirs !== null) {
         // Fire meets water: the water puts the fire out.
         const [burning, soaked] = mine.id === "burning" ? [driven, other] : [other, driven]
-        const affinity = affinityOf(tuning, burning.data.enemy.present ? burning.data.enemy.get().kind : undefined, "water")
-        const water = afflict(tuning, burning.data.state.get().current, { id: "water", atk: 0 }, soaked.data.state.get().current?.charges ?? false, affinity)
+        const water = afflict(tuning, burning.data.state.get().current, { id: "water", atk: 0 }, soaked.data.state.get().current?.charges ?? false, burning.data.affinities.get().water)
         if (water.state === burning.data.state.get().current) continue
         burning.data.state.set({ current: water.state })
         events.reaction.emit({ at: burning.data.position.get(), kind: "steam" })
@@ -111,10 +109,10 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
 const carried = (tuning: TuningValue, state: ActiveState): ActiveState =>
   state.id === "burning" ? { ...state, nextTick: tuning.elements.burning.tick } : state
 
-/** Wind blows that sweep over pools blow them along their push. */
+/** A wind blow that sweeps over a pool blows it along its push, once (the pool counts as hit). */
 export const BlowPools = Game.System("Shooter/BlowPools", {
   queries: {
-    hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
+    hitboxes: Game.Query({ selection: { hitbox: Game.Query.write(Hitbox) } }),
     pools: Game.Query({ selection: { ground: Game.Query.write(Ground) } })
   },
   resources: { tuning: Game.System.readResource(Tuning) }
@@ -125,9 +123,13 @@ export const BlowPools = Game.System("Shooter/BlowPools", {
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
     if (hitbox.blow.element?.id !== "wind" || hitbox.pushAlong === undefined) continue
+    const blown: Array<number> = []
     for (const pool of pools) {
       const ground = pool.data.ground.get()
-      if (areaTouchesCircle(hitbox.area, ground.center, ground.radius / 2)) pool.data.ground.set({ ...ground, drift: scale(hitbox.pushAlong, speed) })
+      if (hitbox.hit.includes(pool.entity.id.value) || !areaTouchesCircle(hitbox.area, ground.center, ground.radius / 2)) continue
+      pool.data.ground.set({ ...ground, drift: scale(hitbox.pushAlong, speed) })
+      blown.push(pool.entity.id.value)
     }
+    if (blown.length > 0) data.hitbox.set({ ...hitbox, hit: [...hitbox.hit, ...blown] })
   }
 })

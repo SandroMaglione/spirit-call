@@ -1,21 +1,17 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { projection } from "../src/config/view.ts"
+import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { afflict, elementDamageFactor, stateSpeed } from "../src/features/elements.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
-import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
-import { ClearEnemies, grenadier, start } from "./helpers.ts"
+import { center, cursorAt, grenadier, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
 const rules = tuning.elements
-const center = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const grenade = tuning.skills.grenade.effect
 /** The grenadier's ATK: the swordsman's with the training blade. */
 const atk = tuning.characters.swordsman.stats.atk + tuning.weapons.trainingBlade.atk
@@ -58,18 +54,10 @@ const World = Game.Inspector("Test/Elements", {
   }
 })
 
-const cursorAt = (offset: Vec2) => {
-  const screen = toScreen(projection, offset)
-  return { x: 640 + screen.x, y: 360 + screen.y }
-}
-
 /** Training mode with only the listed dummies (offsets from the player), aiming at `aim`. */
 const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = {}) => {
   const run = start({ ...options, pointer: [{ frame: 0, move: cursorAt(aim) }] })
-  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
-    for (const offset of dummies) commands.spawnIn(RunScope, makeEnemy(options.tuning ?? tuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
-  })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  run.runtime.tick(placeDummies(dummies, options.tuning))
   /** Puts every body (player and enemies) in `state`. */
   const putIn = (state: ActiveState | null, who: "player" | "enemies" = "enemies") => {
     const Put = Game.System("Test/PutInState", {
@@ -351,9 +339,9 @@ describe("wind", () => {
     const run = range([], { x: 200, y: 0 }, { keys: [cut(1)] })
     run.pour([{ element: "fire", at: { x: 150, y: 0 }, radius: 50 }])
     run.step(40)
-    // Blown for as long as the cut sweeps over it, then drifting to a stop.
+    // Blown once, gliding to a stop like a body the wind drives.
     const [pool] = run.world().pools
-    expect(pool!.center.x - center.x - 150).toBeGreaterThan(rules.wind.poolSpeed / tuning.knockback.decay)
+    expect(pool!.center.x - center.x - 150).toBeCloseTo(rules.wind.poolSpeed / rules.wind.decay, -1)
     expect(pool!.center.y - center.y).toBeCloseTo(0, 6)
   })
 

@@ -8,8 +8,8 @@
  */
 import type { GroundSpec } from "../content/elements.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { ElementState, Enemy, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"
-import { affinityOf, afflict } from "./elements.ts"
+import { ElementAffinities, ElementState, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"
+import { afflict } from "./elements.ts"
 
 /** A pool of `spec`'s element around `center`, its burns from `atk`; `charges`: left by the player. */
 export const makeGround = (spec: GroundSpec, center: Vec2, atk: number, charges: boolean) =>
@@ -34,7 +34,7 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
         hurtbox: Game.Query.read(Hurtbox),
         invulnerable: Game.Query.read(Invulnerable),
         state: Game.Query.write(ElementState),
-        enemy: Game.Query.optional(Enemy)
+        affinities: Game.Query.read(ElementAffinities)
       },
       with: [Health]
     })
@@ -44,7 +44,8 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
-  const decay = Math.exp(-tuning.knockback.decay * dt)
+  // Pools only move when blown by wind, so they glide to a stop like a body driven by it.
+  const decay = Math.exp(-tuning.elements.wind.decay * dt)
   const pools = queries.pools.each()
   const live: Array<(typeof pools)[number]> = []
   for (const pool of pools) {
@@ -80,8 +81,7 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
       const ground = pool.data.ground.get()
       if (!inPool(ground, at, radius)) continue
       const before = data.state.get().current
-      const affinity = affinityOf(tuning, data.enemy.present ? data.enemy.get().kind : undefined, ground.element)
-      const afflicted = afflict(tuning, before, { id: ground.element, atk: ground.atk }, ground.charges, affinity)
+      const afflicted = afflict(tuning, before, { id: ground.element, atk: ground.atk }, ground.charges, data.affinities.get()[ground.element])
       data.state.set({ current: afflicted.state })
       if (afflicted.reaction !== null && afflicted.state?.id !== before?.id) events.reaction.emit({ at, kind: afflicted.reaction })
     }
