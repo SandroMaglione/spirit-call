@@ -11,7 +11,7 @@ import { DrawEnemies, DrawPlayer } from "./actors.ts"
 import { DrawReticle, DrawTouchAim } from "./aim.ts"
 import { PlaySounds } from "./audio.ts"
 import { ReactToHits, ShedStateMotes, SpawnFx, UpdateFx } from "./effects.ts"
-import { SyncHud, SyncTouchPad } from "./hud.ts"
+import { SyncHud, SyncTeam, SyncTouchPad } from "./hud.ts"
 import { ApplyCamera, FadeOccluders, InterpolateActors, SyncNodes } from "./scene.ts"
 import { DrawTelegraphs } from "./telegraphs.ts"
 
@@ -32,5 +32,6 @@ export const frame = Game.Schedule(
   DrawReticle,
   SyncHud,
   SyncTouchPad,
+  SyncTeam,
   SyncUi
 )

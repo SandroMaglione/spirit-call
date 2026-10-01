@@ -7,7 +7,7 @@ import { isMelee } from "../content/attacks.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Member, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
@@ -32,7 +32,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         energy: Game.Query.read(Energy),
         weapon: Game.Query.read(Weapon),
         body: Game.Query.read(Body),
-        state: Game.Query.read(ElementState)
+        state: Game.Query.read(ElementState),
+        member: Game.Query.read(Member)
       },
       with: [Player]
     })
@@ -95,7 +96,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
       node.body.tint = data.flash.get().remaining > 0
         ? view.hitFlash
-        : dash.remaining > 0 ? view.playerDashing : mixColor(stateTint(view.player, data.state.get().current), view.charge.full, glow)
+        : dash.remaining > 0 ? view.playerDashing : mixColor(stateTint(view.characters[data.member.get().character], data.state.get().current), view.charge.full, glow)
       node.root.alpha = data.invulnerable.get().remaining > 0 ? 0.55 : 1
     }
   }

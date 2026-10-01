@@ -24,8 +24,8 @@ effects, enemy traits).
   Bumping `bevyTsRelease` is automatic: `.github/workflows/bevy-ts.yml`
   checks npm hourly, checks the game against a new release, commits the
   bump to main, and deploys prod.
-- `?play` in the URL skips the menu (with `?character=`, `?weapon=`,
-  `?challenge=` for a quick start); backquote opens the tuning panel
+- `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
+  `?character=`, `?weapon=`, `?challenge=` for a quick start); backquote opens the tuning panel
   (live numbers, spawns, "Unlock all").
 
 ## How the code is organized
@@ -36,8 +36,8 @@ effects, enemy traits).
   mostly adding entries; new kinds (a new effect, condition, or objective)
   extend the vocabulary in one place.
 - The arena is a black box to everything around it: it is entered with a
-  build (character and weapon at their levels, skills), a challenge, and an
-  enemy level, and reports a `RunResult`. Quests, hardcore tiers, levels,
+  team (one to three builds: character and weapon at their levels, skills),
+  a challenge, and an enemy level, and reports a `RunResult`. Quests, hardcore tiers, levels,
   currencies, and rewards live in the account and the shell, never in the
   simulation.
 - Simulation (`src/features/`, `src/schema.ts`, `src/schedules.ts`, physics,

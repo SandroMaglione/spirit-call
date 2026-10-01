@@ -36,6 +36,7 @@ export type SoundName =
   | "hurt"
   | "death"
   | "dash"
+  | "switch"
   | "nova"
   | "boom"
   | "throw"
@@ -246,6 +247,12 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     noise(v, "lowpass", 1600, 120, 0.8, 0.35)
   }],
   dash: [{ reverb: 0.1 }, (v) => swish(v, { low: 380, peak: 1700, duration: 0.2, peakAt: 0.35, q: 0.8, gain: 0.35 })],
+  // Another character comes onto the field: a quick airy sweep and a two-note chime.
+  switch: [{ reverb: 0.3 }, (v) => {
+    swish(v, { low: 900, peak: 3200, duration: 0.18, peakAt: 0.5, q: 1.1, gain: 0.18 })
+    tone(v, "triangle", 660, 660, 0.12, 0.08)
+    tone(v, "triangle", 990, 990, 0.18, 0.07, 0.07)
+  }],
   // The ultimate: a deep boom with a long rumble and a shimmer.
   nova: [{ reverb: 0.5, heavy: true }, (v) => {
     click(v, 0.5)

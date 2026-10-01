@@ -93,6 +93,9 @@ middle range). Thunder and Rock come with later characters.
 
 - The player takes states too: Burning hurts her over time, Soaked slows
   her. The HUD shows her current state.
+- **A state stays with the character** when she is switched out, and runs
+  down on the bench: a character switched out burning keeps burning, and
+  can fall there. Her switch button shows it.
 
 ## Enemies
 
@@ -129,11 +132,9 @@ A first sketch for the current enemies (their affinities are in
 
 ## Open questions
 
-1. **States and switching.** Does a character's state (Burning, Soaked)
-   stay with her when she is switched out? To decide with the team rules.
-2. **Elements on basic attacks.** Which skills, if any, lend their element
+1. **Elements on basic attacks.** Which skills, if any, lend their element
    to basic attacks, and for how long.
-3. **Ultimates.** Ultimates are shared for now (the Nova, with no element);
+2. **Ultimates.** Ultimates are shared for now (the Nova, with no element);
    each character's own ultimate, with her element, comes with her kit.
-4. **Reach of spreading.** How far fire spreads between bodies, and how
+3. **Reach of spreading.** How far fire spreads between bodies, and how
    strongly wind has to push for bodies to share a state or be stunned.

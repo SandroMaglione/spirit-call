@@ -81,7 +81,7 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
 export const createNode = (renderable: RenderableValue, assets: RenderAssets, projectilePool: Array<ProjectileNode>): RenderNode => {
   switch (renderable.kind) {
     case "player": {
-      const { root, body } = drawActor(renderable.radius, 1.5, view.bodyHeightFactor, view.player)
+      const { root, body } = drawActor(renderable.radius, 1.5, view.bodyHeightFactor, view.characters[renderable.character])
       return { kind: "player", root, body }
     }
     case "enemy": {

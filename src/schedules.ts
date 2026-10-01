@@ -7,8 +7,8 @@
  * world freezes on the game-over screen and during hit-stop (the `frozen`
  * check); input capture pauses with hit-stop (`whileRunning`), so presses
  * made meanwhile are kept. Game-over detection is gated on the flow only
- * (`whileRunIsLive`), so it never misses the player's death to a hit-stop
- * that the same hit started.
+ * (`whileRunIsLive`), so it never misses the team's last fall to a
+ * hit-stop that the same hit started.
  * Restarting enters `Playing` again, which runs `restart`.
  */
 import { SpawnArena } from "./features/arena.ts"
@@ -26,7 +26,8 @@ import { ApplyUiRequests } from "./features/menu.ts"
 import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
-import { ControlPlayer, SpawnPlayer } from "./features/player.ts"
+import { ControlPlayer } from "./features/player.ts"
+import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
 import { CastCuts, CastLobs, CastNovas, UpdateLobbed, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { UseBasicAttack } from "./features/weapons.ts"
@@ -35,7 +36,7 @@ import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema
 
 /** Spawns what a run starts with. */
 const startRun = Game.Schedule(
-  SpawnPlayer,
+  SpawnTeam,
   SpawnTrainingDummies,
   Game.Schedule.applyDeferred(),
   SnapCamera
@@ -80,6 +81,7 @@ const gameplay = Game.Schedule.when(
   whilePlaying,
   TrackRun,
   TickCombatTimers,
+  TickBench,
   ControlPlayer,
   // Casts (from skills, and from passives queued last step) are carried out
   // right after they are made, in the same step.
@@ -112,13 +114,16 @@ const gameplay = Game.Schedule.when(
 )
 
 /**
- * Needs every Death and Hit event of the run, so it is never skipped by
- * hit-stop: game over (checked before the objective, so dying on the step it
- * is met still loses), and the passives that kills and moves set off.
+ * Never skipped by hit-stop, so nothing is missed: game over (checked
+ * before the objective, so the team falling on the step it is met still
+ * loses), the next character coming in when one falls (and switches, which
+ * wait out a hit-stop themselves), and the passives that kills and moves
+ * set off (from every Hit event).
  */
 const runOutcome = Game.Schedule.when(
   whileRunIsLive,
   DetectGameOver,
+  SwitchCharacter,
   CheckObjective,
   TriggerPassives
 )

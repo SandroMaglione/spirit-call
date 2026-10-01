@@ -6,6 +6,8 @@
  * damage does: invulnerability, health, hit flash, knockback, death, and
  * the element it applies (see `features/elements.ts`).
  */
+import type { ReadCell, WriteCell } from "@typeonce/bevy-ts/Query"
+
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -29,6 +31,7 @@ import {
   Impact,
   Invulnerable,
   Knockback,
+  Member,
   Player,
   Position,
   PrevPosition,
@@ -42,7 +45,7 @@ import {
   Tuning,
   Velocity
 } from "../schema.ts"
-import type { EnemyKind, ProjectileValue } from "../schema.ts"
+import type { ActiveState, Blow, EnemyKind, ProjectileValue } from "../schema.ts"
 import { pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
 import { afflict, durationFactor, elementDamageFactor } from "./elements.ts"
@@ -188,6 +191,13 @@ const Damageable = Game.Query({
   }
 })
 
+/** A team member on the bench: no body, so only a fire she carries off reaches her (see `TickStates`). */
+const Benched = Game.Query({
+  selection: { health: Game.Query.write(Health), stats: Game.Query.read(CombatStats), state: Game.Query.write(ElementState) },
+  with: [Member],
+  without: [Player]
+})
+
 /**
  * Applies damage requests: the single place where hits become consequences.
  * The attacker's passives raise each request's amount (see
@@ -195,10 +205,17 @@ const Damageable = Game.Query({
  * then the target's DEF reduces it (see `damageTaken`). A blow's element
  * then applies to a target that survives (see `afflict`). Burns (periodic
  * blows) land through invulnerability and give none, with no hit-stop or
- * push.
+ * push; they are the only blows that reach a team member on the bench.
+ *
+ * A team member who falls stays in the team, fallen (`SwitchCharacter`
+ * brings in the next one); an enemy that dies is gone. Energy from damage
+ * the team deals goes to the one on the field, and a share of it to each
+ * one on the bench still standing (see `Tuning.team.benchEnergyShare`).
  */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
-  queries: { energies: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) },
+  queries: {
+    energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player) }, with: [Member] })
+  },
   events: {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
@@ -214,7 +231,12 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   let hitStop = 0
   for (const damage of events.damage.all()) {
     const found = lookup.getHandle(damage.target, Damageable)
-    if (!found.ok || dead.has(found.value.entity.id.value)) continue
+    if (!found.ok) {
+      const benched = lookup.getHandle(damage.target, Benched)
+      if (benched.ok && damage.blow.periodic) burnOnBench(tuning, benched.value.data, damage.blow)
+      continue
+    }
+    if (dead.has(found.value.entity.id.value)) continue
     const { entity, data } = found.value
     if (data.hurtbox.get().faction === damage.faction) continue
     const { blow } = damage
@@ -272,7 +294,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
 
     dead.add(entity.id.value)
     events.death.emit({ at, faction: data.hurtbox.get().faction, enemy })
-    commands.despawn(entity.id)
+    // A fallen team member stays (out of the fight); everything else is gone.
+    if (data.player.present) data.state.set({ current: null })
+    else commands.despawn(entity.id)
     if (data.hurtbox.get().faction === "enemy") {
       kills += 1
       hitStop = Math.max(hitStop, tuning.feedback.hitStopOnKill)
@@ -284,11 +308,31 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   if (kills > 0) resources.stats.update((stats) => ({ ...stats, kills: stats.kills + kills }))
   if (energy > 0) {
     for (const { data } of queries.energies.each()) {
-      data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + energy) }))
+      if (data.health.get().current <= 0) continue
+      const gained = data.player.present ? energy : energy * tuning.team.benchEnergyShare
+      data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + gained) }))
     }
   }
   if (hitStop > 0) resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, hitStop) }))
 })
+
+/** A burn on a team member on the bench: it lands like any burn (her DEF, a soaked body's fizzle), and she falls when it ends her. */
+const burnOnBench = (
+  tuning: TuningValue,
+  data: {
+    readonly health: WriteCell<{ readonly current: number; readonly max: number }>
+    readonly stats: ReadCell<{ readonly def: number }>
+    readonly state: WriteCell<{ readonly current: ActiveState | null }>
+  },
+  struck: Blow
+): void => {
+  const health = data.health.get()
+  if (health.current <= 0) return
+  const factor = struck.element === null ? 1 : elementDamageFactor(tuning, struck.element.id, data.state.get().current)
+  const current = Math.max(0, health.current - damageTaken(tuning, struck.damage * factor, data.stats.get().def))
+  data.health.set({ current, max: health.max })
+  if (current <= 0) data.state.set({ current: null })
+}
 
 /** Counts a hit-stop down; gameplay resumes once it reaches zero (see `frozen`). */
 export const TickHitStop = Game.System("Shooter/TickHitStop", {

@@ -10,6 +10,7 @@ import type { CharacterId } from "../content/characters.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
+import { teamSize } from "../content/characters.ts"
 import { createAccount, defaultEquipment, equip, owns, select, unlock, withClearedRewards } from "./account.ts"
 import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, Play, QuestProgress, TierProgress, Unlocked } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
@@ -29,9 +30,9 @@ const keep = <Id extends string, V>(ids: Record<Id, unknown>, saved: Readonly<Re
 /**
  * The account a (migrated) save describes. Content that no longer exists is
  * dropped; equipment that is no longer valid goes back to the character's
- * own; a selection of a character not owned or of something not open goes
- * back to the starter's; and an account left with no character gets the
- * starter's back. Rewards added to quests it had already cleared are given
+ * own; a team keeps the characters it still owns (or falls back to one it
+ * owns), and something not open goes back to the starter's quest; and an
+ * account left with no character gets the starter's back. Rewards added to quests it had already cleared are given
  * (see `withClearedRewards`). `dropped` says what was removed and `granted`
  * what was given, for a notice.
  */
@@ -58,7 +59,7 @@ export const fromStored = (
     }
     hardcore[track] = kept
   }
-  const starterSelection: Account["selection"] = { character: starter.selection.character, play: { kind: "quest", quest: starter.selection.quest } }
+  const starterSelection: Account["selection"] = { team: [starter.selection.character], play: { kind: "quest", quest: starter.selection.quest } }
   let account: Account = {
     id: stored.id,
     createdAt: stored.createdAt,
@@ -93,17 +94,20 @@ export const fromStored = (
     if (reset.ok) account = reset.value
   }
 
-  const { character } = stored.selection
+  // The team keeps the characters that still exist and are owned, each once, in order.
+  const savedTeam = [...new Set(stored.selection.team)]
+  const kept = savedTeam.filter((id): id is CharacterId => known(tuning.characters, id) && owns(account, { kind: "character", id })).slice(0, teamSize)
+  if (kept.length < savedTeam.length) dropped.push("part of the last team")
+  const fallback = owns(account, { kind: "character", id: starter.selection.character }) ? starter.selection.character : (Object.keys(account.owned.characters)[0] as CharacterId)
+  const team = kept.length > 0 ? kept : [fallback]
   const play = playFrom(tuning, stored.selection.play)
-  const selected = known(tuning.characters, character) && play !== undefined ? select(tuning, account, character, play) : undefined
+  const selected = play === undefined ? undefined : select(tuning, account, team, play)
   if (selected?.ok === true) account = selected.value
   else {
     // A save from before quests has nothing selected: that is not something lost.
     const nothing = stored.selection.play.kind === "quest" && stored.selection.play.quest === ""
     if (!nothing) dropped.push("the last selection")
-    const keptCharacter = known(tuning.characters, character) && owns(account, { kind: "character", id: character })
-    const fallbackCharacter = keptCharacter ? character : owns(account, { kind: "character", id: starter.selection.character }) ? starter.selection.character : (Object.keys(account.owned.characters)[0] as CharacterId)
-    account = { ...account, selection: { ...starterSelection, character: fallbackCharacter } }
+    account = { ...account, selection: { ...starterSelection, team } }
   }
   return { account, dropped, granted: rewarded.granted }
 }
@@ -130,7 +134,7 @@ const equipmentFrom = (tuning: Tuning, character: CharacterId, saved: StoredAcco
 
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 2,
+  version: 3,
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,
@@ -160,7 +164,7 @@ export const accountFromLegacy = (tuning: Tuning, starter: StarterSet, legacy: L
     const ultimate = build.skills.ultimate !== undefined && known(tuning.skills, build.skills.ultimate) ? build.skills.ultimate : own.skills.ultimate
     const equipped = equip(tuning, account, character, { weapon, skills: { special, ultimate } })
     if (equipped.ok) account = equipped.value
-    account = { ...account, selection: { ...account.selection, character } }
+    account = { ...account, selection: { ...account.selection, team: [character] } }
   }
   return account
 }

@@ -45,8 +45,8 @@ export interface AccountStoreShape {
   readonly notes: ReadonlyArray<string>
   /** Equips an owned character with owned items (the weapon of its type). */
   readonly equip: (character: CharacterId, equipment: Equipment) => Effect.Effect<Account, AccountRefused | AccountSaveError>
-  /** Selects an owned character and an open quest or tier: what the arena is entered with. */
-  readonly select: (character: CharacterId, play: Play) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Selects a team of owned characters and an open quest or tier: what the arena is entered with. */
+  readonly select: (team: ReadonlyArray<CharacterId>, play: Play) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
   /** Takes an owned character to its next level with gold. */
@@ -149,7 +149,7 @@ export const layer = (options: AccountOptions) =>
         get: Ref.get(current),
         notes: loaded.notes,
         equip: (character, equipment) => change((account) => equip(options.tuning, account, character, equipment)),
-        select: (character, play) => change((account) => select(options.tuning, account, character, play)),
+        select: (team, play) => change((account) => select(options.tuning, account, team, play)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
         earn: (amounts) => apply((account) => earn(account, amounts)),
         train: (character) => change((account) => train(options.tuning, account, character)),
