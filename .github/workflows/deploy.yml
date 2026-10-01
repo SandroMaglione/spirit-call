@@ -1,0 +1,85 @@
+# Checks and deploys the game to Cloudflare (deploy/alchemy.run.ts):
+# main deploys `prod`, every pull request deploys a `pr-<n>` preview (its
+# address is commented on the PR), and closing the PR destroys the preview.
+# It can also be started by hand or by another workflow (bevy-ts.yml), which
+# deploys `prod` from main.
+# Builds use the published bevy-ts release in package.json `bevyTsRelease`.
+# The Cloudflare secrets come from deploy/stacks/github.ts.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  STAGE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'prod' }}
+
+jobs:
+  deploy:
+    # Started by hand, it only deploys from main (it deploys prod)
+    if: github.event.action != 'closed' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Use the published bevy-ts
+        run: node scripts/use-published-bevy-ts.ts
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+      - name: Check
+        run: pnpm check
+      - name: Install deploy tooling
+        run: pnpm --dir deploy install --frozen-lockfile
+      - name: Check deploy tooling
+        run: pnpm --dir deploy typecheck
+      - name: Deploy
+        working-directory: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.number }}
+        run: |
+          # Alchemy reads the pull request number from PULL_REQUEST, and an
+          # empty value is not a number, so it is only set on pull requests
+          if [ -n "$PR" ]; then export PULL_REQUEST="$PR"; fi
+          pnpm alchemy provider check-env --provider Cloudflare --provider GitHub
+          pnpm alchemy deploy --stage "$STAGE" --yes --no-input
+
+  cleanup:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Use the published bevy-ts
+        run: node scripts/use-published-bevy-ts.ts
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+      - name: Install deploy tooling
+        run: pnpm --dir deploy install --frozen-lockfile
+      - name: Destroy the preview
+        working-directory: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm alchemy destroy --stage "$STAGE" --yes --no-input
