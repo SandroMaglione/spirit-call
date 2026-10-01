@@ -3,7 +3,9 @@
 A top-down action game for the phone (and the browser), built on the
 `@typeonce/bevy-ts` ECS. **Read `docs/vision.md` first**: it is the game's
 design direction (pillars, non-goals, open questions). Design decisions are
-checked against it; open questions are asked, not guessed.
+checked against it; open questions are asked, not guessed. Detailed rules
+for one area live next to it (`docs/elements.md`: elements, states, ground
+effects, enemy traits).
 
 ## Commands
 

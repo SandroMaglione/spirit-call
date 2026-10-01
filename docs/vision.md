@@ -93,6 +93,25 @@ It is a personal project, not a commercial one.
 - Weapons belong to a character's type and change how she plays (their
   special effects), not just her numbers.
 
+## Elements
+
+The rules are in `docs/elements.md`; in short:
+
+- **Designed around enemies.** Each element does a job against a kind of
+  enemy situation (fire for packs, water for fast enemies, thunder for
+  spread-out groups, wind to scatter or group, rock for tanky enemies).
+- **An element belongs to a character**, applied through her skills.
+- **Interactions follow intuition** (water conducts thunder and puts out
+  fire), change what happens before they change numbers, and add only a
+  modest damage bonus or penalty. Some teams are weaker together: that is
+  strategy.
+- **Ground effects** (fire pools, puddles) affect everyone standing in them,
+  the player included.
+- **Enemies are weak to, resist, or are immune to elements.** Immunity
+  cancels the effect, never the damage, and every enemy has at least two
+  answers, so no element is ever required. A quest shows its enemies and
+  their traits before you enter.
+
 ## Teams
 
 - **Three characters, switching** between them during a fight; one is on the
@@ -190,10 +209,7 @@ Decided directions are above; these are not decided yet.
    specific thing directly), the exact duplicate rewards, the formats of
    secondary quests, and how pulls stay meaningful once a player owns most
    things.
-2. **Elements and statuses.** Which elements or statuses exist, what each
-   does, and whether they combine (reactions) or stay independent.
-3. **Enemy strengths and weaknesses.** How enemies resist or suffer effects,
-   and how a quest tells you what you will face before you enter.
-4. **Team rules.** How switching works on the touch controls, whether health
+2. **Team rules.** How switching works on the touch controls, whether health
    is per character, what happens when one falls, and how off-field
    characters contribute (if at all).
+3. **Element details**: the open questions at the end of `docs/elements.md`.
