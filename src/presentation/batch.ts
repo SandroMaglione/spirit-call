@@ -8,13 +8,15 @@
  * its own color. While the node is in the scene its instances belong to
  * their batches; every frame the batch copies their transforms and colors.
  */
-import { Color, DynamicDrawUsage, InstancedMesh, Object3D } from "three"
+import { Color, DynamicDrawUsage, InstancedBufferAttribute, InstancedMesh, Object3D } from "three"
 import type { BufferGeometry, Group, Material } from "three"
 
 export class Instance {
   /** Where it is: parented in the node's tree like a mesh. */
   readonly object = new Object3D()
   readonly color = new Color(0xffffff)
+  /** Two baked animation frames and their interpolation weight. */
+  readonly pose = [0, 0, 0, 0]
   /** Its batch; may change while it is out of the scene (a pooled projectile changing shape). */
   batch: Batch
   /** Its slot in the batch, or -1 while out of it. */
@@ -31,11 +33,13 @@ export class Batch {
   private readonly parent: Group
   private readonly geometry: BufferGeometry
   private readonly material: Material
+  private readonly animated: boolean
 
-  constructor(parent: Group, geometry: BufferGeometry, material: Material, options: { readonly order?: number } = {}) {
+  constructor(parent: Group, geometry: BufferGeometry, material: Material, options: { readonly order?: number; readonly animated?: boolean } = {}) {
     this.parent = parent
     this.geometry = geometry
     this.material = material
+    this.animated = options.animated ?? false
     this.mesh = this.makeMesh(64, options.order ?? 0)
   }
 
@@ -74,8 +78,10 @@ export class Batch {
       const member = members[index]!
       mesh.setMatrixAt(index, member.object.matrixWorld)
       mesh.setColorAt(index, member.color)
+      if (this.animated) this.geometry.getAttribute("instancePose").setXYZW(index, member.pose[0]!, member.pose[1]!, member.pose[2]!, member.pose[3]!)
     }
     mesh.count = members.length
+    if (this.animated) this.geometry.getAttribute("instancePose").needsUpdate = true
     mesh.instanceMatrix.clearUpdateRanges()
     mesh.instanceMatrix.addUpdateRange(0, members.length * 16)
     mesh.instanceMatrix.needsUpdate = true
@@ -92,6 +98,7 @@ export class Batch {
   }
 
   private makeMesh(capacity: number, order: number): InstancedMesh {
+    if (this.animated) this.geometry.setAttribute("instancePose", new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage))
     const mesh = new InstancedMesh(this.geometry, this.material, capacity)
     mesh.instanceMatrix.setUsage(DynamicDrawUsage)
     // Allocates the per-instance colors.

@@ -15,6 +15,7 @@ import type { RenderAssets } from "./host-types.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import type { BodyLook, Moments, Shot } from "./looks.ts"
 import { Puppet } from "./puppet.ts"
+import { instancedBody } from "./instanced-body.ts"
 
 export interface ActorBody {
   /** What stands on the body's pivot (the feet). */
@@ -39,6 +40,9 @@ export interface ActorBody {
   animate(position: Vec2, facing: Vec2, seconds: number, holding: boolean): void
   /** Plays a one-shot over `seconds` (its own length when `null`), its blow landing `hitAt` seconds in (see `Puppet.play`). */
   play(shot: Shot, seconds: number | null, hitAt: number | null): void
+  /** A simulation-owned enemy phase, sampled directly rather than advanced by render time. */
+  sample?(clip: string, progress: number): void
+  shield?(relativeAngle: number): void
   dispose(): void
 }
 
@@ -125,6 +129,7 @@ export const makeBody = (assets: RenderAssets, look: BodyLook, radius: number, b
     case "capsule":
       return capsuleBody(assets, look.color, bodyRadius, height, batched)
     case "model": {
+      if (look.batched) return instancedBody(assets, look, bodyRadius, height)
       const puppet = new Puppet(assets.model(look.model), height, look.moments ?? null)
       const held = weapon === null ? undefined : look.held?.weapons[weapon]
       if (held !== undefined && look.held !== undefined) puppet.hold(assets.model(held), look.held.grip)

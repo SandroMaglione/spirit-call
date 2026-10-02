@@ -63,6 +63,8 @@ export type BodyLook =
   | {
       readonly kind: "model"
       readonly model: ModelId
+      /** Crowd models share a baked bone texture and one instance batch. */
+      readonly batched?: boolean
       readonly widthFactor: number
       readonly heightFactor: number
       readonly moments?: Moments

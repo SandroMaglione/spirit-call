@@ -10,6 +10,7 @@ import type { ModelId, ModelSource } from "./models.ts"
 import type { Fx } from "./fx.ts"
 import type { Shapes } from "./shapes.ts"
 import type { SlashTrails } from "./trails.ts"
+import type { AnimationAtlas } from "./animation-atlas.ts"
 
 /**
  * A character or an enemy, standing at `root` (its feet, on the floor).
@@ -56,6 +57,7 @@ export interface RenderAssets {
   model(id: ModelId): ModelSource
   /** The batch drawing every copy of a one-mesh model (floor tiles, wall segments, props). */
   piece(id: ModelId): Batch
+  animated(id: ModelId): { readonly batch: Batch; readonly atlas: AnimationAtlas }
   /** Actors' blob shadows. */
   readonly shadows: Batch
   /** Projectiles' smaller, lighter shadows. */
@@ -206,4 +208,3 @@ export interface RenderHostValue {
   /** Draws the frame. */
   render(): void
 }
-
