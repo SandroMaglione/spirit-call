@@ -6,6 +6,7 @@ import type { ActionButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
+import { loadCrow } from "./crow.ts"
 import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
@@ -94,6 +95,7 @@ export interface BrowserHost {
 }
 
 export const createBrowserHost = async (mount: HTMLElement, arena: { readonly width: number; readonly height: number }): Promise<BrowserHost> => {
+  const crow = await loadCrow()
   // Phones have very dense screens: past 2 device pixels per CSS pixel the cost grows faster than the sharpness.
   const renderer = new WebGLRenderer({ antialias: true, powerPreference: "high-performance" })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -121,7 +123,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   scene.matrixWorldAutoUpdate = false
   const batches = new Group()
   scene.add(batches)
-  const assets = makeAssets(batches)
+  const assets = makeAssets(batches, crow)
   const camera = makeCamera()
   const light = view.light
   // Light intensities are physical: π makes a fully lit face show its own color.

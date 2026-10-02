@@ -1,10 +1,11 @@
-import type { BufferGeometry, Group, Mesh, MeshLambertMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { BufferGeometry, Group, MeshLambertMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
 import type { Vec2 } from "../math/vec.ts"
 
 import type { Batch, Instance } from "./batch.ts"
+import type { Crow, CrowSource } from "./crow.ts"
 import type { Fx } from "./fx.ts"
 import type { Shapes } from "./shapes.ts"
 import type { SlashTrails } from "./trails.ts"
@@ -23,8 +24,8 @@ export interface ActorParts {
   readonly radius: number
 }
 
-/** The player's body is a mesh of its own (it turns see-through while protected). */
-export type PlayerNode = { readonly kind: "player"; readonly body: Mesh<BufferGeometry, MeshLambertMaterial> } & ActorParts
+/** The character on the field: the crow model, with its own materials and animation. */
+export type PlayerNode = { readonly kind: "player"; readonly crow: Crow } & ActorParts
 
 /** Enemy bodies are drawn in batches, one per size: `body` carries the transform and the tint. */
 export type EnemyNode = { readonly kind: "enemy"; readonly body: Instance } & ActorParts
@@ -49,6 +50,8 @@ export type RenderNode = PlayerNode | EnemyNode | ProjectileNode | WallNode
 
 /** Geometry, materials, and batches made once and shared by many nodes. */
 export interface RenderAssets {
+  /** The crow model, loaded once; every character uses it for now. */
+  readonly crow: CrowSource
   /** Actors' blob shadows. */
   readonly shadows: Batch
   /** Projectiles' smaller, lighter shadows. */

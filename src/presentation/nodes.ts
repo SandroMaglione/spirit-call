@@ -12,6 +12,8 @@ import { depthOf, elevation, toScreenAt, worldHeight } from "../math/iso.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { EnemyKind, Faction, ProjectileStyle, RenderableValue } from "../schema.ts"
 import { Batch, Instance } from "./batch.ts"
+import { disposeCrow, makeCrow } from "./crow.ts"
+import type { CrowSource } from "./crow.ts"
 import type { ProjectileNode, RenderAssets, RenderNode, WallNode } from "./host-types.ts"
 import type { Shapes } from "./shapes.ts"
 
@@ -19,7 +21,7 @@ import type { Shapes } from "./shapes.ts"
 export const floorLayers = { grid: 0.1, shadow: 0.2, telegraphs: 0.3, marks: 0.4 } as const
 
 /** Shared geometry, materials, and batches; batch meshes go into `parent`. */
-export const makeAssets = (parent: Group): RenderAssets => {
+export const makeAssets = (parent: Group, crow: CrowSource): RenderAssets => {
   const geometries = new Map<string, BufferGeometry>()
   const bodies = new Map<string, Batch>()
   const disc = new CircleGeometry(1, 20).rotateX(-Math.PI / 2)
@@ -47,6 +49,7 @@ export const makeAssets = (parent: Group): RenderAssets => {
     return geometry
   }
   return {
+    crow,
     shadows: fixed[0],
     projectileShadows: fixed[1],
     orbs: fixed[2],
@@ -162,9 +165,9 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
   switch (renderable.kind) {
     case "player": {
       const parts = actorParts(assets, renderable.radius, 1.5, view.bodyHeightFactor)
-      const body = new Mesh(assets.bodyGeometry(parts.radius, parts.height), new MeshLambertMaterial({ color: view.characters[renderable.character], flatShading: true }))
-      parts.pivot.add(body)
-      return { kind: "player", body, ...parts }
+      const crow = makeCrow(assets.crow, parts.height)
+      parts.pivot.add(crow.model)
+      return { kind: "player", crow, ...parts }
     }
     case "enemy": {
       const look = view.enemies[renderable.enemy]
@@ -201,7 +204,7 @@ export const instancesOf = (node: RenderNode): ReadonlyArray<Instance> => {
 export const disposeNode = (node: RenderNode): void => {
   switch (node.kind) {
     case "player":
-      node.body.material.dispose()
+      disposeCrow(node.crow)
       return
     case "enemy":
     case "projectile":

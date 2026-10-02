@@ -1,5 +1,5 @@
 /**
- * Actors: the player (facing, dash, charge, and nova rings; body tint) and
+ * Actors: the player (facing, dash, charge, and nova rings; the crow's pose and light) and
  * enemies (hit flash, windup tint, health bars, stars over stunned ones).
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
@@ -8,12 +8,14 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Member, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, HitStop, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
 import { enemyColor } from "./nodes.ts"
 import { mixColor } from "./draw.ts"
+import { lightCrow, poseCrow } from "./crow.ts"
+import { advanceCrow } from "./crow-animation.ts"
 
 /** `color` tinted toward the color of `state`, if any. */
 export const stateTint = (color: number, state: ActiveState | null): number =>
@@ -33,13 +35,12 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         energy: Game.Query.read(Energy),
         weapon: Game.Query.read(Weapon),
         body: Game.Query.read(Body),
-        state: Game.Query.read(ElementState),
-        member: Game.Query.read(Member)
+        state: Game.Query.read(ElementState)
       },
       with: [Player]
     })
   },
-  resources: { tuning: Game.System.readResource(Tuning) },
+  resources: { tuning: Game.System.readResource(Tuning), hitStop: Game.System.readResource(HitStop) },
   services: { nodes: Game.System.service(RenderNodes), host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ queries, resources, services }) => {
   const marks = services.host.groundMarks
@@ -91,14 +92,17 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       // Charging glows toward the full-charge color; once full it pulses.
       const pulse = charge >= 1 ? 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.charge.pulseHz * Math.PI * 2) : 0
       const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
-      const material = node.body.material
-      material.color.setHex(data.flash.get().remaining > 0
-        ? view.hitFlash
-        : dash.remaining > 0 ? view.playerDashing : mixColor(stateTint(view.characters[data.member.get().character], data.state.get().current), view.charge.full, glow))
-      // Protected: see-through.
-      const protectedNow = data.invulnerable.get().remaining > 0
-      material.transparent = protectedNow
-      material.opacity = protectedNow ? 0.55 : 1
+      // Her steps follow the ground she covers; everything stops with the world during hit-stop.
+      const seconds = resources.hitStop.get().remaining > 0 ? 0 : services.clock.frameSeconds
+      advanceCrow(node.crow.motion, position, aim, seconds, dash.remaining > 0)
+      poseCrow(node.crow, aim)
+      // A hit flashes her white, a dash lights her up; otherwise a charge glows. Protected: see-through.
+      const flashing = data.flash.get().remaining > 0
+      lightCrow(node.crow,
+        stateTint(0xffffff, data.state.get().current),
+        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : view.charge.full,
+        flashing ? 1 : dash.remaining > 0 ? 0.65 : glow,
+        data.invulnerable.get().remaining > 0 ? 0.55 : 1)
     }
   }
 })
