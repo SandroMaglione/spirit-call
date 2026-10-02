@@ -14,6 +14,9 @@ gltf = json.loads((root / 'gltf-validation.json').read_text())
 assert len(manifest['assets']) == len(verification['assets']) == len(gltf['assets'])
 assert all(not (a['issues']['numErrors'] or a['issues']['numWarnings']) for a in gltf['assets'])
 assert verification['source_sha256'] == manifest['source_sha256']
+hashes = {a['id']: a['sha256'] for a in manifest['assets']}
+for report in (verification, gltf):
+    assert {a['id']: a['sha256'] for a in report['assets']} == hashes, 'Revalidate the current exports'
 assert all((root / 'previews' / (a['id'] + '.png')).is_file() for a in manifest['assets']), 'Render every model first'
 assert (root / 'source/examples.blend').is_file()
 descriptions = {

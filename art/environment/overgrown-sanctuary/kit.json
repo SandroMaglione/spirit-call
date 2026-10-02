@@ -1,0 +1,213 @@
+{
+  "title": "Overgrown sanctuary",
+  "style": "sanctuary",
+  "palette": {
+    "stone": "8F9C87",
+    "light": "ABB49A",
+    "edge": "C3C8AF",
+    "dark": "526756",
+    "accent": "7BACA0",
+    "metal": "526B62",
+    "wood": "756447",
+    "earth": "8B7A56",
+    "green": "66865A",
+    "warm": "BEA26B",
+    "snow": "BCC6AD",
+    "cloth": "8B8362"
+  },
+  "assets": [
+    {
+      "id": "floor-plain",
+      "recipe": "floor-plain"
+    },
+    {
+      "id": "floor-worn",
+      "recipe": "floor-worn"
+    },
+    {
+      "id": "floor-cracked",
+      "recipe": "floor-cracked"
+    },
+    {
+      "id": "floor-inset",
+      "recipe": "floor-inset"
+    },
+    {
+      "id": "floor-small",
+      "recipe": "floor-small"
+    },
+    {
+      "id": "floor-large",
+      "recipe": "floor-large"
+    },
+    {
+      "id": "floor-border",
+      "recipe": "floor-border"
+    },
+    {
+      "id": "floor-border-corner",
+      "recipe": "floor-border-corner"
+    },
+    {
+      "id": "floor-threshold",
+      "recipe": "floor-threshold"
+    },
+    {
+      "id": "floor-transition",
+      "recipe": "floor-transition"
+    },
+    {
+      "id": "wall-short",
+      "recipe": "wall-short"
+    },
+    {
+      "id": "wall-straight",
+      "recipe": "wall-straight"
+    },
+    {
+      "id": "wall-long",
+      "recipe": "wall-long"
+    },
+    {
+      "id": "wall-low",
+      "recipe": "wall-low"
+    },
+    {
+      "id": "wall-tall",
+      "recipe": "wall-tall"
+    },
+    {
+      "id": "wall-corner",
+      "recipe": "wall-corner"
+    },
+    {
+      "id": "wall-end",
+      "recipe": "wall-end"
+    },
+    {
+      "id": "wall-broken",
+      "recipe": "wall-broken"
+    },
+    {
+      "id": "pillar-small",
+      "recipe": "pillar-small"
+    },
+    {
+      "id": "pillar-large",
+      "recipe": "pillar-large"
+    },
+    {
+      "id": "pillar-broken",
+      "recipe": "pillar-broken"
+    },
+    {
+      "id": "stair-short",
+      "recipe": "stair-short"
+    },
+    {
+      "id": "stair-full",
+      "recipe": "stair-full"
+    },
+    {
+      "id": "stair-wide",
+      "recipe": "stair-wide"
+    },
+    {
+      "id": "stair-rail",
+      "recipe": "stair-rail"
+    },
+    {
+      "id": "landing",
+      "recipe": "landing"
+    },
+    {
+      "id": "platform",
+      "recipe": "platform"
+    },
+    {
+      "id": "platform-edge",
+      "recipe": "platform-edge"
+    },
+    {
+      "id": "railing-straight",
+      "recipe": "railing-straight"
+    },
+    {
+      "id": "railing-corner",
+      "recipe": "railing-corner"
+    },
+    {
+      "id": "doorway",
+      "recipe": "doorway"
+    },
+    {
+      "id": "gate-wide",
+      "recipe": "gate-wide"
+    },
+    {
+      "id": "floor-grate",
+      "recipe": "floor-grate"
+    },
+    {
+      "id": "wall-grille",
+      "recipe": "wall-grille"
+    },
+    {
+      "id": "bridge",
+      "recipe": "bridge"
+    },
+    {
+      "id": "root-arch",
+      "recipe": "root-arch"
+    },
+    {
+      "id": "stump",
+      "recipe": "stump"
+    },
+    {
+      "id": "fallen-log",
+      "recipe": "fallen-log"
+    },
+    {
+      "id": "sapling",
+      "recipe": "sapling"
+    },
+    {
+      "id": "bush",
+      "recipe": "bush"
+    },
+    {
+      "id": "mushrooms",
+      "recipe": "mushrooms"
+    },
+    {
+      "id": "fern",
+      "recipe": "fern"
+    },
+    {
+      "id": "shrine",
+      "recipe": "shrine"
+    },
+    {
+      "id": "shrine-broken",
+      "recipe": "shrine-broken"
+    },
+    {
+      "id": "timber-post",
+      "recipe": "timber-post"
+    },
+    {
+      "id": "root-clump",
+      "recipe": "root-clump"
+    },
+    {
+      "id": "basin",
+      "recipe": "basin"
+    }
+  ],
+  "references": [
+    "https://folsen.artstation.com/projects/ZeVlBN",
+    "https://braverobynart.com/deathsdoor",
+    "https://blog.playstation.com/2024/01/19/genshin-impact-version-4-4-brings-new-friends-and-visual-enhancements-jan-31/"
+  ]
+}
