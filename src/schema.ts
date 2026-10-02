@@ -11,7 +11,7 @@ import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
 import type { ChallengeId } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
-import type { Affinities, ElementId, StateId } from "./content/elements.ts"
+import type { Affinities, ElementId, ReactionKind, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot } from "./content/skills.ts"
@@ -383,13 +383,8 @@ export const Hit = Descriptor.Event<{
   readonly element: ElementId | null
 }>()("Shooter/Hit")
 
-/**
- * Elements meeting on a body or on the ground, for effects: a body catching
- * fire or getting soaked, water putting fire out (`steam`), fire fizzling on
- * a soaked body, wind carrying a state to another body, and a body slammed
- * into a wall (`stun`).
- */
-export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun"
+/** Elements meeting on a body or on the ground (see `ReactionKind`), for effects and the run's record. */
+export type { ReactionKind }
 export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind }>()("Shooter/Reaction")
 
 /** An entity with health died. */
@@ -584,22 +579,31 @@ export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 /**
  * How the last run ended, recorded by the game as it ends (see
  * `DetectGameOver` and `CheckObjective`); `null` while a run is going on.
- * The results screen shows it; rewards will be decided from it.
+ * The results screen shows it, and the account decides what the run earns
+ * from it.
  */
 export interface RunResultValue {
   readonly cleared: boolean
   readonly challenge: ChallengeId
+  /** How far toward the objective, from 0 to 1 (1 when cleared): the share of waves cleared, or of the time survived. */
+  readonly progress: number
   /** The wave reached. */
   readonly wave: number
   readonly kills: number
   /** Seconds the run lasted. */
   readonly time: number
+  /** The team the run was played with, in order. */
+  readonly team: ReadonlyArray<CharacterId>
+  /** Each kind of reaction the run set off, once. */
+  readonly reactions: ReadonlyArray<ReactionKind>
 }
 export const RunResult = Descriptor.Resource<RunResultValue | null>()("Shooter/RunResult")
 
 export interface StatsValue {
   readonly kills: number
   readonly shots: number
+  /** Each kind of reaction set off so far, once, in the order first seen. */
+  readonly reactions: ReadonlyArray<ReactionKind>
 }
 export const Stats = Descriptor.Resource<StatsValue>()("Shooter/Stats")
 

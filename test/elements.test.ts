@@ -5,7 +5,7 @@ import { afflict, elementDamageFactor, stateSpeed } from "../src/features/elemen
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stunned } from "../src/schema.ts"
+import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { center, cursorAt, grenadier, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -15,6 +15,9 @@ const rules = tuning.elements
 const grenade = tuning.skills.grenade.effect
 /** The grenadier's ATK: the swordsman's with the training blade. */
 const atk = tuning.characters.swordsman.stats.atk + tuning.weapons.trainingBlade.atk
+
+/** The kinds of reaction the run has set off so far. */
+const Reactions = Game.Inspector("Test/Reactions", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().reactions)
 
 const World = Game.Inspector("Test/Elements", {
   queries: {
@@ -288,6 +291,8 @@ describe("wind", () => {
     const [dummy] = run.world().enemies
     expect(dummy!.stunned).toBeGreaterThan(rules.wind.stunSeconds - 0.3)
     expect(dummy!.gust).toBe(0)
+    // The run notes it, once (discoveries count the reactions a run set off).
+    expect(run.runtime.inspect(Reactions)).toEqual(["stun"])
     run.step(steps(rules.wind.stunSeconds))
     expect(run.world().enemies[0]!.stunned).toBe(0)
   })
