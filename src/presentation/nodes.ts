@@ -1,5 +1,5 @@
 /**
- * Placeholder visuals: simple shapes drawn with Pixi graphics and sprites.
+ * Scene visuals: a baked crow sprite and placeholder Pixi shapes.
  */
 import { Container, Graphics, Sprite } from "pixi.js"
 
@@ -8,6 +8,7 @@ import { toScreen } from "../math/iso.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { EnemyKind, Faction, ProjectileStyle, RenderableValue } from "../schema.ts"
 import type { ProjectileNode, RenderAssets, RenderNode } from "./host-types.ts"
+import { createCrow } from "./crow.ts"
 
 /** Draws an extruded box, relative to the projection of its center. */
 const drawWall = (box: Box, height: number, alpha: number): Graphics => {
@@ -80,10 +81,8 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
 
 export const createNode = (renderable: RenderableValue, assets: RenderAssets, projectilePool: Array<ProjectileNode>): RenderNode => {
   switch (renderable.kind) {
-    case "player": {
-      const { root, body } = drawActor(renderable.radius, 1.5, view.bodyHeightFactor, view.characters[renderable.character])
-      return { kind: "player", root, body }
-    }
+    case "player":
+      return createCrow(renderable.radius, assets.crow)
     case "enemy": {
       const look = view.enemies[renderable.enemy]
       const { root, body } = drawActor(renderable.radius, look.widthFactor, look.heightFactor, look.color)

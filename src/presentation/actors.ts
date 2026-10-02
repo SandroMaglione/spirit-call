@@ -7,12 +7,13 @@ import { isMelee } from "../content/attacks.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Member, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
 import { enemyColor } from "./nodes.ts"
 import { mixColor } from "./draw.ts"
+import { crowDirection, lightCrow } from "./crow.ts"
 
 /** `color` tinted toward the color of `state`, if any. */
 export const stateTint = (color: number, state: ActiveState | null): number =>
@@ -32,8 +33,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         energy: Game.Query.read(Energy),
         weapon: Game.Query.read(Weapon),
         body: Game.Query.read(Body),
-        state: Game.Query.read(ElementState),
-        member: Game.Query.read(Member)
+        state: Game.Query.read(ElementState)
       },
       with: [Player]
     })
@@ -94,9 +94,12 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       // Charging glows toward the full-charge color; once full it pulses.
       const pulse = charge >= 1 ? 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.charge.pulseHz * Math.PI * 2) : 0
       const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
-      node.body.tint = data.flash.get().remaining > 0
-        ? view.hitFlash
-        : dash.remaining > 0 ? view.playerDashing : mixColor(stateTint(view.characters[data.member.get().character], data.state.get().current), view.charge.full, glow)
+      node.body.texture = services.host.assets.crow[crowDirection(aim)]!
+      node.body.tint = stateTint(0xffffff, data.state.get().current)
+      const flashing = data.flash.get().remaining > 0
+      lightCrow(node.light,
+        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : view.charge.full,
+        flashing ? 1 : dash.remaining > 0 ? 0.65 : glow)
       node.root.alpha = data.invulnerable.get().remaining > 0 ? 0.55 : 1
     }
   }

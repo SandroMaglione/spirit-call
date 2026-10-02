@@ -1,4 +1,4 @@
-import type { Application, Container, Graphics, Sprite, Texture } from "pixi.js"
+import type { Application, ColorMatrixFilter, Container, Graphics, Sprite, Texture } from "pixi.js"
 
 import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
@@ -8,14 +8,18 @@ import type { SlashTrails } from "./trails.ts"
 
 export type ProjectileNode = { readonly kind: "projectile"; readonly root: Container; readonly orb: Sprite; readonly shadow: Sprite }
 
+export type PlayerNode = { readonly kind: "player"; readonly root: Container; readonly body: Sprite; readonly light: ColorMatrixFilter }
+
 export type RenderNode =
-  | { readonly kind: "player"; readonly root: Container; readonly body: Graphics }
+  | PlayerNode
   | { readonly kind: "enemy"; readonly root: Container; readonly body: Graphics }
   | ProjectileNode
   | { readonly kind: "wall"; readonly root: Graphics }
 
-/** Textures generated once at startup and shared by many sprites. */
+/** Textures loaded or generated once at startup and shared by sprites. */
 export interface RenderAssets {
+  /** The Blender crow, in world-space facing order. */
+  readonly crow: ReadonlyArray<Texture>
   /** White disc, radius `discRadius`, tinted per use. */
   readonly disc: Texture
   readonly discRadius: number

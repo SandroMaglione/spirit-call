@@ -1,8 +1,42 @@
 # Crow model study 01
 
 A character-only study of the Death's Door crow, built in Blender through
-Python. No sword, accessories, rig, or game integration. The previous pixel
+Python. No sword, accessories, or rig. The previous pixel
 art experiment is independent of this directory.
+
+## In the game
+
+Open `/?play&character=swordsman` on the dev server to play with the crow.
+Every player character currently uses this same test visual. Enemy visuals
+and character abilities retain their existing definitions.
+
+The game uses 16 transparent renders of the saved Blender model in its
+existing Pixi renderer. These are static facing directions, selected by
+aim, with no animation. The camera matches the game's isometric projection;
+each frame shares a ground anchor so turning does not shift the feet.
+The sprite retains the pill's nominal height, collision radius, depth
+sorting, and ground indicators. Hit, dash, and charge feedback brighten
+the rendered silhouette.
+
+To bring saved model changes into the game, run:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/crow-study/bake-sprites.py
+```
+
+This reads `crow.blend` without overwriting it and generates
+`src/presentation/assets/crow.png` plus its frame/anchor metadata in
+`crow.ts`. The 1024 × 1024 atlas contains sixteen 256px frames and is about
+631 kB on disk (about 4 MiB decoded RGBA). Vite bundles it for production;
+Blender is needed only when rebuilding the asset. `src/presentation/crow.ts`
+loads and displays it. No live 3D engine or new package is required.
+
+The bake uses a 30-degree camera elevation for `projection.squash = 0.5`.
+A change to the game's projection requires updating and rebaking this
+camera. At phone scale, the crow is small and dark against the current
+arena; size and contrast remain useful art-direction checks. The next
+animation experiment can extend the bake with action/frame indices, but
+texture memory then grows with directions times animation frames.
 
 ## Inspect
 
@@ -139,3 +173,13 @@ large content throughput, or Death's Door's finished art quality.
   provided pointer clicks, not native touch emulation; physical-phone
   touch behavior remains unverified.
 - `pnpm check` passed: typecheck, lint, and 195 tests across 27 files.
+- The sprite bake checked all 16 frames for opacity, transparent background,
+  and empty margins to avoid sampling adjacent frames. The atlas was
+  visually inspected and `pnpm build` included it in the production output.
+- The network game was checked at desktop and 390 × 844 sizes. Scripted
+  keyboard and touch pointer events exercised movement, aim, dash feedback,
+  and attacks with the crow present. Browser ticks were advanced explicitly
+  during input checks because the hidden preview throttles animation frames.
+  This is functional browser verification, not a phone performance test or
+  a physical-device touch test. The desktop canvas and phone view were
+  visually inspected; subsequent preview screenshots intermittently failed.

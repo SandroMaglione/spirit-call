@@ -8,6 +8,7 @@ import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderAssets, RenderHostValue, RenderNode } from "./host-types.ts"
 import { drawFloor } from "./nodes.ts"
+import { loadCrowTextures } from "./crow.ts"
 
 /** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
 const padLabels: Record<ActionButton, string> = { attack: "ATTACK", special: "", dash: "DASH", ultimate: "" }
@@ -91,6 +92,7 @@ export interface BrowserHost {
 }
 
 export const createBrowserHost = async (mount: HTMLElement, arena: { readonly width: number; readonly height: number }): Promise<BrowserHost> => {
+  const crow = await loadCrowTextures()
   const app = new Application()
   await app.init({ antialias: true, background: view.background, resizeTo: mount, autoDensity: true, resolution: window.devicePixelRatio })
   const hud = createHud()
@@ -98,6 +100,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
 
   const discRadius = 16
   const assets: RenderAssets = {
+    crow,
     disc: app.renderer.generateTexture(new Graphics().circle(0, 0, discRadius).fill({ color: 0xffffff })),
     discRadius,
     shadow: app.renderer.generateTexture(new Graphics().ellipse(0, 0, discRadius, discRadius * projection.squash).fill({ color: 0x000000 }))
@@ -157,7 +160,10 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     detach: (node) => {
       actors.removeChild(node.root)
       if (node.kind === "projectile") projectilePool.push(node)
-      else node.root.destroy({ children: true })
+      else {
+        if (node.kind === "player") node.light.destroy()
+        node.root.destroy({ children: true })
+      }
     }
   })
 
