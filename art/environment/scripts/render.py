@@ -120,81 +120,85 @@ def asset_for(recipe):
             'wall-straight': 'wall-straight', 'wall-low': 'wall-low'}.get(recipe)
 
 
-layouts = []
-example_scenes = []
-prop_ids = [a['id'] for a in manifest['assets'] if a['category'] == 'prop' and not a['id'].startswith('channel-')]
-for variant, title in enumerate(['terrace', 'crossing', 'enclosure']):
-    scene, floor = new_scene(kit['title'] + ' | ' + title, 14)
-    placements = []
-    def place(recipe, x, y, z=0, angle=0, opened=False, exact=False):
-        name = recipe if exact else asset_for(recipe)
-        if not name or name not in assets:
-            return None
-        obj = clone(assets[name], scene, name + ' instance', (x, y, z), angle)
-        if opened:
-            open_parts(obj, name)
-        placements.append({'asset': name, 'kit': 'courtyard' if name not in {e['id'] for e in kit['assets']} else args.kit,
-                           'position_m': [x, z, -y], 'yaw_degrees': math.degrees(angle), 'open': opened})
-        return obj
-    if variant == 0:
-        for x in (-4, -2, 0, 2, 4):
-            for y in (-3, -1, 1, 3):
-                recipe = 'floor-grate' if x == 2 and y == -1 else 'floor-cracked' if x == -2 and y == -1 else 'floor-plain'
-                place(recipe, x, y)
-            place('platform', x, 3)
-        place('stair-full', 0, .8)
-        for x in (-1.1, 1.1):
-            place('stair-rail', x, .8)
-        place('doorway', 0, 3.75, 1.2, opened=True)
-        for x in (-3.7, 3.7):
-            place('railing-straight', x, 2.1, 1.2)
-            place('pillar-large', x, 3.2, 1.2)
-        for y in (-3, -1, 1):
-            place('wall-straight', -4.8, y, angle=math.pi / 2)
-        for i, name in enumerate(prop_ids[:5]):
-            place(name, *[(-3.4, .1), (3.5, .2), (-3, -2.8), (3.2, -2.8), (2.5, 3.0)][i], z=1.2 if i == 4 else 0, exact=True)
-    elif variant == 1:
-        has_bridge = bool(asset_for('bridge'))
-        for x in ((-5, -3, 3, 5) if has_bridge else (-4, -2, 2, 4)):
-            for y in (-3, -1, 1, 3):
-                place('floor-plain', x, y)
-        # Two landings joined by a deck over a recessed, non-traversable gap.
-        if has_bridge:
-            place('bridge', 0, 0, angle=math.pi / 2)
+if kit.get("batch") == "beta-arenas":
+    from beta_layouts import assemble
+    example_scenes, layouts = assemble(args.kit, kit, assets, manifest, new_scene, open_parts)
+else:
+    layouts = []
+    example_scenes = []
+    prop_ids = [a['id'] for a in manifest['assets'] if a['category'] == 'prop' and not a['id'].startswith('channel-')]
+    for variant, title in enumerate(['terrace', 'crossing', 'enclosure']):
+        scene, floor = new_scene(kit['title'] + ' | ' + title, 14)
+        placements = []
+        def place(recipe, x, y, z=0, angle=0, opened=False, exact=False):
+            name = recipe if exact else asset_for(recipe)
+            if not name or name not in assets:
+                return None
+            obj = clone(assets[name], scene, name + ' instance', (x, y, z), angle)
+            if opened:
+                open_parts(obj, name)
+            placements.append({'asset': name, 'kit': 'courtyard' if name not in {e['id'] for e in kit['assets']} else args.kit,
+                               'position_m': [x, z, -y], 'yaw_degrees': math.degrees(angle), 'open': opened})
+            return obj
+        if variant == 0:
+            for x in (-4, -2, 0, 2, 4):
+                for y in (-3, -1, 1, 3):
+                    recipe = 'floor-grate' if x == 2 and y == -1 else 'floor-cracked' if x == -2 and y == -1 else 'floor-plain'
+                    place(recipe, x, y)
+                place('platform', x, 3)
+            place('stair-full', 0, .8)
+            for x in (-1.1, 1.1):
+                place('stair-rail', x, .8)
+            place('doorway', 0, 3.75, 1.2, opened=True)
+            for x in (-3.7, 3.7):
+                place('railing-straight', x, 2.1, 1.2)
+                place('pillar-large', x, 3.2, 1.2)
+            for y in (-3, -1, 1):
+                place('wall-straight', -4.8, y, angle=math.pi / 2)
+            for i, name in enumerate(prop_ids[:5]):
+                place(name, *[(-3.4, .1), (3.5, .2), (-3, -2.8), (3.2, -2.8), (2.5, 3.0)][i], z=1.2 if i == 4 else 0, exact=True)
+        elif variant == 1:
+            has_bridge = bool(asset_for('bridge'))
+            for x in ((-5, -3, 3, 5) if has_bridge else (-4, -2, 2, 4)):
+                for y in (-3, -1, 1, 3):
+                    place('floor-plain', x, y)
+            # Two landings joined by a deck over a recessed, non-traversable gap.
+            if has_bridge:
+                place('bridge', 0, 0, angle=math.pi / 2)
+            else:
+                place('landing', 0, 0)
+            for x in (-4, 4):
+                for y in (-2.7, 2.7):
+                    place('pillar-small', x, y)
+            for x in (-3, 3):
+                place('wall-low', x, -3.8)
+                place('wall-straight', x, 3.8)
+            place('gate-wide', 2.4 if has_bridge else 1.4, 0, angle=math.pi / 2, opened=True)
+            for i, name in enumerate(prop_ids[3:9]):
+                place(name, -4 if i % 2 == 0 else 4, -1.8 + (i // 2) * 1.6, exact=True)
+            if args.kit == 'flooded-cistern':
+                # Channels occupy the drainage gap, below the deck, never a solid tile.
+                for name, y, angle in [('channel-straight', -3, math.pi / 2),
+                                        ('channel-junction', -1, 0),
+                                        ('channel-straight', 1, math.pi / 2),
+                                        ('channel-corner', 3, math.pi)]:
+                    place(name, 0, y, z=-.04, angle=angle, exact=True)
         else:
-            place('landing', 0, 0)
-        for x in (-4, 4):
-            for y in (-2.7, 2.7):
-                place('pillar-small', x, y)
-        for x in (-3, 3):
-            place('wall-low', x, -3.8)
-            place('wall-straight', x, 3.8)
-        place('gate-wide', 2.4 if has_bridge else 1.4, 0, angle=math.pi / 2, opened=True)
-        for i, name in enumerate(prop_ids[3:9]):
-            place(name, -4 if i % 2 == 0 else 4, -1.8 + (i // 2) * 1.6, exact=True)
-        if args.kit == 'flooded-cistern':
-            # Channels occupy the drainage gap, below the deck, never a solid tile.
-            for name, y, angle in [('channel-straight', -3, math.pi / 2),
-                                    ('channel-junction', -1, 0),
-                                    ('channel-straight', 1, math.pi / 2),
-                                    ('channel-corner', 3, math.pi)]:
-                place(name, 0, y, z=-.04, angle=angle, exact=True)
-    else:
-        for x in (-4, -2, 0, 2, 4):
-            for y in (-3, -1, 1, 3):
-                place('floor-inset' if x == 0 and y == 1 else 'floor-worn', x, y)
-        for x in (-4, -2, 2, 4):
-            place('wall-tall', x, 3.8)
-        for y in (-3, -1, 1):
-            place('wall-straight', -4.8, y, angle=math.pi / 2)
-        place('doorway', 0, 3.8)
-        for x in (-2, 2):
-            place('pillar-large', x, .8)
-        for i, name in enumerate(prop_ids[-5:]):
-            place(name, *[(-3.3, 2.5), (3.3, 2.5), (-3.5, -2), (3.5, -1.5), (0, 1.8)][i], exact=True)
-    camera(scene, (12, -18, 17), (0, .1, .5), 15.2, (1600, 1200))
-    example_scenes.append(scene)
-    layouts.append({'name': title, 'scene': scene.name, 'placements': placements})
+            for x in (-4, -2, 0, 2, 4):
+                for y in (-3, -1, 1, 3):
+                    place('floor-inset' if x == 0 and y == 1 else 'floor-worn', x, y)
+            for x in (-4, -2, 2, 4):
+                place('wall-tall', x, 3.8)
+            for y in (-3, -1, 1):
+                place('wall-straight', -4.8, y, angle=math.pi / 2)
+            place('doorway', 0, 3.8)
+            for x in (-2, 2):
+                place('pillar-large', x, .8)
+            for i, name in enumerate(prop_ids[-5:]):
+                place(name, *[(-3.3, 2.5), (3.3, 2.5), (-3.5, -2), (3.5, -1.5), (0, 1.8)][i], exact=True)
+        camera(scene, (12, -18, 17), (0, .1, .5), 15.2, (1600, 1200))
+        example_scenes.append(scene)
+        layouts.append({'name': title, 'scene': scene.name, 'placements': placements})
 
 # Save editable assemblies before the optional external character reference is read.
 bpy.context.window.scene = example_scenes[0]
@@ -225,15 +229,20 @@ if args.crow:
         for index, scene in enumerate(example_scenes):
             copy = bpy.data.objects.new('Crow | scale reference only', data)
             scene.collection.objects.link(copy)
-            copy.location = (0, 0, 0) if index == 1 else (-.4, -1.8, 0)
+            ref = layouts[index].get("reference_position_m")
+            copy.location = (ref[0], -ref[2], ref[1]) if ref else ((0, 0, 0) if index == 1 else (-.4, -1.8, 0))
     crow_data = {'included': True, 'source_name': args.crow.name, 'sha256': digest(args.crow), 'height_m': .95,
                  'note': 'External read-only reference. Not included in exports or saved example scenes.'}
 
 for scene, layout in zip(example_scenes, layouts):
     render(scene, preview / (layout['name'] + '.png'))
+    if kit.get("batch") == "beta-arenas":
+        camera(scene, (0, -.001, 24), (0, 0, 0), 18, (1400, 1400))
+        render(scene, preview / (layout['name'] + '-top.png'))
 scene = example_scenes[0]
 camera(scene, (0, -.001, 20), (0, 0, 0), 13, (1400, 1400))
-render(scene, preview / 'terrace-top.png')
+if kit.get("batch") != "beta-arenas":
+    render(scene, preview / 'terrace-top.png')
 camera(scene, (4.5, -7.794, 5.8), (0, 0, .6), 13, (390, 844))
 render(scene, preview / 'phone-scale.png')
 write_json(preview / 'render-info.json', {'source_sha256': digest(source), 'examples_sha256': digest(examples),

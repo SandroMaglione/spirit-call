@@ -4,7 +4,7 @@ Editable low-poly Blender kits, individual GLBs, and PNG reviews. These folders
 contain art and delivery metadata only. They do not change level layouts,
 simulation, rendering, controls, account content, or asset loading in the game.
 
-The original [courtyard](courtyard/README.md) remains unchanged. New work is in
+The original [courtyard](courtyard/README.md) remains unchanged. The first expansion is in
 `courtyard-extension`, `overgrown-sanctuary`, `flooded-cistern`, `ember-kilnworks`,
 and `frostbound-monastery`. Each kit's README links its source and previews and
 lists the actual delivered models. `kit.json` records the authored inventory,
@@ -18,8 +18,27 @@ palette, and reference links; it is input to the generator, not a game API.
 | [Ember kilnworks](ember-kilnworks/README.md) | 47 | [Contact sheet](ember-kilnworks/previews/contact-sheet.png) · [Enclosure](ember-kilnworks/previews/enclosure.png) |
 | [Frostbound monastery](frostbound-monastery/README.md) | 47 | [Contact sheet](frostbound-monastery/previews/contact-sheet.png) · [Terrace](frostbound-monastery/previews/terrace.png) |
 
-There are 213 new models. Together with the original courtyard, the libraries
-contain 231 models. Each delivered set has its own validation and delivery audit.
+These first five additions contain 213 models. Together with the original
+courtyard they contain 231 models. The [beta arena expansion](BETA-ARENAS.md)
+adds eight further settings with 560 models, bringing the environment library
+to 791 models. Every delivered set has its own validation and delivery audit.
+
+| Beta library | Models | Review |
+| --- | ---: | --- |
+| [Saltwind harbor](saltwind-harbor/README.md) | 70 | [Contact sheet](saltwind-harbor/previews/contact-sheet.png) · [Cargo court](saltwind-harbor/previews/cargo-court.png) |
+| [Ochre necropolis](ochre-necropolis/README.md) | 70 | [Contact sheet](ochre-necropolis/previews/contact-sheet.png) · [Sun altar](ochre-necropolis/previews/sun-altar.png) |
+| [Prism quarry](prism-quarry/README.md) | 70 | [Contact sheet](prism-quarry/previews/contact-sheet.png) · [Crystal gallery](prism-quarry/previews/crystal-gallery.png) |
+| [Mycelium hollow](mycelium-hollow/README.md) | 70 | [Contact sheet](mycelium-hollow/previews/contact-sheet.png) · [Spore clearing](mycelium-hollow/previews/spore-clearing.png) |
+| [Tempest observatory](tempest-observatory/README.md) | 70 | [Contact sheet](tempest-observatory/previews/contact-sheet.png) · [Star court](tempest-observatory/previews/star-court.png) |
+| [Autumn estate](autumn-estate/README.md) | 70 | [Contact sheet](autumn-estate/previews/contact-sheet.png) · [Tea enclosure](autumn-estate/previews/tea-enclosure.png) |
+| [Drowned archive](drowned-archive/README.md) | 70 | [Contact sheet](drowned-archive/previews/contact-sheet.png) · [Vault chamber](drowned-archive/previews/vault-chamber.png) |
+| [Basalt citadel](basalt-citadel/README.md) | 70 | [Contact sheet](basalt-citadel/previews/contact-sheet.png) · [Muster court](basalt-citadel/previews/muster-court.png) |
+
+The beta kits have four example scenes each, named for the area, with a top
+view per scene. Their READMEs and `layouts.json` name those scenes. Use
+`beta_catalog.py` to refresh a beta kit's README after export and validation;
+`catalog.py` continues to serve the first five additions. All other pipeline
+commands work for either batch.
 
 ## Review and edit
 
@@ -28,9 +47,10 @@ Each asset has a named collection and an empty root carrying `asset_id` and
 `metadata_json`. Its children are the actual meshes. Vertex colors are in `Color`.
 The studio floor, camera, and lights are excluded from the exports.
 
-`source/examples.blend` has three additional scenes selectable in Blender's
-scene menu: a terrace, a crossing, and an enclosure. They are editable art
-compositions, not gameplay levels. `layouts.json` records the placements in
+`source/examples.blend` has scenes selectable in Blender's scene menu. The first
+five kits provide a terrace, a crossing and an enclosure. Beta kits provide
+four named arena compositions. They are editable art compositions, not gameplay
+levels. `layouts.json` records the placements in
 exported coordinates. The example file is generated from the library; edit
 individual assets in the main source, not only in its generated example copy.
 

@@ -14,7 +14,7 @@ RENDER_DEVICE = 'CPU'
 
 def arguments(description):
     p = argparse.ArgumentParser(description=description)
-    p.add_argument('--kit', required=True, choices=['courtyard-extension', 'overgrown-sanctuary', 'flooded-cistern', 'ember-kilnworks', 'frostbound-monastery'])
+    p.add_argument('--kit', required=True, choices=sorted(path.parent.name for path in ENV.glob('*/kit.json')))
     p.add_argument('--replace-generated', action='store_true')
     p.add_argument('--asset')
     p.add_argument('--compositions-only', action='store_true')
