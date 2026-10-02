@@ -386,7 +386,7 @@ def quarry(r):
             m.box(x, .68, .18, .03, .06, 1.85, 'metal', bevel=.005)
     elif r == 'drill-rig':
         m = table(1.2, 1, .6, 'metal')
-        m.beam((-.35, 0, .6), (-.35, 0, 1.9), .10, 'metal')
+        m.beam((-.35, 0, .6), (-.35, 0, 1.82), .10, 'metal')
         m.box(0, 0, 1.6, 1, .6, .3, 'metal', top='accent')
         m.join(crystal(.22, .8, 'metal').rotate(math.pi, 'X').move(x=.32, z=1.6))
         for z in (1.0, 1.15, 1.3):

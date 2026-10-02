@@ -29,8 +29,8 @@ def wall(m, w, d, h, style, broken=False):
             m.join(rock)
         if style == 'quarry':
             for x in (-w / 2 + .12, w / 2 - .12):
-                m.box(x, -d / 2, 0, .16, .16, h, 'wood')
-            m.box(0, -d / 2, h - .15, w, .16, .15, 'wood')
+                m.box(x, -d / 2, 0, .16, .16, h - .15, 'wood')
+            m.box(0, -d / 2, h - .15, w - .04, .16, .12, 'wood')
         else:
             m.beam((-w * .42, -d * .5, .15), (w * .38, -d * .5, h * .73), .06, 'wood', radius_end=.025)
     elif style == 'citadel':

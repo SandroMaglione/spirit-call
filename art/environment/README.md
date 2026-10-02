@@ -55,8 +55,9 @@ exported coordinates. The example file is generated from the library; edit
 individual assets in the main source, not only in its generated example copy.
 
 `previews/` includes a labeled contact sheet, library top view, individual model
-PNGs, open-door views, three assembled scenes, a terrace top view, and a
-390 × 844 composition. PNGs need no special viewer. The optional crow in the
+PNGs, open-door views, assembled scenes, plan views, and a 390 × 844 composition.
+There are three assembled scenes in each first-expansion kit and four in each
+beta kit. PNGs need no special viewer. The optional crow in the
 composition images is a read-only reference at 0.95 m tall, not a decision about
 runtime character scale. Its hash is recorded in `render-info.json`. It is not
 included in exported models or the saved example scenes.

@@ -1,0 +1,371 @@
+{
+  "title": "Prism quarry",
+  "style": "quarry",
+  "batch": "beta-arenas",
+  "description": "Faceted slate, pale mineral seams and timber shoring. Excavation yards and galleries mix broad fighting floors with rail-side work areas.",
+  "palette": {
+    "stone": "777F92",
+    "light": "9AABC0",
+    "edge": "BCC9C7",
+    "dark": "424E64",
+    "accent": "8CB9B6",
+    "metal": "576277",
+    "wood": "796955",
+    "earth": "8C887A",
+    "green": "708C81",
+    "warm": "C7AE6F",
+    "snow": "B4C9CF",
+    "cloth": "816C83"
+  },
+  "assets": [
+    {
+      "id": "floor-plain",
+      "recipe": "floor-plain"
+    },
+    {
+      "id": "floor-worn",
+      "recipe": "floor-worn"
+    },
+    {
+      "id": "floor-cracked",
+      "recipe": "floor-cracked"
+    },
+    {
+      "id": "floor-inset",
+      "recipe": "floor-inset"
+    },
+    {
+      "id": "floor-small",
+      "recipe": "floor-small"
+    },
+    {
+      "id": "floor-large",
+      "recipe": "floor-large"
+    },
+    {
+      "id": "floor-border",
+      "recipe": "floor-border"
+    },
+    {
+      "id": "floor-border-corner",
+      "recipe": "floor-border-corner"
+    },
+    {
+      "id": "floor-threshold",
+      "recipe": "floor-threshold"
+    },
+    {
+      "id": "floor-transition",
+      "recipe": "floor-transition"
+    },
+    {
+      "id": "wall-short",
+      "recipe": "wall-short"
+    },
+    {
+      "id": "wall-straight",
+      "recipe": "wall-straight"
+    },
+    {
+      "id": "wall-long",
+      "recipe": "wall-long"
+    },
+    {
+      "id": "wall-low",
+      "recipe": "wall-low"
+    },
+    {
+      "id": "wall-tall",
+      "recipe": "wall-tall"
+    },
+    {
+      "id": "wall-corner",
+      "recipe": "wall-corner"
+    },
+    {
+      "id": "wall-end",
+      "recipe": "wall-end"
+    },
+    {
+      "id": "wall-broken",
+      "recipe": "wall-broken"
+    },
+    {
+      "id": "pillar-small",
+      "recipe": "pillar-small"
+    },
+    {
+      "id": "pillar-large",
+      "recipe": "pillar-large"
+    },
+    {
+      "id": "pillar-broken",
+      "recipe": "pillar-broken"
+    },
+    {
+      "id": "stair-short",
+      "recipe": "stair-short"
+    },
+    {
+      "id": "stair-full",
+      "recipe": "stair-full"
+    },
+    {
+      "id": "stair-wide",
+      "recipe": "stair-wide"
+    },
+    {
+      "id": "stair-rail",
+      "recipe": "stair-rail"
+    },
+    {
+      "id": "landing",
+      "recipe": "landing"
+    },
+    {
+      "id": "platform",
+      "recipe": "platform"
+    },
+    {
+      "id": "platform-edge",
+      "recipe": "platform-edge"
+    },
+    {
+      "id": "railing-straight",
+      "recipe": "railing-straight"
+    },
+    {
+      "id": "railing-corner",
+      "recipe": "railing-corner"
+    },
+    {
+      "id": "doorway",
+      "recipe": "doorway"
+    },
+    {
+      "id": "gate-wide",
+      "recipe": "gate-wide"
+    },
+    {
+      "id": "floor-grate",
+      "recipe": "floor-grate"
+    },
+    {
+      "id": "wall-grille",
+      "recipe": "wall-grille"
+    },
+    {
+      "id": "bridge",
+      "recipe": "bridge"
+    },
+    {
+      "id": "floor-radial",
+      "recipe": "floor-radial"
+    },
+    {
+      "id": "floor-deck",
+      "recipe": "floor-deck"
+    },
+    {
+      "id": "floor-rubble",
+      "recipe": "floor-rubble"
+    },
+    {
+      "id": "wall-window",
+      "recipe": "wall-window"
+    },
+    {
+      "id": "wall-buttress",
+      "recipe": "wall-buttress"
+    },
+    {
+      "id": "arch-free",
+      "recipe": "arch-free"
+    },
+    {
+      "id": "bridge-wide",
+      "recipe": "bridge-wide"
+    },
+    {
+      "id": "stair-narrow",
+      "recipe": "stair-narrow"
+    },
+    {
+      "id": "platform-wide",
+      "recipe": "platform-wide"
+    },
+    {
+      "id": "crystal-large",
+      "recipe": "crystal-large"
+    },
+    {
+      "id": "crystal-small",
+      "recipe": "crystal-small"
+    },
+    {
+      "id": "crystal-cluster",
+      "recipe": "crystal-cluster"
+    },
+    {
+      "id": "ore-vein",
+      "recipe": "ore-vein"
+    },
+    {
+      "id": "mine-cart",
+      "recipe": "mine-cart"
+    },
+    {
+      "id": "cart-empty",
+      "recipe": "cart-empty"
+    },
+    {
+      "id": "track-straight",
+      "recipe": "track-straight"
+    },
+    {
+      "id": "track-corner",
+      "recipe": "track-corner"
+    },
+    {
+      "id": "timber-shoring",
+      "recipe": "timber-shoring"
+    },
+    {
+      "id": "winch",
+      "recipe": "winch"
+    },
+    {
+      "id": "lift-cage",
+      "recipe": "lift-cage"
+    },
+    {
+      "id": "drill-rig",
+      "recipe": "drill-rig"
+    },
+    {
+      "id": "ore-bin",
+      "recipe": "ore-bin"
+    },
+    {
+      "id": "pickaxe-rack",
+      "recipe": "pickaxe-rack"
+    },
+    {
+      "id": "mine-lamp",
+      "recipe": "mine-lamp"
+    },
+    {
+      "id": "cave-rock-large",
+      "recipe": "cave-rock-large"
+    },
+    {
+      "id": "cave-rock-small",
+      "recipe": "cave-rock-small"
+    },
+    {
+      "id": "stalagmites",
+      "recipe": "stalagmites"
+    },
+    {
+      "id": "support-broken",
+      "recipe": "support-broken"
+    },
+    {
+      "id": "powder-kegs",
+      "recipe": "powder-kegs"
+    },
+    {
+      "id": "beacon-idle",
+      "recipe": "beacon-idle"
+    },
+    {
+      "id": "beacon-active",
+      "recipe": "beacon-active"
+    },
+    {
+      "id": "supply-cache",
+      "recipe": "supply-cache"
+    },
+    {
+      "id": "supply-cache-open",
+      "recipe": "supply-cache-open"
+    },
+    {
+      "id": "waymarker",
+      "recipe": "waymarker"
+    },
+    {
+      "id": "seal-plinth",
+      "recipe": "seal-plinth"
+    }
+  ],
+  "references": [
+    "https://folsen.artstation.com/projects/PeVneo",
+    "https://blog.playstation.com/2022/03/18/genshin-impact-version-2-6-lets-dig-into-the-chasm/"
+  ],
+  "examples": [
+    "excavation-yard",
+    "haulage-crossing",
+    "crystal-gallery",
+    "winch-terrace"
+  ],
+  "signature_props": [
+    "crystal-large",
+    "crystal-small",
+    "crystal-cluster",
+    "ore-vein",
+    "mine-cart",
+    "cart-empty",
+    "track-straight",
+    "track-corner",
+    "timber-shoring",
+    "winch",
+    "lift-cage",
+    "drill-rig",
+    "ore-bin",
+    "pickaxe-rack",
+    "mine-lamp",
+    "cave-rock-large",
+    "cave-rock-small",
+    "stalagmites",
+    "support-broken",
+    "powder-kegs"
+  ],
+  "roles": [
+    "quest skirmish",
+    "dungeon connector",
+    "boss or elite room",
+    "survival arena"
+  ],
+  "scope": "Environment art and assembly plans. No gameplay modes or quests are implemented.",
+  "scene_props": [
+    [
+      "mine-cart",
+      "cart-empty",
+      "ore-bin",
+      "drill-rig",
+      "powder-kegs"
+    ],
+    [
+      "track-straight",
+      "track-corner",
+      "timber-shoring",
+      "support-broken",
+      "mine-lamp",
+      "pickaxe-rack"
+    ],
+    [
+      "crystal-large",
+      "crystal-small",
+      "crystal-cluster",
+      "ore-vein",
+      "stalagmites"
+    ],
+    [
+      "winch",
+      "lift-cage",
+      "cave-rock-large",
+      "cave-rock-small"
+    ]
+  ]
+}
