@@ -1,13 +1,28 @@
 import { AnimationClip, Group, Mesh, MeshStandardMaterial, BoxGeometry, NumberKeyframeTrack } from "three"
-import { describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it } from "vitest"
+import { readFileSync } from "node:fs"
+import path from "node:path"
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
 import { Batch, Instance } from "../src/presentation/batch.ts"
 import type { ProjectileNode } from "../src/presentation/host-types.ts"
 import type { ModelId, ModelSource } from "../src/presentation/models.ts"
 import { createNode, disposeNode, instancesOf } from "../src/presentation/nodes.ts"
 import { makeAssets } from "../src/presentation/render-assets.ts"
-import { arenaLook, characterLooks, modelsInLooks } from "../src/presentation/looks.ts"
-import { models } from "../src/presentation/models.ts"
+import { arenaLook, characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
+import { closeLoop, models } from "../src/presentation/models.ts"
+import { EnemyRemains } from "../src/presentation/enemy-remains.ts"
+
+const loadedEnemies = new Map<ModelId, ModelSource>()
+beforeAll(async () => {
+  await Promise.all(Object.values(enemyLooks).map(async (look) => {
+    if (look.kind !== "model" || !look.batched) return
+    const spec = models[look.model]
+    const bytes = readFileSync(path.join(import.meta.dirname, "..", spec.url))
+    const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
+    loadedEnemies.set(look.model, { id: look.model, spec, scene: gltf.scene, clips: new Map(gltf.animations.map((clip) => [clip.name, closeLoop(clip, spec.clips[clip.name as keyof typeof spec.clips]!)])) })
+  }))
+})
 
 /** A stand-in for a loaded body: a box with a grip, whose clips scale it, in place of the GLB (no renderer in tests). */
 const fakeBody = (id: ModelId): ModelSource => {
@@ -43,11 +58,30 @@ const setup = () => {
   loaded.set("crow", fakeBody("crow"))
   loaded.set("trainingBlade", fakeWeapon("trainingBlade"))
   loaded.set("crescendo", fakeWeapon("crescendo"))
+  for (const [id, source] of loadedEnemies) loaded.set(id, source)
   const assets = makeAssets(parent, loaded)
   return { parent, assets, pool: [] as Array<ProjectileNode> }
 }
 
 describe("batches", () => {
+  it("preserves independent animation frames when an animated batch grows and compacts", () => {
+    const parent = new Group()
+    const geometry = new BoxGeometry()
+    const batch = new Batch(parent, geometry, new MeshStandardMaterial(), { animated: true })
+    const members = Array.from({ length: 100 }, (_, index) => {
+      const instance = new Instance(batch)
+      instance.pose.splice(0, 4, index, index + 1, .25, -.5)
+      batch.add(instance)
+      return instance
+    })
+    batch.remove(members[10]!)
+    batch.flush()
+    const poses = geometry.getAttribute("instancePose")
+    expect(poses.count).toBe(128)
+    expect([poses.getX(10), poses.getY(10), poses.getZ(10), poses.getW(10)]).toEqual([99, 100, .25, -.5])
+    expect([poses.getX(11), poses.getY(11), poses.getZ(11), poses.getW(11)]).toEqual([11, 12, .25, -.5])
+    expect(parent.children).toHaveLength(1)
+  })
   it("keep their members packed when one leaves, and grow past their first size", () => {
     const parent = new Group()
     const batch = new Batch(parent, new BoxGeometry(), new MeshStandardMaterial())
@@ -65,6 +99,31 @@ describe("batches", () => {
 })
 
 describe("render nodes", () => {
+  it("retains killed visuals through hit-stop, then frees their batches and clears them on restart", () => {
+    const { parent, assets, pool } = setup()
+    const remains = new EnemyRemains(parent)
+    const node = createNode({ kind: "enemy", enemy: "chaser", radius: 14 }, assets, pool)
+    if (node.kind !== "enemy") throw new Error("expected an enemy")
+    parent.add(node.root)
+    for (const instance of instancesOf(node)) instance.batch.add(instance)
+    remains.followRun(10)
+    remains.take(node)
+    remains.take(node)
+    expect(remains.size).toBe(1)
+    remains.advance(0)
+    const pose = [...node.body.instances[0]!.pose]
+    remains.advance(0)
+    expect(node.body.instances[0]!.pose).toEqual(pose)
+    remains.advance(.35)
+    expect(node.body.instances[0]!.pose).not.toEqual(pose)
+    remains.advance(.36)
+    expect(remains.size).toBe(0)
+    expect(node.body.instances[0]!.batch.size).toBe(0)
+    remains.take(node)
+    remains.followRun(0)
+    expect(remains.size).toBe(0)
+    assets.dispose()
+  })
   it("give characters the body their look says, standing on a pivot", () => {
     const { assets, pool } = setup()
     const node = createNode({ kind: "player", character: "swordsman", weapon: "trainingBlade", radius: 16 }, assets, pool)
@@ -85,12 +144,18 @@ describe("render nodes", () => {
     disposeNode(node)
   })
 
-  it("batch enemy capsules and their shadows", () => {
+  it("batch animated enemies and their shadows", () => {
     const { assets, pool } = setup()
     const node = createNode({ kind: "enemy", enemy: "chaser", radius: 14 }, assets, pool)
     if (node.kind !== "enemy") throw new Error("expected an enemy")
     expect(instancesOf(node)).toHaveLength(2)
-    expect(node.body.moments).toBeNull()
+    expect(node.body.moments).not.toBeNull()
+    const other = createNode({ kind: "enemy", enemy: "chaser", radius: 14 }, assets, pool)
+    if (other.kind !== "enemy") throw new Error("expected an enemy")
+    expect(other.body.instances[0]!.batch).toBe(node.body.instances[0]!.batch)
+    node.body.sample?.("Windup", .5)
+    other.body.sample?.("Recovery", .2)
+    expect(node.body.instances[0]!.pose).not.toEqual(other.body.instances[0]!.pose)
     node.body.paint(0xffffff, 0xffffff, 1, 1)
     expect(node.body.instances[0]!.color.getHex()).toBe(0xffffff)
   })

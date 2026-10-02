@@ -8,7 +8,8 @@ import type { Area } from "../physics/areas.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { isMelee } from "../content/attacks.ts"
-import { Action, Aim, AttackPhase, Attacker, Cast, Dash, Enemy, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Tuning, Velocity, Weapon } from "../schema.ts"
+import { Action, Aim, AttackPhase, Attacker, Cast, Dash, Enemy, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
+import { enemyPose } from "./enemy-pose.ts"
 import type { ActorNode } from "./host-types.ts"
 
 /** Where an attack area points from `from`, if anywhere. */
@@ -35,18 +36,18 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
   queries: {
     player: Game.Query({ selection: { aim: Game.Query.read(Aim), dash: Game.Query.read(Dash) }, with: [Player] }),
     enemies: Game.Query({
-      selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) },
+      selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), enemy: Game.Query.read(Enemy), stunned: Game.Query.read(Stunned), shield: Game.Query.optional(Shield) },
       with: [Enemy]
     })
   },
-  resources: { hitStop: Game.System.readResource(HitStop) },
+  resources: { hitStop: Game.System.readResource(HitStop), tuning: Game.System.readResource(Tuning) },
   services: { nodes: Game.System.service(RenderNodes), clock: Game.System.service(RenderClock) }
 }, ({ queries, resources, services }) => {
   const seconds = resources.hitStop.get().remaining > 0 ? 0 : services.clock.frameSeconds
-  const animate = (node: ActorNode, facing: Vec2, holding: boolean) => {
+  const animate = (node: ActorNode, facing: Vec2, holding: boolean, dt = seconds) => {
     node.facing = facing
     node.body.face(facing)
-    node.body.animate({ x: node.root.position.x, y: node.root.position.z }, facing, seconds, holding)
+    node.body.animate({ x: node.root.position.x, y: node.root.position.z }, facing, dt, holding)
   }
   for (const { entity, data } of queries.player.each()) {
     const node = services.nodes.get(entity.id)
@@ -57,9 +58,15 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     if (node?.kind !== "enemy") continue
     const velocity = data.velocity.get()
     const area = data.attacker.get().area
-    const aimed = data.phase.get() === "windup" && area !== null ? areaDirection(area, data.position.get()) : null
+    const aimed = data.phase.get() !== "ready" && area !== null ? areaDirection(area, data.position.get()) : null
     const moving = Math.hypot(velocity.x, velocity.y) > turnSpeed ? normalizeOr(velocity, node.facing) : null
-    animate(node, aimed ?? moving ?? node.facing, false)
+    const shield = data.shield.present ? data.shield.get().facing : null
+    const facing = aimed ?? shield ?? moving ?? node.facing
+    const held = data.stunned.get().remaining > 0
+    animate(node, facing, held, held ? 0 : seconds)
+    if (shield !== null) node.body.shield?.(Math.atan2(shield.x, shield.y) - Math.atan2(facing.x, facing.y))
+    const pose = enemyPose(resources.tuning.get().enemies[data.enemy.get().kind].attack, data.phase.get(), data.attacker.get().elapsed)
+    if (pose !== null) node.body.sample?.(pose.clip, pose.progress)
   }
 })
 

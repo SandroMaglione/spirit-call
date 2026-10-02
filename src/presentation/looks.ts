@@ -63,6 +63,8 @@ export type BodyLook =
   | {
       readonly kind: "model"
       readonly model: ModelId
+      /** Crowd models share a baked bone texture and one instance batch. */
+      readonly batched?: boolean
       readonly widthFactor: number
       readonly heightFactor: number
       readonly moments?: Moments
@@ -88,17 +90,21 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   tidecaller: { ...crow, moments: crowLoops }
 }
 
-const capsule = (kind: EnemyKind): BodyLook => ({ kind: "capsule", ...view.enemies[kind] })
+const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({
+  kind: "model", model, batched: true,
+  widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor,
+  moments: { idle: "Idle", run: { clip: kind === "dummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
+})
 
 export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
-  dummy: capsule("dummy"),
-  chaser: capsule("chaser"),
-  shooter: capsule("shooter"),
-  brute: capsule("brute"),
-  swarmer: capsule("swarmer"),
-  charger: capsule("charger"),
-  sniper: capsule("sniper"),
-  guardian: capsule("guardian")
+  dummy: enemyModel("dummy", "enemyDummy", 1),
+  chaser: enemyModel("chaser", "enemyChaser", 68),
+  shooter: enemyModel("shooter", "enemyShooter", 62),
+  brute: enemyModel("brute", "enemyBrute", 60),
+  swarmer: enemyModel("swarmer", "enemySwarmer", 55),
+  charger: enemyModel("charger", "enemyCharger", 78),
+  sniper: enemyModel("sniper", "enemySniper", 60),
+  guardian: enemyModel("guardian", "enemyGuardian", 54)
 }
 
 /**

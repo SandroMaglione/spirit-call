@@ -1,0 +1,18 @@
+{
+  "sha256": "a6ecf955ac6c0e1b380eab78b00036e5905890668c9d356d139980d8cc596f06",
+  "roundTripBoundsError": {
+    "Idle": 3.5762786865234375e-07,
+    "Hurt": 2.384185791015625e-07,
+    "Death": 2.384185791015625e-07,
+    "Spawn": 1.1920928955078125e-07
+  },
+  "groundMinimum": {
+    "Idle": 0.0,
+    "Hurt": 0.0,
+    "Death": 0.0,
+    "Spawn": 0.0
+  },
+  "triangles": 676,
+  "bones": 3,
+  "bytes": 116544
+}

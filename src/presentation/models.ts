@@ -12,6 +12,7 @@ import type { AnimationClip, Material, Object3D } from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
 import { courtyardModels } from "./assets/courtyard.ts"
+import { enemyModels } from "./assets/enemies.ts"
 import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
 
 /** How a clip ends: loops name the time their first pose comes back (`closeLoop`); one-shots have `null`. */
@@ -36,7 +37,8 @@ export const models = {
   crow: crowModel,
   trainingBlade: trainingBladeModel,
   crescendo: crescendoModel,
-  ...courtyardModels
+  ...courtyardModels,
+  ...enemyModels
 } as const satisfies Record<string, ModelSpec>
 
 export type ModelId = keyof typeof models

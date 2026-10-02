@@ -8,6 +8,8 @@ import type { BufferGeometry, Group, Material } from "three"
 
 import { view } from "../config/view.ts"
 import { Batch } from "./batch.ts"
+import { bakeAnimation } from "./animation-atlas.ts"
+import type { AnimationAtlas } from "./animation-atlas.ts"
 import { floorLayers } from "./layers.ts"
 import type { RenderAssets } from "./host-types.ts"
 import type { ModelId, ModelSource } from "./models.ts"
@@ -41,6 +43,7 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     return geometry
   }
   const pieces = new Map<ModelId, Batch>()
+  const animated = new Map<ModelId, { readonly batch: Batch; readonly atlas: AnimationAtlas }>()
   const baked: Array<BufferGeometry> = []
   const model = (id: ModelId): ModelSource => {
     const source = models.get(id)
@@ -49,6 +52,14 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
   }
   return {
     model,
+    animated(id) {
+      const known = animated.get(id)
+      if (known !== undefined) return known
+      const atlas = bakeAnimation(model(id))
+      const entry = { atlas, batch: new Batch(parent, atlas.geometry, atlas.material, { animated: true }) }
+      animated.set(id, entry)
+      return entry
+    },
     piece(id) {
       const known = pieces.get(id)
       if (known !== undefined) return known
@@ -84,12 +95,14 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
       for (const batch of fixed) batch.flush()
       for (const batch of bodies.values()) batch.flush()
       for (const batch of pieces.values()) batch.flush()
+      for (const { batch } of animated.values()) batch.flush()
     },
     dispose() {
       for (const batch of [...fixed, ...bodies.values(), ...pieces.values()]) batch.dispose()
       for (const geometry of baked) geometry.dispose()
       for (const geometry of geometries.values()) geometry.dispose()
       for (const resource of [disc, orb, puck, shadow, projectileShadow, glow, flesh]) resource.dispose()
+      for (const { batch, atlas } of animated.values()) { batch.dispose(); atlas.dispose() }
     }
   }
 }
