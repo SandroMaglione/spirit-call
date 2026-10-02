@@ -447,8 +447,19 @@ body:has(.menu) .btm-toggle {
   color: #ffd166;
 }
 
+/* The gold the run paid, the steady income. */
+.results__pay {
+  font-weight: 700;
+}
+
 .results__level-up {
   color: #7ee08a;
+}
+
+/* What every clear pays: the steady income, more for harder content. */
+.card__pay {
+  font-size: 11px;
+  color: #ffd166;
 }
 
 /* A quest's first-clear rewards, or that it is cleared. */

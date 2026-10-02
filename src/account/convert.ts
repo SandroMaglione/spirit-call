@@ -134,7 +134,7 @@ const equipmentFrom = (tuning: Tuning, character: CharacterId, saved: StoredAcco
 
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 3,
+  version: 4,
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,

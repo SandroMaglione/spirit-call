@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -63,8 +63,40 @@ describe("account rules", () => {
     const second = recordRun(defaultTuning, first.account, null, { ...run, cleared: false, progress: 0.5, kills: 3, time: 20 }, 3000)
     expect(second.account.totals).toEqual({ runs: 2, clears: 1, kills: 15, secondsPlayed: 115.5 })
     const earns = defaultTuning.progression.account.run
-    expect(first.earned.experience).toBe(earns.attempt + earns.clear + 12 * earns.perKill)
+    expect(first.earned.experience).toBe(earns.base + earns.perLevel)
     expect(second.account.experience).toBe(first.earned.experience + second.earned.experience)
+    // A quick start is not content: it pays no gold.
+    expect(first.earned.pay).toEqual({})
+  })
+
+  it("pays gold for every run by its enemies' level, and a loss its share of the progress made", () => {
+    const { gold, loss } = defaultTuning.progression
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], challenge: "swarm" as const, wave: 3, kills: 40, time: 60 }
+    const clear = (level: number) => gold.base + gold.perLevel * level
+    expect(runPay(gold, loss, 5, run)).toBe(clear(5))
+    expect(runPay(gold, loss, 20, run)).toBe(clear(20))
+    expect(runPay(gold, loss, 5, { ...run, cleared: false, progress: 2 / 3 })).toBe(Math.round(clear(5) * loss * 2 / 3))
+    expect(runPay(gold, loss, 5, { ...run, cleared: false, progress: 0 })).toBe(0)
+    // Kills and speed do not count.
+    expect(runPay(gold, loss, 5, { ...run, kills: 0, time: 600 })).toBe(clear(5))
+    const level = defaultTuning.quests.theSwarm.enemyLevel
+    const lost = recordRun(defaultTuning, fresh(), quest("theSwarm"), { ...run, cleared: false, progress: 0.5 }, 2000)
+    expect(lost.earned.pay).toEqual({ gold: Math.round(clear(level) * loss * 0.5) })
+    expect(lost.account.wallet.gold).toBe(lost.earned.pay.gold)
+    const again = recordRun(defaultTuning, lost.account, quest("theSwarm"), run, 3000)
+    const won = recordRun(defaultTuning, again.account, quest("theSwarm"), run, 4000)
+    // A quest cleared before still pays its runs, without its first-clear rewards.
+    expect(won.earned.rewards).toBeNull()
+    expect(won.earned.pay).toEqual({ gold: clear(level) })
+  })
+
+  it("gives crystals for every account level gained", () => {
+    const curve = defaultTuning.progression.account.curve
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
+    const { earned, account } = recordRun(defaultTuning, { ...fresh(), experience: curve.base - 1 }, null, run, 2000)
+    expect(earned.levelRewards).toEqual(defaultTuning.progression.account.levelUp)
+    expect(account.wallet).toEqual(defaultTuning.progression.account.levelUp)
+    expect(recordRun(defaultTuning, fresh(), null, { ...run, cleared: false, progress: 0 }, 2000).earned.levelRewards).toEqual({})
   })
 
   it("levels the account up from experience, and says so", () => {
@@ -106,7 +138,11 @@ describe("account rules", () => {
     expect(won.earned.experience).toBe(recordRun(defaultTuning, fresh(), null, { ...run, cleared: true, progress: 1 }, 0).earned.experience + rewards.experience)
     expect(won.account.quests.theSwarm).toEqual({ attempts: 2, clears: 1, firstClearedAt: 3000 })
     expect(owns(won.account, { kind: "character", id: "gunner" })).toBe(true)
-    expect(won.account.wallet).toEqual(rewards.currencies)
+    // On top of what both runs paid, and of the account level the rewards' experience reached.
+    expect(won.account.wallet).toEqual({
+      crystals: rewards.currencies.crystals! + (won.earned.levelRewards.crystals ?? 0),
+      gold: (lost.account.wallet.gold ?? 0) + rewards.currencies.gold! + won.earned.pay.gold!
+    })
     const again = recordRun(defaultTuning, won.account, quest("theSwarm"), { ...run, cleared: true, progress: 1 }, 4000)
     expect(again.earned.rewards).toBeNull()
     expect(again.account.quests.theSwarm).toEqual({ attempts: 3, clears: 2, firstClearedAt: 3000 })
@@ -129,15 +165,14 @@ describe("account rules", () => {
     expect(buildOf(defaultTuning, account, "swordsman").level).toBe(characterLevel(defaultTuning, account, "swordsman").level)
   })
 
-  it("trains a character to its next level with gold", () => {
-    const rate = defaultTuning.progression.character.goldPerExperience
+  it("trains a character to its next level with gold: her experience is the gold trained into her", () => {
     const curve = defaultTuning.progression.character.curve
     const account = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: 30 } } } }
-    const cost = (curve.base - 30) * rate
+    const cost = curve.base - 30
     expect(trainingCost(defaultTuning, account, "swordsman")).toEqual({ gold: cost })
     expect(train(defaultTuning, account, "swordsman")).toEqual({ ok: false, refusal: { kind: "notEnough", currency: "gold", needed: cost, held: 0 } })
     const trained = train(defaultTuning, earn(account, { gold: cost + 5 }), "swordsman")
-    expect(trained.ok && characterLevel(defaultTuning, trained.value, "swordsman")).toEqual({ level: 2, into: 0, needed: curve.base + curve.growth })
+    expect(trained.ok && characterLevel(defaultTuning, trained.value, "swordsman")).toEqual({ level: 2, into: 0, needed: curve.base + curve.growth + curve.square })
     expect(trained.ok && trained.value.wallet.gold).toBe(5)
     expect(train(defaultTuning, account, "gunner")).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
     const maxed = { ...account, owned: { ...account.owned, characters: { swordsman: { unlockedAt: 1000, experience: 1e9 } } } }
@@ -146,7 +181,7 @@ describe("account rules", () => {
 
   it("upgrades an owned weapon a level with gold, and enters with it at that level", () => {
     const cost = defaultTuning.progression.weapon.cost
-    const account = earn(fresh(), { gold: cost.base + cost.base + cost.growth })
+    const account = earn(fresh(), { gold: cost.base + cost.base + cost.growth + cost.square })
     expect(upgradeCost(defaultTuning, account, "trainingBlade")).toEqual({ gold: cost.base })
     const once = upgrade(defaultTuning, account, "trainingBlade")
     const twice = once.ok ? upgrade(defaultTuning, once.value, "trainingBlade") : once
@@ -184,7 +219,8 @@ describe("account rules", () => {
     const leveled = { ...fresh(), experience: 1e6 }
     const first = recordRun(defaultTuning, leveled, tier("gauntlet", 1), run, monday + 1000)
     expect(first.earned.rewards).toEqual({ ...rewards, unlocks: [] })
-    expect(first.account.wallet).toEqual(rewards.currencies)
+    // On top of what the run pays.
+    expect(first.account.wallet).toEqual({ ...rewards.currencies, gold: rewards.currencies.gold! + first.earned.pay.gold! })
     expect(first.account.hardcore.gauntlet?.[1]).toEqual({ attempts: 1, clears: 1, firstClearedAt: monday + 1000, rewardedPeriod: 10 })
     const sameWeek = recordRun(defaultTuning, first.account, tier("gauntlet", 1), run, monday + week - 1)
     expect(sameWeek.earned.rewards).toBeNull()

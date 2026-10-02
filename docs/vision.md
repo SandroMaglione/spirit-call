@@ -210,7 +210,7 @@ Decided so far (the rest is in the open questions):
 - First clears and hardcore tiers also give gold worth several runs: goals
   on top of the steady income.
 - **Pacing is slow, as in Genshin, but every step shows.** Maxing one
-  character and her weapon takes on the order of 200 runs (about 14 hours)
+  character and her weapon takes on the order of 200 runs (about 15 hours)
   at content of her level, and a whole team several times that. The first
   levels take a run or less each, the last ones several runs; every level
   adds stats, so each run moves something forward.

@@ -5,7 +5,8 @@
  * lower tiers are within reach of a low-level team. A track opens at an
  * account level, and each tier once the one before it is cleared.
  *
- * A tier's rewards (experience and currency, never unlocks) are given the
+ * A tier's rewards (experience and currency, never unlocks; gold worth
+ * about six runs at its level) are given on top of what the run pays, the
  * first time it is cleared in each period; the periodic reset makes them
  * available again, so nothing is missable and there is no pressure to play
  * every period.
@@ -48,14 +49,14 @@ export const tracks = {
     name: "Gauntlet",
     challenge: "endless",
     level: 3,
-    tiers: [tier(6, 100, { crystals: 20, gold: 300 }), tier(12, 150, { crystals: 30, gold: 500 }), tier(18, 200, { crystals: 40, gold: 800 })]
+    tiers: [tier(6, 100, { crystals: 20, gold: 1500 }), tier(12, 150, { crystals: 30, gold: 2400 }), tier(18, 200, { crystals: 40, gold: 3300 })]
   }),
   /** The brute and its guards, tougher every tier. */
   siege: track({
     name: "Brute Siege",
     challenge: "brute",
     level: 4,
-    tiers: [tier(8, 120, { crystals: 20, gold: 400 }), tier(14, 180, { crystals: 30, gold: 600 }), tier(20, 240, { crystals: 40, gold: 900 })]
+    tiers: [tier(8, 120, { crystals: 20, gold: 1800 }), tier(14, 180, { crystals: 30, gold: 2700 }), tier(20, 240, { crystals: 40, gold: 3600 })]
   })
 }
 

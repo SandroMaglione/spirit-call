@@ -1,5 +1,5 @@
 /**
- * Levels from experience, and what runs earn. Pure rules over the numbers in
+ * Levels from experience. Pure rules over the numbers in
  * `Tuning.progression` (see `content/progression.ts`); the account stores
  * total experience and levels are derived from it.
  */
@@ -15,7 +15,7 @@ export interface LevelProgress {
 }
 
 /** Experience needed to go from `level` to the next. */
-export const experienceFor = (curve: LevelCurve, level: number): number => curve.base + curve.growth * (level - 1)
+export const experienceFor = (curve: LevelCurve, level: number): number => curve.base + curve.growth * (level - 1) + curve.square * (level - 1) ** 2
 
 /** Total experience needed to reach `level` from level 1. */
 export const experienceTo = (curve: LevelCurve, level: number): number => {
