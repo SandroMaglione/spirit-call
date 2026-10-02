@@ -25,7 +25,7 @@ export const Home = ({ store, nav, team, play, enter }: {
   const leader = team[0]!
   const level = accountLevel(tuning, account)
   const maxed = level.needed === 0
-  const weapon = tuning.weapons[resolveBuild(tuning, buildOf(tuning, account, leader)).weapon]
+  const weapon = resolveBuild(tuning, buildOf(tuning, account, leader)).weapon
   const mainQuests = ids(tuning.quests).filter((id) => tuning.quests[id].line === "main")
   const cleared = mainQuests.filter((id) => (account.quests[id]?.firstClearedAt ?? null) !== null).length
   const discoveries = ids(tuning.discoveries)
@@ -47,13 +47,13 @@ export const Home = ({ store, nav, team, play, enter }: {
         <Wallet store={store} />
       </div>
       <button type="button" class="home__stage" aria-label={`${tuning.characters[leader].name}'s page`} onClick={() => nav.go({ kind: "character", character: leader, tab: "overview" })}>
-        <Model character={leader} />
+        <Model character={leader} weapon={weapon} />
       </button>
       <div class="home__leader">
         <h1 class="home__name">{tuning.characters[leader].name}</h1>
         <span class="home__tag">
           <ElementBadge element={elementOf(tuning, leader)} />
-          Lv {characterLevel(tuning, account, leader).level} · {weapon.name}
+          Lv {characterLevel(tuning, account, leader).level} · {tuning.weapons[weapon].name}
         </span>
         <button type="button" class="home__team" onClick={() => nav.go({ kind: "team" })}>
           {team.map((member) => (

@@ -12,6 +12,7 @@ import type { CurrencyId } from "../../content/currencies.ts"
 import { elements } from "../../content/elements.ts"
 import type { ElementId } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
+import type { WeaponId } from "../../content/weapons.ts"
 import type { UiStore } from "../store.ts"
 
 /** The menu's screens; the character page opens on one of its tabs. */
@@ -76,9 +77,9 @@ export const Cta = ({ onClick, disabled, children }: { readonly onClick: () => v
   </button>
 )
 
-/** Where a character's model stands, playing her idle (drawn by the presentation). */
-export const Model = ({ character, class: className = "" }: { readonly character: CharacterId; readonly class?: string }) => (
-  <div class={`model ${className}`} data-model={character} />
+/** Where a character's model stands, holding `weapon` and playing her idle (drawn by the presentation). */
+export const Model = ({ character, weapon, class: className = "" }: { readonly character: CharacterId; readonly weapon: WeaponId; readonly class?: string }) => (
+  <div class={`model ${className}`} data-model={character} data-weapon={weapon} />
 )
 
 /** What a portrait shows: a character, or an enemy kind. */

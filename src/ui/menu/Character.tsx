@@ -143,7 +143,7 @@ export const Character = ({ store, actions, nav, character, tab }: {
   return (
     <div class="screen character" data-element={elementOf(tuning, character) ?? undefined}>
       <TopBar nav={nav} title="Characters" />
-      <Model character={character} class="character__model" />
+      <Model character={character} weapon={equipmentOf(tuning, account, character).weapon} class="character__model" />
       <div class="character__who">
         <h1 class="character__name">{tuning.characters[character].name}</h1>
         <span class="character__tag">

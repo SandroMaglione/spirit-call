@@ -60,7 +60,7 @@ export const Team = ({ store, nav, draft, play, enter }: {
                   ? <span class="column__empty">+</span>
                   : (
                     <>
-                      <Model character={member} class="column__model" />
+                      <Model character={member} weapon={resolveBuild(tuning, buildOf(tuning, account, member)).weapon} class="column__model" />
                       <span class="column__banner">
                         <b>{tuning.characters[member].name}</b>
                         <small>

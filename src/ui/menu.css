@@ -746,14 +746,18 @@ body:has(.menu) .btm-toggle {
 
 .columns {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 0.9rem;
   min-height: 0;
 }
 
+/* Tall cards, as on a phone; on taller screens they stay that shape. */
 .column {
   position: relative;
   width: 11rem;
+  height: 100%;
+  max-height: 17rem;
 }
 
 .column__pick {

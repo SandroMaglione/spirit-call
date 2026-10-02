@@ -12,6 +12,7 @@ import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
 import { modelsInLooks } from "./looks.ts"
 import { disposeModel, loadModels } from "./models.ts"
+import type { ModelId, ModelSource } from "./models.ts"
 import { floorLayers, trailOrder } from "./layers.ts"
 import { disposeNode, instancesOf } from "./nodes.ts"
 import { makeAssets } from "./render-assets.ts"
@@ -96,6 +97,8 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
 export interface BrowserHost {
   readonly host: RenderHostValue
   readonly nodes: NodeRegistry.NodeRegistry<RenderNode>
+  /** Every model the looks use, loaded (the menu's showcase draws them too). */
+  readonly models: ReadonlyMap<ModelId, ModelSource>
   destroy(): void
 }
 
@@ -253,6 +256,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   return {
     host,
     nodes,
+    models,
     destroy() {
       canvas.removeEventListener("pointermove", onMove)
       canvas.removeEventListener("pointerleave", onLeave)
