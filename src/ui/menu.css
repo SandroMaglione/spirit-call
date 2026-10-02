@@ -221,12 +221,13 @@ body:has(.menu) .btm-toggle {
   pointer-events: none;
 }
 
-/* A portrait: the presentation fills it in; until then, a tile in the element's colors. */
+/* A portrait: the presentation draws it in, over its element's deep color. */
 .portrait {
   display: block;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, var(--el-deep, #2c3358), var(--el-dark, #12152a)) center / cover no-repeat;
+  background: center / cover no-repeat;
+  background-color: var(--el-deep, #2c3358);
 }
 
 .roster {

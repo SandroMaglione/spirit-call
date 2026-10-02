@@ -93,7 +93,7 @@
       .team__member { display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; transition: opacity 150ms; }
       .team__face { position: relative; box-sizing: border-box; width: 46px; height: 46px; transition: opacity 150ms; }
       .team__face::before { content: ""; position: absolute; inset: 0; clip-path: var(--slant); background: var(--el); }
-      .team__portrait { position: absolute; inset: 2px; clip-path: var(--slant); background: center / cover no-repeat; background-color: #12152a; }
+      .team__portrait { position: absolute; inset: 2px; clip-path: var(--slant); background: center / cover no-repeat; background-color: var(--el-deep); }
       .team__wait { position: absolute; inset: 2px; clip-path: var(--slant); background: linear-gradient(0deg, rgba(0, 0, 0, 0.65) calc(var(--wait, 0) * 100%), transparent 0); display: none; }
       .team__member.is-waiting .team__wait { display: block; }
       .team__face kbd { position: absolute; left: -4px; bottom: -3px; padding: 0 4px; background: var(--el); clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%); font: 800 italic 12px/14px "Barlow Condensed", sans-serif; color: #0d1020; text-shadow: none; }
