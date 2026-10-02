@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Crow · Model study 01</title>
+  <style>
+    :root { color-scheme: dark; font: 16px/1.5 system-ui,sans-serif; color:#e8e3d9; background:#181a1c; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    main { max-width:1240px; margin:auto; padding:clamp(18px,4vw,48px); }
+    header { display:flex; align-items:end; justify-content:space-between; gap:24px; margin-bottom:28px; flex-wrap:wrap; }
+    .eyebrow { color:#b6b09e; font-size:.75rem; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { font-size:clamp(2rem,4vw,3.2rem); line-height:1.1; letter-spacing:-.05em; margin:8px 0; font-weight:600; }
+    p { color:#b6b7b8; margin:8px 0; }
+    a { color:#e2d7b6; text-underline-offset:4px; }
+    .downloads { display:flex; gap:18px; flex-wrap:wrap; }
+    .layout { display:grid; grid-template-columns:minmax(0,1fr) 270px; gap:28px; }
+    .stage { background:#363532; border-radius:12px; overflow:hidden; }
+    .stage img,.stage video { display:block; width:100%; aspect-ratio:1; object-fit:contain; }
+    [hidden] { display:none !important; }
+    .caption { display:flex; justify-content:space-between; gap:12px; color:#b6b7b8; font-size:.8rem; margin:12px 0 22px; }
+    .views { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    button { font:inherit; color:inherit; cursor:pointer; }
+    .view { padding:0; border:1px solid #454649; background:#232527; border-radius:7px; overflow:hidden; }
+    .view img { display:block; width:100%; aspect-ratio:1; }
+    .view span { display:block; font-size:.75rem; padding:8px 4px; }
+    .view[aria-pressed="true"] { border-color:#d4c18c; outline:1px solid #d4c18c; }
+    button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid #e5c974; outline-offset:4px; }
+    .turn { width:100%; border:1px solid #595b5e; background:#2d2f31; padding:12px; border-radius:7px; margin:18px 0 8px; }
+    aside section { border-top:1px solid #3b3e40; padding:18px 0; }
+    h2 { font-size:.85rem; font-weight:600; margin:0 0 12px; }
+    aside p,aside li { font-size:.87rem; }
+    ul { color:#b6b7b8; padding-left:20px; }
+    li { margin:8px 0; }
+    dl { display:grid; grid-template-columns:1fr auto; gap:8px; font-size:.85rem; }
+    dt { color:#a9abad; } dd { margin:0; }
+    .scrub { padding:12px 16px; background:#242628; }
+    .scrub label { font-size:.8rem; display:flex; justify-content:space-between; }
+    input[type=range] { width:100%; accent-color:#d4c18c; min-height:40px; }
+    footer { border-top:1px solid #3b3e40; margin-top:28px; padding-top:18px; font-size:.8rem; color:#999d9e; }
+    @media(max-width:760px) { .layout { grid-template-columns:1fr; } aside { display:grid; grid-template-columns:1fr 1fr; gap:20px; } }
+    @media(max-width:420px) { aside { grid-template-columns:1fr; gap:0; } .downloads { font-size:.85rem; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div><div class="eyebrow">Character study / 01</div><h1>The crow</h1><p>A Blender model study after Death's Door. <a href="animation.html">Inspect idle and run ↗</a></p></div>
+    <nav class="downloads" aria-label="Model files"><a href="crow.blend" download>Blender file ↗</a><a href="crow.glb" download>GLB model ↗</a><a href="renders/contact-sheet.png" target="_blank">All views ↗</a></nav>
+  </header>
+  <div class="layout">
+    <div>
+      <div class="stage">
+        <img id="main-image" src="renders/hero.png" alt="Crow model viewed from the front at a three-quarter angle">
+        <video id="turntable" src="renders/turntable.mp4" poster="renders/hero.png" controls loop muted playsinline preload="metadata" hidden aria-label="360 degree camera orbit around the crow"></video>
+        <div id="scrub" class="scrub" hidden><label for="angle">Inspect rotation <output id="angle-value">0°</output></label><input id="angle" type="range" min="0" max="71" value="0" step="1"></div>
+      </div>
+      <div class="caption"><span id="caption" aria-live="polite">Three-quarter front · orthographic camera</span><a id="fullsize" href="renders/hero.png" target="_blank">Open full size ↗</a></div>
+      <div class="views" aria-label="Inspection views">
+        <button class="view" data-view="hero" aria-pressed="true"><img src="renders/hero.png" alt=""><span>Three-quarter</span></button>
+        <button class="view" data-view="front" aria-pressed="false"><img src="renders/front.png" alt=""><span>Front</span></button>
+        <button class="view" data-view="side" aria-pressed="false"><img src="renders/side.png" alt=""><span>Side</span></button>
+        <button class="view" data-view="back" aria-pressed="false"><img src="renders/back.png" alt=""><span>Back</span></button>
+        <button class="view" data-view="back-three-quarter" aria-pressed="false"><img src="renders/back-three-quarter.png" alt=""><span>Rear three-quarter</span></button>
+        <button class="view" data-view="game-camera" aria-pressed="false"><img src="renders/game-camera.png" alt=""><span>30° camera</span></button>
+      </div>
+      <button id="show-turntable" class="turn" aria-pressed="false">Inspect 360° turntable</button>
+    </div>
+    <aside>
+      <section><h2>What to judge</h2><ul><li>Head, beak, and neck proportions.</li><li>The bell shape of the folded wings.</li><li>Grey markings and feather edges.</li><li>Whether the side and back feel consistent.</li></ul></section>
+      <section><h2>This version</h2><dl><dt>Triangles</dt><dd>4,944</dd><dt>Mesh parts</dt><dd>23</dd><dt>Body texture</dt><dd>512 × 512</dd><dt>Rig / animations</dt><dd>None yet</dd></dl><p>The turntable moves the camera. It is not a character animation.</p></section>
+      <section><h2>Editable source</h2><p>Open <a href="crow.blend" download>crow.blend</a> in Blender to orbit freely and edit the parts. The studio sits in a separate collection and is excluded from the GLB.</p><p><a href="build.py">Modeling script</a> · <a href="README.md">Workflow notes</a></p></section>
+      <section><h2>Reference</h2><p>Based on the final crow on <a href="https://folsen.artstation.com/projects/X1VJEw" target="_blank" rel="noreferrer">Frits Olsen's character sheet</a>, with official gameplay screenshots used for context.</p><p>Fan study of Acid Nerve's character. No original game mesh was used.</p></section>
+    </aside>
+  </div>
+  <footer>Model study only. The 30° view approximates the current game's ground projection; these renders are not an in-game integration or a phone readability test.</footer>
+</main>
+<script type="module">
+  const image = document.querySelector('#main-image');
+  const video = document.querySelector('#turntable');
+  const scrub = document.querySelector('#scrub');
+  const slider = document.querySelector('#angle');
+  const output = document.querySelector('#angle-value');
+  const caption = document.querySelector('#caption');
+  const fullsize = document.querySelector('#fullsize');
+  const turn = document.querySelector('#show-turntable');
+  const buttons = [...document.querySelectorAll('[data-view]')];
+  const labels = {hero:'Three-quarter front',front:'Front',side:'Side',back:'Back','back-three-quarter':'Three-quarter rear','game-camera':'30° elevation / 45° azimuth'};
+  for (const button of buttons) button.addEventListener('click', () => {
+    video.pause(); video.hidden = scrub.hidden = true; image.hidden = false;
+    const name = button.dataset.view;
+    image.src = fullsize.href = `renders/${name}.png`;
+    image.alt = `Crow model: ${labels[name]}`;
+    caption.textContent = `${labels[name]} · orthographic camera`;
+    fullsize.textContent = 'Open full size ↗';
+    for (const other of buttons) other.setAttribute('aria-pressed', String(other === button));
+    turn.setAttribute('aria-pressed', 'false');
+    image.scrollIntoView({block:'start',behavior:'smooth'});
+  });
+  turn.addEventListener('click', () => {
+    image.hidden = true; video.hidden = scrub.hidden = false;
+    caption.textContent = '360° camera orbit · use the slider to pause and inspect';
+    fullsize.href = 'renders/turntable.mp4'; fullsize.textContent = 'Open video ↗';
+    for (const button of buttons) button.setAttribute('aria-pressed', 'false');
+    turn.setAttribute('aria-pressed', 'true');
+    video.play().catch(() => {});
+    video.scrollIntoView({block:'start',behavior:'smooth'});
+  });
+  slider.addEventListener('input', () => {
+    video.pause();
+    if (video.readyState >= 1) video.currentTime = Number(slider.value) / 12;
+    output.value = `${Number(slider.value) * 5}°`;
+  });
+  video.addEventListener('timeupdate', () => {
+    slider.value = String(Math.min(71, Math.round(video.currentTime * 12)));
+    output.value = `${Number(slider.value) * 5}°`;
+  });
+</script>
+</body>
+</html>

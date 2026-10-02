@@ -7,10 +7,14 @@ Like `vision.md`, this records the rules; the code is in
 
 ## The pieces
 
-- **A model** is a glTF binary (`.glb`) in `src/presentation/assets/`, with
-  its numbers in a module next to it (`assets/crow.ts`), registered by id in
-  `models` (`models.ts`). It is an asset, not content: content never names a
-  model.
+- **A model** is a glTF binary (`.glb`) exported into `art/`, next to its
+  Blender source and the scripts that build and export it: one folder per
+  character (`art/characters/crow/`), per enemy (`art/enemies/<kind>/`), and
+  per environment kit (`art/environment/courtyard/`). A module in `src/presentation/assets/`
+  imports the file and copies its numbers from the export's metadata
+  (`assets/crow.ts`, `assets/courtyard.ts`), and `models` (`models.ts`)
+  registers it by id. It is an asset, not content: content never names a
+  model. The build bundles only the files the game imports.
 - **A look** says what something looks like (`looks.ts`): every character
   (`characterLooks`), every enemy (`enemyLooks`), and the arena's floor,
   walls, and scenery (`arenaLook`). A look is a placeholder (a capsule, a
@@ -20,8 +24,9 @@ Like `vision.md`, this records the rules; the code is in
   for standing and moving, one-shots for an attack step, the power move, a
   dash, a skill, being hurt, an enemy's windup.
 
-Giving something a model is: drop the file in `assets/`, add its module and
-its `models` entry, and point its look at it. No system changes.
+Giving something a model is: export it into `art/`, register it (its
+module in `assets/` and its `models` entry), and point its look at it. No
+system changes.
 `test/looks.test.ts` checks every file has exactly the clips its spec lists
 and every moment names a clip its model has.
 

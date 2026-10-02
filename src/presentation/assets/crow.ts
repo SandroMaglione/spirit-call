@@ -1,13 +1,13 @@
 /**
- * The crow (`crow-combat.glb`) and its two swords, exported from Blender by
- * `art/crow-study/combat/export.py` (branch `art-style-test`). Copy the
- * GLBs and these numbers from that export's `model-info.json` together; do
- * not edit them by hand.
+ * The crow and its two swords, exported from Blender by
+ * `art/characters/crow/combat/export.py` (see its README). These numbers are
+ * copied from that export's `model-info.json`: update them with it, never
+ * by hand.
  */
 import type { ModelSpec } from "../models.ts"
-import crescendoUrl from "./crescendo.glb?url"
-import crowUrl from "./crow-combat.glb?url"
-import trainingBladeUrl from "./training-blade.glb?url"
+import crescendoUrl from "../../../art/characters/crow/combat/crescendo.glb?url"
+import crowUrl from "../../../art/characters/crow/combat/crow-combat.glb?url"
+import trainingBladeUrl from "../../../art/characters/crow/combat/training-blade.glb?url"
 
 const fps = 30
 
