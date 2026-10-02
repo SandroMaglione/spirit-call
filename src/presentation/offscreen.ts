@@ -5,7 +5,7 @@
  * a fair warning.
  */
 import { view } from "../config/view.ts"
-import { Enemy, Game, Position, RenderHost } from "../schema.ts"
+import { Enemy, Flow, Game, Position, RenderHost } from "../schema.ts"
 
 /**
  * How the arrows sit: `inset` pixels inside the edge, darts `size` long and
@@ -16,11 +16,14 @@ const arrows = { inset: 18, size: 17, width: 7, notch: 6, near: 0.95, far: 0.4, 
 
 export const DrawOffscreenEnemies = Game.System("Shooter/DrawOffscreenEnemies", {
   queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position) } }) },
+  machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost) }
-}, ({ queries, services }) => {
+}, ({ queries, machines, services }) => {
   const host = services.host
   const edges = host.edges
   edges.clear()
+  // Only while fighting: the results screen shows how it went, not who is left.
+  if (machines.flow.get() !== "Playing") return
   const { width, height } = host.size
   const center = { x: width / 2, y: height / 2 }
   // Rays from the center end on this box, just inside the edge.

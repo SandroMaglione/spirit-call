@@ -11,7 +11,8 @@
   font-size: clamp(11px, min(100dvh / 390 * 16, 100dvw / 844 * 16), 22px);
 }
 
-.menu {
+/* The palette, shared by the menu and the results. */
+.ui {
   --ink: #0d1020;
   --ink-2: #161a31;
   --ink-3: #222846;
@@ -22,6 +23,9 @@
   --gold-2: #ff9f2e;
   --display: "Barlow Condensed", "Avenir Next Condensed", sans-serif;
   --body: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+.menu {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -31,42 +35,44 @@
   font-size: 0.75rem;
 }
 
-.menu button {
+.menu button,
+.results button {
   font: inherit;
   color: inherit;
   cursor: pointer;
 }
 
-.menu button:disabled {
+.menu button:disabled,
+.results button:disabled {
   cursor: default;
 }
 
 /* Elements' colors: `--el` bright, `--el-deep` and `--el-dark` for backgrounds. */
-.menu [data-element] {
+.ui [data-element] {
   --el: #9aa2c8;
   --el-deep: #2c3358;
   --el-dark: #12152a;
 }
 
-.menu [data-element="wind"] {
+.ui [data-element="wind"] {
   --el: #5be0b0;
   --el-deep: #1f6f5c;
   --el-dark: #0c2a2b;
 }
 
-.menu [data-element="fire"] {
+.ui [data-element="fire"] {
   --el: #ff6a3d;
   --el-deep: #8a3220;
   --el-dark: #2b0f12;
 }
 
-.menu [data-element="water"] {
+.ui [data-element="water"] {
   --el: #3fb4ff;
   --el-deep: #1d4f8c;
   --el-dark: #0d1a36;
 }
 
-.menu [data-element="thunder"] {
+.ui [data-element="thunder"] {
   --el: #b38cff;
   --el-deep: #4d3591;
   --el-dark: #1a1236;
@@ -177,6 +183,11 @@ body:has(.menu) .btm-toggle {
   font: 800 italic 1.6rem/1 var(--display) !important;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.cta:disabled,
+.ghost:disabled {
+  opacity: 0.4;
 }
 
 .cta:active {
@@ -596,6 +607,7 @@ body:has(.menu) .btm-toggle {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  min-width: 0;
   min-height: 0;
   padding: 0.9rem 1rem;
   border: 1px solid var(--line);
@@ -623,15 +635,20 @@ body:has(.menu) .btm-toggle {
   font-weight: 600;
 }
 
+/* One row, scrolling sideways when a quest holds many kinds, so the actions below stay in reach. */
 .brief__foes {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 0.5rem;
+  min-height: 0;
+  overflow-x: auto;
+  touch-action: pan-x;
+  scrollbar-width: none;
 }
 
 .foe {
   display: flex;
+  flex: none;
   flex-direction: column;
   width: 5.4rem;
   overflow: hidden;
@@ -683,6 +700,9 @@ body:has(.menu) .btm-toggle {
 }
 
 .brief__more {
+  flex: none;
+  align-self: center;
+  max-width: 5rem;
   color: var(--dim);
 }
 

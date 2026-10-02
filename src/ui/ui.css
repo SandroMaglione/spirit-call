@@ -1,123 +1,178 @@
-/* Screens around the arena (src/ui): the shared base and the results. The menu's screens are in menu.css. */
+/* Screens around the arena (src/ui): the shared base and the results. The menu's screens and the palette are in menu.css. */
 
 .ui {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: #e6edf3;
+  font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  color: #eef1ff;
 }
 
 .ui > * {
   pointer-events: auto;
 }
 
+/* ── Results ───────────────────────────────────────────────────────────── */
+
+/* Over the arena where the run ended: a dark slant on the left for what happened, the leader on the right. */
 .results {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 12px;
-  text-align: center;
-  background: rgba(8, 10, 14, 0.62);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: max(1.5rem, env(safe-area-inset-top)) 2rem max(0.9rem, env(safe-area-inset-bottom)) max(2.75rem, env(safe-area-inset-left));
+  background:
+    linear-gradient(115deg, rgba(13, 16, 32, 0.94) 0 52%, rgba(13, 16, 32, 0.55) 52% 100%);
+  font-size: 0.75rem;
 }
 
-.results__title {
-  font-size: clamp(36px, 9vh, 56px);
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  color: #ff5d6c;
+.results__model {
+  right: max(4rem, env(safe-area-inset-right));
+  bottom: 0.5rem;
+  width: 14rem;
+  height: 17rem;
 }
 
-.results.is-cleared .results__title {
-  color: #7ee08a;
+.results__banner {
+  margin-left: -4.5rem;
+  padding: 0.3rem 3rem 0.3rem 4.5rem;
+  background: linear-gradient(90deg, #ff6a5a, #c2364a);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 1.8rem) 100%, 0 100%);
+  color: #fff;
+  font: 800 italic 4.2rem/1 var(--display);
+  text-transform: uppercase;
+}
+
+.results.is-cleared .results__banner {
+  background: linear-gradient(90deg, #ffe08a, #ffcf5a 50%, #ff9f2e);
+  color: var(--ink);
 }
 
 .results__stats {
-  font-size: 16px;
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.results__stats b {
+  color: var(--text);
+}
+
+/* How far a lost run got: it pays that share. */
+.results__progress {
+  position: relative;
+  width: 18rem;
+  height: 0.9rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.45);
+  transform: skewX(-20deg);
+}
+
+.results__progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ffcf5a, #ff9f2e);
+}
+
+.results__progress span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 800 0.75rem/1 var(--display);
+  transform: skewX(20deg);
+}
+
+.results__rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 28rem;
+}
+
+.reward {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.25rem;
+  min-width: 4.6rem;
+  height: 4.4rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.reward.is-fresh {
+  border-color: rgba(143, 232, 200, 0.7);
+  box-shadow: 0 0 1rem rgba(91, 224, 176, 0.3);
+}
+
+.reward i {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+}
+
+.reward b {
+  font: 800 1.25rem/1 var(--display);
+}
+
+.reward small {
+  color: var(--dim);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.reward--experience i {
+  display: none;
+}
+
+.reward--experience b {
+  color: var(--gold);
+  font: 800 italic 1.8rem/1 var(--display);
+}
+
+.reward--gold i {
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #ffcf5a 55%, #b5791d);
+}
+
+.reward--crystals i {
+  border-radius: 0.25rem;
+  background: linear-gradient(135deg, #cfe2ff, #6f9cff);
+  transform: rotate(45deg) scale(0.8);
+}
+
+.reward--level i,
+.reward--unlock i {
+  display: none;
+}
+
+.reward--unlock b {
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.results__discoveries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: #8fe8c8;
+  font-weight: 600;
 }
 
 .results__actions {
   display: flex;
-  gap: 10px;
-  margin-top: 6px;
-}
-
-.results__button {
-  min-width: 140px;
-  padding: 12px 20px;
-  border: 2px solid #30363d;
-  border-radius: 8px;
-  background: rgba(22, 27, 34, 0.9);
-  color: inherit;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.results__button.is-primary {
-  border-color: #4ecdc4;
-  background: #4ecdc4;
-  color: #0d1117;
-}
-
-.results__button:disabled {
-  opacity: 0.4;
-  cursor: default;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
 }
 
 .results__hint {
-  font-size: 13px;
-  color: #7d8590;
-}
-
-.results__currencies {
-  font-size: 14px;
-  font-weight: 700;
-  color: #8fb8ff;
-}
-
-/* What the run earned, on the results screen. */
-.results__earned {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  font-size: 14px;
-  color: #ffd166;
-}
-
-/* Discoveries the run made, each on its own line. */
-.results__discoveries {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #8fb8ff;
-}
-
-/* The gold the run paid, the steady income. */
-.results__pay {
-  font-weight: 700;
-}
-
-.results__level-up {
-  color: #7ee08a;
-}
-
-.results__unlocked {
-  font-size: 14px;
-  font-weight: 700;
-  color: #7ee08a;
-}
-
-.results__characters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  font-size: 13px;
-  color: #7ee0d2;
+  margin-left: 0.4rem;
+  color: var(--dim);
 }
