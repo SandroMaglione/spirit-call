@@ -1,0 +1,43 @@
+{
+  "assets": [
+    {
+      "id": "paving-plain",
+      "sha256": "ffd93562d7340761362278851e338b164b3b429020305dd3ea5e37d5ff04c7a1",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-large",
+      "sha256": "579048ef0e6bf7f16055f8da67e0b41548dc6c1af59a7a5ca57a9812c911b4ce",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "urn-jade",
+      "sha256": "68b1ee7df0e652d83b203eb1cecfc3c22c013b56a936822cb142ecca598328d5",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "stage": "sample-for-art-review",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/courtyard.blend",
+  "source_sha256": "b28d6a9a644d954edac020b1f8c6429849193b9bcd709d2802926b6ef9b48d56",
+  "material": "Opaque rough vertex colors; one shared material; no textures or extensions required",
+  "integration": "Presentation assets only. Simulation owns collision and game-unit conversion.",
+  "assets": [
+    {
+      "id": "paving-plain",
+      "file": "models/paving-plain.glb",
+      "purpose": "ground-decoration",
+      "origin": "Top center; walking surface Y=0 in GLB",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "footprint_xz_m": [
+        2,
+        2
+      ],
+      "triangles": 300,
+      "bytes": 20956,
+      "sha256": "ffd93562d7340761362278851e338b164b3b429020305dd3ea5e37d5ff04c7a1",
+      "collision": null
+    },
+    {
+      "id": "pillar-large",
+      "file": "models/pillar-large.glb",
+      "purpose": "solid-obstacle",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        "max": [
+          0.5,
+          1.8990000486373901,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        1.8990000486373901,
+        1.0
+      ],
+      "footprint_xz_m": [
+        1,
+        1
+      ],
+      "triangles": 748,
+      "bytes": 50284,
+      "sha256": "579048ef0e6bf7f16055f8da67e0b41548dc6c1af59a7a5ca57a9812c911b4ce",
+      "collision": {
+        "kind": "box",
+        "size_xz_m": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "urn-jade",
+      "file": "models/urn-jade.glb",
+      "purpose": "edge-decoration",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.38449999690055847,
+          0.0,
+          -0.35499998927116394
+        ],
+        "max": [
+          0.38449999690055847,
+          0.7749999761581421,
+          0.36399999260902405
+        ]
+      },
+      "dimensions_m": [
+        0.7689999938011169,
+        0.7749999761581421,
+        0.718999981880188
+      ],
+      "footprint_xz_m": [
+        0.769,
+        0.719
+      ],
+      "triangles": 844,
+      "bytes": 58596,
+      "sha256": "68b1ee7df0e652d83b203eb1cecfc3c22c013b56a936822cb142ecca598328d5",
+      "collision": null
+    }
+  ]
+}

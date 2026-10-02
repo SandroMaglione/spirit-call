@@ -1,0 +1,30 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "b28d6a9a644d954edac020b1f8c6429849193b9bcd709d2802926b6ef9b48d56",
+  "assets": [
+    {
+      "id": "paving-plain",
+      "triangles": 300,
+      "bytes": 20956,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "ffd93562d7340761362278851e338b164b3b429020305dd3ea5e37d5ff04c7a1"
+    },
+    {
+      "id": "pillar-large",
+      "triangles": 748,
+      "bytes": 50284,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "579048ef0e6bf7f16055f8da67e0b41548dc6c1af59a7a5ca57a9812c911b4ce"
+    },
+    {
+      "id": "urn-jade",
+      "triangles": 844,
+      "bytes": 58596,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "68b1ee7df0e652d83b203eb1cecfc3c22c013b56a936822cb142ecca598328d5"
+    }
+  ]
+}
