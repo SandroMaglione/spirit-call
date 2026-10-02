@@ -1,13 +1,13 @@
 /**
  * Telegraphs on the floor: pools of elements, enemy attack windups,
- * shields, active hitboxes, lobbed skills, whirls, thrown discs, and spawn
- * warnings.
+ * shields, active hitboxes, lobbed skills, whirls, totems, thrown discs,
+ * and spawn warnings.
  */
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Tuning, Vortex } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Totem, Tuning, Vortex } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { drawArea } from "./draw.ts"
 
@@ -27,6 +27,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
     vortices: Game.Query({ selection: { vortex: Game.Query.read(Vortex) } }),
+    totems: Game.Query({ selection: { totem: Game.Query.read(Totem), position: Game.Query.read(Position) } }),
     shields: Game.Query({
       selection: { shield: Game.Query.read(Shield), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }
     })
@@ -128,6 +129,19 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
         g.strokeArc(center.x, center.y, radius, start, start + 0.9, 3, color, (0.25 + 0.15 * ring) * fade)
       }
     }
+  }
+  // Totems: their one reach (where they zap enemies, and where standing heals), fading as they run out.
+  for (const { data } of queries.totems.each()) {
+    const totem = data.totem.get()
+    const at = data.position.get()
+    const { effect } = totem
+    const color = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const fade = Math.min(1, totem.remaining / 0.6)
+    g.fillCircle(at.x, at.y, effect.radius, view.totem.heal, (0.07 + 0.03 * Math.sin(now * 5)) * fade)
+    g.strokeCircle(at.x, at.y, effect.radius, 3, color, 0.6 * fade)
+    // A sweep around it counting down to the next zap.
+    const next = 1 - Math.max(0, totem.nextTick) / effect.tick
+    g.strokeArc(at.x, at.y, effect.radius + 6, -Math.PI / 2, -Math.PI / 2 + next * Math.PI * 2, 2, color, 0.7 * fade)
   }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
   for (const { data } of queries.discs.each()) {

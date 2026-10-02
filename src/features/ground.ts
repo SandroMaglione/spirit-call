@@ -16,7 +16,7 @@ export const makeGround = (spec: GroundSpec, center: Vec2, atk: number, charges:
   Game.Command.spawn([Ground, { element: spec.element, center, radius: spec.radius, drift: { x: 0, y: 0 }, remaining: spec.seconds, duration: spec.seconds, atk, charges }])
 
 /** A body is in a pool when its feet are: its center within the pool, give or take half its hurtbox. */
-const inPool = (pool: { readonly center: Vec2; readonly radius: number }, at: Vec2, hurtbox: number): boolean =>
+export const inPool = (pool: { readonly center: Vec2; readonly radius: number }, at: Vec2, hurtbox: number): boolean =>
   (at.x - pool.center.x) ** 2 + (at.y - pool.center.y) ** 2 <= (pool.radius + hurtbox / 2) ** 2
 
 /**

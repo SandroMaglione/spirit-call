@@ -81,6 +81,20 @@ export const challenges = {
       endless: null
     }
   }),
+  /** Ranged enemies spread across the arena with swarms between them: reach many at once. */
+  outposts: challenge({
+    name: "Outposts",
+    description: "Clear three waves of shooters and snipers spread out, with swarms between them.",
+    objective: clearWaves(),
+    waves: {
+      scripted: [
+        ["shooter", "shooter", "swarmer", "swarmer"],
+        ["sniper", "shooter", "swarmer", "swarmer", "swarmer"],
+        ["sniper", "sniper", "shooter", "shooter", "swarmer", "swarmer", "chaser"]
+      ],
+      endless: null
+    }
+  }),
   /** Every enemy type, then ever-growing random waves. */
   endless: challenge({
     name: "Endless",

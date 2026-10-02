@@ -98,7 +98,7 @@ export const view = {
   light: { sky: 0xffffff, ground: 0x8c8c8c, skyIntensity: 0.62, sun: { x: 0.6, y: 1.6, z: -0.3 }, sunIntensity: 0.41 },
   player: 0x4ecdc4,
   /** Each character's body color, so a switch is seen at once (and her switch button matches). */
-  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff } satisfies Record<CharacterId, number>,
+  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a } satisfies Record<CharacterId, number>,
   playerDashing: 0xd9fffb,
   shadow: 0x000000,
   /** Body height of actors relative to their radius. */
@@ -112,6 +112,12 @@ export const view = {
   ultimate: 0xffd166,
   /** Whirls (the Cyclone): arms spiraling in, turning this fast. */
   vortex: { arms: 3, turnsPerSecond: 1.6 },
+  /**
+   * Totems (the Spark Totem): a pylon `height` pixels tall with a glowing
+   * orb on top, its reach on the floor tinted `heal`, the color of its
+   * healing zaps.
+   */
+  totem: { height: 46, radius: 8, orb: 9, heal: 0x7ee08a },
   /** Faint ring at a nova's radius while it is ready. */
   ultimateReadyAlpha: 0.22,
   ultimateShake: 12,
@@ -146,7 +152,7 @@ export const view = {
    * in a state are tinted `tint` of the way toward its color and shed motes
    * (embers rising, drops falling) about `motes` times a second.
    */
-  elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1 },
+  elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1, thunder: 0xb48cff },
   states: { burning: 0xff7b2e, soaked: 0x4aa8ff, tint: 0.5, motes: 14 },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6 },

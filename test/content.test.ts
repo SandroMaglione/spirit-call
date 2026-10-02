@@ -84,6 +84,7 @@ describe("content", () => {
       "quest theSwarm: its order loops back through theSwarm",
       "quest crossfire: its order loops back through crossfire",
       "quest theBrute: its order loops back through theBrute",
+      "quest outposts: its order loops back through theBrute",
       "quest holdTheLine: a secondary quest belongs to no chapter",
       "quest holdTheLine: level must be a whole number from 1 to the account's maximum (is 0)",
       "the new account: selects quest theSwarm, which a new account cannot start"

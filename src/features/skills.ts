@@ -70,6 +70,8 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "barrage":
       return { kind: "point", range: effect.maxRange }
     case "nova":
+    case "totem":
+    case "thunderclap":
       return { kind: "self" }
   }
 }
@@ -149,7 +151,7 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
 })
 
 /** The blow of `effect` cast by `cast`'s caster: its power from their ATK, their passives behind it. */
-const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
+export const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
   blow({
     damage: damageDealt(cast.atk, effect.power),
     knockback: effect.knockback,

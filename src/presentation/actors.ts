@@ -75,12 +75,12 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       marks.strokeArc(position.x, position.y, chargeRing, startAngle, startAngle + charge * Math.PI * 2, full ? view.charge.fullWidth : view.charge.width, full ? view.charge.full : view.charge.filling, full ? 0.95 : 0.7)
     }
 
-    // A nova ready to use: a faint ring showing what it would catch.
+    // A skill around her ready to use (a nova, a thunderclap): a faint ring showing what it would catch.
     const skills = data.skills.get()
     const energy = data.energy.get().current
     for (const slot of skillSlots) {
       const spec = tuning.skills[skills[slot].skill]
-      if (spec.effect.kind !== "nova" || skillRecharge(spec, skills[slot].cooldown, energy) > 0) continue
+      if ((spec.effect.kind !== "nova" && spec.effect.kind !== "thunderclap") || skillRecharge(spec, skills[slot].cooldown, energy) > 0) continue
       marks.strokeCircle(position.x, position.y, spec.effect.radius, 3, view.ultimate, view.ultimateReadyAlpha)
     }
 

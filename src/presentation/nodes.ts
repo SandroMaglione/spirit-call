@@ -3,17 +3,19 @@
  * with a blob shadow), projectiles (batched, pooled), and walls (dressed by
  * the arena's look). See `looks.ts` for what each one looks like.
  */
-import { BoxGeometry, Group, Mesh, MeshLambertMaterial } from "three"
+import { BoxGeometry, CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial } from "three"
 
 import { projection, view } from "../config/view.ts"
 import { depthOf, toScreenAt, worldHeight } from "../math/iso.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import type { Box } from "../physics/shapes.ts"
+import type { ElementId } from "../content/elements.ts"
 import type { EnemyKind, Faction, ProjectileStyle, RenderableValue } from "../schema.ts"
 import { Instance } from "./batch.ts"
 import { makeBody } from "./bodies.ts"
+import { mixColor } from "./draw.ts"
 import { floorLayers } from "./layers.ts"
-import type { ProjectileNode, RenderAssets, RenderNode, WallNode } from "./host-types.ts"
+import type { ProjectileNode, RenderAssets, RenderNode, TotemNode, WallNode } from "./host-types.ts"
 import { arenaLook, characterLooks, enemyLooks } from "./looks.ts"
 import type { BodyLook, WallLook } from "./looks.ts"
 import { models } from "./models.ts"
@@ -62,6 +64,36 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
   }
   node.shadow.object.scale.set(radius * 1.2, 1, radius * 1.2)
   return node
+}
+
+/** A totem: a slim stone pylon tinted by its element, a glowing orb on top, and a blob shadow. */
+const totemNode = (assets: RenderAssets, element: ElementId | null): TotemNode => {
+  const spec = view.totem
+  const color = element === null ? view.playerArea : view.elements[element]
+  const height = worldHeight(projection, spec.height)
+  const root = new Group()
+  const shadow = new Instance(assets.shadows)
+  shadow.object.scale.set(spec.radius * 1.6, 1, spec.radius * 1.6)
+  shadow.object.position.y = floorLayers.shadows.height
+  const pylonGeometry = new CylinderGeometry(spec.radius * 0.45, spec.radius, height, 6).translate(0, height / 2, 0)
+  const pylonMaterial = new MeshLambertMaterial({ color: mixColor(view.wall, color, 0.35) })
+  const orbGeometry = new IcosahedronGeometry(spec.orb, 0)
+  const orbMaterial = new MeshBasicMaterial({ color })
+  const orb = new Mesh(orbGeometry, orbMaterial)
+  orb.position.y = height + spec.orb * 0.6
+  root.add(shadow.object, new Mesh(pylonGeometry, pylonMaterial), orb)
+  return {
+    kind: "totem",
+    root,
+    orb,
+    shadow,
+    dispose: () => {
+      pylonGeometry.dispose()
+      pylonMaterial.dispose()
+      orbGeometry.dispose()
+      orbMaterial.dispose()
+    }
+  }
 }
 
 /** One of `count` variants for a place on the floor, the same every time. */
@@ -184,6 +216,8 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
     case "wall": {
       return wallNode(assets, arenaLook.walls[renderable.placement], renderable.box, renderable.placement === "front")
     }
+    case "totem":
+      return totemNode(assets, renderable.element)
   }
 }
 
@@ -197,6 +231,8 @@ export const instancesOf = (node: RenderNode): ReadonlyArray<Instance> => {
       return [node.shadow, node.orb]
     case "wall":
       return node.instances
+    case "totem":
+      return [node.shadow]
   }
 }
 
@@ -210,6 +246,7 @@ export const disposeNode = (node: RenderNode): void => {
     case "projectile":
       return
     case "wall":
+    case "totem":
       node.dispose()
       return
   }

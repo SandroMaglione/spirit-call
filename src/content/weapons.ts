@@ -9,7 +9,7 @@ import { cast, combo, damageBonus, doing, finisher, heal, kill, on, targetHealth
 import type { Passive } from "./passives.ts"
 import { nova } from "./skills.ts"
 
-export type WeaponType = "sword" | "gun" | "disc"
+export type WeaponType = "sword" | "gun" | "disc" | "staff"
 
 /** A percentage raise of one stat, on top of the character's (and, for ATK, the weapon's) base. */
 export interface StatBonus {
@@ -69,6 +69,18 @@ export const weapons = {
     bonus: bonus("hp", 10),
     passives: [
       on(doing(finisher()), cast(nova({ radius: 140, power: 15, element: "water", knockback: 380, active: 0.08, clearsProjectiles: false, hitStop: 0.02, heavy: false })))
+    ]
+  }),
+  /** The Stormcaller's first staff: stats only. */
+  trainingStaff: weapon({ name: "Training Staff", type: "staff", atk: 20, bonus: noBonus(), passives: [] }),
+  /** Lightning Rod: the combo's finisher also sets off a crackle of thunder around the wielder (shocking soaked enemies). */
+  lightningRod: weapon({
+    name: "Lightning Rod",
+    type: "staff",
+    atk: 25,
+    bonus: bonus("atk", 8),
+    passives: [
+      on(doing(finisher()), cast(nova({ radius: 150, power: 16, element: "thunder", knockback: 120, active: 0.08, clearsProjectiles: false, hitStop: 0.02, heavy: false })))
     ]
   })
 }

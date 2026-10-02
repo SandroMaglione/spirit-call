@@ -132,6 +132,10 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
       g.fillCircle(target.x, target.y, effect.radius, view.reticle, 0.08).strokeCircle(target.x, target.y, effect.radius, 2, view.reticle, 0.6)
       return
     }
+    case "totem":
+    case "thunderclap":
+      g.fillCircle(at.x, at.y, effect.radius, view.reticle, 0.08).strokeCircle(at.x, at.y, effect.radius, 2, view.reticle, 0.6)
+      return
     case "barrage": {
       const target = lobTarget(effect, at, aiming)
       const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })

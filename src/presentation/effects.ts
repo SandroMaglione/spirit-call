@@ -1,7 +1,7 @@
 /**
  * Cosmetic effects from gameplay events: slash trails, hit sparks and
- * numbers, recoil, dust, explosions, heals, and elements (reactions, and
- * motes off bodies in a state).
+ * numbers, recoil, dust, explosions, heals, thunder's bolts, and elements
+ * (reactions, and motes off bodies in a state).
  */
 import { Vector3 } from "three"
 
@@ -10,7 +10,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Body, Death, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
+import { Action, Body, Death, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { RenderHostValue } from "./host-types.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
@@ -32,7 +32,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     impact: Game.System.readEvent(Impact),
     explosion: Game.System.readEvent(Explosion),
     heal: Game.System.readEvent(Heal),
-    reaction: Game.System.readEvent(Reaction)
+    reaction: Game.System.readEvent(Reaction),
+    zap: Game.System.readEvent(Zap)
   },
   services: { host: Game.System.service(RenderHost) }
 }, ({ events, services }) => {
@@ -119,6 +120,18 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     services.host.feedback.shake = Math.max(services.host.feedback.shake, nova ? view.ultimateShake : view.explosionShake)
   }
   for (const reaction of events.reaction.all()) react(services.host, toScreen(projection, reaction.at), reaction.kind)
+  // Thunder: a bolt along its path at body height, a spark where it lands; a healing zap in the heal color.
+  for (const zap of events.zap.all()) {
+    const color = zap.heal ? view.totem.heal : view.elements.thunder
+    const points = zap.path.map((point) => {
+      const at = toScreen(projection, point)
+      return { x: at.x, y: at.y - impact.height * projection.zoom }
+    })
+    fx.bolt(points, color, zap.heal ? 0.28 : 0.2)
+    const end = points[points.length - 1]!
+    fx.flash(end, zap.heal ? 30 : 24, color, 0.12)
+    fx.burst(end, { color, count: zap.heal ? 8 : 6, speed: 180, size: 3, life: 0.3, gravity: zap.heal ? -220 : 0 })
+  }
   for (const impact of events.impact.all()) {
     const at = toScreen(projection, impact.at)
     fx.burst({ x: at.x, y: at.y - view.projectileHeight * projection.zoom }, {
@@ -152,6 +165,11 @@ const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind): void => {
       return
     case "carry":
       fx.burst(body, { color: view.elements.wind, count: 8, speed: 220, size: 3, life: 0.3 })
+      return
+    case "shock":
+      fx.flash(body, 42, view.elements.thunder, 0.16)
+      fx.ring(at, 46 * projection.zoom, view.elements.thunder, 0.3)
+      fx.burst(body, { color: view.elements.thunder, count: 12, speed: 280, size: 3, life: 0.3, stretch: 3 })
       return
     case "stun":
       fx.flash(body, 44, view.stun, 0.16)

@@ -14,7 +14,7 @@ import type { CharacterId, Stats as CharacterStats } from "./content/characters.
 import type { Affinities, ElementId, ReactionKind, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { LobEffect, SkillEffect, SkillId, SkillSlot, VortexEffect } from "./content/skills.ts"
+import type { LobEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { WeaponId } from "./content/weapons.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
@@ -106,6 +106,21 @@ export interface VortexValue {
   readonly nextTick: number
 }
 export const Vortex = Descriptor.Component<VortexValue>()("Shooter/Vortex")
+
+/**
+ * A totem planted by a skill (see `TotemEffect`), standing at its
+ * `Position`: it zaps every tick until it runs out. Its strikes come from
+ * the caster's ATK when planted.
+ */
+export interface TotemValue {
+  readonly faction: Faction
+  readonly effect: TotemEffect
+  readonly blow: Blow
+  readonly remaining: number
+  /** Time until its next zap. */
+  readonly nextTick: number
+}
+export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
 
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
@@ -365,6 +380,7 @@ export type RenderableValue =
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number }
   | { readonly kind: "wall"; readonly box: Box; readonly placement: "back" | "front" | "sorted" }
+  | { readonly kind: "totem"; readonly element: ElementId | null }
 
 /** What the entity looks like; presence means "has a render node". */
 export const Renderable = Descriptor.Component<RenderableValue>()("Shooter/Renderable")
@@ -423,8 +439,15 @@ export const Explosion = Descriptor.Event<{
   readonly element: ElementId | null
 }>()("Shooter/Explosion")
 
-/** Health restored to an entity at `at` (a weapon's passive), for effects. */
+/** Health restored to an entity at `at` (a weapon's passive, a totem, a thunderclap), for effects. */
 export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: number }>()("Shooter/Heal")
+
+/**
+ * Thunder went along `path` (from where it came, through every body it
+ * struck in turn), or a totem's zap healed the one at the path's end
+ * (`heal`), for effects.
+ */
+export const Zap = Descriptor.Event<{ readonly path: ReadonlyArray<Vec2>; readonly heal: boolean }>()("Shooter/Zap")
 
 /**
  * A skill was used: its effect goes off from `from`, aimed at `at` (along
@@ -677,6 +700,7 @@ export const Game = Schema.bind(
       Stunned,
       Lobbed,
       Vortex,
+      Totem,
       Health,
       Hurtbox,
       Knockback,
@@ -716,7 +740,7 @@ export const Game = Schema.bind(
       RunResult,
       HitStop
     },
-    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast, Heal, Reaction }
+    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast, Heal, Reaction, Zap }
   }),
   Root
 )

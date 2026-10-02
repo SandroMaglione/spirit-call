@@ -176,7 +176,7 @@ export const enemies = {
   shooter: {
     name: "Shooter",
     description: "Keeps its distance and shoots.",
-    elements: affinities({ wind: "weak" }),
+    elements: affinities({ wind: "weak", thunder: "weak" }),
     hp: 28,
     atk: 100,
     def: 0,
@@ -199,7 +199,7 @@ export const enemies = {
   brute: {
     name: "Brute",
     description: "Slow and heavy; slams where you stood.",
-    elements: affinities({ wind: "immune", water: "weak" }),
+    elements: affinities({ wind: "immune", water: "weak", thunder: "resists" }),
     hp: 150,
     atk: 100,
     def: 0,
@@ -219,7 +219,7 @@ export const enemies = {
   swarmer: {
     name: "Swarmer",
     description: "Tiny and fast; comes in packs.",
-    elements: affinities({ fire: "weak" }),
+    elements: affinities({ fire: "weak", thunder: "weak" }),
     hp: 12,
     atk: 100,
     def: 0,
@@ -259,7 +259,7 @@ export const enemies = {
   sniper: {
     name: "Sniper",
     description: "Locks a beam on you from afar.",
-    elements: affinities({ wind: "weak" }),
+    elements: affinities({ wind: "weak", thunder: "weak" }),
     hp: 32,
     atk: 100,
     def: 0,
