@@ -1,9 +1,10 @@
 /**
  * The two currencies, each for one thing, so it is always clear where each
- * comes from and what it is for: one for pulls (the gacha, later), one for
- * upgrades (character and weapon levels). Both come from rewards given once
- * (a quest's first clear, a hardcore tier until its reset); runs themselves
- * give experience, not currency.
+ * comes from and what it is for (see docs/vision.md, "Progression"):
+ * crystals for pulls (the gacha, later), from milestones only (first
+ * clears, hardcore tiers once per period, account levels, discoveries);
+ * gold for upgrades (character and weapon levels), from every run, and on
+ * top from first clears and hardcore tiers.
  */
 export interface CurrencySpec {
   readonly name: string

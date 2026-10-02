@@ -16,6 +16,7 @@ import { attacks } from "../content/attacks.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { currencies } from "../content/currencies.ts"
+import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
 import { enemies } from "../content/enemies.ts"
 import { reset, tracks } from "../content/hardcore.ts"
@@ -81,6 +82,9 @@ export const defaultTuning = {
   /** Hardcore tracks in tiers, and the periodic reset of their rewards (see content/hardcore.ts). */
   tracks,
   reset,
+
+  /** One-time goals that point at something worth trying, for crystals (see content/discoveries.ts). */
+  discoveries,
 
   /** Every weapon, by id; a character wields one of its type. */
   weapons,

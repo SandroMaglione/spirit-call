@@ -8,6 +8,7 @@ import type { TrackId } from "../content/hardcore.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CurrencyId } from "../content/currencies.ts"
+import type { DiscoveryId } from "../content/discoveries.ts"
 import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { teamSize } from "../content/characters.ts"
@@ -70,6 +71,7 @@ export const fromStored = (
     equipment: {},
     quests,
     hardcore,
+    discoveries: keep<DiscoveryId, { readonly madeAt: number }>(tuning.discoveries, stored.discoveries, "discovery", dropped),
     selection: starterSelection
   }
 
@@ -134,7 +136,7 @@ const equipmentFrom = (tuning: Tuning, character: CharacterId, saved: StoredAcco
 
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 3,
+  version: 4,
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,
@@ -144,6 +146,7 @@ export const toStored = (account: Account): StoredAccountLatest => ({
   equipment: account.equipment,
   quests: account.quests,
   hardcore: account.hardcore,
+  discoveries: account.discoveries,
   selection: account.selection
 })
 

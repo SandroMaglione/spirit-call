@@ -4,6 +4,7 @@ import { defaultTuning, engine } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ChallengeSpec } from "../src/content/challenges.ts"
 import { clearWaves, survive } from "../src/content/challenges.ts"
+import { objectiveProgress } from "../src/features/challenges.ts"
 import { Enemy, Game, Invulnerable, Player, RunResult, Waves } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -52,7 +53,21 @@ describe("challenges", () => {
     expect(run.waves().number).toBe(2)
     expect(run.waves().phase).toBe("complete")
     // The game records how it went, for the results screen (and rewards).
-    expect(run.result()).toMatchObject({ cleared: true, challenge: "swarm", wave: 2 })
+    expect(run.result()).toMatchObject({ cleared: true, challenge: "swarm", wave: 2, progress: 1, team: ["swordsman"], reactions: [] })
+  })
+
+  it("measures how far a run got: the share of waves defeated, or of the time survived", () => {
+    const waves = defaultTuning.challenges.swarm
+    const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [] }, { time: 30, endedAt: null })
+    expect(at(0, "break")).toBe(0)
+    expect(at(1, "fighting")).toBe(0)
+    expect(at(1, "break")).toBeCloseTo(1 / 3)
+    expect(at(3, "spawning")).toBeCloseTo(2 / 3)
+    expect(at(3, "complete")).toBe(1)
+    const endless = defaultTuning.challenges.endless
+    const seconds = endless.objective.kind === "survive" ? endless.objective.seconds : 0
+    expect(objectiveProgress(endless, { number: 2, phase: "fighting", timer: 0, queue: [] }, { time: seconds / 4, endedAt: null })).toBeCloseTo(0.25)
+    expect(objectiveProgress(endless, { number: 9, phase: "fighting", timer: 0, queue: [] }, { time: seconds * 2, endedAt: null })).toBe(1)
   })
 
   it("clear-waves: not cleared while enemies of the last wave are alive", () => {

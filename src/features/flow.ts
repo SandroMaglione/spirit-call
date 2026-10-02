@@ -3,9 +3,8 @@
  * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
  * screen, and a restart that clears the run and starts over.
  */
-import type { ChallengeId } from "../content/challenges.ts"
-import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Rng, Run, RunResult, RunScope, Stats, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
-import type { RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
+import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Reaction, Rng, Run, RunResult, RunScope, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { runResultOf } from "./challenges.ts"
 import { initialWaves } from "./waves.ts"
 
 export const TrackRun = Game.System("Shooter/TrackRun", {
@@ -15,13 +14,14 @@ export const TrackRun = Game.System("Shooter/TrackRun", {
   resources.run.update((run) => ({ ...run, time: run.time + dt }))
 })
 
-/** How a run that ends now went. */
-export const runResultOf = (cleared: boolean, challenge: ChallengeId, run: RunValue, waves: WavesValue, stats: StatsValue): RunResultValue => ({
-  cleared,
-  challenge,
-  wave: waves.number,
-  kills: stats.kills,
-  time: run.time
+/** Notes each kind of reaction the run sets off, for its result (discoveries count them). */
+export const RecordReactions = Game.System("Shooter/RecordReactions", {
+  events: { reaction: Game.System.readEvent(Reaction) },
+  resources: { stats: Game.System.writeResource(Stats) }
+}, ({ events, resources }) => {
+  const seen = resources.stats.get().reactions
+  const added = [...new Set(events.reaction.all().map((reaction) => reaction.kind))].filter((kind) => !seen.includes(kind))
+  if (added.length > 0) resources.stats.update((stats) => ({ ...stats, reactions: [...stats.reactions, ...added] }))
 })
 
 /** The whole team fallen ends the run, lost (one falling brings in the next, see `SwitchCharacter`). */
@@ -33,14 +33,17 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
     challenge: Game.System.readResource(Challenge),
     waves: Game.System.readResource(Waves),
     stats: Game.System.readResource(Stats),
+    team: Game.System.readResource(Team),
+    tuning: Game.System.readResource(Tuning),
     time: Game.System.readResource(Time)
   },
   nextMachines: { flow: Game.System.nextState(Flow) }
 }, ({ queries, resources, nextMachines }) => {
   if (queries.members.each().some(({ data }) => data.health.get().current > 0)) return
   const run = { ...resources.run.get(), endedAt: resources.time.get().elapsed }
+  const challenge = resources.challenge.get()
   resources.run.set(run)
-  resources.result.set(runResultOf(false, resources.challenge.get(), run, resources.waves.get(), resources.stats.get()))
+  resources.result.set(runResultOf(false, challenge, resources.tuning.get().challenges[challenge], run, resources.waves.get(), resources.stats.get(), resources.team.get()))
   nextMachines.flow.set("GameOver")
 })
 
@@ -80,7 +83,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   }
 }, ({ resources }) => {
   const tuning = resources.tuning.get()
-  resources.stats.set({ kills: 0, shots: 0 })
+  resources.stats.set({ kills: 0, shots: 0, reactions: [] })
   resources.waves.set(initialWaves(tuning))
   resources.rng.set({ state: tuning.waves.seed })
   resources.run.set({ time: 0, endedAt: null })

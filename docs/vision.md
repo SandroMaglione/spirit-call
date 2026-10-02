@@ -191,8 +191,29 @@ Decided so far (the rest is in the open questions):
   maximum sounds right, to confirm once there is content to measure it on.
 - **Growth stays simple:** character levels and **weapon levels**. A closed
   set of accessories may come later, only if the collecting side gets dull.
-- **Two currencies:** one for pulls, one for upgrades (leveling characters
-  and weapons), so it is always clear where each comes from.
+- **Two currencies:** one for pulls (crystals), one for upgrades (gold,
+  for leveling characters and weapons), so it is always clear where each
+  comes from.
+- **Gold comes from every run.** A clear pays by its enemies' level, so
+  the best place to earn is at the edge of what you can beat: rising
+  difficulty is the reason to replay, and a skilled player taking a
+  weaker team into harder content earns more. A loss pays its share of the
+  progress made (waves cleared, time survived), up to half of a clear, so
+  trying is never wasted. Nothing pays for kills or for speed. No stamina,
+  no daily tasks, no weekly caps: play as much or as little as you like.
+- **Crystals come from milestones only**, never from repeating content: a
+  quest's first clear, a hardcore tier once per period, account levels, a
+  short list of **discoveries** (the first clear with each character, with
+  a full team, the first time of each element reaction), and later
+  duplicates. New characters come at the pace of progress, not of grinding.
+  Discoveries stay few, and each one points at something worth trying.
+- First clears and hardcore tiers also give gold worth several runs: goals
+  on top of the steady income.
+- **Pacing is slow, as in Genshin, but every step shows.** Maxing one
+  character and her weapon takes on the order of 200 runs (about 15 hours)
+  at content of her level, and a whole team several times that. The first
+  levels take a run or less each, the last ones several runs; every level
+  adds stats, so each run moves something forward.
 
 ## The gacha
 
@@ -226,7 +247,7 @@ Decided so far (the rest is in the open questions):
 Decided directions are above; these are not decided yet.
 
 1. **Progression details**, to settle while building: the stat band (about
-   4x), where each currency comes from, how generous pulls are and how bad
+   4x), how generous pulls are (a pull's price in crystals) and how bad
    luck is protected (a guarantee after a number of pulls, or a way to get a
    specific thing directly), the exact duplicate rewards, the formats of
    secondary quests, and how pulls stay meaningful once a player owns most

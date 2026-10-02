@@ -13,7 +13,7 @@ import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
 
-import { buildOf, characterLevel, encounterOf, equipmentOf, nextReset, owns, playLock, samePlay, tierProgress, tierRewardsAvailable, weaponLevel } from "../account/account.ts"
+import { buildOf, characterLevel, clearPay, encounterOf, equipmentOf, nextReset, owns, playLock, samePlay, tierProgress, tierRewardsAvailable, weaponLevel } from "../account/account.ts"
 import { view } from "../config/view.ts"
 import type { Item, Play } from "../account/account.ts"
 import type { TierRewards, TrackId } from "../content/hardcore.ts"
@@ -134,7 +134,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     return `${tuning.characters[id].weaponType}${element === null ? "" : ` · ${elements[element].name}`} · Lv ${characterLevel(tuning, account, id).level}`
   }
   const now = Date.now()
-  /** A card for something to play: its challenge's objective and enemy level, why it is locked, and what clearing it gives. */
+  /** A card for something to play: its challenge's objective and enemy level, why it is locked, what each clear pays, and what clearing it gives. */
   const playCard = (candidate: Play, key: string, title: string, reward: ComponentChildren) => {
     const encounter = encounterOf(tuning, candidate)
     const challenge = tuning.challenges[encounter.challenge]
@@ -146,6 +146,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
         </span>
         <span class="card__text">{challenge.description}</span>
         {lock !== null && <span class="card__why">{describeLock(tuning, lock)}</span>}
+        <span class="card__pay">Every clear: {describeAmounts(tuning, { gold: clearPay(tuning.progression.gold, encounter.enemyLevel) })}</span>
         {reward}
       </Card>
     )
@@ -165,7 +166,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       `${track}-${tier}`,
       `Tier ${tier}${cleared ? " ✓" : ""}`,
       available
-        ? <span class="card__reward">Clear: +{rewards.experience} XP · {describeAmounts(tuning, rewards.currencies)}</span>
+        ? <span class="card__reward">First clear this period: +{rewards.experience} XP · {describeAmounts(tuning, rewards.currencies)}</span>
         : <span class="card__cleared">Collected · resets in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span>
     )
   }
@@ -283,6 +284,19 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
             })}
           </Section>
         ))}
+        <Section title={`Discoveries · ${ids(tuning.discoveries).filter((id) => account.discoveries[id] !== undefined).length} of ${ids(tuning.discoveries).length}`}>
+          {ids(tuning.discoveries).map((id) => {
+            const spec = tuning.discoveries[id]
+            const made = account.discoveries[id] !== undefined
+            return (
+              <div key={id} class={`card is-static${made ? " is-made" : ""}`}>
+                <span class="card__title">{spec.name}</span>
+                <span class="card__text">{spec.description}</span>
+                {made ? <span class="card__cleared">Discovered</span> : <span class="card__reward">{describeAmounts(tuning, spec.rewards, "+")}</span>}
+              </div>
+            )
+          })}
+        </Section>
       </div>
       <footer class="menu__footer">
         <span class="menu__summary">

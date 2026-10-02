@@ -15,7 +15,7 @@ import { elements } from "./elements.ts"
 import { isMelee } from "./attacks.ts"
 import type { AttackMove } from "./attacks.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
-import type { LevelCurve } from "./progression.ts"
+import type { LevelCurve, RunPay } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
 
 const has = (record: object, id: string): boolean => Object.hasOwn(record, id)
@@ -72,12 +72,18 @@ const checkPassive = (problems: Array<string>, where: string, passive: Passive):
   }
 }
 
-/** Every rule the content in `tuning` breaks, as readable messages; empty when all is well. */
 /** A level curve that rises and ends. */
 const checkCurve = (problems: Array<string>, where: string, curve: LevelCurve): void => {
   if (!(Number.isInteger(curve.maxLevel) && curve.maxLevel >= 1)) problems.push(`${where}: maxLevel must be a whole number from 1 (is ${curve.maxLevel})`)
   positive(problems, where, { base: curve.base })
   if (!(curve.growth >= 0)) problems.push(`${where}: growth must not be negative (is ${curve.growth})`)
+  if (!(curve.square >= 0)) problems.push(`${where}: square must not be negative (is ${curve.square})`)
+}
+
+/** What a run pays: something for a clear, never less at a higher enemy level. */
+const checkPay = (problems: Array<string>, where: string, pay: RunPay): void => {
+  positive(problems, where, { base: pay.base })
+  if (!(pay.perLevel >= 0)) problems.push(`${where}: perLevel must not be negative (is ${pay.perLevel})`)
 }
 
 /** Amounts of currency: known currencies, in whole positive numbers. */
@@ -88,6 +94,7 @@ const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, am
   }
 }
 
+/** Every rule the content in `tuning` breaks, as readable messages; empty when all is well. */
 export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
 
@@ -95,6 +102,10 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   checkCurve(problems, "account levels", progression.account.curve)
   checkCurve(problems, "character levels", progression.character.curve)
   checkCurve(problems, "weapon level costs", progression.weapon.cost)
+  checkPay(problems, "run gold", progression.gold)
+  checkPay(problems, "run account experience", progression.account.run)
+  checkAmounts(problems, "account level-up", tuning, progression.account.levelUp)
+  if (!(progression.loss >= 0 && progression.loss <= 1)) problems.push(`a loss's share must be in [0, 1] (is ${progression.loss})`)
   if (!(progression.stats.band >= 1)) problems.push(`stat curve: band must be 1 or more, or levels would weaken (is ${progression.stats.band})`)
   positive(problems, "stat curve", { shape: progression.stats.shape })
 
@@ -202,6 +213,18 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (!(tier.rewards.experience >= 0)) problems.push(`${at}: experience must not be negative (is ${tier.rewards.experience})`)
       checkAmounts(problems, at, tuning, tier.rewards.currencies)
     })
+  }
+
+  // Discoveries pay crystals only (gold comes from runs), and every character can be discovered.
+  for (const [id, spec] of Object.entries(tuning.discoveries)) {
+    const where = `discovery ${id}`
+    if (spec.check.kind === "clearWith" && !has(tuning.characters, spec.check.character)) problems.push(`${where}: unknown character ${spec.check.character}`)
+    checkAmounts(problems, where, tuning, spec.rewards)
+    if (Object.keys(spec.rewards).some((currency) => currency !== "crystals")) problems.push(`${where}: rewards must be crystals only`)
+  }
+  for (const character of Object.keys(tuning.characters)) {
+    const found = Object.values(tuning.discoveries).some((spec) => spec.check.kind === "clearWith" && spec.check.character === character)
+    if (!found) problems.push(`character ${character}: needs a discovery for clearing with her`)
   }
   positive(problems, "hardcore reset", { days: tuning.reset.days })
 

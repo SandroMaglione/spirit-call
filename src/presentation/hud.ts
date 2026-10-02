@@ -213,9 +213,9 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
       hud.banner.classList.add("is-showing")
     }
   }
-  // The HUD belongs to the arena: hidden while the menu is open (the results screen is in src/ui).
-  const inMenu = machines.flow.get() === "Menu"
-  if (hud.root.hidden !== inMenu) hud.root.hidden = inMenu
+  // The HUD belongs to a run going on: hidden on the menu and on the results screen (in src/ui), which says how it went.
+  const away = machines.flow.get() !== "Playing"
+  if (hud.root.hidden !== away) hud.root.hidden = away
 
   const stats = services.host.stats
   stats.sinceHud += services.clock.frameSeconds

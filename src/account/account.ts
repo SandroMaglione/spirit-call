@@ -13,7 +13,8 @@ import type { StarterSet } from "../content/account.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
-import type { RunEarnings } from "../content/progression.ts"
+import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
+import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { ResetSpec, TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, Unlock } from "../content/quests.ts"
@@ -29,7 +30,7 @@ export interface Unlocked {
   readonly unlockedAt: number
 }
 
-/** A character owned, and its experience (its level comes from it, see `characterLevel`; gained by training, see `train`). */
+/** A character owned, and its experience: the gold trained into her (her level comes from it, see `characterLevel` and `train`). */
 export interface OwnedCharacter extends Unlocked {
   readonly experience: number
 }
@@ -102,6 +103,8 @@ export interface Account {
   readonly quests: { readonly [Id in QuestId]?: QuestProgress }
   /** Each hardcore tier attempted so far, by track and tier number. */
   readonly hardcore: { readonly [Id in TrackId]?: { readonly [tier: number]: TierProgress } }
+  /** The discoveries made, and when (epoch milliseconds); each pays its rewards once. */
+  readonly discoveries: { readonly [Id in DiscoveryId]?: { readonly madeAt: number } }
   /** What the menu starts from: the team last entered with (in order; see `teamSize`), and what for. */
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly play: Play }
 }
@@ -194,6 +197,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     equipment: {},
     quests: {},
     hardcore: {},
+    discoveries: {},
     selection: { team: [starter.selection.character], play: { kind: "quest", quest: starter.selection.quest } }
   }
   const items: Array<Item> = [
@@ -304,7 +308,7 @@ export const spend = (account: Account, amounts: Amounts): Checked<Account> => {
 export const trainingCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
   const progress = characterLevel(tuning, account, character)
   if (progress.needed === 0) return null
-  return { gold: Math.ceil((progress.needed - progress.into) * tuning.progression.character.goldPerExperience) }
+  return { gold: Math.ceil(progress.needed - progress.into) }
 }
 
 /** `account` with `character` taken to its next level with gold, if it owns it, it is not at the maximum, and the gold is there. */
@@ -379,13 +383,44 @@ export interface Earned {
   readonly experience: number
   /** The account level before and after the run. */
   readonly level: LevelChange
+  /** What the run itself paid (gold, by its enemies' level and how far it got). */
+  readonly pay: Amounts
+  /** What the account levels gained gave. */
+  readonly levelRewards: Amounts
+  /** The discoveries the run made (their rewards are paid with them). */
+  readonly discoveries: ReadonlyArray<DiscoveryId>
   /** A quest's first-clear rewards, or a tier's rewards for the period, when this run earned them. */
   readonly rewards: Rewards | null
 }
 
-/** Account experience a run earns with `earns`: something for trying, more for clearing, a little per kill. */
-export const runExperience = (earns: RunEarnings, result: RunResultValue): number =>
-  earns.attempt + (result.cleared ? earns.clear : 0) + result.kills * earns.perKill
+/**
+ * What a run against enemies of `enemyLevel` pays along `pay`: all of it
+ * for a clear, and for a loss its progress times `loss` (see
+ * `progression.loss`). Kills and speed do not count.
+ */
+export const runPay = (pay: RunPay, loss: number, enemyLevel: number, result: RunResultValue): number => {
+  const share = result.cleared ? 1 : loss * Math.min(1, Math.max(0, result.progress))
+  return Math.round(clearPay(pay, enemyLevel) * share)
+}
+
+/** What a clear against enemies of `enemyLevel` pays along `pay`. */
+export const clearPay = (pay: RunPay, enemyLevel: number): number => pay.base + pay.perLevel * enemyLevel
+
+/** `amounts` times `times`. */
+const times = (amounts: Amounts, count: number): Amounts =>
+  Object.fromEntries(Object.entries(amounts).map(([id, amount]) => [id, (amount ?? 0) * count]).filter(([, amount]) => amount !== 0))
+
+/** Whether a run of a quest or tier that ended with `result` makes a discovery checked by `check`. */
+export const discovered = (check: DiscoveryCheck, result: RunResultValue): boolean => {
+  switch (check.kind) {
+    case "clearWith":
+      return result.cleared && result.team.includes(check.character)
+    case "fullTeam":
+      return result.cleared && result.team.length >= teamSize
+    case "reaction":
+      return result.reactions.includes(check.reaction)
+  }
+}
 
 /** `progress` with one more attempt, and a clear when `result` is one (the first clear's time kept). */
 const counted = (progress: QuestProgress, result: RunResultValue, now: number): QuestProgress => ({
@@ -396,11 +431,15 @@ const counted = (progress: QuestProgress, result: RunResultValue, now: number): 
 
 /**
  * `account` after a run that ended with `result`, and what the run earned.
- * A run counts toward what it played: clearing a quest the first time gives
+ * Every run pays gold and account experience by its enemies' level and how
+ * far it got (see `runPay`); each account level gained gives crystals. A
+ * run counts toward what it played: clearing a quest the first time gives
  * its rewards, and clearing a hardcore tier gives its rewards the first
- * time in each period. A run of nothing (a dev quick start) only adds to
- * the totals and experience. Characters do not grow from runs: they are
- * trained with gold (see `train`), so none falls behind on the bench.
+ * time in each period; each discovery it makes pays its rewards once. A run
+ * of nothing (a dev quick start) only adds to the totals and experience (as
+ * at enemy level 1): it pays no gold and makes no discoveries.
+ * Characters do not grow from runs: they are trained with gold (see
+ * `train`), so none falls behind on the bench.
  */
 export const recordRun = (
   tuning: Tuning,
@@ -409,7 +448,10 @@ export const recordRun = (
   result: RunResultValue,
   now: number
 ): { readonly account: Account; readonly earned: Earned } => {
-  let experience = runExperience(tuning.progression.account.run, result)
+  const { progression } = tuning
+  const enemyLevel = play === null ? 1 : encounterOf(tuning, play).enemyLevel
+  let experience = runPay(progression.account.run, progression.loss, enemyLevel, result)
+  const pay: Amounts = play === null ? {} : { gold: runPay(progression.gold, progression.loss, enemyLevel, result) }
   let next: Account = {
     ...account,
     totals: {
@@ -436,13 +478,24 @@ export const recordRun = (
     next = { ...next, hardcore: { ...next.hardcore, [play.track]: { ...next.hardcore[play.track], [play.tier]: updated } } }
     if (rewarded) rewards = { ...spec.rewards, unlocks: [] }
   }
+  next = earn(next, pay)
+  const made: Array<DiscoveryId> = []
+  if (play !== null) {
+    for (const [id, spec] of Object.entries(tuning.discoveries) as Array<[DiscoveryId, (typeof tuning.discoveries)[DiscoveryId]]>) {
+      if (next.discoveries[id] !== undefined || !discovered(spec.check, result)) continue
+      made.push(id)
+      next = earn({ ...next, discoveries: { ...next.discoveries, [id]: { madeAt: now } } }, spec.rewards)
+    }
+  }
   if (rewards !== null) {
     experience += rewards.experience
     next = rewards.unlocks.reduce((owner, item) => unlock(tuning, owner, item, now), earn(next, rewards.currencies))
   }
   next = { ...next, experience: account.experience + experience }
   const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
-  return { account: next, earned: { experience, level, rewards } }
+  const levelRewards = times(progression.account.levelUp, level.after - level.before)
+  next = earn(next, levelRewards)
+  return { account: next, earned: { experience, level, pay, levelRewards, discoveries: made, rewards } }
 }
 
 /** `character`'s equipment in `account` (its own when it has none saved). */

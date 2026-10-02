@@ -20,7 +20,7 @@ export type Unlock =
   | { readonly kind: "weapon"; readonly id: WeaponId }
   | { readonly kind: "skill"; readonly id: SkillId }
 
-/** What a quest gives the first time it is cleared. */
+/** What a quest gives the first time it is cleared, on top of what the run pays: gold worth several runs at its level. */
 export interface Rewards {
   /** Account experience, on top of what the run itself earns. */
   readonly experience: number
@@ -67,7 +67,7 @@ export const quests = {
     enemyLevel: 1,
     level: 1,
     after: null,
-    rewards: { experience: 60, currencies: { crystals: 100, gold: 300 }, unlocks: [character("gunner")] }
+    rewards: { experience: 60, currencies: { crystals: 100, gold: 500 }, unlocks: [character("gunner")] }
   }),
   crossfire: quest({
     name: "Crossfire",
@@ -77,7 +77,7 @@ export const quests = {
     enemyLevel: 3,
     level: 2,
     after: "theSwarm",
-    rewards: { experience: 90, currencies: { crystals: 100, gold: 400 }, unlocks: [weapon("executioner")] }
+    rewards: { experience: 90, currencies: { crystals: 100, gold: 700 }, unlocks: [weapon("executioner")] }
   }),
   theBrute: quest({
     name: "The Brute",
@@ -87,7 +87,7 @@ export const quests = {
     enemyLevel: 5,
     level: 3,
     after: "crossfire",
-    rewards: { experience: 140, currencies: { crystals: 150, gold: 600 }, unlocks: [character("tidecaller"), weapon("crescendo"), weapon("echoSaber"), weapon("undertow")] }
+    rewards: { experience: 140, currencies: { crystals: 150, gold: 900 }, unlocks: [character("tidecaller"), weapon("crescendo"), weapon("echoSaber"), weapon("undertow")] }
   }),
   holdTheLine: quest({
     name: "Hold the Line",
@@ -97,7 +97,7 @@ export const quests = {
     enemyLevel: 4,
     level: 2,
     after: null,
-    rewards: { experience: 80, currencies: { crystals: 50, gold: 400 }, unlocks: [weapon("bloodthirst")] }
+    rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [weapon("bloodthirst")] }
   })
 }
 

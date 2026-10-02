@@ -1,5 +1,6 @@
 /**
- * The results screen: won or lost, how it went, and what next (play again,
+ * The results screen: won or lost, how it went (for a loss, how far it got:
+ * it pays that share), what it earned, and what next (play again,
  * or back to the menu). The buttons wake up after `Tuning.flow.restartDelay`,
  * so a tap meant for the fight does not skip the screen; on a keyboard, R
  * and Esc do the same (see `QueueRestart`).
@@ -28,11 +29,26 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       <div class="results__title">{result.cleared ? "CLEARED" : "YOU DIED"}</div>
       <div class="results__stats">
         {name} · wave {result.wave} · {result.kills} kills · {result.time.toFixed(1)}s
+        {!result.cleared && <> · {Math.round(result.progress * 100)}% of the way</>}
       </div>
       {earned !== null && (
         <div class="results__earned">
-          +{earned.experience} XP
-          {earned.level.after > earned.level.before && <b class="results__level-up">Account level {earned.level.after}!</b>}
+          <span>+{earned.experience} XP</span>
+          {describeAmounts(tuning, earned.pay) !== "" && <span class="results__pay">{describeAmounts(tuning, earned.pay, "+")}</span>}
+          {earned.level.after > earned.level.before && (
+            <b class="results__level-up">
+              Account level {earned.level.after}! {describeAmounts(tuning, earned.levelRewards, "+")}
+            </b>
+          )}
+        </div>
+      )}
+      {earned !== null && earned.discoveries.length > 0 && (
+        <div class="results__discoveries">
+          {earned.discoveries.map((id) => (
+            <span key={id}>
+              Discovered: {tuning.discoveries[id].name} {describeAmounts(tuning, tuning.discoveries[id].rewards, "+")}
+            </span>
+          ))}
         </div>
       )}
       {earned?.rewards != null && earned.rewards.unlocks.length > 0 && (

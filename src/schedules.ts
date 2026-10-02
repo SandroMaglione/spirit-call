@@ -21,7 +21,7 @@ import { UpdateGround } from "./features/ground.ts"
 import { BlowPools, DriveWithWind } from "./features/wind.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
-import { ClearRun, DetectGameOver, QueueRestart, ResetRun, TrackRun } from "./features/flow.ts"
+import { ClearRun, DetectGameOver, QueueRestart, RecordReactions, ResetRun, TrackRun } from "./features/flow.ts"
 import { ApplyUiRequests } from "./features/menu.ts"
 import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
@@ -114,7 +114,8 @@ const gameplay = Game.Schedule.when(
 )
 
 /**
- * Never skipped by hit-stop, so nothing is missed: game over (checked
+ * Never skipped by hit-stop, so nothing is missed: the reactions the step
+ * set off (noted first, for a result made in the same step), game over (checked
  * before the objective, so the team falling on the step it is met still
  * loses), the next character coming in when one falls (and switches, which
  * wait out a hit-stop themselves), and the passives that kills and moves
@@ -122,6 +123,7 @@ const gameplay = Game.Schedule.when(
  */
 const runOutcome = Game.Schedule.when(
   whileRunIsLive,
+  RecordReactions,
   DetectGameOver,
   SwitchCharacter,
   CheckObjective,

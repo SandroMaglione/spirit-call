@@ -22,7 +22,8 @@ const current: Record<string, ReadonlyArray<string>> = {
   quests: Object.keys(defaultTuning.quests),
   chapters: Object.keys(defaultTuning.chapters),
   currencies: Object.keys(defaultTuning.currencies),
-  tracks: Object.keys(defaultTuning.tracks)
+  tracks: Object.keys(defaultTuning.tracks),
+  discoveries: Object.keys(defaultTuning.discoveries)
 }
 
 describe("content ids", () => {

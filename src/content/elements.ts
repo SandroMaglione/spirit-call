@@ -12,6 +12,14 @@
 /** The elements in play. Thunder and rock come with later characters. */
 export type ElementId = "fire" | "water" | "wind"
 
+/**
+ * Elements meeting on a body or on the ground: a body catching fire or
+ * getting soaked, water putting fire out (`steam`), fire fizzling on a
+ * soaked body, wind carrying a state to another body, and a body slammed
+ * into a wall (`stun`).
+ */
+export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun"
+
 /** The states that last on a body: water soaks, fire burns. */
 export type StateId = "burning" | "soaked"
 
