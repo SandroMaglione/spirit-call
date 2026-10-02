@@ -7,6 +7,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
 import { Fx } from "./fx.ts"
+import { EnemyRemains } from "./enemy-remains.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
 import { modelsInLooks } from "./looks.ts"
@@ -178,12 +179,14 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
 
   // Projectiles come and go constantly, so their nodes are pooled.
   const projectilePool: Array<ProjectileNode> = []
+  const remains = new EnemyRemains(actors)
   const nodes = NodeRegistry.make<RenderNode>({
     attach: (node) => {
       actors.add(node.root)
       for (const instance of instancesOf(node)) instance.batch.add(instance)
     },
     detach: (node) => {
+      if (node.kind === "enemy" && remains.has(node)) return
       actors.remove(node.root)
       for (const instance of instancesOf(node)) instance.batch.remove(instance)
       if (node.kind === "projectile") projectilePool.push(node)
@@ -210,6 +213,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     trails: new SlashTrails(trails),
     reticle,
     projectilePool,
+    remains,
     cursor,
     hud: hud.refs,
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
@@ -254,6 +258,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       canvas.removeEventListener("pointerleave", onLeave)
       observer.disconnect()
       nodes.clear()
+      remains.clear()
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       assets.dispose()

@@ -11,6 +11,7 @@ import type { Fx } from "./fx.ts"
 import type { Shapes } from "./shapes.ts"
 import type { SlashTrails } from "./trails.ts"
 import type { AnimationAtlas } from "./animation-atlas.ts"
+import type { EnemyRemains } from "./enemy-remains.ts"
 
 /**
  * A character or an enemy, standing at `root` (its feet, on the floor).
@@ -198,6 +199,7 @@ export interface RenderHostValue {
   readonly reticle: Shapes
   /** Projectile nodes kept for reuse instead of being destroyed. */
   readonly projectilePool: Array<ProjectileNode>
+  readonly remains: EnemyRemains
   /** Live cursor position in canvas pixels, updated by DOM events (not the fixed step). */
   readonly cursor: { x: number; y: number; over: boolean }
   readonly hud: HudRefs

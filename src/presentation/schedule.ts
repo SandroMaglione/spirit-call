@@ -8,6 +8,7 @@
 import { Game } from "../schema.ts"
 import { SyncUi } from "../ui/sync.ts"
 import { DrawEnemies, DrawPlayer } from "./actors.ts"
+import { KeepEnemyDeaths } from "./enemy-remains.ts"
 import { AnimateActors, PlayMoments } from "./animate.ts"
 import { DrawReticle, DrawTouchAim } from "./aim.ts"
 import { PlaySounds } from "./audio.ts"
@@ -17,6 +18,7 @@ import { ApplyCamera, FadeOccluders, InterpolateActors, SyncNodes } from "./scen
 import { DrawTelegraphs } from "./telegraphs.ts"
 
 export const frame = Game.Schedule(
+  KeepEnemyDeaths,
   SyncNodes,
   ApplyCamera,
   InterpolateActors,

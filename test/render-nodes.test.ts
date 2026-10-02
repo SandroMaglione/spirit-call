@@ -11,6 +11,7 @@ import { createNode, disposeNode, instancesOf } from "../src/presentation/nodes.
 import { makeAssets } from "../src/presentation/render-assets.ts"
 import { arenaLook, characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
 import { closeLoop, models } from "../src/presentation/models.ts"
+import { EnemyRemains } from "../src/presentation/enemy-remains.ts"
 
 const loadedEnemies = new Map<ModelId, ModelSource>()
 beforeAll(async () => {
@@ -80,6 +81,31 @@ describe("batches", () => {
 })
 
 describe("render nodes", () => {
+  it("retains killed visuals through hit-stop, then frees their batches and clears them on restart", () => {
+    const { parent, assets, pool } = setup()
+    const remains = new EnemyRemains(parent)
+    const node = createNode({ kind: "enemy", enemy: "chaser", radius: 14 }, assets, pool)
+    if (node.kind !== "enemy") throw new Error("expected an enemy")
+    parent.add(node.root)
+    for (const instance of instancesOf(node)) instance.batch.add(instance)
+    remains.followRun(10)
+    remains.take(node)
+    remains.take(node)
+    expect(remains.size).toBe(1)
+    remains.advance(0)
+    const pose = [...node.body.instances[0]!.pose]
+    remains.advance(0)
+    expect(node.body.instances[0]!.pose).toEqual(pose)
+    remains.advance(.35)
+    expect(node.body.instances[0]!.pose).not.toEqual(pose)
+    remains.advance(.36)
+    expect(remains.size).toBe(0)
+    expect(node.body.instances[0]!.batch.size).toBe(0)
+    remains.take(node)
+    remains.followRun(0)
+    expect(remains.size).toBe(0)
+    assets.dispose()
+  })
   it("give characters the body their look says, standing on a pivot", () => {
     const { assets, pool } = setup()
     const node = createNode({ kind: "player", character: "swordsman", weapon: "trainingBlade", radius: 16 }, assets, pool)
