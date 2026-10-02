@@ -8,7 +8,7 @@ import json
 import math
 import sys
 from pathlib import Path
-from mathutils import Vector
+from mathutils import Euler, Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 30
@@ -134,9 +134,11 @@ class Creature:
                 transforms = pose(name, t)
                 for bone in self.armature.pose.bones:
                     rotation, location, scale = transforms.get(bone.name, ((0, 0, 0), (0, 0, 0), (1, 1, 1)))
-                    bone.rotation_euler = rotation
-                    bone.location = location
-                    bone.scale = scale
+                    # Pose channels use the bone's axes, not Blender's world axes.
+                    basis = bone.bone.matrix_local.to_3x3()
+                    bone.rotation_euler = (basis.transposed() @ Euler(rotation).to_matrix() @ basis).to_euler()
+                    bone.location = basis.transposed() @ Vector(location)
+                    bone.scale = (scale[0], scale[2], scale[1])
                     for attr in ('rotation_euler', 'location', 'scale'):
                         bone.keyframe_insert(data_path=attr, frame=frame+1, group=bone.name)
             self.clips[name] = {'lastKeySeconds': (count-1)/FPS if loop else seconds, 'loopSeconds': seconds if loop else None}
@@ -197,7 +199,7 @@ def motion(style, action, t):
             data['body'] = transform((-.2*ready+.62*strike, 0, 0), (0, 0, .12*ready-.08*strike))
             data['head'] = transform((.1*ready-.3*strike, 0, 0))
             for side in ('L', 'R'):
-                data['arm.'+side] = transform((-2.35*ready+2.9*strike, 0, 0))
+                data['arm.'+side] = transform((-2.35*ready+1.8*strike, 0, 0))
         elif style == 'charger':
             data['body'] = transform((.16*ready, 0, 0), (0, 0, -.025*ready))
             data['head'] = transform((.22*ready, 0, 0))
