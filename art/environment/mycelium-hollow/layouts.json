@@ -1,0 +1,2574 @@
+{
+  "coordinate_system": "glTF meters; +Y up; yaw around +Y",
+  "scope": "Art assembly examples, not authored gameplay levels",
+  "layouts": [
+    {
+      "name": "spore-clearing",
+      "scene": "Mycelium hollow | spore-clearing",
+      "role": "quest skirmish",
+      "placements": [
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3.5,
+            0,
+            -2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3.5,
+            0,
+            2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "mushroom-giant",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "mushroom-cluster",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "shelf-fungus",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "reed-cluster",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "cap-seat",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "waymarker",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -1.65,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "combat-core",
+          "bounds_xz_m": [
+            -2.5,
+            -2.5,
+            2.5,
+            2.5
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.5
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "root-crossing",
+      "scene": "Mycelium hollow | root-crossing",
+      "role": "dungeon connector",
+      "placements": [
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bridge-wide",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gate-wide",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4.8,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": true
+        },
+        {
+          "asset": "root-gateway",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.235724139213562,
+            0,
+            3.204338091611862
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "root-tangle",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.0,
+            0,
+            3.4070488095283507
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "hollow-stump",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.0,
+            0,
+            -3.2628596305847166
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "fallen-trunk",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.0,
+            0,
+            -3.2628596305847166
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "root-rib",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stepping-log",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-idle",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5,
+            0,
+            -1.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "crossing-deck",
+          "bounds_xz_m": [
+            -1.8,
+            -1.7,
+            1.8,
+            1.7
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        0.6
+      ],
+      "entry_points": [
+        {
+          "name": "west",
+          "position_m": [
+            -3,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "east",
+          "position_m": [
+            3,
+            0,
+            0
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "nursery-hollow",
+      "scene": "Mycelium hollow | nursery-hollow",
+      "role": "boss or elite room",
+      "placements": [
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-radial",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": true
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "spore-pod",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pod-open",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "cocoon",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "woven-basket",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "glow-stalk",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "seal-plinth",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache-open",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "encounter-core",
+          "bounds_xz_m": [
+            -2.8,
+            -2.8,
+            2.8,
+            2.8
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.7
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "elder-garden",
+      "scene": "Mycelium hollow | elder-garden",
+      "role": "survival arena",
+      "placements": [
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-rubble",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            0,
+            1.2,
+            -4.3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "fungal-shrine",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "mycelium-rock",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "leaf-shelter",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "fungal-lantern",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-active",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            -5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "mycelium-hollow",
+          "position_m": [
+            5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "lower-combat-floor",
+          "bounds_xz_m": [
+            -3,
+            1,
+            3,
+            4.3
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        2
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    }
+  ]
+}

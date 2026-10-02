@@ -1,0 +1,12 @@
+{
+  "kit": "mycelium-hollow",
+  "assets": 70,
+  "triangles": 31824,
+  "glb_bytes": 2272904,
+  "pngs": 83,
+  "source_sha256": "185df7f3f71bc7caf46b13fe5568db60ea6da2d6c9b3d2a06d9ef7453618fc0c",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}
