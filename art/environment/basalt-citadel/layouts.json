@@ -1,0 +1,2574 @@
+{
+  "coordinate_system": "glTF meters; +Y up; yaw around +Y",
+  "scope": "Art assembly examples, not authored gameplay levels",
+  "layouts": [
+    {
+      "name": "muster-court",
+      "scene": "Basalt citadel | muster-court",
+      "role": "quest skirmish",
+      "placements": [
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3.5,
+            0,
+            -2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3.5,
+            0,
+            2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "weapon-rack",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "shield-rack",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "war-table",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "drum",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "banner-tall",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "waymarker",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -1.65,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "combat-core",
+          "bounds_xz_m": [
+            -2.5,
+            -2.5,
+            2.5,
+            2.5
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.5
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "keep-crossing",
+      "scene": "Basalt citadel | keep-crossing",
+      "role": "dungeon connector",
+      "placements": [
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bridge-wide",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gate-wide",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4.8,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": true
+        },
+        {
+          "asset": "battlement",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.0,
+            0,
+            3.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "buttress-heavy",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.0,
+            0,
+            3.3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "chain-anchor",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.0,
+            0,
+            -3.2170831143856047
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "siege-crate",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.0,
+            0,
+            -3.290000009536743
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "battering-ram",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "cage",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-idle",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5,
+            0,
+            -1.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "crossing-deck",
+          "bounds_xz_m": [
+            -1.8,
+            -1.7,
+            1.8,
+            1.7
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        0.6
+      ],
+      "entry_points": [
+        {
+          "name": "west",
+          "position_m": [
+            -3,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "east",
+          "position_m": [
+            3,
+            0,
+            0
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "audience-chamber",
+      "scene": "Basalt citadel | audience-chamber",
+      "role": "boss or elite room",
+      "placements": [
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-radial",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": true
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "throne",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "throne-broken",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "brazier-large",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "brazier-small",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gargoyle",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "seal-plinth",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache-open",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "encounter-core",
+          "bounds_xz_m": [
+            -2.8,
+            -2.8,
+            2.8,
+            2.8
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.7
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "watch-terrace",
+      "scene": "Basalt citadel | watch-terrace",
+      "role": "survival arena",
+      "placements": [
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "basalt-citadel",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "basalt-citadel",
+          "position_m": [
+            3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "basalt-citadel",
+          "position_m": [
+            1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "basalt-citadel",
+          "position_m": [
+            4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "basalt-citadel",
+          "position_m": [
+            0,
+            1.2,
+            -4.3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "basalt-citadel",
+          "position_m": [
+            6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "watchtower",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "basalt-spires",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "basalt-rubble",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "victory-standard",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-active",
+          "kit": "basalt-citadel",
+          "position_m": [
+            -5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "basalt-citadel",
+          "position_m": [
+            5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "lower-combat-floor",
+          "bounds_xz_m": [
+            -3,
+            1,
+            3,
+            4.3
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        2
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    }
+  ]
+}
