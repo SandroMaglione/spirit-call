@@ -44,7 +44,7 @@ const InsideArena = Invariant.make("player inside arena", () => {
   return undefined
 })
 
-// The render schedule needs Pixi services the headless runtime lacks: describe it
+// The render schedule needs renderer services the headless runtime lacks: describe it
 // (so its event reads count in lints) without running it.
 const session = Session.make(sim.runtime, {
   schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },

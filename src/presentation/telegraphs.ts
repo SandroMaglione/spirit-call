@@ -41,13 +41,13 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const color = view.elements[pool.element]
     const fade = Math.min(1, pool.remaining / view.pools.fadeSeconds)
     const pulse = pool.element === "fire" ? 0.75 + 0.25 * Math.sin(now * 13 + pool.center.x) * Math.sin(now * 7.3 + pool.center.y) : 1
-    g.circle(pool.center.x, pool.center.y, pool.radius).fill({ color, alpha: view.pools.fill * pulse * fade })
-    g.circle(pool.center.x, pool.center.y, pool.radius).stroke({ width: 3, color, alpha: view.pools.outline * fade })
+    g.fillCircle(pool.center.x, pool.center.y, pool.radius, color, view.pools.fill * pulse * fade)
+    g.strokeCircle(pool.center.x, pool.center.y, pool.radius, 3, color, view.pools.outline * fade)
     if (pool.element === "water") {
       const ripple = (now * 0.8 + pool.center.x * 0.01) % 1
-      g.circle(pool.center.x, pool.center.y, pool.radius * ripple).stroke({ width: 2, color, alpha: 0.45 * (1 - ripple) * fade })
+      g.strokeCircle(pool.center.x, pool.center.y, pool.radius * ripple, 2, color, 0.45 * (1 - ripple) * fade)
     } else {
-      g.circle(pool.center.x, pool.center.y, pool.radius * 0.6).fill({ color: view.pools.fireCore, alpha: 0.18 * pulse * fade })
+      g.fillCircle(pool.center.x, pool.center.y, pool.radius * 0.6, view.pools.fireCore, 0.18 * pulse * fade)
     }
   }
   for (const { data } of queries.attackers.each()) {
@@ -62,8 +62,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       for (let shot = 0; shot < spec.count; shot++) {
         const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
         const end = { x: area.origin.x + Math.cos(base + offset) * area.length, y: area.origin.y + Math.sin(base + offset) * area.length }
-        g.moveTo(area.origin.x, area.origin.y).lineTo(end.x, end.y)
-          .stroke({ width: locked ? 4 : 2, color: locked ? view.telegraphLocked : view.telegraph, alpha: locked ? 0.75 : 0.35 })
+        g.line(area.origin.x, area.origin.y, end.x, end.y, locked ? 4 : 2, locked ? view.telegraphLocked : view.telegraph, locked ? 0.75 : 0.35)
       }
       continue
     }
@@ -80,9 +79,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
     const radius = data.body.get().radius + 9
     const facing = Math.atan2(shield.facing.y, shield.facing.x)
-    g.moveTo(at.x + Math.cos(facing - shield.halfAngle) * radius, at.y + Math.sin(facing - shield.halfAngle) * radius)
-      .arc(at.x, at.y, radius, facing - shield.halfAngle, facing + shield.halfAngle)
-      .stroke({ width: 6, color: view.shield, alpha: 0.9 })
+    g.strokeArc(at.x, at.y, radius, facing - shield.halfAngle, facing + shield.halfAngle, 6, view.shield, 0.9)
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
@@ -99,14 +96,14 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const flight = Math.min(1, elapsed / spec.flightTime)
     const fuse = Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse))
     const color = spec.element === null ? view.playerArea : view.elements[spec.element]
-    g.circle(lobbed.to.x, lobbed.to.y, spec.radius).stroke({ width: 2, color, alpha: flight < 1 ? 0.35 : 0.9 })
-    if (fuse > 0) g.circle(lobbed.to.x, lobbed.to.y, spec.radius * fuse).fill({ color, alpha: 0.25 })
+    g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, flight < 1 ? 0.35 : 0.9)
+    if (fuse > 0) g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.25)
     const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
-    g.circle(ground.x, ground.y, 7).fill({ color: view.shadow, alpha: 0.35 })
+    g.fillCircle(ground.x, ground.y, 7, view.shadow, 0.35)
     const screen = toScreen(projection, ground)
     const height = 4 * view.grenadeArc * flight * (1 - flight) * projection.zoom
-    overlay.circle(screen.x, screen.y - height - 6, 6).fill({ color: spec.element === null ? view.grenade : view.elements[spec.element] })
-    if (flight >= 1) overlay.circle(screen.x, screen.y - 6, 6).stroke({ width: 2, color, alpha: 0.5 + 0.5 * Math.sin(elapsed * 40) })
+    overlay.fillCircle(screen.x, screen.y - height - 6, 6, spec.element === null ? view.grenade : view.elements[spec.element], 1)
+    if (flight >= 1) overlay.strokeCircle(screen.x, screen.y - 6, 6, 2, color, 0.5 + 0.5 * Math.sin(elapsed * 40))
   }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
   for (const { data } of queries.discs.each()) {
@@ -115,16 +112,14 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const turn = now * view.disc.turnsPerSecond * Math.PI * 2
     // While hovering, out to where it hits a body of average size.
     const radius = disc.phase === "hover" ? disc.radius + 16 : disc.radius * 1.5
-    g.moveTo(at.x + Math.cos(turn) * radius, at.y + Math.sin(turn) * radius)
-      .arc(at.x, at.y, radius, turn, turn + Math.PI * 1.4)
-      .stroke({ width: disc.phase === "hover" ? 4 : 3, color: view.disc.ring, alpha: disc.phase === "hover" ? 0.9 : 0.6 })
-    if (disc.phase === "hover") g.circle(at.x, at.y, radius).fill({ color: view.disc.ring, alpha: 0.12 })
+    g.strokeArc(at.x, at.y, radius, turn, turn + Math.PI * 1.4, disc.phase === "hover" ? 4 : 3, view.disc.ring, disc.phase === "hover" ? 0.9 : 0.6)
+    if (disc.phase === "hover") g.fillCircle(at.x, at.y, radius, view.disc.ring, 0.12)
   }
   for (const { data } of queries.pending.each()) {
     const pending = data.pending.get()
     const radius = tuning.enemies[pending.kind].radius + 10
     const progress = 1 - pending.remaining / pending.duration
-    g.circle(pending.at.x, pending.at.y, radius).stroke({ width: 3, color: view.spawnWarning, alpha: 0.8 })
-    g.circle(pending.at.x, pending.at.y, radius * progress).fill({ color: view.spawnWarning, alpha: 0.25 })
+    g.strokeCircle(pending.at.x, pending.at.y, radius, 3, view.spawnWarning, 0.8)
+    g.fillCircle(pending.at.x, pending.at.y, radius * progress, view.spawnWarning, 0.25)
   }
 })

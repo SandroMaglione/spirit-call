@@ -34,9 +34,9 @@ const layers = [
     name: "presentation",
     paths: ["src/presentation/"],
     parts: ["content", "simulation", "presentation", "ui", "dev"],
-    packages: ["pixi.js", "@typeonce/bevy-ts", "@typeonce/bevy-ts-pixi", "@typeonce/bevy-ts-browser"]
+    packages: ["three", "@typeonce/bevy-ts", "@typeonce/bevy-ts-pixi", "@typeonce/bevy-ts-browser"]
   },
-  { name: "dev", paths: ["src/dev/"], parts: ["content", "simulation", "dev"], packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-devtools", "@typeonce/bevy-ts-pixi", "pixi.js"] },
+  { name: "dev", paths: ["src/dev/"], parts: ["content", "simulation", "dev"], packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-devtools", "@typeonce/bevy-ts-pixi"] },
   { name: "entry", paths: ["src/main.ts"], parts: "*", packages: "*" }
 ]
 

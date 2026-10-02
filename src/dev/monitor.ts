@@ -6,24 +6,23 @@
 import type { Schema } from "@typeonce/bevy-ts/Schema"
 import { Monitor } from "@typeonce/bevy-ts-devtools"
 import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
-import type { Application } from "pixi.js"
 
-import type { RenderNode } from "../presentation/host-types.ts"
+import type { RenderHostValue, RenderNode } from "../presentation/host-types.ts"
 
-/** Actor bodies are drawn above their feet; pick around their middle. */
-const bodyLift = 12
+/** Actor bodies stand on their feet; pick around their middle (world units above the floor). */
+const bodyLift = 14
 const pickRadius = 40
 
 export const attachMonitor = <S extends Schema.Any, Root>(
   runtime: Monitor.Target<S, Root>,
   schedules: Monitor.Options<S, Root>["schedules"],
-  app: Application,
+  host: RenderHostValue,
   nodes: NodeRegistry.NodeRegistry<RenderNode>
 ): Monitor.Monitor => {
   const screenOf = (node: RenderNode) => {
-    const rect = app.canvas.getBoundingClientRect()
-    const at = node.root.getGlobalPosition()
-    return { x: rect.left + at.x, y: rect.top + at.y - bodyLift }
+    const rect = host.canvas.getBoundingClientRect()
+    const at = host.toCanvas({ x: node.root.position.x, y: node.root.position.z }, bodyLift)
+    return { x: rect.left + at.x, y: rect.top + at.y }
   }
   return Monitor.attach(runtime, {
     schedules,

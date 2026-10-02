@@ -11,8 +11,8 @@ import type { Vec2 } from "../math/vec.ts"
 import { Aim, Controls, Enemy, Game, Hurtbox, Player, Position, PrevPosition, RenderClock, RenderHost, Skills, Tuning, Weapon } from "../schema.ts"
 import { lobTarget } from "../features/skills.ts"
 import { chargeOf, moveArea } from "../features/weapons.ts"
-import type { Graphics } from "pixi.js"
 import { drawArea } from "./draw.ts"
+import type { Shapes } from "./shapes.ts"
 
 /**
  * Attack cues, drawn on the floor. With a melee attack, the opening move's
@@ -92,15 +92,15 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
       if (entity.id.value !== controls.assistTarget) continue
       const target = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
       const radius = data.hurtbox.get().radius + 8
-      g.circle(target.x, target.y, radius).fill({ color: view.reticle, alpha: controls.attackHeld ? 0.18 : 0.08 })
-      g.circle(target.x, target.y, radius).stroke({ width: 3, color: view.reticle, alpha: controls.attackHeld ? 0.95 : 0.6 })
+      g.fillCircle(target.x, target.y, radius, view.reticle, controls.attackHeld ? 0.18 : 0.08)
+      g.strokeCircle(target.x, target.y, radius, 3, view.reticle, controls.attackHeld ? 0.95 : 0.6)
     }
   }
   if (controls.attackHeld && first !== undefined && !isMelee(first)) {
     const dx = controls.aimPoint.x - at.x
     const dy = controls.aimPoint.y - at.y
     const reach = Math.min(first.range, 320) / (Math.hypot(dx, dy) || 1)
-    g.moveTo(at.x, at.y).lineTo(at.x + dx * reach, at.y + dy * reach).stroke({ width: 3, color: view.reticle, alpha: 0.45 })
+    g.line(at.x, at.y, at.x + dx * reach, at.y + dy * reach, 3, view.reticle, 0.45)
   }
   const skills = player.data.skills.get()
   for (const slot of skillSlots) {
@@ -110,7 +110,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
 })
 
 /** What a skill used from `at` toward `aiming` will cover: a cut's lane, or where a lob lands and its blast. */
-const drawSkillAim = (g: Graphics, effect: SkillEffect, at: Vec2, aiming: Vec2): void => {
+const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): void => {
   switch (effect.kind) {
     case "cut": {
       const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })
@@ -119,12 +119,12 @@ const drawSkillAim = (g: Graphics, effect: SkillEffect, at: Vec2, aiming: Vec2):
     }
     case "lob": {
       const target = lobTarget(effect, at, aiming)
-      g.moveTo(at.x, at.y).lineTo(target.x, target.y).stroke({ width: 2, color: view.reticle, alpha: 0.35 })
-      g.circle(target.x, target.y, effect.radius).fill({ color: view.reticle, alpha: 0.08 }).stroke({ width: 2, color: view.reticle, alpha: 0.6 })
+      g.line(at.x, at.y, target.x, target.y, 2, view.reticle, 0.35)
+      g.fillCircle(target.x, target.y, effect.radius, view.reticle, 0.08).strokeCircle(target.x, target.y, effect.radius, 2, view.reticle, 0.6)
       return
     }
     case "nova":
-      g.circle(at.x, at.y, effect.radius).fill({ color: view.reticle, alpha: 0.08 }).stroke({ width: 2, color: view.reticle, alpha: 0.6 })
+      g.fillCircle(at.x, at.y, effect.radius, view.reticle, 0.08).strokeCircle(at.x, at.y, effect.radius, 2, view.reticle, 0.6)
       return
   }
 }
@@ -135,9 +135,8 @@ export const DrawReticle = Game.System("Shooter/DrawReticle", {
 }, ({ resources, services }) => {
   const { reticle, cursor } = services.host
   reticle.clear()
-  reticle.visible = cursor.over && resources.controls.get().device === "desktop"
-  if (!cursor.over) return
+  if (!cursor.over || resources.controls.get().device !== "desktop") return
   const r = 12 * projection.zoom
-  reticle.ellipse(cursor.x, cursor.y, r, r * projection.squash).stroke({ width: 2, color: view.reticle })
-  reticle.circle(cursor.x, cursor.y, 2).fill({ color: view.reticle })
+  reticle.strokeEllipse(cursor.x, cursor.y, r, r * projection.squash, 2, view.reticle, 1)
+  reticle.fillCircle(cursor.x, cursor.y, 2, view.reticle, 1)
 })

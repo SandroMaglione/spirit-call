@@ -5,11 +5,11 @@
  * reach, and the finisher sweeps a full circle. The head leads and the tail
  * chases it, so the trail reads as motion rather than as an area.
  *
- * Drawn in world units into a layer with the floor's projection, lifted to
- * waist height (see `createBrowserHost`). Trails follow the player, so a
+ * Drawn in world units into a layer lying at waist height, over the actors
+ * (see `createBrowserHost`). Trails follow the player, so a
  * lunge carries its slash along.
  */
-import type { Graphics } from "pixi.js"
+import type { Shapes } from "./shapes.ts"
 
 import type { MeleeMove } from "../content/attacks.ts"
 import { view } from "../config/view.ts"
@@ -28,11 +28,11 @@ const easeOut = (t: number): number => 1 - (1 - t) * (1 - t) * (1 - t)
 const clamp01 = (t: number): number => Math.max(0, Math.min(1, t))
 
 export class SlashTrails {
-  private readonly graphics: Graphics
+  private readonly graphics: Shapes
   private readonly trails: Array<Trail> = []
   private origin: Vec2 = { x: 0, y: 0 }
 
-  constructor(graphics: Graphics) {
+  constructor(graphics: Shapes) {
     this.graphics = graphics
   }
 
@@ -62,7 +62,7 @@ export class SlashTrails {
   }
 
   /** Draws one trail; true once it has faded out. */
-  private draw(g: Graphics, trail: Trail): boolean {
+  private draw(g: Shapes, trail: Trail): boolean {
     const spec = view.slashTrail
     const { move } = trail
     const o = this.origin
@@ -98,17 +98,17 @@ export class SlashTrails {
         const half = (move.width / 2) * 0.55
         // A spear of light: widest a third of the way out, sharp at the tip.
         const spear = [...at(back, 0), ...at(back + (length - back) * 0.3, half), ...at(length, 0), ...at(back + (length - back) * 0.3, -half)]
-        g.poly(spear).fill({ color: spec.edge, alpha: 0.35 * fade })
-        g.poly(spear).stroke({ width: 2, color: spec.core, alpha: 0.8 * fade })
+        g.fillPoly(spear, spec.edge, 0.35 * fade)
+        g.strokePoly(spear, 2, spec.core, 0.8 * fade)
         // Speed lines along the sides.
         for (const across of [-1, 1]) {
           const [x0, y0] = at(back + (length - back) * 0.15, across * half * 1.5)
           const [x1, y1] = at(back + (length - back) * 0.75, across * half * 1.5)
-          g.moveTo(x0!, y0!).lineTo(x1!, y1!).stroke({ width: 2, color: spec.core, alpha: 0.45 * fade })
+          g.line(x0!, y0!, x1!, y1!, 2, spec.core, 0.45 * fade)
         }
         const [cx, cy] = at(back, 0)
         const [tx, ty] = at(length, 0)
-        g.moveTo(cx!, cy!).lineTo(tx!, ty!).stroke({ width: 3, color: spec.core, alpha: 0.9 * fade })
+        g.line(cx!, cy!, tx!, ty!, 3, spec.core, 0.9 * fade)
         return false
       }
     }
@@ -118,7 +118,7 @@ export class SlashTrails {
    * A crescent from angle `from` (tail) to `to` (head): thin and faint at the
    * tail, thick and bright at the head, with a bright cutting edge outside.
    */
-  private crescent(g: Graphics, o: Vec2, from: number, to: number, reach: number, headInner: number, fade: number, heavy: boolean): void {
+  private crescent(g: Shapes, o: Vec2, from: number, to: number, reach: number, headInner: number, fade: number, heavy: boolean): void {
     const spec = view.slashTrail
     const segments = Math.max(4, Math.ceil((Math.abs(to - from) / Math.PI) * 14))
     const point = (angle: number, radius: number) => [o.x + Math.cos(angle) * radius, o.y + Math.sin(angle) * radius]
@@ -129,8 +129,7 @@ export class SlashTrails {
       const u1 = (index + 1) / segments
       const a0 = from + (to - from) * u0
       const a1 = from + (to - from) * u1
-      g.poly([...point(a0, outer), ...point(a1, outer), ...point(a1, inner(u1)), ...point(a0, inner(u0))])
-        .fill({ color: spec.edge, alpha: spec.alpha * fade * Math.pow(u1, 1.6) })
+      g.fillPoly([...point(a0, outer), ...point(a1, outer), ...point(a1, inner(u1)), ...point(a0, inner(u0))], spec.edge, spec.alpha * fade * Math.pow(u1, 1.6))
     }
     // The cutting edge, brightest at the head.
     const edge = Math.max(2, Math.ceil(segments / 3))
@@ -139,7 +138,7 @@ export class SlashTrails {
       const u1 = 1 - index / edge
       const [x0, y0] = point(from + (to - from) * u0, outer)
       const [x1, y1] = point(from + (to - from) * u1, outer)
-      g.moveTo(x0!, y0!).lineTo(x1!, y1!).stroke({ width: heavy ? 5 : 3.5, color: spec.core, alpha: fade * u1 })
+      g.line(x0!, y0!, x1!, y1!, heavy ? 5 : 3.5, spec.core, fade * u1)
     }
   }
 }

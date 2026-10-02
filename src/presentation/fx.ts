@@ -1,16 +1,17 @@
 /**
  * Cosmetic effects driven by gameplay events: damage numbers, sparks,
  * impact flashes, dust, and bursts. They live only in the renderer, advance
- * in real time, and reuse their display objects.
+ * in real time, and reuse their display objects. They are drawn flat over
+ * the scene, in projected coordinates (`toScreen`): what flies up moves up
+ * the screen.
  */
-import { Graphics, Sprite, Text } from "pixi.js"
-import type { Container } from "pixi.js"
+import type { Group } from "three"
 
 import type { Vec2 } from "../math/vec.ts"
-import type { RenderAssets } from "./host-types.ts"
+import { Digits } from "./digits.ts"
+import { Shapes } from "./shapes.ts"
 
 interface Particle {
-  readonly sprite: Sprite
   x: number
   y: number
   vx: number
@@ -18,6 +19,7 @@ interface Particle {
   life: number
   maxLife: number
   size: number
+  color: number
   /** Downward pull (negative rises, like dust). */
   gravity: number
   drag: number
@@ -28,14 +30,15 @@ interface Particle {
 
 /** A bright disc that swells and fades at an impact. */
 interface Flash {
-  readonly sprite: Sprite
+  x: number
+  y: number
+  color: number
   radius: number
   life: number
   maxLife: number
 }
 
 interface Ring {
-  readonly graphic: Graphics
   x: number
   y: number
   radius: number
@@ -45,7 +48,8 @@ interface Ring {
 }
 
 interface FloatingNumber {
-  readonly text: Text
+  text: string
+  color: number
   x: number
   y: number
   /** Sideways drift (pixels over its life), along the blow. */
@@ -67,8 +71,6 @@ interface ParticleOptions {
 }
 
 export class Fx {
-  private readonly layer: Container
-  private readonly assets: RenderAssets
   private readonly particles: Array<Particle> = []
   private readonly freeParticles: Array<Particle> = []
   private readonly numbers: Array<FloatingNumber> = []
@@ -78,27 +80,25 @@ export class Fx {
   private readonly flashes: Array<Flash> = []
   private readonly freeFlashes: Array<Flash> = []
   private readonly squash: number
+  private readonly ringShapes = new Shapes({ depthTest: false, order: 1 })
+  private readonly particleShapes = new Shapes({ depthTest: false, order: 2 })
+  private readonly flashShapes = new Shapes({ depthTest: false, additive: true, order: 3 })
+  private readonly digits = new Digits(4)
 
-  constructor(layer: Container, assets: RenderAssets, squash: number) {
-    this.layer = layer
-    this.assets = assets
+  constructor(layer: Group, squash: number) {
     this.squash = squash
+    layer.add(this.ringShapes.mesh, this.particleShapes.mesh, this.flashShapes.mesh, this.digits.mesh)
   }
 
   /** A shockwave on the floor expanding to `radius` (screen pixels, squashed like the floor). */
   ring(at: Vec2, radius: number, color: number, life = 0.4): void {
-    const ring = this.freeRings.pop() ?? (() => {
-      const graphic = new Graphics()
-      this.layer.addChild(graphic)
-      return { graphic, x: 0, y: 0, radius: 0, color: 0, life: 0, maxLife: 1 }
-    })()
+    const ring = this.freeRings.pop() ?? { x: 0, y: 0, radius: 0, color: 0, life: 0, maxLife: 1 }
     ring.x = at.x
     ring.y = at.y
     ring.radius = radius
     ring.color = color
     ring.life = life
     ring.maxLife = life
-    ring.graphic.visible = true
     this.rings.push(ring)
   }
 
@@ -143,16 +143,10 @@ export class Fx {
 
   /** A bright flash at `at` that swells to `radius` and fades over `life` seconds. */
   flash(at: Vec2, radius: number, color: number, life: number): void {
-    const flash = this.freeFlashes.pop() ?? (() => {
-      const sprite = new Sprite(this.assets.disc)
-      sprite.anchor.set(0.5)
-      sprite.blendMode = "add"
-      this.layer.addChild(sprite)
-      return { sprite, radius: 0, life: 0, maxLife: 1 }
-    })()
-    flash.sprite.position.set(at.x, at.y)
-    flash.sprite.tint = color
-    flash.sprite.visible = true
+    const flash = this.freeFlashes.pop() ?? { x: 0, y: 0, color: 0, radius: 0, life: 0, maxLife: 1 }
+    flash.x = at.x
+    flash.y = at.y
+    flash.color = color
     flash.radius = radius
     flash.life = life
     flash.maxLife = life
@@ -164,10 +158,9 @@ export class Fx {
    * than its resting `size` and drifts sideways by `drift` pixels.
    */
   number(at: Vec2, value: number, color: number, options: { readonly size?: number; readonly drift?: number; readonly life?: number } = {}): void {
-    const entry = this.freeNumbers.pop() ?? this.newNumber()
-    entry.text.text = String(Math.round(value))
-    entry.text.tint = color
-    entry.text.visible = true
+    const entry = this.freeNumbers.pop() ?? { text: "", color: 0, x: 0, y: 0, drift: 0, size: 1, life: 0, maxLife: 1 }
+    entry.text = String(Math.max(0, Math.round(value)))
+    entry.color = color
     entry.x = at.x + (Math.random() - 0.5) * 12
     entry.y = at.y
     entry.drift = options.drift ?? 0
@@ -178,26 +171,24 @@ export class Fx {
   }
 
   update(dt: number): void {
+    const flashes = this.flashShapes.clear()
     for (let index = this.flashes.length - 1; index >= 0; index--) {
       const flash = this.flashes[index]!
       flash.life -= dt
       if (flash.life <= 0) {
-        flash.sprite.visible = false
         this.flashes[index] = this.flashes[this.flashes.length - 1]!
         this.flashes.pop()
         this.freeFlashes.push(flash)
         continue
       }
       const t = 1 - flash.life / flash.maxLife
-      flash.sprite.scale.set((flash.radius * (0.45 + 0.55 * Math.sqrt(t))) / this.assets.discRadius)
-      flash.sprite.alpha = (1 - t) * (1 - t)
+      flashes.fillCircle(flash.x, flash.y, flash.radius * (0.45 + 0.55 * Math.sqrt(t)), flash.color, (1 - t) * (1 - t))
     }
+    const rings = this.ringShapes.clear()
     for (let index = this.rings.length - 1; index >= 0; index--) {
       const ring = this.rings[index]!
       ring.life -= dt
-      ring.graphic.clear()
       if (ring.life <= 0) {
-        ring.graphic.visible = false
         this.rings[index] = this.rings[this.rings.length - 1]!
         this.rings.pop()
         this.freeRings.push(ring)
@@ -205,14 +196,14 @@ export class Fx {
       }
       const t = 1 - ring.life / ring.maxLife
       const radius = ring.radius * (0.25 + 0.75 * Math.sqrt(t))
-      ring.graphic.ellipse(ring.x, ring.y, radius, radius * this.squash).stroke({ width: 10 * (1 - t) + 2, color: ring.color, alpha: 1 - t })
-      ring.graphic.ellipse(ring.x, ring.y, radius, radius * this.squash).fill({ color: ring.color, alpha: 0.15 * (1 - t) })
+      rings.strokeEllipse(ring.x, ring.y, radius, radius * this.squash, 10 * (1 - t) + 2, ring.color, 1 - t)
+      rings.fillEllipse(ring.x, ring.y, radius, radius * this.squash, ring.color, 0.15 * (1 - t))
     }
+    const particles = this.particleShapes.clear()
     for (let index = this.particles.length - 1; index >= 0; index--) {
       const particle = this.particles[index]!
       particle.life -= dt
       if (particle.life <= 0) {
-        particle.sprite.visible = false
         this.particles[index] = this.particles[this.particles.length - 1]!
         this.particles.pop()
         this.freeParticles.push(particle)
@@ -224,24 +215,23 @@ export class Fx {
       particle.x += particle.vx * dt
       particle.y += particle.vy * dt
       const t = particle.life / particle.maxLife
-      const size = (particle.size * (0.4 + 0.6 * t)) / this.assets.discRadius
-      particle.sprite.position.set(particle.x, particle.y)
+      const size = particle.size * (0.4 + 0.6 * t)
+      const alpha = t * particle.alpha
       if (particle.stretch > 1) {
         // Streaks point along their motion and shorten as they slow.
         const speed = Math.hypot(particle.vx, particle.vy)
-        particle.sprite.rotation = Math.atan2(particle.vy, particle.vx)
-        particle.sprite.scale.set(size * Math.max(1, particle.stretch * Math.min(1, speed / 250)), size * 0.6)
+        const length = size * Math.max(1, particle.stretch * Math.min(1, speed / 250))
+        particles.fillEllipse(particle.x, particle.y, length, size * 0.6, particle.color, alpha, Math.atan2(particle.vy, particle.vx))
       } else {
-        particle.sprite.rotation = 0
-        particle.sprite.scale.set(size)
+        particles.fillCircle(particle.x, particle.y, size, particle.color, alpha)
       }
-      particle.sprite.alpha = t * particle.alpha
     }
+    const digits = this.digits
+    digits.clear()
     for (let index = this.numbers.length - 1; index >= 0; index--) {
       const entry = this.numbers[index]!
       entry.life -= dt
       if (entry.life <= 0) {
-        entry.text.visible = false
         this.numbers[index] = this.numbers[this.numbers.length - 1]!
         this.numbers.pop()
         this.freeNumbers.push(entry)
@@ -250,25 +240,31 @@ export class Fx {
       const t = 1 - entry.life / entry.maxLife
       // Jumps up fast then hangs; pops in at 1.8x and settles by 15% of its life.
       const rise = 1 - (1 - t) * (1 - t)
-      entry.text.position.set(entry.x + entry.drift * rise, entry.y - 40 - rise * 38)
-      entry.text.alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4
-      entry.text.scale.set(entry.size * (t < 0.15 ? 1.8 - (t / 0.15) * 0.8 : 1))
+      const alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4
+      const scale = entry.size * (t < 0.15 ? 1.8 - (t / 0.15) * 0.8 : 1)
+      digits.write(entry.text, entry.x + entry.drift * rise, entry.y - 40 - rise * 38, scale, entry.color, alpha)
     }
+  }
+
+  /** Uploads this frame's shapes; called before rendering. */
+  flush(): void {
+    this.ringShapes.flush()
+    this.particleShapes.flush()
+    this.flashShapes.flush()
+    this.digits.flush()
+  }
+
+  dispose(): void {
+    for (const shapes of [this.ringShapes, this.particleShapes, this.flashShapes]) shapes.dispose()
+    this.digits.dispose()
   }
 
   get active(): number {
     return this.particles.length + this.numbers.length + this.rings.length + this.flashes.length
   }
 
-  private newParticle(): Particle {
-    const sprite = new Sprite(this.assets.disc)
-    sprite.anchor.set(0.5)
-    this.layer.addChild(sprite)
-    return { sprite, x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 1, gravity: 0, drag: 0, stretch: 1, alpha: 1 }
-  }
-
   private emit(at: Vec2, vx: number, vy: number, options: ParticleOptions): void {
-    const particle = this.freeParticles.pop() ?? this.newParticle()
+    const particle = this.freeParticles.pop() ?? { x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 1, color: 0, gravity: 0, drag: 0, stretch: 1, alpha: 1 }
     particle.x = at.x
     particle.y = at.y
     particle.vx = vx
@@ -276,22 +272,11 @@ export class Fx {
     particle.life = options.life * (0.7 + Math.random() * 0.5)
     particle.maxLife = particle.life
     particle.size = options.size
+    particle.color = options.color
     particle.gravity = options.gravity ?? 260
     particle.drag = options.drag ?? 6
     particle.stretch = options.stretch ?? 1
     particle.alpha = options.alpha ?? 1
-    particle.sprite.tint = options.color
-    particle.sprite.visible = true
     this.particles.push(particle)
-  }
-
-  private newNumber(): FloatingNumber {
-    const text = new Text({
-      text: "",
-      style: { fontFamily: "IBM Plex Mono, ui-monospace, monospace", fontSize: 15, fontWeight: "700", fill: 0xffffff, stroke: { color: 0x0d1117, width: 4 } }
-    })
-    text.anchor.set(0.5)
-    this.layer.addChild(text)
-    return { text, x: 0, y: 0, drift: 0, size: 1, life: 0, maxLife: 1 }
   }
 }

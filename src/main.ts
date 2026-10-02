@@ -91,11 +91,11 @@ const start = async (mount: HTMLElement) => {
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
-  const { app } = browser.host
+  const { canvas, size } = browser.host
   const keyboard = Keyboard.actions(window, keyBindings)
-  const pointer = Pointer.track(app.canvas, window)
+  const pointer = Pointer.track(canvas, window)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
-  const touch = Touch.track(app.canvas, window, touchLayout, {
+  const touch = Touch.track(canvas, window, touchLayout, {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
@@ -118,7 +118,7 @@ const start = async (mount: HTMLElement) => {
   })
   const frameContext: FrameContextValue = {
     get viewport() {
-      return { width: app.screen.width, height: app.screen.height }
+      return { width: size.width, height: size.height }
     }
   }
 
@@ -150,18 +150,14 @@ const start = async (mount: HTMLElement) => {
   // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.
   const step = Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
   // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
-  const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, app, browser.nodes)
+  const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, browser.host, browser.nodes)
   // Dev handle for inspecting the running game from the console.
   Object.assign(window, { __game: { runtime, pointer, keyboard, touch, sounds, host: browser.host, monitor } })
 
   const stats = browser.host.stats
   let simMs = 0
   const loop = FixedLoop.start({
-    source: FixedLoop.source((onTick) => {
-      const tick = (ticker: { readonly deltaMS: number }) => onTick(ticker)
-      app.ticker.add(tick)
-      return { stop: () => app.ticker.remove(tick) }
-    }),
+    source: FixedLoop.animationFrames(window),
     stepSeconds: engine.stepSeconds,
     maxFrameSeconds: engine.maxFrameSeconds,
     maxStepsPerFrame: engine.maxStepsPerFrame,
@@ -180,6 +176,7 @@ const start = async (mount: HTMLElement) => {
       simMs = 0
       const started = performance.now()
       runtime.tick(frame)
+      browser.host.render()
       stats.drawMs += (performance.now() - started - stats.drawMs) * 0.05
     },
     onFailure: (failure) => {

@@ -5,7 +5,7 @@ A top-down action game for the phone (and the browser), built on the
 design direction (pillars, non-goals, open questions). Design decisions are
 checked against it; open questions are asked, not guessed. Detailed rules
 for one area live next to it (`docs/elements.md`: elements, states, ground
-effects, enemy traits).
+effects, enemy traits; `docs/models.md`: 3D models and looks).
 
 ## Commands
 
@@ -43,8 +43,12 @@ effects, enemy traits).
 - Simulation (`src/features/`, `src/schema.ts`, `src/schedules.ts`, physics,
   math, config): the ECS. Deterministic (time and randomness come from the
   world's `Time` and `Rng`), headless, and tested without a browser.
-- `src/presentation/`: rendering (Pixi), sounds, effects, and the in-arena
-  HUD (plain DOM).
+- `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
+  HUD (plain DOM). The world is 3D (low-poly), seen by an orthographic
+  camera whose view of the floor is exactly `src/math/iso.ts`'s projection
+  (`test/camera.test.ts`), so input and the overlay work in projected
+  coordinates. Things that come in numbers (enemies, projectiles, shadows,
+  damage numbers) are drawn in batches, never a mesh each.
 - `src/ui/`: the menu and results screens (Preact with signals). The UI
   mirrors state and calls plain action functions; it never changes game
   state directly.
@@ -68,3 +72,11 @@ simulation); `pnpm check` runs it.
 - Comments explain intent in plain language, matching the surrounding code.
 - Verify gameplay and UI changes in a real browser, on the network address
   (not only localhost), including a phone-sized viewport with touch input.
+- Animation follows the simulation, never the other way round: timings
+  (windups, hits, recoveries) live in content and the simulation, and clips
+  are sped up or slowed down to fit them. No root motion, and no hitboxes
+  from animation.
+- What a character, an enemy, or the arena looks like (a placeholder or a
+  model, and which clip plays at which moment) is `src/presentation/looks.ts`,
+  keyed by content id; content holds no asset paths. Models follow
+  `docs/models.md`.
