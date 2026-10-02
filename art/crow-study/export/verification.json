@@ -1,6 +1,8 @@
 {
-  "bytes": 254560,
+  "bytes": 269876,
   "height_meters": 2.19648814201355,
+  "glb_sha256": "a7589953e5d4f85514f2144fd8345f0ff9c65133676da5f56d612361e8432ecb",
+  "source_blend_sha256": "f25d19fd69b979b791a98ee4f760124c1716fc7560f54c2872e871dabaaa012f",
   "armatures": 1,
   "bones": 12,
   "max_weights_after_import": 2,
@@ -10,6 +12,7 @@
   },
   "round_trip_max_bounds_error_meters": {
     "Idle": 7.152557373046875e-07,
-    "Run": 5.364418029785156e-07
+    "Run": 5.364418029785156e-07,
+    "Attack": 1.7881393432617188e-06
   }
 }

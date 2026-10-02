@@ -3,7 +3,10 @@
 blender --background --python-exit-code 1 --python art/crow-study/export/export-glb.py
 """
 import json
+import hashlib
+import shutil
 import struct
+import sys
 from pathlib import Path
 
 import bpy
@@ -91,6 +94,11 @@ def main():
     collection = bpy.data.collections["CROW | editable character"]
     meshes = [o for o in collection.objects if o.type == "MESH"]
     rig = next(o for o in collection.objects if o.type == "ARMATURE")
+    if "--locomotion-only" not in sys.argv:
+        sys.path.insert(0, str(HERE))
+        from attack import add_attack, FRAMES
+        add_attack(rig)
+        CLIPS["Attack"] = FRAMES
     root = bpy.data.objects["Crow | model root"]
     assert tuple(root.location) == (0, 0, 0) and tuple(root.scale) == (1, 1, 1)
     assert weights(meshes, rig) <= 4
@@ -140,10 +148,14 @@ def main():
     for name, count in CLIPS.items():
         action = bpy.data.actions[name]
         expected[name] = capture(rig, meshes, name, count)
-        scene.frame_set(count + 1)
-        seam = bounds(meshes)
-        seams[name] = max(abs(a - b) for p, q in zip(expected[name][0], seam) for a, b in zip(p, q))
-        assert seams[name] < 1e-5
+        if name != "Attack":
+            scene.frame_set(count + 1)
+            seam = bounds(meshes)
+            seams[name] = max(abs(a - b) for p, q in zip(expected[name][0], seam) for a, b in zip(p, q))
+            assert seams[name] < 1e-5
+        else:
+            assert min(b[0][2] for b in expected[name]) > -0.015
+            assert max(abs(a - b) for p, q in zip(expected[name][0], expected[name][7]) for a, b in zip(p, q)) > 0.25
         for curve in curves(action):
             for key in list(curve.keyframe_points):
                 if key.co.x > count:
@@ -230,9 +242,20 @@ def main():
         "root_motion": False, "fps": FPS,
         "clips": {name: {"frames": [1, count], "samples": count,
                          "last_key_seconds": (count - 1) / FPS,
-                         "loop_seconds": count / FPS} for name, count in CLIPS.items()}}
+                         "loop_seconds": count / FPS if name != "Attack" else None}
+                  for name, count in CLIPS.items()}}
+    if "Attack" in CLIPS:
+        info["animated_export"]["clips"]["Attack"].update({
+            "duration_seconds": (CLIPS["Attack"] - 1) / FPS,
+            "pose_markers_seconds": {"windup": 4 / FPS, "follow_through": 7 / FPS, "recover": 10 / FPS},
+            "scope": "Unarmed side-slash pose study; not wired to combat hit timing"})
     info_path.write_text(json.dumps(info, indent=2) + "\n")
+    # Keep the explicitly requested path and a complete asset handoff folder.
+    shutil.copyfile(OUTPUT, HERE / OUTPUT.name)
+    shutil.copyfile(info_path, HERE / info_path.name)
     report = {"bytes": OUTPUT.stat().st_size, "height_meters": height,
+              "glb_sha256": hashlib.sha256(OUTPUT.read_bytes()).hexdigest(),
+              "source_blend_sha256": hashlib.sha256((ROOT / "crow-animated.blend").read_bytes()).hexdigest(),
               "armatures": 1, "bones": len(rig.data.bones),
               "max_weights_after_import": imported_max_weights,
               "source_loop_seam_error_meters": seams,

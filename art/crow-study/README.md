@@ -1,5 +1,10 @@
 # Crow model study 01
 
+For the Three.js handoff, see [`export/README.md`](export/README.md).
+`crow-animated.glb` includes Idle, Run, and an unarmed Attack pose study;
+`export/export-glb.py` rebuilds it and checks a fresh Blender import.
+`export/` also contains a Three.js inspector and the required loop-timing helper.
+
 A character-only study of the Death's Door crow, built in Blender through
 Python. No sword or accessories. The original static model and a separate
 rigged idle/run version live here. The previous pixel art experiment is
