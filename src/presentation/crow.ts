@@ -5,7 +5,7 @@ import { projection, view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { crowAnimation as crowAtlas } from "./assets/crow-animation.ts"
 import idleUrl from "./assets/crow-idle.png"
-import walkUrl from "./assets/crow-walk.png"
+import runUrl from "./assets/crow-run.png"
 import type { CrowTextures, PlayerNode } from "./host-types.ts"
 
 const loadClip = async (url: string, frames: number): Promise<ReadonlyArray<Texture>> => {
@@ -19,11 +19,11 @@ const loadClip = async (url: string, frames: number): Promise<ReadonlyArray<Text
 }
 
 export const loadCrowTextures = async (): Promise<CrowTextures> => {
-  const [idle, walk] = await Promise.all([
+  const [idle, run] = await Promise.all([
     loadClip(idleUrl, crowAtlas.clips.idle.frames),
-    loadClip(walkUrl, crowAtlas.clips.walk.frames)
+    loadClip(runUrl, crowAtlas.clips.run.frames)
   ])
-  return { idle, walk }
+  return { idle, run }
 }
 
 /** Rows hold animation frames; columns retain the same sixteen facings. */

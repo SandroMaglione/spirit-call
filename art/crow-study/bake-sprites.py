@@ -53,14 +53,14 @@ meshes = [o for o in bpy.data.collections["CROW | editable character"].objects i
 height = max((o.matrix_world @ v.co).z for o in meshes for v in o.data.vertices)
 
 if ANIMATED:
-    rig = bpy.data.objects["Crow rig | idle + walk"]
-    clips = {"idle": {"frames": 8, "sourceFrames": 48, "seconds": 2},
-             "walk": {"frames": 12, "sourceFrames": 24, "seconds": 1}}
+    rig = bpy.data.objects["Crow rig | idle + run"]
+    clips = {"idle": {"frames": 16, "sourceFrames": 48, "seconds": 2},
+             "run": {"frames": 12, "sourceFrames": 12, "seconds": 0.5}}
     metadata = {
         "frameSize": FRAME, "columns": COUNT, "directions": COUNT,
         "anchor": {"x": round(origin.x, 8), "y": round(1 - origin.y, 8)},
         "projectedHeight": round(height * math.cos(ELEVATION) * FRAME / ORTHO, 8),
-        "squash": SQUASH, "walkDistance": 180, "clips": clips,
+        "squash": SQUASH, "runDistance": 110, "clips": clips,
     }
     for clip, config in clips.items():
         rig.animation_data.action = bpy.data.actions[clip.title()]

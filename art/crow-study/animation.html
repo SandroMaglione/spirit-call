@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Crow · Idle and walk</title>
+<title>Crow · Idle and run</title>
 <style>
   :root {color-scheme:dark;font:16px/1.5 system-ui,sans-serif;color:#e8e3d9;background:#181a1c}
   * {box-sizing:border-box} body {margin:0} main {max-width:1120px;margin:auto;padding:clamp(18px,4vw,48px)}
@@ -21,11 +21,11 @@
 </style>
 <main>
   <nav><a href="./">Model study</a><a href="/?play&character=swordsman">Play the game</a><a href="crow-animated.blend" download>Download animated Blender file</a></nav>
-  <h1>A breath. A few steps.</h1>
-  <p>Idle and walk, rendered from the same rig. Turn the crow, pause, or scrub through a cycle.</p>
+  <h1>Breathe. Lean in. Run.</h1>
+  <p>Idle and run, rendered from the same rig. Turn the crow, pause, or scrub through a cycle.</p>
   <div class="views">
     <article><div class="stage"><canvas id="idle" width="512" height="512" aria-label="Looping crow idle animation"></canvas></div><div class="caption"><h2>Idle</h2><span id="idle-frame">Loading…</span></div></article>
-    <article><div class="stage"><canvas id="walk" width="512" height="512" aria-label="Looping crow walk animation"></canvas></div><div class="caption"><h2>Walk</h2><span id="walk-frame">Loading…</span></div></article>
+    <article><div class="stage"><canvas id="run" width="512" height="512" aria-label="Looping crow run animation"></canvas></div><div class="caption"><h2>Run</h2><span id="run-frame">Loading…</span></div></article>
   </div>
   <div class="controls">
     <label for="direction">Facing <output id="direction-value">0°</output><input id="direction" type="range" min="0" max="15" step="1" value="0"></label>
@@ -34,17 +34,19 @@
   </div>
   <div class="playback"><button id="play" type="button">Pause</button><span id="status" aria-live="polite">Loading sprites…</span></div>
   <label class="scrub" for="phase">Cycle position <output id="phase-value">0%</output><input id="phase" type="range" min="0" max="99" step="1" value="0"></label>
-  <footer><p>12 bones · 16 directions · 8 idle frames · 12 walk frames. Feet use two-bone inverse kinematics. The game advances walk by distance traveled and supplies movement; these clips stay in place. At the current full movement speed, walk plays at about 1.8×. Strafing uses this same clip.</p></footer>
+  <footer><p>12 bones · 16 directions · 16 idle frames · 12 run frames. At 1×, run previews the game's normal movement cadence of about 2.9 cycles per second. The game advances the cycle by distance traveled; these previews stay in place. Strafing uses the same clip.</p></footer>
 </main>
 <script type="module">
   import {crowAnimation as atlas} from '/src/presentation/assets/crow-animation.ts';
   const byId = id => document.getElementById(id);
-  const clips = ['idle','walk'];
+  const clips = ['idle','run'];
   const images = Object.fromEntries(await Promise.all(clips.map(async clip => {
-    const image = new Image(); image.src = `/src/presentation/assets/crow-${clip}.png`; await image.decode(); return [clip,image];
+    const image = new Image();
+    await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=`/src/presentation/assets/crow-${clip}.png`;});
+    return [clip,image];
   })));
   let playing = true, last = performance.now();
-  const phases = {idle:0,walk:0};
+  const phases = {idle:0,run:0};
   const play = byId('play'), status = byId('status'), phase = byId('phase');
   function setPlaying(value) {playing=value;play.textContent=value?'Pause':'Play';status.textContent=value?'Playing both loops':'Paused';}
   setPlaying(true);
@@ -67,10 +69,13 @@
       ctx.drawImage(images[clip],direction*atlas.frameSize,frame*atlas.frameSize,atlas.frameSize,atlas.frameSize,x,y,size,size);
       byId(`${clip}-frame`).textContent=`Frame ${frame+1} / ${config.frames}`;
     }
-    phase.value=Math.floor(phases.walk*100);byId('phase-value').textContent=`${phase.value}%`;
+    phase.value=Math.floor(phases.run*100);byId('phase-value').textContent=`${phase.value}%`;
   }
   function render(now) {
-    if(playing)for(const clip of clips)phases[clip]=(phases[clip]+Math.min((now-last)/1000,.1)*Number(byId('speed').value)/atlas.clips[clip].seconds)%1;
+    if(playing)for(const clip of clips){
+      const seconds=clip==='run'?atlas.runDistance/320:atlas.clips[clip].seconds;
+      phases[clip]=(phases[clip]+Math.min((now-last)/1000,.1)*Number(byId('speed').value)/seconds)%1;
+    }
     last=now;draw();
     requestAnimationFrame(render);
   }

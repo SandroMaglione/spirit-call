@@ -22,7 +22,7 @@ bpy.context.view_layer.objects.active = meshes[0]
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 bpy.ops.object.select_all(action="DESELECT")
 
-rig = bpy.data.objects.new("Crow rig | idle + walk", bpy.data.armatures.new("Crow skeleton"))
+rig = bpy.data.objects.new("Crow rig | idle + run", bpy.data.armatures.new("Crow skeleton"))
 collection.objects.link(rig)
 rig.parent = root
 rig.show_in_front = True
@@ -101,7 +101,7 @@ def keyframe(frame):
 
 
 rig.animation_data_create()
-for clip, frames in [("Idle", 48), ("Walk", 24)]:
+for clip, frames in [("Idle", 48), ("Run", 12)]:
     action = bpy.data.actions.new(clip)
     action.use_fake_user = True
     action["loop_frames"] = frames
@@ -112,30 +112,36 @@ for clip, frames in [("Idle", 48), ("Walk", 24)]:
             pose(name)
         if clip == "Idle":
             breath = math.sin(phase)
-            pose("body", (0, 0, 0.012 * breath), scale=(1 + 0.009 * breath, 1 + 0.007 * breath, 1))
-            pose("head", angles=(0.018 * math.sin(phase - 0.5), 0, 0.012 * math.sin(phase)))
+            # Exaggerate breathing and the wing silhouette: the phone shows
+            # only about twenty pixels of character height.
+            pose("body", (0.018 * math.sin(phase), 0, 0.055 * breath),
+                 angles=(0.025 * breath, 0.018 * math.sin(phase), 0),
+                 scale=(1 + 0.035 * breath, 1 + 0.035 * breath, 1))
+            pose("head", angles=(0.075 * math.sin(phase - 0.5), 0, 0.07 * math.sin(phase)))
             for side, label in [(-1, "L"), (1, "R")]:
-                pose(f"wing.{label}", angles=(0.008 * breath, side * 0.016 * breath, 0))
-            pose("tail", angles=(0.018 * math.sin(phase - 0.8), 0, 0))
+                pose(f"wing.{label}", angles=(0.035 * breath, -side * (0.055 + 0.08 * breath), 0))
+            pose("tail", angles=(0.055 * math.sin(phase - 0.8), 0, 0))
         else:
-            # Two steps per cycle. Feet slide back while planted, then lift
-            # and recover forward. The root stays still for the game to move.
-            pose("body", (0.018 * math.sin(phase), 0, -0.014 + 0.025 * math.cos(2 * phase)),
-                 angles=(0.035, 0.025 * math.sin(phase), 0.025 * math.sin(phase)))
-            pose("head", angles=(-0.030 + 0.020 * math.cos(2 * phase - 0.5), 0, -0.015 * math.sin(phase)))
-            pose("tail", angles=(0.065 * math.cos(2 * phase - 0.6), 0, 0.035 * math.sin(phase)))
+            # A short stance and a high, fast recovery leave two airborne
+            # intervals per cycle. Lean from the hips; counter-rotate the
+            # head so the beak still leads rather than pointing at the floor.
+            bounce = math.cos(2 * phase + 0.8)
+            pose("body", (0.025 * math.sin(phase), -0.07, 0.015 + 0.060 * bounce),
+                 angles=(0.54 + 0.045 * bounce, 0.040 * math.sin(phase), 0.045 * math.sin(phase)))
+            pose("head", angles=(-0.20 + 0.045 * math.cos(2 * phase - 0.3), 0, -0.025 * math.sin(phase)))
+            pose("tail", angles=(-0.15 + 0.12 * math.cos(2 * phase - 0.6), 0, 0.065 * math.sin(phase)))
             for side, label in [(-1, "L"), (1, "R")]:
                 cycle = (frame / frames + (0 if side < 0 else 0.5)) % 1
-                if cycle < 0.6:
-                    forward = -0.19 + 0.38 * cycle / 0.6
+                if cycle < 0.36:
+                    forward = -0.34 + 0.68 * cycle / 0.36
                     lift = 0
                 else:
-                    swing = (cycle - 0.6) / 0.4
+                    swing = (cycle - 0.36) / 0.64
                     ease = swing * swing * (3 - 2 * swing)
-                    forward = 0.19 - 0.38 * ease
-                    lift = 0.12 * math.sin(math.pi * swing) ** 2
+                    forward = 0.34 - 0.68 * ease
+                    lift = 0.27 * math.sin(math.pi * swing) ** 2
                 pose(f"foot.{label}", (0, forward, lift))
-                pose(f"wing.{label}", angles=(side * 0.10 * math.sin(phase), side * 0.035, side * 0.03 * math.cos(phase)))
+                pose(f"wing.{label}", angles=(0.30 + side * 0.18 * math.sin(phase), -side * 0.13, side * 0.07 * math.cos(phase)))
         keyframe(frame + 1)
     # Dense authored keys interpolate linearly, avoiding foot overshoot below ground.
     for layer in action.layers:
@@ -146,10 +152,10 @@ for clip, frames in [("Idle", 48), ("Walk", 24)]:
                         key.interpolation = "LINEAR"
 
 scene.render.fps = 24
-rig.animation_data.action = bpy.data.actions["Walk"]
-scene.frame_start, scene.frame_end = 1, 24
+rig.animation_data.action = bpy.data.actions["Run"]
+scene.frame_start, scene.frame_end = 1, 12
 scene.frame_set(1)
-root["scope"] = "Character study with Idle and Walk actions. No weapon. Root motion supplied by game."
-rig["instructions"] = "Action Editor: select Idle (1-48) or Walk (1-24). Final duplicate key closes each loop."
+root["scope"] = "Character study with Idle and Run actions. No weapon. Root motion supplied by game."
+rig["instructions"] = "Action Editor: select Idle (1-48) or Run (1-12). Final duplicate key closes each loop."
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / "crow-animated.blend"))
-print("CROW_ANIMATION", len(rig.data.bones), "bones; Idle 48 frames, Walk 24 frames at 24 fps")
+print("CROW_ANIMATION", len(rig.data.bones), "bones; Idle 48 frames, Run 12 frames at 24 fps")

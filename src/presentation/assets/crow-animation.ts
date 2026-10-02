@@ -10,17 +10,17 @@ export const crowAnimation = {
   },
   "projectedHeight": 81.43132812,
   "squash": 0.5,
-  "walkDistance": 180,
+  "runDistance": 110,
   "clips": {
     "idle": {
-      "frames": 8,
+      "frames": 16,
       "sourceFrames": 48,
       "seconds": 2
     },
-    "walk": {
+    "run": {
       "frames": 12,
-      "sourceFrames": 24,
-      "seconds": 1
+      "sourceFrames": 12,
+      "seconds": 0.5
     }
   }
 } as const

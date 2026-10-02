@@ -13,7 +13,7 @@ describe("crow playback", () => {
       for (let i = 1; i <= fps; i++) advanceCrow(state, { x: i * 100 / fps, y: 0 }, aim, 1 / fps, false)
       return state
     }
-    expect(travel(30).clip).toBe("walk")
+    expect(travel(30).clip).toBe("run")
     expect(travel(30).phase).toBeCloseTo(travel(120).phase, 8)
   })
 
@@ -21,7 +21,7 @@ describe("crow playback", () => {
     const state = fresh()
     const position = { x: 5, y: 0 }
     advanceCrow(state, position, aim, 1 / 60, false)
-    expect(state.clip).toBe("walk")
+    expect(state.clip).toBe("run")
     advanceCrow(state, position, aim, 1 / 60, false)
     expect(state.clip).toBe("idle")
     const before = state.phase
@@ -39,7 +39,7 @@ describe("crow playback", () => {
     expect(state.phase - before).toBeCloseTo(before, 8)
   })
 
-  it("reverses a walk while backing away and wraps to valid frames", () => {
+  it("reverses the steps while backing away and wraps to valid frames", () => {
     const state = fresh()
     for (let i = 1; i <= 200; i++) {
       const frame = advanceCrow(state, { x: -i * 5, y: 0 }, aim, 1 / 60, false)

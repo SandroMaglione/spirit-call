@@ -2,7 +2,7 @@
 
 A character-only study of the Death's Door crow, built in Blender through
 Python. No sword or accessories. The original static model and a separate
-rigged idle/walk version live here. The previous pixel art experiment is
+rigged idle/run version live here. The previous pixel art experiment is
 independent of this directory.
 
 ## In the game
@@ -12,7 +12,7 @@ Every player character currently uses this same test visual. Enemy visuals
 and character abilities retain their existing definitions.
 
 The game uses transparent renders of the animated Blender model in its
-existing Pixi renderer. Idle has 8 frames and walk has 12, each in 16 facing
+existing Pixi renderer. Idle has 16 frames and run has 12, each in 16 facing
 directions selected by aim. The camera matches the game's isometric projection;
 each frame shares a ground anchor so turning does not shift the feet.
 The sprite retains the pill's nominal height, collision radius, depth
@@ -28,15 +28,15 @@ To bring saved model changes into the game, run these in order:
 ```
 
 `animate.py` reads `crow.blend` without overwriting it, then writes
-`crow-animated.blend` with 12 bones, weighted meshes, and named Idle/Walk
+`crow-animated.blend` with 12 bones, weighted meshes, and named Idle/Run
 actions. It overwrites the animated variant; save manual rig edits separately
 or put them in the script. To bake manual animation edits, skip `animate.py`
 and run the verifier and bake directly against the saved animated variant.
 
-The bake generates `src/presentation/assets/crow-idle.png`, `crow-walk.png`,
+The bake generates `src/presentation/assets/crow-idle.png`, `crow-run.png`,
 and `crow-animation.ts` metadata. Frames are 128px square with shared
-camera scale and ground anchor. Both atlases total about 3.65 MB on disk
-and 20 MiB decoded RGBA. Vite bundles them for production; Blender is
+camera scale and ground anchor. Both atlases total about 5.19 MB on disk
+and 28 MiB decoded RGBA. Vite bundles them for production; Blender is
 needed only when rebuilding. The original static atlas remains available
 for comparison, but the game no longer loads it. Running the bake without
 `--animated` still rebuilds that static atlas.
@@ -44,9 +44,9 @@ for comparison, but the game no longer loads it. Running the bake without
 `src/presentation/crow.ts` loads and displays frames.
 `src/presentation/crow-animation.ts` advances playback from interpolated
 travel distance, returns to idle when travel stops, reverses the cycle for
-backward movement, and holds the current pose during a dash. One walk cycle
-covers 180 game units, an artistic timing choice rather than root-motion
-matching. At speed 320, it plays about 1.8 cycles per second. The clip retains
+backward movement, and holds the current pose during a dash. One run cycle
+covers 110 game units, an artistic timing choice rather than root-motion
+matching. At speed 320, it plays about 2.9 cycles per second. The clip retains
 aim-facing when strafing, so sideways travel still slides. Dedicated strafe,
 attack, and dash clips are outside this first animation pass. No simulation
 state, live 3D engine, or package dependency was added.
@@ -55,7 +55,7 @@ The bake uses a 30-degree camera elevation for `projection.squash = 0.5`.
 A change to the game's projection requires updating and rebaking this
 camera. At phone scale, the crow is small and dark against the current
 arena; size and contrast remain useful art-direction checks. Animation has
-already increased decoded texture memory from 4 to 20 MiB for this one
+already increased decoded texture memory from 4 to 28 MiB for this one
 character. More clips and characters will need atlas packing, loading only
 needed characters, and a phone memory/performance budget.
 
@@ -67,12 +67,16 @@ enlarged preview intentionally magnifies the game sprites; it is not a
 high-resolution model render.
 
 Open `crow-animated.blend` in Blender to inspect the actual rig. Select
-`Crow rig | idle + walk` and choose Idle or Walk in the Action Editor.
-Idle loops over frames 1–48 and Walk over 1–24 at 24 fps. Each action also
-has a duplicate closing key at 49 or 25, excluded from playback and baking.
+`Crow rig | idle + run` and choose Idle or Run in the Action Editor.
+Idle loops over frames 1–48 and Run over 1–12 at 24 fps. Each action also
+has a duplicate closing key at 49 or 13, excluded from playback and baking.
 Feet use two-bone inverse kinematics; the body and head deform through
 weights, while eyes, beak, wings, and toes follow their assigned bones.
-Idle keeps both feet planted. Walk alternates stance and raised recovery.
+Idle keeps both feet planted, with an exaggerated breath, head nod, and
+wing opening that move the silhouette at phone size. The run leans forward
+about 30 degrees, with the head counter-rotated to keep looking ahead,
+wings swept back, a longer leg swing, and two airborne intervals per cycle.
+Its shorter stance and faster recovery replace the earlier upright walk.
 This simple rig suits these two clips; it has not proved combat poses,
 extreme wing motion, retargeting, or animated GLB export. `crow.glb` remains
 the original static export.
@@ -101,7 +105,7 @@ character animation.
 The character has 23 mesh parts, 2,518 source vertices, and 4,944 triangles.
 It uses one 512 × 512 texture and simple material colors on the other parts.
 The static file is an editable visual study. Its animated variant has a
-small rig tested for idle and walk; deformation under more demanding poses
+small rig tested for idle and run; deformation under more demanding poses
 and runtime optimization remain unfinished.
 
 ## Rebuild
@@ -160,6 +164,15 @@ rig information. No original game assets were extracted. This is a fan
 study of Acid Nerve's character, intended to assess the workflow before
 making original characters.
 
+Motion reference: the [official gameplay trailer](https://www.youtube.com/watch?v=MfOQWtpeEN0),
+also published on the Steam page. Frame-by-frame inspection of the laser
+room traversal informed the alternating feet, compact body bounce, and
+trailing wing silhouette. The stronger forward lean is an intentional
+adaptation to this game's faster travel, not a claim to reproduce the
+original game's timing. The run cadence is about 2.9 cycles per second at
+speed 320, compared with the previous walk's 1.8. Game movement speed and
+collision sizes have not changed.
+
 The sheet was enough to establish identity, color placement, and broad
 proportions. It was not a complete orthographic turnaround. Body depth,
 the backs of the wings, rear skull shape, and feet required interpretation.
@@ -182,7 +195,7 @@ reduce guesswork. Animation needs motion reference for poses and timing.
   conventions, camera setups, and eventually rigs. A different anatomy
   still needs a new silhouette and deformation plan. This script is a
   character-specific starting point, not a general character generator.
-- Named Blender actions now produce idle and walk sprites. The next proof
+- Named Blender actions now produce idle and run sprites. The next proof
   should be one strong attack, checking feet, wing deformation, silhouette,
   and pose transitions. Animated GLB export remains untested. Scripted
   keyframes still require visual iteration for appealing timing and weight.
@@ -195,7 +208,7 @@ reduce guesswork. Animation needs motion reference for poses and timing.
   that choice or establish phone performance.
 
 The useful result is a repeatable build-and-review loop. A successful
-idle/walk test does not by itself prove production-ready combat animation,
+idle/run test does not by itself prove production-ready combat animation,
 large content throughput, or Death's Door's finished art quality.
 
 ## Verification
@@ -223,10 +236,16 @@ large content throughput, or Death's Door's finished art quality.
   visually inspected; subsequent preview screenshots intermittently failed.
 - Animation verification passed for normalized weights, finite evaluated
   geometry, exact loop closure, no below-ground vertices, stationary idle
-  feet, and walking foot lift/contact over both full actions.
-- All 320 animation renders passed transparency/margin checks. The preview
+  feet, a visible idle head-height range, forward run lean, foot contact,
+  and frames with both feet airborne over the full actions.
+- All 448 animation renders passed transparency/margin checks. The preview
   exposes every facing and frame for review. Browser checks exercised idle,
   moving frames, dash pose hold, stopping, and touch movement. The separate
   viewer was checked at desktop and phone sizes, including pause and scrub.
 - With animation playback tests, `pnpm check` passed 199 tests in 28 files;
   `pnpm build` bundled both animated atlases.
+- The run revision was exercised through keyboard and synthetic touch
+  input in the browser. The game canvas was resized to 390 × 844 for the
+  phone-scale check after the preview's viewport-resize command timed out.
+  Idle's peak and trough changed the silhouette by about 1.75 CSS pixels
+  at phone size. This checks readability and playback, not device performance.
