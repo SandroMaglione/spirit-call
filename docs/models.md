@@ -11,7 +11,7 @@ Like `vision.md`, this records the rules; the code is in
   Blender source and the scripts that build and export it: one folder per
   character (`art/characters/crow/`), per enemy (`art/enemies/<kind>/`), and
   per environment kit (`art/environment/courtyard/`). A module in `src/presentation/assets/`
-  imports the file and copies its numbers from the export's metadata
+  imports the file and takes its numbers from the export's metadata
   (`assets/crow.ts`, `assets/courtyard.ts`), and `models` (`models.ts`)
   registers it by id. It is an asset, not content: content never names a
   model. The build bundles only the files the game imports.
@@ -45,7 +45,8 @@ and every moment names a clip its model has.
   again); the spec's `loopSeconds` puts it back (`closeLoop`).
 - **The spec** (`ModelSpec`): the file's url, its rest height in meters,
   and each clip's last key time and loop length (`null` for one-shots).
-  Copy these from the export's metadata; never edit them by hand.
+  Generate or copy these from the export's metadata; never edit them by hand.
+  The crow exporter generates `assets/crow-timing.ts` alongside its GLBs.
 
 ## Animation follows the simulation
 
@@ -55,6 +56,11 @@ attack step over the move's recovery, a dash over the dash, a windup over
 the windup. Skills and hurt play at the clip's own length. Everything
 freezes with the world during hit-stop. A clip never moves a body, and no
 hit or hitbox ever comes from a clip.
+
+Attack contact poses map to the simulation's hit time. Entry blends capture
+the visible outgoing bone pose and finish by contact, including when a new
+attack interrupts another range of the same clip. Recovery clips start at
+the previous section's endpoint and carry any elapsed frame remainder.
 
 ## Budgets
 

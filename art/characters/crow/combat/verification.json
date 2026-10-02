@@ -5,49 +5,61 @@
     "Idle": {
       "ground_min": 3.259629011154175e-09,
       "source_loop_seam": 0.0,
-      "round_trip_bounds_error": 5.364418029785156e-07
+      "round_trip_bounds_error": 1.0728836059570312e-06
     },
     "Run": {
-      "ground_min": -3.725290298461914e-09,
+      "ground_min": -4.190951585769653e-09,
       "source_loop_seam": 0.0,
-      "round_trip_bounds_error": 5.364418029785156e-07
+      "round_trip_bounds_error": 3.159046173095703e-06
     },
     "AttackCombo": {
+      "ground_min": 3.25962790093115e-09,
+      "round_trip_bounds_error": 2.9802322387695312e-06
+    },
+    "Power": {
       "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 7.748603820800781e-07
+      "round_trip_bounds_error": 3.2782554626464844e-06
+    },
+    "Dash": {
+      "ground_min": 3.259629011154175e-09,
+      "round_trip_bounds_error": 2.562999725341797e-06
     },
     "RunStart": {
       "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 4.76837158203125e-07
+      "round_trip_bounds_error": 2.6226043701171875e-06
     },
     "RunStop": {
       "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 4.76837158203125e-07
+      "round_trip_bounds_error": 2.6226043701171875e-06
     },
     "Recover1": {
-      "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 5.960464477539062e-07
+      "ground_min": 3.25962834502036e-09,
+      "round_trip_bounds_error": 2.1457672119140625e-06
     },
     "Recover2": {
       "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 5.960464477539062e-07
+      "round_trip_bounds_error": 1.3113021850585938e-06
     },
     "Recover3": {
       "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 5.364418029785156e-07
+      "round_trip_bounds_error": 7.748603820800781e-07
     }
   },
   "weapons": {
     "trainingBlade": {
-      "bytes": 13468,
-      "triangles": 126
+      "bytes": 14156,
+      "triangles": 126,
+      "materials": 1
     },
     "crescendo": {
-      "bytes": 14184,
-      "triangles": 142
+      "bytes": 15148,
+      "triangles": 142,
+      "materials": 1
     }
   },
   "max_weights": 2,
-  "bytes": 402252,
-  "sha256": "a85779efa037013f1e448ef6925f4a011bcd16d07a863f9f023362f39430dcde"
+  "bytes": 362716,
+  "sha256": "909dfda0bf2e19910ff2e4517e90a6d368dac3545077a075327f1316b433b25d",
+  "triangles": 4836,
+  "materials": 1
 }

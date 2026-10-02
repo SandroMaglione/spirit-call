@@ -5,8 +5,8 @@
  * direction, plays its loops by how its body moves, and plays one-shot
  * moments over them (see `animation.ts`).
  */
-import { AnimationMixer, Color, LoopRepeat, Mesh, MeshStandardMaterial, SkinnedMesh } from "three"
-import type { AnimationAction, Material, Object3D, Skeleton } from "three"
+import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshStandardMaterial, SkinnedMesh } from "three"
+import type { AnimationAction, Material, Object3D, Quaternion, Skeleton, Vector3 } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
 
 import type { Vec2 } from "../math/vec.ts"
@@ -82,6 +82,13 @@ export class Puppet {
   private readonly locomotion: Locomotion = freshLocomotion()
   private shot: OneShot | null = null
   private readonly source: ModelSource
+  /** A frozen outgoing pose lets a cut start from a run or another cut without snapping to idle. */
+  private readonly joints: Array<{
+    bone: Bone; position: Vector3; rotation: Quaternion; scale: Vector3
+    targetPosition: Vector3; targetRotation: Quaternion; targetScale: Vector3
+  }> = []
+  private transition: { elapsed: number; seconds: number } | null = null
+  private restorePose = false
 
   constructor(source: ModelSource, height: number, moments: Moments | null) {
     this.source = source
@@ -92,6 +99,12 @@ export class Puppet {
     this.materials = [...copy.materials]
     this.moments = moments
     this.mixer = new AnimationMixer(this.object)
+    this.object.traverse((bone) => {
+      if (bone instanceof Bone) this.joints.push({
+        bone, position: bone.position.clone(), rotation: bone.quaternion.clone(), scale: bone.scale.clone(),
+        targetPosition: bone.position.clone(), targetRotation: bone.quaternion.clone(), targetScale: bone.scale.clone()
+      })
+    })
   }
 
   /** Turns to face `direction` on the floor (models face +Z, the floor's y). */
@@ -115,10 +128,10 @@ export class Puppet {
    * its blow lands in the simulation (see `OneShot`).
    */
   play(shot: Shot, seconds: number | null, hitAt: number | null): void {
-    this.start(shot, seconds, hitAt, hitAt === null || hitAt > shotBlend.in)
+    this.start(shot, seconds, hitAt, true)
   }
 
-  private start(shot: Shot, seconds: number | null, hitAt: number | null, blendIn: boolean): void {
+  private start(shot: Shot, seconds: number | null, hitAt: number | null, blendIn: boolean): OneShot | undefined {
     const part = typeof shot === "string" ? { clip: shot } : shot
     const action = this.action(part.clip)
     if (action === undefined) return
@@ -126,6 +139,15 @@ export class Puppet {
     const to = part.to ?? action.getClip().duration
     const length = seconds ?? to - from
     if (length <= 0) return
+    const blendSeconds = blendIn ? Math.min(shotBlend.in, length * 0.25, hitAt ?? Infinity) : 0
+    this.transition = blendSeconds > 0 ? { elapsed: 0, seconds: blendSeconds } : null
+    if (this.transition !== null) {
+      for (const joint of this.joints) {
+        joint.position.copy(joint.bone.position)
+        joint.rotation.copy(joint.bone.quaternion)
+        joint.scale.copy(joint.bone.scale)
+      }
+    }
     this.shot = {
       clip: part.clip,
       from,
@@ -134,9 +156,11 @@ export class Puppet {
       hitAt,
       seconds: length,
       next: part.next ?? null,
-      blendIn,
+      // The outgoing pose is blended below, reaching full strength by contact.
+      blendIn: false,
       elapsed: 0
     }
+    return this.shot
   }
 
   /**
@@ -156,8 +180,12 @@ export class Puppet {
       // Done: what follows it carries on from its last pose, or the loops take over.
       const after = this.shot.next
       if (this.shot.elapsed >= this.shot.seconds) {
+        const overflow = this.shot.elapsed - this.shot.seconds
         this.shot = null
-        if (after !== null) this.start(after, null, null, false)
+        if (after !== null) {
+          const following = this.start(after, null, null, false)
+          if (following !== undefined) following.elapsed = overflow
+        }
       }
     }
     const pose = this.shot === null ? null : oneShotPose(this.shot)
@@ -177,7 +205,31 @@ export class Puppet {
       shot.time = pose.time
       shot.setEffectiveWeight(over)
     }
+    // Three skips writing unchanged tracks. Restore its last output first,
+    // otherwise a held target would blend repeatedly from our modified pose.
+    if (this.restorePose) {
+      for (const joint of this.joints) {
+        joint.bone.position.copy(joint.targetPosition)
+        joint.bone.quaternion.copy(joint.targetRotation)
+        joint.bone.scale.copy(joint.targetScale)
+      }
+    }
+    this.restorePose = false
     this.mixer.update(0)
+    if (this.transition !== null) {
+      this.transition.elapsed += seconds
+      const weight = Math.min(1, this.transition.elapsed / this.transition.seconds)
+      for (const joint of this.joints) {
+        joint.targetPosition.copy(joint.bone.position)
+        joint.targetRotation.copy(joint.bone.quaternion)
+        joint.targetScale.copy(joint.bone.scale)
+        joint.bone.position.lerpVectors(joint.position, joint.bone.position, weight)
+        joint.bone.quaternion.slerpQuaternions(joint.rotation, joint.bone.quaternion, weight)
+        joint.bone.scale.lerpVectors(joint.scale, joint.bone.scale, weight)
+      }
+      this.restorePose = weight < 1
+      if (weight === 1) this.transition = null
+    }
   }
 
   paint(tint: number, glowColor: number, glow: number, opacity: number): void {

@@ -77,7 +77,7 @@ export function verifyCombat(p) {
     report.clips[clip.name]={durationSeconds:clip.duration,maxMotionMeters:motion,groundMinMeters:ground,loopSeamMeters:seam};
   }
   // Explicit endpoints avoid requiring all later characters to share a moveset.
-  for(const name of ['AttackCombo','RunStop','Recover1','Recover2','Recover3'])
+  for(const name of ['AttackCombo','Power','Dash','RunStop','Recover1','Recover2','Recover3'])
     assert(delta(samples[name].last,samples.Idle.first)<1e-5, `${name}: does not return to guard`);
   assert(delta(samples.RunStart.last,samples.Run.first)<1e-5, 'RunStart does not enter Run');
   assert(delta(samples.RunStop.first,samples.Run.first)<1e-5, 'RunStop does not start at the run contact');
