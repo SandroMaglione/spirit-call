@@ -689,14 +689,16 @@ def estate(r):
     return m
 
 
-def bookcase(w=1.4, h=1.8, broken=False):
+def bookcase(w=1.4, h=1.8, broken=False, books=True):
     m = Mesh()
     for x in (-w / 2, w / 2):
         m.box(x, 0, 0, .1, .42, h if not broken or x < 0 else h * .65, 'wood')
     m.box(0, .2, 0, w, .05, h * .92, 'dark')
     for row in range(3 if h > 1 else 2):
         z = .1 + row * (h - .2) / (3 if h > 1 else 2)
-        m.box(0, 0, z, w, .42, .065, 'wood', top='light')
+        m.box(0, 0, z, w - .1, .42, .065, 'wood', top='light')
+        if not books:
+            continue
         for i in range(7):
             if broken and (i + row) % 3 == 0:
                 continue
@@ -728,9 +730,9 @@ def archive(r):
         m.join(top.rotate(.32, 'X').move(z=.8))
     elif r in ('scroll-rack', 'scroll-pile'):
         if r == 'scroll-rack':
-            m = bookcase(.9, 1.1)
+            m = bookcase(.9, 1.1, books=False)
             for x in (-.25, 0, .25):
-                for z in (.28, .72):
+                for z in (.22, .52, .82):
                     m.join(Mesh().lathe([(.055, 0), (.055, .35)], ['edge'], n=8).rotate(math.pi / 2, 'X').move(x=x, y=.1, z=z))
         else:
             for i in range(5):
