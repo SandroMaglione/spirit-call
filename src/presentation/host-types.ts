@@ -1,34 +1,32 @@
-import type { BufferGeometry, Group, MeshLambertMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { BufferGeometry, Group, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
 import type { Vec2 } from "../math/vec.ts"
 
 import type { Batch, Instance } from "./batch.ts"
-import type { Crow, CrowSource } from "./crow.ts"
+import type { ActorBody } from "./bodies.ts"
+import type { ModelId, ModelSource } from "./models.ts"
 import type { Fx } from "./fx.ts"
 import type { Shapes } from "./shapes.ts"
 import type { SlashTrails } from "./trails.ts"
 
 /**
- * An upright body standing at `root` (its feet, on the floor). `pivot` sits
- * inside it at the feet, so a hit can squash and lean the body over them.
+ * A character or an enemy, standing at `root` (its feet, on the floor).
+ * `pivot` sits inside it at the feet, so a hit can squash and lean the body
+ * over them; `body` is whatever its look made (see `bodies.ts`).
  */
-export interface ActorParts {
+export interface ActorNode {
+  readonly kind: "player" | "enemy"
   readonly root: Group
   readonly pivot: Group
   readonly shadow: Instance
-  /** The body's height in world units (what floats over its head goes above it). */
-  readonly height: number
-  /** The body's radius (half its width), in world units. */
-  readonly radius: number
+  readonly body: ActorBody
+  /** Where it faced last frame (kept while it stands still). */
+  facing: Vec2
+  /** The attack phase last drawn (enemies), to start a windup's clip once. */
+  attackPhase: string | null
 }
-
-/** The character on the field: the crow model, with its own materials and animation. */
-export type PlayerNode = { readonly kind: "player"; readonly crow: Crow } & ActorParts
-
-/** Enemy bodies are drawn in batches, one per size: `body` carries the transform and the tint. */
-export type EnemyNode = { readonly kind: "enemy"; readonly body: Instance } & ActorParts
 
 export type ProjectileNode = {
   readonly kind: "projectile"
@@ -37,21 +35,23 @@ export type ProjectileNode = {
   readonly shadow: Instance
 }
 
-/** A wall or pillar: a box. `depth` and `bounds` (its outline on screen, in projected coordinates) let pillars fade in front of the player. */
+/** A wall or pillar. `depth` and `bounds` (its outline on screen, in projected coordinates) let pillars fade in front of the player. */
 export type WallNode = {
   readonly kind: "wall"
   readonly root: Group
-  readonly material: MeshLambertMaterial
   readonly depth: number
   readonly bounds: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+  /** Shows it at `opacity` (1 is solid). */
+  readonly fade: (opacity: number) => void
+  readonly dispose: () => void
 }
 
-export type RenderNode = PlayerNode | EnemyNode | ProjectileNode | WallNode
+export type RenderNode = ActorNode | ProjectileNode | WallNode
 
 /** Geometry, materials, and batches made once and shared by many nodes. */
 export interface RenderAssets {
-  /** The crow model, loaded once; every character uses it for now. */
-  readonly crow: CrowSource
+  /** A loaded model (every model the looks use is loaded before the arena opens). */
+  model(id: ModelId): ModelSource
   /** Actors' blob shadows. */
   readonly shadows: Batch
   /** Projectiles' smaller, lighter shadows. */

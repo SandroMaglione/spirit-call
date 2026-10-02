@@ -83,8 +83,8 @@ export const FadeOccluders = Game.System("Shooter/FadeOccluders", {
     if (node?.kind !== "player") return []
     const feet = { x: node.root.position.x, y: node.root.position.z }
     const at = toScreen(projection, feet)
-    const top = at.y - screenHeight(projection, node.height)
-    const half = node.radius * projection.zoom
+    const top = at.y - screenHeight(projection, node.body.height)
+    const half = node.body.radius * projection.zoom
     return [{ depth: depthOf(feet), left: at.x - half, right: at.x + half, top, bottom: at.y }]
   })
   for (const { entity, data } of queries.occluders.each()) {
@@ -97,11 +97,6 @@ export const FadeOccluders = Game.System("Shooter/FadeOccluders", {
       player.depth < node.depth &&
       player.left < bounds.x + bounds.width && player.right > bounds.x &&
       player.top < bounds.y + bounds.height && player.bottom > bounds.y)
-    const opacity = hides ? view.occluderAlpha : 1
-    if (node.material.opacity === opacity) continue
-    node.material.opacity = opacity
-    node.material.transparent = hides
-    // A see-through pillar must not hide what stands behind it.
-    node.material.depthWrite = !hides
+    node.fade(hides ? view.occluderAlpha : 1)
   }
 })

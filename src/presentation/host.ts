@@ -6,11 +6,15 @@ import type { ActionButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
-import { loadCrow } from "./crow.ts"
 import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
-import { disposeNode, floorLayers, instancesOf, makeAssets, makeFloor } from "./nodes.ts"
+import { modelsInLooks } from "./looks.ts"
+import { disposeModel, loadModels } from "./models.ts"
+import { floorLayers, trailOrder } from "./layers.ts"
+import { disposeNode, instancesOf } from "./nodes.ts"
+import { makeAssets } from "./render-assets.ts"
+import { makeFloor, makeScenery } from "./scenery.ts"
 import { Shapes } from "./shapes.ts"
 
 /** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
@@ -95,9 +99,11 @@ export interface BrowserHost {
 }
 
 export const createBrowserHost = async (mount: HTMLElement, arena: { readonly width: number; readonly height: number }): Promise<BrowserHost> => {
-  const crow = await loadCrow()
-  // Phones have very dense screens: past 2 device pixels per CSS pixel the cost grows faster than the sharpness.
-  const renderer = new WebGLRenderer({ antialias: true, powerPreference: "high-performance" })
+  // Every model the looks use, before the arena opens (nodes are made synchronously).
+  const models = await loadModels(modelsInLooks())
+  // Phones have very dense screens: past 2 device pixels per CSS pixel the cost grows faster than the sharpness,
+  // and at 2 or more edges are fine without multisampling (which would cost 4x the pixels again).
+  const renderer = new WebGLRenderer({ antialias: window.devicePixelRatio < 2, powerPreference: "high-performance" })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setClearColor(view.background)
   renderer.autoClear = false
@@ -123,7 +129,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   scene.matrixWorldAutoUpdate = false
   const batches = new Group()
   scene.add(batches)
-  const assets = makeAssets(batches, crow)
+  const assets = makeAssets(batches, models)
   const camera = makeCamera()
   const light = view.light
   // Light intensities are physical: π makes a fully lit face show its own color.
@@ -132,13 +138,15 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   sun.position.set(light.sun.x, light.sun.y, light.sun.z)
   scene.add(sun)
 
-  const grid = new Shapes({ order: 1 }).onFloor(floorLayers.grid)
-  scene.add(makeFloor(arena.width, arena.height, grid), grid.mesh)
+  const grid = new Shapes({ order: floorLayers.grid.order }).onFloor(floorLayers.grid.height)
+  const floor = makeFloor(arena.width, arena.height, grid)
+  if (floor !== null) scene.add(floor)
+  scene.add(grid.mesh, makeScenery(assets))
   grid.flush()
-  const telegraphs = new Shapes({ order: 2 }).onFloor(floorLayers.telegraphs)
-  const groundMarks = new Shapes({ order: 3 }).onFloor(floorLayers.marks)
+  const telegraphs = new Shapes({ order: floorLayers.telegraphs.order }).onFloor(floorLayers.telegraphs.height)
+  const groundMarks = new Shapes({ order: floorLayers.marks.order }).onFloor(floorLayers.marks.height)
   // Slash trails: at waist height, over the actors.
-  const trails = new Shapes({ depthTest: false, order: 10 }).onFloor(worldHeight(projection, view.slashTrail.height))
+  const trails = new Shapes({ depthTest: false, order: trailOrder }).onFloor(worldHeight(projection, view.slashTrail.height))
   const actors = new Group()
   scene.add(telegraphs.mesh, groundMarks.mesh, trails.mesh, actors)
 
@@ -250,7 +258,13 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       assets.dispose()
+      if (floor !== null) {
+        floor.geometry.dispose()
+        floor.material.dispose()
+      }
+      for (const source of models.values()) disposeModel(source)
       renderer.dispose()
+      renderer.forceContextLoss()
       mount.replaceChildren()
     }
   }

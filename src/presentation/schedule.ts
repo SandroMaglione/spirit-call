@@ -8,6 +8,7 @@
 import { Game } from "../schema.ts"
 import { SyncUi } from "../ui/sync.ts"
 import { DrawEnemies, DrawPlayer } from "./actors.ts"
+import { AnimateActors, PlayMoments } from "./animate.ts"
 import { DrawReticle, DrawTouchAim } from "./aim.ts"
 import { PlaySounds } from "./audio.ts"
 import { ReactToHits, ShedStateMotes, SpawnFx, UpdateFx } from "./effects.ts"
@@ -21,6 +22,8 @@ export const frame = Game.Schedule(
   InterpolateActors,
   DrawPlayer,
   DrawEnemies,
+  PlayMoments,
+  AnimateActors,
   DrawTelegraphs,
   DrawTouchAim,
   PlaySounds,

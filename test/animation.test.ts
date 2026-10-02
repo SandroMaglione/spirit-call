@@ -1,14 +1,17 @@
 import { AnimationClip, NumberKeyframeTrack, QuaternionKeyframeTrack } from "three"
 import { describe, expect, it } from "vitest"
 
-import { closeLoop } from "../src/presentation/crow.ts"
-import { advanceCrow, freshMotion } from "../src/presentation/crow-animation.ts"
-import type { CrowMotion } from "../src/presentation/crow-animation.ts"
+import { advanceLocomotion, freshLocomotion, oneShotPose } from "../src/presentation/animation.ts"
+import type { Locomotion } from "../src/presentation/animation.ts"
+import { closeLoop } from "../src/presentation/models.ts"
 
-const at = (x: number, y = 0): CrowMotion => ({ ...freshMotion(), position: { x, y } })
+const at = (x: number, y = 0): Locomotion => ({ ...freshLocomotion(), position: { x, y } })
 const aim = { x: 1, y: 0 }
+const pace = { idleSeconds: 2, runDistance: 110 }
+const advanceCrow = (motion: Locomotion, position: { x: number; y: number }, facing: { x: number; y: number }, seconds: number, holding: boolean) =>
+  advanceLocomotion(motion, pace, position, facing, seconds, holding)
 
-describe("crow playback", () => {
+describe("locomotion", () => {
   it("takes the same steps for the same travel at different display rates", () => {
     const travel = (fps: number) => {
       const motion = at(0)
@@ -54,7 +57,25 @@ describe("crow playback", () => {
   })
 })
 
-describe("closing the crow's loops", () => {
+describe("one-shot moments", () => {
+  it("stretch their clip over the simulation's length, blending in and out", () => {
+    const shot = { clip: "Attack", seconds: 0.4, elapsed: 0 }
+    expect(oneShotPose(shot)).toEqual({ progress: 0, weight: 0 })
+    shot.elapsed = 0.2
+    expect(oneShotPose(shot)).toEqual({ progress: 0.5, weight: 1 })
+    shot.elapsed = 0.36
+    expect(oneShotPose(shot)!.weight).toBeCloseTo(0.5, 9)
+    shot.elapsed = 0.4
+    expect(oneShotPose(shot)).toBeNull()
+  })
+
+  it("still blend for very short moments", () => {
+    const shot = { clip: "Dash", seconds: 0.1, elapsed: 0.05 }
+    expect(oneShotPose(shot)!.weight).toBe(1)
+  })
+})
+
+describe("closing model loops", () => {
   const exported = () => new AnimationClip("Run", 11 / 24, [
     new NumberKeyframeTrack("root.position[x]", [0, 5 / 24, 11 / 24], [1, 2, 3]),
     new QuaternionKeyframeTrack("root.quaternion", [0, 11 / 24], [0, 0, 0, 1, 0, 0.6, 0, 0.8])

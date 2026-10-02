@@ -6,12 +6,12 @@
  *
  * Coordinates are the overlay's (projected, y down).
  */
-import { BufferAttribute, BufferGeometry, CanvasTexture, Color, DoubleSide, DynamicDrawUsage, LinearFilter, Mesh, MeshBasicMaterial } from "three"
+import { BufferAttribute, BufferGeometry, CanvasTexture, Color, DoubleSide, DynamicDrawUsage, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, SRGBColorSpace } from "three"
 
 /** A cell of the atlas, in CSS pixels at size 1; `advance` is how far apart digits sit. */
 const cell = { width: 14, height: 22, advance: 9 }
 /** Atlas pixels per CSS pixel: sharp on dense screens and while popping in larger. */
-const resolution = 4
+const resolution = 3
 const font = "700 15px IBM Plex Mono, ui-monospace, monospace"
 const outline = { width: 4, color: "#0d1117" }
 
@@ -50,8 +50,9 @@ export class Digits {
 
   constructor(order: number) {
     const texture = new CanvasTexture(drawAtlas())
-    texture.minFilter = LinearFilter
-    texture.generateMipmaps = false
+    // Drawn in sRGB like any color; mipmapped so shrunken numbers do not shimmer.
+    texture.colorSpace = SRGBColorSpace
+    texture.minFilter = LinearMipmapLinearFilter
     this.mesh = new Mesh(new BufferGeometry(), new MeshBasicMaterial({ map: texture, vertexColors: true, transparent: true, depthTest: false, depthWrite: false, side: DoubleSide }))
     this.mesh.frustumCulled = false
     this.mesh.renderOrder = order

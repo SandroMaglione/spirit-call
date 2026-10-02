@@ -46,8 +46,9 @@ export class Shapes {
   private g = 1
   private b = 1
   private a = 1
-  /** A scratch outline for strokes, reused. */
+  /** A scratch outline for strokes, and its corners' offsets, reused every frame. */
   private readonly outline: Array<number> = []
+  private miters = new Float64Array(0)
 
   constructor(options: ShapesOptions = {}) {
     const material = new MeshBasicMaterial({
@@ -218,58 +219,57 @@ export class Shapes {
     if (alpha <= 0 || n < 2) return this
     this.paint(color, alpha)
     const half = width / 2
-    const at = (index: number): number => (closed ? ((index % n) + n) % n : Math.max(0, Math.min(n - 1, index)))
-    /** The offset of the band's left edge at point `index`. */
-    const miter = (index: number): readonly [number, number] => {
-      const i = at(index)
-      const prev = at(index - 1)
-      const next = at(index + 1)
+    if (this.miters.length < n * 2) this.miters = new Float64Array(n * 4)
+    const miters = this.miters
+    // The offset of the band's left edge at each point: the average of the two segments' normals meeting there.
+    for (let i = 0; i < n; i++) {
+      const prev = closed ? (i - 1 + n) % n : Math.max(0, i - 1)
+      const next = closed ? (i + 1) % n : Math.min(n - 1, i + 1)
       const x = points[i * 2]!
       const y = points[i * 2 + 1]!
       let ax = x - points[prev * 2]!
       let ay = y - points[prev * 2 + 1]!
       let bx = points[next * 2]! - x
       let by = points[next * 2 + 1]! - y
-      const la = Math.hypot(ax, ay)
-      const lb = Math.hypot(bx, by)
-      if (la < 1e-9) {
+      if (Math.hypot(ax, ay) < 1e-9) {
         ax = bx
         ay = by
-      } else if (lb < 1e-9) {
+      } else if (Math.hypot(bx, by) < 1e-9) {
         bx = ax
         by = ay
       }
       const na = Math.hypot(ax, ay) || 1
       const nb = Math.hypot(bx, by) || 1
-      // Normals of the two segments meeting here, and their average (the miter).
       const n0x = -ay / na
       const n0y = ax / na
-      const n1x = -by / nb
-      const n1y = bx / nb
-      let mx = n0x + n1x
-      let my = n0y + n1y
+      let mx = n0x - by / nb
+      let my = n0y + bx / nb
       const ml = Math.hypot(mx, my)
-      if (ml < 1e-6) return [n0x * half, n0y * half]
+      if (ml < 1e-6) {
+        miters[i * 2] = n0x * half
+        miters[i * 2 + 1] = n0y * half
+        continue
+      }
       mx /= ml
       my /= ml
       // Longer at sharp corners, capped so spikes stay short.
       const scale = half / Math.max(0.35, mx * n0x + my * n0y)
-      return [mx * scale, my * scale]
+      miters[i * 2] = mx * scale
+      miters[i * 2 + 1] = my * scale
     }
     const last = closed ? n : n - 1
-    let [ox, oy] = miter(0)
-    for (let index = 0; index < last; index++) {
-      const i = at(index)
-      const j = at(index + 1)
-      const [qx, qy] = miter(index + 1)
+    for (let i = 0; i < last; i++) {
+      const j = (i + 1) % n
       const x0 = points[i * 2]!
       const y0 = points[i * 2 + 1]!
       const x1 = points[j * 2]!
       const y1 = points[j * 2 + 1]!
+      const ox = miters[i * 2]!
+      const oy = miters[i * 2 + 1]!
+      const qx = miters[j * 2]!
+      const qy = miters[j * 2 + 1]!
       this.triangle(x0 + ox, y0 + oy, x0 - ox, y0 - oy, x1 + qx, y1 + qy)
       this.triangle(x0 - ox, y0 - oy, x1 - qx, y1 - qy, x1 + qx, y1 + qy)
-      ox = qx
-      oy = qy
     }
     return this
   }

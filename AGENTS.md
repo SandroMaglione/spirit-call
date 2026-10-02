@@ -5,7 +5,7 @@ A top-down action game for the phone (and the browser), built on the
 design direction (pillars, non-goals, open questions). Design decisions are
 checked against it; open questions are asked, not guessed. Detailed rules
 for one area live next to it (`docs/elements.md`: elements, states, ground
-effects, enemy traits).
+effects, enemy traits; `docs/models.md`: 3D models and looks).
 
 ## Commands
 
@@ -76,5 +76,7 @@ simulation); `pnpm check` runs it.
   (windups, hits, recoveries) live in content and the simulation, and clips
   are sped up or slowed down to fit them. No root motion, and no hitboxes
   from animation.
-- Which model or look a character or enemy has is presentation config
-  (`src/config/view.ts`, keyed by id); content holds no asset paths.
+- What a character, an enemy, or the arena looks like (a placeholder or a
+  model, and which clip plays at which moment) is `src/presentation/looks.ts`,
+  keyed by content id; content holds no asset paths. Models follow
+  `docs/models.md`.
