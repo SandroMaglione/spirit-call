@@ -8,19 +8,30 @@ import { createNode, disposeNode, instancesOf } from "../src/presentation/nodes.
 import { makeAssets } from "../src/presentation/render-assets.ts"
 import { characterLooks } from "../src/presentation/looks.ts"
 
-/** A stand-in for a loaded model: a box whose clips scale it, in place of the GLB (no renderer in tests). */
-const fakeModel = (id: ModelId): ModelSource => {
+/** A stand-in for a loaded body: a box with a grip, whose clips scale it, in place of the GLB (no renderer in tests). */
+const fakeBody = (id: ModelId): ModelSource => {
   const scene = new Group()
   const part = new Mesh(new BoxGeometry(1, 2, 1), new MeshStandardMaterial({ color: 0x808080 }))
   part.name = "part"
+  const grip = new Group()
+  grip.name = "weapon_grip"
+  part.add(grip)
   scene.add(part)
   const clip = (name: string, seconds: number) => new AnimationClip(name, seconds, [new NumberKeyframeTrack("part.scale[y]", [0, seconds], [1, 2])])
-  return { id, spec: { url: "", height: 2, clips: {} }, scene, clips: new Map([["Idle", clip("Idle", 2)], ["Run", clip("Run", 0.5)], ["Attack", clip("Attack", 0.6)]]) }
+  const clips = new Map(["Idle", "Run", "AttackCombo", "Recover1", "Recover2", "Recover3"].map((name) => [name, clip(name, name === "AttackCombo" ? 2.2 : 0.5)]))
+  return { id, spec: { url: "", height: 2, clips: {} }, scene, clips }
+}
+
+/** A stand-in for a held weapon: a thin box. */
+const fakeWeapon = (id: ModelId): ModelSource => {
+  const scene = new Group()
+  scene.add(new Mesh(new BoxGeometry(0.05, 1, 0.05), new MeshStandardMaterial()))
+  return { id, spec: { url: "", height: null, clips: {} }, scene, clips: new Map() }
 }
 
 const setup = () => {
   const parent = new Group()
-  const assets = makeAssets(parent, new Map([["crow", fakeModel("crow")]]))
+  const assets = makeAssets(parent, new Map([["crow", fakeBody("crow")], ["trainingBlade", fakeWeapon("trainingBlade")], ["crescendo", fakeWeapon("crescendo")]]))
   return { parent, assets, pool: [] as Array<ProjectileNode> }
 }
 
@@ -53,8 +64,10 @@ describe("render nodes", () => {
     // Faces +Z for "down" the floor's y.
     node.body.face({ x: 1, y: 0 })
     expect(node.body.object.rotation.y).toBeCloseTo(Math.PI / 2, 9)
-    node.body.play("Attack", 0.3)
-    node.body.animate({ x: 0, y: 0 }, { x: 1, y: 0 }, 0.1, false)
+    // The sword is in her grip, and a combo move plays into its recovery.
+    expect(node.body.object.getObjectByName("weapon_grip")!.children).toHaveLength(1)
+    node.body.play({ clip: "AttackCombo", from: 0.1, to: 0.5, contact: 0.3, next: "Recover1" }, 0.3, 0.04)
+    for (let frame = 0; frame < 30; frame++) node.body.animate({ x: frame, y: 0 }, { x: 1, y: 0 }, 1 / 60, false)
     node.body.paint(0xffffff, 0xffffff, 1, 0.5)
     expect(instancesOf(node)).toEqual([node.shadow])
     disposeNode(node)

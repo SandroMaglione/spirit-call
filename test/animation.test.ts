@@ -2,7 +2,7 @@ import { AnimationClip, NumberKeyframeTrack, QuaternionKeyframeTrack } from "thr
 import { describe, expect, it } from "vitest"
 
 import { advanceLocomotion, freshLocomotion, oneShotPose } from "../src/presentation/animation.ts"
-import type { Locomotion } from "../src/presentation/animation.ts"
+import type { Locomotion, OneShot } from "../src/presentation/animation.ts"
 import { closeLoop } from "../src/presentation/models.ts"
 
 const at = (x: number, y = 0): Locomotion => ({ ...freshLocomotion(), position: { x, y } })
@@ -58,20 +58,42 @@ describe("locomotion", () => {
 })
 
 describe("one-shot moments", () => {
-  it("stretch their clip over the simulation's length, blending in and out", () => {
-    const shot = { clip: "Attack", seconds: 0.4, elapsed: 0 }
-    expect(oneShotPose(shot)).toEqual({ progress: 0, weight: 0 })
-    shot.elapsed = 0.2
-    expect(oneShotPose(shot)).toEqual({ progress: 0.5, weight: 1 })
-    shot.elapsed = 0.36
-    expect(oneShotPose(shot)!.weight).toBeCloseTo(0.5, 9)
-    shot.elapsed = 0.4
-    expect(oneShotPose(shot)).toBeNull()
+  const shot = (overrides: Partial<OneShot> = {}): OneShot => ({
+    clip: "Attack", from: 0, to: 0.6, contact: null, hitAt: null, seconds: 0.4, next: null, blendIn: true, elapsed: 0, ...overrides
   })
 
-  it("still blend for very short moments", () => {
-    const shot = { clip: "Dash", seconds: 0.1, elapsed: 0.05 }
-    expect(oneShotPose(shot)!.weight).toBe(1)
+  it("stretch their part of the clip over the simulation's length, blending in and out", () => {
+    const playing = shot()
+    expect(oneShotPose(playing)).toEqual({ time: 0, weight: 0 })
+    playing.elapsed = 0.2
+    expect(oneShotPose(playing)!.time).toBeCloseTo(0.3, 9)
+    expect(oneShotPose(playing)!.weight).toBe(1)
+    playing.elapsed = 0.36
+    expect(oneShotPose(playing)!.weight).toBeCloseTo(0.5, 9)
+    playing.elapsed = 0.4
+    expect(oneShotPose(playing)).toBeNull()
+  })
+
+  it("show the clip's contact pose when the simulation's blow lands", () => {
+    // A combo move: its part of the clip is 1.0-1.6 s, the blow lands at 1.4 s in the clip and 0.04 s into the move.
+    const playing = shot({ from: 1, to: 1.6, contact: 1.4, hitAt: 0.04, seconds: 0.3, blendIn: false })
+    expect(oneShotPose(playing)!.time).toBe(1)
+    playing.elapsed = 0.02
+    expect(oneShotPose(playing)!.time).toBeCloseTo(1.2, 9)
+    playing.elapsed = 0.04
+    expect(oneShotPose(playing)!.time).toBeCloseTo(1.4, 9)
+    playing.elapsed = 0.17
+    expect(oneShotPose(playing)!.time).toBeCloseTo(1.5, 9)
+    // Shown in full at once when it must not blend in.
+    playing.elapsed = 0
+    expect(oneShotPose(playing)!.weight).toBe(1)
+  })
+
+  it("start at contact when the blow lands at once, and hand over to what follows without fading out", () => {
+    const playing = shot({ contact: 0.4, hitAt: 0, next: "Recover1" })
+    expect(oneShotPose(playing)!.time).toBe(0.4)
+    playing.elapsed = 0.39
+    expect(oneShotPose(playing)!.weight).toBe(1)
   })
 })
 

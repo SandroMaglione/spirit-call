@@ -50,25 +50,49 @@ export const advanceLocomotion = (motion: Locomotion, pace: LocomotionPace, posi
   if (moving) motion.run = wrap(motion.run + (distance / pace.runDistance) * (dx * facing.x + dy * facing.y < 0 ? -1 : 1))
 }
 
-/** A one-shot moment playing: its clip, how long it has played, and how long the simulation says it lasts. */
+/**
+ * A one-shot moment playing: part of a clip (`from`–`to`, clip seconds)
+ * over `seconds` of game time. When the clip's `contact` (the pose where
+ * the blow lands) and the game's `hitAt` (when the blow lands, seconds
+ * after the start) are both known, the clip is timed so they meet: what
+ * comes before contact is squeezed or stretched into `hitAt`, the rest into
+ * what is left.
+ */
 export interface OneShot {
   readonly clip: string
+  readonly from: number
+  readonly to: number
+  readonly contact: number | null
+  readonly hitAt: number | null
   readonly seconds: number
+  /** Played after it, if nothing replaces it first (a recovery back to the guard). */
+  readonly next: string | null
+  /** Blends in from the loops; off when it must show at once (a blow landing now, a recovery carrying on from a pose). */
+  readonly blendIn: boolean
   elapsed: number
 }
 
 /** Seconds to blend a one-shot in and out of the loops (shorter for very short moments). */
-const shotBlend = { in: 0.05, out: 0.08 }
+export const shotBlend = { in: 0.05, out: 0.08 }
+
+/** Where in its clip a one-shot is after `elapsed` of its `seconds`. */
+const clipTime = (shot: OneShot, elapsed: number): number => {
+  const { from, to, contact, hitAt, seconds } = shot
+  const t = Math.max(0, Math.min(seconds, elapsed))
+  if (contact === null || hitAt === null || hitAt >= seconds) return from + ((to - from) * t) / seconds
+  if (t <= hitAt) return hitAt <= 0 ? contact : from + ((contact - from) * t) / hitAt
+  return contact + ((to - contact) * (t - hitAt)) / (seconds - hitAt)
+}
 
 /**
- * How far through its clip a one-shot is (0..1, its whole clip stretched
- * over `seconds`) and how much it shows over the loops (0..1, blending in
- * at the start and out at the end); `null` once it is over.
+ * Where a one-shot is in its clip (clip seconds) and how much it shows over
+ * the loops (0..1, blending in at the start and out at the end, unless a
+ * clip follows it); `null` once it is over.
  */
-export const oneShotPose = (shot: OneShot): { readonly progress: number; readonly weight: number } | null => {
+export const oneShotPose = (shot: OneShot): { readonly time: number; readonly weight: number } | null => {
   if (shot.elapsed >= shot.seconds) return null
-  const fadeIn = Math.min(shotBlend.in, shot.seconds * 0.25)
-  const fadeOut = Math.min(shotBlend.out, shot.seconds * 0.25)
+  const fadeIn = shot.blendIn ? Math.min(shotBlend.in, shot.seconds * 0.25) : 0
+  const fadeOut = shot.next !== null ? 0 : Math.min(shotBlend.out, shot.seconds * 0.25)
   const weight = Math.min(1, fadeIn > 0 ? shot.elapsed / fadeIn : 1, fadeOut > 0 ? (shot.seconds - shot.elapsed) / fadeOut : 1)
-  return { progress: shot.elapsed / shot.seconds, weight: Math.max(0, weight) }
+  return { time: clipTime(shot, shot.elapsed), weight: Math.max(0, weight) }
 }

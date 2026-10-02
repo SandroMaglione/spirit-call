@@ -10,9 +10,9 @@ import type { AnimationAction, Material, Object3D, Skeleton } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
 
 import type { Vec2 } from "../math/vec.ts"
-import { advanceLocomotion, freshLocomotion, oneShotPose } from "./animation.ts"
+import { advanceLocomotion, freshLocomotion, oneShotPose, shotBlend } from "./animation.ts"
 import type { Locomotion, OneShot } from "./animation.ts"
-import type { Moments } from "./looks.ts"
+import type { Moments, Shot } from "./looks.ts"
 import type { ModelSource } from "./models.ts"
 
 /** A copy's materials that are its own, with their colors before any tint. */
@@ -76,7 +76,7 @@ export class Puppet {
   /** The model, scaled to its body; it turns to face. */
   readonly object: Object3D
   readonly moments: Moments | null
-  private readonly materials: OwnMaterials
+  private readonly materials: Array<OwnMaterials[number]>
   private readonly mixer: AnimationMixer
   private readonly actions = new Map<string, AnimationAction>()
   private readonly locomotion: Locomotion = freshLocomotion()
@@ -87,8 +87,9 @@ export class Puppet {
     this.source = source
     const copy = copyModel(source, true)
     this.object = copy.object
+    if (source.spec.height === null) throw new Error(`Model ${source.id} has no height: it cannot be a body`)
     this.object.scale.setScalar(height / source.spec.height)
-    this.materials = copy.materials
+    this.materials = [...copy.materials]
     this.moments = moments
     this.mixer = new AnimationMixer(this.object)
   }
@@ -98,13 +99,44 @@ export class Puppet {
     if (direction.x !== 0 || direction.y !== 0) this.object.rotation.y = Math.atan2(direction.x, direction.y)
   }
 
-  /** Plays `clip` once over `seconds` (its own length when `null`), over the loops; a new one replaces the last. */
-  play(clip: string, seconds: number | null): void {
-    const action = this.action(clip)
+  /** Puts a copy of `source` in its `bone` as it is (a weapon in hand); it is lit and tinted with the body. */
+  hold(source: ModelSource, bone: string): void {
+    const grip = this.object.getObjectByName(bone)
+    if (grip === undefined) throw new Error(`Model ${this.source.id} has no ${bone} to hold ${source.id} in`)
+    const copy = copyModel(source, true)
+    grip.add(copy.object)
+    // Its materials are freed with the body's.
+    this.materials.push(...copy.materials)
+  }
+
+  /**
+   * Plays `shot` once over `seconds` of game time (its own length when
+   * `null`), over the loops; a new one replaces the last. `hitAt` is when
+   * its blow lands in the simulation (see `OneShot`).
+   */
+  play(shot: Shot, seconds: number | null, hitAt: number | null): void {
+    this.start(shot, seconds, hitAt, hitAt === null || hitAt > shotBlend.in)
+  }
+
+  private start(shot: Shot, seconds: number | null, hitAt: number | null, blendIn: boolean): void {
+    const part = typeof shot === "string" ? { clip: shot } : shot
+    const action = this.action(part.clip)
     if (action === undefined) return
-    const length = seconds ?? action.getClip().duration
+    const from = part.from ?? 0
+    const to = part.to ?? action.getClip().duration
+    const length = seconds ?? to - from
     if (length <= 0) return
-    this.shot = { clip, seconds: length, elapsed: 0 }
+    this.shot = {
+      clip: part.clip,
+      from,
+      to,
+      contact: part.contact ?? null,
+      hitAt,
+      seconds: length,
+      next: part.next ?? null,
+      blendIn,
+      elapsed: 0
+    }
   }
 
   /**
@@ -119,10 +151,17 @@ export class Puppet {
     const run = this.action(moments.run.clip)
     const pace = { idleSeconds: idle?.getClip().duration ?? 1, runDistance: moments.run.distance }
     advanceLocomotion(this.locomotion, pace, position, facing, seconds, holding)
-    if (this.shot !== null) this.shot.elapsed += seconds
+    if (this.shot !== null) {
+      this.shot.elapsed += seconds
+      // Done: what follows it carries on from its last pose, or the loops take over.
+      const after = this.shot.next
+      if (this.shot.elapsed >= this.shot.seconds) {
+        this.shot = null
+        if (after !== null) this.start(after, null, null, false)
+      }
+    }
     const pose = this.shot === null ? null : oneShotPose(this.shot)
     const shot = this.shot === null ? undefined : this.action(this.shot.clip)
-    if (pose === null) this.shot = null
     const over = pose === null ? 0 : pose.weight
     const { idle: idlePhase, run: runPhase, running } = this.locomotion
     for (const action of this.actions.values()) action.setEffectiveWeight(0)
@@ -135,7 +174,7 @@ export class Puppet {
       run.setEffectiveWeight(running * (1 - over))
     }
     if (shot !== undefined && pose !== null) {
-      shot.time = pose.progress * shot.getClip().duration
+      shot.time = pose.time
       shot.setEffectiveWeight(over)
     }
     this.mixer.update(0)

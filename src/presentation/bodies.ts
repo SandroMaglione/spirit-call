@@ -12,7 +12,8 @@ import type { Vec2 } from "../math/vec.ts"
 import { Instance } from "./batch.ts"
 import { mixColor } from "./draw.ts"
 import type { RenderAssets } from "./host-types.ts"
-import type { BodyLook, Moments } from "./looks.ts"
+import type { WeaponId } from "../content/weapons.ts"
+import type { BodyLook, Moments, Shot } from "./looks.ts"
 import { Puppet } from "./puppet.ts"
 
 export interface ActorBody {
@@ -36,8 +37,8 @@ export interface ActorBody {
   face(direction: Vec2): void
   /** Moves its animation on by a frame (see `Puppet.animate`). */
   animate(position: Vec2, facing: Vec2, seconds: number, holding: boolean): void
-  /** Plays a one-shot clip over `seconds` (its own length when `null`). */
-  play(clip: string, seconds: number | null): void
+  /** Plays a one-shot over `seconds` (its own length when `null`), its blow landing `hitAt` seconds in (see `Puppet.play`). */
+  play(shot: Shot, seconds: number | null, hitAt: number | null): void
   dispose(): void
 }
 
@@ -108,21 +109,26 @@ const puppetBody = (puppet: Puppet, radius: number, height: number): ActorBody =
   paint: (tint, glowColor, glow, opacity) => puppet.paint(tint, glowColor, glow, opacity),
   face: (direction) => puppet.face(direction),
   animate: (position, facing, seconds, holding) => puppet.animate(position, facing, seconds, holding),
-  play: (clip, seconds) => puppet.play(clip, seconds),
+  play: (shot, seconds, hitAt) => puppet.play(shot, seconds, hitAt),
   dispose: () => puppet.dispose()
 })
 
 /**
- * The body `look` gives an actor of collision radius `radius`. `batched`
- * capsules are for enemies (players need to turn see-through).
+ * The body `look` gives an actor of collision radius `radius`, holding
+ * `weapon` when its look has a model for it. `batched` capsules are for
+ * enemies (players need to turn see-through).
  */
-export const makeBody = (assets: RenderAssets, look: BodyLook, radius: number, batched: boolean): ActorBody => {
+export const makeBody = (assets: RenderAssets, look: BodyLook, radius: number, batched: boolean, weapon: WeaponId | null): ActorBody => {
   const bodyRadius = (radius * look.widthFactor) / 2
   const height = bodyHeight(bodyRadius, radius * look.heightFactor * projection.zoom)
   switch (look.kind) {
     case "capsule":
       return capsuleBody(assets, look.color, bodyRadius, height, batched)
-    case "model":
-      return puppetBody(new Puppet(assets.model(look.model), height, look.moments ?? null), bodyRadius, height)
+    case "model": {
+      const puppet = new Puppet(assets.model(look.model), height, look.moments ?? null)
+      const held = weapon === null ? undefined : look.held?.weapons[weapon]
+      if (held !== undefined && look.held !== undefined) puppet.hold(assets.model(held), look.held.grip)
+      return puppetBody(puppet, bodyRadius, height)
+    }
   }
 }

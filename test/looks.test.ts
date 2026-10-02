@@ -4,9 +4,9 @@ import path from "node:path"
 import { describe, expect, it } from "vitest"
 
 import { characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
-import type { Moments } from "../src/presentation/looks.ts"
+import type { Moments, Shot } from "../src/presentation/looks.ts"
 import { models } from "../src/presentation/models.ts"
-import type { ModelId } from "../src/presentation/models.ts"
+import type { ClipTiming, ModelId } from "../src/presentation/models.ts"
 
 /** The clip names inside a GLB file (its JSON chunk), read without a renderer. */
 const clipsInFile = (id: ModelId): ReadonlyArray<string> => {
@@ -18,13 +18,24 @@ const clipsInFile = (id: ModelId): ReadonlyArray<string> => {
   return (json.animations ?? []).map((animation) => animation.name)
 }
 
-const clipsOf = (moments: Moments): ReadonlyArray<string> => [
-  moments.idle,
-  moments.run.clip,
-  ...(moments.attack ?? []),
-  ...[moments.power, moments.dash, moments.windup, moments.hurt].filter((clip) => clip !== undefined),
-  ...Object.values(moments.skills ?? {})
-]
+/** The clips a look's moments play, with the parts of them they play (clip seconds). */
+const shotsOf = (moments: Moments): ReadonlyArray<{ readonly clip: string; readonly from?: number; readonly to?: number }> => {
+  const shots: Array<Shot> = [
+    moments.idle,
+    moments.run.clip,
+    ...(moments.attack ?? []),
+    ...[moments.power, moments.dash, moments.windup, moments.hurt].filter((shot) => shot !== undefined),
+    ...Object.values(moments.skills ?? {})
+  ]
+  return shots.flatMap((shot) => typeof shot === "string" ? [{ clip: shot }] : [shot, ...(shot.next === undefined ? [] : [{ clip: shot.next }])])
+}
+
+/** The node names inside a GLB file. */
+const nodesInFile = (id: ModelId): ReadonlyArray<string> => {
+  const file = readFileSync(path.join(import.meta.dirname, "..", models[id].url))
+  const json = JSON.parse(file.toString("utf8", 20, 20 + file.readUInt32LE(12))) as { nodes?: ReadonlyArray<{ name?: string }> }
+  return (json.nodes ?? []).flatMap((node) => node.name === undefined ? [] : [node.name])
+}
 
 describe("looks and models", () => {
   it("each model file has exactly the clips its spec lists", () => {
@@ -33,12 +44,26 @@ describe("looks and models", () => {
     }
   })
 
-  it("each look's moments name clips its model has", () => {
+  it("each look's moments play clips its model has, within their length", () => {
     for (const look of [...Object.values(characterLooks), ...Object.values(enemyLooks)]) {
       if (look.kind !== "model" || look.moments === undefined) continue
-      const clips = Object.keys(models[look.model].clips)
-      for (const clip of clipsOf(look.moments)) expect(clips, `${look.model}: ${clip}`).toContain(clip)
+      const clips: Readonly<Record<string, ClipTiming>> = models[look.model].clips
+      for (const shot of shotsOf(look.moments)) {
+        const timing = clips[shot.clip]
+        expect(timing, `${look.model}: ${shot.clip}`).toBeDefined()
+        const length = timing!.loopSeconds ?? timing!.lastKeySeconds
+        expect(shot.from ?? 0).toBeGreaterThanOrEqual(0)
+        expect(shot.to ?? length).toBeLessThanOrEqual(length + 1e-9)
+      }
       expect(look.moments.run.distance).toBeGreaterThan(0)
+    }
+  })
+
+  it("held weapons are models without a body height, and the holder has the grip", () => {
+    for (const look of Object.values(characterLooks)) {
+      if (look.kind !== "model" || look.held === undefined) continue
+      expect(nodesInFile(look.model)).toContain(look.held.grip)
+      for (const weapon of Object.values(look.held.weapons)) expect(models[weapon].height).toBeNull()
     }
   })
 

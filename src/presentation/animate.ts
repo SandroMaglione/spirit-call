@@ -7,7 +7,8 @@
 import type { Area } from "../physics/areas.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Aim, AttackPhase, Attacker, Cast, Dash, Enemy, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Tuning, Velocity } from "../schema.ts"
+import { isMelee } from "../content/attacks.ts"
+import { Action, Aim, AttackPhase, Attacker, Cast, Dash, Enemy, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Tuning, Velocity, Weapon } from "../schema.ts"
 import type { ActorNode } from "./host-types.ts"
 
 /** Where an attack area points from `from`, if anywhere. */
@@ -64,14 +65,14 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
 
 /**
  * One-shot moments from the simulation's events, for bodies with a clip
- * for them: an attack or power move over its recovery, a dash over the
- * dash, a skill and a hurt at their clip's length, and an enemy's windup
- * over the windup.
+ * for them: an attack or power move over its recovery (its blow's pose
+ * meeting the simulation's blow), a dash over the dash, a skill and a hurt
+ * at their clip's length, and an enemy's windup over the windup.
  */
 export const PlayMoments = Game.System("Shooter/PlayMoments", {
   events: { action: Game.System.readEvent(Action), cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit) },
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
+    player: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), phase: Game.Query.read(AttackPhase) } })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
@@ -81,14 +82,16 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
   const [player] = queries.player.each()
   const hers = player === undefined ? undefined : services.nodes.get(player.entity.id)
   for (const action of events.action.all()) {
-    if (hers?.kind !== "player") break
+    if (player === undefined || hers?.kind !== "player") break
     const moments = hers.body.moments
     if (moments === null) break
     if (action.kind === "attack") {
-      const clip = action.power ? moments.power : moments.attack?.[Math.min(action.step, moments.attack.length - 1)]
-      if (clip !== undefined) hers.body.play(clip, action.move.recovery)
+      const shot = action.power ? moments.power : moments.attack?.[Math.min(action.step, moments.attack.length - 1)]
+      // A melee blow lands while its hitbox is out (in its middle); a shot leaves at once.
+      const hitAt = isMelee(action.move) ? tuning.attacks[player.data.weapon.get().attack].active / 2 : 0
+      if (shot !== undefined) hers.body.play(shot, action.move.recovery, hitAt)
     } else if (action.kind === "dash" && moments.dash !== undefined) {
-      hers.body.play(moments.dash, tuning.dash.duration)
+      hers.body.play(moments.dash, tuning.dash.duration, null)
     }
   }
   for (const cast of events.cast.all()) {
@@ -96,14 +99,14 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     const node = services.nodes.get(cast.caster)
     if (node?.kind !== "player" && node?.kind !== "enemy") continue
     const clip = node.body.moments?.skills?.[cast.skill]
-    if (clip !== undefined) node.body.play(clip, null)
+    if (clip !== undefined) node.body.play(clip, null, null)
   }
   for (const hit of events.hit.all()) {
     if (hit.periodic || hit.killed) continue
     const node = services.nodes.get({ value: hit.entity })
     if (node?.kind !== "player" && node?.kind !== "enemy") continue
     const clip = node.body.moments?.hurt
-    if (clip !== undefined) node.body.play(clip, null)
+    if (clip !== undefined) node.body.play(clip, null, null)
   }
   // An enemy's windup starts: its clip over the windup.
   for (const { entity, data } of queries.enemies.each()) {
@@ -114,6 +117,6 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     node.attackPhase = phase
     const spec = tuning.enemies[data.enemy.get().kind].attack
     const clip = node.body.moments?.windup
-    if (started && spec !== null && clip !== undefined) node.body.play(clip, spec.windup)
+    if (started && spec !== null && clip !== undefined) node.body.play(clip, spec.windup, null)
   }
 })

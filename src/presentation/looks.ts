@@ -7,9 +7,19 @@
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import type { SkillId } from "../content/skills.ts"
+import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
+import { crowCombo } from "./assets/crow.ts"
 import type { ModelId } from "./models.ts"
+
+/**
+ * A one-shot: a clip, or part of one (`from`–`to`, in clip seconds). For a
+ * blow, `contact` is the clip time where it lands: the game times the clip
+ * so that pose shows when the simulation's blow lands. `next` plays after
+ * it when nothing follows (a recovery back to the guard).
+ */
+export type Shot = string | { readonly clip: string; readonly from?: number; readonly to?: number; readonly contact?: number; readonly next?: string }
 
 /**
  * Which clip plays at which moment of the game. Loops: `idle` while
@@ -23,12 +33,18 @@ import type { ModelId } from "./models.ts"
 export interface Moments {
   readonly idle: string
   readonly run: { readonly clip: string; readonly distance: number }
-  readonly attack?: ReadonlyArray<string>
-  readonly power?: string
-  readonly dash?: string
-  readonly windup?: string
-  readonly skills?: Partial<Record<SkillId, string>>
-  readonly hurt?: string
+  readonly attack?: ReadonlyArray<Shot>
+  readonly power?: Shot
+  readonly dash?: Shot
+  readonly windup?: Shot
+  readonly skills?: Partial<Record<SkillId, Shot>>
+  readonly hurt?: Shot
+}
+
+/** Weapons in hand: each weapon's model, attached to the body model's `grip` bone as it is (same scale and axes). */
+export interface Held {
+  readonly grip: string
+  readonly weapons: Partial<Record<WeaponId, ModelId>>
 }
 
 /**
@@ -44,21 +60,32 @@ export interface Moments {
  */
 export type BodyLook =
   | { readonly kind: "capsule"; readonly color: number; readonly widthFactor: number; readonly heightFactor: number }
-  | { readonly kind: "model"; readonly model: ModelId; readonly widthFactor: number; readonly heightFactor: number; readonly moments?: Moments }
+  | {
+      readonly kind: "model"
+      readonly model: ModelId
+      readonly widthFactor: number
+      readonly heightFactor: number
+      readonly moments?: Moments
+      readonly held?: Held
+    }
 
-/** The crow: idle and run (Attack is a pose study, not yet matched to combat). */
-const crow: BodyLook = {
-  kind: "model",
-  model: "crow",
-  widthFactor: 1.5,
-  heightFactor: view.bodyHeightFactor,
-  moments: { idle: "Idle", run: { clip: "Run", distance: 110 } }
-}
+/** Every character is the crow for now; the Swordsman holds her sword and fights with it. */
+const crow = { kind: "model", model: "crow", widthFactor: 1.5, heightFactor: view.bodyHeightFactor } as const
+const crowLoops: Moments = { idle: "Idle", run: { clip: "Run", distance: 110 } }
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
-  swordsman: crow,
-  gunner: crow,
-  tidecaller: crow
+  swordsman: {
+    ...crow,
+    moments: {
+      ...crowLoops,
+      // The four combo moves, and the charged thrust as the third.
+      attack: crowCombo.map((move) => ({ clip: "AttackCombo", ...move })),
+      power: { clip: "AttackCombo", ...crowCombo[2] }
+    },
+    held: { grip: "weapon_grip", weapons: { trainingBlade: "trainingBlade", crescendo: "crescendo" } }
+  },
+  gunner: { ...crow, moments: crowLoops },
+  tidecaller: { ...crow, moments: crowLoops }
 }
 
 const capsule = (kind: EnemyKind): BodyLook => ({ kind: "capsule", ...view.enemies[kind] })
@@ -109,7 +136,11 @@ export const arenaLook: ArenaLook = {
 /** Every model the looks use: loaded before the arena opens. */
 export const modelsInLooks = (): ReadonlySet<ModelId> => {
   const ids = new Set<ModelId>()
-  for (const look of [...Object.values(characterLooks), ...Object.values(enemyLooks)]) if (look.kind === "model") ids.add(look.model)
+  for (const look of [...Object.values(characterLooks), ...Object.values(enemyLooks)]) {
+    if (look.kind !== "model") continue
+    ids.add(look.model)
+    for (const weapon of Object.values(look.held?.weapons ?? {})) ids.add(weapon)
+  }
   for (const look of Object.values(arenaLook.walls)) if (look.kind === "model") ids.add(look.model)
   for (const scenery of arenaLook.scenery) ids.add(scenery.model)
   return ids

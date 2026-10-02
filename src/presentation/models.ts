@@ -10,7 +10,7 @@ import { Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Texture } from "three
 import type { AnimationClip, Material, Object3D } from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
-import { crowModel } from "./assets/crow.ts"
+import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
 
 /** How a clip ends: loops name the time their first pose comes back (`closeLoop`); one-shots have `null`. */
 export interface ClipTiming {
@@ -21,15 +21,17 @@ export interface ClipTiming {
 
 export interface ModelSpec {
   readonly url: string
-  /** Rest-pose height in the file's units (meters), to scale it to a body or a wall. */
-  readonly height: number
+  /** Rest-pose height in the file's units (meters), to scale it to a body; `null` for a part held by another model (it takes that model's scale). */
+  readonly height: number | null
   /** Its animation clips by name; a model without animation has none. */
   readonly clips: Readonly<Record<string, ClipTiming>>
 }
 
 /** Every model the game can show. Add new ones here (and their file to `assets/`). */
 export const models = {
-  crow: crowModel
+  crow: crowModel,
+  trainingBlade: trainingBladeModel,
+  crescendo: crescendoModel
 } as const satisfies Record<string, ModelSpec>
 
 export type ModelId = keyof typeof models
