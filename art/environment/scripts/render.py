@@ -122,7 +122,7 @@ def asset_for(recipe):
 
 layouts = []
 example_scenes = []
-prop_ids = [a['id'] for a in manifest['assets'] if a['category'] == 'prop']
+prop_ids = [a['id'] for a in manifest['assets'] if a['category'] == 'prop' and not a['id'].startswith('channel-')]
 for variant, title in enumerate(['terrace', 'crossing', 'enclosure']):
     scene, floor = new_scene(kit['title'] + ' | ' + title, 14)
     placements = []
@@ -172,6 +172,13 @@ for variant, title in enumerate(['terrace', 'crossing', 'enclosure']):
         place('gate-wide', 2.4 if has_bridge else 1.4, 0, angle=math.pi / 2, opened=True)
         for i, name in enumerate(prop_ids[3:9]):
             place(name, -4 if i % 2 == 0 else 4, -1.8 + (i // 2) * 1.6, exact=True)
+        if args.kit == 'flooded-cistern':
+            # Channels occupy the drainage gap, below the deck, never a solid tile.
+            for name, y, angle in [('channel-straight', -3, math.pi / 2),
+                                    ('channel-junction', -1, 0),
+                                    ('channel-straight', 1, math.pi / 2),
+                                    ('channel-corner', 3, math.pi)]:
+                place(name, 0, y, z=-.04, angle=angle, exact=True)
     else:
         for x in (-4, -2, 0, 2, 4):
             for y in (-3, -1, 1, 3):

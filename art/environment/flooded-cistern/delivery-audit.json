@@ -1,0 +1,10 @@
+{
+  "kit": "flooded-cistern",
+  "assets": 47,
+  "triangles": 22324,
+  "glb_bytes": 1541816,
+  "pngs": 57,
+  "source_sha256": "a3f1e36bbee5d48d8d3d0025dd5e4bdd435b5c376f7400c52f75130d7281462f",
+  "stair_flights_connected_in_examples": 1,
+  "status": "pass"
+}

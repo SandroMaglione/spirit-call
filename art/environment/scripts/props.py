@@ -136,7 +136,10 @@ def prop(recipe, style, **options):
                 for y in (-.32, .32):
                     segment.box(.6875, y, -.2, .625, .11, .2, 'stone', top='edge')
             else:
-                segment.box(.32, 0, -.2, .11, .75, .2, 'stone', top='edge')
+                # The two closed sides of an elbow meet without overlapping tops.
+                elbow_end = recipe == 'channel-corner' and i == 3
+                segment.box(.32, .055 if elbow_end else 0, -.2, .11,
+                            .64 if elbow_end else .75, .2, 'stone', top='edge')
             m.join(segment.rotate(i * math.pi / 2))
         meta['origin'] = 'Top center; recessed drainage channel, not a walkable floor'
         meta['connections'] = [{'name': 'channel-' + str(i), 'position_m': [round(math.cos(i * math.pi / 2), 6), 0, round(-math.sin(i * math.pi / 2), 6)]} for i in arms]
@@ -165,9 +168,9 @@ def prop(recipe, style, **options):
         m.join(wheel.rotate(math.pi / 2, 'X').move(y=-.08, z=.85))
     elif recipe == 'buttress':
         m.box(0, 0, 0, .9, 1, .15, 'stone', top='edge')
-        m.box(0, .2, .15, .58, .48, 1.55, 'stone', top='light')
-        for i in range(4):
-            m.box(0, -.25 + i * .13, .15 + i * .27, .58, .26, .28, 'light')
+        section = [(-.5, .15), (-.5, .4), (.02, 1.7), (.44, 1.7), (.44, .15)]
+        m.shell([[(x, y, z) for y, z in section] for x in (-.29, .29)], ['stone'])
+        m.box(0, .2, 1.65, .64, .55, .09, 'light', top='edge')
     elif recipe == 'sluice':
         for x in (-.9, .9):
             m.box(x, 0, 0, .25, .5, 2.1, 'stone', top='edge')

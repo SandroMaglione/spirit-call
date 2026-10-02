@@ -1,0 +1,212 @@
+{
+  "title": "Flooded cistern",
+  "style": "cistern",
+  "palette": {
+    "stone": "7B9698",
+    "light": "9BB1AE",
+    "edge": "BAC8BF",
+    "dark": "3D6068",
+    "accent": "6EAD9E",
+    "metal": "427977",
+    "wood": "766F57",
+    "earth": "687B66",
+    "green": "5F8775",
+    "warm": "C3A86B",
+    "snow": "C4D2CB",
+    "cloth": "567E83"
+  },
+  "assets": [
+    {
+      "id": "floor-plain",
+      "recipe": "floor-plain"
+    },
+    {
+      "id": "floor-worn",
+      "recipe": "floor-worn"
+    },
+    {
+      "id": "floor-cracked",
+      "recipe": "floor-cracked"
+    },
+    {
+      "id": "floor-inset",
+      "recipe": "floor-inset"
+    },
+    {
+      "id": "floor-small",
+      "recipe": "floor-small"
+    },
+    {
+      "id": "floor-large",
+      "recipe": "floor-large"
+    },
+    {
+      "id": "floor-border",
+      "recipe": "floor-border"
+    },
+    {
+      "id": "floor-border-corner",
+      "recipe": "floor-border-corner"
+    },
+    {
+      "id": "floor-threshold",
+      "recipe": "floor-threshold"
+    },
+    {
+      "id": "floor-transition",
+      "recipe": "floor-transition"
+    },
+    {
+      "id": "wall-short",
+      "recipe": "wall-short"
+    },
+    {
+      "id": "wall-straight",
+      "recipe": "wall-straight"
+    },
+    {
+      "id": "wall-long",
+      "recipe": "wall-long"
+    },
+    {
+      "id": "wall-low",
+      "recipe": "wall-low"
+    },
+    {
+      "id": "wall-tall",
+      "recipe": "wall-tall"
+    },
+    {
+      "id": "wall-corner",
+      "recipe": "wall-corner"
+    },
+    {
+      "id": "wall-end",
+      "recipe": "wall-end"
+    },
+    {
+      "id": "wall-broken",
+      "recipe": "wall-broken"
+    },
+    {
+      "id": "pillar-small",
+      "recipe": "pillar-small"
+    },
+    {
+      "id": "pillar-large",
+      "recipe": "pillar-large"
+    },
+    {
+      "id": "pillar-broken",
+      "recipe": "pillar-broken"
+    },
+    {
+      "id": "stair-short",
+      "recipe": "stair-short"
+    },
+    {
+      "id": "stair-full",
+      "recipe": "stair-full"
+    },
+    {
+      "id": "stair-wide",
+      "recipe": "stair-wide"
+    },
+    {
+      "id": "stair-rail",
+      "recipe": "stair-rail"
+    },
+    {
+      "id": "landing",
+      "recipe": "landing"
+    },
+    {
+      "id": "platform",
+      "recipe": "platform"
+    },
+    {
+      "id": "platform-edge",
+      "recipe": "platform-edge"
+    },
+    {
+      "id": "railing-straight",
+      "recipe": "railing-straight"
+    },
+    {
+      "id": "railing-corner",
+      "recipe": "railing-corner"
+    },
+    {
+      "id": "doorway",
+      "recipe": "doorway"
+    },
+    {
+      "id": "gate-wide",
+      "recipe": "gate-wide"
+    },
+    {
+      "id": "floor-grate",
+      "recipe": "floor-grate"
+    },
+    {
+      "id": "wall-grille",
+      "recipe": "wall-grille"
+    },
+    {
+      "id": "bridge",
+      "recipe": "bridge"
+    },
+    {
+      "id": "channel-straight",
+      "recipe": "channel-straight"
+    },
+    {
+      "id": "channel-corner",
+      "recipe": "channel-corner"
+    },
+    {
+      "id": "channel-junction",
+      "recipe": "channel-junction"
+    },
+    {
+      "id": "pipe-straight",
+      "recipe": "pipe-straight"
+    },
+    {
+      "id": "pipe-elbow",
+      "recipe": "pipe-elbow"
+    },
+    {
+      "id": "pipe-outlet",
+      "recipe": "pipe-outlet"
+    },
+    {
+      "id": "sluice",
+      "recipe": "sluice"
+    },
+    {
+      "id": "valve",
+      "recipe": "valve"
+    },
+    {
+      "id": "basin",
+      "recipe": "basin"
+    },
+    {
+      "id": "buttress",
+      "recipe": "buttress"
+    },
+    {
+      "id": "urn",
+      "recipe": "urn"
+    },
+    {
+      "id": "pump",
+      "recipe": "pump"
+    }
+  ],
+  "references": [
+    "https://folsen.artstation.com/projects/ZeVlBN",
+    "https://blog.playstation.com/2021/12/26/genshin-impact-version-2-4-brings-grand-celebrations-and-a-mysterious-new-area-to-teyvat/"
+  ]
+}
