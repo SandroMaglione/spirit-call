@@ -16,11 +16,13 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument("--crow", type=Path)
 parser.add_argument("--composition-only", action="store_true")
-parser.add_argument("--asset", choices=["pillar-large", "paving-plain", "urn-jade"])
+parser.add_argument("--asset")
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
 bpy.ops.wm.open_mainfile(filepath=str(ROOT / "source/courtyard.blend"))
 scene = bpy.context.scene
 assets = {o["asset_id"]: o for o in scene.objects if "asset_id" in o}
+if args.asset and args.asset not in assets:
+    raise SystemExit(f"Unknown asset: {args.asset}")
 # Recreate the inspection setup in memory, keeping the editable source intact.
 for obj in list(scene.objects):
     if "asset_id" not in obj:
@@ -81,35 +83,75 @@ def render(name, eye, target, scale, width=1400, height=900):
 # Consistent scale across the lineup. Ground module remains at its actual depth.
 if not args.composition_only:
     if not args.asset:
-        render("contact-sheet", (5, -9, 7), (0, 0, 0.6), 6.2)
-        render("top", (0, -0.001, 10), (0, 0, 0), 6.2, 1400, 700)
+        labels = []
+        for name, obj in assets.items():
+            text = bpy.data.curves.new(name + " label", "FONT")
+            text.body = name.replace("-", " ")
+            text.size, text.align_x = 0.15, "CENTER"
+            label = bpy.data.objects.new(name + " label", text)
+            scene.collection.objects.link(label)
+            label.location = (obj.location.x, obj.location.y - 1.25, 0.01)
+            label.data.materials.append(matte("Label", (0.55, 0.59, 0.54, 1)))
+            labels.append(label)
+        render("contact-sheet", (0, -14, 23), (0, 0, 0.3), 16.7, 1700, 1700)
+        render("top", (0, -0.001, 20), (0, 0, 0), 16.7, 1700, 1700)
+        for label in labels:
+            label.hide_render = True
     for name, obj in assets.items():
         if args.asset and args.asset != name:
             continue
         for other in assets.values():
             other.hide_render = other != obj
         original = obj.location.copy()
-        obj.location = (0, 0, 0.14 if name == "paving-plain" else 0)
-        target = (0, 0, 0.8 if name == "pillar-large" else 0.25)
-        scale = {"pillar-large": 2.7, "paving-plain": 3.4, "urn-jade": 1.35}[name]
+        obj.location = (0, 0, 0.14 if obj["purpose"] == "ground-decoration" else 0)
+        low = min(v.co.z for v in obj.data.vertices)
+        high = max(v.co.z for v in obj.data.vertices)
+        width = max(v.co.x for v in obj.data.vertices) - min(v.co.x for v in obj.data.vertices)
+        depth = max(v.co.y for v in obj.data.vertices) - min(v.co.y for v in obj.data.vertices)
+        target = (0, 0, (low + high) / 2 + obj.location.z)
+        scale = max(width, depth, high - low) * 1.7
         render(name, (3, -5, 3.5), target, scale, 900, 900)
         obj.location = original
 if args.asset:
     raise SystemExit(0)
 for obj in assets.values():
-    obj.hide_render = False
+    obj.hide_render = True
 
-# Repeated tiles test module seams and give the sample a real ground context.
-assets["paving-plain"].hide_render = True
+# Repeated tiles and boundary modules give the kit a real ground context.
 floor.location.z = -0.145
-for x in (-1, 1):
-    for y in (-1, 1):
-        tile = assets["paving-plain"].copy()
+for x in (-3, -1, 1, 3):
+    for y in (-3, -1, 1, 3):
+        tile = assets["paving-cracked" if (x, y) in [(-3, 1), (1, -3)] else "paving-plain"].copy()
         scene.collection.objects.link(tile)
         tile.hide_render = False
         tile.location = (x, y, 0)
-assets["pillar-large"].location = (0.65, 0.6, 0)
-assets["urn-jade"].location = (1.05, -0.85, 0)
+
+
+def place(name, x, y, rotation=0):
+    obj = assets[name].copy()
+    scene.collection.objects.link(obj)
+    obj.hide_render = False
+    obj.location = (x, y, 0)
+    obj.rotation_euler.z = rotation
+    return obj
+
+
+for x in (-3, -1, 1, 3):
+    if x != -3:
+        place("wall-straight", x, 3.75)
+    place("wall-low", x, -3.75)
+for y in (-3, -1, 1):
+    place("wall-straight", -3.75, y, math.pi / 2)
+place("wall-corner", -3, 3, -math.pi / 2)
+place("pillar-large", -2.2, 1.6)
+place("pillar-large-chipped", 2.1, 1.6)
+place("pillar-small", -2.2, -1.5)
+place("pillar-small-chipped", 2.1, -1.5)
+place("urn-jade", 3.0, 0.1)
+place("brazier", 0, 3.0)
+place("rocks-low", -3.0, 0)
+place("rocks-tall", 3.3, 2.8)
+place("rubble-stones", 3.2, -2.8)
 reference_info = {"crow_included": False, "phone_camera_elevation_degrees": 30,
                   "phone_resolution": [390, 844], "phone_orthographic_scale": 12,
                   "source_sha256": hashlib.sha256((ROOT / "source/courtyard.blend").read_bytes()).hexdigest(),
@@ -143,7 +185,7 @@ if args.crow:
                           "crow_source_sha256": hashlib.sha256(args.crow.read_bytes()).hexdigest(),
                           "crow_source_name": args.crow.name,
                           "source_note": "External read-only crow reference; not included in the asset pack"})
-render("courtyard-overview", (6, -9, 8), (0, 0, 0.4), 6.5)
+render("courtyard-overview", (10, -15, 14), (0, 0, 0.3), 12.5, 1600, 1200)
 # Thirty degrees above the ground, matching the old sprite bake as a reference.
 target = Vector((0, 0, 0.3))
 eye = target + Vector((4.5, -7.794228634, 5.196152423))

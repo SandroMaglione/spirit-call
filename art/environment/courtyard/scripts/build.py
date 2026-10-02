@@ -1,9 +1,11 @@
-"""Author the courtyard sample. Existing sources require explicit replacement.
+"""Author the courtyard kit. Existing sources require explicit replacement.
 
 Blender --background --python scripts/build.py [-- --replace-generated]
 Manual edits can be exported without running this generator again.
 """
 import argparse
+import copy
+import json
 import math
 import sys
 from pathlib import Path
@@ -37,6 +39,9 @@ PALETTE = {key: color(value) for key, value in {
     "stone": "A7A497", "light": "BDB8A7", "edge": "CCC3AD", "shadow": "8C9088",
     "moss": "697763", "jade": "6F9690", "clay": "617F7A", "clay_light": "7F9990",
     "clay_dark": "435C5B", "bronze": "B7A17A", "inside": "344344",
+    "rock": "858B80", "rock_light": "9CA18F", "rock_dark": "6E786F",
+    "crystal": "77BDB4", "crystal_light": "ABDCD0", "crystal_dark": "43877F",
+    "gold": "CAA15B", "gold_light": "E3BF7D", "gold_dark": "93713F",
 }.items()}
 material = bpy.data.materials.new("Courtyard | vertex palette")
 material.use_nodes = True
@@ -160,6 +165,161 @@ urn.block(0, -0.34, 0.13, 0.035, 0.35, 0.14, 0.012, ["bronze"])
 urn.block(0, -0.36, 0.055, 0.008, 0.39, 0.06, 0.003, ["clay_dark"])
 urn.finish("urn-jade", (1.65, 0, 0), "edge-decoration", [0.769, 0.719])
 
+
+def solid(obj, boxes):
+    """Footprints are delivery metadata; the renderer never creates simulation walls."""
+    obj["collision_json"] = json.dumps({"kind": "boxes", "boxes": boxes})
+
+
+def box_footprint(width, depth, center=(0, 0)):
+    # Blender x/y becomes glTF x/-z.
+    return {"center_xz_m": [center[0], -center[1]], "size_xz_m": [width, depth]}
+
+
+for name, size, chipped in [
+    ("pillar-large-chipped", 1, True),
+    ("pillar-small", 5 / 7, False),
+    ("pillar-small-chipped", 5 / 7, True),
+]:
+    variant = copy.deepcopy(pillar)
+    if chipped:
+        # Pinch the outer corner of the capital while keeping every base vertex.
+        # The same closed rings survive, so no thin triangles or open holes appear.
+        for i, (x, y, z) in enumerate(variant.vertices):
+            if z >= 1.69 and x > 0.3 and y < -0.3:
+                variant.vertices[i] = (x - 0.10, y + 0.075, z - (0.07 if z > 1.75 else 0))
+        for i, face in enumerate(variant.faces):
+            if any(variant.vertices[v][0] > 0.25 and variant.vertices[v][1] < -0.25
+                   and variant.vertices[v][2] > 1.69 for v in face):
+                variant.colors[i] = "shadow"
+    variant.vertices = [(x * size, y * size, z * (0.78 if size < 1 else 1))
+                        for x, y, z in variant.vertices]
+    obj = variant.finish(name, (0, 0, 0), "solid-obstacle", [size, size])
+    solid(obj, [box_footprint(size, size)])
+solid(scene.objects["pillar-large"], [box_footprint(1, 1)])
+
+
+def wall_segment(mesh, x, y, width, depth, height):
+    mesh.block(x, y, width, depth, 0, 0.12, 0.045, ["shadow", "stone", "light"])
+    shaft_width, shaft_depth = max(width - 0.05, 0.1), max(depth - 0.10, 0.1)
+    middle = (height - 0.25) / 2
+    mesh.block(x, y, shaft_width, shaft_depth, 0.12, middle, 0.035, ["shadow", "stone", "light"])
+    mesh.block(x, y, shaft_width, shaft_depth, 0.125 + middle, middle, 0.035, ["shadow", "stone", "light"])
+    mesh.block(x, y, width, depth, height - 0.12, 0.12, 0.04, ["stone", "light", "edge"])
+
+
+wall = Mesh()
+wall_segment(wall, 0, 0, 2, 0.50, 0.95)
+obj = wall.finish("wall-straight", (0, 0, 0), "boundary-obstacle", [2, 0.5])
+solid(obj, [box_footprint(2, 0.5)])
+
+corner = Mesh()
+# Each arm is a two-meter module. Caps intersect at the corner, with no open end.
+wall_segment(corner, 0, -0.75, 2, 0.5, 0.95)
+wall_segment(corner, -0.75, 0.25, 0.5, 1.5, 0.95)
+obj = corner.finish("wall-corner", (0, 0, 0), "boundary-obstacle", [2, 2])
+solid(obj, [box_footprint(2, 0.5, (0, -0.75)), box_footprint(0.5, 1.5, (-0.75, 0.25))])
+obj["origin_note"] = "Bounding-footprint center; L arms at X=-0.75 and Z=+0.75"
+
+end = Mesh()
+end.block(0, 0, 0.60, 0.60, 0, 0.14, 0.04, ["shadow", "stone", "edge"])
+end.block(0, 0, 0.46, 0.46, 0.14, 0.79, 0.04, ["shadow", "stone", "light"])
+end.block(0, 0, 0.60, 0.60, 0.93, 0.14, 0.045, ["stone", "light", "edge"])
+end.block(0, -0.234, 0.10, 0.016, 0.57, 0.16, 0.006, ["jade"])
+obj = end.finish("wall-end-cap", (0, 0, 0), "boundary-obstacle", [0.6, 0.6])
+solid(obj, [box_footprint(0.6, 0.6)])
+
+low = Mesh()
+wall_segment(low, 0, 0, 2, 0.5, 0.38)
+obj = low.finish("wall-low", (0, 0, 0), "boundary-obstacle", [2, 0.5])
+solid(obj, [box_footprint(2, 0.5)])
+obj["origin_note"] = "Ground center; lower visual for foreground boundary, not traversable cover"
+
+# Shallow, narrow fissures remain below Y=0 after export. Small raised polygons
+# would flicker against the floor; split one stone into two closed flag shapes.
+cracked = Mesh()
+cracked.block(0, 0, 2, 2, -0.14, 0.10, 0.035, ["shadow"])
+for x, y, shade in [(0.50, -0.50, "light"), (-0.50, 0.50, "light"), (0.50, 0.50, "stone")]:
+    cracked.block(x, y, 0.98, 0.98, -0.065, 0.065, 0.018, ["shadow", shade, shade])
+left_flag = [(-0.98, -0.98), (-0.61, -0.98), (-0.49, -0.70), (-0.61, -0.45),
+             (-0.39, -0.02), (-0.98, -0.02)]
+right_flag = [(-0.59, -0.98), (-0.02, -0.98), (-0.02, -0.02), (-0.37, -0.02),
+              (-0.59, -0.45), (-0.47, -0.70)]
+for polygon in (left_flag, right_flag):
+    cracked.shell([[(x, y, z) for x, y in polygon] for z in (-0.06, 0)], ["stone"])
+obj = cracked.finish("paving-cracked", (0, 0, 0.14), "ground-decoration", [2, 2])
+obj["origin_note"] = "Top center; walking surface Y=0 in GLB"
+
+trim = Mesh()
+trim.block(0, 0, 2, 0.35, -0.14, 0.14, 0.025, ["shadow", "stone", "edge"])
+obj = trim.finish("paving-edge", (0, 0, 0.14), "ground-decoration", [2, 0.35])
+obj["origin_note"] = "Top center; 2 m run along X, walking surface Y=0"
+
+
+def rock(mesh, x, y, width, depth, height, phase):
+    count = 7
+    rings = []
+    for radius, z, twist in [(0.78, 0, 0), (1, height * 0.28, 0), (0.74, height * 0.78, 0.14), (0.40, height, 0.18)]:
+        rings.append([(x + width * radius * (1 + 0.09 * math.sin(i * 2.3 + phase)) * math.cos(i * math.tau / count + twist),
+                       y + depth * radius * (1 + 0.10 * math.cos(i * 1.7 + phase)) * math.sin(i * math.tau / count + twist), z)
+                      for i in range(count)])
+    mesh.shell(rings, ["rock_dark", "rock", "rock_light"])
+
+
+for name, pieces in [
+    ("rocks-low", [(-0.20, 0, 0.37, 0.28, 0.30, 0), (0.24, 0.10, 0.23, 0.22, 0.22, 1), (0.30, -0.22, 0.16, 0.12, 0.12, 2)]),
+    ("rocks-tall", [(0, 0.08, 0.38, 0.31, 0.73, 3), (-0.28, -0.16, 0.24, 0.20, 0.24, 4)]),
+    ("rubble-stones", [(-0.31, -0.16, 0.18, 0.13, 0.16, 5), (0.12, 0.04, 0.24, 0.19, 0.20, 6),
+                       (0.33, -0.24, 0.12, 0.12, 0.11, 7), (-0.12, 0.30, 0.15, 0.13, 0.12, 8)]),
+]:
+    mesh = Mesh()
+    for values in pieces:
+        rock(mesh, *values)
+    width = max(v[0] for v in mesh.vertices) - min(v[0] for v in mesh.vertices)
+    depth = max(v[1] for v in mesh.vertices) - min(v[1] for v in mesh.vertices)
+    # Center the footprint so arbitrary rotations keep the documented pivot useful.
+    cx = (max(v[0] for v in mesh.vertices) + min(v[0] for v in mesh.vertices)) / 2
+    cy = (max(v[1] for v in mesh.vertices) + min(v[1] for v in mesh.vertices)) / 2
+    mesh.vertices = [(x - cx, y - cy, z) for x, y, z in mesh.vertices]
+    mesh.finish(name, (0, 0, 0), "edge-decoration", [width, depth])
+
+brazier = Mesh()
+brazier.block(0, 0, 0.48, 0.48, 0, 0.12, 0.04, ["shadow", "stone", "edge"])
+brazier.lathe([(0.15, 0.12), (0.11, 0.20), (0.11, 0.64), (0.17, 0.69)], ["clay_dark", "clay_dark", "bronze"], 12)
+brazier.lathe([(0.15, 0.65), (0.27, 0.72), (0.34, 0.87), (0.35, 0.91),
+              (0.30, 0.92), (0.28, 0.86), (0.22, 0.77), (0.12, 0.73)],
+             ["clay_dark", "clay_dark", "bronze", "bronze", "clay_dark", "inside", "inside"], 12)
+obj = brazier.finish("brazier", (0, 0, 0), "edge-decoration", [0.7, 0.7])
+obj["sockets_json"] = json.dumps({"flame": {"position_m": [0, 0.84, 0], "up": "+Y"}})
+
+crystal = Mesh()
+crystal.lathe([(0.06, 0), (0.24, 0.24), (0.22, 0.57), (0.012, 0.86)],
+              ["crystal_dark", "crystal", "crystal_light"], 6)
+# Alternating facets catch light without transparent sorting or bloom.
+for i in range(len(crystal.colors)):
+    if i % 4 == 0:
+        crystal.colors[i] = "crystal_light"
+crystal.finish("currency-crystal", (0, 0, 0), "reward-visual", [0.48, 0.48 * math.sqrt(3) / 2])
+
+gold = Mesh()
+# A broad octagonal token stands upright; two stepped faces keep the symbol legible.
+gold.lathe([(0.26, 0), (0.29, 0.02), (0.29, 0.075), (0.26, 0.095)], ["gold_dark", "gold", "gold_light"], 8)
+gold.lathe([(0.21, 0.095), (0.205, 0.108)], ["gold_light"], 8)
+gold.block(0, 0, 0.13, 0.13, 0.108, 0.008, 0.013, ["gold_dark"])
+gold.block(0, 0, 0.07, 0.07, 0.116, 0.008, 0.009, ["gold_light"])
+# Local cylinder Z becomes depth; the decorated side faces Blender -Y / glTF +Z.
+gold.vertices = [(x, -z + 0.062, y + 0.29) for x, y, z in gold.vertices]
+gold.finish("currency-gold", (0, 0, 0), "reward-visual", [0.58, 0.124])
+
+# Arrange the editable library as families. These display offsets never export.
+order = ["pillar-large", "pillar-large-chipped", "pillar-small", "pillar-small-chipped",
+         "wall-straight", "wall-corner", "wall-end-cap", "wall-low",
+         "paving-plain", "paving-cracked", "paving-edge", "urn-jade",
+         "rocks-low", "rocks-tall", "rubble-stones", "brazier", "currency-crystal", "currency-gold"]
+for i, name in enumerate(order):
+    obj = scene.objects[name]
+    obj.location = ((i % 4 - 1.5) * 3, (2 - i // 4) * 3, 0.14 if obj["purpose"] == "ground-decoration" else 0)
+
 # Save an immediately viewable scene. Studio objects never carry asset_id.
 studio = bpy.data.collections.new("STUDIO | inspection only")
 scene.collection.children.link(studio)
@@ -190,13 +350,13 @@ for name, location, energy, size, tint in [
 camera = bpy.data.objects.new("Inspection camera", bpy.data.cameras.new("Inspection camera"))
 studio.objects.link(camera)
 scene.camera = camera
-camera.data.type, camera.data.ortho_scale = "ORTHO", 6.2
-camera.location = (5, -9, 7)
+camera.data.type, camera.data.ortho_scale = "ORTHO", 18
+camera.location = (5, -16, 24)
 camera.rotation_euler = (Vector((0, 0, 0.6)) - camera.location).to_track_quat("-Z", "Y").to_euler()
 scene.render.engine = "CYCLES"
 scene.cycles.samples = 40
 scene.cycles.use_denoising = True
-scene.render.resolution_x, scene.render.resolution_y = 1400, 900
+scene.render.resolution_x, scene.render.resolution_y = 1600, 1500
 scene.render.resolution_percentage = 100
 scene.view_settings.view_transform = "AgX"
 scene.render.filepath = "//../previews/contact-sheet.png"
@@ -211,7 +371,7 @@ for screen in bpy.data.screens:
     for area in screen.areas:
         if area.type == "VIEW_3D":
             area.spaces.active.shading.type = "MATERIAL"
-            area.spaces.active.region_3d.view_distance = 7
+            area.spaces.active.region_3d.view_distance = 20
             area.spaces.active.region_3d.view_location = (0, 0, 0.65)
             area.spaces.active.region_3d.view_rotation = camera.rotation_euler.to_quaternion()
 scene["authoring_axes"] = "Z up, -Y forward; glTF exporter converts to Y up, +Z forward"

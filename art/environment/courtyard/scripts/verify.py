@@ -79,9 +79,26 @@ for asset in manifest["assets"]:
     assert max(abs(a - b) for row, expected in zip(imported, sources[asset["id"]]["bounds"])
                for a, b in zip(row, expected)) < 1e-5
     if asset["purpose"] == "solid-obstacle":
-        assert asset["dimensions_m"][0] == asset["collision"]["size_xz_m"][0]
-        assert asset["dimensions_m"][2] == asset["collision"]["size_xz_m"][1]
+        box = asset["collision"]["boxes"][0]
+        assert abs(asset["dimensions_m"][0] - box["size_xz_m"][0]) < 1e-5
+        assert abs(asset["dimensions_m"][2] - box["size_xz_m"][1]) < 1e-5
         assert abs(asset["bounds_m"]["min"][1]) < 1e-5
+    if asset["collision"]:
+        assert asset["collision"]["kind"] == "boxes"
+        for axis, component in [(0, 0), (2, 1)]:
+            boxes = asset["collision"]["boxes"]
+            lower = min(b["center_xz_m"][component] - b["size_xz_m"][component] / 2 for b in boxes)
+            upper = max(b["center_xz_m"][component] + b["size_xz_m"][component] / 2 for b in boxes)
+            assert abs(lower - asset["bounds_m"]["min"][axis]) < 1e-5
+            assert abs(upper - asset["bounds_m"]["max"][axis]) < 1e-5
+        for vertex in obj.data.vertices:
+            point = obj.matrix_world @ vertex.co
+            x, z = point.x, -point.y
+            assert any(abs(x - b["center_xz_m"][0]) <= b["size_xz_m"][0] / 2 + 1e-5
+                       and abs(z - b["center_xz_m"][1]) <= b["size_xz_m"][1] / 2 + 1e-5
+                       for b in asset["collision"]["boxes"]), f"Geometry outside footprint: {asset['id']}"
+    for socket in asset.get("sockets", {}).values():
+        assert len(socket["position_m"]) == 3 and all(math.isfinite(x) for x in socket["position_m"])
     if asset["purpose"] == "ground-decoration":
         assert abs(asset["bounds_m"]["max"][1]) < 1e-5
     reports.append({"id": asset["id"], "triangles": asset["triangles"], "bytes": path.stat().st_size,

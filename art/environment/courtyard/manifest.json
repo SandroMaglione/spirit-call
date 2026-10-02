@@ -1,14 +1,183 @@
 {
   "schema_version": 1,
-  "stage": "sample-for-art-review",
+  "stage": "courtyard-kit-v1",
   "units": "meters",
   "up": "+Y",
   "forward": "+Z",
   "source": "source/courtyard.blend",
-  "source_sha256": "b28d6a9a644d954edac020b1f8c6429849193b9bcd709d2802926b6ef9b48d56",
+  "source_sha256": "e7d80080ebec5c2cb87e93ff6287e4abd544a521716696bb44a7eb12046aaf59",
   "material": "Opaque rough vertex colors; one shared material; no textures or extensions required",
   "integration": "Presentation assets only. Simulation owns collision and game-unit conversion.",
   "assets": [
+    {
+      "id": "brazier",
+      "file": "models/brazier.glb",
+      "purpose": "edge-decoration",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.3499999940395355,
+          0.0,
+          -0.3499999940395355
+        ],
+        "max": [
+          0.3499999940395355,
+          0.9200000166893005,
+          0.3499999940395355
+        ]
+      },
+      "dimensions_m": [
+        0.699999988079071,
+        0.9200000166893005,
+        0.699999988079071
+      ],
+      "footprint_xz_m": [
+        0.7,
+        0.7
+      ],
+      "triangles": 340,
+      "bytes": 23816,
+      "sha256": "8dcae31e54797587a86283b1385bb69d9c97cf36df05996c6764e97935e9d9f7",
+      "collision": null,
+      "sockets": {
+        "flame": {
+          "position_m": [
+            0,
+            0.84,
+            0
+          ],
+          "up": "+Y"
+        }
+      }
+    },
+    {
+      "id": "currency-crystal",
+      "file": "models/currency-crystal.glb",
+      "purpose": "reward-visual",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.23999999463558197,
+          0.0,
+          -0.20784609019756317
+        ],
+        "max": [
+          0.23999999463558197,
+          0.8600000143051147,
+          0.20784609019756317
+        ]
+      },
+      "dimensions_m": [
+        0.47999998927116394,
+        0.8600000143051147,
+        0.41569218039512634
+      ],
+      "footprint_xz_m": [
+        0.48,
+        0.4156921938165305
+      ],
+      "triangles": 44,
+      "bytes": 4260,
+      "sha256": "08b576e0861739a105267285950c4ba9a3cb653837329f12549cec78faf1a55c",
+      "collision": null,
+      "sockets": {}
+    },
+    {
+      "id": "currency-gold",
+      "file": "models/currency-gold.glb",
+      "purpose": "reward-visual",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.28999999165534973,
+          0.0,
+          -0.06199999898672104
+        ],
+        "max": [
+          0.28999999165534973,
+          0.5799999833106995,
+          0.06199999898672104
+        ]
+      },
+      "dimensions_m": [
+        0.5799999833106995,
+        0.5799999833106995,
+        0.12399999797344208
+      ],
+      "footprint_xz_m": [
+        0.58,
+        0.124
+      ],
+      "triangles": 208,
+      "bytes": 14844,
+      "sha256": "a26fb5944d5ad5b6f47b1765c827df8037a81b1210cd9dbc0b1829bd0a36ab27",
+      "collision": null,
+      "sockets": {}
+    },
+    {
+      "id": "paving-cracked",
+      "file": "models/paving-cracked.glb",
+      "purpose": "ground-decoration",
+      "origin": "Top center; walking surface Y=0 in GLB",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "footprint_xz_m": [
+        2,
+        2
+      ],
+      "triangles": 280,
+      "bytes": 19560,
+      "sha256": "e7979e8b9f44492337f4ad556ae36f67493e97f8774fe35d3a99d64d99ed3092",
+      "collision": null,
+      "sockets": {}
+    },
+    {
+      "id": "paving-edge",
+      "file": "models/paving-edge.glb",
+      "purpose": "ground-decoration",
+      "origin": "Top center; 2 m run along X, walking surface Y=0",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -0.17499999701976776
+        ],
+        "max": [
+          1.0,
+          0.0,
+          0.17499999701976776
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        0.3499999940395355
+      ],
+      "footprint_xz_m": [
+        2.0,
+        0.35
+      ],
+      "triangles": 60,
+      "bytes": 5212,
+      "sha256": "c1ad0d504bb1df3d013a70bd1e6ccb61bf07d9b54bb10dfbae063c3a532d8a9e",
+      "collision": null,
+      "sockets": {}
+    },
     {
       "id": "paving-plain",
       "file": "models/paving-plain.glb",
@@ -38,7 +207,8 @@
       "triangles": 300,
       "bytes": 20956,
       "sha256": "ffd93562d7340761362278851e338b164b3b429020305dd3ea5e37d5ff04c7a1",
-      "collision": null
+      "collision": null,
+      "sockets": {}
     },
     {
       "id": "pillar-large",
@@ -70,12 +240,255 @@
       "bytes": 50284,
       "sha256": "579048ef0e6bf7f16055f8da67e0b41548dc6c1af59a7a5ca57a9812c911b4ce",
       "collision": {
-        "kind": "box",
-        "size_xz_m": [
-          1,
-          1
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0
+            ],
+            "size_xz_m": [
+              1,
+              1
+            ]
+          }
         ]
-      }
+      },
+      "sockets": {}
+    },
+    {
+      "id": "pillar-large-chipped",
+      "file": "models/pillar-large-chipped.glb",
+      "purpose": "solid-obstacle",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        "max": [
+          0.5,
+          1.8990000486373901,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        1.8990000486373901,
+        1.0
+      ],
+      "footprint_xz_m": [
+        1,
+        1
+      ],
+      "triangles": 748,
+      "bytes": 50300,
+      "sha256": "b9b69a1fb7525646e9a248e86f7d123b385225b16e8e5164d02c5ca1730266e2",
+      "collision": {
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0
+            ],
+            "size_xz_m": [
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "sockets": {}
+    },
+    {
+      "id": "pillar-small",
+      "file": "models/pillar-small.glb",
+      "purpose": "solid-obstacle",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.3571428656578064,
+          0.0,
+          -0.3571428656578064
+        ],
+        "max": [
+          0.3571428656578064,
+          1.481220006942749,
+          0.3571428656578064
+        ]
+      },
+      "dimensions_m": [
+        0.7142857313156128,
+        1.481220006942749,
+        0.7142857313156128
+      ],
+      "footprint_xz_m": [
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "triangles": 748,
+      "bytes": 50344,
+      "sha256": "5563e5336c513431619bf05f1bd2e8fdb3e3daafa52ddb914bd99f388d924cc8",
+      "collision": {
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0
+            ],
+            "size_xz_m": [
+              0.7142857142857143,
+              0.7142857142857143
+            ]
+          }
+        ]
+      },
+      "sockets": {}
+    },
+    {
+      "id": "pillar-small-chipped",
+      "file": "models/pillar-small-chipped.glb",
+      "purpose": "solid-obstacle",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.3571428656578064,
+          0.0,
+          -0.3571428656578064
+        ],
+        "max": [
+          0.3571428656578064,
+          1.481220006942749,
+          0.3571428656578064
+        ]
+      },
+      "dimensions_m": [
+        0.7142857313156128,
+        1.481220006942749,
+        0.7142857313156128
+      ],
+      "footprint_xz_m": [
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "triangles": 748,
+      "bytes": 50360,
+      "sha256": "70fa5ce8e4735dd2e8391ddf5a7194877a9c7f231bb0cc9b7da1d3076b61d22c",
+      "collision": {
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0
+            ],
+            "size_xz_m": [
+              0.7142857142857143,
+              0.7142857142857143
+            ]
+          }
+        ]
+      },
+      "sockets": {}
+    },
+    {
+      "id": "rocks-low",
+      "file": "models/rocks-low.glb",
+      "purpose": "edge-decoration",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.5190657377243042,
+          0.0,
+          -0.31966015696525574
+        ],
+        "max": [
+          0.5190657377243042,
+          0.30000001192092896,
+          0.31966015696525574
+        ]
+      },
+      "dimensions_m": [
+        1.0381314754486084,
+        0.30000001192092896,
+        0.6393203139305115
+      ],
+      "footprint_xz_m": [
+        1.0381314326244486,
+        0.6393203167972982
+      ],
+      "triangles": 156,
+      "bytes": 11640,
+      "sha256": "c89a250678735953f89e71a9e26a595878d326d33323a952f342cea4481961e2",
+      "collision": null,
+      "sockets": {}
+    },
+    {
+      "id": "rocks-tall",
+      "file": "models/rocks-tall.glb",
+      "purpose": "edge-decoration",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.4462905526161194,
+          0.0,
+          -0.3933428227901459
+        ],
+        "max": [
+          0.4462905526161194,
+          0.7300000190734863,
+          0.3933428227901459
+        ]
+      },
+      "dimensions_m": [
+        0.8925811052322388,
+        0.7300000190734863,
+        0.7866856455802917
+      ],
+      "footprint_xz_m": [
+        0.8925811323442607,
+        0.7866856577516113
+      ],
+      "triangles": 104,
+      "bytes": 8192,
+      "sha256": "021fc02b376a9119b8abe3d3bc3871658443df61ae85ab271eba60e5503b2bd3",
+      "collision": null,
+      "sockets": {}
+    },
+    {
+      "id": "rubble-stones",
+      "file": "models/rubble-stones.glb",
+      "purpose": "edge-decoration",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.47191837430000305,
+          0.0,
+          -0.3886360228061676
+        ],
+        "max": [
+          0.47191837430000305,
+          0.20000000298023224,
+          0.3886360228061676
+        ]
+      },
+      "dimensions_m": [
+        0.9438367486000061,
+        0.20000000298023224,
+        0.7772720456123352
+      ],
+      "footprint_xz_m": [
+        0.943836744772234,
+        0.7772720469196639
+      ],
+      "triangles": 208,
+      "bytes": 15100,
+      "sha256": "aebab88a7e06f868b6d5f11bc04ace03fd6485d81668454c64329c992138e78b",
+      "collision": null,
+      "sockets": {}
     },
     {
       "id": "urn-jade",
@@ -106,7 +519,202 @@
       "triangles": 844,
       "bytes": 58596,
       "sha256": "68b1ee7df0e652d83b203eb1cecfc3c22c013b56a936822cb142ecca598328d5",
-      "collision": null
+      "collision": null,
+      "sockets": {}
+    },
+    {
+      "id": "wall-corner",
+      "file": "models/wall-corner.glb",
+      "purpose": "boundary-obstacle",
+      "origin": "Bounding-footprint center; L arms at X=-0.75 and Z=+0.75",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.949999988079071,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.949999988079071,
+        2.0
+      ],
+      "footprint_xz_m": [
+        2,
+        2
+      ],
+      "triangles": 480,
+      "bytes": 32788,
+      "sha256": "97acc7140ddbcc5780e0b38a479134b2ad0a99d620d32c7ec27962d0957641ce",
+      "collision": {
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0.75
+            ],
+            "size_xz_m": [
+              2,
+              0.5
+            ]
+          },
+          {
+            "center_xz_m": [
+              -0.75,
+              -0.25
+            ],
+            "size_xz_m": [
+              0.5,
+              1.5
+            ]
+          }
+        ]
+      },
+      "sockets": {}
+    },
+    {
+      "id": "wall-end-cap",
+      "file": "models/wall-end-cap.glb",
+      "purpose": "boundary-obstacle",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -0.30000001192092896,
+          0.0,
+          -0.30000001192092896
+        ],
+        "max": [
+          0.30000001192092896,
+          1.0700000524520874,
+          0.30000001192092896
+        ]
+      },
+      "dimensions_m": [
+        0.6000000238418579,
+        1.0700000524520874,
+        0.6000000238418579
+      ],
+      "footprint_xz_m": [
+        0.6,
+        0.6
+      ],
+      "triangles": 240,
+      "bytes": 17084,
+      "sha256": "a439a82a6c918aeee8737cf2b9f87d636ed6b2c8058550bbb8cd7e64ce7e2c01",
+      "collision": {
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0
+            ],
+            "size_xz_m": [
+              0.6,
+              0.6
+            ]
+          }
+        ]
+      },
+      "sockets": {}
+    },
+    {
+      "id": "wall-low",
+      "file": "models/wall-low.glb",
+      "purpose": "boundary-obstacle",
+      "origin": "Ground center; lower visual for foreground boundary, not traversable cover",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          0.3799999952316284,
+          0.25
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.3799999952316284,
+        0.5
+      ],
+      "footprint_xz_m": [
+        2.0,
+        0.5
+      ],
+      "triangles": 240,
+      "bytes": 17008,
+      "sha256": "5f916b850ba9533392bcd1f0996ee8e6f6c70d1eee7f4a1d4dad77be9aa9a96c",
+      "collision": {
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0
+            ],
+            "size_xz_m": [
+              2,
+              0.5
+            ]
+          }
+        ]
+      },
+      "sockets": {}
+    },
+    {
+      "id": "wall-straight",
+      "file": "models/wall-straight.glb",
+      "purpose": "boundary-obstacle",
+      "origin": "Ground center",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          0.949999988079071,
+          0.25
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.949999988079071,
+        0.5
+      ],
+      "footprint_xz_m": [
+        2.0,
+        0.5
+      ],
+      "triangles": 240,
+      "bytes": 17020,
+      "sha256": "4b54fc15892f8957233f71e4a6acb2d64b43f63ff62e0fb910deadb2987717d9",
+      "collision": {
+        "kind": "boxes",
+        "boxes": [
+          {
+            "center_xz_m": [
+              0,
+              0
+            ],
+            "size_xz_m": [
+              2,
+              0.5
+            ]
+          }
+        ]
+      },
+      "sockets": {}
     }
   ]
 }

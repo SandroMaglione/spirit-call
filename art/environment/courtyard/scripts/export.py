@@ -10,7 +10,7 @@ source = ROOT / "source/courtyard.blend"
 bpy.ops.wm.open_mainfile(filepath=str(source))
 assets = sorted((o for o in bpy.context.scene.objects if "asset_id" in o), key=lambda o: o["asset_id"])
 manifest = {
-    "schema_version": 1, "stage": "sample-for-art-review", "units": "meters",
+    "schema_version": 1, "stage": "courtyard-kit-v1", "units": "meters",
     "up": "+Y", "forward": "+Z", "source": "source/courtyard.blend",
     "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
     "material": "Opaque rough vertex colors; one shared material; no textures or extensions required",
@@ -46,7 +46,8 @@ for obj in assets:
         "footprint_xz_m": list(obj["footprint_m"]),
         "triangles": len(obj.data.loop_triangles), "bytes": path.stat().st_size,
         "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        "collision": {"kind": "box", "size_xz_m": [1, 1]} if obj["purpose"] == "solid-obstacle" else None,
+        "collision": json.loads(obj["collision_json"]) if "collision_json" in obj else None,
+        "sockets": json.loads(obj["sockets_json"]) if "sockets_json" in obj else {},
     })
 (ROOT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 print("EXPORTED", len(assets), "assets; source file unchanged")

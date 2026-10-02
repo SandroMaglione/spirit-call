@@ -1,7 +1,47 @@
 {
   "blender": "4.5.14 LTS",
-  "source_sha256": "b28d6a9a644d954edac020b1f8c6429849193b9bcd709d2802926b6ef9b48d56",
+  "source_sha256": "e7d80080ebec5c2cb87e93ff6287e4abd544a521716696bb44a7eb12046aaf59",
   "assets": [
+    {
+      "id": "brazier",
+      "triangles": 340,
+      "bytes": 23816,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "8dcae31e54797587a86283b1385bb69d9c97cf36df05996c6764e97935e9d9f7"
+    },
+    {
+      "id": "currency-crystal",
+      "triangles": 44,
+      "bytes": 4260,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "08b576e0861739a105267285950c4ba9a3cb653837329f12549cec78faf1a55c"
+    },
+    {
+      "id": "currency-gold",
+      "triangles": 208,
+      "bytes": 14844,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "a26fb5944d5ad5b6f47b1765c827df8037a81b1210cd9dbc0b1829bd0a36ab27"
+    },
+    {
+      "id": "paving-cracked",
+      "triangles": 280,
+      "bytes": 19560,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "e7979e8b9f44492337f4ad556ae36f67493e97f8774fe35d3a99d64d99ed3092"
+    },
+    {
+      "id": "paving-edge",
+      "triangles": 60,
+      "bytes": 5212,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "c1ad0d504bb1df3d013a70bd1e6ccb61bf07d9b54bb10dfbae063c3a532d8a9e"
+    },
     {
       "id": "paving-plain",
       "triangles": 300,
@@ -19,12 +59,92 @@
       "sha256": "579048ef0e6bf7f16055f8da67e0b41548dc6c1af59a7a5ca57a9812c911b4ce"
     },
     {
+      "id": "pillar-large-chipped",
+      "triangles": 748,
+      "bytes": 50300,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "b9b69a1fb7525646e9a248e86f7d123b385225b16e8e5164d02c5ca1730266e2"
+    },
+    {
+      "id": "pillar-small",
+      "triangles": 748,
+      "bytes": 50344,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "5563e5336c513431619bf05f1bd2e8fdb3e3daafa52ddb914bd99f388d924cc8"
+    },
+    {
+      "id": "pillar-small-chipped",
+      "triangles": 748,
+      "bytes": 50360,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "70fa5ce8e4735dd2e8391ddf5a7194877a9c7f231bb0cc9b7da1d3076b61d22c"
+    },
+    {
+      "id": "rocks-low",
+      "triangles": 156,
+      "bytes": 11640,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "c89a250678735953f89e71a9e26a595878d326d33323a952f342cea4481961e2"
+    },
+    {
+      "id": "rocks-tall",
+      "triangles": 104,
+      "bytes": 8192,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "021fc02b376a9119b8abe3d3bc3871658443df61ae85ab271eba60e5503b2bd3"
+    },
+    {
+      "id": "rubble-stones",
+      "triangles": 208,
+      "bytes": 15100,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "aebab88a7e06f868b6d5f11bc04ace03fd6485d81668454c64329c992138e78b"
+    },
+    {
       "id": "urn-jade",
       "triangles": 844,
       "bytes": 58596,
       "material_primitives": 1,
       "fresh_import_bounds_match": true,
       "sha256": "68b1ee7df0e652d83b203eb1cecfc3c22c013b56a936822cb142ecca598328d5"
+    },
+    {
+      "id": "wall-corner",
+      "triangles": 480,
+      "bytes": 32788,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "97acc7140ddbcc5780e0b38a479134b2ad0a99d620d32c7ec27962d0957641ce"
+    },
+    {
+      "id": "wall-end-cap",
+      "triangles": 240,
+      "bytes": 17084,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "a439a82a6c918aeee8737cf2b9f87d636ed6b2c8058550bbb8cd7e64ce7e2c01"
+    },
+    {
+      "id": "wall-low",
+      "triangles": 240,
+      "bytes": 17008,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "5f916b850ba9533392bcd1f0996ee8e6f6c70d1eee7f4a1d4dad77be9aa9a96c"
+    },
+    {
+      "id": "wall-straight",
+      "triangles": 240,
+      "bytes": 17020,
+      "material_primitives": 1,
+      "fresh_import_bounds_match": true,
+      "sha256": "4b54fc15892f8957233f71e4a6acb2d64b43f63ff62e0fb910deadb2987717d9"
     }
   ]
 }
