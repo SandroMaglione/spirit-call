@@ -80,9 +80,10 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
     ...crow,
     moments: {
       ...crowLoops,
-      // The four combo moves, and the charged thrust as the third.
+      // The follow-through prepares the next cut; power has its own deeper thrust.
       attack: crowCombo.map((move) => ({ clip: "AttackCombo", ...move })),
-      power: { clip: "AttackCombo", ...crowCombo[2] }
+      power: { clip: "Power", contact: crowCombo[0].contact },
+      dash: "Dash"
     },
     held: { grip: "weapon_grip", weapons: { trainingBlade: "trainingBlade", crescendo: "crescendo" } }
   },

@@ -16,6 +16,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(HERE))
 from geometry import refine, palette
+from motion import COMBO, clips
+from controls import make_editable
 spec = importlib.util.spec_from_file_location("old_export", ROOT / "export/export-glb.py")
 old = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old)
@@ -100,6 +102,7 @@ def build_weapons():
             col.objects.link(obj)
             obj.parent = root
             obj.location = ((.28 if ornate else 0) if marker == "blade_tip" else 0, 0, z)
+        palette([obj for obj in col.objects if obj.type == "MESH"])
         result[name] = (col, root)
     return result
 
@@ -206,7 +209,7 @@ def align(name, head, direction, guide):
     bpy.context.view_layer.update()
 
 
-def arm(label, hand, direction, spin=0):
+def arm(label, hand, direction, spin=0, blade_roll=0):
     rotation=Matrix.Rotation(spin,3,"Z")
     hand=rotation@Vector(hand);direction=(rotation@Vector(direction)).normalized()
     shoulder=rig.pose.bones[f"body"].matrix @ rig.data.bones["body"].matrix_local.inverted() @ rig.data.bones[f"wing.{label}"].head_local
@@ -225,6 +228,7 @@ def arm(label, hand, direction, spin=0):
     roll=rotation@Vector((1,0,0))
     align(f"wing.{label}",shoulder,elbow-shoulder,roll)
     align(f"forewing.{label}",elbow,wrist-elbow,roll)
+    roll=Matrix.Rotation(blade_roll,3,direction)@roll
     align(f"wrist.{label}",wrist,direction,roll)
     if label=="R":align("weapon_grip",hand,direction,roll)
 
@@ -233,8 +237,6 @@ def sword_direction(yaw,pitch):
     return (math.sin(yaw)*math.cos(pitch),-math.cos(yaw)*math.cos(pitch),math.sin(pitch))
 
 
-GUARD=dict(hip=(.025,-.025,-.085),twist=.22,lean=.12,hand=(.62,-.40,1.15),yaw=.48,pitch=.62,left=(-.48,-.23,.88),feet=(-.13,0,.12,0),pivotL=.12,pivotR=-.20,spin=0)
-
 foot_meshes={label:[o for o in meshes if o.name.startswith(f"Foot {label}")] for label in ["L","R"]}
 
 
@@ -242,9 +244,9 @@ def stance(s):
     for name in rig.pose.bones.keys():pose(name)
     spin=s.get("spin",0); twist=s.get("twist",0);lean=s.get("lean",0)
     pose("pelvis",s.get("hip",(0,0,0)),angles=(lean*.35,0,spin+twist*.4))
-    pose("body",angles=(lean*.65,0,twist*.6))
+    pose("body",angles=(lean*.65,s.get("bank",0),twist*.6))
     pose("head",angles=(-lean*.55,0,-twist*.6))
-    pose("tail",angles=(-lean*.45,0,-twist*.25))
+    pose("tail",angles=(-lean*.45+s.get("tail",0),0,-twist*.25))
     rotation=Matrix.Rotation(spin,3,"Z")
     feet=s.get("feet",(0,0,0,0))
     for index,label in enumerate(["L","R"]):
@@ -260,82 +262,9 @@ def stance(s):
             basis=rig.data.bones[f"foot.{label}"].matrix_local.to_3x3()
             rig.pose.bones[f"foot.{label}"].location+=basis.inverted()@Vector((0,0,-lowest))
             bpy.context.view_layer.update()
-    arm("R",s["hand"],sword_direction(s["yaw"],s["pitch"]),spin)
+    arm("R",s["hand"],sword_direction(s["yaw"],s["pitch"]),spin,s.get("blade_roll",0))
     arm("L",s["left"],(0,0,-1),spin)
 
-
-def mix(a,b,t):
-    out={}
-    for key in GUARD.keys() | a.keys() | b.keys():
-        av=a.get(key,GUARD.get(key,0));bv=b.get(key,GUARD.get(key,0))
-        out[key]=tuple(x+(y-x)*t for x,y in zip(av,bv)) if isinstance(av,tuple) else av+(bv-av)*t
-    return out
-
-
-def idle(phase):
-    s=dict(GUARD);breath=math.sin(phase*math.tau)
-    s.update(hip=(.025+.010*breath,-.025,-.085+.014*breath),lean=.12+.012*breath,
-             hand=(.62,-.40,1.15+.012*breath),pitch=.62+.018*breath,left=(-.48,-.23,.88+.016*breath))
-    return s
-
-
-def run(phase):
-    phase%=1
-    feet=[];rolls={}
-    for offset,label in [(0,"L"),(.5,"R")]:
-        cycle=(phase+offset)%1
-        if cycle<.38:
-            t=cycle/.38;y=-.30+.66*t;z=0
-            roll=.35*max(0,(t-.62)/.38)
-        else:
-            t=(cycle-.38)/.62;y=.36-.66*(t*t*(3-2*t));z=.28*math.sin(math.pi*t)**2
-            roll=.20*math.sin(math.pi*t)
-        feet.extend([y,z]);rolls["roll"+label]=roll
-    pulse=math.cos(phase*math.tau*2+.7)
-    s=dict(GUARD)
-    s.update(hip=(.028*math.sin(phase*math.tau),-.09,-.065+.075*pulse),
-             lean=.64+.085*pulse,twist=.08*math.sin(phase*math.tau),
-             hand=(.63,.16,.89+.025*math.sin(phase*math.tau)),yaw=2.35,pitch=.05,
-             left=(-.57,.15+.14*math.sin(phase*math.tau),.90),feet=tuple(feet),**rolls)
-    return s
-
-
-# Pose-to-pose choreography: load, rapid strike, overshoot, then prepare the next hit.
-KEYS=[
- (1,GUARD),
- (7,dict(hip=(.06,.06,-.13),twist=.62,lean=-.08,hand=(.64,.14,1.56),yaw=2.0,pitch=.70,left=(-.57,-.13,.95),feet=(.10,0,-.10,0))),
- (10,dict(hip=(-.06,-.10,-.07),twist=-.62,lean=.23,hand=(.04,-.65,.95),yaw=-1.05,pitch=-.24,left=(-.70,.18,1.04),feet=(-.16,0,.10,.03))),
- (14,dict(hip=(-.05,-.06,-.08),twist=-.72,lean=.18,hand=(-.18,-.48,.83),yaw=-1.65,pitch=-.24,left=(-.71,.17,1.0),feet=(-.16,0,.08,0))),
- (18,dict(hip=(-.06,.02,-.14),twist=-.75,lean=.11,hand=(-.10,-.35,.75),yaw=-1.7,pitch=-.12,left=(-.67,.05,.92),feet=(-.1,0,.08,0))),
- (21,dict(hip=(.06,-.09,-.025),twist=.65,lean=.18,hand=(.72,-.42,1.35),yaw=1.28,pitch=.65,left=(-.57,.21,.9),feet=(.03,.025,-.16,0))),
- (25,dict(hip=(.06,-.02,-.02),twist=.66,lean=.08,hand=(.74,-.20,1.46),yaw=1.6,pitch=.75,left=(-.57,.21,.9),feet=(.03,0,-.16,0))),
- (30,dict(hip=(.02,.08,-.14),twist=.40,lean=-.05,hand=(.40,-.04,1.02),yaw=.02,pitch=.04,left=(-.42,-.18,1.00),feet=(-.08,0,.16,0))),
- (33,dict(hip=(0,-.16,-.05),twist=-.22,lean=.30,hand=(.22,-.92,1.05),yaw=0,pitch=.04,left=(-.64,.20,1.03),feet=(-.24,0,.16,.06))),
- (38,dict(hip=(0,-.06,-.07),twist=-.15,lean=.18,hand=(.31,-.70,1.02),yaw=.1,pitch=.02,left=(-.61,.18,1.0),feet=(-.19,0,.12,0))),
- (44,dict(hip=(.02,.02,-.18),twist=.65,lean=.04,hand=(.62,.10,1.0),yaw=2.2,pitch=.08,left=(-.43,-.19,.95),feet=(-.08,0,.08,0))),
- (48,dict(hip=(0,0,-.03),twist=.35,lean=.16,hand=(.89,-.16,1.13),yaw=1.4,pitch=.04,left=(-.72,0,1.12),feet=(0,.10,0,.04),spin=-2.4)),
- (52,dict(hip=(0,0,.04),twist=.1,lean=.12,hand=(.90,-.18,1.12),yaw=1.35,pitch=.07,left=(-.73,0,1.10),feet=(0,.15,0,.14),spin=-4.8)),
- (56,dict(hip=(0,-.05,-.16),twist=-.55,lean=.22,hand=(.16,-.62,.84),yaw=-1.2,pitch=-.18,left=(-.68,.16,.93),feet=(-.10,0,.08,0),spin=-math.tau)),
- (61,dict(hip=(0,-.02,-.09),twist=-.35,lean=.12,hand=(.30,-.48,.84),yaw=-.70,pitch=-.05,left=(-.61,.1,.82),feet=(-.04,0,.03,0),spin=-math.tau)),
- (67,{**GUARD,"spin":-math.tau}),
-]
-
-
-def combo(frame):
-    a,b=next((a,b) for a,b in zip(KEYS,KEYS[1:]) if a[0]<=frame<=b[0])
-    t=(frame-a[0])/(b[0]-a[0])
-    # The dense bake preserves these intentional accelerations in glTF.
-    t=t*t*(3-2*t)
-    return mix(a[1],b[1],t)
-
-
-clips={"Idle":(60,True,lambda f:idle((f-1)/60)),
-       "Run":(16,True,lambda f:run((f-1)/16)),
-       "AttackCombo":(67,False,combo),
-       "RunStart":(9,False,lambda f:mix(GUARD,run(0),((f-1)/8)**.65)),
-       "RunStop":(10,False,lambda f:mix(run(0),GUARD,(f-1)/9))}
-for hit,frame in enumerate([14,25,38],1):
-    clips[f"Recover{hit}"]=(10,False,lambda f,frame=frame:mix(combo(frame),GUARD,((f-1)/9)**.7))
 
 rig.animation_data_create()
 for name,(frames,loop,evaluate) in clips.items():
@@ -351,6 +280,7 @@ for name,(frames,loop,evaluate) in clips.items():
         for key in curve.keyframe_points:key.interpolation="LINEAR"
     action.use_frame_range=True;action.frame_start=1;action.frame_end=frames
 
+make_editable(rig, clips)
 weapons=build_weapons()
 # The editable scene includes one attached sword, while runtime exports stay modular.
 training=weapons["trainingBlade"][1]
@@ -362,21 +292,21 @@ grip_world=rig.matrix_world@rig.pose.bones["weapon_grip"].matrix
 assert (training.matrix_world.translation-grip_world.translation).length<1e-5
 assert (training.matrix_world.to_3x3()@Vector((0,0,1))).normalized().dot((grip_world.to_3x3()@Vector((0,1,0))).normalized())>.9999
 weapons["crescendo"][1].location=(3,0,0)
-scene.frame_start,scene.frame_end=1,67
-root["scope"]="Armed crow v2; independent weapons; four-hit combo; root displacement supplied by game."
+scene.frame_start,scene.frame_end=1,60
+root["scope"]="Armed crow v3; feather grip and gameplay-paced combat; root displacement supplied by game."
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/"crow-combat.blend"))
 
 metadata={"schema_version":2,"fps":FPS,"height_meters":2.19648814201355,
           "up":"+Y","forward":"+Z","root_motion":False,"grip":"weapon_grip",
           "weapon_axis":"+Y along blade; +Z blade face; origin at handle center",
-          "run_stride_meters":1.74,
+          "run_stride_meters":1.32,
           "clips":{name:{"frames":[1,n],"samples":n,"last_key_seconds":(n-1)/FPS,
                          "loop_seconds":n/FPS if loop else None,"duration_seconds":(n if loop else n-1)/FPS}
                    for name,(n,loop,_) in clips.items()},
           "combo":[{"name":name,"start":(start-1)/FPS,"end":(end-1)/FPS,
+                     "contact":(hit-1)/FPS,
                      "active":[(hit-1)/FPS,(hit+1)/FPS],"recover":recover}
-                   for name,start,end,hit,recover in [("Opening cut",1,14,10,"Recover1"),("Rising backhand",14,25,21,"Recover2"),
-                                                     ("Driving thrust",25,38,33,"Recover3"),("Spinning finisher",38,67,52,None)]],
+                   for name,start,end,hit,recover in COMBO],
           "weapons":{"trainingBlade":{"file":"training-blade.glb","label":"Training Blade"},
                      "crescendo":{"file":"crescendo.glb","label":"Crescendo"}}}
 (HERE/"model-info.json").write_text(json.dumps(metadata,indent=2)+"\n")

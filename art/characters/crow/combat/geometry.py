@@ -102,9 +102,9 @@ def refine(meshes, collection, root, rig, ground, mesh):
 
 def palette(meshes):
     """Pack the painted body and solid colours into one 512 px material."""
-    body = next(o for o in meshes if o.name.startswith('Body'))
-    source = next(n.image for n in body.data.materials[0].node_tree.nodes if n.type == 'TEX_IMAGE')
-    source_pixels = list(source.pixels[:])
+    body = next((o for o in meshes if o.name.startswith('Body')),None)
+    source = next(n.image for n in body.data.materials[0].node_tree.nodes if n.type == 'TEX_IMAGE') if body else None
+    source_pixels = list(source.pixels[:]) if source else [0.0]*(512*512*4)
     materials = list({m.name: m for o in meshes for m in o.data.materials}.values())
     solid = [m for m in materials if not any(n.type == 'TEX_IMAGE' for n in m.node_tree.nodes)]
     size, strip = 512, 16
@@ -123,10 +123,11 @@ def palette(meshes):
     atlas.colorspace_settings.name = 'sRGB'
     atlas.pixels.foreach_set(pixels)
     atlas.pack()
-    shared = bpy.data.materials.new('Crow | single palette')
+    shared = bpy.data.materials.new('Crow | single palette' if body else 'Sword | single palette')
     shared.use_nodes = True
     shader = shared.node_tree.nodes.get('Principled BSDF')
-    shader.inputs['Roughness'].default_value = .78
+    shader.inputs['Roughness'].default_value = .78 if body else .48
+    shader.inputs['Metallic'].default_value = 0 if body else .35
     shader.inputs['Specular IOR Level'].default_value = .16
     texture = shared.node_tree.nodes.new('ShaderNodeTexImage')
     texture.image = atlas
