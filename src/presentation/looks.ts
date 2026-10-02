@@ -101,7 +101,7 @@ const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook =
 export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   dummy: enemyModel("dummy", "enemyDummy", 1),
   chaser: enemyModel("chaser", "enemyChaser", 68),
-  shooter: capsule("shooter"),
+  shooter: enemyModel("shooter", "enemyShooter", 62),
   brute: capsule("brute"),
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),
   charger: capsule("charger"),
