@@ -1,0 +1,238 @@
+{
+  "assets": [
+    {
+      "id": "brazier",
+      "sha256": "8dcae31e54797587a86283b1385bb69d9c97cf36df05996c6764e97935e9d9f7",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "currency-crystal",
+      "sha256": "08b576e0861739a105267285950c4ba9a3cb653837329f12549cec78faf1a55c",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "currency-gold",
+      "sha256": "a26fb5944d5ad5b6f47b1765c827df8037a81b1210cd9dbc0b1829bd0a36ab27",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "paving-cracked",
+      "sha256": "e7979e8b9f44492337f4ad556ae36f67493e97f8774fe35d3a99d64d99ed3092",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "paving-edge",
+      "sha256": "c1ad0d504bb1df3d013a70bd1e6ccb61bf07d9b54bb10dfbae063c3a532d8a9e",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "paving-plain",
+      "sha256": "ffd93562d7340761362278851e338b164b3b429020305dd3ea5e37d5ff04c7a1",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-large",
+      "sha256": "579048ef0e6bf7f16055f8da67e0b41548dc6c1af59a7a5ca57a9812c911b4ce",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-large-chipped",
+      "sha256": "b9b69a1fb7525646e9a248e86f7d123b385225b16e8e5164d02c5ca1730266e2",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-small",
+      "sha256": "5563e5336c513431619bf05f1bd2e8fdb3e3daafa52ddb914bd99f388d924cc8",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-small-chipped",
+      "sha256": "70fa5ce8e4735dd2e8391ddf5a7194877a9c7f231bb0cc9b7da1d3076b61d22c",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "rocks-low",
+      "sha256": "c89a250678735953f89e71a9e26a595878d326d33323a952f342cea4481961e2",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "rocks-tall",
+      "sha256": "021fc02b376a9119b8abe3d3bc3871658443df61ae85ab271eba60e5503b2bd3",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "rubble-stones",
+      "sha256": "aebab88a7e06f868b6d5f11bc04ace03fd6485d81668454c64329c992138e78b",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "urn-jade",
+      "sha256": "68b1ee7df0e652d83b203eb1cecfc3c22c013b56a936822cb142ecca598328d5",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-corner",
+      "sha256": "97acc7140ddbcc5780e0b38a479134b2ad0a99d620d32c7ec27962d0957641ce",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-end-cap",
+      "sha256": "a439a82a6c918aeee8737cf2b9f87d636ed6b2c8058550bbb8cd7e64ce7e2c01",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-low",
+      "sha256": "5f916b850ba9533392bcd1f0996ee8e6f6c70d1eee7f4a1d4dad77be9aa9a96c",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-straight",
+      "sha256": "4b54fc15892f8957233f71e4a6acb2d64b43f63ff62e0fb910deadb2987717d9",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    }
+  ]
+}
