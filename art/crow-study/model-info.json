@@ -1,0 +1,10 @@
+{
+  "blender": "4.5.14 LTS",
+  "mesh_objects": 23,
+  "vertices": 2518,
+  "triangles": 4944,
+  "evaluated_triangles": 4944,
+  "rigged": false,
+  "textured": true,
+  "materials": "512px authored body palette; other parts use flat materials"
+}
