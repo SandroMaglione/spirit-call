@@ -5,16 +5,16 @@
     "Idle": {
       "ground_min": 3.259629011154175e-09,
       "source_loop_seam": 0.0,
-      "round_trip_bounds_error": 5.364418029785156e-07
+      "round_trip_bounds_error": 7.152557373046875e-07
     },
     "Run": {
-      "ground_min": -3.725290298461914e-09,
+      "ground_min": -4.423782229423523e-09,
       "source_loop_seam": 0.0,
-      "round_trip_bounds_error": 5.364418029785156e-07
+      "round_trip_bounds_error": 7.748603820800781e-07
     },
     "AttackCombo": {
-      "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 7.748603820800781e-07
+      "ground_min": 3.25962878910957e-09,
+      "round_trip_bounds_error": 1.3709068298339844e-06
     },
     "RunStart": {
       "ground_min": 3.259629011154175e-09,
@@ -26,7 +26,7 @@
     },
     "Recover1": {
       "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 5.960464477539062e-07
+      "round_trip_bounds_error": 4.76837158203125e-07
     },
     "Recover2": {
       "ground_min": 3.259629011154175e-09,
@@ -34,7 +34,7 @@
     },
     "Recover3": {
       "ground_min": 3.259629011154175e-09,
-      "round_trip_bounds_error": 5.364418029785156e-07
+      "round_trip_bounds_error": 4.76837158203125e-07
     }
   },
   "weapons": {
@@ -48,6 +48,6 @@
     }
   },
   "max_weights": 2,
-  "bytes": 402252,
-  "sha256": "a85779efa037013f1e448ef6925f4a011bcd16d07a863f9f023362f39430dcde"
+  "bytes": 341288,
+  "sha256": "bde45dd52af514effeae0954eceec805025ffe12f16014132342466cc23641a5"
 }

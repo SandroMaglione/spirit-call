@@ -5,6 +5,7 @@ blender --background --python-exit-code 1 --python art/characters/crow/combat/bu
 import importlib.util
 import json
 import math
+import sys
 from pathlib import Path
 
 import bpy
@@ -13,6 +14,8 @@ from mathutils import Matrix, Vector, Euler
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
+sys.path.insert(0, str(HERE))
+from geometry import refine, palette
 spec = importlib.util.spec_from_file_location("old_export", ROOT / "export/export-glb.py")
 old = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old)
@@ -151,30 +154,7 @@ bone("weapon_grip", (.65,-.06,.48-ground), (.65,-.06,.63-ground), "wrist.R")
 bpy.ops.object.mode_set(mode="OBJECT")
 rig.data.pose_position = "POSE"
 
-# The original folded wing had no elbow topology. Give the combat wing a
-# narrow joint and a tapered feather fan so it can bend without folding a slab.
-wing_material = bpy.data.materials["Wings | charcoal"]
-for label,side in [("L",-1),("R",1)]:
-    for obj in list(meshes):
-        if obj.name.startswith(f"Wing {label}"):
-            meshes.remove(obj);bpy.data.objects.remove(obj,do_unlink=True)
-    sections=[(.29,1.49,.10,.09),(.32,1.38,.145,.115),(.40,1.20,.13,.105),
-              (.475,1.02,.09,.08),(.49,.96,.085,.075),(.55,.82,.14,.10),
-              (.60,.68,.165,.095),(.65,.53,.12,.065),(.66,.43,.055,.03)]
-    vertices=[];faces=[];segments=12
-    for x,z,width,depth in sections:
-        for i in range(segments):
-            angle=math.tau*i/segments
-            vertices.append((side*(x+width*math.cos(angle)),-.045+depth*math.sin(angle),z-ground))
-    faces.append(tuple(reversed(range(segments))))
-    for k in range(len(sections)-1):
-        for i in range(segments):
-            faces.append((k*segments+i,k*segments+(i+1)%segments,(k+1)*segments+(i+1)%segments,(k+1)*segments+i))
-    faces.append(tuple(range((len(sections)-1)*segments,len(sections)*segments)))
-    obj=mesh(f"Wing {label} | articulated",vertices,faces,wing_material,collection)
-    obj.parent=root;obj.modifiers.new("Crow skin","ARMATURE").object=rig
-    for polygon in obj.data.polygons:polygon.use_smooth=True
-    meshes.append(obj)
+refine(meshes, collection, root, rig, ground, mesh)
 
 for obj in meshes:
     obj.vertex_groups.clear()
@@ -189,6 +169,8 @@ for obj in meshes:
             label = obj.name.split()[1]
             fore = max(0,min(1,(1.06-z)/.16))
             w = {f"wing.{label}":1-fore,f"forewing.{label}":fore}
+        elif obj.name.startswith("Hand"):
+            w={"wrist.R":1}
         elif obj.name.startswith("Leg"):
             label=obj.name.split()[1]; thigh=max(0,min(1,(z-.20)/.10))
             w={f"thigh.{label}":thigh,f"shin.{label}":1-thigh}
@@ -203,20 +185,7 @@ for obj in meshes:
         for name,weight in w.items():
             if weight>0: groups[name].add([v.index],weight,"REPLACE")
 
-# A small feathered clasp closes around the grip, weighted to the socket.
-mat = bpy.data.materials["Wings | charcoal"]
-for i in range(3):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=12, ring_count=6, location=(.65 + (i-1)*.036,-.085,.49-ground))
-    obj=bpy.context.object; obj.name=f"Grip feather {i+1}"
-    for col in list(obj.users_collection): col.objects.unlink(obj)
-    collection.objects.link(obj);obj.parent=root
-    obj.scale=(.032,.075,.085)
-    bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
-    obj.data.materials.append(mat)
-    group=obj.vertex_groups.new(name="weapon_grip")
-    group.add(list(range(len(obj.data.vertices))),1,"REPLACE")
-    obj.modifiers.new("Crow skin","ARMATURE").object=rig
-    meshes.append(obj)
+palette(meshes)
 
 
 def pose(name, translation=(0,0,0), angles=(0,0,0)):
@@ -264,7 +233,7 @@ def sword_direction(yaw,pitch):
     return (math.sin(yaw)*math.cos(pitch),-math.cos(yaw)*math.cos(pitch),math.sin(pitch))
 
 
-GUARD=dict(hip=(0,0,-.015),twist=0,lean=.04,hand=(.68,-.30,.92),yaw=1.05,pitch=.50,left=(-.58,-.02,.67),feet=(0,0,0,0),spin=0)
+GUARD=dict(hip=(.025,-.025,-.085),twist=.22,lean=.12,hand=(.62,-.40,1.15),yaw=.48,pitch=.62,left=(-.48,-.23,.88),feet=(-.13,0,.12,0),pivotL=.12,pivotR=-.20,spin=0)
 
 foot_meshes={label:[o for o in meshes if o.name.startswith(f"Foot {label}")] for label in ["L","R"]}
 
@@ -305,8 +274,8 @@ def mix(a,b,t):
 
 def idle(phase):
     s=dict(GUARD);breath=math.sin(phase*math.tau)
-    s.update(hip=(.012*breath,0,-.015+.025*breath),lean=.04+.025*breath,
-             hand=(.68,-.30,.92+.02*breath),pitch=.50+.04*breath,left=(-.58,-.02,.67+.025*breath))
+    s.update(hip=(.025+.010*breath,-.025,-.085+.014*breath),lean=.12+.012*breath,
+             hand=(.62,-.40,1.15+.012*breath),pitch=.62+.018*breath,left=(-.48,-.23,.88+.016*breath))
     return s
 
 
