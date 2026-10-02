@@ -1,0 +1,10 @@
+{
+  "kit": "courtyard-extension",
+  "assets": 25,
+  "triangles": 14628,
+  "glb_bytes": 1023836,
+  "pngs": 34,
+  "source_sha256": "a3c4c3a72df8a100454589f0df88b619347d4c698a990a14ad04badc2b7cefd1",
+  "stair_flights_connected_in_examples": 1,
+  "status": "pass"
+}
