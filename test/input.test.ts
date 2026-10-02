@@ -75,7 +75,9 @@ describe("camera zoom", () => {
     const phone = { width: 844, height: 390 }
     const zoom = viewZoom(phone)
     expect(zoom).toBeCloseTo(Math.max(view.camera.minZoom, 390 / view.camera.referenceShortSide), 9)
-    expect(zoom).toBeLessThan(0.6)
+    // A landscape phone sits a little zoomed out (see `view.camera`).
+    expect(zoom).toBeGreaterThan(0.7)
+    expect(zoom).toBeLessThan(0.9)
     expect(viewZoom({ width: 1280, height: 800 })).toBe(1)
     // The cursor 100 px right of the screen center is 100 / zoom screen units away in the world.
     const sim = createSimulation({

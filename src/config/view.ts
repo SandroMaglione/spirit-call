@@ -13,11 +13,13 @@ export const projection: Projection = {
 
 export const view = {
   /**
-   * Small screens (phones) zoom out to show more of the arena: the zoom is the
-   * screen's short side over `referenceShortSide`, clamped to [`minZoom`, 1].
-   * Desktop windows are taller than the reference and keep zoom 1.
+   * Small screens (phones) zoom out a little to show more of the arena: the
+   * zoom is the screen's short side over `referenceShortSide`, clamped to
+   * [`minZoom`, 1]. A landscape phone (390 px) is at 0.8: close enough that
+   * the characters read well, far enough to see what is coming. Desktop
+   * windows are taller than the reference and keep zoom 1.
    */
-  camera: { referenceShortSide: 760, minZoom: 0.45 },
+  camera: { referenceShortSide: 490, minZoom: 0.45 },
   /**
    * The slash area shows while an enemy is in attack-assist range or a slash
    * recharges, fades in over `fadeInSeconds`, and after `lingerSeconds`
