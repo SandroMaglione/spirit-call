@@ -55,14 +55,11 @@ export const doubleTap = (direction: Direction, frame: number, options: { readon
 /** The gun's opening shot: what a single press fires. */
 export const gunShot = defaultTuning.attacks.gun.combo[0] as ShotMove
 
-/** The swordsman (the default character) with `skills` equipped over its own. */
-export const swordsmanWith = (skills: BuildValue["skills"]): BuildValue => ({ character: "swordsman", skills })
+/** The gunner: the gun, the grenade as her special, and the Barrage as her ultimate. */
+export const gunner: BuildValue = { character: "gunner" }
 
-/** The gunner: the gun, and the grenade as its special. */
-export const gunner: BuildValue = { character: "gunner", skills: {} }
-
-/** The swordsman with the grenade instead of the Blade Wave, for tests about the grenade. */
-export const grenadier = swordsmanWith({ special: "grenade" })
+/** The Tidecaller: the disc, the Splash as her special, and the Tide as her ultimate. */
+export const tidecaller: BuildValue = { character: "tidecaller" }
 
 /** The swordsman's stats: the default player's. */
 export const swordsman = defaultTuning.characters.swordsman.stats

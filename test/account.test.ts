@@ -19,18 +19,16 @@ describe("account rules", () => {
     const account = fresh()
     expect(Object.keys(account.owned.characters)).toEqual(newAccount.characters)
     expect(Object.keys(account.owned.weapons)).toEqual(newAccount.weapons)
-    expect(Object.keys(account.owned.skills).sort()).toEqual([...newAccount.skills].sort())
     expect(account.selection).toEqual({ team: [newAccount.selection.character], play: quest(newAccount.selection.quest) })
-    expect(account.equipment.swordsman).toEqual({ weapon: defaultTuning.characters.swordsman.weapon, skills: defaultTuning.characters.swordsman.skills })
+    expect(account.equipment.swordsman).toEqual({ weapon: defaultTuning.characters.swordsman.weapon })
     expect(owns(account, { kind: "character", id: "gunner" })).toBe(false)
   })
 
-  it("unlocking a character brings its own weapon and skills, equipped", () => {
+  it("unlocking a character brings her own weapon, equipped", () => {
     const account = unlock(defaultTuning, fresh(), { kind: "character", id: "gunner" }, 2000)
     const gunner = defaultTuning.characters.gunner
     expect(owns(account, { kind: "weapon", id: gunner.weapon })).toBe(true)
-    expect(owns(account, { kind: "skill", id: gunner.skills.special })).toBe(true)
-    expect(account.equipment.gunner).toEqual({ weapon: gunner.weapon, skills: gunner.skills })
+    expect(account.equipment.gunner).toEqual({ weapon: gunner.weapon })
     expect(account.owned.characters.gunner).toEqual({ unlockedAt: 2000, experience: 0 })
   })
 
@@ -39,7 +37,7 @@ describe("account rules", () => {
     const { account, granted } = withClearedRewards(defaultTuning, cleared, 3000)
     expect(granted).toEqual(defaultTuning.quests.theBrute.rewards.unlocks)
     expect(owns(account, { kind: "character", id: "tidecaller" })).toBe(true)
-    expect(account.equipment.tidecaller).toEqual({ weapon: "trainingDisc", skills: defaultTuning.characters.tidecaller.skills })
+    expect(account.equipment.tidecaller).toEqual({ weapon: "trainingDisc" })
     expect(withClearedRewards(defaultTuning, account, 4000).granted).toEqual([])
     expect(withClearedRewards(defaultTuning, fresh(), 4000).granted).toEqual([])
   })

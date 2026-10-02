@@ -3,7 +3,8 @@
  * secondary quests; or a hardcore tier), see the enemies it holds and how
  * each takes the elements, set up the team (up to three, in order: pick a
  * slot, then a character for it), equip the one in the slot being edited (a
- * weapon of her type and a skill per slot), then enter the arena (the
+ * weapon of her type; her kit, a special and an ultimate, is her own), then
+ * enter the arena (the
  * button, or Enter). What the account does not own, and what is not open
  * yet, are shown locked (a quest or tier says why). Equipment is saved on
  * the character at once; what was played and the team are remembered on
@@ -23,7 +24,7 @@ import { elements } from "../content/elements.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import type { QuestId } from "../content/quests.ts"
 import { skillSlots } from "../content/skills.ts"
-import type { SkillId, SkillSlot } from "../content/skills.ts"
+import type { SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { resolveBuild, statsAtLevel, weaponAtk } from "../features/build.ts"
 import { AccountBar } from "./AccountBar.tsx"
@@ -182,7 +183,6 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
   })
 
   const equipWeapon = (weapon: WeaponId) => actions.equip(character, { ...equipment, weapon })
-  const equipSkill = (slot: SkillSlot, skill: SkillId) => actions.equip(character, { ...equipment, skills: { ...equipment.skills, [slot]: skill } })
 
   return (
     <div class="menu">
@@ -272,18 +272,18 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
           })}
         </Section>
         {owns(account, { kind: "weapon", id: equipment.weapon }) && <WeaponLevel store={store} actions={actions} weapon={equipment.weapon} />}
-        {skillSlots.map((slot) => (
-          <Section key={slot} title={`${slotLabels[slot].name} (${slotLabels[slot].key}) · ${tuning.characters[character].name}`}>
-            {ids(tuning.skills).map((id) => {
-              const spec = tuning.skills[id]
-              return (
-                <Card key={id} selected={id === equipment.skills[slot]} locked={locked({ kind: "skill", id })} onSelect={() => equipSkill(slot, id)} title={spec.name}>
-                  <span class="card__text">{describeSkill(spec)}</span>
-                </Card>
-              )
-            })}
-          </Section>
-        ))}
+        <Section title={`Kit · ${tuning.characters[character].name}`}>
+          {skillSlots.map((slot) => {
+            const spec = tuning.skills[tuning.characters[character].skills[slot]]
+            return (
+              <div key={slot} class="card is-static">
+                <span class="card__title">{spec.name}</span>
+                <span class="card__tag">{slotLabels[slot].name} · {slotLabels[slot].key}</span>
+                <span class="card__text">{describeSkill(spec)}</span>
+              </div>
+            )
+          })}
+        </Section>
         <Section title={`Discoveries · ${ids(tuning.discoveries).filter((id) => account.discoveries[id] !== undefined).length} of ${ids(tuning.discoveries).length}`}>
           {ids(tuning.discoveries).map((id) => {
             const spec = tuning.discoveries[id]

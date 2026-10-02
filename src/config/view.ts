@@ -110,6 +110,8 @@ export const view = {
   /** Player skill areas (lobbed blasts, novas). */
   playerArea: 0x4ecdc4,
   ultimate: 0xffd166,
+  /** Whirls (the Cyclone): arms spiraling in, turning this fast. */
+  vortex: { arms: 3, turnsPerSecond: 1.6 },
   /** Faint ring at a nova's radius while it is ready. */
   ultimateReadyAlpha: 0.22,
   ultimateShake: 12,

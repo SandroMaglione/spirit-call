@@ -79,6 +79,10 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":
       return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)`
+    case "vortex":
+      return `a ${elementWord(effect.element)}whirl that pulls enemies in for ${effect.seconds}s (${effect.power}% ATK every ${effect.tick}s)`
+    case "barrage":
+      return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
   }
 }
 
@@ -102,7 +106,11 @@ export const describePassive = (passive: Passive): string => {
 
 /** A skill's effect and what it costs. */
 export const describeSkill = (skill: SkillSpec): string => {
-  const cost = [skill.cooldown > 0 ? `${skill.cooldown}s cooldown` : "", skill.energy > 0 ? `${skill.energy} energy` : ""].filter((part) => part !== "").join(", ")
+  const cost = [
+    skill.cooldown > 0 ? `${skill.cooldown}s cooldown` : "",
+    skill.energy > 0 ? `${skill.energy} energy` : "",
+    skill.invulnerability > 0 ? "untouchable as it goes off" : ""
+  ].filter((part) => part !== "").join(", ")
   const effect = describeEffect(skill.effect)
   return `${effect.charAt(0).toUpperCase()}${effect.slice(1)}${cost === "" ? "" : ` · ${cost}`}`
 }
@@ -128,8 +136,6 @@ export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
       return tuning.characters[unlock.id].name
     case "weapon":
       return tuning.weapons[unlock.id].name
-    case "skill":
-      return tuning.skills[unlock.id].name
   }
 }
 

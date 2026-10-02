@@ -9,9 +9,9 @@ import { cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
-const swordsman: BuildValue = { character: "swordsman", skills: {} }
-const gunner: BuildValue = { character: "gunner", skills: {} }
-const tidecaller: BuildValue = { character: "tidecaller", skills: {} }
+const swordsman: BuildValue = { character: "swordsman" }
+const gunner: BuildValue = { character: "gunner" }
+const tidecaller: BuildValue = { character: "tidecaller" }
 
 const TeamState = Game.Inspector("Test/Team", {
   queries: {

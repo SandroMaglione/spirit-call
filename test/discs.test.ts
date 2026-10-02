@@ -10,7 +10,7 @@ import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
-const tidecaller: BuildValue = { character: "tidecaller", skills: {} }
+const tidecaller: BuildValue = { character: "tidecaller" }
 const attack = tuning.attacks.disc
 const first = attack.combo[0] as DiscMove
 const power = attack.power!.move as DiscMove

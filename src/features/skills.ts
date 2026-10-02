@@ -1,8 +1,9 @@
 /**
- * Skills: Space uses the special slot, Shift the ultimate slot (the build
- * decides what is in them, see `resolveBuild`; the skills themselves are in
+ * Skills: Space uses the special slot, Shift the ultimate slot (each
+ * character's own, see `resolveBuild`; the skills themselves are in
  * `Tuning.skills`). Effects deal their `power` as a percentage of the
- * caster's ATK.
+ * caster's ATK. A skill may make its user briefly invulnerable (every
+ * ultimate does, so it doubles as an escape).
  *
  * `UseSkills` checks each slot's input, cooldown, and energy cost and emits a
  * `Cast`. One system per effect kind carries casts out, reusing the combat
@@ -13,9 +14,9 @@
  * Energy fills from damage the player deals (`ApplyDamage`), except damage
  * from skills that cost energy.
  */
-import { bySlot } from "../content/skills.ts"
-import type { LobEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
-import { clampLength, normalizeOr, scale, sub } from "../math/vec.ts"
+import { bySlot, lob } from "../content/skills.ts"
+import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
+import { clampLength, normalizeOr, rotate, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
@@ -24,10 +25,13 @@ import {
   Cast,
   CombatStats,
   Controls,
+  Damage,
   Energy,
   Explosion,
   Game,
+  Health,
   Hitbox,
+  Hurtbox,
   Impact,
   Invulnerable,
   Lobbed,
@@ -37,7 +41,8 @@ import {
   RunScope,
   Skills,
   Time,
-  Tuning
+  Tuning,
+  Vortex
 } from "../schema.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
@@ -61,17 +66,27 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "cut":
       return { kind: "direction", reach: effect.length }
     case "lob":
+    case "vortex":
+    case "barrage":
       return { kind: "point", range: effect.maxRange }
     case "nova":
       return { kind: "self" }
   }
 }
 
-/** Where a lobbed effect thrown from `from` toward `at` lands: `at`, clamped to its range. */
-export const lobTarget = (effect: LobEffect, from: Vec2, at: Vec2): Vec2 => {
+/** Where an effect aimed at a point (a lob, a whirl, a volley) from `from` toward `at` goes: `at`, clamped to its range. */
+export const lobTarget = (effect: { readonly maxRange: number }, from: Vec2, at: Vec2): Vec2 => {
   const offset = clampLength(sub(at, from), effect.maxRange)
   return { x: from.x + offset.x, y: from.y + offset.y }
 }
+
+/** Where each shell of a volley aimed at `target` (along `direction`) lands: the first on it, the others evenly on a ring `spread` around it. */
+export const barrageTargets = (effect: BarrageEffect, target: Vec2, direction: Vec2): ReadonlyArray<Vec2> =>
+  Array.from({ length: effect.shells }, (_, index) => {
+    if (index === 0) return target
+    const around = rotate(scale(direction, effect.spread), ((index - 1) / (effect.shells - 1)) * Math.PI * 2)
+    return { x: target.x + around.x, y: target.y + around.y }
+  })
 
 /** How far a slot is from ready, 0 (ready) to 1: the larger of the cooldown left and the energy missing. */
 export const skillRecharge = (spec: SkillSpec, cooldown: number, energy: number): number => {
@@ -92,7 +107,8 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
         aim: Game.Query.read(Aim),
         skills: Game.Query.write(Skills),
         energy: Game.Query.write(Energy),
-        stats: Game.Query.read(CombatStats)
+        stats: Game.Query.read(CombatStats),
+        invulnerable: Game.Query.write(Invulnerable)
       },
       with: [Player]
     })
@@ -114,6 +130,7 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
       const input = controls.skills[slot]
       if (!input.pressed || cooldown > 0 || energy < spec.energy) return { skill, cooldown }
       energy -= spec.energy
+      if (spec.invulnerability > 0) data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, spec.invulnerability) }))
       events.cast.emit({
         caster: Game.Entity.handle(entity.id, Position),
         faction: "player",
@@ -187,6 +204,91 @@ export const CastLobs = Game.System("Shooter/CastLobs", {
   }
 })
 
+/**
+ * Volleys: a shell lobbed at each of their targets (see `barrageTargets`),
+ * one after the other, each landing and exploding like a lobbed skill.
+ */
+export const CastBarrages = Game.System("Shooter/CastBarrages", {
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ events, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "barrage") continue
+    const { power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves } = effect
+    const shell = lob({ power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves, maxRange: Infinity })
+    const blow = castBlow(cast, effect)
+    barrageTargets(effect, lobTarget(effect, cast.from, cast.at), cast.direction).forEach((to, index) => {
+      commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, { from: cast.from, to, faction: cast.faction, effect: shell, blow, elapsed: -index * effect.interval }]))
+    })
+  }
+})
+
+/** Whirls: set down at the aim, clamped to their range; their first strike comes at once. */
+export const CastVortices = Game.System("Shooter/CastVortices", {
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ events, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "vortex") continue
+    commands.spawnIn(RunScope, Game.Command.spawn([Vortex, {
+      center: lobTarget(effect, cast.from, cast.at),
+      faction: cast.faction,
+      effect,
+      blow: castBlow(cast, effect),
+      remaining: effect.seconds,
+      nextTick: 0
+    }]))
+  }
+})
+
+/**
+ * Whirls strike every tick: each body of the other side within reach takes
+ * the blow, pulled toward the center. The pull is a push toward it sized to
+ * close `pull` of the distance (with the drive of wind, see
+ * `Tuning.elements.wind.decay`; a body that is pushed less, or not driven,
+ * comes less far), so bodies gather without being flung past the center.
+ */
+export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
+  queries: {
+    vortices: Game.Query({ selection: { vortex: Game.Query.write(Vortex) } }),
+    targets: Game.Query({
+      selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
+      with: [Health]
+    })
+  },
+  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
+  events: { damage: Game.System.writeEvent(Damage) }
+}, ({ queries, resources, events, commands }) => {
+  const dt = resources.time.get().dt
+  const decay = resources.tuning.get().elements.wind.decay
+  for (const { entity, data } of queries.vortices.each()) {
+    const vortex = data.vortex.get()
+    const { effect, center } = vortex
+    let nextTick = vortex.nextTick - dt
+    if (nextTick <= 1e-9) {
+      nextTick += effect.tick
+      for (const target of queries.targets.each()) {
+        const hurtbox = target.data.hurtbox.get()
+        if (hurtbox.faction === vortex.faction) continue
+        const invulnerable = target.data.invulnerable
+        if (invulnerable.present && invulnerable.get().remaining > 0) continue
+        const at = target.data.position.get()
+        const distance = Math.hypot(center.x - at.x, center.y - at.y)
+        if (distance > effect.radius + hurtbox.radius) continue
+        events.damage.emit({
+          target: Game.Entity.handle(target.entity.id, Health),
+          faction: vortex.faction,
+          direction: normalizeOr(sub(center, at), { x: 0, y: 0 }),
+          blow: { ...vortex.blow, knockback: effect.pull * distance * decay }
+        })
+      }
+    }
+    const remaining = vortex.remaining - dt
+    if (remaining <= 0) commands.despawn(entity.id)
+    else data.vortex.set({ ...vortex, remaining, nextTick })
+  }
+})
+
 /** Lobbed skills fly to their target, sit out the fuse, then explode into a circular hitbox, leaving their pool, if any. */
 export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
   queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.write(Lobbed) } }) },
@@ -215,24 +317,18 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
   }
 })
 
-/** Casters made briefly invulnerable by a nova. */
-const Shielded = Game.Query({ selection: { position: Game.Query.read(Position), invulnerable: Game.Query.write(Invulnerable) } })
-
 /**
- * Novas: a blast around the caster that knocks everything back, grants a
- * moment of invulnerability, and can clear the other side's projectiles
- * inside it.
+ * Novas: a blast around the caster that knocks everything back, and can
+ * clear the other side's projectiles inside it.
  */
 export const CastNovas = Game.System("Shooter/CastNovas", {
   queries: { projectiles: Game.Query({ selection: { position: Game.Query.read(Position), projectile: Game.Query.read(Projectile) } }) },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) }
-}, ({ queries, events, lookup, commands }) => {
+}, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "nova") continue
     const at = cast.from
-    const caster = lookup.getHandle(cast.caster, Shielded)
-    if (caster.ok) caster.value.data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, effect.invulnerability) }))
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: at, radius: effect.radius },
       faction: cast.faction,

@@ -18,8 +18,6 @@ import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { ResetSpec, TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, Unlock } from "../content/quests.ts"
-import { bySlot } from "../content/skills.ts"
-import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import type { BuildValue, RunResultValue } from "../schema.ts"
 import { experienceFor, levelOf } from "./progression.ts"
@@ -44,13 +42,11 @@ export interface OwnedWeapon extends Unlocked {
 export interface Owned {
   readonly characters: { readonly [Id in CharacterId]?: OwnedCharacter }
   readonly weapons: { readonly [Id in WeaponId]?: OwnedWeapon }
-  readonly skills: { readonly [Id in SkillId]?: Unlocked }
 }
 
-/** What a character has equipped: a weapon of its type and a skill per slot. */
+/** What a character has equipped: a weapon of its type (her skills are her own, see `CharacterSpec.skills`). */
 export interface Equipment {
   readonly weapon: WeaponId
-  readonly skills: { readonly [Slot in SkillSlot]: SkillId }
 }
 
 /** Lifetime totals over every run. */
@@ -118,20 +114,15 @@ export const owns = (account: Account, item: Item): boolean => {
       return account.owned.characters[item.id] !== undefined
     case "weapon":
       return account.owned.weapons[item.id] !== undefined
-    case "skill":
-      return account.owned.skills[item.id] !== undefined
   }
 }
 
-/** A character's own equipment (its starting weapon and skills). */
-export const defaultEquipment = (tuning: Tuning, character: CharacterId): Equipment => {
-  const spec = tuning.characters[character]
-  return { weapon: spec.weapon, skills: spec.skills }
-}
+/** A character's own equipment (her starting weapon). */
+export const defaultEquipment = (tuning: Tuning, character: CharacterId): Equipment => ({ weapon: tuning.characters[character].weapon })
 
 /**
- * `account` with `item` owned. A character comes with its own weapon and
- * skills, so it can always be equipped, and starts with them equipped. A
+ * `account` with `item` owned. A character comes with her own weapon, so
+ * she can always be equipped, and starts with it equipped. A
  * weapon owned again gains a copy; anything else owned again is unchanged.
  */
 export const unlock = (tuning: Tuning, account: Account, item: Item, now: number): Account => {
@@ -146,7 +137,6 @@ export const unlock = (tuning: Tuning, account: Account, item: Item, now: number
         equipment: { ...account.equipment, [item.id]: equipment }
       }
       if (!owns(next, { kind: "weapon", id: equipment.weapon })) next = unlock(tuning, next, { kind: "weapon", id: equipment.weapon }, now)
-      for (const skill of Object.values(equipment.skills)) next = unlock(tuning, next, { kind: "skill", id: skill }, now)
       return next
     }
     case "weapon": {
@@ -154,8 +144,6 @@ export const unlock = (tuning: Tuning, account: Account, item: Item, now: number
       const weapon: OwnedWeapon = current === undefined ? { unlockedAt: now, copies: 1, level: 1 } : { ...current, copies: current.copies + 1 }
       return { ...account, owned: { ...owned, weapons: { ...owned.weapons, [item.id]: weapon } } }
     }
-    case "skill":
-      return owns(account, item) ? account : { ...account, owned: { ...owned, skills: { ...owned.skills, [item.id]: { unlockedAt: now } } } }
   }
 }
 
@@ -181,8 +169,7 @@ export const withClearedRewards = (tuning: Tuning, account: Account, now: number
 /** Every item in the content, for unlocking everything (a dev tool). */
 export const everything = (tuning: Tuning): ReadonlyArray<Item> => [
   ...(Object.keys(tuning.characters) as Array<CharacterId>).map((id) => ({ kind: "character" as const, id })),
-  ...(Object.keys(tuning.weapons) as Array<WeaponId>).map((id) => ({ kind: "weapon" as const, id })),
-  ...(Object.keys(tuning.skills) as Array<SkillId>).map((id) => ({ kind: "skill" as const, id }))
+  ...(Object.keys(tuning.weapons) as Array<WeaponId>).map((id) => ({ kind: "weapon" as const, id }))
 ]
 
 /** A new account owning `starter` and nothing else. */
@@ -193,7 +180,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     experience: 0,
     totals: noTotals,
     wallet: {},
-    owned: { characters: {}, weapons: {}, skills: {} },
+    owned: { characters: {}, weapons: {} },
     equipment: {},
     quests: {},
     hardcore: {},
@@ -202,7 +189,6 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
   }
   const items: Array<Item> = [
     ...starter.weapons.map((id) => ({ kind: "weapon" as const, id })),
-    ...starter.skills.map((id) => ({ kind: "skill" as const, id })),
     ...starter.characters.map((id) => ({ kind: "character" as const, id }))
   ]
   return items.reduce((account, item) => unlock(tuning, account, item, now), empty)
@@ -348,7 +334,7 @@ export const upgrade = (tuning: Tuning, account: Account, weapon: WeaponId): Che
 
 /** `account` with `character` equipped with `equipment`, if it owns all of it and the weapon fits. */
 export const equip = (tuning: Tuning, account: Account, character: CharacterId, equipment: Equipment): Checked<Account> => {
-  const needed: Array<Item> = [{ kind: "character", id: character }, { kind: "weapon", id: equipment.weapon }, ...Object.values(equipment.skills).map((id) => ({ kind: "skill" as const, id }))]
+  const needed: Array<Item> = [{ kind: "character", id: character }, { kind: "weapon", id: equipment.weapon }]
   const missing = needed.find((item) => !owns(account, item))
   if (missing !== undefined) return refuse({ kind: "notOwned", item: missing })
   if (tuning.weapons[equipment.weapon].type !== tuning.characters[character].weaponType) {
@@ -509,8 +495,7 @@ export const buildOf = (tuning: Tuning, account: Account, character: CharacterId
     character,
     level: characterLevel(tuning, account, character).level,
     weapon: equipment.weapon,
-    weaponLevel: weaponLevel(account, equipment.weapon),
-    skills: bySlot((slot) => equipment.skills[slot])
+    weaponLevel: weaponLevel(account, equipment.weapon)
   }
 }
 

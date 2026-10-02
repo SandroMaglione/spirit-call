@@ -93,9 +93,23 @@ export const StoredAccountV4 = Schema.Struct({
   discoveries: Schema.Record(Schema.String, Schema.Struct({ madeAt: Schema.Number }))
 })
 
+/**
+ * Version 5: every character owns her kit, so skills are no longer owned or
+ * equipped: equipment is the weapon alone.
+ */
+export const StoredAccountV5 = Schema.Struct({
+  ...StoredAccountV4.fields,
+  version: Schema.Literal(5),
+  owned: Schema.Struct({
+    characters: Schema.Record(Schema.String, OwnedCharacter),
+    weapons: Schema.Record(Schema.String, OwnedWeapon)
+  }),
+  equipment: Schema.Record(Schema.String, Schema.Struct({ weapon: Schema.String }))
+})
+
 /** Any account version ever saved. */
-export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4])
-export const StoredAccountLatest = StoredAccountV4
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4, StoredAccountV5])
+export const StoredAccountLatest = StoredAccountV5
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
@@ -128,7 +142,12 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
       const characters = Object.fromEntries(Object.entries(stored.owned.characters).map(([id, owned]) => [id, { ...owned, experience: owned.experience * 2 }]))
       return migrateAccount({ ...stored, version: 4, owned: { ...stored.owned, characters }, discoveries: {} })
     }
-    case 4:
+    case 4: {
+      // Skills were owned and equipped (the Nova shared by everyone); each character's kit is her own now.
+      const equipment = Object.fromEntries(Object.entries(stored.equipment).map(([id, equipped]) => [id, { weapon: equipped.weapon }]))
+      return migrateAccount({ ...stored, version: 5, owned: { characters: stored.owned.characters, weapons: stored.owned.weapons }, equipment })
+    }
+    case 5:
       return stored
   }
 }

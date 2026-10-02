@@ -49,6 +49,19 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
     case "nova":
       positive(problems, where, { radius: effect.radius, active: effect.active })
       return
+    case "vortex":
+      positive(problems, where, { maxRange: effect.maxRange, radius: effect.radius, seconds: effect.seconds, tick: effect.tick })
+      if (!(effect.pull >= 0 && effect.pull <= 1)) problems.push(`${where}: pull must be a share in [0, 1] (is ${effect.pull})`)
+      return
+    case "barrage":
+      positive(problems, where, { maxRange: effect.maxRange, shells: effect.shells, radius: effect.radius, flightTime: effect.flightTime })
+      if (!Number.isInteger(effect.shells)) problems.push(`${where}: shells must be a whole number (is ${effect.shells})`)
+      if (!(effect.interval >= 0 && effect.spread >= 0 && effect.fuse >= 0)) problems.push(`${where}: interval, spread, and fuse must not be negative`)
+      if (effect.leaves !== null) {
+        positive(problems, `${where} pool`, { radius: effect.leaves.radius, seconds: effect.leaves.seconds })
+        if (!has(elements, effect.leaves.element)) problems.push(`${where}: leaves unknown element ${effect.leaves.element}`)
+      }
+      return
   }
 }
 
@@ -122,6 +135,21 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     checkEffect(problems, `skill ${id}`, skill.effect)
     if (!(skill.cooldown > 0 || skill.energy > 0)) problems.push(`skill ${id}: needs a cooldown or an energy cost, or it can be spammed`)
     if (skill.energy > tuning.energy.max) problems.push(`skill ${id}: costs ${skill.energy} energy, more than the ${tuning.energy.max} maximum`)
+    if (!(skill.invulnerability >= 0)) problems.push(`skill ${id}: invulnerability must not be negative (is ${skill.invulnerability})`)
+  }
+
+  // Every character owns her kit: each skill belongs to exactly one character, and every ultimate is also an escape.
+  const kits = new Map<string, Array<string>>()
+  for (const [id, character] of Object.entries(tuning.characters)) {
+    // One entry per slot, so a skill in both of one character's slots counts twice.
+    for (const skill of Object.values(character.skills)) kits.set(skill, [...(kits.get(skill) ?? []), id])
+    const ultimate = has(tuning.skills, character.skills.ultimate) ? tuning.skills[character.skills.ultimate] : undefined
+    if (ultimate !== undefined && !(ultimate.invulnerability > 0)) problems.push(`character ${id}: her ultimate ${character.skills.ultimate} needs some invulnerability on use`)
+  }
+  for (const id of Object.keys(tuning.skills)) {
+    const owners = kits.get(id) ?? []
+    if (owners.length === 0) problems.push(`skill ${id}: in no character's kit`)
+    if (owners.length > 1) problems.push(`skill ${id}: in more than one kit slot (${owners.join(", ")}); each character's skills are her own`)
   }
 
   for (const [id, weapon] of Object.entries(tuning.weapons)) {
@@ -170,7 +198,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }
 
-  const unlockKinds = { character: tuning.characters, weapon: tuning.weapons, skill: tuning.skills }
+  const unlockKinds = { character: tuning.characters, weapon: tuning.weapons }
   for (const [id, quest] of Object.entries(tuning.quests)) {
     const where = `quest ${id}`
     if (!has(tuning.challenges, quest.challenge)) problems.push(`${where}: unknown challenge ${quest.challenge}`)
@@ -232,8 +260,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const where = "the new account"
   for (const [kind, ids, record] of [
     ["character", starter.characters, tuning.characters],
-    ["weapon", starter.weapons, tuning.weapons],
-    ["skill", starter.skills, tuning.skills]
+    ["weapon", starter.weapons, tuning.weapons]
   ] as const) {
     for (const id of ids) if (!has(record, id)) problems.push(`${where}: unknown ${kind} ${id}`)
   }

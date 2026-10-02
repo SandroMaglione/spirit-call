@@ -4,24 +4,26 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { blow, Cast, Enemy, Energy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { center, cursorAt, grenadier, placeDummies, playerLoss, start, steps, swordsman, swordsmanWith } from "./helpers.ts"
+import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
+import { center, cursorAt, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
 const World = Game.Inspector("Test/Skills", {
   queries: {
-    enemies: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health) }, with: [Enemy] }),
+    enemies: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health), state: Game.Query.read(ElementState) }, with: [Enemy] }),
     player: Game.Query({ selection: { skills: Game.Query.read(Skills), energy: Game.Query.read(Energy) }, with: [Player] }),
     grenades: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
-    projectiles: Game.Query({ selection: { projectile: Game.Query.read(Projectile) } })
+    projectiles: Game.Query({ selection: { projectile: Game.Query.read(Projectile) } }),
+    pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current })),
+  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current, state: data.state.get().current?.id ?? null })),
   skills: queries.player.each()[0]!.data.skills.get(),
   energy: queries.player.each()[0]!.data.energy.get().current,
   grenades: queries.grenades.each().map(({ data }) => data.lobbed.get()),
-  projectiles: queries.projectiles.each().map(({ data }) => data.projectile.get())
+  projectiles: queries.projectiles.each().map(({ data }) => data.projectile.get()),
+  pools: queries.pools.each().map(({ data }) => data.ground.get())
 }))
 
 /** Cursor position (screen) that points at a world offset from the player at spawn. */
@@ -77,7 +79,7 @@ describe("Blade Wave (Space)", () => {
 
 describe("grenade (Space)", () => {
   it("lands at the cursor (clamped to max range), over walls", () => {
-    const run = range([], { x: 0, y: -2000 }, { build: grenadier, keys: [throwGrenade(1)] })
+    const run = range([], { x: 0, y: -2000 }, { build: gunner, keys: [throwGrenade(1)] })
     run.step(3)
     const [grenade] = run.world().grenades
     expect(grenade!.to.x).toBeCloseTo(center.x, 6)
@@ -86,7 +88,7 @@ describe("grenade (Space)", () => {
 
   it("damages everything within its radius, once, after the fuse", () => {
     const spec = defaultTuning.skills.grenade.effect
-    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
+    const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
     run.step(steps(spec.flightTime + spec.fuse) - 2)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp])
     run.step(6)
@@ -96,21 +98,22 @@ describe("grenade (Space)", () => {
 
   it("respects its cooldown", () => {
     const again = steps(defaultTuning.skills.grenade.cooldown) - 10
-    const run = range([], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1), throwGrenade(again)] })
+    const run = range([], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1), throwGrenade(again)] })
     run.step(again + 2)
     expect(run.world().skills.special.cooldown).toBeGreaterThan(0)
     expect(run.world().grenades).toEqual([])
   })
 
   it("does not dash", () => {
-    const run = range([], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
+    const run = range([], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
     run.step(3)
     expect(run.player().dash.remaining).toBe(0)
   })
 })
 
-describe("Nova (Shift)", () => {
-  const spec = defaultTuning.skills.nova.effect
+describe("ultimates (Shift)", () => {
+  const ultimate = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
+  const sturdy = tuningWith({ enemies: { dummy: { hp: 1000 } } })
 
   it("fills with energy from damage the player deals", () => {
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { pointer: [{ frame: 1, press: ["primary"] }, { frame: 4, release: ["primary"] }] })
@@ -121,68 +124,116 @@ describe("Nova (Shift)", () => {
   })
 
   it("does nothing without full energy", () => {
-    const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { keys: [ultimate(1)] })
     run.step(10)
     expect(run.world().enemies[0]!.health).toBe(hp)
-  })
-
-  it("blasts everything within its radius, knocks it back, and spends the energy without refilling it", () => {
-    const tuning = tuningWith({ enemies: { dummy: { hp: 1000 } } })
-    const run = range([{ x: spec.radius - 20, y: 0 }, { x: -(spec.radius + 40), y: 0 }], { x: 200, y: 0 }, {
-      tuning,
-      keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }]
-    })
-    run.runtime.tick(Game.Schedule(FillEnergy))
-    run.step(4)
-    const [inside, outside] = run.world().enemies
-    expect(inside!.health).toBe(1000 - spec.power)
-    expect(outside!.health).toBe(1000)
-    expect(run.world().energy).toBe(0)
-    run.step(30)
-    expect(run.world().enemies[0]!.position.x).toBeGreaterThan(center.x + spec.radius)
     expect(run.player().invulnerable).toBe(0)
   })
 
-  it("clears enemy projectiles inside its radius and grants a moment of invulnerability", () => {
-    const run = range([], { x: 200, y: 0 }, { keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
-    const Bolts = Game.System("Test/Bolts", {}, ({ commands }) => {
-      const bolt = { faction: "enemy" as const, style: "bolt" as const, radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 5, pierce: 0, hit: [] }
-      commands.spawnIn(RunScope, makeProjectile({ x: center.x + 150, y: center.y }, { x: 0, y: 0 }, bolt))
-      commands.spawnIn(RunScope, makeProjectile({ x: center.x + spec.radius + 100, y: center.y }, { x: 0, y: 0 }, bolt))
+  it("makes every character briefly invulnerable as hers goes off, and spends the energy", () => {
+    for (const character of ["swordsman", "gunner", "tidecaller"] as const) {
+      const run = range([], { x: 200, y: 0 }, { build: { character }, keys: [ultimate(1)] })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(2)
+      const spec = defaultTuning.skills[defaultTuning.characters[character].skills.ultimate]
+      expect(spec.invulnerability).toBeGreaterThan(0)
+      expect(run.player().invulnerable, character).toBeGreaterThan(spec.invulnerability - 0.05)
+      expect(run.player().invulnerable, character).toBeLessThanOrEqual(spec.invulnerability)
+      expect(run.world().energy).toBe(0)
+    }
+  })
+
+  describe("the Swordsman's Cyclone", () => {
+    const spec = defaultTuning.skills.cyclone.effect
+
+    it("pulls everything within its reach toward where it was set down, striking each tick, and leaves the rest alone", () => {
+      const at = { x: 200, y: 0 }
+      const inside = [{ x: at.x + 130, y: 0 }, { x: at.x, y: -120 }]
+      const outside = { x: at.x, y: spec.radius + 80 }
+      const run = range([...inside, outside], at, { tuning: sturdy, keys: [ultimate(1)] })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(steps(spec.seconds) + 10)
+      const [right, up, far] = run.world().enemies
+      const toCenter = (position: Vec2) => Math.hypot(position.x - center.x - at.x, position.y - center.y - at.y)
+      expect(toCenter(right!.position)).toBeLessThan(130 / 2)
+      expect(toCenter(up!.position)).toBeLessThan(120 / 2)
+      const ticks = Math.floor(spec.seconds / spec.tick)
+      expect(right!.health).toBeLessThanOrEqual(1000 - ticks * spec.power)
+      expect(far!.health).toBe(1000)
+      expect(far!.position).toEqual({ x: center.x + outside.x, y: center.y + outside.y })
     })
-    run.runtime.tick(Game.Schedule(FillEnergy, Bolts, Game.Schedule.applyDeferred()))
-    run.step(2)
-    expect(run.world().projectiles).toHaveLength(1)
-    expect(run.player().invulnerable).toBeGreaterThan(0)
+
+    it("runs out after its time", () => {
+      const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, keys: [ultimate(1)] })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(steps(spec.seconds) + 5)
+      const struck = run.world().enemies[0]!.health
+      run.step(60)
+      expect(run.world().enemies[0]!.health).toBe(struck)
+    })
+  })
+
+  describe("the Gunner's Barrage", () => {
+    const spec = defaultTuning.skills.barrage.effect
+
+    it("lobs its shells one after the other around the cursor, each blasting and leaving a fire pool", () => {
+      const run = range([{ x: 250, y: 0 }], { x: 250, y: 0 }, { tuning: sturdy, build: gunner, keys: [ultimate(1)] })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(3)
+      const shells = run.world().grenades
+      expect(shells).toHaveLength(spec.shells)
+      // The first one out lands on the cursor (give or take the camera's lead toward it); the others, each a little later, on a ring around it.
+      const [first, ...rest] = [...shells].sort((left, right) => right.elapsed - left.elapsed)
+      expect(Math.hypot(first!.to.x - center.x - 250, first!.to.y - center.y)).toBeLessThan(defaultTuning.camera.maxAimLead)
+      for (const shell of rest) {
+        expect(shell.elapsed).toBeLessThan(first!.elapsed)
+        expect(Math.hypot(shell.to.x - first!.to.x, shell.to.y - first!.to.y)).toBeCloseTo(spec.spread, 6)
+      }
+      run.step(steps(spec.flightTime + spec.fuse + spec.interval * spec.shells) + 5)
+      expect(run.world().grenades).toEqual([])
+      expect(run.world().pools).toHaveLength(spec.shells)
+      expect(run.world().enemies[0]!.health).toBeLessThanOrEqual(1000 - spec.power)
+    })
+  })
+
+  describe("the Tidecaller's Tide", () => {
+    const spec = defaultTuning.skills.tide.effect
+
+    it("soaks and drives back everything within its radius, without refilling the energy", () => {
+      const run = range([{ x: spec.radius - 20, y: 0 }, { x: -(spec.radius + 40), y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, keys: [ultimate(1)] })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(4)
+      const [inside, outside] = run.world().enemies
+      expect(inside!.health).toBe(1000 - spec.power)
+      expect(inside!.state).toBe("soaked")
+      expect(outside!.health).toBe(1000)
+      expect(run.world().energy).toBe(0)
+      run.step(30)
+      expect(run.world().enemies[0]!.position.x).toBeGreaterThan(center.x + spec.radius)
+    })
+
+    it("washes away enemy shots inside its radius", () => {
+      const run = range([], { x: 200, y: 0 }, { build: tidecaller, keys: [ultimate(1)] })
+      const Bolts = Game.System("Test/Bolts", {}, ({ commands }) => {
+        const bolt = { faction: "enemy" as const, style: "bolt" as const, radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 5, pierce: 0, hit: [] }
+        commands.spawnIn(RunScope, makeProjectile({ x: center.x + 150, y: center.y }, { x: 0, y: 0 }, bolt))
+        commands.spawnIn(RunScope, makeProjectile({ x: center.x + spec.radius + 100, y: center.y }, { x: 0, y: 0 }, bolt))
+      })
+      run.runtime.tick(Game.Schedule(FillEnergy, Bolts, Game.Schedule.applyDeferred()))
+      run.step(2)
+      expect(run.world().projectiles).toHaveLength(1)
+    })
   })
 })
 
-describe("builds", () => {
-  const ultimate = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
-  const special = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
-
-  it("puts any skill in any slot: the grenade on Shift, on its cooldown, with no energy needed", () => {
-    const run = range([], { x: 200, y: 0 }, { build: swordsmanWith({ ultimate: "grenade" }), keys: [ultimate(1)] })
-    run.step(3)
-    expect(run.world().grenades).toHaveLength(1)
-    const slot = run.world().skills.ultimate
-    expect(slot.skill).toBe("grenade")
-    expect(slot.cooldown).toBeGreaterThan(defaultTuning.skills.grenade.cooldown - 0.1)
-  })
-
-  it("keeps a skill's energy cost in any slot: the Nova on Space needs full energy", () => {
-    const tuning = tuningWith({ enemies: { dummy: { hp: 1000 } } })
-    const build = swordsmanWith({ special: "nova" })
-    const inside = { x: defaultTuning.skills.nova.effect.radius - 20, y: 0 }
-    const empty = range([inside], { x: 200, y: 0 }, { tuning, build, keys: [special(1)] })
-    empty.step(3)
-    expect(empty.world().enemies[0]!.health).toBe(1000)
-
-    const full = range([inside], { x: 200, y: 0 }, { tuning, build, keys: [special(1)] })
-    full.runtime.tick(Game.Schedule(FillEnergy))
-    full.step(3)
-    expect(full.world().enemies[0]!.health).toBe(1000 - defaultTuning.skills.nova.effect.power)
-    expect(full.world().energy).toBe(0)
+describe("kits", () => {
+  it("gives every character her own special and ultimate", () => {
+    for (const character of ["swordsman", "gunner", "tidecaller"] as const) {
+      const run = range([], { x: 200, y: 0 }, { build: { character } })
+      const { skills } = run.world()
+      expect(skills.special.skill).toBe(defaultTuning.characters[character].skills.special)
+      expect(skills.ultimate.skill).toBe(defaultTuning.characters[character].skills.ultimate)
+    }
   })
 
   it("carries out a cast from any caster: an enemy's Blade Wave hits the player", () => {

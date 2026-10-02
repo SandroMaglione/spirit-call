@@ -1,8 +1,8 @@
 /**
  * Builds and the damage formula.
  *
- * A build (a character plus the weapon and skills equipped on it) resolves
- * into the final stats, kit, and passives she enters the arena with. The weapon
+ * A build (a character plus the weapon equipped on her) resolves into the
+ * final stats, kit (her own skills), and passives she enters the arena with. The weapon
  * adds its ATK to the character's, then its bonus raises one stat by a
  * percentage.
  *
@@ -14,7 +14,6 @@ import type { AttackId } from "../content/attacks.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import type { StatCurve } from "../content/progression.ts"
 import type { Passive } from "../content/passives.ts"
-import { bySlot } from "../content/skills.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId, WeaponSpec } from "../content/weapons.ts"
 import type { BuildValue } from "../schema.ts"
@@ -51,8 +50,8 @@ export const statsAtLevel = (tuning: TuningValue, base: Stats, level: number): S
 export const weaponAtk = (tuning: TuningValue, weapon: WeaponSpec, level: number): number =>
   Math.round(weapon.atk * levelScale(tuning.progression.stats, level, tuning.progression.weapon.cost.maxLevel))
 
-/** The build the game starts with: the first character, with its own weapon and skills. */
-export const defaultBuild: BuildValue = { character: "swordsman", skills: {} }
+/** The build the game starts with: the first character, with her own weapon. */
+export const defaultBuild: BuildValue = { character: "swordsman" }
 
 /** The team the game starts with: the default build alone. */
 export const defaultTeam: ReadonlyArray<BuildValue> = [defaultBuild]
@@ -60,8 +59,7 @@ export const defaultTeam: ReadonlyArray<BuildValue> = [defaultBuild]
 /**
  * Final stats and kit of `build`: the character's stats at its level, with
  * its weapon at its level (the equipped one if it is of the character's
- * type, else the character's own) and equipped skills in place of its
- * defaults.
+ * type, else the character's own), and her own skills.
  */
 export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBuild => {
   const character = tuning.characters[build.character]
@@ -73,7 +71,7 @@ export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBu
     hurtboxRadius: character.hurtboxRadius,
     attack: character.attack,
     weapon,
-    skills: bySlot((slot) => build.skills[slot] ?? character.skills[slot]),
+    skills: character.skills,
     passives: tuning.weapons[weapon].passives
   }
 }

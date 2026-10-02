@@ -8,9 +8,9 @@ import type { ElementId, GroundSpec } from "./elements.ts"
 // ── Skill shapes ──────────────────────────────────────────────────────────
 //
 // A skill is an effect plus what it costs to use: a cooldown, energy, or
-// both. Each skill slot holds one skill (a character's own, or one the
-// build equips; see `resolveBuild`), and any skill works in any slot. A new kind of effect is a new case here and a
-// system that carries it out (see `features/skills.ts`).
+// both. Every character owns her kit: a special and an ultimate of her own
+// (see `CharacterSpec.skills`), never shared. A new kind of effect is a new
+// case here and a system that carries it out (see `features/skills.ts`).
 
 /** What every effect has when it lands. */
 interface EffectBase {
@@ -46,19 +46,52 @@ export interface LobEffect extends EffectBase {
   readonly leaves: GroundSpec | null
 }
 
-/** A blast around the caster that knocks everything back and grants a moment of invulnerability. */
+/** A blast around the caster that knocks everything back. */
 export interface NovaEffect extends EffectBase {
   readonly kind: "nova"
   readonly radius: number
   /** How long the blast stays dangerous. */
   readonly active: number
-  /** Invulnerability when cast, so it also works as an escape. */
-  readonly invulnerability: number
   /** Destroy enemy projectiles inside the radius. */
   readonly clearsProjectiles: boolean
 }
 
-export type SkillEffect = CutEffect | LobEffect | NovaEffect
+/**
+ * A whirl set down at the aim (clamped to `maxRange`) for `seconds`: every
+ * `tick` seconds it strikes the other side's bodies within `radius` (`power`
+ * each time) and pulls them toward its center, closing `pull` of their
+ * distance to it (a share, before how much the body is pushed at all). A
+ * wind whirl drives what it pulls, so bodies pulled into each other share
+ * their states.
+ */
+export interface VortexEffect extends EffectBase {
+  readonly kind: "vortex"
+  readonly maxRange: number
+  readonly radius: number
+  readonly seconds: number
+  readonly tick: number
+  readonly pull: number
+}
+
+/**
+ * A volley of `shells` lobbed around the aim (clamped to `maxRange`), one
+ * every `interval` seconds: the first on the aim, the others on a ring
+ * `spread` around it. Each lands like a lob (`flightTime`, `fuse`), blasts
+ * `radius` around it, and leaves its pool.
+ */
+export interface BarrageEffect extends EffectBase {
+  readonly kind: "barrage"
+  readonly maxRange: number
+  readonly shells: number
+  readonly spread: number
+  readonly interval: number
+  readonly flightTime: number
+  readonly fuse: number
+  readonly radius: number
+  readonly leaves: GroundSpec | null
+}
+
+export type SkillEffect = CutEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -69,6 +102,8 @@ export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   readonly cooldown: number
   /** Energy spent on use (0: free). Damage from a skill that costs energy does not refill it. */
   readonly energy: number
+  /** Invulnerability on use (seconds, 0 for none): every ultimate has some, so it also works as an escape. */
+  readonly invulnerability: number
   readonly effect: Effect
 }
 
@@ -83,6 +118,8 @@ export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in Ski
 export const cut = (spec: Omit<CutEffect, "kind">): CutEffect => ({ kind: "cut", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
 export const nova = (spec: Omit<NovaEffect, "kind">): NovaEffect => ({ kind: "nova", ...spec })
+export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
+export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
 const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<Effect> => spec
 
 /** Every skill, by id. */
@@ -93,6 +130,7 @@ export const skills = {
     label: "WAVE",
     cooldown: 3.5,
     energy: 0,
+    invulnerability: 0,
     effect: cut({ length: 320, width: 120, power: 34, element: "wind", knockback: 900, active: 0.12, hitStop: 0.06, heavy: true })
   }),
   /** Lobbed to the cursor over walls; explodes after landing, setting what it hits on fire and leaving a fire pool. */
@@ -101,6 +139,7 @@ export const skills = {
     label: "GRENADE",
     cooldown: 4,
     energy: 0,
+    invulnerability: 0,
     effect: lob({
       maxRange: 360,
       flightTime: 0.35,
@@ -120,6 +159,7 @@ export const skills = {
     label: "SPLASH",
     cooldown: 4,
     energy: 0,
+    invulnerability: 0,
     effect: lob({
       maxRange: 340,
       flightTime: 0.25,
@@ -133,13 +173,51 @@ export const skills = {
       leaves: { element: "water", radius: 115, seconds: 5 }
     })
   }),
-  /** A large blast around the player, powered by energy from dealing damage. */
-  nova: skill({
-    name: "Nova",
-    label: "NOVA",
+  /**
+   * The Swordsman's ultimate: a cyclone set down at the cursor that pulls
+   * everything around it together for a few seconds, cutting as it turns.
+   * What it drags into each other shares its states (a burning pack spreads
+   * its fire).
+   */
+  cyclone: skill({
+    name: "Cyclone",
+    label: "CYCLONE",
     cooldown: 0,
     energy: 100,
-    effect: nova({ radius: 240, power: 60, element: null, knockback: 760, active: 0.1, invulnerability: 0.35, clearsProjectiles: true, hitStop: 0, heavy: true })
+    invulnerability: 0.5,
+    effect: vortex({ maxRange: 340, radius: 170, seconds: 2.4, tick: 0.3, pull: 0.35, power: 14, element: "wind", knockback: 0, hitStop: 0, heavy: false })
+  }),
+  /** The Gunner's ultimate: a volley of fire shells around the cursor, each leaving a fire pool. */
+  barrage: skill({
+    name: "Barrage",
+    label: "BARRAGE",
+    cooldown: 0,
+    energy: 100,
+    invulnerability: 0.5,
+    effect: barrage({
+      maxRange: 380,
+      shells: 7,
+      spread: 110,
+      interval: 0.08,
+      flightTime: 0.45,
+      fuse: 0.15,
+      radius: 70,
+      power: 45,
+      element: "fire",
+      knockback: 260,
+      hitStop: 0,
+      heavy: false,
+      leaves: { element: "fire", radius: 55, seconds: 3 }
+    })
+  }),
+  /** The Tidecaller's ultimate: a tide breaking out around her that soaks everything far around, drives it back, and washes away shots. */
+  tide: skill({
+    name: "Tide",
+    label: "TIDE",
+    cooldown: 0,
+    energy: 100,
+    invulnerability: 0.5,
+    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
   })
 }
 

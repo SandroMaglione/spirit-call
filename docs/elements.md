@@ -48,6 +48,17 @@ Wave already drives enemies back), **Fire** for the Gunner (the grenade
 leaves a fire pool), and **Water** for the Tidecaller (a disc thrower at
 middle range). Thunder and Rock come with later characters.
 
+Each character's ultimate carries her element too, and every ultimate makes
+her untouchable for a moment as it goes off (so it doubles as an escape):
+
+- **Cyclone** (Swordsman, wind): a whirl set down where she aims that pulls
+  everything around it together for a few seconds; bodies dragged into each
+  other share their states, so a burning pack spreads its fire.
+- **Barrage** (Gunner, fire): a volley of fire shells around where she aims,
+  each leaving a fire pool.
+- **Tide** (Tidecaller, water): a tide breaking out around her that soaks
+  everything far around, drives it back, and washes away shots.
+
 ## States
 
 - Only **water and fire last**: a body is **Soaked** (slowed) or **Burning**
@@ -134,7 +145,5 @@ A first sketch for the current enemies (their affinities are in
 
 1. **Elements on basic attacks.** Which skills, if any, lend their element
    to basic attacks, and for how long.
-2. **Ultimates.** Ultimates are shared for now (the Nova, with no element);
-   each character's own ultimate, with her element, comes with her kit.
-3. **Reach of spreading.** How far fire spreads between bodies, and how
+2. **Reach of spreading.** How far fire spreads between bodies, and how
    strongly wind has to push for bodies to share a state or be stunned.

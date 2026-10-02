@@ -11,14 +11,12 @@
 import type { ChallengeId } from "./challenges.ts"
 import type { CharacterId } from "./characters.ts"
 import type { Amounts } from "./currencies.ts"
-import type { SkillId } from "./skills.ts"
 import type { WeaponId } from "./weapons.ts"
 
 /** Something a reward can give to own. */
 export type Unlock =
   | { readonly kind: "character"; readonly id: CharacterId }
   | { readonly kind: "weapon"; readonly id: WeaponId }
-  | { readonly kind: "skill"; readonly id: SkillId }
 
 /** What a quest gives the first time it is cleared, on top of what the run pays: gold worth several runs at its level. */
 export interface Rewards {

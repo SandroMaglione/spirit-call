@@ -25,6 +25,19 @@ describe("content", () => {
       "challenge endless: clearing every wave can never happen with endless waves"
     ])
   })
+  it("reports kits that are not each character's own, and ultimates that are no escape", () => {
+    const broken: Tuning = {
+      ...defaultTuning,
+      characters: { ...defaultTuning.characters, gunner: { ...defaultTuning.characters.gunner, skills: { special: "bladeWave", ultimate: "barrage" } } },
+      skills: { ...defaultTuning.skills, barrage: { ...defaultTuning.skills.barrage, invulnerability: 0 } }
+    }
+    expect(validateContent(broken)).toEqual([
+      "character gunner: her ultimate barrage needs some invulnerability on use",
+      "skill bladeWave: in more than one kit slot (swordsman, gunner); each character's skills are her own",
+      "skill grenade: in no character's kit"
+    ])
+  })
+
   it("reports enemies that would make an element required", () => {
     const broken: Tuning = {
       ...defaultTuning,

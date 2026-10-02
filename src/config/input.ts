@@ -73,7 +73,7 @@ export const touchLayout = ({ width, height }: Touch.Size): Touch.Layout<TouchBu
       attack: { center: attack, radius: px(58) },
       special: { center: { x: attack.x - px(122), y: attack.y + px(18) }, radius: px(40), aimRadius: px(90) },
       dash: { center: { x: attack.x - px(98), y: attack.y - px(88) }, radius: px(36) },
-      ultimate: { center: { x: attack.x + px(4), y: attack.y - px(128) }, radius: px(38) },
+      ultimate: { center: { x: attack.x + px(4), y: attack.y - px(128) }, radius: px(38), aimRadius: px(90) },
       team1: team(0),
       team2: team(1),
       team3: team(2)

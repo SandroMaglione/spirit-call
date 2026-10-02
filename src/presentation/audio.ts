@@ -16,8 +16,8 @@ const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrus
 const comboPitchStep = 0.067
 const powerPitch = 0.85
 
-/** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`). */
-const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", lob: "throw", nova: null }
+/** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`; a volley as its shells land). */
+const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", lob: "throw", nova: null, vortex: "spin", barrage: "throw" }
 
 /** The sound of elements meeting (wind carrying a state is heard as the blow that pushed it). */
 const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite", soak: "splash", steam: "sizzle", fizzle: "sizzle", carry: null, stun: "slam" }
@@ -80,7 +80,7 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }
-  // The Nova's deep boom; lighter blasts (a grenade, a weapon's shockwave) a shorter one; water bursts with a splash.
+  // An ultimate's deep boom; lighter blasts (a grenade, a weapon's shockwave) a shorter one; water bursts with a splash.
   for (const explosion of events.explosion.all()) {
     sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : explosion.element === "water" ? "splash" : "boom", { pan: pan(explosion.at) })
   }
