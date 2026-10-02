@@ -1,0 +1,371 @@
+{
+  "title": "Saltwind harbor",
+  "style": "harbor",
+  "batch": "beta-arenas",
+  "description": "Salt-worn quays, timber decks, mooring gear and folded sails. A coastal setting with cargo courts, rock-edged piers and dock crossings.",
+  "palette": {
+    "stone": "7B9192",
+    "light": "AAB9AC",
+    "edge": "C4CBB3",
+    "dark": "435F65",
+    "accent": "C29B60",
+    "metal": "526C70",
+    "wood": "88715B",
+    "earth": "8F9F89",
+    "green": "657F70",
+    "warm": "D5B271",
+    "snow": "CCD4CB",
+    "cloth": "A27760"
+  },
+  "assets": [
+    {
+      "id": "floor-plain",
+      "recipe": "floor-plain"
+    },
+    {
+      "id": "floor-worn",
+      "recipe": "floor-worn"
+    },
+    {
+      "id": "floor-cracked",
+      "recipe": "floor-cracked"
+    },
+    {
+      "id": "floor-inset",
+      "recipe": "floor-inset"
+    },
+    {
+      "id": "floor-small",
+      "recipe": "floor-small"
+    },
+    {
+      "id": "floor-large",
+      "recipe": "floor-large"
+    },
+    {
+      "id": "floor-border",
+      "recipe": "floor-border"
+    },
+    {
+      "id": "floor-border-corner",
+      "recipe": "floor-border-corner"
+    },
+    {
+      "id": "floor-threshold",
+      "recipe": "floor-threshold"
+    },
+    {
+      "id": "floor-transition",
+      "recipe": "floor-transition"
+    },
+    {
+      "id": "wall-short",
+      "recipe": "wall-short"
+    },
+    {
+      "id": "wall-straight",
+      "recipe": "wall-straight"
+    },
+    {
+      "id": "wall-long",
+      "recipe": "wall-long"
+    },
+    {
+      "id": "wall-low",
+      "recipe": "wall-low"
+    },
+    {
+      "id": "wall-tall",
+      "recipe": "wall-tall"
+    },
+    {
+      "id": "wall-corner",
+      "recipe": "wall-corner"
+    },
+    {
+      "id": "wall-end",
+      "recipe": "wall-end"
+    },
+    {
+      "id": "wall-broken",
+      "recipe": "wall-broken"
+    },
+    {
+      "id": "pillar-small",
+      "recipe": "pillar-small"
+    },
+    {
+      "id": "pillar-large",
+      "recipe": "pillar-large"
+    },
+    {
+      "id": "pillar-broken",
+      "recipe": "pillar-broken"
+    },
+    {
+      "id": "stair-short",
+      "recipe": "stair-short"
+    },
+    {
+      "id": "stair-full",
+      "recipe": "stair-full"
+    },
+    {
+      "id": "stair-wide",
+      "recipe": "stair-wide"
+    },
+    {
+      "id": "stair-rail",
+      "recipe": "stair-rail"
+    },
+    {
+      "id": "landing",
+      "recipe": "landing"
+    },
+    {
+      "id": "platform",
+      "recipe": "platform"
+    },
+    {
+      "id": "platform-edge",
+      "recipe": "platform-edge"
+    },
+    {
+      "id": "railing-straight",
+      "recipe": "railing-straight"
+    },
+    {
+      "id": "railing-corner",
+      "recipe": "railing-corner"
+    },
+    {
+      "id": "doorway",
+      "recipe": "doorway"
+    },
+    {
+      "id": "gate-wide",
+      "recipe": "gate-wide"
+    },
+    {
+      "id": "floor-grate",
+      "recipe": "floor-grate"
+    },
+    {
+      "id": "wall-grille",
+      "recipe": "wall-grille"
+    },
+    {
+      "id": "bridge",
+      "recipe": "bridge"
+    },
+    {
+      "id": "floor-radial",
+      "recipe": "floor-radial"
+    },
+    {
+      "id": "floor-deck",
+      "recipe": "floor-deck"
+    },
+    {
+      "id": "floor-rubble",
+      "recipe": "floor-rubble"
+    },
+    {
+      "id": "wall-window",
+      "recipe": "wall-window"
+    },
+    {
+      "id": "wall-buttress",
+      "recipe": "wall-buttress"
+    },
+    {
+      "id": "arch-free",
+      "recipe": "arch-free"
+    },
+    {
+      "id": "bridge-wide",
+      "recipe": "bridge-wide"
+    },
+    {
+      "id": "stair-narrow",
+      "recipe": "stair-narrow"
+    },
+    {
+      "id": "platform-wide",
+      "recipe": "platform-wide"
+    },
+    {
+      "id": "bollard",
+      "recipe": "bollard"
+    },
+    {
+      "id": "rope-coil",
+      "recipe": "rope-coil"
+    },
+    {
+      "id": "capstan",
+      "recipe": "capstan"
+    },
+    {
+      "id": "dock-crane",
+      "recipe": "dock-crane"
+    },
+    {
+      "id": "anchor",
+      "recipe": "anchor"
+    },
+    {
+      "id": "barrel-stack",
+      "recipe": "barrel-stack"
+    },
+    {
+      "id": "fish-crate",
+      "recipe": "fish-crate"
+    },
+    {
+      "id": "cargo-pallet",
+      "recipe": "cargo-pallet"
+    },
+    {
+      "id": "boat-hull",
+      "recipe": "boat-hull"
+    },
+    {
+      "id": "wreck-hull",
+      "recipe": "wreck-hull"
+    },
+    {
+      "id": "buoy",
+      "recipe": "buoy"
+    },
+    {
+      "id": "net-rack",
+      "recipe": "net-rack"
+    },
+    {
+      "id": "lantern-hook",
+      "recipe": "lantern-hook"
+    },
+    {
+      "id": "jetty-post",
+      "recipe": "jetty-post"
+    },
+    {
+      "id": "wave-rock",
+      "recipe": "wave-rock"
+    },
+    {
+      "id": "cliff-large",
+      "recipe": "cliff-large"
+    },
+    {
+      "id": "cliff-small",
+      "recipe": "cliff-small"
+    },
+    {
+      "id": "sail-awning",
+      "recipe": "sail-awning"
+    },
+    {
+      "id": "signpost",
+      "recipe": "signpost"
+    },
+    {
+      "id": "life-ring",
+      "recipe": "life-ring"
+    },
+    {
+      "id": "beacon-idle",
+      "recipe": "beacon-idle"
+    },
+    {
+      "id": "beacon-active",
+      "recipe": "beacon-active"
+    },
+    {
+      "id": "supply-cache",
+      "recipe": "supply-cache"
+    },
+    {
+      "id": "supply-cache-open",
+      "recipe": "supply-cache-open"
+    },
+    {
+      "id": "waymarker",
+      "recipe": "waymarker"
+    },
+    {
+      "id": "seal-plinth",
+      "recipe": "seal-plinth"
+    }
+  ],
+  "references": [
+    "https://braverobynart.com/deathsdoor",
+    "https://blog.playstation.com/2023/08/04/genshin-impact-version-4-0-launches-august-16-first-details/"
+  ],
+  "examples": [
+    "cargo-court",
+    "quay-crossing",
+    "customs-yard",
+    "lighthouse-terrace"
+  ],
+  "signature_props": [
+    "bollard",
+    "rope-coil",
+    "capstan",
+    "dock-crane",
+    "anchor",
+    "barrel-stack",
+    "fish-crate",
+    "cargo-pallet",
+    "boat-hull",
+    "wreck-hull",
+    "buoy",
+    "net-rack",
+    "lantern-hook",
+    "jetty-post",
+    "wave-rock",
+    "cliff-large",
+    "cliff-small",
+    "sail-awning",
+    "signpost",
+    "life-ring"
+  ],
+  "roles": [
+    "quest skirmish",
+    "dungeon connector",
+    "boss or elite room",
+    "survival arena"
+  ],
+  "scope": "Environment art and assembly plans. No gameplay modes or quests are implemented.",
+  "scene_props": [
+    [
+      "barrel-stack",
+      "cargo-pallet",
+      "fish-crate",
+      "dock-crane",
+      "capstan"
+    ],
+    [
+      "boat-hull",
+      "wreck-hull",
+      "bollard",
+      "rope-coil",
+      "buoy",
+      "life-ring"
+    ],
+    [
+      "net-rack",
+      "lantern-hook",
+      "jetty-post",
+      "sail-awning",
+      "signpost"
+    ],
+    [
+      "cliff-large",
+      "cliff-small",
+      "wave-rock",
+      "anchor"
+    ]
+  ]
+}

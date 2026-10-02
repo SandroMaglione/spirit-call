@@ -1,0 +1,4169 @@
+{
+  "schema_version": 2,
+  "kit": "saltwind-harbor",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/saltwind-harbor.blend",
+  "source_sha256": "34f1caec1855eb8ec8fe8c0ca972b348e0367a333fbd5274fc660b982dcb80f9",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "anchor",
+      "file": "models/anchor.glb",
+      "bounds_m": {
+        "min": [
+          -0.6393599510192871,
+          0.027170687913894653,
+          -0.09000000357627869
+        ],
+        "max": [
+          0.6393599510192871,
+          1.7100000381469727,
+          0.09000000357627869
+        ]
+      },
+      "dimensions_m": [
+        1.2787199020385742,
+        1.682829350233078,
+        0.18000000715255737
+      ],
+      "triangles": 296,
+      "mesh_count": 1,
+      "bytes": 18880,
+      "sha256": "1fc6fe717c5586bebf3927bda449bc7b200f21a7be2834407285052ed4188d44",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "arch-free",
+      "file": "models/arch-free.glb",
+      "bounds_m": {
+        "min": [
+          -1.399999976158142,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          1.399999976158142,
+          2.069999933242798,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        2.799999952316284,
+        2.069999933242798,
+        0.4000000059604645
+      ],
+      "triangles": 660,
+      "mesh_count": 1,
+      "bytes": 44740,
+      "sha256": "c6c06efa69f0a5c1e82076174a77edfdbca5fb2142979de8510fc3a15e0b897a",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            -1.2,
+            0.925,
+            0
+          ],
+          "size_m": [
+            0.4,
+            1.85,
+            0.4
+          ]
+        },
+        {
+          "center_m": [
+            1.2,
+            0.925,
+            0
+          ],
+          "size_m": [
+            0.4,
+            1.85,
+            0.4
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "opening": {
+        "clear_width_m": 2,
+        "clear_height_m": 1.85,
+        "depth_m": 0.4
+      }
+    },
+    {
+      "id": "barrel-stack",
+      "file": "models/barrel-stack.glb",
+      "bounds_m": {
+        "min": [
+          -0.7699999809265137,
+          0.0,
+          -0.5099999904632568
+        ],
+        "max": [
+          0.7699999809265137,
+          1.690000057220459,
+          0.4099999964237213
+        ]
+      },
+      "dimensions_m": [
+        1.5399999618530273,
+        1.690000057220459,
+        0.9199999868869781
+      ],
+      "triangles": 612,
+      "mesh_count": 1,
+      "bytes": 39596,
+      "sha256": "95ee3fdf96d699731aa74e102fcb01b28e48e0cdb6b3c7651f45369c4ccc3705",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "beacon-active",
+      "file": "models/beacon-active.glb",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        "max": [
+          0.5,
+          1.6699999570846558,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        1.6699999570846558,
+        1.0
+      ],
+      "triangles": 232,
+      "mesh_count": 1,
+      "bytes": 16132,
+      "sha256": "cc6c1693b08d087cd9c9e27b6110587c3977310bdbdcd58b5b25cd88150dcc2c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [
+        {
+          "name": "effect",
+          "position_m": [
+            0,
+            1.35,
+            0
+          ]
+        }
+      ],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries.",
+      "presentation_role": "Supply, navigation or objective art. No reward, activation or timer is defined here.",
+      "state_family": "beacon",
+      "state": "active"
+    },
+    {
+      "id": "beacon-idle",
+      "file": "models/beacon-idle.glb",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        "max": [
+          0.5,
+          1.1200000047683716,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        1.1200000047683716,
+        1.0
+      ],
+      "triangles": 104,
+      "mesh_count": 1,
+      "bytes": 8060,
+      "sha256": "a57ac1f4b021d1b8ab69bce011d2926f362299bedcd9bfe245aaf1eb8493080f",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [
+        {
+          "name": "effect",
+          "position_m": [
+            0,
+            1.35,
+            0
+          ]
+        }
+      ],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries.",
+      "presentation_role": "Supply, navigation or objective art. No reward, activation or timer is defined here.",
+      "state_family": "beacon",
+      "state": "idle"
+    },
+    {
+      "id": "boat-hull",
+      "file": "models/boat-hull.glb",
+      "bounds_m": {
+        "min": [
+          -1.5499999523162842,
+          0.0,
+          -0.6000000238418579
+        ],
+        "max": [
+          1.5499999523162842,
+          0.550000011920929,
+          0.6000000238418579
+        ]
+      },
+      "dimensions_m": [
+        3.0999999046325684,
+        0.550000011920929,
+        1.2000000476837158
+      ],
+      "triangles": 164,
+      "mesh_count": 1,
+      "bytes": 12312,
+      "sha256": "6329ca639373da824fb4c870ff781685c24007536d8e432b26f9fb2b2c44abe5",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "bollard",
+      "file": "models/bollard.glb",
+      "bounds_m": {
+        "min": [
+          -0.25,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          0.25,
+          0.6200000047683716,
+          0.25
+        ]
+      },
+      "dimensions_m": [
+        0.5,
+        0.6200000047683716,
+        0.5
+      ],
+      "triangles": 236,
+      "mesh_count": 1,
+      "bytes": 14992,
+      "sha256": "1dbdd9d8c986a4c0f14d4c523c294987fc5b0b322c2c6d910bdb69364a0b9de4",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "bridge",
+      "file": "models/bridge.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.30000001192092896,
+          -2.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          2.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.30000001192092896,
+        4.0
+      ],
+      "triangles": 1080,
+      "mesh_count": 1,
+      "bytes": 73812,
+      "sha256": "4ea9b3e944c74c2ea927db0946e83e2a9515bb962aa125d5ba537080146c54ec",
+      "category": "floor",
+      "origin": "Top center; deck Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -2.0,
+            1.0,
+            2.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            2.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -2.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "bridge-wide",
+      "file": "models/bridge-wide.glb",
+      "bounds_m": {
+        "min": [
+          -2.0,
+          -0.30000001192092896,
+          -2.0
+        ],
+        "max": [
+          2.0,
+          0.0,
+          2.0
+        ]
+      },
+      "dimensions_m": [
+        4.0,
+        0.30000001192092896,
+        4.0
+      ],
+      "triangles": 1080,
+      "mesh_count": 1,
+      "bytes": 74720,
+      "sha256": "128a8c15c341513b0e25a309deccf087c419d86d4633992ed4d023c01b81d069",
+      "category": "floor",
+      "origin": "Top center; deck Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -2.0,
+            -2.0,
+            2.0,
+            2.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            2.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -2.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "buoy",
+      "file": "models/buoy.glb",
+      "bounds_m": {
+        "min": [
+          -0.41999998688697815,
+          0.0,
+          -0.39944374561309814
+        ],
+        "max": [
+          0.41999998688697815,
+          1.0049999952316284,
+          0.39944374561309814
+        ]
+      },
+      "dimensions_m": [
+        0.8399999737739563,
+        1.0049999952316284,
+        0.7988874912261963
+      ],
+      "triangles": 204,
+      "mesh_count": 1,
+      "bytes": 13184,
+      "sha256": "32893eb1232eaf3ce3b3d34a100483e141131476f17a6ba0536bfec3ec4dd2dd",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "capstan",
+      "file": "models/capstan.glb",
+      "bounds_m": {
+        "min": [
+          -0.75,
+          0.0,
+          -0.75
+        ],
+        "max": [
+          0.75,
+          0.8999999761581421,
+          0.75
+        ]
+      },
+      "dimensions_m": [
+        1.5,
+        0.8999999761581421,
+        1.5
+      ],
+      "triangles": 132,
+      "mesh_count": 1,
+      "bytes": 9756,
+      "sha256": "9235c55baa9b31024b481877e7414f32c8ba08d3d05d01f49a2d5934c1428d12",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "cargo-pallet",
+      "file": "models/cargo-pallet.glb",
+      "bounds_m": {
+        "min": [
+          -0.7350000143051147,
+          0.0,
+          -0.5
+        ],
+        "max": [
+          0.7350000143051147,
+          0.8999999761581421,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.4700000286102295,
+        0.8999999761581421,
+        1.0
+      ],
+      "triangles": 776,
+      "mesh_count": 1,
+      "bytes": 51816,
+      "sha256": "612ebc0b82e89e201a5303006ac71020be2134cf00ec7dd5931fece9853e9a45",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "cliff-large",
+      "file": "models/cliff-large.glb",
+      "bounds_m": {
+        "min": [
+          -1.4168716669082642,
+          0.0,
+          -0.8810880780220032
+        ],
+        "max": [
+          1.3128418922424316,
+          2.4000000953674316,
+          0.905761182308197
+        ]
+      },
+      "dimensions_m": [
+        2.729713559150696,
+        2.4000000953674316,
+        1.7868492603302002
+      ],
+      "triangles": 104,
+      "mesh_count": 1,
+      "bytes": 10040,
+      "sha256": "9dbc8ae9840b458eb12241c17b89bc336eb4c039628ecb1fcffb21a47cb0864f",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "cliff-small",
+      "file": "models/cliff-small.glb",
+      "bounds_m": {
+        "min": [
+          -0.8174259662628174,
+          0.0,
+          -0.5083200335502625
+        ],
+        "max": [
+          0.7574087977409363,
+          1.2999999523162842,
+          0.590246856212616
+        ]
+      },
+      "dimensions_m": [
+        1.5748347640037537,
+        1.2999999523162842,
+        1.0985668897628784
+      ],
+      "triangles": 104,
+      "mesh_count": 1,
+      "bytes": 10040,
+      "sha256": "1cf04457192502276579613c0542087cebd2be7e14edfd0450339007c6753a58",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "dock-crane",
+      "file": "models/dock-crane.glb",
+      "bounds_m": {
+        "min": [
+          -0.3400000035762787,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          1.475000023841858,
+          2.5878567695617676,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        1.8150000274181366,
+        2.5878567695617676,
+        0.4000000059604645
+      ],
+      "triangles": 364,
+      "mesh_count": 1,
+      "bytes": 23252,
+      "sha256": "47a9db39cb596f698b29a2097534dc44af96ac9f7744faf965f09621869ae16a",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "doorway",
+      "file": "models/doorway.glb",
+      "bounds_m": {
+        "min": [
+          -1.2999999523162842,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.2999999523162842,
+          1.9600000381469727,
+          0.25
+        ]
+      },
+      "dimensions_m": [
+        2.5999999046325684,
+        1.9600000381469727,
+        0.5
+      ],
+      "triangles": 1500,
+      "mesh_count": 3,
+      "bytes": 102124,
+      "sha256": "12392e214165b6330ae04dec189f495a85e9fdc13d197faa6bfe033110c4324d",
+      "category": "door",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            -1.15,
+            0.85,
+            0
+          ],
+          "size_m": [
+            0.3,
+            1.7,
+            0.5
+          ]
+        },
+        {
+          "center_m": [
+            1.15,
+            0.85,
+            0
+          ],
+          "size_m": [
+            0.3,
+            1.7,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            0.25
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -0.25
+          ]
+        }
+      ],
+      "moving_parts": [
+        {
+          "node": "doorway__leaf-left",
+          "kind": "hinge",
+          "pivot_m": [
+            -1.0,
+            0,
+            0
+          ],
+          "axis": "+Y",
+          "closed_degrees": 0,
+          "open_degrees": -95,
+          "closed_collision": {
+            "center_m": [
+              -0.5,
+              0.85,
+              0
+            ],
+            "size_m": [
+              0.96,
+              1.7,
+              0.16
+            ]
+          },
+          "collision_note": "Rotate this closed box about pivot_m with the leaf; do not leave it blocking the opening."
+        },
+        {
+          "node": "doorway__leaf-right",
+          "kind": "hinge",
+          "pivot_m": [
+            1.0,
+            0,
+            0
+          ],
+          "axis": "+Y",
+          "closed_degrees": 0,
+          "open_degrees": 95,
+          "closed_collision": {
+            "center_m": [
+              0.5,
+              0.85,
+              0
+            ],
+            "size_m": [
+              0.96,
+              1.7,
+              0.16
+            ]
+          },
+          "collision_note": "Rotate this closed box about pivot_m with the leaf; do not leave it blocking the opening."
+        }
+      ],
+      "sockets": [],
+      "opening": {
+        "clear_width_m": 2,
+        "clear_height_m": 1.7,
+        "depth_m": 0.5
+      }
+    },
+    {
+      "id": "fish-crate",
+      "file": "models/fish-crate.glb",
+      "bounds_m": {
+        "min": [
+          -0.550000011920929,
+          0.0,
+          -0.32499998807907104
+        ],
+        "max": [
+          0.550000011920929,
+          0.3499999940395355,
+          0.32499998807907104
+        ]
+      },
+      "dimensions_m": [
+        1.100000023841858,
+        0.3499999940395355,
+        0.6499999761581421
+      ],
+      "triangles": 508,
+      "mesh_count": 1,
+      "bytes": 38456,
+      "sha256": "c9d2ff88f55e03e3c130def7d54d70b63c2025797b8bec970e0a293c29f993a4",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "floor-border",
+      "file": "models/floor-border.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -0.15000000596046448
+        ],
+        "max": [
+          1.0,
+          0.0,
+          0.15000000596046448
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        0.30000001192092896
+      ],
+      "triangles": 180,
+      "mesh_count": 1,
+      "bytes": 13160,
+      "sha256": "831bee9dee0ef451cf4b9f2ab404d986c86b1d2d92d0d6fbb16d5ee06f8e343e",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -0.15,
+            1.0,
+            0.15
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            0.15
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -0.15
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-border-corner",
+      "file": "models/floor-border-corner.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 120,
+      "mesh_count": 1,
+      "bytes": 9196,
+      "sha256": "a22a381188a1b749fd69b67950fbfeb3393cfaa64fdd5f538ea107ba1917037b",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -0.15,
+            1.0,
+            0.15
+          ],
+          "height_m": 0,
+          "center_xz_m": [
+            0,
+            0.85
+          ]
+        },
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -0.15,
+            -0.85,
+            0.15,
+            0.85
+          ],
+          "height_m": 0,
+          "center_xz_m": [
+            -0.85,
+            -0.15
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-cracked",
+      "file": "models/floor-cracked.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 420,
+      "mesh_count": 1,
+      "bytes": 28904,
+      "sha256": "0934188a0d23b380268547fe9f329476acf667a97312d601b8a295badf29b373",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-deck",
+      "file": "models/floor-deck.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.30000001192092896,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.30000001192092896,
+        2.0
+      ],
+      "triangles": 600,
+      "mesh_count": 1,
+      "bytes": 41244,
+      "sha256": "ba70481e7ffeabaadc944f0601afe4c9047c28e22ba494fd11bfabc3b1e4f8d0",
+      "category": "floor",
+      "origin": "Top center; deck Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-grate",
+      "file": "models/floor-grate.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 900,
+      "mesh_count": 1,
+      "bytes": 60968,
+      "sha256": "a0d2a937cc82c151fe2e9a40c9f188641982891b5658b5c0036588e524c12a3a",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-inset",
+      "file": "models/floor-inset.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 600,
+      "mesh_count": 1,
+      "bytes": 43552,
+      "sha256": "203263c517367b425ed65efb1fb98c215ec943e140b4ed580636e5c227774b76",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-large",
+      "file": "models/floor-large.glb",
+      "bounds_m": {
+        "min": [
+          -2.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          2.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        4.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 540,
+      "mesh_count": 1,
+      "bytes": 36792,
+      "sha256": "2dfdef69adbbd96746fb99dd070135bcc853b48b1abf2b5fcb2b56039326b4f6",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -2.0,
+            -1.0,
+            2.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-plain",
+      "file": "models/floor-plain.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 300,
+      "mesh_count": 1,
+      "bytes": 21008,
+      "sha256": "047546672f22d0436c74356af8f6dcfe3da4169c05f84a24dd9556ec5ee1129f",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-radial",
+      "file": "models/floor-radial.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 436,
+      "mesh_count": 1,
+      "bytes": 25668,
+      "sha256": "5adb7452b2e3dbbce11eb2d9a4c2004974499082786b1d3cb41d818124943d26",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-rubble",
+      "file": "models/floor-rubble.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 892,
+      "mesh_count": 1,
+      "bytes": 74748,
+      "sha256": "ef0073507b0badcfc3bf66b25fd5c22116f82f06e00739d3fab720c76d04454d",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-small",
+      "file": "models/floor-small.glb",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          -0.14000000059604645,
+          -0.5
+        ],
+        "max": [
+          0.5,
+          0.0,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        0.14000000059604645,
+        1.0
+      ],
+      "triangles": 120,
+      "mesh_count": 1,
+      "bytes": 9180,
+      "sha256": "8d9285ea328fffd14cc36c2cf608a079f4615c6918960192cb9d93b7234b5de3",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -0.5,
+            -0.5,
+            0.5,
+            0.5
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -0.5,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            0.5,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            0.5
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -0.5
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-threshold",
+      "file": "models/floor-threshold.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -0.30000001192092896
+        ],
+        "max": [
+          1.0,
+          0.0,
+          0.30000001192092896
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        0.6000000238418579
+      ],
+      "triangles": 180,
+      "mesh_count": 1,
+      "bytes": 13168,
+      "sha256": "89f31d53c328beaad1b1a382952bae1f0ba55dee269b296543d7ae38daaae16f",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -0.3,
+            1.0,
+            0.3
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            0.3
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -0.3
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-transition",
+      "file": "models/floor-transition.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 300,
+      "mesh_count": 1,
+      "bytes": 21024,
+      "sha256": "edb9560e58e166dc67d367c11b1f89556d438411ea0d4288ab8dc054652fc8f4",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "floor-worn",
+      "file": "models/floor-worn.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 1020,
+      "mesh_count": 1,
+      "bytes": 68344,
+      "sha256": "15c0280b386f837e5c88633c60e46ba62e75bb32dd856253b3819209f2d21cc0",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "gate-wide",
+      "file": "models/gate-wide.glb",
+      "bounds_m": {
+        "min": [
+          -2.3450000286102295,
+          0.0,
+          -0.28999999165534973
+        ],
+        "max": [
+          2.3450000286102295,
+          1.9600000381469727,
+          0.28999999165534973
+        ]
+      },
+      "dimensions_m": [
+        4.690000057220459,
+        1.9600000381469727,
+        0.5799999833106995
+      ],
+      "triangles": 1620,
+      "mesh_count": 3,
+      "bytes": 114928,
+      "sha256": "62c404275e1ddb3686e6f6242d135242e7ccd4961336f574f0f5bdd6fd178c97",
+      "category": "door",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            -2.15,
+            0.85,
+            0
+          ],
+          "size_m": [
+            0.3,
+            1.7,
+            0.5
+          ]
+        },
+        {
+          "center_m": [
+            2.15,
+            0.85,
+            0
+          ],
+          "size_m": [
+            0.3,
+            1.7,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            0.25
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -0.25
+          ]
+        }
+      ],
+      "moving_parts": [
+        {
+          "node": "gate-wide__leaf-left",
+          "kind": "hinge",
+          "pivot_m": [
+            -2.0,
+            0,
+            0
+          ],
+          "axis": "+Y",
+          "closed_degrees": 0,
+          "open_degrees": -95,
+          "closed_collision": {
+            "center_m": [
+              -1.0,
+              0.85,
+              0
+            ],
+            "size_m": [
+              1.96,
+              1.7,
+              0.16
+            ]
+          },
+          "collision_note": "Rotate this closed box about pivot_m with the leaf; do not leave it blocking the opening."
+        },
+        {
+          "node": "gate-wide__leaf-right",
+          "kind": "hinge",
+          "pivot_m": [
+            2.0,
+            0,
+            0
+          ],
+          "axis": "+Y",
+          "closed_degrees": 0,
+          "open_degrees": 95,
+          "closed_collision": {
+            "center_m": [
+              1.0,
+              0.85,
+              0
+            ],
+            "size_m": [
+              1.96,
+              1.7,
+              0.16
+            ]
+          },
+          "collision_note": "Rotate this closed box about pivot_m with the leaf; do not leave it blocking the opening."
+        }
+      ],
+      "sockets": [],
+      "opening": {
+        "clear_width_m": 4,
+        "clear_height_m": 1.7,
+        "depth_m": 0.5
+      }
+    },
+    {
+      "id": "jetty-post",
+      "file": "models/jetty-post.glb",
+      "bounds_m": {
+        "min": [
+          -0.25,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          0.25,
+          1.4700000286102295,
+          0.25
+        ]
+      },
+      "dimensions_m": [
+        0.5,
+        1.4700000286102295,
+        0.5
+      ],
+      "triangles": 236,
+      "mesh_count": 1,
+      "bytes": 15000,
+      "sha256": "e0b989135de0e3ebacfccad902b112737141d9163f138c4b0c5561fbc139252d",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "landing",
+      "file": "models/landing.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          -0.14000000059604645,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.14000000059604645,
+        2.0
+      ],
+      "triangles": 300,
+      "mesh_count": 1,
+      "bytes": 20996,
+      "sha256": "d9c8ad729fd9afe68e524d13f6d6bf5c770e70b30bb0303147d43c0bc15de8da",
+      "category": "floor",
+      "origin": "Top center; surface at Y=0",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 0
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            0,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            0,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "lantern-hook",
+      "file": "models/lantern-hook.glb",
+      "bounds_m": {
+        "min": [
+          -0.20000000298023224,
+          0.0,
+          -0.2800000011920929
+        ],
+        "max": [
+          0.7300000190734863,
+          1.7450000047683716,
+          0.2800000011920929
+        ]
+      },
+      "dimensions_m": [
+        0.9300000220537186,
+        1.7450000047683716,
+        0.5600000023841858
+      ],
+      "triangles": 648,
+      "mesh_count": 1,
+      "bytes": 46344,
+      "sha256": "b2e3cbbe07e94d288003985fc5e28cc1590959da1785de3ef9ce96864e809d0f",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "life-ring",
+      "file": "models/life-ring.glb",
+      "bounds_m": {
+        "min": [
+          -0.5149999856948853,
+          0.0,
+          -0.5099999904632568
+        ],
+        "max": [
+          0.5149999856948853,
+          0.1850000023841858,
+          0.5099999904632568
+        ]
+      },
+      "dimensions_m": [
+        1.0299999713897705,
+        0.1850000023841858,
+        1.0199999809265137
+      ],
+      "triangles": 248,
+      "mesh_count": 1,
+      "bytes": 16148,
+      "sha256": "1ca4b3b3c9888ad58e99e4e1dbcac19f801c225b6090158059a275b5155feb41",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "net-rack",
+      "file": "models/net-rack.glb",
+      "bounds_m": {
+        "min": [
+          -0.8500000238418579,
+          0.0,
+          -0.06499999761581421
+        ],
+        "max": [
+          0.8500000238418579,
+          1.659999966621399,
+          0.06499999761581421
+        ]
+      },
+      "dimensions_m": [
+        1.7000000476837158,
+        1.659999966621399,
+        0.12999999523162842
+      ],
+      "triangles": 240,
+      "mesh_count": 1,
+      "bytes": 17380,
+      "sha256": "e6345ad7b657a5fd17887579413c259103503d2fb030d98de3d341eaae84a2cc",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "pillar-broken",
+      "file": "models/pillar-broken.glb",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        "max": [
+          0.5,
+          1.0800000429153442,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        1.0800000429153442,
+        1.0
+      ],
+      "triangles": 292,
+      "mesh_count": 1,
+      "bytes": 21420,
+      "sha256": "de34873b3f20a11e0fb8d84d7e5b2fe509a4cf35f5e404dadf41f0659a5b858a",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.525,
+            0
+          ],
+          "size_m": [
+            1,
+            1.05,
+            1
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "pillar-large",
+      "file": "models/pillar-large.glb",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        "max": [
+          0.5,
+          1.899999976158142,
+          0.5
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        1.899999976158142,
+        1.0
+      ],
+      "triangles": 300,
+      "mesh_count": 1,
+      "bytes": 21016,
+      "sha256": "970305c06eb0cf3df644d4e925c2aee26497404090795e772843df86862ac1bd",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.95,
+            0
+          ],
+          "size_m": [
+            1,
+            1.9,
+            1
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "pillar-small",
+      "file": "models/pillar-small.glb",
+      "bounds_m": {
+        "min": [
+          -0.36000001430511475,
+          0.0,
+          -0.36000001430511475
+        ],
+        "max": [
+          0.36000001430511475,
+          1.4500000476837158,
+          0.36000001430511475
+        ]
+      },
+      "dimensions_m": [
+        0.7200000286102295,
+        1.4500000476837158,
+        0.7200000286102295
+      ],
+      "triangles": 300,
+      "mesh_count": 1,
+      "bytes": 21084,
+      "sha256": "7f8206478fa031c8cfba78ef1806851367418cdcd51a6c9df78bc9c550759983",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.725,
+            0
+          ],
+          "size_m": [
+            0.72,
+            1.45,
+            0.72
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "platform",
+      "file": "models/platform.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          1.2000000476837158,
+          1.0575000047683716
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        1.2000000476837158,
+        2.0575000047683716
+      ],
+      "triangles": 600,
+      "mesh_count": 1,
+      "bytes": 41576,
+      "sha256": "969c5760633c0db9b5a3f1aa748c517d1a972424b85de47e336f7a381a81af46",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.6,
+            0
+          ],
+          "size_m": [
+            2,
+            1.2,
+            2
+          ]
+        }
+      ],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -1.0,
+            1.0,
+            1.0
+          ],
+          "height_m": 1.2
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            1.2,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            1.2,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            1.2,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            1.2,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "platform-edge",
+      "file": "models/platform-edge.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.125
+        ],
+        "max": [
+          1.0,
+          1.2000000476837158,
+          0.18250000476837158
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        1.2000000476837158,
+        0.3075000047683716
+      ],
+      "triangles": 600,
+      "mesh_count": 1,
+      "bytes": 40764,
+      "sha256": "fdeb9d892c349fd0f83ed06f2e2b31653509585ef0a79e41d6a56c5dacd43762",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.6,
+            0
+          ],
+          "size_m": [
+            2,
+            1.2,
+            0.25
+          ]
+        }
+      ],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -1.0,
+            -0.125,
+            1.0,
+            0.125
+          ],
+          "height_m": 1.2
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            1.2,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            1.2,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            1.2,
+            0.125
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            1.2,
+            -0.125
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "platform-wide",
+      "file": "models/platform-wide.glb",
+      "bounds_m": {
+        "min": [
+          -2.0,
+          0.0,
+          -1.0
+        ],
+        "max": [
+          2.0,
+          1.2000000476837158,
+          1.0575000047683716
+        ]
+      },
+      "dimensions_m": [
+        4.0,
+        1.2000000476837158,
+        2.0575000047683716
+      ],
+      "triangles": 840,
+      "mesh_count": 1,
+      "bytes": 58328,
+      "sha256": "d16d96ddebe57ae4c896284ae907a6a30442acbe0f4c372bcfafbb0a6fdf627d",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.6,
+            0
+          ],
+          "size_m": [
+            4,
+            1.2,
+            2
+          ]
+        }
+      ],
+      "walk_surfaces": [
+        {
+          "kind": "plane",
+          "bounds_xz_m": [
+            -2.0,
+            -1.0,
+            2.0,
+            1.0
+          ],
+          "height_m": 1.2
+        }
+      ],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -2.0,
+            1.2,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            2.0,
+            1.2,
+            0
+          ]
+        },
+        {
+          "name": "front",
+          "position_m": [
+            0,
+            1.2,
+            1.0
+          ]
+        },
+        {
+          "name": "back",
+          "position_m": [
+            0,
+            1.2,
+            -1.0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "railing-corner",
+      "file": "models/railing-corner.glb",
+      "bounds_m": {
+        "min": [
+          -1.0200001001358032,
+          0.0,
+          -1.0199999809265137
+        ],
+        "max": [
+          1.0199999809265137,
+          0.8500000238418579,
+          1.0199999809265137
+        ]
+      },
+      "dimensions_m": [
+        2.040000081062317,
+        0.8500000238418579,
+        2.0399999618530273
+      ],
+      "triangles": 1500,
+      "mesh_count": 1,
+      "bytes": 101572,
+      "sha256": "da693d292bd2aea9d57833c1b2f25601aa64af46036b1ec60bb21d8898682952",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.425,
+            0.9
+          ],
+          "size_m": [
+            2,
+            0.85,
+            0.2
+          ]
+        },
+        {
+          "center_m": [
+            -0.9,
+            0.425,
+            -0.1
+          ],
+          "size_m": [
+            0.2,
+            0.85,
+            1.8
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "railing-straight",
+      "file": "models/railing-straight.glb",
+      "bounds_m": {
+        "min": [
+          -1.0199999809265137,
+          0.0,
+          -0.11999999731779099
+        ],
+        "max": [
+          1.0199999809265137,
+          0.8500000238418579,
+          0.11999999731779099
+        ]
+      },
+      "dimensions_m": [
+        2.0399999618530273,
+        0.8500000238418579,
+        0.23999999463558197
+      ],
+      "triangles": 780,
+      "mesh_count": 1,
+      "bytes": 52652,
+      "sha256": "a2a08025b6f401259869becdd594b38e7135b4accfa40de1e935aa28e6277a5d",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.425,
+            0
+          ],
+          "size_m": [
+            2,
+            0.85,
+            0.2
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "rope-coil",
+      "file": "models/rope-coil.glb",
+      "bounds_m": {
+        "min": [
+          -0.37700000405311584,
+          0.003000000026077032,
+          -0.41490811109542847
+        ],
+        "max": [
+          0.6200686097145081,
+          0.05700000002980232,
+          0.37700000405311584
+        ]
+      },
+      "dimensions_m": [
+        0.9970686137676239,
+        0.05400000000372529,
+        0.7919081151485443
+      ],
+      "triangles": 412,
+      "mesh_count": 1,
+      "bytes": 23812,
+      "sha256": "88084fd1f0ba90a0d7d1fdfb54abd55be3843e319011d8e8ddbf941d753aecb4",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "sail-awning",
+      "file": "models/sail-awning.glb",
+      "bounds_m": {
+        "min": [
+          -1.2999999523162842,
+          0.0,
+          -0.8500000238418579
+        ],
+        "max": [
+          1.2999999523162842,
+          2.3949999809265137,
+          0.8500000238418579
+        ]
+      },
+      "dimensions_m": [
+        2.5999999046325684,
+        2.3949999809265137,
+        1.7000000476837158
+      ],
+      "triangles": 104,
+      "mesh_count": 1,
+      "bytes": 8120,
+      "sha256": "4fa78ee314be09fa1dc216d9cd4a53961c3c510e1c4bab4de0d1ba4cf7e82828",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "seal-plinth",
+      "file": "models/seal-plinth.glb",
+      "bounds_m": {
+        "min": [
+          -0.6000000238418579,
+          0.0,
+          -0.6000000238418579
+        ],
+        "max": [
+          0.6000000238418579,
+          0.7699999809265137,
+          0.6000000238418579
+        ]
+      },
+      "dimensions_m": [
+        1.2000000476837158,
+        0.7699999809265137,
+        1.2000000476837158
+      ],
+      "triangles": 168,
+      "mesh_count": 1,
+      "bytes": 11704,
+      "sha256": "a5da70ef0f7d5ec6df2348388fc334251ccb9a45a6b44f741a1cc5e91ccc24bf",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries.",
+      "presentation_role": "Supply, navigation or objective art. No reward, activation or timer is defined here."
+    },
+    {
+      "id": "signpost",
+      "file": "models/signpost.glb",
+      "bounds_m": {
+        "min": [
+          -0.5049999952316284,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          0.699999988079071,
+          1.7000000476837158,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        1.2049999833106995,
+        1.7000000476837158,
+        0.4000000059604645
+      ],
+      "triangles": 208,
+      "mesh_count": 1,
+      "bytes": 14884,
+      "sha256": "ab71f3b94ca504cfa4553a25aa0dc3c19afff53fca365434bcf96e87a4704ba4",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "stair-full",
+      "file": "models/stair-full.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -1.2000000476837158
+        ],
+        "max": [
+          1.0,
+          1.2000000476837158,
+          1.2000000476837158
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        1.2000000476837158,
+        2.4000000953674316
+      ],
+      "triangles": 720,
+      "mesh_count": 1,
+      "bytes": 51120,
+      "sha256": "f7fdf9783ea17e3b9dbbcf322f75e19699f36b0b6f71c04ee44daba202e411d7",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "ramp",
+          "width_m": 2,
+          "bottom_m": [
+            0,
+            0,
+            1.2000000000000002
+          ],
+          "top_m": [
+            0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "name": "bottom",
+          "position_m": [
+            0,
+            0,
+            1.2000000000000002
+          ]
+        },
+        {
+          "name": "top",
+          "position_m": [
+            0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": [],
+      "traversal_note": "Suggested continuous ramp for automatic walking. Visible treads are not a physics collider.",
+      "side_boundaries": [
+        {
+          "start_m": [
+            -1.0,
+            0,
+            1.2000000000000002
+          ],
+          "end_m": [
+            -1.0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        },
+        {
+          "start_m": [
+            1.0,
+            0,
+            1.2000000000000002
+          ],
+          "end_m": [
+            1.0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stair-narrow",
+      "file": "models/stair-narrow.glb",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -1.2000000476837158
+        ],
+        "max": [
+          0.5,
+          1.2000000476837158,
+          1.2000000476837158
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        1.2000000476837158,
+        2.4000000953674316
+      ],
+      "triangles": 720,
+      "mesh_count": 1,
+      "bytes": 52984,
+      "sha256": "fcf5c2193fdbf085138e0d6091c9d6757df155f9887163a17746b81d2bda0997",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "ramp",
+          "width_m": 1,
+          "bottom_m": [
+            0,
+            0,
+            1.2000000000000002
+          ],
+          "top_m": [
+            0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "name": "bottom",
+          "position_m": [
+            0,
+            0,
+            1.2000000000000002
+          ]
+        },
+        {
+          "name": "top",
+          "position_m": [
+            0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": [],
+      "traversal_note": "Suggested continuous ramp for automatic walking. Visible treads are not a physics collider.",
+      "side_boundaries": [
+        {
+          "start_m": [
+            -0.5,
+            0,
+            1.2000000000000002
+          ],
+          "end_m": [
+            -0.5,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        },
+        {
+          "start_m": [
+            0.5,
+            0,
+            1.2000000000000002
+          ],
+          "end_m": [
+            0.5,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stair-rail",
+      "file": "models/stair-rail.glb",
+      "bounds_m": {
+        "min": [
+          -0.07000000029802322,
+          0.0,
+          -1.2599999904632568
+        ],
+        "max": [
+          0.07000000029802322,
+          2.0042219161987305,
+          1.2599999904632568
+        ]
+      },
+      "dimensions_m": [
+        0.14000000059604645,
+        2.0042219161987305,
+        2.5199999809265137
+      ],
+      "triangles": 200,
+      "mesh_count": 1,
+      "bytes": 14648,
+      "sha256": "5d0ac2f0bb6aedd17fed9ed81ee9645c92e56fb4e33220fa755edb4c5a810cd1",
+      "category": "architecture",
+      "origin": "Bottom walking elevation at front endpoint; align Z endpoints with stair-full",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "bottom",
+          "position_m": [
+            0,
+            0,
+            1.2
+          ]
+        },
+        {
+          "name": "top",
+          "position_m": [
+            0,
+            1.2,
+            -1.2
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "stair-short",
+      "file": "models/stair-short.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.4000000059604645
+        ],
+        "max": [
+          1.0,
+          0.4000000059604645,
+          0.4000000059604645
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.4000000059604645,
+        0.800000011920929
+      ],
+      "triangles": 240,
+      "mesh_count": 1,
+      "bytes": 17352,
+      "sha256": "41a58429f7eca42700a8d93ae6effa140509bee9ae21f097feb8669e735bb75b",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "ramp",
+          "width_m": 2,
+          "bottom_m": [
+            0,
+            0,
+            0.4
+          ],
+          "top_m": [
+            0,
+            0.4,
+            -0.4
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "name": "bottom",
+          "position_m": [
+            0,
+            0,
+            0.4
+          ]
+        },
+        {
+          "name": "top",
+          "position_m": [
+            0,
+            0.4,
+            -0.4
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": [],
+      "traversal_note": "Suggested continuous ramp for automatic walking. Visible treads are not a physics collider.",
+      "side_boundaries": [
+        {
+          "start_m": [
+            -1.0,
+            0,
+            0.4
+          ],
+          "end_m": [
+            -1.0,
+            0.4,
+            -0.4
+          ]
+        },
+        {
+          "start_m": [
+            1.0,
+            0,
+            0.4
+          ],
+          "end_m": [
+            1.0,
+            0.4,
+            -0.4
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stair-wide",
+      "file": "models/stair-wide.glb",
+      "bounds_m": {
+        "min": [
+          -2.0,
+          0.0,
+          -1.2000000476837158
+        ],
+        "max": [
+          2.0,
+          1.2000000476837158,
+          1.2000000476837158
+        ]
+      },
+      "dimensions_m": [
+        4.0,
+        1.2000000476837158,
+        2.4000000953674316
+      ],
+      "triangles": 720,
+      "mesh_count": 1,
+      "bytes": 52080,
+      "sha256": "3818b7654b70a522bd87a5325b215219e6e9c1fa7f2a42fbbe35e4e74a78f4f1",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [
+        {
+          "kind": "ramp",
+          "width_m": 4,
+          "bottom_m": [
+            0,
+            0,
+            1.2000000000000002
+          ],
+          "top_m": [
+            0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "name": "bottom",
+          "position_m": [
+            0,
+            0,
+            1.2000000000000002
+          ]
+        },
+        {
+          "name": "top",
+          "position_m": [
+            0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": [],
+      "traversal_note": "Suggested continuous ramp for automatic walking. Visible treads are not a physics collider.",
+      "side_boundaries": [
+        {
+          "start_m": [
+            -2.0,
+            0,
+            1.2000000000000002
+          ],
+          "end_m": [
+            -2.0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        },
+        {
+          "start_m": [
+            2.0,
+            0,
+            1.2000000000000002
+          ],
+          "end_m": [
+            2.0,
+            1.2000000000000002,
+            -1.2000000000000002
+          ]
+        }
+      ]
+    },
+    {
+      "id": "supply-cache",
+      "file": "models/supply-cache.glb",
+      "bounds_m": {
+        "min": [
+          -0.6000000238418579,
+          0.0,
+          -0.36000001430511475
+        ],
+        "max": [
+          0.6000000238418579,
+          0.7300000190734863,
+          0.4050000011920929
+        ]
+      },
+      "dimensions_m": [
+        1.2000000476837158,
+        0.7300000190734863,
+        0.7650000154972076
+      ],
+      "triangles": 660,
+      "mesh_count": 1,
+      "bytes": 45712,
+      "sha256": "008305732e5b4e4f3f95ece093240a9270edebf9b5c66cb5d49dc6af28e15198",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries.",
+      "presentation_role": "Supply, navigation or objective art. No reward, activation or timer is defined here.",
+      "state_family": "supply-cache",
+      "state": "closed"
+    },
+    {
+      "id": "supply-cache-open",
+      "file": "models/supply-cache-open.glb",
+      "bounds_m": {
+        "min": [
+          -0.6000000238418579,
+          0.0,
+          -0.4779053330421448
+        ],
+        "max": [
+          0.6000000238418579,
+          1.3195263147354126,
+          0.3684999942779541
+        ]
+      },
+      "dimensions_m": [
+        1.2000000476837158,
+        1.3195263147354126,
+        0.8464053273200989
+      ],
+      "triangles": 1092,
+      "mesh_count": 1,
+      "bytes": 73724,
+      "sha256": "b0224104fea39534e05c645b6ea21e88984116662ed02de481ef3d5d7c18f366",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries.",
+      "presentation_role": "Supply, navigation or objective art. No reward, activation or timer is defined here.",
+      "state_family": "supply-cache",
+      "state": "open"
+    },
+    {
+      "id": "wall-broken",
+      "file": "models/wall-broken.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          0.7900000214576721,
+          0.3075000047683716
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.7900000214576721,
+        0.5575000047683716
+      ],
+      "triangles": 644,
+      "mesh_count": 1,
+      "bytes": 45500,
+      "sha256": "72866a8ec7a343b544a8a98f8cdec1cd51c1de2c82635d5a1a4196f4cd71eac9",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.325,
+            0
+          ],
+          "size_m": [
+            2,
+            0.65,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-buttress",
+      "file": "models/wall-buttress.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          1.7999999523162842,
+          0.8999999761581421
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        1.7999999523162842,
+        1.149999976158142
+      ],
+      "triangles": 632,
+      "mesh_count": 1,
+      "bytes": 43064,
+      "sha256": "63af3861b8120f6a17bc19cffa350ea839dd85a5a274b0be6acfc5f9970c0782",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.9,
+            0
+          ],
+          "size_m": [
+            2,
+            1.8,
+            0.5
+          ]
+        },
+        {
+          "center_m": [
+            -0.7,
+            0.8,
+            0.56
+          ],
+          "size_m": [
+            0.26,
+            1.6,
+            0.68
+          ]
+        },
+        {
+          "center_m": [
+            0.7,
+            0.8,
+            0.56
+          ],
+          "size_m": [
+            0.26,
+            1.6,
+            0.68
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-corner",
+      "file": "models/wall-corner.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        "max": [
+          1.0,
+          0.949999988079071,
+          1.0575000047683716
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.949999988079071,
+        2.0575000047683716
+      ],
+      "triangles": 1140,
+      "mesh_count": 1,
+      "bytes": 76248,
+      "sha256": "ee88dcb569bb117b8f5b2714c8db1f5d66047569056b140e0ba527f0587a890b",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.475,
+            0.75
+          ],
+          "size_m": [
+            2,
+            0.95,
+            0.5
+          ]
+        },
+        {
+          "center_m": [
+            -0.75,
+            0.475,
+            -0.25
+          ],
+          "size_m": [
+            0.5,
+            0.95,
+            1.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-end",
+      "file": "models/wall-end.glb",
+      "bounds_m": {
+        "min": [
+          -0.30000001192092896,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          0.30000001192092896,
+          1.0499999523162842,
+          0.3075000047683716
+        ]
+      },
+      "dimensions_m": [
+        0.6000000238418579,
+        1.0499999523162842,
+        0.5575000047683716
+      ],
+      "triangles": 420,
+      "mesh_count": 1,
+      "bytes": 28944,
+      "sha256": "a489afe788dc02d06caf0d4fb36c1f53aca5d146822f48ab1011e7531ae33dcb",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.525,
+            0
+          ],
+          "size_m": [
+            0.6,
+            1.05,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -0.3,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            0.3,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-grille",
+      "file": "models/wall-grille.glb",
+      "bounds_m": {
+        "min": [
+          -0.75,
+          -2.3841858265427618e-08,
+          -0.14000004529953003
+        ],
+        "max": [
+          0.75,
+          1.2000000476837158,
+          4.435501566035782e-08
+        ]
+      },
+      "dimensions_m": [
+        1.5,
+        1.200000071525574,
+        0.1400000896545457
+      ],
+      "triangles": 720,
+      "mesh_count": 1,
+      "bytes": 48752,
+      "sha256": "e03defe0d5921136395eed86e0fb5c3a53f1715a92537a053bfd8bee71466dfe",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-long",
+      "file": "models/wall-long.glb",
+      "bounds_m": {
+        "min": [
+          -2.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          2.0,
+          0.949999988079071,
+          0.3075000047683716
+        ]
+      },
+      "dimensions_m": [
+        4.0,
+        0.949999988079071,
+        0.5575000047683716
+      ],
+      "triangles": 840,
+      "mesh_count": 1,
+      "bytes": 56780,
+      "sha256": "054589602aa3bde3ce76d31b65619b68435c990a4c521d88373fbe0b5d12350e",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.475,
+            0
+          ],
+          "size_m": [
+            4,
+            0.95,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-low",
+      "file": "models/wall-low.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          0.3799999952316284,
+          0.2874999940395355
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.3799999952316284,
+        0.5374999940395355
+      ],
+      "triangles": 480,
+      "mesh_count": 1,
+      "bytes": 32856,
+      "sha256": "121624752481b142767e99312c174b9dd7c4febeedfd1d027f10075f07dd505b",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.19,
+            0
+          ],
+          "size_m": [
+            2,
+            0.38,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-short",
+      "file": "models/wall-short.glb",
+      "bounds_m": {
+        "min": [
+          -0.5,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          0.5,
+          0.949999988079071,
+          0.3075000047683716
+        ]
+      },
+      "dimensions_m": [
+        1.0,
+        0.949999988079071,
+        0.5575000047683716
+      ],
+      "triangles": 480,
+      "mesh_count": 1,
+      "bytes": 32864,
+      "sha256": "549a7301c8d99a2db63d391f5706e1a1f29a8697942cf14109f297eed8bfe01b",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.475,
+            0
+          ],
+          "size_m": [
+            1,
+            0.95,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -0.5,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            0.5,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-straight",
+      "file": "models/wall-straight.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          0.949999988079071,
+          0.3075000047683716
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        0.949999988079071,
+        0.5575000047683716
+      ],
+      "triangles": 600,
+      "mesh_count": 1,
+      "bytes": 40760,
+      "sha256": "c37f69733a0947a77de3ada77cfe9473fb2fcd5a210f5324c9905f356acfc6cd",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.475,
+            0
+          ],
+          "size_m": [
+            2,
+            0.95,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-tall",
+      "file": "models/wall-tall.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          1.7999999523162842,
+          0.3075000047683716
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        1.7999999523162842,
+        0.5575000047683716
+      ],
+      "triangles": 600,
+      "mesh_count": 1,
+      "bytes": 40940,
+      "sha256": "f7d3efbf504151748af2eed85b4848c082f9c42b40c6c7d3264126f99d61654b",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.9,
+            0
+          ],
+          "size_m": [
+            2,
+            1.8,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": []
+    },
+    {
+      "id": "wall-window",
+      "file": "models/wall-window.glb",
+      "bounds_m": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.25
+        ],
+        "max": [
+          1.0,
+          2.299999952316284,
+          0.3075000047683716
+        ]
+      },
+      "dimensions_m": [
+        2.0,
+        2.299999952316284,
+        0.5575000047683716
+      ],
+      "triangles": 1680,
+      "mesh_count": 1,
+      "bytes": 113860,
+      "sha256": "97c15f5ec804a9ebc127c75328c00e7c16c740ac840f053b840d643e1bb2aa3d",
+      "category": "architecture",
+      "origin": "Ground center",
+      "collision": [
+        {
+          "center_m": [
+            0,
+            0.325,
+            0
+          ],
+          "size_m": [
+            2,
+            0.65,
+            0.5
+          ]
+        },
+        {
+          "center_m": [
+            -0.8,
+            1.15,
+            0
+          ],
+          "size_m": [
+            0.4,
+            2.3,
+            0.5
+          ]
+        },
+        {
+          "center_m": [
+            0.8,
+            1.15,
+            0
+          ],
+          "size_m": [
+            0.4,
+            2.3,
+            0.5
+          ]
+        }
+      ],
+      "walk_surfaces": [],
+      "connections": [
+        {
+          "name": "left",
+          "position_m": [
+            -1.0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "right",
+          "position_m": [
+            1.0,
+            0,
+            0
+          ]
+        }
+      ],
+      "moving_parts": [],
+      "sockets": [],
+      "opening": {
+        "clear_width_m": 1.2,
+        "clear_height_m": 1.4,
+        "sill_height_m": 0.65,
+        "depth_m": 0.5
+      }
+    },
+    {
+      "id": "wave-rock",
+      "file": "models/wave-rock.glb",
+      "bounds_m": {
+        "min": [
+          -0.7629308700561523,
+          0.0,
+          -0.4744320213794708
+        ],
+        "max": [
+          0.7069149017333984,
+          0.6000000238418579,
+          0.5615637302398682
+        ]
+      },
+      "dimensions_m": [
+        1.4698457717895508,
+        0.6000000238418579,
+        1.035995751619339
+      ],
+      "triangles": 104,
+      "mesh_count": 1,
+      "bytes": 10032,
+      "sha256": "3852584a3f455c665167cc6113d8e64904d9428ccb0151c94981b3e04f8f216c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    },
+    {
+      "id": "waymarker",
+      "file": "models/waymarker.glb",
+      "bounds_m": {
+        "min": [
+          -0.4000000059604645,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          0.4000000059604645,
+          1.399999976158142,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        0.800000011920929,
+        1.399999976158142,
+        0.4000000059604645
+      ],
+      "triangles": 208,
+      "mesh_count": 1,
+      "bytes": 15524,
+      "sha256": "fcca02e6034737932c8505165ee55ca7c883afb0fd303c8e54197d9f68574d04",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries.",
+      "presentation_role": "Supply, navigation or objective art. No reward, activation or timer is defined here."
+    },
+    {
+      "id": "wreck-hull",
+      "file": "models/wreck-hull.glb",
+      "bounds_m": {
+        "min": [
+          -1.5499999523162842,
+          0.0,
+          -0.6000000238418579
+        ],
+        "max": [
+          1.5499999523162842,
+          1.324568748474121,
+          0.6000000238418579
+        ]
+      },
+      "dimensions_m": [
+        3.0999999046325684,
+        1.324568748474121,
+        1.2000000476837158
+      ],
+      "triangles": 192,
+      "mesh_count": 1,
+      "bytes": 14280,
+      "sha256": "9ec4fd2e38fe2277ec55b8f9b9c0bc4df5daa5fc55cfb40fc656c5a0e5b33b3b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "placement_note": "Decorative until runtime assigns collision or interaction. Keep large props at boundaries."
+    }
+  ]
+}
