@@ -1,7 +1,8 @@
 # Crow model study 01
 
 The game uses the armed crow in [`combat/`](combat/README.md): a 20-bone
-rig with a weapon grip, idle and run loops, the sword combo, and two swords.
+exported rig with a feather grip, ten motion clips, and two swords. Its
+Blender source also has editable hand targets and elbow poles.
 [`export/`](export/README.md) holds the earlier unarmed export (Idle, Run,
 and an Attack pose study) with its inspector and loop-timing helper.
 
@@ -15,7 +16,8 @@ independent of this directory.
 The game draws the crow live in 3D (see `docs/models.md`). It loads
 `combat/crow-combat.glb` and the swords in `combat/` straight from this
 directory; `src/presentation/assets/crow.ts` registers them, with the clip
-timings and the combo's four sections copied from `combat/model-info.json`.
+timings and the combo's four sections generated from `combat/model-info.json`
+into `src/presentation/assets/crow-timing.ts` by the exporter.
 Every character is the crow for now; the Swordsman holds her equipped sword
 and plays the combo's sections as her four moves (`characterLooks` in
 `src/presentation/looks.ts`). One run cycle covers 110 game units, an
@@ -23,10 +25,14 @@ artistic choice rather than the art's stride, and the run plays backwards
 when she backs away from where she aims.
 
 To bring model changes into the game, rebuild and export the combat crow
-(`combat/README.md`), then update `src/presentation/assets/crow.ts` if clip
-timings or combo sections changed. `pnpm check` verifies each file has
+(`combat/README.md`); export alone preserves manual edits in the saved
+Blender file and updates the game's timing metadata. `pnpm check` verifies each file has
 exactly the clips its spec lists (`test/looks.test.ts`). Then check the
 crow in the game on the network address at phone size.
+
+## Earlier unarmed and static studies
+
+The remaining sections document the previous studies, not the current combat asset.
 
 `animate.py` reads `crow.blend` without overwriting it, then writes
 `crow-animated.blend` with 12 bones, weighted meshes, and named Idle/Run
