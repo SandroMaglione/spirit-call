@@ -84,11 +84,18 @@ export const view = {
   wallHeight: 64,
   /** Front walls are drawn low and translucent so they never hide the player. */
   frontWallHeight: 12,
-  wallTop: 0x3a4658,
-  wallSideLight: 0x2c3645,
-  wallSideDark: 0x222a36,
+  /** Walls and pillars: their top shows this color; their sides are shaded by the light. */
+  wall: 0x3a4658,
   /** Pillars standing in front of the player are drawn this transparent. */
   occluderAlpha: 0.35,
+  /**
+   * Light on the 3D scene: light from the sky (`sky` from above, `ground`
+   * from below, blended by which way a face points) and the sun from the
+   * north-east (`sun` points toward it). A face lying flat shows exactly its
+   * own color (sky and sun add up to 1 on it); east faces are dimmer, south
+   * faces darker still.
+   */
+  light: { sky: 0xffffff, ground: 0x8c8c8c, skyIntensity: 0.62, sun: { x: 0.6, y: 1.6, z: -0.3 }, sunIntensity: 0.41 },
   player: 0x4ecdc4,
   /** Each character's body color, so a switch is seen at once (and her switch button matches). */
   characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff } satisfies Record<CharacterId, number>,

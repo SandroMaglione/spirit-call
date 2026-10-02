@@ -153,7 +153,7 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
       return
     }
     refs.root.style.top = `${zone.center.y - zone.radius}px`
-    refs.root.style.right = `${services.host.app.screen.width - zone.center.x - zone.radius}px`
+    refs.root.style.right = `${services.host.size.width - zone.center.x - zone.radius}px`
     refs.face.style.width = refs.face.style.height = `${zone.radius * 2}px`
   })
 })

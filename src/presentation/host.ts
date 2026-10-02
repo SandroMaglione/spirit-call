@@ -1,13 +1,16 @@
 import { NodeRegistry } from "@typeonce/bevy-ts-pixi"
-import { Application, Container, Graphics } from "pixi.js"
+import { DirectionalLight, Group, HemisphereLight, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import { actionButtons, teamButtons } from "../config/input.ts"
 import type { ActionButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
+import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
+import { makeCamera, placeCamera } from "./camera.ts"
 import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
-import type { HudRefs, ProjectileNode, RenderAssets, RenderHostValue, RenderNode } from "./host-types.ts"
-import { drawFloor } from "./nodes.ts"
+import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
+import { disposeNode, floorLayers, makeAssets, makeFloor } from "./nodes.ts"
+import { Shapes } from "./shapes.ts"
 
 /** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
 const padLabels: Record<ActionButton, string> = { attack: "ATTACK", special: "", dash: "DASH", ultimate: "" }
@@ -91,53 +94,65 @@ export interface BrowserHost {
 }
 
 export const createBrowserHost = async (mount: HTMLElement, arena: { readonly width: number; readonly height: number }): Promise<BrowserHost> => {
-  const app = new Application()
-  await app.init({ antialias: true, background: view.background, resizeTo: mount, autoDensity: true, resolution: window.devicePixelRatio })
+  // Phones have very dense screens: past 2 device pixels per CSS pixel the cost grows faster than the sharpness.
+  const renderer = new WebGLRenderer({ antialias: true, powerPreference: "high-performance" })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setClearColor(view.background)
+  renderer.autoClear = false
+  // A frame is two renders (the scene, then the overlay): count both.
+  renderer.info.autoReset = false
+  const canvas = renderer.domElement
+  canvas.style.display = "block"
   const hud = createHud()
-  mount.replaceChildren(app.canvas, hud.root)
+  mount.replaceChildren(canvas, hud.root)
 
-  const discRadius = 16
-  const assets: RenderAssets = {
-    disc: app.renderer.generateTexture(new Graphics().circle(0, 0, discRadius).fill({ color: 0xffffff })),
-    discRadius,
-    shadow: app.renderer.generateTexture(new Graphics().ellipse(0, 0, discRadius, discRadius * projection.squash).fill({ color: 0x000000 }))
+  const size = { width: 1, height: 1 }
+  const resize = () => {
+    size.width = Math.max(1, mount.clientWidth)
+    size.height = Math.max(1, mount.clientHeight)
+    renderer.setSize(size.width, size.height)
   }
+  resize()
+  const observer = new ResizeObserver(resize)
+  observer.observe(mount)
 
-  const world = new Container()
-  // Projection as a transform: rotate 45°, then squash vertically.
-  const ground = new Container()
-  ground.scale.set(projection.zoom, projection.zoom * projection.squash)
-  const groundRotated = new Container()
-  groundRotated.rotation = Math.PI / 4
-  ground.addChild(groundRotated)
-  groundRotated.addChild(drawFloor(arena.width, arena.height))
-  const telegraphs = new Graphics()
-  const groundMarks = new Graphics()
-  groundRotated.addChild(telegraphs, groundMarks)
+  const assets = makeAssets()
+  const scene = new Scene()
+  const camera = makeCamera()
+  const light = view.light
+  // Light intensities are physical: π makes a fully lit face show its own color.
+  scene.add(new HemisphereLight(light.sky, light.ground, light.skyIntensity * Math.PI))
+  const sun = new DirectionalLight(0xffffff, light.sunIntensity * Math.PI)
+  sun.position.set(light.sun.x, light.sun.y, light.sun.z)
+  scene.add(sun)
 
-  const actors = new Container()
-  actors.sortableChildren = true
-  // Slash trails: the floor's projection, lifted to waist height, over the actors.
-  const air = new Container()
-  air.scale.set(projection.zoom, projection.zoom * projection.squash)
-  air.position.set(0, -view.slashTrail.height * projection.zoom)
-  const airRotated = new Container()
-  airRotated.rotation = Math.PI / 4
-  air.addChild(airRotated)
-  const trails = new Graphics()
-  airRotated.addChild(trails)
-  const overlay = new Graphics()
-  const fxLayer = new Container()
-  world.addChild(ground, actors, air, overlay, fxLayer)
+  const grid = new Shapes({ order: 1 }).onFloor(floorLayers.grid)
+  scene.add(makeFloor(arena.width, arena.height, grid), grid.mesh)
+  grid.flush()
+  const telegraphs = new Shapes({ order: 2 }).onFloor(floorLayers.telegraphs)
+  const groundMarks = new Shapes({ order: 3 }).onFloor(floorLayers.marks)
+  // Slash trails: at waist height, over the actors.
+  const trails = new Shapes({ depthTest: false, order: 10 }).onFloor(worldHeight(projection, view.slashTrail.height))
+  const actors = new Group()
+  scene.add(telegraphs.mesh, groundMarks.mesh, trails.mesh, actors)
 
-  const screen = new Container()
-  const reticle = new Graphics()
-  screen.addChild(reticle)
-  app.stage.addChild(world, screen)
+  // The overlay: a flat scene in screen pixels (y down) drawn over the 3D one.
+  const overlayScene = new Scene()
+  const overlayCamera = new OrthographicCamera(0, 1, 0, -1, -10, 10)
+  const flipped = new Group()
+  flipped.scale.y = -1
+  overlayScene.add(flipped)
+  // `projected` follows the camera: its coordinates are `toScreen`'s.
+  const projected = new Group()
+  const overlay = new Shapes({ depthTest: false })
+  const fx = new Fx(projected, projection.squash)
+  projected.add(overlay.mesh)
+  const reticle = new Shapes({ depthTest: false })
+  flipped.add(projected, reticle.mesh)
 
   const cursor = { x: 0, y: 0, over: false }
   const onMove = (event: PointerEvent) => {
-    const rect = app.canvas.getBoundingClientRect()
+    const rect = canvas.getBoundingClientRect()
     cursor.x = event.clientX - rect.left
     cursor.y = event.clientY - rect.top
     cursor.over = true
@@ -145,48 +160,87 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   const onLeave = () => {
     cursor.over = false
   }
-  app.canvas.addEventListener("pointermove", onMove)
-  app.canvas.addEventListener("pointerleave", onLeave)
+  canvas.addEventListener("pointermove", onMove)
+  canvas.addEventListener("pointerleave", onLeave)
 
   // Projectiles come and go constantly, so their nodes are pooled.
   const projectilePool: Array<ProjectileNode> = []
   const nodes = NodeRegistry.make<RenderNode>({
     attach: (node) => {
-      actors.addChild(node.root)
+      actors.add(node.root)
     },
     detach: (node) => {
-      actors.removeChild(node.root)
+      actors.remove(node.root)
       if (node.kind === "projectile") projectilePool.push(node)
-      else node.root.destroy({ children: true })
+      else disposeNode(node)
     }
   })
 
-  return {
-    host: {
-      app,
-      assets,
-      world,
-      ground: groundRotated,
-      groundMarks,
-      telegraphs,
-      actors,
-      overlay,
-      fx: new Fx(fxLayer, assets, projection.squash),
-      trails: new SlashTrails(trails),
-      projectilePool,
-      screen,
-      reticle,
-      cursor,
-      hud: hud.refs,
-      stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
-      feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, recoil: new Map() }
+  const cameraView = { center: { x: 0, y: 0 }, pixelsPerUnit: 1, offset: { x: 0, y: 0 } }
+  const layers = [telegraphs, groundMarks, trails, overlay, reticle]
+  const host: RenderHostValue = {
+    renderer,
+    canvas,
+    size,
+    scene,
+    camera,
+    view: cameraView,
+    assets,
+    actors,
+    groundMarks,
+    telegraphs,
+    overlay,
+    projected,
+    fx,
+    trails: new SlashTrails(trails),
+    reticle,
+    projectilePool,
+    cursor,
+    hud: hud.refs,
+    stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
+    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, recoil: new Map() },
+    toCanvas: (world, height) => {
+      const center = toScreen(projection, cameraView.center)
+      const at = toScreenAt(projection, world, height)
+      const scale = cameraView.pixelsPerUnit / projection.zoom
+      return {
+        x: size.width / 2 + (at.x - center.x) * scale + cameraView.offset.x,
+        y: size.height / 2 + (at.y - center.y) * scale + cameraView.offset.y
+      }
     },
+    render: () => {
+      placeCamera(camera, projection, { width: size.width, height: size.height, ...cameraView })
+      // The overlay follows the same view: projected point p shows at center + (p - center's projection) × scale + offset.
+      const center = toScreen(projection, cameraView.center)
+      const scale = cameraView.pixelsPerUnit / projection.zoom
+      projected.scale.set(scale, scale, 1)
+      projected.position.set(size.width / 2 - center.x * scale + cameraView.offset.x, size.height / 2 - center.y * scale + cameraView.offset.y, 0)
+      overlayCamera.right = size.width
+      overlayCamera.bottom = -size.height
+      overlayCamera.updateProjectionMatrix()
+      fx.flush()
+      for (const layer of layers) layer.flush()
+      renderer.info.reset()
+      renderer.clear()
+      renderer.render(scene, camera)
+      renderer.clearDepth()
+      renderer.render(overlayScene, overlayCamera)
+    }
+  }
+
+  return {
+    host,
     nodes,
     destroy() {
-      app.canvas.removeEventListener("pointermove", onMove)
-      app.canvas.removeEventListener("pointerleave", onLeave)
+      canvas.removeEventListener("pointermove", onMove)
+      canvas.removeEventListener("pointerleave", onLeave)
+      observer.disconnect()
       nodes.clear()
-      app.destroy(true)
+      for (const node of projectilePool) node.orb.material.dispose()
+      for (const layer of [grid, ...layers]) layer.dispose()
+      fx.dispose()
+      assets.dispose()
+      renderer.dispose()
       mount.replaceChildren()
     }
   }

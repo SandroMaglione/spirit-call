@@ -44,7 +44,7 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
 }, ({ events, resources, services }) => {
   const sounds = services.sounds
   const camera = resources.camera.get()
-  const screen = services.host.app.screen
+  const screen = services.host.size
   const zoom = viewZoom(screen)
   /** Left-right position on screen, softened so nothing plays fully in one ear. */
   const pan = (at: Vec2): number => {

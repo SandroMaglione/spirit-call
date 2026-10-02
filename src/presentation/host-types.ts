@@ -1,26 +1,65 @@
-import type { Application, Container, Graphics, Sprite, Texture } from "pixi.js"
+import type { BufferGeometry, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
+import type { Vec2 } from "../math/vec.ts"
 
 import type { Fx } from "./fx.ts"
+import type { Shapes } from "./shapes.ts"
 import type { SlashTrails } from "./trails.ts"
 
-export type ProjectileNode = { readonly kind: "projectile"; readonly root: Container; readonly orb: Sprite; readonly shadow: Sprite }
+/**
+ * An upright body standing at `root` (its feet, on the floor). `pivot` sits
+ * inside it at the feet, so a hit can squash and lean the body over them;
+ * `body` is the mesh, tinted through its own material.
+ */
+export interface ActorParts {
+  readonly root: Group
+  readonly pivot: Group
+  readonly body: Mesh<BufferGeometry, MeshLambertMaterial>
+  /** The body's height in world units (what floats over its head goes above it). */
+  readonly height: number
+  /** The body's radius (half its width), in world units. */
+  readonly radius: number
+}
+
+export type ProjectileNode = {
+  readonly kind: "projectile"
+  readonly root: Group
+  readonly orb: Mesh<BufferGeometry, MeshBasicMaterial>
+  readonly shadow: Mesh<BufferGeometry, MeshBasicMaterial>
+}
+
+/** A wall or pillar: a box. `depth` and `bounds` (its outline on screen, in projected coordinates) let pillars fade in front of the player. */
+export type WallNode = {
+  readonly kind: "wall"
+  readonly root: Group
+  readonly material: MeshLambertMaterial
+  readonly depth: number
+  readonly bounds: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+}
 
 export type RenderNode =
-  | { readonly kind: "player"; readonly root: Container; readonly body: Graphics }
-  | { readonly kind: "enemy"; readonly root: Container; readonly body: Graphics }
+  | ({ readonly kind: "player" } & ActorParts)
+  | ({ readonly kind: "enemy" } & ActorParts)
   | ProjectileNode
-  | { readonly kind: "wall"; readonly root: Graphics }
+  | WallNode
 
-/** Textures generated once at startup and shared by many sprites. */
+/** Geometry and materials made once and shared by many nodes. */
 export interface RenderAssets {
-  /** White disc, radius `discRadius`, tinted per use. */
-  readonly disc: Texture
-  readonly discRadius: number
-  /** Soft black ellipse used as a ground shadow. */
-  readonly shadow: Texture
+  /** A flat disc of radius 1 lying on the floor (blob shadows). */
+  readonly disc: BufferGeometry
+  /** Actors' blob shadow. */
+  readonly shadow: MeshBasicMaterial
+  /** Projectiles' smaller, lighter shadow. */
+  readonly projectileShadow: MeshBasicMaterial
+  /** A low-poly ball of radius 1 (projectiles). */
+  readonly orb: BufferGeometry
+  /** A thin low-poly puck of radius 1 (thrown discs). */
+  readonly puck: BufferGeometry
+  /** A capsule body of this radius and height, standing on y = 0, made once per size. */
+  body(radius: number, height: number): BufferGeometry
+  dispose(): void
 }
 
 export interface SkillSlotRefs {
@@ -94,7 +133,7 @@ export interface FeedbackState {
   kick: { x: number; y: number }
   /** Zoom punch, 0..1, decaying (heavy blows). */
   punch: number
-  /** Recoil of recently hit bodies, by entity id: age, duration, screen direction, and strength. */
+  /** Recoil of recently hit bodies, by entity id: age, duration, the blow's direction on the floor, and strength. */
   readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
 }
 
@@ -113,31 +152,37 @@ export interface FrameStats {
 }
 
 /**
- * Pixi objects the render schedule draws into.
+ * What the render schedule draws into: a 3D scene seen by an orthographic
+ * camera (see `camera.ts`), and a flat overlay drawn over it.
  *
- * - `world` is offset by the camera each frame.
- * - `ground` holds world-space drawings (floor, aim marks, telegraphs): its
- *   transform is the isometric projection, so circles drawn there appear as
- *   ellipses on the floor.
- * - `actors` holds upright things placed at projected points, painter-sorted.
- * - `trails` (slash trails) has the floor's projection, lifted to waist
- *   height and drawn above actors.
- * - `overlay` is drawn above actors in projected coordinates (health bars).
- * - `screen` is not moved by the camera (reticle).
+ * - `actors` holds bodies, projectiles, and walls, each placed at its point
+ *   on the floor; the depth buffer sorts them.
+ * - `telegraphs` and `groundMarks` lie on the floor (world coordinates):
+ *   circles drawn there are circles on the floor.
+ * - `trails` (slash trails) lie at waist height, drawn over the actors.
+ * - `overlay` and the effects (`fx`) are drawn over everything in projected
+ *   coordinates (`toScreen`), moving with the camera (health bars, numbers).
+ * - `reticle` is in screen pixels.
  */
 export interface RenderHostValue {
-  readonly app: Application
+  readonly renderer: WebGLRenderer
+  readonly canvas: HTMLCanvasElement
+  /** The canvas size in CSS pixels, kept current. */
+  readonly size: { width: number; height: number }
+  readonly scene: Scene
+  readonly camera: OrthographicCamera
+  /** Where the camera looks this frame (set by `ApplyCamera`). */
+  readonly view: { readonly center: { x: number; y: number }; pixelsPerUnit: number; readonly offset: { x: number; y: number } }
   readonly assets: RenderAssets
-  readonly world: Container
-  readonly ground: Container
-  readonly groundMarks: Graphics
-  readonly telegraphs: Graphics
-  readonly actors: Container
-  readonly overlay: Graphics
+  readonly actors: Group
+  readonly groundMarks: Shapes
+  readonly telegraphs: Shapes
+  readonly overlay: Shapes
+  /** The overlay layer that follows the camera (projected coordinates). */
+  readonly projected: Group
   readonly fx: Fx
   readonly trails: SlashTrails
-  readonly screen: Container
-  readonly reticle: Graphics
+  readonly reticle: Shapes
   /** Projectile nodes kept for reuse instead of being destroyed. */
   readonly projectilePool: Array<ProjectileNode>
   /** Live cursor position in canvas pixels, updated by DOM events (not the fixed step). */
@@ -145,4 +190,9 @@ export interface RenderHostValue {
   readonly hud: HudRefs
   readonly stats: FrameStats
   readonly feedback: FeedbackState
+  /** A point `height` world units above the floor point `world`, in canvas pixels, as the camera shows it this frame. */
+  toCanvas(world: Vec2, height: number): Vec2
+  /** Draws the frame. */
+  render(): void
 }
+

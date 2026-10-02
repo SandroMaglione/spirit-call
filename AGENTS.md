@@ -43,7 +43,7 @@ effects, enemy traits).
 - Simulation (`src/features/`, `src/schema.ts`, `src/schedules.ts`, physics,
   math, config): the ECS. Deterministic (time and randomness come from the
   world's `Time` and `Rng`), headless, and tested without a browser.
-- `src/presentation/`: rendering (Pixi), sounds, effects, and the in-arena
+- `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
   HUD (plain DOM).
 - `src/ui/`: the menu and results screens (Preact with signals). The UI
   mirrors state and calls plain action functions; it never changes game

@@ -3,6 +3,8 @@
  * numbers, recoil, dust, explosions, heals, and elements (reactions, and
  * motes off bodies in a state).
  */
+import { Vector3 } from "three"
+
 import { isMelee } from "../content/attacks.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
@@ -87,11 +89,12 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       feedback.punch = 1
     }
     if (!hit.killed) {
+      const along = normalizeOr(hit.direction, { x: 0, y: 1 })
       feedback.recoil.set(hit.entity, {
         age: 0,
         life: heavy ? impact.recoil.heavySeconds : impact.recoil.seconds,
-        x: direction.x,
-        y: direction.y,
+        x: along.x,
+        y: along.y,
         strength: heavy ? 1.4 : 1
       })
     }
@@ -192,8 +195,9 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
 
 /**
  * Hit reactions on enemy bodies: a recoil after each blow (the body squashes,
- * leans away from the blow, and shifts back, springing back over the
- * recoil's life), and dust kicked up while sliding from a strong push.
+ * leans away from the blow over its feet, and shifts back, springing back
+ * over the recoil's life), and dust kicked up while sliding from a strong
+ * push.
  */
 export const ReactToHits = Game.System("Shooter/ReactToHits", {
   queries: {
@@ -209,17 +213,21 @@ export const ReactToHits = Game.System("Shooter/ReactToHits", {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "enemy") continue
     const recoil = recoils.get(entity.id.value)
+    const pivot = node.pivot
     if (recoil === undefined || recoil.age >= recoil.life) {
-      node.body.scale.set(1)
-      node.body.rotation = 0
-      node.body.position.set(0, 0)
+      pivot.scale.setScalar(1)
+      pivot.quaternion.identity()
+      pivot.position.set(0, 0, 0)
     } else {
       // Sharp at the blow, springing back with a small overshoot.
       const t = recoil.age / recoil.life
       const k = (1 - t) * (1 - t) * Math.cos(t * Math.PI * 1.2) * recoil.strength
-      node.body.scale.set(1 + spec.recoil.squash * 0.8 * k, 1 - spec.recoil.squash * k)
-      node.body.rotation = recoil.x * spec.recoil.lean * k
-      node.body.position.set(recoil.x * spec.recoil.shift * k, recoil.y * spec.recoil.shift * 0.5 * k)
+      const widen = 1 + spec.recoil.squash * 0.8 * k
+      pivot.scale.set(widen, 1 - spec.recoil.squash * k, widen)
+      // Tipped over the feet, the top away from the blow: about the floor axis across the push.
+      leanAxis.set(recoil.y, 0, -recoil.x)
+      pivot.quaternion.setFromAxisAngle(leanAxis, spec.recoil.lean * k)
+      pivot.position.set(recoil.x * spec.recoil.shift * k, 0, recoil.y * spec.recoil.shift * k)
     }
     const push = data.knockback.get()
     const speed = Math.hypot(push.x, push.y)
@@ -231,6 +239,8 @@ export const ReactToHits = Game.System("Shooter/ReactToHits", {
     if (recoil.age >= recoil.life) recoils.delete(id)
   }
 })
+
+const leanAxis = new Vector3()
 
 const fxDust = (host: RenderHostValue, at: Vec2, push: Vec2, speed: number): void => {
   const screen = toScreen(projection, at)

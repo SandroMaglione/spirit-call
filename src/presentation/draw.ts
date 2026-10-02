@@ -2,7 +2,7 @@
  * Drawing helpers shared by the render systems.
  */
 import type { Area } from "../physics/areas.ts"
-import type { Graphics } from "pixi.js"
+import type { Shapes } from "./shapes.ts"
 
 /** Linear blend of two 0xRRGGBB colors. */
 export const mixColor = (from: number, to: number, t: number): number => {
@@ -14,23 +14,21 @@ export const mixColor = (from: number, to: number, t: number): number => {
   return channel(16) | channel(8) | channel(0)
 }
 
-/** Draws an attack area in world space (the ground layer projects it). */
-export const drawArea = (g: Graphics, area: Area, progress: number, style: { readonly color: number; readonly fill: number; readonly outline: number }): void => {
+/** Draws an attack area on a floor layer, filled up to `progress` (0..1). */
+export const drawArea = (g: Shapes, area: Area, progress: number, style: { readonly color: number; readonly fill: number; readonly outline: number }): void => {
   switch (area.kind) {
     case "circle":
-      g.circle(area.center.x, area.center.y, area.radius).fill({ color: style.color, alpha: style.fill })
-      g.circle(area.center.x, area.center.y, area.radius).stroke({ width: 3, color: style.color, alpha: style.outline })
-      if (progress > 0) g.circle(area.center.x, area.center.y, area.radius * progress).fill({ color: style.color, alpha: style.fill + 0.2 })
+      g.fillCircle(area.center.x, area.center.y, area.radius, style.color, style.fill)
+      g.strokeCircle(area.center.x, area.center.y, area.radius, 3, style.color, style.outline)
+      if (progress > 0) g.fillCircle(area.center.x, area.center.y, area.radius * progress, style.color, style.fill + 0.2)
       return
     case "cone": {
       const angle = Math.atan2(area.direction.y, area.direction.x)
-      const sector = (radius: number) => g
-        .moveTo(area.origin.x, area.origin.y)
-        .arc(area.origin.x, area.origin.y, radius, angle - area.halfAngle, angle + area.halfAngle)
-        .lineTo(area.origin.x, area.origin.y)
-      sector(area.radius).fill({ color: style.color, alpha: style.fill })
-      sector(area.radius).stroke({ width: 3, color: style.color, alpha: style.outline })
-      if (progress > 0) sector(area.radius * progress).fill({ color: style.color, alpha: style.fill + 0.2 })
+      const from = angle - area.halfAngle
+      const to = angle + area.halfAngle
+      g.fillSector(area.origin.x, area.origin.y, area.radius, from, to, style.color, style.fill)
+      g.strokeSector(area.origin.x, area.origin.y, area.radius, from, to, 3, style.color, style.outline)
+      if (progress > 0) g.fillSector(area.origin.x, area.origin.y, area.radius * progress, from, to, style.color, style.fill + 0.2)
       return
     }
     case "line":
@@ -41,9 +39,9 @@ export const drawArea = (g: Graphics, area: Area, progress: number, style: { rea
         const end = { x: area.origin.x + area.direction.x * length, y: area.origin.y + area.direction.y * length }
         return [area.origin.x + side.x, area.origin.y + side.y, end.x + side.x, end.y + side.y, end.x - side.x, end.y - side.y, area.origin.x - side.x, area.origin.y - side.y]
       }
-      g.poly(strip(area.length)).fill({ color: style.color, alpha: style.fill })
-      g.poly(strip(area.length)).stroke({ width: 3, color: style.color, alpha: style.outline })
-      if (progress > 0) g.poly(strip(area.length * progress)).fill({ color: style.color, alpha: style.fill + 0.2 })
+      g.fillPoly(strip(area.length), style.color, style.fill)
+      g.strokePoly(strip(area.length), 3, style.color, style.outline)
+      if (progress > 0) g.fillPoly(strip(area.length * progress), style.color, style.fill + 0.2)
       return
     }
   }

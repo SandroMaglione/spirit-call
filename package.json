@@ -21,12 +21,13 @@
     "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
     "@typeonce/bevy-ts-pixi": "link:../../bevy-ts/packages/pixi",
     "effect": "4.0.0-rc.118",
-    "pixi.js": "8.17.1",
-    "preact": "10.29.8"
+    "preact": "10.29.8",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@typeonce/bevy-ts-devtools": "link:../../bevy-ts/packages/devtools",
     "@types/node": "25.5.0",
+    "@types/three": "0.186.0",
     "oxlint": "1.86.0",
     "tsx": "4.21.0",
     "typescript": "7.0.2",

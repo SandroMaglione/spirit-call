@@ -1,13 +1,13 @@
 /**
  * The scene: render nodes for renderables, the camera, interpolated actor
- * positions, and walls fading in front of the player.
+ * positions, and pillars fading in front of the player.
  */
 import { RenderSync } from "@typeonce/bevy-ts-pixi"
 import { projection, view, viewZoom } from "../config/view.ts"
-import { depthOf, toScreen } from "../math/iso.ts"
+import { depthOf, screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
 import { Camera, Game, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Wall } from "../schema.ts"
-import { createNode, wallDepth } from "./nodes.ts"
+import { createNode } from "./nodes.ts"
 
 /**
  * Creates nodes for new renderables (placed once from their position) and
@@ -21,11 +21,9 @@ export const SyncNodes = RenderSync.system(Game, {
   select: { position: Game.Query.read(Position) },
   services: { host: RenderHost },
   create: ({ renderable, services }) => createNode(renderable, services.host.assets, services.host.projectilePool),
-  apply: (node, { renderable, data }) => {
+  apply: (node, { data }) => {
     const position = data.position.get()
-    const screen = toScreen(projection, position)
-    node.root.position.set(screen.x, screen.y)
-    node.root.zIndex = renderable.kind === "wall" ? wallDepth(renderable.placement, depthOf(position)) : depthOf(position)
+    node.root.position.set(position.x, 0, position.y)
   }
 })
 
@@ -45,14 +43,14 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   feedback.kick.y *= kickDecay
   feedback.punch = feedback.punch * Math.exp(-view.impact.punchDecay * seconds) < 0.01 ? 0 : feedback.punch * Math.exp(-view.impact.punchDecay * seconds)
   // Shake jitters; a kick moves the view along the blow and eases back.
-  const offsetX = (Math.random() * 2 - 1) * feedback.shake - feedback.kick.x
-  const offsetY = (Math.random() * 2 - 1) * feedback.shake - feedback.kick.y
-  const center = toScreen(projection, lerp({ x: camera.prevX, y: camera.prevY }, camera, services.clock.alpha))
-  const screen = services.host.app.screen
+  const target = services.host.view
+  target.offset.x = (Math.random() * 2 - 1) * feedback.shake - feedback.kick.x
+  target.offset.y = (Math.random() * 2 - 1) * feedback.shake - feedback.kick.y
+  const center = lerp({ x: camera.prevX, y: camera.prevY }, camera, services.clock.alpha)
+  target.center.x = center.x
+  target.center.y = center.y
   // Phones zoom out (see view.camera); the camera stays centered on the player. Heavy blows punch in.
-  const zoom = viewZoom(screen) * (1 + view.impact.zoomPunch * feedback.punch)
-  services.host.world.scale.set(zoom)
-  services.host.world.position.set(Math.round(screen.width / 2 - center.x * zoom + offsetX), Math.round(screen.height / 2 - center.y * zoom + offsetY))
+  target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + view.impact.zoomPunch * feedback.punch)
   services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
 })
 
@@ -64,15 +62,14 @@ export const InterpolateActors = RenderSync.interpolate(Game, {
   current: Position,
   clock: RenderClock,
   place: (node, position) => {
-    const screen = toScreen(projection, position)
-    node.root.position.set(screen.x, screen.y)
-    node.root.zIndex = depthOf(position)
+    node.root.position.set(position.x, 0, position.y)
   }
 })
 
 /**
- * Fades pillars that stand in front of the player, so the player is never
- * fully hidden. Runs after actors are placed for this frame.
+ * Fades pillars that stand in front of the player and overlap her on
+ * screen, so the player is never fully hidden. Runs after actors are placed
+ * for this frame.
  */
 export const FadeOccluders = Game.System("Shooter/FadeOccluders", {
   queries: {
@@ -83,18 +80,28 @@ export const FadeOccluders = Game.System("Shooter/FadeOccluders", {
 }, ({ queries, services }) => {
   const players = queries.player.each().flatMap(({ entity }) => {
     const node = services.nodes.get(entity.id)
-    return node === undefined ? [] : [{ bounds: node.root.getBounds(), depth: node.root.zIndex }]
+    if (node?.kind !== "player") return []
+    const feet = { x: node.root.position.x, y: node.root.position.z }
+    const at = toScreen(projection, feet)
+    const top = at.y - screenHeight(projection, node.height)
+    const half = node.radius * projection.zoom
+    return [{ depth: depthOf(feet), left: at.x - half, right: at.x + half, top, bottom: at.y }]
   })
   for (const { entity, data } of queries.occluders.each()) {
     const renderable = data.renderable.get()
     if (renderable.kind !== "wall" || renderable.placement !== "sorted") continue
     const node = services.nodes.get(entity.id)
-    if (node === undefined) continue
-    const bounds = node.root.getBounds()
+    if (node?.kind !== "wall") continue
+    const bounds = node.bounds
     const hides = players.some((player) =>
-      player.depth < node.root.zIndex &&
-      player.bounds.x < bounds.x + bounds.width && player.bounds.x + player.bounds.width > bounds.x &&
-      player.bounds.y < bounds.y + bounds.height && player.bounds.y + player.bounds.height > bounds.y)
-    node.root.alpha = hides ? view.occluderAlpha : 1
+      player.depth < node.depth &&
+      player.left < bounds.x + bounds.width && player.right > bounds.x &&
+      player.top < bounds.y + bounds.height && player.bottom > bounds.y)
+    const opacity = hides ? view.occluderAlpha : 1
+    if (node.material.opacity === opacity) continue
+    node.material.opacity = opacity
+    node.material.transparent = hides
+    // A see-through pillar must not hide what stands behind it.
+    node.material.depthWrite = !hides
   }
 })
