@@ -10,6 +10,8 @@ export function prepareCrowClips(animations, metadata) {
     if (spec.loop_seconds == null) return clip;
     const duration = spec.loop_seconds;
     for (const track of clip.tracks) {
+      // Optimized glTF exports store a constant channel as one key.
+      if (track.times.length === 1) continue;
       const last = track.times[track.times.length - 1];
       if (Math.abs(last - duration) < 1e-6) continue;
       if (Math.abs(last - spec.last_key_seconds) > 1e-6 || Math.abs(track.times[0]) > 1e-6) {
