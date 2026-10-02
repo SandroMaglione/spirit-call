@@ -214,6 +214,18 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       checkAmounts(problems, at, tuning, tier.rewards.currencies)
     })
   }
+
+  // Discoveries pay crystals only (gold comes from runs), and every character can be discovered.
+  for (const [id, spec] of Object.entries(tuning.discoveries)) {
+    const where = `discovery ${id}`
+    if (spec.check.kind === "clearWith" && !has(tuning.characters, spec.check.character)) problems.push(`${where}: unknown character ${spec.check.character}`)
+    checkAmounts(problems, where, tuning, spec.rewards)
+    if (Object.keys(spec.rewards).some((currency) => currency !== "crystals")) problems.push(`${where}: rewards must be crystals only`)
+  }
+  for (const character of Object.keys(tuning.characters)) {
+    const found = Object.values(tuning.discoveries).some((spec) => spec.check.kind === "clearWith" && spec.check.character === character)
+    if (!found) problems.push(`character ${character}: needs a discovery for clearing with her`)
+  }
   positive(problems, "hardcore reset", { days: tuning.reset.days })
 
   const starter = newAccount

@@ -13,6 +13,7 @@ import type { StarterSet } from "../content/account.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
+import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
 import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { ResetSpec, TrackId } from "../content/hardcore.ts"
@@ -102,6 +103,8 @@ export interface Account {
   readonly quests: { readonly [Id in QuestId]?: QuestProgress }
   /** Each hardcore tier attempted so far, by track and tier number. */
   readonly hardcore: { readonly [Id in TrackId]?: { readonly [tier: number]: TierProgress } }
+  /** The discoveries made, and when (epoch milliseconds); each pays its rewards once. */
+  readonly discoveries: { readonly [Id in DiscoveryId]?: { readonly madeAt: number } }
   /** What the menu starts from: the team last entered with (in order; see `teamSize`), and what for. */
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly play: Play }
 }
@@ -194,6 +197,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     equipment: {},
     quests: {},
     hardcore: {},
+    discoveries: {},
     selection: { team: [starter.selection.character], play: { kind: "quest", quest: starter.selection.quest } }
   }
   const items: Array<Item> = [
@@ -383,6 +387,8 @@ export interface Earned {
   readonly pay: Amounts
   /** What the account levels gained gave. */
   readonly levelRewards: Amounts
+  /** The discoveries the run made (their rewards are paid with them). */
+  readonly discoveries: ReadonlyArray<DiscoveryId>
   /** A quest's first-clear rewards, or a tier's rewards for the period, when this run earned them. */
   readonly rewards: Rewards | null
 }
@@ -404,6 +410,18 @@ export const clearPay = (pay: RunPay, enemyLevel: number): number => pay.base + 
 const times = (amounts: Amounts, count: number): Amounts =>
   Object.fromEntries(Object.entries(amounts).map(([id, amount]) => [id, (amount ?? 0) * count]).filter(([, amount]) => amount !== 0))
 
+/** Whether a run of a quest or tier that ended with `result` makes a discovery checked by `check`. */
+export const discovered = (check: DiscoveryCheck, result: RunResultValue): boolean => {
+  switch (check.kind) {
+    case "clearWith":
+      return result.cleared && result.team.includes(check.character)
+    case "fullTeam":
+      return result.cleared && result.team.length >= teamSize
+    case "reaction":
+      return result.reactions.includes(check.reaction)
+  }
+}
+
 /** `progress` with one more attempt, and a clear when `result` is one (the first clear's time kept). */
 const counted = (progress: QuestProgress, result: RunResultValue, now: number): QuestProgress => ({
   attempts: progress.attempts + 1,
@@ -417,8 +435,9 @@ const counted = (progress: QuestProgress, result: RunResultValue, now: number): 
  * far it got (see `runPay`); each account level gained gives crystals. A
  * run counts toward what it played: clearing a quest the first time gives
  * its rewards, and clearing a hardcore tier gives its rewards the first
- * time in each period. A run of nothing (a dev quick start) only adds to
- * the totals and experience (as at enemy level 1), and pays no gold.
+ * time in each period; each discovery it makes pays its rewards once. A run
+ * of nothing (a dev quick start) only adds to the totals and experience (as
+ * at enemy level 1): it pays no gold and makes no discoveries.
  * Characters do not grow from runs: they are trained with gold (see
  * `train`), so none falls behind on the bench.
  */
@@ -460,6 +479,14 @@ export const recordRun = (
     if (rewarded) rewards = { ...spec.rewards, unlocks: [] }
   }
   next = earn(next, pay)
+  const made: Array<DiscoveryId> = []
+  if (play !== null) {
+    for (const [id, spec] of Object.entries(tuning.discoveries) as Array<[DiscoveryId, (typeof tuning.discoveries)[DiscoveryId]]>) {
+      if (next.discoveries[id] !== undefined || !discovered(spec.check, result)) continue
+      made.push(id)
+      next = earn({ ...next, discoveries: { ...next.discoveries, [id]: { madeAt: now } } }, spec.rewards)
+    }
+  }
   if (rewards !== null) {
     experience += rewards.experience
     next = rewards.unlocks.reduce((owner, item) => unlock(tuning, owner, item, now), earn(next, rewards.currencies))
@@ -468,7 +495,7 @@ export const recordRun = (
   const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
   const levelRewards = times(progression.account.levelUp, level.after - level.before)
   next = earn(next, levelRewards)
-  return { account: next, earned: { experience, level, pay, levelRewards, rewards } }
+  return { account: next, earned: { experience, level, pay, levelRewards, discoveries: made, rewards } }
 }
 
 /** `character`'s equipment in `account` (its own when it has none saved). */

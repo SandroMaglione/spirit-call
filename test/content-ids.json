@@ -57,5 +57,14 @@
   "tracks": [
     "gauntlet",
     "siege"
+  ],
+  "discoveries": [
+    "withSwordsman",
+    "withGunner",
+    "withTidecaller",
+    "fullTeam",
+    "steam",
+    "wallSlam",
+    "carried"
   ]
 }

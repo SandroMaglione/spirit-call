@@ -42,6 +42,15 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           )}
         </div>
       )}
+      {earned !== null && earned.discoveries.length > 0 && (
+        <div class="results__discoveries">
+          {earned.discoveries.map((id) => (
+            <span key={id}>
+              Discovered: {tuning.discoveries[id].name} {describeAmounts(tuning, tuning.discoveries[id].rewards, "+")}
+            </span>
+          ))}
+        </div>
+      )}
       {earned?.rewards != null && earned.rewards.unlocks.length > 0 && (
         <div class="results__unlocked">Unlocked: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</div>
       )}

@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
+import type { DiscoveryId } from "../src/content/discoveries.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
 import type { QuestId } from "../src/content/quests.ts"
 
 const fresh = () => createAccount(defaultTuning, newAccount, "account-1", 1000)
 const quest = (id: QuestId): Play => ({ kind: "quest", quest: id })
 const tier = (track: TrackId, number: number): Play => ({ kind: "tier", track, tier: number })
+/** The crystals `made` discoveries paid. */
+const discoveryCrystals = (made: ReadonlyArray<DiscoveryId>): number => made.reduce((sum, id) => sum + (defaultTuning.discoveries[id].rewards.crystals ?? 0), 0)
 
 describe("account rules", () => {
   it("a new account owns exactly the starter set, with its characters equipped with their own gear", () => {
@@ -90,6 +93,33 @@ describe("account rules", () => {
     expect(won.earned.pay).toEqual({ gold: clear(level) })
   })
 
+  it("makes discoveries: clears with a character or a full team, and reactions set off", () => {
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const, "gunner" as const], reactions: ["ignite" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
+    expect(discovered({ kind: "clearWith", character: "gunner" }, run)).toBe(true)
+    expect(discovered({ kind: "clearWith", character: "gunner" }, { ...run, cleared: false, progress: 0.9 })).toBe(false)
+    expect(discovered({ kind: "clearWith", character: "tidecaller" }, run)).toBe(false)
+    expect(discovered({ kind: "fullTeam" }, run)).toBe(false)
+    expect(discovered({ kind: "fullTeam" }, { ...run, team: ["swordsman", "gunner", "tidecaller"] })).toBe(true)
+    // A reaction counts in a lost run too.
+    expect(discovered({ kind: "reaction", reaction: "ignite" }, { ...run, cleared: false, progress: 0 })).toBe(true)
+    expect(discovered({ kind: "reaction", reaction: "steam" }, run)).toBe(false)
+  })
+
+  it("pays each discovery once, only in quests and tiers", () => {
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: ["stun" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
+    const { discoveries } = defaultTuning
+    const quick = recordRun(defaultTuning, fresh(), null, run, 2000)
+    expect(quick.earned.discoveries).toEqual([])
+    const first = recordRun(defaultTuning, fresh(), quest("theSwarm"), run, 2000)
+    expect(first.earned.discoveries).toEqual(["withSwordsman", "wallSlam"])
+    expect(first.account.discoveries).toEqual({ withSwordsman: { madeAt: 2000 }, wallSlam: { madeAt: 2000 } })
+    const crystals = discoveries.withSwordsman.rewards.crystals! + discoveries.wallSlam.rewards.crystals!
+    expect(first.account.wallet.crystals).toBe(crystals + defaultTuning.quests.theSwarm.rewards.currencies.crystals! + (first.earned.levelRewards.crystals ?? 0))
+    const again = recordRun(defaultTuning, first.account, quest("theSwarm"), run, 3000)
+    expect(again.earned.discoveries).toEqual([])
+    expect(again.account.discoveries).toEqual(first.account.discoveries)
+  })
+
   it("gives crystals for every account level gained", () => {
     const curve = defaultTuning.progression.account.curve
     const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
@@ -140,7 +170,7 @@ describe("account rules", () => {
     expect(owns(won.account, { kind: "character", id: "gunner" })).toBe(true)
     // On top of what both runs paid, and of the account level the rewards' experience reached.
     expect(won.account.wallet).toEqual({
-      crystals: rewards.currencies.crystals! + (won.earned.levelRewards.crystals ?? 0),
+      crystals: rewards.currencies.crystals! + (won.earned.levelRewards.crystals ?? 0) + discoveryCrystals(won.earned.discoveries),
       gold: (lost.account.wallet.gold ?? 0) + rewards.currencies.gold! + won.earned.pay.gold!
     })
     const again = recordRun(defaultTuning, won.account, quest("theSwarm"), { ...run, cleared: true, progress: 1 }, 4000)
@@ -219,8 +249,8 @@ describe("account rules", () => {
     const leveled = { ...fresh(), experience: 1e6 }
     const first = recordRun(defaultTuning, leveled, tier("gauntlet", 1), run, monday + 1000)
     expect(first.earned.rewards).toEqual({ ...rewards, unlocks: [] })
-    // On top of what the run pays.
-    expect(first.account.wallet).toEqual({ ...rewards.currencies, gold: rewards.currencies.gold! + first.earned.pay.gold! })
+    // On top of what the run pays (and its discoveries).
+    expect(first.account.wallet).toEqual({ crystals: rewards.currencies.crystals! + discoveryCrystals(first.earned.discoveries), gold: rewards.currencies.gold! + first.earned.pay.gold! })
     expect(first.account.hardcore.gauntlet?.[1]).toEqual({ attempts: 1, clears: 1, firstClearedAt: monday + 1000, rewardedPeriod: 10 })
     const sameWeek = recordRun(defaultTuning, first.account, tier("gauntlet", 1), run, monday + week - 1)
     expect(sameWeek.earned.rewards).toBeNull()

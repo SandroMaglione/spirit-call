@@ -32,9 +32,9 @@ effects, enemy traits).
 
 - `src/content/`: the game's content as data (characters, weapons and their
   passives, attacks, skills, enemies, challenges, quests, hardcore tracks,
-  currencies, progression numbers, the starter set). Adding content is
-  mostly adding entries; new kinds (a new effect, condition, or objective)
-  extend the vocabulary in one place.
+  discoveries, currencies, progression numbers, the starter set). Adding
+  content is mostly adding entries; new kinds (a new effect, condition, or
+  objective) extend the vocabulary in one place.
 - The arena is a black box to everything around it: it is entered with a
   team (one to three builds: character and weapon at their levels, skills),
   a challenge, and an enemy level, and reports a `RunResult`. Quests, hardcore tiers, levels,

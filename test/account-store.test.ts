@@ -99,14 +99,16 @@ describe("account store", () => {
   it("opens a save from before experience was gold (version 3), keeping the gold each character was trained with", async () => {
     const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
     const latest = JSON.parse(fresh!)
-    const v3 = JSON.stringify({ ...latest, version: 3, owned: { ...latest.owned, characters: { swordsman: { unlockedAt: 5, experience: 120 } } } })
+    const { discoveries: _, ...before } = latest
+    const v3 = JSON.stringify({ ...before, version: 3, owned: { ...latest.owned, characters: { swordsman: { unlockedAt: 5, experience: 120 } } } })
     const result = await withAccount({ [accountKey]: v3 }, (store, kv) =>
       Effect.gen(function*() {
         return { account: yield* store.get, saved: yield* savedJson(kv, accountKey) }
       }))
     // 120 experience was bought at 2 gold each.
     expect(result.account.owned.characters.swordsman).toEqual({ unlockedAt: 5, experience: 240 })
-    expect(result.saved).toMatchObject({ version: 4 })
+    expect(result.account.discoveries).toEqual({})
+    expect(result.saved).toMatchObject({ version: 4, discoveries: {} })
   })
 
   it("keeps the characters of the saved team it still owns, in order, saying when some are gone", async () => {
@@ -136,6 +138,14 @@ describe("account store", () => {
     expect(result.account.selection.play).toEqual({ kind: "tier", track: "gauntlet", tier: 2 })
     expect(result.notes[0]).toContain("hardcore track unknownTrack")
     expect(result.notes[0]).toContain("Gauntlet tier 9")
+  })
+
+  it("keeps the discoveries made, dropping ones that no longer exist", async () => {
+    const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
+    const saved = JSON.stringify({ ...JSON.parse(fresh!), discoveries: { steam: { madeAt: 5 }, oldThing: { madeAt: 6 } } })
+    const result = await withAccount({ [accountKey]: saved }, (store) => Effect.map(store.get, (account) => ({ account, notes: store.notes })))
+    expect(result.account.discoveries).toEqual({ steam: { madeAt: 5 } })
+    expect(result.notes[0]).toContain("discovery oldThing")
   })
 
   it("refuses what the account does not own, changing nothing", async () => {

@@ -284,6 +284,19 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
             })}
           </Section>
         ))}
+        <Section title={`Discoveries · ${ids(tuning.discoveries).filter((id) => account.discoveries[id] !== undefined).length} of ${ids(tuning.discoveries).length}`}>
+          {ids(tuning.discoveries).map((id) => {
+            const spec = tuning.discoveries[id]
+            const made = account.discoveries[id] !== undefined
+            return (
+              <div key={id} class={`card is-static${made ? " is-made" : ""}`}>
+                <span class="card__title">{spec.name}</span>
+                <span class="card__text">{spec.description}</span>
+                {made ? <span class="card__cleared">Discovered</span> : <span class="card__reward">{describeAmounts(tuning, spec.rewards, "+")}</span>}
+              </div>
+            )
+          })}
+        </Section>
       </div>
       <footer class="menu__footer">
         <span class="menu__summary">

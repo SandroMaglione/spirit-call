@@ -85,11 +85,12 @@ export const StoredAccountV3 = Schema.Struct({
 /**
  * Version 4: a character's experience is the gold trained into her (it was
  * experience bought at 2 gold each), so levels follow the new costs while
- * the gold spent is kept.
+ * the gold spent is kept; and the discoveries made.
  */
 export const StoredAccountV4 = Schema.Struct({
   ...StoredAccountV3.fields,
-  version: Schema.Literal(4)
+  version: Schema.Literal(4),
+  discoveries: Schema.Record(Schema.String, Schema.Struct({ madeAt: Schema.Number }))
 })
 
 /** Any account version ever saved. */
@@ -125,7 +126,7 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
     case 3: {
       // The gold that bought each character's experience, at the old 2 gold each.
       const characters = Object.fromEntries(Object.entries(stored.owned.characters).map(([id, owned]) => [id, { ...owned, experience: owned.experience * 2 }]))
-      return migrateAccount({ ...stored, version: 4, owned: { ...stored.owned, characters } })
+      return migrateAccount({ ...stored, version: 4, owned: { ...stored.owned, characters }, discoveries: {} })
     }
     case 4:
       return stored
