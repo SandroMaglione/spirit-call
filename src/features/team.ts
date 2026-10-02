@@ -15,6 +15,7 @@
  */
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { WeaponId } from "../content/weapons.ts"
 import { bySlot } from "../content/skills.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
@@ -55,7 +56,7 @@ import { initialWeapon } from "./weapons.ts"
 export const makeMember = (build: ResolvedBuild, slot: number) =>
   Game.Command.spawn(
     ...fighterParts({ stats: build.stats, affinities: {} }),
-    [Member, { slot, character: build.character }],
+    [Member, { slot, character: build.character, weapon: build.weapon }],
     [Passives, build.passives],
     [Weapon, initialWeapon(build)],
     [Skills, initialSkills(build)],
@@ -76,15 +77,16 @@ const fresh = (at: Vec2): Carried => ({
   dash: { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }
 })
 
-/** `character`'s body on the field at `at`: her size and look, and what it carries. */
-export const fieldParts = (tuning: TuningValue, character: CharacterId, at: Vec2, carried: Carried) => {
+/** `member`'s body on the field at `at`: her size and look (with her weapon), and what it carries. */
+export const fieldParts = (tuning: TuningValue, member: { readonly character: CharacterId; readonly weapon: WeaponId }, at: Vec2, carried: Carried) => {
+  const { character, weapon } = member
   const { radius, hurtboxRadius } = tuning.characters[character]
   return [
     ...bodyParts({ at, faction: "player", radius, hurtboxRadius }, carried.motion),
     [Player, {}],
     [Aim, carried.aim],
     [Dash, carried.dash],
-    [Renderable, { kind: "player", character, radius }]
+    [Renderable, { kind: "player", character, weapon, radius }]
   ] as const
 }
 
@@ -97,7 +99,7 @@ export const SpawnTeam = Game.System("Shooter/SpawnTeam", {
   resources.team.get().slice(0, teamSize).forEach((build, slot) => {
     const resolved = resolveBuild(tuning, build)
     const member = makeMember(resolved, slot)
-    if (slot === 0) commands.spawnIn(RunScope, Game.Command.insert(member, ...fieldParts(tuning, resolved.character, at, fresh(at))))
+    if (slot === 0) commands.spawnIn(RunScope, Game.Command.insert(member, ...fieldParts(tuning, resolved, at, fresh(at))))
     else commands.spawnIn(RunScope, member)
   })
 })
@@ -173,6 +175,7 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
     entity: entity.id,
     slot: data.member.get().slot,
     character: data.member.get().character,
+    weapon: data.member.get().weapon,
     alive: data.health.get().current > 0
   }))
   const fell = field.data.health.get().current <= 0
@@ -194,11 +197,11 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
     dash: { ...dash, remaining: 0, buffered: 0 }
   }
   // The body leaves the one on the field (the same components any body has), and her attack is interrupted.
-  const outgoing = field.data.member.get().character
+  const outgoing = field.data.member.get()
   for (const [component] of fieldParts(tuning, outgoing, at, carried)) commands.remove(field.entity.id, component)
   if (incoming === undefined) return
   commands.insert(field.entity.id, [Weapon, initialWeapon({ attack: field.data.weapon.get().attack })])
-  commands.insert(incoming.entity, ...fieldParts(tuning, incoming.character, at, carried))
+  commands.insert(incoming.entity, ...fieldParts(tuning, incoming, at, carried))
   resources.teamSwitch.set({ cooldown: tuning.team.switchCooldown })
   events.action.emit({ kind: "switch", at, character: incoming.character, fell })
 })

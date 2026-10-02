@@ -44,7 +44,7 @@ describe("batches", () => {
 describe("render nodes", () => {
   it("give characters the body their look says, standing on a pivot", () => {
     const { assets, pool } = setup()
-    const node = createNode({ kind: "player", character: "swordsman", radius: 16 }, assets, pool)
+    const node = createNode({ kind: "player", character: "swordsman", weapon: "trainingBlade", radius: 16 }, assets, pool)
     if (node.kind !== "player") throw new Error("expected a player")
     expect(characterLooks.swordsman.kind).toBe("model")
     expect(node.body.moments).not.toBeNull()

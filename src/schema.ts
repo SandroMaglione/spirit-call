@@ -45,7 +45,8 @@ export const Player = Descriptor.Tag("Shooter/Player")
  * health, stats, state, energy, skills, and weapon for the whole run, on the
  * field or on the bench.
  */
-export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId }>()("Shooter/Member")
+/** A team member: her slot, who she is, and the weapon she carries. */
+export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly weapon: WeaponId }>()("Shooter/Member")
 /** Unit direction the entity aims at. */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
 
@@ -340,7 +341,7 @@ export const Respawns = Descriptor.Component<{ readonly at: Vec2; readonly delay
 export const PendingSpawn = Descriptor.Component<{ readonly kind: EnemyKind; readonly at: Vec2; readonly remaining: number; readonly duration: number }>()("Shooter/PendingSpawn")
 
 export type RenderableValue =
-  | { readonly kind: "player"; readonly character: CharacterId; readonly radius: number }
+  | { readonly kind: "player"; readonly character: CharacterId; readonly weapon: WeaponId; readonly radius: number }
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number }
   | { readonly kind: "wall"; readonly box: Box; readonly placement: "back" | "front" | "sorted" }
