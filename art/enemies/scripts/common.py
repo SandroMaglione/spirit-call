@@ -270,6 +270,12 @@ def export(kind):
     info = {'height': height, 'triangles': triangles, 'bones': len(rig.data.bones),
             'bytes': path.stat().st_size, 'clips': clips}
     (folder/'model-info.json').write_text(json.dumps(info, indent=2)+'\n')
+    module = ROOT.parents[1] / 'src/presentation/assets/enemies' / (kind+'.ts')
+    module.parent.mkdir(exist_ok=True)
+    module.write_text('// Generated from the saved Blender source by art/enemies/scripts/common.py.\n'
+        + 'import url from "../../../../art/enemies/'+kind+'/'+kind+'.glb?url"\n'
+        + 'import type { ModelSpec } from "../../models.ts"\n\n'
+        + 'export const '+kind+'Model = { url,'+json.dumps({'height': height, 'clips': clips}, indent=2)[1:]+' satisfies ModelSpec\n')
     print('ENEMY_EXPORTED', kind, json.dumps(info))
 
 def render(kind):

@@ -92,9 +92,15 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
 
 const capsule = (kind: EnemyKind): BodyLook => ({ kind: "capsule", ...view.enemies[kind] })
 
+const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({
+  kind: "model", model, batched: true,
+  widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor,
+  moments: { idle: "Idle", run: { clip: kind === "dummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
+})
+
 export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   dummy: capsule("dummy"),
-  chaser: capsule("chaser"),
+  chaser: enemyModel("chaser", "enemyChaser", 68),
   shooter: capsule("shooter"),
   brute: capsule("brute"),
   swarmer: capsule("swarmer"),
