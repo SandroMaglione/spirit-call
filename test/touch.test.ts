@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import { skillSlots } from "../src/content/skills.ts"
+import { touchLayout } from "../src/config/input.ts"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
@@ -126,6 +128,11 @@ describe("touch controls", () => {
     const [first] = thrown.runtime.inspect(World).grenades
     expect(thrown.runtime.inspect(World).grenades).toHaveLength(spec.shells)
     expect(Math.hypot(first!.to.x - center.x, first!.to.y - center.y)).toBeCloseTo(spec.maxRange * defaultTuning.touch.tapThrowRange, 6)
+  })
+
+  it("lets both skill buttons be dragged to aim, since either slot may hold an aimed skill (the Cyclone and the Barrage are ultimates)", () => {
+    const layout = touchLayout({ width: 844, height: 390 })
+    for (const slot of skillSlots) expect(layout.buttons[slot].aimRadius, slot).toBeGreaterThan(0)
   })
 
   it("switches back to keyboard and mouse as soon as they are used", () => {
