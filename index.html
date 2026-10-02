@@ -11,20 +11,24 @@
       html, body { margin: 0; height: 100%; background: #0d1117; overflow: hidden; overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
       [hidden] { display: none !important; }
       .boot-error { position: absolute; inset: 0; margin: 0; padding: 24px; overflow: auto; white-space: pre-wrap; background: #0d1117; color: #ff5d6c; font: 13px/1.5 ui-monospace, monospace; z-index: 10; }
-      /* On-screen touch controls, positioned by SyncTouchPad. */
+      /* On-screen touch controls, positioned by SyncTouchPad. Cooldowns sweep round each button (`--cd`, 0..1 left). */
       .pad { position: absolute; inset: 0; pointer-events: none; }
       .pad > * { position: absolute; left: 0; top: 0; box-sizing: border-box; border-radius: 50%; }
-      .pad__stick { border: 2px solid rgba(230, 237, 243, 0.18); background: rgba(13, 17, 23, 0.25); opacity: 0.55; transition: opacity 120ms; }
-      .pad__stick.is-active { opacity: 1; border-color: rgba(78, 205, 196, 0.6); }
-      .pad__knob { position: absolute; left: 0; top: 0; border-radius: 50%; background: rgba(78, 205, 196, 0.55); box-shadow: 0 0 12px rgba(78, 205, 196, 0.5); }
-      .pad__button { display: grid; place-content: center; overflow: hidden; border: 2px solid #30363d; background: rgba(13, 17, 23, 0.6); color: #e6edf3; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+      .pad__stick { border: 2px solid rgba(255, 255, 255, 0.25); background: radial-gradient(circle, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.18)); opacity: 0.6; transition: opacity 120ms; }
+      .pad__stick.is-active { opacity: 1; border-color: rgba(255, 255, 255, 0.45); }
+      .pad__knob { position: absolute; left: 0; top: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.4); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45); }
+      .pad__button { display: grid; place-content: center; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.55); background: radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06) 60%), rgba(16, 18, 36, 0.55); color: #fff; font: 800 italic 13px "Barlow Condensed", "Avenir Next Condensed", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
       .pad__button span { position: relative; }
-      .pad__button i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(8, 10, 14, 0.75); }
-      .pad__button.is-ready { border-color: #4ecdc4; box-shadow: 0 0 10px rgba(78, 205, 196, 0.35); }
-      .pad__button--attack { font-size: 13px; border-color: #f7c948; }
-      .pad__button--ultimate.is-ready { border-color: #ffd166; box-shadow: 0 0 14px rgba(255, 209, 102, 0.6); }
-      .pad__button.is-held { background: rgba(78, 205, 196, 0.25); transform-origin: center; }
-      .pad__aim { border: 2px solid #e6edf3; background: rgba(230, 237, 243, 0.3); }
+      .pad__button i { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(8, 10, 20, 0.7) calc(var(--cd, 0) * 1turn), transparent 0); }
+      .pad__button em { position: absolute; inset: 0; display: grid; place-items: center; font: 800 18px "Barlow Condensed", sans-serif; font-style: normal; }
+      .pad__button em:empty { display: none; }
+      .pad__button:has(em:not(:empty)) span { opacity: 0; }
+      .pad__button--attack { border-width: 3px; border-color: rgba(255, 255, 255, 0.8); font-size: 18px; }
+      .pad__button--special { border-color: color-mix(in srgb, var(--el) 50%, white); background: radial-gradient(circle at 40% 30%, color-mix(in srgb, var(--el) 85%, white), color-mix(in srgb, var(--el-deep) 85%, transparent) 70%); }
+      .pad__button--ultimate { border-color: rgba(255, 241, 184, 0.6); background: radial-gradient(circle at 40% 30%, rgba(255, 241, 184, 0.55), rgba(120, 72, 20, 0.65) 70%); }
+      .pad__button--ultimate.is-ready { border-color: #fff1b8; background: radial-gradient(circle at 40% 30%, #fff1b8, #c98a2a 75%); box-shadow: 0 0 16px rgba(255, 207, 90, 0.85); color: #2a1a05; text-shadow: none; }
+      .pad__button.is-held { filter: brightness(1.3); }
+      .pad__aim { border: 2px solid #fff; background: rgba(255, 255, 255, 0.3); }
       /* The dev monitor toggle would sit under the left thumb on touch screens. */
       @media (pointer: coarse) { .btm-toggle { display: none; } }
       /* Phones in portrait: ask to rotate. */
@@ -36,63 +40,78 @@
       #game canvas { display: block; cursor: none; }
       .hud {
         position: absolute; inset: 0; pointer-events: none;
-        font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; color: #e6edf3;
+        font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color: #eef1ff;
         /* A dark halo, so text stays readable over light floors as well as dark ones. */
         text-shadow: 0 0 3px #0d1117, 0 1px 2px #0d1117;
+        /* Accents in the element of the character on the field (or of each member, on her tab). */
+        --el: #9aa2c8; --el-deep: #2c3358;
       }
-      /* What is being played: small and out of the way, top left. */
-      .hud__quest { position: absolute; top: 12px; left: 14px; display: grid; gap: 2px; text-shadow: 0 1px 3px #000; }
-      .hud__quest-name { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #7d8590; }
-      .hud__quest-progress { font-size: 12px; color: #c9d1d9; }
-      /* The character on the field, bottom center (above the skill bar on a keyboard). */
-      .hud__vitals { position: absolute; bottom: 116px; left: 50%; transform: translateX(-50%); display: grid; justify-items: center; gap: 4px; width: 220px; text-shadow: 0 1px 3px #000; }
-      .hud[data-device="touch"] .hud__vitals { bottom: 12px; width: 180px; }
-      .hud__who { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-      .hud__health { position: relative; width: 100%; height: 7px; background: rgba(13, 17, 23, 0.8); border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
-      .hud__health-fill { position: absolute; inset: 0; width: 100%; background: linear-gradient(90deg, #ff3b3b, #ff7a6b); transition: width 120ms ease-out; }
-      .hud__health-text { font-size: 10px; color: #c9d1d9; }
-      .hud__state { padding: 1px 6px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: #0d1117; text-shadow: none; }
+      [data-element="wind"] { --el: #5be0b0; --el-deep: #1f6f5c; }
+      [data-element="fire"] { --el: #ff6a3d; --el-deep: #8a3220; }
+      [data-element="water"] { --el: #3fb4ff; --el-deep: #1d4f8c; }
+      [data-element="thunder"] { --el: #b38cff; --el-deep: #4d3591; }
+      /* What is being played, top left: its name, a mark per wave, and what is left. */
+      .hud__quest { position: absolute; top: max(10px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); display: grid; grid-template-columns: auto auto; align-items: center; gap: 2px 10px; text-shadow: 0 1px 3px #000; }
+      .hud__quest-name { font: 800 italic 19px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+      .hud__waves { display: flex; gap: 3px; }
+      .hud__waves i { width: 22px; height: 6px; border-radius: 2px; background: rgba(0, 0, 0, 0.45); transform: skewX(-20deg); }
+      .hud__waves i.is-done { background: #ffcf5a; }
+      .hud__waves i.is-current { background: rgba(255, 207, 90, 0.5); box-shadow: 0 0 6px rgba(255, 207, 90, 0.6); }
+      .hud__quest-progress { grid-column: 1 / -1; font-size: 11px; font-weight: 600; }
+      /* The character on the field, bottom center (above the skill bar on a keyboard): health, then energy toward her ultimate. */
+      .hud__vitals { position: absolute; bottom: 116px; left: 50%; transform: translateX(-50%); display: grid; gap: 3px; width: 230px; text-shadow: 0 1px 3px #000; }
+      .hud[data-device="touch"] .hud__vitals { bottom: max(6px, env(safe-area-inset-bottom)); width: 200px; }
+      .hud__who { display: flex; align-items: baseline; justify-content: center; gap: 8px; font: 800 italic 15px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+      .hud__health { position: relative; height: 9px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.25); transform: skewX(-20deg); overflow: hidden; }
+      .hud__health-fill { position: absolute; inset: 0; width: 100%; background: linear-gradient(180deg, color-mix(in srgb, var(--el) 60%, white), var(--el)); transition: width 120ms ease-out; }
+      .hud__health-text { font: 700 11px system-ui, sans-serif; font-style: normal; opacity: 0.85; }
+      .hud__energy { height: 3px; margin: 0 16px; background: rgba(0, 0, 0, 0.5); transform: skewX(-20deg); }
+      .hud__energy i { display: block; height: 100%; width: 0; background: #ffcf5a; transition: width 120ms ease-out; }
+      .hud__state { padding: 1px 6px; border-radius: 999px; font: 700 9px system-ui, sans-serif; letter-spacing: 0.1em; color: #0d1117; text-shadow: none; }
       .hud__state[hidden] { display: none; }
       .hud__state--burning { background: #ff7b2e; }
       .hud__state--soaked { background: #4aa8ff; }
       .hud__vignette { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 160px 40px rgba(255, 40, 40, 0.9); }
-      .hud__banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font-size: 44px; font-weight: 700; letter-spacing: 0.2em; color: #e6edf3; opacity: 0; text-shadow: 0 2px 12px #000; }
+      .hud__banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font: 800 italic 48px "Barlow Condensed", sans-serif; letter-spacing: 0.08em; color: #fff; opacity: 0; text-shadow: 0 2px 12px #000; white-space: nowrap; }
       .hud__banner.is-showing { animation: banner 1.8s ease-out forwards; }
       @keyframes banner { 0% { opacity: 0; transform: translate(-50%, 10px); } 15% { opacity: 1; transform: translate(-50%, 0); } 70% { opacity: 1; } 100% { opacity: 0; } }
       .hud__skills { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
-      .hud__skill { position: relative; width: 78px; padding: 8px 6px 6px; display: grid; justify-items: center; gap: 4px; background: rgba(13, 17, 23, 0.82); border: 1px solid #30363d; border-radius: 6px; overflow: hidden; font-size: 11px; color: #e6edf3; }
-      .hud__skill kbd { font: 700 14px inherit; color: #4ecdc4; }
-      .hud__skill.is-ready { border-color: #4ecdc4; box-shadow: 0 0 10px rgba(78, 205, 196, 0.35); }
-      .hud__skill--ultimate kbd { color: #ffd166; }
-      .hud__skill--ultimate.is-ready { border-color: #ffd166; box-shadow: 0 0 14px rgba(255, 209, 102, 0.6); }
-      .hud__skill i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(8, 10, 14, 0.72); pointer-events: none; }
-      /* The team: a column on the right; on touch, each face sits on its switch button. */
-      .team { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: grid; gap: 10px; }
+      .hud__skill { position: relative; width: 84px; padding: 7px 6px 6px; display: grid; justify-items: center; gap: 3px; background: rgba(16, 18, 36, 0.8); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 8px; overflow: hidden; font: 800 italic 13px "Barlow Condensed", sans-serif; text-transform: uppercase; color: #eef1ff; }
+      .hud__skill kbd { font: 700 11px system-ui, sans-serif; color: var(--el); }
+      .hud__skill.is-ready { border-color: var(--el); box-shadow: 0 0 10px color-mix(in srgb, var(--el) 45%, transparent); }
+      .hud__skill--ultimate kbd { color: #ffcf5a; }
+      .hud__skill--ultimate.is-ready { border-color: #ffcf5a; box-shadow: 0 0 14px rgba(255, 207, 90, 0.6); }
+      .hud__skill i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(8, 10, 20, 0.72); pointer-events: none; }
+      /*
+       * The team: a slanted portrait tab per member, a column on the right; on touch, each face sits on its
+       * switch button. The face's edge is her element's color; a gold diamond when her ultimate is ready; a
+       * dark fill while the next switch waits (`--wait`, 0..1 left). The one on the field is dimmed.
+       */
+      .team { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: grid; gap: 10px; --slant: polygon(24% 0, 100% 0, 76% 100%, 0 100%); }
       .team.is-touch { inset: 0; transform: none; display: block; }
       .team.is-touch .team__member { position: absolute; }
-      .team__member { --color: #4ecdc4; display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; transition: opacity 150ms; }
-      .team__face { position: relative; box-sizing: border-box; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--color); background: rgba(13, 17, 23, 0.72); transition: opacity 150ms, box-shadow 150ms; }
-      .team__face::before { content: attr(data-initial); font-size: 16px; font-weight: 700; color: var(--color); }
-      .team__face kbd { position: absolute; top: -5px; left: -5px; min-width: 14px; padding: 0 3px; border-radius: 4px; background: #21262d; border: 1px solid #30363d; font: 700 10px/14px inherit; color: #e6edf3; text-align: center; }
-      .team.is-touch .team__face kbd { display: none; }
-      /* On touch only the face and a health bar under it: names would run into the buttons below. */
-      .team.is-touch .team__member { flex-direction: column; gap: 3px; }
-      .team.is-touch .team__info span { display: none; }
-      .team.is-touch .team__hp { width: 34px; }
-      .team__face i { position: absolute; right: -2px; bottom: -2px; width: 10px; height: 10px; border-radius: 50%; display: none; border: 1px solid #0d1117; }
+      .team__member { display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; transition: opacity 150ms; }
+      .team__face { position: relative; box-sizing: border-box; width: 46px; height: 46px; transition: opacity 150ms; }
+      .team__face::before { content: ""; position: absolute; inset: 0; clip-path: var(--slant); background: var(--el); }
+      .team__portrait { position: absolute; inset: 2px; clip-path: var(--slant); background: center / cover no-repeat; background-color: #12152a; }
+      .team__wait { position: absolute; inset: 2px; clip-path: var(--slant); background: linear-gradient(0deg, rgba(0, 0, 0, 0.65) calc(var(--wait, 0) * 100%), transparent 0); display: none; }
+      .team__member.is-waiting .team__wait { display: block; }
+      .team__face kbd { position: absolute; left: -4px; bottom: -3px; padding: 0 4px; background: var(--el); clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%); font: 800 italic 12px/14px "Barlow Condensed", sans-serif; color: #0d1020; text-shadow: none; }
+      .team__member.is-ready .team__face::after { content: ""; position: absolute; right: -3px; top: -4px; width: 10px; height: 10px; transform: rotate(45deg); background: #ffcf5a; box-shadow: 0 0 8px #ffcf5a; }
+      .team__face i { position: absolute; right: 2px; bottom: -2px; width: 9px; height: 9px; border-radius: 50%; display: none; border: 1px solid #0d1117; }
       .team__face i.team__state--burning { display: block; background: #ff7b2e; }
       .team__face i.team__state--soaked { display: block; background: #4aa8ff; }
-      .team__info { display: grid; justify-items: end; gap: 3px; font-size: 10px; color: #c9d1d9; text-shadow: 0 1px 3px #000; }
-      .team__hp { display: block; width: 56px; height: 4px; border-radius: 2px; background: rgba(13, 17, 23, 0.8); overflow: hidden; }
-      .team__hp i { display: block; height: 100%; background: #7ee08a; transition: width 120ms ease-out; }
-      .team__member.is-field .team__face { box-shadow: 0 0 0 3px rgba(230, 237, 243, 0.55); }
-      .team__member.is-field .team__info { color: #ffffff; }
-      .team__member.is-ready .team__face { box-shadow: 0 0 12px 2px rgba(255, 209, 102, 0.75); }
-      .team__member.is-field.is-ready .team__face { box-shadow: 0 0 0 3px rgba(230, 237, 243, 0.55), 0 0 12px 2px rgba(255, 209, 102, 0.75); }
-      .team__member.is-waiting .team__face { opacity: 0.5; }
+      .team__info { display: grid; justify-items: end; gap: 3px; font: 800 italic 13px "Barlow Condensed", sans-serif; text-transform: uppercase; text-shadow: 0 1px 3px #000; }
+      .team__hp { display: block; width: 56px; height: 4px; background: rgba(0, 0, 0, 0.55); transform: skewX(-20deg); overflow: hidden; }
+      .team__hp i { display: block; height: 100%; background: #9fff7a; transition: width 120ms ease-out; }
+      /* On touch only the face and a health bar under it: names would run into the buttons below. */
+      .team.is-touch .team__member { flex-direction: column; gap: 4px; }
+      .team.is-touch .team__info span { display: none; }
+      .team.is-touch .team__hp { width: 36px; }
+      .team__member.is-field .team__face { opacity: 0.5; }
       .team__member.is-fallen { opacity: 0.35; filter: grayscale(1); }
-      .hud__mute { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); pointer-events: auto; font-size: 18px; line-height: 1; padding: 6px 8px; background: rgba(13, 17, 23, 0.6); border: 1px solid #30363d; border-radius: 6px; cursor: pointer; }
-      .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #7d8590; white-space: nowrap; }
+      .hud__mute { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); pointer-events: auto; width: 34px; height: 34px; padding: 0; font-size: 15px; line-height: 1; background: rgba(10, 12, 28, 0.55); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50%; cursor: pointer; }
+      .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #9aa2c8; white-space: nowrap; }
       .tuning { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 320px; display: flex; flex-direction: column; background: rgba(13, 17, 23, 0.94); border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: 12px "IBM Plex Mono", ui-monospace, monospace; z-index: 10; }
       .tuning[hidden] { display: none; }
       .tuning__header { display: grid; gap: 6px; padding: 10px 12px; border-bottom: 1px solid #30363d; }

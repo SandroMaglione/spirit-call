@@ -90,10 +90,11 @@ export interface SkillSlotRefs {
   readonly cooldown: HTMLElement
 }
 
-/** One on-screen touch button: the circle, its cooldown fill, and the drag-aim marker. */
+/** One on-screen touch button: the circle, its cooldown sweep and seconds left, and the drag-aim marker. */
 export interface TouchButtonRefs {
   readonly root: HTMLElement
   readonly cooldown: HTMLElement
+  readonly seconds: HTMLElement
   readonly aim: HTMLElement
 }
 
@@ -105,10 +106,12 @@ export interface TouchPadRefs {
   readonly buttons: { readonly [K in ActionButton]: TouchButtonRefs }
 }
 
-/** One team member's switch button: her face (key, state dot), name, and health. */
+/** One team member's switch button: her face (portrait, key, state dot), name, and health. */
 export interface TeamMemberRefs {
   readonly root: HTMLElement
   readonly face: HTMLElement
+  /** Her portrait, drawn by the showcase (see `showcase.ts`). */
+  readonly portrait: HTMLElement
   readonly state: HTMLElement
   readonly name: HTMLElement
   readonly health: HTMLElement
@@ -131,11 +134,15 @@ export interface HudRefs {
   readonly pad: TouchPadRefs
   /** What is being played (top left, small): its name and level, and how far the run is. */
   readonly quest: HTMLElement
+  /** A mark per wave: cleared, going on, to come. */
+  readonly waves: HTMLElement
   readonly progress: HTMLElement
   /** The character on the field (bottom center): her name, health, and state (burning, soaked; hidden when in none). */
   readonly name: HTMLElement
   readonly health: HTMLElement
   readonly healthText: HTMLElement
+  /** Her energy toward the ultimate. */
+  readonly energy: HTMLElement
   readonly state: HTMLElement
   readonly team: TeamRefs
   readonly banner: HTMLElement
@@ -185,7 +192,7 @@ export interface FrameStats {
  * - `trails` (slash trails) lie at waist height, drawn over the actors.
  * - `overlay` and the effects (`fx`) are drawn over everything in projected
  *   coordinates (`toScreen`), moving with the camera (health bars, numbers).
- * - `reticle` is in screen pixels.
+ * - `reticle` and `edges` (marks at the screen's edge) are in screen pixels.
  */
 export interface RenderHostValue {
   readonly renderer: WebGLRenderer
@@ -206,6 +213,7 @@ export interface RenderHostValue {
   readonly fx: Fx
   readonly trails: SlashTrails
   readonly reticle: Shapes
+  readonly edges: Shapes
   /** Projectile nodes kept for reuse instead of being destroyed. */
   readonly projectilePool: Array<ProjectileNode>
   readonly remains: EnemyRemains
