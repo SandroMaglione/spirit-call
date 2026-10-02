@@ -58,15 +58,31 @@ hit or hitbox ever comes from a clip.
 
 ## Budgets
 
-- **Characters and a few large enemies** are each drawn on their own (their
-  own skeleton and materials): fine for the team and a boss or two.
-- **Things that come in numbers** (swarms, projectiles) must be batched:
-  today they are capsules and primitives drawn as one instance batch per
-  shape (`batch.ts`). A swarm enemy's model must be a single static mesh
-  with one material, so it can join a batch the same way (its motion done
-  by moving the instance, or later by animation baked into a texture).
+- **Characters** are drawn with their own skeleton and materials.
+- **Things that come in numbers** (enemies, projectiles) must be batched.
+  Every current enemy uses one skinned mesh and one vertex-color material.
+  `animation-atlas.ts` samples its GLB clips into a shared bone texture at
+  load time; `batch.ts` supplies each instance's pose and interpolation.
+  Each enemy kind costs one body draw call, regardless of its population.
+  No per-enemy skeleton or animation mixer runs during play.
+- Enemy rigs currently use 3–8 bones and 456–1,624 triangles. Keep new
+  ordinary enemies under 2,000 triangles and 12 bones unless a measured
+  need justifies more. See `art/enemies/README.md` for sources and checks.
 - Keep a character under about 5,000 triangles and a 512 px texture; check
   new art at phone size on the network address.
+
+Enemy attack poses follow `AttackPhase` and `Attacker.elapsed` directly:
+`Windup`, `Active`, and `Recovery` stretch to content timings. Ranged attacks
+with no active interval start recovery in their release pose. The guardian's
+shield follows the simulation's shield facing independently of its attack.
+`Idle`, `Run`, `Spawn`, `Hurt`, and `Death` cover the rest of the lifecycle;
+the training dummy has no locomotion or attack clips. A killed enemy leaves
+only a drawing for its 0.7-second death clip; collision and gameplay end at
+the kill. Hit-stop freezes these drawings too.
+
+Use `?stress=300,2000,mixed` to exercise all eight animated kinds in the live
+arena (invulnerable test actors). The original `?stress=300,2000` still uses
+stationary training dummies.
 
 ## Arena
 

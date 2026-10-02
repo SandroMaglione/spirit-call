@@ -64,6 +64,24 @@ const setup = () => {
 }
 
 describe("batches", () => {
+  it("preserves independent animation frames when an animated batch grows and compacts", () => {
+    const parent = new Group()
+    const geometry = new BoxGeometry()
+    const batch = new Batch(parent, geometry, new MeshStandardMaterial(), { animated: true })
+    const members = Array.from({ length: 100 }, (_, index) => {
+      const instance = new Instance(batch)
+      instance.pose.splice(0, 4, index, index + 1, .25, -.5)
+      batch.add(instance)
+      return instance
+    })
+    batch.remove(members[10]!)
+    batch.flush()
+    const poses = geometry.getAttribute("instancePose")
+    expect(poses.count).toBe(128)
+    expect([poses.getX(10), poses.getY(10), poses.getZ(10), poses.getW(10)]).toEqual([99, 100, .25, -.5])
+    expect([poses.getX(11), poses.getY(11), poses.getZ(11), poses.getW(11)]).toEqual([11, 12, .25, -.5])
+    expect(parent.children).toHaveLength(1)
+  })
   it("keep their members packed when one leaves, and grow past their first size", () => {
     const parent = new Group()
     const batch = new Batch(parent, new BoxGeometry(), new MeshStandardMaterial())
