@@ -5,5 +5,15 @@ import { shooterModel } from "./enemies/shooter.ts"
 import { sniperModel } from "./enemies/sniper.ts"
 import { chargerModel } from "./enemies/charger.ts"
 import { bruteModel } from "./enemies/brute.ts"
+import { guardianModel } from "./enemies/guardian.ts"
 
-export const enemyModels = { enemyBrute: bruteModel, enemyCharger: chargerModel, enemySniper: sniperModel, enemyShooter: shooterModel, enemyChaser: chaserModel, enemySwarmer: swarmerModel, enemyDummy: dummyModel }
+export const enemyModels = {
+  enemyDummy: dummyModel,
+  enemyChaser: chaserModel,
+  enemyShooter: shooterModel,
+  enemyBrute: bruteModel,
+  enemySwarmer: swarmerModel,
+  enemyCharger: chargerModel,
+  enemySniper: sniperModel,
+  enemyGuardian: guardianModel
+}
