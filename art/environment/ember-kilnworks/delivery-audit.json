@@ -1,0 +1,10 @@
+{
+  "kit": "ember-kilnworks",
+  "assets": 47,
+  "triangles": 29072,
+  "glb_bytes": 1994268,
+  "pngs": 56,
+  "source_sha256": "e2e9d786bfbd0254f116d2c5e767ea63da49299eff9736b75013626167d51a59",
+  "stair_flights_connected_in_examples": 1,
+  "status": "pass"
+}

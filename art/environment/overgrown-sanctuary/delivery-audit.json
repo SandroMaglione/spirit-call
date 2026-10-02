@@ -1,0 +1,10 @@
+{
+  "kit": "overgrown-sanctuary",
+  "assets": 47,
+  "triangles": 21976,
+  "glb_bytes": 1547908,
+  "pngs": 56,
+  "source_sha256": "f1a3d68ed60df6ff2d3624ea68b906ea54c6730baacd6115997a3c2d8e70d214",
+  "stair_flights_connected_in_examples": 1,
+  "status": "pass"
+}

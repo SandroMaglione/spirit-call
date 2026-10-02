@@ -1,0 +1,10 @@
+{
+  "kit": "frostbound-monastery",
+  "assets": 47,
+  "triangles": 21928,
+  "glb_bytes": 1540896,
+  "pngs": 56,
+  "source_sha256": "5753c62be8dae5b58d2f82628c930987fd12ab8e885f3f66a9acb2ddd9e4f309",
+  "stair_flights_connected_in_examples": 1,
+  "status": "pass"
+}

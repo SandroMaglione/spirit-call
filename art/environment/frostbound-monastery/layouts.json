@@ -1,0 +1,1212 @@
+{
+  "coordinate_system": "glTF meters; +Y up; yaw around +Y",
+  "scope": "Art assembly examples, not authored gameplay levels",
+  "layouts": [
+    {
+      "name": "terrace",
+      "scene": "Frostbound monastery | terrace",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-grate",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -1.1,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            1.1,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            1.2,
+            -3.75
+          ],
+          "yaw_degrees": 0.0,
+          "open": true
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3.7,
+            1.2,
+            -2.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3.7,
+            1.2,
+            -3.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3.7,
+            1.2,
+            -2.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3.7,
+            1.2,
+            -3.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "banner",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3.4,
+            0,
+            -0.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bell",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3.5,
+            0,
+            -0.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bell-arch",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bench",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3.2,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "brazier",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2.5,
+            1.2,
+            -3.0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ]
+    },
+    {
+      "name": "crossing",
+      "scene": "Frostbound monastery | crossing",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -5,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -5,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -5,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -5,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            5,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            5,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            5,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            5,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bridge",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gate-wide",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2.4,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": true
+        },
+        {
+          "asset": "bench",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "brazier",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "ice-cluster",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            0.19999999999999996
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "lantern-post",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            0.19999999999999996
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "roof-canopy",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -1.4000000000000001
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "shrine",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -1.4000000000000001
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ]
+    },
+    {
+      "name": "enclosure",
+      "scene": "Frostbound monastery | enclosure",
+      "placements": [
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-inset",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            4,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -4.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -2,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            2,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "roof-canopy",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3.3,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "shrine",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3.3,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "snow-rocks",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            -3.5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "snowdrift",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            3.5,
+            0,
+            1.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "timber-arch",
+          "kit": "frostbound-monastery",
+          "position_m": [
+            0,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ]
+    }
+  ]
+}

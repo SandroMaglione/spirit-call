@@ -1,0 +1,125 @@
+{
+  "title": "Courtyard extension",
+  "style": "courtyard",
+  "palette": {
+    "stone": "A7A497",
+    "light": "BDB8A7",
+    "edge": "CCC3AD",
+    "dark": "66706B",
+    "accent": "6F9690",
+    "metal": "536966",
+    "wood": "877359",
+    "earth": "746C55",
+    "green": "697763",
+    "warm": "C6A66F",
+    "snow": "D8DCCF",
+    "cloth": "8C7767"
+  },
+  "assets": [
+    {
+      "id": "paving-large",
+      "recipe": "floor-large"
+    },
+    {
+      "id": "paving-cobbles",
+      "recipe": "floor-worn"
+    },
+    {
+      "id": "paving-inset",
+      "recipe": "floor-inset"
+    },
+    {
+      "id": "paving-border-corner",
+      "recipe": "floor-border-corner"
+    },
+    {
+      "id": "paving-threshold",
+      "recipe": "floor-threshold"
+    },
+    {
+      "id": "wall-short",
+      "recipe": "wall-short"
+    },
+    {
+      "id": "wall-long",
+      "recipe": "wall-long"
+    },
+    {
+      "id": "wall-tall",
+      "recipe": "wall-tall"
+    },
+    {
+      "id": "wall-broken",
+      "recipe": "wall-broken"
+    },
+    {
+      "id": "railing-straight",
+      "recipe": "railing-straight"
+    },
+    {
+      "id": "railing-corner",
+      "recipe": "railing-corner"
+    },
+    {
+      "id": "stair-short",
+      "recipe": "stair-short"
+    },
+    {
+      "id": "stair-full",
+      "recipe": "stair-full"
+    },
+    {
+      "id": "stair-wide",
+      "recipe": "stair-wide"
+    },
+    {
+      "id": "stair-rail",
+      "recipe": "stair-rail"
+    },
+    {
+      "id": "landing",
+      "recipe": "landing"
+    },
+    {
+      "id": "platform",
+      "recipe": "platform"
+    },
+    {
+      "id": "doorway",
+      "recipe": "doorway"
+    },
+    {
+      "id": "gate-wide",
+      "recipe": "gate-wide"
+    },
+    {
+      "id": "floor-grate",
+      "recipe": "floor-grate"
+    },
+    {
+      "id": "bench",
+      "recipe": "bench"
+    },
+    {
+      "id": "planter",
+      "recipe": "planter"
+    },
+    {
+      "id": "fountain-dry",
+      "recipe": "fountain"
+    },
+    {
+      "id": "urn-tall",
+      "recipe": "urn"
+    },
+    {
+      "id": "lantern",
+      "recipe": "lantern"
+    }
+  ],
+  "references": [
+    "https://braverobynart.com/deathsdoor",
+    "https://folsen.artstation.com/projects/ZeVlBN",
+    "https://blog.playstation.com/2024/01/19/genshin-impact-version-4-4-brings-new-friends-and-visual-enhancements-jan-31/"
+  ]
+}

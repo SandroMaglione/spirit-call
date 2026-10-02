@@ -1,0 +1,206 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "a3c4c3a72df8a100454589f0df88b619347d4c698a990a14ad04badc2b7cefd1",
+  "assets": [
+    {
+      "id": "bench",
+      "sha256": "2097b341960c5f84e8f2a377c4f0bbfe87c202c34446975d5da3179fcc6a202a",
+      "triangles": 480,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "doorway",
+      "sha256": "bfccd76e0fb687d9928df4c038a1d024e01228b5b8b525560cc474f26333ffc9",
+      "triangles": 1188,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 2
+    },
+    {
+      "id": "floor-grate",
+      "sha256": "cea519be62ce915454b45c412bb29355364f0ee87116c2f555fe73708fa03fed",
+      "triangles": 900,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "fountain-dry",
+      "sha256": "d6b06b5778a41da200815be41916ef3ba3fa1e9ec255ce35d7216179e43f5cc6",
+      "triangles": 352,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "gate-wide",
+      "sha256": "4fd79ff8158c0fc7b5e5e176dd5e9da60ce51e03764c76f45119adca4e24942e",
+      "triangles": 1620,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 2
+    },
+    {
+      "id": "landing",
+      "sha256": "227df90188cfea5cac9d445bd9479165f7ccb4d46f80fe8d2f0a07e1385f0d50",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "lantern",
+      "sha256": "0570c6062c3a3a54154aee332550fbcdf85bb2acf778959c7129fb0ab5b2690d",
+      "triangles": 532,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "paving-border-corner",
+      "sha256": "47c6abdcf1d4c041dd49ef446af01b6d0405720b2d09c8f279f90163fef27ff8",
+      "triangles": 120,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "paving-cobbles",
+      "sha256": "729cb2e665b7ee47713791fcc14d55702f522bd907373884284588d8783bec60",
+      "triangles": 1020,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "paving-inset",
+      "sha256": "39aced68f445d4abed2e906f3aa714da13438a71f2e350989031e6a5c3c730ae",
+      "triangles": 600,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "paving-large",
+      "sha256": "a3fd6b854ec602b426baa2d8f4a2479e959faa30a6c7a53f0810795c7a204dd4",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "paving-threshold",
+      "sha256": "70759c524430742b871b336a17f766f20b2bffb87bef7c81d3b1f19ef35a3ec5",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "planter",
+      "sha256": "15761a292cb73818e59e520c9bcdc90e158b9347a41ea3127168bebabd404bbf",
+      "triangles": 692,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "platform",
+      "sha256": "cca444d055aa8eea4aa8a050520ed8bd85624a717a15119d70ca2824751ab716",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "railing-corner",
+      "sha256": "d2cb2e312cc0f19e9e4d78a003cb73fc68f69c0397fc9744b427044279afc77d",
+      "triangles": 1500,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "railing-straight",
+      "sha256": "28153dbc45dc548842f763648ac19ec480396ec948c7957be75f033e2ed9e36a",
+      "triangles": 780,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-full",
+      "sha256": "98cbead320c4c295006ba59a25c6907be74bad356d30f28443e9a895d78d896b",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-rail",
+      "sha256": "69fad0f1cc6b234083ea0f4d8b5cddcc10ac42342cb805f4558445046bfd7fa5",
+      "triangles": 200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-short",
+      "sha256": "91fcbe3d1a03e3a555bf9358e4c6f5566ec50dc054721d6d49cdf1ff7c8882f0",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-wide",
+      "sha256": "7c2b306df5d48a4d22d5b5afd593a018855f2292776172bbec03614ca17c01f3",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "urn-tall",
+      "sha256": "e974e34d57ad966efaff801faf5ab6a587e0d7c84c254cb2d37803591386aff1",
+      "triangles": 340,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-broken",
+      "sha256": "4e784cd8301263df1baef6b9461de823b6f92185924cc56c96cc53236225a15b",
+      "triangles": 224,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-long",
+      "sha256": "d4fba5ffd4a1958196be2c07b332de608ccb3da70fc22c85b098f47b62201305",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-short",
+      "sha256": "561806a0d13fc22aa6ca347ac9999f2b33ef3e5c23f4321386816413cddfa24f",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-tall",
+      "sha256": "1a60e1eefa374f0c8f35caf4a950cde03d79926f0cbc5d684b0987de1d7bc2eb",
+      "triangles": 480,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

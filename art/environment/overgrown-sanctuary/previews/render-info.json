@@ -1,0 +1,17 @@
+{
+  "source_sha256": "f1a3d68ed60df6ff2d3624ea68b906ea54c6730baacd6115997a3c2d8e70d214",
+  "examples_sha256": "7d3459c617f29b110afa3bb243f1eba1eb01d1aed5c0c1a312d78c5a21de81ea",
+  "crow": {
+    "included": true,
+    "source_name": "crow.glb",
+    "sha256": "936199bc19624efc32302ccf07cac8ae3c49849682e0f05df9fff0d8be5b70fd",
+    "height_m": 0.95,
+    "note": "External read-only reference. Not included in exports or saved example scenes."
+  },
+  "phone_resolution": [
+    390,
+    844
+  ],
+  "phone_elevation_degrees": 30,
+  "scope": "Blender art review. Not a gameplay screenshot, device test or performance measurement."
+}

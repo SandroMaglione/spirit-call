@@ -1,0 +1,1212 @@
+{
+  "coordinate_system": "glTF meters; +Y up; yaw around +Y",
+  "scope": "Art assembly examples, not authored gameplay levels",
+  "layouts": [
+    {
+      "name": "terrace",
+      "scene": "Overgrown sanctuary | terrace",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-grate",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -1.1,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            1.1,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            1.2,
+            -3.75
+          ],
+          "yaw_degrees": 0.0,
+          "open": true
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3.7,
+            1.2,
+            -2.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3.7,
+            1.2,
+            -3.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3.7,
+            1.2,
+            -2.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3.7,
+            1.2,
+            -3.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "basin",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3.4,
+            0,
+            -0.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bush",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3.5,
+            0,
+            -0.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "fallen-log",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "fern",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3.2,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "mushrooms",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2.5,
+            1.2,
+            -3.0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ]
+    },
+    {
+      "name": "crossing",
+      "scene": "Overgrown sanctuary | crossing",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -5,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -5,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -5,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -5,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            5,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            5,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            5,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            5,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bridge",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -2.7
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gate-wide",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2.4,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": true
+        },
+        {
+          "asset": "fern",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "mushrooms",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "root-arch",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            0.19999999999999996
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "root-clump",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            0.19999999999999996
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "sapling",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -1.4000000000000001
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "shrine",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -1.4000000000000001
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ]
+    },
+    {
+      "name": "enclosure",
+      "scene": "Overgrown sanctuary | enclosure",
+      "placements": [
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-inset",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-worn",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            4,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -4.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -2,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            2,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "sapling",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3.3,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "shrine",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3.3,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "shrine-broken",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            -3.5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stump",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            3.5,
+            0,
+            1.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "timber-post",
+          "kit": "overgrown-sanctuary",
+          "position_m": [
+            0,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ]
+    }
+  ]
+}
