@@ -166,7 +166,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       `${track}-${tier}`,
       `Tier ${tier}${cleared ? " ✓" : ""}`,
       available
-        ? <span class="card__reward">Clear: +{rewards.experience} XP · {describeAmounts(tuning, rewards.currencies)}</span>
+        ? <span class="card__reward">First clear this period: +{rewards.experience} XP · {describeAmounts(tuning, rewards.currencies)}</span>
         : <span class="card__cleared">Collected · resets in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span>
     )
   }
