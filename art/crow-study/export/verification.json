@@ -1,0 +1,15 @@
+{
+  "bytes": 254560,
+  "height_meters": 2.19648814201355,
+  "armatures": 1,
+  "bones": 12,
+  "max_weights_after_import": 2,
+  "source_loop_seam_error_meters": {
+    "Idle": 0.0,
+    "Run": 0.0
+  },
+  "round_trip_max_bounds_error_meters": {
+    "Idle": 7.152557373046875e-07,
+    "Run": 5.364418029785156e-07
+  }
+}
