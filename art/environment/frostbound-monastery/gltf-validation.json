@@ -1,0 +1,615 @@
+{
+  "assets": [
+    {
+      "id": "banner",
+      "sha256": "bdcbe81fac392a255049ebc3f1581c0c22e4fe895b094f24c4dd26fab2147857",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "bell",
+      "sha256": "27b3ece2bf581d986106dec7e4de56e8a28106001800d40017a6af8c0dc4f329",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "bell-arch",
+      "sha256": "78d65b4d02ad84b015f51a96b16b6d52ea2427f2b867d56b2583763ea94b8e10",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "bench",
+      "sha256": "dbd28ee0b82dc9a5a97d1c950258f799e3ae85c08d50c83041d1a1af9dcc7d80",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "brazier",
+      "sha256": "2dbc49f0ae7191847dcea96fa8933c663a104d62c1d272b132dbdcdbe443a42a",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "bridge",
+      "sha256": "ec592b7ee43c64c935e4e348bf57e863bee5bd4b490d7ebbed4de84d42bc4ba2",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "doorway",
+      "sha256": "b160b333dc4ac9501b670b437b848797ac61a7f590869370860e33605c773cae",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-border",
+      "sha256": "2af9f8c673d07e40b5d558b47a5e24356e56db01846a31565be397dd281d7547",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-border-corner",
+      "sha256": "afd811189102c32081d8b59bef0dbb10a174351136d0d7837d1e8eb3cba65f0d",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-cracked",
+      "sha256": "b58fa157e52752e290eed942749b641088ad27bf4c16b63aaa7ac8e4fd518c2a",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-grate",
+      "sha256": "9d7ff1faac4a4a2e7ab44c3266c266d5d693fd26e1838f0b2f82f8ab940ade1a",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-inset",
+      "sha256": "a5ba59fb71e29cda75f3f7698ce4feebf4d7cd7a837203b6889eb561fdb1fa80",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-large",
+      "sha256": "21adaa2f39871d57f56bbc419d1d5177d7cd92908a50ac656ba0494be8adb24c",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-plain",
+      "sha256": "e02936fef301cd5aefe17f2b6cf91e642c5e7c6aee9cf1aaf06a69dd03eb3753",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-small",
+      "sha256": "f1d36d77016d66bb8f424fef81cb4e21677cb79463c904a0b19452001a12ca18",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-threshold",
+      "sha256": "f2efe8b5673042c528c169b45892c45c8316f77ca5964f37a5a6e73a86fbad27",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-transition",
+      "sha256": "1873baee13d486245fde73f39d9ef4ef546ec9286a15712851da4da365473c2f",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "floor-worn",
+      "sha256": "de803102e8e8eeb54c97c17c51a4c03964547adb57ac7123114d5cd2ec48e1ca",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "gate-wide",
+      "sha256": "c9810595daac5bf2ebe6aebd7b0a1a21bb6ebdd44ac38cc70e5f53d6dcbb4158",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "ice-cluster",
+      "sha256": "a37293fe1bd8f51c0bf1475b77aa0a464b6bb502a9f964ad0793adf76b8afaeb",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "landing",
+      "sha256": "c5fc0446405928913cfa81e691de20ed5a5091d81b0dab64e0ec2b27b9383f59",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "lantern-post",
+      "sha256": "ff2ccd97ea9fc30c90e4a5ece0007a8a2e87c70dcd09f5fbd45adda49d8ecf24",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-broken",
+      "sha256": "d1a2c198e7df5c8aad2f4e83ec650fb258730f671852183b132caa3d33f53025",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-large",
+      "sha256": "6bd36a562d8a86000a2a5bb908cfa5abb29393c89ec2c3bebf20d40bd9ce0aa1",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "pillar-small",
+      "sha256": "acf0fc7608e22f45ea5e7f33ef06ba36828e289f27d7d9cf5bd2f71014699f15",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "platform",
+      "sha256": "d7588954889ff7de917400563289ef68d76622008628f053afee3d26b9162b4b",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "platform-edge",
+      "sha256": "1683d01409c33f501b4540e540a8f90cbac5b95b165ed19c064bc5f03f67d33d",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "railing-corner",
+      "sha256": "c467f4601e3f3771576f6286fa83a382c83014b3f05f29409f2658d663ea3fae",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "railing-straight",
+      "sha256": "0e373b1ea5cf0b790486c77c3132a7951697de54c2ee3b16938407b5d5ea181b",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "roof-canopy",
+      "sha256": "2d7901aae2810ff745267684078279a8c6f56de61b790d655896aaf90076a92f",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "shrine",
+      "sha256": "0ff2960b1301034bb64962ab7ab7efff7c7c58c53d280c08cf3c6d8546d9ebc2",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "snow-rocks",
+      "sha256": "af07db949e756f1e7b11a2282b8741060b9d08ea7d92dd529de6bf05dcd6c232",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "snowdrift",
+      "sha256": "545d45204c001cca195e3a00f33031cc899575e61b859ea42449b147cbd08dd7",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "stair-full",
+      "sha256": "929209d908fb663ad9eb17057d2121e7338a21e5640f2fd24c4e6cf41ea935d6",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "stair-rail",
+      "sha256": "1a4f4462886bf79ab485822986c6e1189b8c4585aa51f011d68148256b3065ec",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "stair-short",
+      "sha256": "17dfbb73ece268aa00c0a2338dce67143068311a07af9a76b3d45268f09999e2",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "stair-wide",
+      "sha256": "487cdda9effe861f7803dce25cc119723ef3fbad255f8813a8b3140533346695",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "timber-arch",
+      "sha256": "98ebe2a0cab7681ba6694a1c98a87f69b7fdbf78348c5667853567734659b36c",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-broken",
+      "sha256": "cadc187a470ed8477f418887c42d841efcdc75a9046216cdcdfb071b8581f383",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-corner",
+      "sha256": "f4fa74ea6855a560ebd63663d3a375310c341e09c838f4d9d25eb0a4bd3035e6",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-end",
+      "sha256": "93fa5707f767ec34b58295913421656e9335f9b8187c592a172e8c6aca139e56",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-grille",
+      "sha256": "ab95389574b1421e8002636e46a5a1f8ced71d46ab991f68bc5d0cfbb04efedd",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-long",
+      "sha256": "a02a42454e1b76e811188097253a1fd9c93f2da328d11ee2c031ac82aac8ced3",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-low",
+      "sha256": "e5b7adc046c0789dc3804540be40f98a232a06d6d8bc39243cee79165b6db168",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-short",
+      "sha256": "a0e316585bb0918822751ab5196c9b18dbd97a6ff600e2aa478f30502c4d9f2f",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-straight",
+      "sha256": "d442d2caab121b54d54c31329f59ef5b6f485d050fbfabbf79f56a0cc7439f01",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "wall-tall",
+      "sha256": "9683d87dcb0c37dcec057970b8c28e1785bdd1bd6d0416ba1d2c34f6a7e794c7",
+      "validatorVersion": "2.0.0-dev.3.10",
+      "issues": {
+        "numErrors": 0,
+        "numWarnings": 0,
+        "numInfos": 0,
+        "numHints": 0,
+        "messages": [],
+        "truncated": false
+      }
+    }
+  ]
+}
