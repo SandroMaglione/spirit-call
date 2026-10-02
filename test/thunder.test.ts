@@ -81,24 +81,28 @@ describe("thunder", () => {
 })
 
 describe("the Stormcaller's Spark Totem (Space)", () => {
-  it("is planted at the cursor and zaps the nearest enemy in range at once, the strike jumping to the next", () => {
-    const run = range([{ x: 260, y: 0 }, { x: 260, y: 100 }], { x: 200, y: 0 }, { keys: [special(1)] })
+  it("is planted at her feet, a little toward where she faces, and zaps the nearest enemy within reach at once, the strike jumping to the next", () => {
+    const run = range([{ x: 150, y: 0 }, { x: 150, y: 100 }], { x: 200, y: 0 }, { keys: [special(1)] })
     run.step(3)
     const [totem] = run.world().totems
-    expect(totem).toBeDefined()
-    expect(Math.hypot(totem!.at.x - center.x - 200, totem!.at.y - center.y)).toBeLessThan(defaultTuning.camera.maxAimLead)
+    expect(Math.hypot(totem!.at.x - center.x - totemSpec.offset, totem!.at.y - center.y)).toBeLessThan(3)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([1000 - totemSpec.power, 1000 - totemSpec.power])
     run.step(steps(totemSpec.tick))
     expect(run.world().enemies[0]!.health).toBe(1000 - 2 * totemSpec.power)
   })
 
-  it("heals the one on the field instead, when she stands by it hurt; once she is whole, it zaps again", () => {
-    const run = range([{ x: 120, y: 0 }], { x: 30, y: 0 }, { keys: [special(1)] })
+  it("leaves enemies beyond its reach alone", () => {
+    const run = range([{ x: totemSpec.offset + totemSpec.radius + 40, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
+    run.step(3 + steps(totemSpec.tick))
+    expect(run.world().enemies[0]!.health).toBe(1000)
+  })
+
+  it("heals the one on the field instead, while she is within its reach hurt; once she is whole, it zaps again", () => {
+    const run = range([{ x: 120, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
     run.runtime.tick(Game.Schedule(Hurt(80)))
     run.step(3)
     const max = run.world().player!.max
-    const healed = 80 + (max * totemSpec.heal) / 100
-    expect(run.world().player!.current).toBeCloseTo(healed, 6)
+    expect(run.world().player!.current).toBeCloseTo(80 + (max * totemSpec.heal) / 100, 6)
     expect(run.world().enemies[0]!.health).toBe(1000)
     // Healed to the full, it turns on the enemy.
     run.step(steps(totemSpec.tick * Math.ceil((max - 80) / ((max * totemSpec.heal) / 100))) + 2)
@@ -107,16 +111,18 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
     expect(run.world().enemies[0]!.health).toBeLessThan(1000)
   })
 
-  it("zaps enemies while the one on the field is hurt but out of its heal radius", () => {
-    const run = range([{ x: 300, y: 0 }], { x: 250, y: 0 }, { keys: [special(1)] })
+  it("zaps enemies while the one on the field is hurt but has stepped out of its reach", () => {
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1), { frame: 5, press: ["left"] }, { frame: 50, release: ["left"] }] })
+    run.step(60)
+    const before = run.world().enemies[0]!.health
     run.runtime.tick(Game.Schedule(Hurt(50)))
-    run.step(3)
+    run.step(steps(totemSpec.tick) + 1)
     expect(run.world().player!.current).toBe(50)
-    expect(run.world().enemies[0]!.health).toBe(1000 - totemSpec.power)
+    expect(run.world().enemies[0]!.health).toBeLessThan(before)
   })
 
   it("keeps working after she leaves the field: it heals whoever comes in, and runs out after its time", () => {
-    const run = range([], { x: 30, y: 0 }, { team: [stormcaller, { character: "swordsman" }], keys: [special(1), { frame: 30, press: ["team2"], release: ["team2"] }] })
+    const run = range([], { x: 200, y: 0 }, { team: [stormcaller, { character: "swordsman" }], keys: [special(1), { frame: 30, press: ["team2"], release: ["team2"] }] })
     run.step(40)
     run.runtime.tick(Game.Schedule(Hurt(40)))
     run.step(steps(totemSpec.tick) + 2)
@@ -128,7 +134,7 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
 
 describe("thunder through water", () => {
   it("strikes a soaked enemy harder, with a shock", () => {
-    const run = range([{ x: 260, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
     run.runtime.tick(Game.Schedule(Soak))
     run.step(3)
     expect(run.world().enemies[0]!.health).toBeCloseTo(1000 - totemSpec.power * defaultTuning.elements.reactions.shock, 6)
@@ -139,7 +145,7 @@ describe("thunder through water", () => {
     const Puddle = Game.System("Test/Puddle", {}, ({ commands }) => {
       commands.spawnIn(RunScope, makeGround({ element: "water", radius: 400, seconds: 30 }, { x: center.x + 150, y: center.y }, 0, true))
     })
-    const run = range([{ x: 260, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
     run.runtime.tick(Game.Schedule(Puddle, Game.Schedule.applyDeferred()))
     run.step(3)
     expect(run.world().reactions).toContain("shock")

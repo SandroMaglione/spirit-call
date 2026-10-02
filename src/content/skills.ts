@@ -92,22 +92,22 @@ export interface BarrageEffect extends EffectBase {
 }
 
 /**
- * A totem planted at the aim (clamped to `maxRange`) for `seconds`. Every
- * `tick` seconds it zaps once: the character on the field, if she stands
- * within `healRadius` of it and is hurt, healing `heal` percent of her
+ * A totem planted where the caster stands, `offset` ahead of her (where she
+ * faces), for `seconds`. It reaches `radius` around it, for healing and
+ * striking alike: every `tick` seconds it zaps once, the character on the
+ * field if she is within reach and hurt, healing `heal` percent of her
  * maximum health; otherwise the nearest body of the other side within
- * `range`, a strike that jumps on `jumps` times (see `Tuning.elements.thunder`).
- * So where it stands, and where she stands, choose between damage and
- * healing. It keeps zapping after she leaves the field, for whoever is on
- * it; its strikes come from her ATK when planted.
+ * reach, a strike that jumps on `jumps` times (see `Tuning.elements.thunder`).
+ * So standing by it heals and costs its damage; stepping out lets it fight.
+ * It keeps zapping after she leaves the field, for whoever is on it; its
+ * strikes come from her ATK when planted.
  */
 export interface TotemEffect extends EffectBase {
   readonly kind: "totem"
-  readonly maxRange: number
+  readonly offset: number
   readonly seconds: number
   readonly tick: number
-  readonly range: number
-  readonly healRadius: number
+  readonly radius: number
   readonly heal: number
   readonly jumps: number
 }
@@ -257,9 +257,9 @@ export const skills = {
     effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
   }),
   /**
-   * The Stormcaller's special: a totem planted at the cursor that zaps
+   * The Stormcaller's special: a totem planted at her feet that zaps
    * enemies around it with thunder, or heals the one on the field when she
-   * stands close to it hurt (instead of zapping an enemy).
+   * stands within its reach hurt (instead of zapping an enemy).
    */
   sparkTotem: skill({
     name: "Spark Totem",
@@ -267,7 +267,7 @@ export const skills = {
     cooldown: 9,
     energy: 0,
     invulnerability: 0,
-    effect: totem({ maxRange: 300, seconds: 8, tick: 0.9, range: 240, healRadius: 90, heal: 4, jumps: 2, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
+    effect: totem({ offset: 28, seconds: 8, tick: 0.9, radius: 160, heal: 4, jumps: 2, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
   }),
   /** The Stormcaller's ultimate: thunder striking the enemies around her, jumping between them, and healing the whole team, the bench too. */
   thunderclap: skill({

@@ -40,7 +40,7 @@ import {
 } from "../schema.ts"
 import type { ActiveState, Blow, DamageValue, Faction, GroundValue, ReactionKind } from "../schema.ts"
 import { inPool } from "./ground.ts"
-import { castBlow, lobTarget } from "./skills.ts"
+import { castBlow } from "./skills.ts"
 
 /** A body thunder can strike: where it is, how big, its side, whether it is soaked or protected. */
 export interface Struck {
@@ -169,7 +169,7 @@ const strike = (
   return path
 }
 
-/** Totems: planted at the aim, clamped to their range; their first zap comes at once. */
+/** Totems: planted at the caster's feet, a little ahead of her (where she faces); their first zap comes at once. */
 export const CastTotems = Game.System("Shooter/CastTotems", {
   events: { cast: Game.System.readEvent(Cast) }
 }, ({ events, commands }) => {
@@ -177,7 +177,7 @@ export const CastTotems = Game.System("Shooter/CastTotems", {
     const effect = cast.effect
     if (effect.kind !== "totem") continue
     commands.spawnIn(RunScope, Game.Command.spawn(
-      [Position, lobTarget(effect, cast.from, cast.at)],
+      [Position, { x: cast.from.x + cast.direction.x * effect.offset, y: cast.from.y + cast.direction.y * effect.offset }],
       [Totem, { faction: cast.faction, effect, blow: castBlow(cast, effect), remaining: effect.seconds, nextTick: 0 }],
       [Renderable, { kind: "totem", element: effect.element }]
     ))
@@ -185,15 +185,15 @@ export const CastTotems = Game.System("Shooter/CastTotems", {
 })
 
 /**
- * Totems zap every tick: the one on the field, if she stands within its
- * heal radius hurt, heals; otherwise the nearest body of the other side in
- * range is struck (jumping on). A totem keeps going while its caster is on
+ * Totems zap every tick: the one on the field, if she is within reach
+ * hurt, heals; otherwise the nearest body of the other side within reach
+ * is struck (jumping on). One reach for both, touching it with the body. A totem keeps going while its caster is on
  * the bench, for whoever is on the field.
  */
 export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
   queries: {
     totems: Game.Query({ selection: { totem: Game.Query.write(Totem), position: Game.Query.read(Position) } }),
-    field: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.write(Health) }, with: [Player] }),
+    field: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), health: Game.Query.write(Health) }, with: [Player] }),
     bodies: Strikeable,
     pools: Pools
   },
@@ -214,18 +214,18 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
     let nextTick = totem.nextTick - dt
     if (nextTick <= 1e-9) {
       nextTick += effect.tick
+      const center: Struck = { id: -1, entity: null, at, radius: 0, faction: totem.faction, soaked: false, protected: false }
       const health = field?.data.health.get()
-      const close = field !== undefined && Math.hypot(field.data.position.get().x - at.x, field.data.position.get().y - at.y) <= effect.healRadius
+      const close = field !== undefined && Math.hypot(field.data.position.get().x - at.x, field.data.position.get().y - at.y) <= effect.radius + field.data.hurtbox.get().radius
       if (field !== undefined && health !== undefined && close && health.current > 0 && health.current < health.max) {
         const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)
         field.data.health.set({ current: health.current + amount, max: health.max })
         events.heal.emit({ at: field.data.position.get(), amount })
         events.zap.emit({ path: [at, field.data.position.get()], heal: true })
       } else {
-        const center: Struck = { id: -1, entity: null, at, radius: 0, faction: totem.faction, soaked: false, protected: false }
         let target: (typeof bodies)[number] | undefined
         for (const body of bodies) {
-          if (body.faction === totem.faction || body.protected || gap(center, body) > effect.range) continue
+          if (body.faction === totem.faction || body.protected || gap(center, body) > effect.radius) continue
           if (target === undefined || gap(center, body) < gap(center, target)) target = body
         }
         if (target !== undefined) strike(tuning, events, at, target, bodies, pools, { faction: totem.faction, blow: totem.blow, jumps: effect.jumps })

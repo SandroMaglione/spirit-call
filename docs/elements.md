@@ -67,12 +67,12 @@ her untouchable for a moment as it goes off (so it doubles as an escape):
 
 The Stormcaller heals through her kit, and healing always costs something:
 
-- **Her Spark Totem** is planted where she aims and zaps once a second for
-  a few seconds. A zap heals the character on the field when she stands
-  within its small heal ring and is hurt; otherwise it strikes the nearest
-  enemy in range. Where the totem stands, and where you stand, choose
-  between damage and healing: planted among the enemies it fights, but
-  healing there is risky.
+- **Her Spark Totem** is planted at her feet and zaps once a second for a
+  few seconds, within one reach for healing and striking alike. A zap heals
+  the character on the field when she is within that reach and hurt;
+  otherwise it strikes the nearest enemy within it. Staying by the totem
+  heals and costs its damage; stepping out lets it fight. Planted in the
+  middle of a fight, it does both, but healing there is risky.
 - **It keeps going off the field**: switched out, the Stormcaller's totem
   keeps zapping for whoever is on the field (what a character released
   finishes on its own).

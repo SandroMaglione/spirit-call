@@ -109,7 +109,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   }
 })
 
-/** What a skill used from `at` toward `aiming` will cover: a cut's lane, where a lob lands and its blast, a whirl's reach, a volley's shells, or a totem's reach and heal ring. */
+/** What a skill used from `at` toward `aiming` will cover: a cut's lane, where a lob lands and its blast, a whirl's reach, or a volley's shells. */
 const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): void => {
   switch (effect.kind) {
     case "cut": {
@@ -132,13 +132,7 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
       g.fillCircle(target.x, target.y, effect.radius, view.reticle, 0.08).strokeCircle(target.x, target.y, effect.radius, 2, view.reticle, 0.6)
       return
     }
-    case "totem": {
-      const target = lobTarget(effect, at, aiming)
-      g.line(at.x, at.y, target.x, target.y, 2, view.reticle, 0.35)
-      g.strokeCircle(target.x, target.y, effect.range, 2, view.reticle, 0.35)
-      g.fillCircle(target.x, target.y, effect.healRadius, view.totem.heal, 0.12).strokeCircle(target.x, target.y, effect.healRadius, 2, view.totem.heal, 0.6)
-      return
-    }
+    case "totem":
     case "thunderclap":
       g.fillCircle(at.x, at.y, effect.radius, view.reticle, 0.08).strokeCircle(at.x, at.y, effect.radius, 2, view.reticle, 0.6)
       return

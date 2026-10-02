@@ -82,7 +82,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "vortex":
       return `a ${elementWord(effect.element)}whirl that pulls enemies in for ${effect.seconds}s (${effect.power}% ATK every ${effect.tick}s)`
     case "totem":
-      return `a ${elementWord(effect.element)}totem for ${effect.seconds}s that zaps enemies (${effect.power}% ATK, jumping ${effect.jumps} times), or heals you ${effect.heal}% of max HP when you stand by it hurt`
+      return `a ${elementWord(effect.element)}totem at your feet for ${effect.seconds}s that zaps enemies around it (${effect.power}% ATK, jumping ${effect.jumps} times), or heals you ${effect.heal}% of max HP while you stand in its reach hurt`
     case "thunderclap":
       return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
     case "barrage":

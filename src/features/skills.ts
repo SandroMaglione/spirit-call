@@ -68,9 +68,9 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "lob":
     case "vortex":
     case "barrage":
-    case "totem":
       return { kind: "point", range: effect.maxRange }
     case "nova":
+    case "totem":
     case "thunderclap":
       return { kind: "self" }
   }

@@ -130,19 +130,18 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       }
     }
   }
-  // Totems: how far they zap, faintly, and where standing heals, brighter; both fade as they run out.
+  // Totems: their one reach (where they zap enemies, and where standing heals), fading as they run out.
   for (const { data } of queries.totems.each()) {
     const totem = data.totem.get()
     const at = data.position.get()
     const { effect } = totem
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const fade = Math.min(1, totem.remaining / 0.6)
-    g.strokeCircle(at.x, at.y, effect.range, 2, color, 0.3 * fade)
-    g.fillCircle(at.x, at.y, effect.healRadius, view.totem.heal, (0.1 + 0.04 * Math.sin(now * 5)) * fade)
-    g.strokeCircle(at.x, at.y, effect.healRadius, 3, view.totem.heal, 0.6 * fade)
-    // A sweep around the heal ring counting down to the next zap.
+    g.fillCircle(at.x, at.y, effect.radius, view.totem.heal, (0.07 + 0.03 * Math.sin(now * 5)) * fade)
+    g.strokeCircle(at.x, at.y, effect.radius, 3, color, 0.6 * fade)
+    // A sweep around it counting down to the next zap.
     const next = 1 - Math.max(0, totem.nextTick) / effect.tick
-    g.strokeArc(at.x, at.y, effect.healRadius + 6, -Math.PI / 2, -Math.PI / 2 + next * Math.PI * 2, 2, color, 0.7 * fade)
+    g.strokeArc(at.x, at.y, effect.radius + 6, -Math.PI / 2, -Math.PI / 2 + next * Math.PI * 2, 2, color, 0.7 * fade)
   }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
   for (const { data } of queries.discs.each()) {

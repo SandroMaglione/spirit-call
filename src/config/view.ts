@@ -114,8 +114,8 @@ export const view = {
   vortex: { arms: 3, turnsPerSecond: 1.6 },
   /**
    * Totems (the Spark Totem): a pylon `height` pixels tall with a glowing
-   * orb on top, its zap range faintly on the floor and its heal radius in
-   * `heal`, the color of its healing zaps.
+   * orb on top, its reach on the floor tinted `heal`, the color of its
+   * healing zaps.
    */
   totem: { height: 46, radius: 8, orb: 9, heal: 0x7ee08a },
   /** Faint ring at a nova's radius while it is ready. */
