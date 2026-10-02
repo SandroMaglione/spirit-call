@@ -9,11 +9,10 @@ import type { QuestId } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import type { DiscoveryId } from "../content/discoveries.ts"
-import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { teamSize } from "../content/characters.ts"
 import { createAccount, defaultEquipment, equip, owns, select, unlock, withClearedRewards } from "./account.ts"
-import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, Play, QuestProgress, TierProgress, Unlocked } from "./account.ts"
+import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, Play, QuestProgress, TierProgress } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -46,8 +45,7 @@ export const fromStored = (
   const dropped: Array<string> = []
   const owned: Owned = {
     characters: keep<CharacterId, OwnedCharacter>(tuning.characters, stored.owned.characters, "character", dropped),
-    weapons: keep<WeaponId, OwnedWeapon>(tuning.weapons, stored.owned.weapons, "weapon", dropped),
-    skills: keep<SkillId, Unlocked>(tuning.skills, stored.owned.skills, "skill", dropped)
+    weapons: keep<WeaponId, OwnedWeapon>(tuning.weapons, stored.owned.weapons, "weapon", dropped)
   }
   const quests = keep<QuestId, QuestProgress>(tuning.quests, stored.quests, "quest", dropped)
   const hardcore: { [Id in TrackId]?: { readonly [tier: number]: TierProgress } } = {}
@@ -91,7 +89,6 @@ export const fromStored = (
     if (saved !== undefined) dropped.push(`${character}'s equipment`)
     const own = defaultEquipment(tuning, character)
     account = unlockIfMissing(tuning, account, { kind: "weapon", id: own.weapon }, now)
-    for (const skill of Object.values(own.skills)) account = unlockIfMissing(tuning, account, { kind: "skill", id: skill }, now)
     const reset = equip(tuning, account, character, own)
     if (reset.ok) account = reset.value
   }
@@ -123,20 +120,14 @@ const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"
 const unlockIfMissing = (tuning: Tuning, account: Account, item: Item, now: number): Account =>
   owns(account, item) ? account : unlock(tuning, account, item, now)
 
-/** Saved equipment with typed ids; ids that name no content fall back to the character's own. */
-const equipmentFrom = (tuning: Tuning, character: CharacterId, saved: StoredAccountLatest["equipment"][string]): Equipment => {
-  const own = defaultEquipment(tuning, character)
-  const { weapon } = saved
-  const { special, ultimate } = saved.skills
-  return {
-    weapon: known(tuning.weapons, weapon) ? weapon : own.weapon,
-    skills: { special: known(tuning.skills, special) ? special : own.skills.special, ultimate: known(tuning.skills, ultimate) ? ultimate : own.skills.ultimate }
-  }
-}
+/** Saved equipment with typed ids; a weapon that names no content falls back to the character's own. */
+const equipmentFrom = (tuning: Tuning, character: CharacterId, saved: StoredAccountLatest["equipment"][string]): Equipment => ({
+  weapon: known(tuning.weapons, saved.weapon) ? saved.weapon : defaultEquipment(tuning, character).weapon
+})
 
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 4,
+  version: 5,
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,
@@ -153,8 +144,8 @@ export const toStored = (account: Account): StoredAccountLatest => ({
 /**
  * The account for a device that saved a profile before accounts: a new
  * account (owning the starter set), keeping what it can of that profile's
- * last build (only what the new account owns). Challenges became quests, so
- * its last challenge is not kept.
+ * last build (only what the new account owns; skills are each character's
+ * own now). Challenges became quests, so its last challenge is not kept.
  */
 export const accountFromLegacy = (tuning: Tuning, starter: StarterSet, legacy: LegacyProfileV1, id: string, now: number): Account => {
   let account = createAccount(tuning, starter, id, now)
@@ -163,9 +154,7 @@ export const accountFromLegacy = (tuning: Tuning, starter: StarterSet, legacy: L
     const character = build.character
     const own = defaultEquipment(tuning, character)
     const weapon = build.weapon !== undefined && known(tuning.weapons, build.weapon) ? build.weapon : own.weapon
-    const special = build.skills.special !== undefined && known(tuning.skills, build.skills.special) ? build.skills.special : own.skills.special
-    const ultimate = build.skills.ultimate !== undefined && known(tuning.skills, build.skills.ultimate) ? build.skills.ultimate : own.skills.ultimate
-    const equipped = equip(tuning, account, character, { weapon, skills: { special, ultimate } })
+    const equipped = equip(tuning, account, character, { weapon })
     if (equipped.ok) account = equipped.value
     account = { ...account, selection: { ...account.selection, team: [character] } }
   }

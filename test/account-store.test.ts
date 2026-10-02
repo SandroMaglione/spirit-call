@@ -27,6 +27,13 @@ const withAccount = <A, E>(saved: Record<string, string>, program: (store: Accou
 
 const savedJson = (kv: KeyValueStore.KeyValueStore, key: string) => kv.get(key).pipe(Effect.map((raw) => (raw === undefined ? undefined : JSON.parse(raw))))
 
+/** A save of version 5 or later as saved before kits were fixed (version 4 and earlier): skills owned and equipped, the Nova among them. */
+const withOwnedSkills = (latest: { readonly owned: object; readonly equipment: Record<string, { readonly weapon: string }> }) => ({
+  ...latest,
+  owned: { ...latest.owned, skills: { bladeWave: { unlockedAt: 5 }, nova: { unlockedAt: 5 } } },
+  equipment: Object.fromEntries(Object.entries(latest.equipment).map(([id, equipped]) => [id, { ...equipped, skills: { special: "bladeWave", ultimate: "nova" } }]))
+})
+
 const legacyProfile = JSON.stringify({
   version: 1,
   selection: { build: { character: "swordsman", weapon: "trainingBlade", skills: { special: "nova" } }, challenge: "endless" },
@@ -42,20 +49,20 @@ describe("account store", () => {
     expect(result.account.id).toBe("account-1")
     expect(Object.keys(result.account.owned.characters)).toEqual(newAccount.characters)
     expect(result.notes).toEqual([])
-    expect(result.saved).toMatchObject({ version: 4, id: "account-1", selection: starterSelection })
+    expect(result.saved).toMatchObject({ version: 5, id: "account-1", selection: starterSelection })
   })
 
   it("keeps changes across visits", async () => {
     const { saved, wallet } = await withAccount({}, (store, kv) =>
       Effect.gen(function*() {
         yield* store.unlock([{ kind: "weapon", id: "crescendo" }])
-        yield* store.equip("swordsman", { weapon: "crescendo", skills: { special: "nova", ultimate: "bladeWave" } })
+        yield* store.equip("swordsman", { weapon: "crescendo" })
         const recorded = yield* store.recordRun({ kind: "quest", quest: "theSwarm" }, { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], challenge: "swarm", wave: 3, kills: 9, time: 60 })
         yield* store.select(["gunner", "swordsman"], { kind: "quest", quest: "holdTheLine" })
         return { saved: yield* kv.get(accountKey), wallet: recorded.account.wallet }
       }))
     const reloaded = await withAccount({ [accountKey]: saved! }, (store) => store.get)
-    expect(reloaded.equipment.swordsman).toEqual({ weapon: "crescendo", skills: { special: "nova", ultimate: "bladeWave" } })
+    expect(reloaded.equipment.swordsman).toEqual({ weapon: "crescendo" })
     expect(reloaded.selection).toEqual({ team: ["gunner", "swordsman"], play: { kind: "quest", quest: "holdTheLine" } })
     expect(reloaded.quests.theSwarm?.clears).toBe(1)
     expect(reloaded.wallet).toEqual(wallet)
@@ -79,28 +86,29 @@ describe("account store", () => {
         return { before, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.before).toEqual({ runs: 0, clears: 0, kills: 0, secondsPlayed: 0 })
-    expect(result.saved.version).toBe(4)
+    expect(result.saved.version).toBe(5)
     expect(result.saved.totals).toEqual({ runs: 1, clears: 1, kills: 9, secondsPlayed: 60 })
   })
 
   it("opens a save from before teams (version 2): its selected character leads the team alone", async () => {
     const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
     const latest = JSON.parse(fresh!)
-    const v2 = JSON.stringify({ ...latest, version: 2, selection: { character: "swordsman", play: latest.selection.play } })
+    const v2 = JSON.stringify({ ...withOwnedSkills(latest), version: 2, selection: { character: "swordsman", play: latest.selection.play } })
     const result = await withAccount({ [accountKey]: v2 }, (store, kv) =>
       Effect.gen(function*() {
         return { account: yield* store.get, notes: store.notes, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.account.selection).toEqual(starterSelection)
     expect(result.notes).toEqual([])
-    expect(result.saved).toMatchObject({ version: 4, selection: starterSelection })
+    expect(result.saved).toMatchObject({ version: 5, selection: starterSelection })
   })
 
   it("opens a save from before experience was gold (version 3), keeping the gold each character was trained with", async () => {
     const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
     const latest = JSON.parse(fresh!)
     const { discoveries: _, ...before } = latest
-    const v3 = JSON.stringify({ ...before, version: 3, owned: { ...latest.owned, characters: { swordsman: { unlockedAt: 5, experience: 120 } } } })
+    const old = withOwnedSkills(before)
+    const v3 = JSON.stringify({ ...old, version: 3, owned: { ...old.owned, characters: { swordsman: { unlockedAt: 5, experience: 120 } } } })
     const result = await withAccount({ [accountKey]: v3 }, (store, kv) =>
       Effect.gen(function*() {
         return { account: yield* store.get, saved: yield* savedJson(kv, accountKey) }
@@ -108,7 +116,21 @@ describe("account store", () => {
     // 120 experience was bought at 2 gold each.
     expect(result.account.owned.characters.swordsman).toEqual({ unlockedAt: 5, experience: 240 })
     expect(result.account.discoveries).toEqual({})
-    expect(result.saved).toMatchObject({ version: 4, discoveries: {} })
+    expect(result.saved).toMatchObject({ version: 5, discoveries: {} })
+  })
+
+  it("opens a save from before kits were fixed (version 4): skills are no longer owned or equipped, and nothing is reported lost", async () => {
+    const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
+    const v4 = JSON.stringify({ ...withOwnedSkills(JSON.parse(fresh!)), version: 4 })
+    const result = await withAccount({ [accountKey]: v4 }, (store, kv) =>
+      Effect.gen(function*() {
+        return { account: yield* store.get, notes: store.notes, saved: yield* savedJson(kv, accountKey) }
+      }))
+    expect(result.account.equipment.swordsman).toEqual({ weapon: "trainingBlade" })
+    expect(result.notes).toEqual([])
+    expect(result.saved.version).toBe(5)
+    expect(result.saved.owned).not.toHaveProperty("skills")
+    expect(result.saved.equipment.swordsman).toEqual({ weapon: "trainingBlade" })
   })
 
   it("keeps the characters of the saved team it still owns, in order, saying when some are gone", async () => {
@@ -153,7 +175,7 @@ describe("account store", () => {
       Effect.gen(function*() {
         const refused = yield* store.select(["swordsman", "gunner"], { kind: "quest", quest: "theSwarm" }).pipe(Effect.flip)
         const wrongType = yield* store.unlock([{ kind: "weapon", id: "executioner" }]).pipe(
-          Effect.andThen(store.equip("swordsman", { weapon: "executioner", skills: { special: "bladeWave", ultimate: "nova" } })),
+          Effect.andThen(store.equip("swordsman", { weapon: "executioner" })),
           Effect.flip
         )
         return { refused, wrongType, account: yield* store.get }
@@ -165,7 +187,7 @@ describe("account store", () => {
 
   it("turns the profile saved before accounts into the account, keeping what it owns of it", async () => {
     const account = await withAccount({ [legacyProfileKey]: legacyProfile }, (store) => store.get)
-    expect(account.equipment.swordsman).toEqual({ weapon: "trainingBlade", skills: { special: "nova", ultimate: "nova" } })
+    expect(account.equipment.swordsman).toEqual({ weapon: "trainingBlade" })
     expect(account.selection).toEqual(starterSelection)
   })
 

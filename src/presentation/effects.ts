@@ -112,7 +112,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)
     const nova = explosion.kind === "nova" && explosion.heavy
-    const color = nova ? view.ultimate : explosion.element === null ? view.playerArea : view.elements[explosion.element]
+    const color = explosion.element !== null ? view.elements[explosion.element] : nova ? view.ultimate : view.playerArea
     fx.ring(at, explosion.radius * projection.zoom, color, nova ? 0.45 : 0.3)
     fx.burst({ x: at.x, y: at.y - 10 }, { color, count: nova ? 48 : 26, speed: nova ? 620 : 380, size: 6, life: 0.5 })
     fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })

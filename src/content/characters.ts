@@ -1,10 +1,11 @@
 /**
  * Characters: base stats, body, their own moveset, the type of weapon they
- * wield (and the one they start with), and the skills they start with.
+ * wield (and the one they start with), and their kit (their own special and
+ * ultimate).
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  *
- * What enters the arena is a team of builds (a character plus what is
- * equipped on it), each resolved into final stats and kit by
+ * What enters the arena is a team of builds (a character plus the weapon
+ * equipped on her), each resolved into final stats and kit by
  * `resolveBuild`. Base stats are before the weapon: a character's ATK is
  * mostly its weapon's.
  */
@@ -41,7 +42,7 @@ export interface CharacterSpec {
   readonly weaponType: WeaponType
   /** The weapon it wields unless the build equips another of its type. */
   readonly weapon: WeaponId
-  /** The skill in each slot unless the build equips another. */
+  /** Her kit: her own skill in each slot (no other character has them). */
   readonly skills: { readonly [Slot in SkillSlot]: SkillId }
 }
 
@@ -49,7 +50,7 @@ const character = (spec: CharacterSpec): CharacterSpec => spec
 
 /** Every character, by id. */
 export const characters = {
-  /** Close range: sturdy, with the sword combo and the Blade Wave. */
+  /** Close range: sturdy, with the sword combo, the Blade Wave, and the Cyclone (wind). */
   swordsman: character({
     name: "Swordsman",
     stats: { hp: 100, atk: 80, def: 20, speed: 320 },
@@ -58,9 +59,9 @@ export const characters = {
     attack: "sword",
     weaponType: "sword",
     weapon: "trainingBlade",
-    skills: { special: "bladeWave", ultimate: "nova" }
+    skills: { special: "bladeWave", ultimate: "cyclone" }
   }),
-  /** Range: quicker and frailer, with the gun and grenades. */
+  /** Range: quicker and frailer, with the gun, grenades, and the Barrage (fire). */
   gunner: character({
     name: "Gunner",
     stats: { hp: 85, atk: 80, def: 10, speed: 340 },
@@ -69,9 +70,9 @@ export const characters = {
     attack: "gun",
     weaponType: "gun",
     weapon: "trainingPistol",
-    skills: { special: "grenade", ultimate: "nova" }
+    skills: { special: "grenade", ultimate: "barrage" }
   }),
-  /** Middle range: discs that cut there and back, and water that soaks and slows. */
+  /** Middle range: discs that cut there and back, water that soaks and slows, and the Tide. */
   tidecaller: character({
     name: "Tidecaller",
     stats: { hp: 92, atk: 80, def: 15, speed: 330 },
@@ -80,7 +81,7 @@ export const characters = {
     attack: "disc",
     weaponType: "disc",
     weapon: "trainingDisc",
-    skills: { special: "splash", ultimate: "nova" }
+    skills: { special: "splash", ultimate: "tide" }
   })
 }
 

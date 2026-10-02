@@ -17,6 +17,13 @@ export const sub = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x - b.x, y: a.y - b.y })
 
 export const scale = (a: Vec2, factor: number): Vec2 => ({ x: a.x * factor, y: a.y * factor })
 
+/** `a` turned by `angle` radians. */
+export const rotate = (a: Vec2, angle: number): Vec2 => {
+  const cos = Math.cos(angle)
+  const sin = Math.sin(angle)
+  return { x: a.x * cos - a.y * sin, y: a.x * sin + a.y * cos }
+}
+
 export const dot = (a: Vec2, b: Vec2): number => a.x * b.x + a.y * b.y
 
 export const length = (a: Vec2): number => Math.hypot(a.x, a.y)

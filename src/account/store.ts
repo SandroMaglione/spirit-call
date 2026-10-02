@@ -79,8 +79,6 @@ const itemName = (tuning: Tuning, item: Item): string => {
       return tuning.characters[item.id].name
     case "weapon":
       return tuning.weapons[item.id].name
-    case "skill":
-      return tuning.skills[item.id].name
   }
 }
 

@@ -22,7 +22,7 @@ const flowOf = (run: ReturnType<typeof start>) => run.runtime.debug.dump().machi
 describe("menu requests", () => {
   it("enter the arena from the menu with the chosen team and challenge, in a fresh run, the first one on the field", () => {
     const run = start({ flow: "Menu" })
-    const team = [{ character: "gunner" as const, weapon: "bloodthirst" as const, skills: { special: "bladeWave" as const } }, { character: "swordsman" as const, skills: {} }]
+    const team = [{ character: "gunner" as const, weapon: "bloodthirst" as const, skills: { special: "bladeWave" as const } }, { character: "swordsman" as const }]
     run.requests.pending.push({ kind: "start", team, challenge: "crossfire", enemyLevel: 1 })
     run.step()
     const screen = run.runtime.inspect(Screen)
@@ -46,7 +46,7 @@ describe("menu requests", () => {
     run.step()
     expect(flowOf(run)).toBe("Menu")
 
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman", weapon: "crescendo", skills: {} }], challenge: "swarm", enemyLevel: 1 })
+    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman", weapon: "crescendo" }], challenge: "swarm", enemyLevel: 1 })
     run.step()
     expect(flowOf(run)).toBe("Playing")
     expect(run.runtime.inspect(Screen).challenge).toBe("swarm")
@@ -78,6 +78,7 @@ describe("menu helpers", () => {
     expect(defaultTuning.weapons.executioner.passives.map(describePassive)).toEqual(["+50% damage to enemies below 30% HP"])
     expect(defaultTuning.weapons.bloodthirst.passives.map(describePassive)).toEqual(["On kill: heal 5% of max HP"])
     expect(describePassive(defaultTuning.weapons.echoSaber.passives[0]!)).toMatch(/^On the combo finisher: set off a shockwave/)
-    expect(describeSkill(defaultTuning.skills.nova)).toBe("A shockwave around you (60% ATK) · 100 energy")
+    expect(describeSkill(defaultTuning.skills.tide)).toBe("A water shockwave around you (50% ATK) · 100 energy, untouchable as it goes off")
+    expect(describeSkill(defaultTuning.skills.grenade)).toBe("A lobbed fire blast (38% ATK) leaving a fire pool · 4s cooldown")
   })
 })

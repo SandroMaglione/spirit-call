@@ -58,7 +58,7 @@ const sturdy = (tuning: Tuning): Tuning => ({
 
 describe("weapon passives", () => {
   it("Crescendo: each move of the combo deals more than the last, the finisher most", () => {
-    const build: BuildValue = { character: "swordsman", weapon: "crescendo", skills: {} }
+    const build: BuildValue = { character: "swordsman", weapon: "crescendo" }
     const atk = resolveBuild(defaultTuning, build).stats.atk
     const { frames, timeline } = taps(sword.combo)
     const run = arena(build, [{ x: 70, y: 0 }], timeline, sturdy(defaultTuning))
@@ -76,7 +76,7 @@ describe("weapon passives", () => {
   })
 
   it("Executioner: +50% damage to targets below 30% health", () => {
-    const build: BuildValue = { character: "gunner", weapon: "executioner", skills: {} }
+    const build: BuildValue = { character: "gunner", weapon: "executioner" }
     const shot = defaultTuning.attacks.gun.combo[0] as ShotMove
     const dealt = damageDealt(resolveBuild(defaultTuning, build).stats.atk, shot.power)
     const hit = (health: number) => {
@@ -90,7 +90,7 @@ describe("weapon passives", () => {
   })
 
   it("Bloodthirst: each kill heals 5% of maximum health, even through the kill's hit-stop", () => {
-    const build: BuildValue = { character: "gunner", weapon: "bloodthirst", skills: {} }
+    const build: BuildValue = { character: "gunner", weapon: "bloodthirst" }
     const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuningWith({ enemies: { dummy: { hp: 1, respawnDelay: 100 } } }))
     run.runtime.tick(Game.Schedule(setHealth(undefined, 40)))
     run.step(steps(defaultTuning.feedback.hitStopOnKill) + 20)
@@ -100,7 +100,7 @@ describe("weapon passives", () => {
   })
 
   it("Echo Saber: the finisher sets off a shockwave that reaches past the spin", () => {
-    const build: BuildValue = { character: "swordsman", weapon: "echoSaber", skills: {} }
+    const build: BuildValue = { character: "swordsman", weapon: "echoSaber" }
     const echo = (defaultTuning.weapons.echoSaber.passives[0] as { effect: { effect: NovaEffect } }).effect.effect
     const spin = sword.combo.at(-1)!
     const hurtbox = defaultTuning.enemies.dummy.hurtboxRadius

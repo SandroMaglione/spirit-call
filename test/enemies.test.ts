@@ -155,7 +155,7 @@ describe("enemy levels", () => {
       queries: { enemies: Game.Query({ selection: { stats: Game.Query.read(CombatStats), kind: Game.Query.read(Enemy) } }) }
     }, ({ queries }) => queries.enemies.each().map(({ data }) => ({ kind: data.kind.get().kind, stats: data.stats.get() })))
     const run = start({ flow: "Menu", waves: true })
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman", skills: {} }], challenge: "swarm", enemyLevel: 12 })
+    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "swarm", enemyLevel: 12 })
     run.step(240)
     const spawned = run.runtime.inspect(Enemies)
     expect(spawned.length).toBeGreaterThan(0)

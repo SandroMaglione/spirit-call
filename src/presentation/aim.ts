@@ -9,7 +9,7 @@ import { projection, view } from "../config/view.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Aim, Controls, Enemy, Game, Hurtbox, Player, Position, PrevPosition, RenderClock, RenderHost, Skills, Tuning, Weapon } from "../schema.ts"
-import { lobTarget } from "../features/skills.ts"
+import { barrageTargets, lobTarget } from "../features/skills.ts"
 import { chargeOf, moveArea } from "../features/weapons.ts"
 import { drawArea } from "./draw.ts"
 import type { Shapes } from "./shapes.ts"
@@ -109,7 +109,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   }
 })
 
-/** What a skill used from `at` toward `aiming` will cover: a cut's lane, or where a lob lands and its blast. */
+/** What a skill used from `at` toward `aiming` will cover: a cut's lane, where a lob lands and its blast, a whirl's reach, or a volley's shells. */
 const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): void => {
   switch (effect.kind) {
     case "cut": {
@@ -126,6 +126,21 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
     case "nova":
       g.fillCircle(at.x, at.y, effect.radius, view.reticle, 0.08).strokeCircle(at.x, at.y, effect.radius, 2, view.reticle, 0.6)
       return
+    case "vortex": {
+      const target = lobTarget(effect, at, aiming)
+      g.line(at.x, at.y, target.x, target.y, 2, view.reticle, 0.35)
+      g.fillCircle(target.x, target.y, effect.radius, view.reticle, 0.08).strokeCircle(target.x, target.y, effect.radius, 2, view.reticle, 0.6)
+      return
+    }
+    case "barrage": {
+      const target = lobTarget(effect, at, aiming)
+      const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })
+      g.line(at.x, at.y, target.x, target.y, 2, view.reticle, 0.35)
+      for (const shell of barrageTargets(effect, target, direction)) {
+        g.fillCircle(shell.x, shell.y, effect.radius, view.reticle, 0.05).strokeCircle(shell.x, shell.y, effect.radius, 2, view.reticle, 0.45)
+      }
+      return
+    }
   }
 }
 

@@ -14,7 +14,7 @@ import type { CharacterId, Stats as CharacterStats } from "./content/characters.
 import type { Affinities, ElementId, ReactionKind, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { LobEffect, SkillEffect, SkillId, SkillSlot } from "./content/skills.ts"
+import type { LobEffect, SkillEffect, SkillId, SkillSlot, VortexEffect } from "./content/skills.ts"
 import type { WeaponId } from "./content/weapons.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
@@ -71,10 +71,14 @@ export interface SkillSlotValue {
 export type SkillsValue = { readonly [Slot in SkillSlot]: SkillSlotValue }
 export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
 
-/** Energy for skills that cost it (the Nova), filled by dealing damage. */
+/** Energy for skills that cost it (ultimates), filled by dealing damage. */
 export const Energy = Descriptor.Component<{ readonly current: number }>()("Shooter/Energy")
 
-/** A lobbed skill (the grenade): flies from `from` to `to`, then its fuse runs down and it explodes. */
+/**
+ * A lobbed skill (the grenade, a barrage's shell): flies from `from` to
+ * `to`, then its fuse runs down and it explodes. `elapsed` starts below 0
+ * for a shell that waits its turn in a volley.
+ */
 export interface LobbedValue {
   readonly from: Vec2
   readonly to: Vec2
@@ -86,6 +90,22 @@ export interface LobbedValue {
   readonly elapsed: number
 }
 export const Lobbed = Descriptor.Component<LobbedValue>()("Shooter/Lobbed")
+
+/**
+ * A whirl set down by a skill (see `VortexEffect`): it strikes and pulls the
+ * other side's bodies around `center` every tick until it runs out. Its
+ * blows come from the caster's ATK when cast.
+ */
+export interface VortexValue {
+  readonly center: Vec2
+  readonly faction: Faction
+  readonly effect: VortexEffect
+  readonly blow: Blow
+  readonly remaining: number
+  /** Time until its next strike. */
+  readonly nextTick: number
+}
+export const Vortex = Descriptor.Component<VortexValue>()("Shooter/Vortex")
 
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
@@ -397,7 +417,7 @@ export const Explosion = Descriptor.Event<{
   readonly radius: number
   readonly faction: Faction
   readonly kind: "blast" | "nova"
-  /** A heavy one (the Nova) gets the big effects; a light one (a weapon's shockwave) a smaller ring. */
+  /** A heavy one (an ultimate) gets the big effects; a light one (a weapon's shockwave) a smaller ring. */
   readonly heavy: boolean
   /** Its element, if any, for its color and sound. */
   readonly element: ElementId | null
@@ -447,9 +467,9 @@ export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fa
 export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
 
 /**
- * A character as she enters the arena: at her level, with the weapon and
- * skills equipped over her defaults. `resolveBuild` turns it into final
- * stats and kit when the team spawns.
+ * A character as she enters the arena: at her level, with the weapon
+ * equipped over her own (her skills are always her own). `resolveBuild`
+ * turns it into final stats and kit when the team spawns.
  */
 export interface BuildValue {
   readonly character: CharacterId
@@ -459,7 +479,6 @@ export interface BuildValue {
   readonly weapon?: WeaponId
   /** The weapon's level (1 when missing). */
   readonly weaponLevel?: number
-  readonly skills: { readonly [Slot in SkillSlot]?: SkillId }
 }
 /** Who enters the arena: one to three characters (see `teamSize`), in team order; the first starts on the field. */
 export const Team = Descriptor.Resource<ReadonlyArray<BuildValue>>()("Shooter/Team")
@@ -503,7 +522,7 @@ export const TouchState = Descriptor.TransientResource<TouchSnapshot>()("Shooter
 export interface SkillControl {
   /** Use the skill this step. */
   readonly pressed: boolean
-  /** Where it is aimed: a lobbed skill's landing spot, a point along a cut, or the player for a nova. */
+  /** Where it is aimed: a point for a lob or a whirl, a point along a cut, or the player for a nova. */
   readonly at: Vec2
   /** While its touch button is dragged, where it is aimed (as `at`); `null` otherwise. */
   readonly aiming: Vec2 | null
@@ -657,6 +676,7 @@ export const Game = Schema.bind(
       Gust,
       Stunned,
       Lobbed,
+      Vortex,
       Health,
       Hurtbox,
       Knockback,

@@ -36,8 +36,9 @@ effects, enemy traits; `docs/models.md`: 3D models and looks).
   content is mostly adding entries; new kinds (a new effect, condition, or
   objective) extend the vocabulary in one place.
 - The arena is a black box to everything around it: it is entered with a
-  team (one to three builds: character and weapon at their levels, skills),
-  a challenge, and an enemy level, and reports a `RunResult`. Quests, hardcore tiers, levels,
+  team (one to three builds: character and weapon at their levels; each
+  character brings her own kit), a challenge, and an enemy level, and
+  reports a `RunResult`. Quests, hardcore tiers, levels,
   currencies, and rewards live in the account and the shell, never in the
   simulation.
 - Simulation (`src/features/`, `src/schema.ts`, `src/schedules.ts`, physics,

@@ -8,23 +8,23 @@ import { defaultChallenge } from "../src/features/challenges.ts"
 import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel, weaponAtk, withWeapon } from "../src/features/build.ts"
 
 describe("builds", () => {
-  it("resolve to the character's stats and kit, with its own weapon and equipped skills over its defaults", () => {
+  it("resolve to the character's stats and her own kit, with her own weapon", () => {
     const gunner = defaultTuning.characters.gunner
-    const build = resolveBuild(defaultTuning, { character: "gunner", skills: { ultimate: "bladeWave" } })
+    const build = resolveBuild(defaultTuning, { character: "gunner" })
     expect(build.weapon).toBe(gunner.weapon)
     expect(build.stats).toEqual(withWeapon(gunner.stats, defaultTuning.weapons[gunner.weapon]))
     expect(build.attack).toBe(gunner.attack)
-    expect(build.skills).toEqual({ special: gunner.skills.special, ultimate: "bladeWave" })
+    expect(build.skills).toEqual({ special: "grenade", ultimate: "barrage" })
   })
 
   it("add the weapon's ATK, then raise its bonus stat by a percentage, and take its passives", () => {
     const base = defaultTuning.characters.swordsman.stats
     const crescendo = defaultTuning.weapons.crescendo
-    const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "crescendo", skills: {} })
+    const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "crescendo" })
     expect(build.stats.atk).toBe(Math.round((base.atk + crescendo.atk) * 1.1))
     expect(build.stats.def).toBe(base.def)
     expect(build.passives).toBe(crescendo.passives)
-    const echo = resolveBuild(defaultTuning, { character: "swordsman", weapon: "echoSaber", skills: {} })
+    const echo = resolveBuild(defaultTuning, { character: "swordsman", weapon: "echoSaber" })
     expect(echo.stats.def).toBe(Math.round(base.def * 1.2))
   })
 
@@ -42,7 +42,7 @@ describe("builds", () => {
     const maxLevel = defaultTuning.progression.character.curve.maxLevel
     const top = statsAtLevel(defaultTuning, base, maxLevel)
     expect(top).toEqual({ hp: base.hp * 4, atk: base.atk * 4, def: base.def * 4, speed: base.speed })
-    const build = resolveBuild(defaultTuning, { character: "swordsman", level: maxLevel, skills: {} })
+    const build = resolveBuild(defaultTuning, { character: "swordsman", level: maxLevel })
     expect(build.stats).toEqual(withWeapon(top, defaultTuning.weapons.trainingBlade))
   })
 
@@ -52,31 +52,31 @@ describe("builds", () => {
     expect(weaponAtk(defaultTuning, crescendo, 1)).toBe(crescendo.atk)
     expect(weaponAtk(defaultTuning, crescendo, maxLevel)).toBe(crescendo.atk * 4)
     const base = defaultTuning.characters.swordsman.stats
-    const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "crescendo", weaponLevel: maxLevel, skills: {} })
+    const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "crescendo", weaponLevel: maxLevel })
     expect(build.stats.atk).toBe(Math.round((base.atk + crescendo.atk * 4) * 1.1))
   })
 
   it("keep the character's own weapon when the equipped one is of another type", () => {
-    const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "executioner", skills: {} })
+    const build = resolveBuild(defaultTuning, { character: "swordsman", weapon: "executioner" })
     expect(build.weapon).toBe(defaultTuning.characters.swordsman.weapon)
   })
 
   it("a team comes from the URL: its characters by id (each once, three at most), the first one's build and everyone's levels", () => {
     // The account's builds: the gunner has another weapon equipped.
-    const buildFor = (character: CharacterId): BuildValue => (character === "gunner" ? { character, weapon: "bloodthirst", skills: {} } : { character, skills: {} })
+    const buildFor = (character: CharacterId): BuildValue => (character === "gunner" ? { character, weapon: "bloodthirst" } : { character })
     expect(teamFromQuery(defaultTuning, "?team=gunner,wizard,swordsman,gunner", [defaultBuild], buildFor)).toEqual([buildFor("gunner"), buildFor("swordsman")])
     expect(teamFromQuery(defaultTuning, "?team=tidecaller,gunner,swordsman,tidecaller").map((build) => build.character)).toEqual(["tidecaller", "gunner", "swordsman"])
     expect(teamFromQuery(defaultTuning, "?team=gunner,swordsman&level=7", [defaultBuild], buildFor).map((build) => build.level)).toEqual([7, 7])
     // Without a team, the fallback stands, its first one changed by the URL.
-    expect(teamFromQuery(defaultTuning, "?special=grenade", [defaultBuild, buildFor("gunner")])).toEqual([{ character: "swordsman", skills: { special: "grenade" } }, buildFor("gunner")])
+    expect(teamFromQuery(defaultTuning, "?weapon=crescendo", [defaultBuild, buildFor("gunner")])).toEqual([{ character: "swordsman", weapon: "crescendo" }, buildFor("gunner")])
   })
 
-  it("come from the URL: character and skills by id, ignoring unknown ones", () => {
-    expect(buildFromQuery(defaultTuning, "?character=gunner&special=bladeWave")).toEqual({ character: "gunner", skills: { special: "bladeWave" } })
-    expect(buildFromQuery(defaultTuning, "?character=gunner&weapon=bloodthirst")).toEqual({ character: "gunner", weapon: "bloodthirst", skills: {} })
-    expect(buildFromQuery(defaultTuning, "?character=wizard&ultimate=toString")).toEqual(defaultBuild)
+  it("come from the URL: character and weapon by id, ignoring unknown ones (skills are each character's own)", () => {
+    expect(buildFromQuery(defaultTuning, "?character=gunner&special=bladeWave")).toEqual({ character: "gunner" })
+    expect(buildFromQuery(defaultTuning, "?character=gunner&weapon=bloodthirst")).toEqual({ character: "gunner", weapon: "bloodthirst" })
+    expect(buildFromQuery(defaultTuning, "?character=wizard&weapon=toString")).toEqual(defaultBuild)
     // Without build parts in the URL, the fallback (the profile's last build) stands.
-    const last = { character: "gunner" as const, weapon: "executioner" as const, skills: {} }
+    const last = { character: "gunner" as const, weapon: "executioner" as const }
     expect(buildFromQuery(defaultTuning, "?challenge=swarm", last)).toEqual(last)
     expect(buildFromQuery(defaultTuning, "?level=12&weaponLevel=3", last)).toEqual({ ...last, level: 12, weaponLevel: 3 })
     expect(buildFromQuery(defaultTuning, "?level=0&weaponLevel=2.5", last)).toEqual(last)

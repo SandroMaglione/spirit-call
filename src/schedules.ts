@@ -28,7 +28,7 @@ import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
-import { CastCuts, CastLobs, CastNovas, UpdateLobbed, UseSkills } from "./features/skills.ts"
+import { CastBarrages, CastCuts, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { UseBasicAttack } from "./features/weapons.ts"
 import { DirectWaves } from "./features/waves.ts"
@@ -90,6 +90,8 @@ const gameplay = Game.Schedule.when(
   CastCuts,
   CastLobs,
   CastNovas,
+  CastBarrages,
+  CastVortices,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
@@ -105,6 +107,7 @@ const gameplay = Game.Schedule.when(
   MoveProjectiles,
   MoveDiscs,
   ResolveHitboxes,
+  UpdateVortices,
   BlowPools,
   UpdateGround,
   TickStates,

@@ -7,14 +7,14 @@ import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
-import { center, cursorAt, grenadier, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, gunner, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
 const rules = tuning.elements
 const grenade = tuning.skills.grenade.effect
-/** The grenadier's ATK: the swordsman's with the training blade. */
-const atk = tuning.characters.swordsman.stats.atk + tuning.weapons.trainingBlade.atk
+/** The gunner's ATK: hers with the training pistol. */
+const atk = tuning.characters.gunner.stats.atk + tuning.weapons.trainingPistol.atk
 
 /** The kinds of reaction the run has set off so far. */
 const Reactions = Game.Inspector("Test/Reactions", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().reactions)
@@ -126,7 +126,7 @@ describe("the grenade's fire", () => {
   it("sets what it hits burning; the burn ticks down and wears off", () => {
     // Without its fire pool, which would keep the dummy burning.
     const noPool = tuningWith({ skills: { grenade: { effect: { leaves: null } } } })
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)], tuning: noPool })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: noPool })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const hit = tuning.enemies.dummy.hp - (atk * grenade.power) / 100
     const [dummy] = run.world().enemies
@@ -140,7 +140,7 @@ describe("the grenade's fire", () => {
   })
 
   it("burns fill the player's energy", () => {
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const before = run.world().player.energy
     run.step(steps(1))
@@ -192,7 +192,7 @@ describe("soaked", () => {
   })
 
   it("does not catch fire from the grenade, which deals less to it", () => {
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
     run.putIn(soaked(10))
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const [dummy] = run.world().enemies
@@ -202,7 +202,7 @@ describe("soaked", () => {
 
   it("puts out a fire when water lands", () => {
     const watery = tuningWith({ skills: { grenade: { effect: { element: "water", leaves: null } } } })
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)], tuning: watery })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: watery })
     run.putIn(burning(6, 10))
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     expect(run.world().enemies[0]!.state?.id).toBe("soaked")
@@ -211,7 +211,7 @@ describe("soaked", () => {
 
 describe("ground", () => {
   it("the grenade leaves a fire pool where it explodes, which runs out", () => {
-    const run = range([], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)] })
+    const run = range([], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const [pool] = run.world().pools
     expect(pool!.element).toBe("fire")
@@ -372,7 +372,7 @@ describe("affinities", () => {
 
   it("an enemy weak to an element takes more of its damage, and its effect lasts longer", () => {
     const weak = noPool({ fire: "weak" })
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)], tuning: weak })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: weak })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const [dummy] = run.world().enemies
     expect(dummy!.health).toBeCloseTo(tuning.enemies.dummy.hp - blast * rules.affinity.weak.damage, 6)
@@ -381,7 +381,7 @@ describe("affinities", () => {
 
   it("an immune enemy takes the damage, but not the effect", () => {
     const immune = noPool({ fire: "immune" })
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: grenadier, keys: [throwGrenade(1)], tuning: immune })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: immune })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const [dummy] = run.world().enemies
     expect(dummy!.health).toBeCloseTo(tuning.enemies.dummy.hp - blast, 6)

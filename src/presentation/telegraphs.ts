@@ -1,12 +1,13 @@
 /**
  * Telegraphs on the floor: pools of elements, enemy attack windups,
- * shields, active hitboxes, lobbed skills, thrown discs, and spawn warnings.
+ * shields, active hitboxes, lobbed skills, whirls, thrown discs, and spawn
+ * warnings.
  */
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Tuning } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Tuning, Vortex } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { drawArea } from "./draw.ts"
 
@@ -25,6 +26,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
+    vortices: Game.Query({ selection: { vortex: Game.Query.read(Vortex) } }),
     shields: Game.Query({
       selection: { shield: Game.Query.read(Shield), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }
     })
@@ -93,9 +95,14 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const lobbed = data.lobbed.get()
     const spec = lobbed.effect
     const elapsed = lobbed.elapsed + services.clock.alpha * engine.stepSeconds
-    const flight = Math.min(1, elapsed / spec.flightTime)
-    const fuse = Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse))
     const color = spec.element === null ? view.playerArea : view.elements[spec.element]
+    // A volley's shell waiting its turn: only where it will land, faintly.
+    if (elapsed < 0) {
+      g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, 0.2)
+      continue
+    }
+    const flight = Math.min(1, elapsed / spec.flightTime)
+    const fuse = spec.fuse > 0 ? Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse)) : flight >= 1 ? 1 : 0
     g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, flight < 1 ? 0.35 : 0.9)
     if (fuse > 0) g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.25)
     const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
@@ -104,6 +111,23 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const height = 4 * view.grenadeArc * flight * (1 - flight) * projection.zoom
     overlay.fillCircle(screen.x, screen.y - height - 6, 6, spec.element === null ? view.grenade : view.elements[spec.element], 1)
     if (flight >= 1) overlay.strokeCircle(screen.x, screen.y - 6, 6, 2, color, 0.5 + 0.5 * Math.sin(elapsed * 40))
+  }
+  // Whirls: their reach, with arms spiraling in toward the center (fading as they run out).
+  for (const { data } of queries.vortices.each()) {
+    const vortex = data.vortex.get()
+    const { center, effect } = vortex
+    const color = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const fade = Math.min(1, vortex.remaining / 0.3)
+    g.fillCircle(center.x, center.y, effect.radius, color, 0.1 * fade)
+    g.strokeCircle(center.x, center.y, effect.radius, 3, color, 0.6 * fade)
+    const turn = -now * view.vortex.turnsPerSecond * Math.PI * 2
+    for (let arm = 0; arm < view.vortex.arms; arm++) {
+      for (let ring = 1; ring <= 3; ring++) {
+        const radius = (effect.radius * ring) / 3.4
+        const start = turn + (arm / view.vortex.arms) * Math.PI * 2 + ring * 0.7
+        g.strokeArc(center.x, center.y, radius, start, start + 0.9, 3, color, (0.25 + 0.15 * ring) * fade)
+      }
+    }
   }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
   for (const { data } of queries.discs.each()) {

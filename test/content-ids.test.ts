@@ -8,9 +8,14 @@ import { defaultTuning } from "../src/config/tuning.ts"
  * must never be removed or renamed: an account owning it would lose it. The
  * ids shipped so far are listed in content-ids.json. Adding content means
  * adding its id there too, so every change to the list is a conscious one.
- * (Retiring content means a save migration that handles its id first.)
+ * Retiring content means a save migration that handles its id first; the id
+ * then moves to `retired` (it stays listed, so it is never reused for
+ * something else): the Nova, shared by everyone, retired when every
+ * character got her own ultimate (save version 5).
  */
-const shipped = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>>
+const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>> & {
+  readonly retired?: Record<string, ReadonlyArray<string>>
+}
 
 const current: Record<string, ReadonlyArray<string>> = {
   characters: Object.keys(defaultTuning.characters),
@@ -27,10 +32,14 @@ const current: Record<string, ReadonlyArray<string>> = {
 }
 
 describe("content ids", () => {
-  it("keeps every shipped id (none removed or renamed)", () => {
+  it("keeps every shipped id (none removed or renamed) except the retired ones, which are never reused", () => {
     for (const [kind, ids] of Object.entries(shipped)) {
-      const missing = ids.filter((id) => !current[kind]?.includes(id))
+      const missing = ids.filter((id) => !current[kind]?.includes(id) && !retired[kind]?.includes(id))
       expect(missing, `${kind} ids removed or renamed; saves refer to them`).toEqual([])
+    }
+    for (const [kind, ids] of Object.entries(retired)) {
+      expect(ids.filter((id) => !shipped[kind]?.includes(id)), `retired ${kind} ids must have shipped`).toEqual([])
+      expect(ids.filter((id) => current[kind]?.includes(id)), `retired ${kind} ids are back in the content`).toEqual([])
     }
   })
 

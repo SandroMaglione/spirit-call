@@ -1,7 +1,7 @@
 /**
  * Picks the team and the challenge from the page URL, over the account's
  * last ones, to try them without the menu: `?team=swordsman,tidecaller`,
- * the first one's build with `?character=gunner&weapon=bloodthirst&special=bladeWave`,
+ * the first one's build with `?character=gunner&weapon=bloodthirst`,
  * everyone's levels with `?level=20&weaponLevel=10`, and
  * `?challenge=swarm&enemyLevel=15`. Unknown ids and levels that are not
  * whole numbers from 1 are ignored, so a typo keeps the default.
@@ -10,8 +10,6 @@ import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
-import { skillSlots } from "../content/skills.ts"
-import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { defaultBuild, defaultTeam } from "../features/build.ts"
 import { defaultChallenge } from "../features/challenges.ts"
@@ -41,23 +39,17 @@ const withLevels = (query: URLSearchParams, build: BuildValue): BuildValue => {
   return { ...build, ...(level === undefined ? {} : { level }), ...(weaponLevel === undefined ? {} : { weaponLevel }) }
 }
 
-const buildKeys = ["character", "weapon", ...skillSlots] as const
+const buildKeys = ["character", "weapon"] as const
 
 /** The URL's build (missing parts are the defaults), or `fallback` when it names no part of one. */
 export const buildFromQuery = (tuning: Tuning, search: string, fallback: BuildValue = defaultBuild): BuildValue => {
   const query = new URLSearchParams(search)
   if (!buildKeys.some((key) => query.has(key))) return withLevels(query, fallback)
   const character = query.get("character")
-  const skills: { [Slot in SkillSlot]?: SkillId } = {}
-  for (const slot of skillSlots) {
-    const skill = query.get(slot)
-    if (known<SkillId>(tuning.skills, skill)) skills[slot] = skill
-  }
   const weapon = query.get("weapon")
   return withLevels(query, {
     character: known<CharacterId>(tuning.characters, character) ? character : defaultBuild.character,
-    ...(known<WeaponId>(tuning.weapons, weapon) ? { weapon } : {}),
-    skills
+    ...(known<WeaponId>(tuning.weapons, weapon) ? { weapon } : {})
   })
 }
 
@@ -70,7 +62,7 @@ export const teamFromQuery = (
   tuning: Tuning,
   search: string,
   fallback: ReadonlyArray<BuildValue> = defaultTeam,
-  buildFor: (character: CharacterId) => BuildValue = (character) => ({ character, skills: {} })
+  buildFor: (character: CharacterId) => BuildValue = (character) => ({ character })
 ): ReadonlyArray<BuildValue> => {
   const query = new URLSearchParams(search)
   const named = [...new Set((query.get("team") ?? "").split(","))].filter((id): id is CharacterId => known<CharacterId>(tuning.characters, id)).slice(0, teamSize)

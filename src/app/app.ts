@@ -42,7 +42,7 @@ export interface App {
   readonly upgrade: (weapon: WeaponId) => void
   /** Selects the team to enter the arena with and what for; the account after it, or `undefined` when refused (not owned, or not open). */
   readonly select: (team: ReadonlyArray<CharacterId>, play: Play) => Promise<Account | undefined>
-  /** Owns every character, weapon, and skill, and adds plenty of each currency (a dev tool). */
+  /** Owns every character and weapon, and adds plenty of each currency (a dev tool). */
   readonly unlockEverything: () => void
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
   readonly recordRun: (play: Play | null, result: RunResultValue) => Promise<Earned | undefined>
