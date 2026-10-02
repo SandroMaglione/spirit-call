@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@effect/platform-browser": "4.0.0-rc.118",
+    "@fontsource/barlow-condensed": "5.3.0",
     "@preact/signals": "2.11.2",
     "@typeonce/bevy-ts": "link:../../bevy-ts/packages/core",
     "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
