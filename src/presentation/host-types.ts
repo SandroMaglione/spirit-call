@@ -5,10 +5,13 @@ import type { SkillSlot } from "../content/skills.ts"
 
 import type { Fx } from "./fx.ts"
 import type { SlashTrails } from "./trails.ts"
+import type { CrowClip, CrowMotion } from "./crow-animation.ts"
 
 export type ProjectileNode = { readonly kind: "projectile"; readonly root: Container; readonly orb: Sprite; readonly shadow: Sprite }
 
-export type PlayerNode = { readonly kind: "player"; readonly root: Container; readonly body: Sprite; readonly light: ColorMatrixFilter }
+export type PlayerNode = { readonly kind: "player"; readonly root: Container; readonly body: Sprite; readonly light: ColorMatrixFilter; readonly motion: CrowMotion }
+
+export type CrowTextures = Readonly<Record<CrowClip, ReadonlyArray<Texture>>>
 
 export type RenderNode =
   | PlayerNode
@@ -19,7 +22,7 @@ export type RenderNode =
 /** Textures loaded or generated once at startup and shared by sprites. */
 export interface RenderAssets {
   /** The Blender crow, in world-space facing order. */
-  readonly crow: ReadonlyArray<Texture>
+  readonly crow: CrowTextures
   /** White disc, radius `discRadius`, tinted per use. */
   readonly disc: Texture
   readonly discRadius: number

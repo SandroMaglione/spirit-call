@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crow · Idle and walk</title>
+<style>
+  :root {color-scheme:dark;font:16px/1.5 system-ui,sans-serif;color:#e8e3d9;background:#181a1c}
+  * {box-sizing:border-box} body {margin:0} main {max-width:1120px;margin:auto;padding:clamp(18px,4vw,48px)}
+  h1 {font-size:clamp(2rem,5vw,3rem);letter-spacing:-.04em;line-height:1.1;margin:22px 0 10px} h2 {font-size:1rem;margin:0}
+  p {color:#b6b7b8} a {color:#e2d7b6;text-underline-offset:4px} nav {display:flex;gap:20px;flex-wrap:wrap}
+  .views {display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:24px 0} article {min-width:0}
+  .stage {background:radial-gradient(ellipse at 50% 75%,#444139,#2e3032);border:1px solid #454649;border-radius:12px;overflow:hidden}
+  canvas {display:block;width:100%;aspect-ratio:1} .caption {display:flex;justify-content:space-between;margin:10px 0;color:#b6b7b8;font-size:.85rem}
+  .controls {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;padding:22px 0;border-top:1px solid #454649}
+  label {display:block;font-size:.85rem} output {float:right;color:#dfcc95} input {width:100%;min-height:40px;accent-color:#d4c18c}
+  button,select {font:inherit;color:inherit;background:#2d2f31;border:1px solid #595b5e;border-radius:6px;padding:10px;min-height:44px;max-width:100%}
+  button {cursor:pointer} button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible {outline:3px solid #e5c974;outline-offset:3px}
+  .playback {display:flex;gap:14px;align-items:center;flex-wrap:wrap} .playback label {display:flex;gap:10px;align-items:center}
+  .scrub {margin-top:20px} footer {font-size:.85rem;border-top:1px solid #454649;margin-top:20px;padding-top:12px}
+  @media(max-width:650px) {.views{gap:12px}.controls{grid-template-columns:1fr;gap:8px}}
+</style>
+<main>
+  <nav><a href="./">Model study</a><a href="/?play&character=swordsman">Play the game</a><a href="crow-animated.blend" download>Download animated Blender file</a></nav>
+  <h1>A breath. A few steps.</h1>
+  <p>Idle and walk, rendered from the same rig. Turn the crow, pause, or scrub through a cycle.</p>
+  <div class="views">
+    <article><div class="stage"><canvas id="idle" width="512" height="512" aria-label="Looping crow idle animation"></canvas></div><div class="caption"><h2>Idle</h2><span id="idle-frame">Loading…</span></div></article>
+    <article><div class="stage"><canvas id="walk" width="512" height="512" aria-label="Looping crow walk animation"></canvas></div><div class="caption"><h2>Walk</h2><span id="walk-frame">Loading…</span></div></article>
+  </div>
+  <div class="controls">
+    <label for="direction">Facing <output id="direction-value">0°</output><input id="direction" type="range" min="0" max="15" step="1" value="0"></label>
+    <label for="speed">Playback speed <output id="speed-value">1×</output><input id="speed" type="range" min="0.25" max="2" step="0.25" value="1"></label>
+    <label for="size">Display size <select id="size"><option value="large">Enlarged for inspection</option><option value="desktop">Desktop game size</option><option value="phone">Phone game size</option></select></label>
+  </div>
+  <div class="playback"><button id="play" type="button">Pause</button><span id="status" aria-live="polite">Loading sprites…</span></div>
+  <label class="scrub" for="phase">Cycle position <output id="phase-value">0%</output><input id="phase" type="range" min="0" max="99" step="1" value="0"></label>
+  <footer><p>12 bones · 16 directions · 8 idle frames · 12 walk frames. Feet use two-bone inverse kinematics. The game advances walk by distance traveled and supplies movement; these clips stay in place. At the current full movement speed, walk plays at about 1.8×. Strafing uses this same clip.</p></footer>
+</main>
+<script type="module">
+  import {crowAnimation as atlas} from '/src/presentation/assets/crow-animation.ts';
+  const byId = id => document.getElementById(id);
+  const clips = ['idle','walk'];
+  const images = Object.fromEntries(await Promise.all(clips.map(async clip => {
+    const image = new Image(); image.src = `/src/presentation/assets/crow-${clip}.png`; await image.decode(); return [clip,image];
+  })));
+  let playing = true, last = performance.now();
+  const phases = {idle:0,walk:0};
+  const play = byId('play'), status = byId('status'), phase = byId('phase');
+  function setPlaying(value) {playing=value;play.textContent=value?'Pause':'Play';status.textContent=value?'Playing both loops':'Paused';}
+  setPlaying(true);
+  play.onclick = () => {setPlaying(!playing);draw();};
+  phase.oninput = () => {setPlaying(false);for(const clip of clips)phases[clip]=Number(phase.value)/100;draw();};
+  for(const name of ['direction','speed','size'])byId(name).oninput=()=>draw();
+  function draw() {
+    const direction = Number(byId('direction').value);
+    byId('direction-value').textContent=`${direction*22.5}°`;
+    byId('speed-value').textContent=`${byId('speed').value}×`;
+    for (const clip of clips) {
+      const canvas=byId(clip), ctx=canvas.getContext('2d'), config=atlas.clips[clip];
+      const progress=phases[clip];
+      const frame=Math.floor(progress*config.frames);
+      const mode=byId('size').value, cssWidth=canvas.getBoundingClientRect().width;
+      const scale=mode==='large'?3.3:(mode==='desktop'?38.4:38.4*390/760)/atlas.projectedHeight*512/cssWidth;
+      const size=atlas.frameSize*scale, x=256-atlas.anchor.x*size, y=380-atlas.anchor.y*size;
+      ctx.clearRect(0,0,512,512);
+      ctx.strokeStyle='#9b957947';ctx.beginPath();ctx.ellipse(256,380,36*scale,12*scale,0,0,Math.PI*2);ctx.stroke();
+      ctx.drawImage(images[clip],direction*atlas.frameSize,frame*atlas.frameSize,atlas.frameSize,atlas.frameSize,x,y,size,size);
+      byId(`${clip}-frame`).textContent=`Frame ${frame+1} / ${config.frames}`;
+    }
+    phase.value=Math.floor(phases.walk*100);byId('phase-value').textContent=`${phase.value}%`;
+  }
+  function render(now) {
+    if(playing)for(const clip of clips)phases[clip]=(phases[clip]+Math.min((now-last)/1000,.1)*Number(byId('speed').value)/atlas.clips[clip].seconds)%1;
+    last=now;draw();
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+</script>
+</html>

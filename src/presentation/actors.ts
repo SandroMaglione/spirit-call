@@ -13,7 +13,8 @@ import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
 import { enemyColor } from "./nodes.ts"
 import { mixColor } from "./draw.ts"
-import { crowDirection, lightCrow } from "./crow.ts"
+import { crowTextureIndex, lightCrow } from "./crow.ts"
+import { advanceCrow } from "./crow-animation.ts"
 
 /** `color` tinted toward the color of `state`, if any. */
 export const stateTint = (color: number, state: ActiveState | null): number =>
@@ -94,7 +95,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       // Charging glows toward the full-charge color; once full it pulses.
       const pulse = charge >= 1 ? 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.charge.pulseHz * Math.PI * 2) : 0
       const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
-      node.body.texture = services.host.assets.crow[crowDirection(aim)]!
+      const frame = advanceCrow(node.motion, position, aim, services.clock.frameSeconds, dash.remaining > 0)
+      node.body.texture = services.host.assets.crow[node.motion.clip][crowTextureIndex(aim, frame)]!
       node.body.tint = stateTint(0xffffff, data.state.get().current)
       const flashing = data.flash.get().remaining > 0
       lightCrow(node.light,
