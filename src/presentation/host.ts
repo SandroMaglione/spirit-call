@@ -9,7 +9,7 @@ import { makeCamera, placeCamera } from "./camera.ts"
 import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
-import { disposeNode, floorLayers, makeAssets, makeFloor } from "./nodes.ts"
+import { disposeNode, floorLayers, instancesOf, makeAssets, makeFloor } from "./nodes.ts"
 import { Shapes } from "./shapes.ts"
 
 /** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
@@ -116,8 +116,12 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   const observer = new ResizeObserver(resize)
   observer.observe(mount)
 
-  const assets = makeAssets()
   const scene = new Scene()
+  // Updated once per frame in `render`, before batches read it.
+  scene.matrixWorldAutoUpdate = false
+  const batches = new Group()
+  scene.add(batches)
+  const assets = makeAssets(batches)
   const camera = makeCamera()
   const light = view.light
   // Light intensities are physical: π makes a fully lit face show its own color.
@@ -168,9 +172,11 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   const nodes = NodeRegistry.make<RenderNode>({
     attach: (node) => {
       actors.add(node.root)
+      for (const instance of instancesOf(node)) instance.batch.add(instance)
     },
     detach: (node) => {
       actors.remove(node.root)
+      for (const instance of instancesOf(node)) instance.batch.remove(instance)
       if (node.kind === "projectile") projectilePool.push(node)
       else disposeNode(node)
     }
@@ -220,6 +226,9 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       overlayCamera.updateProjectionMatrix()
       fx.flush()
       for (const layer of layers) layer.flush()
+      // Batches copy where their instances are this frame.
+      scene.updateMatrixWorld()
+      assets.flush()
       renderer.info.reset()
       renderer.clear()
       renderer.render(scene, camera)
@@ -236,7 +245,6 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       canvas.removeEventListener("pointerleave", onLeave)
       observer.disconnect()
       nodes.clear()
-      for (const node of projectilePool) node.orb.material.dispose()
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       assets.dispose()

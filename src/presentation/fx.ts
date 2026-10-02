@@ -5,10 +5,10 @@
  * the scene, in projected coordinates (`toScreen`): what flies up moves up
  * the screen.
  */
-import { CanvasTexture, LinearFilter, Sprite, SpriteMaterial } from "three"
 import type { Group } from "three"
 
 import type { Vec2 } from "../math/vec.ts"
+import { Digits } from "./digits.ts"
 import { Shapes } from "./shapes.ts"
 
 interface Particle {
@@ -47,13 +47,9 @@ interface Ring {
   maxLife: number
 }
 
-/** A number drawn once into its own small canvas, shown as a sprite. */
 interface FloatingNumber {
-  readonly sprite: Sprite
-  readonly canvas: HTMLCanvasElement
-  readonly texture: CanvasTexture
-  /** What its canvas shows now. */
   text: string
+  color: number
   x: number
   y: number
   /** Sideways drift (pixels over its life), along the blow. */
@@ -74,11 +70,7 @@ interface ParticleOptions {
   readonly alpha?: number
 }
 
-/** Damage numbers' canvas, in CSS pixels, and how many canvas pixels per CSS pixel (sharp on dense screens and when zoomed). */
-const numberBox = { width: 64, height: 22, resolution: 3 }
-
 export class Fx {
-  private readonly layer: Group
   private readonly particles: Array<Particle> = []
   private readonly freeParticles: Array<Particle> = []
   private readonly numbers: Array<FloatingNumber> = []
@@ -91,11 +83,11 @@ export class Fx {
   private readonly ringShapes = new Shapes({ depthTest: false, order: 1 })
   private readonly particleShapes = new Shapes({ depthTest: false, order: 2 })
   private readonly flashShapes = new Shapes({ depthTest: false, additive: true, order: 3 })
+  private readonly digits = new Digits(4)
 
   constructor(layer: Group, squash: number) {
-    this.layer = layer
     this.squash = squash
-    layer.add(this.ringShapes.mesh, this.particleShapes.mesh, this.flashShapes.mesh)
+    layer.add(this.ringShapes.mesh, this.particleShapes.mesh, this.flashShapes.mesh, this.digits.mesh)
   }
 
   /** A shockwave on the floor expanding to `radius` (screen pixels, squashed like the floor). */
@@ -166,15 +158,9 @@ export class Fx {
    * than its resting `size` and drifts sideways by `drift` pixels.
    */
   number(at: Vec2, value: number, color: number, options: { readonly size?: number; readonly drift?: number; readonly life?: number } = {}): void {
-    const entry = this.freeNumbers.pop() ?? this.newNumber()
-    const text = String(Math.round(value))
-    if (entry.text !== text) {
-      entry.text = text
-      drawNumber(entry.canvas, text)
-      entry.texture.needsUpdate = true
-    }
-    entry.sprite.material.color.setHex(color)
-    entry.sprite.visible = true
+    const entry = this.freeNumbers.pop() ?? { text: "", color: 0, x: 0, y: 0, drift: 0, size: 1, life: 0, maxLife: 1 }
+    entry.text = String(Math.max(0, Math.round(value)))
+    entry.color = color
     entry.x = at.x + (Math.random() - 0.5) * 12
     entry.y = at.y
     entry.drift = options.drift ?? 0
@@ -240,11 +226,12 @@ export class Fx {
         particles.fillCircle(particle.x, particle.y, size, particle.color, alpha)
       }
     }
+    const digits = this.digits
+    digits.clear()
     for (let index = this.numbers.length - 1; index >= 0; index--) {
       const entry = this.numbers[index]!
       entry.life -= dt
       if (entry.life <= 0) {
-        entry.sprite.visible = false
         this.numbers[index] = this.numbers[this.numbers.length - 1]!
         this.numbers.pop()
         this.freeNumbers.push(entry)
@@ -253,10 +240,9 @@ export class Fx {
       const t = 1 - entry.life / entry.maxLife
       // Jumps up fast then hangs; pops in at 1.8x and settles by 15% of its life.
       const rise = 1 - (1 - t) * (1 - t)
-      entry.sprite.position.set(entry.x + entry.drift * rise, entry.y - 40 - rise * 38, 0)
-      entry.sprite.material.opacity = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4
+      const alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4
       const scale = entry.size * (t < 0.15 ? 1.8 - (t / 0.15) * 0.8 : 1)
-      entry.sprite.scale.set(numberBox.width * scale, numberBox.height * scale, 1)
+      digits.write(entry.text, entry.x + entry.drift * rise, entry.y - 40 - rise * 38, scale, entry.color, alpha)
     }
   }
 
@@ -265,14 +251,12 @@ export class Fx {
     this.ringShapes.flush()
     this.particleShapes.flush()
     this.flashShapes.flush()
+    this.digits.flush()
   }
 
   dispose(): void {
     for (const shapes of [this.ringShapes, this.particleShapes, this.flashShapes]) shapes.dispose()
-    for (const entry of [...this.numbers, ...this.freeNumbers]) {
-      entry.texture.dispose()
-      entry.sprite.material.dispose()
-    }
+    this.digits.dispose()
   }
 
   get active(): number {
@@ -295,36 +279,4 @@ export class Fx {
     particle.alpha = options.alpha ?? 1
     this.particles.push(particle)
   }
-
-  private newNumber(): FloatingNumber {
-    const canvas = document.createElement("canvas")
-    canvas.width = numberBox.width * numberBox.resolution
-    canvas.height = numberBox.height * numberBox.resolution
-    const texture = new CanvasTexture(canvas)
-    texture.minFilter = LinearFilter
-    texture.generateMipmaps = false
-    const sprite = new Sprite(new SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false }))
-    sprite.renderOrder = 4
-    sprite.visible = false
-    this.layer.add(sprite)
-    return { sprite, canvas, texture, text: "", x: 0, y: 0, drift: 0, size: 1, life: 0, maxLife: 1 }
-  }
-}
-
-/** Draws `text` white with a dark outline, centered (tinted by its sprite's color). */
-const drawNumber = (canvas: HTMLCanvasElement, text: string): void => {
-  const context = canvas.getContext("2d")
-  if (context === null) return
-  const r = numberBox.resolution
-  context.setTransform(r, 0, 0, r, 0, 0)
-  context.clearRect(0, 0, numberBox.width, numberBox.height)
-  context.font = "700 15px IBM Plex Mono, ui-monospace, monospace"
-  context.textAlign = "center"
-  context.textBaseline = "middle"
-  context.lineJoin = "round"
-  context.lineWidth = 4
-  context.strokeStyle = "#0d1117"
-  context.strokeText(text, numberBox.width / 2, numberBox.height / 2)
-  context.fillStyle = "#ffffff"
-  context.fillText(text, numberBox.width / 2, numberBox.height / 2)
 }

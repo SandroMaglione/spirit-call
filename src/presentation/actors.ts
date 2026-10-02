@@ -134,7 +134,7 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     const windup = spec !== null && data.phase.get() === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
     const stunned = data.stunned.get().remaining > 0
     const tinted = mixColor(stateTint(enemyColor(kind), data.state.get().current), view.windupTint, windup * 0.75)
-    node.body.material.color.setHex(data.flash.get().remaining > 0 ? view.hitFlash : stunned ? mixColor(tinted, view.stun, 0.35) : tinted)
+    node.body.color.setHex(data.flash.get().remaining > 0 ? view.hitFlash : stunned ? mixColor(tinted, view.stun, 0.35) : tinted)
     // Over its head, in projected coordinates (the overlay's).
     const feet = toScreen(projection, { x: node.root.position.x, y: node.root.position.z })
     const head = feet.y - screenHeight(projection, node.height)

@@ -1,33 +1,39 @@
-import type { BufferGeometry, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { BufferGeometry, Group, Mesh, MeshLambertMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
 import type { Vec2 } from "../math/vec.ts"
 
+import type { Batch, Instance } from "./batch.ts"
 import type { Fx } from "./fx.ts"
 import type { Shapes } from "./shapes.ts"
 import type { SlashTrails } from "./trails.ts"
 
 /**
  * An upright body standing at `root` (its feet, on the floor). `pivot` sits
- * inside it at the feet, so a hit can squash and lean the body over them;
- * `body` is the mesh, tinted through its own material.
+ * inside it at the feet, so a hit can squash and lean the body over them.
  */
 export interface ActorParts {
   readonly root: Group
   readonly pivot: Group
-  readonly body: Mesh<BufferGeometry, MeshLambertMaterial>
+  readonly shadow: Instance
   /** The body's height in world units (what floats over its head goes above it). */
   readonly height: number
   /** The body's radius (half its width), in world units. */
   readonly radius: number
 }
 
+/** The player's body is a mesh of its own (it turns see-through while protected). */
+export type PlayerNode = { readonly kind: "player"; readonly body: Mesh<BufferGeometry, MeshLambertMaterial> } & ActorParts
+
+/** Enemy bodies are drawn in batches, one per size: `body` carries the transform and the tint. */
+export type EnemyNode = { readonly kind: "enemy"; readonly body: Instance } & ActorParts
+
 export type ProjectileNode = {
   readonly kind: "projectile"
   readonly root: Group
-  readonly orb: Mesh<BufferGeometry, MeshBasicMaterial>
-  readonly shadow: Mesh<BufferGeometry, MeshBasicMaterial>
+  readonly orb: Instance
+  readonly shadow: Instance
 }
 
 /** A wall or pillar: a box. `depth` and `bounds` (its outline on screen, in projected coordinates) let pillars fade in front of the player. */
@@ -39,26 +45,24 @@ export type WallNode = {
   readonly bounds: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 }
 
-export type RenderNode =
-  | ({ readonly kind: "player" } & ActorParts)
-  | ({ readonly kind: "enemy" } & ActorParts)
-  | ProjectileNode
-  | WallNode
+export type RenderNode = PlayerNode | EnemyNode | ProjectileNode | WallNode
 
-/** Geometry and materials made once and shared by many nodes. */
+/** Geometry, materials, and batches made once and shared by many nodes. */
 export interface RenderAssets {
-  /** A flat disc of radius 1 lying on the floor (blob shadows). */
-  readonly disc: BufferGeometry
-  /** Actors' blob shadow. */
-  readonly shadow: MeshBasicMaterial
-  /** Projectiles' smaller, lighter shadow. */
-  readonly projectileShadow: MeshBasicMaterial
-  /** A low-poly ball of radius 1 (projectiles). */
-  readonly orb: BufferGeometry
-  /** A thin low-poly puck of radius 1 (thrown discs). */
-  readonly puck: BufferGeometry
-  /** A capsule body of this radius and height, standing on y = 0, made once per size. */
-  body(radius: number, height: number): BufferGeometry
+  /** Actors' blob shadows. */
+  readonly shadows: Batch
+  /** Projectiles' smaller, lighter shadows. */
+  readonly projectileShadows: Batch
+  /** Low-poly balls of radius 1 (bolts). */
+  readonly orbs: Batch
+  /** Thin low-poly pucks of radius 1 (thrown discs). */
+  readonly pucks: Batch
+  /** A capsule of this radius and height, standing on y = 0, made once per size. */
+  bodyGeometry(radius: number, height: number): BufferGeometry
+  /** The batch of enemy bodies of this size. */
+  bodies(radius: number, height: number): Batch
+  /** Copies every batch's instances for this frame. */
+  flush(): void
   dispose(): void
 }
 
