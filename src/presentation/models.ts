@@ -3,8 +3,9 @@
  * an asset, not content: which character, enemy, or wall uses which model
  * is in `looks.ts`. See `docs/models.md` for what a model file must be.
  *
- * Each model's numbers (`ModelSpec`) are copied from its export's metadata
- * next to the file in `assets/`.
+ * The files live in `art/`, next to their Blender sources; each model's
+ * numbers (`ModelSpec`) are copied from its export's metadata by a module in
+ * `assets/`.
  */
 import { Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Texture } from "three"
 import type { AnimationClip, Material, Object3D } from "three"
@@ -30,7 +31,7 @@ export interface ModelSpec {
   readonly clips: Readonly<Record<string, ClipTiming>>
 }
 
-/** Every model the game can show. Add new ones here (and their file to `assets/`). */
+/** Every model the game can show. Add new ones here (with their module in `assets/`). */
 export const models = {
   crow: crowModel,
   trainingBlade: trainingBladeModel,

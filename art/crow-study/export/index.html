@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crow GLB inspection</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#d7cbb6;color:#282624;font:15px system-ui}main{height:100dvh;display:grid;grid-template-rows:auto 1fr}header{padding:14px 20px;background:#eee6d8;display:flex;gap:12px;align-items:center;flex-wrap:wrap}h1{font-size:17px;margin:0}button,select,input{font:inherit}button,select{padding:7px}#view{min-height:0;position:relative}canvas{display:block;width:100%;height:100%;touch-action:none}#status{font-size:12px;flex-basis:100%}label{display:flex;gap:5px;align-items:center}#time{width:145px}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
+<main><header><h1>Crow · exported GLB</h1><select id="clip" aria-label="Animation"></select><button id="play">Pause</button><button id="restart">Restart</button><label>Time <input id="time" type="range" min="0" max="1" step="0.001" value="0"></label><label>Speed <select id="speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option selected value="1">1×</option></select></label><span id="status">Loading model…</span></header><div id="view"></div></main>
+<script type="module">
+import { prepareCrowClips } from './prepare-clips.mjs';
+
+const view=document.querySelector('#view'), select=document.querySelector('#clip'), slider=document.querySelector('#time'), status=document.querySelector('#status');
+try {
+  const THREE=await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js');
+  const {GLTFLoader}=await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/loaders/GLTFLoader.js');
+  const {OrbitControls}=await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/controls/OrbitControls.js');
+  const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2)); view.append(renderer.domElement);
+  renderer.setClearColor(0xd7cbb6); renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(34,1,0.05,50);
+  camera.position.set(3.3,2.6,5.0);
+  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.05,0);controls.update();
+  scene.add(new THREE.HemisphereLight(0xdfeaff,0x72654d,2.4));
+  const key=new THREE.DirectionalLight(0xfff0d2,3.2);key.position.set(-3,5,4);scene.add(key);
+  const rim=new THREE.DirectionalLight(0xc7d7ff,2.0);rim.position.set(3,3,-4);scene.add(rim);
+  const grid=new THREE.GridHelper(6,12,0x9b8a73,0xb9a88f);scene.add(grid);
+  const forward=new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0.01,0),1.1,0x416d80);scene.add(forward);
+  const [gltf,info]=await Promise.all([new GLTFLoader().loadAsync('./crow-animated.glb'),fetch('./model-info.json').then(r=>r.json())]);
+  scene.add(gltf.scene);
+  const clips=prepareCrowClips(gltf.animations,info.animated_export),mixer=new THREE.AnimationMixer(gltf.scene);
+  for(const clip of clips)select.add(new Option(clip.name,clip.name));
+  select.value='Idle';let active,playing=true;
+  function choose(){mixer.stopAllAction();active=mixer.clipAction(clips.find(c=>c.name===select.value));active.reset();active.setLoop(select.value==='Attack'?THREE.LoopOnce:THREE.LoopRepeat,Infinity);active.clampWhenFinished=true;active.play();mixer.update(0);slider.max=active.getClip().duration;slider.value=0;}
+  select.onchange=choose;choose();
+  document.querySelector('#restart').onclick=choose;
+  document.querySelector('#play').onclick=e=>{playing=!playing;e.target.textContent=playing?'Pause':'Play';};
+  slider.oninput=()=>{playing=false;document.querySelector('#play').textContent='Play';active.paused=false;active.time=Number(slider.value);mixer.update(0);};
+  new ResizeObserver(()=>{const {width,height}=view.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix();}).observe(view);
+  status.textContent=`${info.animated_export.height_meters.toFixed(3)} m · +Z forward (arrow) · drag to orbit, pinch/scroll to zoom · Attack is a pose study`;
+  let previous;
+  renderer.setAnimationLoop(now=>{const dt=previous===undefined?0:Math.min((now-previous)/1000,0.05);previous=now;if(playing)mixer.update(dt*Number(document.querySelector('#speed').value));slider.value=active.time;renderer.render(scene,camera);});
+  window.crowPreview={THREE,gltf,clips,mixer,scene,camera,renderer,info,choose};
+} catch(error){status.textContent=String(error);throw error;}
+</script>
+</html>

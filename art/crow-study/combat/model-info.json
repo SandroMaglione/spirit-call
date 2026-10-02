@@ -1,0 +1,145 @@
+{
+  "schema_version": 2,
+  "fps": 30,
+  "height_meters": 2.196488138753921,
+  "up": "+Y",
+  "forward": "+Z",
+  "root_motion": false,
+  "grip": "weapon_grip",
+  "weapon_axis": "+Y along blade; +Z blade face; origin at handle center",
+  "run_stride_meters": 1.74,
+  "clips": {
+    "Idle": {
+      "frames": [
+        1,
+        60
+      ],
+      "samples": 60,
+      "last_key_seconds": 1.9666666666666666,
+      "loop_seconds": 2.0,
+      "duration_seconds": 2.0
+    },
+    "Run": {
+      "frames": [
+        1,
+        16
+      ],
+      "samples": 16,
+      "last_key_seconds": 0.5,
+      "loop_seconds": 0.5333333333333333,
+      "duration_seconds": 0.5333333333333333
+    },
+    "AttackCombo": {
+      "frames": [
+        1,
+        67
+      ],
+      "samples": 67,
+      "last_key_seconds": 2.2,
+      "loop_seconds": null,
+      "duration_seconds": 2.2
+    },
+    "RunStart": {
+      "frames": [
+        1,
+        9
+      ],
+      "samples": 9,
+      "last_key_seconds": 0.26666666666666666,
+      "loop_seconds": null,
+      "duration_seconds": 0.26666666666666666
+    },
+    "RunStop": {
+      "frames": [
+        1,
+        10
+      ],
+      "samples": 10,
+      "last_key_seconds": 0.3,
+      "loop_seconds": null,
+      "duration_seconds": 0.3
+    },
+    "Recover1": {
+      "frames": [
+        1,
+        10
+      ],
+      "samples": 10,
+      "last_key_seconds": 0.3,
+      "loop_seconds": null,
+      "duration_seconds": 0.3
+    },
+    "Recover2": {
+      "frames": [
+        1,
+        10
+      ],
+      "samples": 10,
+      "last_key_seconds": 0.3,
+      "loop_seconds": null,
+      "duration_seconds": 0.3
+    },
+    "Recover3": {
+      "frames": [
+        1,
+        10
+      ],
+      "samples": 10,
+      "last_key_seconds": 0.3,
+      "loop_seconds": null,
+      "duration_seconds": 0.3
+    }
+  },
+  "combo": [
+    {
+      "name": "Opening cut",
+      "start": 0.0,
+      "end": 0.43333333333333335,
+      "active": [
+        0.3,
+        0.36666666666666664
+      ],
+      "recover": "Recover1"
+    },
+    {
+      "name": "Rising backhand",
+      "start": 0.43333333333333335,
+      "end": 0.8,
+      "active": [
+        0.6666666666666666,
+        0.7333333333333333
+      ],
+      "recover": "Recover2"
+    },
+    {
+      "name": "Driving thrust",
+      "start": 0.8,
+      "end": 1.2333333333333334,
+      "active": [
+        1.0666666666666667,
+        1.1333333333333333
+      ],
+      "recover": "Recover3"
+    },
+    {
+      "name": "Spinning finisher",
+      "start": 1.2333333333333334,
+      "end": 2.2,
+      "active": [
+        1.7,
+        1.7666666666666666
+      ],
+      "recover": null
+    }
+  ],
+  "weapons": {
+    "trainingBlade": {
+      "file": "training-blade.glb",
+      "label": "Training Blade"
+    },
+    "crescendo": {
+      "file": "crescendo.glb",
+      "label": "Crescendo"
+    }
+  }
+}

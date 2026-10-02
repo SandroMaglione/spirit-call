@@ -1,0 +1,70 @@
+{
+  "blender": "4.5.14 LTS",
+  "mesh_objects": 23,
+  "vertices": 2518,
+  "triangles": 4944,
+  "evaluated_triangles": 4944,
+  "rigged": false,
+  "textured": true,
+  "materials": "512px authored body palette; other parts use flat materials",
+  "animated_export": {
+    "file": "crow-animated.glb",
+    "height_meters": 2.19648814201355,
+    "up": "+Y",
+    "forward": "+Z",
+    "origin": "ground between feet",
+    "rest_bounds_meters": {
+      "min": [
+        -0.7857499718666077,
+        -1.922018100231071e-11,
+        -0.4713842272758484
+      ],
+      "max": [
+        0.7857499718666077,
+        2.19648814201355,
+        0.7300000190734863
+      ]
+    },
+    "armatures": 1,
+    "bones": 12,
+    "max_weights": 2,
+    "root_motion": false,
+    "fps": 24,
+    "clips": {
+      "Idle": {
+        "frames": [
+          1,
+          48
+        ],
+        "samples": 48,
+        "last_key_seconds": 1.9583333333333333,
+        "loop_seconds": 2.0
+      },
+      "Run": {
+        "frames": [
+          1,
+          12
+        ],
+        "samples": 12,
+        "last_key_seconds": 0.4583333333333333,
+        "loop_seconds": 0.5
+      },
+      "Attack": {
+        "frames": [
+          1,
+          17
+        ],
+        "samples": 17,
+        "last_key_seconds": 0.6666666666666666,
+        "loop_seconds": null,
+        "duration_seconds": 0.6666666666666666,
+        "pose_markers_seconds": {
+          "windup": 0.16666666666666666,
+          "follow_through": 0.2916666666666667,
+          "recover": 0.4166666666666667
+        },
+        "scope": "Unarmed side-slash pose study; not wired to combat hit timing"
+      }
+    }
+  }
+}
