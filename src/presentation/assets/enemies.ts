@@ -3,5 +3,6 @@ import { swarmerModel } from "./enemies/swarmer.ts"
 import { dummyModel } from "./enemies/dummy.ts"
 import { shooterModel } from "./enemies/shooter.ts"
 import { sniperModel } from "./enemies/sniper.ts"
+import { chargerModel } from "./enemies/charger.ts"
 
-export const enemyModels = { enemySniper: sniperModel, enemyShooter: shooterModel, enemyChaser: chaserModel, enemySwarmer: swarmerModel, enemyDummy: dummyModel }
+export const enemyModels = { enemyCharger: chargerModel, enemySniper: sniperModel, enemyShooter: shooterModel, enemyChaser: chaserModel, enemySwarmer: swarmerModel, enemyDummy: dummyModel }

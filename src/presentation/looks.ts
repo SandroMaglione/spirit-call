@@ -104,7 +104,7 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   shooter: enemyModel("shooter", "enemyShooter", 62),
   brute: capsule("brute"),
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),
-  charger: capsule("charger"),
+  charger: enemyModel("charger", "enemyCharger", 78),
   sniper: enemyModel("sniper", "enemySniper", 60),
   guardian: capsule("guardian")
 }
