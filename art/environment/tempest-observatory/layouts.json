@@ -1,0 +1,2530 @@
+{
+  "coordinate_system": "glTF meters; +Y up; yaw around +Y",
+  "scope": "Art assembly examples, not authored gameplay levels",
+  "layouts": [
+    {
+      "name": "star-court",
+      "scene": "Tempest observatory | star-court",
+      "role": "quest skirmish",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3.5,
+            0,
+            -2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3.5,
+            0,
+            2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "orrery",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "armillary",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "star-chart",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "ring-pedestal",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "banner-forked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "waymarker",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -1.65,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "combat-core",
+          "bounds_xz_m": [
+            -2.5,
+            -2.5,
+            2.5,
+            2.5
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.5
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "sky-crossing",
+      "scene": "Tempest observatory | sky-crossing",
+      "role": "dungeon connector",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bridge-wide",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gate-wide",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4.8,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": true
+        },
+        {
+          "asset": "lightning-rod",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.0,
+            0,
+            3.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "conductor-coil",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.0,
+            0,
+            3.2250000119209288
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "capacitor",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.0,
+            0,
+            -3.2250000119209288
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "cable-spool",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.0,
+            0,
+            -3.3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "antenna-array",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "broken-ring",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-idle",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5,
+            0,
+            -1.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "crossing-deck",
+          "bounds_xz_m": [
+            -1.8,
+            -1.7,
+            1.8,
+            1.7
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        0.6
+      ],
+      "entry_points": [
+        {
+          "name": "west",
+          "position_m": [
+            -3,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "east",
+          "position_m": [
+            3,
+            0,
+            0
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "instrument-hall",
+      "scene": "Tempest observatory | instrument-hall",
+      "role": "boss or elite room",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-radial",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": true
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "telescope",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "astrolabe",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "lens-stand",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "instrument-crate",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "console",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "seal-plinth",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache-open",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "encounter-core",
+          "bounds_xz_m": [
+            -2.8,
+            -2.8,
+            2.8,
+            2.8
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.7
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "zenith-terrace",
+      "scene": "Tempest observatory | zenith-terrace",
+      "role": "survival arena",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "tempest-observatory",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "tempest-observatory",
+          "position_m": [
+            3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "tempest-observatory",
+          "position_m": [
+            1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "tempest-observatory",
+          "position_m": [
+            4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "tempest-observatory",
+          "position_m": [
+            0,
+            1.2,
+            -4.3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "tempest-observatory",
+          "position_m": [
+            6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "signal-dish",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wind-vane",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "crystal-prism",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "sky-rock",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-active",
+          "kit": "tempest-observatory",
+          "position_m": [
+            -5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "tempest-observatory",
+          "position_m": [
+            5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "lower-combat-floor",
+          "bounds_xz_m": [
+            -3,
+            1,
+            3,
+            4.3
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        2
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    }
+  ]
+}

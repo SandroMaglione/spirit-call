@@ -1,0 +1,566 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "a43af92d3eb2a35ce09f46aa2598dd35a5ffc93d60edd86c61b9e09ae4dce57d",
+  "assets": [
+    {
+      "id": "antenna-array",
+      "sha256": "00f18804ae75cf3820f3d536089d35310ed40f472905be912d13ddf56d0fec0c",
+      "triangles": 384,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "arch-free",
+      "sha256": "d662b5735c7f5b5b7d3ac13e3024856873ba1c3b5891d2f2e864a463e0e45b07",
+      "triangles": 468,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "armillary",
+      "sha256": "0cf7c6dcd24bcf87be4b1792cb00a0af7be69716e09cf768ee04a39e5dc39983",
+      "triangles": 376,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "astrolabe",
+      "sha256": "0bfa4366a1b278add0bab896069e8472b6111a725f8811e022651a0b756518e6",
+      "triangles": 212,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "banner-forked",
+      "sha256": "2a9ce5dbfc47f045185d1e75d6246e2d0e94c7b2a0a7d236503c09cf6c6a1f2d",
+      "triangles": 292,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "beacon-active",
+      "sha256": "aaf53c52383b4674b06906a5b0412f6488ed12a7fa32b5dd6098cb7ec5f4ee96",
+      "triangles": 232,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "beacon-idle",
+      "sha256": "3195270dfa30b55d95d54d2cd1b912857e595f5153fcad0dce54614fc059f674",
+      "triangles": 104,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bridge",
+      "sha256": "f6e2d2d4dfbdda85c1e138c8c6d98c4a3deda7f2d697b435c319050fbd187865",
+      "triangles": 1080,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bridge-wide",
+      "sha256": "8fb3372faf2a7e27e6bc3852711e16ec50e6b4098b24c4bbe01c2ab891b849d8",
+      "triangles": 1080,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "broken-ring",
+      "sha256": "d4a0c2711da7b52d3ab86f24fab872ccc872629e044499bb0c908f5a873a5fb9",
+      "triangles": 260,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "cable-spool",
+      "sha256": "f725ac76b5224162ab216538beb357834bcdbfd4443202705792c2bfe72c34bb",
+      "triangles": 780,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "capacitor",
+      "sha256": "3b457e8b21b178db4461a4314b7647d2470ce83d1816369410d7d63bf99848e8",
+      "triangles": 708,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "conductor-coil",
+      "sha256": "ca6b8baff92dcc4d50b32392d4d766bb12e0fdd4dd675ce090e4767d843f8204",
+      "triangles": 708,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "console",
+      "sha256": "d1b563aaec91decd5b79ee87565186d1aa5c6628a03fe5764fade5505955a109",
+      "triangles": 492,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "crystal-prism",
+      "sha256": "112b4453780fb602bf1707f3648fda3c2f4dd471547730ef3c4fb943aab56d4a",
+      "triangles": 80,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "doorway",
+      "sha256": "0c2dcbbeb4e05e2ee86ec4b78a61e89005ae60960a15c604e6d02b345c118b30",
+      "triangles": 1260,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 2
+    },
+    {
+      "id": "floor-border",
+      "sha256": "1754e4d915646d6f338aae9848d3cc536618e12cc398e5b0e9dd9d1e261db75a",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-border-corner",
+      "sha256": "eb1f017bbcedf435fbf1070a13523ade4a30fb529f8a15ffafa5bb3761c2dc5b",
+      "triangles": 120,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-cracked",
+      "sha256": "7e30f6ed2bee73b21b9f4c77cc30f904426168b2ec638585a1e06e921b3dd919",
+      "triangles": 420,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-deck",
+      "sha256": "73845cd0d8131daed5c874e103b1fc2b1e580a33f7528205bc35aad0a6026b2a",
+      "triangles": 600,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-grate",
+      "sha256": "1120b1f684e37a1fc7fae9ec36ca273e4e0eafd75a48dfa90916c2674e0cd027",
+      "triangles": 900,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-inset",
+      "sha256": "9d707dc279b9679aff656bb6805b18486f6427878b287d8395cabcce42276216",
+      "triangles": 600,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-large",
+      "sha256": "b3fd88f40fd0bfa8848cf22ed44e3dac0ce75f0dabdda243b52682c84c70b513",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-plain",
+      "sha256": "4a308e983540e8985242790fc5cc2aa676edee9aa09d4c3a3ccceda8da7f3166",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-radial",
+      "sha256": "affc7f42e57586735f882bc2c5b6b0e9150cf140fea41f082300a9e1a39ca2d3",
+      "triangles": 436,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-rubble",
+      "sha256": "3a7d9a7b0148b54b44b87a3fee24fafbf764fd4f1ff244828fac6696998d3a4a",
+      "triangles": 892,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-small",
+      "sha256": "cc43a82b4bd0f69cb80ed9f5e0618641913ff60ad5083f306f6c1bf2d3c65fb5",
+      "triangles": 120,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-threshold",
+      "sha256": "bca067dce9ef0bf3a6bb008933b4c515a3026972d7703376fb1388caf4a0f9ed",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-transition",
+      "sha256": "47772fd9e52544201cf1e3cced434684d80755b130e8473d77dab464a5d1c064",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-worn",
+      "sha256": "c40e75997af76ccd1f5fafba7e8c8bf2c2d5d4b7ca69b9c3cf715ff606cff60e",
+      "triangles": 1020,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "gate-wide",
+      "sha256": "93d194cdeda57b2c48fa527848433cc38b89ee9e211f9950eaa79a69b3eca5a4",
+      "triangles": 1620,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 2
+    },
+    {
+      "id": "instrument-crate",
+      "sha256": "aecd88a18ab6c10684acb8f0823097381efb42eb58cb1cafb98d285e908df0e8",
+      "triangles": 492,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "landing",
+      "sha256": "701ad12aabd7fee810027c64986fee42becf53de97099dd262ea4287c76d477e",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "lens-stand",
+      "sha256": "76a6e4e58a2d24cf3a704b47dc60acb2ac0ac06b49973f99c89417866986f36b",
+      "triangles": 156,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "lightning-rod",
+      "sha256": "9a0c1ce529e11ec42ff65ac4476c3351e6d42ae7c89ea3a38102b92130a0f372",
+      "triangles": 216,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "orrery",
+      "sha256": "5f7b5367186631549ab9a57ab5c3e402b906ddf7653d409fc574d186f044d180",
+      "triangles": 660,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pillar-broken",
+      "sha256": "81cd4cae211ef965b30114455d3036b993b0adac4a839923540b5681944e8158",
+      "triangles": 172,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pillar-large",
+      "sha256": "0a50d9053c194f47a24ab3a6512a36ea2fd4f2164307850cced748ec117f191b",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pillar-small",
+      "sha256": "dcf29737a15f33f57f808d5fbd2690afbc606c015caf86f716b66c740f9f29f1",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "platform",
+      "sha256": "c8028bcdb18cdbcffec488aec1831fec111ddb16353c72544d1883c9d57e4140",
+      "triangles": 480,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "platform-edge",
+      "sha256": "fd44e63bb081112b8a0ed39e552b6657f90493acf128d22daff770ecdcb0f0d0",
+      "triangles": 480,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "platform-wide",
+      "sha256": "25cf69329bd7aecb7204e9950cc99849222f54213abf1b20d79c97d82c553af7",
+      "triangles": 480,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "railing-corner",
+      "sha256": "e6af4807484fa9f2a504716e8aadc3b9f1e6e293a3395c532b0a051a84ce510a",
+      "triangles": 1500,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "railing-straight",
+      "sha256": "20fec9774aed8221834bbb092c04edab7be359b536e140925fedd7cc04867636",
+      "triangles": 780,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "ring-pedestal",
+      "sha256": "6f6360ddd4aa4734c5ede53ae5b8108407e0397c78c6385f62c05f46d28e144f",
+      "triangles": 188,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "seal-plinth",
+      "sha256": "8e21fff1ebe69481626004a97c234eb80ecf770e62b941757b44d0fe1a859129",
+      "triangles": 168,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "signal-dish",
+      "sha256": "daadc1d2f306f0c90586ca4aaf4e3b345fdc2d93e1a109ff84d2a483456110f5",
+      "triangles": 252,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "sky-rock",
+      "sha256": "764981668509527a66851882b760439fd9aff65705eb501a8d64f6869a3f29ad",
+      "triangles": 96,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-full",
+      "sha256": "b4e9d24fe27712cc6c04d2882a6c714bc08a9ee15a5d8da0a2ab6fe8afe655b9",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-narrow",
+      "sha256": "f56ec1e8637f38425b8f1d6f4e0f1504f608494f84d54e489c739d0a290e4f8d",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-rail",
+      "sha256": "31842e06d44b5e43ca2510f1774f5ee9389acf850bfc65793625b0a1e38773a9",
+      "triangles": 200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-short",
+      "sha256": "cb3c878ae8557dc734e50ba2a22ba326a01f9fd93a4cb7db26c9adc88eb52269",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-wide",
+      "sha256": "4917b1938e0d43a9a0173ab08f7ad41fd95b3afce9884e686d703dba76d4b7e0",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "star-chart",
+      "sha256": "50834ebef332ebc461d92f8038b262853d7f28aa59830e991fd3edf929f52e4f",
+      "triangles": 432,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "supply-cache",
+      "sha256": "a13584bcf3253033302f1d2a9bcf09431fbd5e0a30ee810390b0d992da6052c9",
+      "triangles": 660,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "supply-cache-open",
+      "sha256": "673cc282ac28e0af50c6e8480838d1ecc2986530d27e5382dee5f2714bb0f16f",
+      "triangles": 1092,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "telescope",
+      "sha256": "907610929a880b1a10650d3320d92ed39dd3d6ffc2196e9a211cd9d7413f9f5a",
+      "triangles": 200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-broken",
+      "sha256": "d0097f64eb3051dc6a848bdbda5069e3ef90e32e17c0353776c64ca2a92892af",
+      "triangles": 404,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-buttress",
+      "sha256": "41dc640d92390c0d734fe558fe2ff494093e31fb35c424c421817ca49afa0e1c",
+      "triangles": 512,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-corner",
+      "sha256": "be86f1f4dec858f82b34067d8c7a2de79c9025c02af8d868de1303bee13ee0f3",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-end",
+      "sha256": "444e2e7058db208321459b5e77cad7543503759df9db91e8bc18f5539fbb3513",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-grille",
+      "sha256": "f61564a4929b64c80a6a928edf36d4fcb7d8b9ff2e783672d2645a9aa31635da",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-long",
+      "sha256": "8651fd6f621190088721d7abe90ecc133840f80663d3b7d0e25bc261a648c065",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-low",
+      "sha256": "0735497fcf3ffe1cfb3c831bd8e8f096cddd18031dbe415925219760044a1f92",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-short",
+      "sha256": "123e27c243454b417c8006b76458e82fa76900545fe6b2cb2aa00d94e0d76347",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-straight",
+      "sha256": "b56cd022309e4c36b4584f6067c8ec4f6fbb77fb60cd378a413b89b6138f76d1",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-tall",
+      "sha256": "6680633855c03d24ba15a2c1c2f56451718f4ea8c06c45b4a41b59d97b1ed5dd",
+      "triangles": 480,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-window",
+      "sha256": "073d24a23569293873dc1f8e4c7338e1bda4c483ae7f910566c53f5abc9ad85c",
+      "triangles": 1560,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "waymarker",
+      "sha256": "255c81365349356c02b0bca3952848d9f1fac5db912f853168d9ac40467c4d7a",
+      "triangles": 208,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wind-vane",
+      "sha256": "4e8221ffb6c8c7ddbc838bb5edb417e8715ae01de7a88f0db6df0716f8705c5f",
+      "triangles": 176,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}
