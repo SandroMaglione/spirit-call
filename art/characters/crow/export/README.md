@@ -4,13 +4,13 @@ Runtime asset: [`crow-animated.glb`](crow-animated.glb).
 Dimensions and clip timing: [`model-info.json`](model-info.json), under
 `animated_export`. The top-level geometry fields still describe the static study.
 The exporter writes identical copies of both files one directory up, preserving
-the requested `art/crow-study/crow-animated.glb` path. Copy this export folder
+the requested `art/characters/crow/crow-animated.glb` path. Copy this export folder
 for the renderer handoff; do not edit the generated copies independently.
 
 Rebuild and verify from the repository root:
 
 ```sh
-/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/crow-study/export/export-glb.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/characters/crow/export/export-glb.py
 ```
 
 This reads the committed `crow-animated.blend`, without changing either Blender
@@ -27,7 +27,7 @@ PNG and uses Principled materials, with emission disabled. No Studio objects,
 cameras, lights, constraints, or external texture files are required at runtime.
 The leg IK is baked to joint transforms. No Draco or other decoder is required.
 
-Open `/art/crow-study/export/` on the dev server for the Three.js GLB inspector.
+Open `/art/characters/crow/export/` on the dev server for the Three.js GLB inspector.
 It loads Three.js 0.186.1 from jsDelivr, so the inspection page needs internet.
 The GLB and loop helper themselves have no CDN dependency. Orbit by dragging,
 select Idle/Run/Attack, slow playback, or scrub through the poses. The grid and
@@ -62,8 +62,8 @@ setting `clip.duration` would hold the final pose and is not sufficient.
 ```js
 import { prepareCrowClips } from './prepare-clips.mjs';
 
-const gltf = await loader.loadAsync('/art/crow-study/crow-animated.glb');
-const info = await fetch('/art/crow-study/model-info.json').then(r => r.json());
+const gltf = await loader.loadAsync('/art/characters/crow/crow-animated.glb');
+const info = await fetch('/art/characters/crow/model-info.json').then(r => r.json());
 const clips = prepareCrowClips(gltf.animations, info.animated_export);
 const mixer = new THREE.AnimationMixer(gltf.scene);
 mixer.clipAction(clips.find(clip => clip.name === 'Idle')).play();

@@ -1,6 +1,6 @@
 """A character-only Death's Door study. Run with Blender 4.5 LTS.
 
-blender --background --python-exit-code 1 --python art/crow-study/build.py -- --views
+blender --background --python-exit-code 1 --python art/characters/crow/build.py -- --views
 The mesh is authored here; no imported game assets or generated images are used.
 Front is -Y, up is +Z. The presentation stage is excluded from the GLB.
 """

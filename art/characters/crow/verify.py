@@ -1,6 +1,6 @@
 """Check the saved character and its portable export, including a GLB import.
 
-blender --background --python-exit-code 1 --python art/crow-study/verify.py
+blender --background --python-exit-code 1 --python art/characters/crow/verify.py
 """
 import json
 import math

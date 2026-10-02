@@ -1,6 +1,6 @@
 """Author the armed crow study without modifying either earlier Blender source.
 
-blender --background --python-exit-code 1 --python art/crow-study/combat/build.py
+blender --background --python-exit-code 1 --python art/characters/crow/combat/build.py
 """
 import importlib.util
 import json

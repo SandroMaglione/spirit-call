@@ -54,7 +54,7 @@ the original static export.
 ## Inspect
 
 Run `pnpm dev --host --port 5199` at the repository root, then open
-`/art/crow-study/` on the server's network address. The page also works by
+`/art/characters/crow/` on the server's network address. The page also works by
 opening `index.html` directly. It includes six views, a camera turntable,
 and links to the editable model. The turntable is a camera orbit, not a
 character animation.
@@ -89,13 +89,13 @@ From the repository root:
 
 ```sh
 # Rebuild the model and one fast preview.
-/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/crow-study/build.py -- --draft
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/characters/crow/build.py -- --draft
 
 # Rebuild everything, encode the video, assemble the contact sheet, and verify.
-sh art/crow-study/render.sh
+sh art/characters/crow/render.sh
 
 # Verify saved meshes, packed texture, and GLB import without rendering again.
-/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/crow-study/verify.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/characters/crow/verify.py
 ```
 
 Set `CROW_BLENDER_BINARY` when running `render.sh` on another machine.

@@ -1,6 +1,6 @@
 """Rig the saved study and author two looping actions without changing crow.blend.
 
-blender --background --python-exit-code 1 --python art/crow-study/animate.py
+blender --background --python-exit-code 1 --python art/characters/crow/animate.py
 """
 import math
 from pathlib import Path

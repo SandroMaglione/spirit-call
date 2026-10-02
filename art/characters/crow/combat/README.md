@@ -1,6 +1,6 @@
 # Armed crow motion study
 
-Local asset review for the sword character. Open `/art/crow-study/combat/`
+Local asset review for the sword character. Open `/art/characters/crow/combat/`
 on the Vite dev server (`pnpm dev --host --port 5199`). The inspector uses
 Three.js 0.186.1 from jsDelivr, so the first load needs internet access.
 The game loads these files directly (`src/presentation/assets/crow.ts`).
@@ -34,8 +34,8 @@ views, not a renderer integration or a performance test on a physical phone.
 From the repository root, with Blender 4.5 LTS:
 
 ```sh
-blender --background --python-exit-code 1 --python art/crow-study/combat/build.py
-blender --background --python-exit-code 1 --python art/crow-study/combat/export.py
+blender --background --python-exit-code 1 --python art/characters/crow/combat/build.py
+blender --background --python-exit-code 1 --python art/characters/crow/combat/export.py
 ```
 
 On macOS, replace `blender` with

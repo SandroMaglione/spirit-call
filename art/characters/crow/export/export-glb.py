@@ -1,6 +1,6 @@
 """Export and round-trip-check the saved rig. Run with Blender 4.5 LTS.
 
-blender --background --python-exit-code 1 --python art/crow-study/export/export-glb.py
+blender --background --python-exit-code 1 --python art/characters/crow/export/export-glb.py
 """
 import json
 import hashlib
