@@ -44,7 +44,11 @@ effects, enemy traits).
   math, config): the ECS. Deterministic (time and randomness come from the
   world's `Time` and `Rng`), headless, and tested without a browser.
 - `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
-  HUD (plain DOM).
+  HUD (plain DOM). The world is 3D (low-poly), seen by an orthographic
+  camera whose view of the floor is exactly `src/math/iso.ts`'s projection
+  (`test/camera.test.ts`), so input and the overlay work in projected
+  coordinates. Things that come in numbers (enemies, projectiles, shadows,
+  damage numbers) are drawn in batches, never a mesh each.
 - `src/ui/`: the menu and results screens (Preact with signals). The UI
   mirrors state and calls plain action functions; it never changes game
   state directly.
@@ -68,3 +72,9 @@ simulation); `pnpm check` runs it.
 - Comments explain intent in plain language, matching the surrounding code.
 - Verify gameplay and UI changes in a real browser, on the network address
   (not only localhost), including a phone-sized viewport with touch input.
+- Animation follows the simulation, never the other way round: timings
+  (windups, hits, recoveries) live in content and the simulation, and clips
+  are sped up or slowed down to fit them. No root motion, and no hitboxes
+  from animation.
+- Which model or look a character or enemy has is presentation config
+  (`src/config/view.ts`, keyed by id); content holds no asset paths.
