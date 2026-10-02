@@ -10,6 +10,7 @@ import { Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Texture } from "three
 import type { AnimationClip, Material, Object3D } from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
+import { courtyardModels } from "./assets/courtyard.ts"
 import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
 
 /** How a clip ends: loops name the time their first pose comes back (`closeLoop`); one-shots have `null`. */
@@ -23,6 +24,8 @@ export interface ModelSpec {
   readonly url: string
   /** Rest-pose height in the file's units (meters), to scale it to a body; `null` for a part held by another model (it takes that model's scale). */
   readonly height: number | null
+  /** Its footprint on the floor (meters, X × Z), for pieces fitted to the arena's walls and floor. */
+  readonly footprint?: readonly [number, number]
   /** Its animation clips by name; a model without animation has none. */
   readonly clips: Readonly<Record<string, ClipTiming>>
 }
@@ -31,7 +34,8 @@ export interface ModelSpec {
 export const models = {
   crow: crowModel,
   trainingBlade: trainingBladeModel,
-  crescendo: crescendoModel
+  crescendo: crescendoModel,
+  ...courtyardModels
 } as const satisfies Record<string, ModelSpec>
 
 export type ModelId = keyof typeof models

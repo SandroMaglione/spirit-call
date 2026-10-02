@@ -39,6 +39,8 @@ export type ProjectileNode = {
 export type WallNode = {
   readonly kind: "wall"
   readonly root: Group
+  /** Batched pieces (wall segments). */
+  readonly instances: ReadonlyArray<Instance>
   readonly depth: number
   readonly bounds: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
   /** Shows it at `opacity` (1 is solid). */
@@ -52,6 +54,8 @@ export type RenderNode = ActorNode | ProjectileNode | WallNode
 export interface RenderAssets {
   /** A loaded model (every model the looks use is loaded before the arena opens). */
   model(id: ModelId): ModelSource
+  /** The batch drawing every copy of a one-mesh model (floor tiles, wall segments, props). */
+  piece(id: ModelId): Batch
   /** Actors' blob shadows. */
   readonly shadows: Batch
   /** Projectiles' smaller, lighter shadows. */

@@ -1,9 +1,10 @@
 /**
  * What many nodes share, made once: batches (enemy capsules by size,
- * projectiles, shadows), capsule geometry, and the loaded models.
+ * projectiles, shadows, and pieces of scenery by model), capsule geometry,
+ * and the loaded models.
  */
-import { CapsuleGeometry, CircleGeometry, CylinderGeometry, IcosahedronGeometry, MeshBasicMaterial, MeshLambertMaterial } from "three"
-import type { BufferGeometry, Group } from "three"
+import { CapsuleGeometry, CircleGeometry, CylinderGeometry, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial } from "three"
+import type { BufferGeometry, Group, Material } from "three"
 
 import { view } from "../config/view.ts"
 import { Batch } from "./batch.ts"
@@ -39,11 +40,32 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     geometries.set(key, geometry)
     return geometry
   }
+  const pieces = new Map<ModelId, Batch>()
+  const baked: Array<BufferGeometry> = []
+  const model = (id: ModelId): ModelSource => {
+    const source = models.get(id)
+    if (source === undefined) throw new Error(`Model ${id} was not loaded (is it in looks.ts?)`)
+    return source
+  }
   return {
-    model(id) {
-      const source = models.get(id)
-      if (source === undefined) throw new Error(`Model ${id} was not loaded (is it in looks.ts?)`)
-      return source
+    model,
+    piece(id) {
+      const known = pieces.get(id)
+      if (known !== undefined) return known
+      // One mesh and one material, so every copy can share a batch: its geometry, placed as the model places it.
+      const source = model(id)
+      const meshes: Array<Mesh> = []
+      source.scene.updateMatrixWorld(true)
+      source.scene.traverse((part) => {
+        if (part instanceof Mesh) meshes.push(part)
+      })
+      const [mesh] = meshes
+      if (mesh === undefined || meshes.length > 1 || Array.isArray(mesh.material)) throw new Error(`Model ${id} must be one mesh with one material to be batched`)
+      const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld)
+      baked.push(geometry)
+      const batch = new Batch(parent, geometry, mesh.material as Material)
+      pieces.set(id, batch)
+      return batch
     },
     shadows: fixed[0],
     projectileShadows: fixed[1],
@@ -61,9 +83,11 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     flush() {
       for (const batch of fixed) batch.flush()
       for (const batch of bodies.values()) batch.flush()
+      for (const batch of pieces.values()) batch.flush()
     },
     dispose() {
-      for (const batch of [...fixed, ...bodies.values()]) batch.dispose()
+      for (const batch of [...fixed, ...bodies.values(), ...pieces.values()]) batch.dispose()
+      for (const geometry of baked) geometry.dispose()
       for (const geometry of geometries.values()) geometry.dispose()
       for (const resource of [disc, orb, puck, shadow, projectileShadow, glow, flesh]) resource.dispose()
     }

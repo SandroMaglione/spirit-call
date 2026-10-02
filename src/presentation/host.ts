@@ -139,9 +139,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   scene.add(sun)
 
   const grid = new Shapes({ order: floorLayers.grid.order }).onFloor(floorLayers.grid.height)
-  const floor = makeFloor(arena.width, arena.height, grid)
-  if (floor !== null) scene.add(floor)
-  scene.add(grid.mesh, makeScenery(assets))
+  const floor = makeFloor(assets, arena.width, arena.height, grid)
+  scene.add(floor.object, grid.mesh, makeScenery(assets))
   grid.flush()
   const telegraphs = new Shapes({ order: floorLayers.telegraphs.order }).onFloor(floorLayers.telegraphs.height)
   const groundMarks = new Shapes({ order: floorLayers.marks.order }).onFloor(floorLayers.marks.height)
@@ -258,10 +257,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       assets.dispose()
-      if (floor !== null) {
-        floor.geometry.dispose()
-        floor.material.dispose()
-      }
+      floor.base.geometry.dispose()
+      floor.base.material.dispose()
       for (const source of models.values()) disposeModel(source)
       renderer.dispose()
       renderer.forceContextLoss()

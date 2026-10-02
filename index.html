@@ -37,6 +37,8 @@
       .hud {
         position: absolute; inset: 0; pointer-events: none;
         font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; color: #e6edf3;
+        /* A dark halo, so text stays readable over light floors as well as dark ones. */
+        text-shadow: 0 0 3px #0d1117, 0 1px 2px #0d1117;
       }
       /* What is being played: small and out of the way, top left. */
       .hud__quest { position: absolute; top: 12px; left: 14px; display: grid; gap: 2px; text-shadow: 0 1px 3px #000; }

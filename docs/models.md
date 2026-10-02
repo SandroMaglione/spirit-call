@@ -66,8 +66,26 @@ hit or hitbox ever comes from a clip.
 ## Arena
 
 The simulation's walls (`content/arena.ts`, the arena's edges) decide what
-blocks movement and shots; the arena's look only dresses them. A wall model
-is stretched to fill each wall's box (footprint and the view's wall height),
-so model pillars as a unit block. Scenery is for looks only and must not
-look solid where nothing blocks; when a scenery model brings its own floor,
-set the floor look to `none`.
+blocks movement and shots; the arena's look (`arenaLook`) only dresses
+them, at one scale for the whole kit (`unitsPerMeter`, 70 today: the
+courtyard's large pillar fits the arena's 70-unit pillars).
+
+- **Floor:** `tiles` of square pieces laid edge to edge (as many as fit,
+  stretched a little to fill the arena exactly; variants by place, quarter
+  turns at random) over a base slab that shows in their joints, or the
+  placeholder `grid`.
+- **Edge walls:** a `run` of segments of a wall piece along each wall's
+  long side, stretched to fill it and to its thickness. The front walls
+  (toward the camera) use a low piece, so they never hide the player.
+- **Pillars:** a `pillar` model standing on each pillar's box, scaled evenly
+  to its footprint, picked by the footprint closest to the box (variants of
+  that size by place). They fade when the player is behind them.
+- **Scenery:** props placed for looks only, at the arena's scale. They must
+  not look solid where nothing blocks: keep them against the edges.
+
+Floor tiles, wall segments, and props must be one mesh with one material,
+so each model is drawn as one batch however many copies there are.
+
+The courtyard kit is used straight from `art/environment/courtyard/models/`
+(`assets/courtyard.ts` registers the pieces in use, with sizes from its
+`manifest.json`); the build bundles the files it uses.

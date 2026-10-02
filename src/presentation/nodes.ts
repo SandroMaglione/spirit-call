@@ -3,7 +3,7 @@
  * with a blob shadow), projectiles (batched, pooled), and walls (dressed by
  * the arena's look). See `looks.ts` for what each one looks like.
  */
-import { Box3, BoxGeometry, Group, Mesh, MeshLambertMaterial, Vector3 } from "three"
+import { BoxGeometry, Group, Mesh, MeshLambertMaterial } from "three"
 
 import { projection, view } from "../config/view.ts"
 import { depthOf, toScreenAt, worldHeight } from "../math/iso.ts"
@@ -16,6 +16,8 @@ import { floorLayers } from "./layers.ts"
 import type { ProjectileNode, RenderAssets, RenderNode, WallNode } from "./host-types.ts"
 import { arenaLook, characterLooks, enemyLooks } from "./looks.ts"
 import type { BodyLook, WallLook } from "./looks.ts"
+import { models } from "./models.ts"
+import type { ModelId, ModelSpec } from "./models.ts"
 import { copyModel, disposeCopy, paintMaterials } from "./puppet.ts"
 
 /** An upright body on the floor: its feet (`root`), the pivot it leans on, its blob shadow, and the body its look gives it. */
@@ -62,16 +64,26 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
   return node
 }
 
-/** A wall or pillar standing on the floor, `pixels` tall on screen, dressed by `look`. */
-const wallNode = (assets: RenderAssets, look: WallLook, box: Box, pixels: number, opacity: number): WallNode => {
+/** One of `count` variants for a place on the floor, the same every time. */
+export const variantAt = (count: number, at: { readonly x: number; readonly y: number }): number =>
+  ((Math.imul(Math.round(at.x), 73856093) ^ Math.imul(Math.round(at.y), 19349663)) >>> 0) % count
+
+/** A wall or pillar standing on the floor, dressed by `look` at the arena's scale. */
+const wallNode = (assets: RenderAssets, look: WallLook, box: Box, front: boolean): WallNode => {
   const width = box.maxX - box.minX
   const depth = box.maxY - box.minY
-  const height = worldHeight(projection, pixels)
+  const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
+  const scale = arenaLook.unitsPerMeter
   const root = new Group()
-  let fade: (opacity: number) => void
-  let dispose: () => void
+  const instances: Array<Instance> = []
+  let height: number
+  let fade: (opacity: number) => void = () => {}
+  let dispose: () => void = () => {}
   switch (look.kind) {
     case "box": {
+      // Front walls stay low and see-through, so they never hide the player.
+      const opacity = front ? 0.85 : 1
+      height = worldHeight(projection, front ? view.frontWallHeight : view.wallHeight)
       const material = new MeshLambertMaterial({ color: look.color, transparent: opacity < 1, opacity })
       const geometry = new BoxGeometry(width, height, depth).translate(0, height / 2, 0)
       root.add(new Mesh(geometry, material))
@@ -90,17 +102,38 @@ const wallNode = (assets: RenderAssets, look: WallLook, box: Box, pixels: number
       }
       break
     }
-    case "model": {
-      // Stretched to fill the wall's box, standing on the floor.
-      const copy = copyModel(assets.model(look.model), true)
-      const bounds = new Box3().setFromObject(copy.object)
-      const size = bounds.getSize(new Vector3())
-      const center = bounds.getCenter(new Vector3())
-      copy.object.scale.set(width / (size.x || 1), height / (size.y || 1), depth / (size.z || 1))
-      copy.object.position.set(-center.x * copy.object.scale.x, -bounds.min.y * copy.object.scale.y, -center.z * copy.object.scale.z)
+    case "run": {
+      // Segments along the long side, as many as fit, stretched to fill it and to its thickness.
+      const spec = models[look.model]
+      const [length, thickness] = footprintOf(look.model)
+      const along = width >= depth
+      const span = along ? width : depth
+      const count = Math.max(1, Math.round(span / (length * scale)))
+      const segment = span / count
+      for (let index = 0; index < count; index++) {
+        const piece = new Instance(assets.piece(look.model))
+        const offset = -span / 2 + (index + 0.5) * segment
+        piece.object.position.set(along ? offset : 0, 0, along ? 0 : offset)
+        piece.object.rotation.y = along ? 0 : Math.PI / 2
+        piece.object.scale.set(segment / length, scale, (along ? depth : width) / thickness)
+        root.add(piece.object)
+        instances.push(piece)
+      }
+      height = heightOf(spec) * scale
+      break
+    }
+    case "pillar": {
+      // The model whose base fits the box best; variants of that size picked by place.
+      const misfit = (id: ModelId) => Math.abs(footprintOf(id)[0] * scale - width)
+      const best = Math.min(...look.models.map(misfit))
+      const fitting = look.models.filter((id) => misfit(id) - best < 1e-6)
+      const id = fitting[variantAt(fitting.length, center)]!
+      const copy = copyModel(assets.model(id), true)
+      const fit = width / footprintOf(id)[0]
+      copy.object.scale.setScalar(fit)
       root.add(copy.object)
-      fade = (alpha) => paintMaterials(copy.materials, 0xffffff, 0x000000, 0, opacity * alpha)
-      fade(1)
+      height = heightOf(models[id]) * fit
+      fade = (alpha) => paintMaterials(copy.materials, 0xffffff, 0x000000, 0, alpha)
       dispose = () => disposeCopy(copy.object, copy.materials)
       break
     }
@@ -122,12 +155,22 @@ const wallNode = (assets: RenderAssets, look: WallLook, box: Box, pixels: number
   return {
     kind: "wall",
     root,
-    depth: depthOf({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }),
+    instances,
+    depth: depthOf(center),
     bounds: { x: left, y: top, width: Math.max(...xs) - left, height: Math.max(...ys) - top },
     fade,
     dispose
   }
 }
+
+/** A model's footprint (meters), required of the pieces fitted to the arena. */
+export const footprintOf = (id: ModelId): readonly [number, number] => {
+  const spec: ModelSpec = models[id]
+  if (spec.footprint === undefined) throw new Error(`Model ${id} has no footprint to fit the arena with`)
+  return spec.footprint
+}
+
+const heightOf = (spec: ModelSpec): number => spec.height ?? 0
 
 export const createNode = (renderable: RenderableValue, assets: RenderAssets, projectilePool: Array<ProjectileNode>): RenderNode => {
   switch (renderable.kind) {
@@ -139,8 +182,7 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
     case "projectile":
       return projectileNode(assets, projectilePool, renderable.faction, renderable.style, renderable.radius)
     case "wall": {
-      const front = renderable.placement === "front"
-      return wallNode(assets, arenaLook.walls[renderable.placement], renderable.box, front ? view.frontWallHeight : view.wallHeight, front ? 0.85 : 1)
+      return wallNode(assets, arenaLook.walls[renderable.placement], renderable.box, renderable.placement === "front")
     }
   }
 }
@@ -154,7 +196,7 @@ export const instancesOf = (node: RenderNode): ReadonlyArray<Instance> => {
     case "projectile":
       return [node.shadow, node.orb]
     case "wall":
-      return []
+      return node.instances
   }
 }
 

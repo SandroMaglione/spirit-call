@@ -102,36 +102,88 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
 }
 
 /**
- * A wall or pillar: a lit `box`, or a model stretched to fill the wall's box
- * (its footprint, and the wall's height from `view`).
+ * How a wall entity is dressed. A wall's box is what blocks (the
+ * simulation's); its look only dresses it.
+ *
+ * - `box`: a lit box in `color`, as tall as the view's wall height.
+ * - `run`: segments of `model` (a wall piece running along its X) laid along
+ *   the box's long side, as many as fit at the arena's scale, stretched a
+ *   little to fill it exactly and to the box's thickness. Drawn in batches.
+ * - `pillar`: one of `models` standing on the box, scaled evenly to its
+ *   footprint: the one whose footprint is closest to the box's at the
+ *   arena's scale (variants of the same size picked by place).
  */
-export type WallLook = { readonly kind: "box"; readonly color: number } | { readonly kind: "model"; readonly model: ModelId }
+export type WallLook =
+  | { readonly kind: "box"; readonly color: number }
+  | { readonly kind: "run"; readonly model: ModelId }
+  | { readonly kind: "pillar"; readonly models: ReadonlyArray<ModelId> }
 
-/** A model placed in the arena for looks only (it blocks nothing): at a floor point, turned `turn` radians, `scale` times its size in meters. */
+/** The floor: the flat `grid`, or `tiles` of square floor pieces (variants picked by place, turned at random) over a base of `color`. */
+export type FloorLook =
+  | { readonly kind: "grid"; readonly color: number; readonly line: number; readonly spacing: number }
+  | { readonly kind: "tiles"; readonly tiles: ReadonlyArray<ModelId>; readonly color: number }
+
+/** A model placed for looks only (it blocks nothing): at a floor point, turned `turn` radians, at the arena's scale. */
 export interface Scenery {
   readonly model: ModelId
   readonly at: Vec2
   readonly turn: number
-  readonly scale: number
 }
 
 /**
- * The arena: its floor (the flat grid, or `none` when scenery brings its
- * own), its walls by placement (`back` and `front` edges, `sorted` pillars),
- * and scenery. What blocks movement and shots is the simulation's walls
- * (`content/arena.ts`); the looks only dress them.
+ * The arena: its floor, its walls by placement (`back` and `front` edges,
+ * `sorted` pillars), and scenery, with models at `unitsPerMeter` world
+ * units per meter. What blocks movement and shots is the simulation's walls
+ * (`content/arena.ts`); the look only dresses them, and scenery must not
+ * look solid where nothing blocks.
  */
 export interface ArenaLook {
-  readonly floor: { readonly kind: "grid"; readonly color: number; readonly line: number; readonly spacing: number } | { readonly kind: "none" }
+  readonly unitsPerMeter: number
+  readonly floor: FloorLook
   readonly walls: Readonly<Record<"back" | "front" | "sorted", WallLook>>
   readonly scenery: ReadonlyArray<Scenery>
 }
 
-export const arenaLook: ArenaLook = {
+/** The placeholder arena: the grid floor and plain boxes. */
+export const placeholderArena: ArenaLook = {
+  unitsPerMeter: 70,
   floor: { kind: "grid", color: view.floor, line: view.floorGrid, spacing: view.floorGridSpacing },
   walls: { back: { kind: "box", color: view.wall }, front: { kind: "box", color: view.wall }, sorted: { kind: "box", color: view.wall } },
   scenery: []
 }
+
+/**
+ * The courtyard (`art/environment/courtyard`): paving, stone walls (low ones
+ * in front, so they never hide the player), stone pillars, and a few props
+ * against the edges. 70 units per meter fits its large pillar to the
+ * arena's 70-unit pillars.
+ */
+export const courtyardArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["pavingPlain", "pavingPlain", "pavingCracked"], color: 0x2a2724 },
+  walls: {
+    back: { kind: "run", model: "wallStraight" },
+    front: { kind: "run", model: "wallLow" },
+    sorted: { kind: "pillar", models: ["pillarLarge", "pillarLargeChipped", "pillarSmall", "pillarSmallChipped"] }
+  },
+  scenery: [
+    { model: "brazier", at: { x: 70, y: 70 }, turn: 0 },
+    { model: "brazier", at: { x: 1730, y: 70 }, turn: 0 },
+    { model: "brazier", at: { x: 70, y: 1730 }, turn: 0 },
+    { model: "urnJade", at: { x: 450, y: 34 }, turn: 0 },
+    { model: "urnJade", at: { x: 1350, y: 34 }, turn: 0.4 },
+    { model: "urnJade", at: { x: 34, y: 450 }, turn: Math.PI / 2 },
+    { model: "urnJade", at: { x: 34, y: 1350 }, turn: Math.PI / 2 + 0.3 },
+    { model: "rubbleStones", at: { x: 640, y: 50 }, turn: 0.7 },
+    { model: "rubbleStones", at: { x: 46, y: 1120 }, turn: 2.1 },
+    { model: "rocksTall", at: { x: 1150, y: 46 }, turn: 1.2 },
+    { model: "rocksLow", at: { x: 1752, y: 1180 }, turn: 0.5 },
+    { model: "rocksLow", at: { x: 760, y: 1756 }, turn: 2.6 }
+  ]
+}
+
+/** The arena the game shows. */
+export const arenaLook: ArenaLook = courtyardArena
 
 /** Every model the looks use: loaded before the arena opens. */
 export const modelsInLooks = (): ReadonlySet<ModelId> => {
@@ -141,7 +193,11 @@ export const modelsInLooks = (): ReadonlySet<ModelId> => {
     ids.add(look.model)
     for (const weapon of Object.values(look.held?.weapons ?? {})) ids.add(weapon)
   }
-  for (const look of Object.values(arenaLook.walls)) if (look.kind === "model") ids.add(look.model)
+  for (const look of Object.values(arenaLook.walls)) {
+    if (look.kind === "run") ids.add(look.model)
+    if (look.kind === "pillar") for (const id of look.models) ids.add(id)
+  }
+  if (arenaLook.floor.kind === "tiles") for (const id of arenaLook.floor.tiles) ids.add(id)
   for (const scenery of arenaLook.scenery) ids.add(scenery.model)
   return ids
 }

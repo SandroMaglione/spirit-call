@@ -6,7 +6,8 @@ import type { ProjectileNode } from "../src/presentation/host-types.ts"
 import type { ModelId, ModelSource } from "../src/presentation/models.ts"
 import { createNode, disposeNode, instancesOf } from "../src/presentation/nodes.ts"
 import { makeAssets } from "../src/presentation/render-assets.ts"
-import { characterLooks } from "../src/presentation/looks.ts"
+import { arenaLook, characterLooks, modelsInLooks } from "../src/presentation/looks.ts"
+import { models } from "../src/presentation/models.ts"
 
 /** A stand-in for a loaded body: a box with a grip, whose clips scale it, in place of the GLB (no renderer in tests). */
 const fakeBody = (id: ModelId): ModelSource => {
@@ -29,9 +30,20 @@ const fakeWeapon = (id: ModelId): ModelSource => {
   return { id, spec: { url: "", height: null, clips: {} }, scene, clips: new Map() }
 }
 
+/** A stand-in for an arena piece: one box mesh with one material, as the courtyard's pieces are. */
+const fakePiece = (id: ModelId): ModelSource => {
+  const scene = new Group()
+  scene.add(new Mesh(new BoxGeometry(1, 1, 1), new MeshStandardMaterial()))
+  return { id, spec: models[id], scene, clips: new Map() }
+}
+
 const setup = () => {
   const parent = new Group()
-  const assets = makeAssets(parent, new Map([["crow", fakeBody("crow")], ["trainingBlade", fakeWeapon("trainingBlade")], ["crescendo", fakeWeapon("crescendo")]]))
+  const loaded = new Map<ModelId, ModelSource>([...modelsInLooks()].map((id) => [id, fakePiece(id)]))
+  loaded.set("crow", fakeBody("crow"))
+  loaded.set("trainingBlade", fakeWeapon("trainingBlade"))
+  loaded.set("crescendo", fakeWeapon("crescendo"))
+  const assets = makeAssets(parent, loaded)
   return { parent, assets, pool: [] as Array<ProjectileNode> }
 }
 
@@ -94,14 +106,27 @@ describe("render nodes", () => {
     expect(bolt.orb.batch).toBe(assets.pucks)
   })
 
-  it("dress walls and fade them", () => {
+  it("stand a pillar on a pillar's box, fitted to it, and fade it", () => {
     const { assets, pool } = setup()
     const node = createNode({ kind: "wall", placement: "sorted", box: { minX: 100, minY: 100, maxX: 170, maxY: 170 } }, assets, pool)
     if (node.kind !== "wall") throw new Error("expected a wall")
+    expect(arenaLook.walls.sorted.kind).toBe("pillar")
+    expect(node.instances).toHaveLength(0)
+    expect(node.root.children[0]!.scale.x).toBeCloseTo(70, 6)
     expect(node.bounds.width).toBeGreaterThan(0)
     expect(node.bounds.height).toBeGreaterThan(0)
     node.fade(0.35)
     node.fade(1)
     disposeNode(node)
+  })
+
+  it("build an edge wall from segments filling its length", () => {
+    const { assets, pool } = setup()
+    const node = createNode({ kind: "wall", placement: "back", box: { minX: -48, minY: -48, maxX: 1848, maxY: 0 } }, assets, pool)
+    if (node.kind !== "wall") throw new Error("expected a wall")
+    // 1896 units at 140 per 2 m segment: 14 segments, each stretched a little.
+    expect(node.instances).toHaveLength(14)
+    const length = node.instances.reduce((sum, piece) => sum + piece.object.scale.x * 2, 0)
+    expect(length).toBeCloseTo(1896, 6)
   })
 })
