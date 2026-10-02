@@ -9,16 +9,17 @@
  * `features/elements.ts`), and its look in `config/view.ts`.
  */
 
-/** The elements in play. Thunder and rock come with later characters. */
-export type ElementId = "fire" | "water" | "wind"
+/** The elements in play. Rock comes with a later character. */
+export type ElementId = "fire" | "water" | "wind" | "thunder"
 
 /**
  * Elements meeting on a body or on the ground: a body catching fire or
  * getting soaked, water putting fire out (`steam`), fire fizzling on a
- * soaked body, wind carrying a state to another body, and a body slammed
- * into a wall (`stun`).
+ * soaked body, wind carrying a state to another body, a body slammed
+ * into a wall (`stun`), and thunder through water (`shock`: a soaked body
+ * struck, or a puddle it runs through).
  */
-export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun"
+export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun" | "shock"
 
 /** The states that last on a body: water soaks, fire burns. */
 export type StateId = "burning" | "soaked"
@@ -37,7 +38,9 @@ export const elements: { readonly [Id in ElementId]: ElementSpec } = {
   /** Soaks and slows: for fast enemies. */
   water: { name: "Water", state: "soaked" },
   /** Pushes, carrying states between bodies and slamming them into walls: to scatter or group. */
-  wind: { name: "Wind", state: null }
+  wind: { name: "Wind", state: null },
+  /** Strikes at once and jumps between nearby bodies (further through soaked ones): for groups spread apart, and enemies at range. */
+  thunder: { name: "Thunder", state: null }
 }
 
 /** How strongly an enemy kind takes an element (none: as it is). */
@@ -82,9 +85,23 @@ export const elementRules = {
     stunSeconds: 1.4,
     poolSpeed: 600
   },
-  /** Damage factors of the interactions: fire on a soaked body fizzles. */
+  /**
+   * Thunder: a strike jumps on from the body it hits to the nearest body
+   * of the same side within `jumpRange` (edge to edge), `soakedJumpRange`
+   * from a soaked body, as many times as its skill allows, never twice to
+   * the same body. A strike on a body standing in a puddle shocks everyone
+   * else in that puddle, either side (the player too), for `puddlePower`
+   * percent of the striker's ATK.
+   */
+  thunder: {
+    jumpRange: 130,
+    soakedJumpRange: 230,
+    puddlePower: 12
+  },
+  /** Damage factors of the interactions: fire on a soaked body fizzles; thunder on a soaked body shocks. */
   reactions: {
-    fizzle: 0.75
+    fizzle: 0.75,
+    shock: 1.25
   },
   /** An enemy's affinity scales an element's damage and the duration of its effect (immune: no effect, damage as it is). */
   affinity: {

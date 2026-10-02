@@ -52,7 +52,8 @@ const weapon = (id: WeaponId): Unlock => ({ kind: "weapon", id })
 
 /** The main line's chapters, in order. */
 export const chapters = {
-  one: { name: "Chapter 1 · First Blood" } satisfies ChapterSpec
+  one: { name: "Chapter 1 · First Blood" } satisfies ChapterSpec,
+  two: { name: "Chapter 2 · Gathering Storm" } satisfies ChapterSpec
 }
 
 /** Every quest, by id; the main line in order. */
@@ -86,6 +87,16 @@ export const quests = {
     level: 3,
     after: "crossfire",
     rewards: { experience: 140, currencies: { crystals: 150, gold: 900 }, unlocks: [character("tidecaller"), weapon("crescendo"), weapon("echoSaber"), weapon("undertow")] }
+  }),
+  outposts: quest({
+    name: "Outposts",
+    line: "main",
+    chapter: "two",
+    challenge: "outposts",
+    enemyLevel: 7,
+    level: 4,
+    after: "theBrute",
+    rewards: { experience: 180, currencies: { crystals: 150, gold: 1100 }, unlocks: [character("stormcaller"), weapon("lightningRod")] }
   }),
   holdTheLine: quest({
     name: "Hold the Line",

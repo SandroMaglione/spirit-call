@@ -88,7 +88,8 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
     held: { grip: "weapon_grip", weapons: { trainingBlade: "trainingBlade", crescendo: "crescendo" } }
   },
   gunner: { ...crow, moments: crowLoops },
-  tidecaller: { ...crow, moments: crowLoops }
+  tidecaller: { ...crow, moments: crowLoops },
+  stormcaller: { ...crow, moments: crowLoops }
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({

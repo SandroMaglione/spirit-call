@@ -175,6 +175,29 @@ export const attacks = {
       moveSpeedMultiplier: 0.6,
       move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 9, knockback: 30, recovery: 0.5, hitStop: 0.03, heavy: true, lunge: -12 })
     }
+  }),
+  /**
+   * The staff: two sparks that pass through the first enemy, then a pair in
+   * a V. The power attack is a slow ball of light that goes through a line
+   * of enemies. (No element: like every basic attack, for now.)
+   */
+  staff: basicAttack({
+    name: "Staff",
+    combo: [
+      shot({ count: 1, spreadDegrees: 0, speed: 780, radius: 7, range: 520, pierce: 1, power: 11, knockback: 140, recovery: 0.2, hitStop: 0, heavy: false, lunge: 0 }),
+      shot({ count: 1, spreadDegrees: 0, speed: 780, radius: 7, range: 520, pierce: 1, power: 11, knockback: 140, recovery: 0.2, hitStop: 0, heavy: false, lunge: 0 }),
+      shot({ count: 2, spreadDegrees: 14, speed: 780, radius: 7, range: 480, pierce: 1, power: 10, knockback: 200, recovery: 0.4, hitStop: 0.02, heavy: false, lunge: -6 })
+    ],
+    comboWindow: 0.55,
+    inputBuffer: 0.12,
+    active: 0.08,
+    lungeStop: 12,
+    power: {
+      holdDelay: 0.2,
+      chargeTime: 0.6,
+      moveSpeedMultiplier: 0.6,
+      move: shot({ count: 1, spreadDegrees: 0, speed: 560, radius: 13, range: 640, pierce: 6, power: 32, knockback: 420, recovery: 0.45, hitStop: 0.04, heavy: true, lunge: -24 })
+    }
   })
 }
 

@@ -2,7 +2,8 @@
   "characters": [
     "swordsman",
     "gunner",
-    "tidecaller"
+    "tidecaller",
+    "stormcaller"
   ],
   "weapons": [
     "trainingBlade",
@@ -12,7 +13,9 @@
     "executioner",
     "bloodthirst",
     "trainingDisc",
-    "undertow"
+    "undertow",
+    "trainingStaff",
+    "lightningRod"
   ],
   "skills": [
     "bladeWave",
@@ -21,18 +24,22 @@
     "splash",
     "cyclone",
     "barrage",
-    "tide"
+    "tide",
+    "sparkTotem",
+    "thunderclap"
   ],
   "challenges": [
     "swarm",
     "crossfire",
     "brute",
-    "endless"
+    "endless",
+    "outposts"
   ],
   "attacks": [
     "sword",
     "gun",
-    "disc"
+    "disc",
+    "staff"
   ],
   "enemies": [
     "dummy",
@@ -48,10 +55,12 @@
     "theSwarm",
     "crossfire",
     "theBrute",
-    "holdTheLine"
+    "holdTheLine",
+    "outposts"
   ],
   "chapters": [
-    "one"
+    "one",
+    "two"
   ],
   "currencies": [
     "crystals",
@@ -68,7 +77,9 @@
     "fullTeam",
     "steam",
     "wallSlam",
-    "carried"
+    "carried",
+    "withStormcaller",
+    "shocked"
   ],
   "retired": {
     "skills": [

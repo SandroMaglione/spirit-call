@@ -68,7 +68,7 @@ const describeTrigger = (trigger: Trigger): string => {
 const elementWord = (element: ElementId | null): string => (element === null ? "" : `${elements[element].name.toLowerCase()} `)
 
 /** What each element leaves on the ground. */
-const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire pool", water: "a puddle", wind: "a gust" }
+const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire pool", water: "a puddle", wind: "a gust", thunder: "a charge" }
 
 /** A skill effect in a few words. */
 export const describeEffect = (effect: SkillEffect): string => {
@@ -81,6 +81,10 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)`
     case "vortex":
       return `a ${elementWord(effect.element)}whirl that pulls enemies in for ${effect.seconds}s (${effect.power}% ATK every ${effect.tick}s)`
+    case "totem":
+      return `a ${elementWord(effect.element)}totem for ${effect.seconds}s that zaps enemies (${effect.power}% ATK, jumping ${effect.jumps} times), or heals you ${effect.heal}% of max HP when you stand by it hurt`
+    case "thunderclap":
+      return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
     case "barrage":
       return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
   }

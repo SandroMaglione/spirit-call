@@ -55,6 +55,12 @@ export const discoveries = {
     check: clearWith("tidecaller"),
     rewards: { crystals: 40 }
   }),
+  withStormcaller: discovery({
+    name: "Stormcaller",
+    description: "Clear a quest or tier with the Stormcaller on the team.",
+    check: clearWith("stormcaller"),
+    rewards: { crystals: 40 }
+  }),
   fullTeam: discovery({
     name: "Full team",
     description: "Clear a quest or tier with three characters.",
@@ -77,6 +83,12 @@ export const discoveries = {
     name: "Carried along",
     description: "Drive a burning or soaked enemy into another with wind.",
     check: reaction("carry"),
+    rewards: { crystals: 40 }
+  }),
+  shocked: discovery({
+    name: "Shocked",
+    description: "Strike a soaked enemy, or a puddle, with thunder.",
+    check: reaction("shock"),
     rewards: { crystals: 40 }
   })
 }

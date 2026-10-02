@@ -46,7 +46,8 @@ that would be a damage race.
 The first three, one per character: **Wind** for the Swordsman (the Blade
 Wave already drives enemies back), **Fire** for the Gunner (the grenade
 leaves a fire pool), and **Water** for the Tidecaller (a disc thrower at
-middle range). Thunder and Rock come with later characters.
+middle range). **Thunder** came next, with the Stormcaller (a support who
+heals); Rock comes with a later character (a shield support).
 
 Each character's ultimate carries her element too, and every ultimate makes
 her untouchable for a moment as it goes off (so it doubles as an escape):
@@ -58,6 +59,25 @@ her untouchable for a moment as it goes off (so it doubles as an escape):
   each leaving a fire pool.
 - **Tide** (Tidecaller, water): a tide breaking out around her that soaks
   everything far around, drives it back, and washes away shots.
+- **Thunderclap** (Stormcaller, thunder): thunder striking the enemies
+  around her, jumping between them, and healing the whole team, the bench
+  included.
+
+## Healing
+
+The Stormcaller heals through her kit, and healing always costs something:
+
+- **Her Spark Totem** is planted where she aims and zaps once a second for
+  a few seconds. A zap heals the character on the field when she stands
+  within its small heal ring and is hurt; otherwise it strikes the nearest
+  enemy in range. Where the totem stands, and where you stand, choose
+  between damage and healing: planted among the enemies it fights, but
+  healing there is risky.
+- **It keeps going off the field**: switched out, the Stormcaller's totem
+  keeps zapping for whoever is on the field (what a character released
+  finishes on its own).
+- **Her Thunderclap** heals the whole team, the bench included, so the
+  health of the characters waiting is worth looking after.
 
 ## States
 
@@ -77,7 +97,8 @@ her untouchable for a moment as it goes off (so it doubles as an escape):
   a puff of steam); a Soaked body does not catch fire, and fire deals less
   damage to it.
 - **Thunder through water.** Thunder jumps further through Soaked bodies and
-  deals more damage to them; on a puddle, it shocks everyone standing in it.
+  deals more damage to them (a shock); a strike on a body standing in a
+  puddle shocks everyone else standing in it, the player too.
 - **Wind carries states.** Bodies pushed into each other share their state,
   and wind drives a fire pool along its direction.
 - **Wind into rock.** Bodies pushed by wind into a wall or a rock pillar are

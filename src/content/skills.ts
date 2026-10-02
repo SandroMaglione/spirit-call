@@ -91,7 +91,42 @@ export interface BarrageEffect extends EffectBase {
   readonly leaves: GroundSpec | null
 }
 
-export type SkillEffect = CutEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect
+/**
+ * A totem planted at the aim (clamped to `maxRange`) for `seconds`. Every
+ * `tick` seconds it zaps once: the character on the field, if she stands
+ * within `healRadius` of it and is hurt, healing `heal` percent of her
+ * maximum health; otherwise the nearest body of the other side within
+ * `range`, a strike that jumps on `jumps` times (see `Tuning.elements.thunder`).
+ * So where it stands, and where she stands, choose between damage and
+ * healing. It keeps zapping after she leaves the field, for whoever is on
+ * it; its strikes come from her ATK when planted.
+ */
+export interface TotemEffect extends EffectBase {
+  readonly kind: "totem"
+  readonly maxRange: number
+  readonly seconds: number
+  readonly tick: number
+  readonly range: number
+  readonly healRadius: number
+  readonly heal: number
+  readonly jumps: number
+}
+
+/**
+ * A clap around the caster: the `strikes` nearest bodies of the other side
+ * within `radius` are struck, each strike jumping on `jumps` times, and
+ * every member of the caster's team still standing (on the field or on the
+ * bench) heals `heal` percent of her maximum health.
+ */
+export interface ThunderclapEffect extends EffectBase {
+  readonly kind: "thunderclap"
+  readonly radius: number
+  readonly strikes: number
+  readonly jumps: number
+  readonly heal: number
+}
+
+export type SkillEffect = CutEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -120,6 +155,8 @@ export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob",
 export const nova = (spec: Omit<NovaEffect, "kind">): NovaEffect => ({ kind: "nova", ...spec })
 export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
+export const totem = (spec: Omit<TotemEffect, "kind">): TotemEffect => ({ kind: "totem", ...spec })
+export const thunderclap = (spec: Omit<ThunderclapEffect, "kind">): ThunderclapEffect => ({ kind: "thunderclap", ...spec })
 const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<Effect> => spec
 
 /** Every skill, by id. */
@@ -218,6 +255,28 @@ export const skills = {
     energy: 100,
     invulnerability: 0.5,
     effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
+  }),
+  /**
+   * The Stormcaller's special: a totem planted at the cursor that zaps
+   * enemies around it with thunder, or heals the one on the field when she
+   * stands close to it hurt (instead of zapping an enemy).
+   */
+  sparkTotem: skill({
+    name: "Spark Totem",
+    label: "TOTEM",
+    cooldown: 9,
+    energy: 0,
+    invulnerability: 0,
+    effect: totem({ maxRange: 300, seconds: 8, tick: 0.9, range: 240, healRadius: 90, heal: 4, jumps: 2, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
+  }),
+  /** The Stormcaller's ultimate: thunder striking the enemies around her, jumping between them, and healing the whole team, the bench too. */
+  thunderclap: skill({
+    name: "Thunderclap",
+    label: "CLAP",
+    cooldown: 0,
+    energy: 100,
+    invulnerability: 0.5,
+    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 20, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
   })
 }
 

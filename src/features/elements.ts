@@ -3,7 +3,8 @@
  *
  * A blow with an element applies it where it lands (`ApplyDamage` calls
  * `afflict`): fire sets a body burning, water soaks it, and they cancel each
- * other (water puts fire out; fire fizzles on a soaked body). A body is in
+ * other (water puts fire out; fire fizzles on a soaked body); thunder
+ * leaves nothing, but shocks a soaked body (more damage). A body is in
  * one state at most. `TickStates` runs the states down: burning bodies take
  * a burn every tick (damage from no side, so it hurts anyone, the player
  * included) and set the bodies they touch burning too.
@@ -63,13 +64,17 @@ export const afflict = (tuning: TuningValue, current: ActiveState | null, elemen
     case "wind":
       // Wind leaves no state.
       return { state: current, reaction: null }
+    case "thunder":
+      // Thunder leaves no state; through a soaked body, it shocks.
+      return { state: current, reaction: current?.id === "soaked" ? "shock" : null }
   }
 }
 
-/** How much damage `element` deals to a body in `state` of `affinity`, as a factor: fire fizzles on a soaked body. */
+/** How much damage `element` deals to a body in `state` of `affinity`, as a factor: fire fizzles on a soaked body, thunder shocks it. */
 export const elementDamageFactor = (tuning: TuningValue, element: ElementId, state: ActiveState | null, affinity?: Affinity): number => {
-  const fizzles = element === "fire" && state?.id === "soaked"
-  return (affinity === undefined ? 1 : tuning.elements.affinity[affinity].damage) * (fizzles ? tuning.elements.reactions.fizzle : 1)
+  const soaked = state?.id === "soaked"
+  const reaction = soaked && element === "fire" ? tuning.elements.reactions.fizzle : soaked && element === "thunder" ? tuning.elements.reactions.shock : 1
+  return (affinity === undefined ? 1 : tuning.elements.affinity[affinity].damage) * reaction
 }
 
 /** How fast a body in `state` moves, as a factor of its speed: soaked bodies are slowed. */

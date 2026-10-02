@@ -82,6 +82,17 @@ export const characters = {
     weaponType: "disc",
     weapon: "trainingDisc",
     skills: { special: "splash", ultimate: "tide" }
+  }),
+  /** Support at middle range: a staff, a totem that zaps enemies or heals whoever stands by it, and a thunderclap that heals the team. */
+  stormcaller: character({
+    name: "Stormcaller",
+    stats: { hp: 88, atk: 80, def: 12, speed: 330 },
+    radius: 16,
+    hurtboxRadius: 11,
+    attack: "staff",
+    weaponType: "staff",
+    weapon: "trainingStaff",
+    skills: { special: "sparkTotem", ultimate: "thunderclap" }
   })
 }
 

@@ -1,4 +1,4 @@
-import type { BufferGeometry, Group, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { BufferGeometry, Group, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton } from "../config/input.ts"
 import type { SkillSlot } from "../content/skills.ts"
@@ -50,7 +50,16 @@ export type WallNode = {
   readonly dispose: () => void
 }
 
-export type RenderNode = ActorNode | ProjectileNode | WallNode
+/** A totem planted on the floor: a pylon with a glowing `orb` on top (pulsing as it zaps). */
+export type TotemNode = {
+  readonly kind: "totem"
+  readonly root: Group
+  readonly orb: Object3D
+  readonly shadow: Instance
+  readonly dispose: () => void
+}
+
+export type RenderNode = ActorNode | ProjectileNode | WallNode | TotemNode
 
 /** Geometry, materials, and batches made once and shared by many nodes. */
 export interface RenderAssets {

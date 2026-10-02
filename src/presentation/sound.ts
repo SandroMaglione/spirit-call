@@ -51,6 +51,8 @@ export type SoundName =
   | "sizzle"
   | "slam"
   | "disc"
+  | "zap"
+  | "mend"
 
 export interface PlayOptions {
   /** Loudness factor, 1 by default. */
@@ -320,6 +322,18 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     swish(v, { low: 900, peak: 2600, duration: 0.22, peakAt: 0.3, q: 2.5, gain: 0.45 })
     swish(v, { low: 1400, peak: 3200, duration: 0.18, peakAt: 0.6, q: 4, gain: 0.2, delay: 0.06 })
     tone(v, "triangle", 620, 540, 0.2, 0.04)
+  }],
+  // Thunder striking: a sharp electric snap with a buzzing tail.
+  zap: [{ reverb: 0.25, interval: 0.05 }, (v) => {
+    click(v, 0.6)
+    tone(v, "sawtooth", 1800, 320, 0.09, 0.12)
+    noise(v, "bandpass", 4200, 1800, 0.14, 0.22, 2.5)
+    tone(v, "square", 110, 95, 0.12, 0.05, 0.01)
+  }],
+  // A totem's healing zap: a soft, bright chime rising.
+  mend: [{ reverb: 0.4, interval: 0.08 }, (v) => {
+    tone(v, "sine", 880, 1320, 0.22, 0.12)
+    tone(v, "triangle", 1320, 1760, 0.25, 0.06, 0.05)
   }],
   // A new wave: two rising notes.
   waveStart: [{ reverb: 0.4 }, (v) => {

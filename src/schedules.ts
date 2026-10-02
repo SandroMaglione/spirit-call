@@ -19,6 +19,7 @@ import { MoveDiscs } from "./features/discs.ts"
 import { TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
 import { BlowPools, DriveWithWind } from "./features/wind.ts"
+import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { ClearRun, DetectGameOver, QueueRestart, RecordReactions, ResetRun, TrackRun } from "./features/flow.ts"
@@ -92,6 +93,8 @@ const gameplay = Game.Schedule.when(
   CastNovas,
   CastBarrages,
   CastVortices,
+  CastTotems,
+  CastThunderclaps,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
@@ -108,6 +111,7 @@ const gameplay = Game.Schedule.when(
   MoveDiscs,
   ResolveHitboxes,
   UpdateVortices,
+  UpdateTotems,
   BlowPools,
   UpdateGround,
   TickStates,

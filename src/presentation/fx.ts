@@ -60,6 +60,14 @@ interface FloatingNumber {
   maxLife: number
 }
 
+/** A bolt of lightning along `points` (projected coordinates), flickering as it fades. */
+interface Bolt {
+  points: ReadonlyArray<Vec2>
+  color: number
+  life: number
+  maxLife: number
+}
+
 interface ParticleOptions {
   readonly color: number
   readonly size: number
@@ -79,6 +87,7 @@ export class Fx {
   private readonly freeRings: Array<Ring> = []
   private readonly flashes: Array<Flash> = []
   private readonly freeFlashes: Array<Flash> = []
+  private readonly bolts: Array<Bolt> = []
   private readonly squash: number
   private readonly ringShapes = new Shapes({ depthTest: false, order: 1 })
   private readonly particleShapes = new Shapes({ depthTest: false, order: 2 })
@@ -153,6 +162,12 @@ export class Fx {
     this.flashes.push(flash)
   }
 
+  /** Lightning along `points` (projected coordinates), jagged and flickering, for `life` seconds. */
+  bolt(points: ReadonlyArray<Vec2>, color: number, life = 0.2): void {
+    if (points.length < 2) return
+    this.bolts.push({ points, color, life, maxLife: life })
+  }
+
   /**
    * A number rising from `at` (projected coordinates) that pops in larger
    * than its resting `size` and drifts sideways by `drift` pixels.
@@ -183,6 +198,33 @@ export class Fx {
       }
       const t = 1 - flash.life / flash.maxLife
       flashes.fillCircle(flash.x, flash.y, flash.radius * (0.45 + 0.55 * Math.sqrt(t)), flash.color, (1 - t) * (1 - t))
+    }
+    // Bolts: each segment broken into a few kinks that jump about every frame, a colored glow around a white core.
+    for (let index = this.bolts.length - 1; index >= 0; index--) {
+      const bolt = this.bolts[index]!
+      bolt.life -= dt
+      if (bolt.life <= 0) {
+        this.bolts[index] = this.bolts[this.bolts.length - 1]!
+        this.bolts.pop()
+        continue
+      }
+      const fade = bolt.life / bolt.maxLife
+      for (let point = 1; point < bolt.points.length; point++) {
+        const from = bolt.points[point - 1]!
+        const to = bolt.points[point]!
+        const length = Math.hypot(to.x - from.x, to.y - from.y)
+        const kinks = Math.max(2, Math.round(length / 22))
+        const normal = { x: -(to.y - from.y) / (length || 1), y: (to.x - from.x) / (length || 1) }
+        let last = from
+        for (let kink = 1; kink <= kinks; kink++) {
+          const t = kink / kinks
+          const jitter = kink === kinks ? 0 : (Math.random() * 2 - 1) * Math.min(14, length * 0.12)
+          const next = { x: from.x + (to.x - from.x) * t + normal.x * jitter, y: from.y + (to.y - from.y) * t + normal.y * jitter }
+          flashes.line(last.x, last.y, next.x, next.y, 9, bolt.color, 0.45 * fade)
+          flashes.line(last.x, last.y, next.x, next.y, 3, 0xffffff, 0.9 * fade)
+          last = next
+        }
+      }
     }
     const rings = this.ringShapes.clear()
     for (let index = this.rings.length - 1; index >= 0; index--) {
