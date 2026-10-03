@@ -1,0 +1,50 @@
+{
+  "clips": {
+    "Idle": {
+      "ground_min": -0.0008
+    },
+    "Run": {
+      "ground_min": -0.0
+    },
+    "AttackCombo": {
+      "ground_min": -0.0052
+    },
+    "Power": {
+      "ground_min": -0.0015
+    },
+    "Dash": {
+      "ground_min": -0.0008
+    },
+    "RunStart": {
+      "ground_min": -0.0008
+    },
+    "RunStop": {
+      "ground_min": -0.0008
+    },
+    "Recover1": {
+      "ground_min": -0.0009
+    },
+    "Recover2": {
+      "ground_min": -0.0015
+    },
+    "Recover3": {
+      "ground_min": -0.0015
+    }
+  },
+  "weapons": {
+    "trainingBlade": {
+      "bytes": 14156,
+      "scale": 0.52
+    },
+    "crescendo": {
+      "bytes": 15148,
+      "scale": 0.52
+    }
+  },
+  "max_weights": 2,
+  "bones": 28,
+  "triangles": 4820,
+  "materials": 1,
+  "bytes": 485312,
+  "sha256": "73a9b8773ed10b03e6c46dd61ca2edbddd2e3e68b054a41f5cd199865235c085"
+}

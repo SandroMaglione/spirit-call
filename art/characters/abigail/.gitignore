@@ -1,0 +1,4 @@
+# Blender's backup copies, and working renders (review/ keeps the chosen ones).
+*.blend1
+renders/
+__pycache__/

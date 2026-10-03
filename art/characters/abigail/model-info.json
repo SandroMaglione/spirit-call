@@ -1,0 +1,142 @@
+{
+  "schema_version": 2,
+  "fps": 30,
+  "height_meters": 1.6728144884109497,
+  "up": "+Y",
+  "forward": "+Z",
+  "root_motion": false,
+  "grip": "weapon_grip",
+  "sword_scale": 0.52,
+  "clips": {
+    "Idle": {
+      "frames": [
+        1,
+        60
+      ],
+      "samples": 60,
+      "last_key_seconds": 1.9666666666666666,
+      "loop_seconds": 2.0,
+      "duration_seconds": 2.0
+    },
+    "Run": {
+      "frames": [
+        1,
+        16
+      ],
+      "samples": 16,
+      "last_key_seconds": 0.5,
+      "loop_seconds": 0.5333333333333333,
+      "duration_seconds": 0.5333333333333333
+    },
+    "AttackCombo": {
+      "frames": [
+        1,
+        46
+      ],
+      "samples": 46,
+      "last_key_seconds": 1.5,
+      "loop_seconds": null,
+      "duration_seconds": 1.5
+    },
+    "Power": {
+      "frames": [
+        1,
+        16
+      ],
+      "samples": 16,
+      "last_key_seconds": 0.5,
+      "loop_seconds": null,
+      "duration_seconds": 0.5
+    },
+    "Dash": {
+      "frames": [
+        1,
+        10
+      ],
+      "samples": 10,
+      "last_key_seconds": 0.3,
+      "loop_seconds": null,
+      "duration_seconds": 0.3
+    },
+    "RunStart": {
+      "frames": [
+        1,
+        7
+      ],
+      "samples": 7,
+      "last_key_seconds": 0.2,
+      "loop_seconds": null,
+      "duration_seconds": 0.2
+    },
+    "RunStop": {
+      "frames": [
+        1,
+        8
+      ],
+      "samples": 8,
+      "last_key_seconds": 0.23333333333333334,
+      "loop_seconds": null,
+      "duration_seconds": 0.23333333333333334
+    },
+    "Recover1": {
+      "frames": [
+        1,
+        8
+      ],
+      "samples": 8,
+      "last_key_seconds": 0.23333333333333334,
+      "loop_seconds": null,
+      "duration_seconds": 0.23333333333333334
+    },
+    "Recover2": {
+      "frames": [
+        1,
+        8
+      ],
+      "samples": 8,
+      "last_key_seconds": 0.23333333333333334,
+      "loop_seconds": null,
+      "duration_seconds": 0.23333333333333334
+    },
+    "Recover3": {
+      "frames": [
+        1,
+        8
+      ],
+      "samples": 8,
+      "last_key_seconds": 0.23333333333333334,
+      "loop_seconds": null,
+      "duration_seconds": 0.23333333333333334
+    }
+  },
+  "combo": [
+    {
+      "name": "Opening cut",
+      "start": 0.0,
+      "end": 0.26666666666666666,
+      "contact": 0.03333333333333333,
+      "recover": "Recover1"
+    },
+    {
+      "name": "Rising backhand",
+      "start": 0.26666666666666666,
+      "end": 0.5,
+      "contact": 0.3,
+      "recover": "Recover2"
+    },
+    {
+      "name": "Driving thrust",
+      "start": 0.5,
+      "end": 0.8,
+      "contact": 0.5333333333333333,
+      "recover": "Recover3"
+    },
+    {
+      "name": "Spinning finisher",
+      "start": 0.8,
+      "end": 1.5,
+      "contact": 0.8333333333333334,
+      "recover": null
+    }
+  ]
+}
