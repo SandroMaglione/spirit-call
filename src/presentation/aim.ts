@@ -10,7 +10,7 @@ import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Aim, Controls, Enemy, Game, Hurtbox, Player, Position, PrevPosition, RenderClock, RenderHost, Skills, Tuning, Weapon } from "../schema.ts"
 import { barrageTargets, lobTarget } from "../features/skills.ts"
-import { chargeOf, moveArea } from "../features/weapons.ts"
+import { chargeOf, moveArea, moveReach } from "../features/weapons.ts"
 import { drawArea } from "./draw.ts"
 import type { Shapes } from "./shapes.ts"
 
@@ -76,6 +76,9 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     const move = power.move
     const area = isMelee(move)
       ? moveArea(move, at, aim).area
+      : move.shape === "lob"
+        // A grenade: where it will burst.
+        ? { kind: "circle" as const, center: lobTarget({ maxRange: move.maxRange }, at, controls.aimPoint), radius: move.radius }
       : move.shape === "disc" && move.hover > 0
         // A hovering disc: the circle it will spin in, where it stops.
         ? { kind: "circle" as const, center: { x: at.x + aim.x * move.range, y: at.y + aim.y * move.range }, radius: move.radius * 2.5 }
@@ -99,7 +102,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   if (controls.attackHeld && first !== undefined && !isMelee(first)) {
     const dx = controls.aimPoint.x - at.x
     const dy = controls.aimPoint.y - at.y
-    const reach = Math.min(first.range, 320) / (Math.hypot(dx, dy) || 1)
+    const reach = Math.min(moveReach(first), 320) / (Math.hypot(dx, dy) || 1)
     g.line(at.x, at.y, at.x + dx * reach, at.y + dy * reach, 3, view.reticle, 0.45)
   }
   const skills = player.data.skills.get()
@@ -115,6 +118,11 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
     case "cut": {
       const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })
       drawArea(g, { kind: "lane", origin: at, direction, length: effect.length, halfWidth: effect.width / 2 }, 0, { color: view.reticle, fill: 0.08, outline: 0.6 })
+      return
+    }
+    case "blast": {
+      const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })
+      drawArea(g, { kind: "cone", origin: at, direction, radius: effect.radius, halfAngle: (effect.arcDegrees * Math.PI) / 360 }, 0, { color: view.reticle, fill: 0.08, outline: 0.6 })
       return
     }
     case "lob": {

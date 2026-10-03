@@ -13,12 +13,13 @@ import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
-import { keepOut, skirmishTurn, steer } from "./behaviors.ts"
+import { keepOut, readPlayer, skirmishTurn, steer } from "./behaviors.ts"
 import { durationFactor, stateSpeed } from "./elements.ts"
 import { active } from "./ground.ts"
 import {
   Attacker,
   AttackPhase,
+  Aim,
   Body,
   Brain,
   CombatStats,
@@ -36,6 +37,8 @@ import {
   RunScope,
   Shield,
   Elite,
+  Weapon,
+  Dash,
   ElementAffinities,
   Ground,
   Poise,
@@ -175,7 +178,10 @@ export const SteerEnemies = (() => {
       }),
       pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
-      player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] }),
+      player: Game.Query({
+        selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), aim: Game.Query.read(Aim), weapon: Game.Query.read(Weapon), dash: Game.Query.read(Dash) },
+        with: [Player]
+      }),
       walls: Walls
     },
     resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
@@ -184,6 +190,10 @@ export const SteerEnemies = (() => {
     const dt = resources.time.get().dt
     const [player] = queries.player.each()
     const target = player?.data.position.get()
+    // What the enemies make of her: open to a rush, or a threat to keep out of reach of (see `readPlayer`).
+    const read = player === undefined || target === undefined
+      ? undefined
+      : readPlayer(tuning, { at: target, aim: player.data.aim.get(), weapon: player.data.weapon.get(), dashes: player.data.dash.get().charges })
     const boxes = wallBoxes(queries.walls.each())
     // Pools enemies keep out of: fire anywhere, and the arena's basins (each enemy minds those it is not immune to).
     // The arena's hazards they also path around, as if walls (they are not: a push still sends them in).
@@ -223,7 +233,8 @@ export const SteerEnemies = (() => {
         if (tuning.enemies[data.enemy.get().kind].behavior.kind !== "skirmish") continue
         const mode = data.mode.get()
         if (mode === "engage") engaged += 1
-        else if (mode === "orbit" && data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds) {
+        // Open, she gets the circling ones at once.
+        else if (mode === "orbit" && (read?.opening === true || data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds)) {
           const position = data.position.get()
           waiting.push({ distance: Math.hypot(position.x - target.x, position.y - target.y), mode: data.mode, brain: data.brain })
         }
@@ -240,7 +251,9 @@ export const SteerEnemies = (() => {
       const spec = tuning.enemies[kind]
       // Speed is a stat, so what changes stats (levels) changes it; soaked enemies are slowed, charges included.
       const slowed = stateSpeed(tuning, data.state.get())
-      const speed = data.stats.get().speed * slowed
+      // Closing in on her while she is open, a melee enemy rushes.
+      const closing = spec.behavior.kind === "chase" || (spec.behavior.kind === "skirmish" && data.mode.get() === "engage")
+      const speed = data.stats.get().speed * slowed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
       const position = data.position.get()
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
@@ -288,11 +301,18 @@ export const SteerEnemies = (() => {
         const toward = normalizeOr(sub(target, position), zero)
         // Straight at her when nothing is in between; around the walls (and the arena's hazards) otherwise.
         const way = hasLineOfSight(position, target, radius, avoided) ? toward : (paths.way(position) ?? toward)
-        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, distance: length(sub(target, position)), speed, dt })
+        const distance = length(sub(target, position))
+        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, distance, speed, dt })
+        // Under her threat, a skirmisher whose turn it is keeps just out of her reach, circling, until it runs out of patience.
+        const wary = behavior.kind === "skirmish" && mode === "engage" && read !== undefined && read.threatens(position) && data.brain.get().modeTimer < tuning.reading.patience
+        const side = { x: -toward.y * data.brain.get().strafe, y: toward.x * data.brain.get().strafe }
+        const backing = read !== undefined && distance < read.reach ? 1 : 0
+        const holding = wary ? normalizeOr({ x: side.x - toward.x * backing, y: side.y - toward.y * backing }, side) : null
         // Never into a pool it would take harm from: along its edge instead, and out at once if pushed in.
         const affinities = data.affinities.get()
         const minded = pools.filter((pool) => durationFactor(tuning, affinities[pool.element]) > 0)
-        desired = minded.length === 0 ? steering.desired : keepOut(steering.desired, position, radius, speed, minded, tuning.crowd.hazardMargin)
+        const wanted = holding === null ? steering.desired : scale(holding, speed * tuning.crowd.orbitSpeed)
+        desired = minded.length === 0 ? wanted : keepOut(wanted, position, radius, speed, minded, tuning.crowd.hazardMargin)
         data.brain.set(steering.brain)
       }
 

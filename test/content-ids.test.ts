@@ -11,7 +11,9 @@ import { defaultTuning } from "../src/config/tuning.ts"
  * Retiring content means a save migration that handles its id first; the id
  * then moves to `retired` (it stays listed, so it is never reused for
  * something else): the Nova, shared by everyone, retired when every
- * character got her own ultimate (save version 5).
+ * character got her own ultimate (save version 5); the Grenade and the
+ * Splash, when the Gunner and the Tidecaller got new specials (skills have
+ * not been saved since version 5).
  */
 const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>> & {
   readonly retired?: Record<string, ReadonlyArray<string>>

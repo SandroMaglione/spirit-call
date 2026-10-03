@@ -5,9 +5,11 @@ import type { Touch } from "@typeonce/bevy-ts-browser"
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import type { MeleeMove, ShotMove } from "../src/content/attacks.ts"
+import type { LobMove, MeleeMove, ShotMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { Enemy, Game, Health, Player, Position, Projectile, RunScope, Stats, Weapon } from "../src/schema.ts"
+import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Stats, Weapon } from "../src/schema.ts"
+
+const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map(({ data }) => data.lobbed.get()))
 import type { BuildValue } from "../src/schema.ts"
 import { ClearEnemies, gunner, start, swordsman } from "./helpers.ts"
 
@@ -107,17 +109,17 @@ describe("gun", () => {
     expect(run.world().projectiles).toHaveLength(expected)
   })
 
-  it("charges a piercing bolt that kicks the player back", () => {
-    const bolt = gunPower.move as ShotMove
+  it("charges a grenade, lobbed over walls toward the cursor, bursting in fire", () => {
+    const grenade = gunPower.move as LobMove
     const full = gunPower.holdDelay + gunPower.chargeTime
     const run = range([], hold(full + 0.05), gunner)
     run.step(steps(full + 0.05) + 2)
-    const bolts = run.world().projectiles.filter((projectile) => projectile.pierce === bolt.pierce)
-    expect(bolts).toHaveLength(1)
-    expect(bolts[0]!.blow.heavy).toBe(true)
-    run.step(60)
-    // The opening shot has no recoil; the bolt's pushes the player back its full `lunge`.
-    expect(run.world().player.x - center.x).toBeCloseTo(bolt.lunge, 0)
+    const [thrown] = run.runtime.inspect(Grenades)
+    expect(thrown?.effect.radius).toBe(grenade.radius)
+    expect(thrown?.blow.heavy).toBe(true)
+    expect(thrown?.blow.element?.id).toBe("fire")
+    run.step(steps(grenade.flightTime + grenade.fuse) + 2)
+    expect(run.runtime.inspect(Grenades)).toEqual([])
   })
 })
 

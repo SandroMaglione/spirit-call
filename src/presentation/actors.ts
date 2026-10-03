@@ -9,7 +9,7 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Member, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -34,7 +34,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         energy: Game.Query.read(Energy),
         weapon: Game.Query.read(Weapon),
         body: Game.Query.read(Body),
-        state: Game.Query.read(ElementState)
+        state: Game.Query.read(ElementState),
+        member: Game.Query.read(Member)
       },
       with: [Player]
     })
@@ -62,12 +63,24 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     const side = { x: -aim.y * view.facingRing.arrow * 0.7, y: aim.x * view.facingRing.arrow * 0.7 }
     marks.fillPoly([base.x + side.x, base.y + side.y, tip.x, tip.y, base.x - side.x, base.y - side.y], view.aim, view.facingRing.arrowAlpha)
 
-    // Dash readiness ring around the feet.
-    const ready = dash.cooldown <= 0
-    const progress = ready ? 1 : 1 - dash.cooldown / tuning.dash.cooldown
+    // Protected after coming in from a fall: a ring of her color, pulsing, fading as it runs out.
+    const protection = services.host.feedback.protection
+    if (protection > 0 && data.invulnerable.get().remaining > 0) {
+      const pulse = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.fallEntry.pulseHz * Math.PI * 2)
+      const left = Math.min(1, protection / 0.6)
+      marks.strokeCircle(position.x, position.y, radius + 18 + pulse * 4, 4, view.characters[data.member.get().character], (0.45 + 0.35 * pulse) * left)
+    }
+    // Dash charges around the feet: one arc each, lit while ready, the next one filling back up.
     const ring = radius + 6
     const startAngle = -Math.PI / 2
-    marks.strokeArc(position.x, position.y, ring, startAngle, startAngle + progress * Math.PI * 2, 3, ready ? view.aim : 0x5b6b7d, ready ? 0.5 : 0.8)
+    const each = (Math.PI * 2) / tuning.dash.charges
+    const gap = tuning.dash.charges > 1 ? 0.18 : 0
+    for (let charge = 0; charge < tuning.dash.charges; charge++) {
+      const from = startAngle + charge * each + gap / 2
+      const span = each - gap
+      if (charge < dash.charges) marks.strokeArc(position.x, position.y, ring, from, from + span, 3, view.aim, 0.6)
+      else if (charge === dash.charges) marks.strokeArc(position.x, position.y, ring, from, from + span * (1 - dash.cooldown / tuning.dash.cooldown), 3, 0x5b6b7d, 0.8)
+    }
 
     // Charging the power attack: a ring filling up around the feet, brighter and thicker once full.
     const charge = attack.power === null ? 0 : chargeOf(attack.power, weapon.held)

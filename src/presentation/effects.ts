@@ -10,7 +10,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Body, Broke, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Zap } from "../schema.ts"
+import { Action, Body, Broke, Cast, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { RenderHostValue } from "./host-types.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
@@ -35,10 +35,13 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     explosion: Game.System.readEvent(Explosion),
     heal: Game.System.readEvent(Heal),
     reaction: Game.System.readEvent(Reaction),
-    zap: Game.System.readEvent(Zap)
+    zap: Game.System.readEvent(Zap),
+    cast: Game.System.readEvent(Cast)
   },
+  resources: { tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost) }
-}, ({ events, services }) => {
+}, ({ events, resources, services }) => {
+  const tuning = resources.tuning.get()
   const fx = services.host.fx
   const feedback = services.host.feedback
   const impact = view.impact
@@ -53,11 +56,33 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       if (release) feedback.shake = Math.max(feedback.shake, impact.shake)
     }
     // A character comes in: a flash and a ring in her color.
-    if (action.kind === "switch") {
+    if (action.kind === "switch" && !action.fell) {
       const at = toScreen(projection, action.at)
       const color = view.characters[action.character]
       fx.flash({ x: at.x, y: at.y - impact.height * projection.zoom }, 40, color, 0.14)
       fx.ring(at, 56 * projection.zoom, color, 0.35)
+    }
+    // After a fall she comes in for good: a column of light, rings, a flash, her name; protected a while (see `DrawPlayer`).
+    if (action.kind === "switch" && action.fell) {
+      const at = toScreen(projection, action.at)
+      const color = view.characters[action.character]
+      const spec = view.fallEntry
+      const body = { x: at.x, y: at.y - impact.height * projection.zoom }
+      fx.flash(body, spec.flash, view.hitFlash, 0.3)
+      fx.flash(body, spec.flash * 0.7, color, 0.45)
+      fx.ring(at, spec.ring * projection.zoom, color, 0.55)
+      fx.ring(at, spec.ring * 0.55 * projection.zoom, view.hitFlash, 0.35)
+      // Streaks rising off the ground around her: a column of light.
+      fx.burst(at, { color, count: spec.beam, speed: 260, size: 3, life: 0.7, gravity: -900, drag: 1, stretch: 6 })
+      fx.burst(body, { color: view.hitFlash, count: 14, speed: 300, size: 4, life: 0.4 })
+      feedback.shake = Math.max(feedback.shake, spec.shake)
+      feedback.punch = Math.max(feedback.punch, 1)
+      feedback.protection = tuning.team.fallProtection
+      const banner = services.host.hud.banner
+      banner.textContent = `${tuning.characters[action.character].name.toUpperCase()} STEPS IN`
+      banner.classList.remove("is-showing")
+      void banner.offsetWidth // restart the CSS animation
+      banner.classList.add("is-showing")
     }
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
     if (action.kind === "attack" && isMelee(action.move)) {
@@ -132,6 +157,42 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     fx.burst(heart, { color: spec.full, count: 12, speed: 240, size: 5, life: 0.35 })
     services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake)
     services.host.feedback.punch = Math.max(services.host.feedback.punch, 1)
+  }
+  // A wave (the Tidal Wave): spray of its element rushing down its lane.
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "cut") continue
+    const at = toScreen(projection, cast.from)
+    const color = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const base = Math.atan2(cast.direction.y, cast.direction.x)
+    for (let streak = 0; streak < 18; streak++) {
+      // Spread across the lane's width, all heading down it.
+      const side = ((streak % 6) / 5 - 0.5) * (effect.width / 2)
+      const from = toScreen(projection, { x: cast.from.x - Math.sin(base) * side, y: cast.from.y + Math.cos(base) * side })
+      const direction = screenDirection(cast.direction)
+      const speed = (effect.length * 2.4 + (streak % 3) * 80) * projection.zoom
+      fx.mote({ x: from.x, y: from.y - 8 * projection.zoom }, direction.x * speed, direction.y * speed, { color, size: 4, life: 0.35, drag: 3, stretch: 4 })
+    }
+    fx.burst({ x: at.x, y: at.y - 10 }, { color, count: 10, speed: 160, size: 4, life: 0.35 })
+  }
+  // A blast (the Gust): streaks of its element rushing out across its fan.
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "blast") continue
+    const at = toScreen(projection, cast.from)
+    const color = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const half = (effect.arcDegrees * Math.PI) / 360
+    const base = Math.atan2(cast.direction.y, cast.direction.x)
+    // All around her: streaks evenly spread; a fan: across its width.
+    const round = effect.arcDegrees >= 360
+    const streaks = round ? 22 : 14
+    for (let streak = 0; streak < streaks; streak++) {
+      const angle = round ? base + (streak / streaks) * Math.PI * 2 : base + (streak / (streaks - 1) - 0.5) * half * 2
+      const direction = screenDirection({ x: Math.cos(angle), y: Math.sin(angle) })
+      const speed = (effect.radius * 3.2 + (streak % 3) * 60) * projection.zoom
+      fx.mote({ x: at.x, y: at.y - impact.height * projection.zoom }, direction.x * speed, direction.y * speed, { color, size: 3, life: 0.28, drag: 4, stretch: 5 })
+    }
+    feedback.shake = Math.max(feedback.shake, 3)
   }
   // A perfect dodge: a bright flash where she slipped through, a ring rushing out, and streaks off her.
   for (const perfect of events.perfect.all()) {

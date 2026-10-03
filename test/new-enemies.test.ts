@@ -8,7 +8,7 @@ import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, gunShot, gunner, playerLoss, start, swordsman } from "./helpers.ts"
+import { ClearEnemies, grenadeSkill, gunShot, gunner, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -166,10 +166,10 @@ describe("guardian", () => {
       pointer: [{ frame: 0, move: cursorAt({ x: 250, y: 0 }) }],
       keys: [{ frame: turnSteps, press: ["special"], release: ["special"] }]
     })
-    run.step(turnSteps + steps(defaultTuning.skills.grenade.effect.flightTime + defaultTuning.skills.grenade.effect.fuse) + 4)
+    run.step(turnSteps + steps(grenadeSkill.effect.flightTime + grenadeSkill.effect.fuse) + 4)
     expect(run.world().enemies[0]!.facing!.x).toBeLessThan(-0.99)
     // The guardian is weak to the grenade's fire.
-    expect(run.world().enemies[0]!.health).toBe(hp - defaultTuning.skills.grenade.effect.power * defaultTuning.elements.affinity.weak.damage)
+    expect(run.world().enemies[0]!.health).toBe(hp - grenadeSkill.effect.power * defaultTuning.elements.affinity.weak.damage)
   })
 })
 

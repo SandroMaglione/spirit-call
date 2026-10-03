@@ -6,7 +6,7 @@ import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { center, cursorAt, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withWindCut } from "./helpers.ts"
+import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -47,31 +47,51 @@ const FillEnergy = Game.System("Test/FillEnergy", {
 const hp = defaultTuning.enemies.dummy.hp
 const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
-describe("Gale (Space)", () => {
-  const gale = defaultTuning.skills.bladeWave.effect
+describe("Gust (Space)", () => {
+  const gust = defaultTuning.skills.bladeWave.effect
+  const press = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
+
+  it("blasts all around her, driving what it catches far away, and leaves what is out of its reach", () => {
+    expect(gust.kind).toBe("blast")
+    const reach = gust.kind === "blast" ? gust.radius : 0
+    const run = range([{ x: 120, y: 30 }, { x: -110, y: -60 }, { x: reach + 120, y: 0 }], { x: 300, y: 0 }, { keys: [press(1)] })
+    const before = run.world().enemies.map((enemy) => enemy.position)
+    run.step(40)
+    const [front, behind, far] = run.world().enemies
+    expect(front!.health).toBeLessThan(hp)
+    expect(behind!.health).toBeLessThan(hp)
+    expect(far!.health).toBe(hp)
+    // Driven well away from her, each its own way.
+    expect(front!.position.x - before[0]!.x).toBeGreaterThan(150)
+    expect(before[1]!.x - behind!.position.x).toBeGreaterThan(100)
+    expect(far!.position).toEqual(before[2])
+  })
+})
+
+describe("a whirl at her feet (the Gale on Space)", () => {
+  const tuning = withGale()
   const press = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
   const distances = (run: ReturnType<typeof range>) => run.world().enemies.map((enemy) => Math.hypot(enemy.position.x - center.x, enemy.position.y - center.y))
 
   it("whirls at her feet, whatever she aims at, pulling the enemies around her in and grazing them", () => {
-    expect(gale.kind).toBe("vortex")
-    const run = range([{ x: 200, y: 0 }, { x: 0, y: -200 }, { x: -230, y: 60 }], { x: 300, y: 300 }, { keys: [press(1)] })
-    run.step(steps(gale.kind === "vortex" ? gale.seconds : 0) + 4)
+    const run = range([{ x: 200, y: 0 }, { x: 0, y: -200 }, { x: -230, y: 60 }], { x: 300, y: 300 }, { tuning, keys: [press(1)] })
+    run.step(steps(gale.seconds) + 4)
     for (const distance of distances(run)) expect(distance).toBeLessThan(60)
     for (const enemy of run.world().enemies) expect(enemy.health).toBeLessThan(hp)
   })
 
   it("hurts little: a whole Gale leaves a Swarmer standing", () => {
-    expect(gale.kind === "vortex" ? (gale.seconds / gale.tick + 1) * damageDealt(80, gale.power) : 0).toBeLessThan(defaultTuning.enemies.swarmer.hp)
+    expect((gale.seconds / gale.tick + 1) * damageDealt(80, gale.power)).toBeLessThan(defaultTuning.enemies.swarmer.hp)
   })
 
   it("leaves what is out of its reach where it is", () => {
-    const run = range([{ x: 420, y: 0 }], { x: 200, y: 0 }, { keys: [press(1)] })
+    const run = range([{ x: 420, y: 0 }], { x: 200, y: 0 }, { tuning, keys: [press(1)] })
     run.step(60)
     expect(distances(run)[0]).toBeCloseTo(420, 0)
   })
 
   it("barely moves an enemy that is immune to wind and hard to push", () => {
-    const heavy = tuningWith({ enemies: { dummy: { elements: { wind: "immune" }, knockbackTaken: 0.2 } } })
+    const heavy = withGale(tuningWith({ enemies: { dummy: { elements: { wind: "immune" }, knockbackTaken: 0.2 } } }))
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { keys: [press(1)], tuning: heavy })
     run.step(80)
     expect(distances(run)[0]).toBeGreaterThan(150)
@@ -116,11 +136,11 @@ describe("grenade (Space)", () => {
     run.step(3)
     const [grenade] = run.world().grenades
     expect(grenade!.to.x).toBeCloseTo(center.x, 6)
-    expect(center.y - grenade!.to.y).toBeCloseTo(defaultTuning.skills.grenade.effect.maxRange, 6)
+    expect(center.y - grenade!.to.y).toBeCloseTo(grenadeSkill.effect.maxRange, 6)
   })
 
   it("damages everything within its radius, once, after the fuse", () => {
-    const spec = defaultTuning.skills.grenade.effect
+    const spec = grenadeSkill.effect
     const run = range([{ x: 200, y: spec.radius - 10 }, { x: 200, y: -(spec.radius + 30) }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
     run.step(steps(spec.flightTime + spec.fuse) - 2)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp])
@@ -130,7 +150,7 @@ describe("grenade (Space)", () => {
   })
 
   it("respects its cooldown", () => {
-    const again = steps(defaultTuning.skills.grenade.cooldown) - 10
+    const again = steps(grenadeSkill.cooldown) - 10
     const run = range([], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1), throwGrenade(again)] })
     run.step(again + 2)
     expect(run.world().skills.special.cooldown).toBeGreaterThan(0)
@@ -179,8 +199,8 @@ describe("ultimates (Shift)", () => {
   describe("the Swordsman's Cyclone", () => {
     const spec = defaultTuning.skills.cyclone.effect
 
-    it("pulls everything within its reach toward where it was set down, striking each tick, and leaves the rest alone", () => {
-      const at = { x: 200, y: 0 }
+    it("pulls everything within its reach toward her feet, striking each tick, and leaves the rest alone", () => {
+      const at = { x: 0, y: 0 }
       const inside = [{ x: at.x + 130, y: 0 }, { x: at.x, y: -120 }]
       const outside = { x: at.x, y: spec.radius + 80 }
       const run = range([...inside, outside], at, { tuning: sturdy, keys: [ultimate(1)] })

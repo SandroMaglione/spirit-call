@@ -32,7 +32,7 @@ import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
-import { AbsorbIntoVortices, CastBarrages, CastCuts, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
+import { AbsorbIntoVortices, CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { UseBasicAttack } from "./features/weapons.ts"
 import { DirectWaves } from "./features/waves.ts"
@@ -92,6 +92,8 @@ const gameplay = Game.Schedule.when(
   UseSkills,
   ApplyTriggeredEffects,
   CastCuts,
+  CastBlasts,
+  CastLeaps,
   CastLobs,
   CastNovas,
   CastBarrages,

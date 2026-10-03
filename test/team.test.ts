@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { nextAlive } from "../src/features/team.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, TeamSwitch, Weapon } from "../src/schema.ts"
+import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, TeamSwitch, Weapon } from "../src/schema.ts"
 import type { ActiveState, BuildValue } from "../src/schema.ts"
 import { cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -193,6 +193,8 @@ describe("the bench", () => {
   })
 })
 
+const Beat = Game.Inspector("Test/Beat", { resources: { slow: Game.System.readResource(SlowMotion) } }, ({ resources }) => resources.slow.get().remaining)
+
 describe("falling", () => {
   it("brings in the next one alive in order, protected for a moment; the run is lost when the whole team has fallen", () => {
     const team = run([swordsman, gunner, tidecaller])
@@ -203,6 +205,8 @@ describe("falling", () => {
     const incoming = team.field()!
     expect(incoming.slot).toBe(1)
     expect(incoming.invulnerable).toBeGreaterThan(tuning.team.fallProtection - 0.1)
+    // A beat as she comes in: the enemies slow for a moment.
+    expect(team.runtime.inspect(Beat)).toBeGreaterThan(0)
     expect(flowOf(team)).toBe("Playing")
 
     team.runtime.tick(putIn(1, fire(400)))

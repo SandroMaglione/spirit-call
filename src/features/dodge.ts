@@ -38,8 +38,10 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     if (dash.perfect || dash.since > rules.window) continue
     const dodged = dodges.find((dodge) => dodge.target === entity.id.value)
     if (dodged === undefined) continue
-    data.dash.set({ ...dash, perfect: true, cooldown: dash.cooldown * (1 - rules.dashRefund) })
-    if (rules.slowSeconds > 0) resources.slowMotion.set({ remaining: rules.slowSeconds, scale: rules.slowScale })
+    // Dashes back (whole charges; all of them back stops the wait for the next).
+    const charges = Math.min(tuning.dash.charges, dash.charges + rules.dashRefund)
+    data.dash.set({ ...dash, perfect: true, charges, cooldown: charges >= tuning.dash.charges ? 0 : dash.cooldown })
+    if (rules.slowSeconds > 0) resources.slowMotion.set({ remaining: rules.slowSeconds, scale: rules.slowScale, dodge: true })
     if (rules.energy > 0) data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + rules.energy) }))
     if (rules.reload) data.weapon.update((weapon) => ({ ...weapon, spent: 0, reloading: 0 }))
     data.invulnerable.update(({ remaining }) => ({ remaining: remaining + rules.invulnerability }))

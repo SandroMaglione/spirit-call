@@ -16,17 +16,19 @@
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
+import { lob } from "../content/skills.ts"
 import type { AttackId, AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim,
-  Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
+  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Lobbed, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
 import type { HitboxValue, MoveContext, WeaponValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { makeDisc } from "./discs.ts"
+import { lobTarget } from "./skills.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue => ({
@@ -40,7 +42,8 @@ export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue
   powerQueued: false,
   slowed: 1,
   spent: 0,
-  reloading: 0
+  reloading: 0,
+  sinceDashStrike: Infinity
 })
 
 /** How far a power attack held for `held` seconds is charged, 0 to 1. */
@@ -51,8 +54,8 @@ export const chargeOf = (power: PowerAttack, held: number): number =>
 export const charging = (spec: BasicAttackSpec, weapon: WeaponValue): boolean =>
   spec.power !== null && chargeOf(spec.power, weapon.held) > 0
 
-/** How far a move reaches from the player's center: a melee move's reach, a projectile's or a disc's range. */
-export const moveReach = (move: AttackMove): number => (isMelee(move) ? move.reach : move.range)
+/** How far a move reaches from the player's center: a melee move's reach, a projectile's or a disc's range, a grenade's throw. */
+export const moveReach = (move: AttackMove): number => (isMelee(move) ? move.reach : move.shape === "lob" ? move.maxRange : move.range)
 
 /** The area a melee move covers from `position` facing `aim`. */
 export const moveArea = (move: MeleeMove, position: Vec2, aim: Vec2): Pick<HitboxValue, "area"> & { readonly pushAlong?: Vec2 } => {
@@ -109,7 +112,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         weapon: Game.Query.write(Weapon),
         knockback: Game.Query.write(Knockback),
         body: Game.Query.read(Body),
-        stats: Game.Query.read(CombatStats)
+        stats: Game.Query.read(CombatStats),
+        dash: Game.Query.read(Dash)
       },
       with: [Player]
     }),
@@ -144,6 +148,10 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const reloading = Math.max(0, current.reloading - dt)
     const spent = current.reloading > 0 && reloading <= 0 ? 0 : current.spent
     const ready = cooldown <= 0 && reloading <= 0
+    // A press during a dash, or just after it, is the dash strike: once per dash, cutting a recovery short.
+    const dash = data.dash.get()
+    const sinceDashStrike = current.sinceDashStrike + dt
+    const dashing = dash.since <= tuning.dash.duration + tuning.dash.attackWindow && sinceDashStrike > dash.since
 
     // Charging: the hold counts from the press; releasing at full charge queues the power move.
     let powerQueued = current.powerQueued
@@ -169,7 +177,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         charges: true,
         hitStop: move.hitStop,
         heavy: move.heavy,
-        source: { attacker: Game.Entity.handle(entity.id, Position), move: context }
+        source: { attacker: Game.Entity.handle(entity.id, Position), move: context },
+        against: spec.against,
+        chain: spec.chain
       })
       if (move.shape === "shot") {
         const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))
@@ -206,9 +216,22 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
             hoverTick: move.hoverTick,
             nextTick: 0,
             back: 0,
-            hit: []
+            hit: [],
+            bounces: move.bounces
           }))
         }
+      } else if (move.shape === "lob") {
+        // A grenade: lobbed to the cursor (clamped to its throw), bursting like a lobbed skill.
+        const { maxRange, flightTime, fuse, radius, element, leaves, knockback, hitStop, heavy } = move
+        const effect = lob({ maxRange, flightTime, fuse, radius, element, leaves, power: move.power, knockback, hitStop, heavy })
+        commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, {
+          from: position,
+          to: lobTarget(effect, position, controls.aimPoint),
+          faction: "player",
+          effect,
+          blow: move.element === null ? struck : { ...struck, element: { id: move.element, atk } },
+          elapsed: 0
+        }]))
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           ...moveArea(move, position, aim),
@@ -232,10 +255,16 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       const empty = spec.magazine !== null && fired >= spec.magazine.rounds
       data.weapon.set({
         ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed,
-        spent: spec.magazine === null ? 0 : fired, reloading: empty && spec.magazine !== null ? spec.magazine.reload : 0
+        spent: spec.magazine === null ? 0 : fired, reloading: empty && spec.magazine !== null ? spec.magazine.reload : 0,
+        sinceDashStrike: move === spec.dash ? 0 : sinceDashStrike
       })
     }
 
+    if (dashing && reloading <= 0 && buffered > 0 && !powerQueued) {
+      // The combo starts over after it.
+      use(spec.dash, -1, false)
+      continue
+    }
     if (ready && powerQueued && spec.power !== null) {
       // The power move ends the combo: the next press starts it over.
       use(spec.power.move, -1, true)
@@ -249,7 +278,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       use(move, next, false)
       continue
     }
-    data.weapon.set({ ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading })
+    data.weapon.set({ ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading, sinceDashStrike })
   }
   if (moves > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + moves }))
 })

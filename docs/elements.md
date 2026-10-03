@@ -43,25 +43,35 @@ jumps gaps, for groups spread apart. Rock is about controlling the big
 enemies (guard, stagger, terrain), not about damage on a single target:
 that would be a damage race.
 
-The first three, one per character: **Wind** for the Swordsman (her Gale
-pulls the enemies around her into reach, grazing them), **Fire** for the Gunner (the grenade
+The first three, one per character: **Wind** for the Swordsman (her Gust
+throws everything around her far back), **Fire** for the Gunner (her Flare
+Jump bursts in fire around her as she leaps away, and her charged grenade
 leaves a fire pool), and **Water** for the Tidecaller (a disc thrower at
-middle range). **Thunder** came next, with the Stormcaller (a support who
-heals); Rock comes with a later character (a shield support).
+middle range whose Tidal Wave soaks and shoves, leaving puddles; her discs
+hit soaked enemies harder and bounce on between them). **Thunder** came
+next, with the Stormcaller (a support who heals, whose sparks jump); Rock
+comes with a later character (a shield support).
+
+Each character's two skills answer her weakness and play to her strength:
+the Swordsman throws a crowd off (Gust) or pulls it in (Cyclone); the
+Gunner leaps out of a crowd (Flare Jump) and controls the distance with
+fire; the Tidecaller shoves a crowd back and soaks it (Tidal Wave) for her
+discs to finish; the Stormcaller fights from her totem's ring and holds
+what her Thunderclap strikes.
 
 Each character's ultimate carries her element too, and every ultimate makes
 her untouchable for a moment as it goes off (so it doubles as an escape):
 
-- **Cyclone** (Swordsman, wind): a whirl set down where she aims that pulls
-  everything around it together for a few seconds; bodies dragged into each
-  other share their states, so a burning pack spreads its fire.
+- **Cyclone** (Swordsman, wind): a whirl at her feet that pulls everything
+  around her together for a few seconds; bodies dragged into each other
+  share their states, so a burning pack spreads its fire.
 - **Barrage** (Gunner, fire): a volley of fire shells around where she aims,
   each leaving a fire pool.
 - **Tide** (Tidecaller, water): a tide breaking out around her that soaks
   everything far around, drives it back, and washes away shots.
 - **Thunderclap** (Stormcaller, thunder): thunder striking the enemies
-  around her, jumping between them, and healing the whole team, the bench
-  included.
+  around her, jumping between them, stunning them and filling their break
+  bars, and healing the whole team, the bench included.
 
 ## Healing
 
@@ -72,7 +82,9 @@ The Stormcaller heals through her kit, and healing always costs something:
   the character on the field when she is within that reach and hurt;
   otherwise it strikes the nearest enemy within it. Staying by the totem
   heals and costs its damage; stepping out lets it fight. Planted in the
-  middle of a fight, it does both, but healing there is risky.
+  middle of a fight, it does both, but healing there is risky. An enemy
+  stepping into its reach is zapped and thrown back out, so it is also a
+  ring to fight from.
 - **It keeps going off the field**: switched out, the Stormcaller's totem
   keeps zapping for whoever is on the field (what a character released
   finishes on its own).
@@ -101,7 +113,7 @@ The Stormcaller heals through her kit, and healing always costs something:
   puddle shocks everyone else standing in it, the player too.
 - **Wind carries states.** Bodies pushed into each other share their state,
   and wind drives a fire pool along its direction.
-- **A whirl takes on an element.** A wind whirl (the Gale, the Cyclone)
+- **A whirl takes on an element.** A wind whirl (the Cyclone)
   takes on the first fire, water, or thunder that touches it: a pool under
   it, a burning or soaked enemy inside it, a thunder strike landing in it,
   an enemy's fire as much as the team's. It turns that element's color,
@@ -114,8 +126,9 @@ The Stormcaller heals through her kit, and healing always costs something:
 
 ## Ground effects
 
-- Some skills leave an area of their element on the ground: the grenade
-  leaves a fire pool, the Tidecaller leaves puddles.
+- Some skills leave an area of their element on the ground: the Gunner's
+  Flare Jump and grenade leave fire pools, the Tidecaller's Tidal Wave
+  leaves puddles.
 - **They affect everyone standing in them**, enemies and the player alike,
   including the character who made them: a fire pool burns her too, a
   puddle soaks and slows her too. Player-made areas appear where she aims, so

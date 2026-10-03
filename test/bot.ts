@@ -181,7 +181,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       body: player.data.body.get().radius,
       hurtbox: player.data.hurtbox.get().radius,
       speed: player.data.stats.get().speed * stateSpeed(tuning, player.data.state.get()),
-      dashReady: player.data.dash.get().cooldown <= 0 && player.data.dash.get().remaining <= 0,
+      dashReady: player.data.dash.get().charges > 0 && player.data.dash.get().remaining <= 0,
       invulnerable: player.data.invulnerable.get().remaining
     },
     enemies: queries.enemies.each().map(({ data }) => data.position.get()),
@@ -197,7 +197,7 @@ const blast = 0.05
 const horizon = 1.2
 const sample = 1 / 30
 /** Room kept between the player's hurtbox and anything dangerous. */
-const margin = 8
+const margin = 12
 /**
  * How the bot plays: the distance it likes to keep from the nearest enemy
  * when every move is safe, whether it attacks, how long a telegraph must

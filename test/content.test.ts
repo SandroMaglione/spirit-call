@@ -15,12 +15,12 @@ describe("content", () => {
       ...defaultTuning,
       attacks: { ...defaultTuning.attacks, gun: { ...defaultTuning.attacks.gun, combo: [] } },
       characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman, weapon: "executioner" } },
-      skills: { ...defaultTuning.skills, grenade: { ...defaultTuning.skills.grenade, cooldown: 0 } },
+      skills: { ...defaultTuning.skills, flareJump: { ...defaultTuning.skills.flareJump, cooldown: 0 } },
       challenges: { ...defaultTuning.challenges, endless: { ...defaultTuning.challenges.endless, objective: clearWaves() } }
     }
     expect(validateContent(broken)).toEqual([
       "attack gun: the combo needs at least one move",
-      "skill grenade: needs a cooldown or an energy cost, or it can be spammed",
+      "skill flareJump: needs a cooldown or an energy cost, or it can be spammed",
       "character swordsman: its weapon executioner is a gun, not a sword",
       "challenge endless: clearing every wave can never happen with endless waves"
     ])
@@ -34,7 +34,7 @@ describe("content", () => {
     expect(validateContent(broken)).toEqual([
       "character gunner: her ultimate barrage needs some invulnerability on use",
       "skill bladeWave: in more than one kit slot (swordsman, gunner); each character's skills are her own",
-      "skill grenade: in no character's kit"
+      "skill flareJump: in no character's kit"
     ])
   })
 

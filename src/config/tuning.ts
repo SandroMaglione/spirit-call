@@ -64,7 +64,9 @@ export const defaultTuning = {
     /** The share of the energy the character on the field earns that each one on the bench gains. */
     benchEnergyShare: 0.6,
     /** Invulnerability for the character who comes in when the last one falls: she did not choose the moment. */
-    fallProtection: 1
+    fallProtection: 2.5,
+    /** As she comes in after a fall, the enemies slow to `scale` for `seconds` (a beat to take in the fight). */
+    fallBeat: { seconds: 0.6, scale: 0.35 }
   },
 
   /** Every character, by id; the `Team` resource picks the ones in the arena. */
@@ -104,8 +106,13 @@ export const defaultTuning = {
     distance: 170,
     /** How long the dash lasts; speed is distance / duration. */
     duration: 0.14,
-    /** Time from the start of one dash until the next one is available: a dash spent is a dash missing for the next threat. */
-    cooldown: 1.3,
+    /**
+     * Dashes ready at once (charges), and the time each one takes to come
+     * back, one at a time: two let her escape and then place herself, but a
+     * charge spent is one missing for the next threat.
+     */
+    charges: 2,
+    cooldown: 1.1,
     /** Invulnerability from the start of the dash. Can outlast the dash slightly. */
     invulnerability: 0.18,
     /** A dash pressed this long before it is available still happens. */
@@ -113,7 +120,9 @@ export const defaultTuning = {
     /** Two presses of the same movement key this close together (seconds) dash. */
     doubleTapWindow: 0.25,
     /** Fraction of dash speed kept as velocity when the dash ends. */
-    exitSpeedFactor: 0.35
+    exitSpeedFactor: 0.35,
+    /** An attack pressed during a dash or this long after it is the weapon's dash strike (see `BasicAttackSpec.dash`). */
+    attackWindow: 0.15
   },
 
   /** Every basic attack, by id; each character has one (its weapon). */
@@ -145,7 +154,7 @@ export const defaultTuning = {
   energy: {
     max: 100,
     /** Energy gained per point of damage the player deals (except with skills that cost energy). */
-    perDamage: 0.25
+    perDamage: 0.4
   },
 
   knockback: {
@@ -173,8 +182,8 @@ export const defaultTuning = {
    * the dash's invulnerability). A dash taken earlier is a plain dodge. It
    * rewards once per dash: the enemies slow to `slowScale` for
    * `slowSeconds` (their moves, attacks, shots, and bombs; the team keeps
-   * its pace), the attacker's break bar fills by `breakFill` of itself, the
-   * dash comes back (`dashRefund` of its cooldown), she gains `energy`, her
+   * its pace), the attacker's break bar fills by `breakFill` of itself,
+   * `dashRefund` dash charges come back, she gains `energy`, her
    * magazine refills (`reload`), and she stays untouchable
    * `invulnerability` seconds longer.
    * Any reward can be turned off (0, false).
@@ -218,6 +227,23 @@ export const defaultTuning = {
     /** How close to a pool's edge an enemy that keeps out of it slides along it instead of stepping in. */
     hazardMargin: 14
   },
+
+  /**
+   * How enemies read the player (see `readPlayer`). She is open while a move
+   * of at least `openingRecovery` seconds recovers, while she reloads, or
+   * with no dash left: melee enemies then rush in at `rushSpeed` times their
+   * speed, circling ones take their turn at once, and their attack
+   * cooldowns run `cooldownRate` times as fast (not those of enemies keeping
+   * their distance). She threatens an enemy while
+   * her weapon is ready and aimed within `threatDegrees` of it, it within
+   * her melee reach and `threatMargin` more: a melee enemy then keeps just
+   * out of reach, circling, for up to `patience` seconds of its turn, then
+   * commits anyway. Telegraphs never get shorter.
+   */
+  reading: { openingRecovery: 0.3, rushSpeed: 1.1, cooldownRate: 2, threatDegrees: 60, threatMargin: 40, patience: 1.2 },
+
+  /** A disc that hits a soaked enemy turns toward the nearest other soaked enemy this close (see `DiscMove.bounces`). */
+  discBounce: { range: 300 },
 
   /** How enemies find their way around walls to the player (see physics/paths.ts). */
   paths: {

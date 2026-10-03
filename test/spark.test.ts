@@ -5,10 +5,10 @@
  */
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
+import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { makeGround } from "../src/features/ground.ts"
 import { Attacker, AttackPhase, Dash, ElementState, Enemy, Game, Health, Player, Poise, RunScope, SlowMotion, Stunned, Vortex, Weapon } from "../src/schema.ts"
-import { center, cursorAt, doubleTap, gunner, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, doubleTap, gale, gunner, placeDummies, start, steps, withGale } from "./helpers.ts"
 
 const Fight = Game.Inspector("Test/Spark", {
   queries: {
@@ -64,7 +64,8 @@ describe("the Gunner's charged shot", () => {
   // Single shots only (no spread), at a sturdy dummy straight ahead.
   const gun = defaultTuning.attacks.gun
   const single = gun.combo[0]!
-  const tuning = tuningWith({ attacks: { gun: { combo: [single, single, single] } }, enemies: { dummy: { hp: 500 } } })
+  // Its grenade without fire (no burns, no pool), so only the blast counts.
+  const tuning = tuningWith({ attacks: { gun: { combo: [single, single, single], power: { move: { element: null, leaves: null } } } }, enemies: { dummy: { hp: 500 } } })
   // Her ATK with her starting weapon's.
   const atk = defaultTuning.characters.gunner.stats.atk + defaultTuning.weapons.trainingPistol.atk
   const rounds = gun.magazine!.rounds
@@ -97,11 +98,10 @@ describe("the Gunner's charged shot", () => {
 })
 
 describe("a wind whirl taking on an element", () => {
-  const gale = defaultTuning.skills.bladeWave.effect
   const absorbSeconds = defaultTuning.elements.wind.absorbSeconds
 
   it("takes on the fire of a pool under it, lasts longer, and sets what it pulls burning", () => {
-    const run = start({ pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 2, press: ["special"], release: ["special"] }] })
+    const run = start({ tuning: withGale(), pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 2, press: ["special"], release: ["special"] }] })
     run.runtime.tick(placeDummies([{ x: 180, y: 0 }, { x: -160, y: 60 }]))
     const Pool = Game.System("Test/FirePool", {}, ({ commands }) => {
       commands.spawnIn(RunScope, makeGround({ element: "fire", radius: 40, seconds: 1 }, { x: center.x, y: center.y - 120 }, 80, true))
@@ -110,18 +110,18 @@ describe("a wind whirl taking on an element", () => {
     run.step(6)
     const [whirl] = run.runtime.inspect(Fight).vortices
     expect(whirl?.absorbed).toBe("fire")
-    expect(gale.kind === "vortex" && whirl!.remaining > gale.seconds).toBe(true)
+    expect(whirl!.remaining).toBeGreaterThan(gale.seconds)
     run.step(steps(1))
     expect(run.runtime.inspect(Fight).enemies.map((enemy) => enemy.state)).toEqual(["burning", "burning"])
     // It ends later than a plain one would.
-    run.step(steps((gale.kind === "vortex" ? gale.seconds : 0) - 1))
+    run.step(steps(gale.seconds - 1))
     expect(run.runtime.inspect(Fight).vortices).toHaveLength(1)
     run.step(steps(absorbSeconds) + 2)
     expect(run.runtime.inspect(Fight).vortices).toHaveLength(0)
   })
 
   it("stays plain wind with nothing to take on", () => {
-    const run = start({ keys: [{ frame: 2, press: ["special"], release: ["special"] }] })
+    const run = start({ tuning: withGale(), keys: [{ frame: 2, press: ["special"], release: ["special"] }] })
     run.runtime.tick(placeDummies([{ x: 180, y: 0 }]))
     run.step(steps(1))
     expect(run.runtime.inspect(Fight).vortices[0]?.absorbed).toBeNull()
@@ -236,7 +236,7 @@ describe("a perfect dodge", () => {
     run.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning))
     run.step(10)
     const Slow = Game.System("Test/Slow", { resources: { slow: Game.System.writeResource(SlowMotion) } }, ({ resources }) => {
-      resources.slow.set({ remaining: 1, scale: 0.25 })
+      resources.slow.set({ remaining: 1, scale: 0.25, dodge: true })
     })
     run.runtime.tick(Game.Schedule(Slow))
     const before = { at: run.player().position, windup: run.runtime.inspect(Fight).enemies[0]!.phase }
@@ -262,5 +262,33 @@ describe("a perfect dodge", () => {
     const run = dodging(null)
     run.step(landsAt + 3)
     expect(run.runtime.inspect(Dodger).health).toBeLessThan(hp)
+  })
+})
+
+describe("the dash strike", () => {
+  const sword = defaultTuning.attacks.sword
+  const DashWeapon = Game.Inspector("Test/DashWeapon", {
+    queries: { player: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }) }
+  }, ({ queries }) => queries.player.each()[0]!.data.weapon.get())
+  /** A dash toward a sturdy dummy, and an attack pressed `after` steps into it. */
+  const strike = (after: number) => {
+    const tuning = tuningWith({ enemies: { dummy: { hp: 500 } } })
+    const run = start({ tuning, pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }) }, ...clicks(3 + after, 1, 1)], keys: doubleTap("right", 0, { hold: true }) })
+    run.runtime.tick(placeDummies([{ x: 260, y: 0 }], tuning))
+    return run
+  }
+
+  it("strikes out of a dash with the weapon's dash move, once per dash", () => {
+    const run = strike(2)
+    run.step(12)
+    expect(run.runtime.inspect(DashWeapon).sinceDashStrike).toBeLessThan(0.2)
+    expect(run.runtime.inspect(DashWeapon).recovery).toBe(sword.dash.recovery)
+  })
+
+  it("is a plain combo move when pressed long after the dash", () => {
+    const run = strike(Math.ceil((defaultTuning.dash.duration + defaultTuning.dash.attackWindow) / engine.stepSeconds) + 10)
+    run.step(60)
+    expect(run.runtime.inspect(DashWeapon).sinceDashStrike).toBe(Infinity)
+    expect(run.runtime.inspect(DashWeapon).step).toBe(0)
   })
 })

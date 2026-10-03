@@ -20,6 +20,7 @@ import {
   Cast,
   Damage,
   ElementState,
+  Enemy,
   Explosion,
   Game,
   Ground,
@@ -27,12 +28,15 @@ import {
   Health,
   Hurtbox,
   Invulnerable,
+  Knockback,
   Member,
   Player,
+  Poise,
   Position,
   Reaction,
   Renderable,
   RunScope,
+  Stunned,
   Time,
   Totem,
   Tuning,
@@ -40,6 +44,8 @@ import {
 } from "../schema.ts"
 import type { ActiveState, Blow, DamageValue, Faction, GroundValue, ReactionKind } from "../schema.ts"
 import { inPool } from "./ground.ts"
+import { knockbackTaken } from "./motion.ts"
+import { poiseOf } from "./poise.ts"
 import { castBlow } from "./skills.ts"
 
 /** A body thunder can strike: where it is, how big, its side, whether it is soaked or protected. */
@@ -178,7 +184,7 @@ export const CastTotems = Game.System("Shooter/CastTotems", {
     if (effect.kind !== "totem") continue
     commands.spawnIn(RunScope, Game.Command.spawn(
       [Position, { x: cast.from.x + cast.direction.x * effect.offset, y: cast.from.y + cast.direction.y * effect.offset }],
-      [Totem, { faction: cast.faction, effect, blow: castBlow(cast, effect), remaining: effect.seconds, nextTick: 0 }],
+      [Totem, { faction: cast.faction, effect, blow: castBlow(cast, effect), remaining: effect.seconds, nextTick: 0, inside: [] }],
       [Renderable, { kind: "totem", element: effect.element }]
     ))
   }
@@ -195,6 +201,7 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
     totems: Game.Query({ selection: { totem: Game.Query.write(Totem), position: Game.Query.read(Position) } }),
     field: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), health: Game.Query.write(Health) }, with: [Player] }),
     bodies: Strikeable,
+    pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback), enemy: Game.Query.optional(Enemy) }, with: [Health] }),
     pools: Pools
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
@@ -231,9 +238,26 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
         if (target !== undefined) strike(tuning, events, at, target, bodies, pools, { faction: totem.faction, blow: totem.blow, jumps: effect.jumps })
       }
     }
+    // A body of the other side stepping into its reach is zapped and thrown back out: a ring to fight from.
+    const inside: Array<number> = []
+    if (effect.repel > 0) {
+      const center: Struck = { id: -1, entity: null, at, radius: 0, faction: totem.faction, soaked: false, protected: false }
+      for (const body of bodies) {
+        if (body.faction === totem.faction || body.protected || gap(center, body) > effect.radius) continue
+        inside.push(body.id)
+        if (totem.inside.includes(body.id) || body.entity === null) continue
+        strike(tuning, events, at, body, bodies, pools, { faction: totem.faction, blow: totem.blow, jumps: 0 })
+        const pushed = queries.pushed.each().find(({ entity: other }) => other.id.value === body.id)
+        if (pushed !== undefined) {
+          const out = normalizeOr(sub(body.at, at), { x: 1, y: 0 })
+          const push = effect.repel * knockbackTaken(tuning, pushed.data.enemy.present ? pushed.data.enemy.get().kind : undefined)
+          pushed.data.knockback.update((current) => ({ x: current.x + out.x * push, y: current.y + out.y * push }))
+        }
+      }
+    }
     const remaining = totem.remaining - dt
     if (remaining <= 0) commands.despawn(entity.id)
-    else data.totem.set({ ...totem, remaining, nextTick })
+    else data.totem.set({ ...totem, remaining, nextTick, inside })
   }
 })
 
@@ -246,7 +270,8 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
   queries: {
     bodies: Strikeable,
     pools: Pools,
-    members: Game.Query({ selection: { health: Game.Query.write(Health), player: Game.Query.optional(Player) }, with: [Member] })
+    members: Game.Query({ selection: { health: Game.Query.write(Health), player: Game.Query.optional(Player) }, with: [Member] }),
+    stunnable: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise), stunned: Game.Query.write(Stunned) } })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: {
@@ -277,6 +302,15 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
       if (struck.has(target.id)) continue
       strikes += 1
       for (const body of strike(tuning, events, at, target, bodies, pools, { faction: cast.faction, blow: hit, jumps: effect.jumps, skip: struck })) struck.add(body.id)
+    }
+    // What it struck is held: stunned a while, its break bar filled up (a full one breaks, see `BuildPoise`).
+    for (const { entity, data } of queries.stunnable.each()) {
+      if (!struck.has(entity.id.value)) continue
+      if (effect.stun > 0) data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
+      const bar = poiseOf(tuning, data.enemy.get().kind, data.health.get().max)
+      if (bar > 0 && effect.breakFill > 0 && data.poise.get().broken <= 0) {
+        data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
+      }
     }
     for (const { data } of queries.members.each()) {
       const health = data.health.get()

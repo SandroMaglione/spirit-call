@@ -75,7 +75,11 @@ const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire p
 export const describeEffect = (effect: SkillEffect): string => {
   switch (effect.kind) {
     case "cut":
-      return `a cutting ${elementWord(effect.element)}wave (${effect.power}% ATK)`
+      return `a ${elementWord(effect.element)}wave ahead of you (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
+    case "leap":
+      return `a ${elementWord(effect.element)}burst around you (${effect.power}% ATK) as you leap away from your aim${effect.leaves === null ? "" : `, leaving ${poolNames[effect.leaves.element]}`}`
+    case "blast":
+      return `a ${elementWord(effect.element)}blast ${effect.arcDegrees >= 360 ? "all around you" : "wide in front of you"} that drives enemies far back (${effect.power}% ATK)`
     case "lob":
       return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":

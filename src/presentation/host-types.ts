@@ -186,6 +186,8 @@ export interface FeedbackState {
   kick: { x: number; y: number }
   /** Zoom punch, 0..1, decaying (heavy blows). */
   punch: number
+  /** Seconds left of the protection of a character who came in after a fall (shown around her feet). */
+  protection: number
   /** Recoil of recently hit bodies, by entity id: age, duration, the blow's direction on the floor, and strength. */
   readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
 }

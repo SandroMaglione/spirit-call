@@ -95,6 +95,6 @@ describe("menu helpers", () => {
     expect(defaultTuning.weapons.bloodthirst.passives.map(describePassive)).toEqual(["On kill: heal 5% of max HP"])
     expect(describePassive(defaultTuning.weapons.echoSaber.passives[0]!)).toMatch(/^On the combo finisher: set off a shockwave/)
     expect(describeSkill(defaultTuning.skills.tide)).toBe("A water shockwave around you (50% ATK) · 100 energy, untouchable as it goes off")
-    expect(describeSkill(defaultTuning.skills.grenade)).toBe("A lobbed fire blast (38% ATK) leaving a fire pool · 4s cooldown")
+    expect(describeSkill(defaultTuning.skills.flareJump)).toBe("A fire burst around you (22% ATK) as you leap away from your aim, leaving a fire pool · 3s cooldown, untouchable as it goes off")
   })
 })

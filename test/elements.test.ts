@@ -7,12 +7,12 @@ import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
-import { center, cursorAt, gunner, placeDummies, start, steps, withWindCut } from "./helpers.ts"
+import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
 const rules = tuning.elements
-const grenade = tuning.skills.grenade.effect
+const grenade = grenadeSkill.effect
 /** The gunner's ATK: hers with the training pistol. */
 const atk = tuning.characters.gunner.stats.atk + tuning.weapons.trainingPistol.atk
 
@@ -125,7 +125,7 @@ describe("afflict", () => {
 describe("the grenade's fire", () => {
   it("sets what it hits burning; the burn ticks down and wears off", () => {
     // Without its fire pool, which would keep the dummy burning.
-    const noPool = tuningWith({ skills: { grenade: { effect: { leaves: null } } } })
+    const noPool = withGrenade({ leaves: null })
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: noPool })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const hit = tuning.enemies.dummy.hp - (atk * grenade.power) / 100
@@ -201,7 +201,7 @@ describe("soaked", () => {
   })
 
   it("puts out a fire when water lands", () => {
-    const watery = tuningWith({ skills: { grenade: { effect: { element: "water", leaves: null } } } })
+    const watery = withGrenade({ element: "water", leaves: null })
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: watery })
     run.putIn(burning(6, 10))
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
@@ -367,7 +367,7 @@ describe("wind", () => {
 })
 
 describe("affinities", () => {
-  const noPool = (elements: object) => tuningWith({ skills: { grenade: { effect: { leaves: null } } }, enemies: { dummy: { elements } } })
+  const noPool = (elements: object) => withGrenade({ leaves: null }, tuningWith({ enemies: { dummy: { elements } } }))
   const blast = (atk * grenade.power) / 100
 
   it("an enemy weak to an element takes more of its damage, and its effect lasts longer", () => {

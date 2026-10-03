@@ -52,6 +52,7 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   const kickDecay = Math.exp(-view.impact.kickDecay * seconds)
   feedback.kick.x *= kickDecay
   feedback.kick.y *= kickDecay
+  feedback.protection = Math.max(0, feedback.protection - seconds)
   feedback.punch = feedback.punch * Math.exp(-view.impact.punchDecay * seconds) < 0.01 ? 0 : feedback.punch * Math.exp(-view.impact.punchDecay * seconds)
   // Shake jitters; a kick moves the view along the blow and eases back.
   const target = services.host.view
@@ -63,8 +64,9 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   // Phones zoom out (see view.camera); the camera stays centered on the player. Heavy blows punch in.
   target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + view.impact.zoomPunch * feedback.punch)
   services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
-  // Slow motion glows at full strength, fading out over its last part.
-  const slow = resources.slowMotion.get().remaining / Math.max(1e-6, resources.tuning.get().perfectDodge.slowSeconds)
+  // A perfect dodge's slow motion glows at full strength, fading out over its last part (a fall's beat does not).
+  const motion = resources.slowMotion.get()
+  const slow = motion.dodge ? motion.remaining / Math.max(1e-6, resources.tuning.get().perfectDodge.slowSeconds) : 0
   services.host.hud.focus.style.opacity = Math.min(1, slow * 2.5).toFixed(3)
 })
 

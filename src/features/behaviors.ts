@@ -6,6 +6,8 @@
  * with a strong push, and a charge's run.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
+import { isMelee } from "../content/attacks.ts"
+import type { AttackId } from "../content/attacks.ts"
 import type { Behavior } from "../content/enemies.ts"
 import { normalizeOr, scale, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -141,4 +143,46 @@ export const keepOut = (desired: Vec2, at: Vec2, radius: number, speed: number, 
     if (into < 0) result = { x: result.x - edge.out.x * into, y: result.y - edge.out.y * into }
   }
   return result
+}
+
+/**
+ * How the enemies read the player (see `Tuning.reading`): whether she is
+ * open (a long move recovering, reloading, or out of dashes), and whether a
+ * body at `at` is under her threat (her weapon ready, aimed its way, it
+ * within her melee reach and a little more).
+ */
+export interface PlayerRead {
+  readonly opening: boolean
+  /** How far her threat reaches (0: no melee reach to keep out of). */
+  readonly reach: number
+  readonly threatens: (at: Vec2) => boolean
+}
+
+export const readPlayer = (
+  tuning: TuningValue,
+  player: {
+    readonly at: Vec2
+    readonly aim: Vec2
+    readonly weapon: { readonly attack: AttackId; readonly cooldown: number; readonly recovery: number; readonly reloading: number }
+    readonly dashes: number
+  }
+): PlayerRead => {
+  const rules = tuning.reading
+  const { weapon } = player
+  const opening = (weapon.cooldown > 0 && weapon.recovery >= rules.openingRecovery) || weapon.reloading > 0 || player.dashes <= 0
+  const first = tuning.attacks[weapon.attack].combo[0]
+  const reach = first !== undefined && isMelee(first) ? first.reach + rules.threatMargin : 0
+  const ready = weapon.cooldown <= 0 && weapon.reloading <= 0
+  const cos = Math.cos((rules.threatDegrees * Math.PI) / 180)
+  return {
+    opening,
+    reach,
+    threatens: (at) => {
+      if (!ready || opening || reach <= 0) return false
+      const dx = at.x - player.at.x
+      const dy = at.y - player.at.y
+      const distance = Math.hypot(dx, dy)
+      return distance <= reach && (distance < 1e-6 || (dx * player.aim.x + dy * player.aim.y) / distance >= cos)
+    }
+  }
 }

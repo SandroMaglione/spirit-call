@@ -8,7 +8,7 @@ import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Controls, Energy, Game, Lobbed, Player, Position, Projectile, Velocity } from "../src/schema.ts"
-import { gunner, start, swordsman, tidecaller, withWindCut } from "./helpers.ts"
+import { gunner, start, swordsman, tidecaller, withWindCut, grenadeSkill } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
@@ -77,7 +77,7 @@ describe("touch controls", () => {
   })
 
   it("throws the grenade on release: to the dragged spot, or ahead for a tap; a cancelled drag throws nothing", () => {
-    const spec = defaultTuning.skills.grenade.effect
+    const spec = grenadeSkill.effect
     const dragged = start({ build: gunner, touch: [{ frame: 0, press: ["special"], aim: { special: { x: 0, y: -0.5 } } }, { frame: 3, release: ["special"] }] })
     dragged.step(3)
     expect(dragged.runtime.inspect(World).grenades).toEqual([])

@@ -145,6 +145,13 @@ export const view = {
   wallSpark: 0x9fb3c8,
   spawnWarning: 0xf7a948,
   /** Breaking enemies: the bar under their health, and how a broken one glows (and its burst, see `effects.ts`). */
+  /**
+   * A character coming in after a fall: a column of light rising where she
+   * stands (`beam` streaks), two rings, a white flash, a shake, and her
+   * name in the banner; then a ring of her color around her feet while she
+   * is protected, pulsing at `pulseHz`.
+   */
+  fallEntry: { beam: 26, ring: 150, flash: 120, shake: 8, pulseHz: 3 },
   /** A perfect dodge's flash, ring, and streaks. */
   perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7 },
   breaking: { bar: 0xffc857, full: 0xfff4d6, glow: 0xffc857, pulseHz: 5, ring: 90, flash: 70, shake: 9 },

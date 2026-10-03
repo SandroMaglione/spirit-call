@@ -65,14 +65,15 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     // The attack recharges between moves.
     attack: player === undefined ? 0 : recharge(player.data.weapon.get()),
     special: slots?.special.recharge ?? 0,
-    dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
+    // Ready while a charge is left; otherwise waiting for the next one.
+    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
     ultimate: slots?.ultimate.recharge ?? 1
   }
   // Seconds left, on the buttons that wait for a cooldown (the ultimate waits for energy, the attack only a moment).
   const seconds = {
     attack: 0,
     special: player === undefined || (slots?.special.spec.cooldown ?? 0) <= 0 ? 0 : player.data.skills.get().special.cooldown,
-    dash: player === undefined ? 0 : player.data.dash.get().cooldown,
+    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown,
     ultimate: 0
   }
   if (slots !== undefined) {

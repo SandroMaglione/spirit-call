@@ -9,7 +9,7 @@
 import type { ReadCell, WriteCell } from "@typeonce/bevy-ts/Query"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { scale } from "../math/vec.ts"
+import { normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
@@ -46,7 +46,8 @@ import {
   Stats,
   Time,
   Tuning,
-  Velocity
+  Velocity,
+  Zap
 } from "../schema.ts"
 import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
@@ -87,7 +88,7 @@ export const MoveProjectiles = (() => {
       walls: Walls
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged) }
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap) }
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
     const window = resources.tuning.get().perfectDodge.window
@@ -146,6 +147,21 @@ export const MoveProjectiles = (() => {
         }
         events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: projectile.faction, direction, blow: projectile.blow })
         hit.push(contact.target.id)
+        // A blow that jumps: on to the nearest other body of that side in range, with its share of the damage.
+        const chain = projectile.blow.chain
+        if (chain !== null) {
+          let next: Target | undefined
+          const gap = (other: Target) => Math.hypot(other.at.x - contact.target.at.x, other.at.y - contact.target.at.y) - other.radius - contact.target.radius
+          for (const other of targets) {
+            if (other.id === contact.target.id || other.faction !== contact.target.faction || other.invulnerable || gap(other) > chain.range) continue
+            if (next === undefined || gap(other) < gap(next)) next = other
+          }
+          if (next !== undefined) {
+            const jump = { ...projectile.blow, damage: projectile.blow.damage * chain.share, chain: null, hitStop: 0 }
+            events.damage.emit({ target: Game.Entity.handle(next.entity, Health), faction: projectile.faction, direction: normalizeOr(sub(next.at, contact.target.at), direction), blow: jump })
+            events.zap.emit({ path: [contact.at, next.at], heal: false })
+          }
+        }
         if (pierce === 0) {
           stopAt = contact.time
           break
@@ -263,8 +279,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
     const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state, affinity)
-    // A broken enemy takes more (see `Tuning.breaking`).
-    const broken = data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1
+    // A broken enemy takes more (see `Tuning.breaking`), and so does one in the state the blow is made against.
+    const broken = (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1) *
+      (blow.against !== null && state?.id === blow.against.state ? blow.against.factor : 1)
     const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken, data.stats.get().def)
     const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.

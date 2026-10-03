@@ -90,7 +90,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.run.set({ time: 0, endedAt: null })
   resources.result.set(null)
   resources.hitStop.set({ remaining: 0 })
-  resources.slowMotion.set({ remaining: 0, scale: 1 })
+  resources.slowMotion.set({ remaining: 0, scale: 1, dodge: false })
   resources.teamSwitch.set({ cooldown: 0 })
 })
 
