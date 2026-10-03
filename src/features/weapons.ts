@@ -21,7 +21,8 @@ import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Action, Aim, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
+import { Action, Aim,
+  Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
 import type { HitboxValue, MoveContext, WeaponValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
@@ -36,7 +37,8 @@ export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue
   comboTimer: 0,
   step: -1,
   held: 0,
-  powerQueued: false
+  powerQueued: false,
+  slowed: 1
 })
 
 /** How far a power attack held for `held` seconds is charged, 0 to 1. */
@@ -101,6 +103,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       selection: {
         position: Game.Query.read(Position),
         aim: Game.Query.read(Aim),
+        facing: Game.Query.write(Facing),
         weapon: Game.Query.write(Weapon),
         knockback: Game.Query.write(Knockback),
         body: Game.Query.read(Body),
@@ -212,7 +215,10 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       if (lunge !== 0) data.knockback.update((knockback) => ({ x: knockback.x + aim.x * lunge, y: knockback.y + aim.y * lunge }))
       moves += 1
       events.action.emit({ kind: "attack", at: position, direction: aim, move, ...context })
-      data.weapon.set({ ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false })
+      // She faces the way she struck until the move recovers, slowed meanwhile (a heavy move stops her).
+      data.facing.set({ direction: aim, hold: move.recovery })
+      const slowed = move.heavy ? 0 : spec.attackingSpeed
+      data.weapon.set({ ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed })
     }
 
     if (cooldown <= 0 && powerQueued && spec.power !== null) {

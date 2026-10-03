@@ -21,6 +21,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
   Aim,
+  Facing,
   blow,
   Cast,
   CombatStats,
@@ -162,8 +163,9 @@ export const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
     element: effect.element === null ? null : { id: effect.element, atk: cast.atk }
   })
 
-/** Casters that turn toward what they cut. */
+/** Casters that turn toward what they cut (facing it a moment too). */
 const Turning = Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.write(Aim) } })
+const Facers = Game.Query({ selection: { position: Game.Query.read(Position), facing: Game.Query.write(Facing) } })
 
 /** Cuts: a lane toward the aim that hits everything along it once, shortened by walls. */
 export const CastCuts = Game.System("Shooter/CastCuts", {
@@ -185,6 +187,8 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     }]))
     const caster = lookup.getHandle(cast.caster, Turning)
     if (caster.ok) caster.value.data.aim.set(direction)
+    const facer = lookup.getHandle(cast.caster, Facers)
+    if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
   }
 })
 

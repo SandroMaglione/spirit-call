@@ -22,6 +22,7 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import {
   Action,
   Aim,
+  Facing,
   Controls,
   Dash,
   Energy,
@@ -67,6 +68,7 @@ export const makeMember = (build: ResolvedBuild, slot: number) =>
 export interface Carried {
   readonly motion: BodyMotion
   readonly aim: Vec2
+  readonly facing: Vec2
   readonly dash: DashValue
 }
 
@@ -74,6 +76,7 @@ export interface Carried {
 const fresh = (at: Vec2): Carried => ({
   motion: { previous: at, velocity: { x: 0, y: 0 }, invulnerable: 0 },
   aim: { x: 1, y: 0 },
+  facing: { x: 1, y: 0 },
   dash: { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }
 })
 
@@ -85,6 +88,7 @@ export const fieldParts = (tuning: TuningValue, member: { readonly character: Ch
     ...bodyParts({ at, faction: "player", radius, hurtboxRadius }, carried.motion),
     [Player, {}],
     [Aim, carried.aim],
+    [Facing, { direction: carried.facing, hold: 0 }],
     [Dash, carried.dash],
     [Renderable, { kind: "player", character, weapon, radius }]
   ] as const
@@ -150,6 +154,7 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
         previous: Game.Query.read(PrevPosition),
         velocity: Game.Query.read(Velocity),
         aim: Game.Query.read(Aim),
+        facing: Game.Query.read(Facing),
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
         weapon: Game.Query.read(Weapon)
@@ -194,6 +199,7 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   const carried: Carried = {
     motion: { previous: field.data.previous.get(), velocity: field.data.velocity.get(), invulnerable },
     aim: field.data.aim.get(),
+    facing: field.data.facing.get().direction,
     dash: { ...dash, remaining: 0, buffered: 0 }
   }
   // The body leaves the one on the field (the same components any body has), and her attack is interrupted.

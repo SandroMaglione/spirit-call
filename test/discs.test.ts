@@ -73,6 +73,8 @@ describe("disc", () => {
     const sturdy = tuningWith({ enemies: { dummy: { hp: 1000 } } })
     const run = range([{ x: power.range, y: 0 }], { x: 200, y: 0 }, [1], hold, { tuning: sturdy })
     run.step(steps(hold) + steps(power.range / power.speed) + 4)
+    // Its arrival's hit-stop holds the world a few steps.
+    for (let step = 0; step < 20 && run.world().discs[0]!.phase !== "hover"; step++) run.step()
     expect(run.world().discs[0]!.phase).toBe("hover")
     // Its whole hover: its hits grind without hit-stop, so it lasts exactly its time.
     run.step(steps(power.hover) + 2)

@@ -47,8 +47,19 @@ export const Player = Descriptor.Tag("Shooter/Player")
  */
 /** A team member: her slot, who she is, and the weapon she carries. */
 export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly weapon: WeaponId }>()("Shooter/Member")
-/** Unit direction the entity aims at. */
+/** Unit direction the entity aims at: where its attacks and skills go (the cursor, or the touch aim). */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
+
+/**
+ * Which way the body faces (unit `direction`), apart from the aim, as in
+ * Death's Door: where she runs, except for `hold` seconds after an attack
+ * or a skill, when she faces the way it went.
+ */
+export interface FacingValue {
+  readonly direction: Vec2
+  readonly hold: number
+}
+export const Facing = Descriptor.Component<FacingValue>()("Shooter/Facing")
 
 export interface DashValue {
   /** Time left in the current dash; 0 when not dashing. */
@@ -270,6 +281,8 @@ export interface WeaponValue {
   readonly held: number
   /** A fully charged power attack was released and goes off once the recovery ends. */
   readonly powerQueued: boolean
+  /** Her running speed while the last move recovers, as a fraction of it (0: she stands; see `BasicAttackSpec.attackingSpeed`). */
+  readonly slowed: number
 }
 export const Weapon = Descriptor.Component<WeaponValue>()("Shooter/Weapon")
 
@@ -700,6 +713,7 @@ export const Game = Schema.bind(
       Player,
       Member,
       Aim,
+      Facing,
       Dash,
       Invulnerable,
       CombatStats,
