@@ -1,0 +1,566 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "2bdb9524352264e1789e5c73368fb8737970802aacc28dcd8a6f3a73ba1cce89",
+  "assets": [
+    {
+      "id": "arch-free",
+      "sha256": "51d4078dd9dc3c04d2b39ce98c6dfe0a9c6c4d2231ec451e14f1d37d817028ef",
+      "triangles": 580,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "archive-lamp",
+      "sha256": "f92efc44d9e5423e46851fd79d8730c1afcccd491ce668973a56d4d99ac4fd3d",
+      "triangles": 148,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "armored-vault",
+      "sha256": "b64b1bc479075a82df372ba3238ef20d28bdbd2bf64c0f7a4f8017cc8b039915",
+      "triangles": 384,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "barnacle-rock",
+      "sha256": "b6d377136ed5c9d50529bf559baf3beae78381de39a3422e289456965396f341",
+      "triangles": 1200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "beacon-active",
+      "sha256": "7a96e715c4f4a40006d929f39da737867cb8c1629732d892521f784f675f802e",
+      "triangles": 232,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "beacon-idle",
+      "sha256": "24ef3186b891264a3f14dc4432ff04261d2117b8e9546e46072653b2834fd30c",
+      "triangles": 104,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "book-stack",
+      "sha256": "53297134a3ea3441265d3a782fbf3709039e6fb1f6eb22d33e14494d6237698c",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bookcase-broken",
+      "sha256": "ae89f69c14bda752f817480c288de4434b60baa495b340dd61d8e387a6a91cb4",
+      "triangles": 1200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bookcase-low",
+      "sha256": "856a376a3ebc9c6b05e283e5b3096f91c6ebe86e01613042fc431555e1468580",
+      "triangles": 1200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bookcase-tall",
+      "sha256": "2945430c5e1e197be57014c5a8699b0e2ca3f37d14e8f2ae1c475bdc7bc0c8da",
+      "triangles": 1680,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bridge",
+      "sha256": "8459481ddae47124e7a3ffd6ab9fd0ddf270f2d6c5696eda7f8961120f24889c",
+      "triangles": 1080,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bridge-wide",
+      "sha256": "f9c76548a9ffafeec331dbf1a4c0334a2f1f541539b623e7eb39dbbdf9f31093",
+      "triangles": 1080,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "chain-post",
+      "sha256": "a5e39315e11efebac349121147c54eb726440743e2b73d0903970c2faa65934c",
+      "triangles": 472,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "coral-branch",
+      "sha256": "263676fdbb126eb173dd2e90a892b57016b4f6ca58d9a6d9c4644c7a97ca3296",
+      "triangles": 224,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "coral-fan",
+      "sha256": "2310930bd5663fece60b442da7cb08c6bcc0e38caf1f7dca6f54ecd73f83c980",
+      "triangles": 148,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "diving-bell",
+      "sha256": "8404c402f2cf32513f0cbc42a274820cce77c52bc3443f57ca430680618fb369",
+      "triangles": 404,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "doorway",
+      "sha256": "676146a4591fdcd3c3089c79feb097ac309c598ea91262d134d3c70da087bb81",
+      "triangles": 1188,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 2
+    },
+    {
+      "id": "floor-border",
+      "sha256": "7b9ae7a2daff0cbd6844550f3c9d3d6b99c69a7f32f3ba4ea98085c66d905736",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-border-corner",
+      "sha256": "c7ac5c22ccedf8e67fe1b74076087ae2527ee16ac63ed5d7e3eeedc44b0cc46e",
+      "triangles": 120,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-cracked",
+      "sha256": "47db2f638ef2f1908dfd274de567a058f770543c5638b8a0f336bf4e938fbf5e",
+      "triangles": 420,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-deck",
+      "sha256": "4c8a94bf393efe0dcdfaf66837e9ca4fa5b146feb3dd5a5e82b143326a6040dc",
+      "triangles": 600,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-grate",
+      "sha256": "5d62204ae0e63ffe82a1fd98ac625414e193d017c8adece3839011a64bb980bf",
+      "triangles": 900,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-inset",
+      "sha256": "870691b722193971cc5c94b7b33f7df4da62af32367c9500138e3d9a37f530f7",
+      "triangles": 600,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-large",
+      "sha256": "c64a90e022a3291dd67cfc6a5fa7096dfad8d2b8cd960eb73087637529baddd8",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-plain",
+      "sha256": "19d56008b1e4686fcf83bf3c8e7f927b4264903a6fa95b8a52558ac503ed1ae0",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-radial",
+      "sha256": "094d9b43d16dbc6f5d08b096932bf0e030cae102ece478714d66881fe524c962",
+      "triangles": 436,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-rubble",
+      "sha256": "c162cf40759fa5c32b9f97ea59641e3f3f6e2436a7fd63818139ffd03817ef0a",
+      "triangles": 892,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-small",
+      "sha256": "4e5c6a33128950bc8a045cfb4404db2171c153e8191a75d9d1ef8bee1ecb92a8",
+      "triangles": 120,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-threshold",
+      "sha256": "8b283364c268ddfd40da4bb80dbd9f16ef9bf5521845abeb402eaaffc520026b",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-transition",
+      "sha256": "267d9c6b253df723b4dd41525933f3a3a57f4027b473bb732f90e909a4fdc8e7",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "floor-worn",
+      "sha256": "809a004b6b0abff37c90bba508660fb81d803facf5deae66f45798793d46869a",
+      "triangles": 1020,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "gate-wide",
+      "sha256": "10f07724b62b81298de96b57a717b5efa37fc3888557c140e79ec1741465a162",
+      "triangles": 1620,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 2
+    },
+    {
+      "id": "globe",
+      "sha256": "d940e6da39e0aa63efed699f03e9fe457c1358f8a71667a6b439b27fe5ca817c",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "landing",
+      "sha256": "5e71cf1f87e1ed9a0cde87553885d1d10212e224af010906dc0fa277a3c5a55e",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "lectern",
+      "sha256": "92bdf551d4f4cb7966c3a203b4f7865094952a50871005db293b653adb7b48eb",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "map-table",
+      "sha256": "ef02c79b3307d2130874b4d6f28172c1ff7951445e44d65319229b18d35db8ce",
+      "triangles": 464,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pillar-broken",
+      "sha256": "bce5458f212c328a90383dbe0a5e9d362616f6eb5aa709876fe7f1dfd086a20a",
+      "triangles": 228,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pillar-large",
+      "sha256": "2a7ead42249b9843f5a553446d804a9bd34816e54270be4e734a606b060adf84",
+      "triangles": 236,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pillar-small",
+      "sha256": "2172f80c8346c213a8094a8e605ad0f6480b22042f79afb19d7a2626cf702d66",
+      "triangles": 236,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "platform",
+      "sha256": "3505d48ad6b81a72d44fe21ecddcaccb9ab65d6a1b9d78bd6767e96a2be5fd04",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "platform-edge",
+      "sha256": "b1d258cd2321651df9c3f46e4ebf97d3b1e25e69d142d64789cd90fc1418ce8c",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "platform-wide",
+      "sha256": "cc8770f67a32b5814212fbad41506d2bafc2ffdcb89fc26df91b2655e4a43c16",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "railing-corner",
+      "sha256": "aeb40da7ed9ed63a11a2f1a1e08b570d1244e7ca0423ed4f8ff4a4aa3ada2e25",
+      "triangles": 1500,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "railing-straight",
+      "sha256": "80a5faf5927746811720c53323ef8b2c18d32af48d4ce81eb448a03f3fed1efb",
+      "triangles": 780,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "reading-desk",
+      "sha256": "8a7b55de100e607fa3934a481354fb6b2ee0fb8fd3148b17523a14f0fae30106",
+      "triangles": 584,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "scroll-pile",
+      "sha256": "2806e7d57405ef7822541ed0a21abefdeacfb1d679590e73229bcfaa1a899596",
+      "triangles": 140,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "scroll-rack",
+      "sha256": "756cead2cc6ef015e8d4705d2055f5adf330a3e596f6f1159abbd1df0142203f",
+      "triangles": 672,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "seal-plinth",
+      "sha256": "59c4578c6c23c75e7d1d1fd5220b5379b5ee60976487de568cb058d849c8144d",
+      "triangles": 168,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "shell-cluster",
+      "sha256": "845a5033ab22612258227b22cebb8536a63cea1abfc9cb41a5edd97804ebdea1",
+      "triangles": 656,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-full",
+      "sha256": "4c6d91cea8e36d9d02e090a09c767e2e8e6dd695d54a5d2b85ec8cdd0bc1c2e3",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-narrow",
+      "sha256": "8701bae32623db63b912d3a610b99b8871c851e2bb5e76a54898ce823a23831c",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-rail",
+      "sha256": "b8ea2fa723c6552ed98addc2913601e5a3134420c8ccbd91ee2f8934c8f4a81b",
+      "triangles": 200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-short",
+      "sha256": "62a6fcba99817d6be9a3b69933611c33283b3c1f91dd7ded956d785d6533aeb7",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stair-wide",
+      "sha256": "f689b9f32e7353ce65292e3591ead16c6f1d8058b02bff1a8cd7b8a95f996827",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "sunken-statue",
+      "sha256": "e747edf7b664272d193e9044c1c88dc9552b053d938b30e0fb45711e554c9290",
+      "triangles": 370,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "supply-cache",
+      "sha256": "0ab767e84797d31b2443aadd7197b3682ff5fd63c89803ecb87f5aeec215b8d0",
+      "triangles": 660,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "supply-cache-open",
+      "sha256": "31ce62429bb97e73410774933bffef4b12bac438b909e42b7724691bdb1da1b2",
+      "triangles": 1092,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "tablet-plinth",
+      "sha256": "a05d6871be8cb2454b452488755e9d40f5c090095262911a207c681bbd12cfcc",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-broken",
+      "sha256": "cb7386325bd90d7114be121745792a3bacc23a4cf2de7ac9355f15d1e769ee23",
+      "triangles": 464,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-buttress",
+      "sha256": "c332772b65e5879e6923737026840815b0a9964265a9fa5ff942efa40a03d41f",
+      "triangles": 572,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-corner",
+      "sha256": "5c2812a76f894c6cd83b32de9472dd1e482429311f0acdeb299878fb55e8f3c8",
+      "triangles": 840,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-end",
+      "sha256": "bf42a3625acece9313169f6ab41eaed61d7ca5aefaaeafc38791360d2d4d86fe",
+      "triangles": 420,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-grille",
+      "sha256": "17500e8a5f2dc66968571926d7f780ca5bf82384c36adf20bf19669e455b5c5a",
+      "triangles": 720,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-long",
+      "sha256": "fb660f896dfa47758c567a5fd4c7d118d3ddb3a57c1222a5e1187339af2c4276",
+      "triangles": 420,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-low",
+      "sha256": "89195308a6e821ab2ff209a5dc366a102999cbd73f82a408f959b332918e6c1b",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-short",
+      "sha256": "7a03c084b7702a5f6c3ee6f56dbbff188393c617733bcbf9ba55db818b841c2a",
+      "triangles": 420,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-straight",
+      "sha256": "2a09112cebe0b7621b8b2003cf2c9277a6eb69630193e6581bae7c8ba918646e",
+      "triangles": 420,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-tall",
+      "sha256": "0e1fb77ef39bbac23573a8daddcc1a448ddc6389be193c20b5b8319db0a59a49",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wall-window",
+      "sha256": "71cc03701f7b86f75c2a3ed281ffadb8a64f0c4921a69cd26c33ba984be23893",
+      "triangles": 1740,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "waymarker",
+      "sha256": "e345308bfe48d04cd346379c18053edc4280e35a3ad8d3b8a78c4c53db61fe71",
+      "triangles": 208,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

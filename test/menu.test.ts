@@ -5,7 +5,7 @@ import { survive } from "../src/content/challenges.ts"
 import { withWeapon } from "../src/features/build.ts"
 import { Challenge, CombatStats, Game, Player, Team } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
-import { placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
+import { answers, elementOf, placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
 import { start } from "./helpers.ts"
 
 const Screen = Game.Inspector("Test/Screen", {
@@ -76,6 +76,16 @@ describe("menu helpers", () => {
   it("offers a character only weapons of its type", () => {
     expect(weaponsFor(defaultTuning, "gunner").every((id) => defaultTuning.weapons[id].type === "gun")).toBe(true)
     expect(weaponsFor(defaultTuning, "swordsman")).toContain("crescendo")
+  })
+
+  it("names a character's element by her kit, and whether a team answers an enemy", () => {
+    expect(elementOf(defaultTuning, "swordsman")).toBe("wind")
+    expect(elementOf(defaultTuning, "gunner")).toBe("fire")
+    // The chaser is weak to water: only a team bringing water answers it.
+    expect(answers(defaultTuning, ["swordsman", "gunner"], "chaser")).toBe(false)
+    expect(answers(defaultTuning, ["swordsman", "tidecaller"], "chaser")).toBe(true)
+    // Nobody answers the dummy, which is weak to nothing.
+    expect(answers(defaultTuning, ["swordsman", "gunner", "tidecaller"], "dummy")).toBe(false)
   })
 
   it("describes content from its data", () => {

@@ -1,15 +1,30 @@
 /**
- * Menu helpers over content: what a character can wield, and setting up the
- * team.
+ * Menu helpers over content: what a character can wield, her element, how a
+ * team answers a quest's enemies, and setting up the team.
  */
 import type { Tuning } from "../config/tuning.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { ElementId } from "../content/elements.ts"
+import type { EnemyKind } from "../content/enemies.ts"
 import type { WeaponId } from "../content/weapons.ts"
 
 /** The weapons `character` can wield. */
 export const weaponsFor = (tuning: Tuning, character: CharacterId): Array<WeaponId> =>
   (Object.keys(tuning.weapons) as Array<WeaponId>).filter((id) => tuning.weapons[id].type === tuning.characters[character].weaponType)
+
+/** `character`'s element: the one her kit applies (her special's, else her ultimate's), or `null`. */
+export const elementOf = (tuning: Tuning, character: CharacterId): ElementId | null => {
+  const { special, ultimate } = tuning.characters[character].skills
+  return tuning.skills[special].effect.element ?? tuning.skills[ultimate].effect.element
+}
+
+/** Whether `team` brings an element `enemy` is weak to. */
+export const answers = (tuning: Tuning, team: ReadonlyArray<CharacterId>, enemy: EnemyKind): boolean =>
+  team.some((character) => {
+    const element = elementOf(tuning, character)
+    return element !== null && tuning.enemies[enemy].elements[element] === "weak"
+  })
 
 /** A team being set up in the menu, and the slot being edited (it may be the empty one after the last member). */
 export interface TeamDraft {

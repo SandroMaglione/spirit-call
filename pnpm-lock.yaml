@@ -11,6 +11,9 @@ importers:
       '@effect/platform-browser':
         specifier: 4.0.0-rc.118
         version: 4.0.0-rc.118(effect@4.0.0-rc.118)
+      '@fontsource/barlow-condensed':
+        specifier: 5.3.0
+        version: 5.3.0
       '@preact/signals':
         specifier: 2.11.2
         version: 2.11.2(preact@10.29.8)
@@ -379,6 +382,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/barlow-condensed@5.3.0':
+    resolution: {integrity: sha512-RA7MmIx0v3eQ6Gcf74qLVLOwLB0GpPOzx+eU9iG/AmCnSJGcIWYeU8y6CEMGZ210MGwGg5CZhzLkkvyZdTTk1g==}
 
   '@jridgewell/sourcemap-codec@1.6.0':
     resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
@@ -1425,6 +1431,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fontsource/barlow-condensed@5.3.0': {}
 
   '@jridgewell/sourcemap-codec@1.6.0': {}
 

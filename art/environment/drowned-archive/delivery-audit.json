@@ -1,0 +1,12 @@
+{
+  "kit": "drowned-archive",
+  "assets": 70,
+  "triangles": 39882,
+  "glb_bytes": 2761724,
+  "pngs": 83,
+  "source_sha256": "2bdb9524352264e1789e5c73368fb8737970802aacc28dcd8a6f3a73ba1cce89",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}

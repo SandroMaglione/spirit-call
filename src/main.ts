@@ -17,6 +17,7 @@ import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
+import { createShowcase } from "./presentation/showcase.ts"
 import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
@@ -145,6 +146,8 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
   mountUi(mount, uiStore, uiActions)
+  // The menu's models and portraits, over the UI.
+  const showcase = createShowcase(mount, browser.models)
   createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.
@@ -177,6 +180,7 @@ const start = async (mount: HTMLElement) => {
       const started = performance.now()
       runtime.tick(frame)
       browser.host.render()
+      showcase.render(elapsedSeconds)
       stats.drawMs += (performance.now() - started - stats.drawMs) * 0.05
     },
     onFailure: (failure) => {

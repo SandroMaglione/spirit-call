@@ -1,0 +1,12 @@
+{
+  "kit": "tempest-observatory",
+  "assets": 70,
+  "triangles": 34968,
+  "glb_bytes": 2414076,
+  "pngs": 83,
+  "source_sha256": "a43af92d3eb2a35ce09f46aa2598dd35a5ffc93d60edd86c61b9e09ae4dce57d",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}

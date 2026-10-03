@@ -1,0 +1,12 @@
+{
+  "kit": "saltwind-harbor",
+  "assets": 70,
+  "triangles": 37252,
+  "glb_bytes": 2584620,
+  "pngs": 83,
+  "source_sha256": "34f1caec1855eb8ec8fe8c0ca972b348e0367a333fbd5274fc660b982dcb80f9",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}

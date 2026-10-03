@@ -1,0 +1,12 @@
+{
+  "kit": "basalt-citadel",
+  "assets": 70,
+  "triangles": 44144,
+  "glb_bytes": 3046328,
+  "pngs": 83,
+  "source_sha256": "3ae92f8c3a6d37484a166898c35aa702a5d1205c9627cd6b7a475af05b9bdf44",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}

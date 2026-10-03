@@ -25,7 +25,13 @@ scene.unit_settings.scale_length = 1
 material = palette_material(kit['title'] + ' | vertex colors')
 for i, entry in enumerate(kit['assets']):
     recipe = entry['recipe']
-    parts, metadata = architecture(recipe, kit['style']) if recipe in STRUCTURES else prop(recipe, kit['style'], **entry.get('options', {}))
+    if kit.get('batch') == 'beta-arenas':
+        from beta_architecture import beta_architecture
+        from beta_props import beta_prop
+        from beta_specs import EXTRA_STRUCTURES
+        parts, metadata = beta_architecture(recipe, kit['style']) if recipe in STRUCTURES + EXTRA_STRUCTURES else beta_prop(recipe, kit['style'])
+    else:
+        parts, metadata = architecture(recipe, kit['style']) if recipe in STRUCTURES else prop(recipe, kit['style'], **entry.get('options', {}))
     collection = bpy.data.collections.new(entry['id'])
     scene.collection.children.link(collection)
     asset = bpy.data.objects.new(entry['id'], None)

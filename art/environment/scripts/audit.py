@@ -22,6 +22,8 @@ def sha(path):
 
 manifest, verification, validator, render = [read(name) for name in
     ('manifest.json', 'verification.json', 'gltf-validation.json', 'previews/render-info.json')]
+kit = read('kit.json')
+beta = kit.get('batch') == 'beta-arenas'
 source_hash = sha(root / manifest['source'])
 assert source_hash == manifest['source_sha256'] == verification['source_sha256'] == render['source_sha256']
 assert sha(root / 'source/examples.blend') == render['examples_sha256']
@@ -39,7 +41,9 @@ for a in assets.values():
     assert (root / 'previews' / (a['id'] + '.png')).is_file(), a['id']
     if a['moving_parts']:
         assert (root / 'previews' / (a['id'] + '-open.png')).is_file()
-for name in ('contact-sheet', 'top', 'terrace', 'crossing', 'enclosure', 'terrace-top', 'phone-scale'):
+overview_names = ['contact-sheet', 'top', 'phone-scale'] + ([n for title in kit['examples'] for n in (title, title + '-top')]
+                  if beta else ['terrace', 'crossing', 'enclosure', 'terrace-top'])
+for name in overview_names:
     data = (root / 'previews' / (name + '.png')).read_bytes()
     assert data[:8] == b'\x89PNG\r\n\x1a\n'
     width, height = struct.unpack_from('>II', data, 16)
@@ -47,9 +51,14 @@ for name in ('contact-sheet', 'top', 'terrace', 'crossing', 'enclosure', 'terrac
     if name == 'phone-scale':
         assert (width, height) == (390, 844)
 layouts = read('layouts.json')['layouts']
-assert len(layouts) == 3 and len({x['name'] for x in layouts}) == 3
+expected_layouts = kit['examples'] if beta else ['terrace', 'crossing', 'enclosure']
+assert [x['name'] for x in layouts] == expected_layouts
+if beta:
+    used = {p['asset'] for layout in layouts for p in layout['placements']}
+    assert set(kit['signature_props']) <= used, 'Each themed prop must appear in an assembled example'
 libraries = {args.kit: assets}
 joined_stairs = 0
+clear_areas_checked = 0
 for layout in layouts:
     assert layout['placements']
     for placement in layout['placements']:
@@ -58,6 +67,30 @@ for layout in layouts:
         if placement['kit'] not in libraries:
             other = json.loads((root.parent / placement['kit'] / 'manifest.json').read_text())
             libraries[placement['kit']] = {a['id']: a for a in other['assets']}
+    for area in layout.get('reserved_clear_areas', []):
+        ax0, az0, ax1, az1 = area['bounds_xz_m']
+        assert ax1 > ax0 and az1 > az0
+        for placement in layout['placements']:
+            item = libraries[placement['kit']][placement['asset']]
+            if item['category'] == 'floor':
+                continue
+            boxes = item['collision']
+            if item['category'] == 'prop' or item['walk_surfaces']:
+                b = item['bounds_m']
+                boxes = [{'center_m': [(x + y) / 2 for x, y in zip(b['min'], b['max'])],
+                          'size_m': item['dimensions_m']}]
+            ox, oy, oz = placement['position_m']
+            c, s = math.cos(math.radians(placement['yaw_degrees'])), math.sin(math.radians(placement['yaw_degrees']))
+            for box in boxes:
+                x, y, z = box['center_m']
+                w, h, d = box['size_m']
+                if oy + y + h / 2 < area['height_m'] + .05 or oy + y - h / 2 > area['height_m'] + 1.5:
+                    continue
+                cx, cz = ox + c * x + s * z, oz - s * x + c * z
+                rx, rz = (abs(c) * w + abs(s) * d) / 2, (abs(s) * w + abs(c) * d) / 2
+                overlap = min(cx + rx, ax1) - max(cx - rx, ax0) > .001 and min(cz + rz, az1) - max(cz - rz, az0) > .001
+                assert not overlap, f'{layout["name"]}: {item["id"]} intrudes into {area["name"]}'
+        clear_areas_checked += 1
     def supports(point, placement):
         item = libraries[placement['kit']][placement['asset']]
         surfaces = item.get('walk_surfaces', [])
@@ -91,5 +124,9 @@ assert (root / 'README.md').is_file()
 result = {'kit': args.kit, 'assets': len(assets), 'triangles': sum(a['triangles'] for a in assets.values()),
           'glb_bytes': sum(a['bytes'] for a in assets.values()), 'pngs': len(list((root / 'previews').glob('*.png'))),
           'source_sha256': source_hash, 'stair_flights_connected_in_examples': joined_stairs, 'status': 'pass'}
+if beta:
+    assert clear_areas_checked == 4 and joined_stairs == 2
+    result['reserved_combat_areas_checked'] = clear_areas_checked
+    result['layouts'] = len(layouts)
 (root / 'delivery-audit.json').write_text(json.dumps(result, indent=2) + '\n')
 print(json.dumps(result))
