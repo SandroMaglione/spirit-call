@@ -5,6 +5,7 @@ import { zero } from "../math/vec.ts"
 import { moveCircle } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { EnemyKind } from "../content/enemies.ts"
 import { Body, Game, Gust, Knockback, Position, PrevPosition, Time, Tuning, Velocity, Wall } from "../schema.ts"
 
 const Interpolated = Game.Query({
@@ -24,6 +25,10 @@ export const Walls = Game.Query({ selection: { wall: Game.Query.read(Wall) } })
 
 export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box } } }>): Array<Box> =>
   walls.map((match) => match.data.wall.get())
+
+/** The share of a push a body takes: an enemy kind's, or the player's. */
+export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined): number =>
+  enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken
 
 /** How fast a body's push dies down: slower while wind drives it (a glide), else `knockback.decay`. */
 export const pushDecay = (tuning: TuningValue, gust: { readonly remaining: number } | undefined): number =>

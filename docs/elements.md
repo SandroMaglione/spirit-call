@@ -43,8 +43,8 @@ jumps gaps, for groups spread apart. Rock is about controlling the big
 enemies (guard, stagger, terrain), not about damage on a single target:
 that would be a damage race.
 
-The first three, one per character: **Wind** for the Swordsman (the Blade
-Wave already drives enemies back), **Fire** for the Gunner (the grenade
+The first three, one per character: **Wind** for the Swordsman (her Gale
+pulls the enemies around her into reach, hurting nobody), **Fire** for the Gunner (the grenade
 leaves a fire pool), and **Water** for the Tidecaller (a disc thrower at
 middle range). **Thunder** came next, with the Stormcaller (a support who
 heals); Rock comes with a later character (a shield support).

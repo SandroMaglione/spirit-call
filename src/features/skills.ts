@@ -27,14 +27,18 @@ import {
   CombatStats,
   Controls,
   Damage,
+  ElementAffinities,
+  Enemy,
   Energy,
   Explosion,
   Game,
+  Gust,
   Health,
   Hitbox,
   Hurtbox,
   Impact,
   Invulnerable,
+  Knockback,
   Lobbed,
   Player,
   Position,
@@ -47,8 +51,9 @@ import {
 } from "../schema.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
+import { durationFactor } from "./elements.ts"
 import { makeGround } from "./ground.ts"
-import { Walls, wallBoxes } from "./motion.ts"
+import { knockbackTaken, Walls, wallBoxes } from "./motion.ts"
 
 export const initialSkills = (build: { readonly skills: { readonly [Slot in SkillSlot]: SkillId } }): SkillsValue =>
   bySlot((slot) => ({ skill: build.skills[slot], cooldown: 0 }))
@@ -66,8 +71,10 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
   switch (effect.kind) {
     case "cut":
       return { kind: "direction", reach: effect.length }
-    case "lob":
     case "vortex":
+      // A whirl with no range is set down at her feet.
+      return effect.maxRange > 0 ? { kind: "point", range: effect.maxRange } : { kind: "self" }
+    case "lob":
     case "barrage":
       return { kind: "point", range: effect.maxRange }
     case "nova":
@@ -253,12 +260,22 @@ export const CastVortices = Game.System("Shooter/CastVortices", {
  * close `pull` of the distance (with the drive of wind, see
  * `Tuning.elements.wind.decay`; a body that is pushed less, or not driven,
  * comes less far), so bodies gather without being flung past the center.
+ * A whirl with no power lands no blow at all (no flash, no number): only
+ * the pull, and a wind whirl's drive.
  */
 export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
   queries: {
     vortices: Game.Query({ selection: { vortex: Game.Query.write(Vortex) } }),
     targets: Game.Query({
-      selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
+      selection: {
+        position: Game.Query.read(Position),
+        hurtbox: Game.Query.read(Hurtbox),
+        invulnerable: Game.Query.optional(Invulnerable),
+        knockback: Game.Query.write(Knockback),
+        gust: Game.Query.write(Gust),
+        affinities: Game.Query.read(ElementAffinities),
+        enemy: Game.Query.optional(Enemy)
+      },
       with: [Health]
     })
   },
@@ -266,7 +283,8 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
   events: { damage: Game.System.writeEvent(Damage) }
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  const decay = resources.tuning.get().elements.wind.decay
+  const tuning = resources.tuning.get()
+  const decay = tuning.elements.wind.decay
   for (const { entity, data } of queries.vortices.each()) {
     const vortex = data.vortex.get()
     const { effect, center } = vortex
@@ -281,6 +299,16 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
         const at = target.data.position.get()
         const distance = Math.hypot(center.x - at.x, center.y - at.y)
         if (distance > effect.radius + hurtbox.radius) continue
+        const direction = normalizeOr(sub(center, at), { x: 0, y: 0 })
+        if (effect.power <= 0) {
+          const enemy = target.data.enemy.present ? target.data.enemy.get().kind : undefined
+          const push = effect.pull * distance * decay * knockbackTaken(tuning, enemy)
+          target.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
+          const affinity = effect.element === null ? undefined : target.data.affinities.get()[effect.element]
+          const gust = effect.element === "wind" ? tuning.elements.wind.seconds * durationFactor(tuning, affinity) : 0
+          if (gust > 0) target.data.gust.update((current) => ({ remaining: Math.max(current.remaining, gust) }))
+          continue
+        }
         events.damage.emit({
           target: Game.Entity.handle(target.entity.id, Health),
           faction: vortex.faction,

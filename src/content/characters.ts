@@ -50,7 +50,7 @@ const character = (spec: CharacterSpec): CharacterSpec => spec
 
 /** Every character, by id. */
 export const characters = {
-  /** Close range: sturdy, with the sword combo, the Blade Wave, and the Cyclone (wind). */
+  /** Close range: sturdy, with the sword combo, the Gale that gathers enemies around her, and the Cyclone (wind). */
   swordsman: character({
     name: "Swordsman",
     stats: { hp: 100, atk: 80, def: 20, speed: 265 },

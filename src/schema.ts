@@ -385,7 +385,7 @@ export interface HitboxValue {
   readonly remaining: number
   /** Entity ids already hit, so each target is hit at most once. */
   readonly hit: ReadonlyArray<number>
-  /** Push every target this way instead of away from the area (the Blade Wave drives enemies along the cut). */
+  /** Push every target this way instead of away from the area (a cut of wind drives enemies along it). */
   readonly pushAlong?: Vec2
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")

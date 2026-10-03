@@ -7,7 +7,7 @@ import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
-import { center, cursorAt, gunner, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, gunner, placeDummies, start, steps, withWindCut } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
@@ -276,8 +276,8 @@ describe("wind", () => {
     run.runtime.tick(Game.Schedule(Drive))
   }
 
-  it("the Blade Wave drives what it hits", () => {
-    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)] })
+  it("a cut of wind drives what it hits", () => {
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)], tuning: withWindCut() })
     run.step(4)
     expect(run.world().enemies[0]!.gust).toBeGreaterThan(0)
   })
@@ -341,7 +341,7 @@ describe("wind", () => {
   })
 
   it("blows the pools it sweeps over along its push", () => {
-    const run = range([], { x: 200, y: 0 }, { keys: [cut(1)] })
+    const run = range([], { x: 200, y: 0 }, { keys: [cut(1)], tuning: withWindCut() })
     run.pour([{ element: "fire", at: { x: 150, y: 0 }, radius: 50 }])
     run.step(40)
     // Blown once, gliding to a stop like a body the wind drives.
@@ -389,7 +389,7 @@ describe("affinities", () => {
   })
 
   it("an enemy immune to wind is pushed by its blow, but not driven", () => {
-    const immune = tuningWith({ enemies: { dummy: { elements: { wind: "immune" } } } })
+    const immune = withWindCut(tuningWith({ enemies: { dummy: { elements: { wind: "immune" } } } }))
     const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [{ frame: 1, press: ["special"], release: ["special"] }], tuning: immune })
     run.step(4)
     const [dummy] = run.world().enemies

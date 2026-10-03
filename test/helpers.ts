@@ -6,6 +6,7 @@ import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
+import { cut } from "../src/content/skills.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { damageDealt, damageTaken } from "../src/features/build.ts"
@@ -54,6 +55,18 @@ export const doubleTap = (direction: Direction, frame: number, options: { readon
 
 /** The gun's opening shot: what a single press fires. */
 export const gunShot = defaultTuning.attacks.gun.combo[0] as ShotMove
+
+/**
+ * A cut of wind (what the Swordsman's special was before it became the
+ * Gale): a lane toward the aim that drives what it hits back in a glide.
+ * No shipped skill is a cut now; tests of cuts use this one.
+ */
+export const windCut = cut({ length: 320, width: 120, power: 34, element: "wind", knockback: 900, active: 0.12, hitStop: 0.06, heavy: true })
+
+/** `tuning` with the Swordsman's special swapped for `windCut`. */
+export const withWindCut = (tuning: Tuning = defaultTuning): Tuning =>
+  // The content types each skill by its effect; a test swaps one kind for another.
+  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Wind Cut", effect: windCut } } }) as unknown as Tuning
 
 /** The gunner: the gun, the grenade as her special, and the Barrage as her ultimate. */
 export const gunner: BuildValue = { character: "gunner" }

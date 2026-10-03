@@ -85,7 +85,8 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       positive(problems, where, { radius: effect.radius, active: effect.active })
       return
     case "vortex":
-      positive(problems, where, { maxRange: effect.maxRange, radius: effect.radius, seconds: effect.seconds, tick: effect.tick })
+      positive(problems, where, { radius: effect.radius, seconds: effect.seconds, tick: effect.tick })
+      if (!(effect.maxRange >= 0)) problems.push(`${where}: maxRange must not be negative (is ${effect.maxRange})`)
       if (!(effect.pull >= 0 && effect.pull <= 1)) problems.push(`${where}: pull must be a share in [0, 1] (is ${effect.pull})`)
       return
     case "totem":
