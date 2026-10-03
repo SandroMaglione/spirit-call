@@ -15,6 +15,10 @@ import { courtyardModels } from "./assets/courtyard.ts"
 import { cisternModels } from "./assets/cistern.ts"
 import { kilnworksModels } from "./assets/kilnworks.ts"
 import { sanctuaryModels } from "./assets/sanctuary.ts"
+import { citadelModels } from "./assets/citadel.ts"
+import { harborModels } from "./assets/harbor.ts"
+import { necropolisModels } from "./assets/necropolis.ts"
+import { monasteryModels } from "./assets/monastery.ts"
 import { enemyModels } from "./assets/enemies.ts"
 import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
 
@@ -44,6 +48,10 @@ export const models = {
   ...cisternModels,
   ...kilnworksModels,
   ...sanctuaryModels,
+  ...citadelModels,
+  ...harborModels,
+  ...necropolisModels,
+  ...monasteryModels,
   ...enemyModels
 } as const satisfies Record<string, ModelSpec>
 

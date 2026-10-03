@@ -287,12 +287,127 @@ export const sanctuaryArena: ArenaLook = {
   ]
 }
 
+/** The basalt citadel (`art/environment/basalt-citadel`): dark stone, braziers and banners, a broken throne at the back. */
+export const citadelArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["citadelFloorPlain", "citadelFloorWorn", "citadelFloorPlain", "citadelFloorCracked"], color: 0x1c1a1d },
+  walls: {
+    back: { kind: "run", model: "citadelWallStraight" },
+    front: { kind: "run", model: "citadelWallLow" },
+    sorted: { kind: "pillar", models: ["citadelPillarLarge", "citadelPillarSmall"] },
+    inner: { kind: "run", model: "citadelWallLow" }
+  },
+  scenery: [
+    { model: "citadelBannerTall", at: { x: 300, y: 30 }, turn: 0 },
+    { model: "citadelBrazierLarge", at: { x: 620, y: 50 }, turn: 0 },
+    { model: "citadelThroneBroken", at: { x: 900, y: 55 }, turn: 0 },
+    { model: "citadelBrazierLarge", at: { x: 1180, y: 50 }, turn: 0 },
+    { model: "citadelBannerTall", at: { x: 1500, y: 30 }, turn: 0 },
+    { model: "citadelWeaponRack", at: { x: 30, y: 420 }, turn: Math.PI / 2 },
+    { model: "citadelSiegeCrate", at: { x: 40, y: 700 }, turn: 0.4 },
+    { model: "citadelBasaltRubble", at: { x: 50, y: 1350 }, turn: 1.1 },
+    { model: "citadelShieldRack", at: { x: 1770, y: 520 }, turn: -Math.PI / 2 },
+    { model: "citadelDrum", at: { x: 1762, y: 900 }, turn: 0 },
+    { model: "citadelSupplyCache", at: { x: 1758, y: 1250 }, turn: Math.PI / 2 },
+    { model: "citadelGargoyle", at: { x: 600, y: 1770 }, turn: 0 },
+    { model: "citadelBasaltSpires", at: { x: 1300, y: 1760 }, turn: 0.6 },
+    { model: "citadelBrazierSmall", at: { x: 70, y: 70 }, turn: 0 },
+    { model: "citadelBrazierSmall", at: { x: 1730, y: 70 }, turn: 0 }
+  ]
+}
+
+/** The saltwind harbor (`art/environment/saltwind-harbor`): weathered planks of stone, crates, bollards, a boat hull. */
+export const harborArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["harborFloorPlain", "harborFloorWorn", "harborFloorPlain", "harborFloorCracked"], color: 0x26333a },
+  walls: {
+    back: { kind: "run", model: "harborWallStraight" },
+    front: { kind: "run", model: "harborWallLow" },
+    sorted: { kind: "pillar", models: ["harborPillarLarge", "harborPillarSmall"] },
+    inner: { kind: "run", model: "harborWallLow" }
+  },
+  scenery: [
+    { model: "harborBarrelStack", at: { x: 260, y: 50 }, turn: 0 },
+    { model: "harborCapstan", at: { x: 700, y: 55 }, turn: 0 },
+    { model: "harborNetRack", at: { x: 1100, y: 20 }, turn: 0 },
+    { model: "harborCargoPallet", at: { x: 1500, y: 45 }, turn: 0.2 },
+    { model: "harborAnchor", at: { x: 25, y: 400 }, turn: Math.PI / 2 },
+    { model: "harborBollard", at: { x: 30, y: 800 }, turn: 0 },
+    { model: "harborFishCrate", at: { x: 30, y: 1150 }, turn: Math.PI / 2 },
+    { model: "harborLifeRing", at: { x: 40, y: 1500 }, turn: 0 },
+    { model: "harborJettyPost", at: { x: 1770, y: 300 }, turn: 0 },
+    { model: "harborBuoy", at: { x: 1765, y: 700 }, turn: 0 },
+    { model: "harborWaveRock", at: { x: 1755, y: 1150 }, turn: 0.7 },
+    { model: "harborBollard", at: { x: 1770, y: 1500 }, turn: 0 },
+    { model: "harborBoatHull", at: { x: 500, y: 1760 }, turn: 0 },
+    { model: "harborLanternHook", at: { x: 1250, y: 1765 }, turn: 0 }
+  ]
+}
+
+/** The ochre necropolis (`art/environment/ochre-necropolis`): sand-worn stone, a winged statue, urns and sarcophagi. */
+export const necropolisArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["necropolisFloorPlain", "necropolisFloorWorn", "necropolisFloorPlain", "necropolisFloorCracked"], color: 0x3a2c1e },
+  walls: {
+    back: { kind: "run", model: "necropolisWallStraight" },
+    front: { kind: "run", model: "necropolisWallLow" },
+    sorted: { kind: "pillar", models: ["necropolisPillarLarge", "necropolisPillarSmall"] },
+    inner: { kind: "run", model: "necropolisWallLow" }
+  },
+  scenery: [
+    { model: "necropolisWingStatue", at: { x: 900, y: 30 }, turn: 0 },
+    { model: "necropolisTorchStand", at: { x: 560, y: 30 }, turn: 0 },
+    { model: "necropolisTorchStand", at: { x: 1240, y: 30 }, turn: 0 },
+    { model: "necropolisUrnTall", at: { x: 250, y: 40 }, turn: 0 },
+    { model: "necropolisCanopicJars", at: { x: 1550, y: 40 }, turn: 0.3 },
+    { model: "necropolisSandRockLarge", at: { x: 60, y: 350 }, turn: 1.2 },
+    { model: "necropolisDeadShrub", at: { x: 30, y: 900 }, turn: 0 },
+    { model: "necropolisSarcophagus", at: { x: 40, y: 1350 }, turn: 0 },
+    { model: "necropolisSandRockSmall", at: { x: 1755, y: 400 }, turn: 0.4 },
+    { model: "necropolisOfferingTable", at: { x: 1765, y: 900 }, turn: Math.PI / 2 },
+    { model: "necropolisUrnBroken", at: { x: 1760, y: 1350 }, turn: 0.8 },
+    { model: "necropolisSandDrift", at: { x: 600, y: 1760 }, turn: 0 },
+    { model: "necropolisObeliskBroken", at: { x: 1250, y: 1760 }, turn: 0 }
+  ]
+}
+
+/** The frostbound monastery (`art/environment/frostbound-monastery`): cold stone, a shrine and banners, snow along the walls. */
+export const monasteryArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["monasteryFloorPlain", "monasteryFloorWorn", "monasteryFloorPlain", "monasteryFloorCracked"], color: 0x2a3036 },
+  walls: {
+    back: { kind: "run", model: "monasteryWallStraight" },
+    front: { kind: "run", model: "monasteryWallLow" },
+    sorted: { kind: "pillar", models: ["monasteryPillarLarge", "monasteryPillarSmall"] },
+    inner: { kind: "run", model: "monasteryWallLow" }
+  },
+  scenery: [
+    { model: "monasteryShrine", at: { x: 900, y: 40 }, turn: 0 },
+    { model: "monasteryBanner", at: { x: 500, y: 25 }, turn: 0 },
+    { model: "monasteryBanner", at: { x: 1300, y: 25 }, turn: 0 },
+    { model: "monasteryLanternPost", at: { x: 40, y: 40 }, turn: 0 },
+    { model: "monasteryLanternPost", at: { x: 1760, y: 40 }, turn: 0 },
+    { model: "monasteryBench", at: { x: 30, y: 500 }, turn: Math.PI / 2 },
+    { model: "monasterySnowdrift", at: { x: 50, y: 1000 }, turn: 0.3 },
+    { model: "monasteryIceCluster", at: { x: 35, y: 1450 }, turn: 0.6 },
+    { model: "monasteryBell", at: { x: 1765, y: 500 }, turn: 0 },
+    { model: "monasterySnowRocks", at: { x: 1755, y: 1000 }, turn: 1.1 },
+    { model: "monasteryBrazier", at: { x: 1765, y: 1450 }, turn: 0 },
+    { model: "monasterySnowdrift", at: { x: 600, y: 1765 }, turn: 2.2 },
+    { model: "monasteryIceCluster", at: { x: 1250, y: 1768 }, turn: 0.2 }
+  ]
+}
+
 /** Each arena's look, by its id (see `content/arena.ts`). */
 export const arenaLooks: Readonly<Record<ArenaId, ArenaLook>> = {
   courtyard: courtyardArena,
   cistern: cisternArena,
   kilnworks: kilnworksArena,
-  sanctuary: sanctuaryArena
+  sanctuary: sanctuaryArena,
+  citadel: citadelArena,
+  harbor: harborArena,
+  necropolis: necropolisArena,
+  monastery: monasteryArena
 }
 
 /** Every model the looks use: loaded before the arena opens. */

@@ -31,6 +31,27 @@ export const hazardBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<{ r
   }))
 }
 
+/**
+ * The low walls along each hazard's walled edges (see `HazardSpec.walled`),
+ * just outside the pool: one across its north or south edge, one down its
+ * west or east edge, meeting at their corner.
+ */
+export const hazardWalls = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box> => {
+  const boxes = hazardBoxes(tuning, id)
+  return tuning.arenas[id].hazards.flatMap((hazard, index) => {
+    const { box } = boxes[index]!
+    const minX = hazard.walled.x === "west" ? box.minX - wallThickness : box.minX
+    const maxX = hazard.walled.x === "east" ? box.maxX + wallThickness : box.maxX
+    const across = hazard.walled.y === "north"
+      ? { minX, maxX, minY: box.minY - wallThickness, maxY: box.minY }
+      : { minX, maxX, minY: box.maxY, maxY: box.maxY + wallThickness }
+    const down = hazard.walled.x === "west"
+      ? { minX: box.minX - wallThickness, maxX: box.minX, minY: box.minY, maxY: box.maxY }
+      : { minX: box.maxX, maxX: box.maxX + wallThickness, minY: box.minY, maxY: box.maxY }
+    return [across, down]
+  })
+}
+
 /** The arena a challenge is fought in. */
 export const arenaOf = (tuning: TuningValue, challenge: keyof TuningValue["challenges"]): ArenaId => tuning.challenges[challenge].arena
 
@@ -57,6 +78,7 @@ export const SpawnArena = Game.System("Shooter/SpawnArena", {
       : boxAround(wall.x * width, wall.y * height, wallThickness / 2, half)
     commands.spawnIn(RunScope, makeWall(box, "inner", id))
   }
+  for (const box of hazardWalls(tuning, id)) commands.spawnIn(RunScope, makeWall(box, "inner", id))
   for (const { element, box } of hazardBoxes(tuning, id)) {
     const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
     const half = { x: (box.maxX - box.minX) / 2, y: (box.maxY - box.minY) / 2 }

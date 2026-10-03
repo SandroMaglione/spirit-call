@@ -133,12 +133,12 @@ describe("elite enemies", () => {
 })
 
 describe("arenas", () => {
-  it("stand each challenge in its arena: the kilnworks has fire trenches, low walls, and pillars", () => {
+  it("stand each challenge in its arena: the kilnworks has fire trenches walled on two sides, low walls, and pillars", () => {
     const run = start({ arena: "kilnworks" })
     const world = run.runtime.inspect(World)
     const spec = defaultTuning.arenas.kilnworks
     expect(world.pools.filter((pool) => pool.permanent && pool.element === "fire")).toHaveLength(spec.hazards.length)
-    expect(world.walls).toBe(4 + spec.pillars.length + spec.walls.length)
+    expect(world.walls).toBe(4 + spec.pillars.length + spec.walls.length + 2 * spec.hazards.length)
   })
 
   it("keep hazards for good, and a fire trench put out by water burns again after a while", () => {
@@ -182,11 +182,13 @@ describe("enemies keeping out of hazards", () => {
   })
 
   it("go around a fire trench to reach her, never through it", () => {
-    // Across the kilnworks' west trench from her: she stands east of it, the chaser west.
-    const box = hazardBoxes(defaultTuning, "kilnworks").find((hazard) => hazard.box.maxY - hazard.box.minY > hazard.box.maxX - hazard.box.minX)!.box
-    const middle = middleOf(box)
-    const run = start({ arena: "kilnworks", tuning: tuningWith({ enemies: { chaser: { attacks: [] } } }) })
-    alone(run, "chaser", { x: box.minX - 80 - center.x, y: middle.y - center.y })
+    // A pit north of her, open on its east and south sides (its walls on the others): the chaser stands east
+    // of it, so the straight way to her runs in through one open side and out through the other.
+    const pit = { element: "fire" as const, column: 5, row: 4, columns: 3, rows: 2, walled: { y: "north" as const, x: "west" as const } }
+    const tuning = tuningWith({ enemies: { chaser: { attacks: [] } }, arenas: { kilnworks: { hazards: [pit] } } })
+    const box = hazardBoxes(tuning, "kilnworks")[0]!.box
+    const run = start({ arena: "kilnworks", tuning })
+    alone(run, "chaser", { x: box.maxX + 80 - center.x, y: box.minY + 50 - center.y })
     const Where = Game.Inspector("Test/Where", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.each()[0]!.data.position.get())
     let entered = false
     let closest = Infinity
