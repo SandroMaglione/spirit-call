@@ -35,7 +35,7 @@ const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKin
         ))}
         {attackElements(spec.attacks).map((element) => (
           <i key={`attacks-${element}`} class="trait trait--attacks" data-element={element} title={`Its attacks carry ${elements[element].name.toLowerCase()}`}>
-            {elements[element].name} ⚔
+            {elements[element].name} attack
           </i>
         ))}
       </span>
