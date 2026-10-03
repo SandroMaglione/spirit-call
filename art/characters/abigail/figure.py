@@ -341,7 +341,8 @@ def hair(parts):
     part = Part("hair")
     head_only = lambda i: {"head": 1}
     # The cap over the skull; its lower front edge is the fringe's root.
-    cap = [(1.490, 0.074, 0.066, 0.098), (1.535, 0.079, 0.068, 0.103), (1.572, 0.075, 0.062, 0.098),
+    # Its lower ring tucks into her forehead at the front, so no brim shows under the fringe.
+    cap = [(1.490, 0.074, 0.048, 0.098), (1.535, 0.079, 0.068, 0.103), (1.572, 0.075, 0.062, 0.098),
            (1.600, 0.060, 0.049, 0.080), (1.616, 0.036, 0.029, 0.050), (1.622, 0.010, 0.008, 0.012)]
     loft(part, [headward((0, 0.002, z)) for z, *_ in cap],
          [ring(w * HEAD_SCALE, f * HEAD_SCALE, b * HEAD_SCALE) for _, w, f, b in cap], 16, head_only,

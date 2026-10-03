@@ -58,12 +58,21 @@ def quad_uvs(cell, i, count):
 
 
 def frame(tangent, front=Vector((0, -1, 0))):
-    """Side (u) and back (v) axes of a ring whose path runs along `tangent`."""
+    """Side (u) and back (v) axes of a ring whose path runs along `tangent`.
+
+    u points to her left (+X) and v away from `front`, whichever way the
+    path runs (up a torso or down a leg), so `left` and `back` mean the same
+    on every part.
+    """
     t = Vector(tangent).normalized()
     if abs(t.dot(front)) > 0.95:
         front = Vector((0, 0, 1)) if t.dot(front) > 0 else Vector((0, 0, -1))
     u = t.cross(front).normalized()
+    if u.x < -1e-6:
+        u = -u
     v = t.cross(u).normalized()
+    if v.dot(front) > 0:
+        v = -v
     return u, v
 
 

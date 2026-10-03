@@ -59,7 +59,7 @@ paint = ImageDraw.Draw(face)
 blush = Image.new("RGBA", atlas.size, (0, 0, 0, 0))
 for side in (-1, 1):
     cx, cy = at(side * 0.03, 1.448)
-    ImageDraw.Draw(blush).ellipse([cx - 9 * SCALE, cy - 3 * SCALE, cx + 9 * SCALE, cy + 3 * SCALE], fill=(250, 165, 160, 38))
+    ImageDraw.Draw(blush).ellipse([cx - 9 * SCALE, cy - 3 * SCALE, cx + 9 * SCALE, cy + 3 * SCALE], fill=(250, 160, 160, 26))
 blush = blush.filter(ImageFilter.GaussianBlur(4 * SCALE))
 
 for side in (-1, 1):

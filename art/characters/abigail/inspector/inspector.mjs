@@ -10,8 +10,10 @@
  * - `poses`: `Clip@seconds` list (default: a review set); `facing`: degrees
  *   from facing the camera; `weapon`: trainingBlade or crescendo;
  *   `compare`: also draw the crow, for size.
+ * - `level`: a level, front-on orthographic camera (a turnaround, to set
+ *   beside the sheet); the clip `Rest` is her rest pose.
  */
-import { AnimationMixer, CircleGeometry, Color, DirectionalLight, HemisphereLight, Mesh, MeshBasicMaterial, Scene, WebGLRenderer } from "three"
+import { AnimationMixer, CircleGeometry, DirectionalLight, HemisphereLight, Mesh, MeshBasicMaterial, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import { projection, view } from "/src/config/view.ts"
 import { bodyHeight } from "/src/presentation/bodies.ts"
@@ -38,6 +40,7 @@ const facing = (Number(params.get("facing") ?? "0") * Math.PI) / 180
 const gameScale = params.get("scale") === "game"
 const zoom = Number(params.get("zoom") ?? "1")
 const compare = params.has("compare")
+const level = params.has("level")
 
 const models = await loadModels([look.model, look.held.weapons[weapon], crowLook.model])
 const radius = 16
@@ -63,17 +66,18 @@ const place = (id, clip, time, x, z, held, turn = 0) => {
   const copy = copyModel(source, true)
   const object = copy.object
   object.scale.setScalar(height / source.spec.height)
-  // Facing the camera (it looks from the south-east), turned by `facing`.
-  object.rotation.y = Math.PI / 4 + facing + (turn * Math.PI) / 180
+  // Facing the camera (the game's looks from the south-east), turned by `facing`.
+  object.rotation.y = (level ? 0 : Math.PI / 4) + facing + (turn * Math.PI) / 180
   object.position.set(x, 0, z)
   if (held !== undefined) {
     const grip = object.getObjectByName("weapon_grip")
     grip.add(copyModel(models.get(held), true).object)
   }
-  const mixer = new AnimationMixer(object)
-  const action = mixer.clipAction(source.clips.get(clip))
-  action.play()
-  mixer.setTime(time)
+  if (clip !== "Rest") {
+    const mixer = new AnimationMixer(object)
+    mixer.clipAction(source.clips.get(clip)).play()
+    mixer.setTime(time)
+  }
   const shadow = new Mesh(new CircleGeometry(radius * 0.8, 24), new MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 }))
   shadow.rotation.x = -Math.PI / 2
   shadow.position.set(x, 0.1, z)
@@ -86,7 +90,8 @@ const count = poses.length + (compare ? 1 : 0)
 const label = []
 poses.forEach(([name, clip, time, turn], index) => {
   const offset = (index - (count - 1) / 2) * spacing * Math.SQRT1_2
-  place(look.model, clip, time, offset, -offset, look.held.weapons[weapon], turn)
+  if (level) place(look.model, clip, time, offset * Math.SQRT2, 0, clip === "Rest" ? undefined : look.held.weapons[weapon], turn)
+  else place(look.model, clip, time, offset, -offset, look.held.weapons[weapon], turn)
   label.push([name, offset])
 })
 if (compare) {
@@ -95,8 +100,16 @@ if (compare) {
   label.push(["Crow (size)", offset])
 }
 
-const camera = makeCamera()
-placeCamera(camera, projection, { width: innerWidth, height: innerHeight, center: { x: 0, y: 0 }, pixelsPerUnit, offset: { x: 0, y: height * Number(params.get("focus") ?? "0.42") * pixelsPerUnit * Math.cos(Math.PI / 6) } })
+let camera = makeCamera()
+if (level) {
+  const w = innerWidth / 2 / pixelsPerUnit, h = innerHeight / 2 / pixelsPerUnit
+  const focus = height * Number(params.get("focus") ?? "0.5")
+  camera = new OrthographicCamera(-w, w, h, -h, 1, 4000)
+  camera.position.set(0, focus, 2000)
+  camera.lookAt(0, focus, 0)
+} else {
+  placeCamera(camera, projection, { width: innerWidth, height: innerHeight, center: { x: 0, y: 0 }, pixelsPerUnit, offset: { x: 0, y: height * Number(params.get("focus") ?? "0.42") * pixelsPerUnit * Math.cos(Math.PI / 6) } })
+}
 renderer.render(scene, camera)
 const labels = document.getElementById("labels")
 for (const [name, offset] of label) {
