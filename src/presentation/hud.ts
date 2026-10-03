@@ -1,7 +1,9 @@
 /**
  * The in-arena HUD (plain DOM): what is being played and how far the run
- * is (small, top left), the character on the field (bottom center), the
- * team (right), skill slots, the wave banner, and the touch pad.
+ * is (top left: a mark per wave), the character on the field (bottom
+ * center: health and energy), the team (right: a portrait tab each), skill
+ * slots, the wave banner, and the touch pad. Colors follow the element of
+ * the character on the field (`data-element`).
  */
 import { actionButtons, teamButtons } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
@@ -13,6 +15,7 @@ import { Challenge, Controls, Dash, ElementState, Enemy, EnemyLevel, Energy, Flo
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
+import { elementOf } from "../ui/draft.ts"
 import { setText } from "./draw.ts"
 
 /**
@@ -65,6 +68,13 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     dash: player === undefined ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
     ultimate: slots?.ultimate.recharge ?? 1
   }
+  // Seconds left, on the buttons that wait for a cooldown (the ultimate waits for energy, the attack only a moment).
+  const seconds = {
+    attack: 0,
+    special: player === undefined || (slots?.special.spec.cooldown ?? 0) <= 0 ? 0 : player.data.skills.get().special.cooldown,
+    dash: player === undefined ? 0 : player.data.dash.get().cooldown,
+    ultimate: 0
+  }
   if (slots !== undefined) {
     for (const slot of skillSlots) setText(pad.buttons[slot].root.querySelector("span"), slots[slot].spec.label)
   }
@@ -75,7 +85,8 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     place(refs.root, zone.center.x, zone.center.y, zone.radius)
     refs.root.classList.toggle("is-held", state.held)
     refs.root.classList.toggle("is-ready", fill[name] <= 0)
-    refs.cooldown.style.height = `${Math.max(0, Math.min(100, fill[name] * 100))}%`
+    refs.cooldown.style.setProperty("--cd", String(Math.max(0, Math.min(1, fill[name]))))
+    setText(refs.seconds, seconds[name] > 0.05 ? seconds[name].toFixed(1) : "")
     const aim = state.aim
     refs.aim.hidden = aim === null || zone.aimRadius === undefined
     if (aim !== null && zone.aimRadius !== undefined) {
@@ -117,7 +128,10 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
   const team = services.host.hud.team
   const touchMode = resources.controls.get().device === "touch"
   team.root.classList.toggle("is-touch", touchMode)
-  const waiting = resources.teamSwitch.get().cooldown > 0
+  const wait = resources.teamSwitch.get().cooldown
+  const waiting = wait > 0
+  // The switch's wait, as the share of it left (it fills each face that waits).
+  team.root.style.setProperty("--wait", String(Math.min(1, wait / tuning.team.switchCooldown)))
   const members = queries.members.each()
   // A team of one has nothing to switch to.
   const shown = members.length > 1
@@ -138,6 +152,10 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
     refs.root.classList.toggle("is-waiting", waiting && !data.player.present && !fallen)
     refs.root.classList.toggle("is-ready", ready && !fallen)
     refs.root.style.setProperty("--color", css(view.characters[character]))
+    const element = elementOf(tuning, character)
+    if (element === null) delete refs.root.dataset["element"]
+    else refs.root.dataset["element"] = element
+    if (refs.portrait.dataset["portrait"] !== character) refs.portrait.dataset["portrait"] = character
     setText(refs.face.querySelector("kbd"), String(slot + 1))
     refs.face.dataset["initial"] = tuning.characters[character].name.charAt(0)
     setText(refs.name, tuning.characters[character].name)
@@ -165,14 +183,29 @@ const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =
     return { spec, recharge: skillRecharge(spec, skills[slot].cooldown, energy) }
   })
 
-/** Progress toward a challenge's objective, for the HUD: the wave out of the total, or the time left to survive. */
+/**
+ * Progress toward a challenge's objective, in a few words: the enemies left
+ * in the wave (the wave marks show which wave), or for surviving the time
+ * left and the wave.
+ */
 const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number, remaining: number): string => {
-  const total = challenge.objective.kind === "clearWaves" ? `/${challenge.waves.scripted.length}` : ""
+  const marked = challenge.objective.kind === "clearWaves"
   const wave = waves.number === 0
     ? "get ready"
-    : waves.phase === "break" || waves.phase === "complete" ? `wave ${waves.number}${total} cleared` : `wave ${waves.number}${total} · ${remaining} left`
+    : waves.phase === "break" || waves.phase === "complete" ? (marked ? "cleared" : `wave ${waves.number} cleared`) : (marked ? `${remaining} left` : `wave ${waves.number} · ${remaining} left`)
   const progress = challenge.objective.kind === "survive" ? `survive ${Math.max(0, Math.ceil(challenge.objective.seconds - time))}s · ${wave}` : wave
   return progress.charAt(0).toUpperCase() + progress.slice(1)
+}
+
+/** A mark per wave of `total` (none for 0): cleared ones full, the one going on half. */
+const showWaves = (marks: HTMLElement, total: number, waves: WavesValue): void => {
+  while (marks.children.length < total) marks.append(document.createElement("i"))
+  while (marks.children.length > total) marks.lastElementChild!.remove()
+  const done = waves.phase === "break" || waves.phase === "complete" ? waves.number : waves.number - 1
+  for (let index = 0; index < total; index++) {
+    const mark = marks.children[index]!
+    mark.className = index < done ? "is-done" : index === done && waves.number > 0 ? "is-current" : ""
+  }
 }
 
 /** How much of the current move's recovery is left, 0..1. */
@@ -234,12 +267,19 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     }
     const character = field.member.get().character
     setText(hud.name, tuning.characters[character].name)
-    hud.name.style.color = css(view.characters[character])
+    const element = elementOf(tuning, character)
+    if ((hud.root.dataset["element"] ?? null) !== element) {
+      if (element === null) delete hud.root.dataset["element"]
+      else hud.root.dataset["element"] = element
+    }
     const health = field.health.get()
     hud.health.style.width = `${(100 * health.current) / health.max}%`
-    setText(hud.healthText, `${Math.ceil(health.current)} / ${health.max}`)
+    setText(hud.healthText, `${Math.ceil(health.current)}`)
+    const ultimate = tuning.skills[field.skills.get().ultimate.skill]
+    hud.energy.style.width = `${ultimate.energy <= 0 ? 100 : Math.min(100, (100 * field.energy.get().current) / ultimate.energy)}%`
   } else {
     hud.health.style.width = "0%"
+    hud.energy.style.width = "0%"
     setText(hud.healthText, "")
   }
   // Her state, next to her name.
@@ -253,9 +293,11 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
   if (!tuning.waves.enabled) {
     setText(hud.quest, "Training")
     setText(hud.progress, "")
+    showWaves(hud.waves, 0, waves)
     return
   }
   const remaining = queries.enemies.each().length + queries.pending.each().length + waves.queue.length
-  setText(hud.quest, `${challenge.name} · Lv ${resources.enemyLevel.get()}`)
+  setText(hud.quest, challenge.name)
+  showWaves(hud.waves, challenge.objective.kind === "clearWaves" ? challenge.waves.scripted.length : 0, waves)
   setText(hud.progress, challengeProgress(challenge, waves, resources.run.get().time, remaining))
 })

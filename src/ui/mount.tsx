@@ -11,6 +11,7 @@ import { Menu } from "./Menu.tsx"
 import { Results } from "./Results.tsx"
 import type { UiActions, UiStore } from "./store.ts"
 import "./ui.css"
+import "./menu.css"
 
 const App = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   switch (store.flow.value) {

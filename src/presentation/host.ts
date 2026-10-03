@@ -12,6 +12,7 @@ import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
 import { modelsInLooks } from "./looks.ts"
 import { disposeModel, loadModels } from "./models.ts"
+import type { ModelId, ModelSource } from "./models.ts"
 import { floorLayers, trailOrder } from "./layers.ts"
 import { disposeNode, instancesOf } from "./nodes.ts"
 import { makeAssets } from "./render-assets.ts"
@@ -26,14 +27,14 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   root.className = "hud"
   root.innerHTML = `
     <div class="hud__vignette" data-vignette></div>
-    <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__quest-progress" data-progress></div></div>
+    <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div></div>
     <div class="hud__vitals">
-      <div class="hud__who"><b data-name></b><span class="hud__state" data-state hidden></span></div>
+      <div class="hud__who"><b data-name></b><span class="hud__state" data-state hidden></span><span class="hud__health-text" data-health-text></span></div>
       <div class="hud__health"><div class="hud__health-fill" data-health></div></div>
-      <span class="hud__health-text" data-health-text></span>
+      <div class="hud__energy"><i data-energy></i></div>
     </div>
     <div class="team" data-team>
-      ${teamButtons.map((_, slot) => `<div class="team__member" data-member="${slot}" hidden><div class="team__face" data-face><kbd>${slot + 1}</kbd><i data-member-state></i></div><div class="team__info"><span data-member-name></span><b class="team__hp"><i data-member-hp></i></b></div></div>`).join("")}
+      ${teamButtons.map((_, slot) => `<div class="team__member" data-member="${slot}" hidden><div class="team__face" data-face><span class="team__portrait" data-member-portrait></span><b class="team__wait"></b><kbd>${slot + 1}</kbd><i data-member-state></i></div><div class="team__info"><span data-member-name></span><b class="team__hp"><i data-member-hp></i></b></div></div>`).join("")}
     </div>
     <div class="hud__banner" data-banner></div>
     <div class="hud__skills">
@@ -44,7 +45,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <button class="hud__mute" data-mute type="button" title="Sound (M)">🔊</button>
     <div class="pad" data-pad hidden>
       <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
-      ${actionButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
+      ${actionButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span><em data-seconds></em></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
     </div>
   `
   const slot = (id: string) => {
@@ -53,7 +54,12 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   }
   const padButton = (name: ActionButton) => {
     const button = root.querySelector<HTMLElement>(`[data-button="${name}"]`)!
-    return { root: button, cooldown: button.querySelector<HTMLElement>("[data-cooldown]")!, aim: root.querySelector<HTMLElement>(`[data-aim="${name}"]`)! }
+    return {
+      root: button,
+      cooldown: button.querySelector<HTMLElement>("[data-cooldown]")!,
+      seconds: button.querySelector<HTMLElement>("[data-seconds]")!,
+      aim: root.querySelector<HTMLElement>(`[data-aim="${name}"]`)!
+    }
   }
   return {
     root,
@@ -69,10 +75,12 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
         buttons: { attack: padButton("attack"), special: padButton("special"), dash: padButton("dash"), ultimate: padButton("ultimate") }
       },
       quest: root.querySelector<HTMLElement>("[data-quest]")!,
+      waves: root.querySelector<HTMLElement>("[data-waves]")!,
       progress: root.querySelector<HTMLElement>("[data-progress]")!,
       name: root.querySelector<HTMLElement>("[data-name]")!,
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
+      energy: root.querySelector<HTMLElement>("[data-energy]")!,
       state: root.querySelector<HTMLElement>("[data-state]")!,
       team: {
         root: root.querySelector<HTMLElement>("[data-team]")!,
@@ -81,6 +89,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
           return {
             root: member,
             face: member.querySelector<HTMLElement>("[data-face]")!,
+            portrait: member.querySelector<HTMLElement>("[data-member-portrait]")!,
             state: member.querySelector<HTMLElement>("[data-member-state]")!,
             name: member.querySelector<HTMLElement>("[data-member-name]")!,
             health: member.querySelector<HTMLElement>("[data-member-hp]")!
@@ -96,6 +105,8 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
 export interface BrowserHost {
   readonly host: RenderHostValue
   readonly nodes: NodeRegistry.NodeRegistry<RenderNode>
+  /** Every model the looks use, loaded (the menu's showcase draws them too). */
+  readonly models: ReadonlyMap<ModelId, ModelSource>
   destroy(): void
 }
 
@@ -162,7 +173,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   const fx = new Fx(projected, projection.squash)
   projected.add(overlay.mesh)
   const reticle = new Shapes({ depthTest: false })
-  flipped.add(projected, reticle.mesh)
+  const edges = new Shapes({ depthTest: false })
+  flipped.add(projected, reticle.mesh, edges.mesh)
 
   const cursor = { x: 0, y: 0, over: false }
   const onMove = (event: PointerEvent) => {
@@ -195,7 +207,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   })
 
   const cameraView = { center: { x: 0, y: 0 }, pixelsPerUnit: 1, offset: { x: 0, y: 0 } }
-  const layers = [telegraphs, groundMarks, trails, overlay, reticle]
+  const layers = [telegraphs, groundMarks, trails, overlay, reticle, edges]
   const host: RenderHostValue = {
     renderer,
     canvas,
@@ -212,6 +224,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     fx,
     trails: new SlashTrails(trails),
     reticle,
+    edges,
     projectilePool,
     remains,
     cursor,
@@ -253,6 +266,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   return {
     host,
     nodes,
+    models,
     destroy() {
       canvas.removeEventListener("pointermove", onMove)
       canvas.removeEventListener("pointerleave", onLeave)
