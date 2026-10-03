@@ -1,6 +1,8 @@
 import type { BufferGeometry, Group, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton } from "../config/input.ts"
+import type { ArenaId } from "../content/arena.ts"
+import type { Box } from "../physics/shapes.ts"
 import type { ProjectileStyle } from "../schema.ts"
 import type { SkillSlot } from "../content/skills.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -68,7 +70,15 @@ export type TotemNode = {
   readonly dispose: () => void
 }
 
-export type RenderNode = ActorNode | ProjectileNode | WallNode | TotemNode
+/** An arena hazard laid into the floor (see `presentation/hazards.ts`); `show` it lit or put out (`out`: seconds it stays out). */
+export type HazardNode = {
+  readonly kind: "hazard"
+  readonly root: Group
+  readonly show: (out: number) => void
+  readonly dispose: () => void
+}
+
+export type RenderNode = ActorNode | ProjectileNode | WallNode | TotemNode | HazardNode
 
 /** Geometry, materials, and batches made once and shared by many nodes. */
 export interface RenderAssets {
@@ -234,6 +244,8 @@ export interface RenderHostValue {
   readonly hud: HudRefs
   readonly stats: FrameStats
   readonly feedback: FeedbackState
+  /** Lays out the floor (none over `holes`, the hazards laid into it) and scenery of arena `id` (see `SyncArena`); nothing to do when it is already shown. */
+  showArena(id: ArenaId, holes: ReadonlyArray<Box>): void
   /** A point `height` world units above the floor point `world`, in canvas pixels, as the camera shows it this frame. */
   toCanvas(world: Vec2, height: number): Vec2
   /** Draws the frame. */

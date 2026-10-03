@@ -9,7 +9,8 @@ import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
-import type { ChallengeId } from "./content/challenges.ts"
+import type { ArenaId } from "./content/arena.ts"
+import type { ChallengeId, EliteElement, WaveEntry } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
 import type { Affinities, ElementId, ReactionKind, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
@@ -235,6 +236,12 @@ export interface GroundValue {
   readonly duration: number
   readonly atk: number
   readonly charges: boolean
+  /** An arena hazard: it never runs out or drifts (see `Tuning.hazards`). */
+  readonly permanent: boolean
+  /** A pool laid into the floor's tiles is a box this far each way from its center (`radius` then reaches its corners); `null`: a round pool. */
+  readonly half: Vec2 | null
+  /** A fire pit put out by water: seconds until it burns again (0: burning). */
+  readonly out: number
 }
 export const Ground = Descriptor.Component<GroundValue>()("Shooter/Ground")
 
@@ -420,14 +427,40 @@ export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 export const Respawns = Descriptor.Component<{ readonly at: Vec2; readonly delay: number }>()("Shooter/Respawns")
 
 /** An enemy about to appear: its spawn warning is visible until `remaining` runs out. */
-export const PendingSpawn = Descriptor.Component<{ readonly kind: EnemyKind; readonly at: Vec2; readonly remaining: number; readonly duration: number }>()("Shooter/PendingSpawn")
+export const PendingSpawn = Descriptor.Component<{
+  readonly kind: EnemyKind
+  readonly at: Vec2
+  readonly remaining: number
+  readonly duration: number
+  /** The element of an elite (see `Tuning.elites`), or `null`. */
+  readonly elite: EliteElement | null
+}>()("Shooter/PendingSpawn")
+
+/**
+ * An elite enemy (see `Tuning.elites`): its `element`, the time until it
+ * leaves its next trail pool, and (thunder) the time until it discharges,
+ * then the discharge winding up where it stood (`charging`, `null` when
+ * not).
+ */
+export interface EliteValue {
+  readonly element: EliteElement
+  readonly trail: number
+  readonly discharge: number
+  readonly charging: { readonly at: Vec2; readonly remaining: number } | null
+}
+export const Elite = Descriptor.Component<EliteValue>()("Shooter/Elite")
+
+/** Where a wall stands: the `back` and `front` edges, a `sorted` pillar, or a low `inner` wall (see `content/arena.ts`). */
+export type WallPlacement = "back" | "front" | "sorted" | "inner"
 
 export type RenderableValue =
   | { readonly kind: "player"; readonly character: CharacterId; readonly weapon: WeaponId; readonly radius: number }
-  | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number }
+  | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number; readonly elite?: EliteElement }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number; readonly element: ElementId | null }
-  | { readonly kind: "wall"; readonly box: Box; readonly placement: "back" | "front" | "sorted" }
+  | { readonly kind: "wall"; readonly box: Box; readonly placement: WallPlacement; readonly arena: ArenaId }
   | { readonly kind: "totem"; readonly element: ElementId | null }
+  /** An arena hazard: a basin of water or a fire pit (see `content/arena.ts`). */
+  | { readonly kind: "hazard"; readonly element: "fire" | "water"; readonly half: Vec2 }
 
 /** What the entity looks like; presence means "has a render node". */
 export const Renderable = Descriptor.Component<RenderableValue>()("Shooter/Renderable")
@@ -669,7 +702,9 @@ export interface WavesValue {
   /** Break: time until the next wave. Spawning: time until the next spawn. */
   readonly timer: number
   /** Enemies of this wave still to spawn. */
-  readonly queue: ReadonlyArray<EnemyKind>
+  readonly queue: ReadonlyArray<WaveEntry>
+  /** The wave's front: the direction (radians) from the player its ranged enemies come from (see `Tuning.waves.placement`). */
+  readonly front: number
 }
 export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
 
@@ -766,6 +801,7 @@ export const Game = Schema.bind(
       Ground,
       Gust,
       Poise,
+      Elite,
       Stunned,
       Lobbed,
       Vortex,

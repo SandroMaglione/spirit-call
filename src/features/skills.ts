@@ -58,7 +58,7 @@ import type { ElementId } from "../content/elements.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { durationFactor } from "./elements.ts"
-import { makeGround } from "./ground.ts"
+import { active, makeGround } from "./ground.ts"
 import { knockbackTaken, Walls, wallBoxes } from "./motion.ts"
 import { paceOf } from "./time.ts"
 
@@ -288,7 +288,7 @@ export const AbsorbIntoVortices = Game.System("Shooter/AbsorbIntoVortices", {
     let absorbed: ElementId | null = null
     for (const { data: pool } of queries.pools.each()) {
       const ground = pool.ground.get()
-      if (inside(ground.center, ground.radius * 0.5)) absorbed ??= ground.element
+      if (active(ground) && inside(ground.center, ground.radius * 0.5)) absorbed ??= ground.element
     }
     for (const { data: body } of queries.bodies.each()) {
       const state = body.state.get().current

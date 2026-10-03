@@ -6,7 +6,8 @@ import { RenderSync } from "@typeonce/bevy-ts-pixi"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { Camera, Game, Player, Position, PrevPosition, Projectile, RenderClock, RenderHost, RenderNodes, Renderable, SlowMotion, Tuning, Velocity, Wall } from "../schema.ts"
+import { arenaOf, hazardBoxes } from "../features/arena.ts"
+import { Camera, Challenge, Game, Player, Position, PrevPosition, Projectile, RenderClock, RenderHost, RenderNodes, Renderable, SlowMotion, Tuning, Velocity, Wall } from "../schema.ts"
 import { createNode, placeTracer } from "./nodes.ts"
 
 /**
@@ -25,6 +26,16 @@ export const SyncNodes = RenderSync.system(Game, {
     const position = data.position.get()
     node.root.position.set(position.x, 0, position.y)
   }
+})
+
+/** Dresses the floor of the arena the run stands in (the challenge's: see `content/arena.ts`). */
+export const SyncArena = Game.System("Shooter/SyncArena", {
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge) },
+  services: { host: Game.System.service(RenderHost) }
+}, ({ resources, services }) => {
+  const tuning = resources.tuning.get()
+  const id = arenaOf(tuning, resources.challenge.get())
+  services.host.showArena(id, hazardBoxes(tuning, id).map((hazard) => hazard.box))
 })
 
 /** Camera position (interpolated), screen shake, and the hurt vignette. */

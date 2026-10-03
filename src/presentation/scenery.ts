@@ -1,13 +1,14 @@
 /**
  * The arena's dressing that is not a simulation entity: the floor and the
- * scenery (see `arenaLook`). Made once when the renderer starts; tiles and
- * props are drawn in batches.
+ * scenery (see `ArenaLook`). Made again whenever a run stands in another
+ * arena (see `SyncArena`); tiles and props are drawn in batches.
  */
 import { Group, Mesh, MeshLambertMaterial, PlaneGeometry } from "three"
 
 import { Instance } from "./batch.ts"
 import type { RenderAssets } from "./host-types.ts"
-import { arenaLook } from "./looks.ts"
+import type { Box } from "../physics/shapes.ts"
+import type { ArenaLook } from "./looks.ts"
 import { footprintOf, variantAt } from "./nodes.ts"
 import type { Shapes } from "./shapes.ts"
 
@@ -19,8 +20,17 @@ export type FloorBase = Mesh<PlaneGeometry, MeshLambertMaterial>
  * floor layer) or tiles laid edge to edge (as many as fit at the arena's
  * scale, stretched a little to fill it exactly), over a base slab.
  */
-export const makeFloor = (assets: RenderAssets, width: number, height: number, grid: Shapes): { readonly object: Group; readonly base: FloorBase } => {
-  const floor = arenaLook.floor
+const makeFloor = (
+  assets: RenderAssets,
+  look: ArenaLook,
+  width: number,
+  height: number,
+  cells: number,
+  holes: ReadonlyArray<Box>,
+  grid: Shapes,
+  instances: Array<Instance>
+): { readonly object: Group; readonly base: FloorBase } => {
+  const floor = look.floor
   const object = new Group()
   const geometry = new PlaneGeometry(width, height).rotateX(-Math.PI / 2).translate(width / 2, 0, height / 2)
   const base = new Mesh(geometry, new MeshLambertMaterial({ color: floor.color }))
@@ -31,23 +41,27 @@ export const makeFloor = (assets: RenderAssets, width: number, height: number, g
       for (let y = floor.spacing; y < height; y += floor.spacing) grid.line(0, y, width, y, 2, floor.line, 1)
       break
     case "tiles": {
-      const scale = arenaLook.unitsPerMeter
+      const scale = look.unitsPerMeter
       const [first] = floor.tiles
       if (first === undefined) break
       const [sizeX, sizeZ] = footprintOf(first)
-      const across = Math.max(1, Math.round(width / (sizeX * scale)))
-      const down = Math.max(1, Math.round(height / (sizeZ * scale)))
+      // The arena's tile grid (hazards are laid on it: see `content/arena.ts`), each tile stretched a little to fit.
+      const across = cells
+      const down = cells
       // The base sits a little under the tiles' top, so their joints show it.
       base.position.y = -0.05 * scale
       for (let column = 0; column < across; column++) {
         for (let row = 0; row < down; row++) {
           const at = { x: ((column + 0.5) * width) / across, y: ((row + 0.5) * height) / down }
+          // A hazard takes the tile's place (see `presentation/hazards.ts`).
+          if (holes.some((hole) => at.x > hole.minX && at.x < hole.maxX && at.y > hole.minY && at.y < hole.maxY)) continue
           const tile = new Instance(assets.piece(floor.tiles[variantAt(floor.tiles.length, at)]!))
           tile.object.position.set(at.x, 0, at.y)
           // Square tiles turn by quarter turns, so the same few never line up.
           tile.object.rotation.y = (variantAt(4, { x: at.y, y: at.x }) * Math.PI) / 2
           tile.object.scale.set(width / across / sizeX, scale, height / down / sizeZ)
           tile.batch.add(tile)
+          instances.push(tile)
           object.add(tile.object)
         }
       }
@@ -58,15 +72,45 @@ export const makeFloor = (assets: RenderAssets, width: number, height: number, g
 }
 
 /** The scenery, placed at the arena's scale. */
-export const makeScenery = (assets: RenderAssets): Group => {
+const makeScenery = (assets: RenderAssets, look: ArenaLook, instances: Array<Instance>): Group => {
   const group = new Group()
-  for (const piece of arenaLook.scenery) {
+  for (const piece of look.scenery) {
     const prop = new Instance(assets.piece(piece.model))
     prop.object.position.set(piece.at.x, 0, piece.at.y)
     prop.object.rotation.y = piece.turn
-    prop.object.scale.setScalar(arenaLook.unitsPerMeter)
+    prop.object.scale.setScalar(look.unitsPerMeter)
     prop.batch.add(prop)
+    instances.push(prop)
     group.add(prop.object)
   }
   return group
+}
+
+/** An arena's floor and scenery in the scene, until `dispose` takes them out (their batched pieces too). */
+export interface Dressing {
+  readonly object: Group
+  dispose(): void
+}
+
+/**
+ * The floor and scenery of `look` for a `width` × `height` arena of `cells`
+ * tiles across and down, no tiles over `holes` (the hazards laid into the
+ * floor); the grid, if any, drawn into `grid`.
+ */
+export const dressArena = (assets: RenderAssets, look: ArenaLook, arena: { readonly width: number; readonly height: number; readonly cells: number }, holes: ReadonlyArray<Box>, grid: Shapes): Dressing => {
+  const instances: Array<Instance> = []
+  grid.clear()
+  const floor = makeFloor(assets, look, arena.width, arena.height, arena.cells, holes, grid, instances)
+  grid.flush()
+  const object = new Group()
+  object.add(floor.object, makeScenery(assets, look, instances))
+  return {
+    object,
+    dispose: () => {
+      for (const instance of instances) instance.batch.remove(instance)
+      object.removeFromParent()
+      floor.base.geometry.dispose()
+      floor.base.material.dispose()
+    }
+  }
 }

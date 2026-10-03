@@ -247,7 +247,8 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
   for (const { data } of queries.pools.each()) {
     const pool = data.ground.get()
     // More embers off a bigger fire.
-    if (pool.element !== "fire" || Math.random() >= chance * (pool.radius / 40)) continue
+    // Arena hazards stay still (see `presentation/hazards.ts`).
+    if (pool.element !== "fire" || pool.permanent || Math.random() >= chance * (pool.radius / 40)) continue
     const angle = Math.random() * Math.PI * 2
     const distance = Math.sqrt(Math.random()) * pool.radius
     const from = toScreen(projection, { x: pool.center.x + Math.cos(angle) * distance, y: pool.center.y + Math.sin(angle) * distance })

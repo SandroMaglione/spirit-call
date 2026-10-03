@@ -4,7 +4,8 @@ How enemies fight: the rules behind the execution layer of
 `docs/vision.md` (dodging, positioning, timing). Like the vision, this
 records intentions and rules, not implementation; numbers live in
 `src/content/enemies.ts` and `src/config/tuning.ts` (`crowd`, `paths`,
-`fairness`, `breaking`, `perfectDodge`), where they are live-tunable. What enemies are weak to, and the
+`fairness`, `breaking`, `perfectDodge`, `waves`, `elites`, `hazards`), where
+they are live-tunable; arenas are `src/content/arena.ts`. What enemies are weak to, and the
 elements they attack with, are in `docs/elements.md`.
 
 ## Principles
@@ -77,6 +78,53 @@ pressing against the wall in between.
 These two numbers are what makes a big wave dangerous without making it
 unreadable; hardcore modifiers may raise them, never the readability floor.
 
+## Waves
+
+- **Enemies come in by their job.** Each wave has a front, a direction from
+  the player (toward the side of the arena with the most room). Enemies that
+  keep their distance come in far along it; the others come in closer, from
+  the flanks and behind. Backing away from one side walks into the other.
+- **Reinforcements come as a wave thins out**: once only a few of its
+  enemies are left (`waves.reinforceAt`), the next wave starts arriving.
+  Kills bring it, never a timer, so there is no damage race.
+- Every spawn is warned on the floor before the enemy appears.
+
+## Elites
+
+A wave entry can be an **elite**: the first enemy of its group is bigger and
+tougher, immune to its element, and every blow it deals carries that
+element. Its element shows as a ring under its feet and a glow on its body.
+
+- **Fire** leaves fire on the ground behind it as it moves: it burns its own
+  side too, and a wind whirl takes it in.
+- **Water** leaves puddles: they slow and soak (the player as much as the
+  enemies standing in them), and carry thunder.
+- **Thunder** discharges around itself now and then, a ring telegraphed
+  where it stood: the soaked are shocked.
+
+Elites make the elements part of the fight on the enemies' side, ready to be
+turned against them. Endless waves make elites of a growing share of their
+slots.
+
+## Arenas
+
+Each challenge is fought in an arena (`content/arena.ts`): its pillars (tall,
+fading in front of the player), low walls (cover that blocks movement and
+shots without hiding anyone), and hazards. Hazards are permanent pools laid
+into the floor's tiles, level with it, that affect everyone, enemies
+included: **fire trenches** burn (water puts one out for a while, then it
+burns again), and **basins** of water soak and carry thunder. Both feed a
+wind whirl. An arena's look comes from an environment kit, by the same id
+(`presentation/looks.ts`); hazards are drawn flat, in few tones, like the
+rest of the game.
+
+**Enemies keep out of harm's way.** They find their way around the arena's
+hazards as around walls, slide along the edge of any pool they would take
+harm from instead of stepping in (fire anywhere, the player's included),
+and walk straight out of one they were pushed into. Only force puts them
+there: a wind whirl's pull, a push. An enemy immune to an element ignores
+its pools.
+
 ## Breaking
 
 Pressing an attack has a payoff. Every enemy that can break (`poise`
@@ -121,6 +169,5 @@ is on screen.
 
 ## Open questions
 
-1. **Waves.** Where each enemy comes in (by its job: ranged across the
-   arena, melee from the flanks), reinforcements arriving as the last ones
-   fall, elite enemies, and arena hazards.
+1. **More hazards.** Hazards that act on their own (vents that flare on a
+   rhythm, currents that push), and arenas that change during a run.

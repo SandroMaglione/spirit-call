@@ -97,3 +97,48 @@ export const skirmishTurn = (
   if (mode === "retreat" && modeTimer >= behavior.retreatSeconds) return { mode: "orbit", modeTimer: 0 }
   return { mode, modeTimer }
 }
+
+/** A pool on the floor that an enemy keeps out of: round (`half` null), or a box of tiles `half` each way from its center. */
+export interface Hazard {
+  readonly center: Vec2
+  readonly radius: number
+  readonly half: Vec2 | null
+}
+
+/** How `at` stands to `hazard`: inside it or not, the way out (or away) from it, and how far outside its edge (negative inside). */
+const edgeOf = (hazard: Hazard, at: Vec2): { readonly inside: boolean; readonly out: Vec2; readonly gap: number } => {
+  const dx = at.x - hazard.center.x
+  const dy = at.y - hazard.center.y
+  if (hazard.half === null) {
+    const distance = Math.hypot(dx, dy)
+    const out = distance > 1e-6 ? { x: dx / distance, y: dy / distance } : { x: 1, y: 0 }
+    return { inside: distance < hazard.radius, out, gap: distance - hazard.radius }
+  }
+  const overX = Math.abs(dx) - hazard.half.x
+  const overY = Math.abs(dy) - hazard.half.y
+  const sx = dx < 0 ? -1 : 1
+  const sy = dy < 0 ? -1 : 1
+  // Inside: out through the nearer side.
+  if (overX < 0 && overY < 0) return overX > overY ? { inside: true, out: { x: sx, y: 0 }, gap: overX } : { inside: true, out: { x: 0, y: sy }, gap: overY }
+  const ox = Math.max(0, overX) * sx
+  const oy = Math.max(0, overY) * sy
+  const gap = Math.hypot(ox, oy)
+  return { inside: false, out: gap > 1e-6 ? { x: ox / gap, y: oy / gap } : { x: sx, y: 0 }, gap }
+}
+
+/**
+ * Keeps a body of `radius` out of `hazards` it would rather not stand in:
+ * one inside walks straight out at `speed`; one within `margin` of an edge
+ * slides along it instead of stepping in.
+ */
+export const keepOut = (desired: Vec2, at: Vec2, radius: number, speed: number, hazards: ReadonlyArray<Hazard>, margin: number): Vec2 => {
+  let result = desired
+  for (const hazard of hazards) {
+    const edge = edgeOf(hazard, at)
+    if (edge.inside) return scale(edge.out, speed)
+    if (edge.gap > radius + margin) continue
+    const into = result.x * edge.out.x + result.y * edge.out.y
+    if (into < 0) result = { x: result.x - edge.out.x * into, y: result.y - edge.out.y * into }
+  }
+  return result
+}

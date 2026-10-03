@@ -8,6 +8,8 @@
  * immediately; values copied at spawn (radius, HP) apply to entities spawned
  * afterwards, so restart the run to see them everywhere.
  */
+import { entryElite, entryKind } from "../content/challenges.ts"
+import type { WaveEntry } from "../content/challenges.ts"
 import { Descriptor } from "@typeonce/bevy-ts"
 import type { ReadonlyValue } from "@typeonce/bevy-ts/Query"
 
@@ -28,7 +30,8 @@ export interface DevCommandsValue {
   replace: TuningValue | undefined
   readonly edits: Array<{ readonly path: TuningPath; readonly value: number | boolean }>
   /** Enemy types to spawn near the player (each with its group, behind a short spawn warning). */
-  readonly spawns: Array<EnemyKind>
+  /** Enemies to spawn near the player (an elite one for an elite entry). */
+  readonly spawns: Array<WaveEntry>
   /** Remove every enemy and pending spawn. */
   clear: boolean
 }
@@ -100,9 +103,10 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
     const player = queries.player.each()[0]?.data.position.get() ?? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
     const boxes = wallBoxes(queries.walls.each())
     const random = new Random(resources.rng.get().state)
-    for (const kind of queue.spawns) {
+    for (const entry of queue.spawns) {
+      const kind = entryKind(entry)
       const at = pickNearPoint(tuning, kind, player, boxes, random)
-      for (const spawn of makeGroupSpawns(tuning, kind, at, devSpawnWarning)) commands.spawnIn(RunScope, spawn)
+      for (const spawn of makeGroupSpawns(tuning, kind, at, devSpawnWarning, entryElite(entry))) commands.spawnIn(RunScope, spawn)
     }
     queue.spawns.length = 0
     resources.rng.set({ state: random.state })

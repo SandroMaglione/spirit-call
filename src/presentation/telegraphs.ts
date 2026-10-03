@@ -7,7 +7,7 @@ import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Totem, Tuning, Vortex } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Totem, Tuning, Vortex } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
@@ -22,6 +22,7 @@ import { drawArea } from "./draw.ts"
 export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   queries: {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
+    elites: Game.Query({ selection: { elite: Game.Query.read(Elite), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
     discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
@@ -42,6 +43,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   const now = performance.now() / 1000
   for (const { data } of queries.pools.each()) {
     const pool = data.ground.get()
+    // An arena hazard is a place of its own, laid into the floor (see `presentation/hazards.ts`).
+    if (pool.permanent) continue
     const color = view.elements[pool.element]
     const fade = Math.min(1, pool.remaining / view.pools.fadeSeconds)
     const pulse = pool.element === "fire" ? 0.75 + 0.25 * Math.sin(now * 13 + pool.center.x) * Math.sin(now * 7.3 + pool.center.y) : 1
@@ -76,6 +79,22 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
     const color = spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
     drawArea(g, area, progress, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
+  }
+
+  // Elites: a ring of their element under their feet, turning; a thunder elite's discharge fills its ring where it will strike.
+  for (const { data } of queries.elites.each()) {
+    const elite = data.elite.get()
+    const color = view.elements[elite.element]
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const radius = data.body.get().radius + 10
+    const turn = now * 2.2
+    g.strokeArc(at.x, at.y, radius, turn, turn + Math.PI * 0.8, 3, color, 0.85)
+    g.strokeArc(at.x, at.y, radius, turn + Math.PI, turn + Math.PI * 1.8, 3, color, 0.85)
+    if (elite.charging !== null) {
+      const discharge = tuning.elites.discharge
+      const progress = 1 - elite.charging.remaining / discharge.windup
+      drawArea(g, { kind: "circle", center: elite.charging.at, radius: discharge.radius }, progress, { color, fill: 0.12, outline: 0.8 })
+    }
   }
 
   // Guardian shields: a bright arc on the side they face.

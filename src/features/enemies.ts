@@ -13,8 +13,9 @@ import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
-import { skirmishTurn, steer } from "./behaviors.ts"
-import { stateSpeed } from "./elements.ts"
+import { keepOut, skirmishTurn, steer } from "./behaviors.ts"
+import { durationFactor, stateSpeed } from "./elements.ts"
+import { active } from "./ground.ts"
 import {
   Attacker,
   AttackPhase,
@@ -34,6 +35,9 @@ import {
   Respawns,
   RunScope,
   Shield,
+  Elite,
+  ElementAffinities,
+  Ground,
   Poise,
   Stunned,
   Time,
@@ -41,6 +45,7 @@ import {
   Velocity
 } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
+import type { EliteElement } from "../content/challenges.ts"
 
 /** `kind`'s HP, ATK, and DEF at `level`, along the characters' stat curve (see `levelScale`); speed as it is. */
 export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number): { readonly hp: number; readonly atk: number; readonly def: number; readonly speed: number } => {
@@ -49,39 +54,51 @@ export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number):
   return { hp: Math.round(spec.hp * scaled), atk: Math.round(spec.atk * scaled), def: Math.round(spec.def * scaled), speed: spec.speed }
 }
 
-/** An enemy of `kind` at `level` (see `EnemyLevel`). */
-export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1) => {
+/**
+ * An enemy of `kind` at `level` (see `EnemyLevel`); an elite one (see
+ * `Tuning.elites`) when `elite` names its element: bigger, tougher, immune
+ * to its element.
+ */
+export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1, elite: EliteElement | null = null) => {
   const stats = tuning.enemies[kind]
-  const { hp, atk, def, speed } = enemyStats(tuning, kind, level)
-  const draft = Game.Command.insert(
-    makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius, hurtboxRadius: stats.hurtboxRadius, affinities: stats.elements }),
+  const base = enemyStats(tuning, kind, level)
+  const hp = elite === null ? base.hp : Math.round(base.hp * tuning.elites.health)
+  const { atk, def, speed } = base
+  const size = elite === null ? 1 : tuning.elites.scale
+  const affinities = elite === null ? stats.elements : { ...stats.elements, [elite]: "immune" as const }
+  const body = Game.Command.insert(
+    makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius * size, hurtboxRadius: stats.hurtboxRadius * size, affinities }),
     [Enemy, { kind }],
     [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
     [EnemyMode, "orbit"],
     [Poise, { current: 0, broken: 0, quiet: 0 }],
-    [Renderable, { kind: "enemy", enemy: kind, radius: stats.radius }]
+    [Renderable, elite === null ? { kind: "enemy", enemy: kind, radius: stats.radius } : { kind: "enemy", enemy: kind, radius: stats.radius * size, elite }]
   )
+  // Staggered, so elites of a wave do not all discharge together.
+  const draft = elite === null
+    ? body
+    : Game.Command.insert(body, [Elite, { element: elite, trail: tuning.elites.trailEvery, discharge: tuning.elites.discharge.every * (0.5 + (at.x % 97) / 194), charging: null }])
   const shield = stats.shield
   return shield === null
     ? draft
     : Game.Command.insert(draft, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (shield.arcDegrees * Math.PI) / 360, turnRate: (shield.turnRate * Math.PI) / 180 }])
 }
 
-/** Spawn warnings for one wave slot: the enemy's whole `group`, clustered around `at`. */
-export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, delay: number) => {
+/** Spawn warnings for one wave slot: the enemy's whole `group`, clustered around `at`; an elite slot's first one is the elite. */
+export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null) => {
   const count = tuning.enemies[kind].group
   const spread = count === 1 ? 0 : tuning.enemies[kind].radius * 3
   return Array.from({ length: count }, (_, index) => {
     const angle = (index / count) * Math.PI * 2
-    return makePendingSpawn(kind, { x: at.x + Math.cos(angle) * spread, y: at.y + Math.sin(angle) * spread }, delay)
+    return makePendingSpawn(kind, { x: at.x + Math.cos(angle) * spread, y: at.y + Math.sin(angle) * spread }, delay, index === 0 ? elite : null)
   })
 }
 
-/** A spawn warning that becomes an enemy of `kind` at `at` after `delay`. */
-export const makePendingSpawn = (kind: EnemyKind, at: Vec2, delay: number) =>
-  Game.Command.spawn([PendingSpawn, { kind, at, remaining: delay, duration: delay }])
+/** A spawn warning that becomes an enemy of `kind` (an elite, when `elite` names its element) at `at` after `delay`. */
+export const makePendingSpawn = (kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null) =>
+  Game.Command.spawn([PendingSpawn, { kind, at, remaining: delay, duration: delay, elite }])
 
 /** The pending spawn that brings a killed respawning enemy back. */
 export const respawnOf = (kind: EnemyKind, respawns: { readonly at: Vec2; readonly delay: number }) =>
@@ -117,7 +134,7 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
     }
     commands.despawn(entity.id)
     // Alternate strafing directions so groups of shooters spread out.
-    const draft = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level)
+    const draft = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level, pending.elite)
     commands.spawnIn(RunScope, pending.kind === "dummy"
       ? Game.Command.insert(draft, [Respawns, { at: pending.at, delay: tuning.enemies.dummy.respawnDelay }])
       : draft)
@@ -152,9 +169,11 @@ export const SteerEnemies = (() => {
           knockback: Game.Query.read(Knockback),
           mode: Game.Query.write(EnemyMode),
           state: Game.Query.read(ElementState),
-          stunned: Game.Query.read(Stunned)
+          stunned: Game.Query.read(Stunned),
+          affinities: Game.Query.read(ElementAffinities)
         }
       }),
+      pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
       player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] }),
       walls: Walls
@@ -166,8 +185,15 @@ export const SteerEnemies = (() => {
     const [player] = queries.player.each()
     const target = player?.data.position.get()
     const boxes = wallBoxes(queries.walls.each())
+    // Pools enemies keep out of: fire anywhere, and the arena's basins (each enemy minds those it is not immune to).
+    // The arena's hazards they also path around, as if walls (they are not: a push still sends them in).
+    const pools = queries.pools.each().map(({ data }) => data.ground.get()).filter((pool) => active(pool) && (pool.element === "fire" || pool.permanent))
+    const laid = pools.flatMap((pool) => (pool.permanent && pool.half !== null
+      ? [{ minX: pool.center.x - pool.half.x, minY: pool.center.y - pool.half.y, maxX: pool.center.x + pool.half.x, maxY: pool.center.y + pool.half.y }]
+      : []))
+    const avoided = laid.length === 0 ? boxes : [...boxes, ...laid]
     if (paths.cellSize !== tuning.paths.cellSize) paths = new FlowField(tuning.paths.cellSize)
-    paths.setWalls(boxes, tuning.paths.clearance)
+    paths.setWalls(avoided, tuning.paths.clearance)
     if (target !== undefined) paths.setGoal(target)
 
     grid.clear()
@@ -260,10 +286,13 @@ export const SteerEnemies = (() => {
       let desired: Vec2 = zero
       if (target !== undefined) {
         const toward = normalizeOr(sub(target, position), zero)
-        // Straight at her when nothing is in between; around the walls otherwise.
-        const way = hasLineOfSight(position, target, radius, boxes) ? toward : (paths.way(position) ?? toward)
+        // Straight at her when nothing is in between; around the walls (and the arena's hazards) otherwise.
+        const way = hasLineOfSight(position, target, radius, avoided) ? toward : (paths.way(position) ?? toward)
         const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, distance: length(sub(target, position)), speed, dt })
-        desired = steering.desired
+        // Never into a pool it would take harm from: along its edge instead, and out at once if pushed in.
+        const affinities = data.affinities.get()
+        const minded = pools.filter((pool) => durationFactor(tuning, affinities[pool.element]) > 0)
+        desired = minded.length === 0 ? steering.desired : keepOut(steering.desired, position, radius, speed, minded, tuning.crowd.hazardMargin)
         data.brain.set(steering.brain)
       }
 

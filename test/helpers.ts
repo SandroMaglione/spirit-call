@@ -1,3 +1,4 @@
+import type { ArenaId } from "../src/content/arena.ts"
 import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchButtons } from "../src/config/input.ts"
@@ -90,6 +91,12 @@ export const withGun = (tuning: Tuning, shot: Partial<Omit<ShotMove, "shape">> =
 
 const withWaves = (tuning: Tuning, enabled: boolean): Tuning => ({ ...tuning, waves: { ...tuning.waves, enabled } })
 
+/** Every challenge fought in `arena` (tests stand in the open courtyard unless they name another). */
+export const inArena = (tuning: Tuning, arena: ArenaId): Tuning => ({
+  ...tuning,
+  challenges: Object.fromEntries(Object.entries(tuning.challenges).map(([id, challenge]) => [id, { ...challenge, arena }])) as Tuning["challenges"]
+})
+
 export interface StartOptions {
   readonly keys?: Keyboard.Timeline<typeof keyBindings>
   readonly pointer?: Pointer.Timeline
@@ -105,6 +112,8 @@ export interface StartOptions {
   readonly flow?: "Menu" | "Playing"
   /** Run waves instead of training dummies. Defaults to false. */
   readonly waves?: boolean
+  /** The arena every challenge is fought in. Defaults to the courtyard (no hazards). */
+  readonly arena?: ArenaId
 }
 
 /** A headless run after setup. Timeline frame `n` is read by fixed step `n + 1`. */
@@ -113,7 +122,7 @@ export const start = (options: StartOptions = {}) => {
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
-    tuning: withWaves(options.tuning ?? defaultTuning, options.waves ?? false),
+    tuning: inArena(withWaves(options.tuning ?? defaultTuning, options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
     ...(options.team === undefined ? {} : { team: options.team }),
     ...(options.challenge === undefined ? {} : { challenge: options.challenge }),

@@ -13,11 +13,16 @@ import { afflict } from "./elements.ts"
 
 /** A pool of `spec`'s element around `center`, its burns from `atk`; `charges`: left by the player. */
 export const makeGround = (spec: GroundSpec, center: Vec2, atk: number, charges: boolean) =>
-  Game.Command.spawn([Ground, { element: spec.element, center, radius: spec.radius, drift: { x: 0, y: 0 }, remaining: spec.seconds, duration: spec.seconds, atk, charges }])
+  Game.Command.spawn([Ground, { element: spec.element, center, radius: spec.radius, drift: { x: 0, y: 0 }, remaining: spec.seconds, duration: spec.seconds, atk, charges, permanent: false, half: null, out: 0 }])
 
-/** A body is in a pool when its feet are: its center within the pool, give or take half its hurtbox. */
-export const inPool = (pool: { readonly center: Vec2; readonly radius: number }, at: Vec2, hurtbox: number): boolean =>
-  (at.x - pool.center.x) ** 2 + (at.y - pool.center.y) ** 2 <= (pool.radius + hurtbox / 2) ** 2
+/** Whether a pool does anything now: a fire pit put out does not, until it burns again. */
+export const active = (pool: { readonly out: number }): boolean => pool.out <= 0
+
+/** A body is in a pool when its feet are: its center within the pool (round, or a box of tiles), give or take half its hurtbox. */
+export const inPool = (pool: { readonly center: Vec2; readonly radius: number; readonly half?: Vec2 | null }, at: Vec2, hurtbox: number): boolean =>
+  pool.half === null || pool.half === undefined
+    ? (at.x - pool.center.x) ** 2 + (at.y - pool.center.y) ** 2 <= (pool.radius + hurtbox / 2) ** 2
+    : Math.abs(at.x - pool.center.x) <= pool.half.x + hurtbox / 2 && Math.abs(at.y - pool.center.y) <= pool.half.y + hurtbox / 2
 
 /**
  * Runs pools down (moving those blown by wind), puts out fire pools that water touches, and gives every
@@ -50,6 +55,13 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
   const live: Array<(typeof pools)[number]> = []
   for (const pool of pools) {
     const ground = pool.data.ground.get()
+    // An arena hazard stays where it is, for good; a fire pit put out burns again in a while.
+    if (ground.permanent) {
+      if (ground.out > 0) pool.data.ground.set({ ...ground, drift: { x: 0, y: 0 }, out: Math.max(0, ground.out - dt) })
+      else if (ground.drift.x !== 0 || ground.drift.y !== 0) pool.data.ground.set({ ...ground, drift: { x: 0, y: 0 } })
+      live.push(pool)
+      continue
+    }
     const remaining = ground.remaining - dt
     if (remaining <= 0) {
       commands.despawn(pool.entity.id)
@@ -61,14 +73,17 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
     live.push(pool)
   }
 
-  // Water puts out the fire pools it touches.
-  const puddles = live.filter((pool) => pool.data.ground.get().element === "water").map((pool) => pool.data.ground.get())
+  // Water puts out the fire pools it touches (a fire pit only for a while). Basins of the arena do not:
+  // a fire pit next to one burns on.
+  const puddles = live.filter((pool) => pool.data.ground.get().element === "water" && !pool.data.ground.get().permanent).map((pool) => pool.data.ground.get())
   const standing = live.filter((pool) => {
     const ground = pool.data.ground.get()
+    if (!active(ground)) return false
     if (ground.element !== "fire") return true
     const doused = puddles.some((puddle) => Math.hypot(puddle.center.x - ground.center.x, puddle.center.y - ground.center.y) < puddle.radius + ground.radius)
     if (!doused) return true
-    commands.despawn(pool.entity.id)
+    if (ground.permanent) pool.data.ground.set({ ...ground, out: tuning.hazards.relightSeconds })
+    else commands.despawn(pool.entity.id)
     events.reaction.emit({ at: ground.center, kind: "steam", faction: "player" })
     return false
   })

@@ -16,10 +16,12 @@ Like `vision.md`, this records the rules; the code is in
   registers it by id. It is an asset, not content: content never names a
   model. The build bundles only the files the game imports.
 - **A look** says what something looks like (`looks.ts`): every character
-  (`characterLooks`), every enemy (`enemyLooks`), and the arena's floor,
-  walls, and scenery (`arenaLook`). A look is a placeholder (a capsule, a
-  box) or a model. The tables are keyed by content id, so a new character or
-  enemy does not compile until it has a look.
+  (`characterLooks`), every enemy (`enemyLooks`), and every arena's floor,
+  walls, and scenery (`arenaLooks`, one environment kit each: the courtyard,
+  the flooded cistern, the ember kilnworks, the overgrown sanctuary). A look
+  is a placeholder (a capsule, a box) or a model. The tables are keyed by
+  content id, so a new character, enemy, or arena does not compile until it
+  has a look.
 - **Moments** say which clip plays when (`Moments` in `looks.ts`): loops
   for standing and moving, one-shots for an attack step, the power move, a
   dash, a skill, being hurt, an enemy's windup.
@@ -93,9 +95,11 @@ stationary training dummies.
 ## Arena
 
 The simulation's walls (`content/arena.ts`, the arena's edges) decide what
-blocks movement and shots; the arena's look (`arenaLook`) only dresses
-them, at one scale for the whole kit (`unitsPerMeter`, 70 today: the
-courtyard's large pillar fits the arena's 70-unit pillars).
+blocks movement and shots; the arena's look only dresses them, at one scale
+for the whole kit (`unitsPerMeter`, 70 today: a kit's large pillar fits the
+arena's 70-unit pillars). Low `inner` walls are runs of the kit's low wall,
+so they never hide the player. A kit's pieces are registered from its
+manifest (`presentation/assets/<arena>.ts`, prefixed with the arena's id).
 
 - **Floor:** `tiles` of square pieces laid edge to edge (as many as fit,
   stretched a little to fill the arena exactly; variants by place, quarter

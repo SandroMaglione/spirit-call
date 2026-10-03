@@ -176,7 +176,24 @@ export const view = {
   elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1, thunder: 0xb48cff },
   states: { burning: 0xff7b2e, soaked: 0x4aa8ff, tint: 0.5, motes: 14 },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
-  pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6 },
+  pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6, ash: 0x3a3330 },
+  /**
+   * Arena hazards as part of the floor (see `presentation/hazards.ts`): a
+   * pool level with the floor's top (`level` world units over it), its flat
+   * `surface` with a `band` along its edges and marks on it (one per
+   * `markArea` square units: water's `streak`s of light, fire's hot `spot`s),
+   * all in few flat tones; a fire trench put out shows its `ash` tones.
+   */
+  hazards: {
+    level: 0.3,
+    band: 7,
+    markArea: 9000,
+    streak: { length: 26, width: 4 },
+    spot: 7,
+    water: { surface: 0x2b86bf, band: 0x7fcbea, mark: 0xc6ecfb },
+    fire: { surface: 0xe8561c, band: 0x7c2410, mark: 0xffc04a },
+    ash: { surface: 0x4b4542, band: 0x2f2a28, mark: 0x625b57 }
+  },
   /**
    * Thrown discs: drawn flat, `size` times their radius, `height` pixels over
    * the floor, with a spinning ring around them (out to where they hit while

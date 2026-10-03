@@ -41,6 +41,7 @@ import {
   Enemy,
   Game,
   Health,
+  Elite,
   Ground,
   Hitbox,
   Lobbed,
@@ -102,6 +103,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
+    elites: Game.Query({ selection: { elite: Game.Query.read(Elite) } }),
     walls: Game.Query({ selection: { wall: Game.Query.read(Wall) } })
   },
   resources: { tuning: Game.System.readResource(TuningResource) }
@@ -152,10 +154,22 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     const bursts = Math.max(0, lobbed.effect.flightTime + lobbed.effect.fuse - lobbed.elapsed)
     threats.push({ kind: "area", area: { kind: "circle", center: lobbed.to, radius: lobbed.effect.radius }, from: bursts, to: bursts + blast, seen: Infinity })
   }
+  // A thunder elite's discharge winding up: its ring, once it strikes.
+  for (const { data } of queries.elites.each()) {
+    const charging = data.elite.get().charging
+    if (charging === null) continue
+    const discharge = tuning.elites.discharge
+    threats.push({ kind: "area", area: { kind: "circle", center: charging.at, radius: discharge.radius }, from: charging.remaining, to: charging.remaining + blast * 2, seen: discharge.windup - charging.remaining })
+  }
   // Fire on the floor burns whoever walks in: kept out of while it lasts.
   for (const { data } of queries.pools.each()) {
     const pool = data.ground.get()
-    if (pool.element === "fire") threats.push({ kind: "area", area: { kind: "circle", center: pool.center, radius: pool.radius }, from: 0, to: pool.remaining, seen: Infinity })
+    if (pool.element !== "fire" || pool.out > 0) continue
+    // A trench sunk into the floor is a box: a lane along it.
+    const area: Area = pool.half === null
+      ? { kind: "circle", center: pool.center, radius: pool.radius }
+      : { kind: "lane", origin: { x: pool.center.x - pool.half.x, y: pool.center.y }, direction: { x: 1, y: 0 }, length: pool.half.x * 2, halfWidth: pool.half.y }
+    threats.push({ kind: "area", area, from: 0, to: pool.remaining, seen: Infinity })
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
