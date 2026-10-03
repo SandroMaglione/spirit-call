@@ -8,9 +8,11 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
+import { FlowField } from "../physics/paths.ts"
 import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
-import { currentAttack } from "./moveset.ts"
+import { currentAttack, hasLineOfSight } from "./moveset.ts"
+import { Walls, wallBoxes } from "./motion.ts"
 import { skirmishTurn, steer } from "./behaviors.ts"
 import { stateSpeed } from "./elements.ts"
 import {
@@ -122,12 +124,16 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
 
 /**
  * Enemy movement: each archetype's behavior gives a desired velocity toward
- * or around the player, plus separation so crowds do not stack. Enemies
- * stand still while an attack is in progress: attacks are commitments.
+ * or around the player (see `features/behaviors.ts`), finding the way
+ * around walls when she is out of sight (see `FlowField`), plus separation
+ * so crowds do not stack. Enemies stand still while an attack is in
+ * progress: attacks are commitments.
  */
 export const SteerEnemies = (() => {
   const grid = new SpatialGrid(64)
   const bodies: Array<{ x: number; y: number; r: number; id: number }> = []
+  // Rebuilt only when the walls or the tuning's cell size change (see `FlowField`).
+  let paths = new FlowField(30)
 
   return Game.System("Shooter/SteerEnemies", {
     queries: {
@@ -148,7 +154,8 @@ export const SteerEnemies = (() => {
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
-      player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] })
+      player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] }),
+      walls: Walls
     },
     resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
   }, ({ queries, resources }) => {
@@ -156,6 +163,10 @@ export const SteerEnemies = (() => {
     const dt = resources.time.get().dt
     const [player] = queries.player.each()
     const target = player?.data.position.get()
+    const boxes = wallBoxes(queries.walls.each())
+    if (paths.cellSize !== tuning.paths.cellSize) paths = new FlowField(tuning.paths.cellSize)
+    paths.setWalls(boxes, tuning.paths.clearance)
+    if (target !== undefined) paths.setGoal(target)
 
     grid.clear()
     bodies.length = 0
@@ -241,8 +252,10 @@ export const SteerEnemies = (() => {
       // Attacks are commitments: it stands still from the windup to the end of the recovery.
       let desired: Vec2 = zero
       if (phase === "ready" && target !== undefined) {
-        const toward = sub(target, position)
-        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward: normalizeOr(toward, zero), distance: length(toward), speed, dt })
+        const toward = normalizeOr(sub(target, position), zero)
+        // Straight at her when nothing is in between; around the walls otherwise.
+        const way = hasLineOfSight(position, target, radius, boxes) ? toward : (paths.way(position) ?? toward)
+        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, distance: length(sub(target, position)), speed, dt })
         desired = steering.desired
         data.brain.set(steering.brain)
       }

@@ -192,6 +192,14 @@ export const defaultTuning = {
     windups: 3
   },
 
+  /** How enemies find their way around walls to the player (see physics/paths.ts). */
+  paths: {
+    /** Size of the cells the way is found over. */
+    cellSize: 30,
+    /** Cells where a body this wide would touch a wall are closed (bigger bodies slide along walls). */
+    clearance: 18
+  },
+
   /** Every challenge, by id; the `Challenge` resource picks the one in the arena. */
   challenges,
 

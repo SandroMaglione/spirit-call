@@ -13,8 +13,10 @@ import type { AttackPhase, BrainValue, EnemyMode } from "../schema.ts"
 
 /** Where an enemy stands relative to its target. */
 export interface Situation {
-  /** Toward the target (unit length; zero on top of it). */
+  /** Toward the target (unit length; zero on top of it), straight through walls: what it faces, strafes around, and backs away from. */
   readonly toward: Vec2
+  /** The way to the target around walls (unit length): straight at her when nothing is in between. What it closes in along. */
+  readonly way: Vec2
   /** Center to center. */
   readonly distance: number
   /** Its running speed now (a soaked enemy runs slower). */
@@ -42,16 +44,18 @@ const at = (direction: Vec2, speed: number): Vec2 => scale(normalizeOr(direction
 
 /** The velocity `behavior` wants in `situation` (a skirmisher's in `mode`). */
 export const steer = (tuning: TuningValue, behavior: Behavior, mode: EnemyMode, brain: BrainValue, situation: Situation): Steering => {
-  const { toward, distance, speed, dt } = situation
+  const { toward, way, distance, speed, dt } = situation
   switch (behavior.kind) {
     case "idle":
       return { desired: zero, brain }
     case "chase":
-      return { desired: distance > behavior.stopDistance ? scale(toward, speed) : zero, brain }
+      return { desired: distance > behavior.stopDistance ? scale(way, speed) : zero, brain }
     case "kite": {
       const next = strafing(brain, behavior.strafeSeconds, dt)
       const side = sideways(toward, next.strafe)
-      const radial = distance < behavior.minDistance ? -1 : distance > behavior.maxDistance ? 1 : 0
+      // Out of range it closes in along the way around walls, as if it were the straight line.
+      if (distance > behavior.maxDistance) return { desired: at({ x: way.x + side.x * 0.8, y: way.y + side.y * 0.8 }, speed), brain: next }
+      const radial = distance < behavior.minDistance ? -1 : 0
       return { desired: at({ x: toward.x * radial + side.x * 0.8, y: toward.y * radial + side.y * 0.8 }, speed), brain: next }
     }
     case "skirmish": {
@@ -59,14 +63,15 @@ export const steer = (tuning: TuningValue, behavior: Behavior, mode: EnemyMode, 
       const side = sideways(toward, next.strafe)
       switch (mode) {
         case "engage":
-          return { desired: distance > behavior.stopDistance ? scale(toward, speed) : zero, brain: next }
+          return { desired: distance > behavior.stopDistance ? scale(way, speed) : zero, brain: next }
         case "retreat":
           return { desired: at({ x: -toward.x + side.x * 0.5, y: -toward.y + side.y * 0.5 }, speed), brain: next }
         case "orbit": {
           // Circle the target, drifting back to the ring.
           const band = 35
           const radial = distance < behavior.orbit - band ? -1 : distance > behavior.orbit + band ? 1 : 0
-          return { desired: at({ x: toward.x * radial + side.x, y: toward.y * radial + side.y }, speed * tuning.crowd.orbitSpeed), brain: next }
+          const inward = radial === 1 ? way : scale(toward, radial)
+          return { desired: at({ x: inward.x + side.x, y: inward.y + side.y }, speed * tuning.crowd.orbitSpeed), brain: next }
         }
       }
     }
