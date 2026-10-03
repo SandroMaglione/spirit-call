@@ -93,14 +93,32 @@ describe("dash", () => {
   })
 
   it("respects the cooldown and buffers an early press", () => {
+    // One charge, so the second dash waits for it to come back.
+    const tuning = tuningWith({ dash: { charges: 1 } })
     const cooldownSteps = Math.round(defaultTuning.dash.cooldown / engine.stepSeconds)
     const early = cooldownSteps - 3 // within the input buffer
     // The first dash starts on step 3; the second double tap completes `early` steps later.
-    const run = start({ keys: [...doubleTap("right", 0), ...doubleTap("right", early)] })
+    const run = start({ tuning, keys: [...doubleTap("right", 0), ...doubleTap("right", early)] })
     run.step(early + 3)
     expect(run.player().dash.remaining).toBe(0)
     run.step(4)
     expect(run.player().dash.remaining).toBeGreaterThan(0)
+  })
+
+  it("has two charges: a second dash right after the first, then a wait for one to come back", () => {
+    const between = Math.ceil(defaultTuning.dash.duration / engine.stepSeconds) + 2
+    const run = start({ keys: [...doubleTap("right", 0), ...doubleTap("left", between), ...doubleTap("right", between * 2)] })
+    run.step(3)
+    expect(run.player().dash.charges).toBe(defaultTuning.dash.charges - 1)
+    run.step(between)
+    // The second dash went at once: both charges are spent.
+    expect(run.player().dash.charges).toBe(0)
+    expect(run.player().dash.remaining).toBeGreaterThan(0)
+    run.step(between)
+    // A third has to wait for a charge.
+    expect(run.player().dash.remaining).toBe(0)
+    run.step(Math.ceil(defaultTuning.dash.cooldown / engine.stepSeconds))
+    expect(run.player().dash.charges).toBeGreaterThanOrEqual(1)
   })
 
   it("cannot tunnel through a pillar, even with an extreme dash", () => {

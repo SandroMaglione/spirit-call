@@ -12,12 +12,12 @@ import type { ReactionKind } from "../schema.ts"
 import type { SoundName } from "./sound.ts"
 
 /** The sound of each kind of move. It climbs in pitch through the combo (`comboPitchStep` per move); a power move goes deeper. */
-const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrust: "thrust", spin: "spin", shot: "shot", disc: "disc" }
+const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrust: "thrust", spin: "spin", shot: "shot", disc: "disc", lob: "throw" }
 const comboPitchStep = 0.067
 const powerPitch = 0.85
 
 /** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`; a volley as its shells land). */
-const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", thunderclap: null }
+const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", blast: "wave", leap: "boom", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", thunderclap: null }
 
 /** The sound of elements meeting (wind carrying a state is heard as the blow that pushed it). */
 const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite", soak: "splash", steam: "sizzle", fizzle: "sizzle", carry: null, stun: "slam", shock: "zap", swirl: "nova" }

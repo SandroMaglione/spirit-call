@@ -58,18 +58,24 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     const dash = data.dash.get()
     let remaining = dash.remaining
     let direction = dash.direction
-    const cooldown = Math.max(0, dash.cooldown - dt)
-    let nextCooldown = cooldown
+    // Spent charges come back one at a time.
+    let charges = Math.min(tuning.dash.charges, dash.charges)
+    let cooldown = charges < tuning.dash.charges ? dash.cooldown - dt : 0
+    if (charges < tuning.dash.charges && cooldown <= 0) {
+      charges += 1
+      cooldown = charges < tuning.dash.charges ? cooldown + tuning.dash.cooldown : 0
+    }
     let buffered = controls.dashPressed ? tuning.dash.inputBuffer : Math.max(0, dash.buffered - dt)
     let since = dash.since + dt
     let perfect = dash.perfect
     let from = dash.from
 
-    if (remaining <= 0 && buffered > 0 && cooldown <= 0) {
+    if (remaining <= 0 && buffered > 0 && charges > 0) {
       direction = normalizeOr(controls.move, faces)
       remaining = tuning.dash.duration
       events.action.emit({ kind: "dash", at: position })
-      nextCooldown = tuning.dash.cooldown
+      if (cooldown <= 0) cooldown = tuning.dash.cooldown
+      charges -= 1
       buffered = 0
       since = 0
       perfect = false
@@ -96,6 +102,6 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       data.velocity.set(moveToward(carried, target, rate * dt))
     }
 
-    data.dash.set({ remaining, cooldown: nextCooldown, buffered, direction, since, perfect, from })
+    data.dash.set({ remaining, charges, cooldown, buffered, direction, since, perfect, from })
   }
 })

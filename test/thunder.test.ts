@@ -12,7 +12,8 @@ import type { StartOptions } from "./helpers.ts"
 const totemSpec = defaultTuning.skills.sparkTotem.effect
 const clapSpec = defaultTuning.skills.thunderclap.effect
 const rules = defaultTuning.elements.thunder
-const sturdy = tuningWith({ enemies: { dummy: { hp: 1000 } } })
+// Sturdy dummies; the totem's zaps on its own rhythm (its repel, zapping and throwing out what steps in, is tested apart).
+const sturdy = tuningWith({ enemies: { dummy: { hp: 1000 } }, skills: { sparkTotem: { effect: { repel: 0 } } } })
 const stormcaller = { character: "stormcaller" as const }
 
 const World = Game.Inspector("Test/Thunder", {
@@ -91,6 +92,17 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
     expect(run.world().enemies[0]!.health).toBe(1000 - 2 * totemSpec.power)
   })
 
+  it("zaps an enemy stepping into its reach and throws it back out", () => {
+    const repelling = tuningWith({ enemies: { dummy: { hp: 1000 } } })
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)], tuning: repelling })
+    run.step(3)
+    expect(run.world().enemies[0]!.health).toBeLessThan(1000)
+    run.step(40)
+    const [totem] = run.world().totems
+    const dummy = run.world().enemies[0]!
+    expect(Math.hypot(dummy.position.x - totem!.at.x, dummy.position.y - totem!.at.y)).toBeGreaterThan(totemSpec.radius)
+  })
+
   it("leaves enemies beyond its reach alone", () => {
     const run = range([{ x: totemSpec.offset + totemSpec.radius + 40, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
     run.step(3 + steps(totemSpec.tick))
@@ -99,13 +111,13 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
 
   it("heals the one on the field instead, while she is within its reach hurt; once she is whole, it zaps again", () => {
     const run = range([{ x: 120, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
-    run.runtime.tick(Game.Schedule(Hurt(30)))
+    run.runtime.tick(Game.Schedule(Hurt(50)))
     run.step(3)
     const max = run.world().player!.max
-    expect(run.world().player!.current).toBeCloseTo(30 + (max * totemSpec.heal) / 100, 6)
+    expect(run.world().player!.current).toBeCloseTo(50 + (max * totemSpec.heal) / 100, 6)
     expect(run.world().enemies[0]!.health).toBe(1000)
     // Healed to the full, it turns on the enemy.
-    run.step(steps(totemSpec.tick * Math.ceil((max - 30) / ((max * totemSpec.heal) / 100))) + 2)
+    run.step(steps(totemSpec.tick * Math.ceil((max - 50) / ((max * totemSpec.heal) / 100))) + 2)
     expect(run.world().player!.current).toBe(max)
     run.step(steps(totemSpec.tick))
     expect(run.world().enemies[0]!.health).toBeLessThan(1000)

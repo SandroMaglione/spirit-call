@@ -65,7 +65,9 @@ export const Facing = Descriptor.Component<FacingValue>()("Shooter/Facing")
 export interface DashValue {
   /** Time left in the current dash; 0 when not dashing. */
   readonly remaining: number
-  /** Time until the next dash is available. */
+  /** Dashes ready (see `Tuning.dash.charges`). */
+  readonly charges: number
+  /** Time until the next charge comes back (0 while all are ready). */
   readonly cooldown: number
   /** Time left on a buffered dash press. */
   readonly buffered: number
@@ -138,6 +140,8 @@ export interface TotemValue {
   readonly remaining: number
   /** Time until its next zap. */
   readonly nextTick: number
+  /** Bodies of the other side within its reach last step (one stepping in is zapped and thrown out, see `TotemEffect.repel`). */
+  readonly inside: ReadonlyArray<number>
 }
 export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
 
@@ -188,6 +192,10 @@ export interface Blow {
    * none, no hit-stop, and no push; its element only scales its damage.
    */
   readonly periodic: boolean
+  /** It deals `factor` times its damage to a body in `state` (see `BasicAttackSpec.against`); `null` for none. */
+  readonly against: { readonly state: StateId; readonly factor: number } | null
+  /** It jumps on to the nearest other body of the side it hits within `range` with `share` of its damage (see `BasicAttackSpec.chain`); `null` for none. */
+  readonly chain: { readonly range: number; readonly share: number } | null
 }
 
 /** An element carried by a blow (see `content/elements.ts`). */
@@ -198,7 +206,7 @@ export interface ElementHit {
 
 /** A blow of `damage` and `knockback`; the other fields default to none. */
 export const blow = (spec: Pick<Blow, "damage" | "knockback"> & Partial<Blow>): Blow =>
-  ({ charges: false, hitStop: 0, heavy: false, source: null, element: null, periodic: false, ...spec })
+  ({ charges: false, hitStop: 0, heavy: false, source: null, element: null, periodic: false, against: null, chain: null, ...spec })
 
 /**
  * A state lasting on a body (see `content/elements.ts`): burning (taking
@@ -315,6 +323,8 @@ export interface WeaponValue {
   readonly spent: number
   /** Seconds left reloading (0: not reloading); the magazine is full when it ends. */
   readonly reloading: number
+  /** Seconds since her last dash strike (one per dash, see `BasicAttackSpec.dash`). */
+  readonly sinceDashStrike: number
 }
 export const Weapon = Descriptor.Component<WeaponValue>()("Shooter/Weapon")
 
@@ -358,6 +368,8 @@ export interface DiscValue {
   /** Seconds on the way back; a disc that cannot reach its thrower is dropped after a while. */
   readonly back: number
   readonly hit: ReadonlyArray<number>
+  /** Turns left toward the next soaked enemy after hitting a soaked one (see `DiscMove.bounces`). */
+  readonly bounces: number
 }
 export const Disc = Descriptor.Component<DiscValue>()("Shooter/Disc")
 
@@ -521,8 +533,12 @@ export const Dodged = Descriptor.Event<{ readonly target: number; readonly at: V
 /** The player dodged perfectly (see `features/dodge.ts`), for effects. */
 export const PerfectDodged = Descriptor.Event<{ readonly at: Vec2 }>()("Shooter/PerfectDodged")
 
-/** Slow motion (a perfect dodge): the enemies run at `scale` for `remaining` more seconds, the team at its own pace (see `enemyPace`). */
-export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; readonly scale: number }>()("Shooter/SlowMotion")
+/**
+ * Slow motion: the enemies run at `scale` for `remaining` more seconds, the
+ * team at its own pace (see `enemyPace`). `dodge`: a perfect dodge's (its
+ * glow shows on screen), not a fall's beat.
+ */
+export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; readonly scale: number; readonly dodge: boolean }>()("Shooter/SlowMotion")
 
 /** An enemy broke (see `Poise`), for effects. */
 export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind }>()("Shooter/Broke")

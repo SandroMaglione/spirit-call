@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, engine } from "../src/config/tuning.ts"
+import { defaultTuning, tuningWith, engine } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, EnemyMode, Game, Player, Position, RunScope } from "../src/schema.ts"
 import { ClearEnemies, start } from "./helpers.ts"
@@ -23,7 +23,7 @@ const World = Game.Inspector("Test/Skirmish", {
 
 /** Chasers at `distance` around a player who stands still (and never dies: huge hp). */
 const surrounded = (count: number, distance: number) => {
-  const tuning = { ...defaultTuning, player: { ...defaultTuning.player, hp: 1_000_000 } }
+  const tuning = tuningWith({ characters: { swordsman: { stats: { hp: 1_000_000 } } } })
   const run = start({ tuning })
   const Place = Game.System("Test/Surround", {}, ({ commands }) => {
     for (let index = 0; index < count; index++) {

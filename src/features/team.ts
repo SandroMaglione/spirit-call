@@ -29,6 +29,7 @@ import {
   Game,
   Health,
   HitStop,
+  SlowMotion,
   Invulnerable,
   Member,
   Passives,
@@ -72,12 +73,12 @@ export interface Carried {
   readonly dash: DashValue
 }
 
-/** A body that has not moved yet, aiming right, its dash ready. */
-const fresh = (at: Vec2): Carried => ({
+/** A body that has not moved yet, aiming right, its dashes ready. */
+const fresh = (tuning: TuningValue, at: Vec2): Carried => ({
   motion: { previous: at, velocity: { x: 0, y: 0 }, invulnerable: 0 },
   aim: { x: 1, y: 0 },
   facing: { x: 1, y: 0 },
-  dash: { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
+  dash: { remaining: 0, charges: tuning.dash.charges, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
 })
 
 /** `member`'s body on the field at `at`: her size and look (with her weapon), and what it carries. */
@@ -103,7 +104,7 @@ export const SpawnTeam = Game.System("Shooter/SpawnTeam", {
   resources.team.get().slice(0, teamSize).forEach((build, slot) => {
     const resolved = resolveBuild(tuning, build)
     const member = makeMember(resolved, slot)
-    if (slot === 0) commands.spawnIn(RunScope, Game.Command.insert(member, ...fieldParts(tuning, resolved, at, fresh(at))))
+    if (slot === 0) commands.spawnIn(RunScope, Game.Command.insert(member, ...fieldParts(tuning, resolved, at, fresh(tuning, at))))
     else commands.spawnIn(RunScope, member)
   })
 })
@@ -167,7 +168,8 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
     controls: Game.System.readResource(Controls),
     tuning: Game.System.readResource(Tuning),
     teamSwitch: Game.System.writeResource(TeamSwitch),
-    hitStop: Game.System.readResource(HitStop)
+    hitStop: Game.System.readResource(HitStop),
+    slowMotion: Game.System.writeResource(SlowMotion)
   },
   events: { action: Game.System.writeEvent(Action) }
 }, ({ queries, resources, events, commands }) => {
@@ -209,5 +211,9 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   commands.insert(field.entity.id, [Weapon, initialWeapon({ attack: field.data.weapon.get().attack })])
   commands.insert(incoming.entity, ...fieldParts(tuning, incoming, at, carried))
   resources.teamSwitch.set({ cooldown: tuning.team.switchCooldown })
+  // After a fall, a beat: the enemies slow for a moment as she comes in.
+  if (fell && tuning.team.fallBeat.seconds > 0) {
+    resources.slowMotion.update((slow) => (slow.remaining > tuning.team.fallBeat.seconds ? slow : { remaining: tuning.team.fallBeat.seconds, scale: tuning.team.fallBeat.scale, dodge: false }))
+  }
   events.action.emit({ kind: "switch", at, character: incoming.character, fell })
 })

@@ -30,8 +30,35 @@ export interface CutEffect extends EffectBase {
   readonly kind: "cut"
   readonly length: number
   readonly width: number
+  /** Its element left on the ground along it (pools spaced along the lane), or `null`. */
+  readonly leaves: GroundSpec | null
   /** How long the cut's hitbox stays out (seconds). */
   readonly active: number
+}
+
+/**
+ * A blast fanning out in front of the caster toward the aim: a cone of
+ * `radius`, `arcDegrees` wide, out for `active` seconds, hitting everything
+ * in it once and driving it away from her.
+ */
+export interface BlastEffect extends EffectBase {
+  readonly kind: "blast"
+  readonly radius: number
+  readonly arcDegrees: number
+  readonly active: number
+}
+
+/**
+ * A burst around the caster as she leaps away from her aim: a blast of
+ * `radius` (out for `active`), then she is thrown `distance` back, leaving
+ * her element's pool where she stood.
+ */
+export interface LeapEffect extends EffectBase {
+  readonly kind: "leap"
+  readonly radius: number
+  readonly active: number
+  readonly distance: number
+  readonly leaves: GroundSpec | null
 }
 
 /** Lobbed toward the aim over walls (clamped to `maxRange`); explodes after landing. */
@@ -111,6 +138,8 @@ export interface TotemEffect extends EffectBase {
   readonly radius: number
   readonly heal: number
   readonly jumps: number
+  /** A body of the other side stepping into its reach is zapped and thrown back out this hard (0: it is not). */
+  readonly repel: number
 }
 
 /**
@@ -125,9 +154,12 @@ export interface ThunderclapEffect extends EffectBase {
   readonly strikes: number
   readonly jumps: number
   readonly heal: number
+  /** Seconds every struck enemy is stunned, and the share of its break bar the strike fills. */
+  readonly stun: number
+  readonly breakFill: number
 }
 
-export type SkillEffect = CutEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect
+export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -152,6 +184,8 @@ export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in Ski
 
 /** Effect builders, also used by passives that set off a skill effect. */
 export const cut = (spec: Omit<CutEffect, "kind">): CutEffect => ({ kind: "cut", ...spec })
+export const blast = (spec: Omit<BlastEffect, "kind">): BlastEffect => ({ kind: "blast", ...spec })
+export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "leap", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
 export const nova = (spec: Omit<NovaEffect, "kind">): NovaEffect => ({ kind: "nova", ...spec })
 export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
@@ -163,65 +197,50 @@ const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<E
 /** Every skill, by id. */
 export const skills = {
   /**
-   * The sword's special (id `bladeWave`, from when it was a cut): a gale
-   * whirling at her feet that pulls enemies around her into its center,
-   * grazing them as it holds them: it gathers a crowd into reach of the next
-   * swings (its own damage is small), and what it drags into each other
-   * shares its states.
+   * The sword's special (id `bladeWave`, from when it was a cut): a gust
+   * blasting out all around her, driving everything it catches far back:
+   * into walls (stunned), into each other (sharing their states), out of her
+   * way.
    */
   bladeWave: skill({
-    name: "Gale",
-    label: "GALE",
-    cooldown: 5,
+    name: "Gust",
+    label: "GUST",
+    cooldown: 2.5,
     energy: 0,
     invulnerability: 0,
-    effect: vortex({ maxRange: 0, radius: 270, seconds: 2.4, tick: 0.4, pull: 0.3, power: 3, element: "wind", knockback: 0, hitStop: 0, heavy: false })
-  }),
-  /** Lobbed to the cursor over walls; explodes after landing, setting what it hits on fire and leaving a fire pool. */
-  grenade: skill({
-    name: "Grenade",
-    label: "GRENADE",
-    cooldown: 4,
-    energy: 0,
-    invulnerability: 0,
-    effect: lob({
-      maxRange: 360,
-      flightTime: 0.35,
-      fuse: 0.45,
-      radius: 95,
-      power: 38,
-      element: "fire",
-      knockback: 380,
-      hitStop: 0,
-      heavy: false,
-      leaves: { element: "fire", radius: 80, seconds: 3 }
-    })
-  }),
-  /** A burst of water lobbed to the cursor: it soaks what it hits and leaves a puddle that slows anyone in it. */
-  splash: skill({
-    name: "Splash",
-    label: "SPLASH",
-    cooldown: 4,
-    energy: 0,
-    invulnerability: 0,
-    effect: lob({
-      maxRange: 340,
-      flightTime: 0.25,
-      fuse: 0.08,
-      radius: 100,
-      power: 24,
-      element: "water",
-      knockback: 260,
-      hitStop: 0,
-      heavy: false,
-      leaves: { element: "water", radius: 115, seconds: 5 }
-    })
+    effect: blast({ radius: 200, arcDegrees: 360, active: 0.12, power: 20, element: "wind", knockback: 1400, hitStop: 0.06, heavy: false })
   }),
   /**
-   * The Swordsman's ultimate: a cyclone set down at the cursor that pulls
-   * everything around it together for a few seconds, cutting as it turns.
-   * What it drags into each other shares its states (a burning pack spreads
-   * its fire).
+   * The Gunner's special: a burst of fire at her feet, throwing back and
+   * setting alight what crowds her, as she leaps away from where she aims,
+   * leaving fire where she stood (enemies keep out of it).
+   */
+  flareJump: skill({
+    name: "Flare Jump",
+    label: "FLARE",
+    cooldown: 3,
+    energy: 0,
+    invulnerability: 0.35,
+    effect: leap({ radius: 150, active: 0.1, distance: 230, power: 22, element: "fire", knockback: 900, hitStop: 0.05, heavy: false, leaves: { element: "fire", radius: 70, seconds: 2.5 } })
+  }),
+  /**
+   * The Tidecaller's special: a wave rolling out ahead of her, soaking and
+   * shoving back everything in its way, and leaving puddles behind (that
+   * slow, and that her discs and thunder make the most of).
+   */
+  tidalWave: skill({
+    name: "Tidal Wave",
+    label: "WAVE",
+    cooldown: 2.5,
+    energy: 0,
+    invulnerability: 0,
+    effect: cut({ length: 360, width: 150, active: 0.15, power: 22, element: "water", knockback: 900, hitStop: 0.04, heavy: false, leaves: { element: "water", radius: 60, seconds: 4 } })
+  }),
+  /**
+   * The Swordsman's ultimate: a cyclone whirling at her feet that pulls
+   * everything around her into its center for a few seconds, cutting as it
+   * turns. What it drags into each other shares its states, and it takes on
+   * the first fire, water, or thunder it touches (see `AbsorbIntoVortices`).
    */
   cyclone: skill({
     name: "Cyclone",
@@ -229,7 +248,7 @@ export const skills = {
     cooldown: 0,
     energy: 100,
     invulnerability: 0.5,
-    effect: vortex({ maxRange: 340, radius: 170, seconds: 2.4, tick: 0.3, pull: 0.35, power: 14, element: "wind", knockback: 0, hitStop: 0, heavy: false })
+    effect: vortex({ maxRange: 0, radius: 300, seconds: 3.2, tick: 0.35, pull: 0.32, power: 9, element: "wind", knockback: 0, hitStop: 0, heavy: false })
   }),
   /** The Gunner's ultimate: a volley of fire shells around the cursor, each leaving a fire pool. */
   barrage: skill({
@@ -266,24 +285,30 @@ export const skills = {
   /**
    * The Stormcaller's special: a totem planted at her feet that zaps
    * enemies around it with thunder, or heals the one on the field when she
-   * stands within its reach hurt (instead of zapping an enemy).
+   * stands within its reach hurt (instead of zapping an enemy). An enemy
+   * stepping into its reach is zapped and thrown back out: a ring she can
+   * fight from.
    */
   sparkTotem: skill({
     name: "Spark Totem",
     label: "TOTEM",
-    cooldown: 9,
+    cooldown: 6,
     energy: 0,
     invulnerability: 0,
-    effect: totem({ offset: 28, seconds: 8, tick: 0.9, radius: 160, heal: 4, jumps: 2, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
+    effect: totem({ offset: 28, seconds: 8, tick: 0.9, radius: 160, heal: 4, jumps: 2, repel: 700, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
   }),
-  /** The Stormcaller's ultimate: thunder striking the enemies around her, jumping between them, and healing the whole team, the bench too. */
+  /**
+   * The Stormcaller's ultimate: thunder striking the enemies around her,
+   * jumping between them, stunning them and filling their break bars, and
+   * healing the whole team, the bench too.
+   */
   thunderclap: skill({
     name: "Thunderclap",
     label: "CLAP",
     cooldown: 0,
     energy: 100,
     invulnerability: 0.5,
-    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 20, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
+    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 20, stun: 1.5, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
   })
 }
 

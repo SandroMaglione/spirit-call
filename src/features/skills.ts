@@ -78,6 +78,11 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
   switch (effect.kind) {
     case "cut":
       return { kind: "direction", reach: effect.length }
+    case "blast":
+      return { kind: "direction", reach: effect.radius }
+    case "leap":
+      // She leaps away from where she aims.
+      return { kind: "direction", reach: effect.distance }
     case "vortex":
       // A whirl with no range is set down at her feet.
       return effect.maxRange > 0 ? { kind: "point", range: effect.maxRange } : { kind: "self" }
@@ -191,8 +196,16 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     if (effect.kind !== "cut") continue
     const { from, direction } = cast
     const blocked = sweepCircleBoxes(from, scale(direction, effect.length), effect.width / 4, wallBoxes(queries.walls.each()))
+    const length = effect.length * (blocked?.time ?? 1)
+    // What it leaves along its way: pools spaced down the lane, from a little ahead of the caster.
+    if (effect.leaves !== null) {
+      const spacing = effect.leaves.radius * 1.6
+      for (let along = effect.leaves.radius; along <= length; along += spacing) {
+        commands.spawnIn(RunScope, makeGround(effect.leaves, { x: from.x + direction.x * along, y: from.y + direction.y * along }, cast.atk, cast.charges))
+      }
+    }
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-      area: { kind: "lane", origin: from, direction, length: effect.length * (blocked?.time ?? 1), halfWidth: effect.width / 2 },
+      area: { kind: "lane", origin: from, direction, length, halfWidth: effect.width / 2 },
       faction: cast.faction,
       blow: castBlow(cast, effect),
       remaining: effect.active,
@@ -203,6 +216,61 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     if (caster.ok) caster.value.data.aim.set(direction)
     const facer = lookup.getHandle(cast.caster, Facers)
     if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
+  }
+})
+
+/** Blasts: a cone fanning out from the caster toward the aim, driving what it hits away from her; she turns that way. */
+export const CastBlasts = Game.System("Shooter/CastBlasts", {
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ events, lookup, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "blast") continue
+    const { from, direction } = cast
+    commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+      area: { kind: "cone", origin: from, direction, radius: effect.radius, halfAngle: (effect.arcDegrees * Math.PI) / 360 },
+      faction: cast.faction,
+      blow: castBlow(cast, effect),
+      remaining: effect.active,
+      hit: []
+    }]))
+    const caster = lookup.getHandle(cast.caster, Turning)
+    if (caster.ok) caster.value.data.aim.set(direction)
+    const facer = lookup.getHandle(cast.caster, Facers)
+    if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
+  }
+})
+
+/**
+ * Leaps: a burst around the caster (driving what it hits away), the pool
+ * left where she stood, and the caster thrown back away from her aim (a
+ * push that carries her `distance`, see `Tuning.knockback`).
+ */
+const Leapers = Game.Query({ selection: { position: Game.Query.read(Position), knockback: Game.Query.write(Knockback) } })
+
+export const CastLeaps = Game.System("Shooter/CastLeaps", {
+  resources: { tuning: Game.System.readResource(Tuning) },
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
+}, ({ resources, events, lookup, commands }) => {
+  const decay = resources.tuning.get().knockback.decay
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "leap") continue
+    const at = cast.from
+    commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+      area: { kind: "circle", center: at, radius: effect.radius },
+      faction: cast.faction,
+      blow: castBlow(cast, effect),
+      remaining: effect.active,
+      hit: []
+    }]))
+    if (effect.leaves !== null) commands.spawnIn(RunScope, makeGround(effect.leaves, at, cast.atk, cast.charges))
+    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element })
+    const caster = lookup.getHandle(cast.caster, Leapers)
+    if (caster.ok) {
+      const away = scale(cast.direction, -effect.distance * decay)
+      caster.value.data.knockback.update((push) => ({ x: push.x + away.x, y: push.y + away.y }))
+    }
   }
 })
 

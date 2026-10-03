@@ -10,7 +10,7 @@
 import { normalizeOr, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
-import { Damage, Disc, Game, Health, Impact, Position, PrevPosition, Renderable, Time } from "../schema.ts"
+import { Damage, Disc, ElementState, Game, Health, Impact, Position, PrevPosition, Renderable, Time, Tuning } from "../schema.ts"
 import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { shieldBlocks, sweepTargets, targetOf, Targets } from "./targets.ts"
@@ -34,19 +34,25 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
   queries: {
     discs: Game.Query({ selection: { position: Game.Query.write(Position), disc: Game.Query.write(Disc) } }),
     targets: Targets,
+    states: Game.Query({ selection: { state: Game.Query.read(ElementState) }, with: [Health] }),
     walls: Walls
   },
-  resources: { time: Game.System.readResource(Time) },
+  resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) },
   events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) }
 }, ({ queries, resources, events, lookup, commands }) => {
   const dt = resources.time.get().dt
   const boxes = wallBoxes(queries.walls.each())
   const targets = queries.targets.each().map(({ entity, data }) => targetOf(entity.id, data))
+  // Who is soaked: a disc hitting one turns toward the next (see `DiscMove.bounces`).
+  const soaked = new Set(queries.states.each().filter(({ data }) => data.state.get().current?.id === "soaked").map(({ entity }) => entity.id.value))
+  const bounceRange = resources.tuning.get().discBounce.range
 
   for (const { entity, data } of queries.discs.each()) {
     let disc = data.disc.get()
     const origin = data.position.get()
     const hit = [...disc.hit]
+    // Where it turns after hitting a soaked enemy: toward the nearest other soaked one in range.
+    let bounce: { readonly at: Vec2; readonly toward: Vec2 } | undefined
     /** Hits everything it meets along `delta` (up to `until`, a fraction of it), once each; `true` when a shield turns it back. */
     const sweep = (delta: Vec2, until: number, push: Vec2): boolean => {
       for (const contact of sweepTargets(origin, delta, disc.radius, targets, disc.faction, hit, until)) {
@@ -56,6 +62,18 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         }
         hit.push(contact.target.id)
         events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: disc.faction, direction: push, blow: disc.blow })
+        if (disc.phase === "out" && disc.bounces > 0 && bounce === undefined && soaked.has(contact.target.id)) {
+          let next: (typeof targets)[number] | undefined
+          const away = (other: (typeof targets)[number]) => Math.hypot(other.at.x - contact.at.x, other.at.y - contact.at.y)
+          for (const other of targets) {
+            if (hit.includes(other.id) || other.faction === disc.faction || !soaked.has(other.id) || away(other) > bounceRange) continue
+            if (next === undefined || away(other) < away(next)) next = other
+          }
+          if (next !== undefined) {
+            bounce = { at: contact.at, toward: next.at }
+            return false
+          }
+        }
       }
       return false
     }
@@ -67,6 +85,13 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         const wall = sweepCircleBoxes(origin, delta, disc.radius, boxes)
         const until = wall?.time ?? 1
         const blocked = sweep(delta, until, disc.direction)
+        if (bounce !== undefined) {
+          // Off the soaked enemy toward the next, with the way there (and a little more) to fly.
+          const toward = sub(bounce.toward, bounce.at)
+          data.position.set(bounce.at)
+          disc = { ...disc, direction: normalizeOr(toward, disc.direction), range: Math.hypot(toward.x, toward.y) + disc.radius * 2, bounces: disc.bounces - 1, hit }
+          break
+        }
         const at = { x: origin.x + delta.x * until, y: origin.y + delta.y * until }
         data.position.set(at)
         if (wall !== undefined) events.impact.emit({ at, faction: disc.faction, wall: true, shielded: false })

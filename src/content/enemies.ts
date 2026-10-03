@@ -279,12 +279,12 @@ export const enemies = {
     group: 1,
     attacks: [
       volley("volley", {
-        minRange: 200, triggerRange: 560, aimLock: 0.3, windup: 0.7, active: 0, recovery: 0.35, cooldown: 1.2,
-        count: 3, spreadDegrees: 12, projectileSpeed: 460, projectileRadius: 7, range: 820, power: 10, knockback: 180, lead: 0.6
+        minRange: 200, triggerRange: 560, aimLock: 0.3, windup: 0.8, active: 0, recovery: 0.4, cooldown: 2.2,
+        count: 2, spreadDegrees: 1.5, projectileSpeed: 460, projectileRadius: 7, range: 820, power: 10, knockback: 180, lead: 0.6
       }),
       // A wide spray of water at whoever comes close: slower bolts, but hard to slip between.
       volley("spray", {
-        triggerRange: 260, aimLock: 0.35, windup: 0.6, active: 0, recovery: 0.5, cooldown: 1.4,
+        triggerRange: 260, aimLock: 0.35, windup: 0.6, active: 0, recovery: 0.5, cooldown: 2,
         count: 5, spreadDegrees: 26, projectileSpeed: 340, projectileRadius: 8, range: 420, power: 7, knockback: 160, element: "water"
       })
     ],
@@ -362,8 +362,8 @@ export const enemies = {
     group: 1,
     attacks: [
       lob("bomb", {
-        minRange: 140, triggerRange: 460, maxReach: 460, radius: 85, windup: 0.75, aimLock: 0.35, active: 0, recovery: 0.5, cooldown: 1.5,
-        flightTime: 0.65, fuse: 0.3, power: 22, knockback: 380, element: "fire", lead: 0.5, leaves: { element: "fire", radius: 70, seconds: 2.5 }
+        minRange: 140, triggerRange: 460, maxReach: 460, radius: 75, windup: 0.85, aimLock: 0.35, active: 0, recovery: 0.6, cooldown: 2.8,
+        flightTime: 0.65, fuse: 0.3, power: 22, knockback: 380, element: "fire", lead: 0.5, leaves: { element: "fire", radius: 60, seconds: 1.8 }
       }),
       // Up close it swipes ablaze, and backs off to throw again.
       melee("swipe", { triggerRange: 85, reach: 95, arcDegrees: 110, windup: 0.5, aimLock: 0.3, active: 0.1, recovery: 0.5, cooldown: 0.8, power: 14, knockback: 380, element: "fire" })
@@ -391,7 +391,7 @@ export const enemies = {
     attacks: [
       volley("shot", {
         triggerRange: 900, windup: 1.0, aimLock: 0.35, active: 0, recovery: 0.6, cooldown: 1.6,
-        count: 1, spreadDegrees: 0, projectileSpeed: 950, projectileRadius: 8, range: 1000, power: 20, knockback: 260, element: "thunder", lead: 0.5
+        count: 1, spreadDegrees: 0, projectileSpeed: 600, projectileRadius: 8, range: 1000, power: 20, knockback: 260, element: "thunder", lead: 0.5
       })
     ],
     respawnDelay: 0

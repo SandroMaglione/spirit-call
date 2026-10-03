@@ -7,7 +7,7 @@ import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
-import { cut } from "../src/content/skills.ts"
+import { cut, lob, vortex } from "../src/content/skills.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { damageDealt, damageTaken } from "../src/features/build.ts"
@@ -62,12 +62,65 @@ export const gunShot = defaultTuning.attacks.gun.combo[0] as ShotMove
  * Gale): a lane toward the aim that drives what it hits back in a glide.
  * No shipped skill is a cut now; tests of cuts use this one.
  */
-export const windCut = cut({ length: 320, width: 120, power: 34, element: "wind", knockback: 900, active: 0.12, hitStop: 0.06, heavy: true })
+export const windCut = cut({ length: 320, width: 120, power: 34, element: "wind", knockback: 900, active: 0.12, hitStop: 0.06, heavy: true, leaves: null })
 
 /** `tuning` with the Swordsman's special swapped for `windCut`. */
 export const withWindCut = (tuning: Tuning = defaultTuning): Tuning =>
   // The content types each skill by its effect; a test swaps one kind for another.
   ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Wind Cut", effect: windCut } } }) as unknown as Tuning
+
+/**
+ * The Gale (the Swordsman's special before it became the Gust): a whirl at
+ * her feet pulling enemies in. The Cyclone, her ultimate, is one too;
+ * tests of whirls at her feet use this one on Space.
+ */
+export const gale = vortex({ maxRange: 0, radius: 270, seconds: 2.4, tick: 0.4, pull: 0.3, power: 3, element: "wind", knockback: 0, hitStop: 0, heavy: false })
+
+/** `tuning` with the Swordsman's special swapped for `gale`. */
+export const withGale = (tuning: Tuning = defaultTuning): Tuning =>
+  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Gale", effect: gale } } }) as unknown as Tuning
+
+/** The Grenade (the Gunner's special before the Flare Jump): lobbed to the cursor, bursting in fire and leaving a fire pool. */
+export const grenadeSkill = {
+  name: "Grenade",
+  label: "GRENADE",
+  cooldown: 2.5,
+  energy: 0,
+  invulnerability: 0,
+  effect: lob({ maxRange: 360, flightTime: 0.35, fuse: 0.45, radius: 95, power: 38, element: "fire", knockback: 380, hitStop: 0, heavy: false, leaves: { element: "fire", radius: 80, seconds: 3 } })
+} as const
+
+/** The Splash (the Tidecaller's special before the Tidal Wave): water lobbed to the cursor, soaking and leaving a puddle. */
+export const splashSkill = {
+  name: "Splash",
+  label: "SPLASH",
+  cooldown: 2.5,
+  energy: 0,
+  invulnerability: 0,
+  effect: lob({ maxRange: 340, flightTime: 0.25, fuse: 0.08, radius: 100, power: 24, element: "water", knockback: 260, hitStop: 0, heavy: false, leaves: { element: "water", radius: 115, seconds: 5 } })
+} as const
+
+/**
+ * `tuning` with the Gunner's and the Tidecaller's specials swapped back for
+ * the Grenade and the Splash: tests of lobbed skills, elements, and touch
+ * throws were written with those on Space (see `StartOptions.kits`).
+ */
+export const withLobbedSpecials = (tuning: Tuning = defaultTuning): Tuning => {
+  // Only the shipped ones are swapped: a test that set its own lob keeps it.
+  const skills = tuning.skills as Record<string, { readonly effect: { readonly kind: string } }>
+  return ({
+    ...tuning,
+    skills: {
+      ...tuning.skills,
+      flareJump: skills.flareJump!.effect.kind === "leap" ? grenadeSkill : skills.flareJump,
+      tidalWave: skills.tidalWave!.effect.kind === "cut" ? splashSkill : skills.tidalWave
+    }
+  }) as unknown as Tuning
+}
+
+/** `tuning` (with the lobbed specials) whose Grenade is changed by `patch`. */
+export const withGrenade = (patch: Partial<typeof grenadeSkill.effect>, tuning: Tuning = defaultTuning): Tuning =>
+  ({ ...tuning, skills: { ...tuning.skills, flareJump: { ...grenadeSkill, effect: { ...grenadeSkill.effect, ...patch } } } }) as unknown as Tuning
 
 /** The gunner: the gun, the grenade as her special, and the Barrage as her ultimate. */
 export const gunner: BuildValue = { character: "gunner" }
@@ -114,6 +167,8 @@ export interface StartOptions {
   readonly waves?: boolean
   /** The arena every challenge is fought in. Defaults to the courtyard (no hazards). */
   readonly arena?: ArenaId
+  /** The specials as shipped; by default the Gunner and the Tidecaller lob the Grenade and the Splash (see `withLobbedSpecials`). */
+  readonly kits?: "shipped" | "lobbed"
 }
 
 /** A headless run after setup. Timeline frame `n` is read by fixed step `n + 1`. */
@@ -122,7 +177,7 @@ export const start = (options: StartOptions = {}) => {
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
-    tuning: inArena(withWaves(options.tuning ?? defaultTuning, options.waves ?? false), options.arena ?? "courtyard"),
+    tuning: inArena(withWaves(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning), options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
     ...(options.team === undefined ? {} : { team: options.team }),
     ...(options.challenge === undefined ? {} : { challenge: options.challenge }),

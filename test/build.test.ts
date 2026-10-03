@@ -14,7 +14,7 @@ describe("builds", () => {
     expect(build.weapon).toBe(gunner.weapon)
     expect(build.stats).toEqual(withWeapon(gunner.stats, defaultTuning.weapons[gunner.weapon]))
     expect(build.attack).toBe(gunner.attack)
-    expect(build.skills).toEqual({ special: "grenade", ultimate: "barrage" })
+    expect(build.skills).toEqual({ special: "flareJump", ultimate: "barrage" })
   })
 
   it("add the weapon's ATK, then raise its bonus stat by a percentage, and take its passives", () => {

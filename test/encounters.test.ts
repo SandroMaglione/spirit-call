@@ -7,13 +7,13 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { hazardBoxes } from "../src/features/arena.ts"
-import { keepOut } from "../src/features/behaviors.ts"
+import { keepOut, readPlayer } from "../src/features/behaviors.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import { pickSpawnPoint } from "../src/features/waves.ts"
 import { Random } from "../src/math/rng.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
-import { center, ClearEnemies, start } from "./helpers.ts"
+import { center, ClearEnemies, cursorAt, start } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const middleOf = (box: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number }) => ({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 })
@@ -198,5 +198,43 @@ describe("enemies keeping out of hazards", () => {
     }
     expect(entered).toBe(false)
     expect(closest).toBeLessThan(150)
+  })
+})
+
+describe("enemies reading her", () => {
+  const ready = { attack: "sword" as const, cooldown: 0, recovery: 0, reloading: 0 }
+  const her = { at: { x: 0, y: 0 }, aim: { x: 1, y: 0 }, weapon: ready, dashes: 2 }
+  const reach = defaultTuning.attacks.sword.combo[0]!
+  const threat = ("reach" in reach ? reach.reach : 0) + defaultTuning.reading.threatMargin
+
+  it("see her open while a long move recovers, while she reloads, and with no dash left", () => {
+    expect(readPlayer(defaultTuning, her).opening).toBe(false)
+    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, cooldown: 0.2, recovery: 0.7 } }).opening).toBe(true)
+    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, cooldown: 0.1, recovery: 0.13 } }).opening).toBe(false)
+    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, reloading: 1 } }).opening).toBe(true)
+    expect(readPlayer(defaultTuning, { ...her, dashes: 0 }).opening).toBe(true)
+  })
+
+  it("feel her threat in front of her ready blade, not behind her or beyond her reach", () => {
+    const read = readPlayer(defaultTuning, her)
+    expect(read.threatens({ x: threat - 10, y: 0 })).toBe(true)
+    expect(read.threatens({ x: -(threat - 10), y: 0 })).toBe(false)
+    expect(read.threatens({ x: threat + 30, y: 0 })).toBe(false)
+    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, cooldown: 0.2, recovery: 0.7 } }).threatens({ x: threat - 10, y: 0 })).toBe(false)
+  })
+
+  it("keep a chaser whose turn it is out of her reach while she faces it, ready", () => {
+    // One chaser, its turn at once, never attacking: where does it stand?
+    const tuning = tuningWith({ enemies: { chaser: { attacks: [] } }, crowd: { minOrbitSeconds: 0 }, reading: { patience: 100 } })
+    const run = start({ tuning, pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }] })
+    alone(run, "chaser", { x: 300, y: 0 })
+    const Where = Game.Inspector("Test/Wary", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.each()[0]!.data.position.get())
+    let closest = Infinity
+    for (let step = 0; step < steps(3); step++) {
+      run.step()
+      const at = run.runtime.inspect(Where)
+      closest = Math.min(closest, Math.hypot(at.x - center.x, at.y - center.y))
+    }
+    expect(closest).toBeGreaterThan(threat - 40)
   })
 })

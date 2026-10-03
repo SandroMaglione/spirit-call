@@ -26,7 +26,9 @@
     "barrage",
     "tide",
     "sparkTotem",
-    "thunderclap"
+    "thunderclap",
+    "flareJump",
+    "tidalWave"
   ],
   "challenges": [
     "swarm",
@@ -83,7 +85,9 @@
   ],
   "retired": {
     "skills": [
-      "nova"
+      "nova",
+      "grenade",
+      "splash"
     ]
   }
 }

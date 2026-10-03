@@ -53,7 +53,7 @@ export const characters = {
   /** Close range: sturdy, with the sword combo, the Gale that gathers enemies around her, and the Cyclone (wind). */
   swordsman: character({
     name: "Swordsman",
-    stats: { hp: 50, atk: 80, def: 20, speed: 265 },
+    stats: { hp: 75, atk: 80, def: 20, speed: 290 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "sword",
@@ -64,29 +64,29 @@ export const characters = {
   /** Range: quicker and frailer, with the gun, grenades, and the Barrage (fire). */
   gunner: character({
     name: "Gunner",
-    stats: { hp: 42, atk: 80, def: 10, speed: 280 },
+    stats: { hp: 64, atk: 80, def: 10, speed: 305 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "gun",
     weaponType: "gun",
     weapon: "trainingPistol",
-    skills: { special: "grenade", ultimate: "barrage" }
+    skills: { special: "flareJump", ultimate: "barrage" }
   }),
   /** Middle range: discs that cut there and back, water that soaks and slows, and the Tide. */
   tidecaller: character({
     name: "Tidecaller",
-    stats: { hp: 46, atk: 80, def: 15, speed: 272 },
+    stats: { hp: 69, atk: 80, def: 15, speed: 298 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "disc",
     weaponType: "disc",
     weapon: "trainingDisc",
-    skills: { special: "splash", ultimate: "tide" }
+    skills: { special: "tidalWave", ultimate: "tide" }
   }),
   /** Support at middle range: a staff, a totem that zaps enemies or heals whoever stands by it, and a thunderclap that heals the team. */
   stormcaller: character({
     name: "Stormcaller",
-    stats: { hp: 44, atk: 80, def: 12, speed: 272 },
+    stats: { hp: 66, atk: 80, def: 12, speed: 298 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "staff",

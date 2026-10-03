@@ -29,6 +29,7 @@ import { areaTouchesCircle, pushDirection } from "../physics/areas.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import {
+  Aim,
   Attacker,
   AttackPhase,
   blow,
@@ -54,12 +55,14 @@ import {
   Stunned,
   Time,
   Tuning,
-  Velocity
+  Velocity,
+  Weapon
 } from "../schema.ts"
 import type { Faction } from "../schema.ts"
 import { lob } from "../content/skills.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
+import { readPlayer } from "./behaviors.ts"
 import { aimPoint, canStart, pickAttack } from "./moveset.ts"
 import type { Moving } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -108,7 +111,17 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         elite: Game.Query.optional(Elite)
       }
     }),
-    player: Game.Query({ selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), stats: Game.Query.read(CombatStats) }, with: [Player] }),
+    player: Game.Query({
+      selection: {
+        position: Game.Query.read(Position),
+        velocity: Game.Query.read(Velocity),
+        stats: Game.Query.read(CombatStats),
+        aim: Game.Query.read(Aim),
+        weapon: Game.Query.read(Weapon),
+        dash: Game.Query.read(Dash)
+      },
+      with: [Player]
+    }),
     targets: Game.Query({
       selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
       with: [Health]
@@ -129,6 +142,11 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     : { at: target, velocity: clampLength(player.data.velocity.get(), player.data.stats.get().speed) }
   const boxes = wallBoxes(queries.walls.each())
   const faction: Faction = "enemy"
+  // While she is open (see `readPlayer`), the melee enemies' attacks come round faster (never their telegraphs);
+  // those keeping their distance keep their rhythm.
+  const open = player !== undefined && target !== undefined &&
+    readPlayer(tuning, { at: target, aim: player.data.aim.get(), weapon: player.data.weapon.get(), dashes: player.data.dash.get().charges }).opening
+  const cooldownRate = open ? tuning.reading.cooldownRate : 1
   const random = new Random(resources.rng.get().state)
 
   // The nearest enemies attack first: they take the free windups (see `Tuning.crowd.windups`).
@@ -154,7 +172,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const phase = data.phase
     let { attack, area, hit } = current
     let elapsed = current.elapsed + dt
-    let cooldown = Math.max(0, current.cooldown - dt)
+    const rate = tuning.enemies[kind].behavior.kind === "kite" ? 1 : cooldownRate
+    let cooldown = Math.max(0, current.cooldown - dt * rate)
 
     /** Starts the windup of `index` at the target (ahead of her, by its lead). */
     const begin = (index: number, at: Moving) => {

@@ -32,6 +32,7 @@ const positive = (problems: Array<string>, where: string, values: Record<string,
 const checkMove = (problems: Array<string>, where: string, move: AttackMove): void => {
   positive(problems, where, { recovery: move.recovery })
   if (isMelee(move)) positive(problems, where, { reach: move.reach })
+  else if (move.shape === "lob") positive(problems, where, { maxRange: move.maxRange, radius: move.radius })
   else positive(problems, where, { count: move.count, speed: move.speed, range: move.range, radius: move.radius })
   if (move.shape === "disc" && move.hover > 0) positive(problems, where, { hoverTick: move.hoverTick })
 }
@@ -79,6 +80,9 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
   switch (effect.kind) {
     case "cut":
       positive(problems, where, { length: effect.length, width: effect.width, active: effect.active })
+      return
+    case "blast":
+      positive(problems, where, { radius: effect.radius, arcDegrees: effect.arcDegrees, active: effect.active })
       return
     case "lob":
       positive(problems, where, { maxRange: effect.maxRange, radius: effect.radius })
@@ -176,6 +180,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   for (const [id, attack] of Object.entries(tuning.attacks)) {
     if (attack.combo.length === 0) problems.push(`attack ${id}: the combo needs at least one move`)
     attack.combo.forEach((move, index) => checkMove(problems, `attack ${id} move ${index + 1}`, move))
+    checkMove(problems, `attack ${id} dash strike`, attack.dash)
     if (attack.power !== null) {
       checkMove(problems, `attack ${id} power move`, attack.power.move)
       positive(problems, `attack ${id} power`, { chargeTime: attack.power.chargeTime })
