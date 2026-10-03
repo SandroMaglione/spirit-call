@@ -10,7 +10,7 @@ import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { crowCombo } from "./assets/crow.ts"
+import { abigailCombo } from "./assets/abigail.ts"
 import type { ModelId } from "./models.ts"
 
 /**
@@ -71,21 +71,29 @@ export type BodyLook =
       readonly held?: Held
     }
 
-/** Every character is the crow for now; the Swordsman holds her sword and fights with it. */
+/**
+ * The Swordsman is Abigail, the anime character study (see
+ * `art/characters/abigail/`): she holds her equipped sword and plays the
+ * combo's sections as her four moves. The others are still the crow.
+ */
 const crow = { kind: "model", model: "crow", widthFactor: 1.5, heightFactor: view.bodyHeightFactor } as const
 const crowLoops: Moments = { idle: "Idle", run: { clip: "Run", distance: 110 } }
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   swordsman: {
-    ...crow,
+    kind: "model",
+    model: "abigail",
+    widthFactor: 1.5,
+    heightFactor: view.bodyHeightFactor,
     moments: {
-      ...crowLoops,
+      idle: "Idle",
+      run: { clip: "Run", distance: 110 },
       // The follow-through prepares the next cut; power has its own deeper thrust.
-      attack: crowCombo.map((move) => ({ clip: "AttackCombo", ...move })),
-      power: { clip: "Power", contact: crowCombo[0].contact },
+      attack: abigailCombo.map((move) => ({ clip: "AttackCombo", ...move })),
+      power: { clip: "Power", contact: abigailCombo[0].contact },
       dash: "Dash"
     },
-    held: { grip: "weapon_grip", weapons: { trainingBlade: "trainingBlade", crescendo: "crescendo" } }
+    held: { grip: "weapon_grip", weapons: { trainingBlade: "abigailTrainingBlade", crescendo: "abigailCrescendo" } }
   },
   gunner: { ...crow, moments: crowLoops },
   tidecaller: { ...crow, moments: crowLoops },

@@ -56,8 +56,9 @@ const setup = () => {
   const parent = new Group()
   const loaded = new Map<ModelId, ModelSource>([...modelsInLooks()].map((id) => [id, fakePiece(id)]))
   loaded.set("crow", fakeBody("crow"))
-  loaded.set("trainingBlade", fakeWeapon("trainingBlade"))
-  loaded.set("crescendo", fakeWeapon("crescendo"))
+  loaded.set("abigail", fakeBody("abigail"))
+  loaded.set("abigailTrainingBlade", fakeWeapon("abigailTrainingBlade"))
+  loaded.set("abigailCrescendo", fakeWeapon("abigailCrescendo"))
   for (const [id, source] of loadedEnemies) loaded.set(id, source)
   const assets = makeAssets(parent, loaded)
   return { parent, assets, pool: [] as Array<ProjectileNode> }

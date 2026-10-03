@@ -51,7 +51,7 @@ export interface ActorBody {
  * `radius` wide: its rounded ends show at full size, its straight middle
  * shortened by the camera's angle.
  */
-const bodyHeight = (radius: number, pixels: number): number => {
+export const bodyHeight = (radius: number, pixels: number): number => {
   const ends = radius * 2
   return ends + Math.max(0, pixels / projection.zoom - ends) / Math.cos(elevation(projection))
 }
