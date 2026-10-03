@@ -428,9 +428,14 @@ export const Hit = Descriptor.Event<{
   readonly element: ElementId | null
 }>()("Shooter/Hit")
 
-/** Elements meeting on a body or on the ground (see `ReactionKind`), for effects and the run's record. */
+/**
+ * Elements meeting on a body or on the ground (see `ReactionKind`), for
+ * effects and the run's record. `faction`: who set it off: an enemy's blow
+ * (on the team), the team (its blows, pools, and winds), or nobody (a fire
+ * spreading); the run records only what the team set off.
+ */
 export type { ReactionKind }
-export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind }>()("Shooter/Reaction")
+export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind; readonly faction: Faction | null }>()("Shooter/Reaction")
 
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")

@@ -6,7 +6,7 @@
  * that get harder, level curves that rise, a new account that can play, and
  * enemies that every team can answer (no element is ever required: an
  * enemy is immune to one element at most), and enemy movesets whose
- * combos end.
+ * attacks all give fair warning and whose combos end.
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
@@ -35,13 +35,18 @@ const checkMove = (problems: Array<string>, where: string, move: AttackMove): vo
   if (move.shape === "disc" && move.hover > 0) positive(problems, where, { hoverTick: move.hoverTick })
 }
 
-/** A moveset's attacks: each named once, with a range that can be met, and combos that end. */
-const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyArray<AttackSpec>): void => {
+/** A moveset's attacks: each named once, with a range that can be met, warning at least `minTelegraph` before hitting, and combos that end. */
+const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyArray<AttackSpec>, minTelegraph: number): void => {
   const ids = attacks.map((attack) => attack.id)
   for (const attack of attacks) {
     const at = `${where} attack ${attack.id}`
     if (ids.filter((id) => id === attack.id).length > 1) problems.push(`${at}: named more than once in the moveset`)
     positive(problems, at, { triggerRange: attack.triggerRange, weight: attack.weight })
+    if (attack.element !== null && !has(elements, attack.element)) problems.push(`${at}: unknown element ${attack.element}`)
+    if (!(attack.lead >= 0 && attack.lead <= 1)) problems.push(`${at}: lead must be from 0 to 1 (is ${attack.lead})`)
+    const telegraph = attack.kind === "volley" || attack.kind === "beam" ? attack.aimLock : attack.windup
+    if (!(telegraph >= minTelegraph)) problems.push(`${at}: warns ${telegraph}s before it hits, under the fairness floor of ${minTelegraph}s`)
+    if ((attack.kind === "volley" || attack.kind === "beam") && !(attack.aimLock <= attack.windup)) problems.push(`${at}: its aim locks before its windup starts`)
     if (!(attack.minRange >= 0 && attack.minRange < attack.triggerRange)) {
       problems.push(`${at}: minRange must be from 0 to below triggerRange (is ${attack.minRange})`)
     }
@@ -217,7 +222,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
     // Every enemy has at least two answers, so no element (no character) is required against it.
     if (traits.filter(([, affinity]) => affinity === "immune").length > 1) problems.push(`enemy ${id}: immune to more than one element`)
-    checkMoveset(problems, `enemy ${id}`, enemy.attacks)
+    checkMoveset(problems, `enemy ${id}`, enemy.attacks, tuning.fairness.minTelegraph)
   }
 
   const cheapest = Math.min(...Object.values(tuning.enemies).map((enemy) => enemy.cost).filter((cost) => cost > 0))

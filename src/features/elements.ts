@@ -146,6 +146,6 @@ export const TickStates = Game.System("Shooter/TickStates", {
     const fire = fires.find((other) => (other.x - position.x) ** 2 + (other.y - position.y) ** 2 <= (other.r + r + rules.contact) ** 2)
     if (fire === undefined) continue
     data.state.set({ current: { ...fire.state, nextTick: rules.tick } })
-    events.reaction.emit({ at: position, kind: "ignite" })
+    events.reaction.emit({ at: position, kind: "ignite", faction: null })
   }
 })

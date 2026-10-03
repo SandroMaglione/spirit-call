@@ -286,7 +286,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     if (!killed && blow.element !== null && !blow.periodic) {
       const afflicted = afflict(tuning, state, blow.element, blow.charges, affinity)
       data.state.set({ current: afflicted.state })
-      if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction })
+      if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction, faction: damage.faction })
       const gust = blow.element.id === "wind" ? tuning.elements.wind.seconds * durationFactor(tuning, affinity) : 0
       if (gust > 0) data.gust.set({ remaining: gust })
     }

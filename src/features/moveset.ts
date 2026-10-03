@@ -42,3 +42,23 @@ export const pickAttack = (attacks: ReadonlyArray<AttackSpec>, choices: Readonly
   }
   return choices[choices.length - 1]
 }
+
+/** A target on the move: where she is, and her running velocity (at most her speed). */
+export interface Moving {
+  readonly at: Vec2
+  readonly velocity: Vec2
+}
+
+/** Seconds until `spec`, let go in `untilRelease`, reaches a target `distance` away (a shot flies, a charge runs). */
+const timeToLand = (spec: AttackSpec, distance: number, untilRelease: number): number =>
+  untilRelease + (spec.kind === "volley" ? distance / spec.projectileSpeed : spec.kind === "charge" ? Math.min(distance, spec.speed * spec.active) / spec.speed : 0)
+
+/**
+ * Where `spec` from `origin` aims, let go in `untilRelease`: at the target,
+ * or ahead of her run by the attack's `lead`.
+ */
+export const aimPoint = (spec: AttackSpec, origin: Vec2, target: Moving, untilRelease: number): Vec2 => {
+  if (spec.lead <= 0) return target.at
+  const seconds = timeToLand(spec, Math.hypot(target.at.x - origin.x, target.at.y - origin.y), untilRelease) * spec.lead
+  return { x: target.at.x + target.velocity.x * seconds, y: target.at.y + target.velocity.y * seconds }
+}

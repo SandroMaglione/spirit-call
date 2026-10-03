@@ -18,7 +18,7 @@ import { characters } from "../content/characters.ts"
 import { currencies } from "../content/currencies.ts"
 import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
-import { enemies } from "../content/enemies.ts"
+import { enemies, fairness } from "../content/enemies.ts"
 import { reset, tracks } from "../content/hardcore.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, quests } from "../content/quests.ts"
@@ -169,6 +169,9 @@ export const defaultTuning = {
   /** Every enemy kind, by id. */
   enemies,
 
+  /** The least warning any enemy attack gives (see content/enemies.ts). */
+  fairness,
+
   /** How enemies steer around each other. */
   crowd: {
     /** Push strength when two bodies overlap (speed per unit of overlap). */
@@ -180,7 +183,13 @@ export const defaultTuning = {
     /** A circling enemy waits at least this long (seconds) before taking a free slot. */
     minOrbitSeconds: 0.6,
     /** Circling speed as a fraction of the enemy's speed. */
-    orbitSpeed: 0.7
+    orbitSpeed: 0.7,
+    /**
+     * How many enemy attacks may be winding up at once across the arena
+     * (follow-ups excepted): the nearest enemies go first, the rest wait,
+     * so a crowd attacks in a rhythm that can be read.
+     */
+    windups: 3
   },
 
   /** Every challenge, by id; the `Challenge` resource picks the one in the arena. */

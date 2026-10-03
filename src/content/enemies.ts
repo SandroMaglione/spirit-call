@@ -5,7 +5,7 @@
  * budget (0: never in random waves). Numbers are live-tunable: they are part
  * of the `Tuning` resource.
  */
-import type { Affinities } from "./elements.ts"
+import type { Affinities, ElementId } from "./elements.ts"
 
 // ── Attack and behavior shapes ────────────────────────────────────────────
 //
@@ -39,6 +39,14 @@ interface AttackTiming {
   readonly weight: number
   /** The attack (an `id` of the same moveset) that follows this one at once when it can start: a combo. `null` for none. */
   readonly followUp: string | null
+  /** The element its blows carry, putting its state on whoever they hit (the player included; see docs/elements.md); `null` for none. */
+  readonly element: ElementId | null
+  /**
+   * How far ahead of a moving target it aims: 0 at where she is, 1 at where
+   * her run would take her by the time it lands (her speed at most, so a
+   * dash does not throw it off). Its telegraph shows where it aimed.
+   */
+  readonly lead: number
 }
 
 /** A cone in front of the attacker, aimed where the target was when the windup started. */
@@ -148,10 +156,10 @@ export interface EnemySpec {
   readonly respawnDelay: number
 }
 
-/** What every attack may leave out: a lone attack is picked whenever it can start, and is followed by nothing. */
-type AttackInput<Attack extends AttackSpec> = Omit<Attack, "kind" | "id" | "minRange" | "weight" | "followUp"> &
-  Partial<Pick<Attack, "minRange" | "weight" | "followUp">>
-const attackDefaults = { minRange: 0, weight: 1, followUp: null }
+/** What every attack may leave out: by default it can start from up close, is followed by nothing, carries no element, and aims where the target is. */
+type AttackInput<Attack extends AttackSpec> = Omit<Attack, "kind" | "id" | "minRange" | "weight" | "followUp" | "element" | "lead"> &
+  Partial<Pick<Attack, "minRange" | "weight" | "followUp" | "element" | "lead">>
+const attackDefaults = { minRange: 0, weight: 1, followUp: null, element: null, lead: 0 }
 
 const melee = (id: string, spec: AttackInput<MeleeAttack>): AttackSpec => ({ kind: "melee", id, ...attackDefaults, ...spec })
 const volley = (id: string, spec: AttackInput<VolleyAttack>): AttackSpec => ({ kind: "volley", id, ...attackDefaults, ...spec })
@@ -166,6 +174,15 @@ const kite = (spec: { minDistance: number; maxDistance: number; strafeSeconds: n
 const skirmish = (spec: { stopDistance: number; orbit: number; retreatSeconds: number; engageSeconds: number; strafeSeconds: number }): Behavior =>
   ({ kind: "skirmish", ...spec })
 const enemy = (spec: EnemySpec): EnemySpec => spec
+
+/**
+ * The fairness floor: every attack gives at least `minTelegraph` seconds
+ * between its telegraph being final (the windup starting, or an aimed
+ * attack's aim locking) and the hit, so a skilled player can always get
+ * out of the way. Content checks it (see `validateContent`); nothing that
+ * makes enemies harder (a hardcore tier) may go below it.
+ */
+export const fairness = { minTelegraph: 0.3 }
 
 /** Every enemy kind. */
 export const enemies = {

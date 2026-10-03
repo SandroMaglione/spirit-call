@@ -5,6 +5,10 @@
  * (see `canStart`), at random by weight, drawn from the seeded `Rng` only
  * when there is a choice. An attack with a follow-up (`followUp`) starts it
  * right after its recovery when it can, skipping the cooldown: a combo.
+ * Only a few attacks wind up at once across the arena (`crowd.windups`,
+ * the nearest enemies first), and a skirmisher attacks only while it holds
+ * an engagement slot. An attack with a `lead` aims ahead of a running
+ * target; one with an `element` puts its state on whoever it hits.
  *
  * The attack area is decided when the windup starts (melee cones and slams
  * lock onto where the target was; aimed shots track until `aimLock` before
@@ -31,6 +35,7 @@ import {
   CombatStats,
   Damage,
   Enemy,
+  EnemyMode,
   Game,
   Health,
   Hitbox,
@@ -42,12 +47,14 @@ import {
   RunScope,
   Stunned,
   Time,
-  Tuning
+  Tuning,
+  Velocity
 } from "../schema.ts"
 import type { Faction } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
-import { canStart, pickAttack } from "./moveset.ts"
+import { aimPoint, canStart, pickAttack } from "./moveset.ts"
+import type { Moving } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180
@@ -86,10 +93,11 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         attacker: Game.Query.write(Attacker),
         phase: Game.Query.write(AttackPhase),
         stats: Game.Query.read(CombatStats),
-        stunned: Game.Query.read(Stunned)
+        stunned: Game.Query.read(Stunned),
+        mode: Game.Query.read(EnemyMode)
       }
     }),
-    player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
+    player: Game.Query({ selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), stats: Game.Query.read(CombatStats) }, with: [Player] }),
     targets: Game.Query({
       selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
       with: [Health]
@@ -103,12 +111,23 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   const dt = resources.time.get().dt
   const [player] = queries.player.each()
   const target = player?.data.position.get()
+  // Where she runs, at most at her speed (a dash does not throw the lead off).
+  const moving: Moving | undefined = player === undefined || target === undefined
+    ? undefined
+    : { at: target, velocity: clampLength(player.data.velocity.get(), player.data.stats.get().speed) }
   const boxes = wallBoxes(queries.walls.each())
   const faction: Faction = "enemy"
   const random = new Random(resources.rng.get().state)
 
-  for (const { data } of queries.attackers.each()) {
-    const attacks = tuning.enemies[data.enemy.get().kind].attacks
+  // The nearest enemies attack first: they take the free windups (see `Tuning.crowd.windups`).
+  const attackers = queries.attackers.each()
+  const away = (at: Vec2) => (target === undefined ? 0 : (at.x - target.x) ** 2 + (at.y - target.y) ** 2)
+  const order = attackers.map((_, index) => index).sort((left, right) => away(attackers[left]!.data.position.get()) - away(attackers[right]!.data.position.get()))
+  let windingUp = attackers.filter(({ data }) => data.phase.get() === "windup").length
+
+  for (const { data } of order.map((index) => attackers[index]!)) {
+    const kind = data.enemy.get().kind
+    const attacks = tuning.enemies[kind].attacks
     // A stunned enemy's attack waits, its telegraph still showing, until the stun wears off.
     if (attacks.length === 0 || data.stunned.get().remaining > 0) continue
     const position = data.position.get()
@@ -118,19 +137,23 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     let elapsed = current.elapsed + dt
     let cooldown = Math.max(0, current.cooldown - dt)
 
-    /** Starts the windup of `index` at the target. */
-    const begin = (index: number, at: Vec2) => {
+    /** Starts the windup of `index` at the target (ahead of her, by its lead). */
+    const begin = (index: number, at: Moving) => {
+      const spec = attacks[index]!
       attack = index
       phase.transition("ready", "windup")
-      area = aimArea(attacks[index]!, position, at, boxes)
+      area = aimArea(spec, position, aimPoint(spec, position, at, spec.windup), boxes)
+      windingUp += 1
     }
 
+    // A skirmisher attacks only while holding an engagement slot (see `Behavior`).
+    const engaged = tuning.enemies[kind].behavior.kind !== "skirmish" || data.mode.get() === "engage"
     if (phase.get() === "ready") {
       elapsed = 0
-      if (cooldown <= 0 && target !== undefined) {
-        const usable = attacks.flatMap((spec, index) => (canStart(spec, position, target, boxes) ? [index] : []))
+      if (cooldown <= 0 && engaged && windingUp < tuning.crowd.windups && moving !== undefined) {
+        const usable = attacks.flatMap((spec, index) => (canStart(spec, position, moving.at, boxes) ? [index] : []))
         const chosen = pickAttack(attacks, usable, random)
-        if (chosen !== undefined) begin(chosen, target)
+        if (chosen !== undefined) begin(chosen, moving)
       }
     }
 
@@ -139,17 +162,19 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       data.attacker.set({ attack, elapsed, cooldown, area, hit })
       continue
     }
-    // Enemy blows fill no energy and have no passives behind them.
-    const struck = blow({ damage: damageDealt(data.stats.get().atk, spec.power), knockback: spec.knockback })
+    // Enemy blows fill no energy and have no passives behind them; their element is the enemy's to give.
+    const atk = data.stats.get().atk
+    const struck = blow({ damage: damageDealt(atk, spec.power), knockback: spec.knockback, element: spec.element === null ? null : { id: spec.element, atk } })
 
     // Aimed shots follow the target until the aim locks.
-    if (phase.get() === "windup" && target !== undefined && !aimLocked(spec, "windup", elapsed)) {
-      area = aimArea(spec, position, target, boxes)
+    if (phase.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
+      area = aimArea(spec, position, aimPoint(spec, position, moving, Math.max(0, spec.windup - elapsed)), boxes)
     }
 
     if (phase.get() === "windup" && elapsed >= spec.windup && area !== null) {
       elapsed -= spec.windup
       phase.transition("windup", "active")
+      windingUp -= 1
       if (spec.kind === "volley" && area.kind === "line") {
         const base = Math.atan2(area.direction.y, area.direction.x)
         for (let shot = 0; shot < spec.count; shot++) {
@@ -194,9 +219,9 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       cooldown = spec.cooldown
       // A combo: the follow-up starts at once when it can, with no cooldown in between.
       const next = spec.followUp === null ? -1 : attacks.findIndex((candidate) => candidate.id === spec.followUp)
-      if (next >= 0 && target !== undefined && canStart(attacks[next]!, position, target, boxes)) {
+      if (next >= 0 && moving !== undefined && canStart(attacks[next]!, position, moving.at, boxes)) {
         cooldown = 0
-        begin(next, target)
+        begin(next, moving)
       }
     }
 

@@ -14,13 +14,13 @@ export const TrackRun = Game.System("Shooter/TrackRun", {
   resources.run.update((run) => ({ ...run, time: run.time + dt }))
 })
 
-/** Notes each kind of reaction the run sets off, for its result (discoveries count them). */
+/** Notes each kind of reaction the team sets off in the run, for its result (discoveries count them; an enemy's do not). */
 export const RecordReactions = Game.System("Shooter/RecordReactions", {
   events: { reaction: Game.System.readEvent(Reaction) },
   resources: { stats: Game.System.writeResource(Stats) }
 }, ({ events, resources }) => {
   const seen = resources.stats.get().reactions
-  const added = [...new Set(events.reaction.all().map((reaction) => reaction.kind))].filter((kind) => !seen.includes(kind))
+  const added = [...new Set(events.reaction.all().filter((reaction) => reaction.faction !== "enemy").map((reaction) => reaction.kind))].filter((kind) => !seen.includes(kind))
   if (added.length > 0) resources.stats.update((stats) => ({ ...stats, reactions: [...stats.reactions, ...added] }))
 })
 
