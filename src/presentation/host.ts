@@ -26,6 +26,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   root.className = "hud"
   root.innerHTML = `
     <div class="hud__vignette" data-vignette></div>
+    <div class="hud__focus" data-focus></div>
     <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div></div>
     <div class="hud__vitals">
       <div class="hud__who"><b data-name></b><span class="hud__state" data-state hidden></span><span class="hud__health-text" data-health-text></span></div>
@@ -96,7 +97,8 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
         })
       },
       banner: root.querySelector<HTMLElement>("[data-banner]")!,
-      vignette: root.querySelector<HTMLElement>("[data-vignette]")!
+      vignette: root.querySelector<HTMLElement>("[data-vignette]")!,
+      focus: root.querySelector<HTMLElement>("[data-focus]")!
     }
   }
 }

@@ -5,7 +5,7 @@
  * budget (0: never in random waves). Numbers are live-tunable: they are part
  * of the `Tuning` resource.
  */
-import type { Affinities, ElementId } from "./elements.ts"
+import type { Affinities, ElementId, GroundSpec } from "./elements.ts"
 
 // ── Attack and behavior shapes ────────────────────────────────────────────
 //
@@ -98,7 +98,23 @@ export interface BeamAttack extends AttackTiming {
   readonly width: number
 }
 
-export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack
+/**
+ * A bomb lobbed over walls at where the target stood when its aim locked
+ * (clamped to `maxReach`): thrown as the windup ends, it flies
+ * `flightTime`, lands, and bursts `radius` around it after `fuse` (its
+ * ring shows where all along), leaving its pool, if any. `active` is 0: the
+ * throw is the attack.
+ */
+export interface LobAttack extends AttackTiming {
+  readonly kind: "lob"
+  readonly maxReach: number
+  readonly radius: number
+  readonly flightTime: number
+  readonly fuse: number
+  readonly leaves: GroundSpec | null
+}
+
+export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack | LobAttack
 
 /** A frontal shield that blocks projectiles hitting within `arcDegrees / 2` of where it faces. */
 export interface ShieldSpec {
@@ -148,6 +164,11 @@ export interface EnemySpec {
   readonly knockbackTaken: number
   readonly speed: number
   readonly acceleration: number
+  /**
+   * Its break bar, as a share of its max health (0: it never breaks; see
+   * `Tuning.breaking`): a bar under its health filled by blows and reactions.
+   */
+  readonly poise: number
   /** Wave budget cost (0: never in random waves). */
   readonly cost: number
   readonly behavior: Behavior
@@ -172,8 +193,7 @@ const attackDefaults = { minRange: 0, weight: 1, followUp: null, element: null, 
 const melee = (id: string, spec: AttackInput<MeleeAttack>): AttackSpec => ({ kind: "melee", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const volley = (id: string, spec: AttackInput<VolleyAttack>): AttackSpec => ({ kind: "volley", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const slam = (id: string, spec: AttackInput<SlamAttack>): AttackSpec => ({ kind: "slam", id, ...attackDefaults, aimLock: spec.windup, ...spec })
-const charge = (id: string, spec: AttackInput<ChargeAttack>): AttackSpec => ({ kind: "charge", id, ...attackDefaults, aimLock: spec.windup, ...spec })
-const beam = (id: string, spec: AttackInput<BeamAttack>): AttackSpec => ({ kind: "beam", id, ...attackDefaults, aimLock: spec.windup, ...spec })
+const lob = (id: string, spec: AttackInput<LobAttack>): AttackSpec => ({ kind: "lob", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const affinities = (spec: Affinities): Affinities => spec
 const shield = (spec: ShieldSpec): ShieldSpec | null => spec
 const idle = (): Behavior => ({ kind: "idle" })
@@ -205,6 +225,7 @@ export const enemies = {
     knockbackTaken: 1,
     speed: 0,
     acceleration: 0,
+    poise: 0,
     cost: 0,
     behavior: idle(),
     attacks: [],
@@ -213,10 +234,10 @@ export const enemies = {
     /** A destroyed dummy comes back (its spawn warning is shown meanwhile). */
     respawnDelay: 1.5
   }),
-  /** Lunges in from its circle when its turn comes, then swipes twice in a row. */
+  /** Runs in from its circle when its turn comes, then swipes twice in a row. */
   chaser: enemy({
     name: "Chaser",
-    description: "Lunges in, then swipes twice.",
+    description: "Runs in, then swipes twice.",
     elements: affinities({ water: "weak" }),
     hp: 65,
     atk: 100,
@@ -226,13 +247,12 @@ export const enemies = {
     knockbackTaken: 1,
     speed: 215,
     acceleration: 1800,
+    poise: 0.5,
     cost: 1,
     behavior: skirmish({ stopDistance: 60, orbit: 230, retreatSeconds: 0.6, engageSeconds: 3, strafeSeconds: 1.8 }),
     shield: null,
     group: 1,
     attacks: [
-      // Closes the gap (aiming a little ahead of a runner) from anywhere a swipe does not reach, and swipes if it got close.
-      charge("lunge", { minRange: 95, triggerRange: 220, windup: 0.5, aimLock: 0.3, active: 0.22, speed: 1000, width: 36, recovery: 0.35, cooldown: 0.8, power: 12, knockback: 200, lead: 0.5, followUp: "swipe" }),
       melee("swipe", { triggerRange: 90, reach: 100, arcDegrees: 100, windup: 0.4, aimLock: 0.3, active: 0.1, recovery: 0.3, cooldown: 0.6, power: 12, knockback: 220, followUp: "slash" }),
       // The second swipe reaches further, for a player who only stepped back.
       melee("slash", { triggerRange: 120, reach: 125, arcDegrees: 120, windup: 0.35, aimLock: 0.3, active: 0.1, recovery: 0.5, cooldown: 0.7, power: 10, knockback: 300 })
@@ -252,6 +272,7 @@ export const enemies = {
     knockbackTaken: 1.2,
     speed: 150,
     acceleration: 1200,
+    poise: 0.5,
     cost: 2,
     behavior: kite({ minDistance: 250, maxDistance: 420, strafeSeconds: 1.6 }),
     shield: null,
@@ -274,7 +295,7 @@ export const enemies = {
     name: "Brute",
     description: "Slams where you are headed; stomps up close.",
     elements: affinities({ wind: "immune", water: "weak", thunder: "resists" }),
-    hp: 220,
+    hp: 260,
     atk: 100,
     def: 0,
     radius: 25,
@@ -282,6 +303,7 @@ export const enemies = {
     knockbackTaken: 0.2,
     speed: 100,
     acceleration: 700,
+    poise: 0.35,
     cost: 4,
     behavior: chase(120),
     shield: null,
@@ -293,10 +315,10 @@ export const enemies = {
     ],
     respawnDelay: 0
   }),
-  /** Tiny, fast, fragile; comes in packs, and pounces on a player keeping just out of its bite. */
+  /** Tiny, fast, fragile; comes in packs. */
   swarmer: enemy({
     name: "Swarmer",
-    description: "Tiny, fast, pounces; comes in packs.",
+    description: "Tiny, fast; comes in packs.",
     elements: affinities({ fire: "weak", thunder: "weak" }),
     hp: 26,
     atk: 100,
@@ -306,23 +328,26 @@ export const enemies = {
     knockbackTaken: 1.4,
     speed: 245,
     acceleration: 2200,
+    poise: 0,
     cost: 1,
     behavior: skirmish({ stopDistance: 34, orbit: 190, retreatSeconds: 0.6, engageSeconds: 2.5, strafeSeconds: 1.2 }),
     shield: null,
     group: 4,
     attacks: [
-      melee("swipe", { triggerRange: 55, reach: 60, arcDegrees: 80, windup: 0.3, active: 0.08, recovery: 0.35, cooldown: 0.5, power: 5, knockback: 140 }),
-      // A short leap at a player keeping just out of its bite.
-      charge("pounce", { minRange: 60, triggerRange: 150, windup: 0.4, aimLock: 0.3, active: 0.16, speed: 900, width: 26, recovery: 0.45, cooldown: 0.9, power: 5, knockback: 160, lead: 0.4, followUp: "swipe" })
+      melee("swipe", { triggerRange: 55, reach: 60, arcDegrees: 80, windup: 0.3, active: 0.08, recovery: 0.35, cooldown: 0.5, power: 5, knockback: 140 })
     ],
     respawnDelay: 0
   }),
-  /** Keeps mid-range, then charges down a lane it telegraphs, ablaze (it sets you burning), and turns to charge back. Open to punishment afterwards. */
+  /**
+   * The Firebomber (id `charger`, from when it charged down lanes): keeps
+   * its distance and lobs fire bombs over walls where you are headed, which
+   * burst and leave flames; it swipes ablaze at a player who gets close.
+   */
   charger: enemy({
-    name: "Charger",
-    description: "Charges ablaze down a lane, then charges back.",
+    name: "Firebomber",
+    description: "Lobs fire bombs that leave flames.",
     elements: affinities({ water: "weak" }),
-    hp: 100,
+    hp: 115,
     atk: 100,
     def: 0,
     radius: 19,
@@ -330,21 +355,25 @@ export const enemies = {
     knockbackTaken: 0.5,
     speed: 125,
     acceleration: 1000,
+    poise: 0.45,
     cost: 3,
-    behavior: kite({ minDistance: 180, maxDistance: 320, strafeSeconds: 2.2 }),
+    behavior: kite({ minDistance: 220, maxDistance: 400, strafeSeconds: 2.2 }),
     shield: null,
     group: 1,
     attacks: [
-      charge("charge", { triggerRange: 380, windup: 0.8, aimLock: 0.35, active: 0.42, speed: 850, width: 44, recovery: 0.45, cooldown: 1.2, power: 22, knockback: 520, element: "fire", lead: 0.4, followUp: "return" }),
-      // Turning on the spot for a second run: a dash spent on the first leaves none for this one.
-      charge("return", { minRange: 60, triggerRange: 420, windup: 0.6, aimLock: 0.35, active: 0.42, speed: 850, width: 44, recovery: 1.1, cooldown: 1.4, power: 18, knockback: 480, element: "fire", weight: 0 })
+      lob("bomb", {
+        minRange: 140, triggerRange: 460, maxReach: 460, radius: 85, windup: 0.75, aimLock: 0.35, active: 0, recovery: 0.5, cooldown: 1.5,
+        flightTime: 0.65, fuse: 0.3, power: 22, knockback: 380, element: "fire", lead: 0.5, leaves: { element: "fire", radius: 70, seconds: 2.5 }
+      }),
+      // Up close it swipes ablaze, and backs off to throw again.
+      melee("swipe", { triggerRange: 85, reach: 95, arcDegrees: 110, windup: 0.5, aimLock: 0.3, active: 0.1, recovery: 0.5, cooldown: 0.8, power: 14, knockback: 380, element: "fire" })
     ],
     respawnDelay: 0
   }),
-  /** Stays far away; paints a tracking beam of thunder that locks (a little ahead of a runner), then fires instantly. Walls stop it; water on you makes it hurt more. */
+  /** Stays far away; aims a fast thunder bullet (its aim line tracks you, then locks a little ahead of a runner) and fires. Walls stop it; water on you makes it hurt more. */
   sniper: enemy({
     name: "Sniper",
-    description: "Locks a thunder beam on you from afar.",
+    description: "Fires a fast thunder bullet from afar.",
     elements: affinities({ wind: "weak", thunder: "weak" }),
     hp: 46,
     atk: 100,
@@ -354,11 +383,17 @@ export const enemies = {
     knockbackTaken: 1.2,
     speed: 105,
     acceleration: 900,
+    poise: 0.5,
     cost: 3,
     behavior: kite({ minDistance: 430, maxDistance: 680, strafeSeconds: 2.5 }),
     shield: null,
     group: 1,
-    attacks: [beam("beam", { triggerRange: 900, windup: 1.2, aimLock: 0.35, active: 0.1, recovery: 0.6, cooldown: 1.6, length: 1000, width: 18, power: 20, knockback: 260, element: "thunder", lead: 0.5 })],
+    attacks: [
+      volley("shot", {
+        triggerRange: 900, windup: 1.0, aimLock: 0.35, active: 0, recovery: 0.6, cooldown: 1.6,
+        count: 1, spreadDegrees: 0, projectileSpeed: 950, projectileRadius: 8, range: 1000, power: 20, knockback: 260, element: "thunder", lead: 0.5
+      })
+    ],
     respawnDelay: 0
   }),
   /** A frontal shield blocks all projectiles; flank it or use the grenade and ultimate. A long thrust punishes keeping just out of its reach. */
@@ -366,7 +401,7 @@ export const enemies = {
     name: "Guardian",
     description: "Its shield blocks shots from the front; it thrusts far.",
     elements: affinities({ fire: "weak", wind: "resists" }),
-    hp: 130,
+    hp: 150,
     atk: 100,
     def: 0,
     radius: 20,
@@ -374,6 +409,7 @@ export const enemies = {
     knockbackTaken: 0.35,
     speed: 110,
     acceleration: 900,
+    poise: 0.4,
     cost: 3,
     behavior: skirmish({ stopDistance: 70, orbit: 260, retreatSeconds: 1.1, engageSeconds: 3.5, strafeSeconds: 2.2 }),
     shield: shield({ arcDegrees: 130, turnRate: 150 }),

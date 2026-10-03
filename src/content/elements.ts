@@ -16,10 +16,11 @@ export type ElementId = "fire" | "water" | "wind" | "thunder"
  * Elements meeting on a body or on the ground: a body catching fire or
  * getting soaked, water putting fire out (`steam`), fire fizzling on a
  * soaked body, wind carrying a state to another body, a body slammed
- * into a wall (`stun`), and thunder through water (`shock`: a soaked body
- * struck, or a puddle it runs through).
+ * into a wall (`stun`), thunder through water (`shock`: a soaked body
+ * struck, or a puddle it runs through), and a wind whirl taking on another
+ * element (`swirl`).
  */
-export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun" | "shock"
+export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun" | "shock" | "swirl"
 
 /** The states that last on a body: water soaks, fire burns. */
 export type StateId = "burning" | "soaked"
@@ -76,14 +77,17 @@ export const elementRules = {
    * than being knocked back; meanwhile it carries its state to bodies it is
    * pushed into, and is stunned for `stunSeconds` if slammed into a wall
    * while still moving faster than `slamSpeed`. A pool a wind blow sweeps
-   * over is blown along at `poolSpeed`, dying down the same way.
+   * over is blown along at `poolSpeed`, dying down the same way. A wind
+   * whirl takes on the first other element it touches (a pool, a body in a
+   * state, a thunder strike) and whirls it for `absorbSeconds` more.
    */
   wind: {
     seconds: 0.75,
     decay: 4.5,
     slamSpeed: 150,
     stunSeconds: 1.4,
-    poolSpeed: 600
+    poolSpeed: 600,
+    absorbSeconds: 1.5
   },
   /**
    * Thunder: a strike jumps on from the body it hits to the nearest body

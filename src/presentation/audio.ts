@@ -7,7 +7,7 @@ import type { SkillEffect } from "../content/skills.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Camera, Cast, Death, Explosion, Game, Hit, Impact, Reaction, RenderHost, Sounds, Zap } from "../schema.ts"
+import { Action, Broke, Camera, PerfectDodged, Cast, Death, Explosion, Game, Hit, Impact, Reaction, RenderHost, Sounds, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { SoundName } from "./sound.ts"
 
@@ -20,7 +20,7 @@ const powerPitch = 0.85
 const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", thunderclap: null }
 
 /** The sound of elements meeting (wind carrying a state is heard as the blow that pushed it). */
-const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite", soak: "splash", steam: "sizzle", fizzle: "sizzle", carry: null, stun: "slam", shock: "zap" }
+const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite", soak: "splash", steam: "sizzle", fizzle: "sizzle", carry: null, stun: "slam", shock: "zap", swirl: "nova" }
 
 /**
  * Sounds for what happened since the last frame: the player's actions (each
@@ -35,6 +35,8 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     cast: Game.System.readEvent(Cast),
     hit: Game.System.readEvent(Hit),
     death: Game.System.readEvent(Death),
+    broke: Game.System.readEvent(Broke),
+    perfect: Game.System.readEvent(PerfectDodged),
     impact: Game.System.readEvent(Impact),
     explosion: Game.System.readEvent(Explosion),
     reaction: Game.System.readEvent(Reaction),
@@ -80,6 +82,8 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const death of events.death.all()) {
     if (death.faction === "player") sounds.play("death")
   }
+  for (const broke of events.broke.all()) sounds.play("slam", { pan: pan(broke.at) })
+  for (const perfect of events.perfect.all()) sounds.play("charged", { pan: pan(perfect.at) })
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }

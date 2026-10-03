@@ -10,7 +10,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Body, Death, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Zap } from "../schema.ts"
+import { Action, Body, Broke, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { RenderHostValue } from "./host-types.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
@@ -29,6 +29,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     action: Game.System.readEvent(Action),
     hit: Game.System.readEvent(Hit),
     death: Game.System.readEvent(Death),
+    broke: Game.System.readEvent(Broke),
+    perfect: Game.System.readEvent(PerfectDodged),
     impact: Game.System.readEvent(Impact),
     explosion: Game.System.readEvent(Explosion),
     heal: Game.System.readEvent(Heal),
@@ -118,6 +120,33 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     fx.burst(heart, { color: view.hitFlash, count: Math.round(spec.chunks * 0.4 * scale), speed: spec.speed * 0.6, size: spec.size * 0.6, life: spec.life * 0.6 })
     services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake * scale)
   }
+  // A break: a burst of light from the body, a wide ring, sparks, and a heavy kick of the camera.
+  for (const broke of events.broke.all()) {
+    const at = toScreen(projection, broke.at)
+    const scale = view.enemies[broke.enemy].widthFactor / 1.5
+    const heart = { x: at.x, y: at.y - 18 * scale * projection.zoom }
+    const spec = view.breaking
+    fx.flash(heart, spec.flash * scale, spec.full, 0.2)
+    fx.ring(at, spec.ring * scale * projection.zoom, spec.bar, 0.45)
+    fx.burst(heart, { color: spec.bar, count: 26, speed: 420, size: 4, life: 0.5, stretch: 3, drag: 2 })
+    fx.burst(heart, { color: spec.full, count: 12, speed: 240, size: 5, life: 0.35 })
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake)
+    services.host.feedback.punch = Math.max(services.host.feedback.punch, 1)
+  }
+  // A perfect dodge: a bright flash where she slipped through, a ring rushing out, and streaks off her.
+  for (const perfect of events.perfect.all()) {
+    const at = toScreen(projection, perfect.at)
+    const heart = { x: at.x, y: at.y - 18 * projection.zoom }
+    const spec = view.perfectDodge
+    fx.flash(heart, spec.flash, spec.color, 0.3)
+    fx.flash(heart, spec.flash * 0.45, view.hitFlash, 0.18)
+    fx.ring(at, spec.ring * projection.zoom, spec.color, 0.5)
+    fx.ring(at, spec.ring * 0.55 * projection.zoom, view.hitFlash, 0.3)
+    fx.burst(heart, { color: spec.color, count: 40, speed: 640, size: 3.5, life: 0.55, stretch: 5, drag: 3 })
+    fx.burst(heart, { color: view.hitFlash, count: 14, speed: 300, size: 4, life: 0.4 })
+    services.host.feedback.punch = Math.max(services.host.feedback.punch, 1)
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake)
+  }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)
     const nova = explosion.kind === "nova" && explosion.heavy
@@ -178,6 +207,13 @@ const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind): void => {
       fx.flash(body, 42, view.elements.thunder, 0.16)
       fx.ring(at, 46 * projection.zoom, view.elements.thunder, 0.3)
       fx.burst(body, { color: view.elements.thunder, count: 12, speed: 280, size: 3, life: 0.3, stretch: 3 })
+      return
+    case "swirl":
+      // A whirl taking on an element: a gust bursting out from its center (the whirl turns the element's color).
+      fx.flash(body, 60, view.elements.wind, 0.2)
+      fx.ring(at, 120 * projection.zoom, view.elements.wind, 0.4)
+      fx.burst(body, { color: view.elements.wind, count: 18, speed: 320, size: 4, life: 0.45, drag: 2 })
+      host.feedback.shake = Math.max(host.feedback.shake, view.impact.heavyShake)
       return
     case "stun":
       fx.flash(body, 44, view.stun, 0.16)

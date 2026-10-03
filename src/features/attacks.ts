@@ -34,6 +34,8 @@ import {
   blow,
   CombatStats,
   Damage,
+  Dash,
+  Dodged,
   Enemy,
   EnemyMode,
   Game,
@@ -41,21 +43,26 @@ import {
   Hitbox,
   Hurtbox,
   Invulnerable,
+  Lobbed,
   Player,
+  Poise,
   Position,
   Rng,
   RunScope,
+  SlowMotion,
   Stunned,
   Time,
   Tuning,
   Velocity
 } from "../schema.ts"
 import type { Faction } from "../schema.ts"
+import { lob } from "../content/skills.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { aimPoint, canStart, pickAttack } from "./moveset.ts"
 import type { Moving } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
+import { enemyPace, paceOf } from "./time.ts"
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180
 
@@ -71,7 +78,8 @@ export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: Rea
     }
     case "melee":
       return { kind: "cone", origin, direction, radius: spec.reach, halfAngle: toRadians(spec.arcDegrees) / 2 }
-    case "slam": {
+    case "slam":
+    case "lob": {
       const offset = clampLength(sub(target, origin), spec.maxReach)
       return { kind: "circle", center: { x: origin.x + offset.x, y: origin.y + offset.y }, radius: spec.radius }
     }
@@ -94,6 +102,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         phase: Game.Query.write(AttackPhase),
         stats: Game.Query.read(CombatStats),
         stunned: Game.Query.read(Stunned),
+        poise: Game.Query.read(Poise),
         mode: Game.Query.read(EnemyMode)
       }
     }),
@@ -104,11 +113,12 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     }),
     walls: Walls
   },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng) },
+  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng), slowMotion: Game.System.readResource(SlowMotion) },
   events: { damage: Game.System.writeEvent(Damage) }
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
-  const dt = resources.time.get().dt
+  // Enemy attacks run at the enemies' pace (slower in slow motion).
+  const dt = resources.time.get().dt * enemyPace(resources.slowMotion.get())
   const [player] = queries.player.each()
   const target = player?.data.position.get()
   // Where she runs, at most at her speed (a dash does not throw the lead off).
@@ -125,9 +135,16 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   const order = attackers.map((_, index) => index).sort((left, right) => away(attackers[left]!.data.position.get()) - away(attackers[right]!.data.position.get()))
   let windingUp = attackers.filter(({ data }) => data.phase.get() === "windup").length
 
-  for (const { data } of order.map((index) => attackers[index]!)) {
+  for (const { entity, data } of order.map((index) => attackers[index]!)) {
     const kind = data.enemy.get().kind
     const attacks = tuning.enemies[kind].attacks
+    // A broken enemy's windup is cut off (it starts over once it recovers).
+    if (data.poise.get().broken > 0 && data.phase.get() === "windup") {
+      const cut = data.attacker.get()
+      data.phase.transition("windup", "ready")
+      windingUp -= 1
+      data.attacker.set({ ...cut, elapsed: 0, area: null, cooldown: attacks[cut.attack ?? -1]?.cooldown ?? 0 })
+    }
     // A stunned enemy's attack waits, its telegraph still showing, until the stun wears off.
     if (attacks.length === 0 || data.stunned.get().remaining > 0) continue
     const position = data.position.get()
@@ -163,8 +180,14 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       continue
     }
     // Enemy blows fill no energy and have no passives behind them; their element is the enemy's to give.
+    // They remember who dealt them (a perfect dodge fills that enemy's break bar).
     const atk = data.stats.get().atk
-    const struck = blow({ damage: damageDealt(atk, spec.power), knockback: spec.knockback, element: spec.element === null ? null : { id: spec.element, atk } })
+    const struck = blow({
+      damage: damageDealt(atk, spec.power),
+      knockback: spec.knockback,
+      element: spec.element === null ? null : { id: spec.element, atk },
+      source: { attacker: Game.Entity.handle(entity.id, Position) }
+    })
 
     // The aim follows the target until it locks.
     if (phase.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
@@ -186,6 +209,17 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
             faction, style: "bolt", radius: spec.projectileRadius, blow: struck, range: spec.range, pierce: 0, hit: []
           }))
         }
+      } else if (spec.kind === "lob" && area.kind === "circle") {
+        // Thrown: the bomb flies, lands, and bursts like a lobbed skill (see `UpdateLobbed`), its ring showing where.
+        const { maxReach, flightTime, fuse, radius, leaves, power, element, knockback } = spec
+        commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, {
+          from: position,
+          to: area.center,
+          faction,
+          effect: lob({ maxRange: maxReach, flightTime, fuse, radius, leaves, power, element, knockback, hitStop: 0, heavy: false }),
+          blow: struck,
+          elapsed: 0
+        }]))
       } else if (spec.kind === "charge") {
         // The charge itself is the attack: contact damage while active (below).
         hit = []
@@ -241,14 +275,16 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
   queries: {
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.write(Hitbox) } }),
     targets: Game.Query({
-      selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
+      selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable), dash: Game.Query.optional(Dash) },
       with: [Health]
     })
   },
-  resources: { time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage) }
+  resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
+  events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged) }
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
+  const slow = resources.slowMotion.get()
+  const window = resources.tuning.get().perfectDodge.window
   const targets = queries.targets.each()
   for (const { entity, data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
@@ -256,10 +292,22 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     for (const target of targets) {
       const hurtbox = target.data.hurtbox.get()
       if (hurtbox.faction === hitbox.faction || hit.includes(target.entity.id.value)) continue
-      const invulnerable = target.data.invulnerable
-      if (invulnerable.present && invulnerable.get().remaining > 0) continue
+      const invulnerable = target.data.invulnerable.present && target.data.invulnerable.get().remaining > 0
       const position = target.data.position.get()
-      if (!areaTouchesCircle(hitbox.area, position, hurtbox.radius)) continue
+      const attacker = hitbox.blow.source?.attacker ?? null
+      if (!areaTouchesCircle(hitbox.area, position, hurtbox.radius)) {
+        // Not in its way any more, but it lands where she stood when she dashed, just now: dodged.
+        const dash = target.data.dash.present ? target.data.dash.get() : undefined
+        if (dash !== undefined && dash.since <= window && areaTouchesCircle(hitbox.area, dash.from, hurtbox.radius)) {
+          events.dodged.emit({ target: target.entity.id.value, at: position, attacker })
+        }
+        continue
+      }
+      // In its way but untouchable: dodged (it may still land if the invulnerability ends while it is out).
+      if (invulnerable) {
+        events.dodged.emit({ target: target.entity.id.value, at: position, attacker })
+        continue
+      }
       hit.push(target.entity.id.value)
       events.damage.emit({
         target: Game.Entity.handle(target.entity.id, Health),
@@ -268,7 +316,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
         blow: hitbox.blow
       })
     }
-    const remaining = hitbox.remaining - dt
+    const remaining = hitbox.remaining - dt * paceOf(slow, hitbox.faction)
     if (remaining <= 0) commands.despawn(entity.id)
     else data.hitbox.set({ ...hitbox, remaining, hit })
   }

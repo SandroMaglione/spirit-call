@@ -165,8 +165,9 @@ export const skills = {
   /**
    * The sword's special (id `bladeWave`, from when it was a cut): a gale
    * whirling at her feet that pulls enemies around her into its center,
-   * hurting nobody: it gathers a crowd into reach of the next swings, and
-   * what it drags into each other shares its states.
+   * grazing them as it holds them: it gathers a crowd into reach of the next
+   * swings (its own damage is small), and what it drags into each other
+   * shares its states.
    */
   bladeWave: skill({
     name: "Gale",
@@ -174,7 +175,7 @@ export const skills = {
     cooldown: 5,
     energy: 0,
     invulnerability: 0,
-    effect: vortex({ maxRange: 0, radius: 240, seconds: 1.1, tick: 0.25, pull: 0.32, power: 0, element: "wind", knockback: 0, hitStop: 0, heavy: false })
+    effect: vortex({ maxRange: 0, radius: 270, seconds: 2.4, tick: 0.4, pull: 0.3, power: 3, element: "wind", knockback: 0, hitStop: 0, heavy: false })
   }),
   /** Lobbed to the cursor over walls; explodes after landing, setting what it hits on fire and leaving a fire pool. */
   grenade: skill({

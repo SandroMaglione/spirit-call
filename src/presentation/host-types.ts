@@ -1,6 +1,7 @@
 import type { BufferGeometry, Group, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton } from "../config/input.ts"
+import type { ProjectileStyle } from "../schema.ts"
 import type { SkillSlot } from "../content/skills.ts"
 import type { Vec2 } from "../math/vec.ts"
 
@@ -34,6 +35,15 @@ export type ProjectileNode = {
   readonly root: Group
   readonly orb: Instance
   readonly shadow: Instance
+  /** A bolt's parts that turn along its flight (see `OrientBolts`): its hot core, halo, and tracer. */
+  readonly bolt: Group
+  readonly core: Instance
+  readonly halo: Instance
+  readonly streak: Instance
+  readonly trail: Instance
+  /** What it is drawn as now (pooled nodes change), and its collision radius. */
+  style: ProjectileStyle
+  radius: number
 }
 
 /** A wall or pillar. `depth` and `bounds` (its outline on screen, in projected coordinates) let pillars fade in front of the player. */
@@ -75,6 +85,8 @@ export interface RenderAssets {
   readonly orbs: Batch
   /** Thin low-poly pucks of radius 1 (thrown discs). */
   readonly pucks: Batch
+  /** See-through balls of radius 1 (bolts' halos and trails). */
+  readonly flares: Batch
   /** A capsule of this radius and height, standing on y = 0, made once per size. */
   bodyGeometry(radius: number, height: number): BufferGeometry
   /** The batch of enemy bodies of this size. */
@@ -146,6 +158,8 @@ export interface HudRefs {
   readonly team: TeamRefs
   readonly banner: HTMLElement
   readonly vignette: HTMLElement
+  /** The slow-motion glow (a perfect dodge). */
+  readonly focus: HTMLElement
 }
 
 /** Render-side feedback state that decays in real time. */

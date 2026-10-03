@@ -3,7 +3,7 @@
  * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
  * screen, and a restart that clears the run and starts over.
  */
-import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Reaction, Rng, Run, RunResult, RunScope, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { initialWaves } from "./waves.ts"
 
@@ -79,6 +79,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     run: Game.System.writeResource(Run),
     result: Game.System.writeResource(RunResult),
     hitStop: Game.System.writeResource(HitStop),
+    slowMotion: Game.System.writeResource(SlowMotion),
     teamSwitch: Game.System.writeResource(TeamSwitch)
   }
 }, ({ resources }) => {
@@ -89,6 +90,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.run.set({ time: 0, endedAt: null })
   resources.result.set(null)
   resources.hitStop.set({ remaining: 0 })
+  resources.slowMotion.set({ remaining: 0, scale: 1 })
   resources.teamSwitch.set({ cooldown: 0 })
 })
 

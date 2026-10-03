@@ -8,7 +8,7 @@ import type { OptionalReadCell, ReadCell } from "@typeonce/bevy-ts/Query"
 
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleCircle } from "../physics/collide.ts"
-import { Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
+import { Dash, Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
 import type { Faction } from "../schema.ts"
 
 export interface Target {
@@ -21,6 +21,8 @@ export interface Target {
   readonly invulnerable: boolean
   /** A frontal shield, if any: blows arriving within `cosHalfAngle` of `facing` are blocked. */
   readonly shield: { readonly facing: Vec2; readonly cosHalfAngle: number } | undefined
+  /** Where its last dash started and how long ago (the player), for perfect dodges; `undefined` for a body that does not dash. */
+  readonly dashed: { readonly from: Vec2; readonly since: number } | undefined
 }
 
 /** Bodies a thing in flight can hit. */
@@ -29,7 +31,8 @@ export const Targets = Game.Query({
     position: Game.Query.read(Position),
     hurtbox: Game.Query.read(Hurtbox),
     invulnerable: Game.Query.optional(Invulnerable),
-    shield: Game.Query.optional(Shield)
+    shield: Game.Query.optional(Shield),
+    dash: Game.Query.optional(Dash)
   },
   with: [Health]
 })
@@ -42,6 +45,7 @@ export const targetOf = (
     readonly hurtbox: ReadCell<{ readonly radius: number; readonly faction: Faction }>
     readonly invulnerable: OptionalReadCell<{ readonly remaining: number }>
     readonly shield: OptionalReadCell<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>
+    readonly dash?: OptionalReadCell<{ readonly from: Vec2; readonly since: number }>
   }
 ): Target => ({
   entity,
@@ -50,7 +54,8 @@ export const targetOf = (
   radius: data.hurtbox.get().radius,
   faction: data.hurtbox.get().faction,
   invulnerable: data.invulnerable.present && data.invulnerable.get().remaining > 0,
-  shield: data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Math.cos(data.shield.get().halfAngle) } : undefined
+  shield: data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Math.cos(data.shield.get().halfAngle) } : undefined,
+  dashed: data.dash?.present === true ? { from: data.dash.get().from, since: data.dash.get().since } : undefined
 })
 
 /** Whether `target`'s shield faces a blow arriving at `at`. */
@@ -84,4 +89,32 @@ export const sweepTargets = (
     if (time !== undefined && time <= until) contacts.push({ time, at: { x: origin.x + delta.x * time, y: origin.y + delta.y * time }, target })
   }
   return contacts.sort((left, right) => left.time - right.time)
+}
+
+/**
+ * The `candidates` of the other side that dodged the same move (see
+ * `Dodged`): untouchable bodies it passes through, and bodies that dashed
+ * at most `window` seconds ago from a spot it passes through.
+ */
+export const sweepDodgers = (
+  origin: Vec2,
+  delta: Vec2,
+  r: number,
+  candidates: Iterable<Target>,
+  faction: Faction,
+  hit: ReadonlyArray<number>,
+  window: number,
+  until = 1
+): Array<Target> => {
+  const dodgers: Array<Target> = []
+  const touches = (at: Vec2, radius: number) => {
+    const time = sweepCircleCircle(origin, delta, r, at, radius)
+    return time !== undefined && time <= until
+  }
+  for (const target of candidates) {
+    if (target.faction === faction || hit.includes(target.id)) continue
+    const fresh = target.dashed !== undefined && target.dashed.since <= window
+    if ((target.invulnerable && touches(target.at, target.radius)) || (fresh && touches(target.dashed!.from, target.radius))) dodgers.push(target)
+  }
+  return dodgers
 }

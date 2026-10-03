@@ -4,7 +4,7 @@ How enemies fight: the rules behind the execution layer of
 `docs/vision.md` (dodging, positioning, timing). Like the vision, this
 records intentions and rules, not implementation; numbers live in
 `src/content/enemies.ts` and `src/config/tuning.ts` (`crowd`, `paths`,
-`fairness`), where they are live-tunable. What enemies are weak to, and the
+`fairness`, `breaking`, `perfectDodge`), where they are live-tunable. What enemies are weak to, and the
 elements they attack with, are in `docs/elements.md`.
 
 ## Principles
@@ -27,13 +27,14 @@ elements they attack with, are in `docs/elements.md`.
 
 - An enemy has one or more **attacks**. When it may attack, it picks one
   of those that can start: the target within the attack's range (a
-  minimum and a maximum distance) and, for shots and lanes, in sight. It
+  minimum and a maximum distance) and, for shots, in sight (a bomb is
+  lobbed over walls). It
   picks at random by the attacks' weights (from the run's seeded random
   numbers, so a run replays exactly).
 - An attack can name a **follow-up**: the attack that starts right after
   its recovery, with no cooldown, if it can start then. That is a combo
-  (the Chaser's lunge into a swipe into a slash; the Charger's charge and
-  its return). An attack with no weight is only ever a follow-up.
+  (the Chaser's swipe into a slash). An attack with no weight is only ever
+  a follow-up.
 - An attack's **aim follows the target** from the start of its windup until
   it locks (`aimLock` before it lands; at the start by default). The
   telegraph is dim while it follows and bright once it locks: the moment to
@@ -41,8 +42,14 @@ elements they attack with, are in `docs/elements.md`.
   take her by the time it lands (at most at her running speed: a dash does
   not throw it off), so running in a straight line is not a defense.
 - Enemies **stand their ground** while attacking, unmoved by the crowd, so
-  the attack lands where its telegraph showed. A blow can still push them;
-  a charge's lane moves with its charger.
+  the attack lands where its telegraph showed. A blow can still push them.
+- **Enemies attack from where they stand**: a swipe, a slam, a shot, a
+  lobbed bomb. None dashes along a lane at the player (the playtests found
+  a telegraphed slide unpleasant to face); the `charge` and `beam` attack
+  kinds stay in the vocabulary, unused. Ranged attacks are things in
+  flight the player can see coming and step out of: the Sniper fires a fast
+  bullet, the Firebomber lobs bombs whose landing ring shows from the
+  windup until they burst.
 
 ## Behaviors
 
@@ -70,6 +77,33 @@ pressing against the wall in between.
 These two numbers are what makes a big wave dangerous without making it
 unreadable; hardcore modifiers may raise them, never the readability floor.
 
+## Breaking
+
+Pressing an attack has a payoff. Every enemy that can break (`poise`
+above 0, a share of its health; Swarmers and training dummies never do)
+has a bar under its health:
+
+- Blows fill it by the damage they deal, heavy ones (finishers, charged
+  attacks) more, burns a little; a reaction on it (a body catching fire, a
+  shock, a wall slam above all) fills a share of it at once.
+- It **drains** once the enemy has taken nothing for a moment, so chipping
+  at it from afar never breaks it.
+- Full, the enemy **breaks**: its attack is cut off, it is stunned for a
+  while and takes more damage (a modest bonus: breaking is a window, never
+  a requirement), with a heavy pause and a burst. Its bar fills again only
+  once it has recovered.
+
+## Perfect dodges
+
+Reading an attack is rewarded over running from it. A dash started at
+most `perfectDodge.window` seconds before a blow lands where she stood (or
+on her, through the dash's invulnerability) is **perfect**; an earlier one
+is a plain dodge. It rewards once per dash: the **enemies slow down** for a
+moment while the team keeps its pace (their moves, windups, shots, and
+bombs), the attacker's break bar fills, the dash comes back, a little
+energy, a full magazine, and a moment more of invulnerability. Every
+reward is a number, and any can be turned off.
+
 ## Measuring difficulty
 
 A bot plays through the touch controls (`test/bot.ts`), reading only what
@@ -87,8 +121,6 @@ is on screen.
 
 ## Open questions
 
-1. **Commitment on the player's side.** Characters move at full speed while
-   attacking, so a player can swing and walk away at once, which takes
-   much of the danger out of melee range. Whether attacking should slow
-   or root her (and how much, per move) is a question about characters,
-   not enemies.
+1. **Waves.** Where each enemy comes in (by its job: ranged across the
+   arena, melee from the flanks), reinforcements arriving as the last ones
+   fall, elite enemies, and arena hazards.

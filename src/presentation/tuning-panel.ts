@@ -142,7 +142,7 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
       } else if (typeof value === "object" && value !== null && (Array.isArray(value) ? isListOfRecords(value) : !("kind" in value && Object.keys(value).length === 1))) {
         const group = document.createElement("details")
         group.className = "tuning__group"
-        group.open = path.length === 0 && ["player", "dash", "weapon", "feedback"].includes(key)
+        group.open = path.length === 0 && ["player", "dash", "perfectDodge", "breaking", "weapon", "feedback"].includes(key)
         const summary = document.createElement("summary")
         summary.textContent = key
         group.append(summary)
@@ -168,7 +168,8 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
   })
 
   const onKey = (event: KeyboardEvent) => {
-    if (event.key === "`") root.hidden = !root.hidden
+    // The backquote, or the key where it sits on other layouts (left of 1 or of Z: an Italian keyboard has no backquote key).
+    if (event.key === "`" || event.code === "Backquote" || event.code === "IntlBackslash") root.hidden = !root.hidden
   }
   window.addEventListener("keydown", onKey)
   mount.append(root)

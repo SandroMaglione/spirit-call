@@ -144,7 +144,7 @@ export const defaultTuning = {
   energy: {
     max: 100,
     /** Energy gained per point of damage the player deals (except with skills that cost energy). */
-    perDamage: 0.1
+    perDamage: 0.25
   },
 
   knockback: {
@@ -165,6 +165,30 @@ export const defaultTuning = {
     /** Hit-stop when the player takes a hit (0 disables). */
     hitStopOnPlayerHit: 0.12
   },
+
+  /**
+   * A perfect dodge: a dash started at most `window` seconds before an
+   * enemy blow lands where she stood when she dashed (or on her, through
+   * the dash's invulnerability). A dash taken earlier is a plain dodge. It
+   * rewards once per dash: the enemies slow to `slowScale` for
+   * `slowSeconds` (their moves, attacks, shots, and bombs; the team keeps
+   * its pace), the attacker's break bar fills by `breakFill` of itself, the
+   * dash comes back (`dashRefund` of its cooldown), she gains `energy`, her
+   * magazine refills (`reload`), and she stays untouchable
+   * `invulnerability` seconds longer.
+   * Any reward can be turned off (0, false).
+   */
+  perfectDodge: { window: 0.15, slowScale: 0.25, slowSeconds: 1.6, breakFill: 0.5, dashRefund: 1, energy: 10, reload: true, invulnerability: 0.25 },
+
+  /**
+   * Breaking enemies (see `features/poise.ts`). A blow fills an enemy's bar
+   * by the damage it deals (a heavy blow `heavy` times that, a burn `burn`
+   * times); a reaction on it fills `reaction` of the bar, a wall slam
+   * `slam`. After `quietSeconds` without any, the bar drains `drain` of
+   * itself per second. Full, the enemy breaks: stunned for `seconds`, its
+   * attack cut off, taking `damageTaken` times the damage, with a hit-stop.
+   */
+  breaking: { heavy: 2, burn: 0.25, reaction: 0.3, slam: 0.5, quietSeconds: 1.2, drain: 0.35, seconds: 2.5, damageTaken: 1.25, hitStop: 0.16 },
 
   /** Every enemy kind, by id. */
   enemies,

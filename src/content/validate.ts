@@ -52,6 +52,11 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
       problems.push(`${at}: minRange must be from 0 to below triggerRange (is ${attack.minRange})`)
     }
     if (attack.followUp !== null && !ids.includes(attack.followUp)) problems.push(`${at}: unknown follow-up ${attack.followUp}`)
+    if (attack.kind === "lob") {
+      positive(problems, at, { radius: attack.radius })
+      if (!(attack.flightTime >= 0 && attack.fuse >= 0 && attack.maxReach >= 0)) problems.push(`${at}: flightTime, fuse, and maxReach must not be negative`)
+      if (attack.leaves !== null && !has(elements, attack.leaves.element)) problems.push(`${at}: leaves an unknown element ${attack.leaves.element}`)
+    }
   }
   // A combo ends: following the follow-ups never comes back to an attack already made.
   for (const attack of attacks) {
@@ -173,6 +178,10 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (attack.power !== null) {
       checkMove(problems, `attack ${id} power move`, attack.power.move)
       positive(problems, `attack ${id} power`, { chargeTime: attack.power.chargeTime })
+    }
+    if (attack.magazine !== null) {
+      positive(problems, `attack ${id} magazine`, { reload: attack.magazine.reload })
+      if (!(Number.isInteger(attack.magazine.rounds) && attack.magazine.rounds >= 1)) problems.push(`attack ${id} magazine: rounds must be a whole number from 1`)
     }
   }
 

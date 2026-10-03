@@ -70,6 +70,11 @@ export interface DashValue {
   readonly buffered: number
   /** Unit direction of the current dash. */
   readonly direction: Vec2
+  /** Seconds since the last dash started, and where it started (for a perfect dodge, see `features/dodge.ts`). */
+  readonly since: number
+  readonly from: Vec2
+  /** Whether the last dash was already a perfect dodge (it rewards once). */
+  readonly perfect: boolean
 }
 export const Dash = Descriptor.Component<DashValue>()("Shooter/Dash")
 
@@ -115,6 +120,8 @@ export interface VortexValue {
   readonly remaining: number
   /** Time until its next strike. */
   readonly nextTick: number
+  /** The element a wind whirl has taken on (see `AbsorbIntoVortices`), whirled with each strike; `null` before it does. */
+  readonly absorbed: ElementId | null
 }
 export const Vortex = Descriptor.Component<VortexValue>()("Shooter/Vortex")
 
@@ -238,6 +245,20 @@ export const Ground = Descriptor.Component<GroundValue>()("Shooter/Ground")
  */
 export const Gust = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Gust")
 
+/**
+ * How close an enemy is to breaking (see `features/poise.ts`): `current`
+ * fills toward its bar (`EnemySpec.poise` of its max health) from the
+ * blows and reactions it takes, and drains once it has taken none for a
+ * while (`quiet` counts the seconds). Full, it breaks: for `broken` seconds
+ * it is stunned, its attack cut off, and it takes more damage.
+ */
+export interface PoiseValue {
+  readonly current: number
+  readonly broken: number
+  readonly quiet: number
+}
+export const Poise = Descriptor.Component<PoiseValue>()("Shooter/Poise")
+
 /** Stunned for `remaining` seconds: an enemy neither moves nor goes on with its attack. */
 export const Stunned = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Stunned")
 
@@ -283,6 +304,10 @@ export interface WeaponValue {
   readonly powerQueued: boolean
   /** Her running speed while the last move recovers, as a fraction of it (0: she stands; see `BasicAttackSpec.attackingSpeed`). */
   readonly slowed: number
+  /** Rounds fired from the magazine since it was last full (see `BasicAttackSpec.magazine`). */
+  readonly spent: number
+  /** Seconds left reloading (0: not reloading); the magazine is full when it ends. */
+  readonly reloading: number
 }
 export const Weapon = Descriptor.Component<WeaponValue>()("Shooter/Weapon")
 
@@ -334,7 +359,8 @@ export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind }>()("Shoot
 
 /** Where an enemy is in its telegraphed attack cycle. */
 export const AttackPhase = Descriptor.State("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
-  transitions: { ready: ["windup"], windup: ["active"], active: ["recovery"], recovery: ["ready"] }
+  // A windup can be cut off (the enemy broke) and goes back to ready.
+  transitions: { ready: ["windup"], windup: ["active", "ready"], active: ["recovery"], recovery: ["ready"] }
 })
 export type AttackPhase = (typeof AttackPhase.states)[number]
 
@@ -452,6 +478,21 @@ export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: Rea
 
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
+
+/**
+ * A blow passed through an invulnerable body (a hitbox or a shot touching
+ * it): `target` dodged it, if it was dashing. `attacker` dealt it, when known.
+ */
+export const Dodged = Descriptor.Event<{ readonly target: number; readonly at: Vec2; readonly attacker: Entity.Handle<typeof Root, typeof Position> | null }>()("Shooter/Dodged")
+
+/** The player dodged perfectly (see `features/dodge.ts`), for effects. */
+export const PerfectDodged = Descriptor.Event<{ readonly at: Vec2 }>()("Shooter/PerfectDodged")
+
+/** Slow motion (a perfect dodge): the enemies run at `scale` for `remaining` more seconds, the team at its own pace (see `enemyPace`). */
+export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; readonly scale: number }>()("Shooter/SlowMotion")
+
+/** An enemy broke (see `Poise`), for effects. */
+export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind }>()("Shooter/Broke")
 
 /** An area went off (a lobbed skill's blast, a nova), for effects. */
 export const Explosion = Descriptor.Event<{
@@ -724,6 +765,7 @@ export const Game = Schema.bind(
       ElementAffinities,
       Ground,
       Gust,
+      Poise,
       Stunned,
       Lobbed,
       Vortex,
@@ -765,9 +807,10 @@ export const Game = Schema.bind(
       Rng,
       Run,
       RunResult,
-      HitStop
+      HitStop,
+      SlowMotion
     },
-    events: { Damage, Hit, Death, Impact, Explosion, Action, Cast, Heal, Reaction, Zap }
+    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Reaction, Zap }
   }),
   Root
 )

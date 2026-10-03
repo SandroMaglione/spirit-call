@@ -25,13 +25,17 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
   const projectileShadow = new MeshBasicMaterial({ color: view.shadow, transparent: true, opacity: 0.3, depthWrite: false })
   // Unlit: projectiles glow in their color whichever way they face.
   const glow = new MeshBasicMaterial()
+  // See-through glows (halos, trails), rounder than the orbs.
+  const round = new IcosahedronGeometry(1, 1)
+  const flare = new MeshBasicMaterial({ transparent: true, opacity: view.bolt.glowOpacity, depthWrite: false })
   // Instances bring their own colors; flat shading keeps the low-poly facets.
   const flesh = new MeshLambertMaterial({ flatShading: true })
   const fixed = [
     new Batch(parent, disc, shadow, { order: floorLayers.shadows.order }),
     new Batch(parent, disc, projectileShadow, { order: floorLayers.shadows.order }),
     new Batch(parent, orb, glow),
-    new Batch(parent, puck, glow)
+    new Batch(parent, puck, glow),
+    new Batch(parent, round, flare)
   ] as const
   const bodyGeometry = (radius: number, height: number): BufferGeometry => {
     const key = `${radius.toFixed(2)}:${height.toFixed(2)}`
@@ -82,6 +86,7 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     projectileShadows: fixed[1],
     orbs: fixed[2],
     pucks: fixed[3],
+    flares: fixed[4],
     bodyGeometry,
     bodies(radius, height) {
       const key = `${radius.toFixed(2)}:${height.toFixed(2)}`
@@ -101,7 +106,7 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
       for (const batch of [...fixed, ...bodies.values(), ...pieces.values()]) batch.dispose()
       for (const geometry of baked) geometry.dispose()
       for (const geometry of geometries.values()) geometry.dispose()
-      for (const resource of [disc, orb, puck, shadow, projectileShadow, glow, flesh]) resource.dispose()
+      for (const resource of [disc, orb, round, puck, shadow, projectileShadow, glow, flare, flesh]) resource.dispose()
       for (const { batch, atlas } of animated.values()) { batch.dispose(); atlas.dispose() }
     }
   }

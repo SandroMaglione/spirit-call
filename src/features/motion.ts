@@ -6,7 +6,8 @@ import { moveCircle } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EnemyKind } from "../content/enemies.ts"
-import { Body, Game, Gust, Knockback, Position, PrevPosition, Time, Tuning, Velocity, Wall } from "../schema.ts"
+import { Body, Enemy, Game, Gust, Knockback, Position, PrevPosition, SlowMotion, Time, Tuning, Velocity, Wall } from "../schema.ts"
+import { enemyPace } from "./time.ts"
 
 const Interpolated = Game.Query({
   selection: { position: Game.Query.read(Position), previous: Game.Query.write(PrevPosition) }
@@ -51,18 +52,22 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
         velocity: Game.Query.read(Velocity),
         body: Game.Query.read(Body),
         knockback: Game.Query.optional(Knockback),
-        gust: Game.Query.optional(Gust)
+        gust: Game.Query.optional(Gust),
+        enemy: Game.Query.optional(Enemy)
       }
     }),
     walls: Walls
   },
-  resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) }
+  resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) }
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
   const boxes = wallBoxes(queries.walls.each())
+  // Enemies walk at their pace (slow motion); pushes still carry them at full speed.
+  const pace = enemyPace(resources.slowMotion.get())
   for (const { data } of queries.bodies.each()) {
-    const velocity = data.velocity.get()
+    const own = data.velocity.get()
+    const velocity = data.enemy.present && pace !== 1 ? { x: own.x * pace, y: own.y * pace } : own
     const knockback = data.knockback.present ? data.knockback.get() : zero
     const knockbackShare = pushShare(pushDecay(tuning, data.gust.present ? data.gust.get() : undefined), dt)
     const vx = velocity.x + knockback.x * knockbackShare

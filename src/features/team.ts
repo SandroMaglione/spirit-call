@@ -77,7 +77,7 @@ const fresh = (at: Vec2): Carried => ({
   motion: { previous: at, velocity: { x: 0, y: 0 }, invulnerable: 0 },
   aim: { x: 1, y: 0 },
   facing: { x: 1, y: 0 },
-  dash: { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 } }
+  dash: { remaining: 0, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
 })
 
 /** `member`'s body on the field at `at`: her size and look (with her weapon), and what it carries. */

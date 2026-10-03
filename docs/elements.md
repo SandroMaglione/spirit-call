@@ -44,7 +44,7 @@ enemies (guard, stagger, terrain), not about damage on a single target:
 that would be a damage race.
 
 The first three, one per character: **Wind** for the Swordsman (her Gale
-pulls the enemies around her into reach, hurting nobody), **Fire** for the Gunner (the grenade
+pulls the enemies around her into reach, grazing them), **Fire** for the Gunner (the grenade
 leaves a fire pool), and **Water** for the Tidecaller (a disc thrower at
 middle range). **Thunder** came next, with the Stormcaller (a support who
 heals); Rock comes with a later character (a shield support).
@@ -101,6 +101,12 @@ The Stormcaller heals through her kit, and healing always costs something:
   puddle shocks everyone else standing in it, the player too.
 - **Wind carries states.** Bodies pushed into each other share their state,
   and wind drives a fire pool along its direction.
+- **A whirl takes on an element.** A wind whirl (the Gale, the Cyclone)
+  takes on the first fire, water, or thunder that touches it: a pool under
+  it, a burning or soaked enemy inside it, a thunder strike landing in it,
+  an enemy's fire as much as the team's. It turns that element's color,
+  lasts a little longer, and every strike puts the element on what it
+  pulls: a fire storm, a soaking tide, thunder jumping through the pack.
 - **Wind into rock.** Bodies pushed by wind into a wall or a rock pillar are
   stunned.
 - **Every other pair does nothing special.** Fire on a thundered enemy, rock
@@ -140,8 +146,8 @@ The Stormcaller heals through her kit, and healing always costs something:
   thunder; a burning one leaves fire behind for the player to avoid.
 - Enemies can **attack with an element**, putting its state on the player
   like any blow: the Shooter's close-range spray soaks her (slowed), the
-  Sniper's beam is thunder (it shocks her if she is soaked), the Charger
-  sets her burning. Enemy teams combine like the player's: a Shooter's
+  Sniper's bullet is thunder (it shocks her if she is soaked), the
+  Firebomber's bombs set her burning and leave fire on the ground. Enemy teams combine like the player's: a Shooter's
   water makes a Sniper's thunder hurt more. The telegraph and the bolts
   are drawn in the element's color, and a quest lists the elements its
   enemies attack with. Reactions an enemy sets off on the team are not
@@ -158,7 +164,7 @@ A first sketch for the current enemies (their affinities are in
 |---|---|
 | Swarmer (packs) | Fire spreading through the pack; thunder |
 | Chaser (runs at you) | Water to slow it; wind to scatter |
-| Charger (charges down a lane) | Water to slow it; a rock pillar to charge into |
+| Firebomber (lobs fire bombs; id `charger`) | Water to put its fire out; wind to take its fire into a whirl |
 | Shooter, Sniper (keep their distance) | Wind to pull them in; thunder to reach them; rock pillars to block their shots |
 | Brute (slow, heavy) | Rock to stagger it; immune to being pushed by wind |
 | Guardian (frontal shield) | Ground effects (the shield blocks projectiles, not the floor); rock to break its guard |
