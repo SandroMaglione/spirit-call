@@ -13,7 +13,9 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
 import { courtyardModels } from "./assets/courtyard.ts"
 import { enemyModels } from "./assets/enemies.ts"
+import { abigailCrescendoModel, abigailModel, abigailTrainingBladeModel } from "./assets/abigail.ts"
 import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
+import { toonMaterials } from "./toon.ts"
 
 /** How a clip ends: loops name the time their first pose comes back (`closeLoop`); one-shots have `null`. */
 export interface ClipTiming {
@@ -30,6 +32,8 @@ export interface ModelSpec {
   readonly footprint?: readonly [number, number]
   /** Its animation clips by name; a model without animation has none. */
   readonly clips: Readonly<Record<string, ClipTiming>>
+  /** `toon`: cel-shaded with an outline, like the anime characters (see `toon.ts`); lit low-poly otherwise. */
+  readonly shading?: "toon"
 }
 
 /** Every model the game can show. Add new ones here (with their module in `assets/`). */
@@ -37,6 +41,9 @@ export const models = {
   crow: crowModel,
   trainingBlade: trainingBladeModel,
   crescendo: crescendoModel,
+  abigail: abigailModel,
+  abigailTrainingBlade: abigailTrainingBladeModel,
+  abigailCrescendo: abigailCrescendoModel,
   ...courtyardModels,
   ...enemyModels
 } as const satisfies Record<string, ModelSpec>
@@ -129,7 +136,8 @@ export const loadModels = async (ids: Iterable<ModelId>): Promise<ReadonlyMap<Mo
     for (const name of Object.keys(spec.clips)) {
       if (!clips.has(name)) throw new Error(`Model ${id} is missing its ${name} clip`)
     }
-    plainMaterials(gltf.scene)
+    if (spec.shading === "toon") toonMaterials(gltf.scene)
+    else plainMaterials(gltf.scene)
     return { id, spec, scene: gltf.scene, clips }
   }))
   return new Map(loaded.map((source) => [source.id, source]))

@@ -5,7 +5,7 @@
  * direction, plays its loops by how its body moves, and plays one-shot
  * moments over them (see `animation.ts`).
  */
-import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshStandardMaterial, SkinnedMesh } from "three"
+import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshBasicMaterial, MeshStandardMaterial, MeshToonMaterial, SkinnedMesh } from "three"
 import type { AnimationAction, Material, Object3D, Quaternion, Skeleton, Vector3 } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
 
@@ -14,19 +14,26 @@ import { advanceLocomotion, freshLocomotion, oneShotPose, shotBlend } from "./an
 import type { Locomotion, OneShot } from "./animation.ts"
 import type { Moments, Shot } from "./looks.ts"
 import type { ModelSource } from "./models.ts"
+import { addOutlines } from "./toon.ts"
+
+/** A material a copy can tint and fade: lit (standard or cel-shaded) or an outline. */
+export type Paintable = MeshStandardMaterial | MeshToonMaterial | MeshBasicMaterial
 
 /** A copy's materials that are its own, with their colors before any tint. */
-export type OwnMaterials = ReadonlyArray<{ readonly material: MeshStandardMaterial; readonly base: Color }>
+export type OwnMaterials = ReadonlyArray<{ readonly material: Paintable; readonly base: Color }>
 
-/** A copy of `source`; with `ownMaterials`, its materials are copies too (to tint or fade it alone). */
+/**
+ * A copy of `source`; with `ownMaterials`, its materials are copies too (to
+ * tint or fade it alone), and a cel-shaded model gets its outlines.
+ */
 export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonly object: Object3D; readonly materials: OwnMaterials } => {
   const object = clone(source.scene)
-  const materials: Array<{ material: MeshStandardMaterial; base: Color }> = []
+  const materials: Array<{ material: Paintable; base: Color }> = []
   if (ownMaterials) {
-    const copies = new Map<Material, MeshStandardMaterial>()
+    const copies = new Map<Material, MeshStandardMaterial | MeshToonMaterial>()
     // Parts sharing a material keep sharing the copy.
     const own = (material: Material): Material => {
-      if (!(material instanceof MeshStandardMaterial)) return material
+      if (!(material instanceof MeshStandardMaterial || material instanceof MeshToonMaterial)) return material
       const known = copies.get(material)
       if (known !== undefined) return known
       const copy = material.clone()
@@ -37,6 +44,9 @@ export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonl
     object.traverse((part) => {
       if (part instanceof Mesh) part.material = Array.isArray(part.material) ? part.material.map(own) : own(part.material)
     })
+    if (source.spec.shading === "toon") {
+      for (const outline of addOutlines(object)) materials.push({ material: outline, base: outline.color.clone() })
+    }
   }
   return { object, materials }
 }
@@ -62,8 +72,11 @@ export const paintMaterials = (materials: OwnMaterials, tint: number, glowColor:
   const seeThrough = opacity < 1
   for (const { material, base } of materials) {
     material.color.copy(base).multiply(tinted)
-    material.emissive.setHex(glowColor)
-    material.emissiveIntensity = glow
+    // Outlines have no light of their own: they stay dark through a flash.
+    if (!(material instanceof MeshBasicMaterial)) {
+      material.emissive.setHex(glowColor)
+      material.emissiveIntensity = glow
+    }
     material.opacity = opacity
     if (material.transparent !== seeThrough) {
       material.transparent = seeThrough
