@@ -17,8 +17,6 @@ from motion import GUARD, TRAVEL, clips
 
 TOE = {s: Vector((ANKLE[s].x, -0.035, 0.035)) for s in "LR"}
 TOE_TIP = {s: Vector((ANKLE[s].x, -0.118, 0.030)) for s in "LR"}
-# Sole points under each foot (heel and ball), kept above the floor.
-SOLE = {s: (Vector((ANKLE[s].x, 0.095, 0.0)), Vector((ANKLE[s].x, -0.035, 0.0))) for s in "LR"}
 SECONDARY = {  # bone: (stiffness, drag, gravity)
     "hair.back": (0.55, 0.020, 0.15), "hair.side.L": (0.50, 0.025, 0.10), "hair.side.R": (0.45, 0.025, 0.25),
     "cape.back": (0.40, 0.030, 0.55), "cape.L": (0.40, 0.030, 0.55), "cape.R": (0.40, 0.030, 0.55),
@@ -126,6 +124,13 @@ class Poser:
         self.rig.pose.bones[name].matrix = m
         self.update()
 
+    def place(self, name, head, turn):
+        """Sets `name` at `head`, turned by `turn` (armature axes) from its rest."""
+        m = (turn @ self.rest[name].to_3x3()).to_4x4()
+        m.translation = head
+        self.rig.pose.bones[name].matrix = m
+        self.update()
+
     def frame(self, name, head, y, x):
         """Sets `name`'s full frame: its y along `y`, its x toward `x`."""
         y = Vector(y).normalized()
@@ -161,6 +166,10 @@ class Poser:
             return bone.head_local.copy()
         return (self.world(parent.name) @ self.rest[parent.name].inverted() @ bone.head_local.to_4d()).to_3d()
 
+    def deformed(self, bone, point):
+        """Where a rest-pose `point` moved by `bone` is now."""
+        return (self.world(bone) @ self.rest[bone].inverted() @ Vector(point).to_4d()).to_3d()
+
     def pose(self, s):
         for p in self.rig.pose.bones:
             p.matrix_basis.identity()
@@ -183,11 +192,25 @@ class Poser:
             ankle.z += math.sin(roll) * 0.10
             hip = self.head_of(f"thigh.{side}")
             out = Matrix.Rotation(pivot, 3, "Z") @ Vector((0.25 if side == "L" else -0.25, 0, 0))
-            end = self.chain(f"thigh.{side}", f"shin.{side}", hip, ankle, forward + out)
-            foot_dir = Matrix.Rotation(pivot, 3, "Z") @ Matrix.Rotation(roll, 3, "X").inverted() @ (TOE[side] - ANKLE[side])
-            self.aim(f"foot.{side}", end, foot_dir)
-            toe_head = self.head_of(f"toe.{side}")
-            self.aim(f"toe.{side}", toe_head, Matrix.Rotation(pivot, 3, "Z") @ (TOE_TIP[side] - TOE[side]))
+            for _ in range(2):
+                end = self.chain(f"thigh.{side}", f"shin.{side}", hip, ankle, forward + out)
+                # Feet turn by their yaw and heel lift only (a least turn would
+                # tip them onto an edge when they face backward in a spin).
+                yaw = Matrix.Rotation(pivot, 3, "Z")
+                self.place(f"foot.{side}", end, yaw @ Matrix.Rotation(-roll, 3, "X"))
+                self.place(f"toe.{side}", self.head_of(f"toe.{side}"), yaw)
+                # Lift the foot if any point of its sole went under the floor
+                # (weighted between foot and toe as the shoe is, figure.boot).
+                lowest = math.inf
+                for y in (0.095, 0.03, -0.02, -0.045, -0.065, -0.09, -0.11):
+                    for dx in (-0.04, 0.0, 0.04):
+                        t = max(0.0, min(1.0, (-y - 0.035) / 0.05))
+                        point = Vector((ANKLE[side].x + dx, y, 0.0))
+                        z = self.deformed(f"foot.{side}", point).z * (1 - t) + self.deformed(f"toe.{side}", point).z * t
+                        lowest = min(lowest, z)
+                if lowest >= 0:
+                    break
+                ankle.z -= lowest
         # Arms: the sword hand to its grip point, the blade along yaw and pitch.
         yaw, pitch = s["yaw"], s["pitch"]
         blade = turn @ Vector((math.sin(yaw) * math.cos(pitch), -math.cos(yaw) * math.cos(pitch), math.sin(pitch)))

@@ -48,15 +48,6 @@ def export(path, animated):
         export_def_bones=True)
 
 
-def lowest(mesh):
-    depsgraph = bpy.context.evaluated_depsgraph_get()
-    evaluated = mesh.evaluated_get(depsgraph)
-    data = evaluated.to_mesh()
-    z = min((evaluated.matrix_world @ v.co).z for v in data.vertices)
-    evaluated.to_mesh_clear()
-    return z
-
-
 def bounds(mesh):
     depsgraph = bpy.context.evaluated_depsgraph_get()
     evaluated = mesh.evaluated_get(depsgraph)
@@ -112,15 +103,18 @@ assert abs(rest[0][2]) < 1e-4, rest
 height = rest[1][2]
 rig.data.pose_position = "POSE"
 
+expected = {}
 for name, (frames, loop, _) in clips.items():
     action = bpy.data.actions[name]
     rig.animation_data.action = action
     low = math.inf
+    expected[name] = []
     for frame in range(1, frames + 1):
         scene.frame_set(frame)
-        low = min(low, lowest(mesh))
+        expected[name].append(bounds(mesh))
+        low = min(low, expected[name][-1][0][2])
     report["clips"][name] = {"ground_min": round(low, 4)}
-    assert low > -0.02, (name, "below the floor", low)
+    assert low > -0.002, (name, "below the floor", low)
     last = max(k.co.x for c in fcurves(action) for k in c.keyframe_points)
     assert last == frames, (name, last)
 
@@ -143,6 +137,22 @@ assert report["triangles"] < 5000, report["triangles"]
 assert report["materials"] == 1
 assert report["bytes"] < 600_000, report["bytes"]
 assert "weapon_grip" in {document["nodes"][j]["name"] for j in document["skins"][0]["joints"]}
+
+# A fresh import poses the same: every clip's bounds, frame by frame.
+bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.context.scene.render.fps = FPS
+bpy.ops.import_scene.gltf(filepath=str(path))
+imported_rig = next(o for o in bpy.context.scene.objects if o.type == "ARMATURE")
+imported = next(o for o in bpy.context.scene.objects if o.type == "MESH")
+assert "weapon_grip" in imported_rig.data.bones
+for name, (frames, _, _) in clips.items():
+    imported_rig.animation_data.action = bpy.data.actions[name]
+    error = 0.0
+    for frame in range(frames):
+        bpy.context.scene.frame_set(frame)
+        error = max(error, max(abs(a - b) for p, q in zip(expected[name][frame], bounds(imported)) for a, b in zip(p, q)))
+    assert error < 1e-3, (name, "round trip", error)
+    report["clips"][name]["round_trip_bounds_error"] = round(error, 6)
 
 info = {
     "schema_version": 2, "fps": FPS, "height_meters": height, "up": "+Y", "forward": "+Z", "root_motion": False,

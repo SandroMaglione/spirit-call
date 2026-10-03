@@ -1,34 +1,44 @@
 {
   "clips": {
     "Idle": {
-      "ground_min": -0.0008
+      "ground_min": -0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "Run": {
-      "ground_min": -0.0
+      "ground_min": -0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "AttackCombo": {
-      "ground_min": -0.0052
+      "ground_min": -0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "Power": {
-      "ground_min": -0.0015
+      "ground_min": -0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "Dash": {
-      "ground_min": -0.0008
+      "ground_min": 0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "RunStart": {
-      "ground_min": -0.0008
+      "ground_min": -0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "RunStop": {
-      "ground_min": -0.0008
+      "ground_min": -0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "Recover1": {
-      "ground_min": -0.0009
+      "ground_min": 0.0,
+      "round_trip_bounds_error": 0.0
     },
     "Recover2": {
-      "ground_min": -0.0015
+      "ground_min": -0.0,
+      "round_trip_bounds_error": 1e-06
     },
     "Recover3": {
-      "ground_min": -0.0015
+      "ground_min": 0.0,
+      "round_trip_bounds_error": 1e-06
     }
   },
   "weapons": {
@@ -45,6 +55,6 @@
   "bones": 28,
   "triangles": 4820,
   "materials": 1,
-  "bytes": 485312,
-  "sha256": "73a9b8773ed10b03e6c46dd61ca2edbddd2e3e68b054a41f5cd199865235c085"
+  "bytes": 483344,
+  "sha256": "1cf5bab1a1df3560895e3b2cee3ee2abd57b9fff685300e267be3f6eadb42bd7"
 }
