@@ -5,7 +5,8 @@ A top-down action game for the phone (and the browser), built on the
 design direction (pillars, non-goals, open questions). Design decisions are
 checked against it; open questions are asked, not guessed. Detailed rules
 for one area live next to it (`docs/elements.md`: elements, states, ground
-effects, enemy traits; `docs/models.md`: 3D models and looks).
+effects, enemy traits; `docs/models.md`: 3D models and looks;
+`docs/character-sheet.md`: what a character's sheet must give for her model).
 
 ## Commands
 

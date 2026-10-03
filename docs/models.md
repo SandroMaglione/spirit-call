@@ -30,6 +30,29 @@ system changes.
 `test/looks.test.ts` checks every file has exactly the clips its spec lists
 and every moment names a clip its model has.
 
+## Characters
+
+The game's characters are anime girls with normal proportions, not chibi
+(the crow is a placeholder). Each is built from a character sheet
+(`character-sheet.md`); `art/characters/abigail/` is the reference study,
+and its scripts are the template.
+
+- **Cel-shaded.** Its spec says `shading: "toon"`: its materials light in
+  two flat tones, and each copy gets an outline that follows its skeleton,
+  from 0.8 px in the arena to 2.2 px close up in the menu (`toon.ts`). Its
+  face's normals lean forward and up in the file, so the shading's edge
+  never crosses the face.
+- **Proportions:** about 6.5 to 7 heads, the head drawn about 10% larger
+  than a page figure's so it reads at 20 to 35 pixels tall.
+- **Its contract with the game is the crow's:** scaled to its body's
+  height, the clips its look's moments name (`Idle`, `Run`, `RunStart`,
+  `RunStop`, `AttackCombo` in four sections with contacts, `Recover1`–`3`,
+  `Power`, `Dash`), and a `weapon_grip` bone. Weapons attach as they are,
+  so a character of a different size has its own scaled copies.
+- **Review** with its inspector (the model drawn by the game's own code,
+  at fixed clip times), at arena size on a phone beside the crow and
+  close up, then in the live game.
+
 ## What a model file must be
 
 - **glTF binary**, textures embedded, no Draco or other decoders, no lights,

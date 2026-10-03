@@ -19,7 +19,7 @@ SHEET = {"rows": (322, 2400), "height": 1.62, "front_center": 966, "side_center"
 METERS_PER_PIXEL = SHEET["height"] / (SHEET["rows"][1] - SHEET["rows"][0])
 
 # How much bigger than the sheet her head is drawn, for readability at
-# game size; 1 is the sheet (about 7.4 heads tall).
+# game size; 1 is the sheet (about 7.2 heads tall; 1.1 makes 6.7).
 HEAD_SCALE = 1.1
 NECK = Vector((0, 0.012, 1.395))
 
