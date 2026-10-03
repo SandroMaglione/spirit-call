@@ -108,6 +108,11 @@ describe("content", () => {
       "quest crossfire: its order loops back through crossfire",
       "quest theBrute: its order loops back through theBrute",
       "quest outposts: its order loops back through theBrute",
+      "quest ashfall: its order loops back through theBrute",
+      "quest highTide: its order loops back through theBrute",
+      "quest sandstorm: its order loops back through theBrute",
+      "quest theCloister: its order loops back through theBrute",
+      "quest theWarlord: its order loops back through theBrute",
       "quest holdTheLine: a secondary quest belongs to no chapter",
       "quest holdTheLine: level must be a whole number from 1 to the account's maximum (is 0)",
       "the new account: selects quest theSwarm, which a new account cannot start"

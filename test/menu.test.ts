@@ -90,7 +90,7 @@ describe("menu helpers", () => {
 
   it("describes content from its data", () => {
     expect(describeObjective(defaultTuning.challenges.swarm.objective, 3)).toBe("Clear 3 waves")
-    expect(describeObjective(defaultTuning.challenges.endless.objective, 5)).toBe("Survive 90s")
+    expect(describeObjective(defaultTuning.challenges.endless.objective, 5)).toBe("Survive 210s")
     expect(defaultTuning.weapons.executioner.passives.map(describePassive)).toEqual(["+50% damage to enemies below 30% HP"])
     expect(defaultTuning.weapons.bloodthirst.passives.map(describePassive)).toEqual(["On kill: heal 5% of max HP"])
     expect(describePassive(defaultTuning.weapons.echoSaber.passives[0]!)).toMatch(/^On the combo finisher: set off a shockwave/)

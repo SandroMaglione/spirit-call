@@ -43,7 +43,10 @@ elements they attack with, are in `docs/elements.md`.
   take her by the time it lands (at most at her running speed: a dash does
   not throw it off), so running in a straight line is not a defense.
 - Enemies **stand their ground** while attacking, unmoved by the crowd, so
-  the attack lands where its telegraph showed. A blow can still push them.
+  the attack lands where its telegraph showed. A blow can still push them,
+  and what they committed to goes with them: a swing or a lane starts from
+  where they stand, a slam comes back within reach, and a swing already out
+  moves with them. Pushing an attacker away is a defense.
 - **Enemies attack from where they stand**: a swipe, a slam, a shot, a
   lobbed bomb. None dashes along a lane at the player (the playtests found
   a telegraphed slide unpleasant to face); the `charge` and `beam` attack
@@ -88,6 +91,14 @@ unreadable; hardcore modifiers may raise them, never the readability floor.
   enemies are left (`waves.reinforceAt`), the next wave starts arriving.
   Kills bring it, never a timer, so there is no damage race.
 - Every spawn is warned on the floor before the enemy appears.
+- **A run lasts three to four minutes.** A quest's waves add up to that for
+  the lab's quick player (sum its seconds to clear); survive challenges run
+  180 to 210 s. Fewer, bigger waves rather than many small ones: a run of
+  eight to ten waves leaves room for a build-up and a last, hardest wave.
+- **Lasting until the team falls** (the `endure` objective, the Until Fall
+  track): the waves never end, and every wave's enemies come in
+  `levelPerWave` levels above the last. Reaching the goal wave clears the
+  tier; going past it is the score (each tier keeps its best wave).
 
 ## Elites
 
@@ -124,6 +135,15 @@ harm from instead of stepping in (fire anywhere, the player's included),
 and walk straight out of one they were pushed into. Only force puts them
 there: a wind whirl's pull, a push. An enemy immune to an element ignores
 its pools.
+
+Pools are few and small (at most two in an arena, of at most four tiles),
+and each carries low walls along two of its edges, one of each pair: it is
+open on the other two sides only, so it is stepped into on purpose or
+pushed into, never drifted into while dodging. Keep a pool short across the
+way enemies come in: one long enough to stand behind lets ranged enemies
+shoot over it out of reach, and a run drags on (the lab shows it as a wave
+that takes minutes). `test/arenas.test.ts` keeps every gap between what
+blocks wide enough to pass.
 
 ## Breaking
 

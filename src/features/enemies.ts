@@ -14,6 +14,7 @@ import { levelScale } from "./build.ts"
 import { currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { keepOut, readPlayer, skirmishTurn, steer } from "./behaviors.ts"
+import { waveLevelBonus } from "./challenges.ts"
 import { durationFactor, stateSpeed } from "./elements.ts"
 import { active } from "./ground.ts"
 import {
@@ -22,6 +23,7 @@ import {
   Aim,
   Body,
   Brain,
+  Challenge,
   CombatStats,
   ElementState,
   Enemy,
@@ -45,7 +47,8 @@ import {
   Stunned,
   Time,
   Tuning,
-  Velocity
+  Velocity,
+  Waves
 } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
 import type { EliteElement } from "../content/challenges.ts"
@@ -123,11 +126,18 @@ export const SpawnTrainingDummies = Game.System("Shooter/SpawnTrainingDummies", 
 /** Counts spawn warnings down and replaces each with its enemy. */
 export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", {
   queries: { pending: Game.Query({ selection: { pending: Game.Query.write(PendingSpawn) } }) },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), level: Game.System.readResource(EnemyLevel) }
+  resources: {
+    tuning: Game.System.readResource(Tuning),
+    time: Game.System.readResource(Time),
+    level: Game.System.readResource(EnemyLevel),
+    waves: Game.System.readResource(Waves),
+    challenge: Game.System.readResource(Challenge)
+  }
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
-  const level = resources.level.get()
+  // Lasting until the team falls, each wave comes in stronger (see `waveLevelBonus`).
+  const level = resources.level.get() + waveLevelBonus(tuning.challenges[resources.challenge.get()].objective, resources.waves.get().number)
   for (const { entity, data } of queries.pending.each()) {
     const pending = data.pending.get()
     const remaining = pending.remaining - dt

@@ -98,8 +98,13 @@ export const Quests = ({ store, nav, tab, play, enter }: {
             <h2 class="group__title">{tuning.tracks[track].name}</h2>
             {tuning.tracks[track].tiers.map((_, index) => {
               const tier = index + 1
-              const cleared = (tierProgress(account, track, tier)?.firstClearedAt ?? null) !== null
-              return entry({ kind: "tier", track, tier }, `${track}-${tier}`, `${tier}`, `Tier ${tier}`, cleared ? "✓" : null)
+              const progress = tierProgress(account, track, tier)
+              const cleared = (progress?.firstClearedAt ?? null) !== null
+              // Lasting until the team falls, how far it got shows too.
+              const endless = tuning.challenges[tuning.tracks[track].challenge].objective.kind === "endure"
+              const best = endless && progress?.bestWave !== undefined ? `W${progress.bestWave}` : null
+              const state = [cleared ? "✓" : null, best].filter((part) => part !== null).join(" ")
+              return entry({ kind: "tier", track, tier }, `${track}-${tier}`, `${tier}`, `Tier ${tier}`, state === "" ? null : state)
             })}
           </div>
         ))
@@ -135,9 +140,17 @@ export const Quests = ({ store, nav, tab, play, enter }: {
       <div class="quests__list">{list()}</div>
       <section class="brief">
         <h2 class="brief__name">{describePlay(tuning, selected)}</h2>
+        <p class="brief__description">{challenge.description}</p>
         <div class="brief__chips">
           <span>{describeObjective(challenge.objective, challenge.waves.scripted.length)}</span>
-          <span>Enemies Lv {encounter.enemyLevel}</span>
+          <span>{tuning.arenas[challenge.arena].name}</span>
+          <span>
+            Enemies Lv {encounter.enemyLevel}
+            {challenge.objective.kind === "endure" && challenge.objective.levelPerWave > 0 ? `, +${challenge.objective.levelPerWave} a wave` : ""}
+          </span>
+          {selected.kind === "tier" && tierProgress(account, selected.track, selected.tier)?.bestWave !== undefined && (
+            <span>Best wave {tierProgress(account, selected.track, selected.tier)!.bestWave}</span>
+          )}
           <span>{describeAmounts(tuning, { gold: clearPay(tuning.progression.gold, encounter.enemyLevel) })} a clear</span>
         </div>
         <div class="brief__foes">

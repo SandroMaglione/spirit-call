@@ -72,6 +72,8 @@ export interface QuestProgress {
 export interface TierProgress extends QuestProgress {
   /** The last period (see `periodOf`) its rewards were given in, or `null`. */
   readonly rewardedPeriod: number | null
+  /** The furthest wave a run reached (lasting until the team falls, how far it got); absent before any run. */
+  readonly bestWave?: number
 }
 
 /** What the arena is entered for: a quest, or a hardcore track's tier (numbered from 1). */
@@ -460,7 +462,11 @@ export const recordRun = (
     const progress = tierProgress(account, play.track, play.tier) ?? { attempts: 0, clears: 0, firstClearedAt: null, rewardedPeriod: null }
     // Its rewards once per period: the first clear since the last reset gives them.
     const rewarded = result.cleared && spec !== undefined && tierRewardsAvailable(tuning, account, play.track, play.tier, now)
-    const updated: TierProgress = { ...counted(progress, result, now), rewardedPeriod: rewarded ? periodOf(tuning.reset, now) : progress.rewardedPeriod }
+    const updated: TierProgress = {
+      ...counted(progress, result, now),
+      rewardedPeriod: rewarded ? periodOf(tuning.reset, now) : progress.rewardedPeriod,
+      bestWave: Math.max(progress.bestWave ?? 0, result.wave)
+    }
     next = { ...next, hardcore: { ...next.hardcore, [play.track]: { ...next.hardcore[play.track], [play.tier]: updated } } }
     if (rewarded) rewards = { ...spec.rewards, unlocks: [] }
   }

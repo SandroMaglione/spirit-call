@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ChallengeSpec } from "../src/content/challenges.ts"
-import { clearWaves, survive } from "../src/content/challenges.ts"
-import { objectiveProgress } from "../src/features/challenges.ts"
+import { clearWaves, endure, survive } from "../src/content/challenges.ts"
+import { objectiveProgress, runResultOf, waveLevelBonus } from "../src/features/challenges.ts"
 import { Enemy, Game, Invulnerable, Player, RunResult, Waves } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -58,11 +58,12 @@ describe("challenges", () => {
 
   it("measures how far a run got: the share of waves defeated, or of the time survived", () => {
     const waves = defaultTuning.challenges.swarm
+    const total = waves.waves.scripted.length
     const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [], front: 0 }, { time: 30, endedAt: null })
     expect(at(0, "break")).toBe(0)
     expect(at(1, "fighting")).toBe(0)
-    expect(at(1, "break")).toBeCloseTo(1 / 3)
-    expect(at(3, "spawning")).toBeCloseTo(2 / 3)
+    expect(at(1, "break")).toBeCloseTo(1 / total)
+    expect(at(3, "spawning")).toBeCloseTo(2 / total)
     expect(at(3, "complete")).toBe(1)
     const endless = defaultTuning.challenges.endless
     const seconds = endless.objective.kind === "survive" ? endless.objective.seconds : 0
@@ -95,5 +96,35 @@ describe("challenges", () => {
     expect(run.flow()).toBe("Playing")
     expect(run.waves().number).toBe(0)
     expect(run.result()).toBeNull()
+  })
+})
+
+describe("lasting until the team falls", () => {
+  const plan = { scripted: [["chaser"]] as Array<Array<"chaser">>, endless: { baseBudget: 2, budgetPerWave: 1 } }
+  const endless = withChallenge({ objective: endure(3, 1), waves: plan })
+
+  it("never ends on its own, however many waves go by", () => {
+    const run = play(endless)
+    run.tick(steps(40), true)
+    expect(run.flow()).toBe("Playing")
+    expect(run.waves().number).toBeGreaterThan(3)
+  })
+
+  it("counts as cleared once the team falls past its goal wave, as far as it got otherwise", () => {
+    const spec = { ...defaultTuning.challenges.swarm, objective: endure(3, 1), waves: plan }
+    const run = { time: 60, endedAt: 60 }
+    const stats = { kills: 0, shots: 0, reactions: [] }
+    const at = (number: number) => ({ number, phase: "fighting" as const, timer: 0, queue: [], front: 0 })
+    expect(runResultOf(false, "swarm", spec, run, at(2), stats, []).cleared).toBe(false)
+    expect(runResultOf(false, "swarm", spec, run, at(2), stats, []).progress).toBeCloseTo(1 / 3)
+    expect(runResultOf(false, "swarm", spec, run, at(5), stats, []).cleared).toBe(true)
+    expect(runResultOf(false, "swarm", spec, run, at(5), stats, []).wave).toBe(5)
+  })
+
+  it("brings each wave in stronger: a level more every wave", () => {
+    expect(waveLevelBonus(endure(10, 1), 1)).toBe(0)
+    expect(waveLevelBonus(endure(10, 1), 4)).toBe(3)
+    expect(waveLevelBonus(endure(10, 0.5), 5)).toBe(2)
+    expect(waveLevelBonus(survive(60), 9)).toBe(0)
   })
 })

@@ -186,15 +186,19 @@ const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =
 
 /**
  * Progress toward a challenge's objective, in a few words: the enemies left
- * in the wave (the wave marks show which wave), or for surviving the time
- * left and the wave.
+ * in the wave (the wave marks show which wave), for surviving the time left
+ * and the wave, and lasting until the fall the wave against the goal (then
+ * the wave alone, past it).
  */
 const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number, remaining: number): string => {
   const marked = challenge.objective.kind === "clearWaves"
   const wave = waves.number === 0
     ? "get ready"
     : waves.phase === "break" || waves.phase === "complete" ? (marked ? "cleared" : `wave ${waves.number} cleared`) : (marked ? `${remaining} left` : `wave ${waves.number} · ${remaining} left`)
-  const progress = challenge.objective.kind === "survive" ? `survive ${Math.max(0, Math.ceil(challenge.objective.seconds - time))}s · ${wave}` : wave
+  const objective = challenge.objective
+  const progress = objective.kind === "survive"
+    ? `survive ${Math.max(0, Math.ceil(objective.seconds - time))}s · ${wave}`
+    : objective.kind === "endure" && waves.number <= objective.goal ? `goal wave ${objective.goal} · ${wave}` : wave
   return progress.charAt(0).toUpperCase() + progress.slice(1)
 }
 

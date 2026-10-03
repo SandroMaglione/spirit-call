@@ -432,6 +432,12 @@ export interface HitboxValue {
   readonly hit: ReadonlyArray<number>
   /** Push every target this way instead of away from the area (a cut of wind drives enemies along it). */
   readonly pushAlong?: Vec2
+  /**
+   * Where its attacker stood when it struck, for a blow that moves with it
+   * (an enemy's swing): pushed away while the blow is out, the attacker takes
+   * it along instead of leaving it behind.
+   */
+  readonly follows?: Vec2
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 

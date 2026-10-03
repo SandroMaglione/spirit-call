@@ -7,7 +7,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
+import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { doubleTap, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -92,6 +92,22 @@ describe("telegraphed attacks", () => {
     const run = duel("chaser", { x: 300, y: 0 }, { keys: [...doubleTap("down", react - 3, { hold: true }), { frame: react + 20, release: ["down"] }] })
     run.step(windupAt + 60)
     expect(run.world().player!.health).toBe(swordsman.hp)
+  })
+
+  it("a swing goes with its attacker: pushed away as it winds up, it lands far from the player", () => {
+    const run = duel("chaser", { x: 300, y: 0 }, { tuning: swipeOnly })
+    stepUntil(run, () => run.world().enemies[0]?.attacker.phase === "windup")
+    // Past its aim lock, a gust throws the chaser away from her (world +x).
+    run.step(Math.ceil((swipe.windup - swipe.aimLock) / engine.stepSeconds) + 1)
+    const Push = Game.System("Test/Push", { queries: { enemies: Game.Query({ selection: { knockback: Game.Query.write(Knockback) }, with: [Enemy] }) } }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) data.knockback.set({ x: 1500, y: 0 })
+    })
+    run.runtime.tick(Game.Schedule(Push))
+    run.step(Math.ceil(swipe.windup / engine.stepSeconds) + Math.ceil(swipe.active / engine.stepSeconds) + 4)
+    const world = run.world()
+    expect(world.player!.health).toBe(swordsman.hp)
+    const enemy = world.enemies[0]!
+    expect(enemy.position.x - world.player!.position.x).toBeGreaterThan(swipe.kind === "melee" ? swipe.reach * 1.5 : Infinity)
   })
 
   it("dash invulnerability negates damage even without moving out", () => {
