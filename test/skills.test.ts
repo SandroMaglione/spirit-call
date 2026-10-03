@@ -5,7 +5,7 @@ import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { center, cursorAt, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller } from "./helpers.ts"
+import { center, cursorAt, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withWindCut } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -46,19 +46,47 @@ const FillEnergy = Game.System("Test/FillEnergy", {
 const hp = defaultTuning.enemies.dummy.hp
 const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
-describe("Blade Wave (Space)", () => {
-  const wave = defaultTuning.skills.bladeWave.effect
+describe("Gale (Space)", () => {
+  const gale = defaultTuning.skills.bladeWave.effect
+  const press = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
+  const distances = (run: ReturnType<typeof range>) => run.world().enemies.map((enemy) => Math.hypot(enemy.position.x - center.x, enemy.position.y - center.y))
+
+  it("whirls at her feet, whatever she aims at, pulling the enemies around her in without hurting them", () => {
+    expect(gale.kind).toBe("vortex")
+    const run = range([{ x: 200, y: 0 }, { x: 0, y: -200 }, { x: -230, y: 60 }], { x: 300, y: 300 }, { keys: [press(1)] })
+    run.step(steps(gale.kind === "vortex" ? gale.seconds : 0) + 4)
+    for (const distance of distances(run)) expect(distance).toBeLessThan(150)
+    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp, hp])
+  })
+
+  it("leaves what is out of its reach where it is", () => {
+    const run = range([{ x: 420, y: 0 }], { x: 200, y: 0 }, { keys: [press(1)] })
+    run.step(60)
+    expect(distances(run)[0]).toBeCloseTo(420, 0)
+  })
+
+  it("barely moves an enemy that is immune to wind and hard to push", () => {
+    const heavy = tuningWith({ enemies: { dummy: { elements: { wind: "immune" }, knockbackTaken: 0.2 } } })
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { keys: [press(1)], tuning: heavy })
+    run.step(80)
+    expect(distances(run)[0]).toBeGreaterThan(170)
+  })
+})
+
+describe("a cut of wind (Space)", () => {
+  const wave = windCut
+  const tuning = withWindCut()
   const cut = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
   it("cuts everything along its line toward the cursor, once each, and nothing beside it", () => {
-    const run = range([{ x: 100, y: 0 }, { x: 260, y: 0 }, { x: 150, y: 120 }], { x: 200, y: 0 }, { keys: [cut(1)] })
+    const run = range([{ x: 100, y: 0 }, { x: 260, y: 0 }, { x: 150, y: 120 }], { x: 200, y: 0 }, { keys: [cut(1)], tuning })
     run.step(4)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - wave.power, hp - wave.power, hp])
     expect(run.player().aim.x).toBeCloseTo(1, 6)
   })
 
   it("drives what it hits back along the cut in a glide: the wind's push dies down slowly while it drives", () => {
-    const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)] })
+    const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)], tuning })
     run.step(120)
     const [dummy] = run.world().enemies
     // Gliding at the wind's decay while driven, then at the usual one.
@@ -71,7 +99,7 @@ describe("Blade Wave (Space)", () => {
 
   it("respects its cooldown", () => {
     const again = steps(defaultTuning.skills.bladeWave.cooldown) - 10
-    const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1), cut(again)] })
+    const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1), cut(again)], tuning })
     run.step(again + 3)
     expect(run.world().enemies[0]!.health).toBe(hp - wave.power)
   })
@@ -236,7 +264,7 @@ describe("kits", () => {
     }
   })
 
-  it("carries out a cast from any caster: an enemy's Blade Wave hits the player", () => {
+  it("carries out a cast from any caster: an enemy's cut hits the player", () => {
     const PlayerHealth = Game.Inspector("Test/PlayerHealth", {
       queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) }
     }, ({ queries }) => queries.player.each()[0]!.data.health.get().current)
@@ -247,13 +275,13 @@ describe("kits", () => {
     }, ({ queries, events }) => {
       for (const { entity, data } of queries.enemies.each()) {
         const from = data.position.get()
-        const effect = defaultTuning.skills.bladeWave.effect
+        const effect = windCut
         events.cast.emit({ caster: Game.Entity.handle(entity.id, Position), faction: "enemy", atk: defaultTuning.enemies.dummy.atk, skill: "bladeWave", effect, from, at: center, direction: { x: -1, y: 0 }, charges: false })
       }
     })
     run.runtime.tick(Game.Schedule(EnemyCasts, CastCuts, Game.Schedule.applyDeferred()))
     run.step(2)
-    expect(run.runtime.inspect(PlayerHealth)).toBe(swordsman.hp - playerLoss(defaultTuning, "dummy", defaultTuning.skills.bladeWave.effect.power))
+    expect(run.runtime.inspect(PlayerHealth)).toBe(swordsman.hp - playerLoss(defaultTuning, "dummy", windCut.power))
   })
 })
 

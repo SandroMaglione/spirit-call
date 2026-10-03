@@ -47,8 +47,19 @@ export const Player = Descriptor.Tag("Shooter/Player")
  */
 /** A team member: her slot, who she is, and the weapon she carries. */
 export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly weapon: WeaponId }>()("Shooter/Member")
-/** Unit direction the entity aims at. */
+/** Unit direction the entity aims at: where its attacks and skills go (the cursor, or the touch aim). */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
+
+/**
+ * Which way the body faces (unit `direction`), apart from the aim, as in
+ * Death's Door: where she runs, except for `hold` seconds after an attack
+ * or a skill, when she faces the way it went.
+ */
+export interface FacingValue {
+  readonly direction: Vec2
+  readonly hold: number
+}
+export const Facing = Descriptor.Component<FacingValue>()("Shooter/Facing")
 
 export interface DashValue {
   /** Time left in the current dash; 0 when not dashing. */
@@ -270,6 +281,8 @@ export interface WeaponValue {
   readonly held: number
   /** A fully charged power attack was released and goes off once the recovery ends. */
   readonly powerQueued: boolean
+  /** Her running speed while the last move recovers, as a fraction of it (0: she stands; see `BasicAttackSpec.attackingSpeed`). */
+  readonly slowed: number
 }
 export const Weapon = Descriptor.Component<WeaponValue>()("Shooter/Weapon")
 
@@ -331,6 +344,8 @@ export type AttackPhase = (typeof AttackPhase.states)[number]
  * the telegraph shows.
  */
 export interface AttackerValue {
+  /** The attack in progress, or the last one: its index in the enemy's moveset (`attacks`); `null` before the first. */
+  readonly attack: number | null
   /** Time spent in the current phase. */
   readonly elapsed: number
   /** Time left before a new attack may start. */
@@ -344,8 +359,13 @@ export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker"
 /** A frontal shield: blocks projectiles hitting within `halfAngle` (radians) of `facing`. */
 export const Shield = Descriptor.Component<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>()("Shooter/Shield")
 
-/** Movement state for enemy behaviors. */
-export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly strafeTimer: number; readonly modeTimer: number }>()("Shooter/Brain")
+/** Movement state for enemy behaviors: the side it strafes to and until when, and the time in its current `EnemyMode`. */
+export interface BrainValue {
+  readonly strafe: 1 | -1
+  readonly strafeTimer: number
+  readonly modeTimer: number
+}
+export const Brain = Descriptor.Component<BrainValue>()("Shooter/Brain")
 
 /**
  * What a skirmishing enemy is doing (see the `skirmish` behavior): circling,
@@ -355,6 +375,7 @@ export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly st
 export const EnemyMode = Descriptor.State("Shooter/EnemyMode", ["orbit", "engage", "retreat"] as const, {
   transitions: { orbit: ["engage"], engage: ["retreat"], retreat: ["orbit"] }
 })
+export type EnemyMode = (typeof EnemyMode.states)[number]
 
 /** A damaging area that exists while an attack is active. */
 export interface HitboxValue {
@@ -364,7 +385,7 @@ export interface HitboxValue {
   readonly remaining: number
   /** Entity ids already hit, so each target is hit at most once. */
   readonly hit: ReadonlyArray<number>
-  /** Push every target this way instead of away from the area (the Blade Wave drives enemies along the cut). */
+  /** Push every target this way instead of away from the area (a cut of wind drives enemies along it). */
   readonly pushAlong?: Vec2
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
@@ -378,7 +399,7 @@ export const PendingSpawn = Descriptor.Component<{ readonly kind: EnemyKind; rea
 export type RenderableValue =
   | { readonly kind: "player"; readonly character: CharacterId; readonly weapon: WeaponId; readonly radius: number }
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number }
-  | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number }
+  | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number; readonly element: ElementId | null }
   | { readonly kind: "wall"; readonly box: Box; readonly placement: "back" | "front" | "sorted" }
   | { readonly kind: "totem"; readonly element: ElementId | null }
 
@@ -420,9 +441,14 @@ export const Hit = Descriptor.Event<{
   readonly element: ElementId | null
 }>()("Shooter/Hit")
 
-/** Elements meeting on a body or on the ground (see `ReactionKind`), for effects and the run's record. */
+/**
+ * Elements meeting on a body or on the ground (see `ReactionKind`), for
+ * effects and the run's record. `faction`: who set it off: an enemy's blow
+ * (on the team), the team (its blows, pools, and winds), or nobody (a fire
+ * spreading); the run records only what the team set off.
+ */
 export type { ReactionKind }
-export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind }>()("Shooter/Reaction")
+export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind; readonly faction: Faction | null }>()("Shooter/Reaction")
 
 /** An entity with health died. */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
@@ -687,6 +713,7 @@ export const Game = Schema.bind(
       Player,
       Member,
       Aim,
+      Facing,
       Dash,
       Invulnerable,
       CombatStats,

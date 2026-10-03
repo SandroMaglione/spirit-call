@@ -5,7 +5,8 @@ A top-down action game for the phone (and the browser), built on the
 design direction (pillars, non-goals, open questions). Design decisions are
 checked against it; open questions are asked, not guessed. Detailed rules
 for one area live next to it (`docs/elements.md`: elements, states, ground
-effects, enemy traits; `docs/models.md`: 3D models and looks;
+effects, enemy traits; `docs/enemies.md`: enemy movesets, behaviors,
+fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 `docs/character-sheet.md`: what a character's sheet must give for her model).
 
 ## Commands
@@ -25,6 +26,8 @@ effects, enemy traits; `docs/models.md`: 3D models and looks;
   Bumping `bevyTsRelease` is automatic: `.github/workflows/bevy-ts.yml`
   checks npm hourly, checks the game against a new release, commits the
   bump to main, and deploys prod.
+- `pnpm lab`: the difficulty lab (a bot fights every wave of every
+  challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
   `?character=`, `?weapon=`, `?challenge=` for a quick start); backquote opens the tuning panel
   (live numbers, spawns, "Unlock all").

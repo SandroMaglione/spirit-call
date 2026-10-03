@@ -45,8 +45,8 @@ import {
   Tuning,
   Velocity
 } from "../schema.ts"
-import type { ActiveState, Blow, EnemyKind, ProjectileValue } from "../schema.ts"
-import { pushDecay, Walls, wallBoxes } from "./motion.ts"
+import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
+import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
 import { afflict, durationFactor, elementDamageFactor } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
@@ -60,7 +60,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
     [PrevPosition, at],
     [Velocity, velocity],
     [Projectile, projectile],
-    [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius }]
+    [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius, element: projectile.blow.element?.id ?? null }]
   )
 
 /**
@@ -170,8 +170,6 @@ export const MoveProjectiles = (() => {
   })
 })()
 
-const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined): number =>
-  enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken
 
 const Damageable = Game.Query({
   selection: {
@@ -286,7 +284,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     if (!killed && blow.element !== null && !blow.periodic) {
       const afflicted = afflict(tuning, state, blow.element, blow.charges, affinity)
       data.state.set({ current: afflicted.state })
-      if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction })
+      if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction, faction: damage.faction })
       const gust = blow.element.id === "wind" ? tuning.elements.wind.seconds * durationFactor(tuning, affinity) : 0
       if (gust > 0) data.gust.set({ remaining: gust })
     }

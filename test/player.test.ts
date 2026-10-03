@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
-import { screenDirectionToWorld, toScreen } from "../src/math/iso.ts"
+import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { distance, normalizeOr } from "../src/math/vec.ts"
+import { Facing, Game, Player } from "../src/schema.ts"
 import { doubleTap, start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -104,13 +105,12 @@ describe("dash", () => {
 
   it("cannot tunnel through a pillar, even with an extreme dash", () => {
     const tuning = tuningWith({ dash: { distance: 3000, duration: 0.05 } })
-    // Aim at world north (straight at the pillar at (0.5, 0.16)) and dash standing still.
-    const north = toScreen(projection, { x: 0, y: -200 })
-    const run = start({
-      tuning,
-      pointer: [{ frame: 0, move: { x: 640 + north.x, y: 360 + north.y } }],
-      keys: doubleTap("right", 0)
+    // Face world north (straight at the pillar at (0.5, 0.16)) and dash standing still: a dash from standing goes the way she faces.
+    const run = start({ tuning, keys: doubleTap("right", 1) })
+    const FaceNorth = Game.System("Test/FaceNorth", { queries: { player: Game.Query({ selection: { facing: Game.Query.write(Facing) }, with: [Player] }) } }, ({ queries }) => {
+      for (const { data } of queries.player.each()) data.facing.set({ direction: { x: 0, y: -1 }, hold: 10 })
     })
+    run.runtime.tick(Game.Schedule(FaceNorth))
     run.step(12)
     const { position } = run.player()
     const pillarBottom = 0.16 * tuning.arena.height + 25

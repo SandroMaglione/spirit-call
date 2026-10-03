@@ -699,6 +699,12 @@ body:has(.menu) .btm-toggle {
   text-decoration: line-through;
 }
 
+/* An element the enemy attacks with: outlined in its color. */
+.trait--attacks {
+  border: 1px dashed var(--el);
+  color: var(--el);
+}
+
 .brief__more {
   flex: none;
   align-self: center;

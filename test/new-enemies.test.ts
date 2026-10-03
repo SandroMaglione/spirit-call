@@ -60,7 +60,7 @@ const stepUntil = (run: { step: (count?: number) => void }, predicate: () => boo
 }
 
 describe("charger", () => {
-  const spec = defaultTuning.enemies.charger.attack!
+  const spec = defaultTuning.enemies.charger.attacks[0]!
 
   it("telegraphs a lane at the player, then charges down it and hits a player who stays", () => {
     const run = duel("charger", { x: 300, y: 0 })
@@ -86,7 +86,7 @@ describe("charger", () => {
 })
 
 describe("sniper", () => {
-  const spec = defaultTuning.enemies.sniper.attack!
+  const spec = defaultTuning.enemies.sniper.attacks[0]!
 
   it("fires a beam that hits the player standing in its lane", () => {
     const run = duel("sniper", { x: 500, y: 0 })
@@ -123,7 +123,7 @@ describe("sniper", () => {
 describe("guardian", () => {
   const hp = defaultTuning.enemies.guardian.hp
   // A guardian that stands still (and does not attack), so only its shield is under test.
-  const still = tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attack: null } } })
+  const still = tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attacks: [] } } })
   const spec = defaultTuning.enemies.guardian.shield!
   const turnSteps = steps(180 / spec.turnRate) + 5
 

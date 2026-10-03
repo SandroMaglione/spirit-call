@@ -18,7 +18,7 @@ import { characters } from "../content/characters.ts"
 import { currencies } from "../content/currencies.ts"
 import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
-import { enemies } from "../content/enemies.ts"
+import { enemies, fairness } from "../content/enemies.ts"
 import { reset, tracks } from "../content/hardcore.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, quests } from "../content/quests.ts"
@@ -103,8 +103,8 @@ export const defaultTuning = {
     distance: 170,
     /** How long the dash lasts; speed is distance / duration. */
     duration: 0.14,
-    /** Time from the start of one dash until the next one is available. */
-    cooldown: 0.55,
+    /** Time from the start of one dash until the next one is available: a dash spent is a dash missing for the next threat. */
+    cooldown: 1.3,
     /** Invulnerability from the start of the dash. Can outlast the dash slightly. */
     invulnerability: 0.18,
     /** A dash pressed this long before it is available still happens. */
@@ -161,13 +161,16 @@ export const defaultTuning = {
     /** How long a hit target flashes white. */
     hitFlash: 0.08,
     /** Hit-stop: the whole simulation pauses this long when an enemy dies (0 disables). */
-    hitStopOnKill: 0.07,
+    hitStopOnKill: 0.1,
     /** Hit-stop when the player takes a hit (0 disables). */
-    hitStopOnPlayerHit: 0.09
+    hitStopOnPlayerHit: 0.12
   },
 
   /** Every enemy kind, by id. */
   enemies,
+
+  /** The least warning any enemy attack gives (see content/enemies.ts). */
+  fairness,
 
   /** How enemies steer around each other. */
   crowd: {
@@ -176,11 +179,25 @@ export const defaultTuning = {
     /** Extra personal space around each body. */
     spacing: 6,
     /** How many skirmishing enemies may close in on the player at once; the rest circle at a distance. */
-    engagers: 2,
+    engagers: 4,
     /** A circling enemy waits at least this long (seconds) before taking a free slot. */
-    minOrbitSeconds: 0.6,
+    minOrbitSeconds: 0.3,
     /** Circling speed as a fraction of the enemy's speed. */
-    orbitSpeed: 0.7
+    orbitSpeed: 0.7,
+    /**
+     * How many enemy attacks may be winding up at once across the arena
+     * (follow-ups excepted): the nearest enemies go first, the rest wait,
+     * so a crowd attacks in a rhythm that can be read.
+     */
+    windups: 4
+  },
+
+  /** How enemies find their way around walls to the player (see physics/paths.ts). */
+  paths: {
+    /** Size of the cells the way is found over. */
+    cellSize: 30,
+    /** Cells where a body this wide would touch a wall are closed (bigger bodies slide along walls). */
+    clearance: 18
   },
 
   /** Every challenge, by id; the `Challenge` resource picks the one in the arena. */
@@ -238,7 +255,8 @@ export const tuningWith = (overrides: DeepPartial<Tuning>): Tuning => {
     for (const [key, value] of Object.entries(patch)) {
       if (value === undefined) continue
       const current = base[key]
-      result[key] = typeof value === "object" && value !== null && typeof current === "object" && current !== null
+      // Arrays (a moveset, waves) are replaced whole, as their type says.
+      result[key] = typeof value === "object" && value !== null && !Array.isArray(value) && typeof current === "object" && current !== null
         ? merge(current as Record<string, unknown>, value as Record<string, unknown>)
         : value
     }

@@ -4,6 +4,7 @@
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
 import { isMelee } from "../content/attacks.ts"
+import { currentAttack } from "../features/moveset.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
@@ -126,9 +127,9 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     if (node?.kind !== "enemy") continue
     const kind = data.enemy.get().kind
     const attacker = data.attacker.get()
-    const spec = tuning.enemies[kind].attack
+    const spec = currentAttack(tuning, kind, attacker)
     // Anticipation: the body brightens through the windup.
-    const windup = spec !== null && data.phase.get() === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
+    const windup = spec !== undefined && data.phase.get() === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
     const stunned = data.stunned.get().remaining > 0
     // A hit flashes it white; stunned it is dimly lit; otherwise a windup lights it up.
     const tint = stateTint(0xffffff, data.state.get().current)

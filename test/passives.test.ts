@@ -64,7 +64,8 @@ describe("weapon passives", () => {
     const run = arena(build, [{ x: 70, y: 0 }], timeline, sturdy(defaultTuning))
     const dealt: Array<number> = []
     let last = 100_000
-    for (let frame = 0; frame <= frames.at(-1)! + 6; frame++) {
+    // Room for the blows' hit-stops, which hold the world (and the taps waiting) still.
+    for (let frame = 0; frame <= frames.at(-1)! + 40; frame++) {
       run.step()
       const now = run.world().enemies[0]!
       if (now < last - 1e-9) dealt.push(last - now)

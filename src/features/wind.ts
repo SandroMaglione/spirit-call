@@ -62,7 +62,7 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
       data.stunned.set({ remaining: rules.stunSeconds })
       data.gust.set({ remaining: 0 })
       data.knockback.set({ x: 0, y: 0 })
-      events.reaction.emit({ at: position, kind: "stun" })
+      events.reaction.emit({ at: position, kind: "stun", faction: "player" })
       continue
     }
     gusting.add(entity.id.value)
@@ -88,18 +88,18 @@ export const DriveWithWind = Game.System("Shooter/DriveWithWind", {
       if (mine !== null && theirs === null) {
         if (!takes(other, mine)) continue
         other.data.state.set({ current: carried(tuning, mine) })
-        events.reaction.emit({ at: there, kind: "carry" })
+        events.reaction.emit({ at: there, kind: "carry", faction: "player" })
       } else if (mine === null && theirs !== null) {
         if (!takes(driven, theirs)) continue
         driven.data.state.set({ current: carried(tuning, theirs) })
-        events.reaction.emit({ at, kind: "carry" })
+        events.reaction.emit({ at, kind: "carry", faction: "player" })
       } else if (mine !== null && theirs !== null) {
         // Fire meets water: the water puts the fire out.
         const [burning, soaked] = mine.id === "burning" ? [driven, other] : [other, driven]
         const water = afflict(tuning, burning.data.state.get().current, { id: "water", atk: 0 }, soaked.data.state.get().current?.charges ?? false, burning.data.affinities.get().water)
         if (water.state === burning.data.state.get().current) continue
         burning.data.state.set({ current: water.state })
-        events.reaction.emit({ at: burning.data.position.get(), kind: "steam" })
+        events.reaction.emit({ at: burning.data.position.get(), kind: "steam", faction: "player" })
       }
     }
   }

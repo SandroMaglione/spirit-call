@@ -139,6 +139,11 @@ export const view = {
   damageNumber: 0xffe08a,
   /** Health restored by a passive (Bloodthirst). */
   healNumber: 0x7ee08a,
+  /**
+   * A killed enemy bursts apart: chunks in its color (more for wider
+   * bodies), a white flash at its heart, a ring, and a little shake.
+   */
+  death: { chunks: 22, speed: 460, size: 7, life: 0.75, flash: 46, ring: 34, shake: 3 },
   enemies: {
     dummy: { color: 0xb86b77, widthFactor: 1.7, heightFactor: 2.1 },
     chaser: { color: 0xff7a45, widthFactor: 1.4, heightFactor: 2.2 },

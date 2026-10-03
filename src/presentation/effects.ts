@@ -105,10 +105,18 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     fx.number(at, heal.amount, view.healNumber, { size: 1.1, drift: 0, life: 0.8 })
     fx.burst({ x: at.x, y: at.y - impact.height * projection.zoom }, { color: view.healNumber, count: 10, speed: 160, size: 4, life: 0.45 })
   }
+  // A kill bursts the body apart (it is gone at once: no fall), in its color, sized by its width.
   for (const death of events.death.all()) {
     const at = toScreen(projection, death.at)
     const color = death.enemy === undefined ? view.player : enemyColor(death.enemy)
-    fx.burst({ x: at.x, y: at.y - 16 }, { color, count: 18, speed: 320, size: 6, life: 0.55 })
+    const scale = death.enemy === undefined ? 1 : view.enemies[death.enemy].widthFactor / 1.5
+    const heart = { x: at.x, y: at.y - 18 * scale * projection.zoom }
+    const spec = view.death
+    fx.flash(heart, spec.flash * scale, view.hitFlash, 0.12)
+    fx.ring(at, spec.ring * scale * projection.zoom, color, 0.35)
+    fx.burst(heart, { color, count: Math.round(spec.chunks * scale), speed: spec.speed * scale, size: spec.size * scale, life: spec.life, gravity: 520, drag: 2.5 })
+    fx.burst(heart, { color: view.hitFlash, count: Math.round(spec.chunks * 0.4 * scale), speed: spec.speed * 0.6, size: spec.size * 0.6, life: spec.life * 0.6 })
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake * scale)
   }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)

@@ -104,10 +104,10 @@ Enemy attack poses follow `AttackPhase` and `Attacker.elapsed` directly:
 `Windup`, `Active`, and `Recovery` stretch to content timings. Ranged attacks
 with no active interval start recovery in their release pose. The guardian's
 shield follows the simulation's shield facing independently of its attack.
-`Idle`, `Run`, `Spawn`, `Hurt`, and `Death` cover the rest of the lifecycle;
-the training dummy has no locomotion or attack clips. A killed enemy leaves
-only a drawing for its 0.7-second death clip; collision and gameplay end at
-the kill. Hit-stop freezes these drawings too.
+`Idle`, `Run`, `Spawn`, and `Hurt` cover the rest of the lifecycle; the
+training dummy has no locomotion or attack clips. A killed enemy does not
+fall: its body is gone at the kill and bursts into particles in its color
+(`view.death`). The models' `Death` clips stay in the files, unused.
 
 Use `?stress=300,2000,mixed` to exercise all eight animated kinds in the live
 arena (invulnerable test actors). The original `?stress=300,2000` still uses

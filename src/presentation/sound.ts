@@ -208,7 +208,7 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     swish(v, { low: 1600, peak: 6000, duration: 0.3, peakAt: 0.6, q: 6, gain: 0.16, delay: 0.1 })
     tone(v, "sine", 110, 60, 0.35, 0.18, 0, 0.08)
   }],
-  // The Blade Wave: a long rising cut that rings.
+  // A cut (a cut skill): a long rising swish that rings.
   wave: [{ reverb: 0.35 }, (v) => {
     swish(v, { low: 800, peak: 5200, duration: 0.34, peakAt: 0.55, q: 1.1, gain: 0.75 })
     tone(v, "sine", 1100, 2300, 0.32, 0.045, 0.02, 0.1)

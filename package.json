@@ -13,6 +13,7 @@
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "debug": "node --import tsx scripts/debug.ts",
+    "lab": "node --import tsx scripts/lab.ts",
     "shot": "node --import tsx scripts/screenshot.ts"
   },
   "dependencies": {

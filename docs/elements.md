@@ -43,8 +43,8 @@ jumps gaps, for groups spread apart. Rock is about controlling the big
 enemies (guard, stagger, terrain), not about damage on a single target:
 that would be a damage race.
 
-The first three, one per character: **Wind** for the Swordsman (the Blade
-Wave already drives enemies back), **Fire** for the Gunner (the grenade
+The first three, one per character: **Wind** for the Swordsman (her Gale
+pulls the enemies around her into reach, hurting nobody), **Fire** for the Gunner (the grenade
 leaves a fire pool), and **Water** for the Tidecaller (a disc thrower at
 middle range). **Thunder** came next, with the Stormcaller (a support who
 heals); Rock comes with a later character (a shield support).
@@ -138,6 +138,14 @@ The Stormcaller heals through her kit, and healing always costs something:
   enough with any team.
 - Enemies can **carry an element**: a soaked enemy is a ready setup for
   thunder; a burning one leaves fire behind for the player to avoid.
+- Enemies can **attack with an element**, putting its state on the player
+  like any blow: the Shooter's close-range spray soaks her (slowed), the
+  Sniper's beam is thunder (it shocks her if she is soaked), the Charger
+  sets her burning. Enemy teams combine like the player's: a Shooter's
+  water makes a Sniper's thunder hurt more. The telegraph and the bolts
+  are drawn in the element's color, and a quest lists the elements its
+  enemies attack with. Reactions an enemy sets off on the team are not
+  discoveries: those are the player's to find.
 - **Every enemy has at least two answers**, so no single element (or
   character) is required for a challenge.
 - A quest shows the enemies it holds, with their weaknesses and immunities,
