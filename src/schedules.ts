@@ -18,6 +18,8 @@ import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHit
 import { MoveDiscs } from "./features/discs.ts"
 import { TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
+import { PerfectDodge } from "./features/dodge.ts"
+import { BuildPoise } from "./features/poise.ts"
 import { BlowPools, DriveWithWind } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
@@ -29,7 +31,7 @@ import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
-import { CastBarrages, CastCuts, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
+import { AbsorbIntoVortices, CastBarrages, CastCuts, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { UseBasicAttack } from "./features/weapons.ts"
 import { DirectWaves } from "./features/waves.ts"
@@ -110,6 +112,7 @@ const gameplay = Game.Schedule.when(
   MoveProjectiles,
   MoveDiscs,
   ResolveHitboxes,
+  AbsorbIntoVortices,
   UpdateVortices,
   UpdateTotems,
   BlowPools,
@@ -131,6 +134,10 @@ const gameplay = Game.Schedule.when(
 const runOutcome = Game.Schedule.when(
   whileRunIsLive,
   RecordReactions,
+  // A dash at the last moment (its rewards fill the attacker's break bar), then the
+  // blows and reactions of the step fill break bars.
+  PerfectDodge,
+  BuildPoise,
   DetectGameOver,
   SwitchCharacter,
   CheckObjective,

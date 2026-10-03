@@ -49,9 +49,19 @@ export interface Moving {
   readonly velocity: Vec2
 }
 
-/** Seconds until `spec`, let go in `untilRelease`, reaches a target `distance` away (a shot flies, a charge runs). */
-const timeToLand = (spec: AttackSpec, distance: number, untilRelease: number): number =>
-  untilRelease + (spec.kind === "volley" ? distance / spec.projectileSpeed : spec.kind === "charge" ? Math.min(distance, spec.speed * spec.active) / spec.speed : 0)
+/** Seconds until `spec`, let go in `untilRelease`, reaches a target `distance` away (a shot flies, a charge runs, a bomb flies and bursts). */
+const timeToLand = (spec: AttackSpec, distance: number, untilRelease: number): number => {
+  switch (spec.kind) {
+    case "volley":
+      return untilRelease + distance / spec.projectileSpeed
+    case "charge":
+      return untilRelease + Math.min(distance, spec.speed * spec.active) / spec.speed
+    case "lob":
+      return untilRelease + spec.flightTime + spec.fuse
+    default:
+      return untilRelease
+  }
+}
 
 /**
  * Where `spec` from `origin` aims, let go in `untilRelease`: at the target,

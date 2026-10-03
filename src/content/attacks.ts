@@ -104,6 +104,14 @@ export interface BasicAttackSpec {
    */
   readonly attackingSpeed: number
   readonly power: PowerAttack | null
+  /**
+   * A magazine of `rounds`: every move fires one, and the power move fires
+   * all those left, its damage their share of a full magazine (full damage
+   * only from a full one). Once empty, she reloads for `reload` seconds
+   * before she attacks again. Her magazine is full again whenever she is
+   * switched out. `null`: no magazine.
+   */
+  readonly magazine: { readonly rounds: number; readonly reload: number } | null
 }
 
 const arc = (spec: Omit<Extract<MeleeMove, { shape: "arc" }>, "shape">): AttackMove => ({ shape: "arc", ...spec })
@@ -138,15 +146,16 @@ export const attacks = {
       chargeTime: 0.55,
       moveSpeedMultiplier: 0.55,
       move: thrust({ reach: 230, width: 72, power: 55, knockback: 1100, recovery: 0.5, hitStop: 0.14, heavy: true, lunge: 110 })
-    }
+    },
+    magazine: null
   }),
   /** The gun: two quick shots and a spread; the power attack is a slow, piercing bolt that kicks back. */
   gun: basicAttack({
     name: "Gun",
     combo: [
-      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0.025, heavy: false, lunge: 0 }),
-      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0.025, heavy: false, lunge: 0 }),
-      shot({ count: 3, spreadDegrees: 16, speed: 950, radius: 5, range: 620, pierce: 0, power: 10, knockback: 220, recovery: 0.32, hitStop: 0.04, heavy: false, lunge: -8 })
+      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 560, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0.025, heavy: false, lunge: 0 }),
+      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 560, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0.025, heavy: false, lunge: 0 }),
+      shot({ count: 3, spreadDegrees: 16, speed: 950, radius: 5, range: 480, pierce: 0, power: 10, knockback: 220, recovery: 0.32, hitStop: 0.04, heavy: false, lunge: -8 })
     ],
     comboWindow: 0.5,
     inputBuffer: 0.12,
@@ -158,7 +167,8 @@ export const attacks = {
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
       move: shot({ count: 1, spreadDegrees: 0, speed: 1400, radius: 9, range: 950, pierce: 4, power: 38, knockback: 620, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -40 })
-    }
+    },
+    magazine: { rounds: 6, reload: 1.8 }
   }),
   /**
    * The disc: two throws that cut through a line of enemies there and back,
@@ -182,7 +192,8 @@ export const attacks = {
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
       move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 9, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 })
-    }
+    },
+    magazine: null
   }),
   /**
    * The staff: two sparks that pass through the first enemy, then a pair in
@@ -206,7 +217,8 @@ export const attacks = {
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
       move: shot({ count: 1, spreadDegrees: 0, speed: 560, radius: 13, range: 640, pierce: 6, power: 32, knockback: 420, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 })
-    }
+    },
+    magazine: null
   })
 }
 

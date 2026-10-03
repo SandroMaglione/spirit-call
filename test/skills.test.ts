@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
+import { damageDealt } from "../src/features/build.ts"
 import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import type { Vec2 } from "../src/math/vec.ts"
@@ -51,12 +52,16 @@ describe("Gale (Space)", () => {
   const press = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
   const distances = (run: ReturnType<typeof range>) => run.world().enemies.map((enemy) => Math.hypot(enemy.position.x - center.x, enemy.position.y - center.y))
 
-  it("whirls at her feet, whatever she aims at, pulling the enemies around her in without hurting them", () => {
+  it("whirls at her feet, whatever she aims at, pulling the enemies around her in and grazing them", () => {
     expect(gale.kind).toBe("vortex")
     const run = range([{ x: 200, y: 0 }, { x: 0, y: -200 }, { x: -230, y: 60 }], { x: 300, y: 300 }, { keys: [press(1)] })
     run.step(steps(gale.kind === "vortex" ? gale.seconds : 0) + 4)
-    for (const distance of distances(run)) expect(distance).toBeLessThan(150)
-    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp, hp])
+    for (const distance of distances(run)) expect(distance).toBeLessThan(60)
+    for (const enemy of run.world().enemies) expect(enemy.health).toBeLessThan(hp)
+  })
+
+  it("hurts little: a whole Gale leaves a Swarmer standing", () => {
+    expect(gale.kind === "vortex" ? (gale.seconds / gale.tick + 1) * damageDealt(80, gale.power) : 0).toBeLessThan(defaultTuning.enemies.swarmer.hp)
   })
 
   it("leaves what is out of its reach where it is", () => {
@@ -69,7 +74,7 @@ describe("Gale (Space)", () => {
     const heavy = tuningWith({ enemies: { dummy: { elements: { wind: "immune" }, knockbackTaken: 0.2 } } })
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { keys: [press(1)], tuning: heavy })
     run.step(80)
-    expect(distances(run)[0]).toBeGreaterThan(170)
+    expect(distances(run)[0]).toBeGreaterThan(150)
   })
 })
 

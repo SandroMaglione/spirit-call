@@ -43,6 +43,8 @@ export const view = {
    * full. A shot's area is a lane `shotPreview` long.
    */
   charge: { gap: 12, width: 4, fullWidth: 6, filling: 0x7fe6de, full: 0xfff4d6, glow: 0.55, pulseHz: 6, shotPreview: 420 },
+  /** A magazine's rounds: segments on an arc `spread` radians wide in front of her feet, `gap` out from her body. */
+  ammo: { gap: 20, width: 4, spread: 2.1, space: 0.06, round: 0xffd166, empty: 0x3b4655, reloading: 0x7fe6de },
   slashTrail: {
     height: 22,
     core: 0xf2fffd,
@@ -132,8 +134,20 @@ export const view = {
   projectileHeight: 18,
   /** Projectile orb size relative to its collision radius. */
   projectileGlow: 1.6,
+  /**
+   * Bolts (shots, enemy bullets): a hot core inside their colored orb, a
+   * see-through halo (`glowOpacity`), and a tracer streaking behind them
+   * along their flight (a bright streak in a fainter trail), as long as the
+   * distance they cover in `streakSeconds` (between `minStreak` and
+   * `maxStreak` times their radius). Sizes are relative to their radius.
+   */
+  bolt: { core: 0.6, coreWhite: 0.8, orb: 1, halo: 1.8, streak: 0.42, streakWhite: 0.45, trail: 0.85, glowOpacity: 0.4, streakSeconds: 0.05, minStreak: 2, maxStreak: 9 },
   wallSpark: 0x9fb3c8,
   spawnWarning: 0xf7a948,
+  /** Breaking enemies: the bar under their health, and how a broken one glows (and its burst, see `effects.ts`). */
+  /** A perfect dodge's flash, ring, and streaks. */
+  perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7 },
+  breaking: { bar: 0xffc857, full: 0xfff4d6, glow: 0xffc857, pulseHz: 5, ring: 90, flash: 70, shake: 9 },
   healthBack: 0x0d1117,
   healthFill: 0xff5d6c,
   damageNumber: 0xffe08a,

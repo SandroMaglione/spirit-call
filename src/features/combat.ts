@@ -17,6 +17,7 @@ import {
   CombatStats,
   Damage,
   Death,
+  Dodged,
   ElementAffinities,
   ElementState,
   Enemy,
@@ -33,6 +34,7 @@ import {
   Knockback,
   Member,
   Player,
+  Poise,
   Position,
   PrevPosition,
   Projectile,
@@ -40,6 +42,7 @@ import {
   Renderable,
   Respawns,
   RunScope,
+  SlowMotion,
   Stats,
   Time,
   Tuning,
@@ -51,7 +54,8 @@ import { damageTaken } from "./build.ts"
 import { afflict, durationFactor, elementDamageFactor } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { damageBonusPercent, PassiveHolders } from "./passives.ts"
-import { shieldBlocks, sweepTargets, targetOf, Targets } from "./targets.ts"
+import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
+import { paceOf } from "./time.ts"
 import type { Target } from "./targets.ts"
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
@@ -82,10 +86,11 @@ export const MoveProjectiles = (() => {
       targets: Targets,
       walls: Walls
     },
-    resources: { time: Game.System.readResource(Time) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) }
+    resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged) }
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
+    const window = resources.tuning.get().perfectDodge.window
     const boxes = wallBoxes(queries.walls.each())
 
     grid.clear()
@@ -95,13 +100,16 @@ export const MoveProjectiles = (() => {
       grid.insert(targets.length, target.at.x, target.at.y, target.radius)
       targets.push(target)
     }
+    // Bodies that just dashed: a shot through where they stood dodged them, wherever they are now.
+    const dashers = targets.filter((target) => target.dashed !== undefined && target.dashed.since <= window)
 
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()
       const origin = data.position.get()
       const velocity = data.velocity.get()
       const speed = Math.hypot(velocity.x, velocity.y)
-      const travel = Math.min(speed * dt, projectile.range)
+      // Enemy shots fly at the enemies' pace (slower in slow motion).
+      const travel = Math.min(speed * dt * paceOf(resources.slowMotion.get(), projectile.faction), projectile.range)
       const delta = speed > 0 ? scale(velocity, travel / speed) : velocity
       const r = projectile.radius
 
@@ -122,6 +130,12 @@ export const MoveProjectiles = (() => {
       const direction = speed > 0 ? scale(velocity, 1 / speed) : { x: 0, y: 0 }
       let pierce = projectile.pierce
       const hit = [...projectile.hit]
+      // Passing through a body that cannot be touched (dashing): dodged, once; it flies on.
+      const candidates = dashers.length === 0 ? nearby : [...new Set([...nearby, ...dashers])]
+      for (const dodger of sweepDodgers(origin, delta, r, candidates, projectile.faction, projectile.hit, window, wall?.time ?? Infinity)) {
+        events.dodged.emit({ target: dodger.id, at: dodger.at, attacker: projectile.blow.source?.attacker ?? null })
+        hit.push(dodger.id)
+      }
       let stopAt: number | undefined
       let shieldedAt: Vec2 | undefined
       for (const contact of contacts) {
@@ -185,7 +199,8 @@ const Damageable = Game.Query({
     gust: Game.Query.write(Gust),
     player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
-    respawns: Game.Query.optional(Respawns)
+    respawns: Game.Query.optional(Respawns),
+    poise: Game.Query.optional(Poise)
   }
 })
 
@@ -248,7 +263,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
     const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state, affinity)
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor, data.stats.get().def)
+    // A broken enemy takes more (see `Tuning.breaking`).
+    const broken = data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken, data.stats.get().def)
     const current = Math.max(0, health.current - amount)
     // Damage the player deals fills energy; only what actually landed counts.
     if (blow.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage

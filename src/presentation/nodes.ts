@@ -47,11 +47,20 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
     const shadow = new Instance(assets.projectileShadows)
     shadow.object.position.y = floorLayers.shadows.height
     const orb = new Instance(assets.orbs)
-    root.add(shadow.object, orb.object)
-    return { kind: "projectile" as const, root, orb, shadow }
+    const bolt = new Group()
+    const core = new Instance(assets.orbs)
+    const halo = new Instance(assets.flares)
+    const streak = new Instance(assets.orbs)
+    const trail = new Instance(assets.flares)
+    bolt.add(core.object, halo.object, streak.object, trail.object)
+    root.add(shadow.object, orb.object, bolt)
+    return { kind: "projectile" as const, root, orb, shadow, bolt, core, halo, streak, trail, style, radius }
   })()
+  node.style = style
+  node.radius = radius
   const orb = node.orb
-  orb.color.setHex(projectileColor(faction, style, element))
+  const color = projectileColor(faction, style, element)
+  orb.color.setHex(color)
   if (style === "disc") {
     // A flat disc skimming low over the floor.
     orb.batch = assets.pucks
@@ -59,12 +68,36 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
     orb.object.position.y = worldHeight(projection, view.disc.height)
   } else {
     orb.batch = assets.orbs
-    // Drawn larger than it hits, as a glow.
-    orb.object.scale.setScalar(radius * view.projectileGlow * 0.75)
-    orb.object.position.y = worldHeight(projection, view.projectileHeight)
+    // A bolt: its colored orb around a white-hot core, in a soft halo, a tracer streaking behind (turned along its flight by `OrientBolts`).
+    const spec = view.bolt
+    const height = worldHeight(projection, view.projectileHeight)
+    orb.object.scale.setScalar(radius * spec.orb)
+    orb.object.position.y = height
+    node.bolt.position.y = height
+    node.core.color.setHex(mixColor(color, 0xffffff, spec.coreWhite))
+    node.core.object.scale.setScalar(radius * spec.core)
+    node.halo.color.setHex(color)
+    node.halo.object.scale.setScalar(radius * spec.halo)
+    node.streak.color.setHex(mixColor(color, 0xffffff, spec.streakWhite))
+    node.trail.color.setHex(color)
+    placeTracer(node, 0)
   }
   node.shadow.object.scale.set(radius * 1.2, 1, radius * 1.2)
   return node
+}
+
+/**
+ * Stretches a bolt's tracer behind it to `length` world units (at least
+ * `minStreak` radii): a bright, thin streak and a wider, fainter trail
+ * reaching a little further.
+ */
+export const placeTracer = (node: ProjectileNode, length: number): void => {
+  const spec = view.bolt
+  const streak = Math.max(spec.minStreak * node.radius, Math.min(spec.maxStreak * node.radius, length))
+  node.streak.object.scale.set(streak / 2, node.radius * spec.streak, node.radius * spec.streak)
+  node.streak.object.position.x = -streak / 2
+  node.trail.object.scale.set(streak * 0.65, node.radius * spec.trail, node.radius * spec.trail)
+  node.trail.object.position.x = -streak * 0.65
 }
 
 /** A totem: a slim stone pylon tinted by its element, a glowing orb on top, and a blob shadow. */
@@ -229,7 +262,7 @@ export const instancesOf = (node: RenderNode): ReadonlyArray<Instance> => {
     case "enemy":
       return [node.shadow, ...node.body.instances]
     case "projectile":
-      return [node.shadow, node.orb]
+      return node.style === "disc" ? [node.shadow, node.orb] : [node.shadow, node.orb, node.core, node.halo, node.streak, node.trail]
     case "wall":
       return node.instances
     case "totem":

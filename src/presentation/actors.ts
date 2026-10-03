@@ -9,8 +9,9 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
+import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
 import { mixColor } from "./draw.ts"
@@ -76,6 +77,24 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       marks.strokeArc(position.x, position.y, chargeRing, startAngle, startAngle + charge * Math.PI * 2, full ? view.charge.fullWidth : view.charge.width, full ? view.charge.full : view.charge.filling, full ? 0.95 : 0.7)
     }
 
+    // A magazine: its rounds left, one lit segment each on an arc in front of her feet; reloading, the arc fills back up.
+    if (attack.magazine !== null) {
+      const spec = view.ammo
+      const ammoRing = radius + spec.gap
+      const from = Math.PI / 2 - spec.spread / 2
+      if (weapon.reloading > 0) {
+        const done = 1 - weapon.reloading / attack.magazine.reload
+        marks.strokeArc(position.x, position.y, ammoRing, from, from + spec.spread, spec.width, spec.empty, 0.6)
+        marks.strokeArc(position.x, position.y, ammoRing, from, from + spec.spread * done, spec.width, spec.reloading, 0.9)
+      } else {
+        const each = spec.spread / attack.magazine.rounds
+        for (let round = 0; round < attack.magazine.rounds; round++) {
+          const left = round < attack.magazine.rounds - weapon.spent
+          marks.strokeArc(position.x, position.y, ammoRing, from + round * each + spec.space / 2, from + (round + 1) * each - spec.space / 2, spec.width, left ? spec.round : spec.empty, left ? 0.95 : 0.6)
+        }
+      }
+    }
+
     // A skill around her ready to use (a nova, a thunderclap): a faint ring showing what it would catch.
     const skills = data.skills.get()
     const energy = data.energy.get().current
@@ -112,7 +131,8 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
         attacker: Game.Query.read(Attacker),
         phase: Game.Query.read(AttackPhase),
         state: Game.Query.read(ElementState),
-        stunned: Game.Query.read(Stunned)
+        stunned: Game.Query.read(Stunned),
+        poise: Game.Query.read(Poise)
       }
     })
   },
@@ -133,7 +153,10 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     const stunned = data.stunned.get().remaining > 0
     // A hit flashes it white; stunned it is dimly lit; otherwise a windup lights it up.
     const tint = stateTint(0xffffff, data.state.get().current)
+    const poise = data.poise.get()
     if (data.flash.get().remaining > 0) node.body.paint(tint, view.hitFlash, 1, 1)
+    // Broken: it glows in the break color, pulsing, until it recovers.
+    else if (poise.broken > 0) node.body.paint(tint, view.breaking.glow, 0.35 + 0.25 * Math.sin(performance.now() / 1000 * view.breaking.pulseHz * Math.PI * 2), 1)
     else if (stunned) node.body.paint(tint, view.stun, 0.35, 1)
     else node.body.paint(tint, view.windupTint, windup * 0.75, 1)
     // Over its head, in projected coordinates (the overlay's).
@@ -148,11 +171,18 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
       }
     }
     const health = data.health.get()
-    if (health.current >= health.max) continue
+    const bar = poiseOf(tuning, kind, health.max)
+    const breaking = bar > 0 && (poise.current > 0 || poise.broken > 0)
+    if (health.current >= health.max && !breaking) continue
     const width = 34
     const x = feet.x - width / 2
     const y = head - 12
-    overlay.fillRect(x - 1, y - 1, width + 2, 6, view.healthBack, 0.85)
+    overlay.fillRect(x - 1, y - 1, width + 2, breaking ? 10 : 6, view.healthBack, 0.85)
     overlay.fillRect(x, y, width * (health.current / health.max), 4, view.healthFill, 1)
+    // Its break bar under it: filling up, then full and flashing while it is broken.
+    if (breaking) {
+      const full = poise.broken > 0
+      overlay.fillRect(x, y + 5, width * Math.min(1, poise.current / bar), 3, full ? view.breaking.full : view.breaking.bar, full ? 0.6 + 0.4 * Math.sin(performance.now() / 1000 * view.breaking.pulseHz * Math.PI * 2) : 1)
+    }
   }
 })

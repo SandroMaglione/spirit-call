@@ -38,7 +38,9 @@ export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue
   step: -1,
   held: 0,
   powerQueued: false,
-  slowed: 1
+  slowed: 1,
+  spent: 0,
+  reloading: 0
 })
 
 /** How far a power attack held for `held` seconds is charged, 0 to 1. */
@@ -138,6 +140,10 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const comboTimer = cooldown > 0 ? 0 : current.comboTimer + dt
     let step = current.step
     if (step >= 0 && cooldown <= 0 && (step >= spec.combo.length - 1 || comboTimer > spec.comboWindow)) step = -1
+    // An empty magazine reloads before she fires again (a press meanwhile stays buffered).
+    const reloading = Math.max(0, current.reloading - dt)
+    const spent = current.reloading > 0 && reloading <= 0 ? 0 : current.spent
+    const ready = cooldown <= 0 && reloading <= 0
 
     // Charging: the hold counts from the press; releasing at full charge queues the power move.
     let powerQueued = current.powerQueued
@@ -152,9 +158,13 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
 
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
       const context: MoveContext = { step: nextStep, finisher: !power && nextStep === spec.combo.length - 1, power }
+      // A power move from a magazine fires every round left: its damage is their share of a full one. The
+      // press that started the charge fired a round of its own, so it still counts toward the share.
+      const left = spec.magazine === null ? 0 : spec.magazine.rounds - spent
+      const share = power && spec.magazine !== null ? Math.min(1, (left + 1) / spec.magazine.rounds) : 1
       // Blows remember who dealt them and with which move, for the wielder's passives.
       const struck = blow({
-        damage: damageDealt(atk, move.power),
+        damage: damageDealt(atk, move.power) * share,
         knockback: move.knockback,
         charges: true,
         hitStop: move.hitStop,
@@ -218,10 +228,15 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       // She faces the way she struck until the move recovers, slowed meanwhile (a heavy move stops her).
       data.facing.set({ direction: aim, hold: move.recovery })
       const slowed = move.heavy ? 0 : spec.attackingSpeed
-      data.weapon.set({ ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed })
+      const fired = power && spec.magazine !== null ? spec.magazine.rounds : spent + 1
+      const empty = spec.magazine !== null && fired >= spec.magazine.rounds
+      data.weapon.set({
+        ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed,
+        spent: spec.magazine === null ? 0 : fired, reloading: empty && spec.magazine !== null ? spec.magazine.reload : 0
+      })
     }
 
-    if (cooldown <= 0 && powerQueued && spec.power !== null) {
+    if (ready && powerQueued && spec.power !== null) {
       // The power move ends the combo: the next press starts it over.
       use(spec.power.move, -1, true)
       continue
@@ -229,11 +244,12 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const next = step + 1 < spec.combo.length ? step + 1 : 0
     const move = spec.combo[next]
     // An empty combo (content that breaks `validateContent`) never attacks.
-    if (cooldown <= 0 && buffered > 0 && move !== undefined) {
+    // A press waits out a reload (kept a little longer than the buffer: it is not lost to the wait).
+    if (ready && buffered > 0 && move !== undefined) {
       use(move, next, false)
       continue
     }
-    data.weapon.set({ ...current, cooldown, buffered, comboTimer, step, held, powerQueued })
+    data.weapon.set({ ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading })
   }
   if (moves > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + moves }))
 })

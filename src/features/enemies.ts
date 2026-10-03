@@ -34,6 +34,7 @@ import {
   Respawns,
   RunScope,
   Shield,
+  Poise,
   Stunned,
   Time,
   Tuning,
@@ -59,6 +60,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
     [EnemyMode, "orbit"],
+    [Poise, { current: 0, broken: 0, quiet: 0 }],
     [Renderable, { kind: "enemy", enemy: kind, radius: stats.radius }]
   )
   const shield = stats.shield

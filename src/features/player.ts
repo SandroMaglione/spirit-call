@@ -61,6 +61,9 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     const cooldown = Math.max(0, dash.cooldown - dt)
     let nextCooldown = cooldown
     let buffered = controls.dashPressed ? tuning.dash.inputBuffer : Math.max(0, dash.buffered - dt)
+    let since = dash.since + dt
+    let perfect = dash.perfect
+    let from = dash.from
 
     if (remaining <= 0 && buffered > 0 && cooldown <= 0) {
       direction = normalizeOr(controls.move, faces)
@@ -68,6 +71,9 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       events.action.emit({ kind: "dash", at: position })
       nextCooldown = tuning.dash.cooldown
       buffered = 0
+      since = 0
+      perfect = false
+      from = position
       const invulnerable = data.invulnerable.get().remaining
       data.invulnerable.set({ remaining: Math.max(invulnerable, tuning.dash.invulnerability) })
     }
@@ -90,6 +96,6 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       data.velocity.set(moveToward(carried, target, rate * dt))
     }
 
-    data.dash.set({ remaining, cooldown: nextCooldown, buffered, direction })
+    data.dash.set({ remaining, cooldown: nextCooldown, buffered, direction, since, perfect, from })
   }
 })

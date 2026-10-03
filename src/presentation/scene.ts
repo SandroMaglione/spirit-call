@@ -6,8 +6,8 @@ import { RenderSync } from "@typeonce/bevy-ts-pixi"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { Camera, Game, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Renderable, Wall } from "../schema.ts"
-import { createNode } from "./nodes.ts"
+import { Camera, Game, Player, Position, PrevPosition, Projectile, RenderClock, RenderHost, RenderNodes, Renderable, SlowMotion, Tuning, Velocity, Wall } from "../schema.ts"
+import { createNode, placeTracer } from "./nodes.ts"
 
 /**
  * Creates nodes for new renderables (placed once from their position) and
@@ -29,7 +29,7 @@ export const SyncNodes = RenderSync.system(Game, {
 
 /** Camera position (interpolated), screen shake, and the hurt vignette. */
 export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
-  resources: { camera: Game.System.readResource(Camera) },
+  resources: { camera: Game.System.readResource(Camera), slowMotion: Game.System.readResource(SlowMotion), tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ resources, services }) => {
   const camera = resources.camera.get()
@@ -52,6 +52,9 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   // Phones zoom out (see view.camera); the camera stays centered on the player. Heavy blows punch in.
   target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + view.impact.zoomPunch * feedback.punch)
   services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
+  // Slow motion glows at full strength, fading out over its last part.
+  const slow = resources.slowMotion.get().remaining / Math.max(1e-6, resources.tuning.get().perfectDodge.slowSeconds)
+  services.host.hud.focus.style.opacity = Math.min(1, slow * 2.5).toFixed(3)
 })
 
 /** Draws moving entities between their previous and current fixed-step positions. */
@@ -63,6 +66,30 @@ export const InterpolateActors = RenderSync.interpolate(Game, {
   clock: RenderClock,
   place: (node, position) => {
     node.root.position.set(position.x, 0, position.y)
+  }
+})
+
+/**
+ * Turns every bolt along its flight and stretches its tracer by its speed;
+ * its halo flickers (thunder crackles harder) and its core spins.
+ */
+export const OrientBolts = Game.System("Shooter/OrientBolts", {
+  queries: { bolts: Game.Query({ selection: { velocity: Game.Query.read(Velocity), projectile: Game.Query.read(Projectile) } }) },
+  services: { nodes: Game.System.service(RenderNodes) }
+}, ({ queries, services }) => {
+  const now = performance.now() / 1000
+  for (const { entity, data } of queries.bolts.each()) {
+    const node = services.nodes.get(entity.id)
+    if (node?.kind !== "projectile" || node.style === "disc") continue
+    const velocity = data.velocity.get()
+    const speed = Math.hypot(velocity.x, velocity.y)
+    // The floor's y is the scene's z: a turn about the vertical axis.
+    if (speed > 0) node.bolt.rotation.y = Math.atan2(-velocity.y, velocity.x)
+    placeTracer(node, speed * view.bolt.streakSeconds)
+    const thunder = data.projectile.get().blow.element?.id === "thunder"
+    const flicker = thunder ? 0.8 + Math.random() * 0.5 : 1 + 0.1 * Math.sin(now * 38 + entity.id.value)
+    node.halo.object.scale.setScalar(node.radius * view.bolt.halo * flicker)
+    node.core.object.rotation.set(now * 9, now * 13, 0)
   }
 })
 

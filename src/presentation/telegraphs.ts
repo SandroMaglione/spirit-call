@@ -116,12 +116,15 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     if (flight >= 1) overlay.strokeCircle(screen.x, screen.y - 6, 6, 2, color, 0.5 + 0.5 * Math.sin(elapsed * 40))
   }
   // Whirls: their reach, with arms spiraling in toward the center (fading as they run out).
+  // One that took on an element whirls in its color, filled stronger, its wind still at the rim.
   for (const { data } of queries.vortices.each()) {
     const vortex = data.vortex.get()
     const { center, effect } = vortex
-    const color = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const own = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const color = vortex.absorbed === null ? own : view.elements[vortex.absorbed]
     const fade = Math.min(1, vortex.remaining / 0.3)
-    g.fillCircle(center.x, center.y, effect.radius, color, 0.1 * fade)
+    g.fillCircle(center.x, center.y, effect.radius, color, (vortex.absorbed === null ? 0.1 : 0.2) * fade)
+    if (vortex.absorbed !== null) g.strokeCircle(center.x, center.y, effect.radius + 6, 2, own, 0.5 * fade)
     g.strokeCircle(center.x, center.y, effect.radius, 3, color, 0.6 * fade)
     const turn = -now * view.vortex.turnsPerSecond * Math.PI * 2
     for (let arm = 0; arm < view.vortex.arms; arm++) {

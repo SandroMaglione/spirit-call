@@ -41,7 +41,9 @@ import {
   Enemy,
   Game,
   Health,
+  Ground,
   Hitbox,
+  Lobbed,
   Hurtbox,
   Invulnerable,
   Player,
@@ -98,6 +100,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
     projectiles: Game.Query({ selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.read(Projectile) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
+    lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
+    pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
     walls: Game.Query({ selection: { wall: Game.Query.read(Wall) } })
   },
   resources: { tuning: Game.System.readResource(TuningResource) }
@@ -127,6 +131,13 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       }
       continue
     }
+    if (spec.kind === "lob") {
+      // A bomb not yet thrown: where it will burst, once it has flown and its fuse has burnt.
+      if (phase !== "windup") continue
+      const bursts = lands + spec.flightTime + spec.fuse
+      threats.push({ kind: "area", area, from: bursts, to: bursts + blast, seen })
+      continue
+    }
     if (phase === "active" && spec.kind !== "charge") continue
     threats.push({ kind: "area", area, from: lands, to: Math.max(ends, lands + 1 / 60), seen })
   }
@@ -134,6 +145,17 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     const projectile = data.projectile.get()
     if (projectile.faction !== "enemy") continue
     threats.push({ kind: "shot", at: data.position.get(), velocity: data.velocity.get(), radius: projectile.radius, from: 0, range: projectile.range, seen: Infinity })
+  }
+  for (const { data } of queries.lobbed.each()) {
+    const lobbed = data.lobbed.get()
+    if (lobbed.faction !== "enemy") continue
+    const bursts = Math.max(0, lobbed.effect.flightTime + lobbed.effect.fuse - lobbed.elapsed)
+    threats.push({ kind: "area", area: { kind: "circle", center: lobbed.to, radius: lobbed.effect.radius }, from: bursts, to: bursts + blast, seen: Infinity })
+  }
+  // Fire on the floor burns whoever walks in: kept out of while it lasts.
+  for (const { data } of queries.pools.each()) {
+    const pool = data.ground.get()
+    if (pool.element === "fire") threats.push({ kind: "area", area: { kind: "circle", center: pool.center, radius: pool.radius }, from: 0, to: pool.remaining, seen: Infinity })
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
@@ -153,6 +175,9 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     walls: queries.walls.each().map(({ data }) => data.wall.get())
   }
 })
+
+/** How long a bomb's burst stays dangerous (see `UpdateLobbed`). */
+const blast = 0.05
 
 /** How far ahead a move is played out, and in what steps. */
 const horizon = 1.2

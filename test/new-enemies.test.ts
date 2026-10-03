@@ -3,11 +3,10 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "../src/dev/commands.ts"
-import { aimArea } from "../src/features/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Attacker, AttackPhase, Enemy, Game, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
+import { Attacker, AttackPhase, Enemy, Game, Ground, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ClearEnemies, gunShot, gunner, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -36,6 +35,10 @@ const World = Game.Inspector("Test/NewEnemies", {
   pending: queries.pending.each().map(({ data }) => data.pending.get())
 }))
 
+const Pools = Game.Inspector("Test/Pools", {
+  queries: { pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }) }
+}, ({ queries }) => queries.pools.each().map(({ data }) => data.ground.get().element))
+
 const cursorAt = (offset: Vec2) => {
   const screen = toScreen(projection, offset)
   return { x: 640 + screen.x, y: 360 + screen.y }
@@ -59,48 +62,53 @@ const stepUntil = (run: { step: (count?: number) => void }, predicate: () => boo
   throw new Error("condition never held")
 }
 
-describe("charger", () => {
+describe("firebomber", () => {
   const spec = defaultTuning.enemies.charger.attacks[0]!
+  const bursts = spec.kind === "lob" ? spec.flightTime + spec.fuse : 0
 
-  it("telegraphs a lane at the player, then charges down it and hits a player who stays", () => {
+  it("rings where the player stands, then lobs a bomb there that bursts on a player who stays and leaves fire", () => {
     const run = duel("charger", { x: 300, y: 0 })
     stepUntil(run, () => run.world().enemies[0]!.attacker.phase === "windup")
-    const lane = run.world().enemies[0]!.attacker.area
-    expect(lane?.kind).toBe("lane")
-    const before = run.world().enemies[0]!.position
-    stepUntil(run, () => run.world().enemies[0]!.attacker.phase === "recovery")
-    const after = run.world().enemies[0]!.position
-    // It covered most of the lane at charge speed.
-    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(spec.kind === "charge" ? spec.speed * spec.active * 0.7 : 0)
-    expect(run.world().player).toBe(swordsman.hp - playerLoss(defaultTuning, "charger", spec.power))
+    const ring = run.world().enemies[0]!.attacker.area
+    expect(ring?.kind).toBe("circle")
+    if (ring?.kind === "circle") expect(Math.hypot(ring.center.x - center.x, ring.center.y - center.y)).toBeLessThan(1)
+    stepUntil(run, () => run.world().enemies[0]!.attacker.phase !== "windup")
+    // Thrown, it has not landed yet.
+    expect(run.world().player).toBe(swordsman.hp)
+    run.step(steps(bursts) + 2)
+    expect(run.world().player).toBeLessThanOrEqual(swordsman.hp - playerLoss(defaultTuning, "charger", spec.power))
+    expect(run.runtime.inspect(Pools)).toEqual(["fire"])
   })
 
-  it("misses a player who sidesteps out of the lane during the windup", () => {
+  it("misses a player who keeps running", () => {
     const dry = duel("charger", { x: 300, y: 0 })
     const windupAt = stepUntil(dry, () => dry.world().enemies[0]!.attacker.phase === "windup")
-    // The lane points world west from the charger; step screen-down (world south-east) out of it.
-    const run = duel("charger", { x: 300, y: 0 }, { keys: [{ frame: windupAt, press: ["down"] }, { frame: windupAt + 25, release: ["down"] }] })
-    stepUntil(run, () => run.world().enemies[0]!.attacker.phase === "recovery")
+    const run = duel("charger", { x: 300, y: 0 }, { keys: [{ frame: windupAt, press: ["down"] }] })
+    stepUntil(run, () => run.world().enemies[0]!.attacker.phase !== "windup")
+    run.step(steps(bursts) + 2)
     expect(run.world().player).toBe(swordsman.hp)
   })
 })
 
 describe("sniper", () => {
   const spec = defaultTuning.enemies.sniper.attacks[0]!
+  const flight = spec.kind === "volley" ? 500 / spec.projectileSpeed : 0
 
-  it("fires a beam that hits the player standing in its lane", () => {
+  it("fires a bullet that hits a player who stays", () => {
     const run = duel("sniper", { x: 500, y: 0 })
     stepUntil(run, () => run.world().enemies[0]!.attacker.phase === "recovery")
+    // In flight: not hit yet.
+    expect(run.world().player).toBe(swordsman.hp)
+    run.step(steps(flight) + 2)
     expect(run.world().player).toBe(swordsman.hp - playerLoss(defaultTuning, "sniper", spec.power))
   })
 
-  it("stops its beam at walls", () => {
-    const wall = { minX: 100, minY: -50, maxX: 120, maxY: 50 }
-    const lane = aimArea(spec, { x: 0, y: 0 }, { x: 500, y: 0 }, [wall])
-    expect(lane.kind).toBe("lane")
-    if (lane.kind !== "lane") return
-    expect(lane.length).toBeLessThan(101)
-    expect(lane.length).toBeGreaterThan(98)
+  it("misses a player who steps aside once it fires", () => {
+    const dry = duel("sniper", { x: 500, y: 0 })
+    const firedAt = stepUntil(dry, () => dry.world().enemies[0]!.attacker.phase === "recovery")
+    const run = duel("sniper", { x: 500, y: 0 }, { keys: [{ frame: firedAt, press: ["up"] }] })
+    run.step(firedAt + steps(flight) + 10)
+    expect(run.world().player).toBe(swordsman.hp)
   })
 
   it("tracks a moving player during the windup, then locks", () => {
@@ -108,12 +116,12 @@ describe("sniper", () => {
     stepUntil(run, () => run.world().enemies[0]!.attacker.phase === "windup")
     const direction = () => {
       const area = run.world().enemies[0]!.attacker.area
-      return area?.kind === "lane" ? area.direction : undefined
+      return area?.kind === "line" ? area.direction : undefined
     }
     const early = direction()
     run.step(10)
     expect(direction()).not.toEqual(early)
-    run.step(steps(spec.windup - (spec.kind === "beam" ? spec.aimLock : 0)) - 8)
+    run.step(steps(spec.windup - spec.aimLock) - 8)
     const locked = direction()
     run.step(5)
     expect(direction()).toEqual(locked)
