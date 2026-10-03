@@ -170,6 +170,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (phase.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
       area = aimArea(spec, position, aimPoint(spec, position, moving, Math.max(0, spec.windup - elapsed)), boxes)
     }
+    // A charge runs from wherever the charger stands when it goes (a blow can push it during the windup): its lane moves with it.
+    if (phase.get() === "windup" && spec.kind === "charge" && area?.kind === "lane") area = { ...area, origin: position }
 
     if (phase.get() === "windup" && elapsed >= spec.windup && area !== null) {
       elapsed -= spec.windup

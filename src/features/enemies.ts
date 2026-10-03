@@ -249,9 +249,14 @@ export const SteerEnemies = (() => {
         continue
       }
 
-      // Attacks are commitments: it stands still from the windup to the end of the recovery.
+      // Attacks are commitments: it stands its ground from the windup to the end of the recovery,
+      // unmoved by the crowd too, so the attack lands where its telegraph showed.
+      if (phase !== "ready") {
+        data.velocity.set(zero)
+        continue
+      }
       let desired: Vec2 = zero
-      if (phase === "ready" && target !== undefined) {
+      if (target !== undefined) {
         const toward = normalizeOr(sub(target, position), zero)
         // Straight at her when nothing is in between; around the walls otherwise.
         const way = hasLineOfSight(position, target, radius, boxes) ? toward : (paths.way(position) ?? toward)
