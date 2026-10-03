@@ -9,7 +9,7 @@ import type { ProjectileNode } from "../src/presentation/host-types.ts"
 import type { ModelId, ModelSource } from "../src/presentation/models.ts"
 import { createNode, disposeNode, instancesOf } from "../src/presentation/nodes.ts"
 import { makeAssets } from "../src/presentation/render-assets.ts"
-import { arenaLook, characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
+import { arenaLooks, characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
 import { closeLoop, models } from "../src/presentation/models.ts"
 
 const loadedEnemies = new Map<ModelId, ModelSource>()
@@ -147,9 +147,9 @@ describe("render nodes", () => {
 
   it("stand a pillar on a pillar's box, fitted to it, and fade it", () => {
     const { assets, pool } = setup()
-    const node = createNode({ kind: "wall", placement: "sorted", box: { minX: 100, minY: 100, maxX: 170, maxY: 170 } }, assets, pool)
+    const node = createNode({ kind: "wall", placement: "sorted", arena: "courtyard", box: { minX: 100, minY: 100, maxX: 170, maxY: 170 } }, assets, pool)
     if (node.kind !== "wall") throw new Error("expected a wall")
-    expect(arenaLook.walls.sorted.kind).toBe("pillar")
+    expect(arenaLooks.courtyard.walls.sorted.kind).toBe("pillar")
     expect(node.instances).toHaveLength(0)
     expect(node.root.children[0]!.scale.x).toBeCloseTo(70, 6)
     expect(node.bounds.width).toBeGreaterThan(0)
@@ -161,11 +161,23 @@ describe("render nodes", () => {
 
   it("build an edge wall from segments filling its length", () => {
     const { assets, pool } = setup()
-    const node = createNode({ kind: "wall", placement: "back", box: { minX: -48, minY: -48, maxX: 1848, maxY: 0 } }, assets, pool)
+    const node = createNode({ kind: "wall", placement: "back", arena: "courtyard", box: { minX: -48, minY: -48, maxX: 1848, maxY: 0 } }, assets, pool)
     if (node.kind !== "wall") throw new Error("expected a wall")
     // 1896 units at 140 per 2 m segment: 14 segments, each stretched a little.
     expect(node.instances).toHaveLength(14)
     const length = node.instances.reduce((sum, piece) => sum + piece.object.scale.x * 2, 0)
     expect(length).toBeCloseTo(1896, 6)
+  })
+
+  it("dress every arena's low walls and pillars from its own kit", () => {
+    const { assets, pool } = setup()
+    for (const arena of ["courtyard", "cistern", "kilnworks", "sanctuary"] as const) {
+      const wall = createNode({ kind: "wall", placement: "inner", arena, box: { minX: 100, minY: 100, maxX: 400, maxY: 136 } }, assets, pool)
+      if (wall.kind !== "wall") throw new Error("expected a wall")
+      expect(wall.instances.length).toBeGreaterThan(0)
+      disposeNode(wall)
+      const pillar = createNode({ kind: "wall", placement: "sorted", arena, box: { minX: 100, minY: 100, maxX: 150, maxY: 150 } }, assets, pool)
+      disposeNode(pillar)
+    }
   })
 })

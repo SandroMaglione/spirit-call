@@ -9,7 +9,7 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -132,7 +132,8 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
         phase: Game.Query.read(AttackPhase),
         state: Game.Query.read(ElementState),
         stunned: Game.Query.read(Stunned),
-        poise: Game.Query.read(Poise)
+        poise: Game.Query.read(Poise),
+        elite: Game.Query.optional(Elite)
       }
     })
   },
@@ -158,6 +159,8 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     // Broken: it glows in the break color, pulsing, until it recovers.
     else if (poise.broken > 0) node.body.paint(tint, view.breaking.glow, 0.35 + 0.25 * Math.sin(performance.now() / 1000 * view.breaking.pulseHz * Math.PI * 2), 1)
     else if (stunned) node.body.paint(tint, view.stun, 0.35, 1)
+    // An elite glows in its element's color (brighter through a windup).
+    else if (data.elite.present && windup === 0) node.body.paint(tint, view.elements[data.elite.get().element], 0.32, 1)
     else node.body.paint(tint, view.windupTint, windup * 0.75, 1)
     // Over its head, in projected coordinates (the overlay's).
     const feet = toScreen(projection, { x: node.root.position.x, y: node.root.position.z })

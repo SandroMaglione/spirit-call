@@ -16,7 +16,8 @@ import { makeBody } from "./bodies.ts"
 import { mixColor } from "./draw.ts"
 import { floorLayers } from "./layers.ts"
 import type { ProjectileNode, RenderAssets, RenderNode, TotemNode, WallNode } from "./host-types.ts"
-import { arenaLook, characterLooks, enemyLooks } from "./looks.ts"
+import { hazardNode } from "./hazards.ts"
+import { arenaLooks, characterLooks, enemyLooks } from "./looks.ts"
 import type { BodyLook, WallLook } from "./looks.ts"
 import { models } from "./models.ts"
 import type { ModelId, ModelSpec } from "./models.ts"
@@ -135,11 +136,10 @@ export const variantAt = (count: number, at: { readonly x: number; readonly y: n
   ((Math.imul(Math.round(at.x), 73856093) ^ Math.imul(Math.round(at.y), 19349663)) >>> 0) % count
 
 /** A wall or pillar standing on the floor, dressed by `look` at the arena's scale. */
-const wallNode = (assets: RenderAssets, look: WallLook, box: Box, front: boolean): WallNode => {
+const wallNode = (assets: RenderAssets, look: WallLook, scale: number, box: Box, front: boolean): WallNode => {
   const width = box.maxX - box.minX
   const depth = box.maxY - box.minY
   const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
-  const scale = arenaLook.unitsPerMeter
   const root = new Group()
   const instances: Array<Instance> = []
   let height: number
@@ -248,10 +248,13 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
     case "projectile":
       return projectileNode(assets, projectilePool, renderable.faction, renderable.style, renderable.radius, renderable.element)
     case "wall": {
-      return wallNode(assets, arenaLook.walls[renderable.placement], renderable.box, renderable.placement === "front")
+      const arena = arenaLooks[renderable.arena]
+      return wallNode(assets, arena.walls[renderable.placement], arena.unitsPerMeter, renderable.box, renderable.placement === "front")
     }
     case "totem":
       return totemNode(assets, renderable.element)
+    case "hazard":
+      return hazardNode(renderable.element, renderable.half)
   }
 }
 
@@ -267,6 +270,8 @@ export const instancesOf = (node: RenderNode): ReadonlyArray<Instance> => {
       return node.instances
     case "totem":
       return [node.shadow]
+    case "hazard":
+      return []
   }
 }
 
@@ -281,6 +286,7 @@ export const disposeNode = (node: RenderNode): void => {
       return
     case "wall":
     case "totem":
+    case "hazard":
       node.dispose()
       return
   }

@@ -6,6 +6,8 @@
  * "Copy JSON" copies the full current tuning, ready to paste back into
  * `config/tuning.ts` once the numbers feel right.
  */
+import { elite } from "../content/challenges.ts"
+import type { EliteElement } from "../content/challenges.ts"
 import { defaultTuning } from "../config/tuning.ts"
 import type { Tuning } from "../config/tuning.ts"
 import { setAt } from "../dev/commands.ts"
@@ -88,10 +90,26 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
 
   // One button per enemy type, plus clear; waves.enabled below toggles waves for a quiet sandbox.
   const spawnButtons = root.querySelector<HTMLElement>("[data-spawn]")!
+  // What the buttons spawn: plain enemies, or elites of an element (the toggle cycles).
+  const eliteChoices: ReadonlyArray<EliteElement | null> = [null, "fire", "water", "thunder"]
+  let eliteChoice = 0
+  const eliteToggle = document.createElement("button")
+  const showElite = () => {
+    eliteToggle.textContent = `elite: ${eliteChoices[eliteChoice] ?? "off"}`
+  }
+  showElite()
+  eliteToggle.addEventListener("click", () => {
+    eliteChoice = (eliteChoice + 1) % eliteChoices.length
+    showElite()
+  })
+  spawnButtons.append(eliteToggle)
   for (const kind of Object.keys(initial.enemies) as Array<EnemyKind>) {
     const button = document.createElement("button")
     button.textContent = kind
-    button.addEventListener("click", () => queue.spawns.push(kind))
+    button.addEventListener("click", () => {
+      const element = eliteChoices[eliteChoice] ?? null
+      queue.spawns.push(element === null ? kind : elite(kind, element))
+    })
     spawnButtons.append(button)
   }
   const clear = document.createElement("button")

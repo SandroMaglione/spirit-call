@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import { entryKind } from "../src/content/challenges.ts"
+import type { Wave } from "../src/content/challenges.ts"
+
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
@@ -16,8 +19,8 @@ const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id ==
 const swipeOnly = tuningWith({ enemies: { chaser: { attacks: [{ ...swipe, followUp: null }] } } })
 
 /** A scripted wave's enemies, with each entry repeated by its group size (swarmers come in packs). */
-const expandWave = (wave: ReadonlyArray<EnemyKind>): Array<EnemyKind> =>
-  wave.flatMap((kind) => Array.from({ length: defaultTuning.enemies[kind].group }, () => kind)).sort()
+const expandWave = (wave: Wave): Array<EnemyKind> =>
+  wave.map(entryKind).flatMap((kind) => Array.from({ length: defaultTuning.enemies[kind].group }, () => kind)).sort()
 
 const World = Game.Inspector("Test/Enemies", {
   queries: {

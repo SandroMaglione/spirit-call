@@ -58,7 +58,7 @@ describe("challenges", () => {
 
   it("measures how far a run got: the share of waves defeated, or of the time survived", () => {
     const waves = defaultTuning.challenges.swarm
-    const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [] }, { time: 30, endedAt: null })
+    const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [], front: 0 }, { time: 30, endedAt: null })
     expect(at(0, "break")).toBe(0)
     expect(at(1, "fighting")).toBe(0)
     expect(at(1, "break")).toBeCloseTo(1 / 3)
@@ -66,8 +66,8 @@ describe("challenges", () => {
     expect(at(3, "complete")).toBe(1)
     const endless = defaultTuning.challenges.endless
     const seconds = endless.objective.kind === "survive" ? endless.objective.seconds : 0
-    expect(objectiveProgress(endless, { number: 2, phase: "fighting", timer: 0, queue: [] }, { time: seconds / 4, endedAt: null })).toBeCloseTo(0.25)
-    expect(objectiveProgress(endless, { number: 9, phase: "fighting", timer: 0, queue: [] }, { time: seconds * 2, endedAt: null })).toBe(1)
+    expect(objectiveProgress(endless, { number: 2, phase: "fighting", timer: 0, queue: [], front: 0 }, { time: seconds / 4, endedAt: null })).toBeCloseTo(0.25)
+    expect(objectiveProgress(endless, { number: 9, phase: "fighting", timer: 0, queue: [], front: 0 }, { time: seconds * 2, endedAt: null })).toBe(1)
   })
 
   it("clear-waves: not cleared while enemies of the last wave are alive", () => {

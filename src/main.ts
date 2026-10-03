@@ -5,7 +5,7 @@ import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
-import { challengeFromQuery, enemyLevelFromQuery, teamFromQuery } from "./dev/build.ts"
+import { arenaFromQuery, challengeFromQuery, enemyLevelFromQuery, teamFromQuery } from "./dev/build.ts"
 import { startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
@@ -38,7 +38,8 @@ import { fixedUpdate, setup } from "./schedules.ts"
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(window.location.search)
-  const tuning = stressLoad === undefined ? loadSavedTuning() : stressTuning()
+  // `?arena=` fights every challenge in one arena (see dev/build.ts).
+  const tuning = arenaFromQuery(stressLoad === undefined ? loadSavedTuning() : stressTuning(), window.location.search)
   // The account loads first (created on the first visit): the menu starts from its last selection.
   const shell = await startApp(tuning)
   const { account } = shell

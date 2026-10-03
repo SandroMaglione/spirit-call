@@ -1,26 +1,77 @@
-import { pillars } from "../content/arena.ts"
+/**
+ * The arena of the challenge being played (see `content/arena.ts`): its
+ * boundary walls, pillars, low walls, and hazards, spawned with each run (so
+ * a run of another challenge stands in another arena).
+ */
+import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { ArenaId } from "../content/arena.ts"
 import type { Box } from "../physics/shapes.ts"
 import { boxAround } from "../physics/shapes.ts"
-import { ArenaScope, Game, Position, Renderable, Tuning, Wall } from "../schema.ts"
+import { Challenge, Game, Ground, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"
+import type { WallPlacement } from "../schema.ts"
 
-const makeWall = (box: Box, placement: "back" | "front" | "sorted") =>
+const makeWall = (box: Box, placement: WallPlacement, arena: ArenaId) =>
   Game.Command.spawn(
     [Wall, box],
     [Position, { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }],
-    [Renderable, { kind: "wall", box, placement }]
+    [Renderable, { kind: "wall", box, placement, arena }]
   )
 
-/** Boundary walls around `[0, width] × [0, height]` plus the pillars. */
+/** How thick a low wall is, in world units. */
+const wallThickness = 36
+
+/** The arena's hazards as boxes on the floor (whole tiles; see `content/arena.ts`). */
+export const hazardBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<{ readonly element: "fire" | "water"; readonly box: Box }> => {
+  const { width, height, cells } = tuning.arena
+  const cellX = width / cells
+  const cellY = height / cells
+  return tuning.arenas[id].hazards.map((hazard) => ({
+    element: hazard.element,
+    box: { minX: hazard.column * cellX, minY: hazard.row * cellY, maxX: (hazard.column + hazard.columns) * cellX, maxY: (hazard.row + hazard.rows) * cellY }
+  }))
+}
+
+/** The arena a challenge is fought in. */
+export const arenaOf = (tuning: TuningValue, challenge: keyof TuningValue["challenges"]): ArenaId => tuning.challenges[challenge].arena
+
+/** Boundary walls around `[0, width] × [0, height]`, then the challenge's arena: pillars, low walls, and hazards. */
 export const SpawnArena = Game.System("Shooter/SpawnArena", {
-  resources: { tuning: Game.System.readResource(Tuning) }
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge) }
 }, ({ resources, commands }) => {
-  const { width, height, wallThickness: t } = resources.tuning.get().arena
+  const tuning = resources.tuning.get()
+  const id = arenaOf(tuning, resources.challenge.get())
+  const spec = tuning.arenas[id]
+  const { width, height, wallThickness: t } = tuning.arena
   // North and west walls are behind everything; south and east are in front.
-  commands.spawnIn(ArenaScope, makeWall({ minX: -t, minY: -t, maxX: width + t, maxY: 0 }, "back"))
-  commands.spawnIn(ArenaScope, makeWall({ minX: -t, minY: 0, maxX: 0, maxY: height }, "back"))
-  commands.spawnIn(ArenaScope, makeWall({ minX: -t, minY: height, maxX: width + t, maxY: height + t }, "front"))
-  commands.spawnIn(ArenaScope, makeWall({ minX: width, minY: 0, maxX: width + t, maxY: height }, "front"))
-  for (const pillar of pillars) {
-    commands.spawnIn(ArenaScope, makeWall(boxAround(pillar.x * width, pillar.y * height, pillar.size / 2, pillar.size / 2), "sorted"))
+  commands.spawnIn(RunScope, makeWall({ minX: -t, minY: -t, maxX: width + t, maxY: 0 }, "back", id))
+  commands.spawnIn(RunScope, makeWall({ minX: -t, minY: 0, maxX: 0, maxY: height }, "back", id))
+  commands.spawnIn(RunScope, makeWall({ minX: -t, minY: height, maxX: width + t, maxY: height + t }, "front", id))
+  commands.spawnIn(RunScope, makeWall({ minX: width, minY: 0, maxX: width + t, maxY: height }, "front", id))
+  for (const pillar of spec.pillars) {
+    commands.spawnIn(RunScope, makeWall(boxAround(pillar.x * width, pillar.y * height, pillar.size / 2, pillar.size / 2), "sorted", id))
+  }
+  for (const wall of spec.walls) {
+    const half = wall.length / 2
+    const box = wall.along === "x"
+      ? boxAround(wall.x * width, wall.y * height, half, wallThickness / 2)
+      : boxAround(wall.x * width, wall.y * height, wallThickness / 2, half)
+    commands.spawnIn(RunScope, makeWall(box, "inner", id))
+  }
+  for (const { element, box } of hazardBoxes(tuning, id)) {
+    const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
+    const half = { x: (box.maxX - box.minX) / 2, y: (box.maxY - box.minY) / 2 }
+    commands.spawnIn(RunScope, Game.Command.spawn([Position, center], [Renderable, { kind: "hazard", element, half }], [Ground, {
+      element,
+      center,
+      radius: Math.hypot(half.x, half.y),
+      half,
+      drift: { x: 0, y: 0 },
+      remaining: Infinity,
+      duration: Infinity,
+      atk: tuning.hazards.atk,
+      charges: false,
+      permanent: true,
+      out: 0
+    }]))
   }
 })

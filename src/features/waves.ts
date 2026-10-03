@@ -1,13 +1,19 @@
 /**
  * The wave director: a short break, then a wave of enemies spawned one by
- * one behind spawn warnings, then the next break once every enemy is gone.
- * The waves are the challenge's plan (see `content/challenges.ts`): its
- * scripted waves, then (if the plan is endless) random mixes within a growing
- * budget, drawn from the seeded `Rng`, so a run replays exactly. A plan that
- * ends is `complete` once its last wave is cleared.
+ * one behind spawn warnings. Each wave has a front, a direction from the
+ * player: the enemies that keep their distance come in far along it, the
+ * others close from the flanks and behind (see `Tuning.waves.placement`),
+ * so no direction is safe to back away into. Once only a few enemies of a
+ * wave are left (`reinforceAt`), the next one comes in: kills, not time,
+ * bring it. The waves are the challenge's plan (see `content/challenges.ts`):
+ * its scripted waves, then (if the plan is endless) random mixes within a
+ * growing budget, some of them elites, drawn from the seeded `Rng`, so a run
+ * replays exactly. A plan that ends is `complete` once its last wave is
+ * cleared.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import type { WavePlan } from "../content/challenges.ts"
+import { elite, entryElite, entryKind } from "../content/challenges.ts"
+import type { EliteElement, WaveEntry, WavePlan } from "../content/challenges.ts"
 import { Random } from "../math/rng.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox } from "../physics/collide.ts"
@@ -17,38 +23,94 @@ import type { EnemyKind, WavesValue } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
-export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, phase: "break", timer: tuning.waves.firstDelay, queue: [] })
+export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, phase: "break", timer: tuning.waves.firstDelay, queue: [], front: 0 })
 
 /** Whether `plan` has a wave `number` (from 1). */
 export const hasWave = (plan: WavePlan, number: number): boolean => plan.endless !== null || number <= plan.scripted.length
 
-/** The enemies of wave `number` (from 1) of `plan`; call only when it `hasWave`. */
-export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random): Array<EnemyKind> => {
+const eliteElements: ReadonlyArray<EliteElement> = ["fire", "water", "thunder"]
+
+/** The share of an endless wave's slots that are elites (see `Tuning.elites.endless`). */
+const eliteChance = (tuning: TuningValue, number: number): number => {
+  const rules = tuning.elites.endless
+  return number < rules.fromWave ? 0 : Math.min(rules.max, rules.chance + rules.perWave * (number - rules.fromWave))
+}
+
+/** The entries of wave `number` (from 1) of `plan`; call only when it `hasWave`. */
+export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random): Array<WaveEntry> => {
   const scripted = plan.scripted[number - 1]
   if (scripted !== undefined || plan.endless === null) return [...(scripted ?? [])]
   const kinds = (Object.keys(tuning.enemies) as Array<EnemyKind>).filter((kind) => tuning.enemies[kind].cost > 0)
   let budget = plan.endless.baseBudget + plan.endless.budgetPerWave * (number - 1)
-  const wave: Array<EnemyKind> = []
+  const chance = eliteChance(tuning, number)
+  const wave: Array<WaveEntry> = []
   for (;;) {
     const affordable = kinds.filter((kind) => tuning.enemies[kind].cost <= budget)
     if (affordable.length === 0) break
     const kind = random.pick(affordable)
-    wave.push(kind)
+    wave.push(chance > 0 && random.next() < chance ? elite(kind, random.pick(eliteElements)) : kind)
     budget -= tuning.enemies[kind].cost
   }
   return wave
 }
 
-export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec2 | undefined, boxes: ReadonlyArray<Box>, random: Random): Vec2 => {
+/** Whether `kind` keeps its distance (it comes in along the wave's front). */
+const ranged = (tuning: TuningValue, kind: EnemyKind): boolean => tuning.enemies[kind].behavior.kind === "kite"
+
+/**
+ * Where a `kind` of the wave comes in: around the player by its job (see
+ * `Tuning.waves.placement`), clear of walls and inside the arena; failing
+ * that, anywhere far enough from her.
+ */
+export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec2 | undefined, boxes: ReadonlyArray<Box>, random: Random, front = 0): Vec2 => {
   const margin = 60
   const clearance = tuning.enemies[kind].radius + 12
+  const placement = tuning.waves.placement
+  const inside = (at: Vec2) => at.x >= margin && at.y >= margin && at.x <= tuning.arena.width - margin && at.y <= tuning.arena.height - margin
+  const clear = (at: Vec2) => !boxes.some((box) => circleOverlapsBox(at, clearance, box))
+  if (player !== undefined) {
+    const far = ranged(tuning, kind)
+    const band = far ? placement.ranged : placement.melee
+    for (let attempt = 0; attempt < 30; attempt++) {
+      // Ranged: within the front's spread. Melee: a flank or behind, either side.
+      const side = random.next() < 0.5 ? -1 : 1
+      const angle = far
+        ? front + random.range(-placement.frontSpread, placement.frontSpread)
+        : front + side * random.range(placement.flankFrom, Math.PI)
+      const distance = random.range(band.min, band.max)
+      const at = { x: player.x + Math.cos(angle) * distance, y: player.y + Math.sin(angle) * distance }
+      if (inside(at) && clear(at)) return at
+    }
+  }
   let candidate: Vec2 = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
   for (let attempt = 0; attempt < 40; attempt++) {
     candidate = { x: random.range(margin, tuning.arena.width - margin), y: random.range(margin, tuning.arena.height - margin) }
     const farEnough = player === undefined || Math.hypot(candidate.x - player.x, candidate.y - player.y) >= tuning.waves.minSpawnDistance
-    if (farEnough && !boxes.some((box) => circleOverlapsBox(candidate, clearance, box))) return candidate
+    if (farEnough && clear(candidate)) return candidate
   }
   return candidate
+}
+
+/**
+ * A wave's front: toward the side of the arena with the most room from
+ * the player (so its ranged enemies fit), give or take a little.
+ */
+const pickFront = (tuning: TuningValue, player: Vec2 | undefined, random: Random): number => {
+  if (player === undefined) return random.range(0, Math.PI * 2)
+  const room = (angle: number) => {
+    const dx = Math.cos(angle)
+    const dy = Math.sin(angle)
+    const tx = dx > 0 ? (tuning.arena.width - player.x) / dx : dx < 0 ? -player.x / dx : Infinity
+    const ty = dy > 0 ? (tuning.arena.height - player.y) / dy : dy < 0 ? -player.y / dy : Infinity
+    return Math.min(tx, ty)
+  }
+  // A few random directions; the roomiest wins.
+  let best = random.range(0, Math.PI * 2)
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const angle = random.range(0, Math.PI * 2)
+    if (room(angle) > room(best)) best = angle
+  }
+  return best
 }
 
 export const DirectWaves = Game.System("Shooter/DirectWaves", {
@@ -72,8 +134,9 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   const dt = resources.time.get().dt
   const waves = resources.waves.get()
   const random = new Random(resources.rng.get().state)
-  let { number, phase, timer } = waves
+  let { number, phase, timer, front } = waves
   let queue = [...waves.queue]
+  const player = queries.player.each()[0]?.data.position.get()
 
   switch (phase) {
     case "break":
@@ -83,17 +146,18 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       } else if (timer <= 0) {
         number += 1
         queue = composeWave(tuning, plan, number, random)
+        front = pickFront(tuning, player, random)
         phase = "spawning"
         timer = 0
       }
       break
     case "spawning": {
       timer -= dt
-      const player = queries.player.each()[0]?.data.position.get()
       const boxes = wallBoxes(queries.walls.each())
       while (timer <= 0 && queue.length > 0) {
-        const kind = queue.shift()!
-        for (const spawn of makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random), tuning.waves.spawnWarning)) {
+        const entry = queue.shift()!
+        const kind = entryKind(entry)
+        for (const spawn of makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry))) {
           commands.spawnIn(RunScope, spawn)
         }
         timer += tuning.waves.spawnInterval
@@ -101,17 +165,23 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       if (queue.length === 0) phase = "fighting"
       break
     }
-    case "fighting":
-      if (queries.enemies.each().length === 0 && queries.pending.each().length === 0) {
+    case "fighting": {
+      const left = queries.enemies.each().length + queries.pending.each().length
+      if (left === 0) {
         // The last wave of a plan that ends completes it at once.
         phase = hasWave(plan, number + 1) ? "break" : "complete"
         timer = tuning.waves.breakDuration
+      } else if (left <= tuning.waves.reinforceAt && hasWave(plan, number + 1)) {
+        // Reinforcements: the next wave comes in while the last few still stand.
+        phase = "break"
+        timer = tuning.waves.reinforceDelay
       }
       break
+    }
     case "complete":
       break
   }
 
-  resources.waves.set({ number, phase, timer, queue })
+  resources.waves.set({ number, phase, timer, queue, front })
   resources.rng.set({ state: random.state })
 })

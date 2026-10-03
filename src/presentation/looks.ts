@@ -4,12 +4,14 @@
  * `models.ts`). Giving something its model is changing its entry here; no
  * system changes. See `docs/models.md`.
  */
+import type { ArenaId } from "../content/arena.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import type { SkillId } from "../content/skills.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
+import type { WallPlacement } from "../schema.ts"
 import { crowCombo } from "./assets/crow.ts"
 import type { ModelId } from "./models.ts"
 
@@ -140,15 +142,15 @@ export interface Scenery {
 
 /**
  * The arena: its floor, its walls by placement (`back` and `front` edges,
- * `sorted` pillars), and scenery, with models at `unitsPerMeter` world
- * units per meter. What blocks movement and shots is the simulation's walls
+ * `sorted` pillars, low `inner` walls), and scenery, with models at
+ * `unitsPerMeter` world units per meter. What blocks movement and shots is the simulation's walls
  * (`content/arena.ts`); the look only dresses them, and scenery must not
  * look solid where nothing blocks.
  */
 export interface ArenaLook {
   readonly unitsPerMeter: number
   readonly floor: FloorLook
-  readonly walls: Readonly<Record<"back" | "front" | "sorted", WallLook>>
+  readonly walls: Readonly<Record<WallPlacement, WallLook>>
   readonly scenery: ReadonlyArray<Scenery>
 }
 
@@ -156,7 +158,7 @@ export interface ArenaLook {
 export const placeholderArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: { kind: "grid", color: view.floor, line: view.floorGrid, spacing: view.floorGridSpacing },
-  walls: { back: { kind: "box", color: view.wall }, front: { kind: "box", color: view.wall }, sorted: { kind: "box", color: view.wall } },
+  walls: { back: { kind: "box", color: view.wall }, front: { kind: "box", color: view.wall }, sorted: { kind: "box", color: view.wall }, inner: { kind: "box", color: view.wall } },
   scenery: []
 }
 
@@ -172,7 +174,8 @@ export const courtyardArena: ArenaLook = {
   walls: {
     back: { kind: "run", model: "wallStraight" },
     front: { kind: "run", model: "wallLow" },
-    sorted: { kind: "pillar", models: ["pillarLarge", "pillarLargeChipped", "pillarSmall", "pillarSmallChipped"] }
+    sorted: { kind: "pillar", models: ["pillarLarge", "pillarLargeChipped", "pillarSmall", "pillarSmallChipped"] },
+    inner: { kind: "run", model: "wallLow" }
   },
   scenery: [
     { model: "brazier", at: { x: 70, y: 70 }, turn: 0 },
@@ -190,8 +193,107 @@ export const courtyardArena: ArenaLook = {
   ]
 }
 
-/** The arena the game shows. */
-export const arenaLook: ArenaLook = courtyardArena
+/**
+ * The flooded cistern (`art/environment/flooded-cistern`): worn flagstones
+ * with grates, its pumps, pipes, and urns against the walls (the water is
+ * the game's: its basins are hazards, see `content/arena.ts`).
+ */
+export const cisternArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["cisternFloorPlain", "cisternFloorWorn", "cisternFloorPlain", "cisternFloorCracked", "cisternFloorPlain", "cisternFloorWorn", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorCracked", "cisternFloorGrate"], color: 0x1f2a2c },
+  walls: {
+    back: { kind: "run", model: "cisternWallStraight" },
+    front: { kind: "run", model: "cisternWallLow" },
+    sorted: { kind: "pillar", models: ["cisternPillarLarge", "cisternPillarSmall"] },
+    inner: { kind: "run", model: "cisternWallLow" }
+  },
+  scenery: [
+    { model: "cisternPump", at: { x: 150, y: 60 }, turn: 0 },
+    { model: "cisternPipeOutlet", at: { x: 900, y: 40 }, turn: 0 },
+    { model: "cisternPump", at: { x: 1650, y: 60 }, turn: 0 },
+    { model: "cisternValve", at: { x: 520, y: 26 }, turn: 0 },
+    { model: "cisternValve", at: { x: 1280, y: 26 }, turn: 0 },
+    { model: "cisternPipeStraight", at: { x: 22, y: 640 }, turn: Math.PI / 2 },
+    { model: "cisternPipeStraight", at: { x: 22, y: 1160 }, turn: Math.PI / 2 },
+    { model: "cisternUrn", at: { x: 34, y: 300 }, turn: 0.3 },
+    { model: "cisternUrn", at: { x: 34, y: 1500 }, turn: 2.2 },
+    { model: "cisternUrn", at: { x: 1766, y: 900 }, turn: 1.1 },
+    { model: "cisternButtress", at: { x: 1770, y: 420 }, turn: Math.PI / 2 },
+    { model: "cisternButtress", at: { x: 1770, y: 1380 }, turn: Math.PI / 2 },
+    { model: "cisternUrn", at: { x: 600, y: 1768 }, turn: 0.7 },
+    { model: "cisternUrn", at: { x: 1200, y: 1768 }, turn: 2.9 }
+  ]
+}
+
+/**
+ * The ember kilnworks (`art/environment/ember-kilnworks`): soot-dark
+ * flagstones, furnaces and chimneys along the back, crates and barrels on the
+ * sides (its fire pits are the game's: see `presentation/hazards.ts`).
+ */
+export const kilnworksArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["kilnworksFloorPlain", "kilnworksFloorWorn", "kilnworksFloorCracked", "kilnworksFloorPlain"], color: 0x2a1d18 },
+  walls: {
+    back: { kind: "run", model: "kilnworksWallStraight" },
+    front: { kind: "run", model: "kilnworksWallLow" },
+    sorted: { kind: "pillar", models: ["kilnworksPillarLarge", "kilnworksPillarSmall"] },
+    inner: { kind: "run", model: "kilnworksWallLow" }
+  },
+  scenery: [
+    { model: "kilnworksFurnace", at: { x: 300, y: 60 }, turn: 0 },
+    { model: "kilnworksChimney", at: { x: 620, y: 40 }, turn: 0 },
+    { model: "kilnworksBoiler", at: { x: 1200, y: 50 }, turn: 0 },
+    { model: "kilnworksFurnace", at: { x: 1550, y: 60 }, turn: 0 },
+    { model: "kilnworksToolRack", at: { x: 900, y: 20 }, turn: 0 },
+    { model: "kilnworksCrate", at: { x: 36, y: 380 }, turn: 0.3 },
+    { model: "kilnworksBarrel", at: { x: 36, y: 460 }, turn: 0 },
+    { model: "kilnworksCoalBin", at: { x: 40, y: 1250 }, turn: Math.PI / 2 },
+    { model: "kilnworksAnvil", at: { x: 1765, y: 640 }, turn: Math.PI / 2 },
+    { model: "kilnworksCrucible", at: { x: 1760, y: 1140 }, turn: 0.4 },
+    { model: "kilnworksBarrel", at: { x: 1766, y: 1480 }, turn: 0 },
+    { model: "kilnworksCrate", at: { x: 500, y: 1768 }, turn: 1.2 },
+    { model: "kilnworksCrate", at: { x: 1300, y: 1768 }, turn: 2.4 }
+  ]
+}
+
+/**
+ * The overgrown sanctuary (`art/environment/overgrown-sanctuary`): mossy
+ * flagstones, its low walls and pillars taken by roots, shrines and growth
+ * along the edges.
+ */
+export const sanctuaryArena: ArenaLook = {
+  unitsPerMeter: 70,
+  floor: { kind: "tiles", tiles: ["sanctuaryFloorPlain", "sanctuaryFloorWorn", "sanctuaryFloorCracked"], color: 0x1f2a1d },
+  walls: {
+    back: { kind: "run", model: "sanctuaryWallStraight" },
+    front: { kind: "run", model: "sanctuaryWallLow" },
+    sorted: { kind: "pillar", models: ["sanctuaryPillarLarge", "sanctuaryPillarSmall"] },
+    inner: { kind: "run", model: "sanctuaryWallLow" }
+  },
+  scenery: [
+    { model: "sanctuaryShrine", at: { x: 900, y: 40 }, turn: 0 },
+    { model: "sanctuarySapling", at: { x: 420, y: 40 }, turn: 0.6 },
+    { model: "sanctuarySapling", at: { x: 1380, y: 40 }, turn: 2.1 },
+    { model: "sanctuaryRootClump", at: { x: 60, y: 60 }, turn: 0.8 },
+    { model: "sanctuaryStump", at: { x: 1740, y: 60 }, turn: 0 },
+    { model: "sanctuaryBush", at: { x: 36, y: 320 }, turn: Math.PI / 2 },
+    { model: "sanctuaryFern", at: { x: 30, y: 1100 }, turn: 1 },
+    { model: "sanctuaryFallenLog", at: { x: 36, y: 1500 }, turn: Math.PI / 2 },
+    { model: "sanctuaryMushrooms", at: { x: 1766, y: 700 }, turn: 0.2 },
+    { model: "sanctuaryShrineBroken", at: { x: 1760, y: 1250 }, turn: -Math.PI / 2 },
+    { model: "sanctuaryTimberPost", at: { x: 1770, y: 1700 }, turn: 0 },
+    { model: "sanctuaryBush", at: { x: 640, y: 1770 }, turn: 0.4 },
+    { model: "sanctuaryFern", at: { x: 1150, y: 1772 }, turn: 2.3 }
+  ]
+}
+
+/** Each arena's look, by its id (see `content/arena.ts`). */
+export const arenaLooks: Readonly<Record<ArenaId, ArenaLook>> = {
+  courtyard: courtyardArena,
+  cistern: cisternArena,
+  kilnworks: kilnworksArena,
+  sanctuary: sanctuaryArena
+}
 
 /** Every model the looks use: loaded before the arena opens. */
 export const modelsInLooks = (): ReadonlySet<ModelId> => {
@@ -201,11 +303,13 @@ export const modelsInLooks = (): ReadonlySet<ModelId> => {
     ids.add(look.model)
     for (const weapon of Object.values(look.held?.weapons ?? {})) ids.add(weapon)
   }
-  for (const look of Object.values(arenaLook.walls)) {
-    if (look.kind === "run") ids.add(look.model)
-    if (look.kind === "pillar") for (const id of look.models) ids.add(id)
+  for (const arena of Object.values(arenaLooks)) {
+    for (const look of Object.values(arena.walls)) {
+      if (look.kind === "run") ids.add(look.model)
+      if (look.kind === "pillar") for (const id of look.models) ids.add(id)
+    }
+    if (arena.floor.kind === "tiles") for (const id of arena.floor.tiles) ids.add(id)
+    for (const scenery of arena.scenery) ids.add(scenery.model)
   }
-  if (arenaLook.floor.kind === "tiles") for (const id of arenaLook.floor.tiles) ids.add(id)
-  for (const scenery of arenaLook.scenery) ids.add(scenery.model)
   return ids
 }

@@ -12,6 +12,7 @@
  * `src/content/` and is part of the tuning, so its numbers are live-tunable
  * too.
  */
+import { arenas } from "../content/arena.ts"
 import { attacks } from "../content/attacks.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
@@ -213,7 +214,9 @@ export const defaultTuning = {
      * (follow-ups excepted): the nearest enemies go first, the rest wait,
      * so a crowd attacks in a rhythm that can be read.
      */
-    windups: 4
+    windups: 4,
+    /** How close to a pool's edge an enemy that keeps out of it slides along it instead of stepping in. */
+    hazardMargin: 14
   },
 
   /** How enemies find their way around walls to the player (see physics/paths.ts). */
@@ -226,6 +229,16 @@ export const defaultTuning = {
 
   /** Every challenge, by id; the `Challenge` resource picks the one in the arena. */
   challenges,
+
+  /** Every arena, by id: each challenge names the one it is fought in. */
+  arenas,
+
+  /**
+   * Arena hazards (see `content/arena.ts`): permanent pools burning or
+   * soaking with the strength of an ATK of `atk`. Water puts a fire pit out
+   * for `relightSeconds`.
+   */
+  hazards: { atk: 60, relightSeconds: 6 },
 
   /** Wave timing, for every challenge (each challenge has its own waves). */
   waves: {
@@ -241,7 +254,38 @@ export const defaultTuning = {
     spawnWarning: 1.0,
     /** Enemies never appear closer than this to the player. */
     minSpawnDistance: 340,
+    /**
+     * Where enemies come in, by their job: each wave has a front (a
+     * direction from the player, at random). Enemies that keep their
+     * distance (kiting) appear `ranged` away within `frontSpread` radians of
+     * it; the others `melee` away from the flanks and behind (beyond
+     * `flankFrom` radians off the front), so no single direction is safe.
+     */
+    placement: { ranged: { min: 560, max: 760 }, melee: { min: 380, max: 520 }, frontSpread: 0.6, flankFrom: 1.3 },
+    /** The next wave comes in once this few enemies of the current one are left (no break; kills, not time, bring it). */
+    reinforceAt: 2,
+    /** How long after that point it starts arriving. */
+    reinforceDelay: 0.6,
     seed: 1337
+  },
+
+  /**
+   * Elite enemies (a wave entry marked elite): the first of its group is
+   * `scale` times bigger, has `health` times the health, is immune to its
+   * element, and every blow it deals carries it. A fire or water elite
+   * leaves its element on the ground behind it (`trail`: a pool every
+   * `trailEvery` seconds while it moves); a thunder elite discharges
+   * around itself every `discharge.every` seconds (a ring telegraphed for
+   * `windup`). Endless waves make elites of `endless.chance` of their slots
+   * (growing by `endless.perWave` from `endless.fromWave`, up to `max`).
+   */
+  elites: {
+    health: 1.8,
+    scale: 1.2,
+    trailEvery: 0.55,
+    trail: { fire: { radius: 34, seconds: 2.4 }, water: { radius: 42, seconds: 3.2 } },
+    discharge: { every: 4.5, windup: 0.9, radius: 135, power: 14, knockback: 320 },
+    endless: { fromWave: 3, chance: 0.12, perWave: 0.04, max: 0.4 }
   },
 
   flow: {
@@ -262,7 +306,9 @@ export const defaultTuning = {
     width: 1800,
     height: 1800,
     /** Thickness of the boundary walls. */
-    wallThickness: 48
+    wallThickness: 48,
+    /** The floor's tiles across and down (arena hazards are laid on them, see `content/arena.ts`). */
+    cells: 13
   }
 }
 

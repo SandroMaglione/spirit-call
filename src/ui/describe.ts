@@ -6,6 +6,7 @@
  */
 import type { Lock, Play } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
+import { entryKind } from "../content/challenges.ts"
 import type { ChallengeSpec, Objective } from "../content/challenges.ts"
 import { elements } from "../content/elements.ts"
 import type { Affinities, Affinity, ElementId } from "../content/elements.ts"
@@ -135,7 +136,7 @@ export const affinityList = (traits: Affinities): ReadonlyArray<{ readonly eleme
 }
 
 /** The enemy kinds a challenge holds, in the order they first appear. */
-export const challengeEnemies = (challenge: ChallengeSpec): ReadonlyArray<EnemyKind> => [...new Set(challenge.waves.scripted.flat())]
+export const challengeEnemies = (challenge: ChallengeSpec): ReadonlyArray<EnemyKind> => [...new Set(challenge.waves.scripted.flat().map(entryKind))]
 
 /** The name of something a reward unlocks. */
 export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {

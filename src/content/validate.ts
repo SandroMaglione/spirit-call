@@ -12,6 +12,7 @@
  */
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
+import { entryKind } from "./challenges.ts"
 import { elements } from "./elements.ts"
 import { isMelee } from "./attacks.ts"
 import type { AttackMove } from "./attacks.ts"
@@ -242,7 +243,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     const { scripted, endless } = challenge.waves
     scripted.forEach((wave, index) => {
       if (wave.length === 0) problems.push(`${where}: wave ${index + 1} has no enemies`)
-      for (const kind of wave) if (!has(tuning.enemies, kind)) problems.push(`${where}: wave ${index + 1} has unknown enemy ${kind}`)
+      for (const entry of wave) if (!has(tuning.enemies, entryKind(entry))) problems.push(`${where}: wave ${index + 1} has unknown enemy ${entryKind(entry)}`)
     })
     if (challenge.objective.kind === "clearWaves") {
       if (endless !== null) problems.push(`${where}: clearing every wave can never happen with endless waves`)

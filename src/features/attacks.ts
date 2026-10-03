@@ -36,6 +36,7 @@ import {
   Damage,
   Dash,
   Dodged,
+  Elite,
   Enemy,
   EnemyMode,
   Game,
@@ -103,7 +104,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         stats: Game.Query.read(CombatStats),
         stunned: Game.Query.read(Stunned),
         poise: Game.Query.read(Poise),
-        mode: Game.Query.read(EnemyMode)
+        mode: Game.Query.read(EnemyMode),
+        elite: Game.Query.optional(Elite)
       }
     }),
     player: Game.Query({ selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), stats: Game.Query.read(CombatStats) }, with: [Player] }),
@@ -180,12 +182,13 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       continue
     }
     // Enemy blows fill no energy and have no passives behind them; their element is the enemy's to give.
-    // They remember who dealt them (a perfect dodge fills that enemy's break bar).
+    // They remember who dealt them (a perfect dodge fills that enemy's break bar). An elite's carry its element.
     const atk = data.stats.get().atk
+    const element = spec.element ?? (data.elite.present ? data.elite.get().element : null)
     const struck = blow({
       damage: damageDealt(atk, spec.power),
       knockback: spec.knockback,
-      element: spec.element === null ? null : { id: spec.element, atk },
+      element: element === null ? null : { id: element, atk },
       source: { attacker: Game.Entity.handle(entity.id, Position) }
     })
 

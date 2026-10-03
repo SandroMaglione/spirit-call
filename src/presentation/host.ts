@@ -9,13 +9,16 @@ import { makeCamera, placeCamera } from "./camera.ts"
 import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
-import { modelsInLooks } from "./looks.ts"
+import { arenaLooks, modelsInLooks } from "./looks.ts"
 import { disposeModel, loadModels } from "./models.ts"
 import type { ModelId, ModelSource } from "./models.ts"
+import type { ArenaId } from "../content/arena.ts"
+import type { Box } from "../physics/shapes.ts"
 import { floorLayers, trailOrder } from "./layers.ts"
 import { disposeNode, instancesOf } from "./nodes.ts"
 import { makeAssets } from "./render-assets.ts"
-import { makeFloor, makeScenery } from "./scenery.ts"
+import { dressArena } from "./scenery.ts"
+import type { Dressing } from "./scenery.ts"
 import { Shapes } from "./shapes.ts"
 
 /** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
@@ -111,7 +114,7 @@ export interface BrowserHost {
   destroy(): void
 }
 
-export const createBrowserHost = async (mount: HTMLElement, arena: { readonly width: number; readonly height: number }): Promise<BrowserHost> => {
+export const createBrowserHost = async (mount: HTMLElement, arena: { readonly width: number; readonly height: number; readonly cells: number }): Promise<BrowserHost> => {
   // Every model the looks use, before the arena opens (nodes are made synchronously).
   const models = await loadModels(modelsInLooks())
   // Phones have very dense screens: past 2 device pixels per CSS pixel the cost grows faster than the sharpness,
@@ -152,9 +155,16 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   scene.add(sun)
 
   const grid = new Shapes({ order: floorLayers.grid.order }).onFloor(floorLayers.grid.height)
-  const floor = makeFloor(assets, arena.width, arena.height, grid)
-  scene.add(floor.object, grid.mesh, makeScenery(assets))
-  grid.flush()
+  scene.add(grid.mesh)
+  // The arena's floor and scenery: the courtyard's until a run stands in another (see `showArena`).
+  let dressing: { readonly id: ArenaId; readonly dressing: Dressing } | null = null
+  const showArena = (id: ArenaId, holes: ReadonlyArray<Box>) => {
+    if (dressing?.id === id) return
+    dressing?.dressing.dispose()
+    dressing = { id, dressing: dressArena(assets, arenaLooks[id], arena, holes, grid) }
+    scene.add(dressing.dressing.object)
+  }
+  showArena("courtyard", [])
   const telegraphs = new Shapes({ order: floorLayers.telegraphs.order }).onFloor(floorLayers.telegraphs.height)
   const groundMarks = new Shapes({ order: floorLayers.marks.order }).onFloor(floorLayers.marks.height)
   // Slash trails: at waist height, over the actors.
@@ -227,6 +237,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     projectilePool,
     cursor,
     hud: hud.refs,
+    showArena,
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
     feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, recoil: new Map() },
     toCanvas: (world, height) => {
@@ -273,8 +284,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       assets.dispose()
-      floor.base.geometry.dispose()
-      floor.base.material.dispose()
+      dressing?.dressing.dispose()
       for (const source of models.values()) disposeModel(source)
       renderer.dispose()
       renderer.forceContextLoss()

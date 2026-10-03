@@ -19,6 +19,7 @@ import { MoveDiscs } from "./features/discs.ts"
 import { TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
 import { PerfectDodge } from "./features/dodge.ts"
+import { UpdateElites } from "./features/elites.ts"
 import { BuildPoise } from "./features/poise.ts"
 import { BlowPools, DriveWithWind } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
@@ -39,6 +40,7 @@ import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema
 
 /** Spawns what a run starts with. */
 const startRun = Game.Schedule(
+  SpawnArena,
   SpawnTeam,
   SpawnTrainingDummies,
   Game.Schedule.applyDeferred(),
@@ -47,7 +49,6 @@ const startRun = Game.Schedule(
 
 /** Builds the arena and the first run. Ticked once. */
 export const setup = Game.Schedule(
-  SpawnArena,
   startRun
 )
 
@@ -102,6 +103,7 @@ const gameplay = Game.Schedule.when(
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
   SteerEnemies,
   UpdateAttacks,
+  UpdateElites,
   IntegrateBodies,
   // Right after moving and before pushes die down (and the wind's drive runs
   // down with them): it compares how far a driven body moved with its push.

@@ -12,6 +12,9 @@ import type { AnimationClip, Material, Object3D } from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
 import { courtyardModels } from "./assets/courtyard.ts"
+import { cisternModels } from "./assets/cistern.ts"
+import { kilnworksModels } from "./assets/kilnworks.ts"
+import { sanctuaryModels } from "./assets/sanctuary.ts"
 import { enemyModels } from "./assets/enemies.ts"
 import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
 
@@ -38,6 +41,9 @@ export const models = {
   trainingBlade: trainingBladeModel,
   crescendo: crescendoModel,
   ...courtyardModels,
+  ...cisternModels,
+  ...kilnworksModels,
+  ...sanctuaryModels,
   ...enemyModels
 } as const satisfies Record<string, ModelSpec>
 

@@ -35,7 +35,7 @@ for (const id of ids) {
     const pressure = `${Math.round(quick.pressure * 100)}%`.padStart(4)
     console.log(
       `  wave ${index + 1}  quick ${rate(quick.hits, quick.clearedAt ?? seconds)} ${clear(quick.clearedAt)} ${rate(quick.dashes, quick.clearedAt ?? seconds)} ${pressure}` +
-        ` | learning ${rate(slow.hits, slow.clearedAt ?? seconds)} ${clear(slow.clearedAt)}   ${wave.join(", ")}`
+        ` | learning ${rate(slow.hits, slow.clearedAt ?? seconds)} ${clear(slow.clearedAt)}   ${wave.map((entry) => (typeof entry === "string" ? entry : `${entry.elite} ${entry.kind}`)).join(", ")}`
     )
   })
   console.log("")

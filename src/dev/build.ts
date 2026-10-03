@@ -3,10 +3,12 @@
  * last ones, to try them without the menu: `?team=swordsman,tidecaller`,
  * the first one's build with `?character=gunner&weapon=bloodthirst`,
  * everyone's levels with `?level=20&weaponLevel=10`, and
- * `?challenge=swarm&enemyLevel=15`. Unknown ids and levels that are not
- * whole numbers from 1 are ignored, so a typo keeps the default.
+ * `?challenge=swarm&enemyLevel=15`, and `?arena=cistern` to fight every
+ * challenge in one arena. Unknown ids and levels that are not whole numbers
+ * from 1 are ignored, so a typo keeps the default.
  */
 import type { Tuning } from "../config/tuning.ts"
+import type { ArenaId } from "../content/arena.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
@@ -16,6 +18,14 @@ import { defaultChallenge } from "../features/challenges.ts"
 import type { BuildValue } from "../schema.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string | null): value is Id => value !== null && Object.hasOwn(ids, value)
+
+/** `tuning` with every challenge fought in the URL's arena, or as it is when it names none. */
+export const arenaFromQuery = (tuning: Tuning, search: string): Tuning => {
+  const arena = new URLSearchParams(search).get("arena")
+  if (!known<ArenaId>(tuning.arenas, arena)) return tuning
+  const challenges = Object.fromEntries(Object.entries(tuning.challenges).map(([id, challenge]) => [id, { ...challenge, arena }]))
+  return { ...tuning, challenges: challenges as Tuning["challenges"] }
+}
 
 /** The URL's challenge, or `fallback` when it names none. */
 export const challengeFromQuery = (tuning: Tuning, search: string, fallback: ChallengeId = defaultChallenge): ChallengeId => {
