@@ -148,9 +148,22 @@ most `perfectDodge.window` seconds before a blow lands where she stood (or
 on her, through the dash's invulnerability) is **perfect**; an earlier one
 is a plain dodge. It rewards once per dash: the **enemies slow down** for a
 moment while the team keeps its pace (their moves, windups, shots, and
-bombs), the attacker's break bar fills, the dash comes back, a little
+bombs), the attacker's break bar fills, a dash charge comes back, a little
 energy, a full magazine, and a moment more of invulnerability. Every
 reward is a number, and any can be turned off.
+
+## Reading the player
+
+Enemies read the player (`Tuning.reading`), so a fight has a give and take:
+
+- **She is open** while a long move recovers (a finisher, a charged
+  attack), while she reloads, or with no dash charge left. Melee enemies
+  then take their turn at once, a touch faster, and their attacks come
+  round sooner; their telegraphs never get shorter. Enemies keeping their
+  distance keep their rhythm.
+- **She is a threat** to a melee enemy her ready weapon is aimed at, within
+  her reach: it keeps just out of that reach, circling, until it runs out
+  of patience and commits anyway. Enemies behind her do not hesitate.
 
 ## Measuring difficulty
 

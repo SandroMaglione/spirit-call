@@ -125,7 +125,7 @@ The rules are in `docs/elements.md`; in short:
   1, 2, 3 on the keyboard. No entrance attack, for now.
 - A switch **interrupts** what the character was doing (an attack, a combo,
   a charge); not possible mid-dash. What she already released finishes on
-  its own (a grenade lands, a disc keeps cutting); a disc on its way back
+  its own (a grenade lands, a disc keeps cutting, a totem keeps zapping); a disc on its way back
   disappears if its thrower is no longer on the field.
 - The incoming character appears where the last one stood, facing the same
   way, with none of her push.
