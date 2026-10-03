@@ -4,7 +4,7 @@
   "short_name": "Team Shooter",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#0d1117",
   "theme_color": "#0d1117",
