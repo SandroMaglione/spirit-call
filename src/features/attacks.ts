@@ -25,7 +25,7 @@ import { Random } from "../math/rng.ts"
 import { clampLength, normalizeOr, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { Area } from "../physics/areas.ts"
-import { areaTouchesCircle, pushDirection } from "../physics/areas.ts"
+import { areaTouchesCircle, pushDirection, shiftArea } from "../physics/areas.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import {
@@ -215,8 +215,19 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (phase.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
       area = aimArea(spec, position, aimPoint(spec, position, moving, Math.max(0, spec.windup - elapsed)), boxes)
     }
-    // A charge runs from wherever the charger stands when it goes (a blow can push it during the windup): its lane moves with it.
-    if (phase.get() === "windup" && spec.kind === "charge" && area?.kind === "lane") area = { ...area, origin: position }
+    // A blow can push the attacker during the windup (a gust, a knockback): what it committed to goes with it, so
+    // nothing lands where it no longer stands. A swing or a lane starts from where it stands (a beam stops at the
+    // first wall from there); a slam's circle comes back within its reach.
+    if (phase.get() === "windup" && area !== null) {
+      if (area.kind === "cone" || area.kind === "lane") {
+        area = spec.kind === "beam" && area.kind === "lane"
+          ? aimArea(spec, position, { x: position.x + area.direction.x, y: position.y + area.direction.y }, boxes)
+          : { ...area, origin: position }
+      } else if (spec.kind === "slam" && area.kind === "circle") {
+        const offset = clampLength(sub(area.center, position), spec.maxReach)
+        area = { ...area, center: { x: position.x + offset.x, y: position.y + offset.y } }
+      }
+    }
 
     if (phase.get() === "windup" && elapsed >= spec.windup && area !== null) {
       elapsed -= spec.windup
@@ -247,7 +258,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         hit = []
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: []
+          area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], follows: position
         }]))
       }
     }
@@ -288,6 +299,9 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   resources.rng.set({ state: random.state })
 })
 
+/** Whoever holds a blow that moves with them (see `HitboxValue.follows`). */
+const Holders = Game.Query({ selection: { position: Game.Query.read(Position) } })
+
 /**
  * Hitboxes damage every opposing hurtbox they touch, once per target, while
  * they last. Invulnerable targets (dashing, just hit) are not touched, so an
@@ -303,13 +317,21 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
   events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged) }
-}, ({ queries, resources, events, commands }) => {
+}, ({ queries, resources, events, commands, lookup }) => {
   const dt = resources.time.get().dt
   const slow = resources.slowMotion.get()
   const window = resources.tuning.get().perfectDodge.window
   const targets = queries.targets.each()
   for (const { entity, data } of queries.hitboxes.each()) {
-    const hitbox = data.hitbox.get()
+    let hitbox = data.hitbox.get()
+    // A blow that moves with its attacker goes where the attacker was pushed (see `HitboxValue.follows`).
+    const source = hitbox.follows === undefined ? undefined : hitbox.blow.source?.attacker
+    const holder = source === undefined ? undefined : lookup.getHandle(source, Holders)
+    if (hitbox.follows !== undefined && holder?.ok === true) {
+      const at = holder.value.data.position.get()
+      const offset = { x: at.x - hitbox.follows.x, y: at.y - hitbox.follows.y }
+      if (offset.x !== 0 || offset.y !== 0) hitbox = { ...hitbox, area: shiftArea(hitbox.area, offset), follows: at }
+    }
     const hit = [...hitbox.hit]
     for (const target of targets) {
       const hurtbox = target.data.hurtbox.get()

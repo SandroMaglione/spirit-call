@@ -14,6 +14,12 @@ export type Area =
   /** A straight lane (a capsule around a segment): charges and beams. */
   | { readonly kind: "lane"; readonly origin: Vec2; readonly direction: Vec2; readonly length: number; readonly halfWidth: number }
 
+/** `area` moved by `offset`. */
+export const shiftArea = (area: Area, offset: Vec2): Area =>
+  area.kind === "circle"
+    ? { ...area, center: { x: area.center.x + offset.x, y: area.center.y + offset.y } }
+    : { ...area, origin: { x: area.origin.x + offset.x, y: area.origin.y + offset.y } }
+
 /** Whether a circle of radius `r` at `center` touches the area. */
 export const areaTouchesCircle = (area: Area, center: Vec2, r: number): boolean => {
   switch (area.kind) {
