@@ -331,6 +331,8 @@ export type AttackPhase = (typeof AttackPhase.states)[number]
  * the telegraph shows.
  */
 export interface AttackerValue {
+  /** The attack in progress, or the last one: its index in the enemy's moveset (`attacks`); `null` before the first. */
+  readonly attack: number | null
   /** Time spent in the current phase. */
   readonly elapsed: number
   /** Time left before a new attack may start. */
@@ -344,8 +346,13 @@ export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker"
 /** A frontal shield: blocks projectiles hitting within `halfAngle` (radians) of `facing`. */
 export const Shield = Descriptor.Component<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>()("Shooter/Shield")
 
-/** Movement state for enemy behaviors. */
-export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly strafeTimer: number; readonly modeTimer: number }>()("Shooter/Brain")
+/** Movement state for enemy behaviors: the side it strafes to and until when, and the time in its current `EnemyMode`. */
+export interface BrainValue {
+  readonly strafe: 1 | -1
+  readonly strafeTimer: number
+  readonly modeTimer: number
+}
+export const Brain = Descriptor.Component<BrainValue>()("Shooter/Brain")
 
 /**
  * What a skirmishing enemy is doing (see the `skirmish` behavior): circling,
@@ -355,6 +362,7 @@ export const Brain = Descriptor.Component<{ readonly strafe: 1 | -1; readonly st
 export const EnemyMode = Descriptor.State("Shooter/EnemyMode", ["orbit", "engage", "retreat"] as const, {
   transitions: { orbit: ["engage"], engage: ["retreat"], retreat: ["orbit"] }
 })
+export type EnemyMode = (typeof EnemyMode.states)[number]
 
 /** A damaging area that exists while an attack is active. */
 export interface HitboxValue {

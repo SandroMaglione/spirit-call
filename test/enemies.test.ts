@@ -70,9 +70,9 @@ describe("telegraphed attacks", () => {
     expect(area?.kind).toBe("cone")
     expect(run.world().player!.health).toBe(swordsman.hp)
 
-    run.step(Math.ceil(defaultTuning.enemies.chaser.attack!.windup / engine.stepSeconds) + 2)
+    run.step(Math.ceil(defaultTuning.enemies.chaser.attacks[0]!.windup / engine.stepSeconds) + 2)
     const hit = run.world().player!
-    expect(hit.health).toBe(swordsman.hp - playerLoss(defaultTuning, "chaser", defaultTuning.enemies.chaser.attack!.power))
+    expect(hit.health).toBe(swordsman.hp - playerLoss(defaultTuning, "chaser", defaultTuning.enemies.chaser.attacks[0]!.power))
     expect(hit.invulnerable).toBeGreaterThan(0)
     expect(windupAt).toBeGreaterThan(0)
   })
@@ -115,7 +115,7 @@ describe("telegraphed attacks", () => {
       const area = run.world().enemies[0]!.attacker.area
       return area?.kind === "line" ? area.direction : undefined
     }
-    const spec = defaultTuning.enemies.shooter.attack!
+    const spec = defaultTuning.enemies.shooter.attacks[0]!
     const early = direction()
     run.step(5)
     expect(direction()).not.toEqual(early) // tracking the moving player

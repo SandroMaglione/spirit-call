@@ -238,7 +238,8 @@ export const tuningWith = (overrides: DeepPartial<Tuning>): Tuning => {
     for (const [key, value] of Object.entries(patch)) {
       if (value === undefined) continue
       const current = base[key]
-      result[key] = typeof value === "object" && value !== null && typeof current === "object" && current !== null
+      // Arrays (a moveset, waves) are replaced whole, as their type says.
+      result[key] = typeof value === "object" && value !== null && !Array.isArray(value) && typeof current === "object" && current !== null
         ? merge(current as Record<string, unknown>, value as Record<string, unknown>)
         : value
     }

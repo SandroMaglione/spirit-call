@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning } from "../src/config/tuning.ts"
+import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { clearWaves } from "../src/content/challenges.ts"
 import { validateContent } from "../src/content/validate.ts"
@@ -44,6 +44,29 @@ describe("content", () => {
       enemies: { ...defaultTuning.enemies, brute: { ...defaultTuning.enemies.brute, elements: { wind: "immune", fire: "immune" } } }
     }
     expect(validateContent(broken)).toEqual(["enemy brute: immune to more than one element"])
+  })
+
+  it("reports movesets with clashing names, unreachable ranges, and combos that never end", () => {
+    const [swipe] = defaultTuning.enemies.chaser.attacks
+    const broken = tuningWith({
+      enemies: {
+        chaser: {
+          attacks: [
+            { ...swipe!, followUp: "lunge" },
+            { ...swipe!, id: "lunge", minRange: 90, followUp: "swipe" },
+            { ...swipe!, id: "lunge", followUp: "kick" }
+          ]
+        }
+      }
+    })
+    expect(validateContent(broken)).toEqual([
+      "enemy chaser attack lunge: named more than once in the moveset",
+      "enemy chaser attack lunge: minRange must be from 0 to below triggerRange (is 90)",
+      "enemy chaser attack lunge: named more than once in the moveset",
+      "enemy chaser attack lunge: unknown follow-up kick",
+      "enemy chaser attack swipe: its follow-ups loop back through swipe",
+      "enemy chaser attack lunge: its follow-ups loop back through lunge"
+    ])
   })
 
   it("reports hardcore tiers that do not get harder or refer to nothing", () => {

@@ -9,6 +9,7 @@ import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
 import { AttackPhase, Attacker, Body, Disc, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Totem, Tuning, Vortex } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
+import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
 
 /**
@@ -55,8 +56,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
   for (const { data } of queries.attackers.each()) {
     const attacker = data.attacker.get()
-    const spec = tuning.enemies[data.enemy.get().kind].attack
-    if (spec === null || attacker.area === null || data.phase.get() !== "windup") continue
+    const spec = currentAttack(tuning, data.enemy.get().kind, attacker)
+    if (spec === undefined || attacker.area === null || data.phase.get() !== "windup") continue
     const progress = Math.min(1, attacker.elapsed / spec.windup)
     const area = attacker.area
     if (area.kind === "line" && spec.kind === "volley") {

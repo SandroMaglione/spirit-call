@@ -5,7 +5,8 @@
  * challenges that can be won, quests that can be reached, hardcore tiers
  * that get harder, level curves that rise, a new account that can play, and
  * enemies that every team can answer (no element is ever required: an
- * enemy is immune to one element at most).
+ * enemy is immune to one element at most), and enemy movesets whose
+ * combos end.
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
@@ -14,6 +15,7 @@ import { newAccount } from "./account.ts"
 import { elements } from "./elements.ts"
 import { isMelee } from "./attacks.ts"
 import type { AttackMove } from "./attacks.ts"
+import type { AttackSpec } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
@@ -31,6 +33,33 @@ const checkMove = (problems: Array<string>, where: string, move: AttackMove): vo
   if (isMelee(move)) positive(problems, where, { reach: move.reach })
   else positive(problems, where, { count: move.count, speed: move.speed, range: move.range, radius: move.radius })
   if (move.shape === "disc" && move.hover > 0) positive(problems, where, { hoverTick: move.hoverTick })
+}
+
+/** A moveset's attacks: each named once, with a range that can be met, and combos that end. */
+const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyArray<AttackSpec>): void => {
+  const ids = attacks.map((attack) => attack.id)
+  for (const attack of attacks) {
+    const at = `${where} attack ${attack.id}`
+    if (ids.filter((id) => id === attack.id).length > 1) problems.push(`${at}: named more than once in the moveset`)
+    positive(problems, at, { triggerRange: attack.triggerRange, weight: attack.weight })
+    if (!(attack.minRange >= 0 && attack.minRange < attack.triggerRange)) {
+      problems.push(`${at}: minRange must be from 0 to below triggerRange (is ${attack.minRange})`)
+    }
+    if (attack.followUp !== null && !ids.includes(attack.followUp)) problems.push(`${at}: unknown follow-up ${attack.followUp}`)
+  }
+  // A combo ends: following the follow-ups never comes back to an attack already made.
+  for (const attack of attacks) {
+    const seen = new Set([attack.id])
+    let next = attack.followUp
+    while (next !== null) {
+      if (seen.has(next)) {
+        problems.push(`${where} attack ${attack.id}: its follow-ups loop back through ${next}`)
+        break
+      }
+      seen.add(next)
+      next = attacks.find((candidate) => candidate.id === next)?.followUp ?? null
+    }
+  }
 }
 
 const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect): void => {
@@ -188,6 +217,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
     // Every enemy has at least two answers, so no element (no character) is required against it.
     if (traits.filter(([, affinity]) => affinity === "immune").length > 1) problems.push(`enemy ${id}: immune to more than one element`)
+    checkMoveset(problems, `enemy ${id}`, enemy.attacks)
   }
 
   const cheapest = Math.min(...Object.values(tuning.enemies).map((enemy) => enemy.cost).filter((cost) => cost > 0))

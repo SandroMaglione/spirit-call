@@ -10,6 +10,8 @@ import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
+import { currentAttack } from "./moveset.ts"
+import { skirmishTurn, steer } from "./behaviors.ts"
 import { stateSpeed } from "./elements.ts"
 import {
   Attacker,
@@ -51,7 +53,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const draft = Game.Command.insert(
     makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius, hurtboxRadius: stats.hurtboxRadius, affinities: stats.elements }),
     [Enemy, { kind }],
-    [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
+    [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
     [EnemyMode, "orbit"],
@@ -204,7 +206,6 @@ export const SteerEnemies = (() => {
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
       const phase = data.phase.get()
-      const attacking = phase !== "ready"
 
       // Stunned: it stands where it is (a push still slides it).
       if (data.stunned.get().remaining > 0) {
@@ -213,26 +214,22 @@ export const SteerEnemies = (() => {
       }
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
-      const attack = spec.attack
-      if (attack !== null && attack.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
+      const attack = currentAttack(tuning, kind, attacker)
+      if (attack?.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
         data.velocity.set(scale(attacker.area.direction, attack.speed * slowed))
         continue
       }
 
       // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
       const behavior = spec.behavior
+      let mode = data.mode.get()
       if (behavior.kind === "skirmish") {
-        const brain = data.brain.get()
-        let modeTimer = brain.modeTimer + dt
-        const mode = data.mode.get()
-        if (mode === "engage" && (phase === "recovery" || modeTimer > behavior.engageSeconds)) {
-          data.mode.transition("engage", "retreat")
-          modeTimer = 0
-        } else if (mode === "retreat" && modeTimer >= behavior.retreatSeconds) {
-          data.mode.transition("retreat", "orbit")
-          modeTimer = 0
-        }
-        data.brain.set({ ...brain, modeTimer })
+        const before = mode
+        const turn = skirmishTurn(behavior, mode, phase, data.brain.get().modeTimer + dt)
+        mode = turn.mode
+        if (before === "engage" && mode === "retreat") data.mode.transition("engage", "retreat")
+        else if (before === "retreat" && mode === "orbit") data.mode.transition("retreat", "orbit")
+        data.brain.update((brain) => ({ ...brain, modeTimer: turn.modeTimer }))
       }
 
       // Staggered: while a hit's push is strong, the enemy slides with it instead of walking.
@@ -241,59 +238,13 @@ export const SteerEnemies = (() => {
         continue
       }
 
+      // Attacks are commitments: it stands still from the windup to the end of the recovery.
       let desired: Vec2 = zero
-      if (!attacking && target !== undefined) {
+      if (phase === "ready" && target !== undefined) {
         const toward = sub(target, position)
-        const distance = length(toward)
-        const direction = normalizeOr(toward, zero)
-        switch (behavior.kind) {
-          case "idle":
-            break
-          case "chase":
-            if (distance > behavior.stopDistance) desired = scale(direction, speed)
-            break
-          case "kite": {
-            const brain = data.brain.get()
-            let strafeTimer = brain.strafeTimer - dt
-            let strafe = brain.strafe
-            if (strafeTimer <= 0) {
-              strafe = strafe === 1 ? -1 : 1
-              strafeTimer = behavior.strafeSeconds
-            }
-            data.brain.set({ ...brain, strafe, strafeTimer })
-            const side = { x: -direction.y * strafe, y: direction.x * strafe }
-            const radial = distance < behavior.minDistance ? -1 : distance > behavior.maxDistance ? 1 : 0
-            desired = scale(normalizeOr({ x: direction.x * radial + side.x * 0.8, y: direction.y * radial + side.y * 0.8 }, zero), speed)
-            break
-          }
-          case "skirmish": {
-            const brain = data.brain.get()
-            let strafeTimer = brain.strafeTimer - dt
-            let strafe = brain.strafe
-            if (strafeTimer <= 0) {
-              strafe = strafe === 1 ? -1 : 1
-              strafeTimer = behavior.strafeSeconds
-            }
-            data.brain.set({ ...brain, strafe, strafeTimer })
-            const side = { x: -direction.y * strafe, y: direction.x * strafe }
-            switch (data.mode.get()) {
-              case "engage":
-                if (distance > behavior.stopDistance) desired = scale(direction, speed)
-                break
-              case "retreat":
-                desired = scale(normalizeOr({ x: -direction.x + side.x * 0.5, y: -direction.y + side.y * 0.5 }, zero), speed)
-                break
-              case "orbit": {
-                // Circle the target, drifting back to the ring.
-                const band = 35
-                const radial = distance < behavior.orbit - band ? -1 : distance > behavior.orbit + band ? 1 : 0
-                desired = scale(normalizeOr({ x: direction.x * radial + side.x, y: direction.y * radial + side.y }, zero), speed * tuning.crowd.orbitSpeed)
-                break
-              }
-            }
-            break
-          }
-        }
+        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward: normalizeOr(toward, zero), distance: length(toward), speed, dt })
+        desired = steering.desired
+        data.brain.set(steering.brain)
       }
 
       // Separation from nearby bodies (other enemies and the player).
