@@ -28,8 +28,9 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks).
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
-  `?character=`, `?weapon=`, `?challenge=` for a quick start); backquote opens the tuning panel
-  (live numbers, spawns, "Unlock all").
+  `?character=`, `?weapon=`, `?challenge=` for a quick start, and `?arena=` to
+  fight every challenge in one arena); backquote (or the key left of 1 or of Z)
+  opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all").
 
 ## How the code is organized
 

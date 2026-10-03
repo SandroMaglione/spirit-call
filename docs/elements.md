@@ -125,7 +125,12 @@ The Stormcaller heals through her kit, and healing always costs something:
   puddle, wind blows a pool along. A Burning character can step into a
   puddle to put herself out.
 - Enemy ground effects are attacks like any other: warned before they can
-  hurt, always avoidable (see "skill is enough" in the vision).
+  hurt, always avoidable (see "skill is enough" in the vision). Elite
+  enemies leave their element on the ground as they move (see
+  `docs/enemies.md`).
+- **Arenas have hazards of their own**: fire trenches and basins of water
+  laid into the floor that never run out. Water puts a fire trench out for a
+  while; a basin carries thunder to everyone standing in it.
 
 ## The player
 
