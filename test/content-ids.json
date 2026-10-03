@@ -35,7 +35,16 @@
     "crossfire",
     "brute",
     "endless",
-    "outposts"
+    "outposts",
+    "ashfall",
+    "highTide",
+    "sandstorm",
+    "cloister",
+    "warlord",
+    "eliteHunt",
+    "swarmNight",
+    "stormFront",
+    "untilFall"
   ],
   "attacks": [
     "sword",
@@ -58,11 +67,20 @@
     "crossfire",
     "theBrute",
     "holdTheLine",
-    "outposts"
+    "outposts",
+    "ashfall",
+    "highTide",
+    "sandstorm",
+    "theCloister",
+    "theWarlord",
+    "nightOfPacks",
+    "eliteHunt",
+    "stormFront"
   ],
   "chapters": [
     "one",
-    "two"
+    "two",
+    "three"
   ],
   "currencies": [
     "crystals",
@@ -70,7 +88,9 @@
   ],
   "tracks": [
     "gauntlet",
-    "siege"
+    "siege",
+    "untilFall",
+    "keep"
   ],
   "discoveries": [
     "withSwordsman",

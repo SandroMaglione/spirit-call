@@ -12,8 +12,10 @@
  * every period.
  *
  * Tiers only raise enemy levels for now; modifiers and new attack patterns
- * per tier come with gameplay work. Numbers are live-tunable: they are part
- * of the `Tuning` resource.
+ * per tier come with gameplay work. A track can also be endless (its
+ * challenge lasting until the team falls, see `endure`): a tier is cleared
+ * by reaching its goal wave, and the run goes on as far as the team can.
+ * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
 import type { ChallengeId } from "./challenges.ts"
 import type { Amounts } from "./currencies.ts"
@@ -57,6 +59,25 @@ export const tracks = {
     challenge: "brute",
     level: 4,
     tiers: [tier(8, 120, { crystals: 20, gold: 1800 }), tier(14, 180, { crystals: 30, gold: 2700 }), tier(20, 240, { crystals: 40, gold: 3600 })]
+  }),
+  /** No end: every wave stronger than the last, until the team falls; a tier is cleared at its goal wave. */
+  untilFall: track({
+    name: "Until Fall",
+    challenge: "untilFall",
+    level: 3,
+    tiers: [
+      tier(3, 120, { crystals: 20, gold: 1600 }),
+      tier(10, 180, { crystals: 30, gold: 2600 }),
+      tier(18, 240, { crystals: 40, gold: 3600 }),
+      tier(26, 300, { crystals: 50, gold: 4600 })
+    ]
+  }),
+  /** The citadel's warlord and her brutes, the last test of the main line. */
+  keep: track({
+    name: "The Keep",
+    challenge: "warlord",
+    level: 9,
+    tiers: [tier(20, 260, { crystals: 30, gold: 4000 }), tier(26, 320, { crystals: 40, gold: 5000 }), tier(32, 380, { crystals: 50, gold: 6000 })]
   })
 }
 

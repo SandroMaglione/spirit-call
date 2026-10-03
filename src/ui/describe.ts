@@ -29,6 +29,8 @@ export const describeObjective = (objective: Objective, waves: number): string =
       return `Clear ${waves} waves`
     case "survive":
       return `Survive ${objective.seconds}s`
+    case "endure":
+      return `Last until you fall (wave ${objective.goal} clears it)`
   }
 }
 

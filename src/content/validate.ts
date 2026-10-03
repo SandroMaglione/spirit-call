@@ -177,6 +177,20 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   if (!(progression.stats.band >= 1)) problems.push(`stat curve: band must be 1 or more, or levels would weaken (is ${progression.stats.band})`)
   positive(problems, "stat curve", { shape: progression.stats.shape })
 
+  // Pools are few and small, inside the floor (see `content/arena.ts`).
+  for (const [id, arena] of Object.entries(tuning.arenas)) {
+    if (arena.hazards.length > 2) problems.push(`arena ${id}: at most two pools (has ${arena.hazards.length})`)
+    arena.hazards.forEach((hazard, index) => {
+      const at = `arena ${id} pool ${index + 1}`
+      const whole = [hazard.column, hazard.row, hazard.columns, hazard.rows].every(Number.isInteger)
+      if (!whole || hazard.columns < 1 || hazard.rows < 1) problems.push(`${at}: whole tiles, at least one each way`)
+      if (hazard.columns * hazard.rows > 4) problems.push(`${at}: at most four tiles (has ${hazard.columns * hazard.rows})`)
+      if (hazard.column < 1 || hazard.row < 1 || hazard.column + hazard.columns > tuning.arena.cells - 1 || hazard.row + hazard.rows > tuning.arena.cells - 1) {
+        problems.push(`${at}: keep a tile clear between it and the arena's edge, for its walls`)
+      }
+    })
+  }
+
   for (const [id, attack] of Object.entries(tuning.attacks)) {
     if (attack.combo.length === 0) problems.push(`attack ${id}: the combo needs at least one move`)
     attack.combo.forEach((move, index) => checkMove(problems, `attack ${id} move ${index + 1}`, move))
@@ -253,8 +267,12 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (challenge.objective.kind === "clearWaves") {
       if (endless !== null) problems.push(`${where}: clearing every wave can never happen with endless waves`)
       if (scripted.length === 0) problems.push(`${where}: nothing to clear (no waves)`)
-    } else {
+    } else if (challenge.objective.kind === "survive") {
       positive(problems, where, { seconds: challenge.objective.seconds })
+    } else {
+      if (endless === null) problems.push(`${where}: lasting until the team falls needs endless waves`)
+      if (!(Number.isInteger(challenge.objective.goal) && challenge.objective.goal >= 1)) problems.push(`${where}: its goal must be a whole wave from 1`)
+      if (!(challenge.objective.levelPerWave >= 0)) problems.push(`${where}: levelPerWave must not be negative`)
     }
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }

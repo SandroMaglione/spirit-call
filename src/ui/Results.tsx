@@ -58,10 +58,15 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       )
     })
   }
+  const objective = tuning.challenges[result.challenge].objective
   return (
     <div class={`results${result.cleared ? " is-cleared" : ""}`} data-element={leader === undefined ? undefined : (elementOf(tuning, leader.character) ?? undefined)}>
       {leader !== undefined && <Model character={leader.character} weapon={resolveBuild(tuning, leader).weapon} class="results__model" />}
-      <div class="results__banner">{result.cleared ? "Cleared" : "Defeated"}</div>
+      {/* Lasting until the team falls, every run ends in a fall: how far it got is what it says. */}
+      <div class="results__banner">{objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Cleared" : "Defeated"}</div>
+      {objective.kind === "endure" && (
+        <div class="results__note">{result.cleared ? `Past the goal of wave ${objective.goal}` : `The goal is wave ${objective.goal}`}</div>
+      )}
       <div class="results__stats">
         <b>{name}</b> · wave {result.wave} · {result.kills} kills · {minutes(result.time)}
       </div>

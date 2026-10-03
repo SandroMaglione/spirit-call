@@ -239,6 +239,15 @@ describe("account rules", () => {
     expect(encounterOf(defaultTuning, quest("crossfire"))).toEqual({ challenge: "crossfire", enemyLevel: defaultTuning.quests.crossfire.enemyLevel })
   })
 
+  it("keeps a tier's furthest wave, whether the run cleared it or not", () => {
+    const leveled = { ...fresh(), experience: 1_000_000 }
+    const run = { cleared: false, progress: 0, team: ["swordsman" as const], reactions: [], challenge: "untilFall" as const, wave: 1, kills: 0, time: 120 }
+    const far = recordRun(defaultTuning, leveled, tier("untilFall", 1), { ...run, challenge: "untilFall", cleared: false, progress: 0.4, wave: 7 }, 1000)
+    expect(far.account.hardcore.untilFall?.[1]?.bestWave).toBe(7)
+    const shorter = recordRun(defaultTuning, far.account, tier("untilFall", 1), { ...run, challenge: "untilFall", cleared: false, progress: 0.2, wave: 4 }, 2000)
+    expect(shorter.account.hardcore.untilFall?.[1]?.bestWave).toBe(7)
+  })
+
   it("gives a tier's rewards on its first clear in each period, again after the reset", () => {
     const week = defaultTuning.reset.days * 24 * 60 * 60 * 1000
     const monday = defaultTuning.reset.anchor + 10 * week
@@ -249,7 +258,7 @@ describe("account rules", () => {
     expect(first.earned.rewards).toEqual({ ...rewards, unlocks: [] })
     // On top of what the run pays (and its discoveries).
     expect(first.account.wallet).toEqual({ crystals: rewards.currencies.crystals! + discoveryCrystals(first.earned.discoveries), gold: rewards.currencies.gold! + first.earned.pay.gold! })
-    expect(first.account.hardcore.gauntlet?.[1]).toEqual({ attempts: 1, clears: 1, firstClearedAt: monday + 1000, rewardedPeriod: 10 })
+    expect(first.account.hardcore.gauntlet?.[1]).toEqual({ attempts: 1, clears: 1, firstClearedAt: monday + 1000, rewardedPeriod: 10, bestWave: 3 })
     const sameWeek = recordRun(defaultTuning, first.account, tier("gauntlet", 1), run, monday + week - 1)
     expect(sameWeek.earned.rewards).toBeNull()
     expect(tierRewardsAvailable(defaultTuning, sameWeek.account, "gauntlet", 1, monday + week - 1)).toBe(false)

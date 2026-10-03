@@ -154,7 +154,9 @@ The game has two areas.
   every way (enemy levels, modifiers, and attack patterns), so lower tiers
   are within reach of a low-level team. A tier's resources are given the
   first time it is cleared; a **periodic reset** makes them available again,
-  possibly in a different format.
+  possibly in a different format. One track, **Until Fall**, never ends:
+  every wave is stronger than the last, a goal wave clears the tier, and
+  how far the team got is kept as its best.
 - **Nothing is missable.** Temporary content rotates back later, and
   periodic resets only restock rewards: anything skipped can be had another
   time, so there is never pressure to log in.
@@ -171,7 +173,8 @@ The game has two areas.
   clear is long but possible. The band's size is a deliberate number.
 - New content follows the same stat curves as old content of its rarity and
   level; it differs in effects and playstyle, not in numbers.
-- Enemy levels are fixed per quest or tier; they never scale to the player.
+- Enemy levels are fixed per quest or tier (Until Fall's rise by the same
+  amount each wave, for everyone); they never scale to the player.
 
 ## Progression
 

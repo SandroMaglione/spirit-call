@@ -17,8 +17,19 @@ export const objectiveMet = (objective: Objective, waves: WavesValue, run: RunVa
       return waves.phase === "complete"
     case "survive":
       return run.time >= objective.seconds
+    // It never ends on its own: the team falls (reaching its goal counts as a clear, see `runResultOf`).
+    case "endure":
+      return false
   }
 }
+
+/** The waves defeated so far: a wave counts once it is (the break after it, or the end). */
+export const wavesCleared = (waves: WavesValue): number =>
+  waves.phase === "break" || waves.phase === "complete" ? waves.number : Math.max(0, waves.number - 1)
+
+/** How many enemy levels stronger wave `number` comes in (lasting until the team falls; 0 otherwise). */
+export const waveLevelBonus = (objective: Objective, number: number): number =>
+  objective.kind === "endure" ? Math.floor(Math.max(0, number - 1) * objective.levelPerWave) : 0
 
 /**
  * How far toward `spec`'s objective the run got, from 0 to 1: the share of
@@ -30,15 +41,20 @@ export const objectiveProgress = (spec: ChallengeSpec, waves: WavesValue, run: R
     case "clearWaves": {
       const total = spec.waves.scripted.length
       if (waves.phase === "complete" || total === 0) return 1
-      const cleared = waves.phase === "break" ? waves.number : waves.number - 1
-      return Math.min(1, Math.max(0, cleared / total))
+      return Math.min(1, Math.max(0, wavesCleared(waves) / total))
     }
     case "survive":
       return Math.min(1, Math.max(0, run.time / spec.objective.seconds))
+    case "endure":
+      return Math.min(1, Math.max(0, wavesCleared(waves) / spec.objective.goal))
   }
 }
 
-/** How a run that ends now went: cleared, or as far as `objectiveProgress`. */
+/**
+ * How a run that ends now went: cleared, or as far as `objectiveProgress`.
+ * A run lasting until the team falls counts as cleared once it got past its
+ * goal wave.
+ */
 export const runResultOf = (
   cleared: boolean,
   challenge: ChallengeId,
@@ -47,16 +63,19 @@ export const runResultOf = (
   waves: WavesValue,
   stats: StatsValue,
   team: ReadonlyArray<BuildValue>
-): RunResultValue => ({
-  cleared,
-  challenge,
-  progress: cleared ? 1 : objectiveProgress(spec, waves, run),
-  wave: waves.number,
-  kills: stats.kills,
-  time: run.time,
-  team: team.map((build) => build.character),
-  reactions: stats.reactions
-})
+): RunResultValue => {
+  const done = spec.objective.kind === "endure" ? cleared || wavesCleared(waves) >= spec.objective.goal : cleared
+  return {
+    cleared: done,
+    challenge,
+    progress: done ? 1 : objectiveProgress(spec, waves, run),
+    wave: waves.number,
+    kills: stats.kills,
+    time: run.time,
+    team: team.map((build) => build.character),
+    reactions: stats.reactions
+  }
+}
 
 /** Ends the run as cleared once the objective is met; a death in the same step wins over it. */
 export const CheckObjective = Game.System("Shooter/CheckObjective", {

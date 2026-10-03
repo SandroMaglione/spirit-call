@@ -44,7 +44,14 @@ export const StoredAccountV1 = Schema.Struct({
 const Totals = Schema.Struct({ runs: Schema.Number, clears: Schema.Number, kills: Schema.Number, secondsPlayed: Schema.Number })
 
 const QuestProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Number, firstClearedAt: Schema.NullOr(Schema.Number) })
-const TierProgress = Schema.Struct({ attempts: Schema.Number, clears: Schema.Number, firstClearedAt: Schema.NullOr(Schema.Number), rewardedPeriod: Schema.NullOr(Schema.Number) })
+// `bestWave` came later (lasting until the team falls): saves from before have none.
+const TierProgress = Schema.Struct({
+  attempts: Schema.Number,
+  clears: Schema.Number,
+  firstClearedAt: Schema.NullOr(Schema.Number),
+  rewardedPeriod: Schema.NullOr(Schema.Number),
+  bestWave: Schema.optionalKey(Schema.Number)
+})
 const Play = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("quest"), quest: Schema.String }),
   Schema.Struct({ kind: Schema.Literal("tier"), track: Schema.String, tier: Schema.Number })

@@ -53,7 +53,8 @@ const weapon = (id: WeaponId): Unlock => ({ kind: "weapon", id })
 /** The main line's chapters, in order. */
 export const chapters = {
   one: { name: "Chapter 1 · First Blood" } satisfies ChapterSpec,
-  two: { name: "Chapter 2 · Gathering Storm" } satisfies ChapterSpec
+  two: { name: "Chapter 2 · Gathering Storm" } satisfies ChapterSpec,
+  three: { name: "Chapter 3 · The Long Night" } satisfies ChapterSpec
 }
 
 /** Every quest, by id; the main line in order. */
@@ -98,6 +99,56 @@ export const quests = {
     after: "theBrute",
     rewards: { experience: 180, currencies: { crystals: 150, gold: 1100 }, unlocks: [character("stormcaller"), weapon("lightningRod")] }
   }),
+  ashfall: quest({
+    name: "Ashfall",
+    line: "main",
+    chapter: "two",
+    challenge: "ashfall",
+    enemyLevel: 9,
+    level: 5,
+    after: "outposts",
+    rewards: { experience: 220, currencies: { crystals: 150, gold: 1300 }, unlocks: [] }
+  }),
+  highTide: quest({
+    name: "High Tide",
+    line: "main",
+    chapter: "two",
+    challenge: "highTide",
+    enemyLevel: 11,
+    level: 6,
+    after: "ashfall",
+    rewards: { experience: 260, currencies: { crystals: 150, gold: 1500 }, unlocks: [] }
+  }),
+  sandstorm: quest({
+    name: "Sandstorm",
+    line: "main",
+    chapter: "three",
+    challenge: "sandstorm",
+    enemyLevel: 13,
+    level: 7,
+    after: "highTide",
+    rewards: { experience: 300, currencies: { crystals: 200, gold: 1700 }, unlocks: [] }
+  }),
+  theCloister: quest({
+    name: "The Cloister",
+    line: "main",
+    chapter: "three",
+    challenge: "cloister",
+    enemyLevel: 15,
+    level: 8,
+    after: "sandstorm",
+    rewards: { experience: 340, currencies: { crystals: 200, gold: 1900 }, unlocks: [] }
+  }),
+  theWarlord: quest({
+    name: "The Warlord",
+    line: "main",
+    chapter: "three",
+    challenge: "warlord",
+    enemyLevel: 18,
+    level: 9,
+    after: "theCloister",
+    rewards: { experience: 400, currencies: { crystals: 250, gold: 2200 }, unlocks: [] }
+  }),
   holdTheLine: quest({
     name: "Hold the Line",
     line: "secondary",
@@ -107,6 +158,36 @@ export const quests = {
     level: 2,
     after: null,
     rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [weapon("bloodthirst")] }
+  }),
+  nightOfPacks: quest({
+    name: "Night of Packs",
+    line: "secondary",
+    chapter: null,
+    challenge: "swarmNight",
+    enemyLevel: 6,
+    level: 3,
+    after: null,
+    rewards: { experience: 110, currencies: { crystals: 60, gold: 1000 }, unlocks: [] }
+  }),
+  eliteHunt: quest({
+    name: "Elite Hunt",
+    line: "secondary",
+    chapter: null,
+    challenge: "eliteHunt",
+    enemyLevel: 8,
+    level: 4,
+    after: null,
+    rewards: { experience: 150, currencies: { crystals: 80, gold: 1200 }, unlocks: [] }
+  }),
+  stormFront: quest({
+    name: "Storm Front",
+    line: "secondary",
+    chapter: null,
+    challenge: "stormFront",
+    enemyLevel: 10,
+    level: 5,
+    after: null,
+    rewards: { experience: 180, currencies: { crystals: 80, gold: 1400 }, unlocks: [] }
   })
 }
 

@@ -50,6 +50,14 @@
   color: var(--ink);
 }
 
+/* Lasting until the team falls: the goal wave, reached or not. */
+.results__note {
+  color: var(--text);
+  font: 700 italic 1.2rem/1 var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .results__stats {
   color: var(--dim);
   font-weight: 600;
