@@ -1,0 +1,2530 @@
+{
+  "coordinate_system": "glTF meters; +Y up; yaw around +Y",
+  "scope": "Art assembly examples, not authored gameplay levels",
+  "layouts": [
+    {
+      "name": "cargo-court",
+      "scene": "Saltwind harbor | cargo-court",
+      "role": "quest skirmish",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3.5,
+            0,
+            -2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3.5,
+            0,
+            2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "barrel-stack",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "cargo-pallet",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "fish-crate",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "dock-crane",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.275000023841858,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "capstan",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "waymarker",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -1.65,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "combat-core",
+          "bounds_xz_m": [
+            -2.5,
+            -2.5,
+            2.5,
+            2.5
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.5
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "quay-crossing",
+      "scene": "Saltwind harbor | quay-crossing",
+      "role": "dungeon connector",
+      "placements": [
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bridge-wide",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gate-wide",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4.8,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": true
+        },
+        {
+          "asset": "boat-hull",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.349999952316284,
+            0,
+            3.4000000238418577
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wreck-hull",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.349999952316284,
+            0,
+            3.4000000238418577
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bollard",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.0,
+            0,
+            -3.2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "rope-coil",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.0,
+            0,
+            -3.2149081110954283
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "buoy",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "life-ring",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-idle",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5,
+            0,
+            -1.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "crossing-deck",
+          "bounds_xz_m": [
+            -1.8,
+            -1.7,
+            1.8,
+            1.7
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        0.6
+      ],
+      "entry_points": [
+        {
+          "name": "west",
+          "position_m": [
+            -3,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "east",
+          "position_m": [
+            3,
+            0,
+            0
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "customs-yard",
+      "scene": "Saltwind harbor | customs-yard",
+      "role": "boss or elite room",
+      "placements": [
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-radial",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": true
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "net-rack",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "lantern-hook",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "jetty-post",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "sail-awning",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "signpost",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "seal-plinth",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache-open",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "encounter-core",
+          "bounds_xz_m": [
+            -2.8,
+            -2.8,
+            2.8,
+            2.8
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.7
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "lighthouse-terrace",
+      "scene": "Saltwind harbor | lighthouse-terrace",
+      "role": "survival arena",
+      "placements": [
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-deck",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            0,
+            1.2,
+            -4.3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "cliff-large",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "cliff-small",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wave-rock",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "anchor",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-active",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            -5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "saltwind-harbor",
+          "position_m": [
+            5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "lower-combat-floor",
+          "bounds_xz_m": [
+            -3,
+            1,
+            3,
+            4.3
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        2
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "kit": "prism-quarry",
+  "assets": 70,
+  "triangles": 37292,
+  "glb_bytes": 2631920,
+  "pngs": 83,
+  "source_sha256": "628463a9203fa6d3431a200f6079c5068b65be94db9d53dca621000fb7ea165c",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}

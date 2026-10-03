@@ -1,0 +1,12 @@
+{
+  "kit": "autumn-estate",
+  "assets": 70,
+  "triangles": 40852,
+  "glb_bytes": 2867328,
+  "pngs": 83,
+  "source_sha256": "823291a670dca2a55329b53b395f3b60c78f9f4364c94a30a6ae299a412b7524",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}

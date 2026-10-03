@@ -1,0 +1,12 @@
+{
+  "kit": "ochre-necropolis",
+  "assets": 70,
+  "triangles": 32876,
+  "glb_bytes": 2306620,
+  "pngs": 83,
+  "source_sha256": "c4d0317c9d90f0687803acd4041ce428da5ee03caef1e3119e4f23adce9d2ed5",
+  "stair_flights_connected_in_examples": 2,
+  "status": "pass",
+  "reserved_combat_areas_checked": 4,
+  "layouts": 4
+}

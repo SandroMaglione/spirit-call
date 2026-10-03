@@ -1,0 +1,2574 @@
+{
+  "coordinate_system": "glTF meters; +Y up; yaw around +Y",
+  "scope": "Art assembly examples, not authored gameplay levels",
+  "layouts": [
+    {
+      "name": "leaf-court",
+      "scene": "Autumn estate | leaf-court",
+      "role": "quest skirmish",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.7,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.7,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.7,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3.5,
+            0,
+            -2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-broken",
+          "kit": "autumn-estate",
+          "position_m": [
+            3.5,
+            0,
+            2.6
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "maple-large",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.150000023841858,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "maple-small",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.0,
+            0,
+            -2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "hedge-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "hedge-corner",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.0,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "leaf-pile",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache",
+          "kit": "autumn-estate",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "waymarker",
+          "kit": "autumn-estate",
+          "position_m": [
+            -1.65,
+            0,
+            -4.65
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "combat-core",
+          "bounds_xz_m": [
+            -2.5,
+            -2.5,
+            2.5,
+            2.5
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.5
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "garden-crossing",
+      "scene": "Autumn estate | garden-crossing",
+      "role": "dungeon connector",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            3,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            3,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            3,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            3,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            5,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            5,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            5,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            5,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "bridge-wide",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            1,
+            0,
+            2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            1,
+            0,
+            -2.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gate-wide",
+          "kit": "autumn-estate",
+          "position_m": [
+            4.8,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": true
+        },
+        {
+          "asset": "fountain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.0,
+            0,
+            3.849999952316284
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "dry-fountain",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.0,
+            0,
+            3.849999952316284
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "topiary",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.0,
+            0,
+            -3.2327530562877653
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "birdbath",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.0,
+            0,
+            -3.2799999892711638
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "garden-bench",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wheelbarrow",
+          "kit": "autumn-estate",
+          "position_m": [
+            3,
+            0,
+            3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-idle",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5,
+            0,
+            -1.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "crossing-deck",
+          "bounds_xz_m": [
+            -1.8,
+            -1.7,
+            1.8,
+            1.7
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        0.6
+      ],
+      "entry_points": [
+        {
+          "name": "west",
+          "position_m": [
+            -3,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "east",
+          "position_m": [
+            3,
+            0,
+            0
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "tea-enclosure",
+      "scene": "Autumn estate | tea-enclosure",
+      "role": "boss or elite room",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-radial",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-tall",
+          "kit": "autumn-estate",
+          "position_m": [
+            2.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-window",
+          "kit": "autumn-estate",
+          "position_m": [
+            4.4,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-short",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.85,
+            0,
+            4
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.85,
+            0,
+            2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.85,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.85,
+            0,
+            -2
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "doorway",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -4.85
+          ],
+          "yaw_degrees": 0.0,
+          "open": true
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "autumn-estate",
+          "position_m": [
+            3.7,
+            0,
+            1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-large",
+          "kit": "autumn-estate",
+          "position_m": [
+            3.7,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "tea-table",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "tea-stool",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.3,
+            0,
+            2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "garden-screen",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "urn-pair",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.3,
+            0,
+            -2.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "lantern-stone",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.3,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "seal-plinth",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "supply-cache-open",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -3.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "encounter-core",
+          "bounds_xz_m": [
+            -2.8,
+            -2.8,
+            2.8,
+            2.8
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        1.7
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    },
+    {
+      "name": "pergola-terrace",
+      "scene": "Autumn estate | pergola-terrace",
+      "role": "survival arena",
+      "placements": [
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "autumn-estate",
+          "position_m": [
+            -2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "autumn-estate",
+          "position_m": [
+            2,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "autumn-estate",
+          "position_m": [
+            4,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-cracked",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -2
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "floor-plain",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "platform",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            0,
+            -4
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "autumn-estate",
+          "position_m": [
+            -3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "autumn-estate",
+          "position_m": [
+            -4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "autumn-estate",
+          "position_m": [
+            -1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-full",
+          "kit": "autumn-estate",
+          "position_m": [
+            3,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "autumn-estate",
+          "position_m": [
+            1.9,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "stair-rail",
+          "kit": "autumn-estate",
+          "position_m": [
+            4.1,
+            0,
+            -1.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "railing-straight",
+          "kit": "autumn-estate",
+          "position_m": [
+            6,
+            1.2,
+            -3.12
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "arch-free",
+          "kit": "autumn-estate",
+          "position_m": [
+            0,
+            1.2,
+            -4.3
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            -6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.8,
+            0,
+            3
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.8,
+            0,
+            1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "wall-low",
+          "kit": "autumn-estate",
+          "position_m": [
+            6.8,
+            0,
+            -1
+          ],
+          "yaw_degrees": 90.0,
+          "open": false
+        },
+        {
+          "asset": "pergola",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "gazebo-roof",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.5,
+            0,
+            2.5
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "planter-round",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "planter-square",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.5,
+            0,
+            -0.8
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "beacon-active",
+          "kit": "autumn-estate",
+          "position_m": [
+            -5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        },
+        {
+          "asset": "pillar-small",
+          "kit": "autumn-estate",
+          "position_m": [
+            5.4,
+            1.2,
+            -4.1
+          ],
+          "yaw_degrees": 0.0,
+          "open": false
+        }
+      ],
+      "reserved_clear_areas": [
+        {
+          "name": "lower-combat-floor",
+          "bounds_xz_m": [
+            -3,
+            1,
+            3,
+            4.3
+          ],
+          "height_m": 0
+        }
+      ],
+      "reference_position_m": [
+        0,
+        0,
+        2
+      ],
+      "entry_points": [
+        {
+          "name": "arrival",
+          "position_m": [
+            0,
+            0,
+            3.5
+          ]
+        }
+      ],
+      "runtime_note": "Art assembly only. Enemy spawns, navigation, collisions and objectives need gameplay authoring."
+    }
+  ]
+}

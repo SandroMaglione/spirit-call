@@ -19,6 +19,12 @@ assert digest(source) == manifest['source_sha256'], 'Re-export the edited source
 bpy.ops.wm.open_mainfile(filepath=str(source))
 source_roots = {o['asset_id']: o for o in roots(bpy.context.scene)}
 assert set(source_roots) == {a['id'] for a in manifest['assets']}
+kit = json.loads((root / 'kit.json').read_text())
+if kit.get('batch') == 'beta-arenas':
+    for asset in manifest['assets']:
+        expected_meshes = 1 + len(asset['moving_parts'])
+        assert asset['mesh_count'] == expected_meshes, f'Unexpected draw structure: {asset["id"]}'
+        assert asset['triangles'] <= 2500, f'Beta static model budget exceeded: {asset["id"]}'
 source_info = {}
 for name, asset in source_roots.items():
     children = {}
