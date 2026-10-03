@@ -37,10 +37,11 @@ const actorParts = (assets: RenderAssets, look: BodyLook, radius: number, batche
 
 export const enemyColor = (enemy: EnemyKind): number => view.enemies[enemy].color
 
-export const projectileColor = (faction: Faction, style: ProjectileStyle = "bolt"): number =>
-  style === "disc" ? view.disc.color : faction === "player" ? view.playerProjectile : view.enemyProjectile
+/** A projectile's color: a disc's, an enemy's bolt in its element's color (water that will soak you looks like water), or its side's. */
+export const projectileColor = (faction: Faction, style: ProjectileStyle = "bolt", element: ElementId | null = null): number =>
+  style === "disc" ? view.disc.color : faction === "enemy" && element !== null ? view.elements[element] : faction === "player" ? view.playerProjectile : view.enemyProjectile
 
-const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, faction: Faction, style: ProjectileStyle, radius: number): ProjectileNode => {
+const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, faction: Faction, style: ProjectileStyle, radius: number, element: ElementId | null): ProjectileNode => {
   const node = pool.pop() ?? (() => {
     const root = new Group()
     const shadow = new Instance(assets.projectileShadows)
@@ -50,7 +51,7 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
     return { kind: "projectile" as const, root, orb, shadow }
   })()
   const orb = node.orb
-  orb.color.setHex(projectileColor(faction, style))
+  orb.color.setHex(projectileColor(faction, style, element))
   if (style === "disc") {
     // A flat disc skimming low over the floor.
     orb.batch = assets.pucks
@@ -212,7 +213,7 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
     case "enemy":
       return { kind: "enemy", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, enemyLooks[renderable.enemy], renderable.radius, true, null) }
     case "projectile":
-      return projectileNode(assets, projectilePool, renderable.faction, renderable.style, renderable.radius)
+      return projectileNode(assets, projectilePool, renderable.faction, renderable.style, renderable.radius, renderable.element)
     case "wall": {
       return wallNode(assets, arenaLook.walls[renderable.placement], renderable.box, renderable.placement === "front")
     }

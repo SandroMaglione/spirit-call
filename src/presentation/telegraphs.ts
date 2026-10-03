@@ -66,15 +66,16 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       for (let shot = 0; shot < spec.count; shot++) {
         const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
         const end = { x: area.origin.x + Math.cos(base + offset) * area.length, y: area.origin.y + Math.sin(base + offset) * area.length }
-        g.line(area.origin.x, area.origin.y, end.x, end.y, locked ? 4 : 2, locked ? view.telegraphLocked : view.telegraph, locked ? 0.75 : 0.35)
+        const color = spec.element !== null ? view.elements[spec.element] : locked ? view.telegraphLocked : view.telegraph
+        g.line(area.origin.x, area.origin.y, end.x, end.y, locked ? 4 : 2, color, locked ? 0.75 : 0.35)
       }
       continue
     }
-    // Beams track until their aim locks: dim while tracking, bright once locked.
+    // Attacks track until their aim locks: dim while tracking, bright once locked (the cue to move).
+    // An element's attack is drawn in its element's color, so what it would put on you shows before it lands.
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
-    drawArea(g, area, progress, tracking
-      ? { color: view.telegraph, fill: 0.05, outline: 0.35 }
-      : { color: spec.kind === "beam" ? view.telegraphLocked : view.telegraph, fill: 0.12, outline: 0.75 })
+    const color = spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
+    drawArea(g, area, progress, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
   }
 
   // Guardian shields: a bright arc on the side they face.

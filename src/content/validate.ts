@@ -41,12 +41,13 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
   for (const attack of attacks) {
     const at = `${where} attack ${attack.id}`
     if (ids.filter((id) => id === attack.id).length > 1) problems.push(`${at}: named more than once in the moveset`)
-    positive(problems, at, { triggerRange: attack.triggerRange, weight: attack.weight })
+    positive(problems, at, { triggerRange: attack.triggerRange })
+    if (!(attack.weight >= 0)) problems.push(`${at}: weight must not be negative (is ${attack.weight})`)
+    if (attack.weight === 0 && !attacks.some((other) => other.followUp === attack.id)) problems.push(`${at}: has no weight and follows nothing, so it is never made`)
     if (attack.element !== null && !has(elements, attack.element)) problems.push(`${at}: unknown element ${attack.element}`)
     if (!(attack.lead >= 0 && attack.lead <= 1)) problems.push(`${at}: lead must be from 0 to 1 (is ${attack.lead})`)
-    const telegraph = attack.kind === "volley" || attack.kind === "beam" ? attack.aimLock : attack.windup
-    if (!(telegraph >= minTelegraph)) problems.push(`${at}: warns ${telegraph}s before it hits, under the fairness floor of ${minTelegraph}s`)
-    if ((attack.kind === "volley" || attack.kind === "beam") && !(attack.aimLock <= attack.windup)) problems.push(`${at}: its aim locks before its windup starts`)
+    if (!(attack.aimLock >= minTelegraph)) problems.push(`${at}: warns ${attack.aimLock}s before it hits, under the fairness floor of ${minTelegraph}s`)
+    if (!(attack.aimLock <= attack.windup)) problems.push(`${at}: its aim locks before its windup starts`)
     if (!(attack.minRange >= 0 && attack.minRange < attack.triggerRange)) {
       problems.push(`${at}: minRange must be from 0 to below triggerRange (is ${attack.minRange})`)
     }

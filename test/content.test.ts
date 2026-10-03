@@ -47,7 +47,7 @@ describe("content", () => {
   })
 
   it("reports movesets with clashing names, unreachable ranges, and combos that never end", () => {
-    const [swipe] = defaultTuning.enemies.chaser.attacks
+    const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id === "swipe")
     const broken = tuningWith({
       enemies: {
         chaser: {

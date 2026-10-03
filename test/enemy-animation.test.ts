@@ -20,7 +20,7 @@ describe("enemy animation sampling", () => {
   it("samples the simulation's phase even when active lasted zero seconds", () => {
     expect(enemies.shooter.attacks[0]!.active).toBe(0)
     expect(enemyPose(enemies.shooter.attacks[0], "recovery", 0)).toEqual({ clip: "Recovery", progress: 0 })
-    expect(enemyPose(enemies.chaser.attacks[0], "windup", .225)).toEqual({ clip: "Windup", progress: .5 })
+    expect(enemyPose(enemies.chaser.attacks.find((attack) => attack.id === "swipe"), "windup", .2)).toEqual({ clip: "Windup", progress: .5 })
     expect(enemyPose(enemies.charger.attacks[0], "active", .21)).toEqual({ clip: "Active", progress: .5 })
     expect(enemyPose(enemies.charger.attacks[0], "ready", 0)).toBeNull()
     expect(enemyPose(undefined, "windup", 0)).toBeNull()

@@ -64,11 +64,14 @@ describe("enemy elements", () => {
 })
 
 describe("leading aim", () => {
-  const volley = defaultTuning.enemies.shooter.attacks[0]!
+  const shot = defaultTuning.enemies.shooter.attacks[0]! as Extract<AttackSpec, { kind: "volley" }>
+  const volley = shot
 
   it("aims at a target standing still, or ahead of a running one by its lead", () => {
     const origin = { x: 0, y: 0 }
+    // A bolt at 430 a second, she 430 away.
     const target = { at: { x: 430, y: 0 }, velocity: { x: 0, y: 300 } }
+    const volley = { ...shot, projectileSpeed: 430 }
     expect(aimPoint({ ...volley, lead: 0 }, origin, target, 0.3)).toEqual(target.at)
     expect(aimPoint({ ...volley, lead: 1 }, origin, { ...target, velocity: { x: 0, y: 0 } }, 0.3)).toEqual(target.at)
     // Let go in 0.3 s, a bolt at 430 flies 1 s: a full lead aims 1.3 s ahead of her run, a half lead half as far.
@@ -105,7 +108,9 @@ describe("leading aim", () => {
 describe("the crowd's rhythm", () => {
   it("lets only `crowd.windups` enemies wind up at once", () => {
     // Six chasers all in reach, each free to attack (no turns to wait).
-    const tuning = tuningWith({ enemies: { chaser: { behavior: { kind: "chase", stopDistance: 50 } } }, crowd: { windups: 2 } })
+    // Single swipes: follow-ups would add windups past the cap, as they may.
+    const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id === "swipe")!
+    const tuning = tuningWith({ enemies: { chaser: { behavior: { kind: "chase", stopDistance: 50 }, attacks: [{ ...swipe, followUp: null }] } }, crowd: { windups: 2 } })
     const ring = Array.from({ length: 6 }, (_, index) => ({ x: Math.cos((index / 6) * Math.PI * 2) * 60, y: Math.sin((index / 6) * Math.PI * 2) * 60 }))
     const run = arena("chaser", ring, tuning)
     let most = 0
@@ -119,8 +124,8 @@ describe("the crowd's rhythm", () => {
 
 describe("the fairness floor", () => {
   it("rejects an attack that warns for less than `fairness.minTelegraph`", () => {
-    const [swipe] = defaultTuning.enemies.chaser.attacks
-    const broken = tuningWith({ enemies: { chaser: { attacks: [{ ...swipe!, windup: 0.2 }] } } })
+    const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id === "swipe")
+    const broken = tuningWith({ enemies: { chaser: { attacks: [{ ...swipe!, windup: 0.2, aimLock: 0.2, followUp: null }] } } })
     expect(validateContent(broken)).toEqual([`enemy chaser attack swipe: warns 0.2s before it hits, under the fairness floor of ${defaultTuning.fairness.minTelegraph}s`])
   })
 })

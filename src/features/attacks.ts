@@ -10,10 +10,10 @@
  * an engagement slot. An attack with a `lead` aims ahead of a running
  * target; one with an `element` puts its state on whoever it hits.
  *
- * The attack area is decided when the windup starts (melee cones and slams
- * lock onto where the target was; aimed shots track until `aimLock` before
- * firing) and stored on the `Attacker`, so the telegraph drawn during the
- * windup is exactly what lands. A skilled player can always see an attack
+ * The attack area follows the target from the windup's start until the
+ * attack's `aimLock` (at least `fairness.minTelegraph` before it lands),
+ * then stays, and is stored on the `Attacker`, so the telegraph drawn
+ * during the windup is exactly what lands. A skilled player can always see an attack
  * coming and get out of it.
  *
  * The phase is the `AttackPhase` state component; its moves follow the cycle
@@ -80,9 +80,9 @@ export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: Rea
   }
 }
 
-/** Whether an aimed attack's aim is locked (its telegraph no longer follows the target). */
+/** Whether an attack's aim is locked (its telegraph no longer follows the target). */
 export const aimLocked = (spec: AttackSpec, phase: AttackPhase, elapsed: number): boolean =>
-  (spec.kind !== "volley" && spec.kind !== "beam") || phase !== "windup" || elapsed >= spec.windup - spec.aimLock
+  phase !== "windup" || elapsed >= spec.windup - spec.aimLock
 
 export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   queries: {
@@ -151,7 +151,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (phase.get() === "ready") {
       elapsed = 0
       if (cooldown <= 0 && engaged && windingUp < tuning.crowd.windups && moving !== undefined) {
-        const usable = attacks.flatMap((spec, index) => (canStart(spec, position, moving.at, boxes) ? [index] : []))
+        const usable = attacks.flatMap((spec, index) => (spec.weight > 0 && canStart(spec, position, moving.at, boxes) ? [index] : []))
         const chosen = pickAttack(attacks, usable, random)
         if (chosen !== undefined) begin(chosen, moving)
       }
@@ -166,7 +166,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const atk = data.stats.get().atk
     const struck = blow({ damage: damageDealt(atk, spec.power), knockback: spec.knockback, element: spec.element === null ? null : { id: spec.element, atk } })
 
-    // Aimed shots follow the target until the aim locks.
+    // The aim follows the target until it locks.
     if (phase.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
       area = aimArea(spec, position, aimPoint(spec, position, moving, Math.max(0, spec.windup - elapsed)), boxes)
     }

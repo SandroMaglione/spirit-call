@@ -10,11 +10,11 @@ import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Position, RunScope } from "../src/schema.ts"
 import { center, ClearEnemies, start, steps } from "./helpers.ts"
 
-const swipe = defaultTuning.enemies.chaser.attacks[0]! as Extract<AttackSpec, { kind: "melee" }>
+const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id === "swipe")! as Extract<AttackSpec, { kind: "melee" }>
 
 /** A lunge: a short charge, only from a distance. */
 const lunge: AttackSpec = {
-  kind: "charge", id: "lunge", minRange: 150, triggerRange: 260, windup: 0.5, active: 0.2, recovery: 0.5, cooldown: 0.5,
+  kind: "charge", id: "lunge", minRange: 150, triggerRange: 260, windup: 0.5, aimLock: 0.5, active: 0.2, recovery: 0.5, cooldown: 0.5,
   power: 10, knockback: 200, weight: 1, followUp: null, element: null, lead: 0, speed: 900, width: 40
 }
 

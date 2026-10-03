@@ -520,7 +520,11 @@ body:has(.menu) .btm-toggle {
   gap: 4px;
 }
 
-/* An enemy's affinity for an element, in the element's color: solid when weak, outlined when it resists, struck when immune. */
+/*
+ * An enemy's affinity for an element, in the element's color: solid when
+ * weak, outlined when it resists, struck when immune. An element it attacks
+ * with: dashed.
+ */
 .chip {
   padding: 1px 7px;
   border-radius: 999px;
@@ -533,10 +537,14 @@ body:has(.menu) .btm-toggle {
 .chip--fire { color: #ff7b2e; }
 .chip--water { color: #4aa8ff; }
 .chip--wind { color: #c9fff1; }
+.chip--thunder { color: #b48cff; }
 
 .chip--weak.chip--fire { background: #ff7b2e; color: #0d1117; border-color: #ff7b2e; }
 .chip--weak.chip--water { background: #4aa8ff; color: #0d1117; border-color: #4aa8ff; }
 .chip--weak.chip--wind { background: #c9fff1; color: #0d1117; border-color: #c9fff1; }
+.chip--weak.chip--thunder { background: #b48cff; color: #0d1117; border-color: #b48cff; }
+
+.chip--attacks { border-style: dashed; }
 
 .chip--immune {
   opacity: 0.75;

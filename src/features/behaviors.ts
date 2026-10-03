@@ -80,8 +80,9 @@ export const steer = (tuning: TuningValue, behavior: Behavior, mode: EnemyMode, 
 
 /**
  * A skirmisher's turn after `dt` more in `mode`: an engagement ends once its
- * attack recovers or after `engageSeconds` (it backs off), a retreat after
- * `retreatSeconds` (it circles again). Taking a slot (orbit to engage) is
+ * attack recovers or after `engageSeconds` (it backs off), a retreat
+ * `retreatSeconds` after its last attack (a combo's follow-ups included)
+ * is over (it circles again). Taking a slot (orbit to engage) is
  * the crowd's decision (see `SteerEnemies`).
  */
 export const skirmishTurn = (
@@ -91,6 +92,8 @@ export const skirmishTurn = (
   modeTimer: number
 ): { readonly mode: EnemyMode; readonly modeTimer: number } => {
   if (mode === "engage" && (phase === "recovery" || modeTimer > behavior.engageSeconds)) return { mode: "retreat", modeTimer: 0 }
+  // The retreat starts once the last attack of a combo is over.
+  if (mode === "retreat" && phase !== "ready") return { mode, modeTimer: 0 }
   if (mode === "retreat" && modeTimer >= behavior.retreatSeconds) return { mode: "orbit", modeTimer: 0 }
   return { mode, modeTimer }
 }

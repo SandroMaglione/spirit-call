@@ -33,6 +33,7 @@ import { WeaponLevel } from "./WeaponLevel.tsx"
 import {
   affinityList,
   affinityNames,
+  attackElements,
   challengeEnemies,
   describeAmounts,
   describeBonus,
@@ -97,7 +98,7 @@ const StatLine = ({ stats }: { readonly stats: Stats }) => (
   </span>
 )
 
-/** An enemy the selected quest holds: what it does, and how it takes each element. */
+/** An enemy the selected quest holds: what it does, how it takes each element, and the elements it attacks with. */
 const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKind }) => {
   const spec = store.tuning.value.enemies[kind]
   return (
@@ -108,6 +109,11 @@ const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKin
         {affinityList(spec.elements).map(({ element, affinity }) => (
           <span key={element} class={`chip chip--${element} chip--${affinity}`}>
             {affinityNames[affinity]} {elements[element].name}
+          </span>
+        ))}
+        {attackElements(spec.attacks).map((element) => (
+          <span key={`attacks-${element}`} class={`chip chip--${element} chip--attacks`}>
+            {elements[element].name} attacks
           </span>
         ))}
       </span>

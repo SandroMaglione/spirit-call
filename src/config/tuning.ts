@@ -179,9 +179,9 @@ export const defaultTuning = {
     /** Extra personal space around each body. */
     spacing: 6,
     /** How many skirmishing enemies may close in on the player at once; the rest circle at a distance. */
-    engagers: 2,
+    engagers: 4,
     /** A circling enemy waits at least this long (seconds) before taking a free slot. */
-    minOrbitSeconds: 0.6,
+    minOrbitSeconds: 0.3,
     /** Circling speed as a fraction of the enemy's speed. */
     orbitSpeed: 0.7,
     /**
@@ -189,7 +189,7 @@ export const defaultTuning = {
      * (follow-ups excepted): the nearest enemies go first, the rest wait,
      * so a crowd attacks in a rhythm that can be read.
      */
-    windups: 3
+    windups: 4
   },
 
   /** How enemies find their way around walls to the player (see physics/paths.ts). */

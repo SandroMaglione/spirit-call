@@ -60,7 +60,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
     [PrevPosition, at],
     [Velocity, velocity],
     [Projectile, projectile],
-    [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius }]
+    [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius, element: projectile.blow.element?.id ?? null }]
   )
 
 /**

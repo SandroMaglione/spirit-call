@@ -3,8 +3,10 @@
  * measuring how hard enemies are. Each step it reads every threat the
  * player could see on screen (telegraphs, shots in flight, hitboxes out),
  * tries running each way and dashing each way, and picks the move whose
- * path stays clear longest, keeping some distance from enemies when every
- * move is safe. It never attacks: it shows what dodging alone can do.
+ * path stays clear longest. When every move is safe it keeps its distance
+ * from the nearest enemy: far away when it only dodges (what dodging alone
+ * can do), at sword's reach when it fights, attacking whatever is in reach
+ * (what playing the fight asks).
  *
  * It sees nothing a player could not: an attack counts only once its
  * telegraph is up, and aimed shots where they aim now.
@@ -48,13 +50,19 @@ import {
   RunScope,
   Tuning as TuningResource,
   Velocity,
-  Wall
+  Wall,
+  Waves
 } from "../src/schema.ts"
 
-/** Something that will hurt: an area from `from` to `to` seconds from now, or a shot flying from `from` on. */
+/**
+ * Something that will hurt: an area from `from` to `to` seconds from now,
+ * or a shot flying from `from` on. `seen`: how long it has been on screen
+ * (a telegraph since its windup began; what is already flying or out, for
+ * as long as there is to react to).
+ */
 type Threat =
-  | { readonly kind: "area"; readonly area: Area; readonly from: number; readonly to: number }
-  | { readonly kind: "shot"; readonly at: Vec2; readonly velocity: Vec2; readonly radius: number; readonly from: number; readonly range: number }
+  | { readonly kind: "area"; readonly area: Area; readonly from: number; readonly to: number; readonly seen: number }
+  | { readonly kind: "shot"; readonly at: Vec2; readonly velocity: Vec2; readonly radius: number; readonly from: number; readonly range: number; readonly seen: number }
 
 export interface Battlefield {
   readonly player: {
@@ -104,6 +112,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     const area = attacker.area
     if (spec === undefined || area === null || (phase !== "windup" && phase !== "active")) continue
     const lands = phase === "windup" ? Math.max(0, spec.windup - attacker.elapsed) : 0
+    const seen = phase === "windup" ? attacker.elapsed : Infinity
     const ends = lands + (phase === "windup" ? spec.active : Math.max(0, spec.active - attacker.elapsed))
     if (spec.kind === "volley" && area.kind === "line") {
       // Shots not yet fired: where they will fly from the moment they leave.
@@ -113,22 +122,22 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
         const angle = base + (spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * toRadians(spec.spreadDegrees) * 2)
         threats.push({
           kind: "shot", at: area.origin, velocity: { x: Math.cos(angle) * spec.projectileSpeed, y: Math.sin(angle) * spec.projectileSpeed },
-          radius: spec.projectileRadius, from: lands, range: spec.range
+          radius: spec.projectileRadius, from: lands, range: spec.range, seen
         })
       }
       continue
     }
     if (phase === "active" && spec.kind !== "charge") continue
-    threats.push({ kind: "area", area, from: lands, to: Math.max(ends, lands + 1 / 60) })
+    threats.push({ kind: "area", area, from: lands, to: Math.max(ends, lands + 1 / 60), seen })
   }
   for (const { data } of queries.projectiles.each()) {
     const projectile = data.projectile.get()
     if (projectile.faction !== "enemy") continue
-    threats.push({ kind: "shot", at: data.position.get(), velocity: data.velocity.get(), radius: projectile.radius, from: 0, range: projectile.range })
+    threats.push({ kind: "shot", at: data.position.get(), velocity: data.velocity.get(), radius: projectile.radius, from: 0, range: projectile.range, seen: Infinity })
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
-    if (hitbox.faction === "enemy") threats.push({ kind: "area", area: hitbox.area, from: 0, to: hitbox.remaining })
+    if (hitbox.faction === "enemy") threats.push({ kind: "area", area: hitbox.area, from: 0, to: hitbox.remaining, seen: Infinity })
   }
   return {
     player: player === undefined ? undefined : {
@@ -150,8 +159,25 @@ const horizon = 1.2
 const sample = 1 / 30
 /** Room kept between the player's hurtbox and anything dangerous. */
 const margin = 8
-/** The distance it likes to keep from the nearest enemy when every move is safe. */
-const comfort = 260
+/**
+ * How the bot plays: the distance it likes to keep from the nearest enemy
+ * when every move is safe, whether it attacks, how long a telegraph must
+ * have been showing before it reacts to it (seconds), and how often it
+ * decides (every so many steps; it holds its move in between).
+ */
+export interface Style {
+  readonly comfort: number
+  readonly fights: boolean
+  readonly reaction: number
+  readonly every: number
+}
+
+/** Only dodging, from afar, reacting at once: the fairness check (anything it cannot dodge, nobody can). */
+export const dodger: Style = { comfort: 260, fights: false, reaction: 0, every: 1 }
+/** In close with the sword (its first swing reaches 120), attacking, with a quick player's reaction (a quarter second) and decisions (15 a second). */
+export const fighter: Style = { comfort: 95, fights: true, reaction: 0.25, every: 4 }
+/** Fighting with a slower reaction (0.4 s) and fewer decisions (10 a second): a player still learning the fight. */
+export const learner: Style = { ...fighter, reaction: 0.4, every: 6 }
 
 /** Whether `threat` touches a circle of `r` at `at`, `t` seconds from now (shots tested along their last stretch). */
 const touches = (threat: Threat, at: Vec2, r: number, t: number): boolean => {
@@ -192,6 +218,7 @@ const playOut = (
 export interface Move {
   readonly direction: Vec2
   readonly dash: boolean
+  readonly attack: boolean
 }
 
 const directions: ReadonlyArray<Vec2> = [
@@ -199,44 +226,53 @@ const directions: ReadonlyArray<Vec2> = [
   ...Array.from({ length: 16 }, (_, index) => ({ x: Math.cos((index / 16) * Math.PI * 2), y: Math.sin((index / 16) * Math.PI * 2) }))
 ]
 
-/** How much it likes ending a safe move at `end`: near `comfort` from the nearest enemy, away from walls' corners, steady. */
-const liking = (field: Battlefield, end: Vec2, direction: Vec2, last: Vec2, arena: { readonly width: number; readonly height: number }): number => {
+/** How much it likes ending a safe move at `end`: near its `comfort` from the nearest enemy, away from walls' corners, steady. */
+const liking = (field: Battlefield, end: Vec2, direction: Vec2, last: Vec2, arena: { readonly width: number; readonly height: number }, comfort: number): number => {
   const nearest = Math.min(Infinity, ...field.enemies.map((enemy) => Math.hypot(enemy.x - end.x, enemy.y - end.y)))
-  const spacing = Number.isFinite(nearest) ? -Math.abs(Math.min(nearest, comfort * 1.5) - comfort) : 0
+  const spacing = Number.isFinite(nearest) ? -Math.abs(Math.min(nearest, Math.max(comfort * 1.5, 400)) - comfort) : 0
   const center = -0.15 * Math.hypot(end.x - arena.width / 2, end.y - arena.height / 2)
   const steady = 20 * (direction.x * last.x + direction.y * last.y)
   return spacing + center + steady
 }
 
 /** Picks the step's move: the safest run, a dash when only a dash keeps her clear, and among safe runs the one it likes best. */
-export const decide = (field: Battlefield, tuning: Tuning, last: Vec2): Move => {
-  if (field.player === undefined) return { direction: { x: 0, y: 0 }, dash: false }
+export const decide = (seen: Battlefield, tuning: Tuning, last: Vec2, style: Style = dodger): Move => {
+  if (seen.player === undefined) return { direction: { x: 0, y: 0 }, dash: false, attack: false }
+  // What it has noticed: telegraphs up for at least its reaction time.
+  const field = { ...seen, player: seen.player, threats: seen.threats.filter((threat) => threat.seen >= style.reaction) }
+  const at = field.player.at
+  // Something within the sword's first swing (center to center, give or take a body).
+  const attack = style.fights && field.enemies.some((enemy) => Math.hypot(enemy.x - at.x, enemy.y - at.y) <= 125)
   let best: { readonly move: Move; readonly danger: number; readonly liking: number } | undefined
   for (const direction of directions) {
     const { danger, end } = playOut(field, tuning, direction, false)
-    const score = liking(field, end, direction, last, tuning.arena)
-    if (best === undefined || danger > best.danger || (danger === best.danger && score > best.liking)) best = { move: { direction, dash: false }, danger, liking: score }
+    const score = liking(field, end, direction, last, tuning.arena, style.comfort)
+    if (best === undefined || danger > best.danger || (danger === best.danger && score > best.liking)) best = { move: { direction, dash: false, attack }, danger, liking: score }
   }
   if (best!.danger === Infinity || !field.player.dashReady) return best!.move
   // Running is not enough: dash where it keeps her clear longest.
   for (const direction of directions.slice(1)) {
     const { danger, end } = playOut(field, tuning, direction, true)
-    const score = liking(field, end, direction, last, tuning.arena)
-    if (danger > best!.danger || (danger === best!.danger && best!.move.dash && score > best!.liking)) best = { move: { direction, dash: true }, danger, liking: score }
+    const score = liking(field, end, direction, last, tuning.arena, style.comfort)
+    if (danger > best!.danger || (danger === best!.danger && best!.move.dash && score > best!.liking)) best = { move: { direction, dash: true, attack: false }, danger, liking: score }
   }
   return best!.move
 }
 
 const idleButton: Touch.ButtonState = { held: false, pressed: false, released: false, aim: null, cancelled: false }
 
-/** Touch controls the bot moves: the stick toward `move`'s direction (as it shows on screen), the dash button tapped. */
+/** Touch controls the bot moves: the stick toward `move`'s direction (as it shows on screen), the dash button tapped, the attack button tapped every other step (each tap a swing). */
 export const botTouch = () => {
-  let move: Move = { direction: { x: 0, y: 0 }, dash: false }
+  let move: Move = { direction: { x: 0, y: 0 }, dash: false, attack: false }
+  let tapped = false
   const source: Touch.Touch<TouchButton> = {
     snapshot() {
       const screen = toScreen(projection, move.direction)
       const length = Math.hypot(screen.x, screen.y)
-      const buttons = Object.fromEntries(touchButtons.map((name) => [name, name === "dash" && move.dash ? { ...idleButton, held: true, pressed: true } : idleButton]))
+      const attack = move.attack && !tapped
+      tapped = attack
+      const pressed = (name: TouchButton) => (name === "dash" && move.dash) || (name === "attack" && attack)
+      const buttons = Object.fromEntries(touchButtons.map((name) => [name, pressed(name) ? { ...idleButton, held: true, pressed: true } : idleButton]))
       return {
         stick: { active: length > 0, vector: length > 0 ? { x: screen.x / length, y: screen.y / length } : { x: 0, y: 0 } },
         buttons: buttons as Touch.Snapshot<TouchButton>["buttons"],
@@ -266,6 +302,8 @@ const Vitals = Game.Inspector("Bot/Vitals", {
   queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) }
 }, ({ queries }) => queries.player.each()[0]?.data.health.get().current)
 
+const Progress = Game.Inspector("Bot/Progress", { resources: { waves: Game.System.readResource(Waves) } }, ({ resources }) => resources.waves.get().phase)
+
 export interface BotRun {
   readonly tuning: Tuning
   readonly challenge?: ChallengeId
@@ -275,6 +313,8 @@ export interface BotRun {
   readonly seconds: number
   /** Stand still instead of dodging, to compare. */
   readonly still?: boolean
+  /** How it plays (dodging only by default). */
+  readonly style?: Style
 }
 
 export interface BotReport {
@@ -285,6 +325,8 @@ export interface BotReport {
   readonly dashes: number
   /** The share of the time something on screen would hit her if she stood still: how much of the run asks her to move. */
   readonly pressure: number
+  /** When the challenge was won (seconds), if it was. */
+  readonly clearedAt: number | null
 }
 
 /** Plays `run` with the bot (who never falls: her health is out of reach) and reports what it cost. */
@@ -319,14 +361,20 @@ export const runBot = (run: BotRun): BotReport => {
   let dashes = 0
   let pressed = 0
   const total = Math.ceil(run.seconds / engine.stepSeconds)
+  const style = run.style ?? dodger
+  let move: Move = { direction: { x: 0, y: 0 }, dash: false, attack: false }
   for (let step = 0; step < total; step++) {
     const field = sim.runtime.inspect(ReadBattlefield)
     if (field.player !== undefined && playOut({ ...field, player: { ...field.player, invulnerable: 0 } }, tuning, { x: 0, y: 0 }, false).danger < Infinity) pressed += 1
-    const move = run.still === true ? { direction: { x: 0, y: 0 }, dash: false } : decide(field, tuning, last)
+    // It decides every so often, holding its run in between (a dash or a swing is one press).
+    move = run.still === true
+      ? { direction: { x: 0, y: 0 }, dash: false, attack: false }
+      : step % style.every === 0 ? decide(field, tuning, last, style) : { ...move, dash: false, attack: false }
     touch.set(move)
     if (move.dash) dashes += 1
     if (move.direction.x !== 0 || move.direction.y !== 0) last = move.direction
     sim.runtime.tick(sim.fixedUpdate)
+    if (sim.runtime.inspect(Progress) === "complete") return { hits, damage: Math.round(damage), dashes, pressure: pressed / (step + 1), clearedAt: (step + 1) * engine.stepSeconds }
     const now = sim.runtime.inspect(Vitals) ?? health
     if (now < health) {
       hits += 1
@@ -334,5 +382,5 @@ export const runBot = (run: BotRun): BotReport => {
     }
     health = now
   }
-  return { hits, damage: Math.round(damage), dashes, pressure: pressed / total }
+  return { hits, damage: Math.round(damage), dashes, pressure: pressed / total, clearedAt: null }
 }
