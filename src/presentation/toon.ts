@@ -10,13 +10,18 @@
  * a fixed number of pixels, so it shows only around the silhouette and
  * where a part passes in front of another. It follows the same skeleton.
  */
-import { BackSide, BufferAttribute, BufferGeometry, DataTexture, Mesh, MeshBasicMaterial, MeshStandardMaterial, MeshToonMaterial, NearestFilter, RedFormat, SkinnedMesh, Vector2 } from "three"
-import type { Material, Object3D, WebGLRenderer } from "three"
+import { BackSide, BufferAttribute, BufferGeometry, DataTexture, Mesh, MeshBasicMaterial, MeshStandardMaterial, MeshToonMaterial, NearestFilter, OrthographicCamera, PerspectiveCamera, RedFormat, SkinnedMesh, Vector2, Vector3, Vector4 } from "three"
+import type { Camera, Material, Object3D, WebGLRenderer } from "three"
 
 export const toon = {
   /** Light falling on a face, as its fraction of full light, from facing away to facing the sun. */
   steps: [0.55, 0.55, 1, 1],
-  outline: { color: 0x23263a, pixels: 0.8 }
+  /**
+   * The outline's width in CSS pixels: a pixel for every `per` pixels of
+   * the model's height on screen, between `min` (in the arena) and `max`
+   * (close up in the menu).
+   */
+  outline: { color: 0x23263a, min: 0.8, max: 2.2, per: 220 }
 }
 
 let gradient: DataTexture | null = null
@@ -99,7 +104,19 @@ export const outlineGeometry = (geometry: BufferGeometry): BufferGeometry => {
 }
 
 const hulls = new WeakMap<BufferGeometry, BufferGeometry>()
-const drawingBuffer = new Vector2()
+const viewport = new Vector4()
+const where = new Vector3()
+const scale = new Vector3()
+
+/** Device pixels per world unit at `object` for `camera` drawing into a viewport `pixels` tall. */
+const pixelsPerUnit = (camera: Camera, object: Object3D, pixels: number): number => {
+  if (camera instanceof OrthographicCamera) return (pixels * camera.zoom) / (camera.top - camera.bottom)
+  if (camera instanceof PerspectiveCamera) {
+    const distance = Math.max(1e-3, object.getWorldPosition(where).distanceTo(camera.position))
+    return pixels / (2 * Math.tan((camera.fov * Math.PI) / 360) * distance)
+  }
+  return 1
+}
 
 /** The outline's material: back faces only, pushed out by `pixels` on screen, in the outline color. */
 export const outlineMaterial = (): MeshBasicMaterial => {
@@ -132,8 +149,10 @@ export const outlineMaterial = (): MeshBasicMaterial => {
 /**
  * Adds an outline beside each mesh under `object` (sharing its skeleton),
  * and returns their materials (its own, to fade or free with the copy).
+ * `size` is the height its outline width is judged by, in its own units:
+ * its height, or its holder's for a part held by a body.
  */
-export const addOutlines = (object: Object3D): ReadonlyArray<MeshBasicMaterial> => {
+export const addOutlines = (object: Object3D, size: number): ReadonlyArray<MeshBasicMaterial> => {
   const meshes: Array<Mesh> = []
   object.traverse((part) => {
     if (part instanceof Mesh && !part.name.endsWith(" outline")) meshes.push(part)
@@ -157,11 +176,13 @@ export const addOutlines = (object: Object3D): ReadonlyArray<MeshBasicMaterial> 
     outline.frustumCulled = mesh.frustumCulled
     outline.renderOrder = mesh.renderOrder
     const push = material.userData["push"] as { value: Vector2 }
-    // Pixels on screen to clip space, for whichever canvas draws it.
-    outline.onBeforeRender = (renderer: WebGLRenderer) => {
-      renderer.getDrawingBufferSize(drawingBuffer)
-      const pixels = toon.outline.pixels * renderer.getPixelRatio()
-      push.value.set((2 * pixels) / drawingBuffer.x, (2 * pixels) / drawingBuffer.y)
+    // Pixels on screen to clip space, for whichever canvas and viewport draws it.
+    outline.onBeforeRender = (renderer: WebGLRenderer, _scene, camera: Camera) => {
+      renderer.getCurrentViewport(viewport)
+      const ratio = renderer.getRenderTarget() === null ? renderer.getPixelRatio() : 1
+      const tall = size * outline.getWorldScale(scale).y * pixelsPerUnit(camera, outline, viewport.w) / ratio
+      const pixels = Math.min(toon.outline.max, Math.max(toon.outline.min, tall / toon.outline.per)) * ratio
+      push.value.set((2 * pixels) / viewport.z, (2 * pixels) / viewport.w)
     }
     parent.add(outline)
     materials.push(material)

@@ -30,8 +30,9 @@ const stage = {
   /** Portraits: their size in pixels, and how much of a character's height they show (from the top). */
   portraitPixels: 256,
   portraitHead: 0.62,
-  /** The rim lights' strength, and the key light's direction. */
+  /** The rim lights' strength (cel-shaded models take less: every lit face gets its full step), and the key light's direction. */
   rim: 4.5,
+  toonRim: 0.9,
   key: { x: 1.5, y: 2.5, z: 2.5 }
 }
 
@@ -120,7 +121,10 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
   }
   const show = (shown: Shown) => {
     for (const child of scene.children) if (child.userData["shown"] === true) child.visible = child === shown.puppet.object
-    for (const rim of rims) rim.color.copy(shown.rim)
+    for (const rim of rims) {
+      rim.color.copy(shown.rim)
+      rim.intensity = shown.puppet.toon ? stage.toonRim : stage.rim
+    }
   }
   const add = (key: string, puppet: Puppet, rim: Color): Shown => {
     puppet.object.userData["shown"] = true

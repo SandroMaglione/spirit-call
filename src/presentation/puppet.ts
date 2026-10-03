@@ -22,6 +22,9 @@ export type Paintable = MeshStandardMaterial | MeshToonMaterial | MeshBasicMater
 /** A copy's materials that are its own, with their colors before any tint. */
 export type OwnMaterials = ReadonlyArray<{ readonly material: Paintable; readonly base: Color }>
 
+/** The height a held part's outline is judged by when it has none of its own: a character's. */
+const heldSize = 1.6
+
 /**
  * A copy of `source`; with `ownMaterials`, its materials are copies too (to
  * tint or fade it alone), and a cel-shaded model gets its outlines.
@@ -45,7 +48,7 @@ export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonl
       if (part instanceof Mesh) part.material = Array.isArray(part.material) ? part.material.map(own) : own(part.material)
     })
     if (source.spec.shading === "toon") {
-      for (const outline of addOutlines(object)) materials.push({ material: outline, base: outline.color.clone() })
+      for (const outline of addOutlines(object, source.spec.height ?? heldSize)) materials.push({ material: outline, base: outline.color.clone() })
     }
   }
   return { object, materials }
@@ -118,6 +121,11 @@ export class Puppet {
         targetPosition: bone.position.clone(), targetRotation: bone.quaternion.clone(), targetScale: bone.scale.clone()
       })
     })
+  }
+
+  /** Whether it is cel-shaded (lit differently in the menu). */
+  get toon(): boolean {
+    return this.source.spec.shading === "toon"
   }
 
   /** Turns to face `direction` on the floor (models face +Z, the floor's y). */
