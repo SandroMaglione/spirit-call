@@ -8,6 +8,7 @@ import type { Area } from "../physics/areas.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { isMelee } from "../content/attacks.ts"
+import { currentAttack } from "../features/moveset.ts"
 import { Action, Aim, AttackPhase, Attacker, Cast, Dash, Enemy, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
 import { enemyPose } from "./enemy-pose.ts"
 import type { ActorNode } from "./host-types.ts"
@@ -65,7 +66,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     const held = data.stunned.get().remaining > 0
     animate(node, facing, held, held ? 0 : seconds)
     if (shield !== null) node.body.shield?.(Math.atan2(shield.x, shield.y) - Math.atan2(facing.x, facing.y))
-    const pose = enemyPose(resources.tuning.get().enemies[data.enemy.get().kind].attack, data.phase.get(), data.attacker.get().elapsed)
+    const pose = enemyPose(currentAttack(resources.tuning.get(), data.enemy.get().kind, data.attacker.get()), data.phase.get(), data.attacker.get().elapsed)
     if (pose !== null) node.body.sample?.(pose.clip, pose.progress)
   }
 })
@@ -80,7 +81,7 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
   events: { action: Game.System.readEvent(Action), cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit) },
   queries: {
     player: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }),
-    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), phase: Game.Query.read(AttackPhase) } })
+    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   services: { nodes: Game.System.service(RenderNodes) }
@@ -122,8 +123,8 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     const phase = data.phase.get()
     const started = phase === "windup" && node.attackPhase !== "windup"
     node.attackPhase = phase
-    const spec = tuning.enemies[data.enemy.get().kind].attack
+    const spec = currentAttack(tuning, data.enemy.get().kind, data.attacker.get())
     const clip = node.body.moments?.windup
-    if (started && spec !== null && clip !== undefined) node.body.play(clip, spec.windup, null)
+    if (started && spec !== undefined && clip !== undefined) node.body.play(clip, spec.windup, null)
   }
 })

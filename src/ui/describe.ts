@@ -9,7 +9,7 @@ import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeSpec, Objective } from "../content/challenges.ts"
 import { elements } from "../content/elements.ts"
 import type { Affinities, Affinity, ElementId } from "../content/elements.ts"
-import type { EnemyKind } from "../content/enemies.ts"
+import type { AttackSpec, EnemyKind } from "../content/enemies.ts"
 import type { Amounts, CurrencyId } from "../content/currencies.ts"
 import type { Stats } from "../content/characters.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
@@ -118,6 +118,10 @@ export const describeSkill = (skill: SkillSpec): string => {
   const effect = describeEffect(skill.effect)
   return `${effect.charAt(0).toUpperCase()}${effect.slice(1)}${cost === "" ? "" : ` · ${cost}`}`
 }
+
+/** The elements an enemy's attacks carry, each once, in moveset order: what it would put on you. */
+export const attackElements = (attacks: ReadonlyArray<AttackSpec>): ReadonlyArray<ElementId> =>
+  [...new Set(attacks.flatMap((attack) => (attack.element === null ? [] : [attack.element])))]
 
 /** How the menu names an affinity. */
 export const affinityNames: { readonly [Kind in Affinity]: string } = { weak: "Weak", resists: "Resists", immune: "Immune" }

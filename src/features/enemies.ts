@@ -8,8 +8,12 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { SpatialGrid } from "../physics/grid.ts"
+import { FlowField } from "../physics/paths.ts"
 import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
+import { currentAttack, hasLineOfSight } from "./moveset.ts"
+import { Walls, wallBoxes } from "./motion.ts"
+import { skirmishTurn, steer } from "./behaviors.ts"
 import { stateSpeed } from "./elements.ts"
 import {
   Attacker,
@@ -51,7 +55,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const draft = Game.Command.insert(
     makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius, hurtboxRadius: stats.hurtboxRadius, affinities: stats.elements }),
     [Enemy, { kind }],
-    [Attacker, { elapsed: 0, cooldown: 0, area: null, hit: [] }],
+    [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
     [EnemyMode, "orbit"],
@@ -120,12 +124,16 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
 
 /**
  * Enemy movement: each archetype's behavior gives a desired velocity toward
- * or around the player, plus separation so crowds do not stack. Enemies
- * stand still while an attack is in progress: attacks are commitments.
+ * or around the player (see `features/behaviors.ts`), finding the way
+ * around walls when she is out of sight (see `FlowField`), plus separation
+ * so crowds do not stack. Enemies stand still while an attack is in
+ * progress: attacks are commitments.
  */
 export const SteerEnemies = (() => {
   const grid = new SpatialGrid(64)
   const bodies: Array<{ x: number; y: number; r: number; id: number }> = []
+  // Rebuilt only when the walls or the tuning's cell size change (see `FlowField`).
+  let paths = new FlowField(30)
 
   return Game.System("Shooter/SteerEnemies", {
     queries: {
@@ -146,7 +154,8 @@ export const SteerEnemies = (() => {
         }
       }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
-      player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] })
+      player: Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) }, with: [Player] }),
+      walls: Walls
     },
     resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
   }, ({ queries, resources }) => {
@@ -154,6 +163,10 @@ export const SteerEnemies = (() => {
     const dt = resources.time.get().dt
     const [player] = queries.player.each()
     const target = player?.data.position.get()
+    const boxes = wallBoxes(queries.walls.each())
+    if (paths.cellSize !== tuning.paths.cellSize) paths = new FlowField(tuning.paths.cellSize)
+    paths.setWalls(boxes, tuning.paths.clearance)
+    if (target !== undefined) paths.setGoal(target)
 
     grid.clear()
     bodies.length = 0
@@ -204,7 +217,6 @@ export const SteerEnemies = (() => {
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
       const phase = data.phase.get()
-      const attacking = phase !== "ready"
 
       // Stunned: it stands where it is (a push still slides it).
       if (data.stunned.get().remaining > 0) {
@@ -213,26 +225,22 @@ export const SteerEnemies = (() => {
       }
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
-      const attack = spec.attack
-      if (attack !== null && attack.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
+      const attack = currentAttack(tuning, kind, attacker)
+      if (attack?.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
         data.velocity.set(scale(attacker.area.direction, attack.speed * slowed))
         continue
       }
 
       // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
       const behavior = spec.behavior
+      let mode = data.mode.get()
       if (behavior.kind === "skirmish") {
-        const brain = data.brain.get()
-        let modeTimer = brain.modeTimer + dt
-        const mode = data.mode.get()
-        if (mode === "engage" && (phase === "recovery" || modeTimer > behavior.engageSeconds)) {
-          data.mode.transition("engage", "retreat")
-          modeTimer = 0
-        } else if (mode === "retreat" && modeTimer >= behavior.retreatSeconds) {
-          data.mode.transition("retreat", "orbit")
-          modeTimer = 0
-        }
-        data.brain.set({ ...brain, modeTimer })
+        const before = mode
+        const turn = skirmishTurn(behavior, mode, phase, data.brain.get().modeTimer + dt)
+        mode = turn.mode
+        if (before === "engage" && mode === "retreat") data.mode.transition("engage", "retreat")
+        else if (before === "retreat" && mode === "orbit") data.mode.transition("retreat", "orbit")
+        data.brain.update((brain) => ({ ...brain, modeTimer: turn.modeTimer }))
       }
 
       // Staggered: while a hit's push is strong, the enemy slides with it instead of walking.
@@ -241,59 +249,20 @@ export const SteerEnemies = (() => {
         continue
       }
 
+      // Attacks are commitments: it stands its ground from the windup to the end of the recovery,
+      // unmoved by the crowd too, so the attack lands where its telegraph showed.
+      if (phase !== "ready") {
+        data.velocity.set(zero)
+        continue
+      }
       let desired: Vec2 = zero
-      if (!attacking && target !== undefined) {
-        const toward = sub(target, position)
-        const distance = length(toward)
-        const direction = normalizeOr(toward, zero)
-        switch (behavior.kind) {
-          case "idle":
-            break
-          case "chase":
-            if (distance > behavior.stopDistance) desired = scale(direction, speed)
-            break
-          case "kite": {
-            const brain = data.brain.get()
-            let strafeTimer = brain.strafeTimer - dt
-            let strafe = brain.strafe
-            if (strafeTimer <= 0) {
-              strafe = strafe === 1 ? -1 : 1
-              strafeTimer = behavior.strafeSeconds
-            }
-            data.brain.set({ ...brain, strafe, strafeTimer })
-            const side = { x: -direction.y * strafe, y: direction.x * strafe }
-            const radial = distance < behavior.minDistance ? -1 : distance > behavior.maxDistance ? 1 : 0
-            desired = scale(normalizeOr({ x: direction.x * radial + side.x * 0.8, y: direction.y * radial + side.y * 0.8 }, zero), speed)
-            break
-          }
-          case "skirmish": {
-            const brain = data.brain.get()
-            let strafeTimer = brain.strafeTimer - dt
-            let strafe = brain.strafe
-            if (strafeTimer <= 0) {
-              strafe = strafe === 1 ? -1 : 1
-              strafeTimer = behavior.strafeSeconds
-            }
-            data.brain.set({ ...brain, strafe, strafeTimer })
-            const side = { x: -direction.y * strafe, y: direction.x * strafe }
-            switch (data.mode.get()) {
-              case "engage":
-                if (distance > behavior.stopDistance) desired = scale(direction, speed)
-                break
-              case "retreat":
-                desired = scale(normalizeOr({ x: -direction.x + side.x * 0.5, y: -direction.y + side.y * 0.5 }, zero), speed)
-                break
-              case "orbit": {
-                // Circle the target, drifting back to the ring.
-                const band = 35
-                const radial = distance < behavior.orbit - band ? -1 : distance > behavior.orbit + band ? 1 : 0
-                desired = scale(normalizeOr({ x: direction.x * radial + side.x, y: direction.y * radial + side.y }, zero), speed * tuning.crowd.orbitSpeed)
-                break
-              }
-            }
-            break
-          }
-        }
+      if (target !== undefined) {
+        const toward = normalizeOr(sub(target, position), zero)
+        // Straight at her when nothing is in between; around the walls otherwise.
+        const way = hasLineOfSight(position, target, radius, boxes) ? toward : (paths.way(position) ?? toward)
+        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, distance: length(sub(target, position)), speed, dt })
+        desired = steering.desired
+        data.brain.set(steering.brain)
       }
 
       // Separation from nearby bodies (other enemies and the player).

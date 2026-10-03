@@ -162,11 +162,11 @@ describe("render nodes", () => {
 
   it("reuse pooled projectiles across styles", () => {
     const { assets, pool } = setup()
-    const bolt = createNode({ kind: "projectile", faction: "enemy", style: "bolt", radius: 5 }, assets, pool)
+    const bolt = createNode({ kind: "projectile", faction: "enemy", style: "bolt", element: null, radius: 5 }, assets, pool)
     if (bolt.kind !== "projectile") throw new Error("expected a projectile")
     expect(bolt.orb.batch).toBe(assets.orbs)
     pool.push(bolt)
-    const disc = createNode({ kind: "projectile", faction: "player", style: "disc", radius: 13 }, assets, pool)
+    const disc = createNode({ kind: "projectile", faction: "player", style: "disc", element: null, radius: 13 }, assets, pool)
     expect(disc).toBe(bolt)
     expect(bolt.orb.batch).toBe(assets.pucks)
   })

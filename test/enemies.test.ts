@@ -11,6 +11,10 @@ import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
+/** The chaser's swipe, alone in its moveset: tests about one melee attack. */
+const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id === "swipe")!
+const swipeOnly = tuningWith({ enemies: { chaser: { attacks: [{ ...swipe, followUp: null }] } } })
+
 /** A scripted wave's enemies, with each entry repeated by its group size (swarmers come in packs). */
 const expandWave = (wave: ReadonlyArray<EnemyKind>): Array<EnemyKind> =>
   wave.flatMap((kind) => Array.from({ length: defaultTuning.enemies[kind].group }, () => kind)).sort()
@@ -63,16 +67,16 @@ const stepUntil = (run: { step: (count?: number) => void }, predicate: () => boo
 
 describe("telegraphed attacks", () => {
   it("a chaser walks up, telegraphs, and hits a player who stands still exactly once", () => {
-    const run = duel("chaser", { x: 300, y: 0 })
+    const run = duel("chaser", { x: 300, y: 0 }, { tuning: swipeOnly })
     const windupAt = stepUntil(run, () => run.world().enemies[0]?.attacker.phase === "windup")
     // The telegraph is a cone aimed at the player, covering them.
     const area = run.world().enemies[0]!.attacker.area
     expect(area?.kind).toBe("cone")
     expect(run.world().player!.health).toBe(swordsman.hp)
 
-    run.step(Math.ceil(defaultTuning.enemies.chaser.attack!.windup / engine.stepSeconds) + 2)
+    run.step(Math.ceil(swipe.windup / engine.stepSeconds) + 2)
     const hit = run.world().player!
-    expect(hit.health).toBe(swordsman.hp - playerLoss(defaultTuning, "chaser", defaultTuning.enemies.chaser.attack!.power))
+    expect(hit.health).toBe(swordsman.hp - playerLoss(defaultTuning, "chaser", swipe.power))
     expect(hit.invulnerable).toBeGreaterThan(0)
     expect(windupAt).toBeGreaterThan(0)
   })
@@ -115,7 +119,7 @@ describe("telegraphed attacks", () => {
       const area = run.world().enemies[0]!.attacker.area
       return area?.kind === "line" ? area.direction : undefined
     }
-    const spec = defaultTuning.enemies.shooter.attack!
+    const spec = defaultTuning.enemies.shooter.attacks[0]!
     const early = direction()
     run.step(5)
     expect(direction()).not.toEqual(early) // tracking the moving player

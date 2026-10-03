@@ -4,7 +4,7 @@ import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { survive } from "../src/content/challenges.ts"
 import { withWeapon } from "../src/features/build.ts"
 import { Challenge, CombatStats, Game, Player, Team } from "../src/schema.ts"
-import { describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
+import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
 import { answers, elementOf, placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
 import { start } from "./helpers.ts"
 
@@ -54,6 +54,12 @@ describe("menu requests", () => {
 })
 
 describe("menu helpers", () => {
+  it("list the elements an enemy attacks with, once each", () => {
+    expect(attackElements(defaultTuning.enemies.charger.attacks)).toEqual(["fire"])
+    expect(attackElements(defaultTuning.enemies.shooter.attacks)).toEqual(["water"])
+    expect(attackElements(defaultTuning.enemies.chaser.attacks)).toEqual([])
+  })
+
   it("sets up a team like Genshin: a slot, then a character for it", () => {
     // A newcomer in the empty slot joins at the end.
     expect(placeInTeam({ team: ["swordsman"], focus: 1 }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1 })

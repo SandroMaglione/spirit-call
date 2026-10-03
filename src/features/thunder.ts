@@ -114,7 +114,7 @@ const struckOf = (entries: ReadonlyArray<{
 
 interface Emitters {
   readonly damage: { readonly emit: (value: DamageValue) => void }
-  readonly reaction: { readonly emit: (value: { readonly at: Vec2; readonly kind: ReactionKind }) => void }
+  readonly reaction: { readonly emit: (value: { readonly at: Vec2; readonly kind: ReactionKind; readonly faction: Faction | null }) => void }
   readonly zap: { readonly emit: (value: { readonly path: ReadonlyArray<Vec2>; readonly heal: boolean }) => void }
 }
 
@@ -154,7 +154,7 @@ const strike = (
   const atk = struck.blow.element?.atk ?? 0
   for (const pool of pools) {
     if (pool.element !== "water" || !path.some((body) => inPool(pool, body.at, body.radius))) continue
-    emit.reaction.emit({ at: pool.center, kind: "shock" })
+    emit.reaction.emit({ at: pool.center, kind: "shock", faction: struck.faction })
     for (const body of bodies) {
       if (shocked.has(body.id) || body.protected || !inPool(pool, body.at, body.radius)) continue
       shocked.add(body.id)

@@ -21,7 +21,7 @@ export const makeDisc = (at: Vec2, disc: DiscValue) =>
     [Position, at],
     [PrevPosition, at],
     [Disc, disc],
-    [Renderable, { kind: "projectile", faction: disc.faction, style: "disc", radius: disc.radius }]
+    [Renderable, { kind: "projectile", faction: disc.faction, style: "disc", radius: disc.radius, element: null }]
   )
 
 /** Where a disc's thrower is, to fly back to. */

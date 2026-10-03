@@ -11,7 +11,7 @@ import { clearPay, encounterOf, nextReset, playLock, samePlay, tierProgress, tie
 import type { Play } from "../../account/account.ts"
 import { elements } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
-import { affinityList, challengeEnemies, describeAmounts, describeLock, describeObjective, describePlay, describeRewards, describeTimeUntil } from "../describe.ts"
+import { affinityList, attackElements, challengeEnemies, describeAmounts, describeLock, describeObjective, describePlay, describeRewards, describeTimeUntil } from "../describe.ts"
 import type { UiStore } from "../store.ts"
 import { Cta, ids, Portrait, TopBar } from "./parts.tsx"
 import type { Nav, QuestTab } from "./parts.tsx"
@@ -20,7 +20,7 @@ const tabNames: { readonly [Tab in QuestTab]: string } = { main: "Main", seconda
 
 const affinityMarks = { weak: "▲", resists: "▼", immune: "✕" } as const
 
-/** An enemy of the briefing: its portrait, name, and affinities. */
+/** An enemy of the briefing: its portrait, name, affinities, and the elements it attacks with (outlined: what it would put on you). */
 const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKind }) => {
   const spec = store.tuning.value.enemies[kind]
   return (
@@ -31,6 +31,11 @@ const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKin
         {affinityList(spec.elements).map(({ element, affinity }) => (
           <i key={element} class={`trait trait--${affinity}`} data-element={element}>
             {elements[element].name} {affinityMarks[affinity]}
+          </i>
+        ))}
+        {attackElements(spec.attacks).map((element) => (
+          <i key={`attacks-${element}`} class="trait trait--attacks" data-element={element} title={`Its attacks carry ${elements[element].name.toLowerCase()}`}>
+            {elements[element].name} attack
           </i>
         ))}
       </span>

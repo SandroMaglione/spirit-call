@@ -69,7 +69,7 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
     const doused = puddles.some((puddle) => Math.hypot(puddle.center.x - ground.center.x, puddle.center.y - ground.center.y) < puddle.radius + ground.radius)
     if (!doused) return true
     commands.despawn(pool.entity.id)
-    events.reaction.emit({ at: ground.center, kind: "steam" })
+    events.reaction.emit({ at: ground.center, kind: "steam", faction: "player" })
     return false
   })
 
@@ -83,7 +83,7 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
       const before = data.state.get().current
       const afflicted = afflict(tuning, before, { id: ground.element, atk: ground.atk }, ground.charges, data.affinities.get()[ground.element])
       data.state.set({ current: afflicted.state })
-      if (afflicted.reaction !== null && afflicted.state?.id !== before?.id) events.reaction.emit({ at, kind: afflicted.reaction })
+      if (afflicted.reaction !== null && afflicted.state?.id !== before?.id) events.reaction.emit({ at, kind: afflicted.reaction, faction: "player" })
     }
   }
 })
