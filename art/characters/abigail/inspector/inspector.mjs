@@ -10,6 +10,8 @@
  * - `poses`: `Clip@seconds` list (default: a review set); `facing`: degrees
  *   from facing the camera; `weapon`: trainingBlade or crescendo;
  *   `compare`: also draw the crow, for size.
+ * - `window.renderAt(seconds)` redraws every pose that far into its clip
+ *   (from its own time, looping), for recording a video frame by frame.
  * - `level`: a level, front-on orthographic camera (a turnaround, to set
  *   beside the sheet); the clip `Rest` is her rest pose.
  */
@@ -60,6 +62,8 @@ const sun = new DirectionalLight(0xffffff, view.light.sunIntensity * Math.PI)
 sun.position.set(view.light.sun.x, view.light.sun.y, view.light.sun.z)
 scene.add(sun)
 
+const playing = []
+
 /** A copy of `id` posed at `time` of `clip`, standing at floor point (x, z). */
 const place = (id, clip, time, x, z, held, turn = 0) => {
   const source = models.get(id)
@@ -75,8 +79,10 @@ const place = (id, clip, time, x, z, held, turn = 0) => {
   }
   if (clip !== "Rest") {
     const mixer = new AnimationMixer(object)
-    mixer.clipAction(source.clips.get(clip)).play()
+    const animation = source.clips.get(clip)
+    mixer.clipAction(animation).play()
     mixer.setTime(time)
+    playing.push({ mixer, time, duration: animation.duration })
   }
   const shadow = new Mesh(new CircleGeometry(radius * 0.8, 24), new MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 }))
   shadow.rotation.x = -Math.PI / 2
@@ -111,6 +117,10 @@ if (level) {
   placeCamera(camera, projection, { width: innerWidth, height: innerHeight, center: { x: 0, y: 0 }, pixelsPerUnit, offset: { x: 0, y: height * Number(params.get("focus") ?? "0.42") * pixelsPerUnit * Math.cos(Math.PI / 6) } })
 }
 renderer.render(scene, camera)
+window.renderAt = (seconds) => {
+  for (const { mixer, time, duration } of playing) mixer.setTime((time + seconds) % duration)
+  renderer.render(scene, camera)
+}
 const labels = document.getElementById("labels")
 for (const [name, offset] of label) {
   const span = document.createElement("span")

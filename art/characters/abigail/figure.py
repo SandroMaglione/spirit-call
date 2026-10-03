@@ -304,7 +304,7 @@ def hips_gear(parts):
                                 (0.0, 0.085, 1.05, (0.06, 0.024, 0.045), 0.0)]:
         box(part, (x, y, z), size, {"pelvis": 1}, "capeWhite", Matrix.Rotation(turn, 3, "Z"))
     # The thigh holster on her right thigh, and its strap.
-    box(part, (-0.092, -0.012, 0.80), (0.022, 0.05, 0.12), {"thigh.R": 1}, "capeWhite")
+    box(part, (-0.088, -0.03, 0.80), (0.036, 0.042, 0.11), {"thigh.R": 1}, "capeWhite", Matrix.Rotation(0.5, 3, "Z"))
     hip, knee = HIP["R"], KNEE["R"]
     center = hip + (knee - hip) * 0.4
     loft(part, [center + Vector((0, 0, -0.012)), center + Vector((0, 0, 0.012))],
@@ -348,8 +348,8 @@ def hair(parts):
          [ring(w * HEAD_SCALE, f * HEAD_SCALE, b * HEAD_SCALE) for _, w, f, b in cap], 16, head_only,
          lambda i, j: "hairCap")
     # The bob: around the sides and back (not the face), flaring wider on her left.
-    bob = [(1.540, 0.076, 0.070, 0.100, 0.076), (1.480, 0.081, 0.072, 0.102, 0.083), (1.430, 0.085, 0.072, 0.099, 0.095),
-           (1.385, 0.088, 0.070, 0.094, 0.112), (1.345, 0.093, 0.068, 0.088, 0.125)]
+    bob = [(1.540, 0.078, 0.070, 0.101, 0.080), (1.490, 0.086, 0.074, 0.104, 0.092), (1.440, 0.092, 0.074, 0.101, 0.108),
+           (1.395, 0.096, 0.072, 0.096, 0.126), (1.360, 0.100, 0.070, 0.090, 0.140)]
     rings = [ring(r * HEAD_SCALE, f * HEAD_SCALE, b * HEAD_SCALE, left=l * HEAD_SCALE, right=r * HEAD_SCALE) for _, r, f, b, l in bob]
     weights = lambda i: blend({"head": 1}, {"hair.back": 1}, i / 3)
     loft(part, [headward((0, 0.004, z)) for z, *_ in bob], rings, 16, weights,
@@ -374,15 +374,15 @@ def hair(parts):
         lock([(-0.064 + dx, -0.028 + dy, 1.535), (-0.084 + dx, -0.046 + dy, 1.440), (-0.094 + dx, -0.052 + dy, 1.345), (-0.090 + dx, -0.048 + dy, tip)],
              [0.034, 0.036, 0.026, 0.0], "hair.side.R", cell="hairLock")
     # Her left: ends flaring outward and back.
-    for dy, out, tip in [(-0.012, 0.150, 1.385), (0.025, 0.160, 1.360), (0.060, 0.140, 1.345)]:
-        lock([(0.066, dy, 1.505), (0.096, dy + 0.008, 1.445), (0.126, dy + 0.012, 1.405), (out, dy + 0.016, tip)],
+    for dy, out, tip in [(-0.020, 0.175, 1.395), (0.020, 0.185, 1.372), (0.058, 0.165, 1.355)]:
+        lock([(0.070, dy, 1.500), (0.106, dy + 0.008, 1.440), (0.140, dy + 0.012, 1.405), (out, dy + 0.016, tip)],
              [0.040, 0.044, 0.032, 0.0], "hair.side.L", cell="hairLock")
     # Pointed ends below the bob, around her back.
     for angle in (25, 55, 90, 125, 155):
         a = math.radians(angle)
-        r = 0.088
+        r = 0.095
         x, y = r * math.cos(a), 0.004 + r * math.sin(a)
-        lock([(x, y, 1.372), (x * 1.06, y * 1.06 + 0.004, 1.330), (x * 1.08, y * 1.08 + 0.008, 1.290)], [0.045, 0.032, 0.0], "hair.back",
+        lock([(x, y, 1.385), (x * 1.08, y * 1.06 + 0.004, 1.352), (x * 1.12, y * 1.08 + 0.008, 1.318)], [0.048, 0.034, 0.0], "hair.back",
              hint=Vector((math.cos(a), math.sin(a), 0)))
     # One strand standing up from the crown.
     lock([(-0.005, -0.010, 1.605), (-0.018, -0.030, 1.640), (-0.040, -0.048, 1.648)], [0.012, 0.010, 0.0], "head", thickness=0.006, hint=Vector((1, 0, 0)))
@@ -420,10 +420,11 @@ def cape(parts):
         loft(part, path, rings, 12, weights, lambda i, j: "capeWhite" if j in (2, 3) else "capeBlue", front=Vector((0, 0, 1)))
     # The bow at the top of her back: two loops and a knot, then the key hanging from it.
     for sign in (1, -1):
-        path = [(sign * 0.012, 0.108, 1.280), (sign * 0.045, 0.118, 1.292), (sign * 0.080, 0.122, 1.300), (sign * 0.098, 0.118, 1.296)]
-        rings = [ring(0.012, 0.012, 0.012), ring(0.034, 0.018, 0.018), ring(0.040, 0.016, 0.016), ring(0.022, 0.010, 0.010)]
+        # Big, as on the sheet: its loops reach past her shoulder blades.
+        path = [(sign * 0.014, 0.110, 1.272), (sign * 0.055, 0.122, 1.288), (sign * 0.100, 0.126, 1.298), (sign * 0.128, 0.120, 1.290)]
+        rings = [ring(0.014, 0.012, 0.012), ring(0.046, 0.020, 0.020), ring(0.054, 0.018, 0.018), ring(0.030, 0.010, 0.010)]
         loft(part, path, rings, 10, lambda i: blend({"chest": 1}, {"cape.back": 1}, 0.3), lambda i, j: "capeWhite")
-    box(part, (0, 0.112, 1.282), (0.024, 0.026, 0.03), blend({"chest": 1}, {"cape.back": 1}, 0.3), "capeBlue")
+    box(part, (0, 0.116, 1.274), (0.032, 0.03, 0.04), blend({"chest": 1}, {"cape.back": 1}, 0.3), "capeBlue")
     key = lambda i=0: blend({"chest": 1}, {"cape.back": 1}, 0.7)
     loft(part, [(0.026 * math.cos(a), 0.128, 1.225 + 0.026 * math.sin(a)) for a in [math.tau * k / 8 for k in range(9)]],
          [ring(0.007, 0.007, 0.007)] * 9, 6, lambda i: key(), lambda i, j: "metal", cap_start=False, cap_end=False)
