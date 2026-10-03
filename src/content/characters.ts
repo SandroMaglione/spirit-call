@@ -50,10 +50,10 @@ const character = (spec: CharacterSpec): CharacterSpec => spec
 
 /** Every character, by id. */
 export const characters = {
-  /** Close range: sturdy, with the sword combo, the Blade Wave, and the Cyclone (wind). */
+  /** Close range: sturdy, with the sword combo, the Gale that gathers enemies around her, and the Cyclone (wind). */
   swordsman: character({
     name: "Swordsman",
-    stats: { hp: 100, atk: 80, def: 20, speed: 320 },
+    stats: { hp: 100, atk: 80, def: 20, speed: 265 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "sword",
@@ -64,7 +64,7 @@ export const characters = {
   /** Range: quicker and frailer, with the gun, grenades, and the Barrage (fire). */
   gunner: character({
     name: "Gunner",
-    stats: { hp: 85, atk: 80, def: 10, speed: 340 },
+    stats: { hp: 85, atk: 80, def: 10, speed: 280 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "gun",
@@ -75,7 +75,7 @@ export const characters = {
   /** Middle range: discs that cut there and back, water that soaks and slows, and the Tide. */
   tidecaller: character({
     name: "Tidecaller",
-    stats: { hp: 92, atk: 80, def: 15, speed: 330 },
+    stats: { hp: 92, atk: 80, def: 15, speed: 272 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "disc",
@@ -86,7 +86,7 @@ export const characters = {
   /** Support at middle range: a staff, a totem that zaps enemies or heals whoever stands by it, and a thunderclap that heals the team. */
   stormcaller: character({
     name: "Stormcaller",
-    stats: { hp: 88, atk: 80, def: 12, speed: 330 },
+    stats: { hp: 88, atk: 80, def: 12, speed: 272 },
     radius: 16,
     hurtboxRadius: 11,
     attack: "staff",

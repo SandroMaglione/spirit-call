@@ -103,8 +103,8 @@ export const defaultTuning = {
     distance: 170,
     /** How long the dash lasts; speed is distance / duration. */
     duration: 0.14,
-    /** Time from the start of one dash until the next one is available. */
-    cooldown: 0.55,
+    /** Time from the start of one dash until the next one is available: a dash spent is a dash missing for the next threat. */
+    cooldown: 1.3,
     /** Invulnerability from the start of the dash. Can outlast the dash slightly. */
     invulnerability: 0.18,
     /** A dash pressed this long before it is available still happens. */
@@ -161,9 +161,9 @@ export const defaultTuning = {
     /** How long a hit target flashes white. */
     hitFlash: 0.08,
     /** Hit-stop: the whole simulation pauses this long when an enemy dies (0 disables). */
-    hitStopOnKill: 0.07,
+    hitStopOnKill: 0.1,
     /** Hit-stop when the player takes a hit (0 disables). */
-    hitStopOnPlayerHit: 0.09
+    hitStopOnPlayerHit: 0.12
   },
 
   /** Every enemy kind, by id. */

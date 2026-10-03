@@ -98,6 +98,11 @@ export interface BasicAttackSpec {
   readonly active: number
   /** A lunge stops this far short of an enemy straight ahead (edge to edge), so it closes in without running into it. */
   readonly lungeStop: number
+  /**
+   * Her running speed while a move recovers, as a fraction of it: attacking
+   * is a commitment. A heavy move (a finisher, a power attack) stops her.
+   */
+  readonly attackingSpeed: number
   readonly power: PowerAttack | null
 }
 
@@ -118,39 +123,41 @@ export const attacks = {
   sword: basicAttack({
     name: "Sword",
     combo: [
-      arc({ reach: 120, arcDegrees: 140, power: 18, knockback: 480, recovery: 0.26, hitStop: 0.03, heavy: false, lunge: 16 }),
-      arc({ reach: 120, arcDegrees: 140, power: 18, knockback: 480, recovery: 0.24, hitStop: 0.03, heavy: false, lunge: 16 }),
-      thrust({ reach: 175, width: 56, power: 24, knockback: 620, recovery: 0.3, hitStop: 0.045, heavy: false, lunge: 34 }),
-      spin({ reach: 140, power: 40, knockback: 1150, recovery: 0.7, hitStop: 0.09, heavy: true, lunge: 10 })
+      arc({ reach: 120, arcDegrees: 140, power: 18, knockback: 480, recovery: 0.26, hitStop: 0.06, heavy: false, lunge: 16 }),
+      arc({ reach: 120, arcDegrees: 140, power: 18, knockback: 480, recovery: 0.24, hitStop: 0.06, heavy: false, lunge: 16 }),
+      thrust({ reach: 175, width: 56, power: 24, knockback: 620, recovery: 0.3, hitStop: 0.08, heavy: false, lunge: 34 }),
+      spin({ reach: 140, power: 40, knockback: 1150, recovery: 0.7, hitStop: 0.13, heavy: true, lunge: 10 })
     ],
     comboWindow: 0.8,
     inputBuffer: 0.15,
     active: 0.08,
     lungeStop: 12,
+    attackingSpeed: 0.3,
     power: {
       holdDelay: 0.2,
       chargeTime: 0.55,
       moveSpeedMultiplier: 0.55,
-      move: thrust({ reach: 230, width: 72, power: 55, knockback: 1100, recovery: 0.5, hitStop: 0.1, heavy: true, lunge: 110 })
+      move: thrust({ reach: 230, width: 72, power: 55, knockback: 1100, recovery: 0.5, hitStop: 0.14, heavy: true, lunge: 110 })
     }
   }),
   /** The gun: two quick shots and a spread; the power attack is a slow, piercing bolt that kicks back. */
   gun: basicAttack({
     name: "Gun",
     combo: [
-      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0, heavy: false, lunge: 0 }),
-      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0, heavy: false, lunge: 0 }),
-      shot({ count: 3, spreadDegrees: 16, speed: 950, radius: 5, range: 620, pierce: 0, power: 10, knockback: 220, recovery: 0.32, hitStop: 0, heavy: false, lunge: -8 })
+      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0.025, heavy: false, lunge: 0 }),
+      shot({ count: 1, spreadDegrees: 0, speed: 950, radius: 5, range: 720, pierce: 0, power: 10, knockback: 150, recovery: 0.13, hitStop: 0.025, heavy: false, lunge: 0 }),
+      shot({ count: 3, spreadDegrees: 16, speed: 950, radius: 5, range: 620, pierce: 0, power: 10, knockback: 220, recovery: 0.32, hitStop: 0.04, heavy: false, lunge: -8 })
     ],
     comboWindow: 0.5,
     inputBuffer: 0.12,
     active: 0.08,
     lungeStop: 12,
+    attackingSpeed: 0.55,
     power: {
       holdDelay: 0.2,
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
-      move: shot({ count: 1, spreadDegrees: 0, speed: 1400, radius: 9, range: 950, pierce: 4, power: 38, knockback: 620, recovery: 0.45, hitStop: 0.05, heavy: true, lunge: -40 })
+      move: shot({ count: 1, spreadDegrees: 0, speed: 1400, radius: 9, range: 950, pierce: 4, power: 38, knockback: 620, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -40 })
     }
   }),
   /**
@@ -161,19 +168,20 @@ export const attacks = {
   disc: basicAttack({
     name: "Disc",
     combo: [
-      disc({ count: 1, spreadDegrees: 0, speed: 900, radius: 13, range: 300, hover: 0, hoverTick: 0, power: 9, knockback: 200, recovery: 0.3, hitStop: 0.02, heavy: false, lunge: 0 }),
-      disc({ count: 1, spreadDegrees: 0, speed: 900, radius: 13, range: 300, hover: 0, hoverTick: 0, power: 9, knockback: 200, recovery: 0.3, hitStop: 0.02, heavy: false, lunge: 0 }),
-      disc({ count: 2, spreadDegrees: 26, speed: 950, radius: 13, range: 330, hover: 0, hoverTick: 0, power: 8, knockback: 260, recovery: 0.55, hitStop: 0.03, heavy: false, lunge: -6 })
+      disc({ count: 1, spreadDegrees: 0, speed: 900, radius: 13, range: 300, hover: 0, hoverTick: 0, power: 9, knockback: 200, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: 0 }),
+      disc({ count: 1, spreadDegrees: 0, speed: 900, radius: 13, range: 300, hover: 0, hoverTick: 0, power: 9, knockback: 200, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: 0 }),
+      disc({ count: 2, spreadDegrees: 26, speed: 950, radius: 13, range: 330, hover: 0, hoverTick: 0, power: 8, knockback: 260, recovery: 0.55, hitStop: 0.05, heavy: false, lunge: -6 })
     ],
     comboWindow: 0.6,
     inputBuffer: 0.12,
     active: 0.08,
     lungeStop: 12,
+    attackingSpeed: 0.45,
     power: {
       holdDelay: 0.2,
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
-      move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 9, knockback: 30, recovery: 0.5, hitStop: 0.03, heavy: true, lunge: -12 })
+      move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 9, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 })
     }
   }),
   /**
@@ -184,19 +192,20 @@ export const attacks = {
   staff: basicAttack({
     name: "Staff",
     combo: [
-      shot({ count: 1, spreadDegrees: 0, speed: 780, radius: 7, range: 520, pierce: 1, power: 11, knockback: 140, recovery: 0.2, hitStop: 0, heavy: false, lunge: 0 }),
-      shot({ count: 1, spreadDegrees: 0, speed: 780, radius: 7, range: 520, pierce: 1, power: 11, knockback: 140, recovery: 0.2, hitStop: 0, heavy: false, lunge: 0 }),
-      shot({ count: 2, spreadDegrees: 14, speed: 780, radius: 7, range: 480, pierce: 1, power: 10, knockback: 200, recovery: 0.4, hitStop: 0.02, heavy: false, lunge: -6 })
+      shot({ count: 1, spreadDegrees: 0, speed: 780, radius: 7, range: 520, pierce: 1, power: 11, knockback: 140, recovery: 0.2, hitStop: 0.03, heavy: false, lunge: 0 }),
+      shot({ count: 1, spreadDegrees: 0, speed: 780, radius: 7, range: 520, pierce: 1, power: 11, knockback: 140, recovery: 0.2, hitStop: 0.03, heavy: false, lunge: 0 }),
+      shot({ count: 2, spreadDegrees: 14, speed: 780, radius: 7, range: 480, pierce: 1, power: 10, knockback: 200, recovery: 0.4, hitStop: 0.045, heavy: false, lunge: -6 })
     ],
     comboWindow: 0.55,
     inputBuffer: 0.12,
     active: 0.08,
     lungeStop: 12,
+    attackingSpeed: 0.5,
     power: {
       holdDelay: 0.2,
       chargeTime: 0.6,
       moveSpeedMultiplier: 0.6,
-      move: shot({ count: 1, spreadDegrees: 0, speed: 560, radius: 13, range: 640, pierce: 6, power: 32, knockback: 420, recovery: 0.45, hitStop: 0.04, heavy: true, lunge: -24 })
+      move: shot({ count: 1, spreadDegrees: 0, speed: 560, radius: 13, range: 640, pierce: 6, power: 32, knockback: 420, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 })
     }
   })
 }

@@ -9,7 +9,7 @@ import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
-import { Action, Aim, AttackPhase, Attacker, Cast, Dash, Enemy, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
+import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
 import { enemyPose } from "./enemy-pose.ts"
 import type { ActorNode } from "./host-types.ts"
 
@@ -29,13 +29,13 @@ const areaDirection = (area: Area, from: Vec2): Vec2 | null => {
 const turnSpeed = 20
 
 /**
- * Turns and animates every actor's body: the player faces her aim and her
- * loops hold through a dash; an enemy faces where it moves, or where its
+ * Turns and animates every actor's body: the player faces where she runs,
+ * or where she struck (see `Facing`), and her loops hold through a dash; an enemy faces where it moves, or where its
  * attack will land while winding up.
  */
 export const AnimateActors = Game.System("Shooter/AnimateActors", {
   queries: {
-    player: Game.Query({ selection: { aim: Game.Query.read(Aim), dash: Game.Query.read(Dash) }, with: [Player] }),
+    player: Game.Query({ selection: { facing: Game.Query.read(Facing), dash: Game.Query.read(Dash) }, with: [Player] }),
     enemies: Game.Query({
       selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), enemy: Game.Query.read(Enemy), stunned: Game.Query.read(Stunned), shield: Game.Query.optional(Shield) },
       with: [Enemy]
@@ -52,7 +52,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
   }
   for (const { entity, data } of queries.player.each()) {
     const node = services.nodes.get(entity.id)
-    if (node?.kind === "player") animate(node, data.aim.get(), data.dash.get().remaining > 0)
+    if (node?.kind === "player") animate(node, data.facing.get().direction, data.dash.get().remaining > 0)
   }
   for (const { entity, data } of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)

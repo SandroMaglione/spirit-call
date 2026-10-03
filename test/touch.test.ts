@@ -8,7 +8,7 @@ import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Controls, Energy, Game, Lobbed, Player, Position, Projectile, Velocity } from "../src/schema.ts"
-import { gunner, start, swordsman, tidecaller } from "./helpers.ts"
+import { gunner, start, swordsman, tidecaller, withWindCut } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
@@ -68,8 +68,8 @@ describe("touch controls", () => {
     expect(run.player().aim.y).toBeCloseTo(left.y, 6)
   })
 
-  it("aims a dragged Blade Wave along the drag", () => {
-    const dragged = start({ touch: [{ frame: 0, press: ["special"], aim: { special: { x: 0, y: -1 } } }, { frame: 2, release: ["special"] }] })
+  it("aims a dragged cut along the drag", () => {
+    const dragged = start({ tuning: withWindCut(), touch: [{ frame: 0, press: ["special"], aim: { special: { x: 0, y: -1 } } }, { frame: 2, release: ["special"] }] })
     dragged.step(3)
     const up = world({ x: 0, y: -1 })
     expect(dragged.player().aim.x).toBeCloseTo(up.x, 6)

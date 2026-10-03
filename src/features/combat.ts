@@ -45,8 +45,8 @@ import {
   Tuning,
   Velocity
 } from "../schema.ts"
-import type { ActiveState, Blow, EnemyKind, ProjectileValue } from "../schema.ts"
-import { pushDecay, Walls, wallBoxes } from "./motion.ts"
+import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
+import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
 import { afflict, durationFactor, elementDamageFactor } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
@@ -170,8 +170,6 @@ export const MoveProjectiles = (() => {
   })
 })()
 
-const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined): number =>
-  enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken
 
 const Damageable = Game.Query({
   selection: {

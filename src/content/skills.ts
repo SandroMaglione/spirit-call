@@ -57,12 +57,13 @@ export interface NovaEffect extends EffectBase {
 }
 
 /**
- * A whirl set down at the aim (clamped to `maxRange`) for `seconds`: every
- * `tick` seconds it strikes the other side's bodies within `radius` (`power`
- * each time) and pulls them toward its center, closing `pull` of their
- * distance to it (a share, before how much the body is pushed at all). A
- * wind whirl drives what it pulls, so bodies pulled into each other share
- * their states.
+ * A whirl set down at the aim (clamped to `maxRange`; 0: at the caster's
+ * feet) for `seconds`: every `tick` seconds it strikes the other side's
+ * bodies within `radius` (`power` each time; 0: it only pulls, landing no
+ * blow) and pulls them toward its center, closing `pull` of their distance
+ * to it (a share, before how much the body is pushed at all). A wind whirl
+ * drives what it pulls, so bodies pulled into each other share their
+ * states.
  */
 export interface VortexEffect extends EffectBase {
   readonly kind: "vortex"
@@ -161,14 +162,19 @@ const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<E
 
 /** Every skill, by id. */
 export const skills = {
-  /** The sword's special: a long, wide cut of wind that drives enemies back in a glide. */
+  /**
+   * The sword's special (id `bladeWave`, from when it was a cut): a gale
+   * whirling at her feet that pulls enemies around her into its center,
+   * hurting nobody: it gathers a crowd into reach of the next swings, and
+   * what it drags into each other shares its states.
+   */
   bladeWave: skill({
-    name: "Blade Wave",
-    label: "WAVE",
-    cooldown: 3.5,
+    name: "Gale",
+    label: "GALE",
+    cooldown: 5,
     energy: 0,
     invulnerability: 0,
-    effect: cut({ length: 320, width: 120, power: 34, element: "wind", knockback: 900, active: 0.12, hitStop: 0.06, heavy: true })
+    effect: vortex({ maxRange: 0, radius: 240, seconds: 1.1, tick: 0.25, pull: 0.32, power: 0, element: "wind", knockback: 0, hitStop: 0, heavy: false })
   }),
   /** Lobbed to the cursor over walls; explodes after landing, setting what it hits on fire and leaving a fire pool. */
   grenade: skill({

@@ -8,7 +8,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, Weapon } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { start, windCut, withWindCut } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const sword = defaultTuning.attacks.sword
@@ -88,11 +88,11 @@ describe("attack assist (touch)", () => {
     expect(Math.atan2(aim.y, aim.x) * 180 / Math.PI).toBeCloseTo(30, 0)
   })
 
-  it("does not aim skills: a tapped Blade Wave goes where the player faces", () => {
-    // An enemy behind would draw an attack, but not the wave.
-    const run = arena([at(180, 100), at(0, 150)], 1, { touch: [{ frame: 0, press: ["special"], release: ["special"] }] })
+  it("does not aim skills: a tapped cut goes where the player faces", () => {
+    // An enemy behind would draw an attack, but not the cut.
+    const run = arena([at(180, 100), at(0, 150)], 1, { tuning: withWindCut(), touch: [{ frame: 0, press: ["special"], release: ["special"] }] })
     run.step(3)
-    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp, hp - defaultTuning.skills.bladeWave.effect.power])
+    expect(run.runtime.inspect(World).enemies.map((enemy) => enemy.health)).toEqual([hp, hp - windCut.power])
     expect(run.player().aim).toEqual({ x: 1, y: 0 })
   })
 

@@ -80,7 +80,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "nova":
       return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)`
     case "vortex":
-      return `a ${elementWord(effect.element)}whirl that pulls enemies in for ${effect.seconds}s (${effect.power}% ATK every ${effect.tick}s)`
+      return `a ${elementWord(effect.element)}whirl${effect.maxRange > 0 ? "" : " at your feet"} that pulls enemies in for ${effect.seconds}s${effect.power > 0 ? ` (${effect.power}% ATK every ${effect.tick}s)` : ", hurting nobody"}`
     case "totem":
       return `a ${elementWord(effect.element)}totem at your feet for ${effect.seconds}s that zaps enemies around it (${effect.power}% ATK, jumping ${effect.jumps} times), or heals you ${effect.heal}% of max HP while you stand in its reach hurt`
     case "thunderclap":
