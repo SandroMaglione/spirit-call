@@ -1,0 +1,3 @@
+# Keep installed launches online, without storing app responses in the browser cache.
+/*
+  Cache-Control: no-store
