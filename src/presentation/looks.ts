@@ -646,16 +646,12 @@ export const citadelArena: ArenaLook = {
   ]
 }
 
-/**
- * The saltwind harbor (`art/environment/saltwind-harbor`): a stone quay with
- * a boardwalk along its walls, nets and barrels at the back, bollards down
- * the sides, cargo and a boat hull where the dockers left them. Beyond the
- * walls: the sea's color.
- */
+/** Cargo and moorings provide low cover around the harbor's water channels. Small dock gear lies on the boards; a supported crane, net shed and boat cradle stand outside the quay. */
 export const harborArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["harborFloorPlain", "harborFloorPlain", "harborFloorPlain", "harborFloorCracked"],
     color: 0x26333a,
     border: ["harborFloorDeck"],
@@ -678,26 +674,40 @@ export const harborArena: ArenaLook = {
     inner: { kind: "run", model: "harborWallLow" }
   },
   scenery: [
-    { model: "harborLifeRing", at: { x: 56, y: 1420 }, turn: 0.3 },
-    { model: "harborLifeRing", at: { x: 1380, y: 1744 }, turn: Math.PI / 2 - 0.17 }
+    { model: "harborStudyDockCrane", at: { x: 500, y: -155 }, turn: 0 },
+    { model: "harborStudyNetShed", at: { x: 1050, y: -155 }, turn: 0 },
+    { model: "harborStudyBoatOnCradle", at: { x: 1500, y: -140 }, turn: 0 },
+    { model: "harborStudyQuayLoadingBay", at: { x: -145, y: 900 }, turn: Math.PI / 2 },
+    { model: "harborStudyRopeCoil", at: { x: 380, y: 65 }, turn: 0 },
+    { model: "harborStudyBucket", at: { x: 260, y: 65 }, turn: 0 },
+    { model: "harborStudyFishBasket", at: { x: 1420, y: 65 }, turn: 0 },
+    { model: "harborStudyFoldedSail", at: { x: 830, y: 60 }, turn: 0 },
+    { model: "harborStudyRopeCoil", at: { x: 500, y: 1080 }, turn: 0 },
+    { model: "harborStudyFishBasket", at: { x: 1740, y: 1100 }, turn: 0 },
+    { model: "harborStudyBucket", at: { x: 75, y: 1030 }, turn: 0 },
+    { model: "harborStudyFoldedSail", at: { x: 1750, y: 1280 }, turn: Math.PI / 2 },
+    { model: "harborStudyRopeCoil", at: { x: 1330, y: 1150 }, turn: 0 },
+    { model: "harborStudyBucket", at: { x: 620, y: 1750 }, turn: 0 },
+    { model: "harborStudyFoldedSail", at: { x: 1190, y: 1730 }, turn: 0 },
+    { model: "harborStudyFishBasket", at: { x: -100, y: 960 }, turn: 0 },
+    { model: "harborStudyRopeCoil", at: { x: 450, y: -100 }, turn: 0 }
   ],
   props: [
-    { model: "harborNetRack", turn: 0 },
-    { model: "harborBarrelStack", turn: 0 },
-    { model: "harborBarrelStack", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborAnchor", turn: Math.PI / 2 },
-    { model: "harborCargoPallet", turn: Math.PI / 2 + 0.2 },
-    { model: "harborFishCrate", turn: Math.PI / 2 - 0.3 },
-    { model: "harborCapstan", turn: 0.3 },
-    { model: "harborBuoy", turn: 0 },
-    { model: "harborWaveRock", turn: 0.7 },
-    { model: "harborJettyPost", turn: 0 },
-    { model: "harborBoatHull", turn: 0.05 },
-    { model: "harborLanternHook", turn: 0 }
+    { model: "harborStudyNetRack", turn: 0 },
+    { model: "harborStudyBarrelStack", turn: 0 },
+    { model: "harborStudyBarrelStack", turn: 0 },
+    { model: "harborStudyLanternPost", turn: 0 },
+    { model: "harborStudyLanternPost", turn: 0 },
+    { model: "harborStudyBollard", turn: 0 },
+    { model: "harborStudyBollard", turn: 0 },
+    { model: "harborStudyHandcart", turn: 0 },
+    { model: "harborStudyCargoCrate", turn: 0 },
+    { model: "harborStudyBarrel", turn: 0 },
+    { model: "harborStudyLifeRingStand", turn: Math.PI / 2 },
+    { model: "harborStudyMooringCluster", turn: 0 },
+    { model: "harborStudyBarrel", turn: 0 },
+    { model: "harborStudyCargoCrate", turn: 0 },
+    { model: "harborStudyMooringCluster", turn: 0 }
   ],
   background: 0x1b3a4a,
   // Channels framed in the quay's stone.

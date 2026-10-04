@@ -266,8 +266,6 @@ export const arenas = {
   harbor: arena({
     name: "Saltwind Harbor",
     pillars: [
-      { x: 0.25, y: 0.6, size: 50 },
-      { x: 0.75, y: 0.6, size: 50 },
       { x: 0.5, y: 0.45, size: 50 }
     ],
     walls: [
@@ -280,24 +278,21 @@ export const arenas = {
       { element: "water", column: 8, row: 3, columns: 3, rows: 1, walled: { y: "south", x: "east" } }
     ],
     props: [
-      // The quay, the same on both sides: nets between two stacks of barrels, bollards down both walls.
-      prop(900, 5, 108, 10),
-      prop(300, 29, 98, 58),
-      prop(1500, 29, 98, 58),
-      prop(16, 700, 32, 32),
-      prop(1784, 700, 32, 32),
-      prop(16, 1650, 32, 32),
-      prop(1784, 1650, 32, 32),
-      // The day's cargo and gear, where the dockers left it.
-      prop(6, 330, 12, 82),
-      prop(41, 1000, 82, 104),
-      prop(30, 1092, 60, 80),
-      prop(1740, 260, 120, 120),
-      prop(1773, 1020, 54, 52),
-      prop(1743, 1101, 114, 110),
-      prop(1784, 1320, 32, 32),
-      prop(520, 1757, 200, 86),
-      prop(1250, 1782, 60, 36)
+      prop(900, 13, 84, 26),
+      prop(320, 16, 60, 32),
+      prop(1480, 16, 60, 32),
+      prop(22, 13, 44, 26),
+      prop(1778, 13, 44, 26),
+      prop(13, 700, 26, 22),
+      prop(1787, 700, 26, 22),
+      prop(22, 1050, 44, 76),
+      prop(1783, 1100, 34, 30),
+      prop(1785, 1300, 30, 30),
+      prop(1792, 1500, 16, 32),
+      prop(560, 1772, 84, 56),
+      prop(1240, 1785, 30, 30),
+      prop(450, 1080, 34, 30),
+      prop(1350, 1080, 84, 56)
     ]
   }),
   /** An open burial ground: a ring of obelisks, a fire trench to the north and a basin to the south. */
