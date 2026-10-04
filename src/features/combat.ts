@@ -14,6 +14,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
+  Challenge,
   CombatStats,
   Damage,
   Death,
@@ -29,6 +30,7 @@ import {
   HitFlash,
   HitStop,
   Hurtbox,
+  Immortal,
   Impact,
   Invulnerable,
   Knockback,
@@ -218,7 +220,8 @@ const Damageable = Game.Query({
     player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns),
-    poise: Game.Query.optional(Poise)
+    poise: Game.Query.optional(Poise),
+    immortal: Game.Query.optional(Immortal)
   }
 })
 
@@ -254,9 +257,16 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     death: Game.System.writeEvent(Death),
     reaction: Game.System.writeEvent(Reaction)
   },
-  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) }
+  resources: {
+    tuning: Game.System.readResource(Tuning),
+    stats: Game.System.writeResource(Stats),
+    hitStop: Game.System.writeResource(HitStop),
+    challenge: Game.System.readResource(Challenge)
+  }
 }, ({ queries, events, resources, lookup, commands }) => {
   const tuning = resources.tuning.get()
+  // In the Training Ground the team cannot fall (only the fire hurts, and never to the end).
+  const training = tuning.waves.enabled && tuning.challenges[resources.challenge.get()].objective.kind === "training"
   // Enemies a warder's tether holds take only a share (see `features/wards.ts`).
   const warded = wardedTaken(tuning, queries.wards.each().map(({ data }) => ({ kind: data.enemy.get().kind, ward: data.ward.get() })))
   const dead = new Set<number>()
@@ -291,9 +301,13 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const broken = armor * (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1) *
       (blow.against !== null && state?.id === blow.against.state ? blow.against.factor : 1)
     const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
-    const current = Math.max(0, health.current - amount)
-    // Damage the player deals fills energy; only what actually landed counts.
-    if (blow.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
+    // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
+    const current = data.immortal.present
+      ? health.current
+      : training && data.player.present ? Math.max(Math.min(1, health.current), health.current - amount) : Math.max(0, health.current - amount)
+    // Damage the player deals fills energy; only what actually landed counts (on a dummy that never falls, the blow as dealt).
+    const landed = data.immortal.present ? Math.min(amount, health.current) : health.current - current
+    if (blow.charges && data.hurtbox.get().faction === "enemy") energy += landed * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
     if (!blow.periodic) {
       data.flash.set({ remaining: tuning.feedback.hitFlash })

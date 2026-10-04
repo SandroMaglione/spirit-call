@@ -45,7 +45,9 @@
     "swarmNight",
     "stormFront",
     "untilFall",
-    "strangeCompany"
+    "strangeCompany",
+    "trainingGround",
+    "practice"
   ],
   "attacks": [
     "sword",
@@ -66,7 +68,9 @@
     "stalker",
     "volatile",
     "galeCaster",
-    "juggernaut"
+    "juggernaut",
+    "sparringDummy",
+    "heavyDummy"
   ],
   "quests": [
     "theSwarm",

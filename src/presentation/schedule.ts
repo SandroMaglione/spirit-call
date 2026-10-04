@@ -12,7 +12,7 @@ import { AnimateActors, PlayMoments } from "./animate.ts"
 import { DrawReticle, DrawTouchAim } from "./aim.ts"
 import { PlaySounds } from "./audio.ts"
 import { ReactToHits, ShedSpiritDrops, ShedStateMotes, SpawnFx, UpdateFx } from "./effects.ts"
-import { SyncHud, SyncTeam, SyncTouchPad } from "./hud.ts"
+import { SyncDamageMeter, SyncHud, SyncTeam, SyncTouchPad } from "./hud.ts"
 import { ApplyCamera, FadeOccluders, InterpolateActors, OrientBolts, SyncArena, SyncNodes } from "./scene.ts"
 import { DrawOffscreenEnemies } from "./offscreen.ts"
 import { DrawTelegraphs } from "./telegraphs.ts"
@@ -41,6 +41,7 @@ export const frame = Game.Schedule(
   DrawReticle,
   DrawOffscreenEnemies,
   SyncHud,
+  SyncDamageMeter,
   SyncTouchPad,
   SyncTeam,
   SyncUi

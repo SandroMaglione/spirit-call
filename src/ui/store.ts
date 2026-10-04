@@ -14,7 +14,11 @@ import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { WeaponId } from "../content/weapons.ts"
-import type { BuildValue, FlowState, RunResultValue } from "../schema.ts"
+import type { BuildValue, FlowState, PracticeValue, RunResultValue } from "../schema.ts"
+import type { Screen } from "./menu/parts.tsx"
+
+/** An Extra to play (nothing recorded): the Training Ground, or Enemy Practice with its picks. */
+export type Extra = { readonly kind: "training" } | { readonly kind: "practice"; readonly picks: PracticeValue }
 
 export interface UiStore {
   readonly flow: Signal<FlowState>
@@ -39,6 +43,12 @@ export interface UiStore {
   readonly notices: Signal<ReadonlyArray<string>>
   /** This device's sound: on or off, and how loud (0..1). */
   readonly sound: Signal<Sound>
+  /** The Extra being played, or last played; `null` for a quest or tier (or a dev quick start). */
+  readonly extra: Signal<Extra | null>
+  /** Enemy Practice's picks, kept while the app is open. */
+  readonly practicePicks: Signal<PracticeValue>
+  /** A screen the menu opens on when it shows next (from the results: back to the practice picks), or `null`. */
+  readonly menuOpens: Signal<Screen | null>
 }
 
 export interface Sound {
@@ -66,7 +76,10 @@ export const createUiStore = (initial: {
   result: signal(null),
   earned: signal(null),
   notices: signal(initial.notices),
-  sound: signal(initial.sound)
+  sound: signal(initial.sound),
+  extra: signal(null),
+  practicePicks: signal({ kinds: [], elites: false }),
+  menuOpens: signal(null)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
@@ -75,6 +88,8 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 export interface UiActions {
   /** Enter the arena with `team` (in order, each as equipped) to play `play`. */
   readonly enter: (team: ReadonlyArray<CharacterId>, play: Play) => void
+  /** Enter an Extra with `team`: nothing it does is recorded on the account. */
+  readonly enterExtra: (team: ReadonlyArray<CharacterId>, extra: Extra) => void
   /** Equip an owned character (saved at once). */
   readonly equip: (character: CharacterId, equipment: Equipment) => void
   /** Take an owned character to its next level with gold (saved at once). */

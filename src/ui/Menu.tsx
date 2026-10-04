@@ -14,6 +14,7 @@ import type { Play } from "../account/account.ts"
 import type { TeamDraft } from "./draft.ts"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
+import { Extra } from "./menu/Extra.tsx"
 import { Home } from "./menu/Home.tsx"
 import { Quests } from "./menu/Quests.tsx"
 import { Team } from "./menu/Team.tsx"
@@ -24,8 +25,11 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
   const account = store.account.value
   const play = useSignal<Play>(account.selection.play)
   const draft = useSignal<TeamDraft>({ team: account.selection.team, focus: 0 })
-  // The screens opened, the current one last; the home is always at the bottom.
-  const screens = useSignal<ReadonlyArray<Screen>>([{ kind: "home" }])
+  // The screens opened, the current one last; the home is always at the bottom (and a screen asked for on top, see `menuOpens`).
+  const screens = useSignal<ReadonlyArray<Screen>>(store.menuOpens.value === null ? [{ kind: "home" }] : [{ kind: "home" }, store.menuOpens.value])
+  useEffect(() => {
+    store.menuOpens.value = null
+  }, [])
   const screen = screens.value[screens.value.length - 1]!
   const nav: Nav = {
     go: (next) => (screens.value = [...screens.value, next]),
@@ -36,7 +40,8 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Enter") enter()
+      // Enter plays what was picked; the Extras start from their own buttons.
+      if (event.key === "Enter" && screen.kind !== "extra") enter()
       if (event.key === "Escape") nav.back()
     }
     window.addEventListener("keydown", onKey)
@@ -55,6 +60,8 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
         return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
       case "discoveries":
         return <Discoveries store={store} nav={nav} />
+      case "extra":
+        return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} team={draft.value.team} />
     }
   }
 

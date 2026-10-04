@@ -12,7 +12,7 @@ import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import { view } from "../config/view.ts"
-import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, TeamSwitch, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
+import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -201,9 +201,10 @@ const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =
  * Progress toward a challenge's objective, in a few characters, for the
  * objectives the wave marks do not show: for surviving the time left, and
  * lasting until the fall the wave against the goal (then the wave alone,
- * past it). Clearing waves shows its marks only.
+ * past it), and practice the enemies defeated. Clearing waves shows its marks only;
+ * training, nothing.
  */
-const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number): string => {
+const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number, kills: number): string => {
   const objective = challenge.objective
   switch (objective.kind) {
     case "clearWaves":
@@ -214,6 +215,10 @@ const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: nu
     }
     case "endure":
       return waves.number <= objective.goal ? `Wave ${waves.number} / ${objective.goal}` : `Wave ${waves.number}`
+    case "training":
+      return ""
+    case "practice":
+      return `${kills} defeated`
   }
 }
 
@@ -244,7 +249,8 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     run: Game.System.readResource(Run),
     tuning: Game.System.readResource(Tuning),
     challenge: Game.System.readResource(Challenge),
-    enemyLevel: Game.System.readResource(EnemyLevel)
+    enemyLevel: Game.System.readResource(EnemyLevel),
+    stats: Game.System.readResource(Stats)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
@@ -318,5 +324,38 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
   }
   setText(hud.quest, challenge.name)
   showWaves(hud.waves, challenge.objective.kind === "clearWaves" ? challenge.waves.scripted.length : 0, waves)
-  setText(hud.progress, challengeProgress(challenge, waves, resources.run.get().time))
+  setText(hud.progress, challengeProgress(challenge, waves, resources.run.get().time, resources.stats.get().kills))
+})
+
+/** The damage and the hits a second are over this many seconds. */
+const rateWindow = 5
+
+/**
+ * The Extras' damage readout (training and practice), on one line under the
+ * header: the damage a second and the hits a second, both over the last few
+ * seconds. Blows on enemies only, as landed (a dummy that never falls shows
+ * the blow as dealt).
+ */
+export const SyncDamageMeter = Game.System("Shooter/SyncDamageMeter", {
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge), run: Game.System.readResource(Run) },
+  events: { hit: Game.System.readEvent(Hit) },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ resources, events, services }) => {
+  const refs = services.host.hud.meter
+  const tuning = resources.tuning.get()
+  const kind = tuning.challenges[resources.challenge.get()].objective.kind
+  const shown = tuning.waves.enabled && (kind === "training" || kind === "practice")
+  if (refs.root.hidden === shown) refs.root.hidden = !shown
+  const recent = services.host.feedback.meter.recent
+  // A new run starts it over.
+  if (resources.run.get().time <= 0) recent.length = 0
+  const hits = events.hit.all().filter((hit) => hit.faction === "enemy" && hit.amount > 0)
+  if (!shown) return
+  const dt = services.clock.frameSeconds
+  for (const entry of recent) entry.age += dt
+  while (recent.length > 0 && recent[0]!.age > rateWindow) recent.shift()
+  for (const hit of hits) recent.push({ age: 0, amount: hit.amount })
+  const damage = recent.reduce((sum, entry) => sum + entry.amount, 0) / rateWindow
+  setText(refs.damage, `${Math.round(damage)} dmg/s`)
+  setText(refs.hits, `${(recent.length / rateWindow).toFixed(1)} hits/s`)
 })

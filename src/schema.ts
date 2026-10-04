@@ -429,6 +429,9 @@ export interface BurstValue {
 }
 export const Burst = Descriptor.Component<BurstValue>()("Shooter/Burst")
 
+/** A body that takes blows (their numbers show, its break bar fills) but loses no health: the Training Ground's dummies. */
+export const Immortal = Descriptor.Component<{}>()("Shooter/Immortal")
+
 /** A frontal shield: blocks projectiles hitting within `halfAngle` (radians) of `facing`. */
 export const Shield = Descriptor.Component<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>()("Shooter/Shield")
 
@@ -480,7 +483,12 @@ export const PendingSpawn = Descriptor.Component<{
   readonly duration: number
   /** The element of an elite (see `Tuning.elites`), or `null`. */
   readonly elite: EliteElement | null
+  /** Enemy Practice's spot it fills (see `PracticeField`), if any. */
+  readonly slot?: number
 }>()("Shooter/PendingSpawn")
+
+/** An enemy holding one of Enemy Practice's spots (see `PracticeField`): when it falls, the spot fills again. */
+export const PracticeUnit = Descriptor.Component<{ readonly slot: number }>()("Shooter/PracticeUnit")
 
 /**
  * An elite enemy (see `Tuning.elites`): its `element`, the time until it
@@ -765,6 +773,29 @@ export interface WavesValue {
 }
 export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
 
+/**
+ * Enemy Practice's picks (see the `practice` objective): the enemy kinds its
+ * waves bring, and whether some come as elites. Set on entering; a run of
+ * anything else ignores it.
+ */
+export interface PracticeValue {
+  readonly kinds: ReadonlyArray<EnemyKind>
+  readonly elites: boolean
+}
+export const Practice = Descriptor.Resource<PracticeValue>()("Shooter/Practice")
+
+/**
+ * Enemy Practice's field: a spot per enemy kept on it, each the kind it
+ * brings and, while empty, the seconds until it fills (`null` while its
+ * enemy stands or is coming); `turn` is the next pick to take a spot when
+ * the picks take turns. Empty (no spots) until the run's first step.
+ */
+export interface PracticeFieldValue {
+  readonly spots: ReadonlyArray<{ readonly kind: EnemyKind; readonly wait: number | null }>
+  readonly turn: number
+}
+export const PracticeField = Descriptor.Resource<PracticeFieldValue>()("Shooter/PracticeField")
+
 /** Time left in the current hit-stop. */
 export const HitStop = Descriptor.Resource<{ readonly remaining: number }>()("Shooter/HitStop")
 
@@ -883,6 +914,8 @@ export const Game = Schema.bind(
       Shield,
       Ward,
       Burst,
+      Immortal,
+      PracticeUnit,
       Brain,
       EnemyMode,
       Hitbox,
@@ -912,7 +945,9 @@ export const Game = Schema.bind(
       RunResult,
       HitStop,
       SlowMotion,
-      Paused
+      Paused,
+      Practice,
+      PracticeField
     },
     events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Reaction, Zap }
   }),

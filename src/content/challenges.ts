@@ -23,6 +23,22 @@ export type Objective =
    * next tier), and the run goes on; how far it went is the wave it fell at.
    */
   | { readonly kind: "endure"; readonly goal: number; readonly levelPerWave: number }
+  /**
+   * Training (an Extra, not a quest): no waves, only `dummies` (at shares of
+   * the arena's size) that take blows and never fall; the team cannot fall
+   * either, and it never ends (left from the in-game menu). Nothing is
+   * recorded.
+   */
+  | { readonly kind: "training"; readonly dummies: ReadonlyArray<{ readonly kind: EnemyKind; readonly x: number; readonly y: number }> }
+  /**
+   * Practice (an Extra): no waves but a field kept full of the enemies picked
+   * for the run (see `Practice`), until the team falls. Each pick stands
+   * with its group, at least `fewest` enemies and at most `most` in all (the
+   * picks repeated, or taking turns); one that falls comes back `respawn`
+   * seconds later (another pick in its place, when they take turns).
+   * Nothing is recorded.
+   */
+  | { readonly kind: "practice"; readonly most: number; readonly fewest: number; readonly respawn: number }
 
 /** The elements an elite enemy can carry (see `Tuning.elites`). */
 export type EliteElement = Exclude<ElementId, "wind">
@@ -314,6 +330,33 @@ export const challenges = {
       ],
       endless: null
     }
+  }),
+  /** The Training Ground (an Extra): dummies to practice on, a fire pool near each side, nothing to fear. */
+  trainingGround: challenge({
+    name: "Training Ground",
+    description: "Dummies that never fall: practice your combos. Only the fire hurts.",
+    objective: {
+      kind: "training",
+      dummies: [
+        { kind: "dummy", x: 0.5, y: 0.34 },
+        { kind: "dummy", x: 0.66, y: 0.45 },
+        { kind: "dummy", x: 0.7, y: 0.5 },
+        { kind: "dummy", x: 0.66, y: 0.55 },
+        { kind: "dummy", x: 0.25, y: 0.5 },
+        { kind: "heavyDummy", x: 0.5, y: 0.68 },
+        { kind: "sparringDummy", x: 0.34, y: 0.66 }
+      ]
+    },
+    arena: "trainingGround",
+    waves: { scripted: [], endless: null }
+  }),
+  /** Enemy Practice (an Extra): the enemies picked, all together and coming back as they fall, until the team falls. */
+  practice: challenge({
+    name: "Enemy Practice",
+    description: "The enemies you pick, together, coming back as they fall, until you fall.",
+    objective: { kind: "practice", most: 8, fewest: 5, respawn: 3 },
+    arena: "courtyard",
+    waves: { scripted: [], endless: null }
   }),
   /** Packs at night: swarms in a cloister, then ever-growing waves. */
   swarmNight: challenge({

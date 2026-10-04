@@ -49,6 +49,8 @@ import {
   Tuning,
   Velocity,
   Ward,
+  Immortal,
+  PracticeUnit,
   Waves
 } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
@@ -105,19 +107,37 @@ export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, 
   })
 }
 
-/** A spawn warning that becomes an enemy of `kind` (an elite, when `elite` names its element) at `at` after `delay`. */
-export const makePendingSpawn = (kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null) =>
-  Game.Command.spawn([PendingSpawn, { kind, at, remaining: delay, duration: delay, elite }])
+/**
+ * A spawn warning that becomes an enemy of `kind` (an elite, when `elite`
+ * names its element) at `at` after `delay`; holding Enemy Practice's spot
+ * `slot`, when given.
+ */
+export const makePendingSpawn = (kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null, slot?: number) =>
+  Game.Command.spawn([PendingSpawn, { kind, at, remaining: delay, duration: delay, elite, ...(slot === undefined ? {} : { slot }) }])
 
 /** The pending spawn that brings a killed respawning enemy back. */
 export const respawnOf = (kind: EnemyKind, respawns: { readonly at: Vec2; readonly delay: number }) =>
   makePendingSpawn(kind, respawns.at, respawns.delay)
 
-/** Training mode (waves disabled): dummies that come back when destroyed. */
+/**
+ * Dummies to practice on. The Training Ground's (see the `training`
+ * objective) never fall (`Immortal`) and stand at the run's enemy level, so
+ * blows land as they would on enemies of the team's own level. Training
+ * mode (waves disabled, a dev tool and the tests'): dummies that come back
+ * when destroyed.
+ */
 export const SpawnTrainingDummies = Game.System("Shooter/SpawnTrainingDummies", {
-  resources: { tuning: Game.System.readResource(Tuning) }
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge), level: Game.System.readResource(EnemyLevel) }
 }, ({ resources, commands }) => {
   const tuning = resources.tuning.get()
+  const objective = tuning.challenges[resources.challenge.get()].objective
+  if (tuning.waves.enabled && objective.kind === "training") {
+    for (const dummy of objective.dummies) {
+      const at = { x: dummy.x * tuning.arena.width, y: dummy.y * tuning.arena.height }
+      commands.spawnIn(RunScope, Game.Command.insert(makeEnemy(tuning, dummy.kind, at, 1, resources.level.get()), [Immortal, {}]))
+    }
+    return
+  }
   if (tuning.waves.enabled) return
   for (const spot of trainingDummies) {
     const at = { x: spot.x * tuning.arena.width, y: spot.y * tuning.arena.height }
@@ -150,7 +170,9 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
     }
     commands.despawn(entity.id)
     // Alternate strafing directions so groups of shooters spread out.
-    const draft = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level, pending.elite)
+    const made = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level, pending.elite)
+    // Enemy Practice's: it holds its spot (see `KeepPracticeField`).
+    const draft = pending.slot === undefined ? made : Game.Command.insert(made, [PracticeUnit, { slot: pending.slot }])
     commands.spawnIn(RunScope, pending.kind === "dummy"
       ? Game.Command.insert(draft, [Respawns, { at: pending.at, delay: tuning.enemies.dummy.respawnDelay }])
       : draft)

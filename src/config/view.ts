@@ -179,7 +179,9 @@ export const view = {
     stalker: { color: 0x6b5cff, widthFactor: 1.5, heightFactor: 2.2 },
     volatile: { color: 0xffa020, widthFactor: 1.7, heightFactor: 1.6 },
     galeCaster: { color: 0xa8f0d8, widthFactor: 1.4, heightFactor: 2.4 },
-    juggernaut: { color: 0x7d8794, widthFactor: 1.9, heightFactor: 2.0 }
+    juggernaut: { color: 0x7d8794, widthFactor: 1.9, heightFactor: 2.0 },
+    sparringDummy: { color: 0xd49a6a, widthFactor: 1.7, heightFactor: 2.1 },
+    heavyDummy: { color: 0x9a7b5c, widthFactor: 1.9, heightFactor: 2.0 }
   },
   /**
    * Elements and states: each element's color (hits, pools, numbers); bodies

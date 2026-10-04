@@ -144,7 +144,7 @@ The rules are in `docs/elements.md`; in short:
 
 ## Structure
 
-The game has two areas.
+The game has two areas, and Extras for practice.
 
 - **Quests**: where you gather resources and improve your kit, preparing for
   what is harder. A **main quest** line, plus **secondary quests** that can
@@ -160,6 +160,11 @@ The game has two areas.
   possibly in a different format. One track, **Until Fall**, never ends:
   every wave is stronger than the last, a goal wave clears the tier, and
   how far the team got is kept as its best.
+- **Extras**, for practice: a Training Ground (dummies that never fall,
+  one that breaks, one that swings to dodge, fire to push them into) and
+  Enemy Practice (the enemies picked, all on the field together and coming
+  back a few seconds after they fall, until the team falls). Played at the team's own level, they record nothing: no
+  experience, gold, or discoveries, so they are never the place to farm.
 - **Nothing is missable.** Temporary content rotates back later, and
   periodic resets only restock rewards: anything skipped can be had another
   time, so there is never pressure to log in.

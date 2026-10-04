@@ -22,6 +22,8 @@ import { PerfectDodge } from "./features/dodge.ts"
 import { UpdateElites } from "./features/elites.ts"
 import { ArmBursts, UpdateBursts } from "./features/bursts.ts"
 import { UpdateWards } from "./features/wards.ts"
+import { MendInTraining } from "./features/training.ts"
+import { KeepPracticeField } from "./features/practice.ts"
 import { BuildPoise } from "./features/poise.ts"
 import { BlowPools, DriveWithWind } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
@@ -127,8 +129,10 @@ const gameplay = Game.Schedule.when(
   UpdateGround,
   TickStates,
   ApplyDamage,
+  MendInTraining,
   ProcessPendingSpawns,
-  DirectWaves
+  DirectWaves,
+  KeepPracticeField
 )
 
 /**

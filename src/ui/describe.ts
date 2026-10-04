@@ -31,6 +31,10 @@ export const describeObjective = (objective: Objective, waves: number): string =
       return `Survive ${objective.seconds}s`
     case "endure":
       return `Last until you fall (wave ${objective.goal} clears it)`
+    case "training":
+      return "Practice on dummies that never fall; leave from the menu"
+    case "practice":
+      return "The enemies you pick, coming back as they fall, until you fall"
   }
 }
 

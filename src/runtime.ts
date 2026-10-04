@@ -44,6 +44,8 @@ export const initialResources = (
   HitStop: { remaining: 0 },
   SlowMotion: { remaining: 0, scale: 1, dodge: false },
   Paused: { paused: false },
+  Practice: { kinds: [], elites: false },
+  PracticeField: { spots: [], turn: 0 },
   Camera: { x: tuning.arena.width / 2, y: tuning.arena.height / 2, prevX: tuning.arena.width / 2, prevY: tuning.arena.height / 2 }
 })
 

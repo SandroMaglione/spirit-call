@@ -1,7 +1,8 @@
 /**
  * Challenge objectives: the run is won (`Cleared`) once the challenge's
  * objective is met, and lost (`GameOver`) when the whole team falls first
- * (see `DetectGameOver`). Training (waves off) has no objective.
+ * (see `DetectGameOver`). Training (waves off, or the Training Ground) has
+ * no objective; Enemy Practice goes on until the team falls.
  */
 import type { ChallengeId, ChallengeSpec, Objective } from "../content/challenges.ts"
 import { Challenge, Flow, Game, Run, RunResult, Stats, Team, Time, Tuning, Waves } from "../schema.ts"
@@ -19,6 +20,10 @@ export const objectiveMet = (objective: Objective, waves: WavesValue, run: RunVa
       return run.time >= objective.seconds
     // It never ends on its own: the team falls (reaching its goal counts as a clear, see `runResultOf`).
     case "endure":
+      return false
+    // Extras: training never ends (it is left from the in-game menu); practice ends when the team falls.
+    case "training":
+    case "practice":
       return false
   }
 }
@@ -47,6 +52,10 @@ export const objectiveProgress = (spec: ChallengeSpec, waves: WavesValue, run: R
       return Math.min(1, Math.max(0, run.time / spec.objective.seconds))
     case "endure":
       return Math.min(1, Math.max(0, wavesCleared(waves) / spec.objective.goal))
+    // Extras pay nothing, so how far they got is only the wave.
+    case "training":
+    case "practice":
+      return 0
   }
 }
 

@@ -291,10 +291,22 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (scripted.length === 0) problems.push(`${where}: nothing to clear (no waves)`)
     } else if (challenge.objective.kind === "survive") {
       positive(problems, where, { seconds: challenge.objective.seconds })
-    } else {
+    } else if (challenge.objective.kind === "endure") {
       if (endless === null) problems.push(`${where}: lasting until the team falls needs endless waves`)
       if (!(Number.isInteger(challenge.objective.goal) && challenge.objective.goal >= 1)) problems.push(`${where}: its goal must be a whole wave from 1`)
       if (!(challenge.objective.levelPerWave >= 0)) problems.push(`${where}: levelPerWave must not be negative`)
+    } else if (challenge.objective.kind === "practice") {
+      if (endless !== null || scripted.length > 0) problems.push(`${where}: practice keeps a field of the picked enemies, no waves`)
+      positive(problems, where, { most: challenge.objective.most, fewest: challenge.objective.fewest })
+      if (!(challenge.objective.fewest <= challenge.objective.most)) problems.push(`${where}: fewest must not be above most`)
+      if (!(challenge.objective.respawn >= 0)) problems.push(`${where}: respawn must not be negative`)
+    } else {
+      if (endless !== null || scripted.length > 0) problems.push(`${where}: training has no waves, only its dummies`)
+      for (const dummy of challenge.objective.dummies) {
+        if (!has(tuning.enemies, dummy.kind)) problems.push(`${where}: unknown dummy ${dummy.kind}`)
+        else if (tuning.enemies[dummy.kind].cost > 0) problems.push(`${where}: ${dummy.kind} is no dummy (it comes in waves)`)
+        if (!(dummy.x > 0 && dummy.x < 1 && dummy.y > 0 && dummy.y < 1)) problems.push(`${where}: a dummy must stand inside the arena`)
+      }
     }
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }

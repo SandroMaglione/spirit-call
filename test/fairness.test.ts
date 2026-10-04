@@ -8,8 +8,8 @@ import { inArena } from "./helpers.ts"
 /** In the open courtyard: the question is the enemies' attacks, not the arena's hazards. */
 const tuning = inArena(defaultTuning, "courtyard")
 
-/** Every enemy that attacks. */
-const attackers = (Object.keys(defaultTuning.enemies) as Array<EnemyKind>).filter((kind) => defaultTuning.enemies[kind].attacks.length > 0)
+/** Every enemy that attacks and comes in waves (not the Training Ground's sparring dummy, whose swing deals nothing). */
+const attackers = (Object.keys(defaultTuning.enemies) as Array<EnemyKind>).filter((kind) => defaultTuning.enemies[kind].attacks.length > 0 && defaultTuning.enemies[kind].cost > 0)
 
 /**
  * "Every hit is avoidable with perfect play" (docs/vision.md), checked: a
@@ -25,6 +25,7 @@ describe("fairness", () => {
       expect(dodging.hits).toBe(0)
       // And it does attack: standing still gets hit.
       expect(runBot({ tuning, enemies, seconds: 25, still: true }).hits).toBeGreaterThan(0)
-    })
+      // Two 25 s fights: a second or two alone, more on a busy machine.
+    }, 30_000)
   }
 })

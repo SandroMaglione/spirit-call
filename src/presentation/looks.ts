@@ -164,7 +164,9 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   stalker: enemyCapsule("stalker"),
   volatile: enemyCapsule("volatile"),
   galeCaster: enemyCapsule("galeCaster"),
-  juggernaut: enemyCapsule("juggernaut")
+  juggernaut: enemyCapsule("juggernaut"),
+  sparringDummy: enemyCapsule("sparringDummy"),
+  heavyDummy: enemyCapsule("heavyDummy")
 }
 
 /**
@@ -457,6 +459,8 @@ export const monasteryArena: ArenaLook = {
 /** Each arena's look, by its id (see `content/arena.ts`). */
 export const arenaLooks: Readonly<Record<ArenaId, ArenaLook>> = {
   courtyard: courtyardArena,
+  // The training ground is laid in the courtyard's paving.
+  trainingGround: courtyardArena,
   cistern: cisternArena,
   kilnworks: kilnworksArena,
   sanctuary: sanctuaryArena,

@@ -290,6 +290,54 @@ export const fairness = { minTelegraph: 0.3 }
 
 /** Every enemy kind. */
 export const enemies = {
+  /**
+   * The Training Ground's practice partner: stands still and swings a slow,
+   * telegraphed blow that deals nothing, for practicing dodges (and perfect
+   * ones) without a fight around it.
+   */
+  sparringDummy: enemy({
+    name: "Sparring Dummy",
+    description: "Swings a slow blow that deals nothing: practice your dodges.",
+    elements: affinities({}),
+    hp: 200,
+    atk: 100,
+    def: 0,
+    radius: 18,
+    hurtboxRadius: 18,
+    knockbackTaken: 0.4,
+    speed: 0,
+    acceleration: 0,
+    poise: 0,
+    cost: 0,
+    behavior: idle(),
+    shield: null,
+    group: 1,
+    attacks: [
+      melee("swing", { triggerRange: 170, reach: 160, arcDegrees: 120, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.6, cooldown: 1.8, power: 0, knockback: 120 })
+    ],
+    respawnDelay: 0
+  }),
+  /** The Training Ground's heavy dummy: it breaks, for practicing the break and the combo after it. */
+  heavyDummy: enemy({
+    name: "Heavy Dummy",
+    description: "Breaks under blows: practice breaking, then the combo after it.",
+    elements: affinities({}),
+    hp: 300,
+    atk: 100,
+    def: 0,
+    radius: 24,
+    hurtboxRadius: 24,
+    knockbackTaken: 0.3,
+    speed: 0,
+    acceleration: 0,
+    poise: 0.4,
+    cost: 0,
+    behavior: idle(),
+    shield: null,
+    group: 1,
+    attacks: [],
+    respawnDelay: 0
+  }),
   dummy: enemy({
     name: "Training Dummy",
     description: "Stands still and takes hits.",

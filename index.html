@@ -67,6 +67,10 @@
       .hud__waves i.is-current { background: rgba(255, 207, 90, 0.5); box-shadow: 0 0 6px rgba(255, 207, 90, 0.6); }
       .hud__quest-progress { font: 700 10px/1 system-ui, sans-serif; opacity: 0.85; }
       .hud__quest-progress:empty { display: none; }
+      /* The Extras' damage readout, one line: the damage a second, and the hits a second. */
+      .hud__meter { display: flex; gap: 10px; align-items: baseline; font: 800 italic 14px/1 "Barlow Condensed", sans-serif; }
+      .hud__meter b { color: #ffe08a; }
+      .hud__meter span { color: #eef1ff; }
       /* The in-game menu's button, top left: two bars, as a pause sign. */
       .hud__menu { position: absolute; top: max(10px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 5px; width: 42px; height: 42px; padding: 0; background: rgba(10, 12, 28, 0.6); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 50%; cursor: pointer; }
       .hud__menu i { display: block; width: 4px; height: 15px; border-radius: 1px; background: #eef1ff; box-shadow: 0 1px 2px #000; }
