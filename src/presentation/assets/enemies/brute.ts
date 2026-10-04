@@ -3,7 +3,7 @@ import url from "../../../../art/enemies/brute/production/animated/brute.glb?url
 import type { ModelSpec } from "../../models.ts"
 
 export const bruteModel = { url,
-  "height": 1.392391324043274,
+  "height": 1.4064674377441406,
   "clips": {
     "Idle": {
       "lastKeySeconds": 1.9666666666666666,

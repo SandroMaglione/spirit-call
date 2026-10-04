@@ -1,7 +1,7 @@
 {
   "source": "../chaser-production.blend",
-  "source_sha256": "ae4dc44d915530b30a4e6e0e6d7132982a09dde397282eb57350ec6b78b5811e",
-  "triangles": 1890,
+  "source_sha256": "9c00035e06bd1fc204bca5f8a1903801698a9a4e2fcee1173c0b8630767eb061",
+  "triangles": 1894,
   "bones": 12,
   "materials": 1,
   "mesh_objects": 1,

@@ -173,7 +173,7 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
 const enemyCapsule = (kind: EnemyKind): BodyLook => ({ kind: "capsule", color: view.enemies[kind].color, widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor })
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({
-  kind: "model", model, batched: true, ...(attackClips === undefined ? {} : { attackClips }),
+  kind: "model", model, batched: true, transitionSeconds: .10, ...(attackClips === undefined ? {} : { attackClips }),
   widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor,
   moments: { idle: "Idle", run: { clip: kind === "dummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
 })

@@ -19,6 +19,9 @@ export class Instance {
   readonly pose = [0, 0, 0, 0]
   /** Outgoing frames, their interpolation, and how much the incoming pose shows. */
   readonly blendPose = [0, 0, 0, 1]
+  /** Light mixed over the shaded body, independent of its material tint. */
+  readonly glow = new Color(0xffffff)
+  glowAmount = 0
   /** Its batch; may change while it is out of the scene (a pooled projectile changing shape). */
   batch: Batch
   /** Its slot in the batch, or -1 while out of it. */
@@ -83,12 +86,14 @@ export class Batch {
       if (this.animated) {
         this.geometry.getAttribute("instancePose").setXYZW(index, member.pose[0]!, member.pose[1]!, member.pose[2]!, member.pose[3]!)
         this.geometry.getAttribute("instancePoseBlend").setXYZW(index, member.blendPose[0]!, member.blendPose[1]!, member.blendPose[2]!, member.blendPose[3]!)
+        this.geometry.getAttribute("instanceGlow").setXYZW(index, member.glow.r, member.glow.g, member.glow.b, member.glowAmount)
       }
     }
     mesh.count = members.length
     if (this.animated) {
       this.geometry.getAttribute("instancePose").needsUpdate = true
       this.geometry.getAttribute("instancePoseBlend").needsUpdate = true
+      this.geometry.getAttribute("instanceGlow").needsUpdate = true
     }
     mesh.instanceMatrix.clearUpdateRanges()
     mesh.instanceMatrix.addUpdateRange(0, members.length * 16)
@@ -109,6 +114,7 @@ export class Batch {
     if (this.animated) {
       this.geometry.setAttribute("instancePose", new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage))
       this.geometry.setAttribute("instancePoseBlend", new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage))
+      this.geometry.setAttribute("instanceGlow", new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage))
     }
     const mesh = new InstancedMesh(this.geometry, this.material, capacity)
     mesh.instanceMatrix.setUsage(DynamicDrawUsage)

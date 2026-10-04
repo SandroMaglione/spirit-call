@@ -169,8 +169,10 @@ def face(head):
     eyes=SHEET["eyes"]
     ex=abs(eyes[0]["x"]-eyes[1]["x"])/2
     ez=np.mean([e["z"] for e in eyes])
-    ew=np.mean([e["width"] for e in eyes])/2
-    eh=np.mean([e["height"] for e in eyes])/2
+    # Game-size refinement: the eyes are drawn a third larger than measured,
+    # so the scowl still reads when the whole head is a dozen pixels wide.
+    ew=np.mean([e["width"] for e in eyes])/2*1.35
+    eh=np.mean([e["height"] for e in eyes])/2*1.35
     # A tapered dark recess with a pale outer lip follows the head's V.
     outline=[(.018,.71),(.14,.78),(.25,.94),(.29,1.17),(.25,1.10),(.135,.91)]
     for sign,side in ((1,"L"),(-1,"R")):
@@ -221,7 +223,10 @@ def claw():
         cx,cy=(a+b)/2,(c+d)/2
         # Six points keep the blade's diamond cross-section and sharp edge.
         for dx,dy in ((-1,0),(-.6,-.7),(.6,-.7),(1,0),(.6,.7),(-.6,.7)):
-            verts.append((cx+dx*max(.002,(b-a)/2),cy+dy*max(.003,(d-c)/2),z))
+            # Game-size refinement: the blade keeps its measured curve and
+            # length but is half again as thick, tapering to the same point.
+            thick=1+.55*t**.5
+            verts.append((cx+dx*max(.002,(b-a)/2)*thick,cy+dy*max(.003,(d-c)/2)*thick,z))
     for j in range(len(rings)-1):
         for k in range(6):
             a=j*6+k;b=j*6+(k+1)%6
@@ -267,6 +272,10 @@ def main():
     crest_x,crest_y,_,_=section("crest",1.32)
     ellipsoid("CrestSocket",(crest_x,crest_y,1.30),(.13,.15,.12),"rust")
     joints={k:Vector(v) for k,v in SHEET["joints"].items()}
+    # Game-size refinement: limb shells are a third thicker than the sheet's
+    # measured widths. At 60 px the measured limbs thin to single-pixel
+    # sticks between ball joints and the figure reads as a tangle.
+    LIMB=1.35
     widths=SHEET["shell_widths_m"]
     for sign,side in ((-1,"R"),(1,"L")):
         def mirrored(name):
@@ -279,9 +288,9 @@ def main():
             wr.y=(685-655)*SHEET["meters_per_pixel"]
         ellipsoid(f"ShoulderJoint.{side}",sh,(.12,.13,.12),"brown")
         ellipsoid(f"ShoulderPlate.{side}",sh+Vector((sign*.018,0,.025)),(.15,.17,.145))
-        shell(f"UpperArm.{side}",sh+Vector((sign*.065,0,-.06)),el,(.065,.080,.06))
-        ellipsoid(f"Elbow.{side}",el,(.087,.085,.083),"brown")
-        shell(f"Forearm.{side}",el,wr,(.074,widths["forearm"]/2,.075))
+        shell(f"UpperArm.{side}",sh+Vector((sign*.065,0,-.06)),el,(.095,.115,.088))
+        ellipsoid(f"Elbow.{side}",el,(.10,.10,.095),"brown")
+        shell(f"Forearm.{side}",el,wr,(.10,widths["forearm"]/2*LIMB,.105))
         ellipsoid(f"WristPlate.{side}",wr,(.14,.13,.125))
         if side=="L":
             p=wr+Vector((sign*.025,.055,-.11))
@@ -293,9 +302,9 @@ def main():
                 shell("FingerTip.L",q,r,(.026,.029,.005),"brown",5)
         hip,knee,ankle,toe=[mirrored(k) for k in ("hip","knee","ankle","toe")]
         ellipsoid(f"HipJoint.{side}",hip,(.10,.10,.115),"brown")
-        shell(f"ThighPlate.{side}",hip,knee,(.075,widths["thigh"]/2,.08))
+        shell(f"ThighPlate.{side}",hip,knee,(.10,widths["thigh"]/2*LIMB,.105))
         ellipsoid(f"Knee.{side}",knee,(.099,.105,.088),"brown")
-        shell(f"ShinPlate.{side}",knee,ankle,(.07,widths["shin"]/2,.075))
+        shell(f"ShinPlate.{side}",knee,ankle,(.092,widths["shin"]/2*LIMB,.098))
         toe.z=.064
         shell(f"Ankle.{side}",ankle,toe+Vector((0,.09,.025)),(.071,.08,.069),"brown")
         ellipsoid(f"Foot.{side}",toe,(widths["foot"]/2,.20,.075),"rust")

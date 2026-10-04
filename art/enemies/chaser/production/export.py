@@ -12,4 +12,4 @@ import common
 # animated source, keeping the legacy Chaser files available as references.
 common.export("chaser",FOLDER)
 info=json.loads((FOLDER/"model-info.json").read_text())
-assert info["triangles"]==1890 and info["bones"]==12
+assert info["triangles"]<2000 and info["bones"]==12

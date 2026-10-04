@@ -102,6 +102,8 @@ export const view = {
    */
   light: { sky: 0xffffff, ground: 0x8c8c8c, skyIntensity: 0.62, sun: { x: 0.6, y: 1.6, z: -0.3 }, sunIntensity: 0.41 },
   player: 0x4ecdc4,
+  /** Quiet facet rim and authored luminous eyes, gems and lava. */
+  enemyRim: { color: 0xb3cad8, strength: 0.075, power: 3, emission: 1.05 },
   /** Each character's body color, so a switch is seen at once (and her switch button matches). */
   characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a } satisfies Record<CharacterId, number>,
   playerDashing: 0xd9fffb,
@@ -203,7 +205,7 @@ export const view = {
     chaser: { color: 0xff7a45, widthFactor: 1.4, heightFactor: 2.2 },
     shooter: { color: 0x7b96c8, widthFactor: 1.5, heightFactor: 1.8 },
     brute: { color: 0x8b8078, widthFactor: 1.8, heightFactor: 1.9 },
-    swarmer: { color: 0xb74943, widthFactor: 1.5, heightFactor: 1.5 },
+    swarmer: { color: 0xb74943, widthFactor: 1.8, heightFactor: 1.8 },
     charger: { color: 0xe0527a, widthFactor: 1.7, heightFactor: 1.7 },
     sniper: { color: 0x7cc4ff, widthFactor: 1.2, heightFactor: 2.6 },
     guardian: { color: 0x8fa3b8, widthFactor: 1.8, heightFactor: 2.0 },

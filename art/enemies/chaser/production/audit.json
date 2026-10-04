@@ -1,13 +1,13 @@
 {
   "status": "static model review; not integrated",
-  "triangles": 1890,
+  "triangles": 1894,
   "materials": 1,
   "mesh_objects": 52,
   "bones": 0,
   "actions": 0,
   "bounds_m": [
     [
-      -0.9453340172767639,
+      -0.9611155390739441,
       0.9453340172767639
     ],
     [
@@ -20,7 +20,7 @@
     ]
   ],
   "height_m": 1.7999999523162842,
-  "width_m": 1.8906680345535278,
+  "width_m": 1.906449556350708,
   "depth_m": 1.6475869417190552,
   "objects": [
     "Carapace",
@@ -76,8 +76,8 @@
     "Scapula.L",
     "BackKeel"
   ],
-  "source_sha256": "ae4dc44d915530b30a4e6e0e6d7132982a09dde397282eb57350ec6b78b5811e",
-  "review_triangles": 1890,
+  "source_sha256": "9c00035e06bd1fc204bca5f8a1903801698a9a4e2fcee1173c0b8630767eb061",
+  "review_triangles": 1894,
   "degenerate_triangles": 0,
   "source_checks": {
     "no_rig": true,

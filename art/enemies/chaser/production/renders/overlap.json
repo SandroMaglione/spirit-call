@@ -1,51 +1,51 @@
 {
   "front": {
-    "silhouette_iou": 0.6904650246675046,
+    "silhouette_iou": 0.7004116399664986,
     "translation_pixels": [
-      10,
-      -12
+      8,
+      -10
     ]
   },
   "back": {
-    "silhouette_iou": 0.5518635170603674,
+    "silhouette_iou": 0.5634397870924817,
     "translation_pixels": [
       6,
       4
     ]
   },
   "left": {
-    "silhouette_iou": 0.6150039931942082,
+    "silhouette_iou": 0.6217853799676624,
     "translation_pixels": [
       -2,
       -4
     ]
   },
   "right": {
-    "silhouette_iou": 0.7067036031408234,
+    "silhouette_iou": 0.7351784413692644,
     "translation_pixels": [
       4,
       -2
     ]
   },
   "top": {
-    "silhouette_iou": 0.3793374408429324,
+    "silhouette_iou": 0.3598490591465777,
     "translation_pixels": [
-      -16,
+      2,
       16
     ]
   },
   "bottom": {
-    "silhouette_iou": 0.4582560612505317,
+    "silhouette_iou": 0.4375292164353531,
     "translation_pixels": [
-      2,
-      -10
+      0,
+      -8
     ]
   },
   "hero": {
-    "silhouette_iou": 0.5613351782572302,
+    "silhouette_iou": 0.5686332837547513,
     "translation_pixels": [
       -16,
-      0
+      -2
     ]
   }
 }

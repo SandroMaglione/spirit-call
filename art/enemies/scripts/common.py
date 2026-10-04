@@ -151,6 +151,44 @@ class Creature:
         self.armature['enemy_kind'] = self.kind
         bpy.ops.wm.save_as_mainfile(filepath=str(self.folder / (self.kind + '.blend')))
 
+def keep_off_floor(rig, mesh):
+    """Lift any part whose pose dips under the floor, on the frame it dips.
+
+    Recipes pose in broad strokes (a lean, a lunge, a swinging leg); this
+    measures the posed mesh and raises each bone hanging off the root (the
+    body, each leg) by what its own vertices went under, so big motion never
+    sinks into the ground. The same pose gets the same lift, so
+    Windup -> Active -> Recovery stay continuous. Death is left to sink.
+    """
+    scene = bpy.context.scene
+    owner = {}
+    for bone in rig.data.bones:
+        top = bone
+        while top.parent is not None and top.parent.name != 'root':
+            top = top.parent
+        owner[bone.name] = top.name
+    groups = {group.index: group.name for group in mesh.vertex_groups}
+    carried = {}
+    for vertex in mesh.data.vertices:
+        carried.setdefault(owner[groups[vertex.groups[0].group]], []).append(vertex.index)
+    carried.pop('root', None)
+    for action in bpy.data.actions:
+        if action.name == 'Death':
+            continue
+        rig.animation_data.action = action
+        for frame in range(1, int(action.frame_range[1]) + 1):
+            scene.frame_set(frame)
+            posed = mesh.evaluated_get(bpy.context.evaluated_depsgraph_get())
+            lows = {name: min((posed.matrix_world @ posed.data.vertices[i].co).z for i in indices) for name, indices in carried.items()}
+            for name, low in lows.items():
+                if low < -.001:
+                    pose_bone = rig.pose.bones[name]
+                    basis = pose_bone.bone.matrix_local.to_3x3()
+                    pose_bone.location = pose_bone.location + basis.transposed() @ Vector((0, 0, -low))
+                    pose_bone.keyframe_insert(data_path='location', frame=frame, group=name)
+    rig.animation_data.action = bpy.data.actions['Idle']
+    scene.frame_set(1)
+
 def transform(rotation=(0, 0, 0), location=(0, 0, 0), scale=(1, 1, 1)):
     return rotation, location, scale
 
@@ -268,7 +306,9 @@ def export(kind, folder=None):
         export_yup=True, export_cameras=False, export_lights=False, export_extras=False,
         export_animations=True, export_animation_mode='ACTIONS', export_force_sampling=True,
         export_anim_slide_to_zero=True, export_frame_range=False, export_optimize_animation_size=False,
-        export_skins=True, export_all_influences=False, export_influence_nb=4)
+        export_skins=True, export_all_influences=False, export_influence_nb=4,
+        # Custom vertex attributes (`_GLOW`: vertices that shine, see the enemy shader).
+        export_attributes=True)
     info = {'height': height, 'triangles': triangles, 'bones': len(rig.data.bones),
             'bytes': path.stat().st_size, 'clips': clips}
     (folder/'model-info.json').write_text(json.dumps(info, indent=2)+'\n')
