@@ -1,0 +1,58 @@
+{
+  "kind": "charger",
+  "loader": "Three.js GLTFLoader",
+  "meshes": [
+    "ClothBody",
+    "BombBackpack",
+    "BackpackBand",
+    "BackpackBand001",
+    "FuseCollar",
+    "BackpackFlame",
+    "FlameCore",
+    "UpperArmL",
+    "UpperArmR",
+    "CuffL",
+    "CuffR",
+    "HandL",
+    "HandR",
+    "FootL",
+    "FootR",
+    "Ankle",
+    "Toe",
+    "Toe001",
+    "Toe002",
+    "Ankle001",
+    "Toe003",
+    "Toe004",
+    "Toe005",
+    "HandBomb",
+    "BombFlame",
+    "BombFuseCollar",
+    "OpenHood",
+    "RecessedFace",
+    "EyeSocketL",
+    "EyeL",
+    "EyeSocketR",
+    "EyeR",
+    "BackpackCrack",
+    "BombEmber",
+    "PackFrontCrack"
+  ],
+  "materials": 1,
+  "triangles": 1710,
+  "animations": 0,
+  "bounds_gltf_m": {
+    "min": [
+      -0.5556122660636902,
+      0,
+      -0.40408164635300636
+    ],
+    "max": [
+      0.5556122660636902,
+      1.0943877696990967,
+      0.5481020212173462
+    ]
+  },
+  "sha256": "0fc7c0a5df9f56f08d629f9a2e10f06dc35ee15185a3eae283fab49899319057",
+  "status": "passed: static review asset, before rigging"
+}

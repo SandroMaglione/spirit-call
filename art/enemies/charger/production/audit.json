@@ -1,0 +1,63 @@
+{
+  "kind": "charger",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 1710,
+  "materials": 1,
+  "mesh_parts": [
+    "Ankle",
+    "Ankle.001",
+    "BackpackBand",
+    "BackpackBand.001",
+    "BackpackCrack",
+    "BackpackFlame",
+    "BombBackpack",
+    "BombEmber",
+    "BombFlame",
+    "BombFuseCollar",
+    "ClothBody",
+    "Cuff.L",
+    "Cuff.R",
+    "Eye.L",
+    "Eye.R",
+    "EyeSocket.L",
+    "EyeSocket.R",
+    "FlameCore",
+    "Foot.L",
+    "Foot.R",
+    "FuseCollar",
+    "Hand.L",
+    "Hand.R",
+    "HandBomb",
+    "OpenHood",
+    "PackFrontCrack",
+    "RecessedFace",
+    "Toe",
+    "Toe.001",
+    "Toe.002",
+    "Toe.003",
+    "Toe.004",
+    "Toe.005",
+    "UpperArm.L",
+    "UpperArm.R"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.5556122660636902,
+      0.5556122660636902
+    ],
+    [
+      -0.5481020212173462,
+      0.40408164262771606
+    ],
+    [
+      0.0,
+      1.0943877696990967
+    ]
+  ],
+  "height_m": 1.0943877696990967,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}
