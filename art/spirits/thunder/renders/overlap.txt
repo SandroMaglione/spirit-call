@@ -1,0 +1,11 @@
+Full-figure color-mask intersection over union, using tools/overlay.py.
+front: overlap 73.9%
+back: overlap 77.9%
+left: overlap 74.2%
+right: overlap 75.2%
+top: overlap 61.2%
+bottom: overlap 74.9%
+hero: overlap 59.4%
+
+These are first-pass comparisons below the 90% target, including halo,
+pale electricity, and eye holes. See README.md for sheet contradictions.

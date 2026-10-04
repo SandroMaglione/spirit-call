@@ -91,10 +91,10 @@ export type BodyLook =
 
 /**
  * In the arena each character shows as her spirit (art/spirits/). The
- * Swordsman (wind) is the wind spirit, the Gunner (fire) the fire spirit;
- * the others are the water spirit for now: it bobs while it stands, hops
- * while it runs (one hop per `distance` covered), and sheds drops behind
- * it; its moves have no clips yet (they play over its loops).
+ * Swordsman is wind, Gunner is fire, Tidecaller is water, and Stormcaller
+ * is thunder.
+ * Their idle and movement clips follow the body; moves without clips
+ * play over those loops.
  */
 const waterSpirit: BodyLook = {
   kind: "model",
@@ -125,11 +125,21 @@ const windSpirit: BodyLook = {
   drops: { rate: 30, colors: [0x8ee3c1, 0x4cc7a7, 0xbfefdf, 0xffffff], size: 2.2, kind: "wisp" }
 }
 
+/** Stormcaller's thunder spirit: it hovers, leans into movement, and trails violet and gold sparks. */
+const thunderSpirit: BodyLook = {
+  kind: "model",
+  model: "thunderSpirit",
+  widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor,
+  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  drops: { rate: 26, colors: [0xffe66d, 0xc9b8ff, 0x7a6bff], size: 1.8, kind: "ember" }
+}
+
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   swordsman: windSpirit,
   gunner: fireSpirit,
   tidecaller: waterSpirit,
-  stormcaller: waterSpirit
+  stormcaller: thunderSpirit
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({

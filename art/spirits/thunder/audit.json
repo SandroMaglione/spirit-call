@@ -1,0 +1,42 @@
+{
+  "triangles": 2628,
+  "sheet_height_m": 0.62,
+  "actual_height_m": 0.6200000196695328,
+  "bounds_m": [
+    [
+      -0.2973181903362274,
+      0.2973181903362274
+    ],
+    [
+      -0.20321305096149445,
+      0.20286299288272858
+    ],
+    [
+      0.04500000178813934,
+      0.6650000214576721
+    ]
+  ],
+  "body_height_m": 0.3440999872982502,
+  "objects": [
+    "BottomSpark",
+    "Eye.L",
+    "Eye.R",
+    "Halo",
+    "LightningCrest",
+    "LightningWing.L",
+    "LightningWing.R",
+    "Rim.L",
+    "Rim.R",
+    "ThunderSpirit",
+    "VioletFin.L",
+    "VioletFin.R"
+  ],
+  "materials": [
+    "Electrical ring",
+    "Pale gold lightning",
+    "Violet facets",
+    "White eyes"
+  ],
+  "animations": 0,
+  "status": "model review; not integrated"
+}

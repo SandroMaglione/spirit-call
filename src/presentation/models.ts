@@ -20,7 +20,7 @@ import { harborModels } from "./assets/harbor.ts"
 import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { enemyModels } from "./assets/enemies.ts"
-import { fireSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
+import { fireSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
 import { addGlow } from "./glow.ts"
 import type { GlowSpec } from "./glow.ts"
 
@@ -65,11 +65,19 @@ const windGlow: GlowSpec = {
   eyes: { nodes: ["Eye.L", "Eye.R"], color: 0, opacity: 0, size: 0 }
 }
 
+/** Violet edges and soft gold eye glows; the electrical ring is part of the model. */
+const thunderGlow: GlowSpec = {
+  rim: { color: 0xc9b8ff, strength: 0.55, power: 2.8 },
+  halo: { color: 0x7a6bff, opacity: 0.22, size: 1.55 },
+  eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffe66d, opacity: 0.5, size: 0.3 }
+}
+
 /** Every model the game can show. Add new ones here (with their module in `assets/`). */
 export const models = {
   waterSpirit: { ...waterSpiritModel, glow: waterGlow },
   fireSpirit: { ...fireSpiritModel, glow: fireGlow },
   windSpirit: { ...windSpiritModel, glow: windGlow },
+  thunderSpirit: { ...thunderSpiritModel, glow: thunderGlow },
   ...courtyardModels,
   ...cisternModels,
   ...kilnworksModels,

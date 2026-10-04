@@ -27,6 +27,9 @@ MASKS = {
     "orange": lambda im: (im[..., 0] > 150) & (im[..., 0] - im[..., 2] > 80),
     # Mint leaves and a near-white body.
     "mint": lambda im: (im[..., 1] > 120) & ((im[..., 1] - im[..., 0] > 25) | (im.min(axis=2) > 190)),
+    # Thunder's light sheet: saturated violet body or pale gold electricity.
+    # Neutral white background and its grey labels are excluded.
+    "purple": lambda im: ((im[..., 2] > 75) & (im[..., 2] - im[..., 0] > 15) & (im[..., 2] - im[..., 1] > 12)) | ((im[..., 0] > 190) & (im[..., 0] - im[..., 2] > 15) & (im[..., 1] > 160)),
 }
 
 
@@ -90,7 +93,22 @@ def eyes_in(spirit, image):
     """The eyes' centers (col, row) in an image of the spirit, left to right."""
     im = np.asarray(image.convert("RGB") if isinstance(image, Image.Image) else image).astype(int)
     if config(spirit)["eyes"] == "light":
-        found = blobs(im.min(axis=2) > 230, 30)
+        white = im.min(axis=2) > 230
+        if config(spirit)["mask"] == "purple":
+            # Thunder's white backdrop is below 248. Restrict its brighter
+            # eye cores to the body's box, including eyes at a side edge.
+            violet = (im[..., 2] > 75) & (im[..., 2] - im[..., 0] > 15) & (im[..., 2] - im[..., 1] > 12)
+            body = max(blobs(violet, 15), key=len)
+            inside = np.zeros_like(white)
+            # A drawn halo can touch the body in the isometric sheet.
+            # Find the broad body, then exclude the crest and halo above it.
+            rows, counts = np.unique(body[:, 0], return_counts=True)
+            widest = rows[np.argmax(counts)]
+            xs = body[body[:, 0] == widest][:, 1]
+            top = max(body[:, 0].min(), widest - (xs.max() - xs.min()) // 3)
+            inside[top:body[:, 0].max()+1, :] = True
+            white = (im.min(axis=2) > 248) & inside
+        found = blobs(white, 30)
     else:
         mask = mask_of(spirit, im)
         body = max(blobs(mask, 15), key=len)
