@@ -2,7 +2,8 @@
   "source_sha256": "c0217fea4b988618736cc1d0328b8de1e35dea2cbc8aca71bbdfd625c469bf3e",
   "glb_sha256": "12d48d3b3fc09322c0f49acb0602ff32a4b2790ff52d2c4ea2c016d3cd5cd1d6",
   "bytes": 184940,
-  "height_m": 0.40149998664855957,
+  "height_m": 0.6650000214576721,
+  "height_basis": "ground origin to highest rest-pose mesh vertex, including floating parts",
   "clips": {
     "Idle": {
       "lastKeySeconds": 1.9666666666666666,

@@ -68,8 +68,12 @@ soft halo, and gold eye glow through `thunderGlow` in `models.ts`.
 ## In the game
 
 `export.py` preserves the approved rest source, generates the asset spec,
-and records the file hashes, body height, and clip timing in `export.json`.
-The body height excludes the floating crest and ring. `Idle` is a 60 frame
+and records the file hashes, scale height and its basis, and clip timing in
+`export.json`. Scale height is 0.665 m from the ground origin to the full
+rest figure's top, including the crest and ring. The former body-only
+0.4015 m divisor made the full figure 66% taller than Water in the arena.
+The corrected divisor matches Water's full height, with the wings retaining
+their wider silhouette. `Idle` is a 60 frame
 hover with a blink; `Run` is a 16 frame glide with a forward lean and
 trailing parts. Both run at 30 fps, omit their closing key, and have no
 movement along the floor axes. The eye rims blink with the eyes.
@@ -84,3 +88,15 @@ Totem in the normal arena. `renders/gameplay-touch.mp4` records the
 390 x 844 phone layout with simulated touch movement, a totem, and switching
 to Tidecaller and back. Both were exercised at the dev server's network
 address. The `gameplay-*.png` files are frames from those recordings.
+
+`renders/arena-size-comparison.jpg` compares the former Thunder scale,
+Water, Fire, and corrected Thunder as rest-pose copies of the actual
+loaded assets in the arena. All use the same requested height, facing,
+camera, and ground line. Thunder's full top now matches Water's; its
+front-view wing span is about 15% wider. Fire retains its established
+scale, with shards reaching about 19% above Water's top.
+`renders/arena-size-phone.png` shows the correction at 390 x 844;
+`renders/arena-size-touch.mp4` records simulated touch movement and a
+switch to Water and back on the network address. The loaded-asset bounds
+check in `test/spirit-assets.test.ts` guards against the former oversized
+height and width returning after an export.

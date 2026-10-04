@@ -1,17 +1,45 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 
-import { AnimationMixer, LoopOnce } from "three"
+import { AnimationMixer, Box3, LoopOnce, Vector3 } from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { describe, expect, it } from "vitest"
 
 import { closeLoop, models } from "../src/presentation/models.ts"
+import type { ModelId } from "../src/presentation/models.ts"
+import { Puppet } from "../src/presentation/puppet.ts"
+
+const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit") => {
+  const bytes = readFileSync(path.join(import.meta.dirname, "..", models[id].url))
+  return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
+}
 
 describe("thunder spirit export", () => {
+  it("fits the existing spirits' arena silhouette at the same requested height", async () => {
+    const bounds = new Map<ModelId, Box3>()
+    const ids = ["waterSpirit", "fireSpirit", "thunderSpirit"] as const
+    const loaded = await Promise.all(ids.map(loadSpirit))
+    for (const [index, id] of ids.entries()) {
+      const gltf = loaded[index]!
+      // Raw GLBs exclude runtime glow sprites, which must not affect size measurements.
+      const puppet = new Puppet({ id, spec: models[id], scene: gltf.scene, clips: new Map() }, 1, null)
+      bounds.set(id, new Box3().setFromObject(puppet.object, true))
+      puppet.dispose()
+    }
+    const water = bounds.get("waterSpirit")!
+    const fire = bounds.get("fireSpirit")!
+    const thunder = bounds.get("thunderSpirit")!
+    expect(thunder.max.y / water.max.y).toBeCloseTo(1, 2)
+    expect(thunder.max.y).toBeLessThan(fire.max.y)
+    // Thunder's wings can extend beyond Water, but cannot recreate the former oversized footprint.
+    const width = (box: Box3) => box.getSize(new Vector3()).x
+    expect(width(thunder)).toBeGreaterThan(width(fire))
+    expect(width(thunder)).toBeLessThan(width(water) * 1.2)
+  })
+
   it("blinks both eyes with their rims, animates its halo, and keeps locomotion off the floor axes", async () => {
     const spec = models.thunderSpirit
-    const bytes = readFileSync(path.join(import.meta.dirname, "..", spec.url))
-    const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
+    const gltf = await loadSpirit("thunderSpirit")
     const mixer = new AnimationMixer(gltf.scene)
     const idle = gltf.animations.find((clip) => clip.name === "Idle")!
     mixer.clipAction(closeLoop(idle, spec.clips.Idle)).setLoop(LoopOnce, 1).play()

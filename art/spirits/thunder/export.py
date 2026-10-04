@@ -1,7 +1,7 @@
 """Export the approved Thunder model and its clips, then generate its spec.
 
-The game scales by the body's top above its ground origin; the floating
-crest and halo do not shrink its body. The source .blend stays in rest pose.
+The game scales by the whole figure's top above its ground origin, including
+the crest and halo, to match Water's arena height. The source stays in rest pose.
 """
 import hashlib
 import json
@@ -16,8 +16,9 @@ import animate
 
 bpy.ops.wm.open_mainfile(filepath=str(HERE / "thunder-spirit.blend"))
 bpy.context.view_layer.update()
-body = bpy.data.objects["ThunderSpirit"]
-height = max((body.matrix_world @ v.co).z for v in body.data.vertices)
+height = max((o.matrix_world @ v.co).z
+             for o in bpy.data.objects if o.type == "MESH"
+             for v in o.data.vertices)
 # Vertex-color emission exports as white. Keep the facet colors on the
 # base and use a flat violet emission; the game supplies the edge glow.
 violet = bpy.data.materials["Violet facets"]
@@ -45,7 +46,9 @@ export const thunderSpiritModel = {{ url: thunderSpiritUrl, height: {height:.4f}
 metadata = {
     "source_sha256": hashlib.sha256((HERE / "thunder-spirit.blend").read_bytes()).hexdigest(),
     "glb_sha256": hashlib.sha256(out.read_bytes()).hexdigest(),
-    "bytes": out.stat().st_size, "height_m": height, "clips": timing,
+    "bytes": out.stat().st_size, "height_m": height,
+    "height_basis": "ground origin to highest rest-pose mesh vertex, including floating parts",
+    "clips": timing,
     "triangles": sum(len(p.vertices) - 2 for o in bpy.data.objects if o.type == "MESH" for p in o.data.polygons),
 }
 (HERE / "export.json").write_text(json.dumps(metadata, indent=2) + "\n")

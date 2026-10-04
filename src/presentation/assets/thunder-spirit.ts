@@ -3,4 +3,4 @@
 import type { ModelSpec } from "../models.ts"
 import thunderSpiritUrl from "../../../art/spirits/thunder/thunder-spirit.glb?url"
 
-export const thunderSpiritModel = { url: thunderSpiritUrl, height: 0.4015, clips: {"Idle": {"lastKeySeconds": 1.9666666666666666, "loopSeconds": 2.0}, "Run": {"lastKeySeconds": 0.5, "loopSeconds": 0.5333333333333333}} } as const satisfies ModelSpec
+export const thunderSpiritModel = { url: thunderSpiritUrl, height: 0.6650, clips: {"Idle": {"lastKeySeconds": 1.9666666666666666, "loopSeconds": 2.0}, "Run": {"lastKeySeconds": 0.5, "loopSeconds": 0.5333333333333333}} } as const satisfies ModelSpec

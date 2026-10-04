@@ -112,9 +112,11 @@ to copy).
    frames and a `Run` of 16, at 30 fps; see the examples) and
    `<spirit>/export.py`, which writes `<spirit>-spirit.glb` and
    `src/presentation/assets/<spirit>-spirit.ts` (its spec: file, height,
-   clips' timing). The height is the body's, without floating parts above
-   it (parts growing from it count: the wind spirit's top leaves), so every
-   spirit stands as big as the others.
+   clips' timing). For a compact spirit, measure `height` from the ground
+   origin to the highest rest-pose mesh vertex, including floating parts,
+   before adding animation. This matches Water's existing arena scale.
+   Record the measurement basis in the export metadata. Height is a
+   uniform scale divisor, not a bound that clips ornaments.
 7. **Into the game:**
    - export its model from `assets/spirits.ts` and register it in `models`
      (`models.ts`) with its `GlowSpec` (rim, optional core, halo, eye
@@ -123,8 +125,14 @@ to copy).
      `moments: { idle: "Idle", run: { clip: "Run", distance } }`, and its
      trail (`drops`, by `kind`: water drops falling and rippling, `"ember"`
      drifting up and burning out, or `"wisp"` curling away and fading);
+   - compare the loaded model with Water and Fire on one ground line,
+     with the same look factors, camera, facing, and animation phase.
+     Compare both the full silhouette and the central body's width;
+     equal sheet dimensions or equal look factors do not guarantee equal
+     arena size. Exclude runtime glow sprites from measured bounds;
    - `pnpm check`, then play it on the network address (desktop and a
-     phone-sized screen with touch) and record it moving.
+     phone-sized screen with touch) and record it moving and switching
+     to an existing character. Keep that size comparison with the review.
 
 ## Pitfalls met
 
@@ -139,8 +147,18 @@ to copy).
   (`drop-trail.ts`), so the body hides those behind it.
 - **Bounds with halos:** a halo sprite widens a model's bounds; the menu
   frames models without their glows (`showcase.ts`).
-- **Size with floating parts:** scaling by the whole figure's height
-  shrinks a spirit whose parts float high above it; use the body's height.
+- **Inconsistent scale measurements:** Thunder initially used only its
+  body's top (0.4015 m), while Water used its whole figure (0.6612 m).
+  The game divides by this number, making Thunder's crest reach 1.66
+  times Water's height despite identical look factors. Thunder now uses
+  its whole figure's top (0.6650 m). Do not copy a body-only measurement
+  without comparing the resulting silhouette with existing spirits.
+  Fire's existing divisor excludes its highest shards and its full
+  silhouette is about 19% taller than Water; preserve that established
+  look as a comparison, not as an interchangeable measurement rule.
+  If future ornaments float far above the body, review an explicit scale
+  exception against these references and record its basis. Height alone
+  cannot make differently proportioned bodies have equal widths.
 - **Sheets that disagree:** score every view and report which ones the sheet
   itself contradicts, instead of bending the model to fit all of them.
 - **Parts crossing the body:** a view loses a part's root where the body
