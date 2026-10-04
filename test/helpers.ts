@@ -4,7 +4,7 @@ import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 import { keyBindings, touchButtons } from "../src/config/input.ts"
 import type { Direction, TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
-import { projection } from "../src/config/view.ts"
+import { projection, viewZoom } from "../src/config/view.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
 import { cut, lob, vortex } from "../src/content/skills.ts"
@@ -210,7 +210,8 @@ export const steps = (seconds: number): number => Math.ceil(seconds / engine.ste
 /** The cursor (screen) pointing at a world offset from the player at spawn, in the default viewport. */
 export const cursorAt = (offset: Vec2): Vec2 => {
   const screen = toScreen(projection, offset)
-  return { x: 640 + screen.x, y: 360 + screen.y }
+  const zoom = viewZoom({ width: 1280, height: 720 })
+  return { x: 640 + screen.x * zoom, y: 360 + screen.y * zoom }
 }
 
 /** A schedule that replaces every enemy with training dummies (of `tuning`) at offsets from the player's spawn. */

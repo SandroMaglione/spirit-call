@@ -9,10 +9,13 @@ Like `vision.md`, this records the rules; the code is in
 
 - **A model** is a glTF binary (`.glb`) exported into `art/`, next to its
   Blender source and the scripts that build and export it: one folder per
-  character (`art/characters/crow/`), per enemy (`art/enemies/<kind>/`), and
-  per environment kit (`art/environment/courtyard/`). A module in `src/presentation/assets/`
-  imports the file and takes its numbers from the export's metadata
-  (`assets/crow.ts`, `assets/courtyard.ts`), and `models` (`models.ts`)
+  spirit (`art/spirits/<element>/`: in the arena a character shows as her
+  spirit, see `spirits.md`), per enemy (`art/enemies/<kind>/`), and per
+  environment kit (`art/environment/courtyard/`). (`art/characters/crow/`
+  is the first placeholder character, kept as a scale reference for
+  environment previews; the game no longer uses it.) A module in
+  `src/presentation/assets/` imports the file and takes its numbers from
+  the export's metadata (`assets/water-spirit.ts`, `assets/courtyard.ts`), and `models` (`models.ts`)
   registers it by id. It is an asset, not content: content never names a
   model. The build bundles only the files the game imports.
 - **A look** says what something looks like (`looks.ts`): every character
@@ -40,15 +43,17 @@ and every moment names a clip its model has.
   under it; between the feet for a body). The game scales it: a body to its
   look's height, a wall to its box, scenery by its `scale`.
 - **Few materials.** Every material of every model on screen is a draw call.
-  Prefer one palette texture shared by all parts (as the crow's body does).
-- **Animation:** one armature, at most four weights per vertex, clips named
-  as the moments will name them, played in place (no root motion: the game
+  Prefer one palette texture shared by all parts, or vertex colors (as the
+  spirits do).
+- **Animation:** one armature, at most four weights per vertex (or, for a
+  model without a skeleton like the spirits, clips keyed on its objects),
+  clips named as the moments will name them, played in place (no root motion: the game
   moves the body). Loops leave out their closing key (the first pose
   again); the spec's `loopSeconds` puts it back (`closeLoop`).
 - **The spec** (`ModelSpec`): the file's url, its rest height in meters,
   and each clip's last key time and loop length (`null` for one-shots).
   Generate or copy these from the export's metadata; never edit them by hand.
-  The crow exporter generates `assets/crow-timing.ts` alongside its GLBs.
+  The spirits' exporters generate `assets/<spirit>-spirit.ts` alongside their GLBs.
 
 ## Animation follows the simulation
 

@@ -20,7 +20,9 @@ import { harborModels } from "./assets/harbor.ts"
 import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { enemyModels } from "./assets/enemies.ts"
-import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
+import { fireSpiritModel, waterSpiritModel } from "./assets/spirits.ts"
+import { addGlow } from "./glow.ts"
+import type { GlowSpec } from "./glow.ts"
 
 /** How a clip ends: loops name the time their first pose comes back (`closeLoop`); one-shots have `null`. */
 export interface ClipTiming {
@@ -37,13 +39,29 @@ export interface ModelSpec {
   readonly footprint?: readonly [number, number]
   /** Its animation clips by name; a model without animation has none. */
   readonly clips: Readonly<Record<string, ClipTiming>>
+  /** A glow from within (rim, halo, glowing eyes; see `glow.ts`). */
+  readonly glow?: GlowSpec
+}
+
+/** The water spirit's glow, after its sheet: cyan edges, a soft blue halo, haloed eyes. */
+const waterGlow: GlowSpec = {
+  rim: { color: 0x8eebff, strength: 0.9, power: 2.5 },
+  halo: { color: 0x2e7bff, opacity: 0.35, size: 1.6 },
+  eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xcff6ff, opacity: 0.6, size: 0.3 }
+}
+
+/** The fire spirit's glow, after its sheet: a warm yellow heart, ember red edges, an orange halo; its eyes stay dark. */
+const fireGlow: GlowSpec = {
+  rim: { color: 0xe6391f, strength: 1.1, power: 1.8 },
+  core: { color: 0xffd54a, strength: 0.8, power: 2.2 },
+  halo: { color: 0xff8a3d, opacity: 0.4, size: 1.6 },
+  eyes: { nodes: ["Eye.L", "Eye.R"], color: 0, opacity: 0, size: 0 }
 }
 
 /** Every model the game can show. Add new ones here (with their module in `assets/`). */
 export const models = {
-  crow: crowModel,
-  trainingBlade: trainingBladeModel,
-  crescendo: crescendoModel,
+  waterSpirit: { ...waterSpiritModel, glow: waterGlow },
+  fireSpirit: { ...fireSpiritModel, glow: fireGlow },
   ...courtyardModels,
   ...cisternModels,
   ...kilnworksModels,
@@ -144,6 +162,7 @@ export const loadModels = async (ids: Iterable<ModelId>): Promise<ReadonlyMap<Mo
       if (!clips.has(name)) throw new Error(`Model ${id} is missing its ${name} clip`)
     }
     plainMaterials(gltf.scene)
+    if (spec.glow !== undefined && spec.height !== null) addGlow(gltf.scene, spec.glow, spec.height)
     return { id, spec, scene: gltf.scene, clips }
   }))
   return new Map(loaded.map((source) => [source.id, source]))

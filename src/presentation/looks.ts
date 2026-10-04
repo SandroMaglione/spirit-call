@@ -12,7 +12,6 @@ import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { WallPlacement } from "../schema.ts"
-import { crowCombo } from "./assets/crow.ts"
 import type { ModelId } from "./models.ts"
 
 /**
@@ -43,6 +42,19 @@ export interface Moments {
   readonly hurt?: Shot
 }
 
+/**
+ * What a body sheds while it moves: about `rate` a second (at full speed),
+ * thrown back from its back in `colors`, `size` world units across: drops
+ * falling to the floor, about half leaving a ripple there, or (`embers`)
+ * embers drifting up and burning out.
+ */
+export interface Drops {
+  readonly rate: number
+  readonly colors: ReadonlyArray<number>
+  readonly size: number
+  readonly embers?: boolean
+}
+
 /** Weapons in hand: each weapon's model, attached to the body model's `grip` bone as it is (same scale and axes). */
 export interface Held {
   readonly grip: string
@@ -71,27 +83,40 @@ export type BodyLook =
       readonly heightFactor: number
       readonly moments?: Moments
       readonly held?: Held
+      /** Drops shed behind it while it moves (a water spirit's trail; see `ShedSpiritDrops`). */
+      readonly drops?: Drops
     }
 
-/** Every character is the crow for now; the Swordsman holds her sword and fights with it. */
-const crow = { kind: "model", model: "crow", widthFactor: 1.5, heightFactor: view.bodyHeightFactor } as const
-const crowLoops: Moments = { idle: "Idle", run: { clip: "Run", distance: 110 } }
+/**
+ * In the arena each character shows as her spirit (art/spirits/). The
+ * Gunner (fire) is the fire spirit; the others are the water spirit for now: it bobs while it stands, hops
+ * while it runs (one hop per `distance` covered), and sheds drops behind
+ * it; its moves have no clips yet (they play over its loops).
+ */
+const waterSpirit: BodyLook = {
+  kind: "model",
+  model: "waterSpirit",
+  widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor,
+  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  drops: { rate: 30, colors: [0x8eebff, 0x44b6ff, 0xe0f9ff], size: 2.4 }
+}
+
+/** The fire spirit, for the fire character (the Gunner): it bobs and flickers, hops, and sheds embers. */
+const fireSpirit: BodyLook = {
+  kind: "model",
+  model: "fireSpirit",
+  widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor,
+  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  drops: { rate: 34, colors: [0xffd54a, 0xff8a3d, 0xe6391f, 0xfff176], size: 2.6, embers: true }
+}
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
-  swordsman: {
-    ...crow,
-    moments: {
-      ...crowLoops,
-      // The follow-through prepares the next cut; power has its own deeper thrust.
-      attack: crowCombo.map((move) => ({ clip: "AttackCombo", ...move })),
-      power: { clip: "Power", contact: crowCombo[0].contact },
-      dash: "Dash"
-    },
-    held: { grip: "weapon_grip", weapons: { trainingBlade: "trainingBlade", crescendo: "crescendo" } }
-  },
-  gunner: { ...crow, moments: crowLoops },
-  tidecaller: { ...crow, moments: crowLoops },
-  stormcaller: { ...crow, moments: crowLoops }
+  swordsman: waterSpirit,
+  gunner: fireSpirit,
+  tidecaller: waterSpirit,
+  stormcaller: waterSpirit
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({

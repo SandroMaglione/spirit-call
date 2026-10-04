@@ -317,6 +317,53 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
   }
 })
 
+/** Where each body that sheds drops was last frame, and its share of a drop still owed. */
+const shedding = new WeakMap<object, { at: Vec2; owed: number }>()
+
+/**
+ * Drops (or embers) off a moving spirit (a look's `drops`), into the 3D
+ * scene so its body hides the ones behind it: each leaves from its back,
+ * low on it, thrown back against its motion; drops fall to the floor,
+ * about half leaving a ripple there, embers drift up and burn out. More
+ * the faster it goes; none while it stands.
+ */
+export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
+  queries: {
+    players: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }, with: [Player] })
+  },
+  services: { host: Game.System.service(RenderHost), nodes: Game.System.service(RenderNodes), clock: Game.System.service(RenderClock) }
+}, ({ queries, services }) => {
+  const seconds = services.clock.frameSeconds
+  for (const { entity, data } of queries.players.each()) {
+    const node = services.nodes.get(entity.id)
+    if (node?.kind !== "player" || node.drops === null) continue
+    const drops = node.drops
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const last = shedding.get(node) ?? { at, owed: 0 }
+    shedding.set(node, last)
+    const moved = { x: at.x - last.at.x, y: at.y - last.at.y }
+    last.at = at
+    if (seconds <= 0) continue
+    const speed = Math.hypot(moved.x, moved.y) / seconds
+    if (speed < 20) {
+      last.owed = 0
+      continue
+    }
+    last.owed += drops.rate * seconds * Math.min(1, speed / 290)
+    const back = { x: -moved.x / (speed * seconds), y: -moved.y / (speed * seconds) }
+    const radius = data.body.get().radius
+    while (last.owed >= 1) {
+      last.owed -= 1
+      const color = drops.colors[Math.floor(Math.random() * drops.colors.length)]!
+      // From its back, a little to either side, low on its body.
+      const across = (Math.random() - 0.5) * radius * 1.1
+      const from = { x: at.x + back.x * radius * 0.9 - back.y * across, y: at.y + back.y * radius * 0.9 + back.x * across }
+      const height = node.body.height * (0.12 + Math.random() * 0.3)
+      services.host.drops.emit(from, height, back, drops.embers === true ? 25 + Math.random() * 40 : 50 + Math.random() * 70, drops.size * (0.7 + Math.random() * 0.6), color, drops.embers === true)
+    }
+  }
+})
+
 /**
  * Hit reactions on enemy bodies: a recoil after each blow (the body squashes,
  * leans away from the blow over its feet, and shifts back, springing back
@@ -377,6 +424,7 @@ export const UpdateFx = Game.System("Shooter/UpdateFx", {
 }, ({ queries, services }) => {
   const seconds = services.clock.frameSeconds
   services.host.fx.update(seconds)
+  services.host.drops.update(seconds)
   const [player] = queries.player.each()
   services.host.trails.update(seconds, player === undefined ? undefined : lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha))
 })

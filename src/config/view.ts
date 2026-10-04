@@ -17,9 +17,10 @@ export const view = {
    * zoom is the screen's short side over `referenceShortSide`, clamped to
    * [`minZoom`, 1]. A landscape phone (390 px) is at 0.8: close enough that
    * the characters read well, far enough to see what is coming. Desktop
-   * windows are taller than the reference and keep zoom 1.
+   * windows are taller than the reference and keep zoom 1. Everything is
+   * then drawn `magnify` times larger (the spirits read better closer).
    */
-  camera: { referenceShortSide: 490, minZoom: 0.45 },
+  camera: { referenceShortSide: 490, minZoom: 0.45, magnify: 1.25 },
   /**
    * The slash area shows while an enemy is in attack-assist range or a slash
    * recharges, fades in over `fadeInSeconds`, and after `lingerSeconds`
@@ -227,4 +228,4 @@ export const view = {
 
 /** The camera zoom for a screen size (see `view.camera`). */
 export const viewZoom = (screen: { readonly width: number; readonly height: number }): number =>
-  Math.min(1, Math.max(view.camera.minZoom, Math.min(screen.width, screen.height) / view.camera.referenceShortSide))
+  view.camera.magnify * Math.min(1, Math.max(view.camera.minZoom, Math.min(screen.width, screen.height) / view.camera.referenceShortSide))

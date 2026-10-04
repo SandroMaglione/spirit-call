@@ -11,6 +11,7 @@
  * while there is none (in the arena).
  */
 import { Box3, Color, DirectionalLight, HemisphereLight, PerspectiveCamera, RGBAFormat, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from "three"
+import type { Object3D } from "three"
 
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
@@ -57,6 +58,19 @@ const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, wea
   puppet.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, 0, false)
   puppet.object.updateMatrixWorld(true)
   return puppet
+}
+
+/** A model's bounds, without its glows (halos are wider than the body, and would shrink it in its place). */
+const boundsOf = (object: Object3D): Box3 => {
+  // Box3 measures hidden parts too: the glows are detached while it measures.
+  const glows: Array<{ glow: Object3D; parent: Object3D }> = []
+  object.traverse((part) => {
+    if (part.userData["glow"] === true && part.parent !== null) glows.push({ glow: part, parent: part.parent })
+  })
+  for (const { glow, parent } of glows) parent.remove(glow)
+  const bounds = new Box3().setFromObject(object, true)
+  for (const { glow, parent } of glows) parent.add(glow)
+  return bounds
 }
 
 /** The CSS color of `name` on `element` (an element's `--el`), as a three color; white without one. */
@@ -125,7 +139,7 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
   const add = (key: string, puppet: Puppet, rim: Color): Shown => {
     puppet.object.userData["shown"] = true
     scene.add(puppet.object)
-    return { key, puppet, bounds: new Box3().setFromObject(puppet.object, true), rim }
+    return { key, puppet, bounds: boundsOf(puppet.object), rim }
   }
   const remove = (shown: Shown) => {
     scene.remove(shown.puppet.object)
