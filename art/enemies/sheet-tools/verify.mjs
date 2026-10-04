@@ -24,20 +24,19 @@ for (const kind of process.argv.slice(2)) {
   if (gltf.animations.length || materials.size !== 1 || triangles >= 2000) throw Error('Static review contract failed');
   if (Math.abs(box.min.y) > .00001 || Math.abs(box.max.y - audit.height_m) > .00001) throw Error('Ground or height mismatch');
   if (triangles !== audit.triangles) throw Error(`Triangle mismatch ${triangles} != ${audit.triangles}`);
+  const positions = node => Array.from({ length: node.geometry.attributes.position.count }, (_, i) =>
+    new Vector3().fromBufferAttribute(node.geometry.attributes.position, i).applyMatrix4(node.matrixWorld));
+  const mirrorError = (a, b) => Math.max(...a.map(p =>
+    Math.min(...b.map(q => new Vector3(-p.x, p.y, p.z).distanceTo(q)))));
   const symmetry = {};
   for (const prefix of ['Eye', 'EyeSocket', 'EyeRim', 'AngryBrow']) {
     const left = gltf.scene.getObjectByName(`${prefix}L`);
     const right = gltf.scene.getObjectByName(`${prefix}R`);
     if (!left && !right) continue;
     if (!left || !right) throw Error(`Incomplete face pair: ${prefix}`);
-    const positions = node => Array.from({ length: node.geometry.attributes.position.count }, (_, i) =>
-      new Vector3().fromBufferAttribute(node.geometry.attributes.position, i).applyMatrix4(node.matrixWorld));
     const a = positions(left), b = positions(right);
     if (a.length !== b.length) throw Error(`Unequal face topology: ${prefix}`);
-    const error = Math.max(...a.map(p => {
-      p.x = -p.x;
-      return Math.min(...b.map(q => p.distanceTo(q)));
-    }));
+    const error = mirrorError(a, b);
     if (error > .000001) throw Error(`Asymmetric ${prefix}: ${error} meters`);
     symmetry[prefix] = error;
   }
@@ -48,8 +47,38 @@ for (const kind of process.argv.slice(2)) {
     bombDiameters = new Box3().setFromObject(bomb).getSize(new Vector3()).toArray();
     if (Math.max(...bombDiameters) / Math.min(...bombDiameters) > 1.01) throw Error('Hand bomb is flattened');
   }
+  let guardianDetails;
+  if (kind === 'guardian') {
+    const details = {};
+    for (const name of ['Breastplate', 'Helmet', 'GoldenCrest', 'Pauldron', 'GoldShoulderTrim', 'ElbowBand']) {
+      const center = gltf.scene.getObjectByName(name);
+      const left = center ?? gltf.scene.getObjectByName(`${name}L`);
+      const right = center ?? gltf.scene.getObjectByName(`${name}R`);
+      if (!left || !right) throw Error(`Missing Guardian detail: ${name}`);
+      const error = mirrorError(positions(left), positions(right));
+      if (error > .000001) throw Error(`Asymmetric Guardian ${name}: ${error}`);
+      details[name] = error;
+    }
+    const ball = new Box3().setFromObject(gltf.scene.getObjectByName('MaceHead'));
+    const diameters = ball.getSize(new Vector3()).toArray(), center = ball.getCenter(new Vector3());
+    if (Math.max(...diameters) / Math.min(...diameters) > 1.01) throw Error('Guardian mace is flattened');
+    const spikes = meshes.filter(name => name.startsWith('MaceSpike')).map(name => {
+      const points = positions(gltf.scene.getObjectByName(name)).map(p => p.sub(center));
+      return points.reduce((a, b) => a.lengthSq() > b.lengthSq() ? a : b);
+    });
+    if (spikes.length !== 12) throw Error('Expected twelve mace spikes');
+    const radii = spikes.map(p => p.length());
+    if (Math.max(...radii) - Math.min(...radii) > .000001) throw Error('Unequal mace spike lengths');
+    const nearest = spikes.map((p, i) => Math.min(...spikes.filter((_, j) => j !== i).map(q =>
+      p.angleTo(q) * 180 / Math.PI)));
+    if (Math.max(...nearest) - Math.min(...nearest) > .001) throw Error('Uneven mace spike spacing');
+    guardianDetails = { mirror_error_m: details, mace_diameters_m: diameters, spike_count: spikes.length,
+      spike_tip_radius_m: [Math.min(...radii), Math.max(...radii)],
+      nearest_spike_angle_degrees: [Math.min(...nearest), Math.max(...nearest)] };
+  }
   const result = { kind, loader: 'Three.js GLTFLoader', meshes, materials: materials.size, triangles,
     face_mirror_error_m: symmetry, ...(bombDiameters ? { hand_bomb_diameters_m: bombDiameters } : {}),
+    ...(guardianDetails ? { guardian_details: guardianDetails } : {}),
     animations: gltf.animations.length, bounds_gltf_m: { min: box.min.toArray(), max: box.max.toArray() },
     sha256: createHash('sha256').update(bytes).digest('hex'), status: 'passed: static review asset, before rigging' };
   writeFileSync(resolve(here, 'verification.json'), JSON.stringify(result, null, 2) + '\n');

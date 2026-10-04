@@ -90,4 +90,19 @@ if not sweep and not fit:
         camera.location=bomb_target+direction(-25,15)*5
         camera.rotation_euler=(bomb_target-camera.location).to_track_quat('-Z','Y').to_euler()
         scene.render.filepath=str(OUT/'hand-bomb.png');bpy.ops.render.render(write_still=True)
+    if kind=='guardian':
+        weapon_target=bpy.data.objects['MaceHead'].location
+        camera.data.ortho_scale=.60
+        camera.location=weapon_target+direction(-35,20)*5
+        camera.rotation_euler=(weapon_target-camera.location).to_track_quat('-Z','Y').to_euler()
+        scene.render.filepath=str(OUT/'weapon.png');bpy.ops.render.render(write_still=True)
+        # A straight front view exposes both shoulder caps for symmetry
+        # review, with the independently held props temporarily hidden.
+        for obj in bpy.data.objects:
+            if obj.type=='MESH' and obj.name.startswith(('Shield','Mace')):obj.hide_render=True
+        armor_target=Vector((0,0,.94))
+        camera.data.ortho_scale=.95
+        camera.location=armor_target+direction(0,0)*5
+        camera.rotation_euler=(armor_target-camera.location).to_track_quat('-Z','Y').to_euler()
+        scene.render.filepath=str(OUT/'armor-front.png');bpy.ops.render.render(write_still=True)
 print('rendered',kind,list(views))

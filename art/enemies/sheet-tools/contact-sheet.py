@@ -34,3 +34,14 @@ for index,(kind,view,label) in enumerate((('charger','face-front','Firebomber'),
  draw.text((index*400+22,20),label,font=font,fill='#252536')
 details.save(OUT.with_name('review-faces.png'))
 print(OUT.with_name('review-faces.png'))
+
+guardian=ROOT/'guardian/production/renders'
+if (guardian/'armor-front.png').exists() and (guardian/'weapon.png').exists():
+ armor=Image.new('RGB',(1280,700),'#DDDDE6');draw=ImageDraw.Draw(armor)
+ for index,(view,label) in enumerate((('armor-front','Centered crest and mirrored shoulders'),
+                                     ('weapon','Round mace and evenly spaced spikes'))):
+  image=Image.open(guardian/f'{view}.png').convert('RGBA')
+  armor.paste(image,(index*640,60),image)
+  draw.text((index*640+22,20),label,font=small,fill='#252536')
+ armor.save(guardian/'details.png')
+ print(guardian/'details.png')

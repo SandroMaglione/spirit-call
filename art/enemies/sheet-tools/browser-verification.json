@@ -1,6 +1,6 @@
 {
   "url": "http://192.168.40.47:5199/art/enemies/sheet-tools/review.html",
-  "revision": "angry mirrored eyes and rounded held bomb",
+  "revision": "symmetric angry eyes, round hand bomb, centered Guardian armor and uniform mace spikes",
   "phone": [
     {
       "model": {
@@ -45,7 +45,7 @@
     {
       "model": {
         "animations": 0,
-        "calls": 46,
+        "calls": 50,
         "camera": [
           0,
           3.140101492404937,
@@ -53,7 +53,7 @@
         ],
         "kind": "guardian",
         "status": "ready",
-        "triangles": 1854,
+        "triangles": 1934,
         "view": "game"
       },
       "overflow": false,
@@ -107,7 +107,7 @@
     {
       "model": {
         "animations": 0,
-        "calls": 46,
+        "calls": 50,
         "camera": [
           0,
           3.140101492404937,
@@ -115,7 +115,7 @@
         ],
         "kind": "guardian",
         "status": "ready",
-        "triangles": 1854,
+        "triangles": 1934,
         "view": "game"
       },
       "overflow": false,
