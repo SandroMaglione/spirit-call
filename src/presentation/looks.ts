@@ -246,7 +246,7 @@ export interface Inlay {
  */
 export type FloorLook =
   | { readonly kind: "grid"; readonly color: number; readonly line: number; readonly spacing: number }
-  | { readonly kind: "tiles"; readonly tiles: ReadonlyArray<ModelId>; readonly color: number; readonly border?: ReadonlyArray<ModelId>; readonly inlays?: ReadonlyArray<Inlay>; readonly tint?: number }
+  | { readonly kind: "tiles"; readonly tiles: ReadonlyArray<ModelId>; readonly color: number; readonly border?: ReadonlyArray<ModelId>; readonly inlays?: ReadonlyArray<Inlay>; readonly tint?: number; readonly apronTiles?: number }
 
 /** A model placed for looks only (it blocks nothing): at a floor point, turned `turn` radians, at the arena's scale. */
 export interface Scenery {

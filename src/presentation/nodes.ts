@@ -9,6 +9,7 @@ import { projection, view } from "../config/view.ts"
 import { depthOf, toScreenAt, worldHeight } from "../math/iso.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import type { Box } from "../physics/shapes.ts"
+import type { Vec2 } from "../math/vec.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { EnemyKind, Faction, ProjectileStyle, RenderableValue } from "../schema.ts"
 import { Instance } from "./batch.ts"
@@ -208,6 +209,8 @@ const wallNode = (assets: RenderAssets, look: WallLook, scale: number, box: Box,
       const copy = copyModel(assets.model(look.model), true)
       copy.object.scale.setScalar(scale)
       copy.object.rotation.y = look.turn
+      const offset = groundOffsetOf(look.model, look.turn, scale)
+      copy.object.position.set(offset.x, 0, offset.y)
       root.add(copy.object)
       height = heightOf(models[look.model]) * scale
       fade = (alpha) => paintMaterials(copy.materials, 0xffffff, 0x000000, 0, alpha)
@@ -245,6 +248,13 @@ export const footprintOf = (id: ModelId): readonly [number, number] => {
   const spec: ModelSpec = models[id]
   if (spec.footprint === undefined) throw new Error(`Model ${id} has no footprint to fit the arena with`)
   return spec.footprint
+}
+
+/** Center a static piece's visible footprint on its placement, including off-center fittings. */
+export const groundOffsetOf = (id: ModelId, turn: number, scale: number): Vec2 => {
+  const spec: ModelSpec = models[id]
+  const [x, z] = spec.footprintCenter ?? [0, 0]
+  return { x: -(x * Math.cos(turn) + z * Math.sin(turn)) * scale, y: -(-x * Math.sin(turn) + z * Math.cos(turn)) * scale }
 }
 
 const heightOf = (spec: ModelSpec): number => spec.height ?? 0
@@ -304,4 +314,3 @@ export const disposeNode = (node: RenderNode): void => {
       return
   }
 }
-
