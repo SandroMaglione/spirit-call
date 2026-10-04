@@ -1,0 +1,133 @@
+{
+  "title": "Ember kilnworks study",
+  "style": "kiln",
+  "batch": "arena-prop-study",
+  "base_kit": "ember-kilnworks",
+  "palette": {
+    "stone": "9A7966",
+    "light": "AD8D75",
+    "edge": "C0A388",
+    "dark": "424B4B",
+    "accent": "B69063",
+    "metal": "586466",
+    "wood": "79624D",
+    "earth": "A58361",
+    "green": "777F62",
+    "warm": "D5A66A",
+    "snow": "B7BAAD",
+    "cloth": "96715C",
+    "wood-light": "94785E",
+    "wood-dark": "554536",
+    "metal-light": "A0A7A7",
+    "rope": "BCAA82",
+    "sail": "CDC8B1",
+    "fish": "AD8D75"
+  },
+  "assets": [
+    {
+      "id": "iron-ingots",
+      "title": "Stacked iron ingots",
+      "recipe": "study-iron-ingots",
+      "group": "small"
+    },
+    {
+      "id": "tongs-tray",
+      "title": "Tongs and hammer in a tray",
+      "recipe": "study-tongs-tray",
+      "group": "small"
+    },
+    {
+      "id": "coal-pile",
+      "title": "Grounded coal pile",
+      "recipe": "study-coal-pile",
+      "group": "small"
+    },
+    {
+      "id": "small-crucible",
+      "title": "Open crucible",
+      "recipe": "study-small-crucible",
+      "group": "small"
+    },
+    {
+      "id": "casting-mould",
+      "title": "Open casting mould",
+      "recipe": "study-casting-mould",
+      "group": "small"
+    },
+    {
+      "id": "compact-anvil",
+      "title": "Anvil with attached tapered horn",
+      "recipe": "study-compact-anvil",
+      "group": "working"
+    },
+    {
+      "id": "hammer-rack",
+      "title": "Tools resting on a bearing rail",
+      "recipe": "study-hammer-rack",
+      "group": "working"
+    },
+    {
+      "id": "coal-bin",
+      "title": "Planked coal bin",
+      "recipe": "study-coal-bin",
+      "group": "working"
+    },
+    {
+      "id": "compact-boiler",
+      "title": "Boiler with plinth and connected pipe",
+      "recipe": "study-compact-boiler",
+      "group": "working"
+    },
+    {
+      "id": "casting-bench",
+      "title": "Low casting bench",
+      "recipe": "study-casting-bench",
+      "group": "working"
+    },
+    {
+      "id": "brick-furnace",
+      "title": "Compact bonded-brick furnace",
+      "recipe": "study-brick-furnace",
+      "group": "large"
+    },
+    {
+      "id": "forging-bay",
+      "title": "Supported smithing canopy",
+      "recipe": "study-forging-bay",
+      "group": "large"
+    },
+    {
+      "id": "buttressed-chimney",
+      "title": "Bonded chimney with buttresses",
+      "recipe": "study-buttressed-chimney",
+      "group": "large"
+    },
+    {
+      "id": "casting-station",
+      "title": "Grounded casting station",
+      "recipe": "study-casting-station",
+      "group": "large"
+    }
+  ],
+  "player_height_m": 0.5803955393237317,
+  "scope": "Reviewable art study with supported perimeter assemblies.",
+  "changes": [
+    "Reduced the furnace, boiler, anvil and tool proportions beside the spirit.",
+    "Added ingots, tongs, coal, open crucibles and casting moulds.",
+    "Rebuilt furnace piers and chimney supports; added smithing and casting bays outside the grid."
+  ],
+  "comparisons": [
+    {
+      "original": "furnace",
+      "study": "brick-furnace"
+    },
+    {
+      "original": "anvil",
+      "study": "compact-anvil"
+    },
+    {
+      "original": "boiler",
+      "study": "compact-boiler"
+    }
+  ]
+}

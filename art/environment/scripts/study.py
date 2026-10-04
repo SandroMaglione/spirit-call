@@ -190,6 +190,7 @@ def build(kit_name, builders, notes, comparisons, palette=None):
         return ''.join(f'{max(0,min(255,round(int(hexcolor[i:i+2],16)*f))):02X}' for i in (0,2,4))
     colors.update({'wood-light':tint(colors['wood'],1.22),'wood-dark':tint(colors['wood'],.70),
         'metal-light':colors['light'],'rope':'BCAA82','sail':'CDC8B1','fish':colors['light']})
+    colors.update(palette or {})
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.context.preferences.filepaths.save_version=0
     scene=bpy.context.scene
