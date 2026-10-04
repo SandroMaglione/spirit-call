@@ -3,18 +3,22 @@
  * enemies (hit flash, windup tint, health bars, stars over stunned ones).
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
+import { Vector3 } from "three"
+
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
-import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Member, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { lerp, normalizeOr } from "../math/vec.ts"
+import { Action, Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
 import { mixColor } from "./draw.ts"
+
+const leanAxis = new Vector3()
 
 /** `color` tinted toward the color of `state`, if any. */
 export const stateTint = (color: number, state: ActiveState | null): number =>
@@ -36,17 +40,26 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         weapon: Game.Query.read(Weapon),
         body: Game.Query.read(Body),
         state: Game.Query.read(ElementState),
-        member: Game.Query.read(Member)
+        member: Game.Query.read(Member),
+        velocity: Game.Query.read(Velocity)
       },
       with: [Player]
     })
   },
-  resources: { tuning: Game.System.readResource(Tuning) },
+  events: { action: Game.System.readEvent(Action), perfect: Game.System.readEvent(PerfectDodged) },
+  resources: { tuning: Game.System.readResource(Tuning), hitStop: Game.System.readResource(HitStop) },
   services: { nodes: Game.System.service(RenderNodes), host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
-}, ({ queries, resources, services }) => {
+}, ({ events, queries, resources, services }) => {
   const marks = services.host.groundMarks
   marks.clear()
   const tuning = resources.tuning.get()
+  // A character comes in: she pops up, once the one who fell is down, wide-eyed (she did not choose the moment); a perfect dodge widens her eyes too.
+  for (const action of events.action.all()) {
+    if (action.kind !== "switch") continue
+    services.host.feedback.entrance = action.fell ? -view.spirit.fall.seconds : 0
+    if (action.fell) services.host.feedback.wideEyes = view.spirit.wideSeconds + view.spirit.fall.seconds
+  }
+  if (events.perfect.all().length > 0) services.host.feedback.wideEyes = view.spirit.wideSeconds
   for (const { entity, data } of queries.player.each()) {
     const position = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
     const dash = data.dash.get()
@@ -144,10 +157,44 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const wide = 1 + (spirit.wide - 1) * Math.min(1, feedback.wideEyes / (spirit.wideSeconds * 0.5))
       if (health.current <= 0) node.body.express?.(1, spirit.shut)
       else node.body.express?.(wide, wide)
-      // Coming onto the field she pops up to her size, a little past it.
+      // Her body leans with her changes of pace, sprung: digging in as she stops, into a turn, forward as she sets off.
+      const sway = feedback.sway
+      const springs = spirit.sway
+      const velocity = data.velocity.get()
+      const seconds = resources.hitStop.get().remaining > 0 ? 0 : Math.min(services.clock.frameSeconds, 0.05)
+      if (sway.last !== null && seconds > 0) {
+        const pace = tuning.characters[data.member.get().character].stats.speed
+        // A dash's burst counts as no more than a run's.
+        const change = { x: velocity.x - sway.last.x, y: velocity.y - sway.last.y }
+        const size = Math.hypot(change.x, change.y)
+        const most = size > pace ? pace / size : 1
+        sway.vx += change.x * most * springs.kick
+        sway.vy += change.y * most * springs.kick
+        // A stop or a turn back at full pace kicks up dust behind her.
+        if (size * most > pace * springs.dust && dash.remaining <= 0) {
+          const from = toScreen(projection, position)
+          for (let puff = 0; puff < 3; puff++) services.host.fx.dust(from, normalizeOr(toScreen(projection, { x: -change.x, y: -change.y }), { x: 0, y: -1 }), view.impact.dust)
+        }
+      }
+      if (seconds > 0) {
+        sway.vx += (-springs.stiffness * sway.x - springs.damping * sway.vx) * seconds
+        sway.vy += (-springs.stiffness * sway.y - springs.damping * sway.vy) * seconds
+        sway.x += sway.vx * seconds
+        sway.y += sway.vy * seconds
+        sway.last = { x: velocity.x, y: velocity.y }
+      }
+      const lean = Math.min(springs.most, Math.hypot(sway.x, sway.y))
+      if (lean > 1e-4) {
+        // Tipped over her feet, her top toward the lean: about the floor axis across it.
+        leanAxis.set(sway.y, 0, -sway.x).normalize()
+        node.pivot.quaternion.setFromAxisAngle(leanAxis, lean)
+      } else node.pivot.quaternion.identity()
+      const squash = lean * springs.squash
+      // Coming onto the field she pops up to her size, a little past it (not before the one who fell is down).
       const pop = Math.min(1, feedback.entrance / spirit.popSeconds)
-      const size = pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))
-      node.pivot.scale.set(size, pop >= 1 ? 1 : size * (1 + 0.25 * Math.sin(pop * Math.PI)), size)
+      const size = pop < 0 ? 0 : pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))
+      const stretch = pop < 0 || pop >= 1 ? 1 : 1 + 0.25 * Math.sin(pop * Math.PI)
+      node.pivot.scale.set(size * (1 + squash * 0.5), size * stretch * (1 - squash), size * (1 + squash * 0.5))
     }
   }
 })

@@ -161,8 +161,24 @@ export const view = {
    * `pop` of her size over `popSeconds`; her eyes go `wide` times bigger for
    * `wideSeconds` after a perfect dodge or coming in after a fall, and shut
    * to `shut` of their height when she falls.
+   *
+   * `fall`: falling, she is left behind for `seconds`, tipping back by
+   * `lean` and sinking to `flat` of her height, fading over the last
+   * `fade` of it; the next one pops up once she is down.
+   *
+   * `sway`: her body leans with her changes of pace, sprung (`stiffness`,
+   * `damping`): a change of speed kicks the lean by `kick` (radians a
+   * second per unit a second), toward where she speeds up (so stopping
+   * she digs in, leaning back, and turning she leans into the turn), up
+   * to `most`; leaning squashes her by `squash` per radian. A change of
+   * `dust` of her speed at once (a stop or a turn back at full pace) kicks
+   * up dust.
    */
-  spirit: { ready: 1.9, pulse: 0.35, pulseHz: 1.6, low: 0.25, lowHealth: 0.35, pop: 0.55, popSeconds: 0.22, wide: 1.35, wideSeconds: 0.6, shut: 0.12 },
+  spirit: {
+    ready: 1.9, pulse: 0.35, pulseHz: 1.6, low: 0.25, lowHealth: 0.35, pop: 0.55, popSeconds: 0.22, wide: 1.35, wideSeconds: 0.6, shut: 0.12,
+    fall: { seconds: 0.38, lean: 0.9, flat: 0.3, fade: 0.45 },
+    sway: { stiffness: 190, damping: 15, kick: 0.017, most: 0.34, squash: 0.5, dust: 0.75 }
+  },
   /** A perfect dodge's flash, ring, and streaks. */
   perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7 },
   breaking: { bar: 0xffc857, full: 0xfff4d6, glow: 0xffc857, pulseHz: 5, ring: 90, flash: 70, shake: 9 },

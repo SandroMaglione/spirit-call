@@ -62,8 +62,12 @@ a repeat of the same steps. The rules for model files in general are in
     character, not the HUD, so what matters shows on her: her halo pulses
     brighter while her ultimate is ready and dims as her health runs low,
     she pops up when she comes onto the field, and her eyes narrow through
-    a blow, go wide after a perfect dodge, and shut when she falls
-    (`view.spirit`, `DrawPlayer`). A new spirit gets all of this from its
+    a blow, go wide after a perfect dodge, and shut when she falls. Her
+    body also leans with her changes of pace (digging in as she stops,
+    into a turn, kicking up dust from full speed), and falling she is left
+    behind for a moment, tipping back and fading, before the next one pops
+    up (`view.spirit`, `DrawPlayer`, `PlayFalls`). All of it is the
+    presentation's: the simulation switches at once, as before. A new spirit gets all of this from its
     halo (`GlowSpec`) and its look's `eyes`; nothing is built per spirit.
 11. **Model first, then the game.** Each spirit is built and reviewed as a
     model against its sheet (overlays, renders from the game's camera, at
