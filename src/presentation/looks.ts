@@ -718,16 +718,12 @@ export const harborArena: ArenaLook = {
   light: { sky: 0xf0f8ff, ground: 0x84909a, sun: 0xffffff }
 }
 
-/**
- * The ochre necropolis (`art/environment/ochre-necropolis`): sand-worn
- * stone around a sun medallion, obelisks, urns and torches along the north
- * wall, a winged statue facing its offering table, and what the sand and
- * the robbers left.
- */
+/** The obelisk ring and elemental pools remain. Compact burial goods and folded-wing guardians provide cover; the tomb gate, burial dais and sun altar frame the burial ground. */
 export const necropolisArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["necropolisFloorPlain", "necropolisFloorPlain", "necropolisFloorPlain", "necropolisFloorCracked"],
     color: 0x3a2c1e,
     border: ["necropolisFloorWorn"],
@@ -750,26 +746,38 @@ export const necropolisArena: ArenaLook = {
     inner: { kind: "run", model: "necropolisWallLow" }
   },
   scenery: [
-    { model: "necropolisSandDrift", at: { x: 430, y: 1758 }, turn: 0 },
-    { model: "necropolisSandDrift", at: { x: 1520, y: 48 }, turn: Math.PI },
-    { model: "necropolisSandDrift", at: { x: 1752, y: 1620 }, turn: Math.PI / 2 }
+    { model: "necropolisStudyTombGateway", at: { x: 900, y: -115 }, turn: 0 },
+    { model: "necropolisStudyOfferingAwning", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "necropolisStudySunAltar", at: { x: 1400, y: -130 }, turn: 0 },
+    { model: "necropolisStudyBurialDais", at: { x: -155, y: 900 }, turn: 0 },
+    { model: "necropolisStudyOfferingBowl", at: { x: 550, y: 65 }, turn: 0 },
+    { model: "necropolisStudyCanopicJar", at: { x: 310, y: 65 }, turn: 0 },
+    { model: "necropolisStudyPotteryShards", at: { x: 1460, y: 70 }, turn: 0 },
+    { model: "necropolisStudyFoldedLinen", at: { x: 1220, y: 60 }, turn: 0 },
+    { model: "necropolisStudyGlyphTablet", at: { x: 1590, y: 65 }, turn: 0 },
+    { model: "necropolisStudyFoldedLinen", at: { x: 70, y: 1400 }, turn: 0 },
+    { model: "necropolisStudyCanopicJar", at: { x: 1740, y: 1400 }, turn: 0 },
+    { model: "necropolisStudyPotteryShards", at: { x: 500, y: 1190 }, turn: 0 },
+    { model: "necropolisStudyGlyphTablet", at: { x: 1250, y: 675 }, turn: 0 },
+    { model: "necropolisStudyOfferingBowl", at: { x: -110, y: 975 }, turn: 0 },
+    { model: "necropolisStudyFoldedLinen", at: { x: -170, y: 1050 }, turn: 0 },
+    { model: "necropolisStudyCanopicJar", at: { x: 500, y: -150 }, turn: 0 },
+    { model: "necropolisStudyGlyphTablet", at: { x: 1330, y: -120 }, turn: 0 },
+    { model: "necropolisStudyPotteryShards", at: { x: 1380, y: 1730 }, turn: 0 }
   ],
   props: [
-    { model: "necropolisObelisk", turn: 0 },
-    { model: "necropolisObelisk", turn: 0 },
-    { model: "necropolisUrnTall", turn: 0 },
-    { model: "necropolisUrnTall", turn: 0 },
-    { model: "necropolisTorchStand", turn: 0 },
-    { model: "necropolisTorchStand", turn: 0 },
-    { model: "necropolisWingStatue", turn: Math.PI / 2 },
-    { model: "necropolisOfferingTable", turn: Math.PI / 2 },
-    { model: "necropolisSandRockLarge", turn: Math.PI / 2 - 0.37 },
-    { model: "necropolisSarcophagus", turn: 0 },
-    { model: "necropolisDeadShrub", turn: 0 },
-    { model: "necropolisSandRockSmall", turn: 0.4 },
-    { model: "necropolisUrnBroken", turn: 0.8 },
-    { model: "necropolisCanopicJars", turn: 0.3 },
-    { model: "necropolisObeliskBroken", turn: 0 }
+    { model: "necropolisStudyHandledAmphora", turn: 0 },
+    { model: "necropolisStudyHandledAmphora", turn: 0 },
+    { model: "necropolisStudyWingGuardian", turn: 0 },
+    { model: "necropolisStudyWingGuardian", turn: 0 },
+    { model: "necropolisStudyOfferingTable", turn: Math.PI / 2 },
+    { model: "necropolisStudyOfferingTable", turn: Math.PI / 2 },
+    { model: "necropolisStudyFittedSarcophagus", turn: 0 },
+    { model: "necropolisStudyFittedSarcophagus", turn: 0 },
+    { model: "necropolisStudyCanopicTrio", turn: 0 },
+    { model: "necropolisStudyCanopicTrio", turn: 0 },
+    { model: "necropolisStudyFittedSarcophagus", turn: 0 },
+    { model: "necropolisStudyWingGuardian", turn: 0 }
   ],
   background: 0x2b2118,
   // A fire trench and a basin framed in sandstone.
@@ -781,8 +789,7 @@ export const necropolisArena: ArenaLook = {
   // Late sun on the sand.
   light: { sky: 0xfff6e2, ground: 0x9a8a72, sun: 0xfff0d0 },
   fires: [
-    { at: { x: 460, y: 16 }, height: 86 },
-    { at: { x: 1340, y: 16 }, height: 86 }
+
   ]
 }
 

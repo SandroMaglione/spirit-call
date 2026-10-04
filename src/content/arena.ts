@@ -317,23 +317,18 @@ export const arenas = {
       { element: "water", column: 5, row: 11, columns: 3, rows: 1, walled: { y: "south", x: "east" } }
     ],
     props: [
-      // The north wall, the same on both sides of the fire: an obelisk in the corner, an urn, a torch. The statue and its offering table face each other across the ground.
-      prop(32, 32, 64, 64),
-      prop(1768, 32, 64, 64),
-      prop(260, 26, 52, 52),
-      prop(1540, 26, 52, 52),
-      prop(460, 16, 32, 32),
-      prop(1340, 16, 32, 32),
-      prop(21, 900, 42, 128),
-      prop(1773, 900, 54, 108),
-      // What the sand has taken, and what the robbers left.
-      prop(63, 380, 126, 154),
-      prop(32, 1400, 64, 126),
-      prop(23, 1487, 46, 48),
-      prop(1753, 400, 94, 104),
-      prop(1755, 1380, 90, 90),
-      prop(1759, 1461, 82, 72),
-      prop(1400, 1768, 64, 64)
+      prop(260, 13, 38, 26),
+      prop(1540, 13, 38, 26),
+      prop(600, 13, 60, 26),
+      prop(1200, 13, 60, 26),
+      prop(17, 900, 34, 58),
+      prop(1783, 900, 34, 58),
+      prop(19, 1400, 38, 76),
+      prop(1781, 1350, 38, 76),
+      prop(560, 1790, 46, 20),
+      prop(1300, 1790, 46, 20),
+      prop(550, 1180, 38, 76),
+      prop(1250, 620, 60, 26)
     ]
   }),
   /** A cloister: a square of low walls around the middle, pillars at its open corners; nowhere is open for long. */
