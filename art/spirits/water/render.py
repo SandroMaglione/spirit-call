@@ -36,6 +36,12 @@ fill.data.energy = 0.6
 fill.data.color = (0.45, 0.7, 1.0)
 fill.rotation_euler = (math.radians(70), 0, math.radians(150))
 scene.collection.objects.link(fill)
+# A cyan rim from behind and below, like the sheet's lower edge.
+rim = bpy.data.objects.new("Rim", bpy.data.lights.new("Rim", "SUN"))
+rim.data.energy = 2.5
+rim.data.color = (0.45, 0.9, 1.0)
+rim.rotation_euler = (math.radians(-110), 0, math.radians(20))
+scene.collection.objects.link(rim)
 
 # Glow round the eyes, like the sheet's.
 scene.use_nodes = True
@@ -60,9 +66,9 @@ VIEWS = {
     "side": Vector((-1, 0, 0)),  # its front on the right, as the sheet shows it
     "back": Vector((0, 1, 0)),
     "top": Vector((0, 0.0001, 1)),  # its front at the bottom, as the sheet shows it
-    "hero": Vector((-0.55, -0.75, 0.45)),
-    # The game's camera: 30° down, from 45° round it.
-    "game": Vector((-math.sin(math.radians(45)) * math.cos(math.radians(30)), -math.cos(math.radians(45)) * math.cos(math.radians(30)), math.sin(math.radians(30)))),
+    # The sheet's hero view is isometric, like the game's camera: 30° down,
+    # its face turned 32° to the right of the camera.
+    "hero": Vector((-math.sin(math.radians(32)) * math.cos(math.radians(30)), -math.cos(math.radians(32)) * math.cos(math.radians(30)), math.sin(math.radians(30)))),
 }
 for name, direction in VIEWS.items():
     direction = direction.normalized()
@@ -75,7 +81,7 @@ world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.32, 0.25,
 scene.render.resolution_x = 30
 scene.render.resolution_y = 32
 camera.data.ortho_scale = 0.9
-direction = VIEWS["game"].normalized()
+direction = VIEWS["hero"].normalized()
 camera.location = target + direction * 4
 camera.rotation_euler = (-direction).to_track_quat("-Z", "Y").to_euler()
 scene.render.filepath = str(OUT / "game-size.png")

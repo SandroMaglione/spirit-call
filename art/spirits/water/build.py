@@ -28,22 +28,38 @@ HOVER = 0.06  # the body's underside above the floor at rest
 DEPTH = 153 / 159  # the side view's widest over the front view's
 
 # The body's profile, from its underside to its tip: (height, radius), both
-# in body heights. Measured from the front view: widest a third of the way
-# up, shoulders staying wide to the middle, then a taper to the tip; the
-# underside is slightly concave (its middle higher than its rim).
+# in body heights. Measured from the front view and its isometric hero
+# view: a bottom-heavy round bulb (widest under a third of the way up,
+# shoulders holding to 60% of its height, a little fuller low than the
+# sheet's front view) with a narrow tip rising out of it; the underside is slightly concave (its
+# middle higher than its rim).
 PROFILE = [
-    (0.0, 0.13), (0.03, 0.22), (0.075, 0.31), (0.14, 0.4), (0.22, 0.46), (0.32, 0.505),
-    (0.43, 0.482), (0.54, 0.442), (0.645, 0.372), (0.74, 0.29), (0.83, 0.2), (0.915, 0.115),
+    (0.0, 0.17), (0.05, 0.3), (0.14, 0.445), (0.25, 0.5), (0.37, 0.505),
+    (0.49, 0.455), (0.6, 0.395), (0.7, 0.295), (0.8, 0.195), (0.9, 0.115),
 ]
 TIP = 1.0
+# The top curves back (seen from the side), and drifts a little to one side
+# (seen from the front): ring centers offset by height, in body heights.
+LEAN_BACK = 0.1
+LEAN_SIDE = -0.022
+
+
+def lean(z):
+    """Where the profile's middle is at height `z`: straight up to the middle, then curving back toward the tip."""
+    t = max(0.0, min(1.0, (z - 0.42) / 0.58))
+    t = t * t * (3 - 2 * t)
+    return Vector((LEAN_SIDE * t ** 1.3, LEAN_BACK * t ** 1.6, 0))
 UNDERSIDE = 0.025  # the underside's middle, above its rim
-SEGMENTS = 12
+SEGMENTS = 10
+WIDTH = 1.0
 JITTER = 0.035  # random radial unevenness, for facets that look cut, not turned
 
-# Eyes: tall ovals, 36° apart round its front, at 29% of its height.
-EYE_HEIGHT = 0.29
-EYE_APART = math.radians(36)
-EYE_SIZE = (0.088, 0.19)  # width, height (body heights)
+# Eyes: tall ovals, centered on its face (34° apart round its front), at
+# 40% of its height: where the isometric hero view shows them, well inside
+# its outline seen from above.
+EYE_HEIGHT = 0.4
+EYE_APART = math.radians(34)
+EYE_SIZE = (0.1, 0.24)  # width, height (body heights)
 NUB_RADIUS = 0.098
 NUB_HEIGHT = 1.134  # its center, above the body's underside
 
@@ -65,7 +81,7 @@ def facet_color(normal, height, rng):
     light = Vector((-0.45, -0.55, 0.7)).normalized()
     t = 0.5 + 0.5 * normal.dot(light)
     # Strong contrast, like the sheet: deep blue low and away from the light, bright cyan high and toward it.
-    t = 0.75 * t + 0.5 * height + rng.uniform(-0.12, 0.12) - 0.32
+    t = 0.75 * t + 0.5 * height + rng.uniform(-0.12, 0.12) - 0.27
     t = max(0.0, min(1.0, t))
     deep, base, mid, bright = (linear(COLORS[k]) for k in ("deep", "base", "mid", "light"))
     if t < 0.3:
@@ -81,9 +97,10 @@ def lathe(bm, rng):
         ring = []
         for k in range(SEGMENTS):
             a = 2 * math.pi * k / SEGMENTS + turn
-            rr = r * (1 + rng.uniform(-JITTER, JITTER))
+            rr = r * WIDTH * (1 + rng.uniform(-JITTER, JITTER))
             zz = z + rng.uniform(-JITTER, JITTER) * 0.25 * (0.3 if i == 0 else 1)
-            ring.append(bm.verts.new((rr * math.sin(a) * BODY, -rr * math.cos(a) * BODY * DEPTH, zz * BODY + HOVER)))
+            middle = lean(z)
+            ring.append(bm.verts.new(((rr * math.sin(a) + middle.x) * BODY, (-rr * math.cos(a) * DEPTH + middle.y) * BODY, zz * BODY + HOVER)))
         rings.append(ring)
     # Bands between rings: two triangles per step, zigzagging with the half turn.
     for i in range(len(rings) - 1):
@@ -97,7 +114,7 @@ def lathe(bm, rng):
             else:
                 bm.faces.new((lower[k], lower[j], upper[j]))
                 bm.faces.new((lower[k], upper[j], upper[k]))
-    tip = bm.verts.new((0, 0, TIP * BODY + HOVER))
+    tip = bm.verts.new(tuple(lean(TIP) * BODY + Vector((0, 0, TIP * BODY + HOVER))))
     for k in range(SEGMENTS):
         bm.faces.new((rings[-1][k], rings[-1][(k + 1) % SEGMENTS], tip))
     bottom = bm.verts.new((0, 0, UNDERSIDE * BODY + HOVER))
@@ -141,16 +158,22 @@ def eye(bm, tree, side):
     z = EYE_HEIGHT * BODY + HOVER
     out = Vector((math.sin(a), -math.cos(a) * DEPTH, 0)).normalized()
     hit, normal, _, _ = tree.ray_cast(Vector((0, 0, z)) + out * 1.0, -out)
-    # Upright, facing straight out (not tilted with the facet it sits on).
-    facing = Vector((normal.x, normal.y, 0)).normalized()
-    across = Vector((0, 0, 1)).cross(facing).normalized()
-    up = Vector((0, 0, 1))
-    normal = facing
-    center = hit + facing * 0.009
-    made = bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=6, radius=1.0)
+    # Lying on the body's smooth curve at its height (not on one facet, which
+    # would tip it): its face along the profile's normal, its long axis up the slope.
+    zz = EYE_HEIGHT
+    for (z0, r0), (z1, r1) in zip(PROFILE, PROFILE[1:]):
+        if z0 <= zz <= z1:
+            slope = (r1 - r0) / (z1 - z0) * WIDTH
+            break
+    flat = Vector((normal.x, normal.y, 0)).normalized()
+    normal = (flat - Vector((0, 0, slope))).normalized()
+    across = Vector((0, 0, 1)).cross(flat).normalized()
+    up = normal.cross(across).normalized()
+    center = hit + normal * 0.005
+    made = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=5, radius=1.0)
     for v in made["verts"]:
         x, y, h = v.co.x, v.co.y, v.co.z
-        v.co = center + across * x * EYE_SIZE[0] / 2 * BODY + up * h * EYE_SIZE[1] / 2 * BODY + normal * y * 0.007
+        v.co = center + across * x * EYE_SIZE[0] / 2 * BODY + up * h * EYE_SIZE[1] / 2 * BODY + normal * y * 0.005
     return made["verts"]
 
 
@@ -194,7 +217,8 @@ def build():
     color_faces(nub_mesh, rng, lambda p: 1.05 + p.z / (NUB_RADIUS * BODY) * 0.3)
     nub_mesh.materials.append(mesh.materials[0])
     nub = bpy.data.objects.new("Nub", nub_mesh)
-    nub.location = (0, 0, NUB_HEIGHT * BODY + HOVER)
+    # Over the tip, following its curve back.
+    nub.location = tuple(lean(TIP) * 1.25 * BODY + Vector((0, 0, NUB_HEIGHT * BODY + HOVER)))
     nub.parent = body
     collection.objects.link(nub)
 
