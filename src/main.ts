@@ -5,7 +5,7 @@ import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
-import { arenaFromQuery, challengeFromQuery, enemyLevelFromQuery, teamFromQuery } from "./dev/build.ts"
+import { arenaFromQuery, challengeFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
 import { startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
@@ -53,6 +53,7 @@ const start = async (mount: HTMLElement) => {
   const selected = encounterOf(tuning, account.selection.play)
   const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
   const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, selected.enemyLevel) : selected.enemyLevel
+  const practice = quickStart && challenge === "practice" ? practiceFromQuery(tuning, window.location.search) : undefined
   /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
   let playing: Play | null = null
   /** Whether the run going on is recorded on the account: not an Extra's (training, practice). */
@@ -170,7 +171,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(UiRequests, uiRequests),
       Game.Runtime.service(UiStoreService, uiStore)
     ),
-    resources: initialResources(tuning, frameContext.viewport, team, challenge, enemyLevel),
+    resources: { ...initialResources(tuning, frameContext.viewport, team, challenge, enemyLevel), ...(practice === undefined ? {} : { Practice: practice }) },
     machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true

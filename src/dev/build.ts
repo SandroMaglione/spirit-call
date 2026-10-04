@@ -15,7 +15,7 @@ import type { CharacterId } from "../content/characters.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import { defaultBuild, defaultTeam } from "../features/build.ts"
 import { defaultChallenge } from "../features/challenges.ts"
-import type { BuildValue } from "../schema.ts"
+import type { BuildValue, EnemyKind, PracticeValue } from "../schema.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string | null): value is Id => value !== null && Object.hasOwn(ids, value)
 
@@ -31,6 +31,14 @@ export const arenaFromQuery = (tuning: Tuning, search: string): Tuning => {
 export const challengeFromQuery = (tuning: Tuning, search: string, fallback: ChallengeId = defaultChallenge): ChallengeId => {
   const challenge = new URLSearchParams(search).get("challenge")
   return known<ChallengeId>(tuning.challenges, challenge) ? challenge : fallback
+}
+
+/** Combat enemies selected for a direct Enemy Practice link; unknown ids and dummies are ignored. */
+export const practiceFromQuery = (tuning: Tuning, search: string): PracticeValue | undefined => {
+  const value = new URLSearchParams(search).get("practice")
+  const kinds = [...new Set((value ?? "").split(","))].filter((id): id is EnemyKind =>
+    known<EnemyKind>(tuning.enemies, id) && tuning.enemies[id].cost > 0)
+  return kinds.length === 0 ? undefined : { kinds, elites: false }
 }
 
 /** The URL's `key` as a level (a whole number from 1), or `undefined`. */

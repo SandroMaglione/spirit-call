@@ -109,3 +109,9 @@ browser captures are `in-game-desktop.png`, `in-game-phone.png`, and
 schedules to inspect phases; it does not measure physical-phone performance.
 `env VITEST_MAX_WORKERS=2 pnpm check` passes all 374 tests, typecheck and lint;
 `pnpm build` bundles the registered animated exports.
+
+For playable review of only these enemies, open the game with
+`?play&challenge=practice&practice=charger,sniper,guardian&team=tidecaller,gunner,swordsman&level=20&enemyLevel=1&touch`.
+The existing Enemy Practice mode keeps its field populated and respawns each
+enemy after a kill. The URL supplies its picks; no new challenge or content id
+is added. The higher player level gives time to inspect attacks and switch kits.
