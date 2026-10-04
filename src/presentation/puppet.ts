@@ -12,6 +12,7 @@ import { clone } from "three/addons/utils/SkeletonUtils.js"
 import type { Vec2 } from "../math/vec.ts"
 import { advanceLocomotion, freshLocomotion, oneShotPose, shotBlend } from "./animation.ts"
 import type { Locomotion, OneShot } from "./animation.ts"
+import { keepRim } from "./glow.ts"
 import type { Moments, Shot } from "./looks.ts"
 import type { ModelSource } from "./models.ts"
 
@@ -30,6 +31,7 @@ export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonl
       const known = copies.get(material)
       if (known !== undefined) return known
       const copy = material.clone()
+      keepRim(copy)
       copies.set(material, copy)
       materials.push({ material: copy, base: copy.color.clone(), glow: copy.emissive.clone().multiplyScalar(copy.emissiveIntensity) })
       return copy

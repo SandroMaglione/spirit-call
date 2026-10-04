@@ -22,6 +22,8 @@ import { monasteryModels } from "./assets/monastery.ts"
 import { enemyModels } from "./assets/enemies.ts"
 import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
 import { waterSpiritModel } from "./assets/spirits.ts"
+import { addGlow } from "./glow.ts"
+import type { GlowSpec } from "./glow.ts"
 
 /** How a clip ends: loops name the time their first pose comes back (`closeLoop`); one-shots have `null`. */
 export interface ClipTiming {
@@ -38,6 +40,15 @@ export interface ModelSpec {
   readonly footprint?: readonly [number, number]
   /** Its animation clips by name; a model without animation has none. */
   readonly clips: Readonly<Record<string, ClipTiming>>
+  /** A glow from within (rim, halo, glowing eyes; see `glow.ts`). */
+  readonly glow?: GlowSpec
+}
+
+/** The spirits' glow, after their sheet: cyan edges, a soft blue halo, haloed eyes. */
+const spiritGlow: GlowSpec = {
+  rim: { color: 0x8eebff, strength: 0.9, power: 2.5 },
+  halo: { color: 0x2e7bff, opacity: 0.35, size: 1.6 },
+  eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xcff6ff, opacity: 0.6, size: 0.3 }
 }
 
 /** Every model the game can show. Add new ones here (with their module in `assets/`). */
@@ -45,7 +56,7 @@ export const models = {
   crow: crowModel,
   trainingBlade: trainingBladeModel,
   crescendo: crescendoModel,
-  waterSpirit: waterSpiritModel,
+  waterSpirit: { ...waterSpiritModel, glow: spiritGlow },
   ...courtyardModels,
   ...cisternModels,
   ...kilnworksModels,
@@ -146,6 +157,7 @@ export const loadModels = async (ids: Iterable<ModelId>): Promise<ReadonlyMap<Mo
       if (!clips.has(name)) throw new Error(`Model ${id} is missing its ${name} clip`)
     }
     plainMaterials(gltf.scene)
+    if (spec.glow !== undefined && spec.height !== null) addGlow(gltf.scene, spec.glow, spec.height)
     return { id, spec, scene: gltf.scene, clips }
   }))
   return new Map(loaded.map((source) => [source.id, source]))
