@@ -1,0 +1,72 @@
+{
+  "kind": "guardian",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 1867,
+  "materials": 1,
+  "mesh_parts": [
+    "Belt",
+    "BeltClasp",
+    "Boot.L",
+    "Boot.R",
+    "Breastplate",
+    "ChestClasp",
+    "ElbowBand",
+    "ElbowBand.001",
+    "Eye.L",
+    "Eye.R",
+    "EyeSocket.L",
+    "EyeSocket.R",
+    "Forearm.L",
+    "Forearm.R",
+    "Gauntlet.L",
+    "Gauntlet.R",
+    "GoldenCrest",
+    "GoldShoulderTrim",
+    "GoldShoulderTrim.001",
+    "Helmet",
+    "LegArmor.L",
+    "LegArmor.R",
+    "MaceHandle",
+    "MaceHead",
+    "MaceSpike",
+    "MaceSpike.001",
+    "MaceSpike.002",
+    "MaceSpike.003",
+    "MaceSpike.004",
+    "MaceSpike.005",
+    "MaceSpike.006",
+    "MaceSpike.007",
+    "Pauldron.L",
+    "Pauldron.R",
+    "ShieldBoss",
+    "ShieldFrame",
+    "ShieldGrip",
+    "ShieldPlank.1",
+    "ShieldPlank.2",
+    "ShieldPlank.3",
+    "ShieldPlank.4",
+    "Tabard.L",
+    "Tabard.R",
+    "Visor"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.6732086539268494,
+      0.6994923949241638
+    ],
+    [
+      -0.6222261190414429,
+      0.1854560226202011
+    ],
+    [
+      0.0,
+      1.2802029848098755
+    ]
+  ],
+  "height_m": 1.2802029848098755,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}
