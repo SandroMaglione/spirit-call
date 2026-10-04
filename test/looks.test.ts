@@ -3,12 +3,15 @@ import path from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
+import { defaultTuning } from "../src/config/tuning.ts"
+import type { ArenaId } from "../src/content/arena.ts"
+import { propBoxes } from "../src/features/arena.ts"
+import { arenaLooks, characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
 import { enemies } from "../src/content/enemies.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import type { Moments, Shot } from "../src/presentation/looks.ts"
 import { models } from "../src/presentation/models.ts"
-import type { ClipTiming, ModelId } from "../src/presentation/models.ts"
+import type { ClipTiming, ModelId, ModelSpec } from "../src/presentation/models.ts"
 
 /** The clip names inside a GLB file (its JSON chunk), read without a renderer. */
 const clipsInFile = (id: ModelId): ReadonlyArray<string> => {
@@ -81,6 +84,38 @@ describe("looks and models", () => {
         expect(enemies[kind].attacks.some((spec) => spec.id === attack), `${kind}/${attack}`).toBe(true)
         const clips: Readonly<Record<string, ClipTiming>> = models[look.model].clips
         for (const clip of Object.values(phases)) expect(clips[clip], `${kind}/${attack}/${clip}`).toBeDefined()
+      }
+    }
+  })
+
+  it("every arena prop has its look, a model about the size of what blocks", () => {
+    for (const id of Object.keys(arenaLooks) as Array<ArenaId>) {
+      const look = arenaLooks[id]
+      const boxes = propBoxes(defaultTuning, id)
+      expect(look.props?.length ?? 0, id).toBe(boxes.length)
+      boxes.forEach((box, index) => {
+        const prop = look.props![index]!
+        // The model's footprint, turned, as the box around it.
+        const spec: ModelSpec = models[prop.model]
+        const [sizeX, sizeZ] = spec.footprint!
+        const cos = Math.abs(Math.cos(prop.turn))
+        const sin = Math.abs(Math.sin(prop.turn))
+        const across = (sizeX * cos + sizeZ * sin) * look.unitsPerMeter
+        const down = (sizeX * sin + sizeZ * cos) * look.unitsPerMeter
+        const at = `${id}: prop ${index + 1} (${prop.model})`
+        for (const [blocked, shown] of [[box.maxX - box.minX, across], [box.maxY - box.minY, down]] as const) {
+          expect(blocked / shown, at).toBeGreaterThan(0.65)
+          expect(blocked / shown, at).toBeLessThan(1.15)
+        }
+      })
+    }
+  })
+
+  it("floor inlays lie on the floor's tiles", () => {
+    for (const [id, look] of Object.entries(arenaLooks)) {
+      if (look.floor.kind !== "tiles") continue
+      for (const inlay of look.floor.inlays ?? []) {
+        expect(inlay.column >= 0 && inlay.column < defaultTuning.arena.cells && inlay.row >= 0 && inlay.row < defaultTuning.arena.cells, `${id}: ${inlay.model}`).toBe(true)
       }
     }
   })

@@ -21,6 +21,8 @@ import urnUrl from "../../../art/environment/flooded-cistern/models/urn.glb?url"
 import valveUrl from "../../../art/environment/flooded-cistern/models/valve.glb?url"
 import wallLowUrl from "../../../art/environment/flooded-cistern/models/wall-low.glb?url"
 import wallStraightUrl from "../../../art/environment/flooded-cistern/models/wall-straight.glb?url"
+import floorInsetUrl from "../../../art/environment/flooded-cistern/models/floor-inset.glb?url"
+import floorSmallUrl from "../../../art/environment/flooded-cistern/models/floor-small.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -39,5 +41,7 @@ export const cisternModels = {
   cisternValve: piece(valveUrl, 1.17, [0.64, 0.4]),
   cisternUrn: piece(urnUrl, 1.15, [0.876, 0.68]),
   cisternButtress: piece(buttressUrl, 1.74, [0.9, 1]),
-  cisternBasin: piece(basinUrl, 0.4, [1.6, 1.6])
+  cisternBasin: piece(basinUrl, 0.4, [1.6, 1.6]),
+  cisternFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  cisternFloorSmall: piece(floorSmallUrl, 0.14, [1, 1])
 } as const

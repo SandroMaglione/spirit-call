@@ -3,7 +3,7 @@
  * projectiles, shadows, and pieces of scenery by model), capsule geometry,
  * and the loaded models.
  */
-import { CapsuleGeometry, CircleGeometry, CylinderGeometry, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial } from "three"
+import { CapsuleGeometry, CircleGeometry, Color, CylinderGeometry, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial } from "three"
 import type { BufferGeometry, Group, Material } from "three"
 
 import { view } from "../config/view.ts"
@@ -46,7 +46,8 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     geometries.set(key, geometry)
     return geometry
   }
-  const pieces = new Map<ModelId, Batch>()
+  const pieces = new Map<string, Batch>()
+  const tinted: Array<Material> = []
   const animated = new Map<ModelId, { readonly batch: Batch; readonly atlas: AnimationAtlas }>()
   const baked: Array<BufferGeometry> = []
   const model = (id: ModelId): ModelSource => {
@@ -64,8 +65,9 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
       animated.set(id, entry)
       return entry
     },
-    piece(id) {
-      const known = pieces.get(id)
+    piece(id, tint) {
+      const key = tint === undefined ? id : `${id}:${tint}`
+      const known = pieces.get(key)
       if (known !== undefined) return known
       // One mesh and one material, so every copy can share a batch: its geometry, placed as the model places it.
       const source = model(id)
@@ -78,8 +80,15 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
       if (mesh === undefined || meshes.length > 1 || Array.isArray(mesh.material)) throw new Error(`Model ${id} must be one mesh with one material to be batched`)
       const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld)
       baked.push(geometry)
-      const batch = new Batch(parent, geometry, mesh.material as Material)
-      pieces.set(id, batch)
+      // A tint multiplies the model's own colors (its own material, so the untinted copies keep theirs).
+      let material = mesh.material as Material
+      if (tint !== undefined) {
+        material = material.clone()
+        ;(material as Material & { color: Color }).color.multiply(new Color(tint))
+        tinted.push(material)
+      }
+      const batch = new Batch(parent, geometry, material)
+      pieces.set(key, batch)
       return batch
     },
     shadows: fixed[0],
@@ -105,6 +114,7 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     dispose() {
       for (const batch of [...fixed, ...bodies.values(), ...pieces.values()]) batch.dispose()
       for (const geometry of baked) geometry.dispose()
+      for (const material of tinted) material.dispose()
       for (const geometry of geometries.values()) geometry.dispose()
       for (const resource of [disc, orb, round, puck, shadow, projectileShadow, glow, flare, flesh]) resource.dispose()
       for (const { batch, atlas } of animated.values()) { batch.dispose(); atlas.dispose() }

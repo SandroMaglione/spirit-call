@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { ArenaId } from "../src/content/arena.ts"
-import { hazardBoxes, hazardWalls } from "../src/features/arena.ts"
+import { hazardBoxes, hazardWalls, propBoxes } from "../src/features/arena.ts"
 import type { Box } from "../src/physics/shapes.ts"
 import { boxAround } from "../src/physics/shapes.ts"
 
@@ -23,6 +23,7 @@ const blockers = (id: ArenaId): Array<{ readonly name: string; readonly box: Box
       box: wall.along === "x" ? boxAround(wall.x * width, wall.y * height, wall.length / 2, 18) : boxAround(wall.x * width, wall.y * height, 18, wall.length / 2)
     })),
     ...hazardWalls(defaultTuning, id).map((box, index) => ({ name: `pool wall ${index + 1}`, box })),
+    ...propBoxes(defaultTuning, id).map((box, index) => ({ name: `prop ${index + 1}`, box })),
     { name: "north edge", box: { minX: 0, maxX: width, minY: -edge, maxY: 0 } },
     { name: "south edge", box: { minX: 0, maxX: width, minY: height, maxY: height + edge } },
     { name: "west edge", box: { minX: -edge, maxX: 0, minY: 0, maxY: height } },

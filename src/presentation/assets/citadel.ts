@@ -26,6 +26,9 @@ import wallLowUrl from "../../../art/environment/basalt-citadel/models/wall-low.
 import wallStraightUrl from "../../../art/environment/basalt-citadel/models/wall-straight.glb?url"
 import warTableUrl from "../../../art/environment/basalt-citadel/models/war-table.glb?url"
 import weaponRackUrl from "../../../art/environment/basalt-citadel/models/weapon-rack.glb?url"
+import floorInsetUrl from "../../../art/environment/basalt-citadel/models/floor-inset.glb?url"
+import floorRadialUrl from "../../../art/environment/basalt-citadel/models/floor-radial.glb?url"
+import floorSmallUrl from "../../../art/environment/basalt-citadel/models/floor-small.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -49,5 +52,8 @@ export const citadelModels = {
   citadelWarTable: piece(warTableUrl, 0.98, [1.8, 1]),
   citadelWeaponRack: piece(weaponRackUrl, 1.59, [1.4, 0.4]),
   citadelShieldRack: piece(shieldRackUrl, 1.45, [1.4, 0.42]),
-  citadelThroneBroken: piece(throneBrokenUrl, 1.1, [1.5659, 1.1149])
+  citadelThroneBroken: piece(throneBrokenUrl, 1.1, [1.5659, 1.1149]),
+  citadelFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  citadelFloorRadial: piece(floorRadialUrl, 0.14, [2, 2]),
+  citadelFloorSmall: piece(floorSmallUrl, 0.14, [1, 1])
 } as const

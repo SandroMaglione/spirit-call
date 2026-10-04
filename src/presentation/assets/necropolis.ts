@@ -26,6 +26,9 @@ import urnTallUrl from "../../../art/environment/ochre-necropolis/models/urn-tal
 import wallLowUrl from "../../../art/environment/ochre-necropolis/models/wall-low.glb?url"
 import wallStraightUrl from "../../../art/environment/ochre-necropolis/models/wall-straight.glb?url"
 import wingStatueUrl from "../../../art/environment/ochre-necropolis/models/wing-statue.glb?url"
+import floorInsetUrl from "../../../art/environment/ochre-necropolis/models/floor-inset.glb?url"
+import floorSmallUrl from "../../../art/environment/ochre-necropolis/models/floor-small.glb?url"
+import floorRadialUrl from "../../../art/environment/ochre-necropolis/models/floor-radial.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -49,5 +52,8 @@ export const necropolisModels = {
   necropolisUrnTall: piece(urnTallUrl, 1.25, [0.8, 0.8]),
   necropolisUrnBroken: piece(urnBrokenUrl, 0.45, [1.1015, 0.9]),
   necropolisOfferingTable: piece(offeringTableUrl, 0.95, [1.7, 0.85]),
-  necropolisWingStatue: piece(wingStatueUrl, 1.5562, [2.0049, 0.65])
+  necropolisWingStatue: piece(wingStatueUrl, 1.5562, [2.0049, 0.65]),
+  necropolisFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  necropolisFloorSmall: piece(floorSmallUrl, 0.14, [1, 1]),
+  necropolisFloorRadial: piece(floorRadialUrl, 0.14, [2, 2])
 } as const

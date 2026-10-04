@@ -138,7 +138,7 @@ describe("arenas", () => {
     const world = run.runtime.inspect(World)
     const spec = defaultTuning.arenas.kilnworks
     expect(world.pools.filter((pool) => pool.permanent && pool.element === "fire")).toHaveLength(spec.hazards.length)
-    expect(world.walls).toBe(4 + spec.pillars.length + spec.walls.length + 2 * spec.hazards.length)
+    expect(world.walls).toBe(4 + spec.pillars.length + (spec.props?.length ?? 0) + spec.walls.length + 2 * spec.hazards.length)
   })
 
   it("keep hazards for good, and a fire trench put out by water burns again after a while", () => {

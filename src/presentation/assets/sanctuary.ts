@@ -23,6 +23,8 @@ import stumpUrl from "../../../art/environment/overgrown-sanctuary/models/stump.
 import timberPostUrl from "../../../art/environment/overgrown-sanctuary/models/timber-post.glb?url"
 import wallLowUrl from "../../../art/environment/overgrown-sanctuary/models/wall-low.glb?url"
 import wallStraightUrl from "../../../art/environment/overgrown-sanctuary/models/wall-straight.glb?url"
+import floorInsetUrl from "../../../art/environment/overgrown-sanctuary/models/floor-inset.glb?url"
+import floorSmallUrl from "../../../art/environment/overgrown-sanctuary/models/floor-small.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -43,5 +45,7 @@ export const sanctuaryModels = {
   sanctuaryShrine: piece(shrineUrl, 1.5, [1.2, 0.85]),
   sanctuaryShrineBroken: piece(shrineBrokenUrl, 0.86, [1.3119, 0.9014]),
   sanctuarySapling: piece(saplingUrl, 2.2548, [1.2297, 0.6689]),
-  sanctuaryTimberPost: piece(timberPostUrl, 1.715, [0.4364, 0.4432])
+  sanctuaryTimberPost: piece(timberPostUrl, 1.715, [0.4364, 0.4432]),
+  sanctuaryFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  sanctuaryFloorSmall: piece(floorSmallUrl, 0.14, [1, 1])
 } as const

@@ -10,11 +10,11 @@ import { boxAround } from "../physics/shapes.ts"
 import { Challenge, Game, Ground, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"
 import type { WallPlacement } from "../schema.ts"
 
-const makeWall = (box: Box, placement: WallPlacement, arena: ArenaId) =>
+const makeWall = (box: Box, placement: WallPlacement, arena: ArenaId, prop?: number) =>
   Game.Command.spawn(
     [Wall, box],
     [Position, { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }],
-    [Renderable, { kind: "wall", box, placement, arena }]
+    [Renderable, { kind: "wall", box, placement, arena, ...(prop === undefined ? {} : { prop }) }]
   )
 
 /** How thick a low wall is, in world units. */
@@ -52,6 +52,15 @@ export const hazardWalls = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box
   })
 }
 
+/** The arena's props as boxes on the floor (see `PropSpec`), on whole units so one flush against a wall touches it exactly. */
+export const propBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box> =>
+  (tuning.arenas[id].props ?? []).map((prop) => ({
+    minX: Math.round(prop.x - prop.width / 2),
+    minY: Math.round(prop.y - prop.depth / 2),
+    maxX: Math.round(prop.x + prop.width / 2),
+    maxY: Math.round(prop.y + prop.depth / 2)
+  }))
+
 /** The arena a challenge is fought in. */
 export const arenaOf = (tuning: TuningValue, challenge: keyof TuningValue["challenges"]): ArenaId => tuning.challenges[challenge].arena
 
@@ -79,10 +88,12 @@ export const SpawnArena = Game.System("Shooter/SpawnArena", {
     commands.spawnIn(RunScope, makeWall(box, "inner", id))
   }
   for (const box of hazardWalls(tuning, id)) commands.spawnIn(RunScope, makeWall(box, "inner", id))
+  // Props stand like pillars (and fade like them in front of the player).
+  propBoxes(tuning, id).forEach((box, index) => commands.spawnIn(RunScope, makeWall(box, "sorted", id, index)))
   for (const { element, box } of hazardBoxes(tuning, id)) {
     const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
     const half = { x: (box.maxX - box.minX) / 2, y: (box.maxY - box.minY) / 2 }
-    commands.spawnIn(RunScope, Game.Command.spawn([Position, center], [Renderable, { kind: "hazard", element, half }], [Ground, {
+    commands.spawnIn(RunScope, Game.Command.spawn([Position, center], [Renderable, { kind: "hazard", element, half, arena: id }], [Ground, {
       element,
       center,
       radius: Math.hypot(half.x, half.y),

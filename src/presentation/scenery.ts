@@ -55,11 +55,17 @@ const makeFloor = (
           const at = { x: ((column + 0.5) * width) / across, y: ((row + 0.5) * height) / down }
           // A hazard takes the tile's place (see `presentation/hazards.ts`).
           if (holes.some((hole) => at.x > hole.minX && at.x < hole.maxX && at.y > hole.minY && at.y < hole.maxY)) continue
-          const tile = new Instance(assets.piece(floor.tiles[variantAt(floor.tiles.length, at)]!))
+          // A tile chosen by hand, else one of the border's along the walls, else one of the floor's.
+          const edge = column === 0 || row === 0 || column === across - 1 || row === down - 1
+          const variants = edge && floor.border !== undefined ? floor.border : floor.tiles
+          const inlay = floor.inlays?.find((inlay) => inlay.column === column && inlay.row === row)
+          const tile = new Instance(assets.piece(inlay?.model ?? variants[variantAt(variants.length, at)]!, floor.tint))
           tile.object.position.set(at.x, 0, at.y)
-          // Square tiles turn by quarter turns, so the same few never line up.
-          tile.object.rotation.y = (variantAt(4, { x: at.y, y: at.x }) * Math.PI) / 2
-          tile.object.scale.set(width / across / sizeX, scale, height / down / sizeZ)
+          // Square tiles turn by quarter turns, so the same few never line up; the border's run along their wall.
+          const quarters = edge && floor.border !== undefined ? (column === 0 || column === across - 1 ? 1 : 0) : variantAt(4, { x: at.y, y: at.x })
+          tile.object.rotation.y = (quarters * Math.PI) / 2
+          const [tileX, tileZ] = inlay === undefined ? [sizeX, sizeZ] : footprintOf(inlay.model)
+          tile.object.scale.set(width / across / tileX, scale, height / down / tileZ)
           tile.batch.add(tile)
           instances.push(tile)
           object.add(tile.object)

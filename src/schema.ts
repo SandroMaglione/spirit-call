@@ -511,10 +511,11 @@ export type RenderableValue =
   | { readonly kind: "player"; readonly character: CharacterId; readonly weapon: WeaponId; readonly radius: number }
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number; readonly elite?: EliteElement }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number; readonly element: ElementId | null }
-  | { readonly kind: "wall"; readonly box: Box; readonly placement: WallPlacement; readonly arena: ArenaId }
+  /** A wall of the arena; `prop`, when it is one of the arena's props (its place among them: see `content/arena.ts`). */
+  | { readonly kind: "wall"; readonly box: Box; readonly placement: WallPlacement; readonly arena: ArenaId; readonly prop?: number }
   | { readonly kind: "totem"; readonly element: ElementId | null }
   /** An arena hazard: a basin of water or a fire pit (see `content/arena.ts`). */
-  | { readonly kind: "hazard"; readonly element: "fire" | "water"; readonly half: Vec2 }
+  | { readonly kind: "hazard"; readonly element: "fire" | "water"; readonly half: Vec2; readonly arena: ArenaId }
 
 /** What the entity looks like; presence means "has a render node". */
 export const Renderable = Descriptor.Component<RenderableValue>()("Shooter/Renderable")

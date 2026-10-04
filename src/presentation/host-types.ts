@@ -90,7 +90,7 @@ export interface RenderAssets {
   /** A loaded model (every model the looks use is loaded before the arena opens). */
   model(id: ModelId): ModelSource
   /** The batch drawing every copy of a one-mesh model (floor tiles, wall segments, props). */
-  piece(id: ModelId): Batch
+  piece(id: ModelId, tint?: number): Batch
   animated(id: ModelId): { readonly batch: Batch; readonly atlas: AnimationAtlas }
   /** Actors' blob shadows. */
   readonly shadows: Batch
