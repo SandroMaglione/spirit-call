@@ -800,15 +800,12 @@ export const necropolisArena: ArenaLook = {
   ]
 }
 
-/**
- * The frostbound monastery (`art/environment/frostbound-monastery`): cold
- * stone, a shrine between two banners, a bench and a brazier by each side
- * wall, ice and snow where the cold got in.
- */
+/** Low cloister walls retain their open corners. Benches, fitted lanterns and an attached bell provide cover; the bell tower, pavilion and winter hearth stand on the exterior paving. */
 export const monasteryArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["monasteryFloorPlain", "monasteryFloorPlain", "monasteryFloorPlain", "monasteryFloorCracked"],
     color: 0x2a3036,
     border: ["monasteryFloorWorn"],
@@ -831,31 +828,45 @@ export const monasteryArena: ArenaLook = {
     inner: { kind: "run", model: "monasteryWallLow" }
   },
   scenery: [
-    { model: "monasterySnowdrift", at: { x: 60, y: 1130 }, turn: 0.3 },
-    { model: "monasterySnowdrift", at: { x: 600, y: 1762 }, turn: 2.2 },
-    { model: "monasterySnowdrift", at: { x: 1740, y: 300 }, turn: Math.PI / 2 - 0.37 }
+    { model: "monasteryStudyShrinePavilion", at: { x: 900, y: -155 }, turn: 0 },
+    { model: "monasteryStudyBellTower", at: { x: 400, y: -140 }, turn: 0 },
+    { model: "monasteryStudyCloisterGateway", at: { x: 1400, y: -115 }, turn: 0 },
+    { model: "monasteryStudyWinterHearth", at: { x: -145, y: 900 }, turn: Math.PI / 2 },
+    { model: "monasteryStudyTeaCup", at: { x: 430, y: 60 }, turn: 0 },
+    { model: "monasteryStudyPrayerBooks", at: { x: 550, y: 65 }, turn: 0 },
+    { model: "monasteryStudyFoldedMat", at: { x: 830, y: 60 }, turn: 0 },
+    { model: "monasteryStudyIncenseBowl", at: { x: 970, y: 60 }, turn: 0 },
+    { model: "monasteryStudyIceChips", at: { x: 1390, y: 60 }, turn: 0 },
+    { model: "monasteryStudyPrayerBooks", at: { x: 330, y: 900 }, turn: 0 },
+    { model: "monasteryStudyFoldedMat", at: { x: 1470, y: 900 }, turn: 0 },
+    { model: "monasteryStudyTeaCup", at: { x: 1740, y: 500 }, turn: 0 },
+    { model: "monasteryStudyIncenseBowl", at: { x: 65, y: 500 }, turn: 0 },
+    { model: "monasteryStudyIceChips", at: { x: 1740, y: 1250 }, turn: 0 },
+    { model: "monasteryStudyFoldedMat", at: { x: -105, y: 960 }, turn: 0 },
+    { model: "monasteryStudyPrayerBooks", at: { x: 960, y: -110 }, turn: 0 },
+    { model: "monasteryStudyTeaCup", at: { x: 350, y: -110 }, turn: 0 },
+    { model: "monasteryStudyIncenseBowl", at: { x: 830, y: -105 }, turn: 0 },
+    { model: "monasteryStudyIceChips", at: { x: 1260, y: -110 }, turn: 0 }
   ],
   props: [
-    { model: "monasteryShrine", turn: 0 },
-    { model: "monasteryBanner", turn: 0 },
-    { model: "monasteryBanner", turn: 0 },
-    { model: "monasteryLanternPost", turn: 0 },
-    { model: "monasteryLanternPost", turn: 0 },
-    { model: "monasteryBench", turn: Math.PI / 2 },
-    { model: "monasteryBench", turn: -Math.PI / 2 },
-    { model: "monasteryBrazier", turn: 0 },
-    { model: "monasteryBrazier", turn: 0 },
-    { model: "monasteryIceCluster", turn: 0.6 },
-    { model: "monasterySnowRocks", turn: Math.PI / 2 - 0.47 },
-    { model: "monasteryBell", turn: 0.3 },
-    { model: "monasteryIceCluster", turn: 0.2 },
-    { model: "monasterySnowRocks", turn: 2.4 }
+    { model: "monasteryStudySmallBellFrame", turn: 0 },
+    { model: "monasteryStudyPrayerBanner", turn: 0 },
+    { model: "monasteryStudyPrayerBanner", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 },
+    { model: "monasteryStudyFirewoodRack", turn: 0 },
+    { model: "monasteryStudyFirewoodRack", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 }
   ],
   background: 0x1c212a,
   light: { sky: 0xeaf2ff, ground: 0x8a93a3, sun: 0xf6faff },
   fires: [
-    { at: { x: 22, y: 900 }, height: 56 },
-    { at: { x: 1778, y: 900 }, height: 56 }
+
   ]
 }
 

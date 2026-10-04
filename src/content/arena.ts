@@ -338,22 +338,19 @@ export const arenas = {
     ],
     hazards: [],
     props: [
-      // The shrine between two banners, a lantern in each far corner; a bench and a brazier by each side wall.
-      prop(900, 27, 76, 54),
-      prop(500, 16, 56, 32),
-      prop(1300, 16, 56, 32),
-      prop(18, 18, 36, 36),
-      prop(1782, 18, 36, 36),
-      prop(19, 500, 38, 104),
-      prop(1781, 500, 38, 104),
-      prop(22, 900, 44, 44),
-      prop(1778, 900, 44, 44),
-      // Ice and snowed-in rocks where the cold got in, and a bell taken down.
-      prop(32, 1400, 64, 62),
-      prop(1751, 1240, 98, 110),
-      prop(1763, 1480, 74, 74),
-      prop(1240, 1774, 56, 52),
-      prop(520, 1746, 110, 108)
+      prop(900, 12, 56, 24),
+      prop(500, 11, 34, 22),
+      prop(1300, 11, 34, 22),
+      prop(19, 19, 38, 38),
+      prop(1781, 19, 38, 38),
+      prop(14, 500, 28, 72),
+      prop(1786, 500, 28, 72),
+      prop(23, 1250, 46, 30),
+      prop(1777, 1250, 46, 30),
+      prop(500, 1781, 38, 38),
+      prop(1300, 1781, 38, 38),
+      prop(280, 900, 28, 72),
+      prop(1520, 900, 28, 72)
     ]
   })
 }
