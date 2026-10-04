@@ -9,6 +9,7 @@ import bpy
 import numpy as np
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+from mathutils.geometry import tessellate_polygon
 
 
 def linear(color):
@@ -158,19 +159,19 @@ class Model:
         self.ellipsoid('MouthRecess',(cx,ytip+.19,cz),(rx*gap*.77,.012,rz*gap*.77),inner_color,segments,4)
         return cx,ytip,cz,rx,rz,obj
 
-    def eyes(self,body,background='#303341',core='#FFD18A'):
+    def eyes(self,body,background='#303341',core='#FFD18A',socket_scale=1.65,center=0):
         eyes=self.sheet['eyes']
         if len(eyes)!=2:raise ValueError(f'Expected two measured eye cores: {eyes}')
         x=float(np.mean([abs(e['x']) for e in eyes]));z=float(np.mean([e['z'] for e in eyes]))
         rx=float(np.mean([e['width'] for e in eyes]))/2;rz=float(np.mean([e['height'] for e in eyes]))/2
         tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
         for sign,side in ((-1,'L'),(1,'R')):
-            for layer,scale,color in (('EyeSocket',1.65,background),('Eye',1,core)):
+            for layer,scale,color in (('EyeSocket',socket_scale,background),('Eye',1,core)):
                 verts=[];faces=[];n=12
                 for ring in (0,.5,1):
                     for k in range(1 if ring==0 else n):
                         a=2*math.pi*k/n
-                        pos=Vector((sign*x+rx*scale*math.cos(a)*ring,-3,z+rz*scale*math.sin(a)*ring))
+                        pos=Vector((center+sign*x+rx*scale*math.cos(a)*ring,-3,z+rz*scale*math.sin(a)*ring))
                         hit,normal,_,_=tree.ray_cast(pos,Vector((0,1,0)))
                         if hit is None:raise ValueError(f'{layer} missed surface')
                         verts.append(hit+normal*(.002 if layer=='EyeSocket' else .004))
@@ -178,6 +179,47 @@ class Model:
                 for k in range(n):
                     a=1+k;b=1+(k+1)%n;faces.append((a,b,b+n,a+n))
                 self.mesh(f'{layer}.{side}',verts,faces,color,0)
+
+    def surface_patch(self,name,body,points,color):
+        center=self.config['center']['front'];ground=self.config['ground']['front'];pixel=self.sheet['meters_per_pixel']
+        verts=[];faces=[]
+        region=[Vector(((x-center)*pixel,(ground-y)*pixel,0)) for x,y in points]
+        patches=tessellate_polygon([region])
+        body.data.calc_loop_triangles()
+
+        def cross(a,b):return a[0]*b[1]-a[1]*b[0]
+
+        def clipped(subject,clip):
+            if cross(clip[1]-clip[0],clip[2]-clip[0])<0:clip=list(reversed(clip))
+            for j in range(3):
+                edge=clip[(j+1)%3]-clip[j];origin=clip[j]
+                result=[]
+                for k,p in enumerate(subject):
+                    q=subject[k-1]
+                    a=cross(edge,p-origin);b=cross(edge,q-origin)
+                    if (a>=0)!=(b>=0):result.append(q+(p-q)*(b/(b-a)))
+                    if a>=0:result.append(p)
+                subject=result
+                if not subject:break
+            return subject
+
+        # Clip each existing front-facing body triangle to the measured
+        # feature. New points remain on that exact triangle plane, preventing
+        # surface patches from cutting through coarse facets.
+        for tri in body.data.loop_triangles:
+            if tri.normal.y>=-.02:continue
+            p=[body.data.vertices[i].co.copy() for i in tri.vertices]
+            projected=[Vector((v.x,v.z,0)) for v in p]
+            n=(p[1]-p[0]).cross(p[2]-p[0])
+            for patch in patches:
+                poly=clipped(projected,[region[i] if isinstance(i,int) else i for i in patch])
+                if len(poly)<3:continue
+                start=len(verts)
+                for v in poly:
+                    y=p[0].y-(n.x*(v.x-p[0].x)+n.z*(v.y-p[0].z))/n.y
+                    verts.append((v.x,y-.0025,v.y))
+                faces += [(start,start+k,start+k+1) for k in range(1,len(poly)-1)]
+        return self.mesh(name,verts,faces,color,0)
 
     def finish(self,main):
         objects=[o for o in bpy.data.objects if o.type=='MESH']

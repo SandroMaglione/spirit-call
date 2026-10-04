@@ -32,7 +32,7 @@ CONFIGS={
   'center':{'front':145,'back':638,'right':400,'left':892},
   'crops':{'front':[29,280,269,472],'right':[287,276,503,476],'back':[528,277,753,474],
            'left':[788,274,1007,475],'top':[1032,287,1247,455],'bottom':[1280,281,1508,459],'hero':[1190,10,1486,234]},
-  'swatches':{'stone':[817,75],'dark':[888,75],'light':[961,75],'warm':[1033,75],'eye':[1103,75]},
+  'swatches':{'stone':[389,78],'dark':[459,78],'light':[533,78],'warm':[604,78],'eye':[675,78]},
   'eye_regions':[r(130,346,145,376),r(155,346,172,376)],
   'parts':{
    'torso':part('stone',front=[(111,336),(180,336),(199,356),(191,391),(166,418),(145,429),(118,414),(85,380),(86,355)],
@@ -74,6 +74,7 @@ def main(kind, source=None):
     here=ROOT/kind/'production'
     (here/'reference').mkdir(parents=True,exist_ok=True)
     (here/'renders').mkdir(exist_ok=True)
+    (here/'.gitignore').write_text('*.blend1\n__pycache__/\n')
     if source:shutil.copyfile(source,here/'reference/sheet.png')
     config=CONFIGS[kind] | {'blend':f'{kind}-model.blend','background':'#DFDFE8','ortho':2.1 if kind=='brute' else 1.35,
         'resolution':[640,640],'ambient':.45,

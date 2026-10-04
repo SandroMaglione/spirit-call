@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 import bpy
 from mathutils import Vector
+from mathutils import Matrix
 
 ROOT=Path(__file__).resolve().parents[1]
 kind=sys.argv[sys.argv.index('--')+1]
@@ -20,6 +21,20 @@ sheet=json.loads((HERE/'sheet.json').read_text())
 audit=json.loads((HERE/'audit.json').read_text())
 OUT=HERE/'renders';OUT.mkdir(exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(HERE/config['blend']))
+rest={o.name:o.matrix_world.copy() for o in bpy.data.objects if o.type=='MESH'}
+
+def static_sheet_pose(raised):
+    for name,matrix in rest.items():bpy.data.objects[name].matrix_world=matrix
+    if kind!='brute' or not raised:return
+    # The sheet's sides and hero are a different arm pose than its front.
+    # Transform the separate mesh parts for those reference renders only.
+    # No keys, bones or changes to the saved source are introduced.
+    for side in ('L','R'):
+        pivot=bpy.data.objects['Shoulder.'+side].location.copy()
+        rotation=Matrix.Translation(pivot)@Matrix.Rotation(-2.55,4,'X')@Matrix.Translation(-pivot)
+        for part in ('UpperArm','Forearm','Fist'):
+            obj=bpy.data.objects[part+'.'+side];obj.matrix_world=rotation@rest[obj.name]
+    bpy.context.view_layer.update()
 scene=bpy.context.scene;scene.render.engine='BLENDER_EEVEE_NEXT'
 scene.render.film_transparent=True
 scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA'
@@ -56,12 +71,14 @@ else:
        'hero':direction(sheet['hero']['turn'],sheet['hero']['elevation']),
        'game':direction(sheet['hero']['turn'],30)}
 for name,d in views.items():
+    static_sheet_pose(sweep or name == 'hero')
     camera.location=target+d*5
     if name=='top':camera.rotation_euler=(0,0,0)
     elif name=='bottom':camera.rotation_euler=(math.pi,0,0)
     else:camera.rotation_euler=(-d).to_track_quat('-Z','Y').to_euler()
     scene.render.filepath=str(OUT/f'{name}.png');bpy.ops.render.render(write_still=True)
 if not sweep:
+    static_sheet_pose(False)
     camera.location=target+direction(sheet['hero']['turn'],30)*5
     camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
     scene.render.resolution_x=48 if kind=='brute' else 32 if kind=='shooter' else 24
