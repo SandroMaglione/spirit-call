@@ -222,11 +222,7 @@ export const arenas = {
       { x: 0.36, y: 0.36, size: 70 },
       { x: 0.64, y: 0.36, size: 70 },
       { x: 0.36, y: 0.64, size: 70 },
-      { x: 0.64, y: 0.64, size: 70 },
-      { x: 0.15, y: 0.15, size: 50 },
-      { x: 0.85, y: 0.15, size: 50 },
-      { x: 0.15, y: 0.85, size: 50 },
-      { x: 0.85, y: 0.85, size: 50 }
+      { x: 0.64, y: 0.64, size: 70 }
     ],
     walls: [
       { x: 0.5, y: 0.2, length: 420, along: "x" },
@@ -237,29 +233,21 @@ export const arenas = {
       { element: "fire", column: 10, row: 6, columns: 2, rows: 2, walled: { y: "south", x: "west" } }
     ],
     props: [
-      // The north wall, the same on both sides of the throne: banners, braziers, and a brazier in each corner.
-      prop(900, 39, 110, 78),
-      prop(700, 35, 70, 70),
-      prop(1100, 35, 70, 70),
-      prop(500, 14, 78, 28),
-      prop(1300, 14, 78, 28),
-      prop(24, 24, 48, 48),
-      prop(1776, 24, 48, 48),
-      // Two gargoyles on the south wall.
-      prop(560, 1774, 120, 52),
-      prop(1240, 1774, 120, 52),
-      // What the garrison left lying around: arms and a crate by the west wall, fallen basalt further down, and more of it loose near the corner.
-      prop(14, 440, 28, 98),
-      prop(34, 522, 68, 68),
-      prop(48, 1290, 96, 90),
-      prop(44, 1378, 88, 88),
-      prop(142, 1662, 92, 92),
-      // By the east wall: shields and a drum, then the war table and a crate; a cache against the south wall.
-      prop(1786, 520, 28, 98),
-      prop(1766, 602, 68, 68),
-      prop(1762, 1300, 76, 122),
-      prop(1766, 1394, 68, 68),
-      prop(1010, 1770, 88, 60)
+      prop(270, 270, 38, 26),
+      prop(1530, 270, 38, 26),
+      prop(270, 1530, 38, 26),
+      prop(1530, 1530, 38, 26),
+      prop(550, 13, 84, 26),
+      prop(1250, 13, 84, 26),
+      prop(900, 19, 62, 38),
+      prop(13, 500, 26, 84),
+      prop(1787, 500, 26, 84),
+      prop(18, 1300, 36, 30),
+      prop(1781, 1300, 38, 62),
+      prop(650, 1785, 36, 30),
+      prop(1150, 1785, 36, 30),
+      prop(600, 1000, 36, 30),
+      prop(1200, 800, 36, 30)
     ]
   }),
   /** Docks: two water channels across the north, posts and low walls to put between you and the shooters. */

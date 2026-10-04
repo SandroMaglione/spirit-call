@@ -576,17 +576,12 @@ export const sanctuaryArena: ArenaLook = {
   light: { sky: 0xf3ffea, ground: 0x869480, sun: 0xfbffe8 }
 }
 
-/**
- * The basalt citadel (`art/environment/basalt-citadel`): a keep's court of
- * dark stone with a medallion in its middle. Its north wall is laid out the
- * same on both sides of a broken throne (banners, braziers); what the
- * garrison left lies about the other walls. All of it is props: it blocks
- * (see `content/arena.ts`).
- */
+/** A ring of four pillars surrounds the keep; banners and equipment racks mark the outer approaches. Small supplies dress the floor; a throne court and supported siege yard stand outside. */
 export const citadelArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["citadelFloorPlain", "citadelFloorPlain", "citadelFloorPlain", "citadelFloorCracked"],
     color: 0x1c1a1d,
     border: ["citadelFloorWorn"],
@@ -608,27 +603,42 @@ export const citadelArena: ArenaLook = {
     sorted: { kind: "pillar", models: ["citadelPillarLarge", "citadelPillarSmall"] },
     inner: { kind: "run", model: "citadelWallLow" }
   },
-  scenery: [],
+  scenery: [
+    { model: "citadelStudyThroneDais", at: { x: 900, y: -145 }, turn: 0 },
+    { model: "citadelStudyGuardShelter", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "citadelStudyBattlementBay", at: { x: 1400, y: -140 }, turn: 0 },
+    { model: "citadelStudySupportedRam", at: { x: -145, y: 900 }, turn: Math.PI / 2 },
+    { model: "citadelStudySupplyPouch", at: { x: 830, y: 65 }, turn: 0 },
+    { model: "citadelStudyUnlitTorches", at: { x: 480, y: 65 }, turn: Math.PI / 2 },
+    { model: "citadelStudySpareRings", at: { x: 1210, y: 65 }, turn: 0 },
+    { model: "citadelStudyRestingShield", at: { x: 1320, y: 65 }, turn: 0 },
+    { model: "citadelStudyFoldedBanner", at: { x: 970, y: 65 }, turn: 0 },
+    { model: "citadelStudySupplyPouch", at: { x: 650, y: 1000 }, turn: 0 },
+    { model: "citadelStudyRestingShield", at: { x: 1150, y: 820 }, turn: 0 },
+    { model: "citadelStudyUnlitTorches", at: { x: 1735, y: 1300 }, turn: 0 },
+    { model: "citadelStudySpareRings", at: { x: 70, y: 1300 }, turn: 0 },
+    { model: "citadelStudyFoldedBanner", at: { x: 330, y: -140 }, turn: 0 },
+    { model: "citadelStudyRestingShield", at: { x: -100, y: 980 }, turn: 0 },
+    { model: "citadelStudyUnlitTorches", at: { x: -180, y: 850 }, turn: 0 },
+    { model: "citadelStudySupplyPouch", at: { x: 970, y: -130 }, turn: 0 },
+    { model: "citadelStudySpareRings", at: { x: 610, y: 1750 }, turn: 0 }
+  ],
   props: [
-    { model: "citadelThroneBroken", turn: 0 },
-    { model: "citadelBrazierLarge", turn: 0 },
-    { model: "citadelBrazierLarge", turn: 0 },
-    { model: "citadelBannerTall", turn: 0 },
-    { model: "citadelBannerTall", turn: 0 },
-    { model: "citadelBrazierSmall", turn: 0 },
-    { model: "citadelBrazierSmall", turn: 0 },
-    { model: "citadelGargoyle", turn: 0 },
-    { model: "citadelGargoyle", turn: 0 },
-    { model: "citadelWeaponRack", turn: Math.PI / 2 },
-    { model: "citadelSiegeCrate", turn: 0.35 },
-    { model: "citadelBasaltRubble", turn: 1.1 },
-    { model: "citadelBasaltSpires", turn: 0.5 },
-    { model: "citadelBasaltRubble", turn: 2.5 },
-    { model: "citadelShieldRack", turn: -Math.PI / 2 },
-    { model: "citadelDrum", turn: 0.3 },
-    { model: "citadelWarTable", turn: Math.PI / 2 + 0.12 },
-    { model: "citadelSiegeCrate", turn: -0.5 },
-    { model: "citadelSupplyCache", turn: 0.15 }
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyWeaponRack", turn: 0 },
+    { model: "citadelStudyShieldRack", turn: 0 },
+    { model: "citadelStudyWarTable", turn: 0 },
+    { model: "citadelStudyWeaponRack", turn: Math.PI / 2 },
+    { model: "citadelStudyShieldRack", turn: Math.PI / 2 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyWarTable", turn: Math.PI / 2 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 }
   ],
   background: 0x191c23,
   // Fire pits framed in the court's stone, their fire a deeper ember than the plain orange.
@@ -639,10 +649,7 @@ export const citadelArena: ArenaLook = {
   // Cold light on the stone, so the braziers' and the pits' fire stands out.
   light: { sky: 0xeef2ff, ground: 0x84889a, sun: 0xfff4e6 },
   fires: [
-    { at: { x: 700, y: 35 }, height: 84 },
-    { at: { x: 1100, y: 35 }, height: 84 },
-    { at: { x: 24, y: 24 }, height: 58 },
-    { at: { x: 1776, y: 24 }, height: 58 }
+
   ]
 }
 
