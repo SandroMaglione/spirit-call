@@ -1,7 +1,7 @@
 {
   "source_sha256": "f6e4e9e38e1740950e726acc471bcf52d4b0948068e258abb9bab28b94e9e5e8",
-  "glb_sha256": "4fb69e29130700c9d8de2c8ffb84adae113370a987dd3187035e9a878eabd4bc",
-  "bytes": 190148,
+  "glb_sha256": "22b8f6f7390bc48ac213bf683e92a35ed8c042a2a82fb6a4a915e12fc643cc23",
+  "bytes": 188628,
   "height_m": 0.6650000214576721,
   "height_basis": "ground origin to highest rest-pose mesh vertex, including floating parts",
   "clips": {
@@ -38,11 +38,11 @@
       "loopSeconds": null
     },
     "Cast": {
-      "lastKeySeconds": 0.5,
+      "lastKeySeconds": 0.36666666666666664,
       "loopSeconds": null
     },
     "Ultimate": {
-      "lastKeySeconds": 0.8333333333333334,
+      "lastKeySeconds": 0.5666666666666667,
       "loopSeconds": null
     }
   },

@@ -9,8 +9,9 @@ moment, and stretches each over the moment's length in the simulation):
 - Power: the charged move, the biggest blow.
 - Dash: stretched flat along its way, eyes shut tight, its parts streaming back.
 - Hurt: knocked back and squashed, eyes shut, then wide open.
-- Cast: a crouch and a pop up, its parts thrown out (a special).
-- Ultimate: a crouch, a rise with a whole turn, and a landing.
+- Cast: a pop up at once, its parts thrown out (a special).
+- Ultimate: a leap at once, a whole turn in the air, and a landing.
+  Skills take effect the moment they are cast, so neither winds up first.
 
 A spirit's `style` is how its character strikes: how far the blow carries
 it forward (back, for one that shoots: a kick), how far it winds and
@@ -84,20 +85,19 @@ def clips(style):
             (4, {"fwd": -0.02, "pitch": -0.08, "tall": 0.09, "wide": -0.05, "deep": -0.05, "open": 0.8, "spread": 0.3}),
             (9, {}),
         ],
+        # Skills take effect the moment they are cast: no crouch first, the body is up by the second frame.
         "Cast": [
             (0, {}),
-            (2, {"tall": -0.2, "wide": 0.11, "deep": 0.11, "squint": 0.7}),
-            (4, {"up": 0.1, "tall": 0.22, "wide": -0.09, "deep": -0.09, "open": 1.0, "spread": 1.2, "pitch": style["cast"]}),
-            (9, {"up": 0.03, "tall": -0.05, "wide": 0.03, "deep": 0.03, "open": 0.5, "spread": 0.5}),
-            (15, {}),
+            (2, {"up": 0.1, "tall": 0.22, "wide": -0.09, "deep": -0.09, "open": 1.0, "spread": 1.2, "pitch": style["cast"]}),
+            (6, {"up": 0.03, "tall": -0.08, "wide": 0.05, "deep": 0.05, "open": 0.5, "spread": 0.5}),
+            (11, {}),
         ],
         "Ultimate": [
             (0, {}),
-            (3, {"tall": -0.3, "wide": 0.16, "deep": 0.16, "squint": 1.0}),
-            (6, {"up": 0.2, "tall": 0.3, "wide": -0.12, "deep": -0.12, "open": 1.0, "spread": 1.6}),
-            (14, {"up": 0.24, "tall": 0.12, "wide": -0.05, "deep": -0.05, "yaw": 2 * math.pi, "open": 1.0, "spread": 2.0}),
-            (17, {"tall": -0.24, "wide": 0.13, "deep": 0.13, "yaw": 2 * math.pi, "squint": 0.5, "spread": 0.8}),
-            (25, {"yaw": 2 * math.pi}),
+            (2, {"up": 0.22, "tall": 0.3, "wide": -0.12, "deep": -0.12, "open": 1.0, "spread": 1.8}),
+            (8, {"up": 0.2, "tall": 0.1, "wide": -0.04, "deep": -0.04, "yaw": 2 * math.pi, "open": 1.0, "spread": 2.0}),
+            (11, {"tall": -0.24, "wide": 0.13, "deep": 0.13, "yaw": 2 * math.pi, "squint": 0.5, "spread": 0.8}),
+            (17, {"yaw": 2 * math.pi}),
         ],
     }
 
