@@ -43,14 +43,16 @@ export interface Moments {
 }
 
 /**
- * Drops a body sheds while it moves: about `rate` a second (at full speed),
- * thrown back from its back in `colors`, `size` world units across,
- * falling to the floor, about half leaving a ripple there.
+ * What a body sheds while it moves: about `rate` a second (at full speed),
+ * thrown back from its back in `colors`, `size` world units across: drops
+ * falling to the floor, about half leaving a ripple there, or (`embers`)
+ * embers drifting up and burning out.
  */
 export interface Drops {
   readonly rate: number
   readonly colors: ReadonlyArray<number>
   readonly size: number
+  readonly embers?: boolean
 }
 
 /** Weapons in hand: each weapon's model, attached to the body model's `grip` bone as it is (same scale and axes). */
@@ -86,8 +88,8 @@ export type BodyLook =
     }
 
 /**
- * In the arena each character shows as her spirit (art/spirits/). Every
- * character is the water spirit for now: it bobs while it stands, hops
+ * In the arena each character shows as her spirit (art/spirits/). The
+ * Gunner (fire) is the fire spirit; the others are the water spirit for now: it bobs while it stands, hops
  * while it runs (one hop per `distance` covered), and sheds drops behind
  * it; its moves have no clips yet (they play over its loops).
  */
@@ -100,9 +102,19 @@ const waterSpirit: BodyLook = {
   drops: { rate: 30, colors: [0x8eebff, 0x44b6ff, 0xe0f9ff], size: 2.4 }
 }
 
+/** The fire spirit, for the fire character (the Gunner): it bobs and flickers, hops, and sheds embers. */
+const fireSpirit: BodyLook = {
+  kind: "model",
+  model: "fireSpirit",
+  widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor,
+  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  drops: { rate: 34, colors: [0xffd54a, 0xff8a3d, 0xe6391f, 0xfff176], size: 2.6, embers: true }
+}
+
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   swordsman: waterSpirit,
-  gunner: waterSpirit,
+  gunner: fireSpirit,
   tidecaller: waterSpirit,
   stormcaller: waterSpirit
 }

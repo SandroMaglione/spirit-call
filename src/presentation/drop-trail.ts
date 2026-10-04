@@ -1,8 +1,9 @@
 /**
- * Drops shed by a moving spirit, in the 3D scene (not the flat overlay), so
- * the body hides the ones behind it: each leaves from its back, arcs up a
- * little, falls to the floor, and may leave a ripple that spreads and fades
- * there. Two instanced meshes (drops, ripples), reused; positions in world
+ * What a moving spirit sheds, in the 3D scene (not the flat overlay), so
+ * the body hides what is behind it: drops (water) leave from its back, arc
+ * up a little, fall to the floor, and may leave a ripple that spreads and
+ * fades there; embers (fire) drift up and back, shrinking as they burn out.
+ * Two instanced meshes (particles, ripples), reused; positions in world
  * units (the floor's x, height, the floor's y).
  */
 import { AdditiveBlending, Color, IcosahedronGeometry, InstancedMesh, Matrix4, MeshBasicMaterial, Quaternion, RingGeometry, Vector3 } from "three"
@@ -20,6 +21,9 @@ interface Drop {
   size: number
   color: Color
   life: number
+  maxLife: number
+  /** Embers rise and shrink as they burn out; drops fall and may ripple. */
+  ember: boolean
 }
 
 interface Ripple {
@@ -33,8 +37,9 @@ interface Ripple {
 
 const MAX_DROPS = 256
 const MAX_RIPPLES = 96
-/** Pull toward the floor, world units per second squared. */
+/** Pull toward the floor, world units per second squared (embers rise, gently). */
 const GRAVITY = 420
+const EMBER_LIFT = 90
 
 export class DropTrail {
   private readonly drops: Array<Drop> = []
@@ -64,19 +69,22 @@ export class DropTrail {
    * A drop leaving `from` (a floor point), `height` up, thrown along `back`
    * (a floor direction) at `speed`, `size` world units across.
    */
-  emit(from: Vec2, height: number, back: Vec2, speed: number, size: number, color: number): void {
+  emit(from: Vec2, height: number, back: Vec2, speed: number, size: number, color: number, ember = false): void {
     if (this.drops.length >= MAX_DROPS) return
     const side = (Math.random() - 0.5) * speed * 0.6
+    const life = ember ? 0.7 + Math.random() * 0.6 : 2
     this.drops.push({
       x: from.x,
       y: height,
       z: from.y,
       vx: back.x * speed - back.y * side,
-      vy: 60 + Math.random() * 80,
+      vy: ember ? 20 + Math.random() * 40 : 60 + Math.random() * 80,
       vz: back.y * speed + back.x * side,
       size,
       color: new Color(color),
-      life: 2
+      life,
+      maxLife: life,
+      ember
     })
   }
 
@@ -84,13 +92,21 @@ export class DropTrail {
     for (let index = this.drops.length - 1; index >= 0; index--) {
       const drop = this.drops[index]!
       drop.life -= seconds
-      drop.vy -= GRAVITY * seconds
+      if (drop.ember) {
+        // Rising, slowing sideways.
+        const drag = Math.exp(-2.5 * seconds)
+        drop.vx *= drag
+        drop.vz *= drag
+        drop.vy += EMBER_LIFT * seconds
+      } else {
+        drop.vy -= GRAVITY * seconds
+      }
       drop.x += drop.vx * seconds
       drop.y += drop.vy * seconds
       drop.z += drop.vz * seconds
       if (drop.y <= 0 || drop.life <= 0) {
         // Landed: about half leave a ripple.
-        if (drop.y <= 0 && Math.random() < 0.55 && this.ripples.length < MAX_RIPPLES) {
+        if (!drop.ember && drop.y <= 0 && Math.random() < 0.55 && this.ripples.length < MAX_RIPPLES) {
           const life = 1.1 + Math.random() * 0.5
           this.ripples.push({ x: drop.x, z: drop.z, radius: drop.size * (2.5 + Math.random() * 1.5), color: drop.color, life, maxLife: life })
         }
@@ -120,10 +136,11 @@ export class DropTrail {
 
   private draw(): void {
     this.drops.forEach((drop, index) => {
-      // Stretched along its fall a little.
+      // Stretched along its fall a little; embers shrink as they burn out.
       const stretch = 1 + Math.min(0.8, Math.abs(drop.vy) / 600)
+      const size = drop.ember ? drop.size * Math.max(0, drop.life / drop.maxLife) : drop.size
       this.position.set(drop.x, drop.y, drop.z)
-      this.scale.set(drop.size / stretch ** 0.5, drop.size * stretch, drop.size / stretch ** 0.5)
+      this.scale.set(size / stretch ** 0.5, size * stretch, size / stretch ** 0.5)
       this.matrix.compose(this.position, this.turn.identity(), this.scale)
       this.dropMesh.setMatrixAt(index, this.matrix)
       this.dropMesh.setColorAt(index, drop.color)

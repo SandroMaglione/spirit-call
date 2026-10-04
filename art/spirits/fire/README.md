@@ -3,7 +3,8 @@
 The fire character's spirit: a faceted low-poly flame with dark eyes, an
 ember nub hanging under it, and four floating shards. Built only from its
 production model sheet (`reference/sheet.png`; the other images in
-`reference/` are its views, cropped). Model only, for now.
+`reference/` are its views, cropped). In the game it is the fire
+character's (the Gunner's) spirit.
 
 ![The model laid on each of the sheet's views](renders/overlay-all.png)
 
@@ -43,6 +44,21 @@ above, against 0.37 m from the front, at the same scale), so a model true to
 the side views is too round from above. The isometric render is drawn with
 a taller flame tip than the side views give.
 
+## In the game
+
+- **Clips** (`animate.py`, keyed on its objects, exported with it): an idle
+  that bobs while the flame flickers (stretching up, swaying) and each
+  shard floats on its own beat, with a blink; a run that hops, squashes on
+  landing, and leans in, the shards streaming back.
+- **Glow** (`fireGlow` in `src/presentation/models.ts`): a warm yellow core
+  where it faces the camera, ember red edges, an orange halo; its eyes stay
+  dark. glTF keeps the facets' colors, not the renders' view-dependent
+  glow, so the game draws it.
+- **Embers** while it moves (its look's `drops` with `embers`): drifting up
+  and back from it, shrinking as they burn out, hidden behind its body.
+- Scaled by its flame's height (the floating shards above it don't
+  count), so it stands as big as the water spirit.
+
 ## Rebuild
 
 ```sh
@@ -52,4 +68,5 @@ SWEEP=/tmp/sweep blender --background --python art/spirits/fire/render.py       
 uv run --with pillow --with numpy art/spirits/fire/sweep_score.py /tmp/sweep     # its camera, into sheet.json
 blender --background --python-exit-code 1 --python art/spirits/fire/render.py    # renders/
 uv run --with pillow --with numpy art/spirits/fire/overlay.py                    # renders on the sheet, scored
+blender --background --python-exit-code 1 --python art/spirits/fire/export.py    # fire-spirit.glb with its clips, assets/fire-spirit.ts
 ```

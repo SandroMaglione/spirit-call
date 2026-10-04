@@ -16,7 +16,8 @@ describe("glow", () => {
     const scene = new Group()
     const body = new Mesh(new BoxGeometry(), new MeshStandardMaterial())
     const eye = new Mesh(new BoxGeometry(), new MeshStandardMaterial({ emissive: 0xffffff, emissiveIntensity: 4 }))
-    eye.name = "Eye.L"
+    // As the glTF loader names it.
+    eye.name = "EyeL"
     body.add(eye)
     scene.add(body)
     addGlow(scene, glow, 1)
