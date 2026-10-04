@@ -1,3 +1,4 @@
+import { Icon } from "../Icon.tsx"
 /**
  * Picking what to play, by tab (the main line by chapter, the secondary
  * quests, the hardcore tracks by tier), with the briefing of the one picked:
@@ -5,13 +6,16 @@
  * elements, what each clear pays, and what clearing it gives. What is not
  * open yet says why and cannot be picked.
  */
+import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
+import type { EnemyKind } from "../../content/enemies.ts"
+import { EnemyDetails } from "./EnemyDetails.tsx"
 
 import { clearPay, encounterOf, nextReset, playLock, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import { challengeEnemies, describeAmounts, describeLock, describeObjective, describePlay, describeRewards, describeTimeUntil } from "../describe.ts"
 import type { UiStore } from "../store.ts"
-import { Cta, Foe, ids, TopBar } from "./parts.tsx"
+import { Cta, Foe, ids } from "./parts.tsx"
 import type { Nav, QuestTab } from "./parts.tsx"
 
 const tabNames: { readonly [Tab in QuestTab]: string } = { main: "Main", secondary: "Secondary", hardcore: "Hardcore" }
@@ -23,6 +27,8 @@ export const Quests = ({ store, nav, tab, play, enter }: {
   readonly play: Signal<Play>
   readonly enter: () => void
 }) => {
+  const briefing = store.menuBriefing
+  const inspecting = useSignal<EnemyKind | null>(null)
   const tuning = store.tuning.value
   const account = store.account.value
   const now = Date.now()
@@ -38,9 +44,9 @@ export const Quests = ({ store, nav, tab, play, enter }: {
         key={key}
         type="button"
         class={`entry${samePlay(candidate, play.value) ? " is-selected" : ""}`}
-        disabled={lock !== null}
+        data-locked={lock !== null || undefined}
         aria-pressed={samePlay(candidate, play.value)}
-        onClick={() => (play.value = candidate)}
+        onClick={() => { play.value = candidate; briefing.value = true }}
       >
         <span class="entry__number">{number}</span>
         <span class="entry__name">{name}</span>
@@ -85,6 +91,7 @@ export const Quests = ({ store, nav, tab, play, enter }: {
   }
 
   const selected = play.value
+  const lock = playLock(tuning, account, selected)
   const encounter = encounterOf(tuning, selected)
   const challenge = tuning.challenges[encounter.challenge]
   const rewards = () => {
@@ -92,7 +99,7 @@ export const Quests = ({ store, nav, tab, play, enter }: {
       const spec = tuning.quests[selected.quest]
       return (account.quests[selected.quest]?.firstClearedAt ?? null) !== null
         ? <span class="brief__done">Cleared</span>
-        : <span class="brief__reward">First clear {describeRewards(tuning, spec.rewards)}</span>
+        : <span class="brief__reward">{describeRewards(tuning, spec.rewards)}</span>
     }
     const spec = tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards
     return tierRewardsAvailable(tuning, account, selected.track, selected.tier, now)
@@ -101,19 +108,20 @@ export const Quests = ({ store, nav, tab, play, enter }: {
   }
 
   return (
-    <div class="screen quests">
-      <TopBar nav={nav} title="Quests" />
+    <div class={`screen quests${briefing.value ? " is-briefing" : " is-browsing"}`}>
+      <div class="page-intro"><h1>Challenges</h1></div>
       <div class="tabs" role="tablist">
         {(Object.keys(tabNames) as Array<QuestTab>).map((id) => (
-          <button key={id} type="button" role="tab" class={`tab${id === tab ? " is-selected" : ""}`} aria-selected={id === tab} onClick={() => nav.replace({ kind: "quests", tab: id })}>
+          <button key={id} type="button" role="tab" class={`tab${id === tab ? " is-selected" : ""}`} aria-selected={id === tab} onClick={() => { briefing.value = false; nav.replace({ kind: "quests", tab: id }) }}>
             {tabNames[id]}
           </button>
         ))}
       </div>
       <div class="quests__list">{list()}</div>
       <section class="brief">
+        <button type="button" class="text-button mobile-challenge-back" onClick={() => (briefing.value = false)}><Icon name="back" />Choose challenge</button>
         <h2 class="brief__name">{describePlay(tuning, selected)}</h2>
-        <p class="brief__description">{challenge.description}</p>
+        <details class="brief__description"><summary>About this challenge</summary><p>{challenge.description}</p></details>
         <div class="brief__chips">
           <span>{describeObjective(challenge.objective, challenge.waves.scripted.length)}</span>
           <span>{tuning.arenas[challenge.arena].name}</span>
@@ -124,22 +132,25 @@ export const Quests = ({ store, nav, tab, play, enter }: {
           {selected.kind === "tier" && tierProgress(account, selected.track, selected.tier)?.bestWave !== undefined && (
             <span>Best wave {tierProgress(account, selected.track, selected.tier)!.bestWave}</span>
           )}
-          <span>{describeAmounts(tuning, { gold: clearPay(tuning.progression.gold, encounter.enemyLevel) })} a clear</span>
+
         </div>
+        <h3>Enemies</h3>
         <div class="brief__foes">
-          {challengeEnemies(challenge).map((kind) => <Foe key={kind} store={store} kind={kind} />)}
+          {challengeEnemies(challenge).map((kind) => <Foe key={kind} store={store} kind={kind} inspect={(kind) => (inspecting.value = kind)} />)}
           {challenge.waves.endless !== null && <span class="brief__more">…then endless waves</span>}
         </div>
+        <section class="brief__reward-section"><span class="eyebrow">Rewards</span><div class="reward-line"><b>Every clear</b><span>{describeAmounts(tuning, { gold: clearPay(tuning.progression.gold, encounter.enemyLevel) })} · {clearPay(tuning.progression.account.run, encounter.enemyLevel)} account XP</span></div><div class="reward-line"><b>{selected.kind === "quest" ? "First clear" : "Tier milestone"}</b><span>{rewards()}</span></div></section>
         <div class="brief__end">
-          {rewards()}
+          <span class={lock === null ? "brief__done" : "lock-message"}>{lock === null ? "" : describeLock(tuning, lock)}</span>
           <div class="brief__actions">
             <button type="button" class="ghost" onClick={() => nav.go({ kind: "team" })}>
               Team
             </button>
-            <Cta onClick={enter}>Play</Cta>
+            <Cta disabled={lock !== null || store.busy.value} onClick={enter}>{store.busy.value ? "Preparing…" : "Start challenge"}</Cta>
           </div>
         </div>
       </section>
+      {inspecting.value !== null && <EnemyDetails store={store} kind={inspecting.value} close={() => (inspecting.value = null)} />}
     </div>
   )
 }

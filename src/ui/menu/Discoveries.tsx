@@ -1,10 +1,11 @@
+import { Icon } from "../Icon.tsx"
 /**
  * The discoveries: a short list of firsts worth trying, each paying crystals
  * once (see `content/discoveries.ts`).
  */
 import { describeAmounts } from "../describe.ts"
 import type { UiStore } from "../store.ts"
-import { ids, TopBar } from "./parts.tsx"
+import { ids } from "./parts.tsx"
 import type { Nav } from "./parts.tsx"
 
 export const Discoveries = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
@@ -13,11 +14,11 @@ export const Discoveries = ({ store, nav }: { readonly store: UiStore; readonly 
   const all = ids(tuning.discoveries)
   return (
     <div class="screen discoveries">
-      <TopBar nav={nav} title="Discoveries">
+      <div class="page-intro"><h1>Discoveries</h1>
         <span class="discoveries__count">
           {all.filter((id) => account.discoveries[id] !== undefined).length} / {all.length}
         </span>
-      </TopBar>
+      </div>
       <div class="discoveries__grid">
         {all.map((id) => {
           const spec = tuning.discoveries[id]
@@ -31,6 +32,7 @@ export const Discoveries = ({ store, nav }: { readonly store: UiStore; readonly 
           )
         })}
       </div>
+      <button type="button" class="ghost" onClick={() => nav.go({ kind: "team" })}>Prepare a new combination <Icon name="next" /></button>
     </div>
   )
 }

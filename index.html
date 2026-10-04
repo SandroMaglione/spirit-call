@@ -41,7 +41,7 @@
       /* Phones in portrait: ask to rotate. */
       .rotate { display: none; }
       @media (orientation: portrait) and (pointer: coarse) {
-        .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 8px; text-align: center; background: #0d1117; color: #e6edf3; font: 16px "IBM Plex Mono", ui-monospace, monospace; }
+        body:has(.ui [data-flow="Playing"]):not(:has(.pause)) .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 8px; text-align: center; background: #0d1117; color: #e6edf3; font: 16px "IBM Plex Mono", ui-monospace, monospace; }
       }
       #game { position: fixed; inset: 0; }
       #game canvas { display: block; cursor: none; }

@@ -10,7 +10,7 @@ import type { CharacterId } from "../../content/characters.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import { describeObjective } from "../describe.ts"
 import type { UiActions, UiStore } from "../store.ts"
-import { Cta, Foe, ids, TopBar } from "./parts.tsx"
+import { Cta, Foe, ids } from "./parts.tsx"
 import type { Nav } from "./parts.tsx"
 
 type Mode = "training" | "practice"
@@ -43,7 +43,7 @@ export const Extra = ({ store, actions, nav, mode, team }: {
       return (
         <section class="brief">
           <h2 class="brief__name">{challenge.name}</h2>
-          <p class="brief__description">{challenge.description}</p>
+          <details class="brief__description"><summary>About training</summary><p>{challenge.description}</p></details>
           <div class="brief__chips">
             <span>{describeObjective(challenge.objective, 0)}</span>
             <span>Dummies Lv {level}</span>
@@ -103,7 +103,7 @@ export const Extra = ({ store, actions, nav, mode, team }: {
 
   return (
     <div class="screen quests extra">
-      <TopBar nav={nav} title="Extra" />
+      <div class="page-intro"><h1>Extras</h1></div>
       <div class="quests__list">
         <div class="group">
           {(Object.keys(modes) as Array<Mode>).map((id) => (

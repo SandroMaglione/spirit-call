@@ -120,7 +120,7 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
   renderer.autoClear = false
   const canvas = renderer.domElement
   canvas.className = "showcase"
-  canvas.style.cssText = "position: absolute; inset: 0; pointer-events: none"
+  canvas.style.cssText = "position: absolute; inset: 0; pointer-events: none; z-index: 2"
   parent.append(canvas)
   const resize = () => renderer.setSize(window.innerWidth, window.innerHeight)
   resize()
@@ -170,20 +170,19 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
     shown.puppet.dispose()
   }
 
-  // Live models, by the place they stand in.
-  const live = new Map<HTMLElement, Shown>()
+  // Keep each character and weapon idle running when the UI changes places.
+  const live = new Map<string, Shown>()
   const liveFor = (place: HTMLElement): Shown | null => {
     const character = place.dataset["model"] as CharacterId | undefined
     if (character === undefined || !(character in characterLooks)) return null
     const weapon = (place.dataset["weapon"] as WeaponId | undefined) ?? null
     const key = `${character}:${weapon ?? ""}`
-    const known = live.get(place)
-    if (known !== undefined && known.key === key) return known
-    if (known !== undefined) remove(known)
+    const known = live.get(key)
+    if (known !== undefined) return known
     const puppet = puppetOf(models, characterLooks[character], weapon)
     if (puppet === null) return null
     const shown = add(key, puppet, cssColor(place, "--el"))
-    live.set(place, shown)
+    live.set(key, shown)
     return shown
   }
 
@@ -239,12 +238,7 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
         place.style.backgroundImage = `url(${url})`
         place.dataset["drawn"] = id
       }
-      // Models whose place is gone go too.
-      for (const [place, shown] of live) {
-        if (place.isConnected) continue
-        remove(shown)
-        live.delete(place)
-      }
+      // Keep the finite set of character/weapon previews alive across tabs so their idle never restarts.
       const places = document.querySelectorAll<HTMLElement>("[data-model]")
       if (places.length === 0 && !drawn) return
       renderer.setScissorTest(false)
@@ -261,7 +255,10 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
         show(shown)
         frame(shown, rect.width, rect.height, stage.fill, 1)
         renderer.setViewport(rect.left, height - rect.bottom, rect.width, rect.height)
-        renderer.setScissor(rect.left, height - rect.bottom, rect.width, rect.height)
+        const clip = place.closest(".shell-content")?.getBoundingClientRect()
+        const top = Math.max(rect.top, clip?.top ?? 0), bottom = Math.min(rect.bottom, clip?.bottom ?? height)
+        if (bottom <= top) continue
+        renderer.setScissor(rect.left, height - bottom, rect.width, bottom - top)
         renderer.render(scene, camera)
         drawn = true
       }

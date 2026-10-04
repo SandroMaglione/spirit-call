@@ -26,6 +26,7 @@ export interface UiStore {
   readonly feedback: Signal<{ readonly message: string; readonly error: boolean } | null>
   readonly recording: Signal<"idle" | "saving" | "saved" | "failed">
   readonly menuPlay: Signal<Play>
+  readonly menuBriefing: Signal<boolean>
   readonly menuDraft: Signal<TeamDraft>
   readonly menuScreens: Signal<ReadonlyArray<Screen>>
   readonly flow: Signal<FlowState>
@@ -76,6 +77,7 @@ export const createUiStore = (initial: {
   feedback: signal(null),
   recording: signal("idle"),
   menuPlay: signal(initial.account.selection.play),
+  menuBriefing: signal(false),
   menuDraft: signal({ team: initial.account.selection.team, focus: 0 }),
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
