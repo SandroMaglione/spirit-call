@@ -1,12 +1,14 @@
-"""Measures the water spirit's sheet: its outline in the front and side views, row by row, into sheet.json for build.py.
+"""Measures the water spirit's orthographic sheet into sheet.json for build.py.
 
     uv run --with pillow --with numpy art/spirits/water/sheet.py
 
-Front view: left and right edges per height (screen right is the spirit's
-left). Side view: its back and front edges per height (the sheet draws its
-front on the right). Heights and offsets are in body heights, from the
-body's underside; offsets from the middle of its base. Also the nub's
-center and size, and the eyes' centers and sizes.
+For each true view (front, back, left, right): the outline's two edges per
+height, the nub's center and size, and the eyes' centers and sizes.
+Heights and offsets are in body heights, from the body's underside;
+offsets from the middle of its base, as the image shows them (+ to the
+image's right). The front view faces the camera (screen right is its
+left); the left view shows its front on the image's right, the right view
+on the image's left.
 """
 import json
 from collections import deque
@@ -85,7 +87,7 @@ def view(name):
 
 
 def main():
-    sheet = {"front": view("front"), "side": view("side"), "back": view("back")}
+    sheet = {name: view(name) for name in ("front", "back", "left", "right")}
     (HERE / "sheet.json").write_text(json.dumps(sheet, indent=1))
     for name, v in sheet.items():
         print(name, "body", v["pixels"], "px; nub", {k: round(x, 3) for k, x in v["nub"].items()})

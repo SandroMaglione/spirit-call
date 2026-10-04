@@ -27,12 +27,12 @@ world.node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
 scene.world = world
 # A soft key from the upper left front, and some fill.
 sun = bpy.data.objects.new("Sun", bpy.data.lights.new("Sun", "SUN"))
-sun.data.energy = 1.4
+sun.data.energy = 3.2
 sun.data.color = (0.85, 0.95, 1.0)
 sun.rotation_euler = (math.radians(40), 0, math.radians(-35))
 scene.collection.objects.link(sun)
 fill = bpy.data.objects.new("Fill", bpy.data.lights.new("Fill", "SUN"))
-fill.data.energy = 0.6
+fill.data.energy = 1.4
 fill.data.color = (0.45, 0.7, 1.0)
 fill.rotation_euler = (math.radians(70), 0, math.radians(150))
 scene.collection.objects.link(fill)
@@ -56,7 +56,7 @@ tree.links.new(glare.outputs["Image"], tree.nodes["Composite"].inputs["Image"])
 
 camera = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
 camera.data.type = "ORTHO"
-camera.data.ortho_scale = 0.84
+camera.data.ortho_scale = 0.82
 scene.collection.objects.link(camera)
 scene.camera = camera
 target = Vector((0, 0, 0.36))
@@ -71,35 +71,42 @@ def from_turn(degrees, elevation=0.0):
     return Vector((math.sin(t) * math.cos(e), -math.cos(t) * math.cos(e), math.sin(e)))
 
 
-FIT = json.loads((HERE / "sheet.json").read_text())["fit"]
+CAMERA = json.loads((HERE / "sheet.json").read_text()).get("hero", {"turn": -40, "elevation": 15})
 VIEWS = {
-    # The true front; and the sheet's "front view", which is the body turned (fit.py).
-    "true-front": Vector((0, -1, 0)),
-    "front": from_turn(FIT["front_turn_degrees"]),
-    "side": Vector((-1, 0, 0)),  # its front on the right, as the sheet shows it
+    "front": Vector((0, -1, 0)),
     "back": Vector((0, 1, 0)),
-    "top": Vector((0, 0.0001, 1)),  # its front at the bottom, as the sheet shows it
-    # The sheet's hero view: three-quarter, from a little above (its camera fit by sweep_score.py).
-    "hero": from_turn(FIT["hero_turn_degrees"], FIT["hero_elevation_degrees"]),
+    "left": Vector((-1, 0, 0)),  # its front on the image's right, as the sheet's LEFT view
+    "right": Vector((1, 0, 0)),  # its front on the image's left, as the sheet's RIGHT view
+    "top": Vector((0, 0.0001, 1)),  # its front at the bottom
+    "bottom": Vector((0, 0.0001, -1)),
+    # The sheet's isometric render (its camera fit by sweep_score.py).
+    "hero": from_turn(CAMERA["turn"], CAMERA["elevation"]),
     # The game's camera: 30° down, the same turn.
-    "game": from_turn(FIT["hero_turn_degrees"], 30),
+    "game": from_turn(CAMERA["turn"], 30),
 }
 if os.environ.get("SWEEP"):
     # Hero views at many turns, for fitting the sheet's (overlay.py --sweep).
-    VIEWS = {f"sweep{d}_{e}": from_turn(d, e) for d in range(-64, -15, 4) for e in (10, 15, 20, 25, 30, 35)}
+    VIEWS = {f"sweep{d}_{e}": from_turn(d, e) for d in range(-60, 1, 5) for e in (10, 15, 20, 25, 30, 35)}
     OUT = Path(os.environ["SWEEP"])
 for name, direction in VIEWS.items():
     direction = direction.normalized()
     camera.location = target + direction * 4
-    camera.rotation_euler = (0, 0, 0) if name == "top" else (-direction).to_track_quat("-Z", "Y").to_euler()
+    if name == "top":
+        camera.rotation_euler = (0, 0, 0)
+    elif name == "bottom":
+        camera.rotation_euler = (math.pi, 0, 0)
+    else:
+        camera.rotation_euler = (-direction).to_track_quat("-Z", "Y").to_euler()
     scene.render.filepath = str(OUT / f"{name}.png")
     bpy.ops.render.render(write_still=True)
+if os.environ.get("SWEEP"):
+    raise SystemExit
 # At game size: about 22 px tall (a spirit a third of a character's height), on the arena floor's color.
 world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.32, 0.25, 0.2, 1)
 scene.render.resolution_x = 30
 scene.render.resolution_y = 32
 camera.data.ortho_scale = 0.9
-direction = VIEWS["game"].normalized()
+direction = from_turn(CAMERA["turn"], 30).normalized()
 camera.location = target + direction * 4
 camera.rotation_euler = (-direction).to_track_quat("-Z", "Y").to_euler()
 scene.render.filepath = str(OUT / "game-size.png")

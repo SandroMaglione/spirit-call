@@ -54,7 +54,7 @@ def outline(mask):
 
 
 def main():
-  for view in ("front", "side", "back", "top", "hero"):
+  for view in ("front", "back", "left", "right", "top", "bottom", "hero"):
       sheet, sheet_mask = normalized(HERE / "reference" / f"{view}.png")
       model, model_mask = normalized(HERE / "renders" / f"{view}.png")
       union = (sheet_mask | model_mask).sum()

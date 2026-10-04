@@ -42,6 +42,6 @@ if __name__ == "__main__":
     import json
     best = max(results)
     sheet = json.loads((HERE / "sheet.json").read_text())
-    sheet["fit"]["hero_turn_degrees"], sheet["fit"]["hero_elevation_degrees"] = best[1], best[2]
+    sheet["hero"] = {"turn": best[1], "elevation": best[2]}
     (HERE / "sheet.json").write_text(json.dumps(sheet, indent=1))
     print("hero view:", best[1], "° turn,", best[2], "° up")
