@@ -40,6 +40,19 @@ def verify(kind):
     bpy.ops.wm.open_mainfile(filepath=str(folder/(kind+'.blend')))
     rig=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE');mesh=next(o for o in bpy.context.scene.objects if o.type=='MESH')
     source=sample(rig,mesh,info['clips'],1)
+    feet={}
+    if kind=='sniper':
+        for name in ('Run','Windup','Active','Recovery'):
+            rig.animation_data.action=bpy.data.actions[name]
+            error=0
+            for frame in range(round(info['clips'][name]['lastKeySeconds']*30)+1):
+                bpy.context.scene.frame_set(frame+1)
+                for side in ('L','R'):
+                    bone=rig.pose.bones['foot.'+side]
+                    rotation=bone.matrix.to_quaternion().rotation_difference(bone.bone.matrix_local.to_quaternion())
+                    error=max(error,rotation.angle)
+            feet[name]=error
+        assert max(feet.values())<1e-5,feet
     def matrices(name,frame):
         rig.animation_data.action=bpy.data.actions[name];bpy.context.scene.frame_set(frame)
         return {b.name:b.matrix.copy() for b in rig.pose.bones}
@@ -65,10 +78,11 @@ def verify(kind):
     errors={name:max(abs(a-b) for left,right in zip(source[name],imported[name]) for a,b in zip(left,right)) for name in source}
     assert max(errors.values())<5e-4,(errors,source['Idle'][0],imported['Idle'][0],mesh.name,rig.name)
     ground={name:min(p[2] for p in poses) for name,poses in source.items()}
-    assert min(v for name,v in ground.items() if name!='Death')>-.025,ground
+    assert min(v for name,v in ground.items() if name!='Death')>-.0001,ground
     report={'sha256':hashlib.sha256(data).hexdigest(),'triangles':info['triangles'],'bones':info['bones'],
         'material_count':1,'mesh_count':1,'root_motion':False,'approved_rest_bounds_preserved':True,
-        'roundTripBoundsError':errors,'contactPoseErrors':contacts,'groundMinimum':ground,'result':'passed'}
+        'roundTripBoundsError':errors,'contactPoseErrors':contacts,'groundMinimum':ground,
+        'flatFootRotationErrorRadians':feet,'result':'passed'}
     (folder/'verification.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
 
 for kind in sys.argv[sys.argv.index('--')+1:]:verify(kind)

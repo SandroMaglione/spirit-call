@@ -28,9 +28,9 @@ target=Vector((0,0,info['height']*.56));turn=math.radians(45)
 camera.location=target+Vector((math.sin(turn)*math.cos(math.pi/6),-math.cos(turn)*math.cos(math.pi/6),.5))*5
 camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
 out=folder/'renders';out.mkdir(exist_ok=True)
-poses=[('Idle',0),('Run',.15),('Windup',.72),('Windup',1),('Recovery',.35),('Hurt',.1)]
+poses=[('Idle',0),('Run',.15),('Run',.45),('Windup',.72),('Windup',1),('Recovery',.1),('Recovery',.35),('Hurt',.1)]
 suffix={'charger':'Swipe','guardian':'Thrust'}.get(kind)
-if suffix:poses += [('Windup'+suffix,.72),('Windup'+suffix,1),('Recovery'+suffix,.35)]
+if suffix:poses += [('Windup'+suffix,.72),('Windup'+suffix,1),('Recovery'+suffix,.1),('Recovery'+suffix,.35)]
 for action,seconds in poses:
     rig.animation_data.action=bpy.data.actions[action];scene.frame_set(round(seconds*30)+1)
     scene.render.filepath=str(out/f'{action}-{seconds:g}.png');bpy.ops.render.render(write_still=True)

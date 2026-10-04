@@ -1,5 +1,5 @@
 {
-  "sha256": "c9099805aa6b6469e738244e985a5bf11ed29eafca9aba84031c7c4e16c01dad",
+  "sha256": "00a84fee3492c7f8168f518d6935e2b4c0dcbf3e7c24f15956a3b85807aea7d7",
   "triangles": 1890,
   "bones": 9,
   "material_count": 1,
@@ -9,23 +9,23 @@
   "roundTripBoundsError": {
     "Idle": 2.384185791015625e-07,
     "Run": 2.384185791015625e-07,
-    "Windup": 2.980232238769531e-07,
-    "Active": 1.1920928955078125e-07,
+    "Windup": 2.682209014892578e-07,
+    "Active": 2.384185791015625e-07,
     "Recovery": 2.384185791015625e-07,
     "Hurt": 2.384185791015625e-07,
     "Death": 2.384185791015625e-07,
     "Spawn": 2.384185791015625e-07,
     "WindupSwipe": 2.384185791015625e-07,
-    "ActiveSwipe": 5.960464477539063e-08,
-    "RecoverySwipe": 2.384185791015625e-07
+    "ActiveSwipe": 2.384185791015625e-07,
+    "RecoverySwipe": 2.980232238769531e-07
   },
   "contactPoseErrors": {
     "windup_active": 0.0,
     "active_recovery": 0.0,
-    "recovery_idle": 0.0,
+    "recovery_idle": 6.103640008575683e-17,
     "windup_activeSwipe": 0.0,
     "active_recoverySwipe": 0.0,
-    "recovery_idleSwipe": 0.0
+    "recovery_idleSwipe": 9.086878799148998e-17
   },
   "groundMinimum": {
     "Idle": 0.0,
@@ -40,5 +40,6 @@
     "ActiveSwipe": 0.0,
     "RecoverySwipe": 0.0
   },
+  "flatFootRotationErrorRadians": {},
   "result": "passed"
 }

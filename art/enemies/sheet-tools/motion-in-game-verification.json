@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-04",
+  "networkUrl": "http://192.168.40.47:5204/?play&challenge=practice&practice=charger,sniper,guardian&team=tidecaller,gunner,swordsman&level=20&enemyLevel=1&touch",
+  "phoneViewport": { "width": 390, "height": 844 },
+  "desktopViewport": { "width": 1280, "height": 800 },
+  "rigs": { "enemyCharger": 9, "enemySniper": 11, "enemyGuardian": 7 },
+  "observedCombatPhases": {
+    "charger": ["ready", "windup", "recovery"],
+    "sniper": ["ready", "windup", "recovery"],
+    "guardian": ["ready", "windup", "active", "recovery"]
+  },
+  "touch": {
+    "before": { "x": 913.0062240877974, "y": 894.4480247609669 },
+    "moved": { "x": 942.1972190894957, "y": 709.5717230835413 },
+    "afterDash": { "x": 971.5181829024212, "y": 523.8722856016767 },
+    "device": "touch"
+  },
+  "livingPosesAboveFloor": true,
+  "sniperFeetStayFlat": true,
+  "phaseContactsContinuous": true,
+  "approvedRestGeometryPreserved": true,
+  "consoleErrors": [],
+  "method": "Loaded the exported GLBs through the game's animation atlas on the network address. Inspected enlarged walking poses and captured ordinary combat. Advanced the live fixed and presentation schedules to inspect combat phases and synthetic touch movement/dash. Blender audits also checked every frame and GLB round trips. This is not a physical-phone performance measurement.",
+  "phoneCapture": "motion-in-game-phone.png"
+}

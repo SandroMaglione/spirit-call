@@ -89,7 +89,9 @@ existing crowd-ready exporter. The export spec is generated from actual bounds
 and clip metadata. Animated assets contain one mesh, one vertex-color material,
 one armature, and a single rigid weight per vertex.
 
-Firebomber uses nine bones, Sniper and Guardian seven. The default combat phases
+Firebomber uses nine bones, Sniper eleven, and Guardian seven. Sniper's articulated
+hips, hocks and ankles keep its feet flat through its long stalking stride.
+The default combat phases
 are bomb throw, sniper shot, and Guardian mace swing. Firebomber's `Swipe` and
 Guardian's `Thrust` variants are selected by attack id in `looks.ts`. All phase
 contacts are continuous, including zero-duration ranged active phases. The held
@@ -115,3 +117,20 @@ For playable review of only these enemies, open the game with
 The existing Enemy Practice mode keeps its field populated and respawns each
 enemy after a kill. The URL supplies its picks; no new challenge or content id
 is added. The higher player level gives time to inspect attacks and switch kits.
+
+The motion revision gives Firebomber a forward waddle under its backpack,
+Sniper a low reaching stride, and Guardian a forward brace behind its shield.
+Attacks load early and hold their silhouette before an accelerating release.
+Firebomber lifts its bomb above the shoulder and drives through the throw;
+Guardian coils its torso and swings its mace across the front, with a separate
+forward thrust. Sniper compresses into aim, drives forward and kicks back in
+recovery. Early recovery carries the follow-through before settling to idle.
+All existing combat durations and attack phase endpoints are preserved.
+
+The saved game-camera renders include opposite walking steps and early attack
+recovery. The export audit now checks Sniper's flat foot orientation and rejects
+living poses that extend below the ground by more than 0.1 mm.
+Firebomber's shorter locomotion distance gives its short legs a quicker cadence;
+Sniper takes a longer stalking step. `motion-in-game-verification.json` records
+the revised rigs, observed combat phases, and phone touch movement/dash, with
+`motion-in-game-phone.png` as the network browser capture.

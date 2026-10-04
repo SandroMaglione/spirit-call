@@ -2,7 +2,7 @@
   "source": "../sniper-model.blend",
   "source_sha256": "70396e3da265c3eb5615072c3d9ccd0be7ea1d00587fa4a24edce427eaad426e",
   "triangles": 1376,
-  "bones": 7,
+  "bones": 11,
   "materials": 1,
   "mesh_objects": 1,
   "part_bindings": {
@@ -34,13 +34,13 @@
       "leg.L": 12
     },
     "Shin.L": {
-      "leg.L": 12
+      "shin.L": 12
     },
     "Knee.L": {
       "leg.L": 20
     },
     "Ankle.L": {
-      "leg.L": 20
+      "foot.L": 20
     },
     "ThighJoint.R": {
       "leg.R": 12
@@ -49,31 +49,31 @@
       "leg.R": 12
     },
     "Shin.R": {
-      "leg.R": 12
+      "shin.R": 12
     },
     "Knee.R": {
       "leg.R": 20
     },
     "Ankle.R": {
-      "leg.R": 20
+      "foot.R": 20
     },
     "Foot.L": {
-      "leg.L": 14
+      "foot.L": 14
     },
     "Toe.L": {
-      "leg.L": 8
+      "foot.L": 8
     },
     "Toe.L.001": {
-      "leg.L": 8
+      "foot.L": 8
     },
     "Foot.R": {
-      "leg.R": 14
+      "foot.R": 14
     },
     "Toe.R": {
-      "leg.R": 8
+      "foot.R": 8
     },
     "Toe.R.001": {
-      "leg.R": 8
+      "foot.R": 8
     },
     "BarrelConductor": {
       "head": 8
