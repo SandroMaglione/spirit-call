@@ -3,7 +3,7 @@
  * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
  * screen, and a restart that clears the run and starts over.
  */
-import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Paused, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Paused, PracticeField, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { initialWaves } from "./waves.ts"
 
@@ -93,7 +93,8 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     hitStop: Game.System.writeResource(HitStop),
     slowMotion: Game.System.writeResource(SlowMotion),
     teamSwitch: Game.System.writeResource(TeamSwitch),
-    paused: Game.System.writeResource(Paused)
+    paused: Game.System.writeResource(Paused),
+    practiceField: Game.System.writeResource(PracticeField)
   }
 }, ({ resources }) => {
   const tuning = resources.tuning.get()
@@ -106,6 +107,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.slowMotion.set({ remaining: 0, scale: 1, dodge: false })
   resources.teamSwitch.set({ cooldown: 0 })
   resources.paused.set({ paused: false })
+  resources.practiceField.set({ spots: [], turn: 0 })
 })
 
 /** Removes everything the previous run spawned (enemies, projectiles, hitboxes, spawn warnings). */

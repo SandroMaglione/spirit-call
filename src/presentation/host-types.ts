@@ -165,6 +165,8 @@ export interface HudRefs {
   /** A mark per wave: cleared, going on, to come. */
   readonly waves: HTMLElement
   readonly progress: HTMLElement
+  /** The Extras' damage readout (under the header): the damage and the hits a second lately. */
+  readonly meter: { readonly root: HTMLElement; readonly damage: HTMLElement; readonly hits: HTMLElement }
   /** The character on the field (bottom center, a thin bar): her health, and her state (burning, soaked; hidden when in none). Her energy fills the ultimate's button. */
   readonly health: HTMLElement
   readonly healthText: HTMLElement
@@ -196,6 +198,8 @@ export interface FeedbackState {
   readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
   /** The state the one on the field is in, and the most it had left (refreshed by a new hit), so its icon's ring shows what is left. */
   readonly stateClock: { id: StateId | null; full: number }
+  /** The Extras' damage readout: the blows of the last few seconds (`age` in seconds), for the damage and the hits a second. */
+  readonly meter: { recent: Array<{ age: number; amount: number }> }
 }
 
 /** Frame statistics measured by the host loop. */

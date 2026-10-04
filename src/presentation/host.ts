@@ -32,7 +32,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   root.innerHTML = `
     <div class="hud__vignette" data-vignette></div>
     <div class="hud__focus" data-focus></div>
-    <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div></div>
+    <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div><div class="hud__meter" data-meter hidden><b data-damage></b><span data-hits></span></div></div>
     <div class="hud__vitals">
       <span class="hud__state" data-state hidden></span>
       <div class="hud__health"><div class="hud__health-fill" data-health></div><span class="hud__health-text" data-health-text></span></div>
@@ -82,6 +82,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       quest: root.querySelector<HTMLElement>("[data-quest]")!,
       waves: root.querySelector<HTMLElement>("[data-waves]")!,
       progress: root.querySelector<HTMLElement>("[data-progress]")!,
+      meter: { root: root.querySelector<HTMLElement>("[data-meter]")!, damage: root.querySelector<HTMLElement>("[data-damage]")!, hits: root.querySelector<HTMLElement>("[data-hits]")! },
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       state: root.querySelector<HTMLElement>("[data-state]")!,
@@ -246,7 +247,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     safeArea: safeArea.read,
     showArena,
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
-    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, protection: 0, recoil: new Map(), stateClock: { id: null, full: 0 } },
+    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, protection: 0, recoil: new Map(), stateClock: { id: null, full: 0 }, meter: { recent: [] } },
     toCanvas: (world, height) => {
       const center = toScreen(projection, cameraView.center)
       const at = toScreenAt(projection, world, height)

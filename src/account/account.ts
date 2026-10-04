@@ -203,6 +203,15 @@ export const accountLevel = (tuning: Tuning, account: Account): LevelProgress =>
 export const characterLevel = (tuning: Tuning, account: Account, character: CharacterId): LevelProgress =>
   levelOf(tuning.progression.character.curve, account.owned.characters[character]?.experience ?? 0)
 
+/**
+ * The enemy level the Extras (training, practice) are played at: the team's
+ * own level (the average of its characters', rounded), so blows land on
+ * them as on enemies of its level. They pay nothing, so it is never a level
+ * to farm.
+ */
+export const teamLevel = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>): number =>
+  team.length === 0 ? 1 : Math.max(1, Math.round(team.reduce((sum, character) => sum + characterLevel(tuning, account, character).level, 0) / team.length))
+
 /** `account` with `experience` added to `character` (when owned). */
 const addCharacterExperience = (account: Account, character: CharacterId, experience: number): Account => {
   const current = account.owned.characters[character]

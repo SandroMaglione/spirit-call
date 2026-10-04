@@ -2,7 +2,9 @@
  * The results screen: won or lost, how it went (for a loss, how far it got:
  * it pays that share), what it earned as tiles (experience, gold, an
  * account level, first-clear rewards, unlocks, discoveries), the team's
- * leader on the right, and what next (play again, or back to the menu).
+ * leader on the right, and what next (play again, or back to the menu). An
+ * Extra's (Enemy Practice) shows the enemies defeated, pays nothing, and can
+ * go back to the picks.
  * The buttons wake up after `Tuning.flow.restartDelay`, so a tap meant for
  * the fight does not skip the screen; on a keyboard, R and Esc do the same
  * (see `QueueRestart`).
@@ -59,6 +61,37 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
     })
   }
   const objective = tuning.challenges[result.challenge].objective
+  // An Extra (practice) records nothing: the wave it reached, and a way back to its picks.
+  const extra = store.extra.value
+  if (extra !== null) {
+    return (
+      <div class="results" data-element={leader === undefined ? undefined : (elementOf(tuning, leader.character) ?? undefined)}>
+        {leader !== undefined && <Model character={leader.character} weapon={resolveBuild(tuning, leader).weapon} class="results__model" />}
+        <div class="results__banner">{result.kills} defeated</div>
+        <div class="results__note">Practice: nothing is recorded</div>
+        <div class="results__stats">
+          <b>{name}</b> · {minutes(result.time)}
+        </div>
+        <div class="results__actions">
+          <Cta disabled={!ready.value} onClick={actions.retry}>
+            Again
+          </Cta>
+          {extra.kind === "practice" && (
+            <button type="button" class="ghost" disabled={!ready.value} onClick={() => {
+              store.menuOpens.value = { kind: "extra", mode: "practice" }
+              actions.menu()
+            }}>
+              Enemies
+            </button>
+          )}
+          <button type="button" class="ghost" disabled={!ready.value} onClick={actions.menu}>
+            Home
+          </button>
+          {store.device.value === "desktop" && <span class="results__hint">R again · Esc home</span>}
+        </div>
+      </div>
+    )
+  }
   return (
     <div class={`results${result.cleared ? " is-cleared" : ""}`} data-element={leader === undefined ? undefined : (elementOf(tuning, leader.character) ?? undefined)}>
       {leader !== undefined && <Model character={leader.character} weapon={resolveBuild(tuning, leader).weapon} class="results__model" />}

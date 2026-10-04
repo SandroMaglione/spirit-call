@@ -90,6 +90,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     }
   }
   for (const hit of events.hit.all()) {
+    // A blow that deals nothing (a gust's push) shows nothing of a hit.
+    if (hit.amount <= 0) continue
     const at = toScreen(projection, hit.at)
     const body = { x: at.x, y: at.y - impact.height * projection.zoom }
     const direction = screenDirection(hit.direction)

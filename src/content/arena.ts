@@ -57,6 +57,16 @@ const arena = (spec: ArenaSpec): ArenaSpec => spec
 
 /** Every arena, by id. */
 export const arenas = {
+  /** Training: open floor, a fire pool near each side to push dummies into (and to step out of). */
+  trainingGround: arena({
+    name: "Training Ground",
+    pillars: [],
+    walls: [],
+    hazards: [
+      { element: "fire", column: 1, row: 5, columns: 1, rows: 3, walled: { y: "north", x: "west" } },
+      { element: "fire", column: 11, row: 5, columns: 1, rows: 3, walled: { y: "south", x: "east" } }
+    ]
+  }),
   /** Open paving between eight pillars: room to move, cover to circle. */
   courtyard: arena({
     name: "Courtyard",

@@ -18,7 +18,9 @@
  *
  * The phase is the `AttackPhase` state component; its moves follow the cycle
  * above, which the type checker enforces. A stunned enemy's attack is put
- * on hold where it is.
+ * on hold where it is. A blink moves the attacker: it appears in the middle
+ * of its mark as the windup ends, then strikes the mark. A gust blows along
+ * its cone, its own side too (pushed and driven by the wind, no damage).
  */
 import type { AttackSpec } from "../content/enemies.ts"
 import { Random } from "../math/rng.ts"
@@ -49,6 +51,7 @@ import {
   Player,
   Poise,
   Position,
+  PrevPosition,
   Rng,
   RunScope,
   SlowMotion,
@@ -81,9 +84,11 @@ export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: Rea
       return { kind: "lane", origin, direction, length: spec.length * (blocked?.time ?? 1), halfWidth: spec.width / 2 }
     }
     case "melee":
+    case "gust":
       return { kind: "cone", origin, direction, radius: spec.reach, halfAngle: toRadians(spec.arcDegrees) / 2 }
     case "slam":
-    case "lob": {
+    case "lob":
+    case "blink": {
       const offset = clampLength(sub(target, origin), spec.maxReach)
       return { kind: "circle", center: { x: origin.x + offset.x, y: origin.y + offset.y }, radius: spec.radius }
     }
@@ -100,7 +105,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   queries: {
     attackers: Game.Query({
       selection: {
-        position: Game.Query.read(Position),
+        position: Game.Query.write(Position),
+        previous: Game.Query.write(PrevPosition),
         enemy: Game.Query.read(Enemy),
         attacker: Game.Query.write(Attacker),
         phase: Game.Query.write(AttackPhase),
@@ -233,6 +239,12 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       elapsed -= spec.windup
       phase.transition("windup", "active")
       windingUp -= 1
+      // A blink: it appears in the middle of its mark (walls push it out as it moves on), with nothing to blend from.
+      const struckFrom = spec.kind === "blink" && area.kind === "circle" ? area.center : position
+      if (struckFrom !== position) {
+        data.position.set(struckFrom)
+        data.previous.set(struckFrom)
+      }
       if (spec.kind === "volley" && area.kind === "line") {
         const base = Math.atan2(area.direction.y, area.direction.x)
         for (let shot = 0; shot < spec.count; shot++) {
@@ -253,12 +265,24 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
           blow: struck,
           elapsed: 0
         }]))
+      } else if (spec.kind === "gust" && area.kind === "cone") {
+        // Everything in the cone is blown along it: the player struck, the enemies only pushed (and driven by the
+        // wind, so a wall slams them). Neither is anyone's blow to build on: no energy, no passives.
+        const along = area.direction
+        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+          area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], follows: struckFrom, pushAlong: along
+        }]))
+        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+          area, faction: "player", blow: blow({ damage: 0, knockback: spec.knockback, element: { id: "wind", atk } }),
+          // Not the caster itself, at the cone's tip.
+          remaining: Math.max(spec.active, 1e-6), hit: [entity.id.value], follows: struckFrom, pushAlong: along
+        }]))
       } else if (spec.kind === "charge") {
         // The charge itself is the attack: contact damage while active (below).
         hit = []
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], follows: position
+          area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], follows: struckFrom
         }]))
       }
     }

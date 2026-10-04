@@ -14,6 +14,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
+  Challenge,
   CombatStats,
   Damage,
   Death,
@@ -29,6 +30,7 @@ import {
   HitFlash,
   HitStop,
   Hurtbox,
+  Immortal,
   Impact,
   Invulnerable,
   Knockback,
@@ -39,6 +41,7 @@ import {
   PrevPosition,
   Projectile,
   Reaction,
+  Ward,
   Renderable,
   Respawns,
   RunScope,
@@ -57,6 +60,7 @@ import { respawnOf } from "./enemies.ts"
 import { damageBonusPercent, PassiveHolders } from "./passives.ts"
 import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
 import { paceOf } from "./time.ts"
+import { wardedTaken } from "./wards.ts"
 import type { Target } from "./targets.ts"
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
@@ -216,7 +220,8 @@ const Damageable = Game.Query({
     player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns),
-    poise: Game.Query.optional(Poise)
+    poise: Game.Query.optional(Poise),
+    immortal: Game.Query.optional(Immortal)
   }
 })
 
@@ -243,7 +248,8 @@ const Benched = Game.Query({
  */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: {
-    energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player) }, with: [Member] })
+    energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player) }, with: [Member] }),
+    wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy) } })
   },
   events: {
     damage: Game.System.readEvent(Damage),
@@ -251,9 +257,18 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     death: Game.System.writeEvent(Death),
     reaction: Game.System.writeEvent(Reaction)
   },
-  resources: { tuning: Game.System.readResource(Tuning), stats: Game.System.writeResource(Stats), hitStop: Game.System.writeResource(HitStop) }
+  resources: {
+    tuning: Game.System.readResource(Tuning),
+    stats: Game.System.writeResource(Stats),
+    hitStop: Game.System.writeResource(HitStop),
+    challenge: Game.System.readResource(Challenge)
+  }
 }, ({ queries, events, resources, lookup, commands }) => {
   const tuning = resources.tuning.get()
+  // In the Training Ground the team cannot fall (only the fire hurts, and never to the end).
+  const training = tuning.waves.enabled && tuning.challenges[resources.challenge.get()].objective.kind === "training"
+  // Enemies a warder's tether holds take only a share (see `features/wards.ts`).
+  const warded = wardedTaken(tuning, queries.wards.each().map(({ data }) => ({ kind: data.enemy.get().kind, ward: data.ward.get() })))
   const dead = new Set<number>()
   let kills = 0
   let energy = 0
@@ -280,12 +295,19 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
     const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state, affinity)
     // A broken enemy takes more (see `Tuning.breaking`), and so does one in the state the blow is made against.
-    const broken = (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1) *
+    // Armor (see `ArmorSpec`) holds until the break bar fills: a share of the damage, and no push.
+    const armored = enemy !== undefined && tuning.enemies[enemy].armor !== null && !(data.poise.present && data.poise.get().broken > 0)
+    const armor = armored ? tuning.enemies[enemy].armor!.taken : 1
+    const broken = armor * (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1) *
       (blow.against !== null && state?.id === blow.against.state ? blow.against.factor : 1)
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken, data.stats.get().def)
-    const current = Math.max(0, health.current - amount)
-    // Damage the player deals fills energy; only what actually landed counts.
-    if (blow.charges && data.hurtbox.get().faction === "enemy") energy += (health.current - current) * tuning.energy.perDamage
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
+    // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
+    const current = data.immortal.present
+      ? health.current
+      : training && data.player.present ? Math.max(Math.min(1, health.current), health.current - amount) : Math.max(0, health.current - amount)
+    // Damage the player deals fills energy; only what actually landed counts (on a dummy that never falls, the blow as dealt).
+    const landed = data.immortal.present ? Math.min(amount, health.current) : health.current - current
+    if (blow.charges && data.hurtbox.get().faction === "enemy") energy += landed * tuning.energy.perDamage
     data.health.set({ current, max: health.max })
     if (!blow.periodic) {
       data.flash.set({ remaining: tuning.feedback.hitFlash })
@@ -294,7 +316,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
         data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
         hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
       }
-      const push = blow.knockback * knockbackTaken(tuning, enemy)
+      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy)
       data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
       // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
       if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
@@ -325,7 +347,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     if (!killed) continue
 
     dead.add(entity.id.value)
-    events.death.emit({ at, faction: data.hurtbox.get().faction, enemy })
+    events.death.emit({ at, faction: data.hurtbox.get().faction, enemy, atk: data.stats.get().atk })
     // A fallen team member stays (out of the fight); everything else is gone.
     if (data.player.present) data.state.set({ current: null })
     else commands.despawn(entity.id)

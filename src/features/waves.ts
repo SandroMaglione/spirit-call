@@ -129,8 +129,10 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   }
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
-  if (!tuning.waves.enabled) return
-  const plan = tuning.challenges[resources.challenge.get()].waves
+  const spec = tuning.challenges[resources.challenge.get()]
+  // No waves in the Extras: training has its dummies (see `SpawnTrainingDummies`), practice its field (see `KeepPracticeField`).
+  if (!tuning.waves.enabled || spec.objective.kind === "training" || spec.objective.kind === "practice") return
+  const plan = spec.waves
   const dt = resources.time.get().dt
   const waves = resources.waves.get()
   const random = new Random(resources.rng.get().state)

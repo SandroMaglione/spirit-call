@@ -1,6 +1,6 @@
 /**
  * The home screen: the team's leader on stage, the account's level and
- * wallet, the doors (quests, hardcore, characters), the team, and Play,
+ * wallet, the doors (quests, hardcore, the Extras), the team, and Play,
  * which enters what was picked last with the saved team in one tap.
  */
 import { accountLevel, buildOf, characterLevel } from "../../account/account.ts"
@@ -74,8 +74,10 @@ export const Home = ({ store, nav, team, play, enter }: {
         <button type="button" class="door" onClick={() => nav.go({ kind: "quests", tab: "hardcore" })}>
           <b>Hardcore</b>
         </button>
-        <button type="button" class="door" onClick={() => nav.go({ kind: "character", character: leader, tab: "overview" })}>
-          <b>Characters</b>
+        {/* Characters open from the leader on stage and from the team. */}
+        <button type="button" class="door" onClick={() => nav.go({ kind: "extra", mode: "training" })}>
+          <b>Extra</b>
+          <small>Training</small>
         </button>
       </nav>
       <div class="home__play">

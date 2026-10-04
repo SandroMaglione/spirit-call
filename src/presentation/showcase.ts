@@ -60,6 +60,29 @@ const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, wea
   return puppet
 }
 
+/** A placeholder's picture: its capsule standing in the middle, `aspect` wide for its height, lit from the upper left. */
+const capsulePicture = (picture: HTMLCanvasElement, color: number, aspect: number): string => {
+  const size = picture.width
+  const context = picture.getContext("2d")!
+  context.clearRect(0, 0, size, size)
+  const height = size * 0.72
+  const width = Math.min(size * 0.8, height * aspect * 0.5)
+  const x = (size - width) / 2
+  const y = (size - height) / 2 + size * 0.04
+  const base = `#${color.toString(16).padStart(6, "0")}`
+  const light = context.createLinearGradient(x, y, x + width, y + height)
+  light.addColorStop(0, "rgba(255, 255, 255, 0.45)")
+  light.addColorStop(0.5, "rgba(255, 255, 255, 0)")
+  light.addColorStop(1, "rgba(0, 0, 0, 0.35)")
+  context.beginPath()
+  context.roundRect(x, y, width, height, width / 2)
+  context.fillStyle = base
+  context.fill()
+  context.fillStyle = light
+  context.fill()
+  return picture.toDataURL("image/png")
+}
+
 /** A model's bounds, without its glows (halos are wider than the body, and would shrink it in its place). */
 const boundsOf = (object: Object3D): Box3 => {
   // Box3 measures hidden parts too: the glows are detached while it measures.
@@ -176,6 +199,12 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
     const enemy = id.startsWith("enemy:") ? (id.slice("enemy:".length) as EnemyKind) : null
     const look = enemy === null ? characterLooks[id as CharacterId] : enemyLooks[enemy]
     if (look === undefined) return null
+    // A placeholder (no model yet) shows its capsule, in its color.
+    if (look.kind === "capsule") {
+      const url = capsulePicture(picture, look.color, look.widthFactor / look.heightFactor)
+      pictures.set(id, url)
+      return url
+    }
     const puppet = puppetOf(models, look, null)
     if (puppet === null) return null
     const shown = add(id, puppet, cssColor(place, "--el"))

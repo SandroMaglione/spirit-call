@@ -1,13 +1,13 @@
 /**
  * Telegraphs on the floor: pools of elements, enemy attack windups,
- * shields, active hitboxes, lobbed skills, whirls, totems, thrown discs,
- * and spawn warnings.
+ * shields, wards, armor, bursts about to go off, active hitboxes, lobbed skills,
+ * whirls, totems, thrown discs, and spawn warnings.
  */
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Position, PrevPosition, RenderClock, RenderHost, Shield, Totem, Tuning, Vortex } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Burst, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
@@ -25,7 +25,13 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     elites: Game.Query({ selection: { elite: Game.Query.read(Elite), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
     discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
-    attackers: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } }),
+    attackers: Game.Query({
+      selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), position: Game.Query.read(Position), body: Game.Query.read(Body) }
+    }),
+    enemyBodies: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }, with: [Enemy] }),
+    wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
+    bursts: Game.Query({ selection: { burst: Game.Query.read(Burst) } }),
+    armored: Game.Query({ selection: { enemy: Game.Query.read(Enemy), poise: Game.Query.read(Poise), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
     vortices: Game.Query({ selection: { vortex: Game.Query.read(Vortex) } }),
@@ -77,8 +83,53 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     // Attacks track until their aim locks: dim while tracking, bright once locked (the cue to move).
     // An element's attack is drawn in its element's color, so what it would put on you shows before it lands.
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
-    const color = spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
+    // A gust shows as wind: what it does is push.
+    const color = spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
     drawArea(g, area, progress, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
+    // A blink: where it stands fades out, a ring closing in on it, as its mark fills where it will land.
+    if (spec.kind === "blink") {
+      const at = data.position.get()
+      g.strokeCircle(at.x, at.y, (data.body.get().radius + 14) * (1 - progress * 0.7), 3, color, 0.8 * (1 - progress))
+    }
+  }
+
+  // Wards: the tether from the warder to its ally, growing while it forms, then steady and pulsing; a ring under
+  // the ally it holds. Crossing it cuts it.
+  const bodies = new Map(queries.enemyBodies.each().map(({ entity, data }) => [entity.id.value, { at: lerp(data.previous.get(), data.position.get(), services.clock.alpha), radius: data.body.get().radius }]))
+  for (const { data } of queries.wards.each()) {
+    const ward = data.ward.get()
+    const spec = tuning.enemies[data.enemy.get().kind].ward
+    const ally = ward.ally === null ? undefined : bodies.get(ward.ally.id)
+    if (spec === null || ally === undefined) continue
+    const from = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const formed = spec.link <= 0 ? 1 : Math.min(1, ward.formed / spec.link)
+    const end = { x: from.x + (ally.at.x - from.x) * formed, y: from.y + (ally.at.y - from.y) * formed }
+    if (formed < 1) {
+      g.line(from.x, from.y, end.x, end.y, 2, view.ward, 0.45)
+      continue
+    }
+    const pulse = 0.7 + 0.3 * Math.sin(now * 6)
+    g.line(from.x, from.y, end.x, end.y, 4, view.ward, 0.75 * pulse)
+    g.fillCircle(ally.at.x, ally.at.y, ally.radius + 12, view.ward, 0.14 * pulse)
+    g.strokeCircle(ally.at.x, ally.at.y, ally.radius + 12, 3, view.ward, 0.85)
+  }
+
+  // Armor: plates in a ring under an armored enemy until it breaks (its armor down while it is).
+  for (const { data } of queries.armored.each()) {
+    if (tuning.enemies[data.enemy.get().kind].armor === null || data.poise.get().broken > 0) continue
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const radius = data.body.get().radius + 8
+    for (let plate = 0; plate < 6; plate++) {
+      const start = (plate / 6) * Math.PI * 2 + 0.12
+      g.strokeArc(at.x, at.y, radius, start, start + (Math.PI * 2) / 6 - 0.24, 5, view.armor, 0.85)
+    }
+  }
+
+  // Bursts about to go off where a body fell: their ring, filling as the fuse burns.
+  for (const { data } of queries.bursts.each()) {
+    const burst = data.burst.get()
+    const color = burst.element === null ? view.telegraphLocked : view.elements[burst.element.id]
+    drawArea(g, { kind: "circle", center: burst.at, radius: burst.radius }, 1 - burst.remaining / burst.fuse, { color, fill: 0.14, outline: 0.9 })
   }
 
   // Elites: a ring of their element under their feet, turning; a thunder elite's discharge fills its ring where it will strike.

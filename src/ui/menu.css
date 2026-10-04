@@ -1188,3 +1188,69 @@ body:has(.menu) .btm-toggle {
 .discovery.is-made .discovery__reward {
   color: #8fe8c8;
 }
+
+/* ── Extra ─────────────────────────────────────────────────────────────── */
+
+/* A toggle among a briefing's chips (Enemy Practice's elites, all or none). */
+.chip {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--dim);
+  font: 700 0.75rem/1 var(--body);
+}
+
+.chip.is-on {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Enemy Practice's picks: every enemy's card, the picked ones lit, in rows that scroll. */
+.extra__picks {
+  flex-wrap: wrap;
+  align-content: flex-start;
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+/* Compact: the portrait and the name, so every enemy fits at a glance. */
+.extra__picks {
+  gap: 0.35rem;
+}
+
+.extra__picks .foe {
+  width: 3.25rem;
+}
+
+.extra__picks .foe .portrait {
+  height: 2.3rem;
+}
+
+.extra__picks .foe__traits {
+  display: none;
+}
+
+.extra__picks .foe b {
+  padding: 0.15rem 0.25rem 0.3rem;
+  overflow: hidden;
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.extra__pick {
+  padding: 0;
+  border: 0;
+  border-radius: 0.65rem;
+  background: none;
+  opacity: 0.45;
+  transition: opacity 120ms, box-shadow 120ms;
+}
+
+.extra__pick.is-picked {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--gold), 0 0 0.9rem rgba(255, 207, 90, 0.35);
+}
+

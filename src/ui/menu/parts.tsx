@@ -23,6 +23,7 @@ export type Screen =
   | { readonly kind: "team" }
   | { readonly kind: "character"; readonly character: CharacterId; readonly tab: CharacterTab }
   | { readonly kind: "discoveries" }
+  | { readonly kind: "extra"; readonly mode: "training" | "practice" }
 
 export type QuestTab = "main" | "secondary" | "hardcore"
 export type CharacterTab = "overview" | "weapon" | "kit"

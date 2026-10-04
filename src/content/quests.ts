@@ -179,6 +179,16 @@ export const quests = {
     after: null,
     rewards: { experience: 150, currencies: { crystals: 80, gold: 1200 }, unlocks: [] }
   }),
+  strangeCompany: quest({
+    name: "Strange Company",
+    line: "secondary",
+    chapter: null,
+    challenge: "strangeCompany",
+    enemyLevel: 6,
+    level: 3,
+    after: null,
+    rewards: { experience: 120, currencies: { crystals: 60, gold: 1100 }, unlocks: [] }
+  }),
   stormFront: quest({
     name: "Storm Front",
     line: "secondary",

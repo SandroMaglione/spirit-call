@@ -10,12 +10,19 @@
 import { Descriptor } from "@typeonce/bevy-ts"
 
 import type { ChallengeId } from "../content/challenges.ts"
-import { Challenge, EnemyLevel, Flow, Game, Paused, RunResult, Team } from "../schema.ts"
-import type { BuildValue } from "../schema.ts"
+import { Challenge, EnemyLevel, Flow, Game, Paused, Practice, RunResult, Team } from "../schema.ts"
+import type { BuildValue, PracticeValue } from "../schema.ts"
 
 export type UiRequest =
   /** Enter the arena with this team (in order) to face this challenge. */
-  | { readonly kind: "start"; readonly team: ReadonlyArray<BuildValue>; readonly challenge: ChallengeId; readonly enemyLevel: number }
+  | {
+    readonly kind: "start"
+    readonly team: ReadonlyArray<BuildValue>
+    readonly challenge: ChallengeId
+    readonly enemyLevel: number
+    /** Enemy Practice's picks (see `Practice`); none for anything else. */
+    readonly practice?: PracticeValue
+  }
   /** From the results or the in-game menu: the same challenge again, with the same team, from the start. */
   | { readonly kind: "retry" }
   /** From the results or the in-game menu: back to the menu (a run left this way is not recorded). */
@@ -40,7 +47,8 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
     challenge: Game.System.writeResource(Challenge),
     enemyLevel: Game.System.writeResource(EnemyLevel),
     paused: Game.System.writeResource(Paused),
-    result: Game.System.readResource(RunResult)
+    result: Game.System.readResource(RunResult),
+    practice: Game.System.writeResource(Practice)
   },
   machines: { flow: Game.System.machine(Flow) },
   nextMachines: { flow: Game.System.nextState(Flow) },
@@ -58,6 +66,7 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
         resources.team.set(request.team)
         resources.challenge.set(request.challenge)
         resources.enemyLevel.set(request.enemyLevel)
+        resources.practice.set(request.practice ?? { kinds: [], elites: false })
         // Entering `Playing` restarts the run with the new team (see `restart`).
         nextMachines.flow.set("Playing")
         break
