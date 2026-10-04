@@ -1,0 +1,488 @@
+{
+  "schema_version": 2,
+  "kit": "overgrown-sanctuary-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/overgrown-sanctuary-study.blend",
+  "source_sha256": "96fcc3c190fe38231af3977a1e2dba93f0b99c1f8f409fa93bcb14eaf9477940",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "compact-shrine",
+      "file": "models/compact-shrine.glb",
+      "bounds_m": {
+        "min": [
+          -0.3700000047683716,
+          0.0,
+          -0.23999999463558197
+        ],
+        "max": [
+          0.3700000047683716,
+          0.7200000286102295,
+          0.23999999463558197
+        ]
+      },
+      "dimensions_m": [
+        0.7400000095367432,
+        0.7200000286102295,
+        0.47999998927116394
+      ],
+      "triangles": 404,
+      "mesh_count": 1,
+      "bytes": 28636,
+      "sha256": "2b08bd08ead4053912f4cee769bf6924261c5609b5ade6410d5cc4dede071c7c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Small grounded shrine"
+    },
+    {
+      "id": "fallen-leaves",
+      "file": "models/fallen-leaves.glb",
+      "bounds_m": {
+        "min": [
+          -0.22718916833400726,
+          0.0,
+          -0.22165542840957642
+        ],
+        "max": [
+          0.26600000262260437,
+          0.014499999582767487,
+          0.22880910336971283
+        ]
+      },
+      "dimensions_m": [
+        0.49318917095661163,
+        0.014499999582767487,
+        0.45046453177928925
+      ],
+      "triangles": 308,
+      "mesh_count": 1,
+      "bytes": 21148,
+      "sha256": "f9b922644312100048357336bc7023cad03e01fe16bb6adcf0291dd1ac89ba2a",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Individual fallen leaves"
+    },
+    {
+      "id": "fallen-log",
+      "file": "models/fallen-log.glb",
+      "bounds_m": {
+        "min": [
+          -0.6480000019073486,
+          -0.01000000536441803,
+          -0.3041755259037018
+        ],
+        "max": [
+          0.6480000019073486,
+          0.375,
+          0.17000000178813934
+        ]
+      },
+      "dimensions_m": [
+        1.2960000038146973,
+        0.38500000536441803,
+        0.4741755276918411
+      ],
+      "triangles": 208,
+      "mesh_count": 1,
+      "bytes": 14908,
+      "sha256": "80c3d30f82f36bc625d999300b571de429ac3bd365f1bb231217a043d1f14214",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Fallen log with attached moss"
+    },
+    {
+      "id": "ground-fern",
+      "file": "models/ground-fern.glb",
+      "bounds_m": {
+        "min": [
+          -0.2944033145904541,
+          0.0,
+          -0.31716907024383545
+        ],
+        "max": [
+          0.32502615451812744,
+          0.25731077790260315,
+          0.31732767820358276
+        ]
+      },
+      "dimensions_m": [
+        0.6194294691085815,
+        0.25731077790260315,
+        0.6344967484474182
+      ],
+      "triangles": 892,
+      "mesh_count": 1,
+      "bytes": 62988,
+      "sha256": "794ff4cddeb9f9ae2395cc22ec309f1ab52e652722c578c260bfe0f84dc6215a",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Branching grounded fern"
+    },
+    {
+      "id": "hollow-stump",
+      "file": "models/hollow-stump.glb",
+      "bounds_m": {
+        "min": [
+          -0.4359210133552551,
+          -0.018627256155014038,
+          -0.3300188481807709
+        ],
+        "max": [
+          0.4359210133552551,
+          0.49000000953674316,
+          0.3300188481807709
+        ]
+      },
+      "dimensions_m": [
+        0.8718420267105103,
+        0.5086272656917572,
+        0.6600376963615417
+      ],
+      "triangles": 340,
+      "mesh_count": 1,
+      "bytes": 23272,
+      "sha256": "6d36dbc2e73f75a11ba29d767b7012fa4df5969df2a351ae9e7f12a783c8db51",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Rooted hollow stump and shelf fungus"
+    },
+    {
+      "id": "moss-stone",
+      "file": "models/moss-stone.glb",
+      "bounds_m": {
+        "min": [
+          -0.21207338571548462,
+          0.0,
+          -0.17171171307563782
+        ],
+        "max": [
+          0.23295865952968597,
+          0.2150000035762787,
+          0.16323767602443695
+        ]
+      },
+      "dimensions_m": [
+        0.4450320452451706,
+        0.2150000035762787,
+        0.33494938910007477
+      ],
+      "triangles": 104,
+      "mesh_count": 1,
+      "bytes": 10052,
+      "sha256": "f7d1cd8601d7d7c5bb9c0345f3d6aaf6984545a89e37dcdfe319a7c1735f4989",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Moss touching a worn stone"
+    },
+    {
+      "id": "mushroom-garden",
+      "file": "models/mushroom-garden.glb",
+      "bounds_m": {
+        "min": [
+          -0.8193744421005249,
+          0.0,
+          -0.5485235452651978
+        ],
+        "max": [
+          0.9000675082206726,
+          1.437999963760376,
+          0.5214536786079407
+        ]
+      },
+      "dimensions_m": [
+        1.7194419503211975,
+        1.437999963760376,
+        1.0699772238731384
+      ],
+      "triangles": 1456,
+      "mesh_count": 1,
+      "bytes": 101868,
+      "sha256": "2677d7d20565a9bcea875b688c69b53564ea56ed786166accd4f440dc7ff2b26",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Grounded mushroom garden"
+    },
+    {
+      "id": "root-gateway",
+      "file": "models/root-gateway.glb",
+      "bounds_m": {
+        "min": [
+          -1.069249153137207,
+          -0.02016519010066986,
+          -0.3187381327152252
+        ],
+        "max": [
+          1.069249153137207,
+          1.6253340244293213,
+          0.3187381327152252
+        ]
+      },
+      "dimensions_m": [
+        2.138498306274414,
+        1.6454992145299911,
+        0.6374762654304504
+      ],
+      "triangles": 456,
+      "mesh_count": 1,
+      "bytes": 32064,
+      "sha256": "382bda6ca8942a465801ca45c222cd3775c47fedbe7a7aeedac8d8e147b4d4ae",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Continuous rooted gateway"
+    },
+    {
+      "id": "rooted-ruin",
+      "file": "models/rooted-ruin.glb",
+      "bounds_m": {
+        "min": [
+          -1.008236289024353,
+          -0.03252553194761276,
+          -0.3100000023841858
+        ],
+        "max": [
+          1.0,
+          0.9931250810623169,
+          0.3100000023841858
+        ]
+      },
+      "dimensions_m": [
+        2.008236289024353,
+        1.0256506130099297,
+        0.6200000047683716
+      ],
+      "triangles": 508,
+      "mesh_count": 1,
+      "bytes": 35332,
+      "sha256": "38672d4067e0d8ff7205b7dc042624a1690fa6d06cf7bad8a63406728ecd99cd",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Broken wall with connected roots"
+    },
+    {
+      "id": "rooted-sapling",
+      "file": "models/rooted-sapling.glb",
+      "bounds_m": {
+        "min": [
+          -0.6415534615516663,
+          -0.021174073219299316,
+          -0.5113239288330078
+        ],
+        "max": [
+          0.675000011920929,
+          1.049399971961975,
+          0.5170233249664307
+        ]
+      },
+      "dimensions_m": [
+        1.3165534734725952,
+        1.0705740451812744,
+        1.0283472537994385
+      ],
+      "triangles": 700,
+      "mesh_count": 1,
+      "bytes": 52964,
+      "sha256": "97723e9a257aeeaa2af2780e640a1b0dccc9b75e8d7b0f328c4624e31400bc67",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Sapling with branches and joined canopy"
+    },
+    {
+      "id": "seed-pods",
+      "file": "models/seed-pods.glb",
+      "bounds_m": {
+        "min": [
+          -0.125,
+          0.0,
+          -0.09539540112018585
+        ],
+        "max": [
+          0.125,
+          0.3400000035762787,
+          0.090687595307827
+        ]
+      },
+      "dimensions_m": [
+        0.25,
+        0.3400000035762787,
+        0.18608299642801285
+      ],
+      "triangles": 188,
+      "mesh_count": 1,
+      "bytes": 14304,
+      "sha256": "8623230b5259dbe2f58e5cb5c616991a84b69aea03fba9e51ccf53907f972ecb",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Seed pods attached to stems"
+    },
+    {
+      "id": "shrine-grove",
+      "file": "models/shrine-grove.glb",
+      "bounds_m": {
+        "min": [
+          -1.0326000452041626,
+          0.0,
+          -0.5246747136116028
+        ],
+        "max": [
+          1.1118481159210205,
+          0.8200000524520874,
+          0.5773276686668396
+        ]
+      },
+      "dimensions_m": [
+        2.144448161125183,
+        0.8200000524520874,
+        1.1020023822784424
+      ],
+      "triangles": 2116,
+      "mesh_count": 1,
+      "bytes": 144256,
+      "sha256": "07b656a6e58a1ed58fd04a30cd00ba88d750a1c06dcfd0968bb1c57b042227cc",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Shrine with rooted side growth"
+    },
+    {
+      "id": "small-mushrooms",
+      "file": "models/small-mushrooms.glb",
+      "bounds_m": {
+        "min": [
+          -0.3125999867916107,
+          0.0,
+          -0.3199999928474426
+        ],
+        "max": [
+          0.36000001430511475,
+          0.3179999887943268,
+          0.26660001277923584
+        ]
+      },
+      "dimensions_m": [
+        0.6726000010967255,
+        0.3179999887943268,
+        0.5866000056266785
+      ],
+      "triangles": 384,
+      "mesh_count": 1,
+      "bytes": 26088,
+      "sha256": "acd659e53f5a93bcd2d6ea39d263ff8bc55361f1783cca231e95d58fc8017476",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Rooted mushroom cluster"
+    },
+    {
+      "id": "timber-seat",
+      "file": "models/timber-seat.glb",
+      "bounds_m": {
+        "min": [
+          -0.44999998807907104,
+          0.0,
+          -0.2150000035762787
+        ],
+        "max": [
+          0.44999998807907104,
+          0.30000001192092896,
+          0.2150000035762787
+        ]
+      },
+      "dimensions_m": [
+        0.8999999761581421,
+        0.30000001192092896,
+        0.4300000071525574
+      ],
+      "triangles": 240,
+      "mesh_count": 1,
+      "bytes": 17148,
+      "sha256": "6d56b0c5365ef2c7bdc7a1153ab34f907949b8346ae3229de0ac89df5ac9a6dc",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Low supported timber seat"
+    }
+  ]
+}

@@ -151,4 +151,31 @@ describe("looks and models", () => {
       }
     }
   })
+
+  it("only small study details are nonblocking indoors, and exterior structures stand on the apron", () => {
+    for (const [id, look] of Object.entries(arenaLooks)) {
+      for (const piece of look.scenery) {
+        if (!piece.model.includes("Study")) continue
+        const spec: ModelSpec = models[piece.model]
+        const [x, z] = spec.footprint!
+        const across = (Math.abs(Math.cos(piece.turn)) * x + Math.abs(Math.sin(piece.turn)) * z) * look.unitsPerMeter
+        const down = (Math.abs(Math.sin(piece.turn)) * x + Math.abs(Math.cos(piece.turn)) * z) * look.unitsPerMeter
+        const { width, height, cells, wallThickness } = defaultTuning.arena
+        const indoors = piece.at.x > 0 && piece.at.x < width && piece.at.y > 0 && piece.at.y < height
+        const at = `${id}: ${piece.model}`
+        if (indoors) {
+          expect(spec.height, at).toBeLessThan(0.4)
+        } else {
+          expect(look.floor.kind, at).toBe("tiles")
+          if (look.floor.kind !== "tiles") continue
+          const apron = look.floor.apronTiles ?? 0
+          expect(piece.at.x - across / 2, at).toBeGreaterThanOrEqual(-apron * width / cells)
+          expect(piece.at.y - down / 2, at).toBeGreaterThanOrEqual(-apron * height / cells)
+          expect(piece.at.x + across / 2, at).toBeLessThanOrEqual(width + apron * width / cells)
+          expect(piece.at.y + down / 2, at).toBeLessThanOrEqual(height + apron * height / cells)
+          expect(piece.at.x + across / 2 < -wallThickness || piece.at.y + down / 2 < -wallThickness || piece.at.x - across / 2 > width + wallThickness || piece.at.y - down / 2 > height + wallThickness, at).toBe(true)
+        }
+      }
+    }
+  })
 })

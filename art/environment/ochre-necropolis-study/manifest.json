@@ -1,0 +1,488 @@
+{
+  "schema_version": 2,
+  "kit": "ochre-necropolis-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/ochre-necropolis-study.blend",
+  "source_sha256": "b83dab38376e69daf3ea2836574047afe4266ebedd234d06b19c7e94cf1743d7",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "burial-dais",
+      "file": "models/burial-dais.glb",
+      "bounds_m": {
+        "min": [
+          -0.7250000238418579,
+          0.0,
+          -0.8500000238418579
+        ],
+        "max": [
+          0.7250000238418579,
+          0.6599999666213989,
+          0.8500000238418579
+        ]
+      },
+      "dimensions_m": [
+        1.4500000476837158,
+        0.6599999666213989,
+        1.7000000476837158
+      ],
+      "triangles": 1840,
+      "mesh_count": 1,
+      "bytes": 124092,
+      "sha256": "83dd5ee40c6523d7d26e1838732513d0f859613fd07c1c6ae0612b963c4ded93",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Supported burial dais"
+    },
+    {
+      "id": "canopic-jar",
+      "file": "models/canopic-jar.glb",
+      "bounds_m": {
+        "min": [
+          -0.11999999731779099,
+          0.0,
+          -0.11999999731779099
+        ],
+        "max": [
+          0.11999999731779099,
+          0.3499999940395355,
+          0.11999999731779099
+        ]
+      },
+      "dimensions_m": [
+        0.23999999463558197,
+        0.3499999940395355,
+        0.23999999463558197
+      ],
+      "triangles": 404,
+      "mesh_count": 1,
+      "bytes": 28112,
+      "sha256": "b9817664654c2a3731c3536de9c9b984e9f3c0aa8c439f8551b54b3804f2457b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Lidded canopic jar"
+    },
+    {
+      "id": "canopic-trio",
+      "file": "models/canopic-trio.glb",
+      "bounds_m": {
+        "min": [
+          -0.35499998927116394,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          0.35499998927116394,
+          0.38499999046325684,
+          0.15000000596046448
+        ]
+      },
+      "dimensions_m": [
+        0.7099999785423279,
+        0.38499999046325684,
+        0.30000001192092896
+      ],
+      "triangles": 1272,
+      "mesh_count": 1,
+      "bytes": 85556,
+      "sha256": "d94c10447dcaa037b31bda85c90b05afdd559104ce4571ad77cd5a2ad10f263c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Three jars on a grounded tray"
+    },
+    {
+      "id": "fitted-sarcophagus",
+      "file": "models/fitted-sarcophagus.glb",
+      "bounds_m": {
+        "min": [
+          -0.28999999165534973,
+          0.0,
+          -0.5899999737739563
+        ],
+        "max": [
+          0.28999999165534973,
+          0.44999998807907104,
+          0.5899999737739563
+        ]
+      },
+      "dimensions_m": [
+        0.5799999833106995,
+        0.44999998807907104,
+        1.1799999475479126
+      ],
+      "triangles": 448,
+      "mesh_count": 1,
+      "bytes": 31088,
+      "sha256": "c1266a0a4da813686469e5acfda2cf75aee8d175ab25ecfb1a758e25285e110e",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Fitted sarcophagus and lid relief"
+    },
+    {
+      "id": "folded-linen",
+      "file": "models/folded-linen.glb",
+      "bounds_m": {
+        "min": [
+          -0.1664000004529953,
+          0.0,
+          -0.10367999970912933
+        ],
+        "max": [
+          0.1664000004529953,
+          0.08575999736785889,
+          0.10319634526968002
+        ]
+      },
+      "dimensions_m": [
+        0.3328000009059906,
+        0.08575999736785889,
+        0.20687634497880936
+      ],
+      "triangles": 360,
+      "mesh_count": 1,
+      "bytes": 24776,
+      "sha256": "73f382b290ab89e554a2bde852c95f33c8a4b10deb7eda0f4aef5b9d380bb0ad",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Folded and tied burial linen"
+    },
+    {
+      "id": "glyph-tablet",
+      "file": "models/glyph-tablet.glb",
+      "bounds_m": {
+        "min": [
+          -0.17000000178813934,
+          0.0,
+          -0.125
+        ],
+        "max": [
+          0.17000000178813934,
+          0.05900000035762787,
+          0.125
+        ]
+      },
+      "dimensions_m": [
+        0.3400000035762787,
+        0.05900000035762787,
+        0.25
+      ],
+      "triangles": 240,
+      "mesh_count": 1,
+      "bytes": 17120,
+      "sha256": "c1d03ad1e25b0586e619edea0422fda4805fc7fb1735d0442038e13fa3a6bf75",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Inlaid stone tablet"
+    },
+    {
+      "id": "handled-amphora",
+      "file": "models/handled-amphora.glb",
+      "bounds_m": {
+        "min": [
+          -0.2879999876022339,
+          0.0,
+          -0.1899999976158142
+        ],
+        "max": [
+          0.2879999876022339,
+          0.5,
+          0.1899999976158142
+        ]
+      },
+      "dimensions_m": [
+        0.5759999752044678,
+        0.5,
+        0.3799999952316284
+      ],
+      "triangles": 572,
+      "mesh_count": 1,
+      "bytes": 37056,
+      "sha256": "2d9e635fd1f666587718b21cee8308c8b9248620eb999a9f4f0bf9c87b385fe2",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Amphora with attached handles"
+    },
+    {
+      "id": "offering-awning",
+      "file": "models/offering-awning.glb",
+      "bounds_m": {
+        "min": [
+          -1.1339999437332153,
+          0.0,
+          -0.7540000081062317
+        ],
+        "max": [
+          1.1339999437332153,
+          1.5999999046325684,
+          0.7540000081062317
+        ]
+      },
+      "dimensions_m": [
+        2.2679998874664307,
+        1.5999999046325684,
+        1.5080000162124634
+      ],
+      "triangles": 3184,
+      "mesh_count": 1,
+      "bytes": 208012,
+      "sha256": "b417877eff4d99fa4c770e9747c3431405f554b686c87eb48e2fd659635a0690",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Braced offering awning"
+    },
+    {
+      "id": "offering-bowl",
+      "file": "models/offering-bowl.glb",
+      "bounds_m": {
+        "min": [
+          -0.1599999964237213,
+          0.0,
+          -0.1599999964237213
+        ],
+        "max": [
+          0.1599999964237213,
+          0.06499999761581421,
+          0.1599999964237213
+        ]
+      },
+      "dimensions_m": [
+        0.3199999928474426,
+        0.06499999761581421,
+        0.3199999928474426
+      ],
+      "triangles": 140,
+      "mesh_count": 1,
+      "bytes": 9884,
+      "sha256": "ab22d0bedb0eef8e346251f6eecbea56c36aea9981032243e06fd84e1922ea3c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Compact offering bowl"
+    },
+    {
+      "id": "offering-table",
+      "file": "models/offering-table.glb",
+      "bounds_m": {
+        "min": [
+          -0.4350000023841858,
+          0.0,
+          -0.2549999952316284
+        ],
+        "max": [
+          0.4350000023841858,
+          0.7699999809265137,
+          0.2549999952316284
+        ]
+      },
+      "dimensions_m": [
+        0.8700000047683716,
+        0.7699999809265137,
+        0.5099999904632568
+      ],
+      "triangles": 900,
+      "mesh_count": 1,
+      "bytes": 60028,
+      "sha256": "a289c3f80438ac5e6235d6826a93276da79d651d0154a01eb8ef976dd5cc593c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Low offering table and vessels"
+    },
+    {
+      "id": "pottery-shards",
+      "file": "models/pottery-shards.glb",
+      "bounds_m": {
+        "min": [
+          -0.20179444551467896,
+          0.0,
+          -0.14672186970710754
+        ],
+        "max": [
+          0.20999999344348907,
+          0.04500000178813934,
+          0.1757914125919342
+        ]
+      },
+      "dimensions_m": [
+        0.41179443895816803,
+        0.04500000178813934,
+        0.32251328229904175
+      ],
+      "triangles": 260,
+      "mesh_count": 1,
+      "bytes": 23160,
+      "sha256": "bc61355bc4a110b9510e56d33662dbe293a1e2f95eefa5ac68f4d5350595a67b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Pottery shards on the ground"
+    },
+    {
+      "id": "sun-altar",
+      "file": "models/sun-altar.glb",
+      "bounds_m": {
+        "min": [
+          -0.625,
+          0.0,
+          -0.3700000047683716
+        ],
+        "max": [
+          0.625,
+          1.3849999904632568,
+          0.39000001549720764
+        ]
+      },
+      "dimensions_m": [
+        1.25,
+        1.3849999904632568,
+        0.7600000202655792
+      ],
+      "triangles": 868,
+      "mesh_count": 1,
+      "bytes": 56212,
+      "sha256": "b551a8728898fca6c3855f2d1249ca82662ba7b958654d22af284b21267fff52",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Sun disc with pier and spokes"
+    },
+    {
+      "id": "tomb-gateway",
+      "file": "models/tomb-gateway.glb",
+      "bounds_m": {
+        "min": [
+          -1.024999976158142,
+          0.0,
+          -0.4000000059604645
+        ],
+        "max": [
+          1.024999976158142,
+          1.5149999856948853,
+          0.4000000059604645
+        ]
+      },
+      "dimensions_m": [
+        2.049999952316284,
+        1.5149999856948853,
+        0.800000011920929
+      ],
+      "triangles": 1200,
+      "mesh_count": 1,
+      "bytes": 83132,
+      "sha256": "baf055664e836bd01bb8a449c0a466a3e624bd8a6980090db0c0211a6b177af1",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Bonded sandstone tomb gateway"
+    },
+    {
+      "id": "wing-guardian",
+      "file": "models/wing-guardian.glb",
+      "bounds_m": {
+        "min": [
+          -0.46000000834465027,
+          0.0,
+          -0.19499999284744263
+        ],
+        "max": [
+          0.46000000834465027,
+          0.9100000262260437,
+          0.19499999284744263
+        ]
+      },
+      "dimensions_m": [
+        0.9200000166893005,
+        0.9100000262260437,
+        0.38999998569488525
+      ],
+      "triangles": 492,
+      "mesh_count": 1,
+      "bytes": 34600,
+      "sha256": "13215900f1f434e5766253bfbf0fffd6c9415588a6a58c270e37cf6d0493565c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Symmetric folded-wing guardian"
+    }
+  ]
+}

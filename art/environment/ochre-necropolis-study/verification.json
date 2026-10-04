@@ -1,0 +1,118 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "b83dab38376e69daf3ea2836574047afe4266ebedd234d06b19c7e94cf1743d7",
+  "assets": [
+    {
+      "id": "burial-dais",
+      "sha256": "83dd5ee40c6523d7d26e1838732513d0f859613fd07c1c6ae0612b963c4ded93",
+      "triangles": 1840,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "canopic-jar",
+      "sha256": "b9817664654c2a3731c3536de9c9b984e9f3c0aa8c439f8551b54b3804f2457b",
+      "triangles": 404,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "canopic-trio",
+      "sha256": "d94c10447dcaa037b31bda85c90b05afdd559104ce4571ad77cd5a2ad10f263c",
+      "triangles": 1272,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "fitted-sarcophagus",
+      "sha256": "c1266a0a4da813686469e5acfda2cf75aee8d175ab25ecfb1a758e25285e110e",
+      "triangles": 448,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "folded-linen",
+      "sha256": "73f382b290ab89e554a2bde852c95f33c8a4b10deb7eda0f4aef5b9d380bb0ad",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "glyph-tablet",
+      "sha256": "c1d03ad1e25b0586e619edea0422fda4805fc7fb1735d0442038e13fa3a6bf75",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "handled-amphora",
+      "sha256": "2d9e635fd1f666587718b21cee8308c8b9248620eb999a9f4f0bf9c87b385fe2",
+      "triangles": 572,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "offering-awning",
+      "sha256": "b417877eff4d99fa4c770e9747c3431405f554b686c87eb48e2fd659635a0690",
+      "triangles": 3184,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "offering-bowl",
+      "sha256": "ab22d0bedb0eef8e346251f6eecbea56c36aea9981032243e06fd84e1922ea3c",
+      "triangles": 140,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "offering-table",
+      "sha256": "a289c3f80438ac5e6235d6826a93276da79d651d0154a01eb8ef976dd5cc593c",
+      "triangles": 900,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pottery-shards",
+      "sha256": "bc61355bc4a110b9510e56d33662dbe293a1e2f95eefa5ac68f4d5350595a67b",
+      "triangles": 260,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "sun-altar",
+      "sha256": "b551a8728898fca6c3855f2d1249ca82662ba7b958654d22af284b21267fff52",
+      "triangles": 868,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "tomb-gateway",
+      "sha256": "baf055664e836bd01bb8a449c0a466a3e624bd8a6980090db0c0211a6b177af1",
+      "triangles": 1200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "wing-guardian",
+      "sha256": "13215900f1f434e5766253bfbf0fffd6c9415588a6a58c270e37cf6d0493565c",
+      "triangles": 492,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

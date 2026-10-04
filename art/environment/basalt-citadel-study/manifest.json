@@ -1,0 +1,488 @@
+{
+  "schema_version": 2,
+  "kit": "basalt-citadel-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/basalt-citadel-study.blend",
+  "source_sha256": "681b11c21b864979b917e4171c3fda0c47c3da89d0e7a6594135fd6451415c76",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "battlement-bay",
+      "file": "models/battlement-bay.glb",
+      "bounds_m": {
+        "min": [
+          -1.0499999523162842,
+          0.0,
+          -0.41499999165534973
+        ],
+        "max": [
+          1.0499999523162842,
+          1.1399999856948853,
+          0.41499999165534973
+        ]
+      },
+      "dimensions_m": [
+        2.0999999046325684,
+        1.1399999856948853,
+        0.8299999833106995
+      ],
+      "triangles": 520,
+      "mesh_count": 1,
+      "bytes": 35468,
+      "sha256": "7f3d37fd34b0f646e65bcf705d0db416b65a53f924801e38745956c10241731b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Bonded parapet and grounded buttresses"
+    },
+    {
+      "id": "folded-banner",
+      "file": "models/folded-banner.glb",
+      "bounds_m": {
+        "min": [
+          -0.16899999976158142,
+          0.0,
+          -0.10530000180006027
+        ],
+        "max": [
+          0.16899999976158142,
+          0.08709999918937683,
+          0.10480878502130508
+        ]
+      },
+      "dimensions_m": [
+        0.33799999952316284,
+        0.08709999918937683,
+        0.21010878682136536
+      ],
+      "triangles": 360,
+      "mesh_count": 1,
+      "bytes": 24780,
+      "sha256": "a7022dc75220a8f63852a7f918fcfe0ab042cfa2ea7d18eeda5e7a0cce1c8da7",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Folded and tied spare banner"
+    },
+    {
+      "id": "guard-shelter",
+      "file": "models/guard-shelter.glb",
+      "bounds_m": {
+        "min": [
+          -1.1339999437332153,
+          0.0,
+          -0.6959999799728394
+        ],
+        "max": [
+          1.1339999437332153,
+          1.6099998950958252,
+          0.6959999799728394
+        ]
+      },
+      "dimensions_m": [
+        2.2679998874664307,
+        1.6099998950958252,
+        1.3919999599456787
+      ],
+      "triangles": 2636,
+      "mesh_count": 1,
+      "bytes": 179304,
+      "sha256": "891de9a1fda3be8c8ef9f3630411abbff36249f1c24d669164949140641958fc",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Braced guard shelter"
+    },
+    {
+      "id": "reinforced-crate",
+      "file": "models/reinforced-crate.glb",
+      "bounds_m": {
+        "min": [
+          -0.27000001072883606,
+          0.0,
+          -0.22750000655651093
+        ],
+        "max": [
+          0.27000001072883606,
+          0.41100001335144043,
+          0.22750000655651093
+        ]
+      },
+      "dimensions_m": [
+        0.5400000214576721,
+        0.41100001335144043,
+        0.45500001311302185
+      ],
+      "triangles": 1680,
+      "mesh_count": 1,
+      "bytes": 111820,
+      "sha256": "bf774299174d5ccc077ad0314c81a1c584db8e4a2c16d8ff8b5cb7a4f4a326b3",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Compact reinforced supply crate"
+    },
+    {
+      "id": "resting-shield",
+      "file": "models/resting-shield.glb",
+      "bounds_m": {
+        "min": [
+          -0.18000000715255737,
+          0.0,
+          -0.17119017243385315
+        ],
+        "max": [
+          0.18000000715255737,
+          0.07000000029802322,
+          0.17119017243385315
+        ]
+      },
+      "dimensions_m": [
+        0.36000001430511475,
+        0.07000000029802322,
+        0.3423803448677063
+      ],
+      "triangles": 144,
+      "mesh_count": 1,
+      "bytes": 10552,
+      "sha256": "4be4c6a16c97b761058e8daa59f0ef4b512d5de595fdedad0134d10b6f0c9d13",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Shield resting on the ground"
+    },
+    {
+      "id": "restrained-banner",
+      "file": "models/restrained-banner.glb",
+      "bounds_m": {
+        "min": [
+          -0.28999999165534973,
+          0.0,
+          -0.1899999976158142
+        ],
+        "max": [
+          0.28999999165534973,
+          1.1799999475479126,
+          0.1899999976158142
+        ]
+      },
+      "dimensions_m": [
+        0.5799999833106995,
+        1.1799999475479126,
+        0.3799999952316284
+      ],
+      "triangles": 268,
+      "mesh_count": 1,
+      "bytes": 19500,
+      "sha256": "b808575736e6b012a53eceed17aab014147f4046a1bff0e38baed959f13b449d",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Banner fixed to crossbar"
+    },
+    {
+      "id": "shield-rack",
+      "file": "models/shield-rack.glb",
+      "bounds_m": {
+        "min": [
+          -0.6449999809265137,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          0.6449999809265137,
+          0.8799999952316284,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        1.2899999618530273,
+        0.8799999952316284,
+        0.4000000059604645
+      ],
+      "triangles": 608,
+      "mesh_count": 1,
+      "bytes": 41752,
+      "sha256": "14ba09ff5769eebc90205df42331b8703ebc9a3ff399676aa00203f5a7895e68",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Shields attached to bearing rail"
+    },
+    {
+      "id": "spare-rings",
+      "file": "models/spare-rings.glb",
+      "bounds_m": {
+        "min": [
+          -0.15000000596046448,
+          9.618943295208737e-06,
+          -0.19608451426029205
+        ],
+        "max": [
+          0.15000000596046448,
+          0.025990381836891174,
+          0.07608452439308167
+        ]
+      },
+      "dimensions_m": [
+        0.30000001192092896,
+        0.025980762893595966,
+        0.2721690386533737
+      ],
+      "triangles": 360,
+      "mesh_count": 1,
+      "bytes": 24728,
+      "sha256": "723c6df2807de1c7624f3ceafd0385bb5736abeef753ac0bfd596bb90ce840ff",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Loose metal rings on the ground"
+    },
+    {
+      "id": "supply-pouch",
+      "file": "models/supply-pouch.glb",
+      "bounds_m": {
+        "min": [
+          -0.13500000536441803,
+          0.0,
+          -0.10499999672174454
+        ],
+        "max": [
+          0.13500000536441803,
+          0.19499999284744263,
+          0.13050000369548798
+        ]
+      },
+      "dimensions_m": [
+        0.27000001072883606,
+        0.19499999284744263,
+        0.2355000004172325
+      ],
+      "triangles": 180,
+      "mesh_count": 1,
+      "bytes": 13196,
+      "sha256": "a877d1b4adab6d47facbcfa26dba0db373c83cc3e8b2b9fc1e09a159a668f55e",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Cloth pouch with attached clasp"
+    },
+    {
+      "id": "supported-ram",
+      "file": "models/supported-ram.glb",
+      "bounds_m": {
+        "min": [
+          -0.9750000238418579,
+          0.0,
+          -0.4699999988079071
+        ],
+        "max": [
+          0.9750000238418579,
+          0.828000009059906,
+          0.4699999988079071
+        ]
+      },
+      "dimensions_m": [
+        1.9500000476837158,
+        0.828000009059906,
+        0.9399999976158142
+      ],
+      "triangles": 1380,
+      "mesh_count": 1,
+      "bytes": 89140,
+      "sha256": "c4ad678102dea4125b595d0b977959df14f186bf1e1b7bb6851ef190396d0437",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Ram resting on braced saddles"
+    },
+    {
+      "id": "throne-dais",
+      "file": "models/throne-dais.glb",
+      "bounds_m": {
+        "min": [
+          -0.75,
+          0.0,
+          -0.6349999904632568
+        ],
+        "max": [
+          0.75,
+          1.2599999904632568,
+          0.6349999904632568
+        ]
+      },
+      "dimensions_m": [
+        1.5,
+        1.2599999904632568,
+        1.2699999809265137
+      ],
+      "triangles": 1832,
+      "mesh_count": 1,
+      "bytes": 130092,
+      "sha256": "0d5aea02e3da2854affb0fb9df570c6a838e0967f677cbb54ffeaae52be41110",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Symmetric throne and supported dais"
+    },
+    {
+      "id": "unlit-torches",
+      "file": "models/unlit-torches.glb",
+      "bounds_m": {
+        "min": [
+          -0.07500000298023224,
+          -0.006999999284744263,
+          -0.2199999988079071
+        ],
+        "max": [
+          0.07500000298023224,
+          0.0729999989271164,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        0.15000000596046448,
+        0.07999999821186066,
+        0.42000000178813934
+      ],
+      "triangles": 244,
+      "mesh_count": 1,
+      "bytes": 16676,
+      "sha256": "5be98c04423bf9f0066e0f35844a07e909468913a70916ddfa0e8aab2a1fcf70",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Bound unlit torch pair"
+    },
+    {
+      "id": "war-table",
+      "file": "models/war-table.glb",
+      "bounds_m": {
+        "min": [
+          -0.4749999940395355,
+          0.0,
+          -0.2849999964237213
+        ],
+        "max": [
+          0.4749999940395355,
+          0.5070000290870667,
+          0.2849999964237213
+        ]
+      },
+      "dimensions_m": [
+        0.949999988079071,
+        0.5070000290870667,
+        0.5699999928474426
+      ],
+      "triangles": 476,
+      "mesh_count": 1,
+      "bytes": 32244,
+      "sha256": "5e827bc2b357ecdd0d9c5ba6602741cc6acf87b75c3bc541f302fb1e265fbfe7",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Low war table with grounded markers"
+    },
+    {
+      "id": "weapon-rack",
+      "file": "models/weapon-rack.glb",
+      "bounds_m": {
+        "min": [
+          -0.6449999809265137,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          0.6449999809265137,
+          1.0499999523162842,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        1.2899999618530273,
+        1.0499999523162842,
+        0.4000000059604645
+      ],
+      "triangles": 620,
+      "mesh_count": 1,
+      "bytes": 41312,
+      "sha256": "20369473d64afef2b5bb53a46fa6b6e712ff756692a2b964671562e8bda0da53",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Clipped spear rack"
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "680b316324ba00b3b1f165d4edf9e40141bba343895c2ee627f6c004d4590b69",
+  "assets": [
+    {
+      "id": "brick-furnace",
+      "sha256": "74520f48b14a6b5ac2ce3726193e19a07e6e40ad7846024945f7172cdbd39a93",
+      "triangles": 1560,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "buttressed-chimney",
+      "sha256": "05e30ec8f679bbef432b72ae7c3f5914546ede799b168a3d06cf6954963b0b7d",
+      "triangles": 700,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "casting-bench",
+      "sha256": "ac44424970b2bf715d31e256914556147fc2e75ebea5386d9538689e4a668c66",
+      "triangles": 356,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "casting-mould",
+      "sha256": "341900165bd4fa8d6211fd6b8bdd96254edbf9d0d123f769ab06038b4fb6cd91",
+      "triangles": 300,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "casting-station",
+      "sha256": "42c770aeed0b7ae8c1179b60ea1ad5d16445bcacc0276c0cdaccdf45a6518fdb",
+      "triangles": 1924,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "coal-bin",
+      "sha256": "4bcbc456e39bee66c7210304d770a53726fb0f9e9e2dbc38570968e25e53d2ef",
+      "triangles": 1132,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "coal-pile",
+      "sha256": "496affe9062f9fc7c0f62a12533577e4853679912821de49694ef589a72c43c0",
+      "triangles": 260,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "compact-anvil",
+      "sha256": "28bcf6abe9ae6d2b03cc87f03885b11b3d0a17160432acd7a44a5a7c2fbafd5b",
+      "triangles": 192,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "compact-boiler",
+      "sha256": "87a0d299d2f598e7dc192389295e74b5551b33a6794624519f0619d5542ddf4d",
+      "triangles": 640,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "forging-bay",
+      "sha256": "866e14c234911471b522b87e77eb1fe76a273c5273d5e91d83af5e254a3e4b98",
+      "triangles": 2256,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "hammer-rack",
+      "sha256": "674a6ac55eb3a658e6b95632c755f855274fc4e610445ade1c3a7c3b852d5166",
+      "triangles": 532,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "iron-ingots",
+      "sha256": "7c193cfb664b59d6ed24d1ef4f37fe07a8a91b0bfe79849b47bba004e4127d87",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "small-crucible",
+      "sha256": "ee6b1eca8a0a21f3b64f7229aba015ad3c2df97f1ef28db16fa24f33ed218368",
+      "triangles": 140,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "tongs-tray",
+      "sha256": "7b0739d4c7679586b5f5103a534179cc57a7c6100c11825b56dfe9cba1dbc90b",
+      "triangles": 228,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

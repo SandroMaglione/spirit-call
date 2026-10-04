@@ -1,0 +1,133 @@
+{
+  "title": "Flooded cistern study",
+  "style": "cistern",
+  "batch": "arena-prop-study",
+  "base_kit": "flooded-cistern",
+  "palette": {
+    "stone": "7B9698",
+    "light": "9BB1AE",
+    "edge": "BAC8BF",
+    "dark": "3D6068",
+    "accent": "6EAD9E",
+    "metal": "427977",
+    "wood": "766F57",
+    "earth": "687B66",
+    "green": "5F8775",
+    "warm": "C3A86B",
+    "snow": "C4D2CB",
+    "cloth": "567E83",
+    "wood-light": "90876A",
+    "wood-dark": "534E3D",
+    "metal-light": "9BB1AE",
+    "rope": "BCAA82",
+    "sail": "CDC8B1",
+    "fish": "9BB1AE"
+  },
+  "assets": [
+    {
+      "id": "pipe-fitting",
+      "title": "Bolted pipe fitting",
+      "recipe": "study-pipe-fitting",
+      "group": "small"
+    },
+    {
+      "id": "gasket-stack",
+      "title": "Grounded gasket stack",
+      "recipe": "study-gasket-stack",
+      "group": "small"
+    },
+    {
+      "id": "pressure-gauge",
+      "title": "Pressure gauge with attached dial",
+      "recipe": "study-pressure-gauge",
+      "group": "small"
+    },
+    {
+      "id": "repair-tools",
+      "title": "Wrenches resting in a tray",
+      "recipe": "study-repair-tools",
+      "group": "small"
+    },
+    {
+      "id": "water-jar",
+      "title": "Compact water jar",
+      "recipe": "study-water-jar",
+      "group": "small"
+    },
+    {
+      "id": "hand-pump",
+      "title": "Compact hand pump",
+      "recipe": "study-hand-pump",
+      "group": "working"
+    },
+    {
+      "id": "supported-pipe",
+      "title": "Pipe on paired saddles",
+      "recipe": "study-supported-pipe",
+      "group": "working"
+    },
+    {
+      "id": "valve-wheel",
+      "title": "Wheel, axle and valve body",
+      "recipe": "study-valve-wheel",
+      "group": "working"
+    },
+    {
+      "id": "service-bench",
+      "title": "Repair workbench",
+      "recipe": "study-service-bench",
+      "group": "working"
+    },
+    {
+      "id": "masonry-outlet",
+      "title": "Supported pipe outlet and channel",
+      "recipe": "study-masonry-outlet",
+      "group": "working"
+    },
+    {
+      "id": "pump-bank",
+      "title": "Grounded twin pump bank",
+      "recipe": "study-pump-bank",
+      "group": "large"
+    },
+    {
+      "id": "valve-manifold",
+      "title": "Connected valve manifold",
+      "recipe": "study-valve-manifold",
+      "group": "large"
+    },
+    {
+      "id": "settling-tank",
+      "title": "Open tank with grounded ladder",
+      "recipe": "study-settling-tank",
+      "group": "large"
+    },
+    {
+      "id": "repair-canopy",
+      "title": "Roofed maintenance station",
+      "recipe": "study-repair-canopy",
+      "group": "large"
+    }
+  ],
+  "player_height_m": 0.5803955393237317,
+  "scope": "Reviewable art study with supported perimeter assemblies.",
+  "changes": [
+    "Rebuilt pump handles, wheel spokes and pipe supports at everyday prop scale.",
+    "Added repair fittings, gaskets, dial gauges, tools and water jars.",
+    "Added connected pump bank, manifold, settling tank and roofed service station outside the grid."
+  ],
+  "comparisons": [
+    {
+      "original": "pump",
+      "study": "hand-pump"
+    },
+    {
+      "original": "valve",
+      "study": "valve-wheel"
+    },
+    {
+      "original": "urn",
+      "study": "water-jar"
+    }
+  ]
+}

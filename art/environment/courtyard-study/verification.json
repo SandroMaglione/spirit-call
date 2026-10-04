@@ -1,0 +1,118 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "5bdf8b342cbdf0be39885eaa07a811dbd4ab88a368a1b20711a1ebd889549a36",
+  "assets": [
+    {
+      "id": "carved-gateway",
+      "sha256": "8f80ec580254afc874a6fde240144d8f08bea00acacd33124fac45ac07c2b3df",
+      "triangles": 780,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "carved-tablet",
+      "sha256": "970948b11b7e1b4b2208dd65d33f0f2c1af828744d0f00dce27479ca135ed57c",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "compact-brazier",
+      "sha256": "6c01fcc53b607bc05b9e1592627fa4888a3bef1c752a2c4f0a7cccf733320142",
+      "triangles": 496,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "courtyard-pergola",
+      "sha256": "4a16c9251674c7e4f5f160ec0f571df4a7199299c34ef3df247deca20a2f2f4b",
+      "triangles": 1352,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "fern-planter",
+      "sha256": "09df2e65c41d75dec1ad4d4c8df3d442f67c6800a844a74555413c14f5a56d33",
+      "triangles": 1220,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "handled-urn",
+      "sha256": "f0b650947ddd94b8517bf63d45eafdd35fd6bd1eecab54213839fdbfe2619b7c",
+      "triangles": 572,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "incense-tray",
+      "sha256": "82938360a2414495db90b5357a7272b20a663d4cc61e15fb644eeb7e344824ef",
+      "triangles": 108,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "jade-bowl",
+      "sha256": "e928cdeca41ec79db690aab6e48c29e56ed69a1bf1d7d5971733e542c28292f4",
+      "triangles": 140,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "jade-jar",
+      "sha256": "c64b6a4ceb62ae1bfa1df3cb56ccb56bf25fac302d4271e3c1b09561ff5b541b",
+      "triangles": 284,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "offering-alcove",
+      "sha256": "280f106f8e1ba20bb1ea9609a038b6228b90bcf0dc96d6bf1e8a5e1826143821",
+      "triangles": 2100,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stone-bench",
+      "sha256": "03a0bc4eb3c13277596af3287277bfcaceb2b25e97d891716e161c3d16e0b088",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "stone-chips",
+      "sha256": "e15ab68c97a8a3e4d9454ce0644da2e73e28fd38602582f3230ce59603b9f32c",
+      "triangles": 208,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "tiered-fountain",
+      "sha256": "8d4c7c924c753c17d2fc8c7cde10b4f3b92d546ab1128532f3142278bd68977e",
+      "triangles": 416,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "votive-plate",
+      "sha256": "db6548fd0e5028173bd940b96510dbd5c93923e342561de42896a79350082530",
+      "triangles": 192,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

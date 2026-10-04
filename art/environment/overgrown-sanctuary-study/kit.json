@@ -1,0 +1,133 @@
+{
+  "title": "Overgrown sanctuary study",
+  "style": "sanctuary",
+  "batch": "arena-prop-study",
+  "base_kit": "overgrown-sanctuary",
+  "palette": {
+    "stone": "8F9C87",
+    "light": "ABB49A",
+    "edge": "C3C8AF",
+    "dark": "526756",
+    "accent": "7BACA0",
+    "metal": "526B62",
+    "wood": "756447",
+    "earth": "8B7A56",
+    "green": "66865A",
+    "warm": "BEA26B",
+    "snow": "BCC6AD",
+    "cloth": "8B8362",
+    "wood-light": "8F7A57",
+    "wood-dark": "524632",
+    "metal-light": "ABB49A",
+    "rope": "BCAA82",
+    "sail": "CDC8B1",
+    "fish": "ABB49A"
+  },
+  "assets": [
+    {
+      "id": "ground-fern",
+      "title": "Branching grounded fern",
+      "recipe": "study-ground-fern",
+      "group": "small"
+    },
+    {
+      "id": "small-mushrooms",
+      "title": "Rooted mushroom cluster",
+      "recipe": "study-small-mushrooms",
+      "group": "small"
+    },
+    {
+      "id": "fallen-leaves",
+      "title": "Individual fallen leaves",
+      "recipe": "study-fallen-leaves",
+      "group": "small"
+    },
+    {
+      "id": "seed-pods",
+      "title": "Seed pods attached to stems",
+      "recipe": "study-seed-pods",
+      "group": "small"
+    },
+    {
+      "id": "moss-stone",
+      "title": "Moss touching a worn stone",
+      "recipe": "study-moss-stone",
+      "group": "small"
+    },
+    {
+      "id": "hollow-stump",
+      "title": "Rooted hollow stump and shelf fungus",
+      "recipe": "study-hollow-stump",
+      "group": "working"
+    },
+    {
+      "id": "fallen-log",
+      "title": "Fallen log with attached moss",
+      "recipe": "study-fallen-log",
+      "group": "working"
+    },
+    {
+      "id": "rooted-sapling",
+      "title": "Sapling with branches and joined canopy",
+      "recipe": "study-rooted-sapling",
+      "group": "working"
+    },
+    {
+      "id": "compact-shrine",
+      "title": "Small grounded shrine",
+      "recipe": "study-compact-shrine",
+      "group": "working"
+    },
+    {
+      "id": "timber-seat",
+      "title": "Low supported timber seat",
+      "recipe": "study-timber-seat",
+      "group": "working"
+    },
+    {
+      "id": "root-gateway",
+      "title": "Continuous rooted gateway",
+      "recipe": "study-root-gateway",
+      "group": "large"
+    },
+    {
+      "id": "shrine-grove",
+      "title": "Shrine with rooted side growth",
+      "recipe": "study-shrine-grove",
+      "group": "large"
+    },
+    {
+      "id": "rooted-ruin",
+      "title": "Broken wall with connected roots",
+      "recipe": "study-rooted-ruin",
+      "group": "large"
+    },
+    {
+      "id": "mushroom-garden",
+      "title": "Grounded mushroom garden",
+      "recipe": "study-mushroom-garden",
+      "group": "large"
+    }
+  ],
+  "player_height_m": 0.5803955393237317,
+  "scope": "Reviewable art study with supported perimeter assemblies.",
+  "changes": [
+    "Replaced coarse plant silhouettes with connected stems, fronds, roots and branch-supported canopies.",
+    "Reduced shrine and stump sizes; added leaf litter, seed pods, moss stones and low seating.",
+    "Added a continuous root gateway, shrine grove, rooted ruin and mushroom garden around the perimeter."
+  ],
+  "comparisons": [
+    {
+      "original": "sapling",
+      "study": "rooted-sapling"
+    },
+    {
+      "original": "fern",
+      "study": "ground-fern"
+    },
+    {
+      "original": "shrine",
+      "study": "compact-shrine"
+    }
+  ]
+}

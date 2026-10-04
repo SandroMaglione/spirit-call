@@ -1,0 +1,118 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "580a9a084c239553b544ea12436d69340299a0fd81af8baa1298d61887667142",
+  "assets": [
+    {
+      "id": "gasket-stack",
+      "sha256": "1e43ac9cbd882e6769dfc1fef0a4d830e6ca071e50be116a889b018c467b4f87",
+      "triangles": 432,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "hand-pump",
+      "sha256": "4e41e26c59c84fe2dfaea282ba30c67988984e3da25c561afac778311e38bdef",
+      "triangles": 316,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "masonry-outlet",
+      "sha256": "91ee2647ba7ed772708c712d6c1cb0848e0d853d00d25d5ca92bb0569f949a52",
+      "triangles": 472,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pipe-fitting",
+      "sha256": "7568cdca461d49687ddba6611316054ad7f288772122e92c98b254da131e5924",
+      "triangles": 284,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pressure-gauge",
+      "sha256": "13b435a21b1f2a191f72a68f158c64b07647eb9301da10bae0dfa0f362899a78",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "pump-bank",
+      "sha256": "7230ab5385582603e5b1c70334ed5bb0965e19f12309f013fc6d4a5e0d16f2c0",
+      "triangles": 1800,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "repair-canopy",
+      "sha256": "a62b4f8d646399e73a4bcdff41591a3d9d3b4b1cef75913e5a1bd8d27118696c",
+      "triangles": 3204,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "repair-tools",
+      "sha256": "76b6f28c6e119d14305a095deb9f32657056f275ad4e5236787944232b84da6a",
+      "triangles": 292,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "service-bench",
+      "sha256": "6afc725e4980fefc11030f40cf60fb236c3093ce88eeb30da4ec2389263b0cd6",
+      "triangles": 888,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "settling-tank",
+      "sha256": "166b0e4f1ffcc3e190887868eb73ac0a494cea692a9511a2990857e01760d34c",
+      "triangles": 728,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "supported-pipe",
+      "sha256": "ea0d5e3209871f7122b90f5511490c58460caf274859038ad6c88ec3ecf47411",
+      "triangles": 452,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "valve-manifold",
+      "sha256": "f7aafda1e5e46c2edb5c5d0abf5e502deeb8663a5182042edd272724693ad0d7",
+      "triangles": 1220,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "valve-wheel",
+      "sha256": "b1bcd2ce6abea0035a89d983d367304709bbfdf30753d6f1c826ed8abc6ff9ea",
+      "triangles": 352,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "water-jar",
+      "sha256": "086a442e2e6ca812f78d128834d7bdd8b443b78c56d10ceab6f0bab819873e85",
+      "triangles": 284,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

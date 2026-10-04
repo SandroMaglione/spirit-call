@@ -1,0 +1,118 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "681b11c21b864979b917e4171c3fda0c47c3da89d0e7a6594135fd6451415c76",
+  "assets": [
+    {
+      "id": "battlement-bay",
+      "sha256": "7f3d37fd34b0f646e65bcf705d0db416b65a53f924801e38745956c10241731b",
+      "triangles": 520,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "folded-banner",
+      "sha256": "a7022dc75220a8f63852a7f918fcfe0ab042cfa2ea7d18eeda5e7a0cce1c8da7",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "guard-shelter",
+      "sha256": "891de9a1fda3be8c8ef9f3630411abbff36249f1c24d669164949140641958fc",
+      "triangles": 2636,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "reinforced-crate",
+      "sha256": "bf774299174d5ccc077ad0314c81a1c584db8e4a2c16d8ff8b5cb7a4f4a326b3",
+      "triangles": 1680,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "resting-shield",
+      "sha256": "4be4c6a16c97b761058e8daa59f0ef4b512d5de595fdedad0134d10b6f0c9d13",
+      "triangles": 144,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "restrained-banner",
+      "sha256": "b808575736e6b012a53eceed17aab014147f4046a1bff0e38baed959f13b449d",
+      "triangles": 268,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "shield-rack",
+      "sha256": "14ba09ff5769eebc90205df42331b8703ebc9a3ff399676aa00203f5a7895e68",
+      "triangles": 608,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "spare-rings",
+      "sha256": "723c6df2807de1c7624f3ceafd0385bb5736abeef753ac0bfd596bb90ce840ff",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "supply-pouch",
+      "sha256": "a877d1b4adab6d47facbcfa26dba0db373c83cc3e8b2b9fc1e09a159a668f55e",
+      "triangles": 180,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "supported-ram",
+      "sha256": "c4ad678102dea4125b595d0b977959df14f186bf1e1b7bb6851ef190396d0437",
+      "triangles": 1380,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "throne-dais",
+      "sha256": "0d5aea02e3da2854affb0fb9df570c6a838e0967f677cbb54ffeaae52be41110",
+      "triangles": 1832,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "unlit-torches",
+      "sha256": "5be98c04423bf9f0066e0f35844a07e909468913a70916ddfa0e8aab2a1fcf70",
+      "triangles": 244,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "war-table",
+      "sha256": "5e827bc2b357ecdd0d9c5ba6602741cc6acf87b75c3bc541f302fb1e265fbfe7",
+      "triangles": 476,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "weapon-rack",
+      "sha256": "20369473d64afef2b5bb53a46fa6b6e712ff756692a2b964671562e8bda0da53",
+      "triangles": 620,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

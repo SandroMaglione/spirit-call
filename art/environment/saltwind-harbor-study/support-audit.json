@@ -1,0 +1,2552 @@
+{
+  "tolerance_m": 0.002,
+  "method": "Closed primitive BVH surface intersection, contact or containment graph to ground",
+  "assets": {
+    "rope-coil": {
+      "primitives": 90,
+      "grounded_or_connected": 90,
+      "unsupported": [],
+      "support_links": []
+    },
+    "bucket": {
+      "primitives": 9,
+      "grounded_or_connected": 9,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        },
+        {
+          "part": 8,
+          "supported_by": 1
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 7,
+          "supported_by": 8
+        },
+        {
+          "part": 6,
+          "supported_by": 5
+        }
+      ]
+    },
+    "fish-basket": {
+      "primitives": 20,
+      "grounded_or_connected": 20,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 10,
+          "supported_by": 0
+        },
+        {
+          "part": 11,
+          "supported_by": 0
+        },
+        {
+          "part": 15,
+          "supported_by": 0
+        },
+        {
+          "part": 16,
+          "supported_by": 0
+        },
+        {
+          "part": 17,
+          "supported_by": 0
+        },
+        {
+          "part": 18,
+          "supported_by": 0
+        },
+        {
+          "part": 19,
+          "supported_by": 0
+        },
+        {
+          "part": 1,
+          "supported_by": 10
+        },
+        {
+          "part": 2,
+          "supported_by": 10
+        },
+        {
+          "part": 3,
+          "supported_by": 10
+        },
+        {
+          "part": 4,
+          "supported_by": 11
+        },
+        {
+          "part": 5,
+          "supported_by": 11
+        },
+        {
+          "part": 6,
+          "supported_by": 11
+        },
+        {
+          "part": 7,
+          "supported_by": 10
+        },
+        {
+          "part": 8,
+          "supported_by": 10
+        },
+        {
+          "part": 9,
+          "supported_by": 10
+        },
+        {
+          "part": 12,
+          "supported_by": 15
+        },
+        {
+          "part": 13,
+          "supported_by": 15
+        },
+        {
+          "part": 14,
+          "supported_by": 15
+        }
+      ]
+    },
+    "folded-sail": {
+      "primitives": 10,
+      "grounded_or_connected": 10,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 0
+        },
+        {
+          "part": 7,
+          "supported_by": 0
+        },
+        {
+          "part": 9,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 4
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        }
+      ]
+    },
+    "bollard": {
+      "primitives": 6,
+      "grounded_or_connected": 6,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        }
+      ]
+    },
+    "life-ring-stand": {
+      "primitives": 7,
+      "grounded_or_connected": 7,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 6,
+          "supported_by": 4
+        }
+      ]
+    },
+    "cargo-crate": {
+      "primitives": 24,
+      "grounded_or_connected": 24,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 4
+        },
+        {
+          "part": 3,
+          "supported_by": 4
+        },
+        {
+          "part": 6,
+          "supported_by": 0
+        },
+        {
+          "part": 7,
+          "supported_by": 0
+        },
+        {
+          "part": 8,
+          "supported_by": 10
+        },
+        {
+          "part": 9,
+          "supported_by": 10
+        },
+        {
+          "part": 12,
+          "supported_by": 10
+        },
+        {
+          "part": 13,
+          "supported_by": 0
+        },
+        {
+          "part": 14,
+          "supported_by": 4
+        },
+        {
+          "part": 15,
+          "supported_by": 4
+        },
+        {
+          "part": 16,
+          "supported_by": 0
+        },
+        {
+          "part": 17,
+          "supported_by": 5
+        },
+        {
+          "part": 18,
+          "supported_by": 5
+        },
+        {
+          "part": 19,
+          "supported_by": 4
+        },
+        {
+          "part": 21,
+          "supported_by": 5
+        },
+        {
+          "part": 22,
+          "supported_by": 4
+        },
+        {
+          "part": 23,
+          "supported_by": 5
+        },
+        {
+          "part": 20,
+          "supported_by": 3
+        }
+      ]
+    },
+    "barrel": {
+      "primitives": 20,
+      "grounded_or_connected": 20,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 15,
+          "supported_by": 0
+        },
+        {
+          "part": 16,
+          "supported_by": 0
+        },
+        {
+          "part": 17,
+          "supported_by": 0
+        },
+        {
+          "part": 18,
+          "supported_by": 0
+        },
+        {
+          "part": 19,
+          "supported_by": 0
+        }
+      ]
+    },
+    "barrel-stack": {
+      "primitives": 60,
+      "grounded_or_connected": 60,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 15,
+          "supported_by": 0
+        },
+        {
+          "part": 16,
+          "supported_by": 0
+        },
+        {
+          "part": 17,
+          "supported_by": 0
+        },
+        {
+          "part": 18,
+          "supported_by": 0
+        },
+        {
+          "part": 19,
+          "supported_by": 0
+        },
+        {
+          "part": 35,
+          "supported_by": 20
+        },
+        {
+          "part": 36,
+          "supported_by": 20
+        },
+        {
+          "part": 37,
+          "supported_by": 20
+        },
+        {
+          "part": 38,
+          "supported_by": 20
+        },
+        {
+          "part": 39,
+          "supported_by": 20
+        },
+        {
+          "part": 40,
+          "supported_by": 0
+        },
+        {
+          "part": 41,
+          "supported_by": 20
+        },
+        {
+          "part": 42,
+          "supported_by": 20
+        },
+        {
+          "part": 43,
+          "supported_by": 20
+        },
+        {
+          "part": 46,
+          "supported_by": 0
+        },
+        {
+          "part": 47,
+          "supported_by": 0
+        },
+        {
+          "part": 48,
+          "supported_by": 0
+        },
+        {
+          "part": 49,
+          "supported_by": 0
+        },
+        {
+          "part": 50,
+          "supported_by": 0
+        },
+        {
+          "part": 53,
+          "supported_by": 20
+        },
+        {
+          "part": 54,
+          "supported_by": 20
+        },
+        {
+          "part": 44,
+          "supported_by": 40
+        },
+        {
+          "part": 45,
+          "supported_by": 40
+        },
+        {
+          "part": 51,
+          "supported_by": 40
+        },
+        {
+          "part": 52,
+          "supported_by": 40
+        },
+        {
+          "part": 55,
+          "supported_by": 40
+        },
+        {
+          "part": 56,
+          "supported_by": 40
+        },
+        {
+          "part": 57,
+          "supported_by": 40
+        },
+        {
+          "part": 58,
+          "supported_by": 40
+        },
+        {
+          "part": 59,
+          "supported_by": 40
+        }
+      ]
+    },
+    "handcart": {
+      "primitives": 18,
+      "grounded_or_connected": 18,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 6,
+          "supported_by": 4
+        },
+        {
+          "part": 7,
+          "supported_by": 4
+        },
+        {
+          "part": 9,
+          "supported_by": 0
+        },
+        {
+          "part": 10,
+          "supported_by": 0
+        },
+        {
+          "part": 11,
+          "supported_by": 0
+        },
+        {
+          "part": 12,
+          "supported_by": 4
+        },
+        {
+          "part": 13,
+          "supported_by": 4
+        },
+        {
+          "part": 8,
+          "supported_by": 1
+        },
+        {
+          "part": 14,
+          "supported_by": 9
+        },
+        {
+          "part": 15,
+          "supported_by": 9
+        },
+        {
+          "part": 16,
+          "supported_by": 9
+        }
+      ]
+    },
+    "lantern-post": {
+      "primitives": 12,
+      "grounded_or_connected": 12,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 2
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 7,
+          "supported_by": 5
+        },
+        {
+          "part": 6,
+          "supported_by": 7
+        },
+        {
+          "part": 8,
+          "supported_by": 6
+        },
+        {
+          "part": 9,
+          "supported_by": 6
+        },
+        {
+          "part": 10,
+          "supported_by": 6
+        },
+        {
+          "part": 11,
+          "supported_by": 6
+        }
+      ]
+    },
+    "net-rack": {
+      "primitives": 33,
+      "grounded_or_connected": 33,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 3
+        },
+        {
+          "part": 5,
+          "supported_by": 3
+        },
+        {
+          "part": 6,
+          "supported_by": 1
+        },
+        {
+          "part": 7,
+          "supported_by": 6
+        },
+        {
+          "part": 10,
+          "supported_by": 6
+        },
+        {
+          "part": 13,
+          "supported_by": 6
+        },
+        {
+          "part": 16,
+          "supported_by": 6
+        },
+        {
+          "part": 19,
+          "supported_by": 6
+        },
+        {
+          "part": 22,
+          "supported_by": 6
+        },
+        {
+          "part": 25,
+          "supported_by": 6
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        },
+        {
+          "part": 11,
+          "supported_by": 10
+        },
+        {
+          "part": 14,
+          "supported_by": 13
+        },
+        {
+          "part": 17,
+          "supported_by": 16
+        },
+        {
+          "part": 20,
+          "supported_by": 19
+        },
+        {
+          "part": 23,
+          "supported_by": 22
+        },
+        {
+          "part": 26,
+          "supported_by": 25
+        },
+        {
+          "part": 32,
+          "supported_by": 7
+        },
+        {
+          "part": 9,
+          "supported_by": 8
+        },
+        {
+          "part": 12,
+          "supported_by": 11
+        },
+        {
+          "part": 15,
+          "supported_by": 14
+        },
+        {
+          "part": 18,
+          "supported_by": 17
+        },
+        {
+          "part": 21,
+          "supported_by": 20
+        },
+        {
+          "part": 24,
+          "supported_by": 23
+        },
+        {
+          "part": 27,
+          "supported_by": 26
+        },
+        {
+          "part": 29,
+          "supported_by": 8
+        },
+        {
+          "part": 30,
+          "supported_by": 8
+        },
+        {
+          "part": 31,
+          "supported_by": 8
+        },
+        {
+          "part": 28,
+          "supported_by": 9
+        }
+      ]
+    },
+    "mooring-cluster": {
+      "primitives": 109,
+      "grounded_or_connected": 109,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 8,
+          "supported_by": 1
+        },
+        {
+          "part": 9,
+          "supported_by": 1
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 10,
+          "supported_by": 8
+        },
+        {
+          "part": 16,
+          "supported_by": 5
+        },
+        {
+          "part": 17,
+          "supported_by": 5
+        },
+        {
+          "part": 18,
+          "supported_by": 5
+        },
+        {
+          "part": 19,
+          "supported_by": 5
+        },
+        {
+          "part": 20,
+          "supported_by": 5
+        },
+        {
+          "part": 21,
+          "supported_by": 5
+        },
+        {
+          "part": 22,
+          "supported_by": 5
+        },
+        {
+          "part": 23,
+          "supported_by": 5
+        },
+        {
+          "part": 24,
+          "supported_by": 5
+        },
+        {
+          "part": 25,
+          "supported_by": 5
+        },
+        {
+          "part": 26,
+          "supported_by": 5
+        },
+        {
+          "part": 27,
+          "supported_by": 5
+        },
+        {
+          "part": 28,
+          "supported_by": 5
+        },
+        {
+          "part": 29,
+          "supported_by": 5
+        },
+        {
+          "part": 30,
+          "supported_by": 5
+        },
+        {
+          "part": 31,
+          "supported_by": 5
+        },
+        {
+          "part": 32,
+          "supported_by": 5
+        },
+        {
+          "part": 33,
+          "supported_by": 5
+        },
+        {
+          "part": 34,
+          "supported_by": 5
+        },
+        {
+          "part": 35,
+          "supported_by": 5
+        },
+        {
+          "part": 36,
+          "supported_by": 5
+        },
+        {
+          "part": 37,
+          "supported_by": 5
+        },
+        {
+          "part": 38,
+          "supported_by": 5
+        },
+        {
+          "part": 39,
+          "supported_by": 5
+        },
+        {
+          "part": 40,
+          "supported_by": 5
+        },
+        {
+          "part": 45,
+          "supported_by": 5
+        },
+        {
+          "part": 46,
+          "supported_by": 5
+        },
+        {
+          "part": 47,
+          "supported_by": 5
+        },
+        {
+          "part": 48,
+          "supported_by": 5
+        },
+        {
+          "part": 49,
+          "supported_by": 5
+        },
+        {
+          "part": 50,
+          "supported_by": 5
+        },
+        {
+          "part": 51,
+          "supported_by": 5
+        },
+        {
+          "part": 52,
+          "supported_by": 5
+        },
+        {
+          "part": 53,
+          "supported_by": 5
+        },
+        {
+          "part": 54,
+          "supported_by": 5
+        },
+        {
+          "part": 55,
+          "supported_by": 5
+        },
+        {
+          "part": 56,
+          "supported_by": 5
+        },
+        {
+          "part": 57,
+          "supported_by": 5
+        },
+        {
+          "part": 58,
+          "supported_by": 5
+        },
+        {
+          "part": 59,
+          "supported_by": 5
+        },
+        {
+          "part": 60,
+          "supported_by": 5
+        },
+        {
+          "part": 61,
+          "supported_by": 5
+        },
+        {
+          "part": 62,
+          "supported_by": 5
+        },
+        {
+          "part": 63,
+          "supported_by": 5
+        },
+        {
+          "part": 64,
+          "supported_by": 5
+        },
+        {
+          "part": 65,
+          "supported_by": 5
+        },
+        {
+          "part": 73,
+          "supported_by": 5
+        },
+        {
+          "part": 74,
+          "supported_by": 5
+        },
+        {
+          "part": 75,
+          "supported_by": 5
+        },
+        {
+          "part": 76,
+          "supported_by": 5
+        },
+        {
+          "part": 77,
+          "supported_by": 5
+        },
+        {
+          "part": 78,
+          "supported_by": 5
+        },
+        {
+          "part": 79,
+          "supported_by": 5
+        },
+        {
+          "part": 80,
+          "supported_by": 4
+        },
+        {
+          "part": 81,
+          "supported_by": 4
+        },
+        {
+          "part": 82,
+          "supported_by": 4
+        },
+        {
+          "part": 83,
+          "supported_by": 4
+        },
+        {
+          "part": 84,
+          "supported_by": 4
+        },
+        {
+          "part": 85,
+          "supported_by": 4
+        },
+        {
+          "part": 86,
+          "supported_by": 5
+        },
+        {
+          "part": 87,
+          "supported_by": 5
+        },
+        {
+          "part": 88,
+          "supported_by": 5
+        },
+        {
+          "part": 89,
+          "supported_by": 5
+        },
+        {
+          "part": 90,
+          "supported_by": 5
+        },
+        {
+          "part": 91,
+          "supported_by": 5
+        },
+        {
+          "part": 101,
+          "supported_by": 5
+        },
+        {
+          "part": 102,
+          "supported_by": 5
+        },
+        {
+          "part": 103,
+          "supported_by": 5
+        },
+        {
+          "part": 104,
+          "supported_by": 5
+        },
+        {
+          "part": 105,
+          "supported_by": 5
+        },
+        {
+          "part": 106,
+          "supported_by": 5
+        },
+        {
+          "part": 11,
+          "supported_by": 10
+        },
+        {
+          "part": 14,
+          "supported_by": 10
+        },
+        {
+          "part": 15,
+          "supported_by": 10
+        },
+        {
+          "part": 41,
+          "supported_by": 6
+        },
+        {
+          "part": 42,
+          "supported_by": 6
+        },
+        {
+          "part": 43,
+          "supported_by": 6
+        },
+        {
+          "part": 44,
+          "supported_by": 6
+        },
+        {
+          "part": 66,
+          "supported_by": 6
+        },
+        {
+          "part": 67,
+          "supported_by": 6
+        },
+        {
+          "part": 68,
+          "supported_by": 6
+        },
+        {
+          "part": 69,
+          "supported_by": 6
+        },
+        {
+          "part": 70,
+          "supported_by": 6
+        },
+        {
+          "part": 71,
+          "supported_by": 6
+        },
+        {
+          "part": 72,
+          "supported_by": 6
+        },
+        {
+          "part": 92,
+          "supported_by": 6
+        },
+        {
+          "part": 93,
+          "supported_by": 6
+        },
+        {
+          "part": 94,
+          "supported_by": 6
+        },
+        {
+          "part": 95,
+          "supported_by": 6
+        },
+        {
+          "part": 96,
+          "supported_by": 6
+        },
+        {
+          "part": 97,
+          "supported_by": 6
+        },
+        {
+          "part": 98,
+          "supported_by": 6
+        },
+        {
+          "part": 99,
+          "supported_by": 6
+        },
+        {
+          "part": 100,
+          "supported_by": 6
+        },
+        {
+          "part": 107,
+          "supported_by": 7
+        },
+        {
+          "part": 12,
+          "supported_by": 11
+        },
+        {
+          "part": 13,
+          "supported_by": 11
+        },
+        {
+          "part": 108,
+          "supported_by": 11
+        }
+      ]
+    },
+    "boat-on-cradle": {
+      "primitives": 18,
+      "grounded_or_connected": 18,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 3
+        },
+        {
+          "part": 5,
+          "supported_by": 3
+        },
+        {
+          "part": 6,
+          "supported_by": 1
+        },
+        {
+          "part": 7,
+          "supported_by": 1
+        },
+        {
+          "part": 9,
+          "supported_by": 2
+        },
+        {
+          "part": 11,
+          "supported_by": 1
+        },
+        {
+          "part": 12,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 6
+        },
+        {
+          "part": 10,
+          "supported_by": 6
+        },
+        {
+          "part": 13,
+          "supported_by": 6
+        },
+        {
+          "part": 14,
+          "supported_by": 6
+        },
+        {
+          "part": 15,
+          "supported_by": 6
+        },
+        {
+          "part": 16,
+          "supported_by": 6
+        },
+        {
+          "part": 17,
+          "supported_by": 6
+        }
+      ]
+    },
+    "dock-crane": {
+      "primitives": 57,
+      "grounded_or_connected": 57,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 9,
+          "supported_by": 1
+        },
+        {
+          "part": 10,
+          "supported_by": 1
+        },
+        {
+          "part": 22,
+          "supported_by": 20
+        },
+        {
+          "part": 23,
+          "supported_by": 20
+        },
+        {
+          "part": 24,
+          "supported_by": 20
+        },
+        {
+          "part": 27,
+          "supported_by": 21
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 2
+        },
+        {
+          "part": 11,
+          "supported_by": 5
+        },
+        {
+          "part": 12,
+          "supported_by": 5
+        },
+        {
+          "part": 13,
+          "supported_by": 5
+        },
+        {
+          "part": 25,
+          "supported_by": 22
+        },
+        {
+          "part": 26,
+          "supported_by": 22
+        },
+        {
+          "part": 28,
+          "supported_by": 24
+        },
+        {
+          "part": 32,
+          "supported_by": 24
+        },
+        {
+          "part": 33,
+          "supported_by": 27
+        },
+        {
+          "part": 38,
+          "supported_by": 24
+        },
+        {
+          "part": 39,
+          "supported_by": 27
+        },
+        {
+          "part": 14,
+          "supported_by": 11
+        },
+        {
+          "part": 15,
+          "supported_by": 11
+        },
+        {
+          "part": 17,
+          "supported_by": 12
+        },
+        {
+          "part": 18,
+          "supported_by": 11
+        },
+        {
+          "part": 29,
+          "supported_by": 28
+        },
+        {
+          "part": 30,
+          "supported_by": 32
+        },
+        {
+          "part": 31,
+          "supported_by": 32
+        },
+        {
+          "part": 34,
+          "supported_by": 28
+        },
+        {
+          "part": 35,
+          "supported_by": 28
+        },
+        {
+          "part": 36,
+          "supported_by": 38
+        },
+        {
+          "part": 37,
+          "supported_by": 38
+        },
+        {
+          "part": 40,
+          "supported_by": 38
+        },
+        {
+          "part": 41,
+          "supported_by": 28
+        },
+        {
+          "part": 42,
+          "supported_by": 32
+        },
+        {
+          "part": 43,
+          "supported_by": 32
+        },
+        {
+          "part": 44,
+          "supported_by": 28
+        },
+        {
+          "part": 45,
+          "supported_by": 33
+        },
+        {
+          "part": 46,
+          "supported_by": 33
+        },
+        {
+          "part": 47,
+          "supported_by": 32
+        },
+        {
+          "part": 49,
+          "supported_by": 33
+        },
+        {
+          "part": 50,
+          "supported_by": 32
+        },
+        {
+          "part": 51,
+          "supported_by": 33
+        },
+        {
+          "part": 52,
+          "supported_by": 32
+        },
+        {
+          "part": 53,
+          "supported_by": 28
+        },
+        {
+          "part": 54,
+          "supported_by": 39
+        },
+        {
+          "part": 55,
+          "supported_by": 28
+        },
+        {
+          "part": 56,
+          "supported_by": 12
+        },
+        {
+          "part": 16,
+          "supported_by": 14
+        },
+        {
+          "part": 19,
+          "supported_by": 14
+        },
+        {
+          "part": 48,
+          "supported_by": 31
+        }
+      ]
+    },
+    "net-shed": {
+      "primitives": 84,
+      "grounded_or_connected": 84,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 11,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 2
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 2
+        },
+        {
+          "part": 9,
+          "supported_by": 2
+        },
+        {
+          "part": 10,
+          "supported_by": 2
+        },
+        {
+          "part": 12,
+          "supported_by": 2
+        },
+        {
+          "part": 13,
+          "supported_by": 5
+        },
+        {
+          "part": 15,
+          "supported_by": 5
+        },
+        {
+          "part": 17,
+          "supported_by": 11
+        },
+        {
+          "part": 19,
+          "supported_by": 11
+        },
+        {
+          "part": 30,
+          "supported_by": 5
+        },
+        {
+          "part": 34,
+          "supported_by": 5
+        },
+        {
+          "part": 40,
+          "supported_by": 5
+        },
+        {
+          "part": 64,
+          "supported_by": 11
+        },
+        {
+          "part": 65,
+          "supported_by": 11
+        },
+        {
+          "part": 14,
+          "supported_by": 13
+        },
+        {
+          "part": 16,
+          "supported_by": 15
+        },
+        {
+          "part": 18,
+          "supported_by": 17
+        },
+        {
+          "part": 20,
+          "supported_by": 19
+        },
+        {
+          "part": 21,
+          "supported_by": 13
+        },
+        {
+          "part": 22,
+          "supported_by": 15
+        },
+        {
+          "part": 24,
+          "supported_by": 13
+        },
+        {
+          "part": 25,
+          "supported_by": 17
+        },
+        {
+          "part": 26,
+          "supported_by": 15
+        },
+        {
+          "part": 27,
+          "supported_by": 19
+        },
+        {
+          "part": 31,
+          "supported_by": 30
+        },
+        {
+          "part": 32,
+          "supported_by": 34
+        },
+        {
+          "part": 33,
+          "supported_by": 34
+        },
+        {
+          "part": 35,
+          "supported_by": 7
+        },
+        {
+          "part": 36,
+          "supported_by": 30
+        },
+        {
+          "part": 37,
+          "supported_by": 30
+        },
+        {
+          "part": 38,
+          "supported_by": 40
+        },
+        {
+          "part": 39,
+          "supported_by": 40
+        },
+        {
+          "part": 41,
+          "supported_by": 7
+        },
+        {
+          "part": 42,
+          "supported_by": 40
+        },
+        {
+          "part": 43,
+          "supported_by": 30
+        },
+        {
+          "part": 44,
+          "supported_by": 34
+        },
+        {
+          "part": 45,
+          "supported_by": 34
+        },
+        {
+          "part": 46,
+          "supported_by": 30
+        },
+        {
+          "part": 49,
+          "supported_by": 34
+        },
+        {
+          "part": 52,
+          "supported_by": 34
+        },
+        {
+          "part": 66,
+          "supported_by": 65
+        },
+        {
+          "part": 67,
+          "supported_by": 65
+        },
+        {
+          "part": 68,
+          "supported_by": 65
+        },
+        {
+          "part": 72,
+          "supported_by": 65
+        },
+        {
+          "part": 23,
+          "supported_by": 24
+        },
+        {
+          "part": 28,
+          "supported_by": 21
+        },
+        {
+          "part": 29,
+          "supported_by": 21
+        },
+        {
+          "part": 47,
+          "supported_by": 32
+        },
+        {
+          "part": 48,
+          "supported_by": 33
+        },
+        {
+          "part": 50,
+          "supported_by": 33
+        },
+        {
+          "part": 51,
+          "supported_by": 33
+        },
+        {
+          "part": 53,
+          "supported_by": 33
+        },
+        {
+          "part": 54,
+          "supported_by": 52
+        },
+        {
+          "part": 69,
+          "supported_by": 68
+        },
+        {
+          "part": 71,
+          "supported_by": 72
+        },
+        {
+          "part": 73,
+          "supported_by": 22
+        },
+        {
+          "part": 74,
+          "supported_by": 22
+        },
+        {
+          "part": 75,
+          "supported_by": 22
+        },
+        {
+          "part": 76,
+          "supported_by": 22
+        },
+        {
+          "part": 77,
+          "supported_by": 22
+        },
+        {
+          "part": 83,
+          "supported_by": 22
+        },
+        {
+          "part": 55,
+          "supported_by": 54
+        },
+        {
+          "part": 58,
+          "supported_by": 54
+        },
+        {
+          "part": 60,
+          "supported_by": 54
+        },
+        {
+          "part": 61,
+          "supported_by": 54
+        },
+        {
+          "part": 63,
+          "supported_by": 54
+        },
+        {
+          "part": 70,
+          "supported_by": 69
+        },
+        {
+          "part": 78,
+          "supported_by": 73
+        },
+        {
+          "part": 79,
+          "supported_by": 73
+        },
+        {
+          "part": 80,
+          "supported_by": 73
+        },
+        {
+          "part": 81,
+          "supported_by": 73
+        },
+        {
+          "part": 82,
+          "supported_by": 73
+        },
+        {
+          "part": 56,
+          "supported_by": 55
+        },
+        {
+          "part": 57,
+          "supported_by": 58
+        },
+        {
+          "part": 59,
+          "supported_by": 58
+        },
+        {
+          "part": 62,
+          "supported_by": 61
+        }
+      ]
+    },
+    "quay-loading-bay": {
+      "primitives": 194,
+      "grounded_or_connected": 194,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 12,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 2
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 2
+        },
+        {
+          "part": 9,
+          "supported_by": 2
+        },
+        {
+          "part": 10,
+          "supported_by": 2
+        },
+        {
+          "part": 11,
+          "supported_by": 2
+        },
+        {
+          "part": 13,
+          "supported_by": 2
+        },
+        {
+          "part": 14,
+          "supported_by": 5
+        },
+        {
+          "part": 16,
+          "supported_by": 5
+        },
+        {
+          "part": 20,
+          "supported_by": 5
+        },
+        {
+          "part": 26,
+          "supported_by": 5
+        },
+        {
+          "part": 84,
+          "supported_by": 12
+        },
+        {
+          "part": 15,
+          "supported_by": 14
+        },
+        {
+          "part": 17,
+          "supported_by": 16
+        },
+        {
+          "part": 18,
+          "supported_by": 20
+        },
+        {
+          "part": 19,
+          "supported_by": 20
+        },
+        {
+          "part": 21,
+          "supported_by": 7
+        },
+        {
+          "part": 22,
+          "supported_by": 16
+        },
+        {
+          "part": 23,
+          "supported_by": 16
+        },
+        {
+          "part": 24,
+          "supported_by": 26
+        },
+        {
+          "part": 25,
+          "supported_by": 26
+        },
+        {
+          "part": 27,
+          "supported_by": 7
+        },
+        {
+          "part": 28,
+          "supported_by": 26
+        },
+        {
+          "part": 29,
+          "supported_by": 16
+        },
+        {
+          "part": 30,
+          "supported_by": 20
+        },
+        {
+          "part": 31,
+          "supported_by": 20
+        },
+        {
+          "part": 32,
+          "supported_by": 16
+        },
+        {
+          "part": 35,
+          "supported_by": 20
+        },
+        {
+          "part": 38,
+          "supported_by": 20
+        },
+        {
+          "part": 64,
+          "supported_by": 8
+        },
+        {
+          "part": 65,
+          "supported_by": 10
+        },
+        {
+          "part": 66,
+          "supported_by": 9
+        },
+        {
+          "part": 67,
+          "supported_by": 9
+        },
+        {
+          "part": 68,
+          "supported_by": 9
+        },
+        {
+          "part": 69,
+          "supported_by": 9
+        },
+        {
+          "part": 70,
+          "supported_by": 8
+        },
+        {
+          "part": 71,
+          "supported_by": 8
+        },
+        {
+          "part": 72,
+          "supported_by": 8
+        },
+        {
+          "part": 73,
+          "supported_by": 8
+        },
+        {
+          "part": 74,
+          "supported_by": 8
+        },
+        {
+          "part": 75,
+          "supported_by": 9
+        },
+        {
+          "part": 76,
+          "supported_by": 9
+        },
+        {
+          "part": 77,
+          "supported_by": 9
+        },
+        {
+          "part": 78,
+          "supported_by": 9
+        },
+        {
+          "part": 94,
+          "supported_by": 84
+        },
+        {
+          "part": 95,
+          "supported_by": 84
+        },
+        {
+          "part": 99,
+          "supported_by": 84
+        },
+        {
+          "part": 100,
+          "supported_by": 84
+        },
+        {
+          "part": 101,
+          "supported_by": 84
+        },
+        {
+          "part": 102,
+          "supported_by": 84
+        },
+        {
+          "part": 103,
+          "supported_by": 84
+        },
+        {
+          "part": 162,
+          "supported_by": 14
+        },
+        {
+          "part": 163,
+          "supported_by": 14
+        },
+        {
+          "part": 164,
+          "supported_by": 14
+        },
+        {
+          "part": 165,
+          "supported_by": 14
+        },
+        {
+          "part": 166,
+          "supported_by": 14
+        },
+        {
+          "part": 187,
+          "supported_by": 14
+        },
+        {
+          "part": 188,
+          "supported_by": 14
+        },
+        {
+          "part": 33,
+          "supported_by": 18
+        },
+        {
+          "part": 34,
+          "supported_by": 19
+        },
+        {
+          "part": 36,
+          "supported_by": 19
+        },
+        {
+          "part": 37,
+          "supported_by": 19
+        },
+        {
+          "part": 39,
+          "supported_by": 19
+        },
+        {
+          "part": 40,
+          "supported_by": 19
+        },
+        {
+          "part": 44,
+          "supported_by": 19
+        },
+        {
+          "part": 45,
+          "supported_by": 19
+        },
+        {
+          "part": 50,
+          "supported_by": 25
+        },
+        {
+          "part": 51,
+          "supported_by": 25
+        },
+        {
+          "part": 79,
+          "supported_by": 64
+        },
+        {
+          "part": 80,
+          "supported_by": 64
+        },
+        {
+          "part": 81,
+          "supported_by": 64
+        },
+        {
+          "part": 82,
+          "supported_by": 64
+        },
+        {
+          "part": 83,
+          "supported_by": 64
+        },
+        {
+          "part": 85,
+          "supported_by": 94
+        },
+        {
+          "part": 86,
+          "supported_by": 94
+        },
+        {
+          "part": 87,
+          "supported_by": 94
+        },
+        {
+          "part": 88,
+          "supported_by": 95
+        },
+        {
+          "part": 89,
+          "supported_by": 95
+        },
+        {
+          "part": 90,
+          "supported_by": 95
+        },
+        {
+          "part": 91,
+          "supported_by": 94
+        },
+        {
+          "part": 92,
+          "supported_by": 94
+        },
+        {
+          "part": 93,
+          "supported_by": 94
+        },
+        {
+          "part": 96,
+          "supported_by": 99
+        },
+        {
+          "part": 97,
+          "supported_by": 99
+        },
+        {
+          "part": 98,
+          "supported_by": 99
+        },
+        {
+          "part": 161,
+          "supported_by": 162
+        },
+        {
+          "part": 167,
+          "supported_by": 166
+        },
+        {
+          "part": 186,
+          "supported_by": 187
+        },
+        {
+          "part": 189,
+          "supported_by": 188
+        },
+        {
+          "part": 193,
+          "supported_by": 188
+        },
+        {
+          "part": 41,
+          "supported_by": 40
+        },
+        {
+          "part": 42,
+          "supported_by": 44
+        },
+        {
+          "part": 43,
+          "supported_by": 44
+        },
+        {
+          "part": 46,
+          "supported_by": 40
+        },
+        {
+          "part": 47,
+          "supported_by": 40
+        },
+        {
+          "part": 48,
+          "supported_by": 50
+        },
+        {
+          "part": 49,
+          "supported_by": 50
+        },
+        {
+          "part": 52,
+          "supported_by": 50
+        },
+        {
+          "part": 53,
+          "supported_by": 40
+        },
+        {
+          "part": 54,
+          "supported_by": 44
+        },
+        {
+          "part": 55,
+          "supported_by": 44
+        },
+        {
+          "part": 56,
+          "supported_by": 40
+        },
+        {
+          "part": 57,
+          "supported_by": 45
+        },
+        {
+          "part": 58,
+          "supported_by": 45
+        },
+        {
+          "part": 59,
+          "supported_by": 44
+        },
+        {
+          "part": 61,
+          "supported_by": 45
+        },
+        {
+          "part": 62,
+          "supported_by": 44
+        },
+        {
+          "part": 63,
+          "supported_by": 45
+        },
+        {
+          "part": 160,
+          "supported_by": 161
+        },
+        {
+          "part": 168,
+          "supported_by": 167
+        },
+        {
+          "part": 185,
+          "supported_by": 186
+        },
+        {
+          "part": 190,
+          "supported_by": 189
+        },
+        {
+          "part": 192,
+          "supported_by": 189
+        },
+        {
+          "part": 60,
+          "supported_by": 43
+        },
+        {
+          "part": 159,
+          "supported_by": 160
+        },
+        {
+          "part": 169,
+          "supported_by": 168
+        },
+        {
+          "part": 184,
+          "supported_by": 185
+        },
+        {
+          "part": 191,
+          "supported_by": 190
+        },
+        {
+          "part": 158,
+          "supported_by": 159
+        },
+        {
+          "part": 170,
+          "supported_by": 169
+        },
+        {
+          "part": 183,
+          "supported_by": 184
+        },
+        {
+          "part": 157,
+          "supported_by": 158
+        },
+        {
+          "part": 171,
+          "supported_by": 170
+        },
+        {
+          "part": 182,
+          "supported_by": 183
+        },
+        {
+          "part": 156,
+          "supported_by": 157
+        },
+        {
+          "part": 172,
+          "supported_by": 171
+        },
+        {
+          "part": 181,
+          "supported_by": 182
+        },
+        {
+          "part": 155,
+          "supported_by": 156
+        },
+        {
+          "part": 173,
+          "supported_by": 172
+        },
+        {
+          "part": 180,
+          "supported_by": 181
+        },
+        {
+          "part": 154,
+          "supported_by": 155
+        },
+        {
+          "part": 174,
+          "supported_by": 173
+        },
+        {
+          "part": 179,
+          "supported_by": 180
+        },
+        {
+          "part": 127,
+          "supported_by": 154
+        },
+        {
+          "part": 153,
+          "supported_by": 154
+        },
+        {
+          "part": 175,
+          "supported_by": 174
+        },
+        {
+          "part": 178,
+          "supported_by": 179
+        },
+        {
+          "part": 126,
+          "supported_by": 127
+        },
+        {
+          "part": 128,
+          "supported_by": 127
+        },
+        {
+          "part": 152,
+          "supported_by": 153
+        },
+        {
+          "part": 176,
+          "supported_by": 175
+        },
+        {
+          "part": 177,
+          "supported_by": 178
+        },
+        {
+          "part": 125,
+          "supported_by": 126
+        },
+        {
+          "part": 129,
+          "supported_by": 128
+        },
+        {
+          "part": 151,
+          "supported_by": 152
+        },
+        {
+          "part": 124,
+          "supported_by": 125
+        },
+        {
+          "part": 130,
+          "supported_by": 129
+        },
+        {
+          "part": 150,
+          "supported_by": 151
+        },
+        {
+          "part": 123,
+          "supported_by": 124
+        },
+        {
+          "part": 131,
+          "supported_by": 130
+        },
+        {
+          "part": 149,
+          "supported_by": 150
+        },
+        {
+          "part": 122,
+          "supported_by": 123
+        },
+        {
+          "part": 132,
+          "supported_by": 131
+        },
+        {
+          "part": 148,
+          "supported_by": 149
+        },
+        {
+          "part": 121,
+          "supported_by": 122
+        },
+        {
+          "part": 133,
+          "supported_by": 132
+        },
+        {
+          "part": 147,
+          "supported_by": 148
+        },
+        {
+          "part": 120,
+          "supported_by": 121
+        },
+        {
+          "part": 134,
+          "supported_by": 133
+        },
+        {
+          "part": 146,
+          "supported_by": 147
+        },
+        {
+          "part": 119,
+          "supported_by": 120
+        },
+        {
+          "part": 135,
+          "supported_by": 134
+        },
+        {
+          "part": 145,
+          "supported_by": 146
+        },
+        {
+          "part": 118,
+          "supported_by": 119
+        },
+        {
+          "part": 136,
+          "supported_by": 135
+        },
+        {
+          "part": 144,
+          "supported_by": 145
+        },
+        {
+          "part": 117,
+          "supported_by": 118
+        },
+        {
+          "part": 137,
+          "supported_by": 136
+        },
+        {
+          "part": 143,
+          "supported_by": 144
+        },
+        {
+          "part": 116,
+          "supported_by": 117
+        },
+        {
+          "part": 138,
+          "supported_by": 137
+        },
+        {
+          "part": 142,
+          "supported_by": 143
+        },
+        {
+          "part": 115,
+          "supported_by": 116
+        },
+        {
+          "part": 139,
+          "supported_by": 138
+        },
+        {
+          "part": 141,
+          "supported_by": 142
+        },
+        {
+          "part": 114,
+          "supported_by": 115
+        },
+        {
+          "part": 140,
+          "supported_by": 139
+        },
+        {
+          "part": 113,
+          "supported_by": 114
+        },
+        {
+          "part": 112,
+          "supported_by": 113
+        },
+        {
+          "part": 111,
+          "supported_by": 112
+        },
+        {
+          "part": 110,
+          "supported_by": 111
+        },
+        {
+          "part": 109,
+          "supported_by": 110
+        },
+        {
+          "part": 108,
+          "supported_by": 109
+        },
+        {
+          "part": 107,
+          "supported_by": 108
+        },
+        {
+          "part": 106,
+          "supported_by": 107
+        },
+        {
+          "part": 105,
+          "supported_by": 106
+        },
+        {
+          "part": 104,
+          "supported_by": 105
+        }
+      ]
+    }
+  }
+}

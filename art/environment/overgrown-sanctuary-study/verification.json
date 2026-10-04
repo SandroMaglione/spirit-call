@@ -1,0 +1,118 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "96fcc3c190fe38231af3977a1e2dba93f0b99c1f8f409fa93bcb14eaf9477940",
+  "assets": [
+    {
+      "id": "compact-shrine",
+      "sha256": "2b08bd08ead4053912f4cee769bf6924261c5609b5ade6410d5cc4dede071c7c",
+      "triangles": 404,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "fallen-leaves",
+      "sha256": "f9b922644312100048357336bc7023cad03e01fe16bb6adcf0291dd1ac89ba2a",
+      "triangles": 308,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "fallen-log",
+      "sha256": "80c3d30f82f36bc625d999300b571de429ac3bd365f1bb231217a043d1f14214",
+      "triangles": 208,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "ground-fern",
+      "sha256": "794ff4cddeb9f9ae2395cc22ec309f1ab52e652722c578c260bfe0f84dc6215a",
+      "triangles": 892,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "hollow-stump",
+      "sha256": "6d36dbc2e73f75a11ba29d767b7012fa4df5969df2a351ae9e7f12a783c8db51",
+      "triangles": 340,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "moss-stone",
+      "sha256": "f7d1cd8601d7d7c5bb9c0345f3d6aaf6984545a89e37dcdfe319a7c1735f4989",
+      "triangles": 104,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "mushroom-garden",
+      "sha256": "2677d7d20565a9bcea875b688c69b53564ea56ed786166accd4f440dc7ff2b26",
+      "triangles": 1456,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "root-gateway",
+      "sha256": "382bda6ca8942a465801ca45c222cd3775c47fedbe7a7aeedac8d8e147b4d4ae",
+      "triangles": 456,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "rooted-ruin",
+      "sha256": "38672d4067e0d8ff7205b7dc042624a1690fa6d06cf7bad8a63406728ecd99cd",
+      "triangles": 508,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "rooted-sapling",
+      "sha256": "97723e9a257aeeaa2af2780e640a1b0dccc9b75e8d7b0f328c4624e31400bc67",
+      "triangles": 700,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "seed-pods",
+      "sha256": "8623230b5259dbe2f58e5cb5c616991a84b69aea03fba9e51ccf53907f972ecb",
+      "triangles": 188,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "shrine-grove",
+      "sha256": "07b656a6e58a1ed58fd04a30cd00ba88d750a1c06dcfd0968bb1c57b042227cc",
+      "triangles": 2116,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "small-mushrooms",
+      "sha256": "acd659e53f5a93bcd2d6ea39d263ff8bc55361f1783cca231e95d58fc8017476",
+      "triangles": 384,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "timber-seat",
+      "sha256": "6d56b0c5365ef2c7bdc7a1153ab34f907949b8346ae3229de0ac89df5ac9a6dc",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

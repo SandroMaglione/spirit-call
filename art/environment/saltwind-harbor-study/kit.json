@@ -1,0 +1,111 @@
+{
+  "title": "Saltwind harbor scale study",
+  "style": "harbor",
+  "batch": "harbor-study",
+  "description": "Feedback study with connected small props and supported exterior dock assemblies.",
+  "palette": {
+    "stone": "788C8D",
+    "light": "A7B3AC",
+    "edge": "B8C3B3",
+    "dark": "344C54",
+    "wood": "98765A",
+    "wood-light": "B49470",
+    "wood-dark": "715340",
+    "metal": "49666C",
+    "metal-light": "779394",
+    "rope": "C1AB7C",
+    "cloth": "9C6758",
+    "sail": "C9C2A5",
+    "fish": "91A7A5",
+    "warm": "C89D59"
+  },
+  "assets": [
+    {
+      "id": "rope-coil",
+      "recipe": "rope-coil",
+      "group": "small"
+    },
+    {
+      "id": "bucket",
+      "recipe": "bucket",
+      "group": "small"
+    },
+    {
+      "id": "fish-basket",
+      "recipe": "fish-basket",
+      "group": "small"
+    },
+    {
+      "id": "folded-sail",
+      "recipe": "folded-sail",
+      "group": "small"
+    },
+    {
+      "id": "bollard",
+      "recipe": "bollard",
+      "group": "small"
+    },
+    {
+      "id": "life-ring-stand",
+      "recipe": "life-ring-stand",
+      "group": "small"
+    },
+    {
+      "id": "cargo-crate",
+      "recipe": "cargo-crate",
+      "group": "working"
+    },
+    {
+      "id": "barrel",
+      "recipe": "barrel",
+      "group": "working"
+    },
+    {
+      "id": "barrel-stack",
+      "recipe": "barrel-stack",
+      "group": "working"
+    },
+    {
+      "id": "handcart",
+      "recipe": "handcart",
+      "group": "working"
+    },
+    {
+      "id": "lantern-post",
+      "recipe": "lantern-post",
+      "group": "working"
+    },
+    {
+      "id": "net-rack",
+      "recipe": "net-rack",
+      "group": "working"
+    },
+    {
+      "id": "mooring-cluster",
+      "recipe": "mooring-cluster",
+      "group": "working"
+    },
+    {
+      "id": "boat-on-cradle",
+      "recipe": "boat-on-cradle",
+      "group": "large"
+    },
+    {
+      "id": "dock-crane",
+      "recipe": "dock-crane",
+      "group": "large"
+    },
+    {
+      "id": "net-shed",
+      "recipe": "net-shed",
+      "group": "large"
+    },
+    {
+      "id": "quay-loading-bay",
+      "recipe": "quay-loading-bay",
+      "group": "large"
+    }
+  ],
+  "scope": "Isolated art study for feedback. No gameplay registration or collision changes.",
+  "player_height_m": 0.5803955393237317
+}

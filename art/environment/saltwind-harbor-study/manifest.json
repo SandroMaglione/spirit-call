@@ -1,0 +1,590 @@
+{
+  "schema_version": 2,
+  "kit": "saltwind-harbor-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/saltwind-harbor-study.blend",
+  "source_sha256": "12985da292f65a09a651702374d9e61562efbc123fe92c538a7a38cf53564641",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "barrel",
+      "file": "models/barrel.glb",
+      "bounds_m": {
+        "min": [
+          -0.2257400006055832,
+          0.0,
+          -0.22627654671669006
+        ],
+        "max": [
+          0.2257400006055832,
+          0.5360000133514404,
+          0.22627654671669006
+        ]
+      },
+      "dimensions_m": [
+        0.4514800012111664,
+        0.5360000133514404,
+        0.4525530934333801
+      ],
+      "triangles": 1036,
+      "mesh_count": 1,
+      "bytes": 63884,
+      "sha256": "b4dd0b3d223e663a1f3861d3f624e17c4e8bafe8a50f57f75021cf473bea8a93",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "barrel-stack",
+      "file": "models/barrel-stack.glb",
+      "bounds_m": {
+        "min": [
+          -0.4557400047779083,
+          0.0,
+          -0.2612765431404114
+        ],
+        "max": [
+          0.4557400047779083,
+          1.0609999895095825,
+          0.22627654671669006
+        ]
+      },
+      "dimensions_m": [
+        0.9114800095558167,
+        1.0609999895095825,
+        0.48755308985710144
+      ],
+      "triangles": 3108,
+      "mesh_count": 1,
+      "bytes": 189488,
+      "sha256": "0fcf23d2bba09787a996c27327c7b563827a38a52612c1f0fa714d5fa67daf37",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "boat-on-cradle",
+      "file": "models/boat-on-cradle.glb",
+      "bounds_m": {
+        "min": [
+          -1.1799999475479126,
+          0.0,
+          -0.47999998927116394
+        ],
+        "max": [
+          1.2200000286102295,
+          0.6899999976158142,
+          0.47999998927116394
+        ]
+      },
+      "dimensions_m": [
+        2.399999976158142,
+        0.6899999976158142,
+        0.9599999785423279
+      ],
+      "triangles": 872,
+      "mesh_count": 1,
+      "bytes": 58956,
+      "sha256": "fb70757ad9a49c89504f022ab4e0e4fa283333309b2fad14901b4bf8d628f230",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "bollard",
+      "file": "models/bollard.glb",
+      "bounds_m": {
+        "min": [
+          -0.1899999976158142,
+          0.0,
+          -0.16500000655651093
+        ],
+        "max": [
+          0.1899999976158142,
+          0.33000001311302185,
+          0.16500000655651093
+        ]
+      },
+      "dimensions_m": [
+        0.3799999952316284,
+        0.33000001311302185,
+        0.33000001311302185
+      ],
+      "triangles": 484,
+      "mesh_count": 1,
+      "bytes": 31260,
+      "sha256": "5a34e4cf8be5a1f83e4b553a38895cb8e031480a266ef09e9ed196d9dd120338",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "bucket",
+      "file": "models/bucket.glb",
+      "bounds_m": {
+        "min": [
+          -0.17106549441814423,
+          0.0,
+          -0.15600000321865082
+        ],
+        "max": [
+          0.17106549441814423,
+          0.37125834822654724,
+          0.15600000321865082
+        ]
+      },
+      "dimensions_m": [
+        0.34213098883628845,
+        0.37125834822654724,
+        0.31200000643730164
+      ],
+      "triangles": 432,
+      "mesh_count": 1,
+      "bytes": 26592,
+      "sha256": "9d49a5a60b0a7e18bce32e96eb622f68fefbbf904fcb85f47a1ba9b43a57f4da",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "cargo-crate",
+      "file": "models/cargo-crate.glb",
+      "bounds_m": {
+        "min": [
+          -0.25999999046325684,
+          0.0,
+          -0.22750000655651093
+        ],
+        "max": [
+          0.25999999046325684,
+          0.41100001335144043,
+          0.22750000655651093
+        ]
+      },
+      "dimensions_m": [
+        0.5199999809265137,
+        0.41100001335144043,
+        0.45500001311302185
+      ],
+      "triangles": 1440,
+      "mesh_count": 1,
+      "bytes": 96020,
+      "sha256": "46ce10ade2cc22299725810c79459f2890a2880e4cf4a081014764f3b82f1798",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "dock-crane",
+      "file": "models/dock-crane.glb",
+      "bounds_m": {
+        "min": [
+          -0.7250000238418579,
+          0.0,
+          -0.6000000238418579
+        ],
+        "max": [
+          1.4600000381469727,
+          1.9416797161102295,
+          0.6000000238418579
+        ]
+      },
+      "dimensions_m": [
+        2.1850000619888306,
+        1.9416797161102295,
+        1.2000000476837158
+      ],
+      "triangles": 3048,
+      "mesh_count": 1,
+      "bytes": 204032,
+      "sha256": "07ac959c09f54a2994b5e25875ae1a461114a9f3d349e51afe2e67286ce43e09",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "fish-basket",
+      "file": "models/fish-basket.glb",
+      "bounds_m": {
+        "min": [
+          -0.2409999966621399,
+          0.0,
+          -0.17599999904632568
+        ],
+        "max": [
+          0.2409999966621399,
+          0.1899999976158142,
+          0.17599999904632568
+        ]
+      },
+      "dimensions_m": [
+        0.4819999933242798,
+        0.1899999976158142,
+        0.35199999809265137
+      ],
+      "triangles": 1200,
+      "mesh_count": 1,
+      "bytes": 80240,
+      "sha256": "0056264f3b26d88ce1aefa9bdab68bcda4ee7bdfd647619ccea0b34f8a05794f",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "folded-sail",
+      "file": "models/folded-sail.glb",
+      "bounds_m": {
+        "min": [
+          -0.25999999046325684,
+          0.0,
+          -0.16200000047683716
+        ],
+        "max": [
+          0.25999999046325684,
+          0.1340000033378601,
+          0.16124428808689117
+        ]
+      },
+      "dimensions_m": [
+        0.5199999809265137,
+        0.1340000033378601,
+        0.32324428856372833
+      ],
+      "triangles": 360,
+      "mesh_count": 1,
+      "bytes": 24764,
+      "sha256": "9094a52dcb402981de68fe7cf3b91997fdf04cca489bdcd5df6de0c9ccbe7b72",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "handcart",
+      "file": "models/handcart.glb",
+      "bounds_m": {
+        "min": [
+          -0.3400000035762787,
+          -2.9802322831784522e-09,
+          -0.36250001192092896
+        ],
+        "max": [
+          0.3400000035762787,
+          0.4350000023841858,
+          0.8028489351272583
+        ]
+      },
+      "dimensions_m": [
+        0.6800000071525574,
+        0.4350000053644181,
+        1.1653489470481873
+      ],
+      "triangles": 896,
+      "mesh_count": 1,
+      "bytes": 57948,
+      "sha256": "c1f0290142c846115e830e512ab8583a8c801de2763eef7932cfaf28fbb12e90",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "lantern-post",
+      "file": "models/lantern-post.glb",
+      "bounds_m": {
+        "min": [
+          -0.2150000035762787,
+          0.0,
+          -0.19499999284744263
+        ],
+        "max": [
+          0.4650000035762787,
+          1.1200000047683716,
+          0.19499999284744263
+        ]
+      },
+      "dimensions_m": [
+        0.6800000071525574,
+        1.1200000047683716,
+        0.38999998569488525
+      ],
+      "triangles": 560,
+      "mesh_count": 1,
+      "bytes": 39476,
+      "sha256": "8c1122e3e1be6bbfb08fb5a8fce83fb850e0ad114fbba55dcf3f89d62a198007",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "life-ring-stand",
+      "file": "models/life-ring-stand.glb",
+      "bounds_m": {
+        "min": [
+          -0.2329999953508377,
+          0.0,
+          -0.10999999940395355
+        ],
+        "max": [
+          0.2329999953508377,
+          0.4729999899864197,
+          0.10999999940395355
+        ]
+      },
+      "dimensions_m": [
+        0.4659999907016754,
+        0.4729999899864197,
+        0.2199999988079071
+      ],
+      "triangles": 432,
+      "mesh_count": 1,
+      "bytes": 28408,
+      "sha256": "8366f1e9a11752ad70461e9cb72e26ff68877457906f2a213684b33ce53e3db7",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "mooring-cluster",
+      "file": "models/mooring-cluster.glb",
+      "bounds_m": {
+        "min": [
+          -0.6499999761581421,
+          0.0,
+          -0.42500001192092896
+        ],
+        "max": [
+          0.6499999761581421,
+          0.48500001430511475,
+          0.42500001192092896
+        ]
+      },
+      "dimensions_m": [
+        1.2999999523162842,
+        0.48500001430511475,
+        0.8500000238418579
+      ],
+      "triangles": 2944,
+      "mesh_count": 1,
+      "bytes": 190116,
+      "sha256": "adbb835ec5a392e9443eea802babee4ed7d7ddf71a5d5158d296fb9cbe4cd68e",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "net-rack",
+      "file": "models/net-rack.glb",
+      "bounds_m": {
+        "min": [
+          -0.6399999856948853,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          0.6399999856948853,
+          1.0546410083770752,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        1.2799999713897705,
+        1.0546410083770752,
+        0.4000000059604645
+      ],
+      "triangles": 716,
+      "mesh_count": 1,
+      "bytes": 48464,
+      "sha256": "415611adf83400189d1c5598aa67501bd67025c8e762d94a8fe4daac4e38ab77",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "net-shed",
+      "file": "models/net-shed.glb",
+      "bounds_m": {
+        "min": [
+          -1.1000020503997803,
+          0.0,
+          -0.7250000238418579
+        ],
+        "max": [
+          1.1000020503997803,
+          1.6549999713897705,
+          0.7250000238418579
+        ]
+      },
+      "dimensions_m": [
+        2.2000041007995605,
+        1.6549999713897705,
+        1.4500000476837158
+      ],
+      "triangles": 3672,
+      "mesh_count": 1,
+      "bytes": 239644,
+      "sha256": "eb33440be9bc15e0f22dd1bf9a87397edfb01745ba18e96fb75c082cad555911",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "quay-loading-bay",
+      "file": "models/quay-loading-bay.glb",
+      "bounds_m": {
+        "min": [
+          -1.2300000190734863,
+          0.0,
+          -0.675000011920929
+        ],
+        "max": [
+          1.2300000190734863,
+          0.9610000252723694,
+          0.675000011920929
+        ]
+      },
+      "dimensions_m": [
+        2.4600000381469727,
+        0.9610000252723694,
+        1.350000023841858
+      ],
+      "triangles": 7876,
+      "mesh_count": 1,
+      "bytes": 516064,
+      "sha256": "15273df7d03a4116b5f4d515f14b04f6847fd2d50c561b002b3be4d3e5765741",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    },
+    {
+      "id": "rope-coil",
+      "file": "models/rope-coil.glb",
+      "bounds_m": {
+        "min": [
+          -0.18922296166419983,
+          0.0006794910877943039,
+          -0.2570502460002899
+        ],
+        "max": [
+          0.21339325606822968,
+          0.03532050549983978,
+          0.20029792189598083
+        ]
+      },
+      "dimensions_m": [
+        0.4026162177324295,
+        0.03464101441204548,
+        0.45734816789627075
+      ],
+      "triangles": 1800,
+      "mesh_count": 1,
+      "bytes": 116628,
+      "sha256": "7d47fda05381fa97ffe3999b81fb282f19c8a6f97c69b32958088e6f8e704ffc",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "placement_note": "Review art; large assemblies belong outside the combat grid."
+    }
+  ]
+}

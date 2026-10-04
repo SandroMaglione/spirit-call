@@ -9,6 +9,8 @@ import type { ArenaId } from "../src/content/arena.ts"
 import { hazardBoxes, hazardWalls, propBoxes } from "../src/features/arena.ts"
 import type { Box } from "../src/physics/shapes.ts"
 import { boxAround } from "../src/physics/shapes.ts"
+import { circleOverlapsBox, sweepCircleBoxes } from "../src/physics/collide.ts"
+import { arenaLooks } from "../src/presentation/looks.ts"
 
 /** The widest body (an elite brute) passes with room to spare. */
 const passage = 80
@@ -50,6 +52,40 @@ describe("arena layouts", () => {
       const covered = hazardBoxes(defaultTuning, id).flatMap((pool, index) =>
         all.filter((blocker) => gap(pool.box, blocker.box) < 0).map((blocker) => `pool ${index + 1} under ${blocker.name}`))
       expect(covered).toEqual([])
+    })
+
+    it.skipIf(!arenaLooks[id].scenery.some((piece) => piece.model.includes("Study")))(`${id}: revised floor is reachable from the spawn for the widest body`, () => {
+      const boxes = blockers(id).map((blocker) => blocker.box)
+      const step = 40
+      const columns = Math.floor(width / step)
+      const rows = Math.floor(height / step)
+      const open = new Set<number>()
+      for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++) {
+          const point = { x: (column + .5) * step, y: (row + .5) * step }
+          if (!boxes.some((box) => circleOverlapsBox(point, passage / 2, box))) open.add(row * columns + column)
+        }
+      }
+      const start = Math.floor(rows / 2) * columns + Math.floor(columns / 2)
+      expect(open.has(start), "spawn is clear").toBe(true)
+      const reached = new Set([start])
+      const queue = [start]
+      for (let cursor = 0; cursor < queue.length; cursor++) {
+        const current = queue[cursor]!
+        const column = current % columns
+        const row = Math.floor(current / columns)
+        const neighbors = [-1, 0, 1].flatMap((dy) => [-1, 0, 1].flatMap((dx) => {
+          if (dx === 0 && dy === 0 || column + dx < 0 || column + dx >= columns || row + dy < 0 || row + dy >= rows) return []
+          return [(row + dy) * columns + column + dx]
+        }))
+        for (const next of neighbors) {
+          if (!open.has(next) || reached.has(next)) continue
+          const origin = { x: (column + .5) * step, y: (row + .5) * step }
+          const delta = { x: (next % columns - column) * step, y: (Math.floor(next / columns) - row) * step }
+          if (sweepCircleBoxes(origin, delta, passage / 2, boxes) === undefined) { reached.add(next); queue.push(next) }
+        }
+      }
+      expect([...open].filter((cell) => !reached.has(cell)), "isolated floor cells").toEqual([])
     })
   }
 })
