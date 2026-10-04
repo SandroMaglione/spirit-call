@@ -118,8 +118,8 @@ unreadable; hardcore modifiers may raise them, never the readability floor.
   Kills bring it, never a timer, so there is no damage race.
 - Every spawn is warned on the floor before the enemy appears.
 - **A run lasts three to four minutes.** A quest's waves add up to that for
-  the lab's quick player (sum its seconds to clear); survive challenges run
-  180 to 210 s. Fewer, bigger waves rather than many small ones: a run of
+  the lab's quick player (sum its seconds to clear). Goals require defeating
+  enemies; lasting for a timer never clears a challenge. Fewer, bigger waves rather than many small ones: a run of
   eight to ten waves leaves room for a build-up and a last, hardest wave.
 - **Lasting until the team falls** (the `endure` objective, the Until Fall
   track): the waves never end, and every wave's enemies come in

@@ -289,8 +289,6 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (challenge.objective.kind === "clearWaves") {
       if (endless !== null) problems.push(`${where}: clearing every wave can never happen with endless waves`)
       if (scripted.length === 0) problems.push(`${where}: nothing to clear (no waves)`)
-    } else if (challenge.objective.kind === "survive") {
-      positive(problems, where, { seconds: challenge.objective.seconds })
     } else if (challenge.objective.kind === "endure") {
       if (endless === null) problems.push(`${where}: lasting until the team falls needs endless waves`)
       if (!(Number.isInteger(challenge.objective.goal) && challenge.objective.goal >= 1)) problems.push(`${where}: its goal must be a whole wave from 1`)

@@ -11,13 +11,11 @@ import type { BuildValue, RunResultValue, RunValue, StatsValue, WavesValue } fro
 /** The challenge id the game starts with. */
 export const defaultChallenge = "endless" as const
 
-/** Whether `objective` is met, given the waves so far and the run. */
-export const objectiveMet = (objective: Objective, waves: WavesValue, run: RunValue): boolean => {
+/** Whether `objective` is met, given the waves so far. */
+export const objectiveMet = (objective: Objective, waves: WavesValue): boolean => {
   switch (objective.kind) {
     case "clearWaves":
       return waves.phase === "complete"
-    case "survive":
-      return run.time >= objective.seconds
     // It never ends on its own: the team falls (reaching its goal counts as a clear, see `runResultOf`).
     case "endure":
       return false
@@ -38,18 +36,16 @@ export const waveLevelBonus = (objective: Objective, number: number): number =>
 
 /**
  * How far toward `spec`'s objective the run got, from 0 to 1: the share of
- * its waves cleared, or of the time to survive. A wave counts once it is
+ * its waves cleared. A wave counts once it is
  * defeated (the break after it, or the end).
  */
-export const objectiveProgress = (spec: ChallengeSpec, waves: WavesValue, run: RunValue): number => {
+export const objectiveProgress = (spec: ChallengeSpec, waves: WavesValue): number => {
   switch (spec.objective.kind) {
     case "clearWaves": {
       const total = spec.waves.scripted.length
       if (waves.phase === "complete" || total === 0) return 1
       return Math.min(1, Math.max(0, wavesCleared(waves) / total))
     }
-    case "survive":
-      return Math.min(1, Math.max(0, run.time / spec.objective.seconds))
     case "endure":
       return Math.min(1, Math.max(0, wavesCleared(waves) / spec.objective.goal))
     // Extras pay nothing, so how far they got is only the wave.
@@ -77,7 +73,7 @@ export const runResultOf = (
   return {
     cleared: done,
     challenge,
-    progress: done ? 1 : objectiveProgress(spec, waves, run),
+    progress: done ? 1 : objectiveProgress(spec, waves),
     wave: waves.number,
     kills: stats.kills,
     time: run.time,
@@ -105,7 +101,7 @@ export const CheckObjective = Game.System("Shooter/CheckObjective", {
   if (!tuning.waves.enabled || run.endedAt !== null) return
   const challenge = resources.challenge.get()
   const spec = tuning.challenges[challenge]
-  if (!objectiveMet(spec.objective, resources.waves.get(), run)) return
+  if (!objectiveMet(spec.objective, resources.waves.get())) return
   const ended = { ...run, endedAt: resources.time.get().elapsed }
   resources.run.set(ended)
   resources.result.set(runResultOf(true, challenge, spec, ended, resources.waves.get(), resources.stats.get(), resources.team.get()))

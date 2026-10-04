@@ -827,7 +827,7 @@ export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 export interface RunResultValue {
   readonly cleared: boolean
   readonly challenge: ChallengeId
-  /** How far toward the objective, from 0 to 1 (1 when cleared): the share of waves cleared, or of the time survived. */
+  /** How far toward the objective, from 0 to 1 (1 when cleared): the share of waves cleared. */
   readonly progress: number
   /** The wave reached. */
   readonly wave: number

@@ -46,7 +46,7 @@ export const progression = {
   stats: { band: 4, shape: 1 } satisfies StatCurve,
   /**
    * What a lost run pays, as a share of a clear: its progress toward the
-   * objective (waves defeated, time survived) times this, so trying is
+   * objective (waves defeated) times this, so trying is
    * never wasted and finishing is always worth more. Nothing is paid for
    * kills or for speed.
    */
