@@ -18,6 +18,7 @@ import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createShowcase } from "./presentation/showcase.ts"
+import { createMenuInputHost } from "./presentation/menu-input.ts"
 import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
@@ -70,27 +71,49 @@ const start = async (mount: HTMLElement) => {
     const result = uiStore.result.value
     if (result === null) {
       uiStore.earned.value = null
+      uiStore.recording.value = "idle"
       return
     }
     if (result === reported) return
     reported = result
     if (!recording) return
+    uiStore.recording.value = "saving"
     void shell.recordRun(playing, result).then((earned) => {
+      if (uiStore.result.peek() !== result) return
+      uiStore.recording.value = earned === undefined ? "failed" : "saved"
       uiStore.earned.value = earned ?? null
+      if (earned !== undefined) sounds.play("uiReward")
     })
   })
+  let feedbackTimer: ReturnType<typeof setTimeout> | undefined
+  const notify = (message: string, error = false) => {
+    clearTimeout(feedbackTimer)
+    uiStore.feedback.value = { message, error }
+    sounds.play(error ? "uiError" : "uiSuccess")
+    if (!error) feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), 1200)
+  }
+  const change = (action: () => Promise<unknown>, message: string) => {
+    if (uiStore.busy.peek()) return
+    uiStore.busy.value = true
+    void action().then((saved) => notify(saved === undefined ? "Could not save. Please try again." : message, saved === undefined))
+      .catch(() => notify("Could not save. Please try again.", true))
+      .finally(() => (uiStore.busy.value = false))
+  }
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
+    saveTeam: (team) => change(() => shell.select(team, uiStore.account.peek().selection.play), "Team saved"),
     enter: (team, play) => {
       // Entering is remembered on the account; a character not owned or something not open is refused, and nothing starts.
+      if (uiStore.busy.peek()) return
+      uiStore.busy.value = true
       void shell.select(team, play).then((selected) => {
-        if (selected === undefined) return
+        if (selected === undefined) { notify("This challenge is locked or your selection could not be saved.", true); return }
         playing = play
         recording = true
         uiStore.play.value = play
         uiStore.extra.value = null
         uiRequests.pending.push({ kind: "start", team: teamOf(tuning, selected, team), ...encounterOf(tuning, play) })
-      })
+      }).finally(() => (uiStore.busy.value = false))
     },
     enterExtra: (team, extra) => {
       const account = uiStore.account.value
@@ -106,9 +129,9 @@ const start = async (mount: HTMLElement) => {
         ...(extra.kind === "practice" ? { practice: extra.picks } : {})
       })
     },
-    equip: shell.equip,
-    train: shell.train,
-    upgrade: shell.upgrade,
+    equip: (character, equipment) => change(() => shell.equip(character, equipment), "Weapon equipped"),
+    train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
+    upgrade: (weapon) => change(() => shell.upgrade(weapon), `${tuning.weapons[weapon].name} upgraded`),
     retry: () => uiRequests.pending.push({ kind: "retry" }),
     menu: () => uiRequests.pending.push({ kind: "menu" }),
     pause: () => uiRequests.pending.push({ kind: "pause" }),
@@ -130,12 +153,17 @@ const start = async (mount: HTMLElement) => {
   const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
   const { canvas, size } = browser.host
-  const keyboard = Keyboard.actions(window, keyBindings)
-  const pointer = Pointer.track(canvas, window)
+  // Native Enter/Space activation and sliders must keep working in menus.
+  const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek())
+  const keyboard = Keyboard.actions(input.host, keyBindings, { preventDefault: false })
+  const pointer = Pointer.track(canvas, input.host)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
   // The controls keep inside the screen's safe area (clear of a notch and rounded corners).
-  const touch = Touch.track(canvas, window, (size) => touchLayout(size, browser.host.safeArea()), {
+  const touch = Touch.track(canvas, input.host, (size) => touchLayout(size, browser.host.safeArea()), {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
+  })
+  effect(() => {
+    if (uiStore.paused.value || uiStore.flow.value !== "Playing") input.cancel()
   })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
   // The HUD's menu button opens the in-game menu (as Esc does); M mutes anywhere.
@@ -180,6 +208,10 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
   mountUi(mount, uiStore, uiActions)
+  mount.addEventListener("click", (event) => {
+    const button = event.target instanceof Element ? event.target.closest<HTMLButtonElement>(".ui button") : null
+    if (button !== null && !button.disabled) sounds.play("uiTap")
+  })
   // The menu's models and portraits, over the UI.
   const showcase = createShowcase(mount, browser.models)
   createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })

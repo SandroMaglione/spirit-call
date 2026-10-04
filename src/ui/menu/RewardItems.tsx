@@ -1,0 +1,21 @@
+import type { Rewards } from "../../content/quests.ts"
+import type { UiStore } from "../store.ts"
+import { Icon } from "../Icon.tsx"
+import { describeUnlock } from "../describe.ts"
+import { ids, Portrait } from "./parts.tsx"
+import type { Nav } from "./parts.tsx"
+
+export const RewardItems = ({ rewards, store, nav }: { readonly rewards: Rewards; readonly store: UiStore; readonly nav: Nav }) => {
+  const tuning = store.tuning.value
+  return <div class="reward-items">
+    {rewards.experience > 0 && <span class="reward-mini" aria-label={`${rewards.experience} account XP`}><Icon name="character" /><span>{rewards.experience} XP</span></span>}
+    {ids(tuning.currencies).filter((id) => (rewards.currencies[id] ?? 0) > 0).map((id) => <span key={id} class="reward-mini" aria-label={`${rewards.currencies[id]} ${tuning.currencies[id].name}`}><Icon name={id} /><span>{rewards.currencies[id]}</span></span>)}
+    {rewards.unlocks.map((unlock) => <button type="button" key={`${unlock.kind}-${unlock.id}`} class="reward-mini unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} onClick={() => {
+      if (unlock.kind === "character") nav.go({ kind: "character", character: unlock.id, tab: "kit" })
+      else {
+        const character = ids(tuning.characters).find((id) => tuning.characters[id].weaponType === tuning.weapons[unlock.id].type)!
+        nav.go({ kind: "character", character, tab: "weapon" })
+      }
+    }}>{unlock.kind === "character" ? <Portrait of={{ character: unlock.id }} /> : <Icon name="weapon" />}<small>{describeUnlock(tuning, unlock)}</small></button>)}
+  </div>
+}

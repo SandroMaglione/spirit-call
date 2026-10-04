@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import { withWeapon } from "../src/features/build.ts"
-import { Challenge, CombatStats, Game, Paused, Player, Run, Team, Waves } from "../src/schema.ts"
+import { Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
 import { answers, elementOf, placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
 import { start } from "./helpers.ts"
@@ -60,6 +60,24 @@ const Pause = Game.Inspector("Test/Pause", {
 }, ({ resources }) => ({ paused: resources.paused.get().paused, time: resources.run.get().time }))
 
 describe("the in-game menu", () => {
+  it("freezes the simulation clock, hit-stop and perfect-dodge slow motion", () => {
+    const seed = Game.System("Test/SeedPauseTimers", { resources: { hit: Game.System.writeResource(HitStop), slow: Game.System.writeResource(SlowMotion) } }, ({ resources }) => {
+      resources.hit.set({ remaining: 0.1 })
+      resources.slow.set({ remaining: 0.5, scale: 0.2, dodge: true })
+    })
+    const timers = Game.Inspector("Test/PauseTimers", { resources: { time: Game.System.readResource(Time), hit: Game.System.readResource(HitStop), slow: Game.System.readResource(SlowMotion) } }, ({ resources }) => ({ time: resources.time.get(), hit: resources.hit.get(), slow: resources.slow.get() }))
+    const run = start({ waves: true })
+    run.requests.pending.push({ kind: "pause" })
+    run.step()
+    run.runtime.tick(Game.Schedule(seed))
+    const at = run.runtime.inspect(timers)
+    run.step(120)
+    expect(run.runtime.inspect(timers)).toEqual(at)
+    run.requests.pending.push({ kind: "resume" })
+    run.step(2)
+    expect(run.runtime.inspect(timers).time.elapsed).toBeGreaterThan(at.time.elapsed)
+    expect(run.runtime.inspect(timers).slow.remaining).toBeLessThan(at.slow.remaining)
+  })
   it("pauses a run going on: the world stands still until it resumes", () => {
     const run = start({ waves: true })
     run.step(10)

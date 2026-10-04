@@ -1,142 +1,77 @@
-/**
- * The results screen: won or lost, how it went (for a loss, how far it got:
- * it pays that share), what it earned as tiles (experience, gold, an
- * account level, first-clear rewards, unlocks, discoveries), the team's
- * leader on the right, and what next (play again, or back to the menu). An
- * Extra's (Enemy Practice) shows the enemies defeated, pays nothing, and can
- * go back to the picks.
- * The buttons wake up after `Tuning.flow.restartDelay`, so a tap meant for
- * the fight does not skip the screen; on a keyboard, R and Esc do the same
- * (see `QueueRestart`).
- */
 import { useSignal } from "@preact/signals"
-import type { ComponentChildren } from "preact"
 import { useEffect } from "preact/hooks"
-
+import { accountLevel, equipmentOf, playLock } from "../account/account.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import { resolveBuild } from "../features/build.ts"
+import { Dialog } from "./Dialog.tsx"
+import { Icon } from "./Icon.tsx"
 import { describeAmounts, describePlay, describeUnlock } from "./describe.ts"
 import { elementOf } from "./draft.ts"
-import { Cta, Model } from "./menu/parts.tsx"
+import { Cta, Model, Portrait } from "./menu/parts.tsx"
+import type { Screen } from "./menu/parts.tsx"
+import { nextMainQuest } from "./navigation.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
-/** A reward tile: a big amount (or name) over what it is; `fresh` ones (first-time rewards) glow. */
-const Tile = ({ kind, fresh, children, label }: { readonly kind: string; readonly fresh?: boolean; readonly children: ComponentChildren; readonly label: string }) => (
-  <div class={`reward reward--${kind}${fresh === true ? " is-fresh" : ""}`}>
-    <i />
-    <b>{children}</b>
-    <small>{label}</small>
-  </div>
-)
-
-const minutes = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`
-
 export const Results = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
-  const result = store.result.value
-  const earned = store.earned.value
-  const ready = useSignal(false)
-  const delay = store.tuning.value.flow.restartDelay
-  useEffect(() => {
-    const timer = setTimeout(() => (ready.value = true), delay * 1000)
-    return () => clearTimeout(timer)
-  }, [])
+  const ready = useSignal(false), revealed = useSignal(false), details = useSignal(false)
+  const result = store.result.value, earned = store.earned.value
+  useEffect(() => { const timer = setTimeout(() => (ready.value = true), store.tuning.peek().flow.restartDelay * 1000); return () => clearTimeout(timer) }, [])
   if (result === null) return null
-  const tuning = store.tuning.value
-  const play = store.play.value
+  const tuning = store.tuning.value, account = store.account.value, play = store.play.value, extra = store.extra.value
+  const leader = store.team.value[0], objective = tuning.challenges[result.challenge].objective
+  const newcomer = earned?.rewards?.unlocks.find((unlock) => unlock.kind === "character")
+  const companion = newcomer?.kind === "character" ? newcomer.id : leader?.character
+  const companionWeapon = newcomer?.kind === "character" ? equipmentOf(tuning, account, newcomer.id).weapon : leader === undefined ? undefined : resolveBuild(tuning, leader).weapon
   const name = play === null ? tuning.challenges[result.challenge].name : describePlay(tuning, play)
-  const leader = store.team.value[0]
-  /** A tile per currency: what every run pays, plus what was given once (a level, a first clear), which makes it glow. */
-  const currencies = () => {
-    if (earned === null) return null
-    const once = [earned.levelRewards, earned.rewards?.currencies ?? {}]
-    return (Object.keys(tuning.currencies) as Array<CurrencyId>).map((id) => {
-      const extra = once.reduce((sum, amounts) => sum + (amounts[id] ?? 0), 0)
-      const total = (earned.pay[id] ?? 0) + extra
-      if (total <= 0) return null
-      return (
-        <Tile key={id} kind={id} fresh={extra > 0} label={tuning.currencies[id].name}>
-          +{total.toLocaleString("en-US")}
-        </Tile>
-      )
-    })
-  }
-  const objective = tuning.challenges[result.challenge].objective
-  // An Extra (practice) records nothing: the wave it reached, and a way back to its picks.
-  const extra = store.extra.value
-  if (extra !== null) {
-    return (
-      <div class="results" data-element={leader === undefined ? undefined : (elementOf(tuning, leader.character) ?? undefined)}>
-        {leader !== undefined && <Model character={leader.character} weapon={resolveBuild(tuning, leader).weapon} class="results__model" />}
-        <div class="results__banner">{result.kills} defeated</div>
-        <div class="results__note">Practice: nothing is recorded</div>
-        <div class="results__stats">
-          <b>{name}</b> · {minutes(result.time)}
-        </div>
-        <div class="results__actions">
-          <Cta disabled={!ready.value} onClick={actions.retry}>
-            Again
-          </Cta>
-          {extra.kind === "practice" && (
-            <button type="button" class="ghost" disabled={!ready.value} onClick={() => {
-              store.menuOpens.value = { kind: "extra", mode: "practice" }
-              actions.menu()
-            }}>
-              Enemies
-            </button>
-          )}
-          <button type="button" class="ghost" disabled={!ready.value} onClick={actions.menu}>
-            Home
-          </button>
-          {store.device.value === "desktop" && <span class="results__hint">R again · Esc home</span>}
-        </div>
+  const enabled = ready.value && store.recording.value !== "saving"
+  const open = (screen: Screen) => { store.menuOpens.value = screen; actions.menu() }
+  const level = accountLevel(tuning, account), next = nextMainQuest(tuning, account)
+  const canContinue = extra === null && result.cleared && next !== null && playLock(tuning, account, next) === null
+  const title = extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
+  return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}${revealed.value ? " is-revealed" : ""}`} data-element={companion === undefined ? undefined : elementOf(tuning, companion) ?? undefined}>
+    <button type="button" class="icon-button results__info" aria-label="Run details" onClick={() => (details.value = true)}><Icon name="info" /></button>
+    {companion !== undefined && companionWeapon !== undefined && <div class="results__companion"><div class="stage-orbit" /><Model character={companion} weapon={companionWeapon} reveal={newcomer !== undefined && !revealed.value} class="results__model" /></div>}
+    <section class="results__content">
+      <h1 class="results__banner">{title}</h1><p class="results__name">{name}</p>
+      <div class="results__loot" onClick={() => (revealed.value = true)}>
+        {extra !== null ? <p class="results__note">No rewards in practice.</p> : <>
+          {!result.cleared && <div class="results__progress"><span>Progress <b>{Math.round(result.progress * 100)}%</b></span><div class="progress-track"><i style={{ width: `${result.progress * 100}%` }} /></div></div>}
+          {store.recording.value === "saving" && <p role="status" class="results__note">Saving…</p>}
+          {store.recording.value === "failed" && <p role="alert" class="results__saved-error">Rewards could not be saved.</p>}
+          {earned !== null && <>
+            <div class="results__rewards">
+              {earned.experience > 0 && <div class="reward" aria-label={`${earned.experience} account XP`}><Icon name="character" /><b>+{earned.experience}<small>XP</small></b></div>}
+              {(Object.keys(tuning.currencies) as Array<CurrencyId>).map((id) => {
+                const total = (earned.pay[id] ?? 0) + (earned.levelRewards[id] ?? 0) + (earned.rewards?.currencies[id] ?? 0) + earned.discoveries.reduce((sum, discovery) => sum + (tuning.discoveries[discovery].rewards[id] ?? 0), 0)
+                return total <= 0 ? null : <div key={id} class={`reward reward--${id}`} aria-label={`${total} ${tuning.currencies[id].name}`}><Icon name={id} /><b>+{total.toLocaleString("en-US")}</b></div>
+              })}
+            </div>
+            <div class="results__xp"><div><span>{earned.level.after > earned.level.before ? `Lv ${earned.level.before} → ${earned.level.after}` : `Lv ${level.level}`}</span><span>{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed} XP`}</span></div><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
+            {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <section class="results__unlocks">{earned.rewards.unlocks.map((unlock) => <button key={`${unlock.kind}-${unlock.id}`} type="button" class="unlock-card" disabled={!enabled} onClick={() => {
+              if (unlock.kind === "character") open({ kind: "character", character: unlock.id, tab: "kit" })
+              else {
+                const member = (Object.keys(tuning.characters) as Array<keyof typeof tuning.characters>).find((id) => tuning.characters[id].weaponType === tuning.weapons[unlock.id].type)!
+                open({ kind: "character", character: member, tab: "weapon" })
+              }
+            }}>{unlock.kind === "character" ? <Portrait of={{ character: unlock.id }} /> : <span class="unlock-symbol"><Icon name="weapon" /></span>}<span><small>NEW</small><b>{describeUnlock(tuning, unlock)}</b></span><Icon name="next" /></button>)}</section>}
+          </>}
+        </>}
       </div>
-    )
-  }
-  return (
-    <div class={`results${result.cleared ? " is-cleared" : ""}`} data-element={leader === undefined ? undefined : (elementOf(tuning, leader.character) ?? undefined)}>
-      {leader !== undefined && <Model character={leader.character} weapon={resolveBuild(tuning, leader).weapon} class="results__model" />}
-      {/* Lasting until the team falls, every run ends in a fall: how far it got is what it says. */}
-      <div class="results__banner">{objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Cleared" : "Defeated"}</div>
-      {objective.kind === "endure" && (
-        <div class="results__note">{result.cleared ? `Past the goal of wave ${objective.goal}` : `The goal is wave ${objective.goal}`}</div>
-      )}
-      <div class="results__stats">
-        <b>{name}</b> · wave {result.wave} · {result.kills} kills · {minutes(result.time)}
-      </div>
-      {!result.cleared && (
-        <div class="results__progress" title="A loss pays this share of a clear">
-          <i style={{ width: `${Math.round(result.progress * 100)}%` }} />
-          <span>{Math.round(result.progress * 100)}%</span>
-        </div>
-      )}
-      {earned !== null && (
-        <div class="results__rewards">
-          <Tile kind="experience" label="Account XP">+{earned.experience}</Tile>
-          {currencies()}
-          {earned.level.after > earned.level.before && <Tile kind="level" fresh label="Account level">Lv {earned.level.after}</Tile>}
-          {earned.rewards?.unlocks.map((unlock) => (
-            <Tile key={`${unlock.kind}-${unlock.id}`} kind="unlock" fresh label="Unlocked">
-              {describeUnlock(tuning, unlock)}
-            </Tile>
-          ))}
-        </div>
-      )}
-      {earned !== null && earned.discoveries.length > 0 && (
-        <div class="results__discoveries">
-          {earned.discoveries.map((id) => (
-            <span key={id}>✦ {tuning.discoveries[id].name} {describeAmounts(tuning, tuning.discoveries[id].rewards, "+")}</span>
-          ))}
-        </div>
-      )}
-      <div class="results__actions">
-        <Cta disabled={!ready.value} onClick={actions.retry}>
-          {result.cleared ? "Again" : "Try again"}
-        </Cta>
-        <button type="button" class="ghost" disabled={!ready.value} onClick={actions.menu}>
-          Home
-        </button>
-        {store.device.value === "desktop" && <span class="results__hint">R again · Esc home</span>}
-      </div>
-    </div>
-  )
+      <footer class="results__actions">
+        <button type="button" class="icon-button" aria-label="Home" disabled={!enabled} onClick={() => open({ kind: "home" })}><Icon name="home" /></button>
+        <button type="button" class="icon-button" aria-label={extra?.kind === "practice" ? "Change enemies" : "Adjust party"} disabled={!enabled} onClick={() => open(extra?.kind === "practice" ? { kind: "extra", mode: "practice" } : { kind: "team" })}><Icon name={extra?.kind === "practice" ? "practice" : "team"} /></button>
+        {canContinue && <button type="button" class="icon-button" aria-label="Retry" disabled={!enabled} onClick={actions.retry}><Icon name="retry" /></button>}
+        <Cta disabled={!enabled} onClick={() => {
+          if (canContinue && next !== null) { store.menuPlay.value = next; store.menuBriefing.value = true; open({ kind: "quests", tab: "main" }) }
+          else actions.retry()
+        }}>{canContinue ? "Continue" : extra !== null ? "Again" : "Retry"}</Cta>
+      </footer>
+    </section>
+    {details.value && <Dialog title="Run details" close={() => (details.value = false)}><p>Wave {result.wave} · {result.kills} defeated · {Math.floor(result.time / 60)}:{String(Math.floor(result.time % 60)).padStart(2, "0")}</p>
+      {extra !== null ? <p>Practice records no rewards or account progress.</p> : <>
+        {!result.cleared && <p>{Math.round(result.progress * tuning.progression.loss * 100)}% of the repeat clear reward. Kills and speed do not affect rewards.</p>}
+        {earned?.discoveries.map((id) => <p key={id}>{tuning.discoveries[id].name}<br />{describeAmounts(tuning, tuning.discoveries[id].rewards, "+")} · included in the total</p>)}
+      </>}
+    </Dialog>}
+  </div>
 }

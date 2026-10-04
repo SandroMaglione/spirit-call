@@ -35,11 +35,11 @@ export interface App {
   readonly notes: ReadonlyArray<string>
   /** Calls `listener` with the account after every change. */
   readonly onAccount: (listener: (account: Account) => void) => void
-  readonly equip: (character: CharacterId, equipment: Equipment) => void
+  readonly equip: (character: CharacterId, equipment: Equipment) => Promise<Account | undefined>
   /** Takes a character to its next level with gold (refused without enough, or at the maximum). */
-  readonly train: (character: CharacterId) => void
+  readonly train: (character: CharacterId) => Promise<Account | undefined>
   /** Takes a weapon a level higher with gold (refused without enough, or at the maximum). */
-  readonly upgrade: (weapon: WeaponId) => void
+  readonly upgrade: (weapon: WeaponId) => Promise<Account | undefined>
   /** Selects the team to enter the arena with and what for; the account after it, or `undefined` when refused (not owned, or not open). */
   readonly select: (team: ReadonlyArray<CharacterId>, play: Play) => Promise<Account | undefined>
   /** Owns every character and weapon, and adds plenty of each currency (a dev tool). */
@@ -82,9 +82,9 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     onAccount: (listener) => {
       listeners.push(listener)
     },
-    equip: (character, equipment) => void run(accounts.equip(character, equipment)),
-    train: (character) => void run(accounts.train(character)),
-    upgrade: (weapon) => void run(accounts.upgrade(weapon)),
+    equip: (character, equipment) => run(accounts.equip(character, equipment)),
+    train: (character) => run(accounts.train(character)),
+    upgrade: (weapon) => run(accounts.upgrade(weapon)),
     select: (team, play) => run(accounts.select(team, play)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (play, result) => attempt(accounts.recordRun(play, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),

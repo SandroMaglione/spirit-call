@@ -41,6 +41,15 @@ const legacyProfile = JSON.stringify({
 })
 
 describe("account store", () => {
+  it("serializes simultaneous rewards without losing either save", async () => {
+    const result = await withAccount({}, (store, kv) => Effect.gen(function*() {
+      const before = yield* store.get
+      yield* Effect.all([store.earn({ gold: 7 }), store.earn({ gold: 11 })], { concurrency: "unbounded" })
+      return { before, after: yield* store.get, saved: yield* savedJson(kv, accountKey) }
+    }))
+    expect(result.after.wallet.gold).toBe((result.before.wallet.gold ?? 0) + 18)
+    expect(result.saved.wallet).toEqual(result.after.wallet)
+  })
   it("creates the account on the first visit, owning the starter set, and saves it", async () => {
     const result = await withAccount({}, (store, kv) =>
       Effect.gen(function*() {
@@ -233,13 +242,16 @@ describe("account store", () => {
       clear: Effect.void,
       size: Effect.succeed(0)
     }))
-    const failure = await Effect.runPromise(
+    const result = await Effect.runPromise(
       Effect.gen(function*() {
         const store = yield* AccountStore
-        return yield* store.select(["swordsman"], { kind: "quest", quest: "theSwarm" }).pipe(Effect.flip)
+        const before = yield* store.get
+        const failure = yield* store.earn({ gold: 1000 }).pipe(Effect.flip)
+        return { before, failure, after: yield* store.get }
       }).pipe(Effect.provide(accountLayer(options)), Effect.provide(failing))
     )
-    expect(failure._tag).toBe("AccountSaveError")
+    expect(result.failure._tag).toBe("AccountSaveError")
+    expect(result.after).toEqual(result.before)
   })
 })
 

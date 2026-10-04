@@ -37,6 +37,7 @@ import {
   Knockback,
   Member,
   Player,
+  Paused,
   Poise,
   Position,
   PrevPosition,
@@ -404,8 +405,9 @@ const burnOnBench = (
 
 /** Counts a hit-stop down; gameplay resumes once it reaches zero (see `frozen`). */
 export const TickHitStop = Game.System("Shooter/TickHitStop", {
-  resources: { hitStop: Game.System.writeResource(HitStop), time: Game.System.readResource(Time) }
+  resources: { hitStop: Game.System.writeResource(HitStop), time: Game.System.readResource(Time), paused: Game.System.readResource(Paused) }
 }, ({ resources }) => {
+  if (resources.paused.get().paused) return
   const remaining = resources.hitStop.get().remaining
   if (remaining > 0) resources.hitStop.set({ remaining: Math.max(0, remaining - resources.time.get().dt) })
 })
