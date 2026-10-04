@@ -1,8 +1,9 @@
 # Warden, Stalker and Volatile game integration
 
 The three approved models replace their existing capsules. This branch starts
-from `origin/main` at `9db5719`; the enemy definitions and mechanics already
-exist there. No content ids, stats, elemental affinities, hitboxes, attacks,
+from `origin/main` at `9db5719` and was rebased onto current `main`, retaining
+the Gale Caster and Juggernaut models, animation blending and arena dressing. The enemy
+definitions and mechanics already exist there. No content ids, stats, elemental affinities, hitboxes, attacks,
 movement, or challenge waves change.
 
 The approved static sources and review GLBs remain in each enemy's
@@ -75,7 +76,7 @@ The same pages are reachable from a phone on the Mac's network address.
 
 ## Validation
 
-- `pnpm check`: 405 tests pass, including all 11 enemy animation atlases,
+- `pnpm check`: the complete suite passes, including every enemy animation atlas,
   phase timing, ward formation/hold/cut/stun/attack priority, rendering
   cleanup, and the existing simulation fairness and burst tests.
 - `pnpm build`: passes; emits all three game GLBs. Vite retains the existing
@@ -101,4 +102,5 @@ The same pages are reachable from a phone on the Mac's network address.
   in one animation batch. Its browser console had no errors or warnings.
 
 The browser review is on this Mac, not a physical-phone performance test.
-The branch is isolated; it has not been pushed or merged.
+The work was developed and validated in the isolated
+`art/warden-stalker-volatile-game` branch and worktree.
