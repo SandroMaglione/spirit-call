@@ -1,10 +1,12 @@
 """The water spirit: a faceted, low-poly water droplet with two glowing eyes and a floating nub.
 
-Everything is measured from its character sheet (reference/, the crops of
-`sheet.png`): the body's profile is the front view's silhouette, row by row
-(widths ÷ the body's height), its depth the side view's; the eyes' size,
-height, and spacing from their white pixels; colors from the sheet's
-swatches.
+Everything comes from its character sheet (reference/, the crops of
+`sheet.png`), measured by sheet.py into sheet.json: each ring of the body
+takes its four extents from the sheet's outlines at that height (left and
+right from the front view, front and back from the side view), so the
+body's asymmetries, the cap's back curving in toward the nub included,
+are the sheet's own. The nub and the eyes are where the sheet shows them;
+colors are the sheet's swatches.
 
     blender --background --python-exit-code 1 --python art/spirits/water/build.py
 
@@ -22,43 +24,47 @@ from mathutils.bvhtree import BVHTree
 
 HERE = Path(__file__).resolve().parent
 
+import json
+
+SHEET = json.loads((HERE / "sheet.json").read_text())
 # The sheet: about 0.6 m tall with its nub; the body alone is 157 of those 190 pixels.
 BODY = 0.6 * 157 / 190
 HOVER = 0.06  # the body's underside above the floor at rest
-DEPTH = 0.92  # front to back, over side to side
-
-# The body: a fat pill (near-vertical sides, rounded edges, a little wider
-# side to side than front to back) with a full, rounded cap on top that
-# narrows to the tip and curves back toward the nub. (height, radius), in body heights,
-# from its underside; the underside is slightly concave.
-PROFILE = [
-    (0.0, 0.21), (0.045, 0.36), (0.11, 0.455), (0.19, 0.5), (0.29, 0.515), (0.4, 0.505),
-    (0.49, 0.47), (0.55, 0.415), (0.61, 0.355), (0.69, 0.305), (0.78, 0.24), (0.87, 0.16), (0.94, 0.085),
-]
-TIP = 1.0
-# The top curves back (seen from the side), and drifts a little to one side
-# (seen from the front): ring centers offset by height, in body heights.
-LEAN_BACK = 0.13
-LEAN_SIDE = -0.015
-
-
-def lean(z):
-    """Where the profile's middle is at height `z`: straight through the pill, then the cap curving back toward the tip."""
-    t = max(0.0, min(1.0, (z - 0.5) / 0.5))
-    t = t * t * (3 - 2 * t)
-    return Vector((LEAN_SIDE * t ** 1.3, LEAN_BACK * t ** 1.6, 0))
-UNDERSIDE = 0.025  # the underside's middle, above its rim
+# Rings at these heights (body heights), taking the sheet's outline there.
+RINGS = [0.02, 0.06, 0.12, 0.2, 0.3, 0.4, 0.5, 0.59, 0.67, 0.75, 0.83, 0.91]
+UNDERSIDE = 0.03  # the underside's middle, above its rim (slightly concave)
 SEGMENTS = 10
-WIDTH = 1.04  # wider side to side
-JITTER = 0.035  # random radial unevenness, for facets that look cut, not turned
+JITTER = 0.02  # random radial unevenness, for facets that look cut, not turned
 
-# Eyes: tall ovals, centered on its face (34° apart round its front), on
-# the pill's near-vertical band (35% of its height).
-EYE_HEIGHT = 0.35
-EYE_APART = math.radians(34)
-EYE_SIZE = (0.1, 0.22)  # width, height (body heights)
-NUB_RADIUS = 0.098
-NUB_HEIGHT = 1.134  # its center, above the body's underside
+# Eyes: the front view's size and spacing, placed symmetric on its face (the
+# sheet's front view is turned a little, so one eye sits off to the side).
+# Their height follows the isometric hero view, the game's camera: there
+# they sit at 31% and 23% of the silhouette's height, which this model only
+# shows with the eyes at 41% of the body's height. The sheet's front view
+# draws them at 26%: its isometric and front views disagree (see README).
+FRONT_EYES = SHEET["front"]["eyes"]
+EYE_HEIGHT = 0.41
+EYE_SIZE = (sum(e["width"] for e in FRONT_EYES) / len(FRONT_EYES) * 1.05, sum(e["tall"] for e in FRONT_EYES) / len(FRONT_EYES))
+EYE_APART = abs(FRONT_EYES[0]["offset"] - FRONT_EYES[1]["offset"])  # between centers, as the front view shows them
+
+
+def extents(view, z):
+    """The sheet's outline at height `z` in `view`: (low edge, high edge), in body heights from its base's middle."""
+    rows = SHEET[view]["outline"]
+    below = max((r for r in rows if r[0] <= z), key=lambda r: r[0], default=rows[0])
+    above = min((r for r in rows if r[0] >= z), key=lambda r: r[0], default=rows[-1])
+    t = 0 if above[0] == below[0] else (z - below[0]) / (above[0] - below[0])
+    return below[1] + (above[1] - below[1]) * t, below[2] + (above[2] - below[2]) * t
+
+
+def ring_point(z, a):
+    """The body's surface at height `z`, `a` radians round from its front (toward its left): four quarter-ellipses through the sheet's extents."""
+    right, left = extents("front", z)  # front view: screen left is its right (-X)
+    back, front = extents("side", z)  # side view: its front is on screen right (-Y)
+    x = math.sin(a) * (left if math.sin(a) > 0 else -right)
+    y = -math.cos(a) * (front if math.cos(a) > 0 else -back)
+    return Vector((x, y, z))
+
 
 # The sheet's swatches.
 COLORS = {"deep": "#1A5CE6", "base": "#2E7BFF", "mid": "#44B6FF", "light": "#8EEBFF", "highlight": "#E0F9FF", "eye": "#FFFFFF"}
@@ -86,18 +92,17 @@ def facet_color(normal, height, rng):
     return mix(base, mid, (t - 0.3) / 0.4) if t < 0.7 else mix(mid, bright, (t - 0.7) / 0.3)
 
 
-def lathe(bm, rng):
-    """The body: rings of the profile, each turned half a segment from the last (triangular facets), unevenly."""
+def loft(bm, rng):
+    """The body: rings through the sheet's outlines, each turned half a segment from the last (triangular facets), a little uneven."""
     rings = []
-    for i, (z, r) in enumerate(PROFILE):
+    for i, z in enumerate(RINGS):
         turn = (i % 2) * math.pi / SEGMENTS
         ring = []
         for k in range(SEGMENTS):
-            a = 2 * math.pi * k / SEGMENTS + turn
-            rr = r * (1 + rng.uniform(-JITTER, JITTER))
-            zz = z + rng.uniform(-JITTER, JITTER) * 0.25 * (0.3 if i == 0 else 1)
-            middle = lean(z)
-            ring.append(bm.verts.new(((rr * math.sin(a) * WIDTH + middle.x) * BODY, (-rr * math.cos(a) * DEPTH + middle.y) * BODY, zz * BODY + HOVER)))
+            p = ring_point(z, 2 * math.pi * k / SEGMENTS + turn)
+            p.x *= 1 + rng.uniform(-JITTER, JITTER)
+            p.y *= 1 + rng.uniform(-JITTER, JITTER)
+            ring.append(bm.verts.new((p.x * BODY, p.y * BODY, (z + rng.uniform(-0.006, 0.006)) * BODY + HOVER)))
         rings.append(ring)
     # Bands between rings: two triangles per step, zigzagging with the half turn.
     for i in range(len(rings) - 1):
@@ -111,7 +116,10 @@ def lathe(bm, rng):
             else:
                 bm.faces.new((lower[k], lower[j], upper[j]))
                 bm.faces.new((lower[k], upper[j], upper[k]))
-    tip = bm.verts.new(tuple(lean(TIP) * BODY + Vector((0, 0, TIP * BODY + HOVER))))
+    # The tip: where the sheet's outlines close at the top.
+    right, left = extents("front", 0.995)
+    back, front = extents("side", 0.995)
+    tip = bm.verts.new((((right + left) / 2) * BODY, -((back + front) / 2) * BODY, BODY + HOVER))
     for k in range(SEGMENTS):
         bm.faces.new((rings[-1][k], rings[-1][(k + 1) % SEGMENTS], tip))
     bottom = bm.verts.new((0, 0, UNDERSIDE * BODY + HOVER))
@@ -150,33 +158,30 @@ def material(name, color=None, emission=None, strength=1.0, vertex_colors=False)
 
 
 def eye(bm, tree, side):
-    """A tall glowing oval: a thin flat plate, upright, facing straight out from its place on the face.
+    """A tall glowing oval: a thin flat plate, upright, facing straight ahead (both eyes alike).
 
     Its front is set just in front of the body's surface at every point of
-    its outline (cast from outside), so it never sinks into the facets or
+    its outline (cast from in front), so it never sinks into the facets or
     tilts with them: straight from the front, whole from above.
     """
-    a = side * EYE_APART / 2
-    z = EYE_HEIGHT * BODY + HOVER
-    facing = Vector((math.sin(a) / WIDTH, -math.cos(a) / DEPTH, 0)).normalized()
-    across = Vector((0, 0, 1)).cross(facing).normalized()
+    facing = Vector((0, -1, 0))
+    across = Vector((1, 0, 0))
     up = Vector((0, 0, 1))
-    hit, _, _, _ = tree.ray_cast(Vector((0, 0, z)) + facing * 1.0, -facing)
+    center = Vector((side * EYE_APART / 2 * BODY, 0, EYE_HEIGHT * BODY + HOVER))
     w, h = EYE_SIZE[0] / 2 * BODY, EYE_SIZE[1] / 2 * BODY
     outline = [(math.cos(t) * w, math.sin(t) * h) for t in (2 * math.pi * k / 12 for k in range(12))]
-    # How far out the surface comes, along `facing`, anywhere under the oval.
-    reach = 0.0
+    # How far forward the surface comes anywhere under the oval.
+    reach = -1.0
     for x, y in outline + [(0, 0)]:
-        point = hit + across * x + up * y
-        found, _, _, _ = tree.ray_cast(point + facing * 0.3, -facing)
+        found, _, _, _ = tree.ray_cast(center + across * x + up * y + facing * 1.0, -facing)
         if found is not None:
-            reach = max(reach, (found - hit).dot(facing))
-    front = hit + facing * (reach + 0.002)
-    back = hit - facing * 0.02
+            reach = max(reach, -found.y)
+    front = Vector((center.x, -(reach + 0.002), center.z))
+    back = front - facing * 0.025
     front_ring = [bm.verts.new(front + across * x + up * y) for x, y in outline]
     back_ring = [bm.verts.new(back + across * x + up * y) for x, y in outline]
-    bm.faces.new(front_ring[::-1] if facing.dot(across.cross(up)) > 0 else front_ring)
-    bm.faces.new(back_ring if facing.dot(across.cross(up)) > 0 else back_ring[::-1])
+    bm.faces.new(front_ring)
+    bm.faces.new(back_ring[::-1])
     for k in range(12):
         j = (k + 1) % 12
         bm.faces.new((front_ring[k], front_ring[j], back_ring[j], back_ring[k]))
@@ -189,7 +194,7 @@ def build():
 
     # Body and eyes: one mesh, two materials.
     bm = bmesh.new()
-    lathe(bm, rng)
+    loft(bm, rng)
     body_faces = len(bm.faces)
     bm.normal_update()
     tree = BVHTree.FromBMesh(bm)
@@ -212,24 +217,26 @@ def build():
 
     # The nub: a small faceted ball over the tip (its own object, to bob on its own).
     bm = bmesh.new()
-    bmesh.ops.create_icosphere(bm, subdivisions=1, radius=NUB_RADIUS * BODY)
+    nub_spec = {"radius": (SHEET["front"]["nub"]["radius"] + SHEET["side"]["nub"]["radius"]) / 2,
+                "height": (SHEET["front"]["nub"]["height"] + SHEET["side"]["nub"]["height"]) / 2}
+    bmesh.ops.create_icosphere(bm, subdivisions=1, radius=nub_spec["radius"] * BODY)
     bm.normal_update()
     nub_mesh = bpy.data.meshes.new("Nub")
     bm.to_mesh(nub_mesh)
     bm.free()
     for poly in nub_mesh.polygons:
         poly.use_smooth = False
-    color_faces(nub_mesh, rng, lambda p: 1.05 + p.z / (NUB_RADIUS * BODY) * 0.3)
+    color_faces(nub_mesh, rng, lambda p: 1.05 + p.z / (nub_spec["radius"] * BODY) * 0.3)
     nub_mesh.materials.append(mesh.materials[0])
     nub = bpy.data.objects.new("Nub", nub_mesh)
-    # Over the tip, following its curve back.
-    nub.location = tuple(lean(TIP) * 1.35 * BODY + Vector((0, 0, NUB_HEIGHT * BODY + HOVER)))
+    # Where the sheet shows it: over the tip, behind it (front view offset to its right, side view offset back).
+    nub.location = (SHEET["front"]["nub"]["offset"] * BODY, -SHEET["side"]["nub"]["offset"] * BODY, nub_spec["height"] * BODY + HOVER)
     nub.parent = body
     collection.objects.link(nub)
 
     tris = sum(len(p.vertices) - 2 for m in (mesh, nub_mesh) for p in m.polygons)
     bpy.ops.wm.save_as_mainfile(filepath=str(HERE / "water-spirit.blend"))
-    print(f"built: {tris} triangles, {BODY + HOVER + (NUB_HEIGHT - 1 + NUB_RADIUS) * BODY:.3f} m tall")
+    print(f"built: {tris} triangles; eyes at {EYE_HEIGHT:.3f}, {EYE_APART:.3f} apart, {EYE_SIZE[0]:.3f} × {EYE_SIZE[1]:.3f}")
 
 
 build()
