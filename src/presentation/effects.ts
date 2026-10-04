@@ -7,12 +7,14 @@ import { Vector3 } from "three"
 
 import { isMelee } from "../content/attacks.ts"
 import { projection, view } from "../config/view.ts"
-import { toScreen } from "../math/iso.ts"
+import { toScreen, toScreenAt } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Body, Broke, Cast, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
+import { arenaOf } from "../features/arena.ts"
+import { Action, Body, Broke, Camera, Cast, Challenge, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { RenderHostValue } from "./host-types.ts"
+import { arenaLooks } from "./looks.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
 
 /** A world direction as a unit direction on screen. */
@@ -316,6 +318,25 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
     const distance = Math.sqrt(Math.random()) * pool.radius
     const from = toScreen(projection, { x: pool.center.x + Math.cos(angle) * distance, y: pool.center.y + Math.sin(angle) * distance })
     services.host.fx.mote(from, (Math.random() - 0.5) * 20, -50 - Math.random() * 60, { color: view.states.burning, size: 3 + Math.random() * 3, life: 0.6, gravity: -60, drag: 1 })
+  }
+})
+
+/** The flames in the arena's scenery (see `ArenaLook.fires`): each near the camera flickers and sheds an ember now and then. */
+export const ShedArenaEmbers = Game.System("Shooter/ShedArenaEmbers", {
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge), camera: Game.System.readResource(Camera) },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ resources, services }) => {
+  const fires = arenaLooks[arenaOf(resources.tuning.get(), resources.challenge.get())].fires
+  if (fires === undefined) return
+  const camera = resources.camera.get()
+  const spec = view.arenaFires
+  const seconds = services.clock.frameSeconds
+  for (const fire of fires) {
+    if (Math.hypot(fire.at.x - camera.x, fire.at.y - camera.y) > spec.reach) continue
+    const from = toScreenAt(projection, fire.at, fire.height)
+    // The flame: short, fat motes that barely rise; then an ember off it now and then.
+    if (Math.random() < seconds * spec.flames) services.host.fx.mote({ x: from.x + (Math.random() - 0.5) * 8, y: from.y }, (Math.random() - 0.5) * 10, -22, { color: Math.random() < 0.5 ? spec.flame : spec.ember, size: 6 + Math.random() * 4, life: 0.3, gravity: -40, drag: 1 })
+    if (Math.random() < seconds * spec.embers) services.host.fx.mote(from, (Math.random() - 0.5) * 26, -45 - Math.random() * 40, { color: spec.ember, size: 2 + Math.random() * 2, life: 0.9, gravity: -50, drag: 0.8 })
   }
 })
 

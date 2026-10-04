@@ -254,7 +254,7 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
     case "totem":
       return totemNode(assets, renderable.element)
     case "hazard":
-      return hazardNode(renderable.element, renderable.half)
+      return hazardNode(renderable.element, renderable.half, arenaLooks[renderable.arena].pools)
   }
 }
 

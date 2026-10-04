@@ -82,7 +82,7 @@ export const SpawnArena = Game.System("Shooter/SpawnArena", {
   for (const { element, box } of hazardBoxes(tuning, id)) {
     const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
     const half = { x: (box.maxX - box.minX) / 2, y: (box.maxY - box.minY) / 2 }
-    commands.spawnIn(RunScope, Game.Command.spawn([Position, center], [Renderable, { kind: "hazard", element, half }], [Ground, {
+    commands.spawnIn(RunScope, Game.Command.spawn([Position, center], [Renderable, { kind: "hazard", element, half, arena: id }], [Ground, {
       element,
       center,
       radius: Math.hypot(half.x, half.y),

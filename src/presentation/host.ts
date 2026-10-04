@@ -155,7 +155,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   const camera = makeCamera()
   const light = view.light
   // Light intensities are physical: π makes a fully lit face show its own color.
-  scene.add(new HemisphereLight(light.sky, light.ground, light.skyIntensity * Math.PI))
+  const sky = new HemisphereLight(light.sky, light.ground, light.skyIntensity * Math.PI)
+  scene.add(sky)
   const sun = new DirectionalLight(0xffffff, light.sunIntensity * Math.PI)
   sun.position.set(light.sun.x, light.sun.y, light.sun.z)
   scene.add(sun)
@@ -167,8 +168,14 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   const showArena = (id: ArenaId, holes: ReadonlyArray<Box>) => {
     if (dressing?.id === id) return
     dressing?.dressing.dispose()
-    dressing = { id, dressing: dressArena(assets, arenaLooks[id], arena, holes, grid) }
+    const look = arenaLooks[id]
+    dressing = { id, dressing: dressArena(assets, look, arena, holes, grid) }
     scene.add(dressing.dressing.object)
+    // What shows past its surroundings, and the arena's own light.
+    renderer.setClearColor(look.surround?.background ?? view.background)
+    sky.color.set(look.light?.sky ?? light.sky)
+    sky.groundColor.set(look.light?.ground ?? light.ground)
+    sun.color.set(look.light?.sun ?? 0xffffff)
   }
   showArena("courtyard", [])
   const telegraphs = new Shapes({ order: floorLayers.telegraphs.order }).onFloor(floorLayers.telegraphs.height)

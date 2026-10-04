@@ -11,7 +11,7 @@ import { DrawEnemies, DrawPlayer } from "./actors.ts"
 import { AnimateActors, PlayMoments } from "./animate.ts"
 import { DrawReticle, DrawTouchAim } from "./aim.ts"
 import { PlaySounds } from "./audio.ts"
-import { ReactToHits, ShedSpiritDrops, ShedStateMotes, SpawnFx, UpdateFx } from "./effects.ts"
+import { ReactToHits, ShedArenaEmbers, ShedSpiritDrops, ShedStateMotes, SpawnFx, UpdateFx } from "./effects.ts"
 import { SyncDamageMeter, SyncHud, SyncTeam, SyncTouchPad } from "./hud.ts"
 import { ApplyCamera, FadeOccluders, InterpolateActors, OrientBolts, SyncArena, SyncNodes } from "./scene.ts"
 import { DrawOffscreenEnemies } from "./offscreen.ts"
@@ -35,6 +35,7 @@ export const frame = Game.Schedule(
   SpawnFx,
   ReactToHits,
   ShedStateMotes,
+  ShedArenaEmbers,
   ShedSpiritDrops,
   UpdateFx,
   FadeOccluders,

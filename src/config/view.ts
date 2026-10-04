@@ -215,6 +215,8 @@ export const view = {
    * they hover).
    */
   disc: { color: 0x9fe8ff, ring: 0x4aa8ff, turnsPerSecond: 3, size: 1, height: 8 },
+  /** Flames in an arena's scenery (see `ArenaLook.fires`): their two colors, flame motes and embers per second each, and how near the camera (world units) one must be to burn. */
+  arenaFires: { flame: 0xffc04a, ember: 0xff7a2e, flames: 14, embers: 2.5, reach: 1100 },
   /** The puff of water putting fire out. */
   steam: 0xe6edf3,
   /** A body slammed into a wall by wind, and stunned: its color, and the stars circling over its head. */

@@ -26,6 +26,17 @@ import wallLowUrl from "../../../art/environment/basalt-citadel/models/wall-low.
 import wallStraightUrl from "../../../art/environment/basalt-citadel/models/wall-straight.glb?url"
 import warTableUrl from "../../../art/environment/basalt-citadel/models/war-table.glb?url"
 import weaponRackUrl from "../../../art/environment/basalt-citadel/models/weapon-rack.glb?url"
+import archFreeUrl from "../../../art/environment/basalt-citadel/models/arch-free.glb?url"
+import batteringRamUrl from "../../../art/environment/basalt-citadel/models/battering-ram.glb?url"
+import chainAnchorUrl from "../../../art/environment/basalt-citadel/models/chain-anchor.glb?url"
+import floorInsetUrl from "../../../art/environment/basalt-citadel/models/floor-inset.glb?url"
+import floorRadialUrl from "../../../art/environment/basalt-citadel/models/floor-radial.glb?url"
+import floorSmallUrl from "../../../art/environment/basalt-citadel/models/floor-small.glb?url"
+import pillarBrokenUrl from "../../../art/environment/basalt-citadel/models/pillar-broken.glb?url"
+import victoryStandardUrl from "../../../art/environment/basalt-citadel/models/victory-standard.glb?url"
+import wallTallUrl from "../../../art/environment/basalt-citadel/models/wall-tall.glb?url"
+import wallWindowUrl from "../../../art/environment/basalt-citadel/models/wall-window.glb?url"
+import watchtowerUrl from "../../../art/environment/basalt-citadel/models/watchtower.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -49,5 +60,16 @@ export const citadelModels = {
   citadelWarTable: piece(warTableUrl, 0.98, [1.8, 1]),
   citadelWeaponRack: piece(weaponRackUrl, 1.59, [1.4, 0.4]),
   citadelShieldRack: piece(shieldRackUrl, 1.45, [1.4, 0.42]),
-  citadelThroneBroken: piece(throneBrokenUrl, 1.1, [1.5659, 1.1149])
+  citadelThroneBroken: piece(throneBrokenUrl, 1.1, [1.5659, 1.1149]),
+  citadelArchFree: piece(archFreeUrl, 3.2304, [2.8, 0.4]),
+  citadelBatteringRam: piece(batteringRamUrl, 1.24, [2.4, 1]),
+  citadelChainAnchor: piece(chainAnchorUrl, 0.925, [1.292, 0.8202]),
+  citadelFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  citadelFloorRadial: piece(floorRadialUrl, 0.14, [2, 2]),
+  citadelFloorSmall: piece(floorSmallUrl, 0.14, [1, 1]),
+  citadelPillarBroken: piece(pillarBrokenUrl, 1.08, [1, 1]),
+  citadelVictoryStandard: piece(victoryStandardUrl, 2.6, [1.15, 0.4]),
+  citadelWallTall: piece(wallTallUrl, 1.8, [2, 0.5275]),
+  citadelWallWindow: piece(wallWindowUrl, 2.3, [2, 0.5275]),
+  citadelWatchtower: piece(watchtowerUrl, 2.97, [1.7, 1.7])
 } as const

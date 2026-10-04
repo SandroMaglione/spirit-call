@@ -15,6 +15,7 @@ import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Game, Ground, RenderNodes } from "../schema.ts"
 import type { HazardNode } from "./host-types.ts"
+import type { PoolLook, PoolTones } from "./looks.ts"
 
 /** A flat shape lying on the floor (its normal up). */
 const flat = <G extends BufferGeometry>(geometry: G): G => geometry.rotateX(-Math.PI / 2)
@@ -27,16 +28,11 @@ const spread = (count: number, width: number, depth: number) =>
     return { x: u * width, z: v * depth }
   })
 
-/** One tone of a pool's surface: its color, its edge band, its marks. */
-interface Tones {
-  readonly surface: number
-  readonly band: number
-  readonly mark: number
-}
-
-export const hazardNode = (element: "fire" | "water", half: Vec2): HazardNode => {
+/** A pool of `element` filling `half` around its center, in the arena's own tones and stone rim if it has them (`pools`). */
+export const hazardNode = (element: "fire" | "water", half: Vec2, pools: PoolLook | undefined): HazardNode => {
   const spec = view.hazards
-  const look = element === "water" ? spec.water : spec.fire
+  const look = element === "water" ? pools?.water ?? spec.water : pools?.fire ?? spec.fire
+  const rim = pools?.rim
   const width = half.x * 2
   const depth = half.y * 2
   const geometries: Array<BufferGeometry> = []
@@ -50,25 +46,32 @@ export const hazardNode = (element: "fire" | "water", half: Vec2): HazardNode =>
   const root = new Group()
 
   /** The surface in `tones`: flat, its band along the edges, its marks. */
-  const surface = (tones: Tones): Group => {
+  const surface = (tones: PoolTones): Group => {
     const group = new Group()
     // Level with the floor's top (a hair over it, so the two never flicker).
     const level = spec.level
     const base = new Mesh(own(flat(new PlaneGeometry(width, depth))), paint(tones.surface))
     base.position.y = level
     group.add(base)
-    // The band: four strips just inside the edges.
-    const band = paint(tones.band)
-    const b = spec.band
-    for (const [w, d, x, z] of [[width, b, 0, -depth / 2 + b / 2], [width, b, 0, depth / 2 - b / 2], [b, depth - b * 2, -width / 2 + b / 2, 0], [b, depth - b * 2, width / 2 - b / 2, 0]] as const) {
-      const strip = new Mesh(own(flat(new PlaneGeometry(w, d))), band)
-      strip.position.set(x, level + 0.2, z)
-      group.add(strip)
+    // Four strips `thick` wide, `inset` inside the edges.
+    const frame = (material: MeshBasicMaterial, inset: number, thick: number, lift: number) => {
+      const w = width - inset * 2
+      const d = depth - inset * 2
+      for (const [sx, sz, x, z] of [[w, thick, 0, -d / 2 + thick / 2], [w, thick, 0, d / 2 - thick / 2], [thick, d - thick * 2, -w / 2 + thick / 2, 0], [thick, d - thick * 2, w / 2 - thick / 2, 0]] as const) {
+        const strip = new Mesh(own(flat(new PlaneGeometry(sx, sz))), material)
+        strip.position.set(x, level + lift, z)
+        group.add(strip)
+      }
     }
+    // The arena's stone rim along the edges, then the band just inside it.
+    const edge = rim?.width ?? 0
+    if (rim !== undefined) frame(paint(rim.color), 0, edge, 0.3)
+    const b = spec.band
+    frame(paint(tones.band), edge, b, 0.2)
     // The marks: streaks of light across water, hot spots on fire.
     const mark = paint(tones.mark)
     const count = Math.max(2, Math.round((width * depth) / spec.markArea))
-    for (const at of spread(count, width - b * 4, depth - b * 4)) {
+    for (const at of spread(count, width - (edge + b * 2) * 2, depth - (edge + b * 2) * 2)) {
       const shape = element === "water"
         ? own(flat(new PlaneGeometry(spec.streak.length, spec.streak.width)).rotateY(Math.PI / 4))
         : own(flat(new CircleGeometry(spec.spot, 6)))

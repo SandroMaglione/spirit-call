@@ -202,16 +202,66 @@ export type WallLook =
   | { readonly kind: "run"; readonly model: ModelId }
   | { readonly kind: "pillar"; readonly models: ReadonlyArray<ModelId> }
 
-/** The floor: the flat `grid`, or `tiles` of square floor pieces (variants picked by place, turned at random) over a base of `color`. */
+/** One floor tile chosen by hand: the piece lying on the tile at `column`, `row` (from 0, as hazards count them). */
+export interface Inlay {
+  readonly model: ModelId
+  readonly column: number
+  readonly row: number
+}
+
+/**
+ * The floor: the flat `grid`, or `tiles` of square floor pieces (variants
+ * picked by place, turned at random) over a base of `color`. The tiles along
+ * the walls can be others (`border`), and single tiles chosen by hand
+ * (`inlays`: a medallion in the middle).
+ */
 export type FloorLook =
   | { readonly kind: "grid"; readonly color: number; readonly line: number; readonly spacing: number }
-  | { readonly kind: "tiles"; readonly tiles: ReadonlyArray<ModelId>; readonly color: number }
+  | { readonly kind: "tiles"; readonly tiles: ReadonlyArray<ModelId>; readonly color: number; readonly border?: ReadonlyArray<ModelId>; readonly inlays?: ReadonlyArray<Inlay> }
 
-/** A model placed for looks only (it blocks nothing): at a floor point, turned `turn` radians, at the arena's scale. */
+/** A model placed for looks only (it blocks nothing): at a floor point, turned `turn` radians, at the arena's scale (times `scale`, for what stands far off). */
 export interface Scenery {
   readonly model: ModelId
   readonly at: Vec2
   readonly turn: number
+  readonly scale?: number
+}
+
+/**
+ * What lies around the arena, beyond its walls: the ground there (`ground`,
+ * fading into `background` over `reach` world units; `background` fills
+ * the rest of the screen) and what stands on it (`backdrop`: placed like
+ * scenery, outside the floor). The camera looks from the south-east, so
+ * what stands north and west is behind the arena and can be tall; what
+ * stands south and east is in front of it and must stay low and far enough
+ * not to cover the floor (`test/looks.test.ts`).
+ */
+export interface Surround {
+  readonly background: number
+  readonly ground: number
+  readonly reach: number
+  readonly backdrop: ReadonlyArray<Scenery>
+}
+
+/** One tone of a pool's surface: its color, the band along its edges, the marks on it. */
+export interface PoolTones {
+  readonly surface: number
+  readonly band: number
+  readonly mark: number
+}
+
+/** An arena's own pools (see `presentation/hazards.ts`): their tones in place of `view.hazards`', and a stone `rim` (its color and width) framing them. */
+export interface PoolLook {
+  readonly fire?: PoolTones
+  readonly water?: PoolTones
+  readonly rim?: { readonly color: number; readonly width: number }
+}
+
+/** The light on an arena, in place of `view.light`'s colors (the intensities stay). */
+export interface LightLook {
+  readonly sky: number
+  readonly ground: number
+  readonly sun: number
 }
 
 /**
@@ -226,7 +276,16 @@ export interface ArenaLook {
   readonly floor: FloorLook
   readonly walls: Readonly<Record<WallPlacement, WallLook>>
   readonly scenery: ReadonlyArray<Scenery>
+  readonly surround?: Surround
+  readonly pools?: PoolLook
+  readonly light?: LightLook
+  /** Where a flame burns in its scenery (a brazier's bowl: a floor point and how high over it, in world units): it flickers and sheds embers. */
+  readonly fires?: ReadonlyArray<{ readonly at: Vec2; readonly height: number }>
 }
+
+/** `count` copies of a piece in a row: the first at `from`, each `step` further. */
+const row = (model: ModelId, from: Vec2, step: Vec2, count: number, turn: number, scale?: number): ReadonlyArray<Scenery> =>
+  Array.from({ length: count }, (_, index) => ({ model, at: { x: from.x + step.x * index, y: from.y + step.y * index }, turn, ...(scale === undefined ? {} : { scale }) }))
 
 /** The placeholder arena: the grid floor and plain boxes. */
 export const placeholderArena: ArenaLook = {
@@ -361,14 +420,35 @@ export const sanctuaryArena: ArenaLook = {
   ]
 }
 
-/** The basalt citadel (`art/environment/basalt-citadel`): dark stone, braziers and banners, a broken throne at the back. */
+/**
+ * The basalt citadel (`art/environment/basalt-citadel`): a keep's court of
+ * dark stone, a medallion in its middle, braziers and banners, a broken
+ * throne at the back. Behind it stand the keep's tall walls, its gate, and
+ * watchtowers, on a rock of basalt columns that falls away in front.
+ */
 export const citadelArena: ArenaLook = {
   unitsPerMeter: 70,
-  floor: { kind: "tiles", tiles: ["citadelFloorPlain", "citadelFloorWorn", "citadelFloorPlain", "citadelFloorCracked"], color: 0x1c1a1d },
+  floor: {
+    kind: "tiles",
+    tiles: ["citadelFloorPlain", "citadelFloorPlain", "citadelFloorPlain", "citadelFloorCracked"],
+    color: 0x1c1a1d,
+    border: ["citadelFloorWorn"],
+    inlays: [
+      { model: "citadelFloorRadial", column: 6, row: 6 },
+      { model: "citadelFloorInset", column: 5, row: 6 },
+      { model: "citadelFloorInset", column: 7, row: 6 },
+      { model: "citadelFloorInset", column: 6, row: 5 },
+      { model: "citadelFloorInset", column: 6, row: 7 },
+      { model: "citadelFloorSmall", column: 5, row: 5 },
+      { model: "citadelFloorSmall", column: 7, row: 5 },
+      { model: "citadelFloorSmall", column: 5, row: 7 },
+      { model: "citadelFloorSmall", column: 7, row: 7 }
+    ]
+  },
   walls: {
     back: { kind: "run", model: "citadelWallStraight" },
     front: { kind: "run", model: "citadelWallLow" },
-    sorted: { kind: "pillar", models: ["citadelPillarLarge", "citadelPillarSmall"] },
+    sorted: { kind: "pillar", models: ["citadelPillarLarge", "citadelPillarLarge", "citadelPillarBroken", "citadelPillarSmall"] },
     inner: { kind: "run", model: "citadelWallLow" }
   },
   scenery: [
@@ -387,6 +467,65 @@ export const citadelArena: ArenaLook = {
     { model: "citadelBasaltSpires", at: { x: 1300, y: 1760 }, turn: 0.6 },
     { model: "citadelBrazierSmall", at: { x: 70, y: 70 }, turn: 0 },
     { model: "citadelBrazierSmall", at: { x: 1730, y: 70 }, turn: 0 }
+  ],
+  surround: {
+    background: 0x0b0d12,
+    ground: 0x23262e,
+    reach: 1100,
+    backdrop: [
+      // The keep's tall walls behind the north and west edges, a barred window now and then.
+      ...row("citadelWallTall", { x: -50, y: -70 }, { x: 140, y: 0 }, 15, 0).filter((_, index) => index % 4 !== 2 && index !== 6 && index !== 7),
+      ...row("citadelWallWindow", { x: 230, y: -70 }, { x: 560, y: 0 }, 4, 0).filter((_, index) => index !== 1),
+      ...row("citadelWallTall", { x: -70, y: -50 }, { x: 0, y: 140 }, 15, Math.PI / 2).filter((_, index) => index % 4 !== 2),
+      ...row("citadelWallWindow", { x: -70, y: 230 }, { x: 0, y: 560 }, 4, Math.PI / 2),
+      // The gate behind the throne, between two standards.
+      { model: "citadelArchFree", at: { x: 860, y: -80 }, turn: 0, scale: 1.5 },
+      { model: "citadelVictoryStandard", at: { x: 600, y: -150 }, turn: 0, scale: 1.3 },
+      { model: "citadelVictoryStandard", at: { x: 1120, y: -150 }, turn: 0, scale: 1.3 },
+      // Watchtowers at the three far corners.
+      { model: "citadelWatchtower", at: { x: -170, y: -170 }, turn: 0, scale: 1.7 },
+      { model: "citadelWatchtower", at: { x: 1970, y: -170 }, turn: 0, scale: 1.4 },
+      { model: "citadelWatchtower", at: { x: -170, y: 1970 }, turn: 0, scale: 1.4 },
+      // The rock behind: basalt columns, bigger the further off.
+      { model: "citadelBasaltSpires", at: { x: 250, y: -330 }, turn: 0.4, scale: 2.6 },
+      { model: "citadelBasaltSpires", at: { x: 520, y: -560 }, turn: 2.1, scale: 3.6 },
+      { model: "citadelBasaltSpires", at: { x: 1380, y: -300 }, turn: 1.3, scale: 2.2 },
+      { model: "citadelBasaltSpires", at: { x: 1650, y: -520 }, turn: 3.0, scale: 3.2 },
+      { model: "citadelBasaltSpires", at: { x: 1050, y: -700 }, turn: 0.9, scale: 4 },
+      { model: "citadelBasaltRubble", at: { x: 820, y: -330 }, turn: 0.2, scale: 2 },
+      { model: "citadelBasaltSpires", at: { x: -330, y: 300 }, turn: 1.8, scale: 2.4 },
+      { model: "citadelBasaltSpires", at: { x: -560, y: 700 }, turn: 0.5, scale: 3.6 },
+      { model: "citadelBasaltSpires", at: { x: -300, y: 1250 }, turn: 2.6, scale: 2.2 },
+      { model: "citadelBasaltSpires", at: { x: -620, y: 1500 }, turn: 1.1, scale: 3.2 },
+      { model: "citadelBasaltRubble", at: { x: -330, y: 900 }, turn: 1.4, scale: 2 },
+      { model: "citadelBasaltSpires", at: { x: -520, y: -480 }, turn: 2.2, scale: 4 },
+      // In front, the rock falls away: only low things, well clear of the walls.
+      { model: "citadelBasaltRubble", at: { x: 300, y: 1960 }, turn: 0.6, scale: 1.6 },
+      { model: "citadelBatteringRam", at: { x: 820, y: 2030 }, turn: 0.3 },
+      { model: "citadelBasaltRubble", at: { x: 1350, y: 1990 }, turn: 2.4, scale: 2 },
+      { model: "citadelChainAnchor", at: { x: 1620, y: 1960 }, turn: 1.0 },
+      { model: "citadelBasaltSpires", at: { x: 560, y: 2260 }, turn: 1.9, scale: 1.4 },
+      { model: "citadelBasaltSpires", at: { x: 1500, y: 2320 }, turn: 0.3, scale: 1.6 },
+      { model: "citadelBasaltRubble", at: { x: 1960, y: 350 }, turn: 1.2, scale: 1.6 },
+      { model: "citadelChainAnchor", at: { x: 1970, y: 900 }, turn: 2.6 },
+      { model: "citadelBasaltRubble", at: { x: 1990, y: 1400 }, turn: 0.1, scale: 2 },
+      { model: "citadelBasaltSpires", at: { x: 2280, y: 650 }, turn: 2.7, scale: 1.5 },
+      { model: "citadelBasaltSpires", at: { x: 2330, y: 1600 }, turn: 0.8, scale: 1.4 },
+      { model: "citadelBasaltRubble", at: { x: 2050, y: 2050 }, turn: 0.9, scale: 2.4 }
+    ]
+  },
+  // Fire pits framed in the court's stone, their fire a deeper ember than the plain orange.
+  pools: {
+    fire: { surface: 0xd9481c, band: 0x4a1a12, mark: 0xffb347 },
+    rim: { color: 0x4a5163, width: 11 }
+  },
+  // Cold light on the stone, so the braziers' and the pits' fire stands out.
+  light: { sky: 0xeef2ff, ground: 0x84889a, sun: 0xfff4e6 },
+  fires: [
+    { at: { x: 620, y: 50 }, height: 84 },
+    { at: { x: 1180, y: 50 }, height: 84 },
+    { at: { x: 70, y: 70 }, height: 58 },
+    { at: { x: 1730, y: 70 }, height: 58 }
   ]
 }
 
@@ -500,7 +639,8 @@ export const modelsInLooks = (): ReadonlySet<ModelId> => {
       if (look.kind === "pillar") for (const id of look.models) ids.add(id)
     }
     if (arena.floor.kind === "tiles") for (const id of arena.floor.tiles) ids.add(id)
-    for (const scenery of arena.scenery) ids.add(scenery.model)
+    if (arena.floor.kind === "tiles") for (const id of [...(arena.floor.border ?? []), ...(arena.floor.inlays ?? []).map((inlay) => inlay.model)]) ids.add(id)
+    for (const scenery of [...arena.scenery, ...(arena.surround?.backdrop ?? [])]) ids.add(scenery.model)
   }
   return ids
 }
