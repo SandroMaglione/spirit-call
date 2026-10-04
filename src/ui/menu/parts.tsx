@@ -84,8 +84,8 @@ export const Cta = ({ onClick, disabled, children }: { readonly onClick: () => v
 )
 
 /** Where a character's model stands, holding `weapon` and playing her idle (drawn by the presentation). */
-export const Model = ({ character, weapon, class: className = "" }: { readonly character: CharacterId; readonly weapon: WeaponId; readonly class?: string }) => (
-  <div class={`model ${className}`} data-model={character} data-weapon={weapon} />
+export const Model = ({ character, weapon, turn, reveal, class: className = "" }: { readonly character: CharacterId; readonly weapon: WeaponId; readonly turn?: number; readonly reveal?: boolean; readonly class?: string }) => (
+  <div class={`model ${className}`} data-model={character} data-weapon={weapon} data-turn={turn} data-reveal={reveal ? "true" : undefined} />
 )
 
 /** What a portrait shows: a character, or an enemy kind. */

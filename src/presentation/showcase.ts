@@ -172,6 +172,8 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
 
   // Keep each character and weapon idle running when the UI changes places.
   const live = new Map<string, Shown>()
+  const reveals = new WeakMap<HTMLElement, number>()
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
   const liveFor = (place: HTMLElement): Shown | null => {
     const character = place.dataset["model"] as CharacterId | undefined
     if (character === undefined || !(character in characterLooks)) return null
@@ -252,8 +254,15 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
         const shown = liveFor(place)
         if (shown === null) continue
         shown.puppet.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, seconds, false)
+        // A newly earned spirit turns into the light once; its idle keeps running.
+        const revealing = place.dataset["reveal"] === "true" && !reducedMotion.matches
+        const elapsed = revealing ? Math.min(1, (reveals.get(place) ?? 0) + seconds) : 1
+        if (revealing) reveals.set(place, elapsed)
+        const arrival = 1 - (1 - elapsed) ** 3
+        const turn = (place.dataset["turn"] === undefined ? stage.turn : Number(place.dataset["turn"])) + 0.6 * (1 - arrival)
+        shown.puppet.face({ x: Math.sin(turn), y: Math.cos(turn) })
         show(shown)
-        frame(shown, rect.width, rect.height, stage.fill, 1)
+        frame(shown, rect.width, rect.height, stage.fill * (0.78 + 0.22 * arrival), 1)
         renderer.setViewport(rect.left, height - rect.bottom, rect.width, rect.height)
         const clip = place.closest(".shell-content")?.getBoundingClientRect()
         const top = Math.max(rect.top, clip?.top ?? 0), bottom = Math.min(rect.bottom, clip?.bottom ?? height)

@@ -1,39 +1,36 @@
 import { useSignal } from "@preact/signals"
+import { useEffect, useRef } from "preact/hooks"
+import { accountLevel, playLock } from "../account/account.ts"
+import { Dialog } from "./Dialog.tsx"
 import { Icon } from "./Icon.tsx"
 import type { IconName } from "./Icon.tsx"
-import { Dialog } from "./Dialog.tsx"
-import { useEffect, useRef } from "preact/hooks"
-import { playLock } from "../account/account.ts"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
 import { Extra } from "./menu/Extra.tsx"
 import { Home } from "./menu/Home.tsx"
 import { Quests } from "./menu/Quests.tsx"
-import { Team } from "./menu/Team.tsx"
 import { Settings } from "./menu/Settings.tsx"
-import { Wallet } from "./menu/parts.tsx"
+import { Team } from "./menu/Team.tsx"
+import { Portrait, Wallet } from "./menu/parts.tsx"
 import type { Nav, Screen } from "./menu/parts.tsx"
+import { elementOf } from "./draft.ts"
 import { selectionIn } from "./navigation.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
-const section = (screen: Screen): string => ({ home: "Home", quests: "Challenges", team: "Team", character: "Characters", discoveries: "Discoveries", extra: "Extras", settings: "Settings" })[screen.kind]
+const section = (screen: Screen): string => ({ home: "", quests: "Challenges", team: "Party", character: "Characters", discoveries: "Discoveries", extra: "Practice", settings: "Settings" })[screen.kind]
 
 export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
-  const more = useSignal(false)
-  const play = store.menuPlay
-  const draft = store.menuDraft
-  const screens = store.menuScreens
+  const menuOpen = useSignal(false)
+  const play = store.menuPlay, draft = store.menuDraft, screens = store.menuScreens
   const content = useRef<HTMLElement>(null)
   const screen = screens.value[screens.value.length - 1]!
+  const leader = draft.value.team[0]!
   const prepare = (next: Screen) => {
     if (next.kind === "quests") play.value = selectionIn(store.tuning.value, store.account.value, next.tab, play.value)
     return next
   }
   const nav: Nav = {
-    go: (next) => {
-      if (JSON.stringify(next) === JSON.stringify(screen)) return
-      screens.value = [...screens.value, prepare(next)]
-    },
+    go: (next) => { if (JSON.stringify(next) !== JSON.stringify(screen)) screens.value = [...screens.value, prepare(next)] },
     replace: (next) => (screens.value = [...screens.value.slice(0, -1), prepare(next)]),
     back: () => {
       screens.value = screens.value.length > 1 ? screens.value.slice(0, -1) : screens.value
@@ -48,28 +45,28 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     if (requested !== null) { nav.go(requested); store.menuOpens.value = null }
   }, [])
   useEffect(() => {
-    if (content.current !== null) content.current.scrollTop = 0
     content.current?.focus({ preventScroll: true })
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !document.querySelector('[role="dialog"]')) nav.back()
+      if (event.key !== "Escape" || document.querySelector('[role="dialog"]')) return
+      if (screens.value.length > 1) nav.back()
+      else menuOpen.value = true
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [screen.kind, screen.kind === "character" ? screen.character : ""])
-
-  const routes: ReadonlyArray<{ readonly label: string; readonly icon: IconName; readonly to: Screen }> = [
-    { label: "Home", icon: "home", to: { kind: "home" } },
+  const destinations: ReadonlyArray<{ readonly label: string; readonly icon: IconName; readonly to: Screen }> = [
+    { label: "Characters", icon: "character", to: { kind: "character", character: leader, tab: "overview" } },
+    { label: "Party", icon: "team", to: { kind: "team" } },
     { label: "Challenges", icon: "challenge", to: { kind: "quests", tab: "main" } },
-    { label: "Characters", icon: "character", to: { kind: "character", character: draft.value.team[0]!, tab: "overview" } },
-    { label: "Team", icon: "team", to: { kind: "team" } },
     { label: "Discoveries", icon: "discovery", to: { kind: "discoveries" } },
-    { label: "Extras", icon: "practice", to: { kind: "extra", mode: "training" } }
+    { label: "Practice", icon: "practice", to: { kind: "extra", mode: "training" } },
+    { label: "Settings", icon: "settings", to: { kind: "settings" } }
   ]
   const current = () => {
     switch (screen.kind) {
       case "home": {
         const playable = playLock(store.tuning.value, store.account.value, play.value) === null ? play.value : store.account.value.selection.play
-        return <Home store={store} nav={nav} team={draft.value.team} play={playable} enter={() => actions.enter(draft.value.team, playable)} />
+        return <Home store={store} nav={nav} draft={draft} play={playable} enter={() => actions.enter(draft.value.team, playable)} />
       }
       case "quests": return <Quests store={store} nav={nav} tab={screen.tab} play={play} enter={enter} />
       case "team": return <Team store={store} actions={actions} nav={nav} draft={draft} play={play.value} enter={enter} />
@@ -79,24 +76,23 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       case "settings": return <Settings store={store} actions={actions} />
     }
   }
-  return <div class="menu">
+  const level = accountLevel(store.tuning.value, store.account.value)
+  return <div class="menu" data-section={screen.kind} data-element={elementOf(store.tuning.value, screen.kind === "character" ? screen.character : leader) ?? undefined}>
+    <div class="menu__sky" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${(i * 37 + 7) % 98}%`, top: `${(i * 23 + 11) % 96}%`, animationDelay: `${-i * 0.8}s` }} />)}</div>
     <header class="shell-header">
       <div class="shell-location">
-        <button type="button" class="icon-button" disabled={screens.value.length === 1} aria-label="Back" onClick={nav.back}><Icon name="back" /></button>
-        <span class="shell-brand"><b>{section(screen)}</b></span>
+        {screen.kind === "home" ? <button type="button" class="profile-button" aria-label="Open menu" onClick={() => (menuOpen.value = true)}><Portrait of={{ character: leader }} /><span>Lv {level.level}</span></button> : <button type="button" class="icon-button" aria-label="Back" onClick={nav.back}><Icon name="back" /></button>}
+        {screen.kind !== "home" && screen.kind !== "character" && <span class="shell-title">{section(screen)}</span>}
       </div>
       <Wallet store={store} />
-      <button type="button" class="icon-button" aria-label="Settings" aria-pressed={screen.kind === "settings"} onClick={() => nav.go({ kind: "settings" })}><Icon name="settings" /></button>
+      {screen.kind !== "home" && <button type="button" class="icon-button" aria-label="Return to lobby" onClick={() => (screens.value = [{ kind: "home" }])}><Icon name="close" /></button>}
     </header>
-    <nav class="shell-nav" aria-label="Main navigation">
-      {routes.map(({ label, icon, to }) => <button key={label} class={to.kind === "discoveries" || to.kind === "extra" ? "secondary-nav" : ""} type="button" aria-current={section(screen) === label ? "page" : undefined} onClick={() => {
-        if (to.kind === "quests") store.menuBriefing.value = false
-        if (section(screen) !== label) screens.value = [{ kind: "home" }, ...(to.kind === "home" ? [] : [prepare(to)])]
-      }}><span class="nav-icon"><Icon name={icon} /></span><span>{label}</span></button>)}
-      <button type="button" class="mobile-more" aria-label="More" aria-current={["discoveries", "extra", "settings"].includes(screen.kind) ? "page" : undefined} onClick={() => (more.value = true)}><span class="nav-icon"><Icon name="more" /></span><span>More</span></button>
-    </nav>
-    {more.value && <Dialog title="More" close={() => (more.value = false)}><div class="more-links">{[{ label: "Discoveries", to: { kind: "discoveries" } }, { label: "Extras", to: { kind: "extra", mode: "training" } }, { label: "Settings", to: { kind: "settings" } }].map(({ label, to }) => <button type="button" class="ghost" key={label} onClick={() => { more.value = false; nav.go(to as Screen) }}><span>{label}</span><Icon name="next" /></button>)}</div></Dialog>}
-    <main class="shell-content" ref={content} tabIndex={-1} aria-label={section(screen)}>{current()}</main>
-    {store.notices.value.length > 0 && <div class="notices" role="status">{store.notices.value.map((notice, index) => <div key={index} class="notice"><span>{notice}</span><button type="button" onClick={() => (store.notices.value = store.notices.value.filter((_, other) => other !== index))}>Dismiss</button></div>)}</div>}
+    <main class="shell-content" ref={content} tabIndex={-1} aria-label={screen.kind === "home" ? "Lobby" : section(screen)}>{current()}</main>
+    {menuOpen.value && <Dialog title="Menu" variant="drawer" close={() => (menuOpen.value = false)}>
+      <div class="menu-profile"><Portrait of={{ character: leader }} /><div><h2>{store.tuning.value.characters[leader].name}</h2><span>Account Lv {level.level}</span></div></div>
+      <div class="menu-profile__xp"><span>{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed} XP`}</span><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
+      <div class="game-menu">{destinations.map(({ label, icon, to }) => <button type="button" key={label} onClick={() => { menuOpen.value = false; if (to.kind === "quests") store.menuBriefing.value = false; nav.go(to) }}><Icon name={icon} /><span>{label}</span></button>)}</div>
+      {store.notices.value.length > 0 && <div class="save-notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<button type="button" class="ghost" onClick={() => (store.notices.value = [])}>Dismiss</button></div>}
+    </Dialog>}
   </div>
 }

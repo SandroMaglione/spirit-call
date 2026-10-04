@@ -90,7 +90,7 @@ const start = async (mount: HTMLElement) => {
     clearTimeout(feedbackTimer)
     uiStore.feedback.value = { message, error }
     sounds.play(error ? "uiError" : "uiSuccess")
-    feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), error ? 6000 : 2800)
+    if (!error) feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), 1200)
   }
   const change = (action: () => Promise<unknown>, message: string) => {
     if (uiStore.busy.peek()) return

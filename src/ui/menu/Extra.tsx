@@ -5,19 +5,21 @@
  * into) and Enemy Practice (endless waves of only the enemies picked, until
  * the team falls). Both are played at the team's own level.
  */
+import { useSignal } from "@preact/signals"
+import { Dialog } from "../Dialog.tsx"
+import { Icon } from "../Icon.tsx"
 import { teamLevel } from "../../account/account.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
-import { describeObjective } from "../describe.ts"
 import type { UiActions, UiStore } from "../store.ts"
 import { Cta, Foe, ids } from "./parts.tsx"
 import type { Nav } from "./parts.tsx"
 
 type Mode = "training" | "practice"
 
-const modes: { readonly [M in Mode]: { readonly name: string; readonly meta: string } } = {
-  training: { name: "Training Ground", meta: "Dummies, combos, dodges" },
-  practice: { name: "Enemy Practice", meta: "Pick the enemies, until you fall" }
+const modes: { readonly [M in Mode]: { readonly name: string } } = {
+  training: { name: "Training Ground" },
+  practice: { name: "Enemy Practice" }
 }
 
 export const Extra = ({ store, actions, nav, mode, team }: {
@@ -27,6 +29,7 @@ export const Extra = ({ store, actions, nav, mode, team }: {
   readonly mode: Mode
   readonly team: ReadonlyArray<CharacterId>
 }) => {
+  const information = useSignal(false)
   const tuning = store.tuning.value
   const level = teamLevel(tuning, store.account.value, team)
   const picks = store.practicePicks.value
@@ -43,21 +46,16 @@ export const Extra = ({ store, actions, nav, mode, team }: {
       return (
         <section class="brief">
           <h2 class="brief__name">{challenge.name}</h2>
-          <details class="brief__description"><summary>About training</summary><p>{challenge.description}</p></details>
+          <button type="button" class="text-button" aria-label="Training details" onClick={() => (information.value = true)}><Icon name="info" /></button>
           <div class="brief__chips">
-            <span>{describeObjective(challenge.objective, 0)}</span>
             <span>Dummies Lv {level}</span>
-            <span>Nothing recorded</span>
           </div>
           <div class="brief__foes">
             {dummies.map((kind) => <Foe key={kind} store={store} kind={kind} />)}
           </div>
           <div class="brief__end">
-            <span class="brief__done">Your damage shows at the top</span>
             <div class="brief__actions">
-              <button type="button" class="ghost" onClick={() => nav.go({ kind: "team" })}>
-                Team
-              </button>
+              <button type="button" class="icon-button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}><Icon name="team" /></button>
               <Cta onClick={() => actions.enterExtra(team, { kind: "training" })}>Train</Cta>
             </div>
           </div>
@@ -68,7 +66,7 @@ export const Extra = ({ store, actions, nav, mode, team }: {
     return (
       <section class="brief">
         <h2 class="brief__name">{challenge.name}</h2>
-        <p class="brief__description">{challenge.description}</p>
+        <button type="button" class="text-button" aria-label="Practice details" onClick={() => (information.value = true)}><Icon name="info" /></button>
         <div class="brief__chips">
           <span>Enemies Lv {level}</span>
           <button type="button" class={`chip${picks.elites ? " is-on" : ""}`} aria-pressed={picks.elites} onClick={() => (store.practicePicks.value = { ...picks, elites: !picks.elites })}>
@@ -89,9 +87,7 @@ export const Extra = ({ store, actions, nav, mode, team }: {
         <div class="brief__end">
           <span class="brief__done">{picks.kinds.length === 0 ? "Tap the enemies to face" : `${picks.kinds.length} picked`}</span>
           <div class="brief__actions">
-            <button type="button" class="ghost" onClick={() => nav.go({ kind: "team" })}>
-              Team
-            </button>
+            <button type="button" class="icon-button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}><Icon name="team" /></button>
             <Cta disabled={picks.kinds.length === 0} onClick={() => actions.enterExtra(team, { kind: "practice", picks })}>
               Start
             </Cta>
@@ -108,14 +104,14 @@ export const Extra = ({ store, actions, nav, mode, team }: {
         <div class="group">
           {(Object.keys(modes) as Array<Mode>).map((id) => (
             <button key={id} type="button" class={`entry${id === mode ? " is-selected" : ""}`} aria-pressed={id === mode} onClick={() => nav.replace({ kind: "extra", mode: id })}>
-              <span class="entry__number">{id === "training" ? "◎" : "⚔"}</span>
+              <span class="entry__number"><Icon name={id === "training" ? "practice" : "challenge"} /></span>
               <span class="entry__name">{modes[id].name}</span>
-              <small class="entry__meta">{modes[id].meta}</small>
             </button>
           ))}
         </div>
       </div>
       {brief()}
+      {information.value && <Dialog title={modes[mode].name} close={() => (information.value = false)}><p>{tuning.challenges[mode === "training" ? "trainingGround" : "practice"].description}</p><p>No account progress or rewards are recorded.</p></Dialog>}
     </div>
   )
 }
