@@ -1,0 +1,44 @@
+{
+  "kind": "volatile",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 1768,
+  "materials": 1,
+  "mesh_parts": [
+    "Cracked rock body",
+    "Eye.L",
+    "Eye.R",
+    "EyeSocket.L",
+    "EyeSocket.R",
+    "Flame",
+    "Flame inner light",
+    "Flame root",
+    "Foot root.L",
+    "Foot root.R",
+    "Foot.L",
+    "Foot.R",
+    "Mouth fissure",
+    "Side rock.L",
+    "Side rock.R",
+    "Top rock"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.22622352838516235,
+      0.22622352838516235
+    ],
+    [
+      -0.1809735745191574,
+      0.1956786811351776
+    ],
+    [
+      0.0,
+      0.7315686345100403
+    ]
+  ],
+  "height_m": 0.7315686345100403,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}

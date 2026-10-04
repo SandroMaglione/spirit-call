@@ -1,0 +1,62 @@
+[
+  {
+    "turn": 20,
+    "elevation": 35,
+    "silhouette_iou": 0.5819791450046047
+  },
+  {
+    "turn": 20,
+    "elevation": 25,
+    "silhouette_iou": 0.57239087751095
+  },
+  {
+    "turn": 30,
+    "elevation": 35,
+    "silhouette_iou": 0.5705567467874226
+  },
+  {
+    "turn": 30,
+    "elevation": 15,
+    "silhouette_iou": 0.5662033537478981
+  },
+  {
+    "turn": 20,
+    "elevation": 15,
+    "silhouette_iou": 0.56575960286951
+  },
+  {
+    "turn": 50,
+    "elevation": 35,
+    "silhouette_iou": 0.5633012329019199
+  },
+  {
+    "turn": 30,
+    "elevation": 25,
+    "silhouette_iou": 0.5618641085662704
+  },
+  {
+    "turn": 40,
+    "elevation": 35,
+    "silhouette_iou": 0.5602983396879889
+  },
+  {
+    "turn": 40,
+    "elevation": 15,
+    "silhouette_iou": 0.558381032810985
+  },
+  {
+    "turn": 50,
+    "elevation": 15,
+    "silhouette_iou": 0.5557285873192436
+  },
+  {
+    "turn": 40,
+    "elevation": 25,
+    "silhouette_iou": 0.5496469276511398
+  },
+  {
+    "turn": 50,
+    "elevation": 25,
+    "silhouette_iou": 0.5447566333630408
+  }
+]

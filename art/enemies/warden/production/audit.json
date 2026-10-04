@@ -1,0 +1,67 @@
+{
+  "kind": "warden",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 1775,
+  "materials": 1,
+  "mesh_parts": [
+    "Belt",
+    "Belt clasp cyan",
+    "Belt clasp gold rim",
+    "Chest emblem cyan",
+    "Chest emblem gold rim",
+    "Chest trim.L",
+    "Chest trim.R",
+    "Collar",
+    "Cuff.L",
+    "Cuff.R",
+    "Eye.L",
+    "Eye.R",
+    "EyeSocket.L",
+    "EyeSocket.R",
+    "FaceRecess",
+    "Foot.L",
+    "Foot.R",
+    "Hand.L",
+    "Hand.R",
+    "Hood",
+    "Hood inner wall",
+    "Open robe inner cloth",
+    "Ribbon.Lower.L",
+    "Ribbon.Lower.R",
+    "Ribbon.Upper.L",
+    "Ribbon.Upper.R",
+    "Robe",
+    "Robe trim.L",
+    "Robe trim.R",
+    "Sleeve.L",
+    "Sleeve.R",
+    "Staff crown point",
+    "Staff crown point.001",
+    "Staff crown point.002",
+    "Staff crown point.003",
+    "Staff cyan crystal",
+    "Staff gold ferrule",
+    "Staff ring",
+    "Staff shaft"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.5151515007019043,
+      0.5151515007019043
+    ],
+    [
+      -0.310380220413208,
+      0.5303030014038086
+    ],
+    [
+      0.0,
+      0.9747474789619446
+    ]
+  ],
+  "height_m": 0.9747474789619446,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}

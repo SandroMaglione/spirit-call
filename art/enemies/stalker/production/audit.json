@@ -1,0 +1,67 @@
+{
+  "kind": "stalker",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 1860,
+  "materials": 1,
+  "mesh_parts": [
+    "Arm blade.L",
+    "Arm blade.R",
+    "Dorsal armor",
+    "Eye.L",
+    "Eye.R",
+    "EyeSocket.L",
+    "EyeSocket.R",
+    "FaceRecess",
+    "Foot.L",
+    "Foot.R",
+    "Hood inner wall",
+    "Limb connection.L.0",
+    "Limb connection.L.1",
+    "Limb connection.L.2",
+    "Limb connection.L.3",
+    "Limb connection.L.4",
+    "Limb connection.L.5",
+    "Limb connection.R.0",
+    "Limb connection.R.1",
+    "Limb connection.R.2",
+    "Limb connection.R.3",
+    "Limb connection.R.4",
+    "Limb connection.R.5",
+    "Pointed head",
+    "Shin.L",
+    "Shin.R",
+    "Shoulder joint.L",
+    "Shoulder joint.R",
+    "Shoulder tip.L",
+    "Shoulder tip.R",
+    "Shoulder.L",
+    "Shoulder.R",
+    "Thigh.L",
+    "Thigh.R",
+    "Thorax",
+    "Upper arm.L",
+    "Upper arm.R",
+    "Waist armor",
+    "Waist connection"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.5339981913566589,
+      0.5339981913566589
+    ],
+    [
+      -0.44437500834465027,
+      0.3881250023841858
+    ],
+    [
+      0.0,
+      0.8943749666213989
+    ]
+  ],
+  "height_m": 0.8943749666213989,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}

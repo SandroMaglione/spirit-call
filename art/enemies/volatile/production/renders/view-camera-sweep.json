@@ -1,0 +1,190 @@
+{
+  "front": [
+    {
+      "turn": -10,
+      "elevation": 0,
+      "silhouette_iou": 0.743659780161568
+    },
+    {
+      "turn": 10,
+      "elevation": 0,
+      "silhouette_iou": 0.7423766371213123
+    },
+    {
+      "turn": -10,
+      "elevation": 10,
+      "silhouette_iou": 0.7382183085548802
+    },
+    {
+      "turn": 10,
+      "elevation": 10,
+      "silhouette_iou": 0.7362424080178025
+    },
+    {
+      "turn": 0,
+      "elevation": 0,
+      "silhouette_iou": 0.7337918611315811
+    },
+    {
+      "turn": 10,
+      "elevation": 20,
+      "silhouette_iou": 0.7271833333333333
+    },
+    {
+      "turn": 0,
+      "elevation": 10,
+      "silhouette_iou": 0.7259736388925686
+    },
+    {
+      "turn": -10,
+      "elevation": 20,
+      "silhouette_iou": 0.724004489638651
+    },
+    {
+      "turn": 0,
+      "elevation": 20,
+      "silhouette_iou": 0.7099707272400203
+    }
+  ],
+  "back": [
+    {
+      "turn": 190,
+      "elevation": 10,
+      "silhouette_iou": 0.650636778849901
+    },
+    {
+      "turn": 180,
+      "elevation": 10,
+      "silhouette_iou": 0.6447796964296688
+    },
+    {
+      "turn": 190,
+      "elevation": 20,
+      "silhouette_iou": 0.6441329149192011
+    },
+    {
+      "turn": 170,
+      "elevation": 10,
+      "silhouette_iou": 0.6411697495599543
+    },
+    {
+      "turn": 180,
+      "elevation": 20,
+      "silhouette_iou": 0.638762732990444
+    },
+    {
+      "turn": 170,
+      "elevation": 20,
+      "silhouette_iou": 0.6342473289515592
+    },
+    {
+      "turn": 190,
+      "elevation": 0,
+      "silhouette_iou": 0.6341513845370826
+    },
+    {
+      "turn": 170,
+      "elevation": 0,
+      "silhouette_iou": 0.6306663914513901
+    },
+    {
+      "turn": 180,
+      "elevation": 0,
+      "silhouette_iou": 0.630462927876721
+    }
+  ],
+  "right": [
+    {
+      "turn": 100,
+      "elevation": 10,
+      "silhouette_iou": 0.6877915211028232
+    },
+    {
+      "turn": 100,
+      "elevation": 0,
+      "silhouette_iou": 0.6844155844155844
+    },
+    {
+      "turn": 100,
+      "elevation": 20,
+      "silhouette_iou": 0.675705186533212
+    },
+    {
+      "turn": 90,
+      "elevation": 0,
+      "silhouette_iou": 0.6709456649147352
+    },
+    {
+      "turn": 80,
+      "elevation": 0,
+      "silhouette_iou": 0.6599100349863942
+    },
+    {
+      "turn": 90,
+      "elevation": 10,
+      "silhouette_iou": 0.6581804637303287
+    },
+    {
+      "turn": 90,
+      "elevation": 20,
+      "silhouette_iou": 0.6401634475185859
+    },
+    {
+      "turn": 80,
+      "elevation": 10,
+      "silhouette_iou": 0.633115396589931
+    },
+    {
+      "turn": 80,
+      "elevation": 20,
+      "silhouette_iou": 0.6130285876528313
+    }
+  ],
+  "left": [
+    {
+      "turn": 280,
+      "elevation": 0,
+      "silhouette_iou": 0.67566364294062
+    },
+    {
+      "turn": 270,
+      "elevation": 0,
+      "silhouette_iou": 0.6638545671730934
+    },
+    {
+      "turn": 260,
+      "elevation": 0,
+      "silhouette_iou": 0.6604861213100308
+    },
+    {
+      "turn": 260,
+      "elevation": 10,
+      "silhouette_iou": 0.6483281820736162
+    },
+    {
+      "turn": 260,
+      "elevation": 20,
+      "silhouette_iou": 0.640644824240615
+    },
+    {
+      "turn": 270,
+      "elevation": 10,
+      "silhouette_iou": 0.6394487283422259
+    },
+    {
+      "turn": 280,
+      "elevation": 10,
+      "silhouette_iou": 0.6365396908961005
+    },
+    {
+      "turn": 270,
+      "elevation": 20,
+      "silhouette_iou": 0.6302263498270416
+    },
+    {
+      "turn": 280,
+      "elevation": 20,
+      "silhouette_iou": 0.617396856397063
+    }
+  ]
+}
