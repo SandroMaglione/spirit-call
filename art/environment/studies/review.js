@@ -37,7 +37,7 @@ function card(id,old=false){
   const size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3())
   const scene=sceneFor(obj);player(scene,-size.x/2-.32,size.z/2+.12)
   const entry=kit.assets.find(a=>a.id===id)
-  return {scene,target:new T.Vector3(center.x-.16,Math.min(size.y*.35,.65),center.z),
+  return {scene,target:new T.Vector3(center.x-.16,Math.min(size.y*.40,1.2),center.z),
     title:(old?'Original: ':'')+(entry?.title||id.replaceAll('-',' ')),
     detail:`${size.y.toFixed(2)} m · ${(size.y/kit.player_height_m).toFixed(1)}× player height`,large:entry?.group==='large'}
 }
@@ -77,12 +77,12 @@ function rebuild(){
 function render(){
   const width=stage.clientWidth,phone=width<650
   const cols=view==='outside'?1:view==='compare'||view==='large'||phone?2:view==='all'?4:3
-  const cw=width/cols,ch=view==='outside'?Math.max(210,innerHeight-document.querySelector('header').offsetHeight-42):view==='large'?330:phone?230:view==='all'?240:290
+  const cw=width/cols,ch=view==='outside'?Math.max(210,innerHeight-document.querySelector('header').offsetHeight-42):view==='large'||view==='compare'?340:phone?230:view==='all'?240:290
   const height=ch*Math.ceil(cards.length/cols);renderer.setSize(width,height);labels.replaceChildren()
   renderer.setScissorTest(false);renderer.clear();renderer.setScissorTest(true)
   cards.forEach((card,i)=>{
     const x=(i%cols)*cw,y=Math.floor(i/cols)*ch
-    const ppm=view==='outside'?Math.min(width/15.6,ch/9.8):Math.min(view==='compare'?105:card.large?(view==='all'?80:95):140,cw/(view==='compare'?3.5:card.large?3.65:2.55))
+    const ppm=view==='outside'?Math.min(width/15.6,ch/9.8):Math.min(view==='compare'?90:card.large?(view==='all'?80:95):140,cw/(view==='compare'?3.5:card.large?3.65:2.55))
     const camera=new T.OrthographicCamera(-cw/ppm/2,cw/ppm/2,ch/ppm/2,-ch/ppm/2,.01,100)
     const ang=Math.PI/4+turn;camera.position.copy(card.target).add(new T.Vector3(Math.sin(ang)*17.32,10,Math.cos(ang)*17.32));camera.lookAt(card.target)
     renderer.setViewport(x,height-y-ch,cw,ch);renderer.setScissor(x,height-y-ch,cw,ch);renderer.render(card.scene,camera)
