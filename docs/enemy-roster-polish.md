@@ -32,6 +32,13 @@ Swarmer's presentation size increases from 1.5 to 1.8 times its radius. Its
 simulation radius stays 10. Training variants share the dummy asset at their own
 existing sizes. No enemy stats, attacks, content ids or progression changed.
 
+The first pass left five inherited Idle clips too subtle to read. Sniper now
+scans with its barrel and claws over planted articulated legs; Stalker breathes
+and scans with opposing blade drift; Guardian watches over a settling mace;
+Firebomber heaves its pack with a hanging bomb hand and trailing flame; and
+Juggernaut breathes through its shoulders with hanging fist sway. These loops
+remain smaller than their attack coils and retain independent foot plants.
+
 The editable final assets and reproducible recipe are described in
 [the finishing workflow](../art/enemies/polish-tools/README.md). Static reference
 renders describe the base source; use the finishing viewer and final exports to
@@ -45,6 +52,10 @@ attacks which skip Active. Living poses stay within 1 mm of the floor. GLBs load
 through Three.js, retain normalized skin weights and valid luminous masks, and
 GPU atlas samples match Three.js skinning.
 
+A regression check projects these five Idle clips from the game camera at a
+40 px model height in two facings. It requires visible motion across a broad
+part of each figure, rather than accepting movement from one decorative tip.
+
 The network-address browser review covers desktop 1280×800, phone landscape
 844×390 and portrait 390×844, all combat enemies through windup/contact/recovery, native mouse taps
 on the touch-enabled controls, and a synthetic touch-stick drag through the
@@ -56,3 +67,5 @@ The touch HUD now refreshes its resting layout immediately after a viewport
 rotation. An active gesture keeps its original layout until release.
 
 ![Finished roster](../art/enemies/polish-tools/evidence/roster-idle.png)
+
+[Revised Idle loops in motion](../art/enemies/polish-tools/evidence/roster-idle.mp4)

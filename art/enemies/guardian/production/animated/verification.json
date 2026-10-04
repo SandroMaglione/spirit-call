@@ -1,5 +1,5 @@
 {
-  "sha256": "1d9f8678b7678af7934b422f0a094820b38f74f5d8f4a8a4108565a14d9fe1e0",
+  "sha256": "861368e878d2ae9bf802000853d18275857268b2a97d46d64764b40361be6258",
   "roundTripBoundsError": {
     "Idle": 2.384185791015625e-07,
     "Run": 2.384185791015625e-07,
@@ -28,7 +28,7 @@
   },
   "triangles": 1974,
   "bones": 7,
-  "bytes": 410108,
+  "bytes": 413692,
   "phaseBoundaryVertexError": {
     "Windup\u2192Active": 0.0,
     "Active\u2192Recovery": 0.0,

@@ -59,7 +59,14 @@ def pose(kind,action,t):
                         travel=.085-.17*ease(swing);lift=.11*math.sin(math.pi*swing)**2
                     data['leg.'+side]=transform(location=(0,travel,lift))
                     data['arm.'+side]=transform((.30*s*sign,0,.035*s*sign))
-            else:data['body']=transform((0,.009*s,0),(0,0,.006*(1-c)))
+            else:
+                # Slow shoulders and hanging fists sell the armor's weight;
+                # feet stay on their root bones rather than bobbing with it.
+                breath=(1-c)/2
+                data['body']=transform((.04*breath,.035*s,0),(.018*s,0,.025*breath))
+                data['head']=transform((-.025*breath,0,.14*s))
+                for side,sign in (('L',1),('R',-1)):
+                    data['arm.'+side]=transform((.14*s*sign,sign*.05*breath,0))
     elif action.startswith(('Windup','Active','Recovery')):
         if action.startswith('Windup'):
             ready=ease(t/.70);strike=ease((t-.74)/.26)

@@ -64,8 +64,32 @@ def pose(kind, action, t):
     s, c = math.sin(math.tau*t), math.cos(math.tau*t)
     result = {}
     if action == 'Idle':
-        result['body'] = transform((0, .006*s, 0), (0, 0, .004*(1-c)))
-        if kind == 'charger':result['flame'] = transform((.025*s, 0, .025*s))
+        breath = (1-c)/2
+        if kind == 'charger':
+            # The pack heaves, the bomb hand hangs and the flame trails the
+            # shoulders. Tiny torso translations disappear at phone scale.
+            result['body'] = transform((.05*breath, .055*s, 0), (0, 0, .025*breath))
+            result['head'] = transform((-.04*breath, 0, .12*s))
+            for side, sign in (('L', -1), ('R', 1)):
+                result['arm.'+side] = transform((.16*s*sign, 0, sign*.08*breath))
+            result['bomb'] = transform((-.10*s, 0, 0))
+            result['flame'] = transform((.18*math.sin(math.tau*t-.5), 0, .12*s),
+                scale=(1+.08*s, 1, 1+.10*s))
+        elif kind == 'sniper':
+            # Scan over planted articulated legs, with a quiet barrel lift
+            # and counter-swaying claws; this stays well below the shot coil.
+            result['body'] = transform((.035*breath, .045*s, 0), (0, 0, .025*breath))
+            result['head'] = transform((-.035*breath+.045*s, 0, .14*s))
+            for side, sign in (('L', -1), ('R', 1)):
+                result['arm.'+side] = transform((.12*s*sign, 0, sign*.06*breath))
+            sniper_legs(result)
+        else:
+            # A heavy breath and a watchful helmet, with the mace settling
+            # in the free hand. The shield keeps the simulation's facing.
+            result['body'] = transform((.035*breath, .04*s, 0), (0, 0, .025*breath))
+            result['head'] = transform((-.025*breath, 0, .16*s))
+            result['arm.L'] = transform((.16*s, 0, -.08*breath))
+            result['shield'] = transform(location=(0, 0, .015*breath))
     elif action == 'Run':
         if kind == 'charger':
             # Short legs drive the heavy backpack; the hood leads and the flame trails.
