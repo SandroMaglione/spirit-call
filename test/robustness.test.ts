@@ -104,7 +104,8 @@ describe("determinism", () => {
     const first = play()
     expect(first.resources["Shooter/Stats"]).not.toEqual({ kills: 0, shots: 0 })
     expect(play()).toEqual(first)
-  })
+    // Two 40 s runs: a few seconds alone, more alongside the other test files.
+  }, 30_000)
 })
 
 describe("render sync under multi-rate ticking", () => {
