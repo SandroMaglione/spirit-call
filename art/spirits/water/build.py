@@ -8,15 +8,17 @@ Everything comes from its orthographic sheet (reference/, the crops of
   front and back from the left and right views (each pair averaged), so its
   shape, the uneven taper and the back curving in toward the nub included,
   is the sheet's own.
-- The eyes are painted on its surface, not modeled: a texture projected
-  from the front onto its front facets, the ovals exactly where and as big
-  as the front view draws them. Glowing (emission), they cannot sink into
-  the facets or stand out from them.
+- The eyes are thin glowing ellipses laid on its surface like stickers:
+  dense discs whose every point is snapped onto the body (2 mm above it)
+  along the eye's outward direction, where and as big as the front view
+  draws them. They bend with the facets, so they read as drawn on, and
+  they are their own objects (`Eye.L`, `Eye.R`, origin at the eye's
+  center) so they can blink (scale) and look around (move) later.
 - The nub floats where the views put it; colors are the sheet's swatches.
 
     blender --background --python-exit-code 1 --python art/spirits/water/build.py
 
-Writes `water-spirit.blend` and `eyes.png`. Blender axes: it faces -Y, its
+Writes `water-spirit.blend`. Blender axes: it faces -Y, its
 left is +X, up is +Z; meters; its origin on the floor under it (it hovers).
 """
 import json
@@ -42,8 +44,9 @@ JITTER = 0.015  # a little unevenness, for facets that look cut, not turned
 
 # The sheet's swatches (and one deeper blue, which its shadowed facets reach).
 COLORS = {"deep": "#1A5CE6", "base": "#2E7BFF", "mid": "#4486FF", "light": "#8EEBFF", "eye": "#FFFFFF"}
-EYE_GLOW = 3.0  # emission strength of the painted eyes
-BODY_GLOW = (0.004, 0.03, 0.12)  # a soft inner glow everywhere else (emission color, linear, before strength)
+EYE_GLOW = 4.0  # emission strength of the eyes
+EYE_LIFT = 0.002  # how far above the surface the eyes lie (m)
+EYE_RAISE = 0.014  # renders measure the eyes this much lower than the sheet (body heights; the render's base reads lower)
 
 
 def edges(view, z):
@@ -128,47 +131,63 @@ def loft(bm, rng):
         bm.faces.new((rings[0][(k + 1) % SEGMENTS], rings[0][k], bottom))
 
 
-# The eye texture: the front view's frame, in body heights (x from -SPAN to SPAN, z from 0 to 2 × SPAN).
-SPAN = 0.6
-TEXTURE = 512
+def eye(tree, sheet_eye, material):
+    """One eye: a thin ellipse snapped onto the body's surface, its own object with its origin at the eye's center.
 
+    It is laid along the eye's outward direction (the body's horizontal
+    normal at its center), and widened by that direction's turn from the
+    front so that, seen from the front, it is exactly the sheet's ellipse.
+    """
+    x, z = sheet_eye["offset"], sheet_eye["height"] + EYE_RAISE  # front view: image right is its left (+X)
+    left, right, front, back = extents(z)
+    side = left if x > 0 else right
+    a = math.asin(max(-0.95, min(0.95, x / side)))
+    outward = Vector((math.sin(a) / side, -math.cos(a) / front, 0)).normalized()
+    across = Vector((0, 0, 1)).cross(outward).normalized()
+    up = Vector((0, 0, 1))
+    turn = abs(outward.dot(Vector((0, -1, 0))))
+    width, tall = sheet_eye["width"] / 2 / turn * BODY, sheet_eye["tall"] / 2 * BODY
+    middle = Vector((x * BODY, 0, z * BODY + HOVER))
+    center_hit, _, _, _ = tree.ray_cast(middle + Vector((0, -1, 0)) * 1.0 + across * 0, Vector((0, 1, 0)))
+    center = center_hit
+    rings, segments = 5, 24
 
-def eyes_image():
-    """Black, with the front view's two eye ovals in white, where and as big as the sheet draws them."""
-    pixels = np.zeros((TEXTURE, TEXTURE, 4), dtype=np.float32)
-    pixels[..., 3] = 1
-    ys, xs = np.mgrid[0:TEXTURE, 0:TEXTURE] + 0.5
-    # Texture rows run bottom-up, like Blender's UVs.
-    x = (xs / TEXTURE) * 2 * SPAN - SPAN
-    z = (ys / TEXTURE) * 2 * SPAN
-    for eye in SHEET["front"]["eyes"]:
-        # Image right is its left (+X).
-        cx, cz = eye["offset"], eye["height"]
-        rx, rz = eye["width"] / 2, eye["tall"] / 2
-        inside = ((x - cx) / rx) ** 2 + ((z - cz) / rz) ** 2
-        # A soft edge a pixel or two wide.
-        value = np.clip((1 - inside) / 0.15, 0, 1)
-        pixels[..., :3] = np.maximum(pixels[..., :3], value[..., None])
-    image = bpy.data.images.new("Eyes", TEXTURE, TEXTURE, alpha=False)
-    image.pixels.foreach_set(pixels.ravel())
-    image.filepath_raw = str(HERE / "eyes.png")
-    image.file_format = "PNG"
-    image.save()
-    image.pack()
-    return image
+    def snap(u, v):
+        """The body's surface under the point (u, v) of the eye's plane, lifted along its normal."""
+        point = center + across * u + up * v
+        hit, normal, _, _ = tree.ray_cast(point + outward * 0.3, -outward)
+        return hit + normal * EYE_LIFT
 
-
-def project_eyes(mesh):
-    """UVs projecting the eye texture from the front onto its front facets; every other facet maps to the texture's black corner."""
-    uv = mesh.uv_layers.new(name="UVMap")
-    for poly in mesh.polygons:
-        front = poly.normal.y < -0.3
-        for loop in poly.loop_indices:
-            if front:
-                p = mesh.vertices[mesh.loops[loop].vertex_index].co
-                uv.data[loop].uv = ((p.x / BODY + SPAN) / (2 * SPAN), ((p.z - HOVER) / BODY) / (2 * SPAN))
+    bm = bmesh.new()
+    middle_vert = bm.verts.new(snap(0, 0))
+    previous = None
+    for r in range(1, rings + 1):
+        f = r / rings
+        ring = [bm.verts.new(snap(math.cos(t) * width * f, math.sin(t) * tall * f)) for t in (2 * math.pi * k / segments for k in range(segments))]
+        for k in range(segments):
+            j = (k + 1) % segments
+            if previous is None:
+                bm.faces.new((middle_vert, ring[k], ring[j]))
             else:
-                uv.data[loop].uv = (0.002, 0.998)
+                bm.faces.new((previous[k], ring[k], ring[j], previous[j]))
+        previous = ring
+    origin = center + outward * EYE_LIFT
+    bm.verts.ensure_lookup_table()
+    for v in bm.verts:
+        v.co -= origin
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    # Facing out: flip if the disc's normal points into the body.
+    bm.normal_update()
+    if sum((f.normal.dot(outward) for f in bm.faces)) < 0:
+        bmesh.ops.reverse_faces(bm, faces=bm.faces)
+    name = "Eye.L" if x > 0 else "Eye.R"
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(material)
+    obj = bpy.data.objects.new(name, mesh)
+    obj.location = origin
+    return obj
 
 
 def color_faces(mesh, rng, height_of):
@@ -180,8 +199,8 @@ def color_faces(mesh, rng, height_of):
             attribute.data[loop].color = (*c, 1.0)
 
 
-def water_material(eyes):
-    """Vertex colors for its facets; glowing where the eye texture is white, softly blue elsewhere."""
+def water_material():
+    """Its facets' vertex colors, semi-gloss, glowing softly in their own colors."""
     m = bpy.data.materials.new("Water")
     m.use_nodes = True
     nodes, links = m.node_tree.nodes, m.node_tree.links
@@ -191,19 +210,21 @@ def water_material(eyes):
     colors = nodes.new("ShaderNodeVertexColor")
     colors.layer_name = "Color"
     links.new(colors.outputs["Color"], bsdf.inputs["Base Color"])
-    texture = nodes.new("ShaderNodeTexImage")
-    texture.image = eyes
-    texture.interpolation = "Linear"
-    # Emission: the texture (white eyes on black), lifted to the body's soft glow (glTF: emissive texture × factor).
-    glow = nodes.new("ShaderNodeMix")
-    glow.data_type = "RGBA"
-    glow.blend_type = "LIGHTEN"
-    glow.inputs["Factor"].default_value = 1.0
-    glow.inputs["A"].default_value = (*BODY_GLOW, 1)
-    links.new(texture.outputs["Color"], glow.inputs["B"])
-    links.new(glow.outputs["Result"], bsdf.inputs["Emission Color"])
+    # A soft inner glow in each facet's own color ("soft inner glow impression, not transparent").
+    links.new(colors.outputs["Color"], bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = 0.45
+    return m
+
+
+def eye_material():
+    """White glow."""
+    m = bpy.data.materials.new("Eyes")
+    m.use_nodes = True
+    bsdf = m.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (1, 1, 1, 1)
+    bsdf.inputs["Emission Color"].default_value = (1, 1, 1, 1)
     bsdf.inputs["Emission Strength"].default_value = EYE_GLOW
-    return m, texture
+    return m
 
 
 def build():
@@ -220,11 +241,21 @@ def build():
     for poly in mesh.polygons:
         poly.use_smooth = False
     color_faces(mesh, rng, lambda p: (p.z - HOVER) / BODY)
-    project_eyes(mesh)
-    material, texture = water_material(eyes_image())
+    material = water_material()
     mesh.materials.append(material)
     body = bpy.data.objects.new("WaterSpirit", mesh)
     collection.objects.link(body)
+
+    # The eyes, laid on the body.
+    from mathutils.bvhtree import BVHTree
+    tree = BVHTree.FromPolygons([tuple(v.co) for v in mesh.vertices], [tuple(p.vertices) for p in mesh.polygons])
+    glow = eye_material()
+    eye_tris = 0
+    for sheet_eye in SHEET["front"]["eyes"]:
+        obj = eye(tree, sheet_eye, glow)
+        obj.parent = body
+        collection.objects.link(obj)
+        eye_tris += sum(len(p.vertices) - 2 for p in obj.data.polygons)
 
     # The nub: a small faceted ball, its own object (to bob on its own), where the views put it.
     nub = SHEET["front"]["nub"]
@@ -240,10 +271,6 @@ def build():
     for poly in nub_mesh.polygons:
         poly.use_smooth = False
     color_faces(nub_mesh, rng, lambda p: 1.05 + p.z / (radius * BODY) * 0.3)
-    # The nub never shows the eyes: all its UVs on the black corner.
-    uv = nub_mesh.uv_layers.new(name="UVMap")
-    for loop in uv.data:
-        loop.uv = (0.002, 0.998)
     nub_mesh.materials.append(material)
     nub_object = bpy.data.objects.new("Nub", nub_mesh)
     nub_object.location = (across * BODY, -forward * BODY, height * BODY + HOVER)
@@ -252,7 +279,7 @@ def build():
 
     tris = sum(len(p.vertices) - 2 for m in (mesh, nub_mesh) for p in m.polygons)
     bpy.ops.wm.save_as_mainfile(filepath=str(HERE / "water-spirit.blend"))
-    print(f"built: {tris} triangles, body {BODY:.3f} m, nub at {height:.3f} ({across:+.3f} across, {forward:+.3f} forward)")
+    print(f"built: {tris} triangles (+{eye_tris} for the eyes), body {BODY:.3f} m, nub at {height:.3f} ({across:+.3f} across, {forward:+.3f} forward)")
 
 
 build()

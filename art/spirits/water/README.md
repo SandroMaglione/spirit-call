@@ -10,9 +10,9 @@ orthographic model sheet (`reference/sheet.png`; the other images in
 The model rendered from each of the sheet's cameras and laid on its view
 (front, back, left, right, top, bottom, and the isometric render; sheet
 outlines yellow, model red). Full size: `renders/overlay-<view>.png`.
-Beside the sheet, and at the game's camera and size:
+Beside the sheet (left, front, isometric), and at the game's camera:
 
-![Front and isometric, beside the sheet; the game's camera; game size](renders/compare.png)
+![Beside the sheet; the game's camera](renders/compare.png)
 
 ## From the sheet
 
@@ -23,11 +23,13 @@ Beside the sheet, and at the game's camera and size:
    back from the left and right views (each pair averaged), so the bulb,
    the uneven taper, and the back curving in toward the nub are the sheet's
    own. The nub floats where the views put it.
-3. The eyes are painted, not modeled: a texture (`eyes.png`) projected
-   from the front onto the front facets, the ovals exactly where and as
-   big as the front view draws them, glowing (an emissive texture in the
-   GLB). They lie on the surface, so they cannot sink into the facets or
-   stand out of them.
+3. The eyes are thin glowing ellipses laid on the surface like stickers:
+   dense discs whose every point is snapped onto the body, 2 mm above it,
+   along the eye's outward direction, where and as big as the front view
+   draws them. They bend with the facets, so they read as drawn on from
+   every side, and each is its own object (`Eye.L`, `Eye.R` in the GLB,
+   origin at the eye's center): blinking is scaling it, looking around is
+   moving it.
 4. `sweep_score.py` finds the isometric render's camera (35° round, 10° up)
    by rendering many and scoring each against it.
 5. `overlay.py` lays each render on the sheet's view and scores the
@@ -39,15 +41,15 @@ Beside the sheet, and at the game's camera and size:
 | About 0.6 m tall with its nub | Body 0.5 m, hovering 6 cm, nub on top |
 | Front, back, left, right outlines | Lofted through them (12 rings of 12 facets, each ring turned half a step) |
 | Bottom: a concave underside | The underside's middle 4% of its height above its rim |
-| Eyes: white glow | Painted on: projected emissive texture, white |
-| Base #2E7BFF, mid #4486FF, light #8EEBFF, eye #FFFFFF | Each facet one flat color (vertex colors), deep low and away from the light, light high and toward it |
-| Low-poly | 308 triangles, a 51 KB GLB |
+| Eyes: white glow | Ellipses laid on the surface, emissive white, their own objects (to blink and move) |
+| Base #2E7BFF, mid #4486FF, light #8EEBFF, eye #FFFFFF | Each facet one flat color (vertex colors), deep low and away from the light, light high and toward it, glowing softly in its own color |
+| Low-poly | 308 triangles for body and nub, 432 for the two eye discs (dense, to follow the facets); a 55 KB GLB |
 
 ## Rebuild
 
 ```sh
 uv run --with pillow --with numpy art/spirits/water/sheet.py                     # sheet.json (once per sheet)
-blender --background --python-exit-code 1 --python art/spirits/water/build.py    # water-spirit.blend, eyes.png
+blender --background --python-exit-code 1 --python art/spirits/water/build.py    # water-spirit.blend
 SWEEP=/tmp/sweep blender --background --python art/spirits/water/render.py       # isometric camera candidates
 uv run --with pillow --with numpy art/spirits/water/sweep_score.py /tmp/sweep    # its camera, into sheet.json
 blender --background --python-exit-code 1 --python art/spirits/water/render.py   # renders/
