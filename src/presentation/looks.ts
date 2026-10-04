@@ -42,6 +42,17 @@ export interface Moments {
   readonly hurt?: Shot
 }
 
+/**
+ * Drops a body sheds while it moves: about `rate` a second (at full speed),
+ * flung back against its motion in `colors`, falling, with a ripple on the
+ * floor for some of them.
+ */
+export interface Drops {
+  readonly rate: number
+  readonly colors: ReadonlyArray<number>
+  readonly size: number
+}
+
 /** Weapons in hand: each weapon's model, attached to the body model's `grip` bone as it is (same scale and axes). */
 export interface Held {
   readonly grip: string
@@ -70,14 +81,24 @@ export type BodyLook =
       readonly heightFactor: number
       readonly moments?: Moments
       readonly held?: Held
+      /** Drops shed behind it while it moves (a water spirit's trail; see `ShedSpiritDrops`). */
+      readonly drops?: Drops
     }
 
 /**
  * In the arena each character shows as her spirit (art/spirits/). Every
- * character is the water spirit for now, without animation: it only turns
- * to face (no moments: its moves play no clips).
+ * character is the water spirit for now: it bobs while it stands, hops
+ * while it runs (one hop per `distance` covered), and sheds drops behind
+ * it; its moves have no clips yet (they play over its loops).
  */
-const waterSpirit = { kind: "model", model: "waterSpirit", widthFactor: 1.5, heightFactor: view.bodyHeightFactor } as const
+const waterSpirit: BodyLook = {
+  kind: "model",
+  model: "waterSpirit",
+  widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor,
+  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  drops: { rate: 26, colors: [0x8eebff, 0x44b6ff, 0xe0f9ff], size: 3 }
+}
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   swordsman: waterSpirit,

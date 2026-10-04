@@ -45,6 +45,21 @@ Beside the sheet (left, front, isometric), and at the game's camera:
 | Base #2E7BFF, mid #4486FF, light #8EEBFF, eye #FFFFFF | Each facet one flat color (vertex colors), deep low and away from the light, light high and toward it, glowing softly in its own color |
 | Low-poly | 308 triangles for body and nub, 432 for the two eye discs (dense, to follow the facets); a 55 KB GLB |
 
+## Animation
+
+`animate.py` keys two clips on its objects (no skeleton), exported with it:
+
+- **Idle** (2 s loop): a gentle bob, squashing a little at the bottom; the
+  nub floats out of step with it, circling and spinning slowly; one blink
+  (the eyes squash shut and open).
+- **Run** (one hop every 0.53 s; the game plays one per 120 units covered):
+  a small hop squashing as it lands, leaning into the run, the nub trailing
+  behind and lagging the hop.
+
+The trail of drops is the game's (`ShedSpiritDrops` in
+`src/presentation/effects.ts`, set by its look's `drops`): drops flung
+back from its lower half while it moves, falling, a few leaving ripples.
+
 ## Rebuild
 
 ```sh
@@ -54,5 +69,5 @@ SWEEP=/tmp/sweep blender --background --python art/spirits/water/render.py      
 uv run --with pillow --with numpy art/spirits/water/sweep_score.py /tmp/sweep    # its camera, into sheet.json
 blender --background --python-exit-code 1 --python art/spirits/water/render.py   # renders/
 uv run --with pillow --with numpy art/spirits/water/overlay.py                   # renders on the sheet, scored
-blender --background --python-exit-code 1 --python art/spirits/water/export.py   # water-spirit.glb
+blender --background --python-exit-code 1 --python art/spirits/water/export.py   # water-spirit.glb with its clips, assets/spirits.ts
 ```

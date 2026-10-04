@@ -317,6 +317,53 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
   }
 })
 
+/** Where each body that sheds drops was last frame, and its share of a drop still owed. */
+const shedding = new WeakMap<object, { at: Vec2; owed: number }>()
+
+/**
+ * Drops off a moving spirit (a look's `drops`): flung back against its
+ * motion from its lower half, falling to the floor, some leaving a ripple
+ * where they fall. More the faster it goes; none while it stands or the
+ * world is frozen.
+ */
+export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
+  queries: {
+    players: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }, with: [Player] })
+  },
+  services: { host: Game.System.service(RenderHost), nodes: Game.System.service(RenderNodes), clock: Game.System.service(RenderClock) }
+}, ({ queries, services }) => {
+  const seconds = services.clock.frameSeconds
+  for (const { entity, data } of queries.players.each()) {
+    const node = services.nodes.get(entity.id)
+    if (node?.kind !== "player" || node.drops === null) continue
+    const drops = node.drops
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const last = shedding.get(node) ?? { at, owed: 0 }
+    shedding.set(node, last)
+    const moved = { x: at.x - last.at.x, y: at.y - last.at.y }
+    last.at = at
+    if (seconds <= 0) continue
+    const speed = Math.hypot(moved.x, moved.y) / seconds
+    if (speed < 20) {
+      last.owed = 0
+      continue
+    }
+    last.owed += drops.rate * seconds * Math.min(1, speed / 290)
+    const back = screenDirection({ x: -moved.x, y: -moved.y })
+    const feet = toScreen(projection, at)
+    const r = data.body.get().radius * projection.zoom
+    while (last.owed >= 1) {
+      last.owed -= 1
+      const color = drops.colors[Math.floor(Math.random() * drops.colors.length)]!
+      // From its lower half, a little behind it.
+      const from = { x: feet.x + back.x * r * 0.7 + (Math.random() - 0.5) * r * 0.9, y: feet.y + back.y * r * 0.35 - r * (0.3 + Math.random() * 0.9) }
+      const fling = 40 + Math.random() * 60
+      services.host.fx.mote(from, back.x * fling, back.y * fling * 0.5 - 30 - Math.random() * 40, { color, size: drops.size * (0.7 + Math.random() * 0.6), life: 0.4, gravity: 620, drag: 1.5, alpha: 0.9 })
+      if (Math.random() < 0.18) services.host.fx.ring({ x: feet.x + back.x * r * 1.5, y: feet.y + back.y * r * 0.75 + (Math.random() - 0.5) * r * 0.4 }, r * 0.3, drops.colors[0]!, 0.4)
+    }
+  }
+})
+
 /**
  * Hit reactions on enemy bodies: a recoil after each blow (the body squashes,
  * leans away from the blow over its feet, and shifts back, springing back

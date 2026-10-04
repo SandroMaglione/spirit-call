@@ -33,7 +33,7 @@ const actorParts = (assets: RenderAssets, look: BodyLook, radius: number, batche
   const body = makeBody(assets, look, radius, batched, weapon)
   pivot.add(body.object)
   root.add(shadow.object, pivot)
-  return { root, pivot, shadow, body }
+  return { root, pivot, shadow, body, drops: look.kind === "model" ? look.drops ?? null : null }
 }
 
 export const enemyColor = (enemy: EnemyKind): number => view.enemies[enemy].color

@@ -102,9 +102,10 @@ describe("render nodes", () => {
     const { assets, pool } = setup()
     const node = createNode({ kind: "player", character: "swordsman", weapon: "trainingBlade", radius: 16 }, assets, pool)
     if (node.kind !== "player") throw new Error("expected a player")
-    // Every character is the water spirit for now: a model without clips, which only turns to face.
+    // Every character is the water spirit for now: it bobs and hops (idle and run), and sheds drops.
     expect(characterLooks.swordsman.kind).toBe("model")
-    expect(node.body.moments).toBeNull()
+    expect(node.body.moments?.idle).toBe("Idle")
+    expect(node.drops).not.toBeNull()
     expect(node.pivot.children).toContain(node.body.object)
     expect(node.body.height).toBeGreaterThan(16)
     // Faces +Z for "down" the floor's y.
