@@ -85,7 +85,7 @@ def view(name):
 
 
 def main():
-    sheet = {"front": view("front"), "side": view("side")}
+    sheet = {"front": view("front"), "side": view("side"), "back": view("back")}
     (HERE / "sheet.json").write_text(json.dumps(sheet, indent=1))
     for name, v in sheet.items():
         print(name, "body", v["pixels"], "px; nub", {k: round(x, 3) for k, x in v["nub"].items()})

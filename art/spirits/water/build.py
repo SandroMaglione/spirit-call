@@ -2,11 +2,12 @@
 
 Everything comes from its character sheet (reference/, the crops of
 `sheet.png`), measured by sheet.py into sheet.json: each ring of the body
-takes its four extents from the sheet's outlines at that height (left and
-right from the front view, front and back from the side view), so the
-body's asymmetries, the cap's back curving in toward the nub included,
-are the sheet's own. The nub and the eyes are where the sheet shows them;
-colors are the sheet's swatches.
+takes its four extents from the sheet's true views at that height (left
+and right from the back view, mirrored; front and back from the side
+view), so the body's asymmetries, the cap's back curving in toward the
+nub included, are the sheet's own. The sheet's "front view" is the body
+turned 17° (fit.py finds that, and the eyes' place on the true front that
+puts them where that view draws them). Colors are the sheet's swatches.
 
     blender --background --python-exit-code 1 --python art/spirits/water/build.py
 
@@ -36,16 +37,12 @@ UNDERSIDE = 0.03  # the underside's middle, above its rim (slightly concave)
 SEGMENTS = 10
 JITTER = 0.02  # random radial unevenness, for facets that look cut, not turned
 
-# Eyes: the front view's size and spacing, placed symmetric on its face (the
-# sheet's front view is turned a little, so one eye sits off to the side).
-# Their height follows the isometric hero view, the game's camera: there
-# they sit at 31% and 23% of the silhouette's height, which this model only
-# shows with the eyes at 41% of the body's height. The sheet's front view
-# draws them at 26%: its isometric and front views disagree (see README).
-FRONT_EYES = SHEET["front"]["eyes"]
-EYE_HEIGHT = 0.41
-EYE_SIZE = (sum(e["width"] for e in FRONT_EYES) / len(FRONT_EYES) * 1.05, sum(e["tall"] for e in FRONT_EYES) / len(FRONT_EYES))
-EYE_APART = abs(FRONT_EYES[0]["offset"] - FRONT_EYES[1]["offset"])  # between centers, as the front view shows them
+# Eyes, centered on the true front: height, spacing, and size from fit.py
+# (seen turned like the sheet's front view, they land where it draws them).
+FIT = SHEET["fit"]
+EYE_HEIGHT = FIT["eye_height"]
+EYE_APART = FIT["eye_spread"]
+EYE_SIZE = (FIT["eye_width"] * 1.05, FIT["eye_tall"])
 
 
 def extents(view, z):
@@ -59,9 +56,10 @@ def extents(view, z):
 
 def ring_point(z, a):
     """The body's surface at height `z`, `a` radians round from its front (toward its left): four quarter-ellipses through the sheet's extents."""
-    right, left = extents("front", z)  # front view: screen left is its right (-X)
+    lo, hi = extents("back", z)  # back view: screen left is its left (+X)
+    left, right = -lo, hi
     back, front = extents("side", z)  # side view: its front is on screen right (-Y)
-    x = math.sin(a) * (left if math.sin(a) > 0 else -right)
+    x = math.sin(a) * (left if math.sin(a) > 0 else right)
     y = -math.cos(a) * (front if math.cos(a) > 0 else -back)
     return Vector((x, y, z))
 
@@ -117,9 +115,9 @@ def loft(bm, rng):
                 bm.faces.new((lower[k], lower[j], upper[j]))
                 bm.faces.new((lower[k], upper[j], upper[k]))
     # The tip: where the sheet's outlines close at the top.
-    right, left = extents("front", 0.995)
+    lo, hi = extents("back", 0.995)
     back, front = extents("side", 0.995)
-    tip = bm.verts.new((((right + left) / 2) * BODY, -((back + front) / 2) * BODY, BODY + HOVER))
+    tip = bm.verts.new((-((lo + hi) / 2) * BODY, -((back + front) / 2) * BODY, BODY + HOVER))
     for k in range(SEGMENTS):
         bm.faces.new((rings[-1][k], rings[-1][(k + 1) % SEGMENTS], tip))
     bottom = bm.verts.new((0, 0, UNDERSIDE * BODY + HOVER))
@@ -217,8 +215,8 @@ def build():
 
     # The nub: a small faceted ball over the tip (its own object, to bob on its own).
     bm = bmesh.new()
-    nub_spec = {"radius": (SHEET["front"]["nub"]["radius"] + SHEET["side"]["nub"]["radius"]) / 2,
-                "height": (SHEET["front"]["nub"]["height"] + SHEET["side"]["nub"]["height"]) / 2}
+    nub_spec = {"radius": (SHEET["back"]["nub"]["radius"] + SHEET["side"]["nub"]["radius"]) / 2,
+                "height": (SHEET["back"]["nub"]["height"] + SHEET["side"]["nub"]["height"]) / 2}
     bmesh.ops.create_icosphere(bm, subdivisions=1, radius=nub_spec["radius"] * BODY)
     bm.normal_update()
     nub_mesh = bpy.data.meshes.new("Nub")
@@ -229,8 +227,8 @@ def build():
     color_faces(nub_mesh, rng, lambda p: 1.05 + p.z / (nub_spec["radius"] * BODY) * 0.3)
     nub_mesh.materials.append(mesh.materials[0])
     nub = bpy.data.objects.new("Nub", nub_mesh)
-    # Where the sheet shows it: over the tip, behind it (front view offset to its right, side view offset back).
-    nub.location = (SHEET["front"]["nub"]["offset"] * BODY, -SHEET["side"]["nub"]["offset"] * BODY, nub_spec["height"] * BODY + HOVER)
+    # Where the sheet's true views show it: over the tip, behind it (back view: across; side view: back).
+    nub.location = (-SHEET["back"]["nub"]["offset"] * BODY, -SHEET["side"]["nub"]["offset"] * BODY, nub_spec["height"] * BODY + HOVER)
     nub.parent = body
     collection.objects.link(nub)
 

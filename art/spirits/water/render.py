@@ -61,15 +61,33 @@ scene.collection.objects.link(camera)
 scene.camera = camera
 target = Vector((0, 0, 0.36))
 
+import json
+import os
+
+
+def from_turn(degrees, elevation=0.0):
+    """The camera's direction from the spirit: `degrees` round from its front (negative: toward its right), `elevation` up."""
+    t, e = math.radians(degrees), math.radians(elevation)
+    return Vector((math.sin(t) * math.cos(e), -math.cos(t) * math.cos(e), math.sin(e)))
+
+
+FIT = json.loads((HERE / "sheet.json").read_text())["fit"]
 VIEWS = {
-    "front": Vector((0, -1, 0)),
+    # The true front; and the sheet's "front view", which is the body turned (fit.py).
+    "true-front": Vector((0, -1, 0)),
+    "front": from_turn(FIT["front_turn_degrees"]),
     "side": Vector((-1, 0, 0)),  # its front on the right, as the sheet shows it
     "back": Vector((0, 1, 0)),
     "top": Vector((0, 0.0001, 1)),  # its front at the bottom, as the sheet shows it
-    # The sheet's hero view is isometric, like the game's camera: 30° down,
-    # its face turned 32° to the right of the camera.
-    "hero": Vector((-math.sin(math.radians(32)) * math.cos(math.radians(30)), -math.cos(math.radians(32)) * math.cos(math.radians(30)), math.sin(math.radians(30)))),
+    # The sheet's hero view: three-quarter, from a little above (its camera fit by sweep_score.py).
+    "hero": from_turn(FIT["hero_turn_degrees"], FIT["hero_elevation_degrees"]),
+    # The game's camera: 30° down, the same turn.
+    "game": from_turn(FIT["hero_turn_degrees"], 30),
 }
+if os.environ.get("SWEEP"):
+    # Hero views at many turns, for fitting the sheet's (overlay.py --sweep).
+    VIEWS = {f"sweep{d}_{e}": from_turn(d, e) for d in range(-64, -15, 4) for e in (10, 15, 20, 25, 30, 35)}
+    OUT = Path(os.environ["SWEEP"])
 for name, direction in VIEWS.items():
     direction = direction.normalized()
     camera.location = target + direction * 4
@@ -81,7 +99,7 @@ world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.32, 0.25,
 scene.render.resolution_x = 30
 scene.render.resolution_y = 32
 camera.data.ortho_scale = 0.9
-direction = VIEWS["hero"].normalized()
+direction = VIEWS["game"].normalized()
 camera.location = target + direction * 4
 camera.rotation_euler = (-direction).to_track_quat("-Z", "Y").to_euler()
 scene.render.filepath = str(OUT / "game-size.png")

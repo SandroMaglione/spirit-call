@@ -53,20 +53,25 @@ def outline(mask):
     return edge
 
 
-for view in ("front", "side", "back"):
-    sheet, sheet_mask = normalized(HERE / "reference" / f"{view}.png")
-    model, model_mask = normalized(HERE / "renders" / f"{view}.png")
-    union = (sheet_mask | model_mask).sum()
-    iou = (sheet_mask & model_mask).sum() / union
-    blend = Image.blend(sheet, model, 0.5)
-    for image in (sheet, blend):
-        pixels = np.asarray(image).copy()
-        pixels[outline(sheet_mask)] = (255, 220, 60)
-        pixels[outline(model_mask)] = (255, 60, 60)
-        image.paste(Image.fromarray(pixels))
-    out = Image.new("RGB", (sheet.width * 2 + 10, sheet.height), (0, 0, 0))
-    out.paste(sheet, (0, 0))
-    out.paste(blend, (sheet.width + 10, 0))
-    ImageDraw.Draw(out).text((10, 10), f"{view}: overlap {iou:.1%} (yellow sheet, red model)", fill=(255, 255, 255))
-    out.save(HERE / "renders" / f"overlay-{view}.png")
-    print(f"{view}: overlap {iou:.1%}")
+def main():
+  for view in ("front", "side", "back", "top", "hero"):
+      sheet, sheet_mask = normalized(HERE / "reference" / f"{view}.png")
+      model, model_mask = normalized(HERE / "renders" / f"{view}.png")
+      union = (sheet_mask | model_mask).sum()
+      iou = (sheet_mask & model_mask).sum() / union
+      blend = Image.blend(sheet, model, 0.5)
+      for image in (sheet, blend):
+          pixels = np.asarray(image).copy()
+          pixels[outline(sheet_mask)] = (255, 220, 60)
+          pixels[outline(model_mask)] = (255, 60, 60)
+          image.paste(Image.fromarray(pixels))
+      out = Image.new("RGB", (sheet.width * 2 + 10, sheet.height), (0, 0, 0))
+      out.paste(sheet, (0, 0))
+      out.paste(blend, (sheet.width + 10, 0))
+      ImageDraw.Draw(out).text((10, 10), f"{view}: overlap {iou:.1%} (yellow sheet, red model)", fill=(255, 255, 255))
+      out.save(HERE / "renders" / f"overlay-{view}.png")
+      print(f"{view}: overlap {iou:.1%}")
+
+
+if __name__ == "__main__":
+    main()
