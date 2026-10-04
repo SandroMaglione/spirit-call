@@ -198,7 +198,13 @@ is on screen.
   one still learning (0.4 s). It reports hits per minute, seconds to clear,
   dashes per minute (how often the fight forces the dash), and pressure
   (the share of the time standing still would get hit). Use it to compare
-  tunings; a bot is not a human, so feel is checked by playing.
+  tunings; a bot is not a human, so feel is checked by playing. It fights
+  as a player does: one enemy at a time (kept until another comes much
+  nearer), however far that one backs off; it dashes in when the way is
+  clear and it holds a spare charge; and fire on the floor is a cost to
+  step through, not a wall (an elite's fire trail would otherwise keep it
+  away for good). A wave that does not clear in the lab is a finding: an
+  enemy a player cannot reach either, or a gap in the bot.
 
 ## Open questions
 
