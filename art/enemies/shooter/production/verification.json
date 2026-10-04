@@ -1,0 +1,42 @@
+{
+  "kind": "shooter",
+  "sha256": "e92b88060c3b433e5a42c9f9279353cbc91e31c4a9b4786edc90e2b88b8c1be1",
+  "triangles": 1180,
+  "material_count": 1,
+  "source_bounds_blender_m": [
+    [
+      -0.515625,
+      0.515625
+    ],
+    [
+      -0.4895833432674408,
+      0.546875
+    ],
+    [
+      0.0,
+      0.9895833134651184
+    ]
+  ],
+  "imported_bounds_blender_m": [
+    [
+      -0.515625,
+      0.515625
+    ],
+    [
+      -0.4895833432674408,
+      0.546875
+    ],
+    [
+      0.0,
+      0.9895833134651184
+    ]
+  ],
+  "animations": 0,
+  "skins": 0,
+  "cameras": 0,
+  "lights": 0,
+  "vertex_colors": true,
+  "source_parts_preserved": true,
+  "ground_origin": true,
+  "result": "passed"
+}

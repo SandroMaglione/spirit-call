@@ -80,6 +80,7 @@ def main(kind, source=None):
         'resolution':[640,640],'ambient':.45,
         'lights':{'sun':[1.6,[1, .95,.9]],'fill':[.45,[.8,.88,1]],'rim':[.35,[1,1,1]]},
         'sweep':{'turns':[20,50,10],'elevations':[15,25,35]}}
+    if kind=='swarmer':config['sweep']={'turns':[20,60,10],'elevations':[15,25,35,45,55]}
     (here/'spirit.json').write_text(json.dumps(config,indent=2)+'\n')
     (here/'sheet.py').write_text('"""Re-measure the preserved sheet with its labeled regions."""\nimport sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[2]/"production-tools"))\nfrom measure import measure\nmeasure("'+kind+'")\n')
     measure(kind)

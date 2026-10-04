@@ -1,0 +1,42 @@
+{
+  "kind": "swarmer",
+  "sha256": "a3f49ca058208090e5d939294529ed898ba8d2444d3791e55b80edf5930f2b23",
+  "triangles": 984,
+  "material_count": 1,
+  "source_bounds_blender_m": [
+    [
+      -0.2722133696079254,
+      0.2856687903404236
+    ],
+    [
+      -0.3534904420375824,
+      0.36847132444381714
+    ],
+    [
+      0.0,
+      0.6123801469802856
+    ]
+  ],
+  "imported_bounds_blender_m": [
+    [
+      -0.2722133696079254,
+      0.2856687903404236
+    ],
+    [
+      -0.3534904420375824,
+      0.36847132444381714
+    ],
+    [
+      0.0,
+      0.6123801469802856
+    ]
+  ],
+  "animations": 0,
+  "skins": 0,
+  "cameras": 0,
+  "lights": 0,
+  "vertex_colors": true,
+  "source_parts_preserved": true,
+  "ground_origin": true,
+  "result": "passed"
+}

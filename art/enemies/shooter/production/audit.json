@@ -1,7 +1,7 @@
 {
   "kind": "shooter",
   "status": "static model review; animation and game integration await review",
-  "triangles": 1260,
+  "triangles": 1180,
   "materials": 1,
   "mesh_parts": [
     "BellMouth",

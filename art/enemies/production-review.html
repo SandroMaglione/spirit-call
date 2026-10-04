@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enemy model review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #e3e4ea; color: #252c3c; }
+    header { padding: 20px 28px 14px; background: #f7f7fa; border-bottom: 1px solid #cbd0dc; }
+    h1 { margin: 0; font-size: 25px; font-weight: 650; }
+    p { margin: 4px 0 14px; }
+    nav, .views { display: flex; flex-wrap: wrap; gap: 7px; }
+    button, select { font: inherit; border: 1px solid #b2b9c9; border-radius: 6px; padding: 6px 14px; background: #f8f8fb; color: inherit; cursor: pointer; }
+    button[aria-pressed="true"] { background: #344664; color: white; border-color: #344664; }
+    main { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+    .model { min-width: 0; position: relative; }
+    #viewport { width: 100%; height: 570px; touch-action: none; }
+    #viewport canvas { display: block; width: 100%; height: 100%; }
+    .model .views, #status, .hint, .links { margin: 10px 24px; }
+    #status { min-height: 24px; font-weight: 600; }
+    .hint { font-size: 13px; color: #526074; }
+    .reference { padding: 22px; border-left: 1px solid #cbd0dc; min-width: 0; }
+    .reference label { display: block; margin-bottom: 12px; font-weight: 600; }
+    .reference img { display: block; width: 100%; background: #dfdfe8; border-radius: 6px; }
+    #sheet-link { display: inline-block; margin: 8px 0; }
+    a { color: #314e80; }
+    #pixels { image-rendering: pixelated; width: auto; height: 96px; display: inline-block; margin-left: 16px; }
+    .native { display: flex; gap: 12px; align-items: center; margin: 18px 24px; }
+    #native { background: #35423e; padding: 5px; }
+    .native span { font-size: 12px; }
+    @media (max-width: 700px) {
+      header { padding: 14px 16px; }
+      h1 { font-size: 21px; }
+      main { display: block; }
+      #viewport { height: 390px; }
+      .reference { border-left: 0; border-top: 1px solid #cbd0dc; padding: 16px; }
+      .model .views, #status, .hint, .links, .native { margin-left: 16px; margin-right: 16px; }
+      button { padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Enemy model review</h1>
+    <p>Static models for review before animation.</p>
+    <nav aria-label="Enemy">
+      <button data-kind="shooter" aria-pressed="true">Shooter</button>
+      <button data-kind="brute" aria-pressed="false">Brute</button>
+      <button data-kind="swarmer" aria-pressed="false">Swarmer</button>
+    </nav>
+  </header>
+  <main>
+    <section class="model" aria-label="3D model">
+      <div id="viewport"></div>
+      <div class="views" aria-label="Camera">
+        <button data-view="game">Game camera</button><button data-view="front">Front</button>
+        <button data-view="back">Back</button><button data-view="right">Right</button>
+        <button data-view="left">Left</button><button data-view="top">Top</button>
+        <button id="wire" aria-pressed="false">Wireframe</button>
+      </div>
+      <div id="status" role="status" aria-live="polite">Loading Shooter…</div>
+      <p class="hint">Drag to rotate. Scroll or pinch to zoom. The Brute model uses lowered fists.</p>
+      <div class="native"><img id="native" alt="Native small model preview"><img id="pixels" alt="Enlarged pixels"><span id="pixel-label"></span></div>
+      <p class="links"><a id="blend" href="#">Blender source</a> · <a id="glb" href="#">Static GLB</a> · <a id="readme" href="#">Model notes</a></p>
+    </section>
+    <section class="reference" aria-label="Reference and overlays">
+      <label>Compare with the sheet
+        <select id="reference-mode">
+          <option value="compare.png">Sheet beside model</option>
+          <option value="overlay-all.png">All silhouette overlays</option>
+          <option value="review-game-size.png">Game-size study</option>
+          <option value="measure-front.png">Measured front regions</option>
+        </select>
+      </label>
+      <img id="reference" alt="Sheet beside rendered model">
+      <a id="sheet-link" target="_blank">Open full reference sheet</a>
+      <p class="hint">Overlays use yellow for the sheet and red for the model. The notes record view and pose differences.</p>
+    </section>
+  </main>
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    const viewport=document.querySelector('#viewport');
+    const renderer=new THREE.WebGLRenderer({antialias:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.NoToneMapping;
+    viewport.append(renderer.domElement);
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#e3e4ea');
+    const camera=new THREE.OrthographicCamera(-1,1,1,-1,.01,100);
+    const controls=new OrbitControls(camera,renderer.domElement);
+    controls.enableDamping=true;controls.enablePan=false;controls.minZoom=.4;controls.maxZoom=4;
+    scene.add(new THREE.HemisphereLight('#dce5ff','#5f5c57',1.3));
+    const key=new THREE.DirectionalLight('#fff2e3',2.3);key.position.set(-3,5,4);scene.add(key);
+    const fill=new THREE.DirectionalLight('#d9e8ff',.6);fill.position.set(3,2,-3);scene.add(fill);
+    const grid=new THREE.GridHelper(4,20,'#a2aab6','#ccd0d7');grid.material.opacity=.5;grid.material.transparent=true;scene.add(grid);
+    const loader=new GLTFLoader();let model=null,kind='shooter',height=1,wire=false,request=0;
+    const status=document.querySelector('#status');
+    controls.addEventListener('change',()=>{if(window.modelReview)window.modelReview.camera=camera.position.toArray();});
+    const mode=document.querySelector('#reference-mode');
+    const base=()=>`/art/enemies/${kind}/production/`;
+    function resize(){
+      const w=viewport.clientWidth,h=viewport.clientHeight;const scale=height*.78;
+      camera.left=-scale*w/h;camera.right=scale*w/h;camera.top=scale;camera.bottom=-scale;
+      camera.updateProjectionMatrix();renderer.setSize(w,h);
+    }
+    function view(name){
+      const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
+      const angles={game:[35,30],front:[0,0],back:[180,0],right:[90,0],left:[-90,0],top:[0,89.99]};
+      const [turn,elevation]=angles[name].map(THREE.MathUtils.degToRad);
+      const target=new THREE.Vector3(0,height*.5,0);
+      camera.position.copy(target).add(new THREE.Vector3(Math.sin(turn)*Math.cos(elevation),Math.sin(elevation),Math.cos(turn)*Math.cos(elevation)).multiplyScalar(5));
+      camera.up.set(0,1,0);camera.zoom=1;controls.target.copy(target);camera.lookAt(target);controls.update();controls.enableDamping=damping;resize();
+    }
+    function reference(){document.querySelector('#reference').src=base()+'renders/'+mode.value;}
+    function dispose(root){root.traverse(o=>{if(o.isMesh){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms)m.dispose();}});}
+    async function load(next){
+      kind=next;const token=++request;status.textContent=`Loading ${kind}…`;
+      document.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));
+      reference();document.querySelector('#sheet-link').href=base()+'reference/sheet.png';
+      for(const ext of ['blend','glb'])document.querySelector('#'+ext).href=base()+`${kind}-model.${ext}`;
+      document.querySelector('#readme').href=base()+'README.md';
+      document.querySelector('#native').src=base()+'renders/game-size.png';document.querySelector('#pixels').src=base()+'renders/game-size.png';
+      document.querySelector('#pixel-label').textContent=`${kind==='brute'?48:kind==='shooter'?32:24}px native / enlarged`;
+      try {
+        const gltf=await loader.loadAsync(base()+`${kind}-model.glb`);
+        if(token!==request){dispose(gltf.scene);return;}
+        if(model){scene.remove(model);dispose(model);}model=gltf.scene;scene.add(model);
+        const box=new THREE.Box3().setFromObject(model);height=box.max.y-box.min.y;
+        let triangles=0,meshes=0;const materials=new Set();
+        model.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){materials.add(m.uuid);m.wireframe=wire;}}});
+        status.textContent=`${next[0].toUpperCase()+next.slice(1)} · ${triangles.toLocaleString()} triangles · ${materials.size} material · no animation`;
+        window.modelReview={kind:next,triangles,meshes,materials:materials.size,animations:gltf.animations.length,bounds:{min:box.min.toArray(),max:box.max.toArray()},loaded:true};
+        view('game');
+      } catch(error){status.textContent=`Could not load model: ${error.message}`;window.modelReview={kind:next,error:error.message};}
+    }
+    document.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>load(b.dataset.kind)));
+    document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.view)));
+    document.querySelector('#wire').addEventListener('click',event=>{wire=!wire;event.currentTarget.setAttribute('aria-pressed',String(wire));model?.traverse(o=>{if(o.isMesh){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms)m.wireframe=wire;}});});
+    mode.addEventListener('change',reference);
+    new ResizeObserver(resize).observe(viewport);
+    renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});
+    load('shooter');
+  </script>
+</body>
+</html>

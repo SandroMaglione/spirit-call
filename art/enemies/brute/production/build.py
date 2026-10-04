@@ -7,7 +7,7 @@ from geometry import Model
 
 m=Model(HERE)
 body=m.loft('StoneTorso','torso','warm',7,12)
-m.loft('HunchedBack','back','dark',5,8)
+m.loft('HunchedBack','back','dark',5,8,align=True)
 head=m.loft('BrowStone','head','light',6,10)
 m.surface_patch('RecessedFace',head,[(132,350),(163,350),(167,360),(155,371),(143,373),(131,361)],'#343132')
 m.surface_patch('BreastPlate',body,[(112,368),(122,376),(147,387),(172,375),(180,368),(172,390),(147,405),(124,394),(111,382)],'light')

@@ -1,43 +1,43 @@
 [
   {
     "turn": 50,
-    "elevation": 25,
-    "silhouette_iou": 0.8868219516067961
+    "elevation": 15,
+    "silhouette_iou": 0.8885212800895236
   },
   {
     "turn": 50,
-    "elevation": 15,
-    "silhouette_iou": 0.8811919645566547
+    "elevation": 25,
+    "silhouette_iou": 0.8812318126067195
   },
   {
     "turn": 40,
     "elevation": 15,
-    "silhouette_iou": 0.8560460424824967
+    "silhouette_iou": 0.8551222517058378
   },
   {
     "turn": 50,
     "elevation": 35,
-    "silhouette_iou": 0.8487982112912241
+    "silhouette_iou": 0.8286109504858442
   },
   {
     "turn": 40,
     "elevation": 25,
-    "silhouette_iou": 0.8242844773115536
+    "silhouette_iou": 0.8262590975254731
   },
   {
     "turn": 40,
     "elevation": 35,
-    "silhouette_iou": 0.7904518740871085
+    "silhouette_iou": 0.7819651586826686
   },
   {
     "turn": 30,
     "elevation": 15,
-    "silhouette_iou": 0.7692949332130982
+    "silhouette_iou": 0.7693798449612403
   },
   {
     "turn": 30,
     "elevation": 25,
-    "silhouette_iou": 0.7366558938594999
+    "silhouette_iou": 0.7418704024845002
   },
   {
     "turn": 20,
@@ -47,16 +47,16 @@
   {
     "turn": 30,
     "elevation": 35,
-    "silhouette_iou": 0.7134583159954565
+    "silhouette_iou": 0.7218970668874988
   },
   {
     "turn": 20,
     "elevation": 25,
-    "silhouette_iou": 0.7020552591118748
+    "silhouette_iou": 0.7026996472822646
   },
   {
     "turn": 20,
     "elevation": 35,
-    "silhouette_iou": 0.6831447022028216
+    "silhouette_iou": 0.6931912787165583
   }
 ]

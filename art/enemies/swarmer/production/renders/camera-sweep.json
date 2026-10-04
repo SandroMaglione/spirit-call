@@ -1,0 +1,127 @@
+[
+  {
+    "turn": 20,
+    "elevation": 15,
+    "silhouette_iou": 0.7158212765108836
+  },
+  {
+    "turn": 30,
+    "elevation": 15,
+    "silhouette_iou": 0.7089510393200398
+  },
+  {
+    "turn": 40,
+    "elevation": 15,
+    "silhouette_iou": 0.7039990753582986
+  },
+  {
+    "turn": 40,
+    "elevation": 25,
+    "silhouette_iou": 0.700551576357612
+  },
+  {
+    "turn": 30,
+    "elevation": 25,
+    "silhouette_iou": 0.6986277838405885
+  },
+  {
+    "turn": 40,
+    "elevation": 35,
+    "silhouette_iou": 0.6968653254626358
+  },
+  {
+    "turn": 40,
+    "elevation": 45,
+    "silhouette_iou": 0.6915621604158713
+  },
+  {
+    "turn": 30,
+    "elevation": 35,
+    "silhouette_iou": 0.6822534866150736
+  },
+  {
+    "turn": 50,
+    "elevation": 35,
+    "silhouette_iou": 0.677570498080605
+  },
+  {
+    "turn": 50,
+    "elevation": 25,
+    "silhouette_iou": 0.6766702839746852
+  },
+  {
+    "turn": 40,
+    "elevation": 55,
+    "silhouette_iou": 0.6752563839127267
+  },
+  {
+    "turn": 50,
+    "elevation": 15,
+    "silhouette_iou": 0.6750355991905869
+  },
+  {
+    "turn": 30,
+    "elevation": 45,
+    "silhouette_iou": 0.6749750647309509
+  },
+  {
+    "turn": 20,
+    "elevation": 25,
+    "silhouette_iou": 0.6736320133865257
+  },
+  {
+    "turn": 50,
+    "elevation": 45,
+    "silhouette_iou": 0.6699636863466236
+  },
+  {
+    "turn": 30,
+    "elevation": 55,
+    "silhouette_iou": 0.6695639520783819
+  },
+  {
+    "turn": 50,
+    "elevation": 55,
+    "silhouette_iou": 0.657480349769679
+  },
+  {
+    "turn": 60,
+    "elevation": 15,
+    "silhouette_iou": 0.6546814715525205
+  },
+  {
+    "turn": 60,
+    "elevation": 25,
+    "silhouette_iou": 0.6527346393836283
+  },
+  {
+    "turn": 20,
+    "elevation": 35,
+    "silhouette_iou": 0.6475428290725996
+  },
+  {
+    "turn": 20,
+    "elevation": 55,
+    "silhouette_iou": 0.6466300940438872
+  },
+  {
+    "turn": 60,
+    "elevation": 35,
+    "silhouette_iou": 0.6452088633263282
+  },
+  {
+    "turn": 20,
+    "elevation": 45,
+    "silhouette_iou": 0.6411846077728526
+  },
+  {
+    "turn": 60,
+    "elevation": 45,
+    "silhouette_iou": 0.6349275221152739
+  },
+  {
+    "turn": 60,
+    "elevation": 55,
+    "silhouette_iou": 0.6198375713369129
+  }
+]

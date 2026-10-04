@@ -156,7 +156,8 @@ class Model:
         for p in obj.data.polygons:
             if p.index >= segments*3:
                 for i in p.loop_indices:attr.data[i].color=(*linear(inner_color),1)
-        self.ellipsoid('MouthRecess',(cx,ytip+.19,cz),(rx*gap*.77,.012,rz*gap*.77),inner_color,segments,4)
+        cap=[(cx,ytip+.19,cz)]+[(cx+rx*gap*.76*math.cos(2*math.pi*k/segments),ytip+.18,cz+rz*gap*.76*math.sin(2*math.pi*k/segments)) for k in range(segments)]
+        self.mesh('MouthRecess',cap,[(0,1+k,1+(k+1)%segments) for k in range(segments)],inner_color,0)
         return cx,ytip,cz,rx,rz,obj
 
     def eyes(self,body,background='#303341',core='#FFD18A',socket_scale=1.65,center=0):
@@ -220,6 +221,50 @@ class Model:
                     verts.append((v.x,y-.0025,v.y))
                 faces += [(start,start+k,start+k+1) for k in range(1,len(poly)-1)]
         return self.mesh(name,verts,faces,color,0)
+
+    def front_prism(self,name,points,y,depth,color):
+        pixel=self.sheet['meters_per_pixel'];center=self.config['center']['front'];ground=self.config['ground']['front']
+        front=[((x-center)*pixel,y,(ground-z)*pixel) for x,z in points]
+        back=[(x,y+depth,z) for x,_,z in front]
+        n=len(front)
+        # A ridge across the face makes the tooth faceted without extra
+        # surface noise. Its outline is the annotated sheet pixel polygon.
+        ridge=(sum(v[0] for v in front)/n,y-.008,sum(v[2] for v in front)/n)
+        verts=front+back+[ridge]
+        faces=[(2*n,k,(k+1)%n) for k in range(n)]+[tuple(range(n,2*n))]
+        faces += [(k,k+n,(k+1)%n+n,(k+1)%n) for k in range(n)]
+        return self.mesh(name,verts,faces,color)
+
+    def seat_on_shell(self,part,body):
+        # Drawn views disagree slightly on spike root height. Preserve each
+        # measured spike shape and seat its root on the actual lofted shell.
+        tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
+        low=min(v.co.z for v in part.data.vertices)
+        base=[v.co for v in part.data.vertices if v.co.z<low+.001]
+        center=sum(base,Vector())/len(base)
+        hit,_,_,_=tree.ray_cast(Vector((center.x,center.y,3)),Vector((0,0,-1)))
+        if hit is None:raise ValueError(f'{part.name} outside shell')
+        for v in part.data.vertices:v.co.z+=hit.z-low-.003
+
+    def leg_joint(self,part,body,color):
+        tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
+        top=max(v.co.z for v in part.data.vertices)
+        roots=[v.co for v in part.data.vertices if v.co.z>top-.008]
+        start=sum(roots,Vector())/len(roots)
+        hit,normal,_,_=tree.find_nearest(start)
+        end=hit-normal*.022
+        axis=(end-start).normalized()
+        tangent=axis.cross(Vector((0,0,1)))
+        if tangent.length<.01:tangent=axis.cross(Vector((1,0,0)))
+        tangent.normalize();other=axis.cross(tangent).normalized()
+        radius=.035;verts=[];n=6
+        for center in (start,end):
+            for k in range(n):
+                a=2*math.pi*k/n
+                verts.append(center+radius*(math.cos(a)*tangent+math.sin(a)*other))
+        faces=[tuple(range(n)),tuple(range(n,2*n))]
+        faces += [(k,(k+1)%n,(k+1)%n+n,k+n) for k in range(n)]
+        return self.mesh(part.name.replace('Leg','Joint'),verts,faces,color)
 
     def finish(self,main):
         objects=[o for o in bpy.data.objects if o.type=='MESH']

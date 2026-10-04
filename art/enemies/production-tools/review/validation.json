@@ -1,0 +1,40 @@
+{
+  "scope": "Static Shooter, Brute and Swarmer review candidates; no gameplay integration",
+  "blender_version": "4.5.14 LTS",
+  "exports": {
+    "command": "blender --background --python-exit-code 1 --python art/enemies/production-tools/verify.py -- shooter brute swarmer",
+    "result": "passed",
+    "checks": ["under 2000 triangles each", "one shared vertex-color material", "zero animations and skins", "no cameras or lights", "no decoder extensions", "source and imported mesh names agree", "source and imported world bounds agree", "ground origin"]
+  },
+  "typecheck": "passed",
+  "lint": "passed",
+  "standard_check": {
+    "command": "pnpm check",
+    "passed_once": true,
+    "latest_result": "368 passed; deterministic replay exceeded its existing 5000 ms timeout",
+    "affected_test": "test/robustness.test.ts: replays a 40 s run with waves and input to the identical world",
+    "test_passed_in_isolation": true
+  },
+  "final_tests": {
+    "command": "pnpm exec vitest run --maxWorkers=1",
+    "result": "passed",
+    "files": 48,
+    "tests": 369,
+    "duration_seconds": 24.08,
+    "replay_test_duration_ms": 3149
+  },
+  "browser": {
+    "network_url": "http://192.168.40.47:5199/art/enemies/production-review.html",
+    "desktop_viewport": [1280, 800],
+    "phone_viewport": [390, 844],
+    "all_models_loaded": true,
+    "phone_horizontal_overflow": false,
+    "synthetic_touch_rotation": true,
+    "touch_camera_position_before": [2.48365882446077, 2.8061900734901424, 3.5470323995811133],
+    "touch_camera_position_after": [1.4941015588539261, 2.8061900734901433, 4.064192482133479],
+    "physical_phone_checked": false,
+    "live_arena_checked": false,
+    "note": "An earlier shared dev server stopped during inspection; restarting restored file loads. Synthetic touch events use a temporary pointer-capture shim."
+  },
+  "review_status": "Awaiting model feedback before rigging, animation and integration; several view scores are below the 90 percent target"
+}

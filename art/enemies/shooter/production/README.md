@@ -8,7 +8,7 @@ The body loft uses the front/back widths and left/right depths measured in
 `sheet.json`. Separate measured parts form the cream fins, dorsal spike,
 feet and tail. The coral mouth has an actual opening, inner wall and dark
 recess. The two eyes are separate surface-projected meshes. All parts share
-one vertex-color material. The static source has 1,260 triangles and no rig
+one vertex-color material. The static source has 1,180 triangles and no rig
 or clips; merging and skinning for enemy batching comes after model review.
 
 ## Review evidence
