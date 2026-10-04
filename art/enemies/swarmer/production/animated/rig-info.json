@@ -1,0 +1,110 @@
+{
+  "source": "../swarmer-model.blend",
+  "source_sha256": "c38a73db52ad7bfacf53418b0acd010232a9461487d1db57ed75e343547efa20",
+  "triangles": 984,
+  "bones": 7,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "RedShell": {
+      "body": 150
+    },
+    "BackSpike": {
+      "body": 22
+    },
+    "ShellSpike.L": {
+      "body": 22
+    },
+    "ShellSpike.R": {
+      "body": 22
+    },
+    "JawShell": {
+      "body": 35,
+      "jaw": 25
+    },
+    "MouthRecess": {
+      "body": 13
+    },
+    "UpperFang.L": {
+      "body": 9
+    },
+    "UpperFang.R": {
+      "body": 9
+    },
+    "SideFang.L": {
+      "body": 11
+    },
+    "SideFang.R": {
+      "body": 11
+    },
+    "LowerTooth.L": {
+      "jaw": 9
+    },
+    "LowerTooth.R": {
+      "jaw": 9
+    },
+    "FrontLeg.L": {
+      "leg.L": 32
+    },
+    "FrontLeg.R": {
+      "leg.R": 32
+    },
+    "FrontJoint.L": {
+      "leg.L": 12
+    },
+    "FrontJoint.R": {
+      "leg.R": 12
+    },
+    "BackLeg.L": {
+      "back.L": 32
+    },
+    "BackLeg.R": {
+      "back.R": 32
+    },
+    "BackJoint.L": {
+      "back.L": 12
+    },
+    "BackJoint.R": {
+      "back.R": 12
+    },
+    "UnderShell": {
+      "body": 26
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true
+}

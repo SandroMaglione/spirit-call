@@ -1,0 +1,41 @@
+{
+  "kind": "shooter",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 1180,
+  "materials": 1,
+  "mesh_parts": [
+    "BellMouth",
+    "DorsalSpike",
+    "Eye.L",
+    "Eye.R",
+    "EyeSocket.L",
+    "EyeSocket.R",
+    "Foot.L",
+    "Foot.R",
+    "MouthRecess",
+    "ShooterBody",
+    "SideFin.L",
+    "SideFin.R",
+    "TailFin"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.515625,
+      0.515625
+    ],
+    [
+      -0.4895833432674408,
+      0.546875
+    ],
+    [
+      0.0,
+      0.9895833134651184
+    ]
+  ],
+  "height_m": 0.9895833134651184,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}

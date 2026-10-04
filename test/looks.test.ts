@@ -4,6 +4,8 @@ import path from "node:path"
 import { describe, expect, it } from "vitest"
 
 import { characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
+import { enemies } from "../src/content/enemies.ts"
+import type { EnemyKind } from "../src/content/enemies.ts"
 import type { Moments, Shot } from "../src/presentation/looks.ts"
 import { models } from "../src/presentation/models.ts"
 import type { ClipTiming, ModelId } from "../src/presentation/models.ts"
@@ -69,5 +71,17 @@ describe("looks and models", () => {
 
   it("use only registered models", () => {
     expect([...modelsInLooks()].every((id) => id in models)).toBe(true)
+  })
+
+  it("enemy attack variants name real moves and exported phase clips", () => {
+    for (const kind of Object.keys(enemyLooks) as Array<EnemyKind>) {
+      const look = enemyLooks[kind]
+      if (look.kind !== "model") continue
+      for (const [attack, phases] of Object.entries(look.attackClips ?? {})) {
+        expect(enemies[kind].attacks.some((spec) => spec.id === attack), `${kind}/${attack}`).toBe(true)
+        const clips: Readonly<Record<string, ClipTiming>> = models[look.model].clips
+        for (const clip of Object.values(phases)) expect(clips[clip], `${kind}/${attack}/${clip}`).toBeDefined()
+      }
+    }
   })
 })

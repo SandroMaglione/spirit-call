@@ -1,0 +1,124 @@
+{
+  "source": "../brute-model.blend",
+  "source_sha256": "1254f0bf76a8613c7348566d305d0ec43d7dc903449dadf24295831fc6dd194d",
+  "triangles": 1612,
+  "bones": 7,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "StoneTorso": {
+      "body": 86
+    },
+    "HunchedBack": {
+      "body": 42
+    },
+    "BrowStone": {
+      "head": 62
+    },
+    "RecessedFace": {
+      "head": 215
+    },
+    "PaleBrowCap": {
+      "head": 17
+    },
+    "BreastPlate": {
+      "body": 169
+    },
+    "EyeSocket.L": {
+      "head": 25
+    },
+    "Eye.L": {
+      "head": 25
+    },
+    "Eye.R": {
+      "head": 25
+    },
+    "EyeSocket.R": {
+      "head": 25
+    },
+    "Shoulder.L": {
+      "body": 42
+    },
+    "Shoulder.R": {
+      "body": 42
+    },
+    "UpperArm.L": {
+      "arm.L": 34
+    },
+    "UpperArm.R": {
+      "arm.R": 34
+    },
+    "Forearm.L": {
+      "arm.L": 42
+    },
+    "Forearm.R": {
+      "arm.R": 42
+    },
+    "Fist.L": {
+      "arm.L": 42
+    },
+    "Fist.R": {
+      "arm.R": 42
+    },
+    "Thigh.L": {
+      "leg.L": 34
+    },
+    "Thigh.R": {
+      "leg.R": 34
+    },
+    "Foot.L": {
+      "leg.L": 42
+    },
+    "Foot.R": {
+      "leg.R": 42
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "WindupStomp": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "ActiveStomp": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "RecoveryStomp": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true
+}

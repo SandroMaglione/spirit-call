@@ -1,0 +1,15 @@
+{
+  "metric": "silhouette intersection over union; independently normalized height, centered bounding box",
+  "target": 0.9,
+  "views": {
+    "front": 0.8723867352747485,
+    "back": 0.9206496835514825,
+    "left": 0.8374987759365445,
+    "right": 0.8442793721435038,
+    "top": 0.8872096886923244,
+    "bottom": 0.7404875117837793,
+    "hero": 0.8849980539067821
+  },
+  "orthographic_camera_elevation": 0,
+  "reference_note": "Sheets include perspective and inconsistent mouth positions or poses; see README."
+}

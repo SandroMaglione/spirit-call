@@ -1,0 +1,42 @@
+{
+  "kind": "brute",
+  "sha256": "fc7261c7358029c903914670b726899bddc60290629cb7a6bace59fb27a174b3",
+  "triangles": 1612,
+  "material_count": 1,
+  "source_bounds_blender_m": [
+    [
+      -0.8369565010070801,
+      0.8369565010070801
+    ],
+    [
+      -0.502173900604248,
+      0.42989131808280945
+    ],
+    [
+      0.0,
+      1.392391324043274
+    ]
+  ],
+  "imported_bounds_blender_m": [
+    [
+      -0.8369565010070801,
+      0.8369565010070801
+    ],
+    [
+      -0.502173900604248,
+      0.42989131808280945
+    ],
+    [
+      0.0,
+      1.392391324043274
+    ]
+  ],
+  "animations": 0,
+  "skins": 0,
+  "cameras": 0,
+  "lights": 0,
+  "vertex_colors": true,
+  "source_parts_preserved": true,
+  "ground_origin": true,
+  "result": "passed"
+}

@@ -2,8 +2,25 @@ import { describe, expect, it } from "vitest"
 import { enemies } from "../src/content/enemies.ts"
 import { atlasFrame } from "../src/presentation/animation-atlas.ts"
 import { enemyPose } from "../src/presentation/enemy-pose.ts"
+import { enemyLooks } from "../src/presentation/looks.ts"
 
 describe("enemy animation sampling", () => {
+  it("samples the stomp clips over the stomp's own phase duration", () => {
+    const stomp = enemies.brute.attacks.find((attack) => attack.id === "stomp")!
+    const look = enemyLooks.brute
+    if (look.kind !== "model") throw new Error("Brute needs its model")
+    expect(enemyPose(stomp, "windup", .375, look.attackClips?.stomp)).toEqual({ clip: "WindupStomp", progress: .5 })
+    expect(enemyPose(stomp, "active", .06, look.attackClips?.stomp)).toEqual({ clip: "ActiveStomp", progress: .5 })
+    expect(enemyPose(stomp, "recovery", .4, look.attackClips?.stomp)).toEqual({ clip: "RecoveryStomp", progress: .5 })
+  })
+  it("uses the spray's release pose when its active phase has zero duration", () => {
+    const spray = enemies.shooter.attacks.find((attack) => attack.id === "spray")!
+    const look = enemyLooks.shooter
+    if (look.kind !== "model") throw new Error("Shooter needs its model")
+    expect(enemyPose(spray, "windup", spray.windup / 2, look.attackClips?.spray)).toEqual({ clip: "WindupSpray", progress: .5 })
+    expect(enemyPose(spray, "recovery", 0, look.attackClips?.spray)).toEqual({ clip: "RecoverySpray", progress: 0 })
+    expect(enemyPose(spray, "ready", 0, look.attackClips?.spray)).toBeNull()
+  })
   it("wraps reversed locomotion and closes the last interval without skipping a pose", () => {
     const clip = { offset: 10, frames: 31, seconds: 1, loop: true }
     expect(atlasFrame(clip, -.1)[0]).toBe(37)

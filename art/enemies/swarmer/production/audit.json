@@ -1,0 +1,49 @@
+{
+  "kind": "swarmer",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 984,
+  "materials": 1,
+  "mesh_parts": [
+    "BackJoint.L",
+    "BackJoint.R",
+    "BackLeg.L",
+    "BackLeg.R",
+    "BackSpike",
+    "FrontJoint.L",
+    "FrontJoint.R",
+    "FrontLeg.L",
+    "FrontLeg.R",
+    "JawShell",
+    "LowerTooth.L",
+    "LowerTooth.R",
+    "MouthRecess",
+    "RedShell",
+    "ShellSpike.L",
+    "ShellSpike.R",
+    "SideFang.L",
+    "SideFang.R",
+    "UnderShell",
+    "UpperFang.L",
+    "UpperFang.R"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.2722133696079254,
+      0.2856687903404236
+    ],
+    [
+      -0.3993121087551117,
+      0.36847132444381714
+    ],
+    [
+      0.0,
+      0.6123801469802856
+    ]
+  ],
+  "height_m": 0.6123801469802856,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}

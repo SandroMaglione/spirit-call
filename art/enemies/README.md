@@ -8,9 +8,9 @@ recipe. There is no separate viewer; inspect motion in Blender or the live game.
 | --- | --- | ---: | ---: | --- |
 | dummy | Padded training post; wobbles when struck | 676 | 3 | [PNG](dummy/reference.png) |
 | chaser | Rust-colored hook creature; draws back its striking arm | 1,540 | 8 | [PNG](chaser/reference.png) |
-| shooter | Round bell-mouth creature; opens its muzzle for a volley | 1,624 | 8 | [PNG](shooter/reference.png) |
-| brute | Stone heavyweight; raises both fists for a slam | 996 | 7 | [PNG](brute/reference.png) |
-| swarmer | Small seed pest; springs forward to bite | 456 | 7 | [PNG](swarmer/reference.png) |
+| shooter | Blue bell-mouth creature; expands its muzzle for volley/spray | 1,180 | 8 | [Approved source](shooter/production/README.md) |
+| brute | Pale-brow stone heavyweight; raises fists to slam, lifts a foot to stomp | 1,612 | 7 | [Approved source](brute/production/README.md) |
+| swarmer | Red-shell pest with projecting fangs; compresses and lifts into a bite | 984 | 7 | [Approved source](swarmer/production/README.md) |
 | charger | Four-legged armored ram; crouches before rushing | 1,528 | 7 | [PNG](charger/reference.png) |
 | sniper | Tall needle creature; steadies its long muzzle | 808 | 8 | [PNG](sniper/reference.png) |
 | guardian | Helmeted guard with plank shield and mace | 1,516 | 8 | [PNG](guardian/reference.png) |
