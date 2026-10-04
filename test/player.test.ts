@@ -122,7 +122,11 @@ describe("dash", () => {
   })
 
   it("cannot tunnel through a pillar, even with an extreme dash", () => {
-    const tuning = tuningWith({ dash: { distance: 3000, duration: 0.05 } })
+    const tuning = tuningWith({
+      dash: { distance: 3000, duration: 0.05 },
+      // An explicit obstacle keeps this sweep test independent of the shipped court's art layout.
+      arenas: { courtyard: { pillars: [{ x: 0.5, y: 0.16, size: 50 }], props: [] } }
+    })
     // Face world north (straight at the pillar at (0.5, 0.16)) and dash standing still: a dash from standing goes the way she faces.
     const run = start({ tuning, keys: doubleTap("right", 1) })
     const FaceNorth = Game.System("Test/FaceNorth", { queries: { player: Game.Query({ selection: { facing: Game.Query.write(Facing) }, with: [Player] }) } }, ({ queries }) => {

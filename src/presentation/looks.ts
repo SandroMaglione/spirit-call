@@ -306,17 +306,12 @@ export const placeholderArena: ArenaLook = {
   scenery: []
 }
 
-/**
- * The courtyard (`art/environment/courtyard`): paving, stone walls (low ones
- * in front, so they never hide the player), stone pillars. A brazier burns
- * in each corner and urns stand in pairs by the far walls; rocks lie where
- * they fell. 70 units per meter fits its large pillar to the arena's
- * 70-unit pillars.
- */
+/** Four stone pillars frame an open court, with low benches and planters for cover. Ritual goods dress the paving; a pergola, gate, alcove and fountain stand beyond the boundary. */
 export const courtyardArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["pavingPlain", "pavingPlain", "pavingPlain", "pavingCracked"],
     color: 0x2a2724
   },
@@ -327,30 +322,46 @@ export const courtyardArena: ArenaLook = {
     inner: { kind: "run", model: "wallLow" }
   },
   scenery: [
-    { model: "rubbleStones", at: { x: 640, y: 50 }, turn: 0.7 },
-    { model: "rubbleStones", at: { x: 46, y: 1320 }, turn: Math.PI / 2 + 0.53 },
-    { model: "rubbleStones", at: { x: 1690, y: 1240 }, turn: Math.PI / 2 - 0.27 }
+    { model: "courtyardStudyCourtyardPergola", at: { x: 480, y: -150 }, turn: 0 },
+    { model: "courtyardStudyCarvedGateway", at: { x: 900, y: -110 }, turn: 0 },
+    { model: "courtyardStudyOfferingAlcove", at: { x: 1360, y: -150 }, turn: 0 },
+    { model: "courtyardStudyTieredFountain", at: { x: -145, y: 900 }, turn: 0 },
+    { model: "courtyardStudyJadeBowl", at: { x: 440, y: 65 }, turn: 0 },
+    { model: "courtyardStudyIncenseTray", at: { x: 870, y: 60 }, turn: 0 },
+    { model: "courtyardStudyJadeJar", at: { x: 1240, y: 60 }, turn: 0 },
+    { model: "courtyardStudyVotivePlate", at: { x: 1370, y: 60 }, turn: 0 },
+    { model: "courtyardStudyStoneChips", at: { x: 285, y: 970 }, turn: 0 },
+    { model: "courtyardStudyJadeBowl", at: { x: -100, y: 960 }, turn: 0 },
+    { model: "courtyardStudyIncenseTray", at: { x: 1270, y: -145 }, turn: 0 },
+    { model: "courtyardStudyJadeJar", at: { x: 550, y: -135 }, turn: 0 },
+    { model: "courtyardStudyVotivePlate", at: { x: 800, y: -100 }, turn: 0 },
+    { model: "courtyardStudyStoneChips", at: { x: 930, y: 350 }, turn: Math.PI / 2 },
+    { model: "courtyardStudyStoneChips", at: { x: 1450, y: 930 }, turn: Math.PI },
+    { model: "courtyardStudyStoneChips", at: { x: 90, y: 1240 }, turn: Math.PI / 2 },
+    { model: "courtyardStudyJadeBowl", at: { x: 75, y: 560 }, turn: 0 },
+    { model: "courtyardStudyVotivePlate", at: { x: 950, y: 1460 }, turn: 0 }
   ],
   props: [
-    { model: "brazier", turn: 0 },
-    { model: "brazier", turn: 0 },
-    { model: "brazier", turn: 0 },
-    { model: "brazier", turn: 0 },
-    { model: "urnJade", turn: 0 },
-    { model: "urnJade", turn: 0 },
-    { model: "urnJade", turn: Math.PI / 2 },
-    { model: "urnJade", turn: Math.PI / 2 },
-    { model: "rocksTall", turn: Math.PI / 2 - 0.37 },
-    { model: "rocksLow", turn: 0.4 },
-    { model: "rocksLow", turn: 0.5 },
-    { model: "rocksTall", turn: 2.6 }
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyHandledUrn", turn: 0 },
+    { model: "courtyardStudyHandledUrn", turn: 0 },
+    { model: "courtyardStudyCarvedTablet", turn: 0 },
+    { model: "courtyardStudyHandledUrn", turn: Math.PI / 2 },
+    { model: "courtyardStudyHandledUrn", turn: Math.PI / 2 },
+    { model: "courtyardStudyFernPlanter", turn: 0 },
+    { model: "courtyardStudyFernPlanter", turn: 0 },
+    { model: "courtyardStudyStoneBench", turn: Math.PI / 2 },
+    { model: "courtyardStudyStoneBench", turn: Math.PI / 2 }
   ],
   background: 0x1f1e1c,
   fires: [
-    { at: { x: 23, y: 23 }, height: 59 },
-    { at: { x: 1777, y: 23 }, height: 59 },
-    { at: { x: 23, y: 1777 }, height: 59 },
-    { at: { x: 1777, y: 1777 }, height: 59 }
+    { at: { x: 17, y: 17 }, height: 28 },
+    { at: { x: 1783, y: 17 }, height: 28 },
+    { at: { x: 17, y: 1783 }, height: 28 },
+    { at: { x: 1783, y: 1783 }, height: 28 }
   ]
 }
 

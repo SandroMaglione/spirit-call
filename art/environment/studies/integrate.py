@@ -83,6 +83,19 @@ def apply(arena, layout):
     look_file = ROOT / "src/presentation/looks.ts"
     looks = look_file.read_text()
     start = looks.index(f"export const {arena}Arena: ArenaLook = {{")
+    descriptions = {
+        "courtyard": "Four stone pillars frame an open court, with low benches and planters for cover. Ritual goods dress the paving; a pergola, gate, alcove and fountain stand beyond the boundary.",
+        "cistern": "The basins and low walls keep their water tactics. Compact machinery and repair benches provide cover; pump banks, valves and a settling tank fill the exterior service yard.",
+        "kilnworks": "Fire trenches divide the foundry. Low casting benches and compact machinery interrupt its flanks; the furnace, chimney and covered work bays stand on the exterior paving.",
+        "sanctuary": "Rooted saplings replace the corner pillars along the sanctuary's lanes. Low growth and fallen leaves dress the ground; rooted ruins and the shrine grove frame the exterior.",
+        "harbor": "Cargo and moorings provide low cover around the harbor's water channels. Small dock gear lies on the boards; a supported crane, net shed and boat cradle stand outside the quay.",
+        "necropolis": "The obelisk ring and elemental pools remain. Compact burial goods and folded-wing guardians provide cover; the tomb gate, burial dais and sun altar frame the burial ground.",
+        "citadel": "A ring of four pillars surrounds the keep; banners and equipment racks mark the outer approaches. Small supplies dress the floor; a throne court and supported siege yard stand outside.",
+        "monastery": "Low cloister walls retain their open corners. Benches, fitted lanterns and an attached bell provide cover; the bell tower, pavilion and winter hearth stand on the exterior paving."
+    }
+    doc_start = looks.rfind("/**", 0, start)
+    looks = looks[:doc_start] + "/** " + descriptions[arena] + " */\n" + looks[start:]
+    start = looks.index(f"export const {arena}Arena: ArenaLook = {{")
     scenery = [f'    {{ model: "{model_id(arena, asset)}", at: {{ x: {x}, y: {y} }}, turn: {turn(q)} }}' for asset, x, y, q in layout["scenery"]]
     looks = replace_field(looks, start, "scenery", "  scenery: [\n" + ",\n".join(scenery) + "\n  ]")
     looks = replace_field(looks, start, "props", "  props: [\n" + ",\n".join(props) + "\n  ]")

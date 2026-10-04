@@ -93,29 +93,24 @@ export const arenas = {
       { x: 0.28, y: 0.28, size: 70 },
       { x: 0.72, y: 0.28, size: 70 },
       { x: 0.28, y: 0.72, size: 70 },
-      { x: 0.72, y: 0.72, size: 70 },
-      { x: 0.5, y: 0.16, size: 50 },
-      { x: 0.5, y: 0.84, size: 50 },
-      { x: 0.16, y: 0.5, size: 50 },
-      { x: 0.84, y: 0.5, size: 50 }
+      { x: 0.72, y: 0.72, size: 70 }
     ],
     walls: [],
     hazards: [],
     props: [
-      // A brazier in each corner, and urns in pairs by the north and west walls.
-      prop(23, 23, 46, 46),
-      prop(1777, 23, 46, 46),
-      prop(23, 1777, 46, 46),
-      prop(1777, 1777, 46, 46),
-      prop(760, 23, 50, 46),
-      prop(1040, 23, 50, 46),
-      prop(23, 760, 46, 50),
-      prop(23, 1040, 46, 50),
-      // Rocks fallen in from outside, where they landed.
-      prop(1420, 36, 68, 72),
-      prop(1492, 32, 76, 64),
-      prop(1761, 1180, 78, 68),
-      prop(640, 1764, 74, 72)
+      prop(17, 17, 34, 34),
+      prop(1783, 17, 34, 34),
+      prop(17, 1783, 34, 34),
+      prop(1783, 1783, 34, 34),
+      prop(500, 13, 40, 26),
+      prop(1300, 13, 40, 26),
+      prop(900, 9, 30, 18),
+      prop(13, 550, 26, 40),
+      prop(13, 1250, 26, 40),
+      prop(900, 288, 40, 42),
+      prop(900, 1512, 40, 42),
+      prop(288, 900, 28, 68),
+      prop(1512, 900, 28, 68)
     ]
   }),
   /** Two basins in opposite corners of the middle (soak them, then thunder) and low walls to drive enemies into. */
