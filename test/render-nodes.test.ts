@@ -93,7 +93,7 @@ describe("render nodes", () => {
     const { assets, pool } = setup()
     const node = createNode({ kind: "player", character: "swordsman", weapon: "trainingBlade", radius: 16 }, assets, pool)
     if (node.kind !== "player") throw new Error("expected a player")
-    // Every character is the water spirit for now: it bobs and hops (idle and run), and sheds drops.
+    // Swordsman still uses the water spirit: it bobs and hops, and sheds drops.
     expect(characterLooks.swordsman.kind).toBe("model")
     expect(node.body.moments?.idle).toBe("Idle")
     expect(node.drops).not.toBeNull()

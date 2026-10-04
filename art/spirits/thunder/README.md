@@ -1,8 +1,8 @@
 # Thunder Spirit
 
-First static model for review against the supplied Thunder Spirit sheet.
-The editable asset is `thunder-spirit.blend`. There are no animations,
-GLB exports, presentation registrations, or changes to game content.
+Stormcaller's spirit, built from the supplied Thunder Spirit sheet and
+approved in model review. The editable rest model is `thunder-spirit.blend`;
+`animate.py` adds object clips during export to `thunder-spirit.glb`.
 
 `renders/review-angles.png` shows front, right, back, left, the fitted
 reference camera, and the game's 30 degree elevation. The reference is
@@ -32,7 +32,7 @@ requires. In Blender it faces -Y with Z up and hovers above the origin.
 
 ## Review limits
 
-This is a first review pass, not a final match. `renders/overlay-*.png`
+The approved model is a first review pass, not an exact match. `renders/overlay-*.png`
 contains measured comparisons and `renders/overlap.txt` records the
 current full-figure color-mask scores. They are below the 90% target.
 
@@ -58,8 +58,29 @@ uv run --with pillow --with numpy art/spirits/tools/sweep_score.py thunder /tmp/
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/tools/render.py -- thunder
 uv run --with pillow --with numpy art/spirits/tools/overlay.py thunder
 uv run --with pillow --with numpy art/spirits/thunder/review.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/thunder/export.py
 ```
 
 `sheet.py` preserves the fitted camera when measurements are regenerated.
-Glow in these renders is a preview. Game glow and clips belong to the later
-integration stage after the model review.
+Glow in the review renders is a preview. The game adds its violet rim,
+soft halo, and gold eye glow through `thunderGlow` in `models.ts`.
+
+## In the game
+
+`export.py` preserves the approved rest source, generates the asset spec,
+and records the file hashes, body height, and clip timing in `export.json`.
+The body height excludes the floating crest and ring. `Idle` is a 60 frame
+hover with a blink; `Run` is a 16 frame glide with a forward lean and
+trailing parts. Both run at 30 fps, omit their closing key, and have no
+movement along the floor axes. The eye rims blink with the eyes.
+
+`assets/spirits.ts` exports the generated spec, `models.ts` registers
+`thunderSpirit`, and `characterLooks.stormcaller` selects it. Its trail
+uses the existing batched ember particles in violet and pale gold. Attacks
+and skills continue over its locomotion clips, as with water and fire.
+
+`renders/gameplay-desktop.mp4` records keyboard movement and the Spark
+Totem in the normal arena. `renders/gameplay-touch.mp4` records the
+390 x 844 phone layout with simulated touch movement, a totem, and switching
+to Tidecaller and back. Both were exercised at the dev server's network
+address. The `gameplay-*.png` files are frames from those recordings.
