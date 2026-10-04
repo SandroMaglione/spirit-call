@@ -18,6 +18,7 @@ import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createShowcase } from "./presentation/showcase.ts"
+import { createMenuInputHost } from "./presentation/menu-input.ts"
 import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
@@ -81,6 +82,7 @@ const start = async (mount: HTMLElement) => {
       if (uiStore.result.peek() !== result) return
       uiStore.recording.value = earned === undefined ? "failed" : "saved"
       uiStore.earned.value = earned ?? null
+      if (earned !== undefined) sounds.play("uiReward")
     })
   })
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined
@@ -151,12 +153,17 @@ const start = async (mount: HTMLElement) => {
   const devCommands = emptyDevCommands()
   const browser = await createBrowserHost(mount, tuning.arena)
   const { canvas, size } = browser.host
-  const keyboard = Keyboard.actions(window, keyBindings)
-  const pointer = Pointer.track(canvas, window)
+  // Native Enter/Space activation and sliders must keep working in menus.
+  const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek())
+  const keyboard = Keyboard.actions(input.host, keyBindings, { preventDefault: false })
+  const pointer = Pointer.track(canvas, input.host)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
   // The controls keep inside the screen's safe area (clear of a notch and rounded corners).
-  const touch = Touch.track(canvas, window, (size) => touchLayout(size, browser.host.safeArea()), {
+  const touch = Touch.track(canvas, input.host, (size) => touchLayout(size, browser.host.safeArea()), {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
+  })
+  effect(() => {
+    if (uiStore.paused.value || uiStore.flow.value !== "Playing") input.cancel()
   })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
   // The HUD's menu button opens the in-game menu (as Esc does); M mutes anywhere.
