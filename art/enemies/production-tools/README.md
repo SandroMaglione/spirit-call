@@ -75,8 +75,20 @@ and the mouse-driven touch dash and team buttons worked. Review enemies
 were positioned and held still in that browser session to compare their
 sizes; no gameplay content or movement rule was changed.
 
-Typecheck, lint, export verification, skinning checks and the production
-build pass. The full 372-test suite passes with one worker and a 20-second
+In the original shared checkout, typecheck, lint, export verification,
+skinning checks and the production build passed. Its full 372-test suite
+passed with one worker and a 20-second
 timeout. The default parallel `pnpm check` run hits the existing five-second
 replay/fairness timeouts under concurrent machine load. Test configuration
 is unchanged. These browser checks do not measure a physical phone.
+
+For publication, the seven model and integration commits were isolated in
+`art/shooter-brute-swarmer`, based on `origin/main` at `e47184a`. The shared
+checkout and other agents' changes were preserved. A scope audit and
+range-diff confirmed only these models, their tools and review evidence,
+and their presentation wiring were carried over. The approved sources and
+exports are byte-for-byte unchanged. All three Blender export checks pass
+again; the isolated branch passes default `pnpm check` (400 tests in 50
+files) and `pnpm build`. A fresh network preview loads all three animated
+models with one body draw call each, and synthetic touch movement works
+at 390×844.
