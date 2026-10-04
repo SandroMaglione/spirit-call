@@ -1,0 +1,58 @@
+{
+  "kind": "gale-caster",
+  "loader": "Three.js GLTFLoader",
+  "meshes": [
+    "SplitRobe",
+    "ShadowLegs",
+    "PointedFoot",
+    "PointedHood",
+    "FaceVoid",
+    "EyeSocketL",
+    "EyeL",
+    "EyeSocketR",
+    "EyeR",
+    "Mantle",
+    "MantleBinding",
+    "SleeveL",
+    "SleeveR",
+    "StaffGrip",
+    "HandR",
+    "Belt",
+    "ChestStraps",
+    "ChestDiamond",
+    "DiamondInset",
+    "FrontBindingL",
+    "FrontBindingR",
+    "HemBinding",
+    "ScarfUpperR",
+    "ScarfUpperL",
+    "ScarfLowerR",
+    "ScarfLowerL",
+    "StaffShaft",
+    "ForearmL",
+    "CuffL",
+    "StaffRing",
+    "StaffCore",
+    "StaffPoint0",
+    "StaffPoint1",
+    "StaffPoint2",
+    "StaffPoint3"
+  ],
+  "materials": 1,
+  "triangles": 1956,
+  "animations": 0,
+  "bounds_gltf_m": {
+    "min": [
+      -0.5966851115226746,
+      0,
+      -0.5259153246879578
+    ],
+    "max": [
+      0.5966851115226746,
+      1.013712763786316,
+      0.4262310266494751
+    ]
+  },
+  "sha256": "2e912428633b92af0e6c691a0540a18968d0217dd422da1cddc90411cf39f576",
+  "status": "passed: static review asset, before rigging"
+}

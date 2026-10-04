@@ -1,0 +1,63 @@
+{
+  "kind": "gale-caster",
+  "status": "static model review; animation and game integration await review",
+  "triangles": 1956,
+  "materials": 1,
+  "mesh_parts": [
+    "Belt",
+    "ChestDiamond",
+    "ChestStraps",
+    "Cuff.L",
+    "DiamondInset",
+    "Eye.L",
+    "Eye.R",
+    "EyeSocket.L",
+    "EyeSocket.R",
+    "FaceVoid",
+    "Forearm.L",
+    "FrontBinding.L",
+    "FrontBinding.R",
+    "Hand.R",
+    "HemBinding",
+    "Mantle",
+    "MantleBinding",
+    "PointedFoot",
+    "PointedHood",
+    "ScarfLower.L",
+    "ScarfLower.R",
+    "ScarfUpper.L",
+    "ScarfUpper.R",
+    "ShadowLegs",
+    "Sleeve.L",
+    "Sleeve.R",
+    "SplitRobe",
+    "StaffCore",
+    "StaffGrip",
+    "StaffPoint.0",
+    "StaffPoint.1",
+    "StaffPoint.2",
+    "StaffPoint.3",
+    "StaffRing",
+    "StaffShaft"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -0.5966851115226746,
+      0.5966851115226746
+    ],
+    [
+      -0.4262310266494751,
+      0.5259153246879578
+    ],
+    [
+      0.0,
+      1.013712763786316
+    ]
+  ],
+  "height_m": 1.013712763786316,
+  "height_basis": "ground origin to highest rest-pose mesh vertex",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png"
+}
