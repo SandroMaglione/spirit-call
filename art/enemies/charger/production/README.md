@@ -1,8 +1,8 @@
 # Firebomber model review
 
 Static replacement for the enemy named Firebomber. Its permanent content id
-is `charger`. This folder is a model review, before rigging, animation, or
-registration in the game.
+is `charger`. The approved static model is preserved here; the game imports
+its rigged copy from `animated/charger.glb`.
 
 The supplied sheet is preserved in `reference/`. `spirit.json` labels its
 parts in source pixels; `sheet.py` measures their row contours and swatches

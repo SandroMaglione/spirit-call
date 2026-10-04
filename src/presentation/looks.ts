@@ -167,9 +167,9 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
     stomp: { windup: "WindupStomp", active: "ActiveStomp", recovery: "RecoveryStomp" }
   }),
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),
-  charger: enemyModel("charger", "enemyCharger", 78),
+  charger: enemyModel("charger", "enemyCharger", 78, { swipe: { windup: "WindupSwipe", active: "ActiveSwipe", recovery: "RecoverySwipe" } }),
   sniper: enemyModel("sniper", "enemySniper", 60),
-  guardian: enemyModel("guardian", "enemyGuardian", 54),
+  guardian: enemyModel("guardian", "enemyGuardian", 54, { thrust: { windup: "WindupThrust", active: "ActiveThrust", recovery: "RecoveryThrust" } }),
   warden: { ...enemyModel("warden", "enemyWarden", 70), wardClip: "Buff" },
   stalker: enemyModel("stalker", "enemyStalker", 64, {
     blink: { windup: "WindupBlink", active: "ActiveBlink", recovery: "RecoveryBlink" }

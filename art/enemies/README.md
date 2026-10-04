@@ -11,9 +11,9 @@ recipe. There is no separate viewer; inspect motion in Blender or the live game.
 | shooter | Blue bell-mouth creature; expands its muzzle for volley/spray | 1,180 | 8 | [Approved source](shooter/production/README.md) |
 | brute | Pale-brow stone heavyweight; raises fists to slam, lifts a foot to stomp | 1,612 | 7 | [Approved source](brute/production/README.md) |
 | swarmer | Red-shell pest with projecting fangs; compresses and lifts into a bite | 984 | 7 | [Approved source](swarmer/production/README.md) |
-| charger | Four-legged armored ram; crouches before rushing | 1,528 | 7 | [PNG](charger/reference.png) |
-| sniper | Tall needle creature; steadies its long muzzle | 808 | 8 | [PNG](sniper/reference.png) |
-| guardian | Helmeted guard with plank shield and mace | 1,516 | 8 | [PNG](guardian/reference.png) |
+| charger | Firebomber; raises its bomb to lob, swipes with its free hand | 1,890 | 9 | [Approved source](charger/production/README.md) |
+| sniper | Purple robotic Sniper; steadies its head-mounted barrel | 1,376 | 7 | [Approved source](sniper/production/README.md) |
+| guardian | Helmeted guard; swings and thrusts its round mace behind a plank shield | 1,934 | 7 | [Approved source](guardian/production/README.md) |
 
 Every combat enemy has `Idle`, `Run`, `Windup`, `Active`, `Recovery`, `Hurt`,
 `Death`, and `Spawn`. The dummy has `Idle`, `Hurt`, `Death`, and `Spawn`.
@@ -58,7 +58,8 @@ compares the runtime atlas with Three.js skeletal deformation for every clip.
 
 The full set was checked in the network-served game at 1280×800 and 390×844,
 including synthetic touch movement/dash and simulation-driven attack phases.
-All eight killed visuals survived hit-stop and expired after their death clips.
+Killed enemies now disappear immediately and burst into particles; `Death`
+clips remain in the files but are unused.
 At 80 and 300 mixed stress enemies, the renderer used eight animated body
 batches (one per kind); this checks batching, not physical-phone frame rate.
 Use `?stress=300,2000,mixed` to repeat the crowded arena setup, or the tuning

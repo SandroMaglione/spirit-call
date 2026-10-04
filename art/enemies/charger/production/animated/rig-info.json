@@ -1,0 +1,178 @@
+{
+  "source": "../charger-model.blend",
+  "source_sha256": "ce87ade5748a3494a7f1a14e67a7c518abc9df7dd047050987a57b9d3c634c67",
+  "triangles": 1890,
+  "bones": 9,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "ClothBody": {
+      "body": 86
+    },
+    "BombBackpack": {
+      "body": 86
+    },
+    "BackpackBand": {
+      "body": 24
+    },
+    "BackpackBand.001": {
+      "body": 24
+    },
+    "FuseCollar": {
+      "body": 20
+    },
+    "BackpackFlame": {
+      "flame": 38
+    },
+    "FlameCore": {
+      "flame": 38
+    },
+    "UpperArm.L": {
+      "arm.L": 34
+    },
+    "UpperArm.R": {
+      "arm.R": 34
+    },
+    "Cuff.L": {
+      "arm.L": 26
+    },
+    "Cuff.R": {
+      "arm.R": 26
+    },
+    "Hand.L": {
+      "arm.L": 34
+    },
+    "Hand.R": {
+      "arm.R": 34
+    },
+    "Foot.L": {
+      "leg.L": 26
+    },
+    "Foot.R": {
+      "leg.R": 26
+    },
+    "Ankle": {
+      "leg.L": 12
+    },
+    "Toe": {
+      "leg.L": 14
+    },
+    "Toe.001": {
+      "leg.L": 14
+    },
+    "Toe.002": {
+      "leg.L": 14
+    },
+    "Ankle.001": {
+      "leg.R": 12
+    },
+    "Toe.003": {
+      "leg.R": 14
+    },
+    "Toe.004": {
+      "leg.R": 14
+    },
+    "Toe.005": {
+      "leg.R": 14
+    },
+    "HandBomb": {
+      "bomb": 114
+    },
+    "BombFlame": {
+      "bomb": 32
+    },
+    "BombFuseCollar": {
+      "bomb": 20
+    },
+    "BombFuseLip": {
+      "bomb": 20
+    },
+    "BombFuse": {
+      "bomb": 12
+    },
+    "OpenHood": {
+      "head": 32
+    },
+    "RecessedFace": {
+      "head": 50
+    },
+    "EyeSocket.L": {
+      "head": 69
+    },
+    "EyeSocket.R": {
+      "head": 69
+    },
+    "Eye.L": {
+      "head": 45
+    },
+    "Eye.R": {
+      "head": 45
+    },
+    "BackpackCrack": {
+      "body": 8
+    },
+    "BombEmber.1": {
+      "bomb": 63
+    },
+    "BombEmber.2": {
+      "bomb": 108
+    },
+    "BombEmber.3": {
+      "bomb": 63
+    },
+    "BombEmberCore": {
+      "bomb": 24
+    },
+    "PackFrontCrack": {
+      "body": 8
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "WindupSwipe": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "ActiveSwipe": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "RecoverySwipe": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true
+}

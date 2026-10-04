@@ -1,0 +1,44 @@
+{
+  "sha256": "c9099805aa6b6469e738244e985a5bf11ed29eafca9aba84031c7c4e16c01dad",
+  "triangles": 1890,
+  "bones": 9,
+  "material_count": 1,
+  "mesh_count": 1,
+  "root_motion": false,
+  "approved_rest_bounds_preserved": true,
+  "roundTripBoundsError": {
+    "Idle": 2.384185791015625e-07,
+    "Run": 2.384185791015625e-07,
+    "Windup": 2.980232238769531e-07,
+    "Active": 1.1920928955078125e-07,
+    "Recovery": 2.384185791015625e-07,
+    "Hurt": 2.384185791015625e-07,
+    "Death": 2.384185791015625e-07,
+    "Spawn": 2.384185791015625e-07,
+    "WindupSwipe": 2.384185791015625e-07,
+    "ActiveSwipe": 5.960464477539063e-08,
+    "RecoverySwipe": 2.384185791015625e-07
+  },
+  "contactPoseErrors": {
+    "windup_active": 0.0,
+    "active_recovery": 0.0,
+    "recovery_idle": 0.0,
+    "windup_activeSwipe": 0.0,
+    "active_recoverySwipe": 0.0,
+    "recovery_idleSwipe": 0.0
+  },
+  "groundMinimum": {
+    "Idle": 0.0,
+    "Run": 0.0,
+    "Windup": 0.0,
+    "Active": 0.0,
+    "Recovery": 0.0,
+    "Hurt": 0.0,
+    "Death": 0.0,
+    "Spawn": 0.0,
+    "WindupSwipe": 0.0,
+    "ActiveSwipe": 0.0,
+    "RecoverySwipe": 0.0
+  },
+  "result": "passed"
+}

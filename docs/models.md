@@ -78,7 +78,7 @@ the previous section's endpoint and carry any elapsed frame remainder.
   load time; `batch.ts` supplies each instance's pose and interpolation.
   Each enemy kind costs one body draw call, regardless of its population.
   No per-enemy skeleton or animation mixer runs during play.
-- Enemy rigs currently use 3–8 bones and 456–1,624 triangles. Keep new
+- Enemy rigs currently use 3–9 bones and 676–1,934 triangles. Keep new
   ordinary enemies under 2,000 triangles and 12 bones unless a measured
   need justifies more. See `art/enemies/README.md` for sources and checks.
 - Keep a character under about 5,000 triangles and a 512 px texture; check

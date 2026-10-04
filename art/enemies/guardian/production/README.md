@@ -1,7 +1,7 @@
 # Guardian model review
 
-Static model from the supplied Guardian sheet, before rigging, animation,
-or game registration. `guardian-model.blend` keeps editable named parts;
+Approved static model from the supplied Guardian sheet. The game imports
+its rigged copy from `animated/guardian.glb`. `guardian-model.blend` keeps editable named parts;
 `guardian-model.glb` is a static review export with one shared vertex-color
 material. It is not yet a crowd-ready skinned asset.
 

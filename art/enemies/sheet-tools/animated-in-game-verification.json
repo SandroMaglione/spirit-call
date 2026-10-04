@@ -1,0 +1,331 @@
+{
+  "date": "2026-10-04",
+  "networkUrl": "http://192.168.40.47:5199",
+  "integration": {
+    "models": [
+      {
+        "bodyMeshes": 1,
+        "bones": 9,
+        "clips": [
+          "Active",
+          "ActiveSwipe",
+          "Death",
+          "Hurt",
+          "Idle",
+          "Recovery",
+          "RecoverySwipe",
+          "Run",
+          "Spawn",
+          "Windup",
+          "WindupSwipe"
+        ],
+        "height": 1.0943877696990967,
+        "id": "enemyCharger",
+        "instanced": true,
+        "triangles": 1890,
+        "url": "/art/enemies/charger/production/animated/charger.glb"
+      },
+      {
+        "bodyMeshes": 1,
+        "bones": 7,
+        "clips": [
+          "Active",
+          "Death",
+          "Hurt",
+          "Idle",
+          "Recovery",
+          "Run",
+          "Spawn",
+          "Windup"
+        ],
+        "height": 1.2146226167678833,
+        "id": "enemySniper",
+        "instanced": true,
+        "triangles": 1376,
+        "url": "/art/enemies/sniper/production/animated/sniper.glb"
+      },
+      {
+        "bodyMeshes": 1,
+        "bones": 7,
+        "clips": [
+          "Active",
+          "ActiveThrust",
+          "Death",
+          "Hurt",
+          "Idle",
+          "Recovery",
+          "RecoveryThrust",
+          "Run",
+          "Spawn",
+          "Windup",
+          "WindupThrust"
+        ],
+        "height": 1.280203104019165,
+        "id": "enemyGuardian",
+        "instanced": true,
+        "triangles": 1934,
+        "url": "/art/enemies/guardian/production/animated/guardian.glb"
+      }
+    ],
+    "phases": [
+      {
+        "attack": 0,
+        "clip": "Run",
+        "kind": "charger",
+        "phase": "ready",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 0,
+        "clip": "Run",
+        "kind": "sniper",
+        "phase": "ready",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 1,
+        "clip": "Run",
+        "kind": "guardian",
+        "phase": "ready",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 1,
+        "clip": "WindupThrust",
+        "kind": "guardian",
+        "phase": "windup",
+        "shieldAngle": 4.440892098500626e-16
+      },
+      {
+        "attack": 0,
+        "clip": "Windup",
+        "kind": "sniper",
+        "phase": "windup",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 1,
+        "clip": "ActiveThrust",
+        "kind": "guardian",
+        "phase": "active",
+        "shieldAngle": 4.440892098500626e-16
+      },
+      {
+        "attack": 1,
+        "clip": "RecoveryThrust",
+        "kind": "guardian",
+        "phase": "recovery",
+        "shieldAngle": 4.440892098500626e-16
+      },
+      {
+        "attack": 0,
+        "clip": "Recovery",
+        "kind": "sniper",
+        "phase": "recovery",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 0,
+        "clip": "Windup",
+        "kind": "charger",
+        "phase": "windup",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 0,
+        "clip": "Recovery",
+        "kind": "charger",
+        "phase": "recovery",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 1,
+        "clip": "WindupSwipe",
+        "kind": "charger",
+        "phase": "windup",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 0,
+        "clip": "Windup",
+        "kind": "guardian",
+        "phase": "windup",
+        "shieldAngle": -2.220446049250313e-16
+      },
+      {
+        "attack": 1,
+        "clip": "ActiveSwipe",
+        "kind": "charger",
+        "phase": "active",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 0,
+        "clip": "Active",
+        "kind": "guardian",
+        "phase": "active",
+        "shieldAngle": -2.220446049250313e-16
+      },
+      {
+        "attack": 1,
+        "clip": "RecoverySwipe",
+        "kind": "charger",
+        "phase": "recovery",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 0,
+        "clip": "Recovery",
+        "kind": "guardian",
+        "phase": "recovery",
+        "shieldAngle": -2.220446049250313e-16
+      },
+      {
+        "attack": 1,
+        "clip": "Run",
+        "kind": "charger",
+        "phase": "ready",
+        "shieldAngle": 0
+      },
+      {
+        "attack": 0,
+        "clip": "Run",
+        "kind": "guardian",
+        "phase": "ready",
+        "shieldAngle": 0
+      }
+    ]
+  },
+  "shield": {
+    "bodyFacing": {
+      "x": 1,
+      "y": 0
+    },
+    "phase": "windup",
+    "relativeAngle": -1.5707963267948966,
+    "shieldBoneIndex": 6,
+    "shieldFacing": {
+      "x": 0,
+      "y": 1
+    }
+  },
+  "touch": {
+    "after": {
+      "x": 1123.980080681238,
+      "y": 727.4086016388685
+    },
+    "before": {
+      "x": 1087.9999999999995,
+      "y": 900
+    },
+    "dash": {
+      "before": { "x": 900, "y": 900 },
+      "after": { "x": 1087.9999999999995, "y": 900 },
+      "distance": 187.99999999999955
+    },
+    "device": "touch",
+    "distance": 176.3018916349998,
+    "switchedTo": "tidecaller",
+    "syntheticTouch": true,
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "lifecycle": {
+    "hurt": [
+      {
+        "id": 29,
+        "pose": [
+          50,
+          51,
+          0.5266666457384264,
+          0
+        ],
+        "recoil": true
+      },
+      {
+        "id": 30,
+        "pose": [
+          110,
+          111,
+          0.9166666666667136,
+          0
+        ],
+        "recoil": true
+      },
+      {
+        "id": 31,
+        "pose": [
+          50,
+          51,
+          0.5266666457384264,
+          0
+        ],
+        "recoil": true
+      }
+    ],
+    "immediately": {
+      "bodyNodes": 0,
+      "enemyEntities": 0,
+      "particles": 146
+    }
+  },
+  "crowd": {
+    "canvas": [
+      780,
+      1688
+    ],
+    "enemyCount": 305,
+    "models": [
+      {
+        "bodyMeshes": 1,
+        "id": "enemyCharger",
+        "instanced": true,
+        "instances": 37,
+        "materials": 1,
+        "triangles": 1890
+      },
+      {
+        "bodyMeshes": 1,
+        "id": "enemySniper",
+        "instanced": true,
+        "instances": 37,
+        "materials": 1,
+        "triangles": 1376
+      },
+      {
+        "bodyMeshes": 1,
+        "id": "enemyGuardian",
+        "instanced": true,
+        "instances": 37,
+        "materials": 1,
+        "triangles": 1934
+      }
+    ],
+    "projectiles": 2000,
+    "sceneSkinnedMeshes": 0,
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "validation": {
+    "blender": "All three animated exports preserve approved rest vertices and bounds. Every clip passes no-root-motion, living floor clearance, loop closure, phase contacts and GLB round-trip checks.",
+    "tests": {
+      "command": "env VITEST_MAX_WORKERS=2 pnpm check",
+      "files": 48,
+      "passed": 374,
+      "failed": 0
+    },
+    "build": "pnpm build passed",
+    "browser": "T3 network preview at 1280x800 and 390x844. QA advanced the live runtime's fixed and presentation schedules to inspect every combat phase; touch events drove the real canvas input handlers.",
+    "phone": "Synthetic touch movement, dash and team switching verified. No physical-device frame-rate claim.",
+    "consoleErrorsInCapturedSnapshots": []
+  },
+  "screenshots": {
+    "desktop": "in-game-desktop.png",
+    "phone": "in-game-phone.png",
+    "crowd": "in-game-crowd.png"
+  }
+}

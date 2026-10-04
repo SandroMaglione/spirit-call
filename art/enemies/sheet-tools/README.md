@@ -2,8 +2,8 @@
 
 The three attached sheets are kept beside their editable models under
 `art/enemies/{charger,sniper,guardian}/production/`. Firebomber uses the
-permanent content id `charger`. These folders stop at model review, before
-rigging, clips, glow, or registration in the game.
+permanent content id `charger`. The approved static files remain editable;
+rigged copies under each `production/animated/` folder are used by the game.
 
 The pipeline follows `docs/spirits.md` for labeled crops, pixel measurements,
 lofted sections, mirrored face features, facet colors, camera sweeps,
@@ -19,6 +19,9 @@ separate measured parts rather than one spirit's continuous body.
 | `review.py` | Scores silhouettes and writes overlays and comparisons |
 | `verify.mjs` | Checks the GLB with Three.js, axes, bounds, and triangle count |
 | `review.html` | Loads static GLBs for rotation and model review |
+| `animate-approved.py` | Rigidly skins approved parts, writes clips, exports and registers the GLB |
+| `verify-approved-animation.py` | Checks every clip, phase contacts, rest geometry, floor clearance and GLB round trips |
+| `render-approved-animation.py` | Renders saved attack and locomotion poses from the game camera |
 
 The shared geometry and measurement helpers started from the local static
 enemy production tools; this directory keeps the three supplied sheets'
@@ -67,3 +70,42 @@ The occluded side drawing no longer flattens it. Its fuse has a collar,
 raised lip and wick, and the shell has separate ember patches and a pale
 core. `verify.mjs` checks exported eye symmetry within one micrometer and
 equal bomb diameters. `review-faces.png` collects the new closeups.
+
+## Approved animation and integration
+
+Run these after approving the static model, substituting `sniper` or `guardian`
+for `charger`:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/enemies/sheet-tools/animate-approved.py -- charger build-export
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/enemies/sheet-tools/verify-approved-animation.py -- charger
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/enemies/sheet-tools/render-approved-animation.py -- charger
+```
+
+`build-export` replaces the animated copy, preserving every approved rest vertex.
+`export` alone reads the saved animated Blender source, so manual action edits
+can be exported without rebuilding the rig. Export and registration reuse the
+existing crowd-ready exporter. The export spec is generated from actual bounds
+and clip metadata. Animated assets contain one mesh, one vertex-color material,
+one armature, and a single rigid weight per vertex.
+
+Firebomber uses nine bones, Sniper and Guardian seven. The default combat phases
+are bomb throw, sniper shot, and Guardian mace swing. Firebomber's `Swipe` and
+Guardian's `Thrust` variants are selected by attack id in `looks.ts`. All phase
+contacts are continuous, including zero-duration ranged active phases. The held
+bomb shrinks out at release and returns during recovery; the projectile remains
+simulation-owned. Guardian's root-level `shield` bone keeps the shield and its
+gripping hand facing independently through the existing animation atlas shader.
+
+`Idle`, `Run`, `Hurt`, and `Spawn` complete the living lifecycle. `Death` is
+included for the asset contract; killed enemies use the game's instant particle
+burst. All actions stay in place. Animation adds no movement or hit windows.
+
+`animated-in-game-verification.json` records the loaded assets, every combat
+variant, shield angle, hit/death feedback, synthetic touch movement/dash/team
+switching, and the 305-enemy / 2,000-projectile mixed stress scene. Network
+browser captures are `in-game-desktop.png`, `in-game-phone.png`, and
+`in-game-crowd.png`. QA advances the live runtime's fixed and presentation
+schedules to inspect phases; it does not measure physical-phone performance.
+`env VITEST_MAX_WORKERS=2 pnpm check` passes all 374 tests, typecheck and lint;
+`pnpm build` bundles the registered animated exports.

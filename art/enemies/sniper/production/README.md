@@ -1,7 +1,7 @@
 # Sniper model review
 
-Static model from the supplied robotic Sniper sheet, before rigging,
-animation, or game registration. `sniper-model.blend` keeps editable named
+Approved static model from the supplied robotic Sniper sheet. The game imports
+its rigged copy from `animated/sniper.glb`. `sniper-model.blend` keeps editable named
 parts; `sniper-model.glb` is a static review export with one shared
 vertex-color material. It is not yet a crowd-ready skinned asset.
 
