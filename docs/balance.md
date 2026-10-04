@@ -47,6 +47,14 @@ and the pace of a fight. No clear timer or character-level entry gate is needed.
   basic attacks only. It resets each wave, uses enemy level 1 by default,
   and has no balance regression gate. Its fairness tests are useful;
   its numbers cannot establish quest difficulty or ability balance.
+- The nine main first clears pay 14,750 gold including their run payouts.
+  Training one character to level 18 costs 13,940; reaching weapon level
+  9 costs another 4,440. The first-clear path alone cannot fund even one
+  fully matched late-main build. Secondary quests and repeats fill the
+  gap. Raising enemy levels needs an upgrade-income check alongside it.
+  Maxing one character and weapon costs 163,745 gold. At the current last
+  main quest's 550 gold per repeat, that is about 298 clears before other
+  rewards; at level-40 content's 1,100 gold it is about 149.
 
 ## Changes to try, in order
 
@@ -69,6 +77,10 @@ These are proposed experiments, not established target values.
    to 5. Keep the dash refund initially, so reading an attack still feels
    good. Try wall-slam fill at 20 to 25% too. Avoid slowing basic movement
    or shrinking telegraphs to make the game hard.
+   Give healing its own budget too. Start by testing Thunderclap at 8 to
+   10% per member rather than 20%, and Totem at 2 to 3% per tick rather
+   than 4%. Measure effective healing and incoming damage together so
+   support remains useful without erasing every mistake.
 4. Spread later quests across roughly enemy levels 20 to 35 and upper
    Hardcore tiers toward 40. Tune common enemy damage so an underleveled
    character loses roughly 30 to 50% HP to a clean hit, while a prepared
@@ -86,7 +98,7 @@ These are proposed experiments, not established target values.
    maxed. Fourfold stat growth also gives more than fourfold effective
    survivability because HP and DEF both grow.
 
-Timed survival goals are being replaced with finite combat challenges.
+Timed survival goals have been replaced with finite combat challenges.
 Until Fall keeps its endless wave score: beating enemies advances it.
 Escaping without fighting should never complete a reward-bearing goal.
 
@@ -110,6 +122,33 @@ hits and ended fully healed. A solo starter did lose, so "everything is
 easy" is not a universal result. Crowd energy and team healing are the
 strongest confirmed offenders. The variation between quick and learner
 paths also shows why one bot's clear time cannot be the tuning target.
+The opening Swarm cleared in 78.1 seconds with basics and 71.2 with skills,
+short of the three-to-four-minute direction. Consider how much of that
+target belongs in the tutorial before inflating HP to reach a duration.
+
+After the goal change, escape-only Hold the Line timed out at 240 seconds
+with zero kills and 93% HP. It no longer awards a clear for waiting. The
+new finite Gauntlet cleared in 106.1 seconds for the basic profile and
+62.8 for the team rotation. Its combat tuning still needs the experiments
+above; removing the timer fixes the objective, not the energy economy.
+
+An unshipped experiment is in `tools/balance/cadence-experiment.json`.
+It uses 6/6/7/10-second specials, 10-second ultimate cooldowns, 30% bench
+energy, 0.15 damage energy, and smaller dodge and break rewards. It retains
+all HP and enemy levels. On Warlord at seed 1337:
+
+- The matched quick profile cleared in 111.0 seconds with 4% HP and nine
+  ultimates, versus 218.2 seconds, 84% HP and 26 ultimates before.
+- The matched learner cleared in 112.4 seconds with 17% HP and nine
+  ultimates, versus 81.1 seconds, 42% HP and 22 ultimates before.
+- The level-1 team still cleared with 100% HP, now in 168.2 seconds with
+  23 ultimates. Cooldowns and energy reductions alone do not fix team
+  sustain. That is why healing needs its own experiment.
+
+This bundled trial does not isolate each parameter's effect. Reducing
+Gust frequency can also shorten a fight because it scatters enemies less.
+The 0.15 damage-energy rate is a temporary experiment, not the proposed
+long-term cast-budget design. Do not ship the whole patch based on one seed.
 
 ## Repeatable measurements
 
@@ -126,6 +165,7 @@ pnpm balance --compare /tmp/balance-before.json --output /tmp/balance-after.json
 pnpm balance --quest theWarlord --seeds 1337,7,42
 pnpm balance --full --seeds 1337,7,42 --output /tmp/balance-full.json
 pnpm balance --tuning /tmp/proposed-tuning.json --output /tmp/balance-experiment.json
+pnpm balance --quest theWarlord --tuning tools/balance/cadence-experiment.json
 pnpm balance --stats-only
 ```
 
@@ -135,6 +175,18 @@ numbers. A comparison exits unsuccessfully when outcomes change or metrics
 move by more than 20%, allowing a floor of three seconds or two events;
 remaining HP has a 15-percentage-point tolerance. Review both easier and
 harder changes. An intentional tuning needs a reviewed new baseline.
+Escape-only clears fail independently of the baseline.
+
+CI runs the representative 18-scenario suite against
+`test/balance-baseline.json` before deployment and uploads its JSON report.
+This baseline records the current problems; passing means they have not
+unexpectedly drifted, not that the tuning is good. To accept an intentional
+change, inspect the report, run broader seeds and kits, play it, and then
+generate and review a replacement baseline with:
+
+```sh
+pnpm balance --output test/balance-baseline.json
+```
 
 Profiles include basic attacks, skills used whenever available, levels
 matched to the enemy with a proportionate weapon level, a slower learner,

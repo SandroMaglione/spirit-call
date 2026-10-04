@@ -1,0 +1,16 @@
+{
+  "energy": { "perDamage": 0.15 },
+  "team": { "benchEnergyShare": 0.3 },
+  "perfectDodge": { "slowSeconds": 0.7, "breakFill": 0.25, "energy": 4 },
+  "breaking": { "slam": 0.25, "reaction": 0.2 },
+  "skills": {
+    "bladeWave": { "cooldown": 6 },
+    "tidalWave": { "cooldown": 6 },
+    "flareJump": { "cooldown": 7 },
+    "sparkTotem": { "cooldown": 10 },
+    "cyclone": { "cooldown": 10 },
+    "barrage": { "cooldown": 10 },
+    "tide": { "cooldown": 10 },
+    "thunderclap": { "cooldown": 10 }
+  }
+}

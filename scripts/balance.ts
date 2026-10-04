@@ -6,7 +6,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { QuestId } from "../src/content/quests.ts"
 import { validateContent } from "../src/content/validate.ts"
 import { runBot } from "../test/bot.ts"
-import { balanceCases, compareBalance, statAudit } from "../test/balance-model.ts"
+import { balanceCases, balanceViolations, compareBalance, statAudit } from "../test/balance-model.ts"
 import type { BalanceRow } from "../test/balance-model.ts"
 
 const { values } = parseArgs({ options: {
@@ -36,6 +36,9 @@ if (!values["stats-only"]) for (const scenario of balanceCases(tuning, quests, s
 }
 const report = { version: 1, seconds, seeds, full: values.full, tuningHash: createHash("sha256").update(JSON.stringify(tuning)).digest("hex"), stats, rows }
 if (values.output !== undefined) writeFileSync(values.output, `${JSON.stringify(report, null, 2)}\n`)
+const violations = balanceViolations(rows)
+for (const violation of violations) console.error(violation)
+if (violations.length > 0) process.exitCode = 1
 if (values.compare !== undefined) {
   const before = JSON.parse(readFileSync(values.compare, "utf8")) as typeof report
   if (before.version !== report.version || before.seconds !== seconds || before.full !== values.full || JSON.stringify(before.seeds) !== JSON.stringify(seeds)) throw new Error("Baseline must use the same version, horizon, seeds and full setting")

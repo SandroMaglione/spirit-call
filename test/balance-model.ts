@@ -61,6 +61,11 @@ export interface BalanceRow {
   readonly report: BotReport
 }
 
+/** A baseline update must never approve a clear earned by running out a goal. */
+export const balanceViolations = (rows: ReadonlyArray<BalanceRow>): Array<string> => rows
+  .filter((row) => row.profile === "escape-only" && row.report.outcome === "cleared")
+  .map((row) => `${row.id}: escape-only play cleared a combat goal`)
+
 /** Both directions matter: unexpectedly easy content is a balance regression too. */
 export const compareBalance = (before: ReadonlyArray<BalanceRow>, after: ReadonlyArray<BalanceRow>, tolerance = 0.2): Array<string> => {
   const issues: Array<string> = []

@@ -1,0 +1,433 @@
+{
+  "version": 1,
+  "seconds": 240,
+  "seeds": [
+    1337
+  ],
+  "full": false,
+  "tuningHash": "dc6cc956693dea57b1123eba6764fe2b89031d568efc05ee8bf5bffa81cd0ce3",
+  "stats": [
+    {
+      "level": 1,
+      "hp": 75,
+      "atkWithLevel1Weapon": 100,
+      "def": 20,
+      "chaserHp": 65,
+      "hitsToFallAtLevel1": 8,
+      "basicHitsToKillAtLevel1": 4,
+      "basicHitsToKillMatched": 4
+    },
+    {
+      "level": 5,
+      "hp": 98,
+      "atkWithLevel1Weapon": 125,
+      "def": 26,
+      "chaserHp": 85,
+      "hitsToFallAtLevel1": 6,
+      "basicHitsToKillAtLevel1": 5,
+      "basicHitsToKillMatched": 4
+    },
+    {
+      "level": 10,
+      "hp": 127,
+      "atkWithLevel1Weapon": 155,
+      "def": 34,
+      "chaserHp": 110,
+      "hitsToFallAtLevel1": 5,
+      "basicHitsToKillAtLevel1": 7,
+      "basicHitsToKillMatched": 4
+    },
+    {
+      "level": 18,
+      "hp": 173,
+      "atkWithLevel1Weapon": 205,
+      "def": 46,
+      "chaserHp": 150,
+      "hitsToFallAtLevel1": 4,
+      "basicHitsToKillAtLevel1": 9,
+      "basicHitsToKillMatched": 5
+    },
+    {
+      "level": 30,
+      "hp": 242,
+      "atkWithLevel1Weapon": 278,
+      "def": 65,
+      "chaserHp": 210,
+      "hitsToFallAtLevel1": 3,
+      "basicHitsToKillAtLevel1": 12,
+      "basicHitsToKillMatched": 5
+    },
+    {
+      "level": 40,
+      "hp": 300,
+      "atkWithLevel1Weapon": 340,
+      "def": 80,
+      "chaserHp": 260,
+      "hitsToFallAtLevel1": 2,
+      "basicHitsToKillAtLevel1": 15,
+      "basicHitsToKillMatched": 5
+    }
+  ],
+  "rows": [
+    {
+      "id": "theSwarm/swordsman-basic/1337",
+      "quest": "theSwarm",
+      "profile": "swordsman-basic",
+      "seed": 1337,
+      "report": {
+        "hits": 3,
+        "damage": 7,
+        "dashes": 10,
+        "pressure": 0,
+        "clearedAt": 78.13333333333333,
+        "endedAt": 78.13333333333333,
+        "outcome": "cleared",
+        "kills": 93,
+        "specials": 0,
+        "ultimates": 0,
+        "breaks": 25,
+        "healthRemaining": 0.9044444444444444
+      }
+    },
+    {
+      "id": "theSwarm/swordsman-skills/1337",
+      "quest": "theSwarm",
+      "profile": "swordsman-skills",
+      "seed": 1337,
+      "report": {
+        "hits": 7,
+        "damage": 19,
+        "dashes": 12,
+        "pressure": 0,
+        "clearedAt": 71.18333333333334,
+        "endedAt": 71.18333333333334,
+        "outcome": "cleared",
+        "kills": 93,
+        "specials": 22,
+        "ultimates": 10,
+        "breaks": 25,
+        "healthRemaining": 0.7444444444444444
+      }
+    },
+    {
+      "id": "theSwarm/swordsman-matched/1337",
+      "quest": "theSwarm",
+      "profile": "swordsman-matched",
+      "seed": 1337,
+      "report": {
+        "hits": 7,
+        "damage": 19,
+        "dashes": 12,
+        "pressure": 0,
+        "clearedAt": 71.18333333333334,
+        "endedAt": 71.18333333333334,
+        "outcome": "cleared",
+        "kills": 93,
+        "specials": 22,
+        "ultimates": 10,
+        "breaks": 25,
+        "healthRemaining": 0.7444444444444444
+      }
+    },
+    {
+      "id": "theSwarm/swordsman-learning/1337",
+      "quest": "theSwarm",
+      "profile": "swordsman-learning",
+      "seed": 1337,
+      "report": {
+        "hits": 25,
+        "damage": 76,
+        "dashes": 2,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 41.516666666666666,
+        "outcome": "defeated",
+        "kills": 51,
+        "specials": 12,
+        "ultimates": 4,
+        "breaks": 15,
+        "healthRemaining": 0
+      }
+    },
+    {
+      "id": "theSwarm/escape-only/1337",
+      "quest": "theSwarm",
+      "profile": "escape-only",
+      "seed": 1337,
+      "report": {
+        "hits": 4,
+        "damage": 25,
+        "dashes": 67,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 240,
+        "outcome": "timeout",
+        "kills": 0,
+        "specials": 0,
+        "ultimates": 0,
+        "breaks": 0,
+        "healthRemaining": 0.6666666666666667
+      }
+    },
+    {
+      "id": "theSwarm/team-skills/1337",
+      "quest": "theSwarm",
+      "profile": "team-skills",
+      "seed": 1337,
+      "report": {
+        "hits": 4,
+        "damage": 12,
+        "dashes": 9,
+        "pressure": 0,
+        "clearedAt": 62.483333333333334,
+        "endedAt": 62.483333333333334,
+        "outcome": "cleared",
+        "kills": 93,
+        "specials": 20,
+        "ultimates": 15,
+        "breaks": 23,
+        "healthRemaining": 1
+      }
+    },
+    {
+      "id": "theWarlord/swordsman-basic/1337",
+      "quest": "theWarlord",
+      "profile": "swordsman-basic",
+      "seed": 1337,
+      "report": {
+        "hits": 11,
+        "damage": 78,
+        "dashes": 15,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 98.45,
+        "outcome": "defeated",
+        "kills": 35,
+        "specials": 0,
+        "ultimates": 0,
+        "breaks": 23,
+        "healthRemaining": 0
+      }
+    },
+    {
+      "id": "theWarlord/swordsman-skills/1337",
+      "quest": "theWarlord",
+      "profile": "swordsman-skills",
+      "seed": 1337,
+      "report": {
+        "hits": 22,
+        "damage": 78,
+        "dashes": 2,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 43.28333333333333,
+        "outcome": "defeated",
+        "kills": 20,
+        "specials": 14,
+        "ultimates": 7,
+        "breaks": 9,
+        "healthRemaining": 0
+      }
+    },
+    {
+      "id": "theWarlord/swordsman-matched/1337",
+      "quest": "theWarlord",
+      "profile": "swordsman-matched",
+      "seed": 1337,
+      "report": {
+        "hits": 6,
+        "damage": 28,
+        "dashes": 8,
+        "pressure": 0,
+        "clearedAt": 218.21666666666667,
+        "endedAt": 218.21666666666667,
+        "outcome": "cleared",
+        "kills": 60,
+        "specials": 80,
+        "ultimates": 26,
+        "breaks": 37,
+        "healthRemaining": 0.8360915353551347
+      }
+    },
+    {
+      "id": "theWarlord/swordsman-learning/1337",
+      "quest": "theWarlord",
+      "profile": "swordsman-learning",
+      "seed": 1337,
+      "report": {
+        "hits": 14,
+        "damage": 100,
+        "dashes": 6,
+        "pressure": 0,
+        "clearedAt": 81.06666666666666,
+        "endedAt": 81.06666666666666,
+        "outcome": "cleared",
+        "kills": 60,
+        "specials": 26,
+        "ultimates": 22,
+        "breaks": 38,
+        "healthRemaining": 0.42156940375326657
+      }
+    },
+    {
+      "id": "theWarlord/escape-only/1337",
+      "quest": "theWarlord",
+      "profile": "escape-only",
+      "seed": 1337,
+      "report": {
+        "hits": 4,
+        "damage": 77,
+        "dashes": 26,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 96.4,
+        "outcome": "defeated",
+        "kills": 0,
+        "specials": 0,
+        "ultimates": 0,
+        "breaks": 0,
+        "healthRemaining": 0
+      }
+    },
+    {
+      "id": "theWarlord/team-skills/1337",
+      "quest": "theWarlord",
+      "profile": "team-skills",
+      "seed": 1337,
+      "report": {
+        "hits": 6,
+        "damage": 53,
+        "dashes": 11,
+        "pressure": 0,
+        "clearedAt": 132.06666666666666,
+        "endedAt": 132.06666666666666,
+        "outcome": "cleared",
+        "kills": 60,
+        "specials": 58,
+        "ultimates": 46,
+        "breaks": 58,
+        "healthRemaining": 1
+      }
+    },
+    {
+      "id": "holdTheLine/swordsman-basic/1337",
+      "quest": "holdTheLine",
+      "profile": "swordsman-basic",
+      "seed": 1337,
+      "report": {
+        "hits": 8,
+        "damage": 16,
+        "dashes": 26,
+        "pressure": 0,
+        "clearedAt": 106.06666666666666,
+        "endedAt": 106.06666666666666,
+        "outcome": "cleared",
+        "kills": 52,
+        "specials": 0,
+        "ultimates": 0,
+        "breaks": 34,
+        "healthRemaining": 0.7916666666666666
+      }
+    },
+    {
+      "id": "holdTheLine/swordsman-skills/1337",
+      "quest": "holdTheLine",
+      "profile": "swordsman-skills",
+      "seed": 1337,
+      "report": {
+        "hits": 29,
+        "damage": 76,
+        "dashes": 10,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 77.61666666666666,
+        "outcome": "defeated",
+        "kills": 50,
+        "specials": 25,
+        "ultimates": 13,
+        "breaks": 30,
+        "healthRemaining": 0
+      }
+    },
+    {
+      "id": "holdTheLine/swordsman-matched/1337",
+      "quest": "holdTheLine",
+      "profile": "swordsman-matched",
+      "seed": 1337,
+      "report": {
+        "hits": 36,
+        "damage": 94,
+        "dashes": 6,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 82.65,
+        "outcome": "defeated",
+        "kills": 49,
+        "specials": 28,
+        "ultimates": 12,
+        "breaks": 28,
+        "healthRemaining": 0
+      }
+    },
+    {
+      "id": "holdTheLine/swordsman-learning/1337",
+      "quest": "holdTheLine",
+      "profile": "swordsman-learning",
+      "seed": 1337,
+      "report": {
+        "hits": 15,
+        "damage": 58,
+        "dashes": 6,
+        "pressure": 0,
+        "clearedAt": 72.68333333333334,
+        "endedAt": 72.68333333333334,
+        "outcome": "cleared",
+        "kills": 52,
+        "specials": 23,
+        "ultimates": 12,
+        "breaks": 29,
+        "healthRemaining": 0.37208695652173945
+      }
+    },
+    {
+      "id": "holdTheLine/escape-only/1337",
+      "quest": "holdTheLine",
+      "profile": "escape-only",
+      "seed": 1337,
+      "report": {
+        "hits": 1,
+        "damage": 5,
+        "dashes": 56,
+        "pressure": 0,
+        "clearedAt": null,
+        "endedAt": 240,
+        "outcome": "timeout",
+        "kills": 0,
+        "specials": 0,
+        "ultimates": 0,
+        "breaks": 0,
+        "healthRemaining": 0.9316666666666666
+      }
+    },
+    {
+      "id": "holdTheLine/team-skills/1337",
+      "quest": "holdTheLine",
+      "profile": "team-skills",
+      "seed": 1337,
+      "report": {
+        "hits": 7,
+        "damage": 20,
+        "dashes": 8,
+        "pressure": 0,
+        "clearedAt": 62.766666666666666,
+        "endedAt": 62.766666666666666,
+        "outcome": "cleared",
+        "kills": 52,
+        "specials": 24,
+        "ultimates": 19,
+        "breaks": 33,
+        "healthRemaining": 1
+      }
+    }
+  ]
+}

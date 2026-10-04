@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import { balanceCases, compareBalance } from "./balance-model.ts"
+import { balanceCases, balanceViolations, compareBalance } from "./balance-model.ts"
 import type { BalanceRow } from "./balance-model.ts"
 import { runBot } from "./bot.ts"
 
@@ -40,5 +40,7 @@ describe("balance measurements", () => {
     expect(compareBalance([row], [{ ...row, report: { ...report, endedAt: 60, ultimates: 10 } }])).toHaveLength(2)
     expect(compareBalance([row], [{ ...row, report: { ...report, outcome: "defeated" } }])).toHaveLength(1)
     expect(compareBalance([row], [])).toHaveLength(1)
+    expect(balanceViolations([{ ...row, profile: "escape-only" }])).toHaveLength(1)
+    expect(balanceViolations([{ ...row, profile: "escape-only", report: { ...report, outcome: "timeout" } }])).toEqual([])
   })
 })
