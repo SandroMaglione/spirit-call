@@ -4,9 +4,10 @@
 - Reduced shrine and stump sizes; added leaf litter, seed pods, moss stones and low seating.
 - Added a continuous root gateway, shrine grove, rooted ruin and mushroom garden around the perimeter.
 
-This is an art delivery for review, using the current 0.5804 m player spirit.
-The playable arena continues to use its existing registered assets. Large scenery
-belongs outside the combat floor; the review page checks actual placement bounds.
+These models are now placed in the playable arena, using the current 0.5804 m player spirit.
+Small ground details are decorative; solid props use simulation collisions.
+Large assemblies stand outside the arena walls on extended paving.
+See [in-game layouts and previews](../studies/IN_GAME.md).
 
 ## Review
 

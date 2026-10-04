@@ -22,7 +22,8 @@ Each comparison pair uses the same orthographic camera scale.
 
 The exterior view reserves an 8 × 7 m floor; all twelve dressing placements
 have model bounds outside it. Its editable arrangement is in `review.js`.
-This is a layout study, not a registered playable arena.
+This exterior sheet is an art study. All seventeen models are also registered
+in the revised playable harbor; see [in-game layout and previews](../studies/IN_GAME.md).
 
 ![Small details](previews/small.png)
 ![Working props](previews/working.png)
@@ -41,7 +42,8 @@ supporting object or the ground.
 `source/saltwind-harbor-study.blend` is the editable model library.
 `models/` contains the exported GLBs. Every model has one mesh and one
 vertex-color material, with no textures or animation. The study has its own
-palette and ids; the shipped harbor assets and game registrations are unchanged.
+palette and ids; original source assets remain available alongside the new
+game registrations and placements.
 
 `support-audit.json` checks closed primitive contacts, intersections and
 containment through a graph to ground, with a 2 mm tolerance. All 17 models

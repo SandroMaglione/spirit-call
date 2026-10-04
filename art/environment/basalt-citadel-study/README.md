@@ -4,9 +4,10 @@
 - Added spare equipment, cloth pouches, unlit torches and table markers.
 - Rebuilt a symmetric throne; added a supported ram, guard shelter and bonded battlement bay for the perimeter.
 
-This is an art delivery for review, using the current 0.5804 m player spirit.
-The playable arena continues to use its existing registered assets. Large scenery
-belongs outside the combat floor; the review page checks actual placement bounds.
+These models are now placed in the playable arena, using the current 0.5804 m player spirit.
+Small ground details are decorative; solid props use simulation collisions.
+Large assemblies stand outside the arena walls on extended paving.
+See [in-game layouts and previews](../studies/IN_GAME.md).
 
 ## Review
 

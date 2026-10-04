@@ -86,7 +86,7 @@ export const arenas = {
       { element: "fire", column: 11, row: 5, columns: 1, rows: 3, walled: { y: "south", x: "east" } }
     ]
   }),
-  /** Open paving between eight pillars: room to move, cover to circle. */
+  /** Open paving between four pillars and low furniture: room to move, cover to circle. */
   courtyard: arena({
     name: "Courtyard",
     pillars: [

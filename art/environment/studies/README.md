@@ -5,9 +5,10 @@ Eight art sets cover every arena currently registered in `arenaLooks`:
 across the other seven arenas. Each of those seven sets has five small details,
 five working props and four large perimeter assemblies.
 
-These are editable art deliveries for review. The playable arenas continue to use
-their registered assets; choosing replacements and integrating placements is a
-separate step. Each arena has its own commit, Blender source, GLBs and audit reports.
+All 115 models are now registered and placed in the playable arenas. The eight
+revised layouts have 105 solid props and 147 decorative placements, including 32
+large exterior assemblies. Each arena has its own art and integration commits,
+Blender source, GLBs and audit reports. See [in-game changes, previews and play links](IN_GAME.md).
 
 ## Review
 
@@ -47,8 +48,9 @@ footprint, with the player shown alongside them.
 - Every modeled component has geometric contact with ground or a connected chain of components. The support audit has zero unsupported pieces with a 2 mm tolerance. This checks contact, not structural load capacity; joined meshes retain intersecting closed shells rather than boolean-welded solids.
 - New props use one mesh and one opaque vertex-color material per asset, without textures or animations.
 - Desktop and phone-sized browser reviews used the network address and actual exports. The seven new exterior arrangements have no asset bounds overlapping the combat rectangle. Phone layouts have no horizontal overflow; touch rotation was exercised with synthetic pointer events, not on a physical phone.
-- After rebasing the eight arena commits onto current main, `env VITEST_MAX_WORKERS=2 pnpm check` passed typecheck, lint and all 417 tests in 52 files. Default parallelism hit the existing replay-test timeout during earlier runs; limiting workers resolved the final check.
-- `pnpm build` passed on the rebased branch. The review gallery is served by the dev server; study models are not imported into the production game yet.
+- After the in-game integration, `env VITEST_MAX_WORKERS=2 pnpm check` passed typecheck, lint and 428 tests in 53 files, with one route-check case skipped for the unchanged training layout. Default parallelism hit the existing replay-test timeout during earlier runs; limiting workers resolved the full check.
+- `pnpm build` passed. All 115 study models are imported into the production game; the art gallery remains available in the dev server.
 
-Art readability, supported construction and scale are reviewed here. Gameplay
-placement, collisions and physical-device performance need review during integration.
+The in-game review covers desktop and phone-sized layouts, touch controls, solid
+prop collisions, walkable decoration and connected routes for the widest body.
+Physical-device performance has not been measured.

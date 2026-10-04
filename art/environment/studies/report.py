@@ -15,9 +15,10 @@ assert len(verification['assets'])==len(kit['assets'])==len(manifest['assets'])
 assert all(not a['unsupported'] for a in audit['assets'].values())
 assets={a['id']:a for a in manifest['assets']}
 lines=['# '+kit['title'],'','\n'.join('- '+n for n in kit['changes']),'',
- 'This is an art delivery for review, using the current 0.5804 m player spirit.',
- 'The playable arena continues to use its existing registered assets. Large scenery',
- 'belongs outside the combat floor; the review page checks actual placement bounds.',
+ 'These models are now placed in the playable arena, using the current 0.5804 m player spirit.',
+ 'Small ground details are decorative; solid props use simulation collisions.',
+ 'Large assemblies stand outside the arena walls on extended paving.',
+ 'See [in-game layouts and previews](../studies/IN_GAME.md).',
  '', '## Review', '',
  'Run `pnpm dev --host --port 5200` and open',
  f'`/art/environment/{name}-study/review.html`. Switch between all props,',
@@ -58,6 +59,7 @@ for n in names:
     k=json.loads((p/'kit.json').read_text());title=html.escape(k['title'])
     pic='working.png' if n=='saltwind-harbor' else 'all.png'
     notes=html.escape(' '.join(k.get('changes',[k.get('description','')])) )
-    cards.append(f'<article><a href="../{n}-study/review.html"><img src="../{n}-study/previews/{pic}" alt="{title} models"><h2>{title}</h2></a><p>{len(k["assets"])} models. {notes}</p><a href="../{n}-study/review.html?view=outside">Exterior layout</a></article>')
+    arena=next(arena for arena, layout in json.loads((ENV/'studies/layouts.json').read_text()).items() if layout['kit']==n)
+    cards.append(f'<article><a href="../{n}-study/review.html"><img src="../{n}-study/previews/{pic}" alt="{title} models"><h2>{title}</h2></a><p>{len(k["assets"])} models. {notes}</p><a href="../{n}-study/review.html?view=outside">Exterior study</a> · <a href="/?play&amp;arena={arena}&amp;challenge=trainingGround&amp;character=tidecaller">Play quiet tour</a> · <a href="in-game/{arena}.png">In-game preview</a></article>')
 (ENV/'studies/index.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arena prop studies</title><style>*{box-sizing:border-box}body{margin:0;padding:24px;background:#15232d;color:#e3e9df;font:15px system-ui}h1{margin:0 0 8px}p{color:#b2c4c5;line-height:1.55}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:20px}article{background:#233640;border:1px solid #435761;border-radius:8px;padding:16px}a{color:#c4b28d}img{width:100%;height:280px;object-fit:contain;background:#182831}h2{font-size:20px}</style><h1>Arena prop studies</h1><p>Connected construction, everyday prop scale and supported perimeter assemblies. Every sheet uses the current player spirit as a reference.</p><main>'+''.join(cards)+'</main></html>')
 print('REPORT',name,len(kit['assets']))
