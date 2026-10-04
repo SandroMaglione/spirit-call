@@ -1,0 +1,103 @@
+{
+  "source": "../chaser-production.blend",
+  "source_sha256": "ae4dc44d915530b30a4e6e0e6d7132982a09dde397282eb57350ec6b78b5811e",
+  "triangles": 1890,
+  "bones": 12,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "Carapace": "body",
+    "Abdomen": "body",
+    "BellyBib": "body",
+    "HeadShell": "head",
+    "FaceRim.L": "head",
+    "EyeSocket.L": "head",
+    "Eye.L": "head",
+    "FaceRim.R": "head",
+    "EyeSocket.R": "head",
+    "Eye.R": "head",
+    "ForeheadShield": "head",
+    "SweptCrest": "body",
+    "CrestSocket": "body",
+    "ShoulderJoint.R": "arm.R",
+    "ShoulderPlate.R": "arm.R",
+    "UpperArm.R": "arm.R",
+    "Elbow.R": "forearm.R",
+    "Forearm.R": "forearm.R",
+    "WristPlate.R": "forearm.R",
+    "HipJoint.R": "leg.R",
+    "ThighPlate.R": "leg.R",
+    "Knee.R": "leg.R",
+    "ShinPlate.R": "leg.R",
+    "Ankle.R": "foot.R",
+    "Foot.R": "foot.R",
+    "Toe.R.0": "foot.R",
+    "Toe.R.1": "foot.R",
+    "Toe.R.2": "foot.R",
+    "ShoulderJoint.L": "arm.L",
+    "ShoulderPlate.L": "arm.L",
+    "UpperArm.L": "arm.L",
+    "Elbow.L": "forearm.L",
+    "Forearm.L": "forearm.L",
+    "WristPlate.L": "forearm.L",
+    "SmallPalm.L": "forearm.L",
+    "Finger.L": "forearm.L",
+    "FingerTip.L": "forearm.L",
+    "Finger.L.001": "forearm.L",
+    "FingerTip.L.001": "forearm.L",
+    "HipJoint.L": "leg.L",
+    "ThighPlate.L": "leg.L",
+    "Knee.L": "leg.L",
+    "ShinPlate.L": "leg.L",
+    "Ankle.L": "foot.L",
+    "Foot.L": "foot.L",
+    "Toe.L.0": "foot.L",
+    "Toe.L.1": "foot.L",
+    "Toe.L.2": "foot.L",
+    "BoneClaw.R": "forearm.R",
+    "Scapula.R": "body",
+    "Scapula.L": "body",
+    "BackKeel": "tail"
+  },
+  "run": {
+    "forward_lean_degrees": 15.469860468532229,
+    "foot_travel_meters": 0.68,
+    "stance_fraction": 0.28,
+    "runtime_distance": 48
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false
+}

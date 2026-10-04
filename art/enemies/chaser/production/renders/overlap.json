@@ -1,0 +1,51 @@
+{
+  "front": {
+    "silhouette_iou": 0.6904650246675046,
+    "translation_pixels": [
+      10,
+      -12
+    ]
+  },
+  "back": {
+    "silhouette_iou": 0.5518635170603674,
+    "translation_pixels": [
+      6,
+      4
+    ]
+  },
+  "left": {
+    "silhouette_iou": 0.6150039931942082,
+    "translation_pixels": [
+      -2,
+      -4
+    ]
+  },
+  "right": {
+    "silhouette_iou": 0.7067036031408234,
+    "translation_pixels": [
+      4,
+      -2
+    ]
+  },
+  "top": {
+    "silhouette_iou": 0.3793374408429324,
+    "translation_pixels": [
+      -16,
+      16
+    ]
+  },
+  "bottom": {
+    "silhouette_iou": 0.4582560612505317,
+    "translation_pixels": [
+      2,
+      -10
+    ]
+  },
+  "hero": {
+    "silhouette_iou": 0.5613351782572302,
+    "translation_pixels": [
+      -16,
+      0
+    ]
+  }
+}

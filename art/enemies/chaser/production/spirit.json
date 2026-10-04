@@ -1,0 +1,11 @@
+{
+  "blend": "chaser-production.blend",
+  "mask": "rust-and-bone",
+  "eyes": "light",
+  "background": "#132332",
+  "ortho": 2.65,
+  "resolution": [700, 700],
+  "sweep": {"turns": [15, 60, 15], "elevations": [15, 25, 35, 45]},
+  "sheet_height_m": 1.8,
+  "status": "static model review"
+}

@@ -225,9 +225,9 @@ def motion(style, action, t):
         data['body'] = transform(location=(0, 0, .1*math.sin(t*math.pi)), scale=(size, size, size))
     return data
 
-def export(kind):
+def export(kind, folder=None):
     """Export the saved source. Never save over manual Blender edits."""
-    folder = ROOT / kind
+    folder = ROOT / kind if folder is None else folder
     bpy.ops.wm.open_mainfile(filepath=str(folder / (kind+'.blend')))
     rig = next(o for o in bpy.context.scene.objects if o.type == 'ARMATURE')
     mesh = next(o for o in bpy.context.scene.objects if o.type == 'MESH')
@@ -275,7 +275,7 @@ def export(kind):
     module = ROOT.parents[1] / 'src/presentation/assets/enemies' / (kind+'.ts')
     module.parent.mkdir(exist_ok=True)
     module.write_text('// Generated from the saved Blender source by art/enemies/scripts/common.py.\n'
-        + 'import url from "../../../../art/enemies/'+kind+'/'+kind+'.glb?url"\n'
+        + 'import url from "../../../../'+path.relative_to(ROOT.parents[1]).as_posix()+'?url"\n'
         + 'import type { ModelSpec } from "../../models.ts"\n\n'
         + 'export const '+kind+'Model = { url,'+json.dumps({'height': height, 'clips': clips}, indent=2)[1:]+' satisfies ModelSpec\n')
     print('ENEMY_EXPORTED', kind, json.dumps(info))
