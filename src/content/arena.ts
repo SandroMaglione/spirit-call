@@ -185,12 +185,8 @@ export const arenas = {
   sanctuary: arena({
     name: "Overgrown Sanctuary",
     pillars: [
-      { x: 0.2, y: 0.2, size: 70 },
-      { x: 0.8, y: 0.8, size: 70 },
-      { x: 0.8, y: 0.2, size: 70 },
-      { x: 0.2, y: 0.8, size: 70 },
-      { x: 0.5, y: 0.5 - 0.17, size: 50 },
-      { x: 0.5, y: 0.5 + 0.17, size: 50 }
+      { x: 0.5, y: 0.33, size: 50 },
+      { x: 0.5, y: 0.67, size: 50 }
     ],
     walls: [
       { x: 0.33, y: 0.33, length: 300, along: "x" },
@@ -204,20 +200,19 @@ export const arenas = {
     ],
     hazards: [],
     props: [
-      // The shrine between two saplings, and a post in each near corner.
-      prop(900, 27, 76, 54),
-      prop(420, 40, 88, 80),
-      prop(1380, 45, 76, 90),
-      prop(14, 1786, 28, 28),
-      prop(1786, 1786, 28, 28),
-      // What grew in, and what fell.
-      prop(61, 61, 122, 122),
-      prop(1756, 46, 88, 92),
-      prop(25, 330, 50, 78),
-      prop(29, 1480, 58, 126),
-      prop(1768, 640, 64, 50),
-      prop(1771, 1280, 58, 84),
-      prop(640, 1762, 92, 76)
+      prop(360, 360, 86, 68),
+      prop(1440, 360, 86, 68),
+      prop(360, 1440, 86, 68),
+      prop(1440, 1440, 86, 68),
+      prop(900, 16, 48, 32),
+      prop(420, 22, 58, 44),
+      prop(1380, 22, 58, 44),
+      prop(16, 400, 32, 84),
+      prop(16, 1400, 32, 84),
+      prop(1784, 500, 32, 84),
+      prop(1784, 1400, 32, 84),
+      prop(560, 1786, 58, 28),
+      prop(1240, 1786, 58, 28)
     ]
   }),
   /** A fortress: a ring of pillars around the keep, battlements north and south, and fire pits on both flanks. */

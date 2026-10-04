@@ -507,15 +507,12 @@ export const kilnworksArena: ArenaLook = {
   light: { sky: 0xfff2e8, ground: 0x94847c, sun: 0xffe9d6 }
 }
 
-/**
- * The overgrown sanctuary (`art/environment/overgrown-sanctuary`): mossy
- * flagstones, its low walls and pillars taken by roots, a shrine between
- * two saplings, and what grew in along the walls.
- */
+/** Rooted saplings replace the corner pillars along the sanctuary's lanes. Low growth and fallen leaves dress the ground; rooted ruins and the shrine grove frame the exterior. */
 export const sanctuaryArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["sanctuaryFloorPlain", "sanctuaryFloorPlain", "sanctuaryFloorPlain", "sanctuaryFloorCracked"],
     color: 0x1f2a1d,
     border: ["sanctuaryFloorWorn"],
@@ -538,23 +535,42 @@ export const sanctuaryArena: ArenaLook = {
     inner: { kind: "run", model: "sanctuaryWallLow" }
   },
   scenery: [
-    { model: "sanctuaryFern", at: { x: 34, y: 1100 }, turn: Math.PI / 2 - 0.57 },
-    { model: "sanctuaryFern", at: { x: 1150, y: 1768 }, turn: 2.3 },
-    { model: "sanctuaryFern", at: { x: 1766, y: 980 }, turn: 0.4 }
+    { model: "sanctuaryStudyRootGateway", at: { x: 900, y: -115 }, turn: 0 },
+    { model: "sanctuaryStudyShrineGrove", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "sanctuaryStudyRootedRuin", at: { x: -145, y: 600 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudyMushroomGarden", at: { x: -145, y: 1300 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 330, y: 300 }, turn: 0 },
+    { model: "sanctuaryStudySmallMushrooms", at: { x: 400, y: 430 }, turn: 0 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 1440, y: 420 }, turn: 0 },
+    { model: "sanctuaryStudySeedPods", at: { x: 1370, y: 320 }, turn: 0 },
+    { model: "sanctuaryStudyMossStone", at: { x: 350, y: 1510 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 1510, y: 1480 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudySmallMushrooms", at: { x: 430, y: 1440 }, turn: 0 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 290, y: 1380 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 910, y: 60 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 70, y: 420 }, turn: 0 },
+    { model: "sanctuaryStudyMossStone", at: { x: 1740, y: 480 }, turn: 0 },
+    { model: "sanctuaryStudySeedPods", at: { x: 430, y: 65 }, turn: 0 },
+    { model: "sanctuaryStudySmallMushrooms", at: { x: 1320, y: 60 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 840, y: -120 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 500, y: -130 }, turn: 0 },
+    { model: "sanctuaryStudySeedPods", at: { x: -100, y: 1360 }, turn: 0 },
+    { model: "sanctuaryStudyMossStone", at: { x: -170, y: 700 }, turn: 0 }
   ],
   props: [
-    { model: "sanctuaryShrine", turn: 0 },
-    { model: "sanctuarySapling", turn: 0.6 },
-    { model: "sanctuarySapling", turn: Math.PI / 2 + 0.53 },
-    { model: "sanctuaryTimberPost", turn: 0 },
-    { model: "sanctuaryTimberPost", turn: 0 },
-    { model: "sanctuaryRootClump", turn: 0.8 },
-    { model: "sanctuaryStump", turn: 0 },
-    { model: "sanctuaryBush", turn: Math.PI / 2 },
-    { model: "sanctuaryFallenLog", turn: Math.PI / 2 + 0.15 },
-    { model: "sanctuaryMushrooms", turn: 0.2 },
-    { model: "sanctuaryShrineBroken", turn: -Math.PI / 2 },
-    { model: "sanctuaryBush", turn: 0.4 }
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyCompactShrine", turn: 0 },
+    { model: "sanctuaryStudyHollowStump", turn: 0 },
+    { model: "sanctuaryStudyHollowStump", turn: 0 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyTimberSeat", turn: 0 },
+    { model: "sanctuaryStudyTimberSeat", turn: 0 }
   ],
   background: 0x161e15,
   light: { sky: 0xf3ffea, ground: 0x869480, sun: 0xfbffe8 }
