@@ -153,6 +153,16 @@ export const view = {
    * is protected, pulsing at `pulseHz`.
    */
   fallEntry: { beam: 26, ring: 150, flash: 120, shake: 8, pulseHz: 3 },
+  /**
+   * What a spirit's body says about her: its halo `ready` times brighter
+   * (pulsing by `pulse` of that, `pulseHz` a second) while her ultimate is
+   * ready, and down to `low` times at no health, dimming from `lowHealth`
+   * (a share of her health) down; coming onto the field she pops up from
+   * `pop` of her size over `popSeconds`; her eyes go `wide` times bigger for
+   * `wideSeconds` after a perfect dodge or coming in after a fall, and shut
+   * to `shut` of their height when she falls.
+   */
+  spirit: { ready: 1.9, pulse: 0.35, pulseHz: 1.6, low: 0.25, lowHealth: 0.35, pop: 0.55, popSeconds: 0.22, wide: 1.35, wideSeconds: 0.6, shut: 0.12 },
   /** A perfect dodge's flash, ring, and streaks. */
   perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7 },
   breaking: { bar: 0xffc857, full: 0xfff4d6, glow: 0xffc857, pulseHz: 5, ring: 90, flash: 70, shake: 9 },

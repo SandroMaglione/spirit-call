@@ -14,9 +14,17 @@ loop's end, see `closeLoop`).
 """
 import math
 
+import sys
+from pathlib import Path
+
 import bpy
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import moves  # noqa: E402
+
 FPS = 30
+# The Tidecaller throws: she winds far round and snaps through, turning with her big throws.
+STYLE = {"lunge": 0.05, "back": 0.03, "twist": 0.7, "roll": 0.16, "hop": 0.01, "spin": True, "cast": 0.12}
 
 
 def wave(t, phase=0.0):
@@ -96,7 +104,8 @@ def add_clips():
             track.mute = True
             obj.animation_data.action = None
         timing[clip] = {"lastKeySeconds": (frames - 1) / FPS, "loopSeconds": frames / FPS}
-    # Back to rest.
+    # Its combat clips (shared by every spirit: tools/moves.py).
+    timing.update(moves.add(bpy, objects, base, "WaterSpirit", STYLE))
     for name, obj in objects.items():
         for prop, value in base[name].items():
             setattr(obj, prop, value)

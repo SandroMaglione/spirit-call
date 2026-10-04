@@ -11,9 +11,17 @@ glTF export writes them as animations and the scene keeps its rest pose.
 """
 import math
 
+import sys
+from pathlib import Path
+
 import bpy
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import moves  # noqa: E402
+
 FPS = 30
+# The Gunner shoots: each shot kicks her back, nothing spins.
+STYLE = {"lunge": -0.06, "back": 0.0, "twist": 0.12, "roll": 0.1, "hop": 0.0, "spin": False, "cast": -0.15}
 
 
 def wave(t, cycles=1, phase=0.0):
@@ -101,6 +109,8 @@ def add_clips():
             track.mute = True
             obj.animation_data.action = None
         timing[clip] = {"lastKeySeconds": (frames - 1) / FPS, "loopSeconds": frames / FPS}
+    # Its combat clips (shared by every spirit: tools/moves.py).
+    timing.update(moves.add(bpy, objects, base, "FireSpirit", STYLE))
     for name, obj in objects.items():
         for prop, value in base[name].items():
             setattr(obj, prop, value)

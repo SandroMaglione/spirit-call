@@ -40,6 +40,10 @@ export interface ActorBody {
   animate(position: Vec2, facing: Vec2, seconds: number, holding: boolean): void
   /** Plays a one-shot over `seconds` (its own length when `null`), its blow landing `hitAt` seconds in (see `Puppet.play`). */
   play(shot: Shot, seconds: number | null, hitAt: number | null): void
+  /** Holds its eyes at `wide` times their width and `tall` times their height (bodies with eyes; see `Puppet.express`). */
+  express?(wide: number, tall: number): void
+  /** Its halo at `level` times its own brightness (bodies with one; see `Puppet.aura`). */
+  aura?(level: number): void
   /** A simulation-owned enemy phase, sampled directly rather than advanced by render time. */
   sample?(clip: string, progress: number): void
   /** Finalize a blended pose after locomotion and simulation phase sampling. */
@@ -116,6 +120,8 @@ const puppetBody = (puppet: Puppet, radius: number, height: number): ActorBody =
   face: (direction) => puppet.face(direction),
   animate: (position, facing, seconds, holding) => puppet.animate(position, facing, seconds, holding),
   play: (shot, seconds, hitAt) => puppet.play(shot, seconds, hitAt),
+  express: (wide, tall) => puppet.express(wide, tall),
+  aura: (level) => puppet.aura(level),
   dispose: () => puppet.dispose()
 })
 
@@ -132,7 +138,7 @@ export const makeBody = (assets: RenderAssets, look: BodyLook, radius: number, b
       return capsuleBody(assets, look.color, bodyRadius, height, batched)
     case "model": {
       if (look.batched) return instancedBody(assets, look, bodyRadius, height)
-      const puppet = new Puppet(assets.model(look.model), height, look.moments ?? null)
+      const puppet = new Puppet(assets.model(look.model), height, look.moments ?? null, look.eyes)
       const held = weapon === null ? undefined : look.held?.weapons[weapon]
       if (held !== undefined && look.held !== undefined) puppet.hold(assets.model(held), look.held.grip)
       return puppetBody(puppet, bodyRadius, height)

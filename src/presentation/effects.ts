@@ -57,7 +57,12 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       fx.ring(at, (release ? 70 : 44) * projection.zoom, view.charge.full, release ? 0.3 : 0.25)
       if (release) feedback.shake = Math.max(feedback.shake, impact.shake)
     }
-    // A character comes in: a flash and a ring in her color.
+    // A character comes in: she pops up (see `DrawPlayer`), wide-eyed if she did not choose the moment.
+    if (action.kind === "switch") {
+      feedback.entrance = 0
+      if (action.fell) feedback.wideEyes = view.spirit.wideSeconds
+    }
+    // A flash and a ring in her color.
     if (action.kind === "switch" && !action.fell) {
       const at = toScreen(projection, action.at)
       const color = view.characters[action.character]
@@ -211,6 +216,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     fx.burst(heart, { color: view.hitFlash, count: 14, speed: 300, size: 4, life: 0.4 })
     services.host.feedback.punch = Math.max(services.host.feedback.punch, 1)
     services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake)
+    services.host.feedback.wideEyes = view.spirit.wideSeconds
   }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)

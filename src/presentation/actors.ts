@@ -32,6 +32,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         flash: Game.Query.read(HitFlash),
         skills: Game.Query.read(Skills),
         energy: Game.Query.read(Energy),
+        health: Game.Query.read(Health),
         weapon: Game.Query.read(Weapon),
         body: Game.Query.read(Body),
         state: Game.Query.read(ElementState),
@@ -129,6 +130,24 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : view.charge.full,
         flashing ? 1 : dash.remaining > 0 ? 0.65 : glow,
         data.invulnerable.get().remaining > 0 ? 0.55 : 1)
+      // Her body says how she is: its halo bright and pulsing while her ultimate is ready, dimming as her health runs low.
+      const spirit = view.spirit
+      const feedback = services.host.feedback
+      const ultimate = skills.ultimate
+      const ready = skillRecharge(tuning.skills[ultimate.skill], ultimate.cooldown, energy) <= 0
+      const health = data.health.get()
+      const left = health.max > 0 ? health.current / health.max : 1
+      const dim = spirit.low + (1 - spirit.low) * Math.min(1, left / spirit.lowHealth)
+      const beat = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * spirit.pulseHz * Math.PI * 2)
+      node.body.aura?.(dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
+      // Her eyes: shut once she has fallen, wide for a moment after a perfect dodge or coming in after a fall.
+      const wide = 1 + (spirit.wide - 1) * Math.min(1, feedback.wideEyes / (spirit.wideSeconds * 0.5))
+      if (health.current <= 0) node.body.express?.(1, spirit.shut)
+      else node.body.express?.(wide, wide)
+      // Coming onto the field she pops up to her size, a little past it.
+      const pop = Math.min(1, feedback.entrance / spirit.popSeconds)
+      const size = pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))
+      node.pivot.scale.set(size, pop >= 1 ? 1 : size * (1 + 0.25 * Math.sin(pop * Math.PI)), size)
     }
   }
 })

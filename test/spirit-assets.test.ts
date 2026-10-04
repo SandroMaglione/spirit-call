@@ -37,7 +37,7 @@ describe("thunder spirit export", () => {
     expect(width(thunder)).toBeLessThan(width(water) * 1.2)
   })
 
-  it("blinks both eyes with their rims, animates its halo, and keeps locomotion off the floor axes", async () => {
+  it("blinks both eyes with their rims, animates its halo, and never travels on the floor", async () => {
     const spec = models.thunderSpirit
     const gltf = await loadSpirit("thunderSpirit")
     const mixer = new AnimationMixer(gltf.scene)
@@ -52,11 +52,17 @@ describe("thunder spirit export", () => {
     mixer.setTime(0)
     expect(halo.quaternion.angleTo(turned)).toBeGreaterThan(0.2)
     for (const clip of gltf.animations) {
-      const root = clip.tracks.find((track) => track.name === "ThunderSpirit.position")!
-      expect(root, clip.name).toBeDefined()
+      const root = clip.tracks.find((track) => track.name === "ThunderSpirit.position")
+      // A clip that never moves it has no track for it (the dash: stretched on the spot).
+      if (root === undefined) continue
+      // Its loops never leave the spot; a combat clip leans into its blow (well inside its own width) and ends back on it: travel is the simulation's.
+      const loop = spec.clips[clip.name as keyof typeof spec.clips].loopSeconds !== null
+      const last = root.times.length - 1
       for (let key = 0; key < root.times.length; key++) {
+        const still = loop || key === 0 || key === last
         expect(root.values[key * 3], `${clip.name}: X`).toBeCloseTo(0, 9)
-        expect(root.values[key * 3 + 2], `${clip.name}: Z`).toBeCloseTo(0, 9)
+        if (still) expect(root.values[key * 3 + 2], `${clip.name}: Z`).toBeCloseTo(0, 9)
+        else expect(Math.abs(root.values[key * 3 + 2]!), `${clip.name}: Z`).toBeLessThan(0.15)
       }
     }
     expect(gltf.scene.getObjectByName("LightningCrest")).toBeDefined()

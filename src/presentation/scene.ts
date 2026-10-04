@@ -53,6 +53,8 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   feedback.kick.x *= kickDecay
   feedback.kick.y *= kickDecay
   feedback.protection = Math.max(0, feedback.protection - seconds)
+  feedback.entrance += seconds
+  feedback.wideEyes = Math.max(0, feedback.wideEyes - seconds)
   feedback.punch = feedback.punch * Math.exp(-view.impact.punchDecay * seconds) < 0.01 ? 0 : feedback.punch * Math.exp(-view.impact.punchDecay * seconds)
   // Shake jitters; a kick moves the view along the blow and eases back.
   const target = services.host.view

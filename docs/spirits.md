@@ -38,7 +38,11 @@ a repeat of the same steps. The rules for model files in general are in
    the eye's outward direction: it reads as drawn on from every side (a
    projected texture smears across side facets; a separate solid sinks in
    or sticks out). Named `Eye.L` and `Eye.R`, origin at the eye's center:
-   blinking is scaling, looking around is moving.
+   blinking is scaling, looking around is moving. Their shape is the
+   character's (`EYE_SHAPE` in `build.py`, over the sheet's ellipses:
+   wider, lidded, slanted): two characters of one mood should not look
+   alike. The game holds them wide or shut at moments of the fight
+   (`eyes` in her look).
 7. **Floating parts are their own objects** (the water spirit's nub, the
    fire spirit's shards), so they bob, sway, and trail on their own.
 8. **Faceted color is per facet, glow is the game's.** Each facet gets one
@@ -47,9 +51,13 @@ a repeat of the same steps. The rules for model files in general are in
    cannot travel in glTF: the game draws it (`glow.ts`, a `GlowSpec` per
    model), and the export keeps only a flat emission.
 9. **Animate objects, not bones.** A spirit has no skeleton: its clips
-   (`Idle`, `Run`) key the body's location, rotation, and scale and its
-   parts' (`animate.py`), one muted NLA track per object, exported together.
-   Loops leave out their closing key, as every model's do.
+   key the body's location, rotation, and scale and its parts'
+   (`animate.py`), one muted NLA track per object, exported together.
+   Loops (`Idle`, `Run`) leave out their closing key, as every model's do.
+   Its combat clips (a combo's blows, the charged move, the dash, a hit
+   taken, the special, the ultimate) are the same for every spirit
+   (`tools/moves.py`), shaped by a `STYLE` in its `animate.py`: how its
+   character strikes (a lunge for a blade, a kick back for a gun).
 10. **Model first, then the game.** Each spirit is built and reviewed as a
     model against its sheet (overlays, renders from the game's camera, at
     game size) before it gets clips, glow, a trail, and its look.
@@ -109,7 +117,8 @@ to copy).
    beside the model, and the game's camera) with the designer; iterate on
    `build.py` until they agree.
 6. **Animate and export.** Write `<spirit>/animate.py` (an `Idle` of 60
-   frames and a `Run` of 16, at 30 fps; see the examples) and
+   frames and a `Run` of 16, at 30 fps, and its `STYLE` for the shared
+   combat clips; see the examples) and
    `<spirit>/export.py`, which writes `<spirit>-spirit.glb` and
    `src/presentation/assets/<spirit>-spirit.ts` (its spec: file, height,
    clips' timing). For a compact spirit, measure `height` from the ground
@@ -122,7 +131,8 @@ to copy).
      (`models.ts`) with its `GlowSpec` (rim, optional core, halo, eye
      glows: the eye nodes by their Blender names);
    - give its character a look in `looks.ts`: `kind: "model"`, its model,
-     `moments: { idle: "Idle", run: { clip: "Run", distance } }`, and its
+     `moments: spiritMoments(...)` (her combo's length, her special, her
+     ultimate), her `eyes`, and its
      trail (`drops`, by `kind`: water drops falling and rippling, `"ember"`
      drifting up and burning out, or `"wisp"` curling away and fading);
    - compare the loaded model with Water and Fire on one ground line,

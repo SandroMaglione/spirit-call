@@ -23,6 +23,13 @@ PIXEL=SHEET["meters_per_pixel"]
 HOVER=0.045
 RNG=random.Random(19)
 COLORS=["#3B2EA6","#7A6BFF","#C9B8FF"]
+# The halo's band: sections round the ring, half its width and height (m),
+# and its tilt (rise per meter toward the back: the front view's 34 pixel
+# opening over the side view's 139 pixel depth).
+HALO_SECTIONS=32
+HALO_WIDE=0.012
+HALO_TALL=0.009
+HALO_TILT=0.24
 
 def linear(value):
     rgb=[int(value[i:i+2],16)/255 for i in (1,3,5)]
@@ -57,7 +64,9 @@ def shade(obj,crest=False):
     mesh=obj.data;attr=mesh.color_attributes.new("Color","FLOAT_COLOR","CORNER")
     for poly in mesh.polygons:
         height=(poly.center.z-HOVER)/UNIT
-        t=0.12+0.55*height+0.06*poly.normal.dot(Vector((-0.5,-0.6,0.65)))+RNG.uniform(-0.035,0.035)
+        # The sheet's body is its middle violet, lighter toward the top
+        # and front, each facet a clearly different step.
+        t=0.36+0.5*height+0.24*poly.normal.dot(Vector((0,-0.6,0.8)))+RNG.uniform(-0.14,0.14)
         if crest:t=0.25+0.72*height+RNG.uniform(-0.06,0.06)
         t=max(0,min(1,t))
         a,b=linear(COLORS[0]),linear(COLORS[1])
@@ -93,6 +102,14 @@ def loft(name,part,heights,segments,mat,parent=None):
     obj=object_mesh(name,verts,faces,mat,parent);shade(obj,part=="crest")
     return obj
 
+# Her eyes, from the sheet's ellipses: the Stormcaller is gentle (big and round, their outer ends a little lower).
+EYE_SHAPE={"wide":1.1,"tall":1.0,"tilt":-0.12}
+
+def eye_shape(u,v,left):
+    u,v=u*EYE_SHAPE["wide"],v*EYE_SHAPE["tall"]
+    tilt=EYE_SHAPE["tilt"]*(1 if left else -1)
+    return u*math.cos(tilt)-v*math.sin(tilt),u*math.sin(tilt)+v*math.cos(tilt)
+
 def eye(body,side,gold,white):
     eyes=SHEET["front"]["eyes"]
     offset=np.mean([abs(e["offset"]) for e in eyes])*side
@@ -113,7 +130,7 @@ def eye(body,side,gold,white):
         for r in range(1,rings+1):
             for k in range(segments):
                 a=2*math.pi*k/segments
-                verts.append(point(math.cos(a)*width*scale*r/rings,math.sin(a)*tall*scale*r/rings)-center)
+                verts.append(point(*eye_shape(math.cos(a)*width*scale*r/rings,math.sin(a)*tall*scale*r/rings,side>0))-center)
         for k in range(segments):faces.append((0,1+k,1+(k+1)%segments))
         for r in range(rings-1):
             for k in range(segments):
@@ -152,37 +169,39 @@ def bolt(side,mat,parent):
 def halo(mat,parent):
     radius=(255-104)*PIXEL/2;depth=139*PIXEL/2
     height=(519-375)*PIXEL+HOVER
-    # The sheet shows the ring's interior in both upright views: preserve
-    # its slight tilt, rather than flattening it to an edge-on line.
-    def pos(a,r=0):
+    # The sheet shows the ring's interior in every upright view, its front
+    # arc lower and crossing before the crest's base: keep that tilt.
+    def pos(a,r=0,lift=0):
         x=math.cos(a)*(radius+r);y=math.sin(a)*(depth+r)
-        return Vector((x,y,height-0.24*y))
-    verts=[];faces=[];n=96
+        return Vector((x,y,height+HALO_TILT*y+lift))
+    # A band of lightning, not a wire: a diamond section thick enough to
+    # read side-on and at phone size, its middle line zig-zagging in and
+    # out and its width swelling and thinning like a bolt's segments.
+    rng=random.Random(7);n=HALO_SECTIONS
+    verts=[];faces=[];barbs=[]
     for k in range(n):
-        a=2*math.pi*k/n
-        for offset in (-0.003,0.003):verts.append(pos(a,offset))
-    for k in range(n):faces.append((2*k,2*k+1,2*((k+1)%n)+1,2*((k+1)%n)))
-    # Short jagged ribbons sit on the ring, with alternating violet-white
-    # breaks so its electrical silhouette survives at phone size.
-    for j in range(10):
-        start=len(verts);a0=2*math.pi*j/10
-        for k in range(7):
-            a=a0+(k/6)*0.38
-            zig=(0.004 if k%2 else -0.004)
-            width=0.003+(0.006 if k in (1,4) else 0)
-            verts.extend([pos(a,zig-width),pos(a,zig+width)])
-        for k in range(6):faces.append((start+2*k,start+2*k+1,start+2*k+3,start+2*k+2))
-    obj=object_mesh("Halo",verts,faces,mat,parent)
-    # Give the ring real thickness, including when viewed from the side.
-    mod=obj.modifiers.new("Ribbon thickness","SOLIDIFY");mod.thickness=0.0015
-    bpy.context.view_layer.objects.active=obj;bpy.ops.object.modifier_apply(modifier=mod.name)
+        a=2*math.pi*(k+rng.uniform(-0.22,0.22))/n
+        out=k%2==0
+        zig=(1 if out else -1)*rng.uniform(0.004,0.008)-1.25*HALO_WIDE-0.008
+        wide=HALO_WIDE*(1.25 if out else 0.7);tall=HALO_TALL*(1.2 if out else 0.75)
+        lift=(0.4 if k%4<2 else -0.4)*HALO_TALL
+        verts.extend([pos(a,zig-wide,lift),pos(a,zig,lift+tall),pos(a,zig+wide,lift),pos(a,zig,lift-tall)])
+        # Barbs fork off some outer corners, swept round the ring.
+        if k%4==2:barbs.append((k,pos(a+0.17,zig+wide+0.022,lift+0.005)))
+    for k in range(n):
+        a=4*k;b=4*((k+1)%n)
+        faces.extend((a+j,a+(j+1)%4,b+(j+1)%4,b+j) for j in range(4))
+    for k,tip in barbs:
+        i=len(verts);verts.append(tip)
+        faces.extend([(4*k+1,4*k+2,i),(4*k+2,4*k+3,i),(4*k+3,4*k+1,i)])
+    object_mesh("Halo",verts,faces,mat,parent)
 
 def main():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     purple=material("Violet facets",emission=0.25)
-    gold=material("Pale gold lightning","#FFF0B3",0.5)
+    gold=material("Pale gold lightning","#FFDE6A",0.6)
     white=material("White eyes","#FFFFFF",3)
-    ring=material("Electrical ring","#FFE66D",1.3)
+    ring=material("Electrical ring","#FFE9A0",0.9)
     body=loft("ThunderSpirit","outline",[0.023,0.045,0.075,0.12,0.18,0.25,0.32,0.39,0.45,0.5,0.54,0.56,0.572],16,purple)
     crest=loft("LightningCrest","crest",[0.59,0.63,0.665,0.69,0.79,0.865,0.997],6,purple,body)
     for side in (-1,1):

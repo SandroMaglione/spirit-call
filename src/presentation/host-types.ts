@@ -194,6 +194,9 @@ export interface FeedbackState {
   punch: number
   /** Seconds left of the protection of a character who came in after a fall (shown around her feet). */
   protection: number
+  /** Seconds since the one on the field came onto it (she pops up), and seconds left of her eyes held wide (a perfect dodge, coming in after a fall). */
+  entrance: number
+  wideEyes: number
   /** Recoil of recently hit bodies, by entity id: age, duration, the blow's direction on the floor, and strength. */
   readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
   /** The state the one on the field is in, and the most it had left (refreshed by a new hit), so its icon's ring shows what is left. */

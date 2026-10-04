@@ -254,7 +254,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     safeArea: safeArea.read,
     showArena,
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
-    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, protection: 0, recoil: new Map(), stateClock: { id: null, full: 0 }, meter: { recent: [] } },
+    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, protection: 0, entrance: Infinity, wideEyes: 0, recoil: new Map(), stateClock: { id: null, full: 0 }, meter: { recent: [] } },
     toCanvas: (world, height) => {
       const center = toScreen(projection, cameraView.center)
       const at = toScreenAt(projection, world, height)

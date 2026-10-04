@@ -112,6 +112,8 @@ export const addGlow = (scene: Object3D, glow: GlowSpec, height: number): void =
     }
   })
   const halo = disc(glow.halo.color, glow.halo.opacity, glow.halo.size * height)
+  // Told apart from the eyes' glows: a body's own copy changes with its state (see `Puppet.aura`).
+  halo.userData["halo"] = true
   halo.position.y = height * 0.42
   scene.add(halo)
   for (const name of glow.eyes.opacity > 0 ? glowing : []) {
