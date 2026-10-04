@@ -18,6 +18,8 @@ import type { BuildValue, FlowState, RunResultValue } from "../schema.ts"
 
 export interface UiStore {
   readonly flow: Signal<FlowState>
+  /** Whether the run going on is paused (its in-game menu open). */
+  readonly paused: Signal<boolean>
   /** The input in use: keyboard and mouse, or touch (for hints). */
   readonly device: Signal<"desktop" | "touch">
   /** The content (characters, weapons, skills, challenges) and its numbers. */
@@ -35,6 +37,13 @@ export interface UiStore {
   readonly earned: Signal<Earned | null>
   /** Messages for the player (what loading the profile had to fix), until dismissed. */
   readonly notices: Signal<ReadonlyArray<string>>
+  /** This device's sound: on or off, and how loud (0..1). */
+  readonly sound: Signal<Sound>
+}
+
+export interface Sound {
+  readonly muted: boolean
+  readonly volume: number
 }
 
 export const createUiStore = (initial: {
@@ -44,8 +53,10 @@ export const createUiStore = (initial: {
   readonly flow: FlowState
   readonly account: Account
   readonly notices: ReadonlyArray<string>
+  readonly sound: Sound
 }): UiStore => ({
   flow: signal(initial.flow),
+  paused: signal(false),
   device: signal("desktop"),
   tuning: signal(initial.tuning),
   team: signal(initial.team),
@@ -54,7 +65,8 @@ export const createUiStore = (initial: {
   play: signal(null),
   result: signal(null),
   earned: signal(null),
-  notices: signal(initial.notices)
+  notices: signal(initial.notices),
+  sound: signal(initial.sound)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
@@ -69,8 +81,15 @@ export interface UiActions {
   readonly train: (character: CharacterId) => void
   /** Take an owned weapon a level higher with gold (saved at once). */
   readonly upgrade: (weapon: WeaponId) => void
-  /** From the results: the same challenge again. */
+  /** From the results or the in-game menu: the same challenge again, from the start. */
   readonly retry: () => void
-  /** From the results: back to the menu. */
+  /** From the results or the in-game menu: back to the menu. */
   readonly menu: () => void
+  /** During a run: open the in-game menu (the run stands still). */
+  readonly pause: () => void
+  /** Close the in-game menu: back to the run. */
+  readonly resume: () => void
+  /** Sound on or off, and how loud (0..1); saved on this device. */
+  readonly setMuted: (muted: boolean) => void
+  readonly setVolume: (volume: number) => void
 }

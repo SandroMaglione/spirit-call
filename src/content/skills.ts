@@ -164,8 +164,6 @@ export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | Nov
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
   readonly name: string
-  /** Shown on the touch button. */
-  readonly label: string
   /** Seconds after use before it can be used again (0: none). */
   readonly cooldown: number
   /** Energy spent on use (0: free). Damage from a skill that costs energy does not refill it. */
@@ -204,7 +202,6 @@ export const skills = {
    */
   bladeWave: skill({
     name: "Gust",
-    label: "GUST",
     cooldown: 2.5,
     energy: 0,
     invulnerability: 0,
@@ -217,7 +214,6 @@ export const skills = {
    */
   flareJump: skill({
     name: "Flare Jump",
-    label: "FLARE",
     cooldown: 3,
     energy: 0,
     invulnerability: 0.35,
@@ -230,7 +226,6 @@ export const skills = {
    */
   tidalWave: skill({
     name: "Tidal Wave",
-    label: "WAVE",
     cooldown: 2.5,
     energy: 0,
     invulnerability: 0,
@@ -244,7 +239,6 @@ export const skills = {
    */
   cyclone: skill({
     name: "Cyclone",
-    label: "CYCLONE",
     cooldown: 0,
     energy: 100,
     invulnerability: 0.5,
@@ -253,7 +247,6 @@ export const skills = {
   /** The Gunner's ultimate: a volley of fire shells around the cursor, each leaving a fire pool. */
   barrage: skill({
     name: "Barrage",
-    label: "BARRAGE",
     cooldown: 0,
     energy: 100,
     invulnerability: 0.5,
@@ -276,7 +269,6 @@ export const skills = {
   /** The Tidecaller's ultimate: a tide breaking out around her that soaks everything far around, drives it back, and washes away shots. */
   tide: skill({
     name: "Tide",
-    label: "TIDE",
     cooldown: 0,
     energy: 100,
     invulnerability: 0.5,
@@ -291,7 +283,6 @@ export const skills = {
    */
   sparkTotem: skill({
     name: "Spark Totem",
-    label: "TOTEM",
     cooldown: 6,
     energy: 0,
     invulnerability: 0,
@@ -304,7 +295,6 @@ export const skills = {
    */
   thunderclap: skill({
     name: "Thunderclap",
-    label: "CLAP",
     cooldown: 0,
     energy: 100,
     invulnerability: 0.5,

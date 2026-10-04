@@ -36,13 +36,15 @@
 }
 
 .menu button,
-.results button {
+.results button,
+.pause button {
   font: inherit;
   color: inherit;
   cursor: pointer;
 }
 
 .menu button:disabled,
+.pause button:disabled,
 .results button:disabled {
   cursor: default;
 }

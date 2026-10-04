@@ -25,6 +25,7 @@ import {
   FrameContext,
   Game,
   KeyboardInput,
+  PartyInput,
   PointerInput,
   TouchInput,
   RenderClock,
@@ -55,7 +56,8 @@ const start = async (mount: HTMLElement) => {
   /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
   let playing: Play | null = null
   const uiRequests = emptyUiRequests()
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, notices: shell.notes })
+  const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, notices: shell.notes, sound: shell.settings })
   shell.onAccount((next) => {
     uiStore.account.value = next
   })
@@ -88,7 +90,21 @@ const start = async (mount: HTMLElement) => {
     train: shell.train,
     upgrade: shell.upgrade,
     retry: () => uiRequests.pending.push({ kind: "retry" }),
-    menu: () => uiRequests.pending.push({ kind: "menu" })
+    menu: () => uiRequests.pending.push({ kind: "menu" }),
+    pause: () => uiRequests.pending.push({ kind: "pause" }),
+    resume: () => uiRequests.pending.push({ kind: "resume" }),
+    setMuted: (muted) => {
+      sounds.setMuted(muted)
+      shell.setMuted(muted)
+      uiStore.sound.value = { ...uiStore.sound.value, muted }
+    },
+    setVolume: (volume) => {
+      sounds.setVolume(volume)
+      shell.setVolume(sounds.volume())
+      // Turning the volume up turns the sound on.
+      if (sounds.volume() > 0 && sounds.muted()) uiActions.setMuted(false)
+      uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
+    }
   }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
@@ -97,27 +113,23 @@ const start = async (mount: HTMLElement) => {
   const keyboard = Keyboard.actions(window, keyBindings)
   const pointer = Pointer.track(canvas, window)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
-  const touch = Touch.track(canvas, window, touchLayout, {
+  // The controls keep inside the screen's safe area (clear of a notch and rounded corners).
+  const touch = Touch.track(canvas, window, (size) => touchLayout(size, browser.host.safeArea()), {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
   const clock: RenderClockValue = { alpha: 0, frameSeconds: 0 }
-  const sounds = createSoundBoard(window, { muted: shell.settings.muted })
-  // Mute with M or the speaker button (remembered in the profile).
-  const muteButton = browser.host.hud.mute
-  const showMute = () => {
-    muteButton.textContent = sounds.muted() ? "🔇" : "🔊"
-  }
-  const toggleMute = () => {
-    sounds.setMuted(!sounds.muted())
-    shell.setMuted(sounds.muted())
-    showMute()
-  }
-  showMute()
-  muteButton.addEventListener("pointerdown", (event) => event.stopPropagation())
-  muteButton.addEventListener("click", toggleMute)
+  // The HUD's menu button opens the in-game menu (as Esc does); M mutes anywhere.
+  const menuButton = browser.host.hud.menu
+  menuButton.addEventListener("pointerdown", (event) => event.stopPropagation())
+  menuButton.addEventListener("click", uiActions.pause)
   window.addEventListener("keydown", (event) => {
-    if (event.code === "KeyM" && !(event.target instanceof HTMLInputElement)) toggleMute()
+    if (event.code === "KeyM" && !(event.target instanceof HTMLInputElement)) uiActions.setMuted(!sounds.muted())
   })
+  // Leaving the game (another app, a call, another tab or window) pauses the run; only a run going on pauses.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) uiActions.pause()
+  })
+  window.addEventListener("blur", uiActions.pause)
   const frameContext: FrameContextValue = {
     get viewport() {
       return { width: size.width, height: size.height }
@@ -129,6 +141,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(KeyboardInput, keyboard),
       Game.Runtime.service(PointerInput, pointer),
       Game.Runtime.service(TouchInput, touch),
+      Game.Runtime.service(PartyInput, browser.party),
       Game.Runtime.service(FrameContext, frameContext),
       Game.Runtime.service(RenderClock, clock),
       Game.Runtime.service(RenderHost, browser.host),
@@ -173,7 +186,8 @@ const start = async (mount: HTMLElement) => {
     },
     render: ({ alpha, elapsedSeconds, fixedSteps }) => {
       clock.alpha = alpha
-      clock.frameSeconds = elapsedSeconds
+      // While paused, what is drawn stands still with the world (animations, effects, the camera's shake).
+      clock.frameSeconds = uiStore.paused.value ? 0 : elapsedSeconds
       stats.steps = fixedSteps
       if (elapsedSeconds > 0) stats.fps += (1 / elapsedSeconds - stats.fps) * 0.05
       stats.simMs += (simMs - stats.simMs) * 0.05

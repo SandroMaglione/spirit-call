@@ -74,8 +74,9 @@ It is a personal project, not a commercial one.
 ## Platform and controls
 
 - **Phone first.** The touch controls (a stick on the left; attack, special,
-  dash, and ultimate buttons on the right, the team's switch buttons above
-  them) are the reference; keyboard and
+  dash, and ultimate buttons on the right, laid out and sized as Genshin's,
+  with icons rather than words; the team's party list above them) are the
+  reference; keyboard and
   mouse are supported too. A mechanic that does not fit the touch layout
   needs a very good reason.
 - Runs are around four minutes; menus and preparation should be quick on a
@@ -120,9 +121,11 @@ The rules are in `docs/elements.md`; in short:
   example one applies an element, another heals). A team can be smaller
   (an early account owns only one or two characters).
 - **Switching is immediate**, with a short wait between switches (a
-  second), and gives no protection: dodging is the dash's job. One button
-  per character, stacked on the right above the other buttons on touch;
-  1, 2, 3 on the keyboard. No entrance attack, for now.
+  second), and gives no protection: dodging is the dash's job. On touch,
+  a party list as Genshin's: a row per character on the right, above the
+  other buttons, and a tap on her row switches to her; once her ultimate is
+  ready its icon shows beside her row, and a tap on it switches her in and
+  uses it at once. 1, 2, 3 on the keyboard. No entrance attack, for now.
 - A switch **interrupts** what the character was doing (an attack, a combo,
   a charge); not possible mid-dash. What she already released finishes on
   its own (a grenade lands, a disc keeps cutting, a totem keeps zapping); a disc on its way back

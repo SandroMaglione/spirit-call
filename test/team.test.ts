@@ -49,6 +49,13 @@ const TeamState = Game.Inspector("Test/Team", {
   switchCooldown: resources.teamSwitch.get().cooldown
 }))
 
+/** Fills every member's energy: ultimates ready. */
+const ChargeTeam = Game.System("Test/ChargeTeam", {
+  queries: { members: Game.Query({ selection: { energy: Game.Query.write(Energy) } }) }
+}, ({ queries }) => {
+  for (const { data } of queries.members.each()) data.energy.set({ current: tuning.energy.max })
+})
+
 /** A run with `team`; `world()` is the team's state, `field()` the one on the field. */
 const run = (team: ReadonlyArray<BuildValue>, options: StartOptions = {}) => {
   const started = start({ ...options, team })
@@ -139,10 +146,30 @@ describe("switching", () => {
     expect(team.field()?.slot).toBe(0)
   })
 
-  it("works from the touch buttons", () => {
-    const team = run([swordsman, gunner, tidecaller], { touch: [{ frame: 0, press: ["team3"], release: ["team3"] }] })
+  it("works from a tap on her row of the party list", () => {
+    const team = run([swordsman, gunner, tidecaller], { party: [{ frame: 0, slot: 2, ultimate: false }] })
     team.step(2)
     expect(team.field()?.character).toBe("tidecaller")
+  })
+
+  it("switches in and uses her ultimate at once from a tap on its icon, as Genshin's party list", () => {
+    const team = run([swordsman, gunner], { party: [{ frame: 1, slot: 1, ultimate: true }] })
+    team.runtime.tick(Game.Schedule(ChargeTeam))
+    team.step(1)
+    expect(team.world().members[1]!.energy).toBe(tuning.energy.max)
+    team.step(3)
+    expect(team.field()?.character).toBe("gunner")
+    // Her energy went into the ultimate; the one who left keeps hers.
+    expect(team.world().members[1]!.energy).toBeLessThan(tuning.energy.max)
+    expect(team.world().members[0]!.energy).toBe(tuning.energy.max)
+  })
+
+  it("drops the ultimate when the switch has to wait, so it never goes off later on its own", () => {
+    const team = run([swordsman, gunner], { party: [{ frame: 0, slot: 1, ultimate: false }, { frame: 3, slot: 0, ultimate: true }] })
+    team.runtime.tick(Game.Schedule(ChargeTeam))
+    team.step(steps(tuning.team.switchCooldown) + 10)
+    expect(team.field()?.character).toBe("gunner")
+    expect(team.world().members[0]!.energy).toBe(tuning.energy.max)
   })
 })
 

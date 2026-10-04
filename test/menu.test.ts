@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { survive } from "../src/content/challenges.ts"
 import { withWeapon } from "../src/features/build.ts"
-import { Challenge, CombatStats, Game, Player, Team } from "../src/schema.ts"
+import { Challenge, CombatStats, Game, Paused, Player, Run, Team } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
 import { answers, elementOf, placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
 import { start } from "./helpers.ts"
@@ -50,6 +50,59 @@ describe("menu requests", () => {
     run.step()
     expect(flowOf(run)).toBe("Playing")
     expect(run.runtime.inspect(Screen).challenge).toBe("swarm")
+  })
+})
+
+const Pause = Game.Inspector("Test/Pause", {
+  resources: { paused: Game.System.readResource(Paused), run: Game.System.readResource(Run) }
+}, ({ resources }) => ({ paused: resources.paused.get().paused, time: resources.run.get().time }))
+
+describe("the in-game menu", () => {
+  it("pauses a run going on: the world stands still until it resumes", () => {
+    const run = start({ waves: true })
+    run.step(10)
+    run.requests.pending.push({ kind: "pause" })
+    run.step()
+    const at = run.runtime.inspect(Pause)
+    expect(at.paused).toBe(true)
+    run.step(60)
+    expect(run.runtime.inspect(Pause)).toEqual(at)
+    expect(flowOf(run)).toBe("Playing")
+
+    run.requests.pending.push({ kind: "resume" })
+    run.step(30)
+    expect(run.runtime.inspect(Pause).paused).toBe(false)
+    expect(run.runtime.inspect(Pause).time).toBeGreaterThan(at.time)
+  })
+
+  it("restarts the run, or leaves it for the menu, only once paused", () => {
+    const run = start({ waves: true })
+    run.step(60)
+    run.requests.pending.push({ kind: "pause" })
+    run.step()
+    run.requests.pending.push({ kind: "retry" })
+    run.step()
+    expect(flowOf(run)).toBe("Playing")
+    expect(run.runtime.inspect(Pause)).toEqual({ paused: false, time: 0 })
+
+    run.requests.pending.push({ kind: "pause" })
+    run.step()
+    run.requests.pending.push({ kind: "menu" })
+    run.step()
+    expect(flowOf(run)).toBe("Menu")
+    expect(run.runtime.inspect(Pause).paused).toBe(false)
+    // Nothing to pause on the menu.
+    run.requests.pending.push({ kind: "pause" })
+    run.step()
+    expect(run.runtime.inspect(Pause).paused).toBe(false)
+  })
+
+  it("opens and closes with Esc", () => {
+    const run = start({ keys: [{ frame: 5, press: ["menu"], release: ["menu"] }, { frame: 40, press: ["menu"], release: ["menu"] }] })
+    run.step(10)
+    expect(run.runtime.inspect(Pause).paused).toBe(true)
+    run.step(40)
+    expect(run.runtime.inspect(Pause).paused).toBe(false)
   })
 })
 

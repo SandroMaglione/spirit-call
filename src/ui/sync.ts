@@ -5,7 +5,7 @@
  */
 import { batch } from "@preact/signals"
 
-import { Challenge, Controls, Flow, Game, RunResult, Team, Tuning } from "../schema.ts"
+import { Challenge, Controls, Flow, Game, Paused, RunResult, Team, Tuning } from "../schema.ts"
 import { UiStoreService } from "./store.ts"
 
 export const SyncUi = Game.System("Shooter/SyncUi", {
@@ -14,7 +14,8 @@ export const SyncUi = Game.System("Shooter/SyncUi", {
     team: Game.System.readResource(Team),
     challenge: Game.System.readResource(Challenge),
     controls: Game.System.readResource(Controls),
-    result: Game.System.readResource(RunResult)
+    result: Game.System.readResource(RunResult),
+    paused: Game.System.readResource(Paused)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { store: Game.System.service(UiStoreService) }
@@ -23,6 +24,7 @@ export const SyncUi = Game.System("Shooter/SyncUi", {
   const flow = machines.flow.get()
   batch(() => {
     store.flow.value = flow
+    store.paused.value = flow === "Playing" && resources.paused.get().paused
     store.device.value = resources.controls.get().device
     store.tuning.value = resources.tuning.get()
     store.team.value = resources.team.get()

@@ -1,8 +1,8 @@
 import type { ArenaId } from "../src/content/arena.ts"
 import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
-import { keyBindings, touchButtons } from "../src/config/input.ts"
-import type { Direction, TouchButton } from "../src/config/input.ts"
+import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
+import type { Direction, PartyTap, TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { projection, viewZoom } from "../src/config/view.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -154,6 +154,8 @@ export interface StartOptions {
   readonly keys?: Keyboard.Timeline<typeof keyBindings>
   readonly pointer?: Pointer.Timeline
   readonly touch?: Touch.Timeline<TouchButton>
+  /** Taps on the party list. */
+  readonly party?: ReadonlyArray<PartyTap & { readonly frame: number }>
   readonly tuning?: Tuning
   /** Who enters the arena. Defaults to the swordsman. */
   readonly build?: BuildValue
@@ -177,6 +179,7 @@ export const start = (options: StartOptions = {}) => {
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
+    party: scriptedPartyTaps(options.party ?? []),
     tuning: inArena(withWaves(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning), options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
     ...(options.team === undefined ? {} : { team: options.team }),

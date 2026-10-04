@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { skillSlots } from "../src/content/skills.ts"
-import { touchLayout } from "../src/config/input.ts"
+import { actionButtons, partyLayout, stickRest, touchButtons, touchLayout } from "../src/config/input.ts"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
@@ -128,6 +128,57 @@ describe("touch controls", () => {
     const [first] = thrown.runtime.inspect(World).grenades
     expect(thrown.runtime.inspect(World).grenades).toHaveLength(spec.shells)
     expect(Math.hypot(first!.to.x - center.x, first!.to.y - center.y)).toBeCloseTo(spec.maxRange * defaultTuning.touch.tapThrowRange, 6)
+  })
+
+  it("lays the buttons out apart, on the right half, inside the safe area, the party list above them", () => {
+    // Landscape phones (notched ones with their safe area: a mini, a 14, a Pro Max, and an SE without), a wide Android, and a tablet.
+    const screens = [
+      { width: 812, height: 375, notch: 50 },
+      { width: 844, height: 390, notch: 0 },
+      { width: 844, height: 390, notch: 47 },
+      { width: 932, height: 430, notch: 59 },
+      { width: 667, height: 375, notch: 0 },
+      { width: 1010, height: 360, notch: 32 },
+      { width: 932, height: 325, notch: 59 },
+      { width: 1180, height: 820, notch: 0 }
+    ]
+    for (const { notch, ...screen } of screens) {
+      const safe = { top: 0, right: notch, bottom: 0, left: notch }
+      const layout = touchLayout(screen, safe)
+      const label = `${screen.width}x${screen.height}, notch ${notch}`
+      const zones = touchButtons.map((name) => ({ name, ...layout.buttons[name] }))
+      const rows = partyLayout(screen, safe)
+      for (const [index, zone] of [...zones, ...rows.map((row, slot) => ({ name: `row ${slot}`, ...row }))].entries()) {
+        expect(zone.center.x - zone.radius, `${label}: ${zone.name}`).toBeGreaterThan(screen.width / 2)
+        expect(zone.center.x + zone.radius, `${label}: ${zone.name}`).toBeLessThanOrEqual(screen.width - notch)
+        expect(zone.center.y - zone.radius, `${label}: ${zone.name}`).toBeGreaterThan(0)
+        expect(zone.center.y + zone.radius, `${label}: ${zone.name}`).toBeLessThan(screen.height)
+        for (const other of zones.slice(index + 1)) {
+          expect(Math.hypot(zone.center.x - other.center.x, zone.center.y - other.center.y), `${label}: ${zone.name}, ${other.name}`).toBeGreaterThan(zone.radius + other.radius)
+        }
+      }
+      // The rows, in slot order down one column, all above the buttons: nothing under a row (her name, health, and ultimate's icon run left of the portrait).
+      for (const [slot, row] of rows.entries()) {
+        expect(row.center.x).toBeCloseTo(rows[0]!.center.x, 6)
+        if (slot > 0) expect(row.center.y - row.radius, `${label}: row ${slot}`).toBeGreaterThan(rows[slot - 1]!.center.y + rows[slot - 1]!.radius)
+      }
+      // Well clear of the buttons below: room for the rows' names to read apart from them.
+      const bottom = rows.at(-1)!.center.y + rows.at(-1)!.radius
+      const scale = Math.min(1.4, Math.max(0.8, Math.min(screen.width, screen.height) / 400))
+      for (const name of actionButtons) {
+        const zone = layout.buttons[name]
+        expect(zone.center.y - zone.radius, `${label}: ${name} under the party list`).toBeGreaterThan(bottom + 24 * scale)
+      }
+    }
+  })
+
+  it("rests the stick as far in from the left edge as the dash is from the right", () => {
+    for (const screen of [{ width: 844, height: 390 }, { width: 900, height: 330 }]) {
+      const layout = touchLayout(screen)
+      const rest = stickRest(screen)
+      const dash = layout.buttons.dash
+      expect(rest.x - layout.stick.radius).toBeCloseTo(screen.width - (dash.center.x + dash.radius), 6)
+    }
   })
 
   it("lets both skill buttons be dragged to aim, since either slot may hold an aimed skill (the Cyclone and the Barrage are ultimates)", () => {

@@ -1,7 +1,7 @@
 /**
  * Pieces the menu's screens share: where they go (`Nav`), the top bar, the
- * wallet, element badges, the big call to action, and the places a model or
- * a portrait shows. The UI only marks those places (`data-model`,
+ * wallet, element badges, the big call to action, the places a model or
+ * a portrait shows, and an enemy's card. The UI only marks those places (`data-model`,
  * `data-portrait`); the presentation draws into them (see
  * `presentation/showcase.ts`), so the menu never touches the renderer.
  */
@@ -13,6 +13,7 @@ import { elements } from "../../content/elements.ts"
 import type { ElementId } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import type { WeaponId } from "../../content/weapons.ts"
+import { affinityList, attackElements } from "../describe.ts"
 import type { UiStore } from "../store.ts"
 
 /** The menu's screens; the character page opens on one of its tabs. */
@@ -89,3 +90,28 @@ export type PortraitOf = { readonly character: CharacterId } | { readonly enemy:
 export const Portrait = ({ of, class: className = "" }: { readonly of: PortraitOf; readonly class?: string }) => (
   <span class={`portrait ${className}`} data-portrait={"character" in of ? of.character : `enemy:${of.enemy}`} />
 )
+
+const affinityMarks = { weak: "▲", resists: "▼", immune: "✕" } as const
+
+/** An enemy of a briefing (or the in-game menu): its portrait, name, affinities, and the elements it attacks with (outlined: what it would put on you). */
+export const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKind }) => {
+  const spec = store.tuning.value.enemies[kind]
+  return (
+    <div class="foe" title={spec.description}>
+      <Portrait of={{ enemy: kind }} />
+      <b>{spec.name}</b>
+      <span class="foe__traits">
+        {affinityList(spec.elements).map(({ element, affinity }) => (
+          <i key={element} class={`trait trait--${affinity}`} data-element={element}>
+            {elements[element].name} {affinityMarks[affinity]}
+          </i>
+        ))}
+        {attackElements(spec.attacks).map((element) => (
+          <i key={`attacks-${element}`} class="trait trait--attacks" data-element={element} title={`Its attacks carry ${elements[element].name.toLowerCase()}`}>
+            {elements[element].name} attack
+          </i>
+        ))}
+      </span>
+    </div>
+  )
+}
