@@ -101,6 +101,10 @@
     controls.addEventListener('change',()=>{if(window.modelReview)window.modelReview.camera=camera.position.toArray();});
     const mode=document.querySelector('#reference-mode');
     const base=()=>`/art/enemies/${kind}/production/`;
+    // Rebuilt models and renders keep their names; a refreshed review must
+    // fetch the new files together instead of mixing cached revisions.
+    const revision=Date.now();
+    const asset=path=>base()+path+`?revision=${revision}`;
     function resize(){
       const w=viewport.clientWidth,h=viewport.clientHeight;const scale=height*.78;
       camera.left=-scale*w/h;camera.right=scale*w/h;camera.top=scale;camera.bottom=-scale;
@@ -114,18 +118,18 @@
       camera.position.copy(target).add(new THREE.Vector3(Math.sin(turn)*Math.cos(elevation),Math.sin(elevation),Math.cos(turn)*Math.cos(elevation)).multiplyScalar(5));
       camera.up.set(0,1,0);camera.zoom=1;controls.target.copy(target);camera.lookAt(target);controls.update();controls.enableDamping=damping;resize();
     }
-    function reference(){document.querySelector('#reference').src=base()+'renders/'+mode.value;}
+    function reference(){document.querySelector('#reference').src=asset('renders/'+mode.value);}
     function dispose(root){root.traverse(o=>{if(o.isMesh){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms)m.dispose();}});}
     async function load(next){
       kind=next;const token=++request;status.textContent=`Loading ${kind}…`;
       document.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));
       reference();document.querySelector('#sheet-link').href=base()+'reference/sheet.png';
-      for(const ext of ['blend','glb'])document.querySelector('#'+ext).href=base()+`${kind}-model.${ext}`;
+      for(const ext of ['blend','glb'])document.querySelector('#'+ext).href=asset(`${kind}-model.${ext}`);
       document.querySelector('#readme').href=base()+'README.md';
-      document.querySelector('#native').src=base()+'renders/game-size.png';document.querySelector('#pixels').src=base()+'renders/game-size.png';
+      document.querySelector('#native').src=asset('renders/game-size.png');document.querySelector('#pixels').src=asset('renders/game-size.png');
       document.querySelector('#pixel-label').textContent=`${kind==='brute'?48:kind==='shooter'?32:24}px native / enlarged`;
       try {
-        const gltf=await loader.loadAsync(base()+`${kind}-model.glb`);
+        const gltf=await loader.loadAsync(asset(`${kind}-model.glb`));
         if(token!==request){dispose(gltf.scene);return;}
         if(model){scene.remove(model);dispose(model);}model=gltf.scene;scene.add(model);
         const box=new THREE.Box3().setFromObject(model);height=box.max.y-box.min.y;

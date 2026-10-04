@@ -8,7 +8,11 @@ Front/back widths and left/right depths drive the shell loft. Measured
 cream spikes are seated on the actual shell surface. The bone jaw has a
 real cavity, with separate large upper fangs, side fangs and lower teeth.
 The tooth polygons are labeled in the build script in original front-view
-pixels. Four separate dark legs and an under-shell complete the shape.
+pixels. Upper and side fangs lean forward from embedded roots, extending
+their tapered tips about 12–13 side-view pixels (5 cm) beyond the jaw lip.
+The lower teeth project a little less. This preserves the front outline
+while making the bite readable from the side.
+Four separate dark legs and an under-shell complete the shape.
 The source has 984 triangles, one vertex-color material, and no rig or clips.
 Small tooth chips, shell cracks and additional leg joints are simplified.
 
@@ -16,8 +20,10 @@ Small tooth chips, shell cracks and additional leg joints are simplified.
 
 `renders/compare.png` pairs front, right and hero views with the reference.
 `renders/overlay-all.png` and `renders/overlap.json` report every view.
-The front reaches 90% silhouette overlap; the back and sides are about 84%,
-below the spirits pipeline's 90% target. The hero has a different shell
+The front reaches 90% silhouette overlap; the back is about 85% and the
+sides about 81–82%, below the spirits pipeline's 90% target. The extended
+fangs make the side silhouette wider than the previous flush teeth.
+The hero has a different shell
 proportion from the orthographic sheet and remains about 71% after the
 camera sweep. These differences stay visible for the model review.
 `renders/review-game-size.png` shows the game's 30 degree camera, a native

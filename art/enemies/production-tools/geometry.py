@@ -222,14 +222,19 @@ class Model:
                 faces += [(start,start+k,start+k+1) for k in range(1,len(poly)-1)]
         return self.mesh(name,verts,faces,color,0)
 
-    def front_prism(self,name,points,y,depth,color):
+    def front_prism(self,name,points,y,depth,color,offsets=None,thickness=None):
         pixel=self.sheet['meters_per_pixel'];center=self.config['center']['front'];ground=self.config['ground']['front']
-        front=[((x-center)*pixel,y,(ground-z)*pixel) for x,z in points]
-        back=[(x,y+depth,z) for x,_,z in front]
+        # Optional forward offsets and thicknesses lean a tooth from its
+        # embedded root and taper the tip without altering its front outline.
+        offsets=offsets if offsets is not None else [0]*len(points)
+        thickness=thickness if thickness is not None else [depth]*len(points)
+        assert len(points)==len(offsets)==len(thickness)
+        front=[((x-center)*pixel,y+offset,(ground-z)*pixel) for (x,z),offset in zip(points,offsets)]
+        back=[(x,fy+thick,z) for (x,fy,z),thick in zip(front,thickness)]
         n=len(front)
         # A ridge across the face makes the tooth faceted without extra
         # surface noise. Its outline is the annotated sheet pixel polygon.
-        ridge=(sum(v[0] for v in front)/n,y-.008,sum(v[2] for v in front)/n)
+        ridge=(sum(v[0] for v in front)/n,sum(v[1] for v in front)/n-.008,sum(v[2] for v in front)/n)
         verts=front+back+[ridge]
         faces=[(2*n,k,(k+1)%n) for k in range(n)]+[tuple(range(n,2*n))]
         faces += [(k,k+n,(k+1)%n+n,(k+1)%n) for k in range(n)]

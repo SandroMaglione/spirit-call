@@ -4,11 +4,11 @@
   "views": {
     "front": 0.9038890265048303,
     "back": 0.8469683912315632,
-    "left": 0.8380288499573667,
-    "right": 0.8476137438454127,
-    "top": 0.8059118359510175,
-    "bottom": 0.7969095880897609,
-    "hero": 0.7144511902859881
+    "left": 0.8101154037416191,
+    "right": 0.8166151621316852,
+    "top": 0.7559618261776306,
+    "bottom": 0.7432217256185278,
+    "hero": 0.7151009964718699
   },
   "orthographic_camera_elevation": 0,
   "reference_note": "Sheets include perspective and inconsistent mouth positions or poses; see README."

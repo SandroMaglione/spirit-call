@@ -37,6 +37,10 @@ static GLBs with Three.js, provides camera presets and orbit controls, and
 links each source, reference and overlay. It is a separate art review page;
 the game entry point does not import it or any of these models.
 
+`review/refinements.png` compares the initial Brute face and Swarmer side
+profile with their revisions. `refinement-board.py` rebuilds this board
+from the preserved before renders and current saved-model renders.
+
 The exports intentionally have no skeleton. After model review, the separate
 parts must become one mesh with rigid weights and simulation-timed clips
 before registration in the existing enemy animation atlas and batches.

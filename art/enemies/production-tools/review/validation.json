@@ -20,8 +20,8 @@
     "result": "passed",
     "files": 48,
     "tests": 369,
-    "duration_seconds": 24.08,
-    "replay_test_duration_ms": 3149
+    "duration_seconds": 36.14,
+    "replay_test_duration_ms": 1890
   },
   "browser": {
     "network_url": "http://192.168.40.47:5199/art/enemies/production-review.html",
@@ -36,5 +36,17 @@
     "live_arena_checked": false,
     "note": "An earlier shared dev server stopped during inspection; restarting restored file loads. Synthetic touch events use a temporary pointer-capture shim."
   },
-  "review_status": "Awaiting model feedback before rigging, animation and integration; several view scores are below the 90 percent target"
+  "refinement": {
+    "request": "Pale Brute brow cap and symmetric face/eyes; forward Swarmer teeth",
+    "shooter": "Approved; source and export unchanged",
+    "brute_eye_pair": "Exact mirrored source vertices asserted during build; both eyes clear visor",
+    "swarmer_tip_projection_m": { "upper": 0.0496815287, "side": 0.0538216561 },
+    "exports": "Brute and Swarmer rebuilt and round-trip verification passed; current hashes in their verification.json files",
+    "render_views": "All six orthographic views, previously fitted hero camera, 30 degree game camera and native game-size renders regenerated",
+    "review_page": "Refresh versions both GLBs and render URLs to avoid stale comparisons",
+    "desktop_and_phone": "Revised models loaded in network browser at 1280x800 and 390x844; no phone horizontal overflow",
+    "tests": "Typecheck and lint passed; 369 tests passed with one worker. Default check replay timed out. Earlier Brute check also timed out on three fairness tests, all passed with one worker.",
+    "before_after": "refinements.png"
+  },
+  "review_status": "Shooter approved; Brute face and Swarmer teeth revisions awaiting model review before animation or game integration; several view scores remain below the 90 percent target"
 }
