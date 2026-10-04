@@ -435,16 +435,12 @@ export const cisternArena: ArenaLook = {
   light: { sky: 0xeafbff, ground: 0x809696, sun: 0xf4ffff }
 }
 
-/**
- * The ember kilnworks (`art/environment/ember-kilnworks`): flagstones dark
- * with soot, furnaces and chimneys along the north wall, the day's work
- * left by the others (its fire pits are the game's: see
- * `presentation/hazards.ts`).
- */
+/** Fire trenches divide the foundry. Low casting benches and compact machinery interrupt its flanks; the furnace, chimney and covered work bays stand on the exterior paving. */
 export const kilnworksArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["kilnworksFloorPlain", "kilnworksFloorPlain", "kilnworksFloorPlain", "kilnworksFloorCracked"],
     color: 0x1d1614,
     border: ["kilnworksFloorWorn"],
@@ -468,24 +464,38 @@ export const kilnworksArena: ArenaLook = {
     inner: { kind: "run", model: "kilnworksWallLow" }
   },
   scenery: [
-    { model: "kilnworksVent", at: { x: 1660, y: 150 }, turn: 0 },
-    { model: "kilnworksVent", at: { x: 140, y: 1660 }, turn: Math.PI / 2 }
+    { model: "kilnworksStudyForgingBay", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "kilnworksStudyBrickFurnace", at: { x: 900, y: -130 }, turn: 0 },
+    { model: "kilnworksStudyButtressedChimney", at: { x: 1300, y: -130 }, turn: 0 },
+    { model: "kilnworksStudyCastingStation", at: { x: -145, y: 1000 }, turn: Math.PI / 2 },
+    { model: "kilnworksStudyIronIngots", at: { x: 520, y: 65 }, turn: 0 },
+    { model: "kilnworksStudyTongsTray", at: { x: 840, y: 60 }, turn: 0 },
+    { model: "kilnworksStudyCoalPile", at: { x: 1300, y: 65 }, turn: 0 },
+    { model: "kilnworksStudySmallCrucible", at: { x: 1450, y: 60 }, turn: 0 },
+    { model: "kilnworksStudyCastingMould", at: { x: 1180, y: 65 }, turn: 0 },
+    { model: "kilnworksStudyIronIngots", at: { x: 540, y: 840 }, turn: 0 },
+    { model: "kilnworksStudyTongsTray", at: { x: 1260, y: 950 }, turn: 0 },
+    { model: "kilnworksStudySmallCrucible", at: { x: 1280, y: 490 }, turn: 0 },
+    { model: "kilnworksStudyCastingMould", at: { x: 1190, y: 1725 }, turn: 0 },
+    { model: "kilnworksStudyCoalPile", at: { x: 65, y: 690 }, turn: 0 },
+    { model: "kilnworksStudyIronIngots", at: { x: -100, y: 950 }, turn: 0 },
+    { model: "kilnworksStudyCastingMould", at: { x: -105, y: 1050 }, turn: 0 },
+    { model: "kilnworksStudySmallCrucible", at: { x: 900, y: -75 }, turn: 0 },
+    { model: "kilnworksStudyCoalPile", at: { x: 1230, y: -130 }, turn: 0 }
   ],
   props: [
-    { model: "kilnworksToolRack", turn: 0 },
-    { model: "kilnworksFurnace", turn: 0 },
-    { model: "kilnworksFurnace", turn: 0 },
-    { model: "kilnworksChimney", turn: 0 },
-    { model: "kilnworksChimney", turn: 0 },
-    { model: "kilnworksCrate", turn: 0.3 },
-    { model: "kilnworksBarrel", turn: 0 },
-    { model: "kilnworksCoalBin", turn: Math.PI / 2 },
-    { model: "kilnworksAnvil", turn: Math.PI / 2 + 0.1 },
-    { model: "kilnworksCrucible", turn: 0.4 },
-    { model: "kilnworksBarrel", turn: 0 },
-    { model: "kilnworksBoiler", turn: 0 },
-    { model: "kilnworksCrate", turn: Math.PI / 2 - 0.37 },
-    { model: "kilnworksCrate", turn: 0.2 }
+    { model: "kilnworksStudyHammerRack", turn: 0 },
+    { model: "kilnworksStudyCoalBin", turn: 0 },
+    { model: "kilnworksStudyCoalBin", turn: 0 },
+    { model: "kilnworksStudyCompactBoiler", turn: 0 },
+    { model: "kilnworksStudyCastingBench", turn: Math.PI / 2 },
+    { model: "kilnworksStudyHammerRack", turn: Math.PI / 2 },
+    { model: "kilnworksStudyCoalBin", turn: Math.PI / 2 },
+    { model: "kilnworksStudyCoalBin", turn: 0 },
+    { model: "kilnworksStudyCastingBench", turn: 0 },
+    { model: "kilnworksStudyCastingBench", turn: 0 },
+    { model: "kilnworksStudyCompactAnvil", turn: 0 },
+    { model: "kilnworksStudyCompactBoiler", turn: 0 }
   ],
   background: 0x1a1412,
   // Fire trenches framed in dark iron-grey stone.

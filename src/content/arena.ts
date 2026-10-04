@@ -167,22 +167,18 @@ export const arenas = {
       { element: "fire", column: 5, row: 8, columns: 3, rows: 1, walled: { y: "north", x: "east" } }
     ],
     props: [
-      // The north wall, the same on both sides of the tool rack: a chimney and a furnace.
-      prop(900, 13, 90, 26),
-      prop(420, 45, 124, 90),
-      prop(1380, 45, 124, 90),
-      prop(660, 30, 60, 60),
-      prop(1140, 30, 60, 60),
-      // The day's work, left where it was: stores by the west wall, the smith's corner by the east, a boiler and crates by the south.
-      prop(34, 620, 68, 68),
-      prop(26, 680, 52, 52),
-      prop(28, 1150, 56, 82),
-      prop(1778, 640, 44, 84),
-      prop(1751, 1120, 98, 94),
-      prop(1774, 1193, 52, 52),
-      prop(560, 1763, 100, 74),
-      prop(1220, 1765, 70, 70),
-      prop(1287, 1768, 64, 64)
+      prop(900, 12, 70, 24),
+      prop(420, 16, 50, 32),
+      prop(1380, 16, 50, 32),
+      prop(19, 650, 38, 40),
+      prop(19, 1150, 38, 72),
+      prop(1788, 650, 24, 70),
+      prop(1784, 1150, 32, 50),
+      prop(560, 1784, 50, 32),
+      prop(1240, 1781, 72, 38),
+      prop(540, 900, 72, 38),
+      prop(1260, 900, 48, 20),
+      prop(1260, 550, 38, 40)
     ]
   }),
   /** Lanes of low walls and pillars: cover from shots, and walls to slam enemies into. */
