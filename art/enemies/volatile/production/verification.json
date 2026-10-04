@@ -1,0 +1,33 @@
+{
+  "kind": "volatile",
+  "passed": true,
+  "glb_sha256": "c364a65830dca1059a07a3868c9911a2017dbc44e2dbbcc2e1987bf71ed6e99c",
+  "blend_sha256": "e86e54c7feba18666cdc641b2148f87be5eec2d22fd6dfb04c1a9f6d3fdee647",
+  "sheet_sha256": "651fd0434297477d64c7662c8f8ccf63b4c905a25f21a358f74823ca37600898",
+  "triangles": 1768,
+  "materials": 1,
+  "animations": 0,
+  "armatures": 0,
+  "max_roundtrip_bounds_error_m": 0.0,
+  "rest_height_m": 0.7315686345100403,
+  "axes": "Blender Z-up/-Y forward exports as glTF +Y up/+Z forward",
+  "model_review_checks": {
+    "mirrored_parts_error_m": {
+      "Eye": 0.0,
+      "EyeSocket": 0.0,
+      "Foot": 0.0,
+      "Foot root": 0.0,
+      "Side rock": 0.0
+    },
+    "eye_depth_behind_rim_m": 0.02224273160099982
+  },
+  "checks": [
+    "embedded vertex colors",
+    "no lights/cameras/helpers",
+    "no textures/decoders",
+    "two named eyes",
+    "source/GLB triangle and bounds agreement",
+    "ground origin",
+    "under 2000 triangles"
+  ]
+}

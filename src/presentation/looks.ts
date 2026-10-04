@@ -86,6 +86,8 @@ export type BodyLook =
       readonly transitionSeconds?: number
       /** Optional phase clips for a particular enemy attack, keyed by its moveset id. */
       readonly attackClips?: Readonly<Record<string, EnemyAttackClips>>
+      /** Raised staff pose while the simulation's ally ward forms, held while linked. */
+      readonly wardClip?: string
       readonly widthFactor: number
       readonly heightFactor: number
       readonly moments?: Moments
@@ -168,10 +170,11 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   charger: enemyModel("charger", "enemyCharger", 78),
   sniper: enemyModel("sniper", "enemySniper", 60),
   guardian: enemyModel("guardian", "enemyGuardian", 54),
-  // Placeholders until they have models: a capsule in their color.
-  warden: enemyCapsule("warden"),
-  stalker: enemyCapsule("stalker"),
-  volatile: enemyCapsule("volatile"),
+  warden: { ...enemyModel("warden", "enemyWarden", 70), wardClip: "Buff" },
+  stalker: enemyModel("stalker", "enemyStalker", 64, {
+    blink: { windup: "WindupBlink", active: "ActiveBlink", recovery: "RecoveryBlink" }
+  }),
+  volatile: enemyModel("volatile", "enemyVolatile", 56),
   galeCaster: {
     ...enemyModel("galeCaster", "enemyGaleCaster", 140), transitionSeconds: .18,
     moments: { idle: "Idle", run: { clip: "Run", distance: 140, timeBased: true }, hurt: "Hurt" }
@@ -181,6 +184,7 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
       quake: { windup: "WindupQuake", active: "ActiveQuake", recovery: "RecoveryQuake" }
     }), transitionSeconds: .14
   },
+  // Placeholders until they have models: a capsule in their color.
   sparringDummy: enemyCapsule("sparringDummy"),
   heavyDummy: enemyCapsule("heavyDummy")
 }

@@ -1,0 +1,32 @@
+{
+  "metric": "silhouette intersection over union; independently normalized height, centered bounding box",
+  "target": 0.9,
+  "views": {
+    "front": 0.5221669834771165,
+    "back": 0.5294615238936936,
+    "left": 0.5046971345665578,
+    "right": 0.5336441646559388,
+    "top": 0.16881264547071778,
+    "bottom": 0.25488705360397423,
+    "hero": 0.48183510898934606
+  },
+  "orthographic_cameras": {
+    "front": {
+      "turn": 0,
+      "elevation": 0
+    },
+    "back": {
+      "turn": 180,
+      "elevation": 0
+    },
+    "right": {
+      "turn": 90,
+      "elevation": 0
+    },
+    "left": {
+      "turn": 270,
+      "elevation": 0
+    }
+  },
+  "reference_note": "Sheets include turned views and inconsistent ornament positions or poses; see the model README."
+}

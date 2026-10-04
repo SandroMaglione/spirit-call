@@ -1,0 +1,28 @@
+{
+  "kind": "stalker",
+  "passed": true,
+  "glb_sha256": "593bb83cc0a9412b6c2f11d17034a20cfbc25a8da97d1903eb099b23e833f7f4",
+  "blend_sha256": "3328b780f7815a721af613b720c350dbb0a97d3a9eb98298bb0797cbffa7e174",
+  "sheet_sha256": "101bcf5d6fd907e3abaadb5457d2df0f5e97fff89fc9652914413466a2b3be49",
+  "triangles": 1860,
+  "materials": 1,
+  "animations": 0,
+  "armatures": 0,
+  "max_roundtrip_bounds_error_m": 0.0,
+  "rest_height_m": 0.8943749666213989,
+  "axes": "Blender Z-up/-Y forward exports as glTF +Y up/+Z forward",
+  "model_review_checks": {
+    "floating_crests": 0,
+    "limb_connections": 12,
+    "waist_connection": true
+  },
+  "checks": [
+    "embedded vertex colors",
+    "no lights/cameras/helpers",
+    "no textures/decoders",
+    "two named eyes",
+    "source/GLB triangle and bounds agreement",
+    "ground origin",
+    "under 2000 triangles"
+  ]
+}
