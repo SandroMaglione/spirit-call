@@ -172,6 +172,9 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
 
   const { progression } = tuning
+  positive(problems, "energy", tuning.energy)
+  if (!(tuning.energy.targetCap >= 1 && tuning.energy.targetCap <= 2)) problems.push("energy: targetCap must be between 1 and 2")
+  if (!(tuning.team.benchEnergyShare >= 0 && tuning.team.benchEnergyShare <= 1)) problems.push("team: benchEnergyShare must be between 0 and 1")
   checkCurve(problems, "account levels", progression.account.curve)
   checkCurve(problems, "character levels", progression.character.curve)
   checkCurve(problems, "weapon level costs", progression.weapon.cost)

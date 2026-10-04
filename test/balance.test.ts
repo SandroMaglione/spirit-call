@@ -1,10 +1,23 @@
 import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import { balanceCases, balanceViolations, compareBalance } from "./balance-model.ts"
+import { balanceCases, balanceViolations, compareBalance, economyAudit } from "./balance-model.ts"
 import type { BalanceRow } from "./balance-model.ts"
 import { runBot } from "./bot.ts"
+import { energyViolations } from "./energy-model.ts"
 
 describe("balance measurements", () => {
+  it("rejects faster energy cadence at high level even if a baseline accepts it", () => {
+    const low = { id: "swordsman/1/1", character: "swordsman" as const, level: 1, targets: 1, specials: 8, ultimates: 2 }
+    const high = { ...low, id: "swordsman/40/1", level: 40 }
+    expect(energyViolations([low, high])).toEqual([])
+    expect(energyViolations([low, { ...high, ultimates: 3 }])).toHaveLength(1)
+  })
+  it("funds one matched main-line build before each quest without relying on pulls", () => {
+    const economy = economyAudit(defaultTuning)
+    expect(economy).toHaveLength(9)
+    expect(economy.every((row) => row.extraClearsAtPreviousQuest === 0)).toBe(true)
+    expect(economyAudit(tuningWith({ quests: { theCloister: { rewards: { currencies: { gold: 0 } } } } })).at(-1)!.extraClearsAtPreviousQuest).toBeGreaterThan(0)
+  })
   it("uses the quest's enemy level and real HP, and stops on defeat", () => {
     const run = runBot({ tuning: defaultTuning, seconds: 20, mortal: true, still: true, enemyLevel: 40,
       enemies: [{ kind: "brute", offset: { x: 100, y: 0 } }], measurePressure: false })
@@ -17,7 +30,7 @@ describe("balance measurements", () => {
   it("casts aimed specials through touch release and counts actual casts, not button attempts", () => {
     const run = runBot({ tuning: tuningWith({ enemies: { dummy: { hp: 10000 } } }), seconds: 3, mortal: true, still: true,
       team: [{ character: "tidecaller" }], abilities: true, enemies: [{ kind: "dummy", offset: { x: 100, y: 0 } }], measurePressure: false })
-    expect(run.specials).toBe(2)
+    expect(run.specials).toBe(1)
     expect(run.ultimates).toBe(0)
     expect(run.outcome).toBe("timeout")
     expect(run.healthRemaining).toBe(1)
@@ -28,12 +41,12 @@ describe("balance measurements", () => {
     expect(scenario).toBeDefined()
     expect(runBot(scenario!.run)).toEqual(runBot(scenario!.run))
     const late = balanceCases(defaultTuning, ["theWarlord"], [7], 5)
-    expect(late.every((row) => row.run.enemyLevel === 18 && row.run.mortal)).toBe(true)
-    expect(late.find((row) => row.profile === "swordsman-matched")!.run.team![0]!.level).toBe(18)
+    expect(late.every((row) => row.run.enemyLevel === 32 && row.run.mortal)).toBe(true)
+    expect(late.find((row) => row.profile === "swordsman-matched")!.run.team![0]!.level).toBe(32)
   })
 
   it("flags easier and harder outcomes, excessive cadence changes, and missing cases", () => {
-    const report = { hits: 0, damage: 0, dashes: 0, pressure: 0, clearedAt: 100, endedAt: 100, outcome: "cleared" as const,
+    const report = { hits: 0, damage: 0, healing: 0, dashes: 0, pressure: 0, clearedAt: 100, endedAt: 100, outcome: "cleared" as const,
       kills: 30, specials: 10, ultimates: 3, breaks: 10, healthRemaining: 0.5 }
     const row: BalanceRow = { id: "quest/profile/7", quest: "theSwarm", profile: "swordsman-skills", seed: 7, report }
     expect(compareBalance([row], [row])).toEqual([])

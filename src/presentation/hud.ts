@@ -82,7 +82,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     attack: 0,
     special: player === undefined || (slots?.special.spec.cooldown ?? 0) <= 0 ? 0 : player.data.skills.get().special.cooldown,
     dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown,
-    ultimate: 0
+    ultimate: player === undefined ? 0 : player.data.skills.get().ultimate.cooldown
   }
   // Icons: the attack's by the weapon in hand, the skills' by the skill in each slot.
   if (player !== undefined) {

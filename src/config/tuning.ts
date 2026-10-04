@@ -62,7 +62,7 @@ export const defaultTuning = {
     /** Seconds after a switch before the next one. */
     switchCooldown: 1,
     /** The share of the energy the character on the field earns that each one on the bench gains. */
-    benchEnergyShare: 0.6,
+    benchEnergyShare: 0.3,
     /** Invulnerability for the character who comes in when the last one falls: she did not choose the moment. */
     fallProtection: 2.5,
     /** As she comes in after a fall, the enemies slow to `scale` for `seconds` (a beat to take in the fight). */
@@ -153,8 +153,10 @@ export const defaultTuning = {
   /** Energy, spent by skills that cost it (the Nova). */
   energy: {
     max: 100,
-    /** Energy gained per point of damage the player deals (except with skills that cost energy). */
-    perDamage: 0.4
+    /** Energy per landed action; additional targets share a capped bonus. */
+    attack: 3,
+    special: 10,
+    targetCap: 1.5
   },
 
   knockback: {
@@ -188,7 +190,7 @@ export const defaultTuning = {
    * `invulnerability` seconds longer.
    * Any reward can be turned off (0, false).
    */
-  perfectDodge: { window: 0.15, slowScale: 0.25, slowSeconds: 1.6, breakFill: 0.5, dashRefund: 1, energy: 10, reload: true, invulnerability: 0.25 },
+  perfectDodge: { window: 0.15, slowScale: 0.25, slowSeconds: 0.7, breakFill: 0.25, dashRefund: 1, energy: 4, reload: true, invulnerability: 0.25 },
 
   /**
    * Breaking enemies (see `features/poise.ts`). A blow fills an enemy's bar
@@ -198,7 +200,7 @@ export const defaultTuning = {
    * itself per second. Full, the enemy breaks: stunned for `seconds`, its
    * attack cut off, taking `damageTaken` times the damage, with a hit-stop.
    */
-  breaking: { heavy: 2, burn: 0.25, reaction: 0.3, slam: 0.5, quietSeconds: 1.2, drain: 0.35, seconds: 2.5, damageTaken: 1.25, hitStop: 0.16 },
+  breaking: { heavy: 2, burn: 0.25, reaction: 0.2, slam: 0.25, quietSeconds: 1.2, drain: 0.35, seconds: 2.5, damageTaken: 1.25, hitStop: 0.16 },
 
   /** Every enemy kind, by id. */
   enemies,

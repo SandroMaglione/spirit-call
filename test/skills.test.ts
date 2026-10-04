@@ -168,12 +168,31 @@ describe("ultimates (Shift)", () => {
   const ultimate = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
   const sturdy = tuningWith({ enemies: { dummy: { hp: 1000 } } })
 
-  it("fills with energy from damage the player deals", () => {
+  it("fills with a fixed amount per landed attack", () => {
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { pointer: [{ frame: 1, press: ["primary"] }, { frame: 4, release: ["primary"] }] })
     run.step(20)
     const dealt = hp - run.world().enemies[0]!.health
     expect(dealt).toBeGreaterThan(0)
-    expect(run.world().energy).toBeCloseTo(dealt * defaultTuning.energy.perDamage, 9)
+    expect(run.world().energy).toBe(defaultTuning.energy.attack * defaultTuning.attacks.sword.combo[0]!.recovery)
+  })
+
+  it("caps a crowded special and gives the same energy at high level", () => {
+    const dummies = [{ x: 100, y: 0 }, { x: -100, y: 0 }, { x: 0, y: 100 }, { x: 0, y: -100 }]
+    for (const level of [1, 40]) {
+      const run = range(dummies, { x: 200, y: 0 }, { tuning: sturdy, build: { character: "swordsman", level }, keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
+      run.step(20)
+      expect(run.world().energy).toBe(defaultTuning.energy.special * defaultTuning.energy.targetCap)
+    }
+  })
+
+  it("shares one budget across repeated vortex ticks and does not charge from burns", () => {
+    const tuning = withGale(sturdy)
+    const run = range([{ x: 120, y: 0 }], { x: 200, y: 0 }, { tuning, keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
+    run.step(steps(gale.seconds) + 10)
+    expect(run.world().energy).toBe(defaultTuning.energy.special)
+    const fire = range([{ x: 90, y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: gunner, keys: [throwGrenade(1)] })
+    fire.step(steps(5))
+    expect(fire.world().energy).toBeLessThanOrEqual(defaultTuning.energy.special * defaultTuning.energy.targetCap)
   })
 
   it("does nothing without full energy", () => {

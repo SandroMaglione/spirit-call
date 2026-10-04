@@ -24,6 +24,7 @@ import {
   Enemy,
   Gust,
   Energy,
+  EnergyLedger,
   Game,
   Health,
   Hit,
@@ -260,6 +261,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   resources: {
     tuning: Game.System.readResource(Tuning),
     stats: Game.System.writeResource(Stats),
+    energyLedger: Game.System.writeResource(EnergyLedger),
+    time: Game.System.readResource(Time),
     hitStop: Game.System.writeResource(HitStop),
     challenge: Game.System.readResource(Challenge)
   }
@@ -272,6 +275,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   const dead = new Set<number>()
   let kills = 0
   let energy = 0
+  const now = resources.time.get().elapsed
+  const ledger = Object.fromEntries(Object.entries(resources.energyLedger.get()).filter(([, value]) => value.expires > now))
   let hitStop = 0
   for (const damage of events.damage.all()) {
     const found = lookup.getHandle(damage.target, Damageable)
@@ -305,9 +310,17 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const current = data.immortal.present
       ? health.current
       : training && data.player.present ? Math.max(Math.min(1, health.current), health.current - amount) : Math.max(0, health.current - amount)
-    // Damage the player deals fills energy; only what actually landed counts (on a dummy that never falls, the blow as dealt).
+    // Only landed attacks and specials charge energy; damage and level do not set the award.
     const landed = data.immortal.present ? Math.min(amount, health.current) : health.current - current
-    if (blow.charges && data.hurtbox.get().faction === "enemy") energy += landed * tuning.energy.perDamage
+    if (landed > 0 && blow.charges && !blow.periodic && blow.energyAction !== undefined && data.hurtbox.get().faction === "enemy") {
+      const action = blow.energyAction
+      const entry = ledger[action.key] ?? { targets: [], gained: 0, expires: now + 60 }
+      if (!entry.targets.includes(entity.id.value)) {
+        const gain = Math.max(0, Math.min(action.base / 2 ** entry.targets.length, action.base * tuning.energy.targetCap - entry.gained))
+        energy += gain
+        ledger[action.key] = { ...entry, targets: [...entry.targets, entity.id.value], gained: entry.gained + gain }
+      }
+    }
     data.health.set({ current, max: health.max })
     if (!blow.periodic) {
       data.flash.set({ remaining: tuning.feedback.hitFlash })
@@ -360,6 +373,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     }
   }
   if (kills > 0) resources.stats.update((stats) => ({ ...stats, kills: stats.kills + kills }))
+  resources.energyLedger.set(ledger)
   if (energy > 0) {
     for (const { data } of queries.energies.each()) {
       if (data.health.get().current <= 0) continue

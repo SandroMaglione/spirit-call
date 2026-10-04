@@ -90,14 +90,14 @@ describe("weapon passives", () => {
     expect(hit(25)).toBeCloseTo(dealt * 1.5, 6)
   })
 
-  it("Bloodthirst: each kill heals 5% of maximum health, even through the kill's hit-stop", () => {
+  it("Bloodthirst: each kill heals 2% of maximum health, even through the kill's hit-stop", () => {
     const build: BuildValue = { character: "gunner", weapon: "bloodthirst" }
     const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuningWith({ enemies: { dummy: { hp: 1, respawnDelay: 100 } } }))
     run.runtime.tick(Game.Schedule(setHealth(undefined, 40)))
     run.step(steps(defaultTuning.feedback.hitStopOnKill) + 20)
     const { player } = run.world()
     expect(run.world().enemies).toEqual([])
-    expect(player.current).toBeCloseTo(40 + player.max * 0.05, 6)
+    expect(player.current).toBeCloseTo(40 + player.max * 0.02, 6)
   })
 
   it("Echo Saber: the finisher sets off a shockwave that reaches past the spin", () => {

@@ -202,7 +202,7 @@ export const skills = {
    */
   bladeWave: skill({
     name: "Gust",
-    cooldown: 2.5,
+    cooldown: 6,
     energy: 0,
     invulnerability: 0,
     effect: blast({ radius: 200, arcDegrees: 360, active: 0.12, power: 20, element: "wind", knockback: 1400, hitStop: 0.06, heavy: false })
@@ -214,7 +214,7 @@ export const skills = {
    */
   flareJump: skill({
     name: "Flare Jump",
-    cooldown: 3,
+    cooldown: 7,
     energy: 0,
     invulnerability: 0.35,
     effect: leap({ radius: 150, active: 0.1, distance: 230, power: 22, element: "fire", knockback: 900, hitStop: 0.05, heavy: false, leaves: { element: "fire", radius: 70, seconds: 2.5 } })
@@ -226,7 +226,7 @@ export const skills = {
    */
   tidalWave: skill({
     name: "Tidal Wave",
-    cooldown: 2.5,
+    cooldown: 6,
     energy: 0,
     invulnerability: 0,
     effect: cut({ length: 360, width: 150, active: 0.15, power: 22, element: "water", knockback: 900, hitStop: 0.04, heavy: false, leaves: { element: "water", radius: 60, seconds: 4 } })
@@ -239,7 +239,7 @@ export const skills = {
    */
   cyclone: skill({
     name: "Cyclone",
-    cooldown: 0,
+    cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
     effect: vortex({ maxRange: 0, radius: 300, seconds: 3.2, tick: 0.35, pull: 0.32, power: 9, element: "wind", knockback: 0, hitStop: 0, heavy: false })
@@ -247,7 +247,7 @@ export const skills = {
   /** The Gunner's ultimate: a volley of fire shells around the cursor, each leaving a fire pool. */
   barrage: skill({
     name: "Barrage",
-    cooldown: 0,
+    cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
     effect: barrage({
@@ -269,7 +269,7 @@ export const skills = {
   /** The Tidecaller's ultimate: a tide breaking out around her that soaks everything far around, drives it back, and washes away shots. */
   tide: skill({
     name: "Tide",
-    cooldown: 0,
+    cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
     effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
@@ -283,10 +283,10 @@ export const skills = {
    */
   sparkTotem: skill({
     name: "Spark Totem",
-    cooldown: 6,
+    cooldown: 10,
     energy: 0,
     invulnerability: 0,
-    effect: totem({ offset: 28, seconds: 8, tick: 0.9, radius: 160, heal: 4, jumps: 2, repel: 700, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
+    effect: totem({ offset: 28, seconds: 8, tick: 0.9, radius: 160, heal: 2, jumps: 2, repel: 700, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
   }),
   /**
    * The Stormcaller's ultimate: thunder striking the enemies around her,
@@ -295,10 +295,10 @@ export const skills = {
    */
   thunderclap: skill({
     name: "Thunderclap",
-    cooldown: 0,
+    cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
-    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 20, stun: 1.5, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
+    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1.5, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
   })
 }
 

@@ -38,7 +38,7 @@ export type Trigger =
 export type TriggeredEffect =
   /** Heals the wielder by this percentage of their maximum health. */
   | { readonly kind: "heal"; readonly percent: number }
-  /** Sets off a skill effect from the wielder, as if cast (its damage fills energy). */
+  /** Sets off a skill effect from the wielder, as if cast (without generating energy). */
   | { readonly kind: "cast"; readonly effect: SkillEffect }
 
 export type Passive =

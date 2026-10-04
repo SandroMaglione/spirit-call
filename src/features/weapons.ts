@@ -175,6 +175,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         damage: damageDealt(atk, move.power) * share,
         knockback: move.knockback,
         charges: true,
+        energyAction: { key: `${entity.id.value}/${resources.time.get().step}/attack`, base: tuning.energy.attack * (move.recovery + (spec.magazine === null ? 0 : spec.magazine.reload / spec.magazine.rounds)) },
         hitStop: move.hitStop,
         heavy: move.heavy,
         source: { attacker: Game.Entity.handle(entity.id, Position), move: context },

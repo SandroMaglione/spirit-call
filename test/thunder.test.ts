@@ -111,13 +111,13 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
 
   it("heals the one on the field instead, while she is within its reach hurt; once she is whole, it zaps again", () => {
     const run = range([{ x: 120, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
-    run.runtime.tick(Game.Schedule(Hurt(50)))
+    run.runtime.tick(Game.Schedule(Hurt(60)))
     run.step(3)
     const max = run.world().player!.max
-    expect(run.world().player!.current).toBeCloseTo(50 + (max * totemSpec.heal) / 100, 6)
+    expect(run.world().player!.current).toBeCloseTo(60 + (max * totemSpec.heal) / 100, 6)
     expect(run.world().enemies[0]!.health).toBe(1000)
     // Healed to the full, it turns on the enemy.
-    run.step(steps(totemSpec.tick * Math.ceil((max - 50) / ((max * totemSpec.heal) / 100))) + 2)
+    run.step(steps(totemSpec.tick * Math.ceil((max - 60) / ((max * totemSpec.heal) / 100))) + 2)
     expect(run.world().player!.current).toBe(max)
     run.step(steps(totemSpec.tick))
     expect(run.world().enemies[0]!.health).toBeLessThan(1000)

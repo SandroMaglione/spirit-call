@@ -378,9 +378,9 @@ export const enemies = {
     shield: null,
     group: 1,
     attacks: [
-      melee("swipe", { triggerRange: 90, reach: 100, arcDegrees: 100, windup: 0.4, aimLock: 0.3, active: 0.1, recovery: 0.3, cooldown: 0.6, power: 12, knockback: 220, followUp: "slash" }),
+      melee("swipe", { triggerRange: 90, reach: 100, arcDegrees: 100, windup: 0.4, aimLock: 0.3, active: 0.1, recovery: 0.3, cooldown: 0.6, power: 18, knockback: 220, followUp: "slash" }),
       // The second swipe reaches further, for a player who only stepped back.
-      melee("slash", { triggerRange: 120, reach: 125, arcDegrees: 120, windup: 0.35, aimLock: 0.3, active: 0.1, recovery: 0.5, cooldown: 0.7, power: 10, knockback: 300 })
+      melee("slash", { triggerRange: 120, reach: 125, arcDegrees: 120, windup: 0.35, aimLock: 0.3, active: 0.1, recovery: 0.5, cooldown: 0.7, power: 14, knockback: 300 })
     ],
     respawnDelay: 0
   }),

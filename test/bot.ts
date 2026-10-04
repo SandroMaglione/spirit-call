@@ -50,6 +50,7 @@ import {
   Enemy,
   Game,
   Health,
+  Heal,
   Hit,
   Elite,
   Ground,
@@ -442,6 +443,8 @@ export interface BotRun {
   readonly seconds: number
   /** Stand still instead of dodging, to compare. */
   readonly still?: boolean
+  /** Attack without steering, for controlled energy measurements. */
+  readonly stationaryAttack?: boolean
   /** How it plays (dodging only by default). */
   readonly style?: Style
   readonly team?: ReadonlyArray<BuildValue>
@@ -460,6 +463,7 @@ export interface BotReport {
   /** Blows that cost health (burns count each tick). */
   readonly hits: number
   readonly damage: number
+  readonly healing: number
   /** What dodging needed: dashes used to dodge (not those closing in). */
   readonly dashes: number
   /** The share of the time something on screen would hit her if she stood still: how much of the run asks her to move. */
@@ -509,8 +513,9 @@ export const runBot = (run: BotRun): BotReport => {
   let kills = 0
   let dealtHits = 0
   let taken = 0
+  let healing = 0
   const Measure = Game.System("Bot/Measure", {
-    events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke) }
+    events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal) }
   }, ({ events }) => {
     for (const cast of events.cast.all()) {
       if (cast.faction !== "player" || cast.skill === null) continue
@@ -518,6 +523,7 @@ export const runBot = (run: BotRun): BotReport => {
       else specials += 1
     }
     breaks += events.broke.all().length
+    healing += events.heal.all().reduce((sum, heal) => sum + heal.amount, 0)
     for (const hit of events.hit.all()) {
       if (hit.faction === "enemy") { if (hit.killed) kills += 1 }
       else { dealtHits += 1; taken += hit.amount }
@@ -544,7 +550,7 @@ export const runBot = (run: BotRun): BotReport => {
   const report = (elapsed: number, outcome: BotReport["outcome"]): BotReport => ({
     hits: run.mortal === true ? dealtHits : hits, damage: Math.round(run.mortal === true ? taken : damage), dashes,
     pressure: pressed / Math.max(1, Math.round(elapsed / engine.stepSeconds)), clearedAt: outcome === "cleared" ? elapsed : null,
-    endedAt: elapsed, outcome, kills, specials, ultimates, breaks,
+    endedAt: elapsed, outcome, kills, specials, ultimates, breaks, healing: Math.round(healing),
     healthRemaining: members.reduce((sum, member) => sum + member.health.current, 0) / members.reduce((sum, member) => sum + member.health.max, 0)
   })
   const total = Math.ceil(run.seconds / engine.stepSeconds)
@@ -555,7 +561,7 @@ export const runBot = (run: BotRun): BotReport => {
     if (run.measurePressure !== false && field.player !== undefined && playOut({ ...field, player: { ...field.player, invulnerable: 0 } }, tuning, { x: 0, y: 0 }, false).danger < Infinity) pressed += 1
     // It decides every so often, holding its run in between (a dash or a swing is one press).
     move = run.still === true
-      ? { direction: { x: 0, y: 0 }, dash: false, attack: false, target: null }
+      ? { direction: { x: 0, y: 0 }, dash: false, attack: run.stationaryAttack === true && step % style.every === 0, target: null }
       : step % style.every === 0 ? decide(field, tuning, last, style, move.target) : { ...move, dash: false, attack: false, special: false, ultimate: false }
     if (run.abilities === true && step % style.every === 0 && field.enemies.length > 0) {
       const target = field.enemies.find((enemy) => enemy.id === move.target) ?? field.enemies[0]!

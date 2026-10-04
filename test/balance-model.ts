@@ -5,6 +5,7 @@ import type { QuestId } from "../src/content/quests.ts"
 import { damageDealt, damageTaken, resolveBuild, statsAtLevel } from "../src/features/build.ts"
 import type { BotReport, BotRun } from "./bot.ts"
 import { dodger, fighter, learner } from "./bot.ts"
+import { experienceTo } from "../src/account/progression.ts"
 
 export interface BalanceCase {
   readonly id: string
@@ -36,6 +37,7 @@ export const balanceCases = (tuning: Tuning, quests: ReadonlyArray<QuestId>, see
       }
       add("escape-only", { style: { ...dodger, reaction: 0.25, every: 4 } })
       add("team-skills", { team: [{ character: "swordsman" }, { character: "tidecaller" }, { character: "stormcaller" }], style: fighter, abilities: true, rotateEvery: 3 })
+      add("team-matched", { team: [{ character: "swordsman", level, weaponLevel }, { character: "tidecaller", level, weaponLevel }, { character: "stormcaller", level, weaponLevel }], style: fighter, abilities: true, rotateEvery: 3 })
     }
   }
   return cases
@@ -61,6 +63,21 @@ export interface BalanceRow {
   readonly report: BotReport
 }
 
+/** Currency available before entering each main quest, with no secondary rewards or pulls. */
+export const economyAudit = (tuning: Tuning) => {
+  let available = 0
+  let previousPay = tuning.progression.gold.base + tuning.progression.gold.perLevel
+  return Object.entries(tuning.quests).filter(([, quest]) => quest.line === "main").map(([quest, spec]) => {
+    const weaponLevel = Math.round(1 + (spec.enemyLevel - 1) / (tuning.progression.character.curve.maxLevel - 1) * (tuning.progression.weapon.cost.maxLevel - 1))
+    const buildCost = experienceTo(tuning.progression.character.curve, spec.enemyLevel) + experienceTo(tuning.progression.weapon.cost, weaponLevel)
+    const row = { quest, enemyLevel: spec.enemyLevel, weaponLevel, goldBeforeFirstAttempt: available, singleBuildCost: buildCost,
+      extraClearsAtPreviousQuest: Math.ceil(Math.max(0, buildCost - available) / previousPay) }
+    previousPay = tuning.progression.gold.base + tuning.progression.gold.perLevel * spec.enemyLevel
+    available += (spec.rewards.currencies.gold ?? 0) + previousPay
+    return row
+  })
+}
+
 /** A baseline update must never approve a clear earned by running out a goal. */
 export const balanceViolations = (rows: ReadonlyArray<BalanceRow>): Array<string> => rows
   .filter((row) => row.profile === "escape-only" && row.report.outcome === "cleared")
@@ -76,7 +93,7 @@ export const compareBalance = (before: ReadonlyArray<BalanceRow>, after: Readonl
     const old = previous.get(row.id)?.report
     if (old === undefined) { issues.push(`${row.id}: new scenario`); continue }
     if (old.outcome !== row.report.outcome) issues.push(`${row.id}: ${old.outcome} -> ${row.report.outcome}`)
-    for (const key of ["endedAt", "damage", "kills", "specials", "ultimates", "breaks"] as const) {
+    for (const key of ["endedAt", "damage", "healing", "kills", "specials", "ultimates", "breaks"] as const) {
       const value = row.report[key]
       if (Math.abs(value - old[key]) > Math.max(key === "endedAt" ? 3 : 2, Math.abs(old[key]) * tolerance)) issues.push(`${row.id}: ${key} ${old[key].toFixed(1)} -> ${value.toFixed(1)}`)
     }

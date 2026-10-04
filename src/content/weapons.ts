@@ -58,7 +58,7 @@ export const weapons = {
   /** Executioner: finishes off the wounded. */
   executioner: weapon({ name: "Executioner", type: "gun", atk: 30, bonus: bonus("speed", 8), passives: [damageBonus(50, targetHealthBelow(0.3))] }),
   /** Bloodthirst: every kill heals the wielder. */
-  bloodthirst: weapon({ name: "Bloodthirst", type: "gun", atk: 25, bonus: bonus("hp", 15), passives: [on(kill(), heal(5))] }),
+  bloodthirst: weapon({ name: "Bloodthirst", type: "gun", atk: 25, bonus: bonus("hp", 15), passives: [on(kill(), heal(2))] }),
   /** The Tidecaller's first disc: stats only. */
   trainingDisc: weapon({ name: "Training Disc", type: "disc", atk: 20, bonus: noBonus(), passives: [] }),
   /** Undertow: the combo's finisher also soaks everything around the wielder. */

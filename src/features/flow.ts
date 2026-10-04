@@ -3,7 +3,7 @@
  * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
  * screen, and a restart that clears the run and starts over.
  */
-import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Paused, PracticeField, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Challenge, EnergyLedger, Flow, Game, Health, HitStop, Keys, Member, Paused, PracticeField, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { initialWaves } from "./waves.ts"
 
@@ -84,6 +84,7 @@ export const PauseWithKey = Game.System("Shooter/PauseWithKey", {
 /** First system of a restart: fresh run state. */
 export const ResetRun = Game.System("Shooter/ResetRun", {
   resources: {
+    energyLedger: Game.System.writeResource(EnergyLedger),
     tuning: Game.System.readResource(Tuning),
     stats: Game.System.writeResource(Stats),
     waves: Game.System.writeResource(Waves),
@@ -99,6 +100,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
 }, ({ resources }) => {
   const tuning = resources.tuning.get()
   resources.stats.set({ kills: 0, shots: 0, reactions: [] })
+  resources.energyLedger.set({})
   resources.waves.set(initialWaves(tuning))
   resources.rng.set({ state: tuning.waves.seed })
   resources.run.set({ time: 0, endedAt: null })

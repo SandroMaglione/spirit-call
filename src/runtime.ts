@@ -37,6 +37,7 @@ export const initialResources = (
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   Viewport: viewport,
   Stats: { kills: 0, shots: 0, reactions: [] },
+  EnergyLedger: {},
   Waves: initialWaves(tuning),
   Rng: { state: tuning.waves.seed },
   Run: { time: 0, endedAt: null },
