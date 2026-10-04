@@ -1,0 +1,133 @@
+{
+  "title": "Basalt citadel study",
+  "style": "citadel",
+  "batch": "arena-prop-study",
+  "base_kit": "basalt-citadel",
+  "palette": {
+    "stone": "626C79",
+    "light": "89939B",
+    "edge": "B1B9B6",
+    "dark": "343F50",
+    "accent": "B99469",
+    "metal": "455566",
+    "wood": "706052",
+    "earth": "77796F",
+    "green": "627569",
+    "warm": "C7A570",
+    "snow": "ACB8B7",
+    "cloth": "935F59",
+    "wood-light": "897564",
+    "wood-dark": "4E4339",
+    "metal-light": "A2ACA9",
+    "rope": "BCAA82",
+    "sail": "CDC8B1",
+    "fish": "89939B"
+  },
+  "assets": [
+    {
+      "id": "supply-pouch",
+      "title": "Cloth pouch with attached clasp",
+      "recipe": "study-supply-pouch",
+      "group": "small"
+    },
+    {
+      "id": "unlit-torches",
+      "title": "Bound unlit torch pair",
+      "recipe": "study-unlit-torches",
+      "group": "small"
+    },
+    {
+      "id": "spare-rings",
+      "title": "Loose metal rings on the ground",
+      "recipe": "study-spare-rings",
+      "group": "small"
+    },
+    {
+      "id": "resting-shield",
+      "title": "Shield resting on the ground",
+      "recipe": "study-resting-shield",
+      "group": "small"
+    },
+    {
+      "id": "folded-banner",
+      "title": "Folded and tied spare banner",
+      "recipe": "study-folded-banner",
+      "group": "small"
+    },
+    {
+      "id": "weapon-rack",
+      "title": "Clipped spear rack",
+      "recipe": "study-weapon-rack",
+      "group": "working"
+    },
+    {
+      "id": "shield-rack",
+      "title": "Shields attached to bearing rail",
+      "recipe": "study-shield-rack",
+      "group": "working"
+    },
+    {
+      "id": "restrained-banner",
+      "title": "Banner fixed to crossbar",
+      "recipe": "study-restrained-banner",
+      "group": "working"
+    },
+    {
+      "id": "war-table",
+      "title": "Low war table with grounded markers",
+      "recipe": "study-war-table",
+      "group": "working"
+    },
+    {
+      "id": "reinforced-crate",
+      "title": "Compact reinforced supply crate",
+      "recipe": "study-reinforced-crate",
+      "group": "working"
+    },
+    {
+      "id": "supported-ram",
+      "title": "Ram resting on braced saddles",
+      "recipe": "study-supported-ram",
+      "group": "large"
+    },
+    {
+      "id": "guard-shelter",
+      "title": "Braced guard shelter",
+      "recipe": "study-guard-shelter",
+      "group": "large"
+    },
+    {
+      "id": "throne-dais",
+      "title": "Symmetric throne and supported dais",
+      "recipe": "study-throne-dais",
+      "group": "large"
+    },
+    {
+      "id": "battlement-bay",
+      "title": "Bonded parapet and grounded buttresses",
+      "recipe": "study-battlement-bay",
+      "group": "large"
+    }
+  ],
+  "player_height_m": 0.5803955393237317,
+  "scope": "Reviewable art study with supported perimeter assemblies.",
+  "changes": [
+    "Reduced banners, equipment racks and supply crates to practical proportions.",
+    "Added spare equipment, cloth pouches, unlit torches and table markers.",
+    "Rebuilt a symmetric throne; added a supported ram, guard shelter and bonded battlement bay for the perimeter."
+  ],
+  "comparisons": [
+    {
+      "original": "banner-tall",
+      "study": "restrained-banner"
+    },
+    {
+      "original": "weapon-rack",
+      "study": "weapon-rack"
+    },
+    {
+      "original": "throne",
+      "study": "throne-dais"
+    }
+  ]
+}

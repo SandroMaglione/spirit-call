@@ -1,0 +1,871 @@
+{
+  "tolerance_m": 0.002,
+  "method": "Closed shell BVH contact graph to ground",
+  "assets": {
+    "supply-pouch": {
+      "primitives": 3,
+      "grounded_or_connected": 3,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        }
+      ]
+    },
+    "unlit-torches": {
+      "primitives": 11,
+      "grounded_or_connected": 11,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 0,
+          "supported_by": 1
+        },
+        {
+          "part": 2,
+          "supported_by": 3
+        },
+        {
+          "part": 4,
+          "supported_by": 10
+        },
+        {
+          "part": 7,
+          "supported_by": 8
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        }
+      ]
+    },
+    "spare-rings": {
+      "primitives": 3,
+      "grounded_or_connected": 3,
+      "unsupported": [],
+      "support_links": []
+    },
+    "resting-shield": {
+      "primitives": 3,
+      "grounded_or_connected": 3,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        }
+      ]
+    },
+    "folded-banner": {
+      "primitives": 10,
+      "grounded_or_connected": 10,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 0
+        },
+        {
+          "part": 7,
+          "supported_by": 0
+        },
+        {
+          "part": 9,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 4
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        }
+      ]
+    },
+    "weapon-rack": {
+      "primitives": 15,
+      "grounded_or_connected": 15,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 2
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        },
+        {
+          "part": 5,
+          "supported_by": 1
+        },
+        {
+          "part": 6,
+          "supported_by": 4
+        },
+        {
+          "part": 8,
+          "supported_by": 4
+        },
+        {
+          "part": 9,
+          "supported_by": 4
+        },
+        {
+          "part": 11,
+          "supported_by": 4
+        },
+        {
+          "part": 12,
+          "supported_by": 4
+        },
+        {
+          "part": 14,
+          "supported_by": 4
+        },
+        {
+          "part": 7,
+          "supported_by": 6
+        },
+        {
+          "part": 10,
+          "supported_by": 9
+        },
+        {
+          "part": 13,
+          "supported_by": 12
+        }
+      ]
+    },
+    "shield-rack": {
+      "primitives": 15,
+      "grounded_or_connected": 15,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 2
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        },
+        {
+          "part": 5,
+          "supported_by": 1
+        },
+        {
+          "part": 6,
+          "supported_by": 1
+        },
+        {
+          "part": 12,
+          "supported_by": 3
+        },
+        {
+          "part": 7,
+          "supported_by": 6
+        },
+        {
+          "part": 8,
+          "supported_by": 6
+        },
+        {
+          "part": 9,
+          "supported_by": 4
+        },
+        {
+          "part": 13,
+          "supported_by": 12
+        },
+        {
+          "part": 14,
+          "supported_by": 12
+        },
+        {
+          "part": 10,
+          "supported_by": 9
+        },
+        {
+          "part": 11,
+          "supported_by": 9
+        }
+      ]
+    },
+    "restrained-banner": {
+      "primitives": 5,
+      "grounded_or_connected": 5,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        }
+      ]
+    },
+    "war-table": {
+      "primitives": 11,
+      "grounded_or_connected": 11,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 1
+        },
+        {
+          "part": 7,
+          "supported_by": 4
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        },
+        {
+          "part": 9,
+          "supported_by": 7
+        },
+        {
+          "part": 10,
+          "supported_by": 7
+        }
+      ]
+    },
+    "reinforced-crate": {
+      "primitives": 28,
+      "grounded_or_connected": 28,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 4
+        },
+        {
+          "part": 3,
+          "supported_by": 4
+        },
+        {
+          "part": 6,
+          "supported_by": 0
+        },
+        {
+          "part": 7,
+          "supported_by": 0
+        },
+        {
+          "part": 8,
+          "supported_by": 10
+        },
+        {
+          "part": 9,
+          "supported_by": 10
+        },
+        {
+          "part": 12,
+          "supported_by": 10
+        },
+        {
+          "part": 13,
+          "supported_by": 0
+        },
+        {
+          "part": 14,
+          "supported_by": 4
+        },
+        {
+          "part": 15,
+          "supported_by": 4
+        },
+        {
+          "part": 16,
+          "supported_by": 0
+        },
+        {
+          "part": 17,
+          "supported_by": 5
+        },
+        {
+          "part": 18,
+          "supported_by": 5
+        },
+        {
+          "part": 19,
+          "supported_by": 4
+        },
+        {
+          "part": 21,
+          "supported_by": 5
+        },
+        {
+          "part": 22,
+          "supported_by": 4
+        },
+        {
+          "part": 23,
+          "supported_by": 5
+        },
+        {
+          "part": 24,
+          "supported_by": 0
+        },
+        {
+          "part": 25,
+          "supported_by": 0
+        },
+        {
+          "part": 26,
+          "supported_by": 0
+        },
+        {
+          "part": 27,
+          "supported_by": 0
+        },
+        {
+          "part": 20,
+          "supported_by": 3
+        }
+      ]
+    },
+    "supported-ram": {
+      "primitives": 23,
+      "grounded_or_connected": 23,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 11,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 2
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 2
+        },
+        {
+          "part": 9,
+          "supported_by": 2
+        },
+        {
+          "part": 10,
+          "supported_by": 2
+        },
+        {
+          "part": 12,
+          "supported_by": 2
+        },
+        {
+          "part": 13,
+          "supported_by": 5
+        },
+        {
+          "part": 14,
+          "supported_by": 5
+        },
+        {
+          "part": 15,
+          "supported_by": 5
+        },
+        {
+          "part": 16,
+          "supported_by": 11
+        },
+        {
+          "part": 17,
+          "supported_by": 11
+        },
+        {
+          "part": 18,
+          "supported_by": 11
+        },
+        {
+          "part": 19,
+          "supported_by": 13
+        },
+        {
+          "part": 21,
+          "supported_by": 16
+        },
+        {
+          "part": 20,
+          "supported_by": 19
+        },
+        {
+          "part": 22,
+          "supported_by": 19
+        }
+      ]
+    },
+    "guard-shelter": {
+      "primitives": 56,
+      "grounded_or_connected": 56,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 11,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 2
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 2
+        },
+        {
+          "part": 9,
+          "supported_by": 2
+        },
+        {
+          "part": 10,
+          "supported_by": 2
+        },
+        {
+          "part": 12,
+          "supported_by": 2
+        },
+        {
+          "part": 13,
+          "supported_by": 5
+        },
+        {
+          "part": 15,
+          "supported_by": 5
+        },
+        {
+          "part": 17,
+          "supported_by": 11
+        },
+        {
+          "part": 19,
+          "supported_by": 11
+        },
+        {
+          "part": 30,
+          "supported_by": 5
+        },
+        {
+          "part": 32,
+          "supported_by": 11
+        },
+        {
+          "part": 45,
+          "supported_by": 5
+        },
+        {
+          "part": 48,
+          "supported_by": 11
+        },
+        {
+          "part": 14,
+          "supported_by": 13
+        },
+        {
+          "part": 16,
+          "supported_by": 15
+        },
+        {
+          "part": 18,
+          "supported_by": 17
+        },
+        {
+          "part": 20,
+          "supported_by": 19
+        },
+        {
+          "part": 21,
+          "supported_by": 13
+        },
+        {
+          "part": 24,
+          "supported_by": 15
+        },
+        {
+          "part": 31,
+          "supported_by": 30
+        },
+        {
+          "part": 33,
+          "supported_by": 32
+        },
+        {
+          "part": 46,
+          "supported_by": 45
+        },
+        {
+          "part": 47,
+          "supported_by": 45
+        },
+        {
+          "part": 49,
+          "supported_by": 48
+        },
+        {
+          "part": 50,
+          "supported_by": 48
+        },
+        {
+          "part": 22,
+          "supported_by": 21
+        },
+        {
+          "part": 23,
+          "supported_by": 21
+        },
+        {
+          "part": 25,
+          "supported_by": 24
+        },
+        {
+          "part": 26,
+          "supported_by": 24
+        },
+        {
+          "part": 28,
+          "supported_by": 21
+        },
+        {
+          "part": 29,
+          "supported_by": 21
+        },
+        {
+          "part": 34,
+          "supported_by": 31
+        },
+        {
+          "part": 35,
+          "supported_by": 31
+        },
+        {
+          "part": 36,
+          "supported_by": 31
+        },
+        {
+          "part": 42,
+          "supported_by": 33
+        },
+        {
+          "part": 51,
+          "supported_by": 49
+        },
+        {
+          "part": 52,
+          "supported_by": 49
+        },
+        {
+          "part": 53,
+          "supported_by": 49
+        },
+        {
+          "part": 54,
+          "supported_by": 49
+        },
+        {
+          "part": 55,
+          "supported_by": 49
+        },
+        {
+          "part": 27,
+          "supported_by": 22
+        },
+        {
+          "part": 37,
+          "supported_by": 36
+        },
+        {
+          "part": 38,
+          "supported_by": 36
+        },
+        {
+          "part": 39,
+          "supported_by": 34
+        },
+        {
+          "part": 43,
+          "supported_by": 42
+        },
+        {
+          "part": 44,
+          "supported_by": 42
+        },
+        {
+          "part": 40,
+          "supported_by": 39
+        },
+        {
+          "part": 41,
+          "supported_by": 39
+        }
+      ]
+    },
+    "throne-dais": {
+      "primitives": 30,
+      "grounded_or_connected": 30,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        },
+        {
+          "part": 5,
+          "supported_by": 1
+        },
+        {
+          "part": 14,
+          "supported_by": 1
+        },
+        {
+          "part": 22,
+          "supported_by": 1
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 3
+        },
+        {
+          "part": 10,
+          "supported_by": 2
+        },
+        {
+          "part": 12,
+          "supported_by": 4
+        },
+        {
+          "part": 15,
+          "supported_by": 14
+        },
+        {
+          "part": 16,
+          "supported_by": 14
+        },
+        {
+          "part": 23,
+          "supported_by": 22
+        },
+        {
+          "part": 24,
+          "supported_by": 22
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        },
+        {
+          "part": 9,
+          "supported_by": 7
+        },
+        {
+          "part": 11,
+          "supported_by": 7
+        },
+        {
+          "part": 13,
+          "supported_by": 7
+        },
+        {
+          "part": 17,
+          "supported_by": 15
+        },
+        {
+          "part": 18,
+          "supported_by": 15
+        },
+        {
+          "part": 19,
+          "supported_by": 15
+        },
+        {
+          "part": 20,
+          "supported_by": 15
+        },
+        {
+          "part": 21,
+          "supported_by": 15
+        },
+        {
+          "part": 25,
+          "supported_by": 23
+        },
+        {
+          "part": 26,
+          "supported_by": 23
+        },
+        {
+          "part": 27,
+          "supported_by": 23
+        },
+        {
+          "part": 28,
+          "supported_by": 23
+        },
+        {
+          "part": 29,
+          "supported_by": 23
+        }
+      ]
+    },
+    "battlement-bay": {
+      "primitives": 10,
+      "grounded_or_connected": 10,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 8,
+          "supported_by": 0
+        },
+        {
+          "part": 9,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 8
+        },
+        {
+          "part": 4,
+          "supported_by": 8
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 6,
+          "supported_by": 4
+        },
+        {
+          "part": 7,
+          "supported_by": 4
+        }
+      ]
+    }
+  }
+}
