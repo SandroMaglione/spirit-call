@@ -3,11 +3,16 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { CharacterId } from "../src/content/characters.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery, teamFromQuery } from "../src/dev/build.ts"
+import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "../src/dev/build.ts"
 import { defaultChallenge } from "../src/features/challenges.ts"
 import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel, weaponAtk, withWeapon } from "../src/features/build.ts"
 
 describe("builds", () => {
+  it("practice links select combat enemies once and ignore unknown ids and dummies", () => {
+    expect(practiceFromQuery(defaultTuning, "?practice=charger,sniper,guardian,charger,dummy,missing,toString")).toEqual({ kinds: ["charger", "sniper", "guardian"], elites: false })
+    expect(practiceFromQuery(defaultTuning, "?practice=missing,dummy")).toBeUndefined()
+    expect(practiceFromQuery(defaultTuning, "")).toBeUndefined()
+  })
   it("resolve to the character's stats and her own kit, with her own weapon", () => {
     const gunner = defaultTuning.characters.gunner
     const build = resolveBuild(defaultTuning, { character: "gunner" })

@@ -18,6 +18,24 @@ describe("enemy animation sampling", () => {
       }
     }
   })
+  it("distinguishes Firebomber's swipe and Guardian's thrust using their combat durations", () => {
+    for (const [kind, id, suffix] of [["charger", "swipe", "Swipe"], ["guardian", "thrust", "Thrust"]] as const) {
+      const attack = enemies[kind].attacks.find((attack) => attack.id === id)!
+      const look = enemyLooks[kind]
+      if (look.kind !== "model") throw new Error(`${kind} needs its model`)
+      for (const phase of ["windup", "active", "recovery"] as const) {
+        const base = { windup: "Windup", active: "Active", recovery: "Recovery" }[phase]
+        expect(enemyPose(attack, phase, attack[phase] / 2, look.attackClips?.[id])).toEqual({ clip: base + suffix, progress: .5 })
+      }
+    }
+  })
+  it("starts the bomb and sniper recovery at release without an active interval", () => {
+    for (const kind of ["charger", "sniper"] as const) {
+      const attack = enemies[kind].attacks[0]!
+      expect(attack.active).toBe(0)
+      expect(enemyPose(attack, "recovery", 0)).toEqual({ clip: "Recovery", progress: 0 })
+    }
+  })
   it("samples the stomp clips over the stomp's own phase duration", () => {
     const stomp = enemies.brute.attacks.find((attack) => attack.id === "stomp")!
     const look = enemyLooks.brute

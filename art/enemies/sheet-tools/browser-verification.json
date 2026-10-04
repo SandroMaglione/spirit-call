@@ -1,0 +1,148 @@
+{
+  "url": "http://192.168.40.47:5199/art/enemies/sheet-tools/review.html",
+  "revision": "symmetric angry eyes, round hand bomb, centered Guardian armor and uniform mace spikes",
+  "phone": [
+    {
+      "model": {
+        "animations": 0,
+        "calls": 41,
+        "camera": [
+          0,
+          3.047193884849548,
+          4.330127018922194
+        ],
+        "kind": "charger",
+        "status": "ready",
+        "triangles": 1890,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 46,
+        "camera": [
+          0,
+          3.107311308383941,
+          4.330127018922194
+        ],
+        "kind": "sniper",
+        "status": "ready",
+        "triangles": 1376,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 50,
+        "camera": [
+          0,
+          3.140101492404937,
+          4.330127018922193
+        ],
+        "kind": "guardian",
+        "status": "ready",
+        "triangles": 1934,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        390,
+        844
+      ]
+    }
+  ],
+  "desktop": [
+    {
+      "model": {
+        "animations": 0,
+        "calls": 41,
+        "camera": [
+          0,
+          3.047193884849548,
+          4.330127018922194
+        ],
+        "kind": "charger",
+        "status": "ready",
+        "triangles": 1890,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 46,
+        "camera": [
+          0,
+          3.107311308383941,
+          4.330127018922194
+        ],
+        "kind": "sniper",
+        "status": "ready",
+        "triangles": 1376,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 50,
+        "camera": [
+          0,
+          3.140101492404937,
+          4.330127018922193
+        ],
+        "kind": "guardian",
+        "status": "ready",
+        "triangles": 1934,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        1280,
+        800
+      ]
+    }
+  ],
+  "touch": {
+    "after": [
+      -0.12527786708580765,
+      3.140101492404937,
+      4.328314389692415
+    ],
+    "before": [
+      0,
+      3.140101492404937,
+      4.330127018922193
+    ],
+    "changed": true,
+    "input": "synthetic touch PointerEvents with capture stub",
+    "overflow": false,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  "physicalPhoneTested": false
+}

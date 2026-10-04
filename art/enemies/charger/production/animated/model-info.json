@@ -1,0 +1,53 @@
+{
+  "height": 1.0943877696990967,
+  "height_basis": "ground origin to highest approved rest-pose vertex",
+  "triangles": 1890,
+  "bones": 9,
+  "bytes": 426448,
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "WindupSwipe": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "ActiveSwipe": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "RecoverySwipe": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    }
+  }
+}

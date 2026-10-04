@@ -1,0 +1,181 @@
+{
+  "source": "../sniper-model.blend",
+  "source_sha256": "70396e3da265c3eb5615072c3d9ccd0be7ea1d00587fa4a24edce427eaad426e",
+  "triangles": 1376,
+  "bones": 11,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "Torso": {
+      "body": 82
+    },
+    "HeadAndPrecisionBarrel": {
+      "head": 18
+    },
+    "Crest.L": {
+      "head": 32
+    },
+    "Crest.R": {
+      "head": 32
+    },
+    "CentralCrest": {
+      "head": 32
+    },
+    "LegArmor.L": {
+      "leg.L": 50
+    },
+    "LegArmor.R": {
+      "leg.R": 50
+    },
+    "ThighJoint.L": {
+      "leg.L": 12
+    },
+    "Hock.L": {
+      "leg.L": 12
+    },
+    "Shin.L": {
+      "shin.L": 12
+    },
+    "Knee.L": {
+      "leg.L": 20
+    },
+    "Ankle.L": {
+      "foot.L": 20
+    },
+    "ThighJoint.R": {
+      "leg.R": 12
+    },
+    "Hock.R": {
+      "leg.R": 12
+    },
+    "Shin.R": {
+      "shin.R": 12
+    },
+    "Knee.R": {
+      "leg.R": 20
+    },
+    "Ankle.R": {
+      "foot.R": 20
+    },
+    "Foot.L": {
+      "foot.L": 14
+    },
+    "Toe.L": {
+      "foot.L": 8
+    },
+    "Toe.L.001": {
+      "foot.L": 8
+    },
+    "Foot.R": {
+      "foot.R": 14
+    },
+    "Toe.R": {
+      "foot.R": 8
+    },
+    "Toe.R.001": {
+      "foot.R": 8
+    },
+    "BarrelConductor": {
+      "head": 8
+    },
+    "Muzzle": {
+      "head": 16
+    },
+    "EyeRim.L": {
+      "head": 84
+    },
+    "EyeRim.R": {
+      "head": 84
+    },
+    "EyeSocket.L": {
+      "head": 78
+    },
+    "EyeSocket.R": {
+      "head": 78
+    },
+    "Eye.L": {
+      "head": 36
+    },
+    "Eye.R": {
+      "head": 36
+    },
+    "AngryBrow.L": {
+      "head": 12
+    },
+    "AngryBrow.R": {
+      "head": 12
+    },
+    "ShoulderPlate.L": {
+      "body": 32
+    },
+    "ShoulderPlate.R": {
+      "body": 32
+    },
+    "ShoulderSpike.L": {
+      "body": 6
+    },
+    "ShoulderSpike.R": {
+      "body": 6
+    },
+    "UpperArm.L": {
+      "arm.L": 12
+    },
+    "Forearm.L": {
+      "arm.L": 12
+    },
+    "Claw.L": {
+      "arm.L": 14
+    },
+    "UpperArm.R": {
+      "arm.R": 12
+    },
+    "Forearm.R": {
+      "arm.R": 12
+    },
+    "Claw.R": {
+      "arm.R": 14
+    },
+    "LegConductor.L": {
+      "leg.L": 6
+    },
+    "LegConductor.R": {
+      "leg.R": 6
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true
+}

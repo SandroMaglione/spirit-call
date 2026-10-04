@@ -1,0 +1,13 @@
+{
+  "metric": "silhouette intersection over union after uniform height normalization",
+  "target": 0.9,
+  "scores": {
+    "front": 0.801573564122738,
+    "back": 0.7497117193663895,
+    "right": 0.6185436768771628,
+    "left": 0.6281563057499657,
+    "top": 0.4262485964985237,
+    "bottom": 0.37241132789077996,
+    "hero": 0.5742405941036998
+  }
+}

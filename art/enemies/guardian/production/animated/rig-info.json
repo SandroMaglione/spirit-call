@@ -1,0 +1,205 @@
+{
+  "source": "../guardian-model.blend",
+  "source_sha256": "8730a2da79575738e9c2b754cfba143c5fffcb272a158608b1b3d5f41941db88",
+  "triangles": 1934,
+  "bones": 7,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "Breastplate": {
+      "body": 72
+    },
+    "Helmet": {
+      "head": 98
+    },
+    "GoldenCrest": {
+      "head": 38
+    },
+    "Pauldron.L": {
+      "body": 42
+    },
+    "Pauldron.R": {
+      "body": 42
+    },
+    "Forearm.L": {
+      "arm.L": 34
+    },
+    "Forearm.R": {
+      "shield": 34
+    },
+    "Gauntlet.L": {
+      "arm.L": 34
+    },
+    "Gauntlet.R": {
+      "shield": 34
+    },
+    "LegArmor.L": {
+      "leg.L": 42
+    },
+    "LegArmor.R": {
+      "leg.R": 42
+    },
+    "Boot.L": {
+      "leg.L": 34
+    },
+    "Boot.R": {
+      "leg.R": 34
+    },
+    "Visor.L": {
+      "head": 147
+    },
+    "Visor.R": {
+      "head": 147
+    },
+    "EyeSocket.L": {
+      "head": 39
+    },
+    "EyeSocket.R": {
+      "head": 39
+    },
+    "Eye.L": {
+      "head": 33
+    },
+    "Eye.R": {
+      "head": 33
+    },
+    "Tabard.L": {
+      "body": 8
+    },
+    "Tabard.R": {
+      "body": 8
+    },
+    "Belt": {
+      "body": 20
+    },
+    "BeltClasp": {
+      "body": 8
+    },
+    "ChestClasp": {
+      "body": 8
+    },
+    "GoldShoulderTrim.L": {
+      "body": 16
+    },
+    "GoldShoulderTrim.R": {
+      "body": 16
+    },
+    "ElbowBand.L": {
+      "arm.L": 16
+    },
+    "ElbowBand.R": {
+      "shield": 16
+    },
+    "ShieldFrame": {
+      "shield": 16
+    },
+    "ShieldPlank.1": {
+      "shield": 8
+    },
+    "ShieldPlank.2": {
+      "shield": 8
+    },
+    "ShieldPlank.3": {
+      "shield": 8
+    },
+    "ShieldPlank.4": {
+      "shield": 8
+    },
+    "ShieldBoss": {
+      "shield": 5
+    },
+    "ShieldGrip": {
+      "shield": 16
+    },
+    "MaceHead": {
+      "arm.L": 114
+    },
+    "MaceHandle": {
+      "arm.L": 16
+    },
+    "MaceSpike.01": {
+      "arm.L": 7
+    },
+    "MaceSpike.02": {
+      "arm.L": 7
+    },
+    "MaceSpike.03": {
+      "arm.L": 7
+    },
+    "MaceSpike.04": {
+      "arm.L": 7
+    },
+    "MaceSpike.05": {
+      "arm.L": 7
+    },
+    "MaceSpike.06": {
+      "arm.L": 7
+    },
+    "MaceSpike.07": {
+      "arm.L": 7
+    },
+    "MaceSpike.08": {
+      "arm.L": 7
+    },
+    "MaceSpike.09": {
+      "arm.L": 7
+    },
+    "MaceSpike.10": {
+      "arm.L": 7
+    },
+    "MaceSpike.11": {
+      "arm.L": 7
+    },
+    "MaceSpike.12": {
+      "arm.L": 7
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "WindupThrust": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "ActiveThrust": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "RecoveryThrust": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true
+}

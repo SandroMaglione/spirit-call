@@ -1,0 +1,100 @@
+{
+  "kind": "guardian",
+  "loader": "Three.js GLTFLoader",
+  "meshes": [
+    "Breastplate",
+    "Helmet",
+    "GoldenCrest",
+    "PauldronL",
+    "PauldronR",
+    "ForearmL",
+    "ForearmR",
+    "GauntletL",
+    "GauntletR",
+    "LegArmorL",
+    "LegArmorR",
+    "BootL",
+    "BootR",
+    "VisorL",
+    "VisorR",
+    "EyeSocketL",
+    "EyeSocketR",
+    "EyeL",
+    "EyeR",
+    "TabardL",
+    "TabardR",
+    "Belt",
+    "BeltClasp",
+    "ChestClasp",
+    "GoldShoulderTrimL",
+    "GoldShoulderTrimR",
+    "ElbowBandL",
+    "ElbowBandR",
+    "ShieldFrame",
+    "ShieldPlank1",
+    "ShieldPlank2",
+    "ShieldPlank3",
+    "ShieldPlank4",
+    "ShieldBoss",
+    "ShieldGrip",
+    "MaceHead",
+    "MaceHandle",
+    "MaceSpike01",
+    "MaceSpike02",
+    "MaceSpike03",
+    "MaceSpike04",
+    "MaceSpike05",
+    "MaceSpike06",
+    "MaceSpike07",
+    "MaceSpike08",
+    "MaceSpike09",
+    "MaceSpike10",
+    "MaceSpike11",
+    "MaceSpike12"
+  ],
+  "materials": 1,
+  "triangles": 1934,
+  "face_mirror_error_m": {
+    "Eye": 0,
+    "EyeSocket": 0
+  },
+  "guardian_details": {
+    "mirror_error_m": {
+      "Breastplate": 4.9700766602166893e-17,
+      "Helmet": 3.725290298461914e-9,
+      "GoldenCrest": 1.3576794980879886e-17,
+      "Pauldron": 0,
+      "GoldShoulderTrim": 0,
+      "ElbowBand": 0
+    },
+    "mace_diameters_m": [
+      0.31345176696777344,
+      0.31345176696777344,
+      0.3134517967700958
+    ],
+    "spike_count": 12,
+    "spike_tip_radius_m": [
+      0.21172583287507168,
+      0.21172590450431286
+    ],
+    "nearest_spike_angle_degrees": [
+      63.43493665353264,
+      63.43494603064902
+    ]
+  },
+  "animations": 0,
+  "bounds_gltf_m": {
+    "min": [
+      -0.6642167568206787,
+      0,
+      -0.1854560226202011
+    ],
+    "max": [
+      0.6994923949241638,
+      1.2802029848098755,
+      0.6209973692893982
+    ]
+  },
+  "sha256": "56ee465a9872f67d5271e1631060a560aac67e4fd1fca82d2febf7ae10aef793",
+  "status": "passed: static review asset, before rigging"
+}
