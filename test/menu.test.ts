@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning, engine } from "../src/config/tuning.ts"
-import { survive } from "../src/content/challenges.ts"
+import { defaultTuning } from "../src/config/tuning.ts"
 import { withWeapon } from "../src/features/build.ts"
-import { Challenge, CombatStats, Game, Paused, Player, Run, Team } from "../src/schema.ts"
+import { Challenge, CombatStats, Game, Paused, Player, Run, Team, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
 import { answers, elementOf, placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
 import { start } from "./helpers.ts"
@@ -33,14 +32,17 @@ describe("menu requests", () => {
   })
 
   it("retry and back to the menu only from the results screen; start again from the menu", () => {
-    // A challenge won by surviving a moment, to reach the results screen quickly.
-    const tuning = { ...defaultTuning, challenges: { ...defaultTuning.challenges, endless: { ...defaultTuning.challenges.endless, objective: survive(0.5) } } }
-    const run = start({ tuning, waves: true })
+    const run = start({ waves: true })
     run.requests.pending.push({ kind: "menu" }, { kind: "retry" })
     run.step()
     expect(flowOf(run)).toBe("Playing")
 
-    run.step(Math.ceil(0.5 / engine.stepSeconds) + 2)
+    // Complete the waves to exercise the results-screen actions.
+    const Complete = Game.System("Test/CompleteWaves", { resources: { waves: Game.System.writeResource(Waves) } }, ({ resources }) => {
+      resources.waves.update((waves) => ({ ...waves, phase: "complete" }))
+    })
+    run.runtime.tick(Game.Schedule(Complete))
+    run.step()
     expect(flowOf(run)).toBe("Cleared")
     run.requests.pending.push({ kind: "menu" })
     run.step()
@@ -143,11 +145,11 @@ describe("menu helpers", () => {
 
   it("describes content from its data", () => {
     expect(describeObjective(defaultTuning.challenges.swarm.objective, 3)).toBe("Clear 3 waves")
-    expect(describeObjective(defaultTuning.challenges.endless.objective, 5)).toBe("Survive 210s")
+    expect(describeObjective(defaultTuning.challenges.endless.objective, 8)).toBe("Clear 8 waves")
     expect(defaultTuning.weapons.executioner.passives.map(describePassive)).toEqual(["+50% damage to enemies below 30% HP"])
-    expect(defaultTuning.weapons.bloodthirst.passives.map(describePassive)).toEqual(["On kill: heal 5% of max HP"])
+    expect(defaultTuning.weapons.bloodthirst.passives.map(describePassive)).toEqual(["On kill: heal 2% of max HP"])
     expect(describePassive(defaultTuning.weapons.echoSaber.passives[0]!)).toMatch(/^On the combo finisher: set off a shockwave/)
-    expect(describeSkill(defaultTuning.skills.tide)).toBe("A water shockwave around you (50% ATK) · 100 energy, untouchable as it goes off")
-    expect(describeSkill(defaultTuning.skills.flareJump)).toBe("A fire burst around you (22% ATK) as you leap away from your aim, leaving a fire pool · 3s cooldown, untouchable as it goes off")
+    expect(describeSkill(defaultTuning.skills.tide)).toBe("A water shockwave around you (50% ATK) · 10s cooldown, 100 energy, untouchable as it goes off")
+    expect(describeSkill(defaultTuning.skills.flareJump)).toBe("A fire burst around you (22% ATK) as you leap away from your aim, leaving a fire pool · 7s cooldown, untouchable as it goes off")
   })
 })

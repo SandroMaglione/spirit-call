@@ -82,7 +82,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     attack: 0,
     special: player === undefined || (slots?.special.spec.cooldown ?? 0) <= 0 ? 0 : player.data.skills.get().special.cooldown,
     dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown,
-    ultimate: 0
+    ultimate: player === undefined ? 0 : player.data.skills.get().ultimate.cooldown
   }
   // Icons: the attack's by the weapon in hand, the skills' by the skill in each slot.
   if (player !== undefined) {
@@ -203,20 +203,15 @@ const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =
 
 /**
  * Progress toward a challenge's objective, in a few characters, for the
- * objectives the wave marks do not show: for surviving the time left, and
- * lasting until the fall the wave against the goal (then the wave alone,
+ * objectives the wave marks do not show: for lasting until the fall the wave against the goal (then the wave alone,
  * past it), and practice the enemies defeated. Clearing waves shows its marks only;
  * training, nothing.
  */
-const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number, kills: number): string => {
+const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, kills: number): string => {
   const objective = challenge.objective
   switch (objective.kind) {
     case "clearWaves":
       return ""
-    case "survive": {
-      const left = Math.max(0, Math.ceil(objective.seconds - time))
-      return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`
-    }
     case "endure":
       return waves.number <= objective.goal ? `Wave ${waves.number} / ${objective.goal}` : `Wave ${waves.number}`
     case "training":
@@ -328,7 +323,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
   }
   setText(hud.quest, challenge.name)
   showWaves(hud.waves, challenge.objective.kind === "clearWaves" ? challenge.waves.scripted.length : 0, waves)
-  setText(hud.progress, challengeProgress(challenge, waves, resources.run.get().time, resources.stats.get().kills))
+  setText(hud.progress, challengeProgress(challenge, waves, resources.stats.get().kills))
 })
 
 /** The damage and the hits a second are over this many seconds. */

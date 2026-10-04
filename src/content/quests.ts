@@ -77,7 +77,7 @@ export const quests = {
     enemyLevel: 3,
     level: 2,
     after: "theSwarm",
-    rewards: { experience: 90, currencies: { crystals: 100, gold: 700 }, unlocks: [weapon("executioner")] }
+    rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [weapon("executioner")] }
   }),
   theBrute: quest({
     name: "The Brute",
@@ -87,67 +87,67 @@ export const quests = {
     enemyLevel: 5,
     level: 3,
     after: "crossfire",
-    rewards: { experience: 140, currencies: { crystals: 150, gold: 900 }, unlocks: [character("tidecaller"), weapon("crescendo"), weapon("echoSaber"), weapon("undertow")] }
+    rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("tidecaller"), weapon("crescendo"), weapon("echoSaber"), weapon("undertow")] }
   }),
   outposts: quest({
     name: "Outposts",
     line: "main",
     chapter: "two",
     challenge: "outposts",
-    enemyLevel: 7,
+    enemyLevel: 8,
     level: 4,
     after: "theBrute",
-    rewards: { experience: 180, currencies: { crystals: 150, gold: 1100 }, unlocks: [character("stormcaller"), weapon("lightningRod")] }
+    rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [character("stormcaller"), weapon("lightningRod")] }
   }),
   ashfall: quest({
     name: "Ashfall",
     line: "main",
     chapter: "two",
     challenge: "ashfall",
-    enemyLevel: 9,
+    enemyLevel: 12,
     level: 5,
     after: "outposts",
-    rewards: { experience: 220, currencies: { crystals: 150, gold: 1300 }, unlocks: [] }
+    rewards: { experience: 220, currencies: { crystals: 150, gold: 5500 }, unlocks: [] }
   }),
   highTide: quest({
     name: "High Tide",
     line: "main",
     chapter: "two",
     challenge: "highTide",
-    enemyLevel: 11,
+    enemyLevel: 16,
     level: 6,
     after: "ashfall",
-    rewards: { experience: 260, currencies: { crystals: 150, gold: 1500 }, unlocks: [] }
+    rewards: { experience: 260, currencies: { crystals: 150, gold: 15000 }, unlocks: [] }
   }),
   sandstorm: quest({
     name: "Sandstorm",
     line: "main",
     chapter: "three",
     challenge: "sandstorm",
-    enemyLevel: 13,
+    enemyLevel: 21,
     level: 7,
     after: "highTide",
-    rewards: { experience: 300, currencies: { crystals: 200, gold: 1700 }, unlocks: [] }
+    rewards: { experience: 300, currencies: { crystals: 200, gold: 24000 }, unlocks: [] }
   }),
   theCloister: quest({
     name: "The Cloister",
     line: "main",
     chapter: "three",
     challenge: "cloister",
-    enemyLevel: 15,
+    enemyLevel: 26,
     level: 8,
     after: "sandstorm",
-    rewards: { experience: 340, currencies: { crystals: 200, gold: 1900 }, unlocks: [] }
+    rewards: { experience: 340, currencies: { crystals: 200, gold: 36000 }, unlocks: [] }
   }),
   theWarlord: quest({
     name: "The Warlord",
     line: "main",
     chapter: "three",
     challenge: "warlord",
-    enemyLevel: 18,
+    enemyLevel: 32,
     level: 9,
     after: "theCloister",
-    rewards: { experience: 400, currencies: { crystals: 250, gold: 2200 }, unlocks: [] }
+    rewards: { experience: 400, currencies: { crystals: 250, gold: 22000 }, unlocks: [] }
   }),
   holdTheLine: quest({
     name: "Hold the Line",
@@ -164,7 +164,7 @@ export const quests = {
     line: "secondary",
     chapter: null,
     challenge: "swarmNight",
-    enemyLevel: 6,
+    enemyLevel: 8,
     level: 3,
     after: null,
     rewards: { experience: 110, currencies: { crystals: 60, gold: 1000 }, unlocks: [] }
@@ -174,7 +174,7 @@ export const quests = {
     line: "secondary",
     chapter: null,
     challenge: "eliteHunt",
-    enemyLevel: 8,
+    enemyLevel: 12,
     level: 4,
     after: null,
     rewards: { experience: 150, currencies: { crystals: 80, gold: 1200 }, unlocks: [] }
@@ -184,7 +184,7 @@ export const quests = {
     line: "secondary",
     chapter: null,
     challenge: "strangeCompany",
-    enemyLevel: 6,
+    enemyLevel: 9,
     level: 3,
     after: null,
     rewards: { experience: 120, currencies: { crystals: 60, gold: 1100 }, unlocks: [] }
@@ -194,7 +194,7 @@ export const quests = {
     line: "secondary",
     chapter: null,
     challenge: "stormFront",
-    enemyLevel: 10,
+    enemyLevel: 16,
     level: 5,
     after: null,
     rewards: { experience: 180, currencies: { crystals: 80, gold: 1400 }, unlocks: [] }

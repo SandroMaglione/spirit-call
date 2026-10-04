@@ -19,7 +19,7 @@
 import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 import type { Touch } from "@typeonce/bevy-ts-browser"
 
-import type { TouchButton } from "../src/config/input.ts"
+import type { PartyTaps, TouchButton } from "../src/config/input.ts"
 import { keyBindings, touchButtons } from "../src/config/input.ts"
 import { engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -30,6 +30,7 @@ import { createSimulation } from "../src/simulation.ts"
 import { projection } from "../src/config/view.ts"
 import { stateSpeed } from "../src/features/elements.ts"
 import { currentAttack } from "../src/features/moveset.ts"
+import { skillAim } from "../src/features/skills.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
@@ -42,11 +43,15 @@ import {
   Body,
   Burst,
   CombatStats,
+  Cast,
+  Broke,
   Dash,
   ElementState,
   Enemy,
   Game,
   Health,
+  Heal,
+  Hit,
   Elite,
   Ground,
   Hitbox,
@@ -54,14 +59,17 @@ import {
   Hurtbox,
   Invulnerable,
   Player,
+  Member,
   Position,
   Projectile,
   RunScope,
+  RunResult,
   Tuning as TuningResource,
   Velocity,
   Wall,
   Waves
 } from "../src/schema.ts"
+import type { BuildValue } from "../src/schema.ts"
 
 /**
  * Something that will hurt: an area from `from` to `to` seconds from now,
@@ -228,6 +236,8 @@ export interface Style {
   readonly fights: boolean
   readonly reaction: number
   readonly every: number
+  /** Basic attack reach for non-sword kits in the full balance sweep. */
+  readonly reach?: number
 }
 
 /** Only dodging, from afar, reacting at once: the fairness check (anything it cannot dodge, nobody can). */
@@ -291,6 +301,11 @@ export interface Move {
   readonly closing?: boolean
   /** The enemy it is fighting (entity id), kept from one decision to the next. */
   readonly target: number | null
+  readonly special?: boolean
+  readonly ultimate?: boolean
+  /** Skill drag in projected coordinates, relative to the button. */
+  readonly skillAim?: Vec2
+  readonly ultimateAim?: Vec2
 }
 
 const directions: ReadonlyArray<Vec2> = [
@@ -340,8 +355,8 @@ export const decide = (seen: Battlefield, tuning: Tuning, last: Vec2, style: Sty
   const at = field.player.at
   const target = style.fights ? pickTarget(field, at, previous) : undefined
   const targetId = target?.id ?? null
-  // Something within the sword's first swing.
-  const attack = style.fights && field.enemies.some((enemy) => Math.hypot(enemy.at.x - at.x, enemy.at.y - at.y) <= swordReach)
+  const reach = style.reach ?? swordReach
+  const attack = style.fights && field.enemies.some((enemy) => Math.hypot(enemy.at.x - at.x, enemy.at.y - at.y) <= reach)
   let best: { readonly move: Move; readonly danger: number; readonly liking: number } | undefined
   for (const direction of directions) {
     const { danger, end, burns } = playOut(field, tuning, direction, false)
@@ -352,7 +367,7 @@ export const decide = (seen: Battlefield, tuning: Tuning, last: Vec2, style: Sty
     // Safe: close a gap the dash covers in one go, keeping a charge to dodge with.
     if (target === undefined || !field.player.dashReady || field.player.charges < field.player.maxCharges) return best!.move
     const gap = Math.hypot(target.at.x - at.x, target.at.y - at.y)
-    if (gap <= swordReach + 15 || gap > swordReach + tuning.dash.distance) return best!.move
+    if (gap <= reach + 15 || gap > reach + tuning.dash.distance) return best!.move
     const toward = { x: (target.at.x - at.x) / gap, y: (target.at.y - at.y) / gap }
     const { danger, burns } = playOut(field, tuning, toward, true)
     return danger === Infinity && !burns ? { direction: toward, dash: true, attack: false, closing: true, target: targetId } : best!.move
@@ -379,8 +394,11 @@ export const botTouch = () => {
       const length = Math.hypot(screen.x, screen.y)
       const attack = move.attack && !tapped
       tapped = attack
-      const pressed = (name: TouchButton) => (name === "dash" && move.dash) || (name === "attack" && attack)
-      const buttons = Object.fromEntries(touchButtons.map((name) => [name, pressed(name) ? { ...idleButton, held: true, pressed: true } : idleButton]))
+      const pressed = (name: TouchButton) => (name === "dash" && move.dash) || (name === "attack" && attack) || (name === "special" && move.special === true) || (name === "ultimate" && move.ultimate === true)
+      const buttons = Object.fromEntries(touchButtons.map((name) => {
+        const skill = name === "special" || name === "ultimate"
+        return [name, pressed(name) ? { ...idleButton, held: !skill, pressed: true, released: skill, aim: name === "ultimate" ? move.ultimateAim ?? null : skill ? move.skillAim ?? null : null } : idleButton]
+      }))
       return {
         stick: { active: length > 0, vector: length > 0 ? { x: screen.x / length, y: screen.y / length } : { x: 0, y: 0 } },
         buttons: buttons as Touch.Snapshot<TouchButton>["buttons"],
@@ -411,6 +429,10 @@ const Vitals = Game.Inspector("Bot/Vitals", {
 }, ({ queries }) => queries.player.each()[0]?.data.health.get().current)
 
 const Progress = Game.Inspector("Bot/Progress", { resources: { waves: Game.System.readResource(Waves) } }, ({ resources }) => resources.waves.get().phase)
+const Outcome = Game.Inspector("Bot/Outcome", { resources: { result: Game.System.readResource(RunResult) } }, ({ resources }) => resources.result.get())
+const Members = Game.Inspector("Bot/Members", {
+  queries: { members: Game.Query({ selection: { member: Game.Query.read(Member), health: Game.Query.read(Health), player: Game.Query.optional(Player) } }) }
+}, ({ queries }) => queries.members.each().map(({ data }) => ({ ...data.member.get(), health: data.health.get(), active: data.player.present })))
 
 export interface BotRun {
   readonly tuning: Tuning
@@ -421,36 +443,93 @@ export interface BotRun {
   readonly seconds: number
   /** Stand still instead of dodging, to compare. */
   readonly still?: boolean
+  /** Attack without steering, for controlled energy measurements. */
+  readonly stationaryAttack?: boolean
   /** How it plays (dodging only by default). */
   readonly style?: Style
+  readonly team?: ReadonlyArray<BuildValue>
+  /** Real HP and the actual objective, including defeat, instead of the immortal wave probe. */
+  readonly mortal?: boolean
+  readonly seed?: number
+  /** Try specials and ultimates on each decision, aimed toward the selected enemy. */
+  readonly abilities?: boolean
+  /** Rotate through surviving members every this many simulated seconds. */
+  readonly rotateEvery?: number
+  /** Skip the expensive standing-still pressure probe in large balance sweeps. */
+  readonly measurePressure?: boolean
 }
 
 export interface BotReport {
   /** Blows that cost health (burns count each tick). */
   readonly hits: number
   readonly damage: number
+  readonly healing: number
   /** What dodging needed: dashes used to dodge (not those closing in). */
   readonly dashes: number
   /** The share of the time something on screen would hit her if she stood still: how much of the run asks her to move. */
   readonly pressure: number
   /** When the challenge was won (seconds), if it was. */
   readonly clearedAt: number | null
+  readonly endedAt: number
+  readonly outcome: "cleared" | "defeated" | "timeout"
+  readonly kills: number
+  readonly specials: number
+  readonly ultimates: number
+  readonly breaks: number
+  readonly healthRemaining: number
 }
 
 /** Plays `run` with the bot (who never falls: her health is out of reach) and reports what it cost. */
 export const runBot = (run: BotRun): BotReport => {
-  const tuning = tuningWith({ ...run.tuning, characters: { swordsman: { stats: { hp: 1_000_000 } } }, waves: { enabled: run.enemies === undefined } })
+  const team = run.team ?? [{ character: "swordsman" }]
+  const tuning = tuningWith({ ...run.tuning, ...(run.mortal === true ? {} : { characters: Object.fromEntries(team.map(({ character }) => [character, { stats: { hp: 1_000_000 } }])) }), waves: { enabled: run.enemies === undefined, seed: run.seed ?? run.tuning.waves.seed } })
   const touch = botTouch()
+  let rotate = 0
+  let slot = 0
+  let members: Array<{ slot: number; health: { current: number; max: number }; active: boolean }> = []
+  const party: PartyTaps = { snapshot: () => {
+    if (run.rotateEvery === undefined || rotate <= 0 || members === undefined) return []
+    rotate = 0
+    const next = members.filter((member) => member.health.current > 0).sort((a, b) => a.slot - b.slot)
+    const active = next.findIndex((member) => member.active)
+    slot = next[(active + 1) % next.length]?.slot ?? slot
+    return [{ slot, ultimate: run.abilities === true }]
+  } }
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, []),
     pointer: Pointer.scripted([], { x: 640, y: 360 }),
     touch: touch.source,
     tuning,
-    build: { character: "swordsman" },
+    team,
+    party,
     ...(run.challenge === undefined ? {} : { challenge: run.challenge }),
     ...(run.enemyLevel === undefined ? {} : { enemyLevel: run.enemyLevel })
   })
   sim.runtime.tick(sim.setup)
+  members = sim.runtime.inspect(Members)
+  let specials = 0
+  let ultimates = 0
+  let breaks = 0
+  let kills = 0
+  let dealtHits = 0
+  let taken = 0
+  let healing = 0
+  const Measure = Game.System("Bot/Measure", {
+    events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal) }
+  }, ({ events }) => {
+    for (const cast of events.cast.all()) {
+      if (cast.faction !== "player" || cast.skill === null) continue
+      if (tuning.skills[cast.skill].energy > 0) ultimates += 1
+      else specials += 1
+    }
+    breaks += events.broke.all().length
+    healing += events.heal.all().reduce((sum, heal) => sum + heal.amount, 0)
+    for (const hit of events.hit.all()) {
+      if (hit.faction === "enemy") { if (hit.killed) kills += 1 }
+      else { dealtHits += 1; taken += hit.amount }
+    }
+  })
+  const measuredUpdate = Game.Schedule(sim.fixedUpdate, Measure)
   if (run.enemies !== undefined) {
     const enemies = run.enemies
     const Clear = Game.System("Bot/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
@@ -468,27 +547,53 @@ export const runBot = (run: BotRun): BotReport => {
   let damage = 0
   let dashes = 0
   let pressed = 0
+  const report = (elapsed: number, outcome: BotReport["outcome"]): BotReport => ({
+    hits: run.mortal === true ? dealtHits : hits, damage: Math.round(run.mortal === true ? taken : damage), dashes,
+    pressure: pressed / Math.max(1, Math.round(elapsed / engine.stepSeconds)), clearedAt: outcome === "cleared" ? elapsed : null,
+    endedAt: elapsed, outcome, kills, specials, ultimates, breaks, healing: Math.round(healing),
+    healthRemaining: members.reduce((sum, member) => sum + member.health.current, 0) / members.reduce((sum, member) => sum + member.health.max, 0)
+  })
   const total = Math.ceil(run.seconds / engine.stepSeconds)
   const style = run.style ?? dodger
   let move: Move = { direction: { x: 0, y: 0 }, dash: false, attack: false, target: null }
   for (let step = 0; step < total; step++) {
     const field = sim.runtime.inspect(ReadBattlefield)
-    if (field.player !== undefined && playOut({ ...field, player: { ...field.player, invulnerable: 0 } }, tuning, { x: 0, y: 0 }, false).danger < Infinity) pressed += 1
+    if (run.measurePressure !== false && field.player !== undefined && playOut({ ...field, player: { ...field.player, invulnerable: 0 } }, tuning, { x: 0, y: 0 }, false).danger < Infinity) pressed += 1
     // It decides every so often, holding its run in between (a dash or a swing is one press).
     move = run.still === true
-      ? { direction: { x: 0, y: 0 }, dash: false, attack: false, target: null }
-      : step % style.every === 0 ? decide(field, tuning, last, style, move.target) : { ...move, dash: false, attack: false }
+      ? { direction: { x: 0, y: 0 }, dash: false, attack: run.stationaryAttack === true && step % style.every === 0, target: null }
+      : step % style.every === 0 ? decide(field, tuning, last, style, move.target) : { ...move, dash: false, attack: false, special: false, ultimate: false }
+    if (run.abilities === true && step % style.every === 0 && field.enemies.length > 0) {
+      const target = field.enemies.find((enemy) => enemy.id === move.target) ?? field.enemies[0]!
+      const from = field.player?.at ?? target.at
+      const active = members.find((member) => member.active)
+      const character = team[active?.slot ?? 0]?.character ?? "swordsman"
+      const offset = { x: target.at.x - from.x, y: target.at.y - from.y }
+      const distance = Math.hypot(offset.x, offset.y)
+      const screen = toScreen(projection, offset)
+      const screenLength = Math.hypot(screen.x, screen.y)
+      const aimed = (slot: "special" | "ultimate"): Vec2 => {
+        const aim = skillAim(tuning.skills[tuning.characters[character].skills[slot]].effect)
+        const fraction = aim.kind === "point" ? Math.min(1, distance / aim.range) : 1
+        return screenLength === 0 ? { x: 1, y: 0 } : { x: screen.x / screenLength * fraction, y: screen.y / screenLength * fraction }
+      }
+      move = { ...move, special: true, ultimate: true, skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
+    }
+    if (run.rotateEvery !== undefined && step > 0 && step % Math.max(1, Math.round(run.rotateEvery / engine.stepSeconds)) === 0) rotate = 1
     touch.set(move)
     if (move.dash && move.closing !== true) dashes += 1
     if (move.direction.x !== 0 || move.direction.y !== 0) last = move.direction
-    sim.runtime.tick(sim.fixedUpdate)
-    if (sim.runtime.inspect(Progress) === "complete") return { hits, damage: Math.round(damage), dashes, pressure: pressed / (step + 1), clearedAt: (step + 1) * engine.stepSeconds }
+    sim.runtime.tick(measuredUpdate)
+    members = sim.runtime.inspect(Members)
     const now = sim.runtime.inspect(Vitals) ?? health
     if (now < health) {
       hits += 1
       damage += health - now
     }
     health = now
+    const result = sim.runtime.inspect(Outcome)
+    if (run.mortal === true && result !== null) return report((step + 1) * engine.stepSeconds, result.cleared ? "cleared" : "defeated")
+    if (run.mortal !== true && sim.runtime.inspect(Progress) === "complete") return report((step + 1) * engine.stepSeconds, "cleared")
   }
-  return { hits, damage: Math.round(damage), dashes, pressure: pressed / total, clearedAt: null }
+  return report(total * engine.stepSeconds, "timeout")
 }

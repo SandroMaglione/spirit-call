@@ -106,7 +106,7 @@ const Wielders = Game.Query({
 
 /**
  * Carries out queued triggered effects: heals, and skill effects cast from
- * the wielder along its aim (their damage fills energy). Effects of a
+ * the wielder along its aim (without generating energy). Effects of a
  * wielder that is gone are dropped.
  */
 export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects", {
@@ -144,7 +144,7 @@ export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects"
           from,
           at,
           direction,
-          charges: true
+          charges: false
         })
         break
       }

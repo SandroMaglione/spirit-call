@@ -57,8 +57,8 @@ It is a personal project, not a commercial one.
   shields that must be broken in a window, no enemies spawning on a timer
   regardless of how fast you kill them, and no rewards or records for
   clearing fast. These turn difficulty into a numbers requirement, which is
-  power creep. Timers that do not reward damage are fine (survive for a
-  while).
+  power creep. Surviving a timer is not a goal either: clearing a challenge
+  requires fighting, rather than escaping until time runs out.
 - **No story focus.** The game is about dungeons, swarms of enemies, and
   beating challenges. Attachment to characters comes from how they play,
   look, and feel (the excitement of getting one, as in gacha games), not
@@ -152,7 +152,7 @@ The game has two areas, and Extras for practice.
   what is harder. A **main quest** line, plus **secondary quests** that can
   be temporary and take various formats, while keeping the quest shape
   (chapters, a clear end).
-- **Hardcore**: every mode about surviving, tanky bosses that are hard to
+- **Hardcore**: combat waves, tanky bosses that are hard to
   beat in any case, and the more grinding challenges. These are the goals you
   are aiming to beat, where preparation and skill are tested fully. It is
   organized in **tiers** of mostly the same kind of content, each harder in
@@ -211,7 +211,7 @@ Decided so far (the rest is in the open questions):
   the best place to earn is at the edge of what you can beat: rising
   difficulty is the reason to replay, and a skilled player taking a
   weaker team into harder content earns more. A loss pays its share of the
-  progress made (waves cleared, time survived), up to half of a clear, so
+  progress made (waves cleared), up to half of a clear, so
   trying is never wasted. Nothing pays for kills or for speed. No stamina,
   no daily tasks, no weekly caps: play as much or as little as you like.
 - **Crystals come from milestones only**, never from repeating content: a

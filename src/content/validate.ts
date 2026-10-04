@@ -172,6 +172,9 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
 
   const { progression } = tuning
+  positive(problems, "energy", tuning.energy)
+  if (!(tuning.energy.targetCap >= 1 && tuning.energy.targetCap <= 2)) problems.push("energy: targetCap must be between 1 and 2")
+  if (!(tuning.team.benchEnergyShare >= 0 && tuning.team.benchEnergyShare <= 1)) problems.push("team: benchEnergyShare must be between 0 and 1")
   checkCurve(problems, "account levels", progression.account.curve)
   checkCurve(problems, "character levels", progression.character.curve)
   checkCurve(problems, "weapon level costs", progression.weapon.cost)
@@ -289,8 +292,6 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (challenge.objective.kind === "clearWaves") {
       if (endless !== null) problems.push(`${where}: clearing every wave can never happen with endless waves`)
       if (scripted.length === 0) problems.push(`${where}: nothing to clear (no waves)`)
-    } else if (challenge.objective.kind === "survive") {
-      positive(problems, where, { seconds: challenge.objective.seconds })
     } else if (challenge.objective.kind === "endure") {
       if (endless === null) problems.push(`${where}: lasting until the team falls needs endless waves`)
       if (!(Number.isInteger(challenge.objective.goal) && challenge.objective.goal >= 1)) problems.push(`${where}: its goal must be a whole wave from 1`)

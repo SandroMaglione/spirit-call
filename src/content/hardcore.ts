@@ -1,7 +1,7 @@
 /**
  * Hardcore: the goals to aim for, where preparation and skill are tested
  * fully (see docs/vision.md, "Structure"). Each track is one kind of
- * content (surviving, a tanky boss) in tiers, each harder than the last;
+ * content (mixed waves, a tanky boss) in tiers, each harder than the last;
  * lower tiers are within reach of a low-level team. A track opens at an
  * account level, and each tier once the one before it is cleared.
  *
@@ -46,19 +46,19 @@ const tier = (enemyLevel: number, experience: number, currencies: Amounts): Tier
 
 /** Every hardcore track, by id. */
 export const tracks = {
-  /** Surviving ever-growing waves. */
+  /** Clearing mixed formations with elite leaders. */
   gauntlet: track({
     name: "Gauntlet",
     challenge: "endless",
     level: 3,
-    tiers: [tier(6, 100, { crystals: 20, gold: 1500 }), tier(12, 150, { crystals: 30, gold: 2400 }), tier(18, 200, { crystals: 40, gold: 3300 })]
+    tiers: [tier(6, 100, { crystals: 20, gold: 1500 }), tier(20, 150, { crystals: 30, gold: 2400 }), tier(32, 200, { crystals: 40, gold: 3300 })]
   }),
   /** The brute and its guards, tougher every tier. */
   siege: track({
     name: "Brute Siege",
     challenge: "brute",
     level: 4,
-    tiers: [tier(8, 120, { crystals: 20, gold: 1800 }), tier(14, 180, { crystals: 30, gold: 2700 }), tier(20, 240, { crystals: 40, gold: 3600 })]
+    tiers: [tier(8, 120, { crystals: 20, gold: 1800 }), tier(24, 180, { crystals: 30, gold: 2700 }), tier(36, 240, { crystals: 40, gold: 3600 })]
   }),
   /** No end: every wave stronger than the last, until the team falls; a tier is cleared at its goal wave. */
   untilFall: track({
@@ -68,8 +68,8 @@ export const tracks = {
     tiers: [
       tier(3, 120, { crystals: 20, gold: 1600 }),
       tier(10, 180, { crystals: 30, gold: 2600 }),
-      tier(18, 240, { crystals: 40, gold: 3600 }),
-      tier(26, 300, { crystals: 50, gold: 4600 })
+      tier(22, 240, { crystals: 40, gold: 3600 }),
+      tier(34, 300, { crystals: 50, gold: 4600 })
     ]
   }),
   /** The citadel's warlord and her brutes, the last test of the main line. */
@@ -77,7 +77,7 @@ export const tracks = {
     name: "The Keep",
     challenge: "warlord",
     level: 9,
-    tiers: [tier(20, 260, { crystals: 30, gold: 4000 }), tier(26, 320, { crystals: 40, gold: 5000 }), tier(32, 380, { crystals: 50, gold: 6000 })]
+    tiers: [tier(28, 260, { crystals: 30, gold: 4000 }), tier(34, 320, { crystals: 40, gold: 5000 }), tier(40, 380, { crystals: 50, gold: 6000 })]
   })
 }
 

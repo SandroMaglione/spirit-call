@@ -16,7 +16,7 @@ describe("content", () => {
       attacks: { ...defaultTuning.attacks, gun: { ...defaultTuning.attacks.gun, combo: [] } },
       characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman, weapon: "executioner" } },
       skills: { ...defaultTuning.skills, flareJump: { ...defaultTuning.skills.flareJump, cooldown: 0 } },
-      challenges: { ...defaultTuning.challenges, endless: { ...defaultTuning.challenges.endless, objective: clearWaves() } }
+      challenges: { ...defaultTuning.challenges, endless: { ...defaultTuning.challenges.endless, objective: clearWaves(), waves: { ...defaultTuning.challenges.endless.waves, endless: { baseBudget: 6, budgetPerWave: 2 } } } }
     }
     expect(validateContent(broken)).toEqual([
       "attack gun: the combo needs at least one move",

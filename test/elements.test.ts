@@ -139,12 +139,12 @@ describe("the grenade's fire", () => {
     expect(after!.health).toBeCloseTo(hit - burns * (atk * rules.burning.power / 100) * rules.burning.tick, 6)
   })
 
-  it("burns fill the player's energy", () => {
+  it("burn ticks do not refill the grenade's action budget", () => {
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const before = run.world().player.energy
     run.step(steps(1))
-    expect(run.world().player.energy).toBeGreaterThan(before)
+    expect(run.world().player.energy).toBe(before)
   })
 })
 

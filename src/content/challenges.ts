@@ -14,8 +14,6 @@ import type { EnemyKind } from "./enemies.ts"
 export type Objective =
   /** Defeat every wave (the plan must end: no endless waves). */
   | { readonly kind: "clearWaves" }
-  /** Stay alive this long while waves keep coming. */
-  | { readonly kind: "survive"; readonly seconds: number }
   /**
    * Last until the team falls (the plan must not end: endless waves): the
    * enemies come `levelPerWave` levels stronger each wave (over the run's
@@ -82,7 +80,6 @@ export interface ChallengeSpec {
 }
 
 export const clearWaves = (): Objective => ({ kind: "clearWaves" })
-export const survive = (seconds: number): Objective => ({ kind: "survive", seconds })
 export const endure = (goal: number, levelPerWave: number): Objective => ({ kind: "endure", goal, levelPerWave })
 const challenge = (spec: ChallengeSpec): ChallengeSpec => spec
 
@@ -149,11 +146,11 @@ export const challenges = {
       endless: null
     }
   }),
-  /** Every enemy type, then ever-growing random waves. */
+  /** Mixed waves with a final elite formation; also used by the Gauntlet tiers. */
   endless: challenge({
-    name: "Endless",
-    description: "Survive three and a half minutes of ever-growing waves.",
-    objective: survive(210),
+    name: "The Gauntlet",
+    description: "Clear eight mixed waves, ending with an elite formation.",
+    objective: clearWaves(),
     arena: "kilnworks",
     waves: {
       scripted: [
@@ -161,9 +158,12 @@ export const challenges = {
         ["charger", "shooter", "chaser"],
         ["guardian", "sniper", "chaser", "chaser"],
         [elite("brute", "fire"), "charger", "swarmer", "shooter"],
-        ["guardian", elite("sniper", "thunder"), "swarmer", elite("chaser", "water"), "chaser", "brute"]
+        ["guardian", elite("sniper", "thunder"), "swarmer", elite("chaser", "water"), "chaser", "brute"],
+        ["warden", "stalker", "shooter", "chaser", "swarmer"],
+        ["juggernaut", "volatile", "volatile", elite("shooter", "water"), "chaser"],
+        [elite("brute", "fire"), elite("guardian", "thunder"), "warden", "stalker", "swarmer"]
       ],
-      endless: { baseBudget: 6, budgetPerWave: 2 }
+      endless: null
     }
   }),
   /** Ranged enemies spread across the arena with swarms between them: reach many at once. */
@@ -229,20 +229,25 @@ export const challenges = {
       endless: null
     }
   }),
-  /** A long stand in the open: every kind, then ever-growing waves. */
+  /** Fight through the obelisks to an armored final formation. */
   sandstorm: challenge({
     name: "Sandstorm",
-    description: "Survive three and a half minutes among the obelisks.",
-    objective: survive(210),
+    description: "Clear nine waves among the obelisks, ending with armored foes and their support.",
+    objective: clearWaves(),
     arena: "necropolis",
     waves: {
       scripted: [
         ["chaser", "chaser", "swarmer"],
         ["shooter", "charger", "swarmer"],
         ["guardian", "sniper", "chaser", "chaser"],
-        ["brute", "swarmer", "swarmer", "shooter"]
+        ["brute", "swarmer", "swarmer", "shooter"],
+        ["stalker", "stalker", "shooter", "chaser"],
+        [elite("guardian", "water"), "sniper", "chaser", "swarmer"],
+        ["juggernaut", "galeCaster", "chaser", "chaser"],
+        ["warden", "brute", "volatile", "volatile", "shooter"],
+        [elite("brute", "thunder"), "juggernaut", "warden", "stalker", "swarmer"]
       ],
-      endless: { baseBudget: 7, budgetPerWave: 2 }
+      endless: null
     }
   }),
   /** Close quarters: guardians and skirmishers around a cloister of low walls. */
@@ -358,19 +363,24 @@ export const challenges = {
     arena: "courtyard",
     waves: { scripted: [], endless: null }
   }),
-  /** Packs at night: swarms in a cloister, then ever-growing waves. */
+  /** Packs at night: swarms in a cloister, ending with their elite leaders. */
   swarmNight: challenge({
     name: "Night of Packs",
-    description: "Survive three minutes of packs in the monastery.",
-    objective: survive(180),
+    description: "Clear eight waves of packs in the monastery, ending with their elite leaders.",
+    objective: clearWaves(),
     arena: "monastery",
     waves: {
       scripted: [
         ["swarmer", "swarmer"],
         ["swarmer", "chaser", "chaser"],
-        ["swarmer", "swarmer", "swarmer"]
+        ["swarmer", "swarmer", "swarmer"],
+        ["chaser", "chaser", "swarmer", "swarmer"],
+        [elite("chaser", "water"), "swarmer", "swarmer", "shooter"],
+        ["charger", "stalker", "swarmer", "swarmer"],
+        [elite("swarmer", "fire"), "chaser", "chaser", "guardian"],
+        [elite("chaser", "thunder"), elite("swarmer", "water"), "charger", "swarmer", "swarmer"]
       ],
-      endless: { baseBudget: 5, budgetPerWave: 2 }
+      endless: null
     }
   }),
   /** Snipers and thunder over the water: the soaked are struck hardest. */

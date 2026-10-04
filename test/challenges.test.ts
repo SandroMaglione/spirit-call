@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ChallengeSpec } from "../src/content/challenges.ts"
-import { clearWaves, endure, survive } from "../src/content/challenges.ts"
+import { clearWaves, endure } from "../src/content/challenges.ts"
 import { objectiveProgress, runResultOf, waveLevelBonus } from "../src/features/challenges.ts"
 import { Enemy, Game, Invulnerable, Player, RunResult, Waves } from "../src/schema.ts"
 import { start } from "./helpers.ts"
@@ -56,19 +56,15 @@ describe("challenges", () => {
     expect(run.result()).toMatchObject({ cleared: true, challenge: "swarm", wave: 2, progress: 1, team: ["swordsman"], reactions: [] })
   })
 
-  it("measures how far a run got: the share of waves defeated, or of the time survived", () => {
+  it("measures how far a run got by waves defeated", () => {
     const waves = defaultTuning.challenges.swarm
     const total = waves.waves.scripted.length
-    const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [], front: 0 }, { time: 30, endedAt: null })
+    const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [], front: 0 })
     expect(at(0, "break")).toBe(0)
     expect(at(1, "fighting")).toBe(0)
     expect(at(1, "break")).toBeCloseTo(1 / total)
     expect(at(3, "spawning")).toBeCloseTo(2 / total)
     expect(at(3, "complete")).toBe(1)
-    const endless = defaultTuning.challenges.endless
-    const seconds = endless.objective.kind === "survive" ? endless.objective.seconds : 0
-    expect(objectiveProgress(endless, { number: 2, phase: "fighting", timer: 0, queue: [], front: 0 }, { time: seconds / 4, endedAt: null })).toBeCloseTo(0.25)
-    expect(objectiveProgress(endless, { number: 9, phase: "fighting", timer: 0, queue: [], front: 0 }, { time: seconds * 2, endedAt: null })).toBe(1)
   })
 
   it("clear-waves: not cleared while enemies of the last wave are alive", () => {
@@ -78,21 +74,26 @@ describe("challenges", () => {
     expect(run.flow()).toBe("Playing")
   })
 
-  it("survive: cleared once the time is up, while waves keep coming", () => {
-    const run = play(withChallenge({ objective: survive(3), waves: { scripted: [], endless: { baseBudget: 2, budgetPerWave: 1 } } }))
-    run.tick(steps(3) - 5, false)
+  it.each(["endless", "sandstorm", "swarmNight"] as const)("%s requires fighting: waiting neither clears it nor earns progress", (id) => {
+    const spec = defaultTuning.challenges[id]
+    expect(spec.objective.kind).toBe("clearWaves")
+    expect(spec.waves.endless).toBeNull()
+    const run = play(withChallenge(spec))
+    run.tick(steps(10), false)
     expect(run.flow()).toBe("Playing")
-    run.tick(10, false)
+    expect(objectiveProgress(spec, run.waves())).toBe(0)
+    run.tick(steps(45), true)
     expect(run.flow()).toBe("Cleared")
+    expect(run.result()?.progress).toBe(1)
   })
 
   it("restarts from the results screen into a fresh run of the same challenge", () => {
-    const tuning = withChallenge({ objective: survive(1), waves: { scripted: [["chaser"]], endless: null } })
-    const restartAt = steps(1 + tuning.flow.restartDelay) + 10
+    const tuning = withChallenge({ objective: clearWaves(), waves: { scripted: [["chaser"]], endless: null } })
+    const restartAt = steps(3 + tuning.flow.restartDelay) + 10
     const run = play(tuning, { keys: [{ frame: restartAt, press: ["restart"], release: ["restart"] }] })
-    run.tick(steps(1) + 5, false)
+    run.tick(steps(3), true)
     expect(run.flow()).toBe("Cleared")
-    run.tick(restartAt - steps(1), false)
+    run.tick(restartAt - steps(3) + 1, false)
     expect(run.flow()).toBe("Playing")
     expect(run.waves().number).toBe(0)
     expect(run.result()).toBeNull()
@@ -125,6 +126,6 @@ describe("lasting until the team falls", () => {
     expect(waveLevelBonus(endure(10, 1), 1)).toBe(0)
     expect(waveLevelBonus(endure(10, 1), 4)).toBe(3)
     expect(waveLevelBonus(endure(10, 0.5), 5)).toBe(2)
-    expect(waveLevelBonus(survive(60), 9)).toBe(0)
+    expect(waveLevelBonus(clearWaves(), 9)).toBe(0)
   })
 })

@@ -41,6 +41,16 @@ jobs:
         run: pnpm install --no-frozen-lockfile
       - name: Check
         run: pnpm check
+      - name: Balance regression audit
+        timeout-minutes: 15
+        run: pnpm balance --compare test/balance-baseline.json --output balance-report.json
+      - name: Upload balance measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balance-${{ github.run_id }}
+          path: balance-report.json
+          if-no-files-found: ignore
       - name: Install deploy tooling
         run: pnpm --dir deploy install --frozen-lockfile
       - name: Check deploy tooling

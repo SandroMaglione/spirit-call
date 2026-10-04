@@ -11,8 +11,8 @@
  * kind of effect is one more system here, and anything that emits `Cast`
  * (a future enemy caster) gets the same effects.
  *
- * Energy fills from damage the player deals (`ApplyDamage`), except damage
- * from skills that cost energy.
+ * Landed attacks and specials fill energy from a shared action budget
+ * (`ApplyDamage`). Ultimates, burns, pools, and passive effects do not.
  */
 import { bySlot, lob } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
@@ -162,7 +162,8 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
         from,
         at: input.at,
         direction: normalizeOr(sub(input.at, from), data.aim.get()),
-        charges: spec.energy === 0
+        charges: spec.energy === 0,
+        energyAction: spec.energy === 0 ? { key: `${entity.id.value}/${resources.time.get().step}/special`, base: tuning.energy.special } : undefined
       })
       return { skill, cooldown: spec.cooldown }
     }))
@@ -176,6 +177,7 @@ export const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
     damage: damageDealt(cast.atk, effect.power),
     knockback: effect.knockback,
     charges: cast.charges,
+    energyAction: cast.energyAction,
     hitStop: effect.hitStop,
     heavy: effect.heavy,
     source: { attacker: cast.caster },

@@ -90,8 +90,16 @@ export interface SkillSlotValue {
 export type SkillsValue = { readonly [Slot in SkillSlot]: SkillSlotValue }
 export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
 
-/** Energy for skills that cost it (ultimates), filled by dealing damage. */
+/** Energy for skills that cost it (ultimates), filled by landed attacks and specials. */
 export const Energy = Descriptor.Component<{ readonly current: number }>()("Shooter/Energy")
+
+/** Landed targets and energy already awarded by each attack or special. */
+export const EnergyLedger = Descriptor.Resource<Readonly<Record<string, { readonly targets: ReadonlyArray<number>; readonly gained: number; readonly expires: number }>>>()("Shooter/EnergyLedger")
+
+export interface EnergyAction {
+  readonly key: string
+  readonly base: number
+}
 
 /**
  * A lobbed skill (the grenade, a barrage's shell): flies from `from` to
@@ -173,6 +181,8 @@ export interface DamageSource {
  * when it does not apply; `blow()` fills those in.
  */
 export interface Blow {
+  /** Shared by all projectiles and targets of an attack or special. */
+  readonly energyAction?: EnergyAction | undefined
   /** Damage before the attacker's passive bonuses and the target's DEF. */
   readonly damage: number
   /** Push given to the target, as an initial speed that decays (see `Tuning.knockback`). */
@@ -614,6 +624,7 @@ export const Zap = Descriptor.Event<{ readonly path: ReadonlyArray<Vec2>; readon
  * `features/skills.ts`), so the same event serves any caster.
  */
 export interface CastValue {
+  readonly energyAction?: EnergyAction | undefined
   readonly caster: Entity.Handle<typeof Root, typeof Position>
   readonly faction: Faction
   /** The caster's ATK: the effect deals its `power` as a percentage of it. */
@@ -827,7 +838,7 @@ export const Run = Descriptor.Resource<RunValue>()("Shooter/Run")
 export interface RunResultValue {
   readonly cleared: boolean
   readonly challenge: ChallengeId
-  /** How far toward the objective, from 0 to 1 (1 when cleared): the share of waves cleared, or of the time survived. */
+  /** How far toward the objective, from 0 to 1 (1 when cleared): the share of waves cleared. */
   readonly progress: number
   /** The wave reached. */
   readonly wave: number
@@ -942,6 +953,7 @@ export const Game = Schema.bind(
       Viewport,
       Camera,
       Stats,
+      EnergyLedger,
       Waves,
       Rng,
       Run,

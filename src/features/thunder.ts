@@ -167,7 +167,7 @@ const strike = (
       damageTo(emit, body, {
         faction: null,
         direction: { x: 0, y: 0 },
-        blow: blow({ damage: (atk * tuning.elements.thunder.puddlePower) / 100, knockback: 0, charges: struck.blow.charges, element: { id: "thunder", atk } })
+        blow: blow({ damage: (atk * tuning.elements.thunder.puddlePower) / 100, knockback: 0, charges: struck.blow.charges, energyAction: struck.blow.energyAction, element: { id: "thunder", atk } })
       })
       emit.zap.emit({ path: [pool.center, body.at], heal: false })
     }

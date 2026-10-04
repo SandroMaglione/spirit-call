@@ -98,7 +98,7 @@ describe("enemy practice", () => {
   })
 
   it("goes on until the team falls", () => {
-    expect(objectiveMet(defaultTuning.challenges.practice.objective, { ...initialWaves(defaultTuning), number: 50, phase: "complete" }, { time: 999, endedAt: null })).toBe(false)
+    expect(objectiveMet(defaultTuning.challenges.practice.objective, { ...initialWaves(defaultTuning), number: 50, phase: "complete" })).toBe(false)
   })
 
   it("brings the picks together, and one that falls comes back a few seconds later", () => {
