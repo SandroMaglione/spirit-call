@@ -1,0 +1,133 @@
+{
+  "title": "Ochre necropolis study",
+  "style": "desert",
+  "batch": "arena-prop-study",
+  "base_kit": "ochre-necropolis",
+  "palette": {
+    "stone": "B3966D",
+    "light": "C7AC82",
+    "edge": "E0C89C",
+    "dark": "786652",
+    "accent": "62A9A0",
+    "metal": "587A78",
+    "wood": "826447",
+    "earth": "BDA478",
+    "green": "7A8860",
+    "warm": "D4B063",
+    "snow": "D1BD99",
+    "cloth": "A06959",
+    "wood-light": "9F7A57",
+    "wood-dark": "5B4632",
+    "metal-light": "C7AC82",
+    "rope": "BCAA82",
+    "sail": "CDC8B1",
+    "fish": "C7AC82"
+  },
+  "assets": [
+    {
+      "id": "offering-bowl",
+      "title": "Compact offering bowl",
+      "recipe": "study-offering-bowl",
+      "group": "small"
+    },
+    {
+      "id": "canopic-jar",
+      "title": "Lidded canopic jar",
+      "recipe": "study-canopic-jar",
+      "group": "small"
+    },
+    {
+      "id": "pottery-shards",
+      "title": "Pottery shards on the ground",
+      "recipe": "study-pottery-shards",
+      "group": "small"
+    },
+    {
+      "id": "folded-linen",
+      "title": "Folded and tied burial linen",
+      "recipe": "study-folded-linen",
+      "group": "small"
+    },
+    {
+      "id": "glyph-tablet",
+      "title": "Inlaid stone tablet",
+      "recipe": "study-glyph-tablet",
+      "group": "small"
+    },
+    {
+      "id": "handled-amphora",
+      "title": "Amphora with attached handles",
+      "recipe": "study-handled-amphora",
+      "group": "working"
+    },
+    {
+      "id": "offering-table",
+      "title": "Low offering table and vessels",
+      "recipe": "study-offering-table",
+      "group": "working"
+    },
+    {
+      "id": "wing-guardian",
+      "title": "Symmetric folded-wing guardian",
+      "recipe": "study-wing-guardian",
+      "group": "working"
+    },
+    {
+      "id": "fitted-sarcophagus",
+      "title": "Fitted sarcophagus and lid relief",
+      "recipe": "study-fitted-sarcophagus",
+      "group": "working"
+    },
+    {
+      "id": "canopic-trio",
+      "title": "Three jars on a grounded tray",
+      "recipe": "study-canopic-trio",
+      "group": "working"
+    },
+    {
+      "id": "tomb-gateway",
+      "title": "Bonded sandstone tomb gateway",
+      "recipe": "study-tomb-gateway",
+      "group": "large"
+    },
+    {
+      "id": "burial-dais",
+      "title": "Supported burial dais",
+      "recipe": "study-burial-dais",
+      "group": "large"
+    },
+    {
+      "id": "sun-altar",
+      "title": "Sun disc with pier and spokes",
+      "recipe": "study-sun-altar",
+      "group": "large"
+    },
+    {
+      "id": "offering-awning",
+      "title": "Braced offering awning",
+      "recipe": "study-offering-awning",
+      "group": "large"
+    }
+  ],
+  "player_height_m": 0.5803955393237317,
+  "scope": "Reviewable art study with supported perimeter assemblies.",
+  "changes": [
+    "Reduced urn, offering-table and burial-goods proportions; fitted the sarcophagus lid.",
+    "Rebuilt the guardian with mirrored folded wings, attached feather relief and a carved face.",
+    "Added small ritual details, a bonded tomb gateway, burial dais, supported sun altar and offering awning."
+  ],
+  "comparisons": [
+    {
+      "original": "wing-statue",
+      "study": "wing-guardian"
+    },
+    {
+      "original": "urn-tall",
+      "study": "handled-amphora"
+    },
+    {
+      "original": "sarcophagus",
+      "study": "fitted-sarcophagus"
+    }
+  ]
+}
