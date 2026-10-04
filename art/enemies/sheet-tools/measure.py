@@ -30,6 +30,8 @@ def surface(image, color='all'):
         'fire': (r > 210) & (r-b > 55) & (g > 105),
         'purple': (b-r > 8) & (b-g > 7) & (r < 180),
         'all': (a.min(axis=2) < 153) | ((r-b > 18) & (g-b > 7)) | ((b-r > 20) & (r < 172)),
+        'robot': (a.min(axis=2) < 185) | ((b-r > 20) & (b-g > 15) & (r < 230)) | ((r-b > 35) & (g-b > 25)),
+        'armor': (a.min(axis=2) < 185) | ((r-b > 18) & (g-b > 7)),
     }
     return masks[color]
 
@@ -52,7 +54,9 @@ def measure(kind):
             'center_pixels':config['center'], 'regions_pixels':config['parts'], 'parts':{},
             'palette':{}, 'eyes':[], 'hero':{'turn':35,'elevation':25}}
     if (here / 'sheet.json').exists():
-        data['hero'] = json.loads((here / 'sheet.json').read_text()).get('hero',data['hero'])
+        previous=json.loads((here / 'sheet.json').read_text())
+        data['hero'] = previous.get('hero',data['hero'])
+        if 'cameras' in previous:data['cameras']=previous['cameras']
     images = {}
     for view, box in config['crops'].items():
         images[view] = sheet.crop(box)

@@ -37,26 +37,27 @@ CONFIGS = {
  'sniper': {
   'meters_per_pixel':1.25/212,
   'ground':{'front':650,'back':650,'right':650,'left':650},
-  'center':{'front':83,'back':338,'right':242,'left':466},
+  'center':{'front':79,'back':338,'right':242,'left':466},
   'crops':{'front':[35,431,126,658],'right':[143,431,293,658],'back':[302,431,385,658],'left':[411,431,553,658],'top':[563,431,642,658],'bottom':[650,431,735,658],'hero':[426,22,944,360]},
   'swatches':{'violet':[1046,90],'purple':[1131,90],'charcoal':[1212,90],'metal':[1294,90],'eye':[1377,90]},
   'parts':{
-   'body':part('all',front=r(60,487,108,568),back=r(314,485,363,565),right=r(216,473,271,530),left=r(440,473,494,535)),
-   'head':part('all',front=r(69,479,98,526),right=[(196,477),(216,466),(242,477),(254,492),(236,509),(211,499)]),
-   'crest':part('purple',front=[(57,441),(73,480),(69,504),(61,475)],right=[(224,443),(259,470),(252,483),(239,470)]),
-   'centercrest':part('purple',front=[(89,447),(100,440),(96,481),(86,494)],right=[(236,443),(262,478),(249,477)]),
-   'thigh':part('all',front=[(54,529),(72,524),(76,554),(63,584),(49,583)],right=[(242,526),(273,510),(271,540),(243,574),(225,575)]),
+   'body':part('all',front=[(68,508),(90,508),(96,527),(92,541),(70,541),(64,528)],back=r(322,494,355,543),right=[(222,491),(238,492),(247,509),(253,527),(251,537),(233,540),(225,519)]),
+   'head':part('all',front=[(79,482),(97,507),(90,550),(85,576),(77,579),(69,557),(62,509)],right=[(222,476),(202,478),(186,485),(178,504),(138,539),(140,543),(202,511),(219,501),(237,489)]),
+   'crest':part('all',front=[(61,441),(66,466),(74,480),(70,497),(61,490),(56,471),(59,450)],right=r(185,440,248,486)),
+   'centercrest':part('all',front=[(79,481),(89,490),(84,503),(72,490)],right=[(255,475),(231,480),(228,495),(244,490)]),
+   'thigh':part('all',front=[(57,535),(69,536),(63,557),(47,580),(38,579),(42,557)],right=[(243,536),(271,535),(258,556),(211,578),(197,583),(210,556),(229,541)]),
+   'shoulder':part('all',front=[(52,486),(64,498),(64,520),(54,530),(47,509)],right=[(217,483),(230,487),(232,514),(225,526),(213,510),(203,495)]),
    'foot':part('dark',front=r(39,629,62,651),right=r(218,628,251,651)),
   },
-  'landmarks':{'front':{'hipL':[67,557],'kneeL':[52,594],'ankleL':[48,638],'hipR':[99,557],'kneeR':[108,594],'ankleR':[112,638]},'right':{'hip':[252,549],'knee':[227,577],'ankle':[242,638],'barrel_root':[203,491],'barrel_tip':[145,543],'eye':[219,481]}},
+  'landmarks':{'front':{'hipL':[62,544],'kneeL':[44,581],'hockL':[43,594],'ankleL':[42,637],'hipR':[96,544],'kneeR':[114,581],'hockR':[115,594],'ankleR':[116,637]},'right':{'hip':[243,538],'knee':[201,581],'hock':[240,592],'ankle':[215,638],'barrel_root':[197,490],'barrel_tip':[140,541],'eye':[197,489]}},
  },
  'guardian': {
   'meters_per_pixel':1.3/197,
   'ground':{'front':457,'back':457,'right':457,'left':457},
-  'center':{'front':127,'back':645,'right':390,'left':895},
+  'center':{'front':130,'back':645,'right':390,'left':895},
   'crops':{'front':[27,258,253,466],'right':[278,258,505,466],'back':[531,258,758,466],'left':[783,258,1009,466],'top':[1038,265,1258,466],'bottom':[1289,260,1512,464],'hero':[1220,14,1470,217]},
   'swatches':{'dark':[391,76],'steel':[458,76],'trim':[526,76],'gold':[598,76],'wood':[666,76],'light':[735,76]},
-  'eye_regions':[r(111,312,125,341),r(132,312,146,341)],
+  'eye_regions':[r(120,318,128,330),r(134,317,145,329)],
   'parts':{
    'body':part('all',front=r(98,335,151,405),back=r(610,334,682,407),right=r(363,335,410,406),left=r(871,335,920,406)),
    'helmet':part('all',front=[(109,302),(124,294),(147,301),(159,320),(151,348),(131,370),(111,352),(102,326)],back=r(620,296,668,344),right=r(356,296,403,352),left=r(884,296,936,352)),
@@ -64,8 +65,8 @@ CONFIGS = {
    'shoulder':part('all',front=[(90,321),(111,321),(108,353),(86,374),(78,361)],right=r(358,324,397,359)),
    'arm':part('all',front=r(81,359,107,392),right=r(357,355,388,395)),
    'hand':part('dark',front=r(69,382,97,406),right=r(348,385,371,408)),
-   'thigh':part('all',front=r(94,399,119,437),back=r(608,399,637,438),right=r(365,400,392,434)),
-   'foot':part('dark',front=r(76,431,115,455),right=r(363,429,400,458)),
+   'thigh':part('all',back=r(654,398,686,436),right=r(373,400,406,434)),
+   'foot':part('all',back=r(655,430,692,457),right=r(365,429,407,457)),
    'mace':part('all',front=r(32,335,82,381),right=r(300,335,347,381)),
   },
   'landmarks':{'front':{'shield':[[143,331],[218,321],[236,451],[153,459]],'shield_inner':[[153,340],[210,331],[225,442],[160,449]],'shield_diamond':[[183,367],[193,386],[186,407],[176,389]],'handle_start':[80,397],'handle_end':[59,365]},'right':{'shield_front':[350,390],'shield_back':[367,390]}},
@@ -79,7 +80,14 @@ def main(kind, source):
  shutil.copyfile(source,here/'reference/sheet.png')
  cfg=CONFIGS[kind] | {'blend':f'{kind}-model.blend','background':'#DFDFE8','ortho':1.9 if kind=='sniper' else 1.7,
   'lights':{'sun':[1.6,[1,.95,.9]],'fill':[.45,[.8,.88,1]],'rim':[.35,[1,1,1]]},
-  'sweep':{'turns':[20,60,10],'elevations':[15,25,35]}}
+  'sweep':{'turns':[-80,-30,10] if kind=='sniper' else [20,60,10],'elevations':[15,25,35]}}
+ if kind=='guardian':cfg['view_sweeps']={'right':[25,45,65],'left':[-65,-45,-25]}
+ if kind=='sniper':
+  for entry in cfg['parts'].values():
+   if entry['mask']=='all':entry['mask']='robot'
+ if kind=='guardian':
+  for entry in cfg['parts'].values():
+   if entry['mask']=='all':entry['mask']='armor'
  (here/'spirit.json').write_text(json.dumps(cfg,indent=2)+'\n')
  (here/'sheet.py').write_text('"""Re-measure the preserved sheet."""\nimport sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[2]/"sheet-tools"))\nfrom measure import measure\nmeasure("'+kind+'")\n')
  measure(kind)

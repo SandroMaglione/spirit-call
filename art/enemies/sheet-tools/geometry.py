@@ -196,19 +196,19 @@ class Model:
         self.ellipsoid('MouthRecess',(cx,ytip+.19,cz),(rx*gap*.77,.012,rz*gap*.77),inner_color,segments,4)
         return cx,ytip,cz,rx,rz,obj
 
-    def eyes(self,body,background='#303341',core='#FFD18A'):
+    def eyes(self,body,background='#303341',core='#FFD18A',socket_scale=1.65,center_x=0):
         eyes=self.sheet['eyes']
         if len(eyes)!=2:raise ValueError(f'Expected two measured eye cores: {eyes}')
         x=float(np.mean([abs(e['x']) for e in eyes]));z=float(np.mean([e['z'] for e in eyes]))
         rx=float(np.mean([e['width'] for e in eyes]))/2;rz=float(np.mean([e['height'] for e in eyes]))/2
         tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
         for sign,side in ((-1,'L'),(1,'R')):
-            for layer,scale,color in (('EyeSocket',1.65,background),('Eye',1,core)):
+            for layer,scale,color in (('EyeSocket',socket_scale,background),('Eye',1,core)):
                 verts=[];faces=[];n=12
                 for ring in (0,.5,1):
                     for k in range(1 if ring==0 else n):
                         a=2*math.pi*k/n
-                        pos=Vector((sign*x+rx*scale*math.cos(a)*ring,-3,z+rz*scale*math.sin(a)*ring))
+                        pos=Vector((center_x+sign*x+rx*scale*math.cos(a)*ring,-3,z+rz*scale*math.sin(a)*ring))
                         hit,normal,_,_=tree.ray_cast(pos,Vector((0,1,0)))
                         if hit is None:raise ValueError(f'{layer} missed surface')
                         verts.append(hit+normal*(.002 if layer=='EyeSocket' else .004))

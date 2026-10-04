@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enemy model review</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #dedee7; color: #252532; font: 16px system-ui, sans-serif; }
+  main { max-width: 1400px; margin: auto; padding: 24px; }
+  h1 { margin: 0 0 8px; font-size: 28px; }
+  p { margin: 6px 0 16px; }
+  nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  button { border: 1px solid #9a99ac; border-radius: 6px; padding: 10px 14px; background: #f5f5fa; color: inherit; font: inherit; cursor: pointer; }
+  button[aria-pressed=true] { background: #454158; color: white; }
+  .views button { padding: 8px 12px; font-size: 14px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  section { min-width: 0; background: #e6e6ee; border: 1px solid #bdbccb; border-radius: 8px; overflow: hidden; }
+  section h2 { font-size: 16px; padding: 14px; margin: 0; }
+  #stage { height: 460px; touch-action: none; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  #reference { display: block; width: 100%; height: 460px; object-fit: contain; padding: 24px; }
+  #stats { padding: 12px 14px; font-size: 14px; }
+  .review { width: 100%; display: block; margin-top: 20px; }
+  .links { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 18px; }
+  a { color: #49406c; }
+  @media(max-width: 700px) { main { padding: 16px; } .pair { grid-template-columns: 1fr; } #stage { height: 380px; } #reference { height: 220px; } .pair section:first-child { order: 2; } }
+</style>
+<main>
+  <h1>Enemy model review</h1>
+  <p>Static models before animation. Drag to orbit, pinch or scroll to zoom.</p>
+  <nav aria-label="Enemy">
+    <button data-kind="charger">Firebomber</button><button data-kind="sniper">Sniper</button><button data-kind="guardian">Guardian</button>
+  </nav>
+  <nav class="views" aria-label="Camera">
+    <button data-view="hero">Sheet hero</button><button data-view="front">Front</button><button data-view="right">Right</button><button data-view="back">Back</button><button data-view="left">Left</button><button data-view="top">Top</button><button data-view="game">Game camera</button>
+  </nav>
+  <div class="pair">
+    <section><h2>Reference sheet</h2><img id="reference" alt="Reference view"></section>
+    <section><h2 id="name">Model</h2><div id="stage"></div><div id="stats" role="status">Loading…</div></section>
+  </div>
+  <div class="links"><a id="blend">Blender source</a><a id="glb">Static GLB</a><a id="overlays">Silhouette overlays</a></div>
+  <img id="comparison" class="review" alt="All reference views beside the rendered model">
+</main>
+<script type="module">
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  const stage=document.querySelector('#stage'), stats=document.querySelector('#stats');
+  const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setClearColor('#dedee7'); stage.append(renderer.domElement);
+  const scene=new THREE.Scene(), camera=new THREE.OrthographicCamera(-1,1,1,-1,.01,50);
+  let controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
+  scene.add(new THREE.HemisphereLight('#ffffff','#545363',2));
+  const key=new THREE.DirectionalLight('#fff5e5',2.4);key.position.set(-3,5,4);scene.add(key);
+  const fill=new THREE.DirectionalLight('#dfe8ff',1);fill.position.set(3,2,-3);scene.add(fill);
+  const grid=new THREE.GridHelper(4,16,'#b5b3c3','#c9c7d5');grid.position.y=-.002;scene.add(grid);
+  let model,audit,sheet,kind='charger',view='hero',serial=0;
+  const names={charger:'Firebomber',sniper:'Sniper',guardian:'Guardian'};
+  const state=window.enemyReview={status:'loading'};
+  function cameraView(){
+    if(!audit)return;
+    const hero=sheet.hero??{turn:35,elevation:25};
+    const angles={front:[0,0],right:[90,0],back:[180,0],left:[-90,0],top:[0,89.99],hero:[hero.turn,hero.elevation],game:[0,30]};
+    for(const [name,fit] of Object.entries(sheet.cameras??{}))angles[name]=[fit.turn,fit.elevation];
+    const [t,e]=angles[view].map(THREE.MathUtils.degToRad);
+    const target=new THREE.Vector3(0,audit.height_m/2,0);
+    controls.dispose();
+    camera.position.copy(target).add(new THREE.Vector3(Math.sin(t)*Math.cos(e),Math.sin(e),Math.cos(t)*Math.cos(e)).multiplyScalar(5));
+    camera.up.set(0,1,0);camera.lookAt(target);
+    controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.copy(target);
+    controls.addEventListener('change',()=>{state.camera=camera.position.toArray()});
+    const width=stage.clientWidth,height=stage.clientHeight,scale=kind==='sniper'?1.9:1.7;
+    camera.left=-scale*width/height/2;camera.right=-camera.left;camera.top=scale/2;camera.bottom=-scale/2;
+    camera.zoom=1;camera.updateProjectionMatrix();renderer.setSize(width,height);controls.update();
+    const ref=view==='game'?'hero':view;
+    document.querySelector('#reference').src=`../${kind}/production/reference/${ref}.png`;
+    document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));
+    state.view=view;
+    state.camera=camera.position.toArray();
+  }
+  async function load(next){
+    const token=++serial;kind=next;state.status='loading';stats.textContent='Loading…';
+    const base=`../${kind}/production/`;
+    try {
+      const [gltf,a,s]=await Promise.all([new GLTFLoader().loadAsync(`${base}${kind}-model.glb`),fetch(base+'audit.json').then(r=>r.json()),fetch(base+'sheet.json').then(r=>r.json())]);
+      if(token!==serial)return;
+      if(model){scene.remove(model);model.traverse(o=>{if(o.isMesh)o.geometry.dispose()});}
+      model=gltf.scene;audit=a;sheet=s;scene.add(model);
+      document.querySelector('#name').textContent=names[kind];
+      stats.textContent=`${audit.triangles.toLocaleString()} triangles · one shared material · static model`;
+      document.querySelector('#blend').href=base+`${kind}-model.blend`;
+      document.querySelector('#glb').href=base+`${kind}-model.glb`;
+      document.querySelector('#overlays').href=base+'renders/overlay-all.png';
+      document.querySelector('#comparison').src=base+'renders/compare.png';
+      document.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));
+      cameraView();Object.assign(state,{status:'ready',kind,triangles:audit.triangles,animations:gltf.animations.length});
+    }catch(error){stats.textContent=String(error);state.status='error';state.error=String(error);}
+  }
+  document.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>load(b.dataset.kind));
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;cameraView()});
+  new ResizeObserver(()=>cameraView()).observe(stage);
+  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);state.calls=renderer.info.render.calls;state.camera=camera.position.toArray()});
+  load(new URLSearchParams(location.search).get('kind') in names?new URLSearchParams(location.search).get('kind'):'charger');
+</script>
+</html>

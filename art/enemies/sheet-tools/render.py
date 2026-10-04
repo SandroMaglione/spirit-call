@@ -14,6 +14,7 @@ from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[1]
 kind=sys.argv[sys.argv.index('--')+1]
 sweep='sweep' in sys.argv[sys.argv.index('--')+2:]
+fit='fit-views' in sys.argv[sys.argv.index('--')+2:]
 HERE=ROOT/kind/'production'
 config=json.loads((HERE/'spirit.json').read_text())
 sheet=json.loads((HERE/'sheet.json').read_text())
@@ -23,10 +24,10 @@ bpy.ops.wm.open_mainfile(filepath=str(HERE/config['blend']))
 scene=bpy.context.scene;scene.render.engine='BLENDER_EEVEE_NEXT'
 scene.render.film_transparent=True
 scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA'
-scene.render.resolution_x=400 if sweep else 640
-scene.render.resolution_y=400 if sweep else 640
+scene.render.resolution_x=400 if sweep or fit else 640
+scene.render.resolution_y=400 if sweep or fit else 640
 scene.render.resolution_percentage=100
-scene.eevee.taa_render_samples=16 if sweep else 64
+scene.eevee.taa_render_samples=16 if sweep or fit else 64
 scene.view_settings.view_transform='Standard'
 world=bpy.data.worlds.new('Review ambient');world.use_nodes=True
 world.node_tree.nodes['Background'].inputs['Color'].default_value=(.72,.76,.83,1)
@@ -47,7 +48,11 @@ def direction(turn,elevation):
     t,e=math.radians(turn),math.radians(elevation)
     return Vector((math.sin(t)*math.cos(e),-math.cos(t)*math.cos(e),math.sin(e)))
 
-if sweep:
+if fit:
+    views={f'fit-{v}_{t}_{e}':direction(t,e)
+           for v,base in (('front',0),('back',180),('right',90),('left',-90))
+           for t in (config.get('view_sweeps',{}).get(v) or (base-10,base,base+10)) for e in (0,10,20,30)}
+elif sweep:
     start,stop,step=config['sweep']['turns']
     views={f'sweep{t}_{e}':direction(t,e) for t in range(start,stop+1,step) for e in config['sweep']['elevations']}
 else:
@@ -55,13 +60,15 @@ else:
        'top':Vector((0,0,1)),'bottom':Vector((0,0,-1)),
        'hero':direction(sheet['hero']['turn'],sheet['hero']['elevation']),
        'game':direction(0,30)}
+    for view,angles in sheet.get('cameras',{}).items():
+        views[view]=direction(angles['turn'],angles['elevation'])
 for name,d in views.items():
     camera.location=target+d*5
     if name=='top':camera.rotation_euler=(0,0,0)
     elif name=='bottom':camera.rotation_euler=(math.pi,0,0)
     else:camera.rotation_euler=(-d).to_track_quat('-Z','Y').to_euler()
     scene.render.filepath=str(OUT/f'{name}.png');bpy.ops.render.render(write_still=True)
-if not sweep:
+if not sweep and not fit:
     camera.location=target+direction(0,30)*5
     camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
     scene.render.resolution_x=40 if kind=='guardian' else 32

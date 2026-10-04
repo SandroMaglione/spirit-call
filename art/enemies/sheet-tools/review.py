@@ -13,15 +13,15 @@ from measure import surface
 
 ROOT=Path(__file__).resolve().parents[1]
 SIZE=320
-def mask(path,ground=None):
+def mask(path,ground=None,color='all'):
  im=Image.open(path)
  if im.mode=='RGBA': a=np.asarray(im)[...,3]>96
- else: a=surface(im,'all')
+ else: a=surface(im,color)
  if ground is not None:a[ground+1:]=False
  return im.convert('RGBA'),a
 
-def normalized(path,ground=None):
- im,a=mask(path,ground)
+def normalized(path,ground=None,color='all'):
+ im,a=mask(path,ground,color)
  ys,xs=np.nonzero(a)
  box=(xs.min(),ys.min(),xs.max()+1,ys.max()+1)
  rgba=np.asarray(im).copy();rgba[...,3]=a*255
@@ -35,15 +35,28 @@ def normalized(path,ground=None):
 def score(here,view,path,cfg):
  ground=cfg['ground'].get(view)
  if ground is not None:ground-=cfg['crops'][view][1]
- ref,a=normalized(here/'reference'/f'{view}.png',ground)
+ color={'sniper':'robot','guardian':'armor'}.get(here.parent.name,'all')
+ ref,a=normalized(here/'reference'/f'{view}.png',ground,color)
  model,b=normalized(path)
  return (a&b).sum()/(a|b).sum(),ref,model,a,b
 
 def outline(a):return a & ~(np.roll(a,1,0)&np.roll(a,-1,0)&np.roll(a,1,1)&np.roll(a,-1,1))
 
-def main(kind,sweep=False):
+def main(kind,mode=None):
  here=ROOT/kind/'production';cfg=json.loads((here/'spirit.json').read_text());out=here/'renders'
- if sweep:
+ if mode=='fit-views':
+  data=json.loads((here/'sheet.json').read_text());data['cameras']={};report={}
+  for view in ('front','back','right','left'):
+   results=[]
+   for path in out.glob(f'fit-{view}_*.png'):
+    _,t,e=path.stem.split('_');t=int(t);e=int(e)
+    results.append((float(score(here,view,path,cfg)[0]),t,e))
+   results.sort(reverse=True);best=results[0]
+   data['cameras'][view]={'turn':best[1],'elevation':best[2]};report[view]=results
+  (here/'sheet.json').write_text(json.dumps(data,indent=2)+'\n')
+  (out/'view-camera-sweep.json').write_text(json.dumps(report,indent=2)+'\n')
+  print(kind,'sheet cameras',data['cameras']);return
+ if mode=='sweep':
   results=[]
   for path in out.glob('sweep*.png'):
    t,e=map(int,path.stem[5:].split('_'))
@@ -73,4 +86,4 @@ def main(kind,sweep=False):
  (out/'overlap.json').write_text(json.dumps({'metric':'silhouette intersection over union after uniform height normalization','target':.9,'scores':scores},indent=2)+'\n')
  print(kind,scores)
 
-if __name__=='__main__':main(sys.argv[1],len(sys.argv)>2 and sys.argv[2]=='sweep')
+if __name__=='__main__':main(sys.argv[1],sys.argv[2] if len(sys.argv)>2 else None)

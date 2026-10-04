@@ -1,0 +1,147 @@
+{
+  "url": "http://192.168.40.47:5199/art/enemies/sheet-tools/review.html",
+  "phone": [
+    {
+      "model": {
+        "animations": 0,
+        "calls": 36,
+        "camera": [
+          0,
+          3.047193884849548,
+          4.330127018922194
+        ],
+        "kind": "charger",
+        "status": "ready",
+        "triangles": 1710,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 44,
+        "camera": [
+          0,
+          3.107311308383941,
+          4.330127018922194
+        ],
+        "kind": "sniper",
+        "status": "ready",
+        "triangles": 1452,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 44,
+        "camera": [
+          0,
+          3.140101492404937,
+          4.330127018922193
+        ],
+        "kind": "guardian",
+        "status": "ready",
+        "triangles": 1867,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        390,
+        844
+      ]
+    }
+  ],
+  "desktop": [
+    {
+      "model": {
+        "animations": 0,
+        "calls": 45,
+        "camera": [
+          0,
+          3.047193884849548,
+          4.330127018922194
+        ],
+        "kind": "charger",
+        "status": "ready",
+        "triangles": 1710,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 45,
+        "camera": [
+          0,
+          3.107311308383941,
+          4.330127018922194
+        ],
+        "kind": "sniper",
+        "status": "ready",
+        "triangles": 1452,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        1280,
+        800
+      ]
+    },
+    {
+      "model": {
+        "animations": 0,
+        "calls": 45,
+        "camera": [
+          0,
+          3.140101492404937,
+          4.330127018922193
+        ],
+        "kind": "guardian",
+        "status": "ready",
+        "triangles": 1867,
+        "view": "game"
+      },
+      "overflow": false,
+      "viewport": [
+        1280,
+        800
+      ]
+    }
+  ],
+  "touch": {
+    "after": [
+      0.4148065196191199,
+      3.0471938848495483,
+      4.310212935723881
+    ],
+    "before": [
+      0,
+      3.047193884849548,
+      4.330127018922194
+    ],
+    "changed": true,
+    "input": "synthetic touch PointerEvents with capture stub",
+    "overflow": false,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  "physicalPhoneTested": false
+}
