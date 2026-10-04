@@ -173,7 +173,7 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({
   kind: "model", model, batched: true, transitionSeconds: .10, ...(attackClips === undefined ? {} : { attackClips }),
   widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor,
-  moments: { idle: "Idle", run: { clip: model === "enemyDummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
+  moments: { idle: "Idle", run: { clip: kind === "dummy" || kind === "sparringDummy" || kind === "heavyDummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
 })
 
 export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
@@ -203,8 +203,8 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
       quake: { windup: "WindupQuake", active: "ActiveQuake", recovery: "RecoveryQuake" }
     }), transitionSeconds: .14
   },
-  sparringDummy: enemyModel("sparringDummy", "enemyDummy", 1),
-  heavyDummy: enemyModel("heavyDummy", "enemyDummy", 1)
+  sparringDummy: enemyModel("sparringDummy", "enemySparringDummy", 1),
+  heavyDummy: enemyModel("heavyDummy", "enemyHeavyDummy", 1)
 }
 
 /**

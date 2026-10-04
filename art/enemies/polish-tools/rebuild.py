@@ -5,10 +5,11 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 BLENDER='/Applications/Blender.app/Contents/MacOS/Blender'
-KINDS=['dummy','chaser','shooter','brute','swarmer','charger','sniper','guardian','warden','stalker','volatile','gale-caster','juggernaut']
+KINDS=['dummy','sparring-dummy','heavy-dummy','chaser','shooter','brute','swarmer','charger','sniper','guardian','warden','stalker','volatile','gale-caster','juggernaut']
 for kind in sys.argv[1:] or KINDS:
     assert kind in KINDS
-    if kind=='dummy':script=ROOT/kind/'build.py';args=['--replace']
+    if kind in ('dummy','sparring-dummy','heavy-dummy'):
+        script=ROOT/'dummy/build.py';args=['--replace','--variant',kind]
     elif kind=='chaser':script=ROOT/kind/'production/animate.py';args=[]
     else:
         family='production-tools/animate-approved.py' if kind in ('shooter','brute','swarmer') else (

@@ -23,14 +23,14 @@ rig budgets and the single mesh/material contract:
 ```sh
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 \
   --python art/enemies/polish-tools/verify.py -- \
-  dummy chaser shooter brute swarmer charger sniper guardian warden stalker volatile gale-caster juggernaut
+  dummy sparring-dummy heavy-dummy chaser shooter brute swarmer charger sniper guardian warden stalker volatile gale-caster juggernaut
 pnpm check
 pnpm build
 ```
 
 Open `/art/enemies/polish-tools/review.html` on the Vite server to inspect the
 finished exports. It uses the actual animation atlas and crowd shader. Clip,
-facing, scrubber, small-scale view and hit flash controls cover all 13 models.
+facing, scrubber, small-scale view and hit flash controls cover all 15 models.
 Unsupported attack variants hold Idle. Models are normalized to a common height
 for anatomy comparisons; in-game sizes are set by `view.enemies`.
 
@@ -43,7 +43,7 @@ the independently aimed shield through the existing shield shader transform.
 
 `_GLOW` is a scalar vertex mask for eyes, gems, lava and fire cores. It introduces
 no textures, extra lights or per-enemy meshes. The dummy and Swarmer have a zero
-mask. Body flashes use a separate instance attribute; multiplying white into
+mask, as do the Sparring and Heavy Dummy variations. Body flashes use a separate instance attribute; multiplying white into
 the palette cannot create a visible flash.
 
 Simulation retains attack timing, telegraphs, movement, collisions and damage.

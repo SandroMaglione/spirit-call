@@ -38,7 +38,7 @@ for(const [id,spec] of Object.entries(enemyModels)){
  const card=document.createElement('article');card.innerHTML=`<h2>${id.replace('enemy','').replace('Charger','Firebomber')}</h2><div class="view"></div><p>${atlas.geometry.index.count/3} triangles</p>`;$('cards').append(card);
  entries.push({id,atlas,scene,batch,instance,camera,element:card.querySelector('.view')});
 }
-$('status').textContent='13 exported models · drag facing to inspect joints · unsupported variant clips hold Idle';
+$('status').textContent=`${entries.length} exported models · drag facing to inspect joints · unsupported variant clips hold Idle`;
 for(const name of new Set(entries.flatMap(e=>[...e.atlas.clips.keys()])))if(![...$('clip').options].some(o=>o.value===name))$('clip').add(new Option(name,name));
 window.__roster={entries,renderer};
 function frame(now){

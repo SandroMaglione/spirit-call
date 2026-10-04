@@ -7,13 +7,15 @@ silhouette and character; gameplay-scale readability guided the exaggeration.
 
 Every crowd model now has a quiet facet rim, visible hit/windup light, staggered
 idle phases and movement turning. Attack aim and shield direction stay exact.
-Eyes and authored fire/gem regions emit through one vertex mask. The thirteen
+Eyes and authored fire/gem regions emit through one vertex mask. The fifteen
 models still use one skinned mesh, one material and one body draw call per model
 kind. All fit below 2,000 triangles and at most twelve bones.
 
 | Enemy | Finished changes | Triangles / bones |
 |---|---|---|
-| Dummy and practice variants | Wooden timbers, circular bullseye and top peg; fixed base joined to bending post; readable sparring swing | 740 / 3 |
+| Training Dummy | Wooden timbers, circular bullseye and top peg; fixed base joined to bending post | 740 / 3 |
+| Sparring Dummy | Red padded guards and an articulated striking bar; joined shoulder and a readable windup/sweep | 928 / 4 |
+| Heavy Dummy | Broader timber torso and post, iron bands and shoulder weights, larger base and blue bullseye | 1,064 / 3 |
 | Chaser | Thicker limbs, larger claw and eyes; connected hips, shoulders, neck and ankles; whole-body coil | 1,950 / 12 |
 | Shooter | Slanted eyes, ivory studs, connected feet/fins; larger breathing, recoil and muzzle windup | 1,244 / 8 |
 | Brute | Rougher larger fists and shoulders, slanted eyes; joined hips/shoulders/neck; raised slam and separate knee-lift stomp | 1,652 / 7 |
@@ -29,8 +31,8 @@ kind. All fit below 2,000 triangles and at most twelve bones.
 
 Brute rests with lowered wide fists; raised fists are its slam warning. The
 Swarmer's presentation size increases from 1.5 to 1.8 times its radius. Its
-simulation radius stays 10. Training variants share the dummy asset at their own
-existing sizes. No enemy stats, attacks, content ids or progression changed.
+simulation radius stays 10. The three training roles each have their own model
+at their existing sizes. No enemy stats, attacks, content ids or progression changed.
 
 The first pass left five inherited Idle clips too subtle to read. Sniper now
 scans with its barrel and claws over planted articulated legs; Stalker breathes
@@ -56,6 +58,12 @@ A regression check projects these five Idle clips from the game camera at a
 40 px model height in two facings. It requires visible motion across a broad
 part of each figure, rather than accepting movement from one decorative tip.
 
+Roster coverage checks all fifteen content kinds against the model mappings:
+twelve combat enemies and three dummy roles. Every kind has a batched animated
+model, and the three dummies have distinct exported assets. There are no capsule
+enemy placeholders. Training Ground, Enemy Practice, waves, elites and tuning
+spawns all use these same mappings.
+
 The network-address browser review covers desktop 1280×800, phone landscape
 844×390 and portrait 390×844, all combat enemies through windup/contact/recovery, native mouse taps
 on the touch-enabled controls, and a synthetic touch-stick drag through the
@@ -65,6 +73,12 @@ browser evidence, not physical-phone performance testing.
 
 The touch HUD now refreshes its resting layout immediately after a viewport
 rotation. An active gesture keeps its original layout until release.
+
+The Training Ground review shows all three target models at 1280×800 and
+844×390. A synthetic touch-stick drag approaches Sparring Dummy and exercises
+its windup, active sweep and recovery through the real simulation and input
+binding. The gesture returns to neutral and its temporary capture bypass is
+restored. Both target exports pass fresh Blender round-trips and contact checks.
 
 ![Finished roster](../art/enemies/polish-tools/evidence/roster-idle.png)
 

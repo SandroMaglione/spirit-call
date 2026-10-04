@@ -9,7 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('verify',ROOT/'scripts/verify.py')
 verify=importlib.util.module_from_spec(spec);spec.loader.exec_module(verify)
 for kind in sys.argv[sys.argv.index('--')+1:]:
-    folder=ROOT/kind if kind=='dummy' else ROOT/kind/'production/animated'
+    folder=ROOT/kind if kind in ('dummy','sparring-dummy','heavy-dummy') else ROOT/kind/'production/animated'
     bpy.ops.wm.open_mainfile(filepath=str(folder/(kind+'.blend')))
     rig=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE')
     mesh=next(o for o in bpy.context.scene.objects if o.type=='MESH')

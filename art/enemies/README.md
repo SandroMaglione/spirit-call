@@ -1,71 +1,63 @@
 # Enemy models
 
-Original low-poly creatures for the current eight enemy IDs. Blender sources,
-portable animated GLBs, generated metadata and a reference PNG live beside each
-recipe. There is no separate viewer; inspect motion in Blender or the live game.
+The complete roster has fifteen content kinds: twelve combat enemies and three
+training targets. Each has a distinct batched animated model. Editable Blender
+sources, GLBs, metadata and audits live beside the corresponding recipes.
 
-| Content ID | Design and attack pose | Triangles | Bones | Reference |
-| --- | --- | ---: | ---: | --- |
-| dummy | Padded training post; wobbles when struck | 676 | 3 | [PNG](dummy/reference.png) |
-| chaser | Rust-colored hook creature; draws back its striking arm | 1,540 | 8 | [PNG](chaser/reference.png) |
-| shooter | Blue bell-mouth creature; expands its muzzle for volley/spray | 1,180 | 8 | [Approved source](shooter/production/README.md) |
-| brute | Pale-brow stone heavyweight; raises fists to slam, lifts a foot to stomp | 1,612 | 7 | [Approved source](brute/production/README.md) |
-| swarmer | Red-shell pest with projecting fangs; compresses and lifts into a bite | 984 | 7 | [Approved source](swarmer/production/README.md) |
-| charger | Firebomber; raises its bomb to lob, swipes with its free hand | 1,890 | 9 | [Approved source](charger/production/README.md) |
-| sniper | Purple robotic Sniper; steadies its head-mounted barrel | 1,376 | 7 | [Approved source](sniper/production/README.md) |
-| guardian | Helmeted guard; swings and thrusts its round mace behind a plank shield | 1,934 | 7 | [Approved source](guardian/production/README.md) |
+| Content ID | Finished source | Triangles / bones |
+|---|---|---|
+| dummy | [Wooden target](dummy/) | 740 / 3 |
+| sparringDummy | [Padded target with a striking arm](sparring-dummy/) | 928 / 4 |
+| heavyDummy | [Reinforced target](heavy-dummy/) | 1,064 / 3 |
+| chaser | [Hook creature](chaser/production/) | 1,950 / 12 |
+| shooter | [Bell-mouth creature](shooter/production/) | 1,244 / 8 |
+| brute | [Stone heavyweight](brute/production/) | 1,652 / 7 |
+| swarmer | [Red-shell pest](swarmer/production/) | 1,016 / 7 |
+| charger | [Firebomber](charger/production/) | 1,954 / 9 |
+| sniper | [Precision shooter](sniper/production/) | 1,448 / 11 |
+| guardian | [Shield and mace guard](guardian/production/) | 1,974 / 7 |
+| warden | [Staff and ward caster](warden/production/) | 1,807 / 10 |
+| stalker | [Hooded blade hunter](stalker/production/) | 1,884 / 7 |
+| volatile | [Cracked lava creature](volatile/production/) | 1,768 / 5 |
+| galeCaster | [Floating wind caster](gale-caster/production/) | 1,974 / 9 |
+| juggernaut | [Armored heavyweight](juggernaut/production/) | 1,891 / 7 |
 
-Every combat enemy has `Idle`, `Run`, `Windup`, `Active`, `Recovery`, `Hurt`,
-`Death`, and `Spawn`. The dummy has `Idle`, `Hurt`, `Death`, and `Spawn`.
-The designs use wood, cloth, shell, stone and metal across several palettes;
-the courtyard is the initial setting, not a limit on future creature families.
-
-Blender 4.5 LTS is at `/Applications/Blender.app/Contents/MacOS/Blender` on the
-authoring machine. Run from the repository root, replacing `chaser` as needed:
-
-```sh
-blender --background --python-exit-code 1 --python art/enemies/chaser/build.py
-blender --background --python-exit-code 1 --python art/enemies/scripts/common.py -- export chaser
-blender --background --python-exit-code 1 --python art/enemies/scripts/common.py -- render chaser
-```
-
-Rebuild and render the whole set, or verify the existing exports:
+The final exports receive a finishing pass over their base geometry and animation
+recipes. Use [the finishing workflow](polish-tools/README.md) to rebuild, verify
+and inspect them. Static production sources preserve the reference-fitting base;
+the animated sources and game exports contain the connected joints, luminous
+regions and final silhouette changes. The dummy variations share
+[dummy/build.py](dummy/build.py) and export into their own folders.
 
 ```sh
-blender --background --python-exit-code 1 --python art/enemies/scripts/build-all.py -- --replace --renders
-blender --background --python-exit-code 1 --python art/enemies/scripts/verify.py
+python3 art/enemies/polish-tools/rebuild.py
 ```
 
-Rebuilding refuses to replace a saved source. Pass `-- --replace` to deliberately
-regenerate it. Export and render read the saved source and preserve manual edits.
-Named actions are editable in Blender's Action Editor. Source loops include their
-closing key; export omits it and the game's `closeLoop` restores the interval.
+Append names to rebuild a subset, for example `sparring-dummy heavy-dummy`.
+The recipe explicitly replaces generated sources; preserve manual Blender work
+before rebuilding. Blender 4.5 LTS defaults to
+`/Applications/Blender.app/Contents/MacOS/Blender`.
 
-Each export has one mesh, one vertex-color material, one armature and rigid
-weights. The small joint counts suit the separate shells, claws, shields and
-limbs. The GLB uses meters, +Y up, +Z forward, a ground origin and no root motion.
-No original reference-game assets, external textures or compression decoders are used.
+Every model has Idle, Run, Windup, Active, Recovery, Hurt, Spawn and Death clips.
+Attack variants and Warden's Buff add their own clips. The stationary dummies
+use Idle during knockback; only Sparring Dummy uses its attack clips in play.
+The simulation owns timing, aim, movement and hitboxes. Death clips remain in
+the assets; kills remove the live body and produce the existing particle burst.
 
-The game bakes the GLB actions into a shared bone texture once per model. Enemies
-then use one instance batch per model, including their animated limbs. The
-simulation supplies attack phase and elapsed time. The atlas adds no hit windows,
-movement, stagger, immunity or spawn delay.
+Each model has one mesh, one vertex-color material and at most twelve bones.
+The GLB uses meters, +Y up, +Z forward, a ground origin and no root motion.
+Joint sleeves follow their adjoining bones, including the independently aimed
+Guardian shield. Authored `_GLOW` masks add eyes, gems and fire cores through the
+same crowd shader. Dummies and Swarmer have zero luminous masks.
 
-`verify.py` compares sampled animation bounds from the Blender source with a
-fresh import of each GLB, checks root motion, loops and mesh/material structure,
-then records the export hash in `verification.json`. `test/enemy-assets.test.ts`
-compares the runtime atlas with Three.js skeletal deformation for every clip.
+The game bakes each model's actions into a shared bone texture once. Instances
+sample that atlas, so a kind costs one body draw call regardless of population.
+No per-enemy animation mixer runs during play. `?stress=300,2000,mixed` exercises
+the full roster; the tuning panel can spawn individual kinds and elites.
 
-The full set was checked in the network-served game at 1280×800 and 390×844,
-including synthetic touch movement/dash and simulation-driven attack phases.
-Killed enemies now disappear immediately and burst into particles; `Death`
-clips remain in the files but are unused.
-At 80 and 300 mixed stress enemies, the renderer used eight animated body
-batches (one per kind); this checks batching, not physical-phone frame rate.
-Use `?stress=300,2000,mixed` to repeat the crowded arena setup, or the tuning
-panel's spawn controls for ordinary combat. [In-game reference](in-game.png).
+Blender audits compare exported frames with fresh imports, verify loop seams,
+floor clearance, root motion and attack contact continuity. Runtime tests compare
+the atlas with Three.js skinning. Coverage tests require a batched animated model
+for every content kind and distinct assets for all three training roles.
 
-The reference direction is broad shapes and readable poses, informed by
-[Frits Olsen's Death's Door concepts](https://folsen.artstation.com/projects/X1VJEw).
-Material variety can expand beyond the first courtyard, whose palette references
-[HoYoverse's Chenyu Vale overview](https://blog.playstation.com/2024/01/19/genshin-impact-version-4-4-brings-new-friends-and-visual-enhancements-jan-31/).
+See [the per-enemy changes and review evidence](../../docs/enemy-roster-polish.md).
