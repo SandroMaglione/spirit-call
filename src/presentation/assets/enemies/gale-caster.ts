@@ -6,12 +6,12 @@ export const galeCasterModel = { url,
   "height": 1.013712763786316,
   "clips": {
     "Idle": {
-      "lastKeySeconds": 1.9666666666666666,
-      "loopSeconds": 2
+      "lastKeySeconds": 2.3666666666666667,
+      "loopSeconds": 2.4
     },
     "Run": {
-      "lastKeySeconds": 0.5666666666666667,
-      "loopSeconds": 0.6
+      "lastKeySeconds": 2.3666666666666667,
+      "loopSeconds": 2.4
     },
     "Windup": {
       "lastKeySeconds": 1,

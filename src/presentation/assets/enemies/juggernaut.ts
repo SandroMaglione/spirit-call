@@ -10,8 +10,8 @@ export const juggernautModel = { url,
       "loopSeconds": 2
     },
     "Run": {
-      "lastKeySeconds": 0.5666666666666667,
-      "loopSeconds": 0.6
+      "lastKeySeconds": 1.1666666666666667,
+      "loopSeconds": 1.2
     },
     "Windup": {
       "lastKeySeconds": 1,

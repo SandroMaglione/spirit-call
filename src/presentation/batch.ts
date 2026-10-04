@@ -17,6 +17,8 @@ export class Instance {
   readonly color = new Color(0xffffff)
   /** Two baked animation frames and their interpolation weight. */
   readonly pose = [0, 0, 0, 0]
+  /** Outgoing frames, their interpolation, and how much the incoming pose shows. */
+  readonly blendPose = [0, 0, 0, 1]
   /** Its batch; may change while it is out of the scene (a pooled projectile changing shape). */
   batch: Batch
   /** Its slot in the batch, or -1 while out of it. */
@@ -78,10 +80,16 @@ export class Batch {
       const member = members[index]!
       mesh.setMatrixAt(index, member.object.matrixWorld)
       mesh.setColorAt(index, member.color)
-      if (this.animated) this.geometry.getAttribute("instancePose").setXYZW(index, member.pose[0]!, member.pose[1]!, member.pose[2]!, member.pose[3]!)
+      if (this.animated) {
+        this.geometry.getAttribute("instancePose").setXYZW(index, member.pose[0]!, member.pose[1]!, member.pose[2]!, member.pose[3]!)
+        this.geometry.getAttribute("instancePoseBlend").setXYZW(index, member.blendPose[0]!, member.blendPose[1]!, member.blendPose[2]!, member.blendPose[3]!)
+      }
     }
     mesh.count = members.length
-    if (this.animated) this.geometry.getAttribute("instancePose").needsUpdate = true
+    if (this.animated) {
+      this.geometry.getAttribute("instancePose").needsUpdate = true
+      this.geometry.getAttribute("instancePoseBlend").needsUpdate = true
+    }
     mesh.instanceMatrix.clearUpdateRanges()
     mesh.instanceMatrix.addUpdateRange(0, members.length * 16)
     mesh.instanceMatrix.needsUpdate = true
@@ -98,7 +106,10 @@ export class Batch {
   }
 
   private makeMesh(capacity: number, order: number): InstancedMesh {
-    if (this.animated) this.geometry.setAttribute("instancePose", new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage))
+    if (this.animated) {
+      this.geometry.setAttribute("instancePose", new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage))
+      this.geometry.setAttribute("instancePoseBlend", new InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(DynamicDrawUsage))
+    }
     const mesh = new InstancedMesh(this.geometry, this.material, capacity)
     mesh.instanceMatrix.setUsage(DynamicDrawUsage)
     // Allocates the per-instance colors.

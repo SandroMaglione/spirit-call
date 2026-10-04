@@ -22,50 +22,70 @@ def center(name):
     return sum((obj.matrix_world@v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
 
 
+def ease(t):
+    t=max(0,min(1,t))
+    return t*t*t*(t*(t*6-15)+10)
+
+
 def pose(kind,action,t):
     s,c=math.sin(math.tau*t),math.cos(math.tau*t)
     data={}
     if action in ('Idle','Run'):
         moving=action=='Run'
         if kind=='gale-caster':
-            data['body']=transform((.07 if moving else 0,.008*s,0),(0,0,.018*(1-c)))
-            data['head']=transform((-.03 if moving else 0,0,.012*s))
-            data['arm.L']=transform((.025*s,0,0))
-            data['arm.R']=transform((-.035*s,0,0))
+            data['body']=transform((.13 if moving else .018*s,.025*s,0),(0,0,.10*(1-c)))
+            data['head']=transform((-.06 if moving else -.01*s,0,.025*s))
+            data['arm.L']=transform((.055*s,0,0))
+            data['arm.R']=transform((-.08*s,0,0))
             for level in ('Upper','Lower'):
                 for side,sign in (('L',-1),('R',1)):
-                    data[f'scarf{level}.{side}']=transform((.035*s,sign*.035*s,sign*.055*s))
+                    sway=.075 if level=='Upper' else .11
+                    data[f'scarf{level}.{side}']=transform((sway*s,sign*.09*s,sign*.14*s))
         else:
-            data['body']=transform((.025 if moving else 0,.009*s,0),(0,0,.006*(1-c)))
             if moving:
+                # The torso drops into each planted step; feet stay on the
+                # ground during the long stance and lift during the return.
+                impact=(.5+.5*math.cos(2*math.tau*t))**6
+                data['body']=transform((.12+.05*math.cos(2*math.tau*t),.055*s,0),
+                    (.036*s,0,.05*s*s-.028*impact),
+                    (1+.025*impact,1+.015*impact,1-.035*impact))
+                data['head']=transform((-.06,0,-.02*s))
                 for side,sign in (('L',1),('R',-1)):
-                    data['leg.'+side]=transform(location=(0,.045*s*sign,.028*max(0,s*sign)))
-                    data['arm.'+side]=transform((.10*s*sign,0,0))
+                    phase=(t+(0 if side=='L' else .5))%1
+                    if phase<.62:
+                        travel=-.085+.17*ease(phase/.62);lift=0
+                    else:
+                        swing=(phase-.62)/.38
+                        travel=.085-.17*ease(swing);lift=.11*math.sin(math.pi*swing)**2
+                    data['leg.'+side]=transform(location=(0,travel,lift))
+                    data['arm.'+side]=transform((.30*s*sign,0,.035*s*sign))
+            else:data['body']=transform((0,.009*s,0),(0,0,.006*(1-c)))
     elif action.startswith(('Windup','Active','Recovery')):
         if action.startswith('Windup'):
-            ready=math.sin(min(1,t/.72)*math.pi/2);strike=max(0,(t-.82)/.18)
+            ready=ease(t/.70);strike=ease((t-.74)/.26)
         elif action.startswith('Active'):ready=strike=1
-        else:ready=strike=(1-t)**2
+        else:ready=1-ease(t);strike=1-ease(t/.78)
         if kind=='gale-caster':
-            data['body']=transform((-.035*ready+.12*strike,0,-.06*ready+.10*strike),(0,0,.045*ready))
+            data['body']=transform((-.24*ready+.76*strike,0,-.12*ready+.20*strike),(0,-.045*strike,.14*ready-.04*strike))
             # The hand, sleeve and complete staff share a bone, preserving
             # the approved grip throughout the cast.
-            data['arm.L']=transform((-.25*ready+1.05*strike,0,.12*ready-.16*strike))
-            data['arm.R']=transform((.12*strike,0,-.35*ready+.15*strike))
-            data['head']=transform((.035*ready-.09*strike,0,0))
+            data['arm.L']=transform((-.60*ready+1.50*strike,0,.20*ready-.28*strike))
+            data['arm.R']=transform((.26*strike,0,-.48*ready+.20*strike))
+            data['head']=transform((.14*ready-.40*strike,0,0))
             for level in ('Upper','Lower'):
                 for side,sign in (('L',-1),('R',1)):
-                    data[f'scarf{level}.{side}']=transform((.05*ready,sign*.08*strike,sign*.12*ready))
+                    data[f'scarf{level}.{side}']=transform((-.10*ready+.24*strike,sign*.16*strike,sign*.24*ready))
         elif action.endswith('Quake'):
-            data['body']=transform((-.045*ready+.12*strike,0,0),(0,0,.045*ready))
-            data['head']=transform((.04*ready-.08*strike,0,0))
+            data['body']=transform((-.24*ready+.72*strike,0,0),(0,-.08*strike,.10*ready-.15*strike),
+                (1+.03*ready,1+.02*ready,1-.05*strike))
+            data['head']=transform((.10*ready-.35*strike,0,0),(0,0,.08*strike))
             for side in ('L','R'):
-                data['arm.'+side]=transform((-2.15*ready+2.30*strike,0,0))
+                data['arm.'+side]=transform((-2.35*ready+1.80*strike,0,0))
         else:
-            data['body']=transform((.025*strike,0,-.18*ready+.34*strike),(0,0,.015*ready))
-            data['head']=transform((0,0,.08*ready-.15*strike))
-            data['arm.R']=transform((-.10*ready,0,-.75*ready+1.45*strike))
-            data['arm.L']=transform((-.08*ready,0,.12*ready-.18*strike))
+            data['body']=transform((-.14*ready+.49*strike,0,-.34*ready+.82*strike),(0,-.07*strike,.035*ready-.075*strike))
+            data['head']=transform((.08*ready-.28*strike,0,.16*ready-.30*strike),(0,0,.06*strike))
+            data['arm.R']=transform((-.65*ready+.30*strike,0,-1.20*ready+2.10*strike))
+            data['arm.L']=transform((-.20*ready+.02*strike,0,.24*ready-.40*strike))
     elif action=='Hurt':
         recoil=math.sin(math.pi*t)*(1-t)
         data['body']=transform((-.10*recoil,.035*recoil,0),(0,0,.02*recoil))
@@ -80,6 +100,21 @@ def pose(kind,action,t):
         if kind=='juggernaut':
             for side in ('L','R'):data['leg.'+side]=transform(scale=(size,size,size))
     return data
+
+
+def action(creature,kind,name,seconds,loop=False):
+    rig=creature.armature
+    clip=bpy.data.actions.new(name);clip.use_fake_user=True;rig.animation_data.action=clip
+    count=round(seconds*30)
+    for frame in range(count+1):
+        transforms=pose(kind,name,frame/count)
+        for bone in rig.pose.bones:
+            rotation,location,scale=transforms.get(bone.name,transform())
+            basis=bone.bone.matrix_local.to_3x3()
+            bone.rotation_euler=(basis.transposed()@Euler(rotation).to_matrix()@basis).to_euler()
+            bone.location=basis.transposed()@Vector(location);bone.scale=(scale[0],scale[2],scale[1])
+            for attr in ('rotation_euler','location','scale'):bone.keyframe_insert(data_path=attr,frame=frame+1,group=bone.name)
+    creature.clips[name]={'lastKeySeconds':(count-1)/30 if loop else seconds,'loopSeconds':seconds if loop else None}
 
 
 def build(kind):
@@ -122,21 +157,17 @@ def build(kind):
         obj.vertex_groups.new(name=bone).add(list(range(len(obj.data.vertices))),1,'REPLACE')
     creature=Creature.__new__(Creature);creature.kind=kind;creature.folder=folder
     creature.parts=parts;creature.joints=joints
-    creature.animate(lambda action,t:pose(kind,action,t))
+    creature.rig();creature.clips={}
     rig=creature.armature
+    # More samples in the longer float and step cycles keep their curved
+    # paths smooth when the game interpolates the baked bone matrices.
+    for name,seconds,loop in (('Idle',2.4 if kind=='gale-caster' else 2,True),
+        ('Run',2.4 if kind=='gale-caster' else 1.2,True),('Windup',1,False),
+        ('Active',.4,False),('Recovery',.7,False),('Hurt',.3,False),('Death',.7,False),('Spawn',.3,False)):
+        action(creature,kind,name,seconds,loop)
     if kind=='juggernaut':
         for base,seconds in (('Windup',1),('Active',.4),('Recovery',.7)):
-            name=base+'Quake';action=bpy.data.actions[base].copy();action.name=name;action.use_fake_user=True
-            rig.animation_data.action=action
-            for frame in range(round(seconds*30)+1):
-                transforms=pose(kind,name,frame/(seconds*30))
-                for bone in rig.pose.bones:
-                    rotation,location,scale=transforms.get(bone.name,transform())
-                    basis=bone.bone.matrix_local.to_3x3()
-                    bone.rotation_euler=(basis.transposed()@Euler(rotation).to_matrix()@basis).to_euler()
-                    bone.location=basis.transposed()@Vector(location);bone.scale=(scale[0],scale[2],scale[1])
-                    for attr in ('rotation_euler','location','scale'):bone.keyframe_insert(data_path=attr,frame=frame+1,group=bone.name)
-            creature.clips[name]={'lastKeySeconds':seconds,'loopSeconds':None}
+            action(creature,kind,base+'Quake',seconds)
     rig['clips']=json.dumps(creature.clips);rig.animation_data.action=None;rig.data.pose_position='REST'
     bpy.context.view_layer.update();mesh=creature.mesh;mesh.data.calc_loop_triangles()
     assert len(mesh.data.vertices)==len(original)
@@ -151,7 +182,8 @@ def build(kind):
     audit=json.loads((here/'audit.json').read_text())
     assert len(mesh.data.loop_triangles)==audit['triangles']<2000
     assert len(rig.data.bones)<=12 and len(mesh.data.materials)==1
-    rig.data.pose_position='POSE';rig.animation_data.action=bpy.data.actions['Idle'];bpy.context.scene.frame_set(1)
+    rig.data.pose_position='POSE';rig.animation_data.action=bpy.data.actions['Idle']
+    bpy.context.scene.render.fps=30;bpy.context.scene.frame_end=72;bpy.context.scene.frame_set(1)
     bpy.ops.wm.save_as_mainfile(filepath=str(folder/(kind+'.blend')))
     report={'source':'../'+source.name,'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
         'part_bindings':bindings,'bones':len(joints),'root_motion':False,'rest_vertices_preserved':True,

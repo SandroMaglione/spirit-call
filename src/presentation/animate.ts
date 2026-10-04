@@ -73,6 +73,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     const clips = look.kind === "model" && spec !== undefined ? look.attackClips?.[spec.id] : undefined
     const pose = enemyPose(spec, data.phase.get(), data.attacker.get().elapsed, clips)
     if (pose !== null) node.body.sample?.(pose.clip, pose.progress)
+    node.body.finishAnimation?.(held ? 0 : seconds)
   }
 })
 
