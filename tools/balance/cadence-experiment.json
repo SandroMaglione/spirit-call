@@ -1,5 +1,5 @@
 {
-  "energy": { "perDamage": 0.15 },
+  "energy": { "attack": 2.5, "special": 8, "targetCap": 1.25 },
   "team": { "benchEnergyShare": 0.3 },
   "perfectDodge": { "slowSeconds": 0.7, "breakFill": 0.25, "energy": 4 },
   "breaking": { "slam": 0.25, "reaction": 0.2 },

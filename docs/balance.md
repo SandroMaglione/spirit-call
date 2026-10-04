@@ -5,7 +5,68 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
-## What the numbers say
+## Implemented tuning
+
+The audit below records the original problems. The playable update now uses:
+
+| Mechanic | New value |
+| --- | --- |
+| Main quest enemy levels | 1, 3, 5, 8, 12, 16, 21, 26, 32 |
+| Highest Keep tier | 40 |
+| Gust / Tidal Wave / Flare Jump / Spark Totem | 6 / 6 / 7 / 10 seconds |
+| Ultimate cooldown | 10 seconds, plus 100 energy |
+| Bench energy | 30% per living member |
+| Totem / Thunderclap healing | 2% per tick / 8% per member |
+| Bloodthirst healing | 2% max HP per kill |
+| Perfect-dodge slow / break fill / energy | 0.7 seconds / 25% / 4 |
+| Wall-slam / reaction break fill | 25% / 20% |
+| Chaser swipe / follow-up | 18% / 14% ATK |
+
+Energy now has a shared budget per action. A basic attack earns 3 times
+its recovery in seconds on its first target, including a magazine weapon's
+share of reload time. A special earns 10. Additional unique targets receive
+half the previous award, capped at 150% of the first-target award. The same
+key travels through projectiles, repeated ticks and thunder chains; repeated
+contact with one target adds nothing. Levels and damage do not change the
+award. Burns, ground pools, passive effects and ultimates generate no energy.
+The ledger expires old entries and resets with a run. The touch HUD shows
+ultimate cooldowns and checks both cooldown and energy for readiness.
+
+First-clear rewards fund the higher main levels. Prior main clears and run
+payouts provide 90,600 gold before Warlord, compared with 87,785 to train
+one level-32 character and level-16 weapon. Every main quest can fund one
+matched build from prior clears, assuming gold goes to that build. A whole
+team takes more play. Existing saves do not receive claimed rewards again.
+
+At enemy level 32, a Chaser swipe costs a level-1 Swordsman about 68% HP,
+versus about 15% at character level 32. Heavy attacks can kill an
+underleveled character outright. The fourfold stat band, movement, dash
+recharge and readable telegraphs remain intact.
+
+The new Warlord measurements use real HP and a 240-second observation:
+
+| Profile | Seed | Result | Seconds | Remaining HP | Ultimates |
+| --- | ---: | --- | ---: | ---: | ---: |
+| Level-1 Swordsman, skills | 1337 | Defeat | 127.5 | 0% | 5 |
+| Level-1 rotating team | 1337 | Defeat | 150.3 | 0% | 8 |
+| Matched Swordsman | 1337 | Clear | 127.6 | 75% | 3 |
+| Matched rotating team | 1337 | Clear | 120.0 | 72% | 6 |
+| Level-1 Swordsman, skills | 42 | Defeat | 52.8 | 0% | 1 |
+| Level-1 rotating team | 42 | Defeat | 166.4 | 0% | 9 |
+| Matched Swordsman | 42 | Clear | 220.5 | 98% | 3 |
+| Matched rotating team | 42 | Clear | 117.0 | 91% | 5 |
+
+These builds and enemy levels differ from the original audit. The comparison
+shows the whole update, not the isolated effect of one parameter. Path
+selection can make a stronger bot slower or less successful on a seed.
+
+Play feedback should first cover the opening quest, sparse-target ultimate
+charging, Stormcaller healing, the final chapter's level gap and the length
+of finite fights. The opening Swarm remains clearable with basics alone in
+three tested seeds, but the slower learner struggles. Gunner particularly
+needs human judgment about aiming Flare Jump away from her own fire.
+
+## Original numbers before this update
 
 - Stats grow linearly from 1x at level 1 to 4x at level 40. Each early
   character level adds 7.69% of the base stat. Main quests stop at enemy
@@ -56,9 +117,10 @@ and the pace of a fight. No clear timer or character-level entry gate is needed.
   main quest's 550 gold per repeat, that is about 298 clears before other
   rewards; at level-40 content's 1,100 gold it is about 149.
 
-## Changes to try, in order
+## Original proposals and rationale
 
-These are proposed experiments, not established target values.
+These proposals led to the implemented values above. They remain design
+hypotheses to test through play, rather than established optimal values.
 
 1. Bound energy gain independently of damage. Give a basic hit a small
    energy award and a successful special a budget, with diminishing
@@ -132,10 +194,10 @@ new finite Gauntlet cleared in 106.1 seconds for the basic profile and
 62.8 for the team rotation. Its combat tuning still needs the experiments
 above; removing the timer fixes the objective, not the energy economy.
 
-An unshipped experiment is in `tools/balance/cadence-experiment.json`.
-It uses 6/6/7/10-second specials, 10-second ultimate cooldowns, 30% bench
-energy, 0.15 damage energy, and smaller dodge and break rewards. It retains
-all HP and enemy levels. On Warlord at seed 1337:
+An earlier unshipped experiment used 6/6/7/10-second specials, 10-second
+ultimate cooldowns, 30% bench energy, 0.15 damage energy and smaller dodge
+and break rewards, while retaining all HP and enemy levels. On Warlord at
+seed 1337:
 
 - The matched quick profile cleared in 111.0 seconds with 4% HP and nine
   ultimates, versus 218.2 seconds, 84% HP and 26 ultimates before.
@@ -148,13 +210,15 @@ all HP and enemy levels. On Warlord at seed 1337:
 This bundled trial does not isolate each parameter's effect. Reducing
 Gust frequency can also shorten a fight because it scatters enemies less.
 The 0.15 damage-energy rate is a temporary experiment, not the proposed
-long-term cast-budget design. Do not ship the whole patch based on one seed.
+long-term cast-budget design. The current `tools/balance/cadence-experiment.json`
+instead tries a smaller action-energy rate and crowd bonus against the
+implemented tuning.
 
 ## Repeatable measurements
 
 `pnpm balance` fights whole opening, late-main, and former survival quests
 at their actual enemy levels with real HP. It reports clear, defeat, or
-timeout, elapsed time, remaining team HP, incoming hits, kills, actual
+timeout, elapsed time, remaining team HP, incoming damage, effective healing, kills, actual
 specials and ultimates, and breaks. Timeouts do not prove an impossible
 clear; they only mean the bot did not finish within the observation window.
 The stat table isolates level effects from the movement planner.
@@ -177,10 +241,15 @@ remaining HP has a 15-percentage-point tolerance. Review both easier and
 harder changes. An intentional tuning needs a reviewed new baseline.
 Escape-only clears fail independently of the baseline.
 
-CI runs the representative 18-scenario suite against
+CI runs the representative 42-scenario suite at seeds 1337 and 42 against
 `test/balance-baseline.json` before deployment and uploads its JSON report.
-This baseline records the current problems; passing means they have not
-unexpectedly drifted, not that the tuning is good. To accept an intentional
+It also checks 16 controlled energy probes across all kits, levels 1 and
+40, and one and six durable targets. These probes remove displacement and
+self-damaging pools to measure sustained contact without the movement
+planner. Level must not accelerate this cadence. The report includes
+upgrade-cost and first-clear-income tables; a progression test checks that
+the main path funds one matched build. Passing means tuning has not
+unexpectedly drifted, not that it is optimal. To accept an intentional
 change, inspect the report, run broader seeds and kits, play it, and then
 generate and review a replacement baseline with:
 
@@ -190,7 +259,7 @@ pnpm balance --output test/balance-baseline.json
 
 Profiles include basic attacks, skills used whenever available, levels
 matched to the enemy with a proportionate weapon level, a slower learner,
-escape-only play, and a low-level three-character rotation. Full sweeps
+escape-only play, and low-level and matched three-character rotations. Full sweeps
 exercise every quest and each character's starting weapon. They are
 hypothetical builds, not a claim that an account can own every character
 at that point. Seeds are fixed and reports include the tuning hash.
@@ -205,6 +274,5 @@ can outperform the quick profile on a seed through a different path.
 Keep fairness tests separate. Use full sweeps to find outliers, compare
 candidate tunings on the same scenarios, then play them on a phone. The
 tool monitors balance; it does not decide good gameplay or silently
-retune content. Longer term, add sparse/dense pack probes for cast energy,
-weapon comparisons, explicit counterplay bots, enemy attack opportunities
-and stun uptime, and upgrade-cost runs per chapter.
+retune content. Longer term, add weapon comparisons, explicit counterplay
+bots, enemy attack opportunities and stun uptime.
