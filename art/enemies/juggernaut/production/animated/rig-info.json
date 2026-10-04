@@ -56,7 +56,13 @@
   },
   "bones": 7,
   "root_motion": false,
-  "rest_vertices_preserved": true,
+  "rest_vertices_preserved": false,
   "maximum_join_position_error_m": 1.1920928955078125e-07,
-  "facet_colors_preserved": true
+  "facet_colors_preserved": true,
+  "base_triangles": null,
+  "triangles": 1891,
+  "materials": 1,
+  "mesh_objects": 1,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

@@ -1,11 +1,5 @@
 {
-  "sha256": "0f4732e5665004e4ab71d2005d80114c681b6ea0ded8b32088304f680e4bcf3c",
-  "triangles": 1180,
-  "bones": 8,
-  "material_count": 1,
-  "mesh_count": 1,
-  "root_motion": false,
-  "approved_rest_bounds_preserved": true,
+  "sha256": "5d82097ad96bf4b19fb6e7b992e5dacf34039994cbd81bfabb0236480611257e",
   "roundTripBoundsError": {
     "Idle": 2.384185791015625e-07,
     "Run": 1.7881393432617188e-07,
@@ -18,14 +12,6 @@
     "WindupSpray": 2.384185791015625e-07,
     "ActiveSpray": 1.1920928955078125e-07,
     "RecoverySpray": 1.7881393432617188e-07
-  },
-  "contactPoseErrors": {
-    "windup_active": 0.0,
-    "active_recovery": 0.0,
-    "recovery_idle": 0.0,
-    "windup_activeSpray": 2.8526147528106624e-32,
-    "active_recoverySpray": 0.0,
-    "recovery_idleSpray": 0.0
   },
   "groundMinimum": {
     "Idle": 0.0,
@@ -40,5 +26,15 @@
     "ActiveSpray": 0.0,
     "RecoverySpray": -4.470348358154297e-08
   },
-  "result": "passed"
+  "triangles": 1244,
+  "bones": 8,
+  "bytes": 337872,
+  "phaseBoundaryVertexError": {
+    "Windup\u2192Active": 0.0,
+    "Active\u2192Recovery": 0.0,
+    "Windup\u2192Recovery": 0.0,
+    "WindupSpray\u2192ActiveSpray": 0.0,
+    "ActiveSpray\u2192RecoverySpray": 0.0,
+    "WindupSpray\u2192RecoverySpray": 0.0
+  }
 }

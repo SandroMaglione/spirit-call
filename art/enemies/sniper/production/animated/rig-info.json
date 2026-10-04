@@ -1,7 +1,7 @@
 {
   "source": "../sniper-model.blend",
   "source_sha256": "70396e3da265c3eb5615072c3d9ccd0be7ea1d00587fa4a24edce427eaad426e",
-  "triangles": 1376,
+  "triangles": 1448,
   "bones": 11,
   "materials": 1,
   "mesh_objects": 1,
@@ -177,5 +177,8 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true
+  "rest_vertices_preserved": false,
+  "base_triangles": 1376,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

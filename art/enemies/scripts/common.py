@@ -115,13 +115,13 @@ class Creature:
         rig.animation_data_create()
         self.mesh, self.armature = mesh, rig
 
-    def animate(self, pose):
+    def animate(self, pose, full_lifecycle=False):
         """Recipes return local bone transforms at normalized action time."""
         self.rig()
         clips = {'Idle': (2, True), 'Run': (.6, True), 'Windup': (1, False),
                  'Active': (.4, False), 'Recovery': (.7, False), 'Hurt': (.3, False),
                  'Death': (.7, False), 'Spawn': (.3, False)}
-        if self.kind == 'dummy':
+        if self.kind == 'dummy' and not full_lifecycle:
             clips = {k: v for k, v in clips.items() if k in ('Idle', 'Hurt', 'Death', 'Spawn')}
         self.clips = {}
         for name, (seconds, loop) in clips.items():

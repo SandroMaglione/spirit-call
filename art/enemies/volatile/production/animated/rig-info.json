@@ -92,6 +92,9 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true,
-  "rest_vertex_error_m": 2.9802322387695312e-08
+  "rest_vertices_preserved": false,
+  "rest_vertex_error_m": 2.9802322387695312e-08,
+  "base_triangles": 1768,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

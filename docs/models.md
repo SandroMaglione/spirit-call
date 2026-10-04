@@ -139,3 +139,12 @@ so each model is drawn as one batch however many copies there are.
 The courtyard kit is used straight from `art/environment/courtyard/models/`
 (`assets/courtyard.ts` registers the pieces in use, with sizes from its
 `manifest.json`); the build bundles the files it uses.
+
+## Finished enemy roster
+
+Enemy game exports receive a finishing pass after their reference-fitting
+animation recipes. See [the roster changes](enemy-roster-polish.md) and
+[rebuild instructions](../art/enemies/polish-tools/README.md). The final animated
+source is editable; static production sources preserve the reference benchmark.
+Joint sleeves follow both adjoining bones, and `_GLOW` marks luminous regions
+within the same crowd material. Simulation owns contact timing and facing.

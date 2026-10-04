@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enemy roster · model and motion review</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#18212c;color:#eef4f6;font:15px system-ui}header{position:sticky;top:0;background:#18212cf5;padding:14px;z-index:2;border-bottom:1px solid #455465}h1{font-size:20px;margin:0 0 10px}label{margin-right:16px;white-space:nowrap}select,button,input{font:inherit}#cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;padding:14px}article{border:1px solid #455465;border-radius:8px;overflow:hidden}h2{font-size:16px;margin:12px}p{margin:8px 12px;color:#b7c9d4;font-size:12px}.view{height:215px}canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}header,article h2,article p{position:relative;z-index:1}#status{font-size:12px;margin-top:10px;color:#b7c9d4}
+</style>
+<canvas id="canvas"></canvas>
+<header><h1>Enemy roster · model and motion review</h1>
+<label>Clip <select id="clip"><option>Idle</option><option>Run</option><option>Windup</option><option>Active</option><option>Recovery</option><option>Hurt</option><option>Spawn</option><option>Death</option><option>Buff</option><option>WindupSpray</option><option>WindupStomp</option><option>WindupSwipe</option><option>WindupThrust</option><option>WindupBlink</option><option>WindupQuake</option></select></label>
+<label>Facing <input id="yaw" type="range" min="-180" max="180" value="35"></label>
+<label><input id="small" type="checkbox">Game scale</label>
+<label><input id="flash" type="checkbox">Hit flash</label>
+<button id="pause">Pause</button><input id="time" aria-label="Pose progress" type="range" min="0" max="1" step=".001" value="0">
+<div id="status">Loading the exported models through the game’s crowd shader…</div></header>
+<style>header{position:sticky;top:0;z-index:2}</style>
+<main id="cards"></main>
+<script type="module">
+import {Scene,WebGLRenderer,OrthographicCamera,HemisphereLight,DirectionalLight,Mesh,CircleGeometry,MeshBasicMaterial,Color} from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {enemyModels} from '/src/presentation/assets/enemies.ts';
+import {closeLoop} from '/src/presentation/models.ts';
+import {bakeAnimation,atlasFrame} from '/src/presentation/animation-atlas.ts';
+import {Batch,Instance} from '/src/presentation/batch.ts';
+import {view} from '/src/config/view.ts';
+const $=id=>document.getElementById(id),renderer=new WebGLRenderer({canvas:$('canvas'),antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setScissorTest(true);
+const entries=[];let paused=false,clock=0,last=performance.now();
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Play':'Pause'};
+$('clip').onchange=()=>{clock=0};$('time').oninput=()=>{paused=true;$('pause').textContent='Play';clock=Number($('time').value)};
+for(const [id,spec] of Object.entries(enemyModels)){
+ const gltf=await new GLTFLoader().loadAsync(spec.url),clips=new Map(gltf.animations.map(c=>[c.name,closeLoop(c,spec.clips[c.name])])),atlas=bakeAnimation({id,spec,scene:gltf.scene,clips});
+ const scene=new Scene();scene.background=new Color('#263340');scene.add(new HemisphereLight(view.light.sky,view.light.ground,view.light.skyIntensity));
+ const sun=new DirectionalLight(0xffffff,view.light.sunIntensity);sun.position.set(view.light.sun.x,view.light.sun.y,view.light.sun.z);scene.add(sun);
+ const batch=new Batch(scene,atlas.geometry,atlas.material,{animated:true}),instance=new Instance(batch);instance.object.scale.setScalar(2/spec.height);scene.add(instance.object);batch.add(instance);
+ const shadow=new Mesh(new CircleGeometry(.5,24),new MeshBasicMaterial({color:0x090f18,transparent:true,opacity:.35}));shadow.rotation.x=-Math.PI/2;shadow.position.y=-.005;scene.add(shadow);
+ const camera=new OrthographicCamera(-2,2,2,-2,.1,100);camera.position.set(6,6,6);camera.lookAt(0,1.1,0);
+ const card=document.createElement('article');card.innerHTML=`<h2>${id.replace('enemy','').replace('Charger','Firebomber')}</h2><div class="view"></div><p>${atlas.geometry.index.count/3} triangles</p>`;$('cards').append(card);
+ entries.push({id,atlas,scene,batch,instance,camera,element:card.querySelector('.view')});
+}
+$('status').textContent='13 exported models · drag facing to inspect joints · unsupported variant clips hold Idle';
+for(const name of new Set(entries.flatMap(e=>[...e.atlas.clips.keys()])))if(![...$('clip').options].some(o=>o.value===name))$('clip').add(new Option(name,name));
+window.__roster={entries,renderer};
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;if(!paused)clock=(clock+dt*.65)%1;
+ $('time').value=clock;renderer.setSize(innerWidth,innerHeight,false);renderer.setScissor(0,0,innerWidth,innerHeight);renderer.setClearColor(0x000000,0);renderer.clear();
+ for(const e of entries){
+  const r=e.element.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)continue;
+  const name=e.atlas.clips.has($('clip').value)?$('clip').value:'Idle',clip=e.atlas.clips.get(name),[a,b,w]=atlasFrame(clip,clock*clip.seconds);
+  e.instance.pose.splice(0,3,a,b,w);e.instance.glowAmount=$('flash').checked?1:0;e.instance.object.rotation.y=Number($('yaw').value)*Math.PI/180;
+  e.scene.updateMatrixWorld(true);e.batch.flush();
+  const extent=$('small').checked?10:2.1,aspect=r.width/r.height;e.camera.left=-extent*aspect;e.camera.right=extent*aspect;e.camera.top=extent;e.camera.bottom=-extent;e.camera.updateProjectionMatrix();
+  renderer.setViewport(r.left,innerHeight-r.bottom,r.width,r.height);renderer.setScissor(r.left,innerHeight-r.bottom,r.width,r.height);renderer.render(e.scene,e.camera);
+ }
+ requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script>
+</html>

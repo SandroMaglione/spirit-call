@@ -1,7 +1,7 @@
 {
   "source": "../shooter-model.blend",
   "source_sha256": "f2572105ee3ea9b6ccf3a758d5d929da917ed8bd53173afda35cb9ee34421f63",
-  "triangles": 1180,
+  "triangles": 1244,
   "bones": 8,
   "materials": 1,
   "mesh_objects": 1,
@@ -93,5 +93,8 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true
+  "rest_vertices_preserved": false,
+  "base_triangles": 1180,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }
