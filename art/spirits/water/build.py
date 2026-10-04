@@ -25,41 +25,38 @@ HERE = Path(__file__).resolve().parent
 # The sheet: about 0.6 m tall with its nub; the body alone is 157 of those 190 pixels.
 BODY = 0.6 * 157 / 190
 HOVER = 0.06  # the body's underside above the floor at rest
-DEPTH = 153 / 159  # the side view's widest over the front view's
+DEPTH = 0.92  # front to back, over side to side
 
-# The body's profile, from its underside to its tip: (height, radius), both
-# in body heights. Measured from the front view and its isometric hero
-# view: a bottom-heavy round bulb (widest under a third of the way up,
-# shoulders holding to 60% of its height, a little fuller low than the
-# sheet's front view) with a narrow tip rising out of it; the underside is slightly concave (its
-# middle higher than its rim).
+# The body: a fat pill (near-vertical sides, rounded edges, a little wider
+# side to side than front to back) with a full, rounded cap on top that
+# narrows to the tip and curves back toward the nub. (height, radius), in body heights,
+# from its underside; the underside is slightly concave.
 PROFILE = [
-    (0.0, 0.17), (0.05, 0.3), (0.14, 0.445), (0.25, 0.5), (0.37, 0.505),
-    (0.49, 0.455), (0.6, 0.395), (0.7, 0.295), (0.8, 0.195), (0.9, 0.115),
+    (0.0, 0.21), (0.045, 0.36), (0.11, 0.455), (0.19, 0.5), (0.29, 0.515), (0.4, 0.505),
+    (0.49, 0.47), (0.55, 0.415), (0.61, 0.355), (0.69, 0.305), (0.78, 0.24), (0.87, 0.16), (0.94, 0.085),
 ]
 TIP = 1.0
 # The top curves back (seen from the side), and drifts a little to one side
 # (seen from the front): ring centers offset by height, in body heights.
-LEAN_BACK = 0.1
-LEAN_SIDE = -0.022
+LEAN_BACK = 0.13
+LEAN_SIDE = -0.015
 
 
 def lean(z):
-    """Where the profile's middle is at height `z`: straight up to the middle, then curving back toward the tip."""
-    t = max(0.0, min(1.0, (z - 0.42) / 0.58))
+    """Where the profile's middle is at height `z`: straight through the pill, then the cap curving back toward the tip."""
+    t = max(0.0, min(1.0, (z - 0.5) / 0.5))
     t = t * t * (3 - 2 * t)
     return Vector((LEAN_SIDE * t ** 1.3, LEAN_BACK * t ** 1.6, 0))
 UNDERSIDE = 0.025  # the underside's middle, above its rim
 SEGMENTS = 10
-WIDTH = 1.0
+WIDTH = 1.04  # wider side to side
 JITTER = 0.035  # random radial unevenness, for facets that look cut, not turned
 
-# Eyes: tall ovals, centered on its face (34° apart round its front), at
-# 40% of its height: where the isometric hero view shows them, well inside
-# its outline seen from above.
-EYE_HEIGHT = 0.4
+# Eyes: tall ovals, centered on its face (34° apart round its front), on
+# the pill's near-vertical band (35% of its height).
+EYE_HEIGHT = 0.35
 EYE_APART = math.radians(34)
-EYE_SIZE = (0.1, 0.24)  # width, height (body heights)
+EYE_SIZE = (0.1, 0.22)  # width, height (body heights)
 NUB_RADIUS = 0.098
 NUB_HEIGHT = 1.134  # its center, above the body's underside
 
@@ -97,10 +94,10 @@ def lathe(bm, rng):
         ring = []
         for k in range(SEGMENTS):
             a = 2 * math.pi * k / SEGMENTS + turn
-            rr = r * WIDTH * (1 + rng.uniform(-JITTER, JITTER))
+            rr = r * (1 + rng.uniform(-JITTER, JITTER))
             zz = z + rng.uniform(-JITTER, JITTER) * 0.25 * (0.3 if i == 0 else 1)
             middle = lean(z)
-            ring.append(bm.verts.new(((rr * math.sin(a) + middle.x) * BODY, (-rr * math.cos(a) * DEPTH + middle.y) * BODY, zz * BODY + HOVER)))
+            ring.append(bm.verts.new(((rr * math.sin(a) * WIDTH + middle.x) * BODY, (-rr * math.cos(a) * DEPTH + middle.y) * BODY, zz * BODY + HOVER)))
         rings.append(ring)
     # Bands between rings: two triangles per step, zigzagging with the half turn.
     for i in range(len(rings) - 1):
@@ -153,28 +150,36 @@ def material(name, color=None, emission=None, strength=1.0, vertex_colors=False)
 
 
 def eye(bm, tree, side):
-    """A tall glowing oval on the body's surface: cast onto the facet at its place, lying along it, standing out a hair."""
+    """A tall glowing oval: a thin flat plate, upright, facing straight out from its place on the face.
+
+    Its front is set just in front of the body's surface at every point of
+    its outline (cast from outside), so it never sinks into the facets or
+    tilts with them: straight from the front, whole from above.
+    """
     a = side * EYE_APART / 2
     z = EYE_HEIGHT * BODY + HOVER
-    out = Vector((math.sin(a), -math.cos(a) * DEPTH, 0)).normalized()
-    hit, normal, _, _ = tree.ray_cast(Vector((0, 0, z)) + out * 1.0, -out)
-    # Lying on the body's smooth curve at its height (not on one facet, which
-    # would tip it): its face along the profile's normal, its long axis up the slope.
-    zz = EYE_HEIGHT
-    for (z0, r0), (z1, r1) in zip(PROFILE, PROFILE[1:]):
-        if z0 <= zz <= z1:
-            slope = (r1 - r0) / (z1 - z0) * WIDTH
-            break
-    flat = Vector((normal.x, normal.y, 0)).normalized()
-    normal = (flat - Vector((0, 0, slope))).normalized()
-    across = Vector((0, 0, 1)).cross(flat).normalized()
-    up = normal.cross(across).normalized()
-    center = hit + normal * 0.005
-    made = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=5, radius=1.0)
-    for v in made["verts"]:
-        x, y, h = v.co.x, v.co.y, v.co.z
-        v.co = center + across * x * EYE_SIZE[0] / 2 * BODY + up * h * EYE_SIZE[1] / 2 * BODY + normal * y * 0.005
-    return made["verts"]
+    facing = Vector((math.sin(a) / WIDTH, -math.cos(a) / DEPTH, 0)).normalized()
+    across = Vector((0, 0, 1)).cross(facing).normalized()
+    up = Vector((0, 0, 1))
+    hit, _, _, _ = tree.ray_cast(Vector((0, 0, z)) + facing * 1.0, -facing)
+    w, h = EYE_SIZE[0] / 2 * BODY, EYE_SIZE[1] / 2 * BODY
+    outline = [(math.cos(t) * w, math.sin(t) * h) for t in (2 * math.pi * k / 12 for k in range(12))]
+    # How far out the surface comes, along `facing`, anywhere under the oval.
+    reach = 0.0
+    for x, y in outline + [(0, 0)]:
+        point = hit + across * x + up * y
+        found, _, _, _ = tree.ray_cast(point + facing * 0.3, -facing)
+        if found is not None:
+            reach = max(reach, (found - hit).dot(facing))
+    front = hit + facing * (reach + 0.002)
+    back = hit - facing * 0.02
+    front_ring = [bm.verts.new(front + across * x + up * y) for x, y in outline]
+    back_ring = [bm.verts.new(back + across * x + up * y) for x, y in outline]
+    bm.faces.new(front_ring[::-1] if facing.dot(across.cross(up)) > 0 else front_ring)
+    bm.faces.new(back_ring if facing.dot(across.cross(up)) > 0 else back_ring[::-1])
+    for k in range(12):
+        j = (k + 1) % 12
+        bm.faces.new((front_ring[k], front_ring[j], back_ring[j], back_ring[k]))
 
 
 def build():
@@ -218,7 +223,7 @@ def build():
     nub_mesh.materials.append(mesh.materials[0])
     nub = bpy.data.objects.new("Nub", nub_mesh)
     # Over the tip, following its curve back.
-    nub.location = tuple(lean(TIP) * 1.25 * BODY + Vector((0, 0, NUB_HEIGHT * BODY + HOVER)))
+    nub.location = tuple(lean(TIP) * 1.35 * BODY + Vector((0, 0, NUB_HEIGHT * BODY + HOVER)))
     nub.parent = body
     collection.objects.link(nub)
 
