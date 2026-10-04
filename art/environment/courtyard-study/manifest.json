@@ -1,0 +1,488 @@
+{
+  "schema_version": 2,
+  "kit": "courtyard-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/courtyard-study.blend",
+  "source_sha256": "5bdf8b342cbdf0be39885eaa07a811dbd4ab88a368a1b20711a1ebd889549a36",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "carved-gateway",
+      "file": "models/carved-gateway.glb",
+      "bounds_m": {
+        "min": [
+          -1.024999976158142,
+          0.0,
+          -0.36500000953674316
+        ],
+        "max": [
+          1.024999976158142,
+          1.6150000095367432,
+          0.36500000953674316
+        ]
+      },
+      "dimensions_m": [
+        2.049999952316284,
+        1.6150000095367432,
+        0.7300000190734863
+      ],
+      "triangles": 780,
+      "mesh_count": 1,
+      "bytes": 54108,
+      "sha256": "8f80ec580254afc874a6fde240144d8f08bea00acacd33124fac45ac07c2b3df",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Bonded stone gateway"
+    },
+    {
+      "id": "carved-tablet",
+      "file": "models/carved-tablet.glb",
+      "bounds_m": {
+        "min": [
+          -0.23000000417232513,
+          0.0,
+          -0.125
+        ],
+        "max": [
+          0.23000000417232513,
+          0.6100000143051147,
+          0.125
+        ]
+      },
+      "dimensions_m": [
+        0.46000000834465027,
+        0.6100000143051147,
+        0.25
+      ],
+      "triangles": 360,
+      "mesh_count": 1,
+      "bytes": 25188,
+      "sha256": "970948b11b7e1b4b2208dd65d33f0f2c1af828744d0f00dce27479ca135ed57c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Carved courtyard tablet"
+    },
+    {
+      "id": "compact-brazier",
+      "file": "models/compact-brazier.glb",
+      "bounds_m": {
+        "min": [
+          -0.25999999046325684,
+          0.0,
+          -0.25999999046325684
+        ],
+        "max": [
+          0.25999999046325684,
+          0.47999998927116394,
+          0.25999999046325684
+        ]
+      },
+      "dimensions_m": [
+        0.5199999809265137,
+        0.47999998927116394,
+        0.5199999809265137
+      ],
+      "triangles": 496,
+      "mesh_count": 1,
+      "bytes": 37948,
+      "sha256": "6c01fcc53b607bc05b9e1592627fa4888a3bef1c752a2c4f0a7cccf733320142",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Compact bowl brazier"
+    },
+    {
+      "id": "courtyard-pergola",
+      "file": "models/courtyard-pergola.glb",
+      "bounds_m": {
+        "min": [
+          -1.1339999437332153,
+          0.0,
+          -0.7250000238418579
+        ],
+        "max": [
+          1.1339999437332153,
+          1.6299999952316284,
+          0.7250000238418579
+        ]
+      },
+      "dimensions_m": [
+        2.2679998874664307,
+        1.6299999952316284,
+        1.4500000476837158
+      ],
+      "triangles": 1352,
+      "mesh_count": 1,
+      "bytes": 89360,
+      "sha256": "4a16c9251674c7e4f5f160ec0f571df4a7199299c34ef3df247deca20a2f2f4b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Braced timber pergola"
+    },
+    {
+      "id": "fern-planter",
+      "file": "models/fern-planter.glb",
+      "bounds_m": {
+        "min": [
+          -0.2944033145904541,
+          0.0,
+          -0.31716907024383545
+        ],
+        "max": [
+          0.32502615451812744,
+          0.4673107862472534,
+          0.31732767820358276
+        ]
+      },
+      "dimensions_m": [
+        0.6194294691085815,
+        0.4673107862472534,
+        0.6344967484474182
+      ],
+      "triangles": 1220,
+      "mesh_count": 1,
+      "bytes": 85388,
+      "sha256": "09df2e65c41d75dec1ad4d4c8df3d442f67c6800a844a74555413c14f5a56d33",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Fern rooted inside a planter"
+    },
+    {
+      "id": "handled-urn",
+      "file": "models/handled-urn.glb",
+      "bounds_m": {
+        "min": [
+          -0.3020000159740448,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          0.3020000159740448,
+          0.5,
+          0.20000000298023224
+        ]
+      },
+      "dimensions_m": [
+        0.6040000319480896,
+        0.5,
+        0.4000000059604645
+      ],
+      "triangles": 572,
+      "mesh_count": 1,
+      "bytes": 37032,
+      "sha256": "f0b650947ddd94b8517bf63d45eafdd35fd6bd1eecab54213839fdbfe2619b7c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Jade urn with attached handles"
+    },
+    {
+      "id": "incense-tray",
+      "file": "models/incense-tray.glb",
+      "bounds_m": {
+        "min": [
+          -0.1899999976158142,
+          0.0,
+          -0.07999999821186066
+        ],
+        "max": [
+          0.1899999976158142,
+          0.17118559777736664,
+          0.07999999821186066
+        ]
+      },
+      "dimensions_m": [
+        0.3799999952316284,
+        0.17118559777736664,
+        0.1599999964237213
+      ],
+      "triangles": 108,
+      "mesh_count": 1,
+      "bytes": 8464,
+      "sha256": "82938360a2414495db90b5357a7272b20a663d4cc61e15fb644eeb7e344824ef",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Incense in a metal tray"
+    },
+    {
+      "id": "jade-bowl",
+      "file": "models/jade-bowl.glb",
+      "bounds_m": {
+        "min": [
+          -0.1599999964237213,
+          0.0,
+          -0.1599999964237213
+        ],
+        "max": [
+          0.1599999964237213,
+          0.07500000298023224,
+          0.1599999964237213
+        ]
+      },
+      "dimensions_m": [
+        0.3199999928474426,
+        0.07500000298023224,
+        0.3199999928474426
+      ],
+      "triangles": 140,
+      "mesh_count": 1,
+      "bytes": 9860,
+      "sha256": "e928cdeca41ec79db690aab6e48c29e56ed69a1bf1d7d5971733e542c28292f4",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Small jade bowl"
+    },
+    {
+      "id": "jade-jar",
+      "file": "models/jade-jar.glb",
+      "bounds_m": {
+        "min": [
+          -0.11999999731779099,
+          0.0,
+          -0.11999999731779099
+        ],
+        "max": [
+          0.11999999731779099,
+          0.3100000023841858,
+          0.11999999731779099
+        ]
+      },
+      "dimensions_m": [
+        0.23999999463558197,
+        0.3100000023841858,
+        0.23999999463558197
+      ],
+      "triangles": 284,
+      "mesh_count": 1,
+      "bytes": 19944,
+      "sha256": "c64b6a4ceb62ae1bfa1df3cb56ccb56bf25fac302d4271e3c1b09561ff5b541b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Compact jade jar"
+    },
+    {
+      "id": "offering-alcove",
+      "file": "models/offering-alcove.glb",
+      "bounds_m": {
+        "min": [
+          -1.0800000429153442,
+          0.0,
+          -0.7540000081062317
+        ],
+        "max": [
+          1.0800000429153442,
+          1.6299999952316284,
+          0.7540000081062317
+        ]
+      },
+      "dimensions_m": [
+        2.1600000858306885,
+        1.6299999952316284,
+        1.5080000162124634
+      ],
+      "triangles": 2100,
+      "mesh_count": 1,
+      "bytes": 137812,
+      "sha256": "280f106f8e1ba20bb1ea9609a038b6228b90bcf0dc96d6bf1e8a5e1826143821",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Roofed offering alcove"
+    },
+    {
+      "id": "stone-bench",
+      "file": "models/stone-bench.glb",
+      "bounds_m": {
+        "min": [
+          -0.5249999761581421,
+          0.0,
+          -0.2150000035762787
+        ],
+        "max": [
+          0.5249999761581421,
+          0.30000001192092896,
+          0.2150000035762787
+        ]
+      },
+      "dimensions_m": [
+        1.0499999523162842,
+        0.30000001192092896,
+        0.4300000071525574
+      ],
+      "triangles": 240,
+      "mesh_count": 1,
+      "bytes": 17124,
+      "sha256": "03a0bc4eb3c13277596af3287277bfcaceb2b25e97d891716e161c3d16e0b088",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Paired supports and stone seat"
+    },
+    {
+      "id": "stone-chips",
+      "file": "models/stone-chips.glb",
+      "bounds_m": {
+        "min": [
+          -0.26311948895454407,
+          0.0,
+          -0.15585584938526154
+        ],
+        "max": [
+          0.27700158953666687,
+          0.07999999821186066,
+          0.22071199119091034
+        ]
+      },
+      "dimensions_m": [
+        0.5401210784912109,
+        0.07999999821186066,
+        0.3765678405761719
+      ],
+      "triangles": 208,
+      "mesh_count": 1,
+      "bytes": 18728,
+      "sha256": "e15ab68c97a8a3e4d9454ce0644da2e73e28fd38602582f3230ce59603b9f32c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Grounded stone chips"
+    },
+    {
+      "id": "tiered-fountain",
+      "file": "models/tiered-fountain.glb",
+      "bounds_m": {
+        "min": [
+          -0.5799999833106995,
+          0.0,
+          -0.5799999833106995
+        ],
+        "max": [
+          0.5799999833106995,
+          0.7850000262260437,
+          0.5799999833106995
+        ]
+      },
+      "dimensions_m": [
+        1.159999966621399,
+        0.7850000262260437,
+        1.159999966621399
+      ],
+      "triangles": 416,
+      "mesh_count": 1,
+      "bytes": 27152,
+      "sha256": "8d4c7c924c753c17d2fc8c7cde10b4f3b92d546ab1128532f3142278bd68977e",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Supported two-tier fountain"
+    },
+    {
+      "id": "votive-plate",
+      "file": "models/votive-plate.glb",
+      "bounds_m": {
+        "min": [
+          -0.17499999701976776,
+          0.0,
+          -0.125
+        ],
+        "max": [
+          0.17499999701976776,
+          0.13199999928474426,
+          0.125
+        ]
+      },
+      "dimensions_m": [
+        0.3499999940395355,
+        0.13199999928474426,
+        0.25
+      ],
+      "triangles": 192,
+      "mesh_count": 1,
+      "bytes": 13552,
+      "sha256": "db6548fd0e5028173bd940b96510dbd5c93923e342561de42896a79350082530",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Unlit votive plate"
+    }
+  ]
+}

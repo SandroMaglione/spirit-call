@@ -1,0 +1,133 @@
+{
+  "title": "Courtyard study",
+  "style": "courtyard",
+  "batch": "arena-prop-study",
+  "base_kit": "courtyard",
+  "palette": {
+    "stone": "8D8D80",
+    "light": "AAA997",
+    "edge": "CCC7AE",
+    "dark": "55584E",
+    "accent": "709B83",
+    "metal": "66745F",
+    "wood": "927653",
+    "earth": "8E8363",
+    "green": "72865D",
+    "warm": "C9AE6F",
+    "snow": "CBCDBE",
+    "cloth": "9A8974",
+    "wood-light": "B29065",
+    "wood-dark": "66533A",
+    "metal-light": "AAA997",
+    "rope": "BCAA82",
+    "sail": "CDC8B1",
+    "fish": "AAA997"
+  },
+  "assets": [
+    {
+      "id": "jade-bowl",
+      "title": "Small jade bowl",
+      "recipe": "study-jade-bowl",
+      "group": "small"
+    },
+    {
+      "id": "stone-chips",
+      "title": "Grounded stone chips",
+      "recipe": "study-stone-chips",
+      "group": "small"
+    },
+    {
+      "id": "incense-tray",
+      "title": "Incense in a metal tray",
+      "recipe": "study-incense-tray",
+      "group": "small"
+    },
+    {
+      "id": "jade-jar",
+      "title": "Compact jade jar",
+      "recipe": "study-jade-jar",
+      "group": "small"
+    },
+    {
+      "id": "votive-plate",
+      "title": "Unlit votive plate",
+      "recipe": "study-votive-plate",
+      "group": "small"
+    },
+    {
+      "id": "handled-urn",
+      "title": "Jade urn with attached handles",
+      "recipe": "study-handled-urn",
+      "group": "working"
+    },
+    {
+      "id": "stone-bench",
+      "title": "Paired supports and stone seat",
+      "recipe": "study-stone-bench",
+      "group": "working"
+    },
+    {
+      "id": "compact-brazier",
+      "title": "Compact bowl brazier",
+      "recipe": "study-compact-brazier",
+      "group": "working"
+    },
+    {
+      "id": "fern-planter",
+      "title": "Fern rooted inside a planter",
+      "recipe": "study-fern-planter",
+      "group": "working"
+    },
+    {
+      "id": "carved-tablet",
+      "title": "Carved courtyard tablet",
+      "recipe": "study-carved-tablet",
+      "group": "working"
+    },
+    {
+      "id": "courtyard-pergola",
+      "title": "Braced timber pergola",
+      "recipe": "study-courtyard-pergola",
+      "group": "large"
+    },
+    {
+      "id": "carved-gateway",
+      "title": "Bonded stone gateway",
+      "recipe": "study-carved-gateway",
+      "group": "large"
+    },
+    {
+      "id": "tiered-fountain",
+      "title": "Supported two-tier fountain",
+      "recipe": "study-tiered-fountain",
+      "group": "large"
+    },
+    {
+      "id": "offering-alcove",
+      "title": "Roofed offering alcove",
+      "recipe": "study-offering-alcove",
+      "group": "large"
+    }
+  ],
+  "player_height_m": 0.5803955393237317,
+  "scope": "Reviewable art study with supported perimeter assemblies.",
+  "changes": [
+    "Reduced jade urn and brazier proportions beside the current spirit.",
+    "Added small ritual details, a low bench and rooted planter.",
+    "Added supported pergola, gateway, fountain and offering alcove for the perimeter."
+  ],
+  "comparisons": [
+    {
+      "original": "urn-jade",
+      "study": "handled-urn"
+    },
+    {
+      "original": "brazier",
+      "study": "compact-brazier"
+    },
+    {
+      "original": "rocks-tall",
+      "study": "stone-chips"
+    }
+  ]
+}
