@@ -42,10 +42,26 @@ scene.render.engine = "BLENDER_EEVEE_NEXT"
 scene.view_settings.view_transform = "Standard"
 scene.render.resolution_x = 470
 scene.render.resolution_y = 500
+if not os.environ.get("SWEEP") and "resolution" in CONFIG:
+    scene.render.resolution_x, scene.render.resolution_y = CONFIG["resolution"]
 world = bpy.data.worlds.new("World")
 world.use_nodes = True
 world.node_tree.nodes["Background"].inputs["Color"].default_value = (*linear(CONFIG["background"]), 1)
 scene.world = world
+if "ambient" in CONFIG:
+    # Light sheets should not turn into an equally bright environment
+    # light. Keep the camera background while lighting with a dim world.
+    nodes, links = world.node_tree.nodes, world.node_tree.links
+    backdrop = nodes["Background"]
+    ambient = nodes.new("ShaderNodeBackground")
+    ambient.inputs["Color"].default_value = backdrop.inputs["Color"].default_value
+    ambient.inputs["Strength"].default_value = CONFIG["ambient"]
+    rays = nodes.new("ShaderNodeLightPath")
+    mixed = nodes.new("ShaderNodeMixShader")
+    links.new(rays.outputs["Is Camera Ray"], mixed.inputs[0])
+    links.new(ambient.outputs["Background"], mixed.inputs[1])
+    links.new(backdrop.outputs["Background"], mixed.inputs[2])
+    links.new(mixed.outputs[0], nodes["World Output"].inputs["Surface"])
 # A key from the upper left front, a fill from behind, a rim from behind and below.
 for name, rotation in (("sun", (40, 0, -35)), ("fill", (70, 0, 150)), ("rim", (-110, 0, 20))):
     energy, color = CONFIG["lights"][name]
