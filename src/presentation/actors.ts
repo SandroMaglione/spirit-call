@@ -183,13 +183,20 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         sway.y += sway.vy * seconds
         sway.last = { x: velocity.x, y: velocity.y }
       }
-      const lean = Math.min(springs.most, Math.hypot(sway.x, sway.y))
+      // Standing, she leans toward where she aims (seen from behind, her body still says where that is); a run leans on its own.
+      const pace = tuning.characters[data.member.get().character].stats.speed
+      // Less the more she faces the camera: there her eyes say it, and leaning would tip them out of sight.
+      const onScreen = normalizeOr(toScreen(projection, aim), { x: 0, y: -1 })
+      const still = Math.max(0, 1 - Math.hypot(velocity.x, velocity.y) / (pace * 0.5)) * (0.5 - 0.5 * onScreen.y)
+      const tilt = { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
+      const lean = Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
       if (lean > 1e-4) {
         // Tipped over her feet, her top toward the lean: about the floor axis across it.
-        leanAxis.set(sway.y, 0, -sway.x).normalize()
+        leanAxis.set(tilt.y, 0, -tilt.x).normalize()
         node.pivot.quaternion.setFromAxisAngle(leanAxis, lean)
       } else node.pivot.quaternion.identity()
-      const squash = lean * springs.squash
+      // Only a change of pace squashes her, not her aim.
+      const squash = Math.min(springs.most, Math.hypot(sway.x, sway.y)) * springs.squash
       // Coming onto the field she pops up to her size, a little past it (not before the one who fell is down).
       const pop = Math.min(1, feedback.entrance / spirit.popSeconds)
       const size = pop < 0 ? 0 : pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))

@@ -1,7 +1,7 @@
 {
-  "source_sha256": "7ef82379d46655fa03428867918c17390c2e70587bb4be453de3dfb188040faf",
-  "glb_sha256": "3458e5e0f2381d9c50c32555b2e41f9591c692ecbc838175e043bc9bc5dac8a6",
-  "bytes": 178104,
+  "source_sha256": "f6e4e9e38e1740950e726acc471bcf52d4b0948068e258abb9bab28b94e9e5e8",
+  "glb_sha256": "4fb69e29130700c9d8de2c8ffb84adae113370a987dd3187035e9a878eabd4bc",
+  "bytes": 190148,
   "height_m": 0.6650000214576721,
   "height_basis": "ground origin to highest rest-pose mesh vertex, including floating parts",
   "clips": {
@@ -46,5 +46,5 @@
       "loopSeconds": null
     }
   },
-  "triangles": 1620
+  "triangles": 1800
 }

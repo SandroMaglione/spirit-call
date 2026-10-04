@@ -69,7 +69,17 @@ a repeat of the same steps. The rules for model files in general are in
     up (`view.spirit`, `DrawPlayer`, `PlayFalls`). All of it is the
     presentation's: the simulation switches at once, as before. A new spirit gets all of this from its
     halo (`GlowSpec`) and its look's `eyes`; nothing is built per spirit.
-11. **Model first, then the game.** Each spirit is built and reviewed as a
+11. **Its back says which way it faces.** The camera sees the arena from
+    one side, so facing away a spirit shows no eyes. Four things say it
+    anyway, and a new spirit needs them all: something only its back has
+    (Water's tail, Thunder's bolt down its back, Fire's curl, Wind's
+    trailing leaves), floating parts that rest off-center front to back in
+    its `Idle` (Water's nub behind its tip, Thunder's ring tipped down in
+    front), a few of its trail's particles still leaving its back while it
+    stands (`view.spirit.standing`), and a lean toward its aim when that is
+    away from the camera (`view.spirit.sway.aim`). Check it in the game
+    aiming away, sideways, and toward the camera.
+12. **Model first, then the game.** Each spirit is built and reviewed as a
     model against its sheet (overlays, renders from the game's camera, at
     game size) before it gets clips, glow, a trail, and its look.
 

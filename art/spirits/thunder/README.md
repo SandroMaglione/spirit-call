@@ -94,7 +94,10 @@ the special, the ultimate) are every spirit's (`../tools/moves.py`), in the
 Stormcaller's `STYLE`: she casts, with a small nod and a hop. They may lean
 along the floor into a blow, starting and ending on the spot. Her eyes
 have her own shape (`EYE_SHAPE` in `build.py`: big and round, their outer
-ends a little lower), and the halo turns about its own tilted axis.
+ends a little lower), and the halo turns about its own tilted axis, tipped
+a little further down in front while she stands. A gold bolt down its back
+(`BackBolt`, not on the sheet) says which way she faces when her eyes do
+not show.
 
 `renders/gameplay-desktop.mp4` records keyboard movement and the Spark
 Totem in the normal arena. `renders/gameplay-touch.mp4` records the

@@ -20,6 +20,8 @@ FPS = 30
 STYLE = {"lunge": 0.03, "back": 0.02, "twist": 0.1, "roll": 0.08, "hop": 0.035, "spin": False, "cast": -0.1}
 # The halo's own axis: it is built tilted, rising 0.24 per meter toward the back (`HALO_TILT` in build.py).
 HALO_AXIS = Vector((0, -0.24, 1)).normalized()
+# How much further the halo tips down in front while it stands (rad).
+HALO_FRONT = 0.12
 NAMES = ["ThunderSpirit", "LightningCrest", "Halo", "LightningWing.L", "LightningWing.R",
          "VioletFin.L", "VioletFin.R", "Eye.L", "Eye.R", "Rim.L", "Rim.R"]
 
@@ -46,7 +48,8 @@ def pose(t, base, running):
             values[name] = {
                 "location": (x, y + (0.018 if running else 0), z + 0.008 * wave(t, -0.8)),
                 # Turning about its own axis (the ring is modeled tilted: about the floor's it would wobble like a coin), swaying a little.
-                "rotation_euler": (Euler((-0.08 if running else 0.025 * wave(t, 0.4), 0.02 * wave(t, 1.2), 0)).to_matrix()
+                # Standing, it tips a little further down in front (`HALO_FRONT`): from any side it says which way she faces.
+                "rotation_euler": (Euler((-0.08 if running else HALO_FRONT + 0.025 * wave(t, 0.4), 0.02 * wave(t, 1.2), 0)).to_matrix()
                                    @ Matrix.Rotation(2 * math.pi * t, 3, HALO_AXIS)).to_euler(),
             }
         elif name == "LightningCrest":

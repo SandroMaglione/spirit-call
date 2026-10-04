@@ -47,6 +47,8 @@ COLORS = {"deep": "#1A5CE6", "base": "#2E7BFF", "mid": "#4486FF", "light": "#8EE
 EYE_GLOW = 4.0  # emission strength of the eyes
 EYE_LIFT = 0.002  # how far above the surface the eyes lie (m)
 EYE_RAISE = 0.014  # renders measure the eyes this much lower than the sheet (body heights; the render's base reads lower)
+# Her tail: how high on the body it leaves (of its height), how far behind and up it reaches, and its section at the root (m).
+TAIL = {"height": 0.22, "long": 0.2, "rise": 0.15, "wide": 0.085, "thick": 0.03}
 # Her eyes, from the sheet's ellipses: the Tidecaller is calm (wide, half-lidded, level).
 EYE_SHAPE = {"wide": 1.12, "tall": 0.9, "lid": 0.4, "tilt": 0.0}
 
@@ -237,6 +239,43 @@ def eye_material():
     return m
 
 
+def tail(tree, rng, material):
+    """A small fin curling up from low on its back (not on the sheet: from behind, where its eyes do not show, it says
+    which way it faces). Its own object, its origin at its root, to sway and stream on its own."""
+    root, _, _, _ = tree.ray_cast(Vector((0, 1.0, HOVER + TAIL["height"] * BODY)), Vector((0, -1, 0)))
+    root = root - Vector((0, 0.012, 0))  # sunk in a little, so no gap shows at its root
+    rings = 6
+    bm = bmesh.new()
+    previous = None
+    for ring in range(rings):
+        s = ring / rings
+        # Out behind it, curling up; a flat diamond section, tapering to its tip.
+        center = Vector((0, TAIL["long"] * s, TAIL["rise"] * s * s))
+        wide, thick = TAIL["wide"] * (1 - s) ** 0.8, TAIL["thick"] * (1 - s) ** 0.8
+        up = Vector((0, -2 * TAIL["rise"] * s, TAIL["long"])).normalized()
+        verts = [bm.verts.new(center + offset) for offset in (Vector((wide, 0, 0)), up * thick, Vector((-wide, 0, 0)), -up * thick)]
+        if previous is not None:
+            for k in range(4):
+                bm.faces.new((previous[k], previous[(k + 1) % 4], verts[(k + 1) % 4], verts[k]))
+        previous = verts
+    tip = bm.verts.new(Vector((0, TAIL["long"], TAIL["rise"])))
+    for k in range(4):
+        bm.faces.new((previous[k], previous[(k + 1) % 4], tip))
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    mesh = bpy.data.meshes.new("Tail")
+    bm.to_mesh(mesh)
+    bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = False
+    # Lighter toward its tip, like the body toward its top.
+    color_faces(mesh, rng, lambda p: 0.55 + 0.6 * p.y / TAIL["long"])
+    mesh.materials.append(material)
+    obj = bpy.data.objects.new("Tail", mesh)
+    obj.location = root
+    return obj
+
+
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rng = random.Random(7)
@@ -287,7 +326,11 @@ def build():
     nub_object.parent = body
     collection.objects.link(nub_object)
 
-    tris = sum(len(p.vertices) - 2 for m in (mesh, nub_mesh) for p in m.polygons)
+    fin = tail(tree, rng, material)
+    fin.parent = body
+    collection.objects.link(fin)
+
+    tris = sum(len(p.vertices) - 2 for m in (mesh, nub_mesh, fin.data) for p in m.polygons)
     bpy.ops.wm.save_as_mainfile(filepath=str(HERE / "water-spirit.blend"))
     print(f"built: {tris} triangles (+{eye_tris} for the eyes), body {BODY:.3f} m, nub at {height:.3f} ({across:+.3f} across, {forward:+.3f} forward)")
 

@@ -166,6 +166,31 @@ def bolt(side,mat,parent):
     for v in obj.data.vertices:v.co-=center
     obj.location=center
 
+# A bolt down its back (not on the sheet: from behind, where its eyes do not
+# show, it says which way it faces). Its outline across (meters) and up
+# (of UNIT), laid on the back's surface like the eyes on the front.
+BACK_BOLT=[(0.012,0.5),(-0.055,0.335),(0.004,0.335),(-0.022,0.17),(0.055,0.385),(-0.004,0.385),(0.048,0.5)]
+
+def back_bolt(body,mat):
+    tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
+    bm=bmesh.new()
+    face=bm.faces.new([bm.verts.new((x,0,z*UNIT+HOVER)) for x,z in BACK_BOLT])
+    # Small pieces, so it follows the facets under it.
+    bmesh.ops.triangulate(bm,faces=[face])
+    bmesh.ops.subdivide_edges(bm,edges=bm.edges[:],cuts=5,use_grid_fill=True)
+    bmesh.ops.triangulate(bm,faces=bm.faces[:])
+    for v in bm.verts:
+        hit,normal,_,_=tree.ray_cast(Vector((v.co.x,1,v.co.z)),Vector((0,-1,0)))
+        if hit is None:raise ValueError("back bolt extends beyond body")
+        v.co=hit+normal*0.007
+    mesh=bpy.data.meshes.new("BackBolt");bm.to_mesh(mesh);bm.free()
+    bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=bm.faces)
+    if sum(f.normal.y for f in bm.faces)<0:bmesh.ops.reverse_faces(bm,faces=bm.faces)
+    bm.to_mesh(mesh);bm.free()
+    mesh.materials.append(mat)
+    obj=bpy.data.objects.new("BackBolt",mesh);bpy.context.scene.collection.objects.link(obj)
+    obj.parent=body
+
 def halo(mat,parent):
     radius=(255-104)*PIXEL/2;depth=139*PIXEL/2
     height=(519-375)*PIXEL+HOVER
@@ -210,6 +235,7 @@ def main():
         fin=extruded_polygon(f"VioletFin.{'L' if side>0 else 'R'}",front,"Y",-0.026,0.026,purple)
         fin.parent=body;shade(fin)
     halo(ring,body)
+    back_bolt(body,gold)
     # A small luminous diamond finishes the underside, as in every view.
     verts=[(-0.029,0,0.018*UNIT+HOVER),(0,0,0.045*UNIT+HOVER),(0.029,0,0.018*UNIT+HOVER),(0,0,HOVER),(0,-0.029,0.018*UNIT+HOVER),(0,0.029,0.018*UNIT+HOVER)]
     faces=[(0,1,4),(1,2,4),(2,3,4),(3,0,4),(1,0,5),(2,1,5),(3,2,5),(0,3,5)]

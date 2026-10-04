@@ -371,7 +371,9 @@ const shedding = new WeakMap<object, { at: Vec2; owed: number }>()
  * the 3D scene so its body hides the ones behind it: each leaves from its
  * back, low on it, thrown back against its motion; drops fall to the
  * floor, about half leaving a ripple there, embers drift up and burn out,
- * wisps curl away and fade. More the faster it goes; none while it stands.
+ * wisps curl away and fade. More the faster it goes; standing, a few still
+ * leave its back (`view.spirit.standing` of its rate), drifting out behind
+ * where it faces: seen from behind, they say which way that is.
  */
 export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
   queries: {
@@ -391,12 +393,9 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
     last.at = at
     if (seconds <= 0) continue
     const speed = Math.hypot(moved.x, moved.y) / seconds
-    if (speed < 20) {
-      last.owed = 0
-      continue
-    }
-    last.owed += drops.rate * seconds * Math.min(1, speed / 290)
-    const back = { x: -moved.x / (speed * seconds), y: -moved.y / (speed * seconds) }
+    const standing = speed < 20
+    last.owed += drops.rate * seconds * (standing ? view.spirit.standing : Math.min(1, speed / 290))
+    const back = standing ? { x: -node.facing.x, y: -node.facing.y } : { x: -moved.x / (speed * seconds), y: -moved.y / (speed * seconds) }
     const radius = data.body.get().radius
     while (last.owed >= 1) {
       last.owed -= 1
@@ -407,7 +406,7 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
       const height = node.body.height * (0.12 + Math.random() * 0.3)
       const kind = drops.kind ?? "drop"
       const thrown = kind === "drop" ? 50 + Math.random() * 70 : kind === "ember" ? 25 + Math.random() * 40 : 60 + Math.random() * 50
-      services.host.drops.emit(from, height, back, thrown, drops.size * (0.7 + Math.random() * 0.6), color, kind)
+      services.host.drops.emit(from, height, back, standing ? thrown * 0.4 : thrown, drops.size * (0.7 + Math.random() * 0.6), color, kind)
     }
   }
 })
