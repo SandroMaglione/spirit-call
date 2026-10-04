@@ -57,7 +57,11 @@ a repeat of the same steps. The rules for model files in general are in
    Its combat clips (a combo's blows, the charged move, the dash, a hit
    taken, the special, the ultimate) are the same for every spirit
    (`tools/moves.py`), shaped by a `STYLE` in its `animate.py`: how its
-   character strikes (a lunge for a blade, a kick back for a gun).
+   character strikes (a lunge for a blade, a kick back for a gun). A blow
+   may wind up (its `contact` pose is timed to the simulation's blow), but
+   a skill takes effect the moment it is cast: its clip leaves the ground
+   by its second frame, with no crouch first, or the leap comes after the
+   effect.
 10. **The body says how she is.** On a phone the eyes are on the
     character, not the HUD, so what matters shows on her: her halo pulses
     brighter while her ultimate is ready and dims as her health runs low,
@@ -75,8 +79,9 @@ a repeat of the same steps. The rules for model files in general are in
     (Water's tail, Thunder's bolt down its back, Fire's curl, Wind's
     trailing leaves), floating parts that rest off-center front to back in
     its `Idle` (Water's nub behind its tip, Thunder's ring tipped down in
-    front), a few of its trail's particles still leaving its back while it
-    stands (`view.spirit.standing`), and a lean toward its aim when that is
+    front), a very few of its trail's particles still leaving its back
+    while it stands (`view.spirit.standing`: small, slow, and rising, never
+    falling at its feet), and a lean toward its aim when that is
     away from the camera (`view.spirit.sway.aim`). Check it in the game
     aiming away, sideways, and toward the camera.
 12. **Model first, then the game.** Each spirit is built and reviewed as a
@@ -204,6 +209,10 @@ to copy).
 - **A clip that never moves an object has no track for it:** the exporter
   drops constant tracks (the dash keeps the body on the spot), so code and
   tests must not expect every clip to have every track.
+- **Portraits cropped to the head:** the party list and the menus draw a
+  character's portrait (`showcase.ts`). Cropped to the top of the figure,
+  as for a person, a spirit shows only its crest: its eyes sit low. A
+  portrait shows all of her, nearly facing the camera.
 - **Halos are shared by copies:** a copied model shares its glow sprites'
   material; a body whose halo changes with its state needs its own
   (`copyModel` gives a puppet one).

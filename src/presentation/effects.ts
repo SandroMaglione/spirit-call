@@ -371,9 +371,11 @@ const shedding = new WeakMap<object, { at: Vec2; owed: number }>()
  * the 3D scene so its body hides the ones behind it: each leaves from its
  * back, low on it, thrown back against its motion; drops fall to the
  * floor, about half leaving a ripple there, embers drift up and burn out,
- * wisps curl away and fade. More the faster it goes; standing, a few still
- * leave its back (`view.spirit.standing` of its rate), drifting out behind
- * where it faces: seen from behind, they say which way that is.
+ * wisps curl away and fade. More the faster it goes; standing, only a few
+ * still leave its back (`view.spirit.standing` of its rate), small and
+ * slow, behind where it faces: seen from behind, they say which way that
+ * is. Standing, drops rise like bubbles instead of falling (a body
+ * dripping on the spot reads wrong).
  */
 export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
   queries: {
@@ -403,10 +405,11 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
       // From its back, a little to either side, low on its body.
       const across = (Math.random() - 0.5) * radius * 1.1
       const from = { x: at.x + back.x * radius * 0.9 - back.y * across, y: at.y + back.y * radius * 0.9 + back.x * across }
-      const height = node.body.height * (0.12 + Math.random() * 0.3)
-      const kind = drops.kind ?? "drop"
+      const height = node.body.height * (standing ? 0.3 + Math.random() * 0.3 : 0.12 + Math.random() * 0.3)
+      const shed = drops.kind ?? "drop"
+      const kind = standing && shed === "drop" ? "ember" : shed
       const thrown = kind === "drop" ? 50 + Math.random() * 70 : kind === "ember" ? 25 + Math.random() * 40 : 60 + Math.random() * 50
-      services.host.drops.emit(from, height, back, standing ? thrown * 0.4 : thrown, drops.size * (0.7 + Math.random() * 0.6), color, kind)
+      services.host.drops.emit(from, height, back, standing ? thrown * 0.3 : thrown, drops.size * (standing ? 0.6 : 1) * (0.7 + Math.random() * 0.6), color, kind)
     }
   }
 })
