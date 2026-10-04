@@ -37,13 +37,6 @@ const fakeBody = (id: ModelId): ModelSource => {
   return { id, spec: { url: "", height: 2, clips: {} }, scene, clips }
 }
 
-/** A stand-in for a held weapon: a thin box. */
-const fakeWeapon = (id: ModelId): ModelSource => {
-  const scene = new Group()
-  scene.add(new Mesh(new BoxGeometry(0.05, 1, 0.05), new MeshStandardMaterial()))
-  return { id, spec: { url: "", height: null, clips: {} }, scene, clips: new Map() }
-}
-
 /** A stand-in for an arena piece: one box mesh with one material, as the courtyard's pieces are. */
 const fakePiece = (id: ModelId): ModelSource => {
   const scene = new Group()
@@ -55,8 +48,6 @@ const setup = () => {
   const parent = new Group()
   const loaded = new Map<ModelId, ModelSource>([...modelsInLooks()].map((id) => [id, fakePiece(id)]))
   loaded.set("waterSpirit", fakeBody("waterSpirit"))
-  loaded.set("trainingBlade", fakeWeapon("trainingBlade"))
-  loaded.set("crescendo", fakeWeapon("crescendo"))
   for (const [id, source] of loadedEnemies) loaded.set(id, source)
   const assets = makeAssets(parent, loaded)
   return { parent, assets, pool: [] as Array<ProjectileNode> }

@@ -17,7 +17,7 @@ const fixture = () => {
     ["Hold", clip("Hold", [0, 0.4], [10, 10])],
     ["Recover", clip("Recover", [0, 0.2], [6, 0])]
   ])
-  const puppet = new Puppet({ id: "crow", scene, clips, spec: { url: "", height: 1, clips: {} } }, 1,
+  const puppet = new Puppet({ id: "waterSpirit", scene, clips, spec: { url: "", height: 1, clips: {} } }, 1,
     { idle: "Idle", run: { clip: "Run", distance: 100 } })
   let x = 0
   const animate = (seconds: number, travel = 0) => {
