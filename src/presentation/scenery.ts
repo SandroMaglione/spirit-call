@@ -59,10 +59,11 @@ const makeFloor = (
           const edge = column === 0 || row === 0 || column === across - 1 || row === down - 1
           const variants = edge && floor.border !== undefined ? floor.border : floor.tiles
           const inlay = floor.inlays?.find((inlay) => inlay.column === column && inlay.row === row)
-          const tile = new Instance(assets.piece(inlay?.model ?? variants[variantAt(variants.length, at)]!))
+          const tile = new Instance(assets.piece(inlay?.model ?? variants[variantAt(variants.length, at)]!, floor.tint))
           tile.object.position.set(at.x, 0, at.y)
-          // Square tiles turn by quarter turns, so the same few never line up.
-          tile.object.rotation.y = (variantAt(4, { x: at.y, y: at.x }) * Math.PI) / 2
+          // Square tiles turn by quarter turns, so the same few never line up; the border's run along their wall.
+          const quarters = edge && floor.border !== undefined ? (column === 0 || column === across - 1 ? 1 : 0) : variantAt(4, { x: at.y, y: at.x })
+          tile.object.rotation.y = (quarters * Math.PI) / 2
           const [tileX, tileZ] = inlay === undefined ? [sizeX, sizeZ] : footprintOf(inlay.model)
           tile.object.scale.set(width / across / tileX, scale, height / down / tileZ)
           tile.batch.add(tile)

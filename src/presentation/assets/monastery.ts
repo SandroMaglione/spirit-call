@@ -22,6 +22,8 @@ import snowRocksUrl from "../../../art/environment/frostbound-monastery/models/s
 import snowdriftUrl from "../../../art/environment/frostbound-monastery/models/snowdrift.glb?url"
 import wallLowUrl from "../../../art/environment/frostbound-monastery/models/wall-low.glb?url"
 import wallStraightUrl from "../../../art/environment/frostbound-monastery/models/wall-straight.glb?url"
+import floorInsetUrl from "../../../art/environment/frostbound-monastery/models/floor-inset.glb?url"
+import floorSmallUrl from "../../../art/environment/frostbound-monastery/models/floor-small.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -41,5 +43,7 @@ export const monasteryModels = {
   monasteryLanternPost: piece(lanternPostUrl, 1.93, [0.56, 0.56]),
   monasteryShrine: piece(shrineUrl, 1.5, [1.2, 0.85]),
   monasterySnowRocks: piece(snowRocksUrl, 0.62, [1.4285, 0.9879]),
-  monasterySnowdrift: piece(snowdriftUrl, 0.248, [1.4285, 0.9879])
+  monasterySnowdrift: piece(snowdriftUrl, 0.248, [1.4285, 0.9879]),
+  monasteryFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  monasteryFloorSmall: piece(floorSmallUrl, 0.14, [1, 1])
 } as const

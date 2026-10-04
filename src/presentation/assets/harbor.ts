@@ -26,6 +26,10 @@ import pillarSmallUrl from "../../../art/environment/saltwind-harbor/models/pill
 import wallLowUrl from "../../../art/environment/saltwind-harbor/models/wall-low.glb?url"
 import wallStraightUrl from "../../../art/environment/saltwind-harbor/models/wall-straight.glb?url"
 import waveRockUrl from "../../../art/environment/saltwind-harbor/models/wave-rock.glb?url"
+import floorInsetUrl from "../../../art/environment/saltwind-harbor/models/floor-inset.glb?url"
+import floorSmallUrl from "../../../art/environment/saltwind-harbor/models/floor-small.glb?url"
+import floorRadialUrl from "../../../art/environment/saltwind-harbor/models/floor-radial.glb?url"
+import floorDeckUrl from "../../../art/environment/saltwind-harbor/models/floor-deck.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -49,5 +53,9 @@ export const harborModels = {
   harborLifeRing: piece(lifeRingUrl, 0.185, [1.03, 1.02]),
   harborNetRack: piece(netRackUrl, 1.66, [1.7, 0.13]),
   harborWaveRock: piece(waveRockUrl, 0.6, [1.4698, 1.036]),
-  harborBoatHull: piece(boatHullUrl, 0.55, [3.1, 1.2])
+  harborBoatHull: piece(boatHullUrl, 0.55, [3.1, 1.2]),
+  harborFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  harborFloorSmall: piece(floorSmallUrl, 0.14, [1, 1]),
+  harborFloorRadial: piece(floorRadialUrl, 0.14, [2, 2]),
+  harborFloorDeck: piece(floorDeckUrl, 0.3, [2, 2])
 } as const

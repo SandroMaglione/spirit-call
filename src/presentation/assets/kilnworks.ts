@@ -24,6 +24,8 @@ import toolRackUrl from "../../../art/environment/ember-kilnworks/models/tool-ra
 import ventUrl from "../../../art/environment/ember-kilnworks/models/vent.glb?url"
 import wallLowUrl from "../../../art/environment/ember-kilnworks/models/wall-low.glb?url"
 import wallStraightUrl from "../../../art/environment/ember-kilnworks/models/wall-straight.glb?url"
+import floorInsetUrl from "../../../art/environment/ember-kilnworks/models/floor-inset.glb?url"
+import floorSmallUrl from "../../../art/environment/ember-kilnworks/models/floor-small.glb?url"
 
 const piece = (url: string, height: number, footprint: readonly [number, number]) => ({ url, height, footprint, clips: {} }) as const satisfies ModelSpec
 
@@ -45,5 +47,7 @@ export const kilnworksModels = {
   kilnworksCrucible: piece(crucibleUrl, 0.72, [1.2, 1.1]),
   kilnworksBoiler: piece(boilerUrl, 1.55, [1.57, 1.155]),
   kilnworksVent: piece(ventUrl, 0.24, [1, 0.6]),
-  kilnworksToolRack: piece(toolRackUrl, 1.45, [1.4, 0.4])
+  kilnworksToolRack: piece(toolRackUrl, 1.45, [1.4, 0.4]),
+  kilnworksFloorInset: piece(floorInsetUrl, 0.14, [2, 2]),
+  kilnworksFloorSmall: piece(floorSmallUrl, 0.14, [1, 1])
 } as const

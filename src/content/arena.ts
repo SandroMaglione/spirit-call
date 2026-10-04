@@ -100,7 +100,23 @@ export const arenas = {
       { x: 0.84, y: 0.5, size: 50 }
     ],
     walls: [],
-    hazards: []
+    hazards: [],
+    props: [
+      // A brazier in each corner, and urns in pairs by the north and west walls.
+      prop(23, 23, 46, 46),
+      prop(1777, 23, 46, 46),
+      prop(23, 1777, 46, 46),
+      prop(1777, 1777, 46, 46),
+      prop(760, 23, 50, 46),
+      prop(1040, 23, 50, 46),
+      prop(23, 760, 46, 50),
+      prop(23, 1040, 46, 50),
+      // Rocks fallen in from outside, where they landed.
+      prop(1420, 36, 68, 72),
+      prop(1492, 32, 76, 64),
+      prop(1761, 1180, 78, 68),
+      prop(640, 1764, 74, 72)
+    ]
   }),
   /** Two basins in opposite corners of the middle (soak them, then thunder) and low walls to drive enemies into. */
   cistern: arena({
@@ -120,6 +136,25 @@ export const arenas = {
     hazards: [
       { element: "water", column: 3, row: 3, columns: 2, rows: 2, walled: { y: "north", x: "west" } },
       { element: "water", column: 8, row: 8, columns: 2, rows: 2, walled: { y: "south", x: "east" } }
+    ],
+    props: [
+      // The waterworks on the north wall, the same on both sides of the outlet; pipes down the west wall, buttresses down the east.
+      prop(900, 24, 106, 48),
+      prop(200, 37, 100, 74),
+      prop(1600, 37, 100, 74),
+      prop(520, 13, 42, 26),
+      prop(1280, 13, 42, 26),
+      prop(15, 640, 30, 102),
+      prop(15, 1160, 30, 102),
+      prop(1768, 640, 64, 58),
+      prop(1768, 1160, 64, 58),
+      // Urns left where they were last filled.
+      prop(33, 300, 66, 58),
+      prop(34, 1560, 68, 70),
+      prop(1768, 380, 64, 70),
+      prop(600, 1765, 70, 70),
+      prop(667, 1772, 64, 56),
+      prop(1300, 1773, 64, 54)
     ]
   }),
   /** Fire trenches north and south of the middle: pull a pack in with wind, or keep out of them. */
@@ -140,6 +175,24 @@ export const arenas = {
     hazards: [
       { element: "fire", column: 5, row: 4, columns: 3, rows: 1, walled: { y: "south", x: "west" } },
       { element: "fire", column: 5, row: 8, columns: 3, rows: 1, walled: { y: "north", x: "east" } }
+    ],
+    props: [
+      // The north wall, the same on both sides of the tool rack: a chimney and a furnace.
+      prop(900, 13, 90, 26),
+      prop(420, 45, 124, 90),
+      prop(1380, 45, 124, 90),
+      prop(660, 30, 60, 60),
+      prop(1140, 30, 60, 60),
+      // The day's work, left where it was: stores by the west wall, the smith's corner by the east, a boiler and crates by the south.
+      prop(34, 620, 68, 68),
+      prop(26, 680, 52, 52),
+      prop(28, 1150, 56, 82),
+      prop(1778, 640, 44, 84),
+      prop(1751, 1120, 98, 94),
+      prop(1774, 1193, 52, 52),
+      prop(560, 1763, 100, 74),
+      prop(1220, 1765, 70, 70),
+      prop(1287, 1768, 64, 64)
     ]
   }),
   /** Lanes of low walls and pillars: cover from shots, and walls to slam enemies into. */
@@ -163,7 +216,23 @@ export const arenas = {
       { x: 0.1, y: 0.5, length: 360, along: "y" },
       { x: 0.9, y: 0.5, length: 360, along: "y" }
     ],
-    hazards: []
+    hazards: [],
+    props: [
+      // The shrine between two saplings, and a post in each near corner.
+      prop(900, 27, 76, 54),
+      prop(420, 40, 88, 80),
+      prop(1380, 45, 76, 90),
+      prop(14, 1786, 28, 28),
+      prop(1786, 1786, 28, 28),
+      // What grew in, and what fell.
+      prop(61, 61, 122, 122),
+      prop(1756, 46, 88, 92),
+      prop(25, 330, 50, 78),
+      prop(29, 1480, 58, 126),
+      prop(1768, 640, 64, 50),
+      prop(1771, 1280, 58, 84),
+      prop(640, 1762, 92, 76)
+    ]
   }),
   /** A fortress: a ring of pillars around the keep, battlements north and south, and fire pits on both flanks. */
   citadel: arena({
@@ -228,6 +297,26 @@ export const arenas = {
     hazards: [
       { element: "water", column: 2, row: 3, columns: 3, rows: 1, walled: { y: "south", x: "west" } },
       { element: "water", column: 8, row: 3, columns: 3, rows: 1, walled: { y: "south", x: "east" } }
+    ],
+    props: [
+      // The quay, the same on both sides: nets between two stacks of barrels, bollards down both walls.
+      prop(900, 5, 108, 10),
+      prop(300, 29, 98, 58),
+      prop(1500, 29, 98, 58),
+      prop(16, 700, 32, 32),
+      prop(1784, 700, 32, 32),
+      prop(16, 1650, 32, 32),
+      prop(1784, 1650, 32, 32),
+      // The day's cargo and gear, where the dockers left it.
+      prop(6, 330, 12, 82),
+      prop(41, 1000, 82, 104),
+      prop(30, 1092, 60, 80),
+      prop(1740, 260, 120, 120),
+      prop(1773, 1020, 54, 52),
+      prop(1743, 1101, 114, 110),
+      prop(1784, 1320, 32, 32),
+      prop(520, 1757, 200, 86),
+      prop(1250, 1782, 60, 36)
     ]
   }),
   /** An open burial ground: a ring of obelisks, a fire trench to the north and a basin to the south. */
@@ -250,6 +339,25 @@ export const arenas = {
     hazards: [
       { element: "fire", column: 5, row: 1, columns: 3, rows: 1, walled: { y: "north", x: "west" } },
       { element: "water", column: 5, row: 11, columns: 3, rows: 1, walled: { y: "south", x: "east" } }
+    ],
+    props: [
+      // The north wall, the same on both sides of the fire: an obelisk in the corner, an urn, a torch. The statue and its offering table face each other across the ground.
+      prop(32, 32, 64, 64),
+      prop(1768, 32, 64, 64),
+      prop(260, 26, 52, 52),
+      prop(1540, 26, 52, 52),
+      prop(460, 16, 32, 32),
+      prop(1340, 16, 32, 32),
+      prop(21, 900, 42, 128),
+      prop(1773, 900, 54, 108),
+      // What the sand has taken, and what the robbers left.
+      prop(63, 380, 126, 154),
+      prop(32, 1400, 64, 126),
+      prop(23, 1487, 46, 48),
+      prop(1753, 400, 94, 104),
+      prop(1755, 1380, 90, 90),
+      prop(1759, 1461, 82, 72),
+      prop(1400, 1768, 64, 64)
     ]
   }),
   /** A cloister: a square of low walls around the middle, pillars at its open corners; nowhere is open for long. */
@@ -269,7 +377,25 @@ export const arenas = {
       { x: 0.5, y: 0.1, length: 360, along: "x" },
       { x: 0.5, y: 0.9, length: 360, along: "x" }
     ],
-    hazards: []
+    hazards: [],
+    props: [
+      // The shrine between two banners, a lantern in each far corner; a bench and a brazier by each side wall.
+      prop(900, 27, 76, 54),
+      prop(500, 16, 56, 32),
+      prop(1300, 16, 56, 32),
+      prop(18, 18, 36, 36),
+      prop(1782, 18, 36, 36),
+      prop(19, 500, 38, 104),
+      prop(1781, 500, 38, 104),
+      prop(22, 900, 44, 44),
+      prop(1778, 900, 44, 44),
+      // Ice and snowed-in rocks where the cold got in, and a bell taken down.
+      prop(32, 1400, 64, 62),
+      prop(1751, 1240, 98, 110),
+      prop(1763, 1480, 74, 74),
+      prop(1240, 1774, 56, 52),
+      prop(520, 1746, 110, 108)
+    ]
   })
 }
 
