@@ -88,8 +88,13 @@ movement along the floor axes. The eye rims blink with the eyes.
 
 `assets/spirits.ts` exports the generated spec, `models.ts` registers
 `thunderSpirit`, and `characterLooks.stormcaller` selects it. Its trail
-uses the existing batched ember particles in violet and pale gold. Attacks
-and skills continue over its locomotion clips, as with water and fire.
+uses the existing batched ember particles in violet and pale gold. Its
+combat clips (a combo's blows, the charged move, the dash, a hit taken,
+the special, the ultimate) are every spirit's (`../tools/moves.py`), in the
+Stormcaller's `STYLE`: she casts, with a small nod and a hop. They may lean
+along the floor into a blow, starting and ending on the spot. Her eyes
+have her own shape (`EYE_SHAPE` in `build.py`: big and round, their outer
+ends a little lower), and the halo turns about its own tilted axis.
 
 `renders/gameplay-desktop.mp4` records keyboard movement and the Spark
 Totem in the normal arena. `renders/gameplay-touch.mp4` records the

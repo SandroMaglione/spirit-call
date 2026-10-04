@@ -58,6 +58,10 @@ tall; its drawings measure about 0.24 m.
   that bobs and tilts on a breeze while the top leaves flutter, the horns
   sway, and the leaves under it swing, with a blink; a run that hops,
   squashes on landing, and leans in, its leaves and horns swept back.
+  Its combat clips (a combo's blows, the charged move, the dash, a hit
+  taken, the special, the ultimate) are every spirit's (`../tools/moves.py`),
+  in its character's `STYLE`: the Swordsman cuts, a long lunge rolling with the blade, her big blows a whole turn. Her eyes have her own shape
+  (`EYE_SHAPE` in `build.py`): tall and narrow, a slight slant.
 - **Glow** (`windGlow` in `src/presentation/models.ts`): teal edges and a
   teal halo, kept low (its palette is pale); its eyes stay dark.
 - **Wisps** while it moves (its look's `drops` with `kind: "wisp"`): mint

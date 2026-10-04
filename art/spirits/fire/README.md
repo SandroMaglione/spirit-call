@@ -50,6 +50,10 @@ a taller flame tip than the side views give.
   that bobs while the flame flickers (stretching up, swaying) and each
   shard floats on its own beat, with a blink; a run that hops, squashes on
   landing, and leans in, the shards streaming back.
+  Its combat clips (a combo's blows, the charged move, the dash, a hit
+  taken, the special, the ultimate) are every spirit's (`../tools/moves.py`),
+  in its character's `STYLE`: the Gunner shoots, so each shot kicks her back. Her eyes have her own shape
+  (`EYE_SHAPE` in `build.py`): lidded and slanted, taking aim.
 - **Glow** (`fireGlow` in `src/presentation/models.ts`): a warm yellow core
   where it faces the camera, ember red edges, an orange halo; its eyes stay
   dark. glTF keeps the facets' colors, not the renders' view-dependent

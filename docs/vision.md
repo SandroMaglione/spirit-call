@@ -138,6 +138,8 @@ The rules are in `docs/elements.md`; in short:
   A weapon's effects work only while its character is on the field.
 - **Falling.** When the character on the field falls, the next one in order
   comes in, with a moment of protection (she did not choose the moment). The
+  fall is seen (she goes down before the next one appears), but the switch
+  itself is immediate. The
   run is lost when the whole team has fallen. Reviving is for later.
 - **One team is saved**, set up in the menu (its order is the 1, 2, 3 and
   who starts); several saved teams may come later.
