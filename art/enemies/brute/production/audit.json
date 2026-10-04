@@ -1,7 +1,7 @@
 {
   "kind": "brute",
   "status": "static model review; animation and game integration await review",
-  "triangles": 1539,
+  "triangles": 1612,
   "materials": 1,
   "mesh_parts": [
     "BreastPlate",
@@ -17,6 +17,7 @@
     "Forearm.L",
     "Forearm.R",
     "HunchedBack",
+    "PaleBrowCap",
     "RecessedFace",
     "Shoulder.L",
     "Shoulder.R",

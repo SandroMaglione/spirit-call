@@ -7,9 +7,13 @@ The game's existing animated Brute is unchanged.
 The torso, brow, hunched back, shoulders, arms, fists, thighs and feet loft
 the labeled front and side silhouettes in `sheet.json`. The paired limbs
 are mirrored. A surface-clipped black visor and pale chest plate follow the
-actual body facets. The eyes remain separate meshes. Small stone chips are
-simplified into broad facets and color variation. The source has 1,539
-triangles, one vertex-color material and no skeleton or clips.
+actual body facets. The head, visor and eye pair share the body's center
+axis; the right eye and socket are exact mirrors of the left. A separate
+ivory brow cap projects over the visor. Eye surfaces clear the visor so
+the dark face cannot occlude small patches of their amber cores.
+Small stone chips are simplified into broad facets and color variation.
+The source has 1,612 triangles, one vertex-color material and no skeleton
+or clips.
 
 ## Review evidence
 
