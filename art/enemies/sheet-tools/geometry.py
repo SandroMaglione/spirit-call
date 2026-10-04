@@ -9,6 +9,7 @@ import bpy
 import numpy as np
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+from mathutils.geometry import tessellate_polygon
 
 
 def linear(color):
@@ -113,7 +114,7 @@ class Model:
         return ((f[0]+f[1]+b[0]+b[1])/4,(r[0]+r[1]+l[0]+l[1])/4,
                 max(.002,(f[1]-f[0]+b[1]-b[0])/4),max(.002,(r[1]-r[0]+l[1]-l[0])/4))
 
-    def loft(self,name,part,color,rings=9,segments=12,align=False):
+    def loft(self,name,part,color,rings=9,segments=12,align=False,symmetric=False):
         views=self.sheet['parts'][part]
         primary='front' if 'front' in views else 'back'
         rows=self.rows(part,primary)
@@ -125,6 +126,7 @@ class Model:
         verts=[];faces=[]
         for i,z in enumerate(zs):
             cx,cy,rx,ry=self.section(part,z,align)
+            if symmetric:cx=0
             for k in range(segments):
                 a=2*math.pi*k/segments
                 verts.append((cx+math.sin(a)*rx,cy-math.cos(a)*ry,z))
@@ -134,6 +136,7 @@ class Model:
                 faces.extend([(a,b,c),(b,d,c)] if (i+k)%2 else [(a,b,d),(a,d,c)])
         for ring,z in ((0,low),(rings-1,high)):
             cx,cy,_,_=self.section(part,z,align)
+            if symmetric:cx=0
             tip=len(verts);verts.append((cx,cy,z))
             for k in range(segments):faces.append((tip,ring*segments+k,ring*segments+(k+1)%segments))
         return self.mesh(name,verts,faces,color)
@@ -196,26 +199,62 @@ class Model:
         self.ellipsoid('MouthRecess',(cx,ytip+.19,cz),(rx*gap*.77,.012,rz*gap*.77),inner_color,segments,4)
         return cx,ytip,cz,rx,rz,obj
 
-    def eyes(self,body,background='#303341',core='#FFD18A',socket_scale=1.65,center_x=0):
+    def patch(self,name,body,points,color,axis='front',offset=.004):
+        """Clip the visible surface facets to a drawn polygon.
+
+        Keeping the body's actual triangle boundaries avoids decals cutting
+        through curved armor between their projected boundary vertices.
+        """
+        lateral=0 if axis=='front' else 1
+        depth=1 if axis=='front' else 0
+        def flat(p):return Vector((p[lateral],p[2],0))
+        def cross(a,b):return a.x*b.y-a.y*b.x
+        outline=[flat(Vector(p)) for p in points]
+        clips=[[outline[v] if isinstance(v,int) else v for v in tri]
+               for tri in tessellate_polygon([outline])]
+        verts=[];faces=[]
+        body.data.calc_loop_triangles()
+        for tri in body.data.loop_triangles:
+            surface=[body.data.vertices[i].co.copy() for i in tri.vertices]
+            normal=(surface[1]-surface[0]).cross(surface[2]-surface[0]).normalized()
+            if normal[depth]>=-.0001:continue
+            for clip in clips:
+                clip=list(clip)
+                if cross(clip[1]-clip[0],clip[2]-clip[0])<0:clip.reverse()
+                polygon=surface[:]
+                for i,a in enumerate(clip):
+                    b=clip[(i+1)%3];edge=b-a;result=[]
+                    for j,p in enumerate(polygon):
+                        q=polygon[(j+1)%len(polygon)]
+                        dp=cross(edge,flat(p)-a);dq=cross(edge,flat(q)-a)
+                        if dp>=-1e-9:result.append(p)
+                        if (dp>=0)!=(dq>=0):result.append(p+(q-p)*(dp/(dp-dq)))
+                    polygon=result
+                    if len(polygon)<3:break
+                if len(polygon)<3:continue
+                for i in range(1,len(polygon)-1):
+                    triangle=[polygon[0],polygon[i],polygon[i+1]]
+                    if (triangle[1]-triangle[0]).cross(triangle[2]-triangle[0]).length<1e-9:continue
+                    # One projection-direction offset keeps adjacent facets
+                    # joined. Independent normal offsets leave dark seams.
+                    push=Vector((0,-offset,0)) if axis=='front' else Vector((-offset,0,0))
+                    start=len(verts);verts.extend(p+push for p in triangle)
+                    faces.append((start,start+1,start+2))
+        if not faces:raise ValueError(f'{name} missed surface')
+        return self.mesh(name,verts,faces,color,0)
+
+    def eyes(self,body,background='#303341',core='#FFD18A',socket_scale=1.35):
         eyes=self.sheet['eyes']
         if len(eyes)!=2:raise ValueError(f'Expected two measured eye cores: {eyes}')
-        x=float(np.mean([abs(e['x']) for e in eyes]));z=float(np.mean([e['z'] for e in eyes]))
+        x=abs(eyes[0]['x']-eyes[1]['x'])/2;z=float(np.mean([e['z'] for e in eyes]))
         rx=float(np.mean([e['width'] for e in eyes]))/2;rz=float(np.mean([e['height'] for e in eyes]))/2
-        tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
-        for sign,side in ((-1,'L'),(1,'R')):
-            for layer,scale,color in (('EyeSocket',socket_scale,background),('Eye',1,core)):
-                verts=[];faces=[];n=12
-                for ring in (0,.5,1):
-                    for k in range(1 if ring==0 else n):
-                        a=2*math.pi*k/n
-                        pos=Vector((center_x+sign*x+rx*scale*math.cos(a)*ring,-3,z+rz*scale*math.sin(a)*ring))
-                        hit,normal,_,_=tree.ray_cast(pos,Vector((0,1,0)))
-                        if hit is None:raise ValueError(f'{layer} missed surface')
-                        verts.append(hit+normal*(.002 if layer=='EyeSocket' else .004))
-                for k in range(n):faces.append((0,1+k,1+(k+1)%n))
-                for k in range(n):
-                    a=1+k;b=1+(k+1)%n;faces.append((a,b,b+n,a+n))
-                self.mesh(f'{layer}.{side}',verts,faces,color,0)
+        # The inner upper corner is lower than the outer corner. Build one
+        # eye and mirror its vertices and colors, so both expressions agree.
+        outline=[(-1,1),(.95,.30),(1,-.55),(.25,-.88),(-.85,-.58)]
+        for layer,scale,color,offset in (('EyeSocket',socket_scale,background,.003),('Eye',1,core,.007)):
+            points=[(-x+rx*scale*u,0,z+rz*scale*v) for u,v in outline]
+            obj=self.patch(f'{layer}.L',body,points,color,offset=offset)
+            self.mirror(obj,f'{layer}.R')
 
     def finish(self,main):
         objects=[o for o in bpy.data.objects if o.type=='MESH']

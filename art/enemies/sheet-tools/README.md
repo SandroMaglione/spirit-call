@@ -47,10 +47,23 @@ Validation of this review stage:
   horizontal overflow. A synthetic touch pointer drag changes the orbit.
   `browser-verification.json` records the observations. No physical phone
   performance test was performed.
-- `env VITEST_MAX_WORKERS=2 pnpm check` passes typecheck, lint, and all 369
+- `env VITEST_MAX_WORKERS=2 pnpm check` passes typecheck, lint, and all 372
   tests in 48 files. The default worker count timed out in the existing
   40-second simulation replay test during concurrent rendering; limiting
   workers leaves its 5-second test timeout unchanged.
 - The silhouette overlays remain below the 90% target. Sniper needs the
   closest designer review because its front and hero illustrations differ
   most from the standing side views.
+
+The face revision replaces round front eyes with angry angular apertures.
+One eye is built against the face and mirrored, including its surface
+vertices and colors. Guardian's helmet is centered before its visor and
+eyes are added. Sniper keeps circular side lens rims with sloped lids on
+the exposed crest armor. Surface patches clip the actual body facets to
+avoid intersections and gaps across the face.
+
+Firebomber's held bomb uses its measured front diameter in all three axes.
+The occluded side drawing no longer flattens it. Its fuse has a collar,
+raised lip and wick, and the shell has separate ember patches and a pale
+core. `verify.mjs` checks exported eye symmetry within one micrometer and
+equal bomb diameters. `review-faces.png` collects the new closeups.

@@ -15,10 +15,11 @@
     "LegArmorR",
     "BootL",
     "BootR",
-    "Visor",
+    "VisorL",
+    "VisorR",
     "EyeSocketL",
-    "EyeL",
     "EyeSocketR",
+    "EyeL",
     "EyeR",
     "TabardL",
     "TabardR",
@@ -48,7 +49,11 @@
     "MaceSpike007"
   ],
   "materials": 1,
-  "triangles": 1867,
+  "triangles": 1854,
+  "face_mirror_error_m": {
+    "Eye": 0,
+    "EyeSocket": 0
+  },
   "animations": 0,
   "bounds_gltf_m": {
     "min": [
@@ -62,6 +67,6 @@
       0.6222261190414429
     ]
   },
-  "sha256": "d418ea8c32f9770425bd5cc72e92b0c31fa35ca9b5052f93a1788722f8359b9c",
+  "sha256": "234f8ba675e7806c572007004be1b64645d5fb9f36ad0184853dc56984c7270c",
   "status": "passed: static review asset, before rigging"
 }

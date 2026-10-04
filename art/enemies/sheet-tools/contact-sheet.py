@@ -22,3 +22,15 @@ for index,(kind,name) in enumerate(names.items()):
  canvas.paste(enlarged,(index*512+110,636),enlarged)
 canvas.save(OUT)
 print(OUT)
+
+# Closeups for the face and held-bomb iteration. Sniper's eyes face sideways.
+details=Image.new('RGB',(1600,460),'#DDDDE6');draw=ImageDraw.Draw(details)
+for index,(kind,view,label) in enumerate((('charger','face-front','Firebomber'),
+                                         ('sniper','face-left','Sniper'),
+                                         ('guardian','face-front','Guardian'),
+                                         ('charger','hand-bomb','Hand bomb'))):
+ image=Image.open(ROOT/kind/'production/renders'/f'{view}.png').convert('RGBA').resize((400,400))
+ details.paste(image,(index*400,60),image)
+ draw.text((index*400+22,20),label,font=font,fill='#252536')
+details.save(OUT.with_name('review-faces.png'))
+print(OUT.with_name('review-faces.png'))

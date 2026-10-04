@@ -1,10 +1,11 @@
 {
   "url": "http://192.168.40.47:5199/art/enemies/sheet-tools/review.html",
+  "revision": "angry mirrored eyes and rounded held bomb",
   "phone": [
     {
       "model": {
         "animations": 0,
-        "calls": 36,
+        "calls": 41,
         "camera": [
           0,
           3.047193884849548,
@@ -12,7 +13,7 @@
         ],
         "kind": "charger",
         "status": "ready",
-        "triangles": 1710,
+        "triangles": 1890,
         "view": "game"
       },
       "overflow": false,
@@ -24,7 +25,7 @@
     {
       "model": {
         "animations": 0,
-        "calls": 44,
+        "calls": 46,
         "camera": [
           0,
           3.107311308383941,
@@ -32,7 +33,7 @@
         ],
         "kind": "sniper",
         "status": "ready",
-        "triangles": 1452,
+        "triangles": 1376,
         "view": "game"
       },
       "overflow": false,
@@ -44,7 +45,7 @@
     {
       "model": {
         "animations": 0,
-        "calls": 44,
+        "calls": 46,
         "camera": [
           0,
           3.140101492404937,
@@ -52,7 +53,7 @@
         ],
         "kind": "guardian",
         "status": "ready",
-        "triangles": 1867,
+        "triangles": 1854,
         "view": "game"
       },
       "overflow": false,
@@ -66,7 +67,7 @@
     {
       "model": {
         "animations": 0,
-        "calls": 45,
+        "calls": 41,
         "camera": [
           0,
           3.047193884849548,
@@ -74,7 +75,7 @@
         ],
         "kind": "charger",
         "status": "ready",
-        "triangles": 1710,
+        "triangles": 1890,
         "view": "game"
       },
       "overflow": false,
@@ -86,7 +87,7 @@
     {
       "model": {
         "animations": 0,
-        "calls": 45,
+        "calls": 46,
         "camera": [
           0,
           3.107311308383941,
@@ -94,7 +95,7 @@
         ],
         "kind": "sniper",
         "status": "ready",
-        "triangles": 1452,
+        "triangles": 1376,
         "view": "game"
       },
       "overflow": false,
@@ -106,7 +107,7 @@
     {
       "model": {
         "animations": 0,
-        "calls": 45,
+        "calls": 46,
         "camera": [
           0,
           3.140101492404937,
@@ -114,7 +115,7 @@
         ],
         "kind": "guardian",
         "status": "ready",
-        "triangles": 1867,
+        "triangles": 1854,
         "view": "game"
       },
       "overflow": false,
@@ -126,14 +127,14 @@
   ],
   "touch": {
     "after": [
-      0.4148065196191199,
-      3.0471938848495483,
-      4.310212935723881
+      -0.12527786708580765,
+      3.140101492404937,
+      4.328314389692415
     ],
     "before": [
       0,
-      3.047193884849548,
-      4.330127018922194
+      3.140101492404937,
+      4.330127018922193
     ],
     "changed": true,
     "input": "synthetic touch PointerEvents with capture stub",

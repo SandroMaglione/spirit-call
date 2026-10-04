@@ -34,11 +34,20 @@ for sign in (-1,1):
  m.cylinder('Ankle',(sign*.235,-.10,.07),(sign*.205,-.02,.20),.047,'#363239',6)
  for dx in (-.045,0,.045):
   m.ellipsoid('Toe',(sign*.235+dx,-.155,.035),(.028,.055,.035),'#363239',6,3)
-bomb=m.loft('HandBomb','bomb','charcoal',6,10)
+# The side drawing hides half the held bomb behind the hand. Its front
+# diameter defines a sphere instead of an occlusion-flattened loft.
+rows=m.rows('bomb','front')
+bx=(rows[:,1].min()+rows[:,2].max())/2
+bz=(rows[:,0].min()+rows[:,0].max())/2
+radius=(rows[:,2].max()-rows[:,1].min())/2
+_,by,_,_=m.section('bomb',bz)
+bomb=m.ellipsoid('HandBomb',(bx,by,bz),(radius,radius,radius),'charcoal',16,8)
 m.loft('BombFlame','bombflame','fire',5,6)
 x,z=m.pixel('front',m.config['landmarks']['front']['bomb_neck'])
 _,y,_,_=m.section('bomb',.55)
-m.cylinder('BombFuseCollar',(x,y,z-.014),(x,y,z+.025),.043,'brown',8)
+m.cylinder('BombFuseCollar',(x,y,z-.014),(x,y,z+.025),.047,'brown',10)
+m.cylinder('BombFuseLip',(x,y,z+.019),(x,y,z+.033),.054,'charcoal',10)
+m.cylinder('BombFuse',(x,y,z+.030),(x-.004,y,z+.053),.017,'#FFE898',6)
 # A real open hood: outside shell, rim, and inner wall surround a recessed face.
 land=m.config['landmarks']['front'];outer=[m.pixel('front',p) for p in land['hood_outer']]
 inner=[m.pixel('front',p) for p in land['hood_inner']]
@@ -58,6 +67,10 @@ m.eyes(face,background='#302E34',core='#FFE695')
 for name,view,points in (('BackpackCrack','back',[[611,334],[607,348],[614,365],[611,382]]),):
  m.stripe(name,pack,view,points,'fire',.012)
 # Ember facets on the held bomb are projected onto its actual surface.
-m.stripe('BombEmber',bomb,'front',[[57,396],[66,399],[76,397],[84,400]],'fire',.012)
+for i,points in enumerate(([[51,386],[55,389],[58,398],[54,399],[50,393]],
+                          [[62,395],[66,390],[71,394],[74,402],[70,405],[64,403]],
+                          [[81,395],[85,391],[90,389],[89,398],[84,402]])):
+ m.patch(f'BombEmber.{i+1}',bomb,[(px,0,pz) for px,pz in (m.pixel('front',p) for p in points)],'fire')
+m.patch('BombEmberCore',bomb,[(px,0,pz) for px,pz in (m.pixel('front',p) for p in [[65,397],[68,395],[71,400],[67,403]])],'#FFD26E',offset=.006)
 m.stripe('PackFrontCrack',pack,'front',[[113,330],[108,341],[114,352],[110,362]],'#FFD26E',.013)
 m.finish(body)

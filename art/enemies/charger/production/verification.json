@@ -28,18 +28,32 @@
     "HandBomb",
     "BombFlame",
     "BombFuseCollar",
+    "BombFuseLip",
+    "BombFuse",
     "OpenHood",
     "RecessedFace",
     "EyeSocketL",
-    "EyeL",
     "EyeSocketR",
+    "EyeL",
     "EyeR",
     "BackpackCrack",
-    "BombEmber",
+    "BombEmber1",
+    "BombEmber2",
+    "BombEmber3",
+    "BombEmberCore",
     "PackFrontCrack"
   ],
   "materials": 1,
-  "triangles": 1710,
+  "triangles": 1890,
+  "face_mirror_error_m": {
+    "Eye": 0,
+    "EyeSocket": 0
+  },
+  "hand_bomb_diameters_m": [
+    0.3311224728822708,
+    0.3311224430799484,
+    0.33112242817878723
+  ],
   "animations": 0,
   "bounds_gltf_m": {
     "min": [
@@ -50,9 +64,9 @@
     "max": [
       0.5556122660636902,
       1.0943877696990967,
-      0.5481020212173462
+      0.6454081535339355
     ]
   },
-  "sha256": "0fc7c0a5df9f56f08d629f9a2e10f06dc35ee15185a3eae283fab49899319057",
+  "sha256": "4a8c9d73f39fac67506c45ecda01f2ca79e0644fcf2e6bcf5aafd895d724f41c",
   "status": "passed: static review asset, before rigging"
 }

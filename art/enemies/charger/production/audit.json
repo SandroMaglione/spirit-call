@@ -1,7 +1,7 @@
 {
   "kind": "charger",
   "status": "static model review; animation and game integration await review",
-  "triangles": 1710,
+  "triangles": 1890,
   "materials": 1,
   "mesh_parts": [
     "Ankle",
@@ -11,9 +11,14 @@
     "BackpackCrack",
     "BackpackFlame",
     "BombBackpack",
-    "BombEmber",
+    "BombEmber.1",
+    "BombEmber.2",
+    "BombEmber.3",
+    "BombEmberCore",
     "BombFlame",
+    "BombFuse",
     "BombFuseCollar",
+    "BombFuseLip",
     "ClothBody",
     "Cuff.L",
     "Cuff.R",
@@ -48,7 +53,7 @@
       0.5556122660636902
     ],
     [
-      -0.5481020212173462,
+      -0.6454081535339355,
       0.40408164262771606
     ],
     [

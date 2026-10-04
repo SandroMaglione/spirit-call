@@ -1,9 +1,11 @@
 {
   "kind": "sniper",
   "status": "static model review; animation and game integration await review",
-  "triangles": 1452,
+  "triangles": 1376,
   "materials": 1,
   "mesh_parts": [
+    "AngryBrow.L",
+    "AngryBrow.R",
     "Ankle.L",
     "Ankle.R",
     "BarrelConductor",

@@ -6,11 +6,10 @@ HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parents[1]/'sheet-tools'))
 from geometry import Model
 from mathutils import Vector
-from mathutils.bvhtree import BVHTree
 
 m=Model(HERE)
 body=m.loft('Breastplate','body','steel',7,10)
-helmet=m.loft('Helmet','helmet','steel',8,12)
+helmet=m.loft('Helmet','helmet','steel',8,12,symmetric=True)
 m.loft('GoldenCrest','crest','gold',6,6)
 shoulder=m.loft('Pauldron.L','shoulder','steel',5,8);m.mirror(shoulder,'Pauldron.R')
 arm=m.loft('Forearm.L','arm','steel',4,8);m.mirror(arm,'Forearm.R')
@@ -19,20 +18,11 @@ thigh=m.loft('LegArmor.L','thigh','dark',5,8);m.mirror(thigh,'LegArmor.R')
 foot=m.loft('Boot.L','foot','dark',4,8);m.mirror(foot,'Boot.R')
 # The dark visor is projected onto the faceted helmet, not placed in front
 # of it. Each glowing eye uses the same surface-snapping rule as the spirits.
-tree=BVHTree.FromPolygons([v.co for v in helmet.data.vertices],[p.vertices for p in helmet.data.polygons])
-verts=[];outline=[[118,318],[146,315],[142,335],[130,349],[119,335]];center=[130,331]
-for factor in (0,.5,1):
- for p in ([center] if factor==0 else outline):
-  point=[center[i]+factor*(p[i]-center[i]) for i in (0,1)]
-  x,z=m.pixel('front',point)
-  hit,normal,_,_=tree.ray_cast(Vector((x,-3,z)),Vector((0,1,0)))
-  if hit is None:raise ValueError(f'Visor missed helmet at {point}')
-  verts.append(hit+normal*.002)
-faces=[(0,1+k,1+(k+1)%5) for k in range(5)]
-faces += [(1+k,1+(k+1)%5,6+(k+1)%5,6+k) for k in range(5)]
-m.mesh('Visor',verts,faces,'#24242B',0)
-m.eyes(helmet,background='#24242B',core='#FFC16A',socket_scale=1.2,
-       center_x=sum(e['x'] for e in m.sheet['eyes'])/2)
+outline=[[130,318],[118,315],[114,334],[125,348],[130,351]]
+points=[(x,0,z) for x,z in (m.pixel('front',p) for p in outline)]
+visor=m.patch('Visor.L',helmet,points,'#24242B',offset=.002)
+m.mirror(visor,'Visor.R')
+m.eyes(helmet,background='#24242B',core='#FFC16A',socket_scale=1.2)
 # Broad hanging armor plates and a belt distinguish the body from a solid
 # capsule without adding details that disappear at phone size.
 tab=m.prism('Tabard.L',[[119,394],[128,399],[119,430],[101,422]],-.19,-.13,'steel');m.mirror(tab,'Tabard.R')

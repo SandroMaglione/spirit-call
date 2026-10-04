@@ -1,7 +1,7 @@
 {
   "kind": "guardian",
   "status": "static model review; animation and game integration await review",
-  "triangles": 1867,
+  "triangles": 1854,
   "materials": 1,
   "mesh_parts": [
     "Belt",
@@ -47,7 +47,8 @@
     "ShieldPlank.4",
     "Tabard.L",
     "Tabard.R",
-    "Visor"
+    "Visor.L",
+    "Visor.R"
   ],
   "animations": 0,
   "armatures": 0,

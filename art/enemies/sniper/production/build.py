@@ -49,13 +49,17 @@ for sign,side in ((-1,'L'),(1,'R')):
 root=m.point([79,490],s['barrel_root']);tip=m.point([79,541],s['barrel_tip'])
 m.cylinder('BarrelConductor',root+Vector((0,0,-.030)),tip+Vector((0,0,-.008)),.006,'eye',4)
 m.cylinder('Muzzle',tip,tip+Vector((0,-.016,-.008)),.014,'#DB9BFF',8)
-# Symmetrical side lenses use the measured side-view eye center.
+# Side lenses keep the reference's circular lower rim. Sloped upper lids
+# expose an angry aperture, mirrored together across the head's center.
 ey,ez=m.pixel('right',s['eye'])
-for sign,side in ((-1,'L'),(1,'R')):
- x=sign*.065
- m.cylinder('EyeRim.'+side,(x,ey,ez),(x+sign*.012,ey,ez),.035,'eye',10)
- m.cylinder('EyeSocket.'+side,(x+sign*.013,ey,ez),(x+sign*.017,ey,ez),.024,'charcoal',10)
- m.cylinder('Eye.'+side,(x+sign*.018,ey,ez),(x+sign*.021,ey,ez),.015,'#FFFFB0',10)
+import math
+rim=[(0,ey+.036*math.cos(k*math.tau/12),ez+.036*math.sin(k*math.tau/12)) for k in range(12)]
+socket=[(0,ey+.028*math.cos(k*math.tau/12),ez+.028*math.sin(k*math.tau/12)) for k in range(12)]
+aperture=[(0,ey+y,ez+z) for y,z in [(-.021,.002),(.018,.018),(.023,-.005),(.011,-.022),(-.013,-.021),(-.023,-.009)]]
+brow=[(0,ey+y,ez+z) for y,z in [(-.035,.004),(.026,.029),(.029,.043),(-.033,.020)]]
+for name,points,color,offset in [('EyeRim',rim,'eye',.003),('EyeSocket',socket,'charcoal',.006),('Eye',aperture,'#FFFFB0',.010),('AngryBrow',brow,'violet',.014)]:
+ obj=m.patch(name+'.L',crest,points,color,axis='left',offset=offset)
+ m.mirror(obj,name+'.R')
 plate=m.loft('ShoulderPlate.L','shoulder','metal',5,6,align=True);m.mirror(plate,'ShoulderPlate.R')
 spikeverts=[]
 for x in (-.19,-.15):

@@ -74,4 +74,20 @@ if not sweep and not fit:
     scene.render.resolution_x=40 if kind=='guardian' else 32
     scene.render.resolution_y=scene.render.resolution_x
     scene.render.filepath=str(OUT/'game-size.png');bpy.ops.render.render(write_still=True)
+    # Face crops use a true frontal camera for symmetry review, independent
+    # of the fitted sheet camera. Side eyes also get matching oblique views.
+    scene.render.resolution_x=640;scene.render.resolution_y=640
+    eyes=[bpy.data.objects[f'Eye.{side}'].location for side in ('L','R')]
+    face_target=sum(eyes,Vector())/2
+    camera.data.ortho_scale=.48 if kind=='sniper' else .43
+    for name,turn in (('face-front',0),('face-left',-55),('face-right',55)):
+        camera.location=face_target+direction(turn,0)*5
+        camera.rotation_euler=(face_target-camera.location).to_track_quat('-Z','Y').to_euler()
+        scene.render.filepath=str(OUT/f'{name}.png');bpy.ops.render.render(write_still=True)
+    if kind=='charger':
+        bomb_target=bpy.data.objects['HandBomb'].location+Vector((0,0,.035))
+        camera.data.ortho_scale=.50
+        camera.location=bomb_target+direction(-25,15)*5
+        camera.rotation_euler=(bomb_target-camera.location).to_track_quat('-Z','Y').to_euler()
+        scene.render.filepath=str(OUT/'hand-bomb.png');bpy.ops.render.render(write_still=True)
 print('rendered',kind,list(views))
