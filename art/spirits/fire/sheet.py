@@ -15,60 +15,23 @@ right view on the left; the top view has its front at the bottom (image
 right is its left).
 """
 import json
-from collections import deque
+import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent / "tools"))
+from common import blobs, holes  # noqa: E402
 
 
-def blobs(mask, minimum=20):
-    """Connected pieces of `mask`, as (n, 2) arrays of (row, col)."""
-    seen = np.zeros_like(mask)
-    out = []
-    for y, x in zip(*np.nonzero(mask)):
-        if seen[y, x]:
-            continue
-        queue, piece = deque([(y, x)]), []
-        seen[y, x] = True
-        while queue:
-            a, b = queue.popleft()
-            piece.append((a, b))
-            for da, db in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                c, d = a + da, b + db
-                if 0 <= c < mask.shape[0] and 0 <= d < mask.shape[1] and mask[c, d] and not seen[c, d]:
-                    seen[c, d] = True
-                    queue.append((c, d))
-        if len(piece) >= minimum:
-            out.append(np.array(piece))
-    return out
 
 
 def orange(im):
     return (im[..., 0] > 150) & (im[..., 0] - im[..., 2] > 80)
 
 
-def holes(mask, box):
-    """Pixels inside `box` (rows, cols) not in `mask` and not reachable from the box's edge: the eyes."""
-    top, bottom, left, right = box
-    inside = ~mask[top:bottom + 1, left:right + 1]
-    h, w = inside.shape
-    seen = np.zeros_like(inside)
-    queue = deque((y, x) for y in range(h) for x in (0, w - 1) if inside[y, x])
-    queue.extend((y, x) for x in range(w) for y in (0, h - 1) if inside[y, x])
-    for y, x in queue:
-        seen[y, x] = True
-    while queue:
-        y, x = queue.popleft()
-        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            a, b = y + dy, x + dx
-            if 0 <= a < h and 0 <= b < w and inside[a, b] and not seen[a, b]:
-                seen[a, b] = True
-                queue.append((a, b))
-    enclosed = inside & ~seen
-    return [p + np.array([top, left]) for p in blobs(enclosed, 20)]
 
 
 def view(name):

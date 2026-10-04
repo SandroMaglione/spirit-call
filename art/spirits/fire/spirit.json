@@ -1,0 +1,9 @@
+{
+  "blend": "fire-spirit.blend",
+  "mask": "orange",
+  "eyes": "dark",
+  "background": "#17212F",
+  "lights": { "sun": [0.5, [1.0, 0.95, 0.85]], "fill": [0.15, [1.0, 0.7, 0.45]], "rim": [0.8, [1.0, 0.6, 0.3]] },
+  "ortho": 0.8,
+  "sweep": { "turns": [-50, 50, 5], "elevations": [5, 10, 15, 20, 25, 30] }
+}

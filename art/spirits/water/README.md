@@ -3,7 +3,7 @@
 The water character's spirit, as the game shows it: a faceted low-poly
 droplet with two glowing eyes and a floating nub. Built only from its
 orthographic model sheet (`reference/sheet.png`; the other images in
-`reference/` are its views, cropped; `reference/v1/` is the first sheet).
+`reference/` are its views, cropped).
 
 ![The model laid on each of the sheet's views](renders/overlay-all.png)
 
@@ -30,9 +30,9 @@ Beside the sheet (left, front, isometric), and at the game's camera:
    every side, and each is its own object (`Eye.L`, `Eye.R` in the GLB,
    origin at the eye's center): blinking is scaling it, looking around is
    moving it.
-4. `sweep_score.py` finds the isometric render's camera (35° round, 10° up)
+4. `tools/sweep_score.py` finds the isometric render's camera (35° round, 10° up)
    by rendering many and scoring each against it.
-5. `overlay.py` lays each render on the sheet's view and scores the
+5. `tools/overlay.py` lays each render on the sheet's view and scores the
    overlap: front 96%, back 97%, left and right 96%, isometric 93%, top and
    bottom 87–88% (the sheet's glow widens those).
 
@@ -64,12 +64,16 @@ leaving a ripple that spreads and fades there.
 
 ## Rebuild
 
+From the repository root, with Blender 4.5 LTS and `uv` (the shared tools
+are in `../tools/`, see `docs/spirits.md`):
+
 ```sh
-uv run --with pillow --with numpy art/spirits/water/sheet.py                     # sheet.json (once per sheet)
-blender --background --python-exit-code 1 --python art/spirits/water/build.py    # water-spirit.blend
-SWEEP=/tmp/sweep blender --background --python art/spirits/water/render.py       # isometric camera candidates
-uv run --with pillow --with numpy art/spirits/water/sweep_score.py /tmp/sweep    # its camera, into sheet.json
-blender --background --python-exit-code 1 --python art/spirits/water/render.py   # renders/
-uv run --with pillow --with numpy art/spirits/water/overlay.py                   # renders on the sheet, scored
-blender --background --python-exit-code 1 --python art/spirits/water/export.py   # water-spirit.glb with its clips, assets/spirits.ts
+uv run --with pillow --with numpy art/spirits/water/sheet.py                       # sheet.json (once per sheet)
+blender --background --python-exit-code 1 --python art/spirits/water/build.py     # water-spirit.blend
+SWEEP=/tmp/sweep blender --background --python art/spirits/tools/render.py -- water   # isometric camera candidates
+uv run --with pillow --with numpy art/spirits/tools/sweep_score.py water /tmp/sweep  # its camera, into sheet.json
+blender --background --python-exit-code 1 --python art/spirits/tools/render.py -- water  # renders/
+uv run --with pillow --with numpy art/spirits/tools/overlay.py water                 # renders on the sheet, scored
+uv run --with pillow --with numpy art/spirits/tools/compare.py water                 # renders/compare.png
+blender --background --python-exit-code 1 --python art/spirits/water/export.py     # water-spirit.glb with its clips, src/presentation/assets/water-spirit.ts
 ```
