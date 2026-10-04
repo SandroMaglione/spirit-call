@@ -46,7 +46,9 @@ export interface App {
   readonly unlockEverything: () => void
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
   readonly recordRun: (play: Play | null, result: RunResultValue) => Promise<Earned | undefined>
+  /** Saves the sound settings (the sound board applies them itself). */
   readonly setMuted: (muted: boolean) => void
+  readonly setVolume: (volume: number) => void
 }
 
 /** Starts the app runtime over `localStorage` and loads the account and settings. */
@@ -68,6 +70,11 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
       Effect.orElseSucceed(() => undefined)
     ))
   const run = <E>(action: Effect.Effect<Account, E>) => attempt(action, (account) => account)
+  const saveSettings = (change: (current: Settings) => Settings) =>
+    runtime.runFork(settings.update(change).pipe(
+      Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),
+      Effect.ignore
+    ))
   return {
     account: await runtime.runPromise(accounts.get),
     settings: await runtime.runPromise(settings.get),
@@ -81,11 +88,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     select: (team, play) => run(accounts.select(team, play)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (play, result) => attempt(accounts.recordRun(play, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
-    setMuted: (muted) => {
-      runtime.runFork(settings.update((current) => ({ ...current, muted })).pipe(
-        Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),
-        Effect.ignore
-      ))
-    }
+    setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),
+    setVolume: (volume) => saveSettings((current) => ({ ...current, volume }))
   }
 }

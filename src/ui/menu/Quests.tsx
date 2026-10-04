@@ -9,39 +9,12 @@ import type { Signal } from "@preact/signals"
 
 import { clearPay, encounterOf, nextReset, playLock, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
-import { elements } from "../../content/elements.ts"
-import type { EnemyKind } from "../../content/enemies.ts"
-import { affinityList, attackElements, challengeEnemies, describeAmounts, describeLock, describeObjective, describePlay, describeRewards, describeTimeUntil } from "../describe.ts"
+import { challengeEnemies, describeAmounts, describeLock, describeObjective, describePlay, describeRewards, describeTimeUntil } from "../describe.ts"
 import type { UiStore } from "../store.ts"
-import { Cta, ids, Portrait, TopBar } from "./parts.tsx"
+import { Cta, Foe, ids, TopBar } from "./parts.tsx"
 import type { Nav, QuestTab } from "./parts.tsx"
 
 const tabNames: { readonly [Tab in QuestTab]: string } = { main: "Main", secondary: "Secondary", hardcore: "Hardcore" }
-
-const affinityMarks = { weak: "▲", resists: "▼", immune: "✕" } as const
-
-/** An enemy of the briefing: its portrait, name, affinities, and the elements it attacks with (outlined: what it would put on you). */
-const Foe = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKind }) => {
-  const spec = store.tuning.value.enemies[kind]
-  return (
-    <div class="foe" title={spec.description}>
-      <Portrait of={{ enemy: kind }} />
-      <b>{spec.name}</b>
-      <span class="foe__traits">
-        {affinityList(spec.elements).map(({ element, affinity }) => (
-          <i key={element} class={`trait trait--${affinity}`} data-element={element}>
-            {elements[element].name} {affinityMarks[affinity]}
-          </i>
-        ))}
-        {attackElements(spec.attacks).map((element) => (
-          <i key={`attacks-${element}`} class="trait trait--attacks" data-element={element} title={`Its attacks carry ${elements[element].name.toLowerCase()}`}>
-            {elements[element].name} attack
-          </i>
-        ))}
-      </span>
-    </div>
-  )
-}
 
 export const Quests = ({ store, nav, tab, play, enter }: {
   readonly store: UiStore

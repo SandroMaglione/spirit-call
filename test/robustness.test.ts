@@ -3,7 +3,7 @@ import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 import { NodeRegistry, RenderSync } from "@typeonce/bevy-ts-pixi"
 import { describe, expect, it } from "vitest"
 
-import { keyBindings, touchButtons } from "../src/config/input.ts"
+import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
@@ -11,7 +11,7 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import { emptyUiRequests, UiRequests } from "../src/features/menu.ts"
 import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
-import { Dash, FrameContext, Game, HitStop, KeyboardInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning } from "../src/schema.ts"
+import { Dash, FrameContext, Game, HitStop, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning } from "../src/schema.ts"
 import { defaultViewport } from "../src/simulation.ts"
 import { doubleTap, gunner, start, withGun } from "./helpers.ts"
 
@@ -104,7 +104,8 @@ describe("determinism", () => {
     const first = play()
     expect(first.resources["Shooter/Stats"]).not.toEqual({ kills: 0, shots: 0 })
     expect(play()).toEqual(first)
-  })
+    // Two 40 s runs: a few seconds alone, more alongside the other test files.
+  }, 30_000)
 })
 
 describe("render sync under multi-rate ticking", () => {
@@ -129,6 +130,7 @@ describe("render sync under multi-rate ticking", () => {
         Game.Runtime.service(KeyboardInput, Keyboard.scripted(keyBindings, [])),
         Game.Runtime.service(PointerInput, Pointer.scripted([])),
         Game.Runtime.service(TouchInput, Touch.scripted(touchButtons, [])),
+        Game.Runtime.service(PartyInput, scriptedPartyTaps([])),
         Game.Runtime.service(FrameContext, { viewport: defaultViewport }),
         Game.Runtime.service(TestNodes, registry),
         Game.Runtime.service(UiRequests, emptyUiRequests())

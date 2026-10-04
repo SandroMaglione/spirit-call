@@ -4,11 +4,11 @@
  * Rendering has its own schedule in `presentation/schedule.ts`.
  *
  * Gameplay runs in a `Game.Schedule.when(whilePlaying, ...)` group, so the
- * world freezes on the game-over screen and during hit-stop (the `frozen`
- * check); input capture pauses with hit-stop (`whileRunning`), so presses
- * made meanwhile are kept. Game-over detection is gated on the flow only
- * (`whileRunIsLive`), so it never misses the team's last fall to a
- * hit-stop that the same hit started.
+ * world freezes on the game-over screen, while paused (the in-game menu),
+ * and during hit-stop (the `frozen` check); input capture pauses with hit-stop (`whileRunning`), so presses
+ * made meanwhile are kept. Game-over detection is gated on the flow and the
+ * pause only (`whileRunIsLive`), so it never misses the team's last fall to
+ * a hit-stop that the same hit started.
  * Restarting enters `Playing` again, which runs `restart`.
  */
 import { SpawnArena } from "./features/arena.ts"
@@ -25,9 +25,9 @@ import { BlowPools, DriveWithWind } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
-import { ClearRun, DetectGameOver, QueueRestart, RecordReactions, ResetRun, TrackRun } from "./features/flow.ts"
+import { ClearRun, DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, ResetRun, TrackRun } from "./features/flow.ts"
 import { ApplyUiRequests } from "./features/menu.ts"
-import { CaptureKeys, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
+import { CaptureKeys, CaptureParty, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
@@ -70,6 +70,7 @@ const input = Game.Schedule.when(
   CaptureKeys,
   CapturePointer,
   CaptureTouch,
+  CaptureParty,
   ResolveControls
 )
 
@@ -157,8 +158,9 @@ export const fixedUpdate = Game.Schedule(
   RememberPositions,
   gameplay,
   runOutcome,
-  // Screen changes (menu requests, results shortcuts) apply with this step's transitions.
+  // Screen changes (menu requests, the pause key, results shortcuts) apply with this step's transitions.
   ApplyUiRequests,
+  PauseWithKey,
   QueueRestart,
   FollowCamera,
   Game.Schedule.applyStateTransitions(transitions),

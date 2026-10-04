@@ -33,6 +33,7 @@ export const initialResources = (
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),
   TouchState: Touch.idle(touchButtons),
+  PartyState: [],
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   Viewport: viewport,
   Stats: { kills: 0, shots: 0, reactions: [] },
@@ -42,6 +43,7 @@ export const initialResources = (
   RunResult: null,
   HitStop: { remaining: 0 },
   SlowMotion: { remaining: 0, scale: 1, dodge: false },
+  Paused: { paused: false },
   Camera: { x: tuning.arena.width / 2, y: tuning.arena.height / 2, prevX: tuning.arena.width / 2, prevY: tuning.arena.height / 2 }
 })
 

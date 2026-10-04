@@ -259,10 +259,18 @@ describe("settings store", () => {
     )
 
   it("starts from the mute setting saved before (profile or older), and saves changes", async () => {
-    expect((await withSettings({})).loaded.muted).toBe(false)
+    expect((await withSettings({})).loaded).toEqual({ muted: false, volume: 1 })
     expect((await withSettings({ [legacyMutedKey]: "1" })).loaded.muted).toBe(true)
     const fromProfile = await withSettings({ [legacyProfileKey]: legacyProfile })
     expect(fromProfile.loaded.muted).toBe(true)
-    expect(fromProfile.saved).toEqual({ version: 1, muted: false })
+    expect(fromProfile.saved).toEqual({ version: 2, muted: false, volume: 1 })
+  })
+
+  it("moves first-version settings to full volume, and keeps a volume saved since", async () => {
+    const first = await withSettings({ [settingsKey]: JSON.stringify({ version: 1, muted: true }) })
+    expect(first.loaded).toEqual({ muted: true, volume: 1 })
+    const second = await withSettings({ [settingsKey]: JSON.stringify({ version: 2, muted: false, volume: 0.4 }) })
+    expect(second.loaded).toEqual({ muted: false, volume: 0.4 })
+    expect(second.saved).toEqual({ version: 2, muted: true, volume: 0.4 })
   })
 })

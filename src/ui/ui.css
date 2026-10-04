@@ -184,3 +184,113 @@
   margin-left: 0.4rem;
   color: var(--dim);
 }
+
+/* ── In-game menu ──────────────────────────────────────────────────────── */
+
+/* Over the paused run, as the results: a dark slant on the left holding what is played, the sound, and the way out. */
+.pause {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  padding: max(1.25rem, env(safe-area-inset-top)) 2rem max(1rem, env(safe-area-inset-bottom)) max(2.75rem, env(safe-area-inset-left));
+  background: linear-gradient(115deg, rgba(13, 16, 32, 0.94) 0 56%, rgba(13, 16, 32, 0.5) 56% 100%);
+  font-size: 0.75rem;
+}
+
+.pause__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+  max-width: min(34rem, 52vw);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.pause__label {
+  padding: 0.2rem 1.2rem 0.2rem 0.7rem;
+  background: var(--gold);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.6rem) 100%, 0 100%);
+  color: var(--ink);
+  font: 800 italic 0.85rem/1 var(--display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pause__title {
+  font: 800 italic 2.6rem/1 var(--display);
+  text-transform: uppercase;
+}
+
+.pause__objective {
+  margin-top: -0.3rem;
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.pause__foes {
+  display: flex;
+  gap: 0.4rem;
+  max-width: 100%;
+  overflow-x: auto;
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+
+.pause__sound {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pause .pause__mute {
+  min-width: 6.4rem;
+  height: 2.1rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(143, 232, 200, 0.6);
+  border-radius: 999px;
+  background: rgba(91, 224, 176, 0.14);
+  color: var(--text);
+  font: 700 italic 1rem/1 var(--display);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pause .pause__mute.is-off {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--dim);
+}
+
+.pause__sound input[type="range"] {
+  width: 11rem;
+  height: 2rem;
+  margin: 0;
+  accent-color: var(--gold);
+}
+
+.pause__volume {
+  min-width: 2ch;
+  color: var(--dim);
+  font: 700 1rem/1 var(--display);
+}
+
+.pause__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+
+/* A way out that gives up the run, waiting for its second tap. */
+.ghost.is-confirming {
+  border-color: rgba(255, 106, 90, 0.8);
+  background: rgba(255, 106, 90, 0.16);
+  color: #ffb3a8;
+}
+
+.pause__hint {
+  color: var(--dim);
+}

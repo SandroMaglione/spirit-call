@@ -3,7 +3,7 @@
  * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
  * screen, and a restart that clears the run and starts over.
  */
-import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Challenge, Flow, Game, Health, HitStop, Keys, Member, Paused, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { initialWaves } from "./waves.ts"
 
@@ -69,6 +69,18 @@ export const QueueRestart = Game.System("Shooter/QueueRestart", {
   else if (keys.menu.pressed) nextMachines.flow.set("Menu")
 })
 
+/**
+ * Esc opens the in-game menu during a run, and closes it again. Taps go to
+ * the HUD's menu button and the menu's own buttons (src/ui).
+ */
+export const PauseWithKey = Game.System("Shooter/PauseWithKey", {
+  resources: { keys: Game.System.readResource(Keys), paused: Game.System.writeResource(Paused), result: Game.System.readResource(RunResult) },
+  when: [Game.Condition.inState(Flow, "Playing")]
+}, ({ resources }) => {
+  if (!resources.keys.get().menu.pressed || resources.result.get() !== null) return
+  resources.paused.set({ paused: !resources.paused.get().paused })
+})
+
 /** First system of a restart: fresh run state. */
 export const ResetRun = Game.System("Shooter/ResetRun", {
   resources: {
@@ -80,7 +92,8 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     result: Game.System.writeResource(RunResult),
     hitStop: Game.System.writeResource(HitStop),
     slowMotion: Game.System.writeResource(SlowMotion),
-    teamSwitch: Game.System.writeResource(TeamSwitch)
+    teamSwitch: Game.System.writeResource(TeamSwitch),
+    paused: Game.System.writeResource(Paused)
   }
 }, ({ resources }) => {
   const tuning = resources.tuning.get()
@@ -92,6 +105,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.hitStop.set({ remaining: 0 })
   resources.slowMotion.set({ remaining: 0, scale: 1, dodge: false })
   resources.teamSwitch.set({ cooldown: 0 })
+  resources.paused.set({ paused: false })
 })
 
 /** Removes everything the previous run spawned (enemies, projectiles, hitboxes, spawn warnings). */

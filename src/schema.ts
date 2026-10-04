@@ -6,7 +6,7 @@ import { Descriptor, Schema } from "@typeonce/bevy-ts"
 import type * as Entity from "@typeonce/bevy-ts/Entity"
 import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 
-import type { Direction, KeyboardSource, KeysSnapshot, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
+import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackId, AttackMove } from "./content/attacks.ts"
 import type { ArenaId } from "./content/arena.ts"
@@ -662,6 +662,8 @@ export const Time = Descriptor.Resource<TimeValue>()("Shooter/Time")
 export const Keys = Descriptor.TransientResource<KeysSnapshot>()("Shooter/Keys")
 export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Shooter/PointerState")
 export const TouchState = Descriptor.TransientResource<TouchSnapshot>()("Shooter/TouchState")
+/** The party list's taps this step (see `PartyTap`). */
+export const PartyState = Descriptor.TransientResource<ReadonlyArray<PartyTap>>()("Shooter/PartyState")
 
 /** One skill slot's input for this step. */
 export interface SkillControl {
@@ -692,6 +694,11 @@ export interface ControlsValue {
   readonly attackHeld: boolean
   /** The team slot whose switch was pressed this step (0 first), or `null`. */
   readonly switchTo: number | null
+  /**
+   * The slot switched to by a tap on her ultimate's icon (see `PartyTap`):
+   * once she is on the field, the next step uses her ultimate. `null` otherwise.
+   */
+  readonly burstOnArrival: number | null
   /** Last non-zero movement direction, kept for the movement grace. */
   readonly lastMove: Vec2
   /** The last movement key pressed and when (`Time.elapsed`), to detect a double tap. */
@@ -732,6 +739,12 @@ export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
 
 /** Time left in the current hit-stop. */
 export const HitStop = Descriptor.Resource<{ readonly remaining: number }>()("Shooter/HitStop")
+
+/**
+ * Whether the run is paused (the in-game menu is open): the world stands
+ * still, and what is pressed meanwhile is dropped (see `whilePlaying`).
+ */
+export const Paused = Descriptor.Resource<{ readonly paused: boolean }>()("Shooter/Paused")
 
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
@@ -779,6 +792,7 @@ export const Stats = Descriptor.Resource<StatsValue>()("Shooter/Stats")
 export const KeyboardInput = Descriptor.Service<KeyboardSource>()("Shooter/KeyboardInput")
 export const PointerInput = Descriptor.Service<PointerSource>()("Shooter/PointerInput")
 export const TouchInput = Descriptor.Service<TouchSource>()("Shooter/TouchInput")
+export const PartyInput = Descriptor.Service<PartyTaps>()("Shooter/PartyInput")
 
 /** What the fixed update reads from the host: the current viewport size. */
 export interface FrameContextValue {
@@ -857,6 +871,7 @@ export const Game = Schema.bind(
       Keys,
       PointerState,
       TouchState,
+      PartyState,
       Controls,
       Viewport,
       Camera,
@@ -866,7 +881,8 @@ export const Game = Schema.bind(
       Run,
       RunResult,
       HitStop,
-      SlowMotion
+      SlowMotion,
+      Paused
     },
     events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Reaction, Zap }
   }),
@@ -891,21 +907,30 @@ export const frozen = Game.Condition.check("frozen", {
   resources: { hitStop: Game.System.readResource(HitStop) }
 }, ({ resources }) => resources.hitStop.get().remaining > 1e-9)
 
+/** The run is paused: the in-game menu is open. */
+export const paused = Game.Condition.check("paused", {
+  resources: { paused: Game.System.readResource(Paused) }
+}, ({ resources }) => resources.paused.get().paused)
+
 /**
  * Run condition for input capture: skipped during hit-stop, so presses made
- * meanwhile stay in the device and are seen when the game resumes.
+ * meanwhile stay in the device and are seen when the game resumes. It keeps
+ * running while paused, so presses made in the menu are consumed and dropped.
  */
 export const whileRunning = [Game.Condition.not(frozen)] as const
 
-/** Run condition for systems that advance gameplay: playing and not in a hit-stop. */
-export const whilePlaying = [Game.Condition.inState(Flow, "Playing"), Game.Condition.not(frozen)] as const
+/** Run condition for systems that advance gameplay: playing, not paused, and not in a hit-stop. */
+export const whilePlaying = [Game.Condition.inState(Flow, "Playing"), Game.Condition.not(paused), Game.Condition.not(frozen)] as const
 
 /**
  * Run condition for systems that must see every event of a run (game over):
- * gated on the flow only, never on hit-stop. A hit-stop can start earlier in
- * the same step, and a skipped system discards the events published meanwhile.
+ * gated on the flow and the pause only, never on hit-stop. A hit-stop can
+ * start earlier in the same step, and a skipped system discards the events
+ * published meanwhile. A pause starts at the end of a step (see
+ * `ApplyUiRequests`), after these systems saw its events, and nothing
+ * publishes any while it lasts.
  */
-export const whileRunIsLive = [Game.Condition.inState(Flow, "Playing")] as const
+export const whileRunIsLive = [Game.Condition.inState(Flow, "Playing"), Game.Condition.not(paused)] as const
 
 /** Entities that belong to one run; despawned on restart. */
 export const RunScope = Game.EntityScope("Shooter/Run")

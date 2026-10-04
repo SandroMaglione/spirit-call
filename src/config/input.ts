@@ -41,42 +41,134 @@ export type PointerSnapshot = Pointer.Snapshot
 export type PointerSource = Pointer.Pointer
 
 /**
- * On-screen controls for touch screens: a floating stick on the left half
- * moves; on the right, like Stella Sora, a large attack button with the
- * special, dash, and ultimate around it. Each ATTACK tap slashes, turning toward
- * the enemy the attack assist picks (see `Tuning.touch.assist`). The special
- * and ultimate buttons use the skills in those slots. An aimed skill aims by
+ * On-screen controls for touch screens, laid out as Genshin's (its sizes
+ * and places, measured on a landscape phone): a floating stick on the left
+ * half moves; on the right, the attack button, the dash below and right of
+ * it, the special down and left of it, and the ultimate, smaller, farther
+ * left and lower still. Each ATTACK tap slashes, turning toward the enemy
+ * the attack assist picks (see `Tuning.touch.assist`). The special and
+ * ultimate buttons use the skills in those slots. An aimed skill aims by
  * dragging (drag to pick where it goes, release to use it; a tap uses it
- * where you face); a skill around the player goes off on touch. Above them,
- * at the right edge, one button per team slot switches to that character.
+ * where you face); a skill around the player goes off on touch. The team
+ * switches from the HUD's party list, above the controls (see `PartyTap`).
  */
 export const actionButtons = ["attack", "special", "dash", "ultimate"] as const
-/** The switch buttons, by team slot. */
-export const teamButtons = ["team1", "team2", "team3"] as const
-export const touchButtons = [...actionButtons, ...teamButtons] as const
+export const touchButtons = actionButtons
+/** The team's slots, in order: the party list's rows, and the keys 1, 2, 3. */
+export const teamSlots = [0, 1, 2] as const
 export type ActionButton = (typeof actionButtons)[number]
 export type TouchButton = (typeof touchButtons)[number]
 export type TouchSnapshot = Touch.Snapshot<TouchButton>
 export type TouchSource = Touch.Touch<TouchButton>
 
-/** Sizes scale with the screen's short side, 400 px (a landscape phone) being 1. */
-export const touchLayout = ({ width, height }: Touch.Size): Touch.Layout<TouchButton> => {
-  const scale = Math.min(1.4, Math.max(0.8, Math.min(width, height) / 400))
-  const px = (value: number) => value * scale
-  const attack = { x: width - px(90), y: height - px(90) }
-  // The switch buttons: a column at the right edge from the top, clear of the ultimate below it.
-  const team = (slot: number) => ({ center: { x: width - px(28), y: px(28) + slot * px(50) }, radius: px(21) })
+/**
+ * A tap on the party list (the HUD's row per team member, as Genshin's): on
+ * her row, switch to her; on her ultimate's icon (shown once it is ready),
+ * switch to her and use it at once.
+ */
+export interface PartyTap {
+  readonly slot: number
+  readonly ultimate: boolean
+}
+
+/** The party list's taps since the last snapshot. */
+export interface PartyTaps {
+  snapshot(): ReadonlyArray<PartyTap>
+}
+
+/** Party taps from a script, for headless runs: `frame` n is read by the n-th snapshot (from 0). */
+export const scriptedPartyTaps = (timeline: ReadonlyArray<PartyTap & { readonly frame: number }>): PartyTaps => {
+  let frame = 0
   return {
-    // Below the top-left HUD, left half of the screen.
-    stick: { region: { left: 0, top: height * 0.25, width: width / 2, height: height * 0.75 }, radius: px(55), deadZone: 0.12 },
-    buttons: {
-      attack: { center: attack, radius: px(58) },
-      special: { center: { x: attack.x - px(122), y: attack.y + px(18) }, radius: px(40), aimRadius: px(90) },
-      dash: { center: { x: attack.x - px(98), y: attack.y - px(88) }, radius: px(36) },
-      ultimate: { center: { x: attack.x + px(4), y: attack.y - px(128) }, radius: px(38), aimRadius: px(90) },
-      team1: team(0),
-      team2: team(1),
-      team3: team(2)
+    snapshot: () => {
+      const taps = timeline.filter((tap) => tap.frame === frame).map(({ slot, ultimate }) => ({ slot, ultimate }))
+      frame += 1
+      return taps
     }
   }
+}
+
+/** How far in from each edge of the screen it is safe to place controls (a notch, rounded corners), in CSS pixels. */
+export interface SafeArea {
+  readonly top: number
+  readonly right: number
+  readonly bottom: number
+  readonly left: number
+}
+
+export const noSafeArea: SafeArea = { top: 0, right: 0, bottom: 0, left: 0 }
+
+/** Control sizes scale with the screen's short side, 400 px (a landscape phone) being 1. */
+const controlScale = ({ width, height }: Touch.Size): number => Math.min(1.4, Math.max(0.8, Math.min(width, height) / 400))
+
+/** Nearest the right edge any control comes (the party's portraits), before the safe area. */
+const rightMargin = 55
+
+/**
+ * The right edge the controls are placed from: the screen's, moved in only
+ * as far as needed to keep them clear of an unsafe area (Genshin's margins
+ * already clear most notches).
+ */
+const controlsEdge = (size: Touch.Size, safe: SafeArea): number => {
+  const scale = controlScale(size)
+  return size.width - Math.max(0, safe.right + 8 * scale - rightMargin * scale)
+}
+
+/** Where the attack button sits, the others placed around it. */
+const attackButton = (size: Touch.Size, safe: SafeArea) => {
+  const px = (value: number) => value * controlScale(size)
+  return { center: { x: controlsEdge(size, safe) - px(173), y: size.height - px(92) }, radius: px(38) }
+}
+
+/** The dash, right of and below the attack button: the right-hand control nearest the edge. */
+const dashOffset = { x: 69, y: 34, radius: 28 }
+
+/**
+ * Where the stick rests (a hint of it while no thumb is on it): as far in
+ * from the left edge as the dash is from the right, so the two sides mirror.
+ */
+export const stickRest = (size: Touch.Size, safe: SafeArea = noSafeArea): { readonly x: number; readonly y: number } => {
+  const scale = controlScale(size)
+  const layout = touchLayout(size, safe)
+  const dash = layout.buttons.dash
+  const margin = controlsEdge(size, safe) - (dash.center.x + dash.radius)
+  const left = Math.max(0, safe.left + 8 * scale - rightMargin * scale)
+  return { x: left + margin + layout.stick.radius, y: layout.stick.region.top + layout.stick.region.height - layout.stick.radius * 2 }
+}
+
+/** The touch buttons, as Genshin's. The bottom is left as it is, the buttons already well above it. */
+export const touchLayout = (size: Touch.Size, safe: SafeArea = noSafeArea): Touch.Layout<TouchButton> => {
+  const px = (value: number) => value * controlScale(size)
+  const { center: attack, radius } = attackButton(size, safe)
+  return {
+    // Below the top-left HUD, left half of the screen.
+    stick: { region: { left: 0, top: size.height * 0.25, width: size.width / 2, height: size.height * 0.75 }, radius: px(55), deadZone: 0.12 },
+    buttons: {
+      attack: { center: attack, radius },
+      dash: { center: { x: attack.x + px(dashOffset.x), y: attack.y + px(dashOffset.y) }, radius: px(dashOffset.radius) },
+      special: { center: { x: attack.x - px(67), y: attack.y + px(34) }, radius: px(26), aimRadius: px(90) },
+      ultimate: { center: { x: attack.x - px(131), y: attack.y + px(52) }, radius: px(21), aimRadius: px(90) }
+    }
+  }
+}
+
+/** Where a party row's portrait sits (her name and health run left of it), in CSS pixels. */
+export interface PartyRow {
+  readonly center: { readonly x: number; readonly y: number }
+  readonly radius: number
+}
+
+/**
+ * The party list, as Genshin's: a row per slot down the right side, the
+ * last one well clear of the attack button (however short the screen).
+ */
+export const partyLayout = (size: Touch.Size, safe: SafeArea = noSafeArea): ReadonlyArray<PartyRow> => {
+  const px = (value: number) => value * controlScale(size)
+  const attack = attackButton(size, safe)
+  const radius = px(16)
+  const last = attack.center.y - attack.radius - px(30) - radius
+  return teamSlots.map((slot) => ({
+    center: { x: controlsEdge(size, safe) - px(rightMargin + 16), y: last - (teamSlots.length - 1 - slot) * px(50) },
+    radius
+  }))
 }

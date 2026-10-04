@@ -1,12 +1,12 @@
 /**
- * Host input into world data: keyboard and pointer snapshots are captured
- * into resources once per fixed step, then turned into world-space intent
- * (`Controls`) that gameplay systems read.
+ * Host input into world data: keyboard, pointer, touch, and party list
+ * snapshots are captured into resources once per fixed step, then turned
+ * into world-space intent (`Controls`) that gameplay systems read.
  */
 import { InputCapture } from "@typeonce/bevy-ts-browser"
 
-import { directions, teamButtons, teamKeys, touchButtons } from "../config/input.ts"
-import type { KeysSnapshot, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
+import { directions, teamKeys, touchButtons } from "../config/input.ts"
+import type { KeysSnapshot, PartyTap, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { BasicAttackSpec } from "../content/attacks.ts"
 import { bySlot } from "../content/skills.ts"
@@ -25,6 +25,9 @@ import {
   Hurtbox,
   KeyboardInput,
   Keys,
+  Member,
+  PartyInput,
+  PartyState,
   Player,
   PointerInput,
   PointerState,
@@ -46,6 +49,8 @@ export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKey
 export const CapturePointer = InputCapture.system(Game, { name: "Shooter/CapturePointer", source: PointerInput, resource: PointerState })
 
 export const CaptureTouch = InputCapture.system(Game, { name: "Shooter/CaptureTouch", source: TouchInput, resource: TouchState })
+
+export const CaptureParty = InputCapture.system(Game, { name: "Shooter/CaptureParty", source: PartyInput, resource: PartyState })
 
 /** Whether the on-screen controls were used this step. */
 const touchUsed = (touch: TouchSnapshot): boolean =>
@@ -78,7 +83,7 @@ export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
 export const ResolveControls = Game.System("Shooter/ResolveControls", {
   queries: {
     player: Game.Query({
-      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.read(Skills), weapon: Game.Query.read(Weapon) },
+      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.read(Skills), weapon: Game.Query.read(Weapon), member: Game.Query.read(Member) },
       with: [Player]
     }),
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
@@ -87,6 +92,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     keys: Game.System.readResource(Keys),
     pointer: Game.System.readResource(PointerState),
     touch: Game.System.readResource(TouchState),
+    party: Game.System.readResource(PartyState),
     camera: Game.System.readResource(Camera),
     viewport: Game.System.readResource(Viewport),
     controls: Game.System.writeResource(Controls),
@@ -99,13 +105,16 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   const touch = resources.touch.get()
   const previous = resources.controls.get()
   const device = touchUsed(touch) ? "touch" : desktopUsed(keys, pointer) ? "desktop" : previous.device
+  const [field] = queries.player.each()
+  const fieldSlot = field?.data.member.get().slot ?? null
+  const party = (controls: ControlsValue) => withParty(controls, previous, resources.party.get(), fieldSlot)
   if (device === "touch") {
-    const [player] = queries.player.each()
+    const player = field
     const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, position: data.position.get(), radius: data.hurtbox.get().radius }))
     const state = player === undefined
       ? undefined
       : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get(), attack: resources.tuning.get().attacks[player.data.weapon.get().attack] }
-    resources.controls.set(resolveTouch(touch, previous, state, enemies, resources.tuning.get()))
+    resources.controls.set(party(resolveTouch(touch, previous, state, enemies, resources.tuning.get())))
     return
   }
   const camera = resources.camera.get()
@@ -152,7 +161,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     }
   }
 
-  resources.controls.set({
+  resources.controls.set(party({
     device,
     move,
     aimPoint,
@@ -163,11 +172,31 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     attackPressed: pointer.primary.pressed,
     attackHeld: pointer.primary.held,
     switchTo: switchPressed(teamKeys.map((key) => keys[key])),
+    burstOnArrival: null,
     lastMove,
     lastTap,
     grace
-  })
+  }))
 })
+
+/**
+ * The party list's taps into the controls, as Genshin's: a tap on a row
+ * switches to her; a tap on her ultimate's icon switches to her and, the
+ * step she is on the field, uses it (where a tap of its button would). A
+ * switch that does not happen (still waiting, mid-dash) drops it.
+ */
+const withParty = (controls: ControlsValue, previous: ControlsValue, taps: ReadonlyArray<PartyTap>, fieldSlot: number | null): ControlsValue => {
+  const tap = taps[0]
+  const arrived = previous.burstOnArrival !== null && previous.burstOnArrival === fieldSlot
+  const onField = tap !== undefined && tap.slot === fieldSlot
+  const ultimate = arrived || (onField && tap.ultimate) ? { ...controls.skills.ultimate, pressed: true, aiming: null } : controls.skills.ultimate
+  return {
+    ...controls,
+    skills: { ...controls.skills, ultimate },
+    switchTo: tap === undefined ? controls.switchTo : onField ? null : tap.slot,
+    burstOnArrival: tap !== undefined && tap.ultimate && !onField ? tap.slot : null
+  }
+}
 
 interface AssistCandidate {
   readonly id: number
@@ -233,7 +262,7 @@ const resolveTouch = (
 ): ControlsValue => {
   // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
   if (player === undefined) {
-    return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, attackHeld: false, switchTo: null, grace: 0 }
+    return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, attackHeld: false, switchTo: null, burstOnArrival: null, grace: 0 }
   }
   const tilt = length(touch.stick.vector)
   const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
@@ -257,7 +286,9 @@ const resolveTouch = (
     dashPressed: touch.buttons.dash.pressed,
     attackPressed: attack.pressed,
     attackHeld: attack.held,
-    switchTo: switchPressed(teamButtons.map((name) => touch.buttons[name])),
+    // The team switches from the party list (see `withParty`).
+    switchTo: null,
+    burstOnArrival: null,
     lastMove: moving ? normalizeOr(move, zero) : previous.lastMove,
     lastTap: null,
     grace: 0
@@ -298,6 +329,7 @@ export const initialControls = (aimPoint: Vec2): ControlsValue => ({
   attackPressed: false,
   attackHeld: false,
   switchTo: null,
+  burstOnArrival: null,
   lastMove: zero,
   lastTap: null,
   grace: 0

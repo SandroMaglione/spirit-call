@@ -68,6 +68,9 @@ export interface SoundBoard {
   play(name: SoundName, options?: PlayOptions): void
   readonly muted: () => boolean
   setMuted(muted: boolean): void
+  /** The player's volume, 0..1 (1 by default), over every sound. */
+  readonly volume: () => number
+  setVolume(volume: number): void
 }
 
 /** The loudest a single sound plays, before the master volume. */
@@ -377,8 +380,8 @@ interface Mixer {
   readonly context: AudioContext
   /** Sounds that get ducked. */
   readonly bus: GainNode
-  /** Heavy sounds, never ducked. */
-  readonly front: AudioNode
+  /** Heavy sounds, never ducked; its gain is the master volume. */
+  readonly front: GainNode
   readonly reverb: AudioNode
   readonly noise: AudioBuffer
   readonly distortion: Float32Array<ArrayBuffer>
@@ -388,9 +391,10 @@ interface Mixer {
  * The browser's sound board. `unlockHost` (usually `window`) resumes audio on
  * the first pointer or key press, as browsers require.
  */
-export const createSoundBoard = (unlockHost: Window, options: { readonly muted?: boolean } = {}): SoundBoard => {
+export const createSoundBoard = (unlockHost: Window, options: { readonly muted?: boolean; readonly volume?: number } = {}): SoundBoard => {
   let mixer: Mixer | undefined
   let muted = options.muted ?? false
+  let volume = clampVolume(options.volume ?? 1)
   const last = new Map<SoundName, number>()
 
   const ensure = (): Mixer | undefined => {
@@ -398,7 +402,7 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
     if (typeof AudioContext === "undefined") return undefined
     const context = new AudioContext()
     const master = context.createGain()
-    master.gain.value = masterVolume
+    master.gain.value = masterVolume * volume
     const compressor = context.createDynamicsCompressor()
     compressor.threshold.value = -16
     compressor.knee.value = 8
@@ -468,6 +472,13 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
     muted: () => muted,
     setMuted(next) {
       muted = next
+    },
+    volume: () => volume,
+    setVolume(next) {
+      volume = clampVolume(next)
+      if (mixer !== undefined) mixer.front.gain.setTargetAtTime(masterVolume * volume, mixer.context.currentTime, 0.02)
     }
   }
 }
+
+const clampVolume = (volume: number): number => (Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 1)

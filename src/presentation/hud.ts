@@ -1,22 +1,24 @@
 /**
- * The in-arena HUD (plain DOM): what is being played and how far the run
- * is (top left: a mark per wave), the character on the field (bottom
- * center: health and energy), the team (right: a portrait tab each), skill
- * slots, the wave banner, and the touch pad. Colors follow the element of
+ * The in-arena HUD (plain DOM): the menu button (top left), what is being
+ * played and how far the run is (top center: a mark per wave), the
+ * character on the field (bottom center: a thin health bar), the team
+ * (right: a row each, as Genshin's party list), skill slots, the wave
+ * banner, and the touch pad (icons; the ultimate's button fills with
+ * energy). Colors follow the element of
  * the character on the field (`data-element`).
  */
-import { actionButtons, teamButtons } from "../config/input.ts"
+import { actionButtons, partyLayout, stickRest } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
-import type { StateId } from "../content/elements.ts"
 import { view } from "../config/view.ts"
-import { Challenge, Controls, Dash, ElementState, Enemy, EnemyLevel, Energy, Flow, Game, Health, Member, PendingSpawn, Player, RenderClock, RenderHost, Run, Skills, Sounds, TeamSwitch, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
+import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, TeamSwitch, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { elementOf } from "../ui/draft.ts"
 import { setText } from "./draw.ts"
+import { skillIcons, stateIcons, weaponIcons } from "./icons.ts"
 
 /**
  * The on-screen touch controls: the stick under the thumb (or a faint hint
@@ -25,7 +27,10 @@ import { setText } from "./draw.ts"
  */
 export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   queries: {
-    player: Game.Query({ selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), weapon: Game.Query.read(Weapon) }, with: [Player] })
+    player: Game.Query({
+      selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), weapon: Game.Query.read(Weapon), member: Game.Query.read(Member) },
+      with: [Player]
+    })
   },
   resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), touch: Game.System.service(TouchInput) }
@@ -47,8 +52,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const stickRadius = live.layout.stick.radius
   if (live.stick === null) {
     // Where the thumb usually rests: a hint of the floating stick.
-    const region = live.layout.stick.region
-    const rest = { x: region.left + stickRadius * 2, y: region.top + region.height - stickRadius * 2 }
+    const rest = stickRest(services.host.size, services.host.safeArea())
     place(pad.stick, rest.x, rest.y, stickRadius)
     place(pad.knob, stickRadius, stickRadius, stickRadius * 0.45)
     pad.stick.classList.remove("is-active")
@@ -76,8 +80,10 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown,
     ultimate: 0
   }
-  if (slots !== undefined) {
-    for (const slot of skillSlots) setText(pad.buttons[slot].root.querySelector("span"), slots[slot].spec.label)
+  // Icons: the attack's by the weapon in hand, the skills' by the skill in each slot.
+  if (player !== undefined) {
+    showIcon(pad.buttons.attack.icon, weaponIcons, tuning.characters[player.data.member.get().character].weaponType)
+    for (const slot of skillSlots) showIcon(pad.buttons[slot].icon, skillIcons, player.data.skills.get()[slot].skill)
   }
   for (const name of actionButtons) {
     const zone = live.layout.buttons[name]
@@ -96,18 +102,23 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   }
 })
 
-/** How the HUD names the player's state. */
-const stateNames: Record<StateId, string> = { burning: "BURNING", soaked: "SOAKED" }
+/** Shows `icons[id]` in `place`, touching the page only when it changes. */
+const showIcon = <Id extends string>(place: HTMLElement, icons: { readonly [K in Id]: string }, id: Id): void => {
+  if (place.dataset["icon"] === id) return
+  place.dataset["icon"] = id
+  place.innerHTML = icons[id]
+}
 
 /** A color as CSS. */
 const css = (color: number): string => `#${color.toString(16).padStart(6, "0")}`
 
 /**
- * The team, one entry per slot: her face in her color (with her switch key
- * on a keyboard, and a dot for her state), her name, and her health. The
- * one on the field stands out; a fallen one is grayed; the others dim while
- * the next switch waits, and glow gold with their ultimate ready. On touch
- * screens each face sits on its switch button.
+ * The team, a row per slot as Genshin's party list: her name and health,
+ * and her face in her color (with her switch key on a keyboard, and a dot
+ * for her state). The one on the field stands out; a fallen one is grayed;
+ * the others fill dark while the next switch waits, and show their
+ * ultimate's icon once it is ready. On touch screens each face sits on its
+ * switch button.
  */
 export const SyncTeam = Game.System("Shooter/SyncTeam", {
   queries: {
@@ -136,7 +147,7 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
   const members = queries.members.each()
   // A team of one has nothing to switch to.
   const shown = members.length > 1
-  const layout = touchMode ? services.touch.view().layout : undefined
+  const rows = touchMode ? partyLayout(services.host.size, services.host.safeArea()) : undefined
   team.members.forEach((refs, slot) => {
     const found = shown ? members.find(({ data }) => data.member.get().slot === slot) : undefined
     refs.root.hidden = found === undefined
@@ -152,6 +163,8 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
     refs.root.classList.toggle("is-fallen", fallen)
     refs.root.classList.toggle("is-waiting", waiting && !data.player.present && !fallen)
     refs.root.classList.toggle("is-ready", ready && !fallen)
+    // Her ultimate's icon left of her row once it is ready, as Genshin's: worth switching to her.
+    showIcon(refs.burst, skillIcons, ultimate.skill)
     refs.root.style.setProperty("--color", css(view.characters[character]))
     const element = elementOf(tuning, character)
     if (element === null) delete refs.root.dataset["element"]
@@ -162,8 +175,8 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
     setText(refs.name, tuning.characters[character].name)
     refs.health.style.width = `${(100 * health.current) / health.max}%`
     refs.state.className = state === null ? "" : `team__state--${state.id}`
-    // On touch, the face sits on the slot's switch button, the name and health to its left.
-    const zone = layout?.buttons[teamButtons[slot]!]
+    // On touch, as Genshin's party list: the rows down the right side, each face at its row's place.
+    const zone = rows?.[slot]
     if (zone === undefined) {
       refs.root.style.removeProperty("top")
       refs.root.style.removeProperty("right")
@@ -185,21 +198,23 @@ const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =
   })
 
 /**
- * Progress toward a challenge's objective, in a few words: the enemies left
- * in the wave (the wave marks show which wave), for surviving the time left
- * and the wave, and lasting until the fall the wave against the goal (then
- * the wave alone, past it).
+ * Progress toward a challenge's objective, in a few characters, for the
+ * objectives the wave marks do not show: for surviving the time left, and
+ * lasting until the fall the wave against the goal (then the wave alone,
+ * past it). Clearing waves shows its marks only.
  */
-const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number, remaining: number): string => {
-  const marked = challenge.objective.kind === "clearWaves"
-  const wave = waves.number === 0
-    ? "get ready"
-    : waves.phase === "break" || waves.phase === "complete" ? (marked ? "cleared" : `wave ${waves.number} cleared`) : (marked ? `${remaining} left` : `wave ${waves.number} · ${remaining} left`)
+const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, time: number): string => {
   const objective = challenge.objective
-  const progress = objective.kind === "survive"
-    ? `survive ${Math.max(0, Math.ceil(objective.seconds - time))}s · ${wave}`
-    : objective.kind === "endure" && waves.number <= objective.goal ? `goal wave ${objective.goal} · ${wave}` : wave
-  return progress.charAt(0).toUpperCase() + progress.slice(1)
+  switch (objective.kind) {
+    case "clearWaves":
+      return ""
+    case "survive": {
+      const left = Math.max(0, Math.ceil(objective.seconds - time))
+      return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`
+    }
+    case "endure":
+      return waves.number <= objective.goal ? `Wave ${waves.number} / ${objective.goal}` : `Wave ${waves.number}`
+  }
 }
 
 /** A mark per wave of `total` (none for 0): cleared ones full, the one going on half. */
@@ -222,9 +237,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     player: Game.Query({
       selection: { health: Game.Query.read(Health), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), state: Game.Query.read(ElementState), member: Game.Query.read(Member) },
       with: [Player]
-    }),
-    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
-    pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
+    })
   },
   resources: {
     waves: Game.System.readResource(Waves),
@@ -270,29 +283,31 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
       refs.cooldown.style.height = `${100 * slots[slot].recharge}%`
       refs.root.classList.toggle("is-ready", slots[slot].recharge <= 0)
     }
-    const character = field.member.get().character
-    setText(hud.name, tuning.characters[character].name)
-    const element = elementOf(tuning, character)
+    const element = elementOf(tuning, field.member.get().character)
     if ((hud.root.dataset["element"] ?? null) !== element) {
       if (element === null) delete hud.root.dataset["element"]
       else hud.root.dataset["element"] = element
     }
     const health = field.health.get()
     hud.health.style.width = `${(100 * health.current) / health.max}%`
-    setText(hud.healthText, `${Math.ceil(health.current)}`)
-    const ultimate = tuning.skills[field.skills.get().ultimate.skill]
-    hud.energy.style.width = `${ultimate.energy <= 0 ? 100 : Math.min(100, (100 * field.energy.get().current) / ultimate.energy)}%`
+    setText(hud.healthText, `${Math.ceil(health.current)} / ${Math.ceil(health.max)}`)
   } else {
     hud.health.style.width = "0%"
-    hud.energy.style.width = "0%"
     setText(hud.healthText, "")
   }
-  // Her state, next to her name.
+  // Her state, as Genshin's: its icon over the left end of her health bar, a ring inside it running down with its time.
   const state = field?.state.get().current ?? null
+  const clock = services.host.feedback.stateClock
   hud.state.hidden = state === null
-  if (state !== null) {
-    setText(hud.state, `${stateNames[state.id]} ${state.remaining.toFixed(1)}s`)
+  if (state === null) clock.id = null
+  else {
+    if (clock.id !== state.id || state.remaining > clock.full) {
+      clock.id = state.id
+      clock.full = state.remaining
+    }
+    showIcon(hud.state, stateIcons, state.id)
     hud.state.className = `hud__state hud__state--${state.id}`
+    hud.state.style.setProperty("--left", String(clock.full <= 0 ? 0 : Math.min(1, state.remaining / clock.full)))
   }
   // What is being played, and how far the run is: small, out of the way.
   if (!tuning.waves.enabled) {
@@ -301,8 +316,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     showWaves(hud.waves, 0, waves)
     return
   }
-  const remaining = queries.enemies.each().length + queries.pending.each().length + waves.queue.length
   setText(hud.quest, challenge.name)
   showWaves(hud.waves, challenge.objective.kind === "clearWaves" ? challenge.waves.scripted.length : 0, waves)
-  setText(hud.progress, challengeProgress(challenge, waves, resources.run.get().time, remaining))
+  setText(hud.progress, challengeProgress(challenge, waves, resources.run.get().time))
 })

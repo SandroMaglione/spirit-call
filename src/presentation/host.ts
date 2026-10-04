@@ -1,13 +1,16 @@
 import { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 import { DirectionalLight, Group, HemisphereLight, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
-import { actionButtons, teamButtons } from "../config/input.ts"
-import type { ActionButton } from "../config/input.ts"
+import { actionButtons, teamSlots } from "../config/input.ts"
+import type { ActionButton, PartyTaps } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
 import { DropTrail } from "./drop-trail.ts"
 import { Fx } from "./fx.ts"
+import { trackPartyTaps } from "./party-taps.ts"
+import { readSafeArea } from "./safe-area.ts"
+import { dashIcon } from "./icons.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
 import { arenaLooks, modelsInLooks } from "./looks.ts"
@@ -22,8 +25,6 @@ import { dressArena } from "./scenery.ts"
 import type { Dressing } from "./scenery.ts"
 import { Shapes } from "./shapes.ts"
 
-/** Button labels; the skill buttons show the name of the skill in their slot (see `SyncTouchPad`). */
-const padLabels: Record<ActionButton, string> = { attack: "ATTACK", special: "", dash: "DASH", ultimate: "" }
 
 const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => {
   const root = document.createElement("div")
@@ -33,23 +34,22 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <div class="hud__focus" data-focus></div>
     <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div></div>
     <div class="hud__vitals">
-      <div class="hud__who"><b data-name></b><span class="hud__state" data-state hidden></span><span class="hud__health-text" data-health-text></span></div>
-      <div class="hud__health"><div class="hud__health-fill" data-health></div></div>
-      <div class="hud__energy"><i data-energy></i></div>
+      <span class="hud__state" data-state hidden></span>
+      <div class="hud__health"><div class="hud__health-fill" data-health></div><span class="hud__health-text" data-health-text></span></div>
     </div>
     <div class="team" data-team>
-      ${teamButtons.map((_, slot) => `<div class="team__member" data-member="${slot}" hidden><div class="team__face" data-face><span class="team__portrait" data-member-portrait></span><b class="team__wait"></b><kbd>${slot + 1}</kbd><i data-member-state></i></div><div class="team__info"><span data-member-name></span><b class="team__hp"><i data-member-hp></i></b></div></div>`).join("")}
+      ${teamSlots.map((slot) => `<div class="team__member" data-member="${slot}" hidden><div class="team__face" data-face><span class="team__portrait" data-member-portrait></span><b class="team__wait"></b><kbd>${slot + 1}</kbd><i data-member-state></i></div><div class="team__info"><span data-member-name></span><b class="team__hp"><i data-member-hp></i></b></div><b class="team__burst" data-member-burst></b></div>`).join("")}
     </div>
     <div class="hud__banner" data-banner></div>
     <div class="hud__skills">
       <div class="hud__skill" data-skill="special"><kbd>Space</kbd><span></span><i data-cooldown></i></div>
       <div class="hud__skill hud__skill--ultimate" data-skill="ultimate"><kbd>Shift</kbd><span></span><i data-cooldown></i></div>
     </div>
-    <div class="hud__hint" data-hint>WASD move · double-tap dash · Click attack · Space special · Shift ultimate · 1–3 switch</div>
-    <button class="hud__mute" data-mute type="button" title="Sound (M)">🔊</button>
+    <div class="hud__hint" data-hint>WASD move · double-tap dash · Click attack · Space special · Shift ultimate · 1–3 switch · Esc menu</div>
+    <button class="hud__menu" data-menu type="button" title="Menu (Esc)" aria-label="Menu"><i></i><i></i></button>
     <div class="pad" data-pad hidden>
       <div class="pad__stick" data-stick><div class="pad__knob" data-knob></div></div>
-      ${actionButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span>${padLabels[name]}</span><em data-seconds></em></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
+      ${actionButtons.map((name) => `<div class="pad__button pad__button--${name}" data-button="${name}"><i data-cooldown></i><span data-icon>${name === "dash" ? dashIcon : ""}</span><em data-seconds></em></div><b class="pad__aim" data-aim="${name}"></b>`).join("")}
     </div>
   `
   const slot = (id: string) => {
@@ -60,6 +60,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     const button = root.querySelector<HTMLElement>(`[data-button="${name}"]`)!
     return {
       root: button,
+      icon: button.querySelector<HTMLElement>("[data-icon]")!,
       cooldown: button.querySelector<HTMLElement>("[data-cooldown]")!,
       seconds: button.querySelector<HTMLElement>("[data-seconds]")!,
       aim: root.querySelector<HTMLElement>(`[data-aim="${name}"]`)!
@@ -71,7 +72,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       root,
       skills: { special: slot("special"), ultimate: slot("ultimate") },
       desktopOnly: [root.querySelector<HTMLElement>(".hud__skills")!, root.querySelector<HTMLElement>("[data-hint]")!],
-      mute: root.querySelector<HTMLButtonElement>("[data-mute]")!,
+      menu: root.querySelector<HTMLButtonElement>("[data-menu]")!,
       pad: {
         root: root.querySelector<HTMLElement>("[data-pad]")!,
         stick: root.querySelector<HTMLElement>("[data-stick]")!,
@@ -81,18 +82,17 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       quest: root.querySelector<HTMLElement>("[data-quest]")!,
       waves: root.querySelector<HTMLElement>("[data-waves]")!,
       progress: root.querySelector<HTMLElement>("[data-progress]")!,
-      name: root.querySelector<HTMLElement>("[data-name]")!,
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
-      energy: root.querySelector<HTMLElement>("[data-energy]")!,
       state: root.querySelector<HTMLElement>("[data-state]")!,
       team: {
         root: root.querySelector<HTMLElement>("[data-team]")!,
-        members: teamButtons.map((_, slot) => {
+        members: teamSlots.map((slot) => {
           const member = root.querySelector<HTMLElement>(`[data-member="${slot}"]`)!
           return {
             root: member,
             face: member.querySelector<HTMLElement>("[data-face]")!,
+            burst: member.querySelector<HTMLElement>("[data-member-burst]")!,
             portrait: member.querySelector<HTMLElement>("[data-member-portrait]")!,
             state: member.querySelector<HTMLElement>("[data-member-state]")!,
             name: member.querySelector<HTMLElement>("[data-member-name]")!,
@@ -112,6 +112,8 @@ export interface BrowserHost {
   readonly nodes: NodeRegistry.NodeRegistry<RenderNode>
   /** Every model the looks use, loaded (the menu's showcase draws them too). */
   readonly models: ReadonlyMap<ModelId, ModelSource>
+  /** Taps on the HUD's party list, an input (see `PartyTap`). */
+  readonly party: PartyTaps
   destroy(): void
 }
 
@@ -130,6 +132,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   canvas.style.display = "block"
   const hud = createHud()
   mount.replaceChildren(canvas, hud.root)
+  const safeArea = readSafeArea(mount)
+  const party = trackPartyTaps(hud.refs.team)
 
   const size = { width: 1, height: 1 }
   const resize = () => {
@@ -239,9 +243,10 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     projectilePool,
     cursor,
     hud: hud.refs,
+    safeArea: safeArea.read,
     showArena,
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
-    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, protection: 0, recoil: new Map() },
+    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, protection: 0, recoil: new Map(), stateClock: { id: null, full: 0 } },
     toCanvas: (world, height) => {
       const center = toScreen(projection, cameraView.center)
       const at = toScreenAt(projection, world, height)
@@ -278,7 +283,10 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     host,
     nodes,
     models,
+    party,
     destroy() {
+      party.dispose()
+      safeArea.dispose()
       canvas.removeEventListener("pointermove", onMove)
       canvas.removeEventListener("pointerleave", onLeave)
       observer.disconnect()

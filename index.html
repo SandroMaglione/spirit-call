@@ -14,23 +14,27 @@
       html, body { margin: 0; height: 100%; background: #0d1117; overflow: hidden; overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
       [hidden] { display: none !important; }
       .boot-error { position: absolute; inset: 0; margin: 0; padding: 24px; overflow: auto; white-space: pre-wrap; background: #0d1117; color: #ff5d6c; font: 13px/1.5 ui-monospace, monospace; z-index: 10; }
-      /* On-screen touch controls, positioned by SyncTouchPad. Cooldowns sweep round each button (`--cd`, 0..1 left). */
+      /* On-screen touch controls, positioned by SyncTouchPad: an icon each, as Genshin's. Cooldowns sweep round each button (`--cd`, 0..1 left); the ultimate's fills from below with energy. */
       .pad { position: absolute; inset: 0; pointer-events: none; }
       .pad > * { position: absolute; left: 0; top: 0; box-sizing: border-box; border-radius: 50%; }
       .pad__stick { border: 2px solid rgba(255, 255, 255, 0.25); background: radial-gradient(circle, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.18)); opacity: 0.6; transition: opacity 120ms; }
       .pad__stick.is-active { opacity: 1; border-color: rgba(255, 255, 255, 0.45); }
       .pad__knob { position: absolute; left: 0; top: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.4); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45); }
-      .pad__button { display: grid; place-content: center; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.55); background: radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06) 60%), rgba(16, 18, 36, 0.55); color: #fff; font: 800 italic 13px "Barlow Condensed", "Avenir Next Condensed", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
-      .pad__button span { position: relative; }
-      .pad__button i { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(8, 10, 20, 0.7) calc(var(--cd, 0) * 1turn), transparent 0); }
-      .pad__button em { position: absolute; inset: 0; display: grid; place-items: center; font: 800 18px "Barlow Condensed", sans-serif; font-style: normal; }
+      .pad__button { display: grid; place-content: center; overflow: hidden; border: 0; background: radial-gradient(closest-side, rgba(8, 10, 20, 0.03) 40%, rgba(8, 10, 20, 0.24) 100%); color: rgba(255, 255, 255, 0.92); font: 800 italic 13px "Barlow Condensed", "Avenir Next Condensed", sans-serif; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+      .pad__button span { position: absolute; inset: 0; display: grid; place-items: center; }
+      .pad__button svg { width: 56%; height: 56%; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)); }
+      .pad__button i { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(8, 10, 20, 0.55) calc(var(--cd, 0) * 1turn), transparent 0); }
+      .pad__button em { position: absolute; inset: 0; display: grid; place-items: center; font: 800 16px "Barlow Condensed", sans-serif; font-style: normal; }
       .pad__button em:empty { display: none; }
       .pad__button:has(em:not(:empty)) span { opacity: 0; }
-      .pad__button--attack { border-width: 3px; border-color: rgba(255, 255, 255, 0.8); font-size: 18px; }
-      .pad__button--special { border-color: color-mix(in srgb, var(--el) 50%, white); background: radial-gradient(circle at 40% 30%, color-mix(in srgb, var(--el) 85%, white), color-mix(in srgb, var(--el-deep) 85%, transparent) 70%); }
-      .pad__button--ultimate { border-color: rgba(255, 241, 184, 0.6); background: radial-gradient(circle at 40% 30%, rgba(255, 241, 184, 0.55), rgba(120, 72, 20, 0.65) 70%); }
-      .pad__button--ultimate.is-ready { border-color: #fff1b8; background: radial-gradient(circle at 40% 30%, #fff1b8, #c98a2a 75%); box-shadow: 0 0 16px rgba(255, 207, 90, 0.85); color: #2a1a05; text-shadow: none; }
-      .pad__button.is-held { filter: brightness(1.3); }
+      .pad__button--attack { background: radial-gradient(closest-side, rgba(8, 10, 20, 0.04) 40%, rgba(8, 10, 20, 0.28) 100%); }
+      .pad__button--attack svg { width: 58%; height: 58%; }
+      /* The special as the others; its icon in her element while ready. */
+      .pad__button--special.is-ready { color: color-mix(in srgb, var(--el) 45%, white); }
+      .pad__button--ultimate { background: radial-gradient(closest-side, rgba(8, 10, 20, 0.05) 40%, rgba(8, 10, 20, 0.28) 100%); box-shadow: 0 0 10px 1px color-mix(in srgb, var(--el) 35%, transparent); }
+      .pad__button--ultimate i { background: linear-gradient(0deg, color-mix(in srgb, var(--el) 60%, transparent) calc((1 - var(--cd, 0)) * 100%), transparent 0); }
+      .pad__button--ultimate.is-ready { color: #fff; background: radial-gradient(circle at 40% 30%, color-mix(in srgb, var(--el) 70%, white), var(--el-deep) 85%); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 0 14px 2px color-mix(in srgb, var(--el) 85%, transparent); }
+      .pad__button.is-held { background-color: rgba(255, 255, 255, 0.18); }
       .pad__aim { border: 2px solid #fff; background: rgba(255, 255, 255, 0.3); }
       /* The dev monitor toggle would sit under the left thumb on touch screens. */
       @media (pointer: coarse) { .btm-toggle { display: none; } }
@@ -53,27 +57,34 @@
       [data-element="fire"] { --el: #ff6a3d; --el-deep: #8a3220; }
       [data-element="water"] { --el: #3fb4ff; --el-deep: #1d4f8c; }
       [data-element="thunder"] { --el: #b38cff; --el-deep: #4d3591; }
-      /* What is being played, top left: its name, a mark per wave, and what is left. */
-      .hud__quest { position: absolute; top: max(10px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); display: grid; grid-template-columns: auto auto; align-items: center; gap: 2px 10px; text-shadow: 0 1px 3px #000; }
-      .hud__quest-name { font: 800 italic 19px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
-      .hud__waves { display: flex; gap: 3px; }
-      .hud__waves i { width: 22px; height: 6px; border-radius: 2px; background: rgba(0, 0, 0, 0.45); transform: skewX(-20deg); }
+      /* What is being played, top center: its name, a mark per wave, and what is left. */
+      .hud__quest { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: grid; justify-items: center; gap: 4px; text-shadow: 0 1px 3px #000; white-space: nowrap; }
+      .hud__quest-name { font: 800 italic 14px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.04em; text-transform: uppercase; }
+      .hud__waves { display: flex; gap: 2px; }
+      .hud__waves:empty { display: none; }
+      .hud__waves i { width: 13px; height: 4px; border-radius: 1px; background: rgba(0, 0, 0, 0.45); transform: skewX(-20deg); }
       .hud__waves i.is-done { background: #ffcf5a; }
       .hud__waves i.is-current { background: rgba(255, 207, 90, 0.5); box-shadow: 0 0 6px rgba(255, 207, 90, 0.6); }
-      .hud__quest-progress { grid-column: 1 / -1; font-size: 11px; font-weight: 600; }
-      /* The character on the field, bottom center (above the skill bar on a keyboard): health, then energy toward her ultimate. */
-      .hud__vitals { position: absolute; bottom: 116px; left: 50%; transform: translateX(-50%); display: grid; gap: 3px; width: 230px; text-shadow: 0 1px 3px #000; }
-      .hud[data-device="touch"] .hud__vitals { bottom: max(6px, env(safe-area-inset-bottom)); width: 200px; }
-      .hud__who { display: flex; align-items: baseline; justify-content: center; gap: 8px; font: 800 italic 15px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
-      .hud__health { position: relative; height: 9px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.25); transform: skewX(-20deg); overflow: hidden; }
-      .hud__health-fill { position: absolute; inset: 0; width: 100%; background: linear-gradient(180deg, color-mix(in srgb, var(--el) 60%, white), var(--el)); transition: width 120ms ease-out; }
-      .hud__health-text { font: 700 11px system-ui, sans-serif; font-style: normal; opacity: 0.85; }
-      .hud__energy { height: 3px; margin: 0 16px; background: rgba(0, 0, 0, 0.5); transform: skewX(-20deg); }
-      .hud__energy i { display: block; height: 100%; width: 0; background: #ffcf5a; transition: width 120ms ease-out; }
-      .hud__state { padding: 1px 6px; border-radius: 999px; font: 700 9px system-ui, sans-serif; letter-spacing: 0.1em; color: #0d1117; text-shadow: none; }
+      .hud__quest-progress { font: 700 10px/1 system-ui, sans-serif; opacity: 0.85; }
+      .hud__quest-progress:empty { display: none; }
+      /* The in-game menu's button, top left: two bars, as a pause sign. */
+      .hud__menu { position: absolute; top: max(10px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 5px; width: 42px; height: 42px; padding: 0; background: rgba(10, 12, 28, 0.6); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 50%; cursor: pointer; }
+      .hud__menu i { display: block; width: 4px; height: 15px; border-radius: 1px; background: #eef1ff; box-shadow: 0 1px 2px #000; }
+      .hud__menu:hover { border-color: rgba(255, 255, 255, 0.5); }
+      /* The character on the field, bottom center (above the skill bar on a keyboard): a thin health bar, her health written on it, her state over it. */
+      .hud__vitals { position: absolute; bottom: 116px; left: 50%; transform: translateX(-50%); display: grid; justify-items: center; gap: 3px; width: 220px; text-shadow: 0 1px 3px #000; }
+      .hud[data-device="touch"] .hud__vitals { bottom: max(26px, env(safe-area-inset-bottom)); width: 140px; }
+      .hud__health { position: relative; width: 100%; height: 8px; background: rgba(0, 0, 0, 0.45); border-radius: 4px; overflow: hidden; }
+      .hud__health-fill { position: absolute; inset: 0; width: 100%; border-radius: 4px; background: linear-gradient(180deg, #c6ff9a, #7fd957); transition: width 120ms ease-out; }
+      .hud__health-text { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font: 700 7px/1 system-ui, sans-serif; letter-spacing: 0.04em; text-shadow: 0 0 2px rgba(0, 0, 0, 0.55); }
+      .hud[data-device="desktop"] .hud__health { height: 10px; border-radius: 5px; }
+      .hud[data-device="desktop"] .hud__health-text { font-size: 8px; }
+      /* Her state, as Genshin's: its icon in a small disc over the left end of her health bar, the time left a ring inside it (`--left`, 0..1). */
+      .hud__state { position: absolute; left: 0; bottom: calc(100% + 3px); display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; color: #fff; background: conic-gradient(color-mix(in srgb, var(--state) 55%, transparent) calc(var(--left, 1) * 1turn), rgba(10, 12, 28, 0.4) 0); box-shadow: 0 0 0 1px color-mix(in srgb, var(--state) 70%, transparent); }
+      .hud__state svg { width: 11px; height: 11px; }
       .hud__state[hidden] { display: none; }
-      .hud__state--burning { background: #ff7b2e; }
-      .hud__state--soaked { background: #4aa8ff; }
+      .hud__state--burning { --state: #ff7b2e; }
+      .hud__state--soaked { --state: #4aa8ff; }
       .hud__vignette { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 160px 40px rgba(255, 40, 40, 0.9); }
       /* Slow motion after a perfect dodge: the edges glow cold and the world dims around her. */
       .hud__focus { position: absolute; inset: 0; opacity: 0; pointer-events: none; box-shadow: inset 0 0 240px 80px rgba(120, 255, 240, 0.6); background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 28, 44, 0.45) 100%); }
@@ -88,34 +99,36 @@
       .hud__skill--ultimate.is-ready { border-color: #ffcf5a; box-shadow: 0 0 14px rgba(255, 207, 90, 0.6); }
       .hud__skill i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(8, 10, 20, 0.72); pointer-events: none; }
       /*
-       * The team: a slanted portrait tab per member, a column on the right; on touch, each face sits on its
-       * switch button. The face's edge is her element's color; a gold diamond when her ultimate is ready; a
-       * dark fill while the next switch waits (`--wait`, 0..1 left). The one on the field is dimmed.
+       * The team, as Genshin's party list: a row per member, a dark pill with her name and health, her slanted
+       * portrait at its right end, in a column on the right; on touch, each portrait sits on its switch button.
+       * The portrait's edge is her element's color; her ultimate's icon glows left of the row once it is ready;
+       * a dark fill while the next switch waits (`--wait`, 0..1 left). The one on the field stands out.
        */
       .team { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: grid; gap: 10px; --slant: polygon(24% 0, 100% 0, 76% 100%, 0 100%); }
       .team.is-touch { inset: 0; transform: none; display: block; }
       .team.is-touch .team__member { position: absolute; }
-      .team__member { display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; transition: opacity 150ms; }
-      .team__face { position: relative; box-sizing: border-box; width: 46px; height: 46px; transition: opacity 150ms; }
+      .team__member { display: flex; flex-direction: row-reverse; align-items: center; pointer-events: auto; cursor: pointer; transition: opacity 150ms; }
+      .team__face { position: relative; z-index: 1; box-sizing: border-box; width: 52px; height: 52px; transition: transform 150ms; }
       .team__face::before { content: ""; position: absolute; inset: 0; clip-path: var(--slant); background: var(--el); }
       .team__portrait { position: absolute; inset: 2px; clip-path: var(--slant); background: center / cover no-repeat; background-color: var(--el-deep); }
       .team__wait { position: absolute; inset: 2px; clip-path: var(--slant); background: linear-gradient(0deg, rgba(0, 0, 0, 0.65) calc(var(--wait, 0) * 100%), transparent 0); display: none; }
       .team__member.is-waiting .team__wait { display: block; }
       .team__face kbd { position: absolute; left: -4px; bottom: -3px; padding: 0 4px; background: var(--el); clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%); font: 800 italic 12px/14px "Barlow Condensed", sans-serif; color: #0d1020; text-shadow: none; }
-      .team__member.is-ready .team__face::after { content: ""; position: absolute; right: -3px; top: -4px; width: 10px; height: 10px; transform: rotate(45deg); background: #ffcf5a; box-shadow: 0 0 8px #ffcf5a; }
       .team__face i { position: absolute; right: 2px; bottom: -2px; width: 9px; height: 9px; border-radius: 50%; display: none; border: 1px solid #0d1117; }
       .team__face i.team__state--burning { display: block; background: #ff7b2e; }
       .team__face i.team__state--soaked { display: block; background: #4aa8ff; }
-      .team__info { display: grid; justify-items: end; gap: 3px; font: 800 italic 13px "Barlow Condensed", sans-serif; text-transform: uppercase; text-shadow: 0 1px 3px #000; }
-      .team__hp { display: block; width: 56px; height: 4px; background: rgba(0, 0, 0, 0.55); transform: skewX(-20deg); overflow: hidden; }
-      .team__hp i { display: block; height: 100%; background: #9fff7a; transition: width 120ms ease-out; }
-      /* On touch only the face and a health bar under it: names would run into the buttons below. */
-      .team.is-touch .team__member { flex-direction: column; gap: 4px; }
-      .team.is-touch .team__info span { display: none; }
-      .team.is-touch .team__hp { width: 36px; }
-      .team__member.is-field .team__face { opacity: 0.5; }
+      .team__info { box-sizing: border-box; display: grid; justify-items: end; gap: 3px; width: 82px; margin-right: -6px; padding: 4px 12px 5px 12px; background: linear-gradient(90deg, rgba(10, 12, 28, 0), rgba(10, 12, 28, 0.36) 35%); border-radius: 999px 0 0 999px; font: 600 9.5px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(238, 241, 255, 0.85); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+      .team__info span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .team__hp { display: block; justify-self: end; width: 46px; height: 2px; background: rgba(255, 255, 255, 0.14); border-radius: 1px; overflow: hidden; }
+      .team__hp i { display: block; height: 100%; background: rgba(159, 255, 122, 0.75); transition: width 120ms ease-out; }
+      .team__burst { display: none; place-items: center; width: 32px; height: 32px; margin-right: 8px; border-radius: 50%; color: rgba(255, 255, 255, 0.9); background: radial-gradient(circle, color-mix(in srgb, var(--el) 55%, rgba(12, 14, 26, 0.6)), color-mix(in srgb, var(--el-deep) 55%, rgba(12, 14, 26, 0.35))); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 6px color-mix(in srgb, var(--el) 40%, transparent); }
+      .team__burst svg { width: 18px; height: 18px; }
+      .team__member.is-ready:not(.is-field) .team__burst { display: grid; }
+      /* On the field: her row lit, the portrait a little forward. */
+      .team__member.is-field .team__info { background: linear-gradient(90deg, rgba(10, 12, 28, 0), color-mix(in srgb, var(--el) 40%, rgba(10, 12, 28, 0.45)) 35%); }
+      .team__member.is-field .team__face { transform: translateX(-4px) scale(1.06); }
+      .team.is-touch .team__face kbd { display: none; }
       .team__member.is-fallen { opacity: 0.35; filter: grayscale(1); }
-      .hud__mute { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); pointer-events: auto; width: 34px; height: 34px; padding: 0; font-size: 15px; line-height: 1; background: rgba(10, 12, 28, 0.55); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50%; cursor: pointer; }
       .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #9aa2c8; white-space: nowrap; }
       .tuning { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 320px; display: flex; flex-direction: column; background: rgba(13, 17, 23, 0.94); border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: 12px "IBM Plex Mono", ui-monospace, monospace; z-index: 10; }
       .tuning[hidden] { display: none; }

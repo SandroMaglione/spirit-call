@@ -1,6 +1,7 @@
 import type { BufferGeometry, Group, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
-import type { ActionButton } from "../config/input.ts"
+import type { ActionButton, SafeArea } from "../config/input.ts"
+import type { StateId } from "../content/elements.ts"
 import type { ArenaId } from "../content/arena.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { ProjectileStyle } from "../schema.ts"
@@ -115,9 +116,10 @@ export interface SkillSlotRefs {
   readonly cooldown: HTMLElement
 }
 
-/** One on-screen touch button: the circle, its cooldown sweep and seconds left, and the drag-aim marker. */
+/** One on-screen touch button: the circle, its icon, its cooldown sweep (or the ultimate's energy filling it) and seconds left, and the drag-aim marker. */
 export interface TouchButtonRefs {
   readonly root: HTMLElement
+  readonly icon: HTMLElement
   readonly cooldown: HTMLElement
   readonly seconds: HTMLElement
   readonly aim: HTMLElement
@@ -131,10 +133,11 @@ export interface TouchPadRefs {
   readonly buttons: { readonly [K in ActionButton]: TouchButtonRefs }
 }
 
-/** One team member's switch button: her face (portrait, key, state dot), name, and health. */
+/** One team member's row: her face (portrait, key, state dot; the switch button on touch), name, and health, and her ultimate's icon once it is ready. */
 export interface TeamMemberRefs {
   readonly root: HTMLElement
   readonly face: HTMLElement
+  readonly burst: HTMLElement
   /** Her portrait, drawn by the showcase (see `showcase.ts`). */
   readonly portrait: HTMLElement
   readonly state: HTMLElement
@@ -142,7 +145,7 @@ export interface TeamMemberRefs {
   readonly health: HTMLElement
 }
 
-/** The team, one entry per slot: a column on the right, placed on the touch switch buttons on touch screens. */
+/** The team, one entry per slot: a column on the right, placed as the party list on touch screens (see `partyLayout`). */
 export interface TeamRefs {
   readonly root: HTMLElement
   readonly members: ReadonlyArray<TeamMemberRefs>
@@ -154,20 +157,17 @@ export interface HudRefs {
   readonly skills: { readonly [Slot in SkillSlot]: SkillSlotRefs }
   /** The keyboard skill bar and key hint, hidden while playing with touch. */
   readonly desktopOnly: ReadonlyArray<HTMLElement>
-  /** Sound on/off. */
-  readonly mute: HTMLButtonElement
+  /** Opens the in-game menu (top left). */
+  readonly menu: HTMLButtonElement
   readonly pad: TouchPadRefs
-  /** What is being played (top left, small): its name and level, and how far the run is. */
+  /** What is being played (top center, small): its name, and how far the run is. */
   readonly quest: HTMLElement
   /** A mark per wave: cleared, going on, to come. */
   readonly waves: HTMLElement
   readonly progress: HTMLElement
-  /** The character on the field (bottom center): her name, health, and state (burning, soaked; hidden when in none). */
-  readonly name: HTMLElement
+  /** The character on the field (bottom center, a thin bar): her health, and her state (burning, soaked; hidden when in none). Her energy fills the ultimate's button. */
   readonly health: HTMLElement
   readonly healthText: HTMLElement
-  /** Her energy toward the ultimate. */
-  readonly energy: HTMLElement
   readonly state: HTMLElement
   readonly team: TeamRefs
   readonly banner: HTMLElement
@@ -194,6 +194,8 @@ export interface FeedbackState {
   protection: number
   /** Recoil of recently hit bodies, by entity id: age, duration, the blow's direction on the floor, and strength. */
   readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
+  /** The state the one on the field is in, and the most it had left (refreshed by a new hit), so its icon's ring shows what is left. */
+  readonly stateClock: { id: StateId | null; full: number }
 }
 
 /** Frame statistics measured by the host loop. */
@@ -228,6 +230,8 @@ export interface RenderHostValue {
   readonly canvas: HTMLCanvasElement
   /** The canvas size in CSS pixels, kept current. */
   readonly size: { width: number; height: number }
+  /** The screen's safe area (clear of a notch, rounded corners), kept current. */
+  readonly safeArea: () => SafeArea
   readonly scene: Scene
   readonly camera: OrthographicCamera
   /** Where the camera looks this frame (set by `ApplyCamera`). */
