@@ -57,8 +57,10 @@ Beside the sheet (left, front, isometric), and at the game's camera:
   behind and lagging the hop.
 
 The trail of drops is the game's (`ShedSpiritDrops` in
-`src/presentation/effects.ts`, set by its look's `drops`): drops flung
-back from its lower half while it moves, falling, a few leaving ripples.
+`src/presentation/effects.ts`, drawn by `drop-trail.ts`, set by its look's
+`drops`): drops in the 3D scene, so its body hides the ones behind it,
+thrown back from its back while it moves, falling to the floor, about half
+leaving a ripple that spreads and fades there.
 
 ## Rebuild
 

@@ -6,6 +6,7 @@ import type { ActionButton } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
+import { DropTrail } from "./drop-trail.ts"
 import { Fx } from "./fx.ts"
 import { SlashTrails } from "./trails.ts"
 import type { HudRefs, ProjectileNode, RenderHostValue, RenderNode } from "./host-types.ts"
@@ -231,6 +232,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     overlay,
     projected,
     fx,
+    drops: new DropTrail(scene),
     trails: new SlashTrails(trails),
     reticle,
     edges,
@@ -283,6 +285,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       nodes.clear()
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
+      host.drops.dispose()
       assets.dispose()
       dressing?.dressing.dispose()
       for (const source of models.values()) disposeModel(source)

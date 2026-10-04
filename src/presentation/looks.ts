@@ -44,8 +44,8 @@ export interface Moments {
 
 /**
  * Drops a body sheds while it moves: about `rate` a second (at full speed),
- * flung back against its motion in `colors`, falling, with a ripple on the
- * floor for some of them.
+ * thrown back from its back in `colors`, `size` world units across,
+ * falling to the floor, about half leaving a ripple there.
  */
 export interface Drops {
   readonly rate: number
@@ -97,7 +97,7 @@ const waterSpirit: BodyLook = {
   widthFactor: 1.5,
   heightFactor: view.bodyHeightFactor,
   moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
-  drops: { rate: 26, colors: [0x8eebff, 0x44b6ff, 0xe0f9ff], size: 3 }
+  drops: { rate: 30, colors: [0x8eebff, 0x44b6ff, 0xe0f9ff], size: 2.4 }
 }
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {

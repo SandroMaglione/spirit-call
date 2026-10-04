@@ -321,10 +321,10 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
 const shedding = new WeakMap<object, { at: Vec2; owed: number }>()
 
 /**
- * Drops off a moving spirit (a look's `drops`): flung back against its
- * motion from its lower half, falling to the floor, some leaving a ripple
- * where they fall. More the faster it goes; none while it stands or the
- * world is frozen.
+ * Drops off a moving spirit (a look's `drops`), into the 3D scene so its
+ * body hides the ones behind it: each leaves from its back, low on it,
+ * thrown back against its motion, and falls to the floor, about half
+ * leaving a ripple there. More the faster it goes; none while it stands.
  */
 export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
   queries: {
@@ -349,17 +349,16 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
       continue
     }
     last.owed += drops.rate * seconds * Math.min(1, speed / 290)
-    const back = screenDirection({ x: -moved.x, y: -moved.y })
-    const feet = toScreen(projection, at)
-    const r = data.body.get().radius * projection.zoom
+    const back = { x: -moved.x / (speed * seconds), y: -moved.y / (speed * seconds) }
+    const radius = data.body.get().radius
     while (last.owed >= 1) {
       last.owed -= 1
       const color = drops.colors[Math.floor(Math.random() * drops.colors.length)]!
-      // From its lower half, a little behind it.
-      const from = { x: feet.x + back.x * r * 0.7 + (Math.random() - 0.5) * r * 0.9, y: feet.y + back.y * r * 0.35 - r * (0.3 + Math.random() * 0.9) }
-      const fling = 40 + Math.random() * 60
-      services.host.fx.mote(from, back.x * fling, back.y * fling * 0.5 - 30 - Math.random() * 40, { color, size: drops.size * (0.7 + Math.random() * 0.6), life: 0.4, gravity: 620, drag: 1.5, alpha: 0.9 })
-      if (Math.random() < 0.18) services.host.fx.ring({ x: feet.x + back.x * r * 1.5, y: feet.y + back.y * r * 0.75 + (Math.random() - 0.5) * r * 0.4 }, r * 0.3, drops.colors[0]!, 0.4)
+      // From its back, a little to either side, low on its body.
+      const across = (Math.random() - 0.5) * radius * 1.1
+      const from = { x: at.x + back.x * radius * 0.9 - back.y * across, y: at.y + back.y * radius * 0.9 + back.x * across }
+      const height = node.body.height * (0.12 + Math.random() * 0.3)
+      services.host.drops.emit(from, height, back, 50 + Math.random() * 70, drops.size * (0.7 + Math.random() * 0.6), color)
     }
   }
 })
@@ -424,6 +423,7 @@ export const UpdateFx = Game.System("Shooter/UpdateFx", {
 }, ({ queries, services }) => {
   const seconds = services.clock.frameSeconds
   services.host.fx.update(seconds)
+  services.host.drops.update(seconds)
   const [player] = queries.player.each()
   services.host.trails.update(seconds, player === undefined ? undefined : lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha))
 })
