@@ -8,12 +8,12 @@ sheet.py into sheet.json:
   left and right from the front and back views (averaged), front and back
   from the left view (the right view is drawn as its mirror image, so it
   adds nothing), so the flame's lean and its tip are the sheet's own.
-- The shards are faceted diamonds where the views put them: across and
-  height from the front view, front to back from the top and left views;
-  their size and lean as drawn.
+- The shards are small flames (faceted teardrops curling outward) where
+  the views put them: across and height from the front view, front to back
+  from the top and left views; as tall as drawn.
 - The eyes are dark ellipses laid on its surface (their own objects,
-  `Eye.L` and `Eye.R`, to blink and look later), where the front view
-  draws them.
+  `Eye.L` and `Eye.R`, to blink and look later), mirrored: the front view's
+  two eyes averaged, on a body centered below its flame.
 - Colors are the sheet's swatches: each facet flat, yellow low and in
   front, orange to ember red toward the top; the renders shade the
   silhouette's edges ember red, as the sheet does.
@@ -56,22 +56,39 @@ def edges(view, z):
             float(np.interp(z, zs[order], np.array([r[2] for r in rows])[order])))
 
 
-def extents(z):
-    """Its four extents at height `z`: (left, right, front, back), each a distance from its middle (units)."""
+def smoothstep(edge0, edge1, x):
+    t = max(0.0, min(1.0, (x - edge0) / (edge1 - edge0)))
+    return t * t * (3 - 2 * t)
+
+
+def section(z):
+    """Its cross-section at height `z`: center (across, + its left; forward, + its front) and half-widths, in units.
+
+    Left and right come from the front and back views (averaged), front and
+    back from the left view. Below the flame (up to its eyes and a little
+    above) it is centered side to side, so its face and eyes are symmetric;
+    the flame's tip leans as the sheet draws it.
+    """
     f_lo, f_hi = edges("front", z)  # facing the camera: image right is its left
     b_lo, b_hi = edges("back", z)  # from behind: image left is its left
     l_lo, l_hi = edges("left", z)  # its front on the image's right
-    left = (f_hi - b_lo) / 2
-    right = (-f_lo + b_hi) / 2
-    return left, right, l_hi, -l_lo
+    left, right = (f_hi - b_lo) / 2, (-f_lo + b_hi) / 2
+    front, back = l_hi, -l_lo
+    across = (left - right) / 2 * smoothstep(0.5, 0.68, z)
+    forward = (front - back) / 2
+    return across, forward, max(0.004, (left + right) / 2), max(0.004, (front + back) / 2)
+
+
+def extents(z):
+    """Its four extents at height `z`: (left, right, front, back), each a distance from its middle (units)."""
+    across, forward, half_x, half_y = section(z)
+    return across + half_x, half_x - across, forward + half_y, half_y - forward
 
 
 def ring_point(z, a):
-    """The surface at height `z`, `a` radians round from its front toward its left: quarter-ellipses through its extents."""
-    left, right, front, back = extents(z)
-    x = math.sin(a) * (left if math.sin(a) > 0 else right)
-    y = -math.cos(a) * (front if math.cos(a) > 0 else back)
-    return Vector((x, y, z))
+    """The surface at height `z`, `a` radians round from its front toward its left: an ellipse round the section's center."""
+    across, forward, half_x, half_y = section(z)
+    return Vector((across + math.sin(a) * half_x, -(forward + math.cos(a) * half_y), z))
 
 
 def linear(hex_color):
@@ -104,7 +121,7 @@ def loft(bm, rng):
     lowest, highest = min(r[0] for r in rows), max(r[0] for r in rows)
     neck = SHEET["front"]["neck"]
     # Rings: denser round the nub and its neck, then up the flame.
-    heights = [lowest + 0.012, 0.04, 0.075, 0.11, neck, neck + 0.03, neck + 0.08, 0.3, 0.38, 0.46, 0.53, 0.6, 0.66, 0.71, highest - 0.02]
+    heights = [lowest + 0.012, 0.04, 0.075, 0.11, neck, neck + 0.03, neck + 0.08, 0.3, 0.38, 0.46, 0.53, 0.6, 0.66, 0.71, 0.75, 0.79, highest - 0.025]
     rings = []
     for i, z in enumerate(heights):
         turn = (i % 2) * math.pi / SEGMENTS
@@ -160,20 +177,47 @@ def shard_places():
 
 
 def shard(bm, place, rng):
-    """A faceted diamond: a six-sided bipyramid, longer above its waist, leaning as drawn, turned a little."""
+    """A small flame: a faceted teardrop, round below, rising to a point that curls outward (away from the body), as tall as the sheet's shard."""
     center = Vector((place["across"] * UNIT, -place["forward"] * UNIT, place["height"] * UNIT + HOVER))
-    tall, wide = place["tall"] * UNIT, place["wide"] * UNIT
-    turn = Matrix.Rotation(math.radians(-place["lean"]), 4, "Y") @ Matrix.Rotation(rng.uniform(0, math.pi), 4, "Z")
-    waist = 0.42  # the waist sits below its middle: a longer point above
-    top = bm.verts.new(center + (turn @ Vector((0, 0, tall * (1 - waist)))))
-    bottom = bm.verts.new(center + (turn @ Vector((0, 0, -tall * waist))))
-    ring = [bm.verts.new(center + (turn @ Vector((math.cos(a) * wide / 2, math.sin(a) * wide / 2 * 0.8, 0)))) for a in (2 * math.pi * k / 6 for k in range(6))]
-    faces = []
-    for k in range(6):
-        j = (k + 1) % 6
-        faces.append(bm.faces.new((ring[k], ring[j], top)))
-        faces.append(bm.faces.new((ring[j], ring[k], bottom)))
-    return faces
+    tall, wide = place["tall"] * UNIT * 1.1, place["tall"] * UNIT * 0.55
+    # Out from the body's axis, on the floor plane.
+    out = Vector((center.x, center.y, 0))
+    out = out.normalized() if out.length > 1e-4 else Vector((1, 0, 0))
+    curl = 0.35 if abs(place["across"]) > 0.1 else 0.15
+    spin = rng.uniform(0, math.pi)
+    sides = 6
+    # (height share, radius share) from its bottom to just under its point.
+    profile = [(0.04, 0.45), (0.14, 0.88), (0.3, 1.0), (0.5, 0.78), (0.7, 0.45)]
+    bottom = bm.verts.new(center + Vector((0, 0, -tall * 0.4)))
+    rings = []
+    for i, (h, r) in enumerate(profile):
+        lift = h * tall - tall * 0.4
+        shift = out * curl * tall * h * h
+        turn = spin + (i % 2) * math.pi / sides
+        rings.append([bm.verts.new(center + shift + Vector((math.cos(a) * wide / 2 * r, math.sin(a) * wide / 2 * r, lift)))
+                      for a in (turn + 2 * math.pi * k / sides for k in range(sides))])
+    tip = bm.verts.new(center + out * curl * tall + Vector((0, 0, tall * 0.6)))
+    for k in range(sides):
+        j = (k + 1) % sides
+        bm.faces.new((rings[0][j], rings[0][k], bottom))
+        bm.faces.new((rings[-1][k], rings[-1][j], tip))
+    for i in range(len(rings) - 1):
+        lower, upper = rings[i], rings[i + 1]
+        for k in range(sides):
+            j = (k + 1) % sides
+            if i % 2 == 0:
+                bm.faces.new((lower[k], lower[j], upper[j]))
+                bm.faces.new((lower[k], upper[j], upper[k]))
+            else:
+                bm.faces.new((lower[k], lower[j], upper[k]))
+                bm.faces.new((upper[k], lower[j], upper[j]))
+
+
+def body_shade(t, rng):
+    """Yellow (0) through orange to ember red (1), a little uneven."""
+    t = max(0.0, min(1.0, t + rng.uniform(-0.1, 0.1)))
+    yellow, orange, ember = linear(COLORS["yellow"]), linear(COLORS["orange"]), linear(COLORS["ember"])
+    return mix(yellow, orange, t / 0.5) if t < 0.5 else mix(orange, ember, (t - 0.5) / 0.5)
 
 
 def color_faces(mesh, rng, color_of):
@@ -300,8 +344,12 @@ def build():
 
     tree = BVHTree.FromPolygons([tuple(v.co) for v in mesh.vertices], [tuple(p.vertices) for p in mesh.polygons])
     dark = eye_material()
-    for sheet_eye in SHEET["front"]["eyes"]:
-        obj = eye(tree, sheet_eye, dark)
+    # One size and height for both, mirrored about its middle.
+    eyes = SHEET["front"]["eyes"]
+    mean = {k: sum(e[k] for e in eyes) / len(eyes) for k in ("height", "wide", "tall")}
+    apart = sum(abs(e["offset"]) for e in eyes) / len(eyes)
+    for side in (1, -1):
+        obj = eye(tree, {**mean, "offset": side * apart}, dark)
         obj.parent = body
         collection.objects.link(obj)
 
@@ -319,7 +367,9 @@ def build():
         bm.free()
         for poly in shard_mesh.polygons:
             poly.use_smooth = False
-        color_faces(shard_mesh, rng, lambda poly, r: mix(linear(COLORS["orange"]), linear(COLORS["ember"]), max(0.0, min(1.0, 0.5 - 0.4 * poly.normal.z + r.uniform(-0.2, 0.2)))))
+        # Yellow at its base, orange, ember red at its point.
+        low, high = min(v.co.z for v in shard_mesh.vertices), max(v.co.z for v in shard_mesh.vertices)
+        color_faces(shard_mesh, rng, lambda poly, r: body_shade((poly.center.z - low) / (high - low), r))
         shard_mesh.materials.append(material)
         obj = bpy.data.objects.new(f"Shard{index}", shard_mesh)
         obj.location = center

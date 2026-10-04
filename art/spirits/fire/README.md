@@ -21,18 +21,21 @@ outlines yellow, model red). Beside the sheet, and at the game's camera:
    top view's shards.
 2. `build.py` lofts the body and nub through the outlines (left and right
    from the front and back views, front and back from the left view: the
-   right view is its mirror image), so the flame's lean and its tip are the
-   sheet's own; places the four shards where the front, left, and top views
-   put them, as long and as leaning as drawn (six-sided diamonds, each its
-   own object, to float); lays the dark eyes on the surface (`Eye.L`,
-   `Eye.R`, to blink later).
+   right view is its mirror image): each ring an ellipse round its section's
+   center, so the head rises to a pointed tip leaning as the sheet draws it,
+   while below the flame it is centered, for a symmetric face. It places
+   the four shards as small flames (faceted teardrops curling outward, each
+   its own object, to float) where the front, left, and top views put them,
+   around the pointed head; and lays the dark eyes on the surface (`Eye.L`,
+   `Eye.R`, to blink later), one size, mirrored.
 3. Colors are the swatches: each facet orange to ember red (redder toward
    the tip and on the nub), and the material glows from within: warm yellow
    where it faces the camera, ember red at the silhouette's edges.
 4. `sweep_score.py` finds the isometric render's camera (30° round, 10° up);
    `overlay.py` lays each render on the sheet's view and scores the
-   overlap: front and back 87%, left 83%, right 79%, the isometric render
-   67%, top 63%, bottom 72%.
+   overlap: front 82%, back 84%, left 81%, right 78%, the isometric render
+   66%, top 61%, bottom 70% (lower than before: the shards are flames now,
+   not the sheet's diamonds, and the face is centered).
 
 **Where the sheet disagrees with itself.** Its top and bottom views draw the
 body narrower than its front and side views do (about 0.33 m across from
