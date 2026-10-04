@@ -9,8 +9,9 @@ Like `vision.md`, this records the rules; the code is in
 
 - **A model** is a glTF binary (`.glb`) exported into `art/`, next to its
   Blender source and the scripts that build and export it: one folder per
-  character (`art/characters/crow/`), per enemy (`art/enemies/<kind>/`), and
-  per environment kit (`art/environment/courtyard/`). A module in `src/presentation/assets/`
+  character (`art/characters/crow/`), per spirit (`art/spirits/<element>/`:
+  in the arena a character shows as her spirit), per enemy
+  (`art/enemies/<kind>/`), and per environment kit (`art/environment/courtyard/`). A module in `src/presentation/assets/`
   imports the file and takes its numbers from the export's metadata
   (`assets/crow.ts`, `assets/courtyard.ts`), and `models` (`models.ts`)
   registers it by id. It is an asset, not content: content never names a

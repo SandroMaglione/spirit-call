@@ -54,7 +54,7 @@ const fakePiece = (id: ModelId): ModelSource => {
 const setup = () => {
   const parent = new Group()
   const loaded = new Map<ModelId, ModelSource>([...modelsInLooks()].map((id) => [id, fakePiece(id)]))
-  loaded.set("crow", fakeBody("crow"))
+  loaded.set("waterSpirit", fakeBody("waterSpirit"))
   loaded.set("trainingBlade", fakeWeapon("trainingBlade"))
   loaded.set("crescendo", fakeWeapon("crescendo"))
   for (const [id, source] of loadedEnemies) loaded.set(id, source)
@@ -102,16 +102,14 @@ describe("render nodes", () => {
     const { assets, pool } = setup()
     const node = createNode({ kind: "player", character: "swordsman", weapon: "trainingBlade", radius: 16 }, assets, pool)
     if (node.kind !== "player") throw new Error("expected a player")
+    // Every character is the water spirit for now: a model without clips, which only turns to face.
     expect(characterLooks.swordsman.kind).toBe("model")
-    expect(node.body.moments).not.toBeNull()
+    expect(node.body.moments).toBeNull()
     expect(node.pivot.children).toContain(node.body.object)
     expect(node.body.height).toBeGreaterThan(16)
     // Faces +Z for "down" the floor's y.
     node.body.face({ x: 1, y: 0 })
     expect(node.body.object.rotation.y).toBeCloseTo(Math.PI / 2, 9)
-    // The sword is in her grip, and a combo move plays into its recovery.
-    expect(node.body.object.getObjectByName("weapon_grip")!.children).toHaveLength(1)
-    node.body.play({ clip: "AttackCombo", from: 0.1, to: 0.5, contact: 0.3, next: "Recover1" }, 0.3, 0.04)
     for (let frame = 0; frame < 30; frame++) node.body.animate({ x: frame, y: 0 }, { x: 1, y: 0 }, 1 / 60, false)
     node.body.paint(0xffffff, 0xffffff, 1, 0.5)
     expect(instancesOf(node)).toEqual([node.shadow])

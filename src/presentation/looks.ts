@@ -12,7 +12,6 @@ import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { WallPlacement } from "../schema.ts"
-import { crowCombo } from "./assets/crow.ts"
 import type { ModelId } from "./models.ts"
 
 /**
@@ -73,25 +72,18 @@ export type BodyLook =
       readonly held?: Held
     }
 
-/** Every character is the crow for now; the Swordsman holds her sword and fights with it. */
-const crow = { kind: "model", model: "crow", widthFactor: 1.5, heightFactor: view.bodyHeightFactor } as const
-const crowLoops: Moments = { idle: "Idle", run: { clip: "Run", distance: 110 } }
+/**
+ * In the arena each character shows as her spirit (art/spirits/). Every
+ * character is the water spirit for now, without animation: it only turns
+ * to face (no moments: its moves play no clips).
+ */
+const waterSpirit = { kind: "model", model: "waterSpirit", widthFactor: 1.5, heightFactor: view.bodyHeightFactor } as const
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
-  swordsman: {
-    ...crow,
-    moments: {
-      ...crowLoops,
-      // The follow-through prepares the next cut; power has its own deeper thrust.
-      attack: crowCombo.map((move) => ({ clip: "AttackCombo", ...move })),
-      power: { clip: "Power", contact: crowCombo[0].contact },
-      dash: "Dash"
-    },
-    held: { grip: "weapon_grip", weapons: { trainingBlade: "trainingBlade", crescendo: "crescendo" } }
-  },
-  gunner: { ...crow, moments: crowLoops },
-  tidecaller: { ...crow, moments: crowLoops },
-  stormcaller: { ...crow, moments: crowLoops }
+  swordsman: waterSpirit,
+  gunner: waterSpirit,
+  tidecaller: waterSpirit,
+  stormcaller: waterSpirit
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({

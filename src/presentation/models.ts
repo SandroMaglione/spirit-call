@@ -21,6 +21,7 @@ import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { enemyModels } from "./assets/enemies.ts"
 import { crescendoModel, crowModel, trainingBladeModel } from "./assets/crow.ts"
+import { waterSpiritModel } from "./assets/spirits.ts"
 
 /** How a clip ends: loops name the time their first pose comes back (`closeLoop`); one-shots have `null`. */
 export interface ClipTiming {
@@ -44,6 +45,7 @@ export const models = {
   crow: crowModel,
   trainingBlade: trainingBladeModel,
   crescendo: crescendoModel,
+  waterSpirit: waterSpiritModel,
   ...courtyardModels,
   ...cisternModels,
   ...kilnworksModels,

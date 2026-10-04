@@ -79,3 +79,19 @@ describe("puppet transitions", () => {
     puppet.dispose()
   })
 })
+
+describe("painting a copy", () => {
+  it("keeps a material's own glow under a flash, and back after it", async () => {
+    const { Group, Mesh, BoxGeometry, MeshStandardMaterial } = await import("three")
+    const { copyModel, paintMaterials } = await import("../src/presentation/puppet.ts")
+    const scene = new Group()
+    scene.add(new Mesh(new BoxGeometry(), new MeshStandardMaterial({ emissive: 0xffffff, emissiveIntensity: 4 })))
+    const copy = copyModel({ id: "waterSpirit", scene, clips: new Map(), spec: { url: "", height: 1, clips: {} } }, true)
+    const material = copy.materials[0]!.material
+    paintMaterials(copy.materials, 0xffffff, 0xff0000, 0.5, 1)
+    expect(material.emissive.r * material.emissiveIntensity).toBeCloseTo(4.5)
+    expect(material.emissive.g * material.emissiveIntensity).toBeCloseTo(4)
+    paintMaterials(copy.materials, 0xffffff, 0x000000, 0, 1)
+    expect(material.emissive.g * material.emissiveIntensity).toBeCloseTo(4)
+  })
+})

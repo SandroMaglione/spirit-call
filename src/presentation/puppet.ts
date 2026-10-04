@@ -15,13 +15,13 @@ import type { Locomotion, OneShot } from "./animation.ts"
 import type { Moments, Shot } from "./looks.ts"
 import type { ModelSource } from "./models.ts"
 
-/** A copy's materials that are its own, with their colors before any tint. */
-export type OwnMaterials = ReadonlyArray<{ readonly material: MeshStandardMaterial; readonly base: Color }>
+/** A copy's materials that are its own, with their colors before any tint, and their own glow (glowing eyes) before any flash. */
+export type OwnMaterials = ReadonlyArray<{ readonly material: MeshStandardMaterial; readonly base: Color; readonly glow: Color }>
 
 /** A copy of `source`; with `ownMaterials`, its materials are copies too (to tint or fade it alone). */
 export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonly object: Object3D; readonly materials: OwnMaterials } => {
   const object = clone(source.scene)
-  const materials: Array<{ material: MeshStandardMaterial; base: Color }> = []
+  const materials: Array<{ material: MeshStandardMaterial; base: Color; glow: Color }> = []
   if (ownMaterials) {
     const copies = new Map<Material, MeshStandardMaterial>()
     // Parts sharing a material keep sharing the copy.
@@ -31,7 +31,7 @@ export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonl
       if (known !== undefined) return known
       const copy = material.clone()
       copies.set(material, copy)
-      materials.push({ material: copy, base: copy.color.clone() })
+      materials.push({ material: copy, base: copy.color.clone(), glow: copy.emissive.clone().multiplyScalar(copy.emissiveIntensity) })
       return copy
     }
     object.traverse((part) => {
@@ -52,18 +52,21 @@ export const disposeCopy = (object: Object3D, materials: OwnMaterials): void => 
 }
 
 const tinted = new Color()
+const flash = new Color()
 
 /**
  * Colors `materials` multiplied by `tint` (white for none), lit by `glow`
- * (0..1) of `glowColor`, and see-through below `opacity` 1.
+ * (0..1) of `glowColor` over their own glow, and see-through below
+ * `opacity` 1.
  */
 export const paintMaterials = (materials: OwnMaterials, tint: number, glowColor: number, glow: number, opacity: number): void => {
   tinted.setHex(tint)
+  flash.setHex(glowColor).multiplyScalar(glow)
   const seeThrough = opacity < 1
-  for (const { material, base } of materials) {
+  for (const { material, base, glow: own } of materials) {
     material.color.copy(base).multiply(tinted)
-    material.emissive.setHex(glowColor)
-    material.emissiveIntensity = glow
+    material.emissive.copy(own).add(flash)
+    material.emissiveIntensity = 1
     material.opacity = opacity
     if (material.transparent !== seeThrough) {
       material.transparent = seeThrough
