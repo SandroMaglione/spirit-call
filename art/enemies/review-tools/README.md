@@ -12,15 +12,22 @@ enemy recipes does not change their build dependency.
   warm ivory, mint cloth, neutral stone, gold and eyes from blue-gray panels.
 - `geometry.py` lofts measured widths and depths, projects surface details,
   creates cloth and prop geometry, and saves a static Blender source and GLB.
+- `faces.py` adds surface-snapped, mirrored facial details. The head shells
+  also mirror facet colors so random shading does not skew their expressions.
 - `render.py` reads the saved Blender file and renders six orthographic
   views, the hero, the 30-degree game view, and a small raster preview.
   `sweep` renders candidate hero cameras.
+  `face` renders matching front and three-quarter close-ups. Adding `before`
+  reads the source at HEAD for comparison; capture this before committing.
 - `review.py` scores silhouettes and creates comparison, overlay and
   phone-size boards. Enclosed shading gaps are filled in reference masks;
   the wide scoring canvas avoids cropping the scarf. It reports every view,
   including results below the 90% target.
 - `verify.mjs` loads a GLB with Three.js and checks colors, one material,
   ground/height agreement, triangle budget and absence of animations or rigs.
+  It also checks the exported head and facial pairs for mirrored world
+  positions and colors within one micrometer.
+- `face-board.py` composes preserved before and revised face close-ups.
 - `grid.py` adds sheet pixel coordinates to a crop for checking labels.
 
 The sources retain separate mesh parts for editing. A static review asset

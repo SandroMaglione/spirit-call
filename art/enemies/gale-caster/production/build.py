@@ -9,6 +9,7 @@ from mathutils import Vector
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parents[1]/'review-tools'))
 from geometry import Model
+from faces import gale_face
 
 m=Model(HERE)
 body=m.loft('SplitRobe','robe','hood',7,12)
@@ -26,9 +27,8 @@ bmesh.ops.delete(bm,geom=[bm.faces[i] for i in remove],context='FACES')
 bm.to_mesh(body.data);bm.free();body.data.update()
 m.loft('ShadowLegs','leg','void',5,8)
 m.loft('PointedFoot','foot','void',4,8)
-hood=m.loft('PointedHood','hood','hood',7,12)
-m.surface_patch('FaceVoid',hood,[(148,288),(158,301),(165,316),(155,329),(146,333),(131,322),(130,308),(138,297)],'void')
-m.eyes(hood,background=m.color('void'),core='#50F0ED',socket_scale=1.15)
+hood=m.loft('PointedHood','hood','hood',7,12,symmetric=True)
+gale_face(m,hood)
 collar=m.loft('Mantle','collar','mint',4,8)
 m.surface_patch('MantleBinding',collar,[(119,325),(134,334),(150,343),(168,326),(180,328),(170,333),(152,349),(133,340)],'gold')
 for part,name,color in [('sleeve.L','Sleeve.L','hood'),('sleeve.R','Sleeve.R','hood'),

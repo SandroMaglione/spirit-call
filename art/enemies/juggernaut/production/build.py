@@ -11,36 +11,15 @@ from mathutils.bvhtree import BVHTree
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parents[1]/'review-tools'))
 from geometry import Model, linear
+from faces import juggernaut_face
 
 m=Model(HERE)
 body=m.loft('StoneTorso','torso','dark',5,8)
 back=m.loft('HunchedBack','hunch','dark',5,8)
-head=m.loft('Helmet','head','stone',5,8)
-m.surface_patch('FaceRecess',head,[(131,339),(139,342),(149,350),(160,340),(167,336),(165,356),(158,372),(143,372),(132,359)],'#292B30')
-for side in (-1,1):
-    points=[(137,330),(134,340),(136,356),(145,367),(144,373),(131,363),(127,342),(130,333)]
-    if side==1:points=[(296-x,y) for x,y in points]
-    m.surface_patch('HelmetBinding.'+('L' if side<0 else 'R'),head,points,'gold')
-for obj in bpy.data.objects:
-    if obj.name.startswith('HelmetBinding'):
-        for v in obj.data.vertices:v.co.y-=.003
-# The sheet's eye blobs are angular, unlike a spirit's round eyes. Preserve
-# their measured outline and mirror their shape around the helmet center.
-eyes=m.sheet['eyes'];eye=min(eyes,key=lambda e:e['x'])
-eye_x=float(np.mean([abs(e['x']) for e in eyes]));eye_z=float(np.mean([e['z'] for e in eyes]))
-tree=BVHTree.FromPolygons([v.co for v in head.data.vertices],[p.vertices for p in head.data.polygons])
+head=m.loft('Helmet','head','stone',5,8,symmetric=True)
+juggernaut_face(m,head)
+eye_z=float(np.mean([e['z'] for e in m.sheet['eyes']]))
 pixel=m.sheet['meters_per_pixel']
-for sign,side in ((-1,'L'),(1,'R')):
-    points=[(sign*eye_x,eye_z)]
-    for x,y in eye['outline_pixels']:
-        local_x=(x-148)*pixel-eye['x'];local_z=(455-y)*pixel-eye['z']
-        points.append((sign*(eye_x-local_x),eye_z+local_z))
-    vertices=[]
-    for x,z in points:
-        hit,normal,_,_=tree.ray_cast(Vector((x,-3,z)),Vector((0,1,0)))
-        if hit is None:raise ValueError('Measured eye missed helmet')
-        vertices.append(hit+normal*.009)
-    m.mesh('Eye.'+side,vertices,[(0,i,1 if i==len(points)-1 else i+1) for i in range(1,len(points))],'#FFE65B',0)
 z=eye_z
 hx,hy,hrx,hry=m.section('head',z)
 _,by,_,bry=m.section('torso',z)

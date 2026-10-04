@@ -5,11 +5,22 @@
     "StoneTorso",
     "HunchedBack",
     "Helmet",
-    "FaceRecess",
+    "FaceRecessL",
+    "FaceRecessR",
     "HelmetBindingL",
     "HelmetBindingR",
+    "BrowL",
+    "BrowR",
+    "EyeSocketL",
+    "EyeSocketR",
     "EyeL",
     "EyeR",
+    "EyeCoreL",
+    "EyeCoreR",
+    "ForeheadCrestL",
+    "ForeheadCrestR",
+    "NoseGuardL",
+    "NoseGuardR",
     "NeckBridge",
     "ChestChevron",
     "WaistChevron",
@@ -44,7 +55,24 @@
     "BackRidgeR"
   ],
   "materials": 1,
-  "triangles": 1984,
+  "triangles": 1995,
+  "face_symmetry": {
+    "centerline": "world X = 0",
+    "tolerance_m": 0.000001,
+    "max_position_error_m": 1.862645149230957e-9,
+    "max_color_error": 0,
+    "checked": [
+      "Helmet",
+      "FaceRecess.L/.R",
+      "HelmetBinding.L/.R",
+      "Brow.L/.R",
+      "Eye.L/.R",
+      "EyeSocket.L/.R",
+      "EyeCore.L/.R",
+      "ForeheadCrest.L/.R",
+      "NoseGuard.L/.R"
+    ]
+  },
   "animations": 0,
   "bounds_gltf_m": {
     "min": [
@@ -55,9 +83,9 @@
     "max": [
       0.9320651888847351,
       1.377173900604248,
-      0.523097813129425
+      0.5307236313819885
     ]
   },
-  "sha256": "bc2d569eee08a9681a0d82ab87a25f2be1201609d078628185d9bbddce9de1bc",
+  "sha256": "7a00b53a07c2129ba58de5f8729b493f236d405ca46f2e9111734779df51a147",
   "status": "passed: static review asset, before rigging"
 }

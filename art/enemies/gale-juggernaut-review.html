@@ -56,6 +56,7 @@
         <button data-view="game">Game camera</button><button data-view="front">Front</button>
         <button data-view="back">Back</button><button data-view="right">Right</button>
         <button data-view="left">Left</button><button data-view="top">Top</button>
+        <button data-view="face">Face front</button><button data-view="face-quarter">Face ¾</button>
         <button id="wire" aria-pressed="false">Wireframe</button>
       </div>
       <div id="status" role="status" aria-live="polite">Loading Gale Caster…</div>
@@ -64,8 +65,10 @@
       <p class="links"><a id="blend" href="#">Blender source</a> · <a id="glb" href="#">Static GLB</a> · <a id="readme" href="#">Model notes</a></p>
     </section>
     <section class="reference" aria-label="Reference and overlays">
-      <label>Compare with the sheet
+      <label>Review image
         <select id="reference-mode">
+          <option value="face-front.png">Face close-up</option>
+          <option value="face-three-quarter.png">Face three-quarter</option>
           <option value="compare.png">Sheet beside model</option>
           <option value="overlay-all.png">All silhouette overlays</option>
           <option value="review-game-size.png">Game-size study</option>
@@ -95,7 +98,7 @@
     const key=new THREE.DirectionalLight('#fff2e3',2.3);key.position.set(-3,5,4);scene.add(key);
     const fill=new THREE.DirectionalLight('#d9e8ff',.6);fill.position.set(3,2,-3);scene.add(fill);
     const grid=new THREE.GridHelper(4,20,'#a2aab6','#ccd0d7');grid.material.opacity=.5;grid.material.transparent=true;scene.add(grid);
-    const loader=new GLTFLoader();let model=null,kind='gale-caster',height=1,frameScale=.8,wire=false,request=0;
+    const loader=new GLTFLoader();let model=null,kind='gale-caster',height=1,frameScale=.8,faceTarget=new THREE.Vector3(),wire=false,request=0;
     const status=document.querySelector('#status');
     controls.addEventListener('change',()=>{if(window.modelReview)window.modelReview.camera=camera.position.toArray();});
     const mode=document.querySelector('#reference-mode');
@@ -107,11 +110,12 @@
     }
     function view(name){
       const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
-      const angles={game:[35,30],front:[0,0],back:[180,0],right:[90,0],left:[-90,0],top:[0,89.99]};
+      const angles={game:[35,30],front:[0,0],back:[180,0],right:[90,0],left:[-90,0],top:[0,89.99],face:[0,0],'face-quarter':[30,12]};
       const [turn,elevation]=angles[name].map(THREE.MathUtils.degToRad);
-      const target=new THREE.Vector3(0,height*.5,0);
+      const closeup=name.startsWith('face');
+      const target=closeup?faceTarget:new THREE.Vector3(0,height*.5,0);
       camera.position.copy(target).add(new THREE.Vector3(Math.sin(turn)*Math.cos(elevation),Math.sin(elevation),Math.cos(turn)*Math.cos(elevation)).multiplyScalar(5));
-      camera.up.set(0,1,0);camera.zoom=1;controls.target.copy(target);camera.lookAt(target);controls.update();controls.enableDamping=damping;resize();
+      camera.up.set(0,1,0);camera.zoom=closeup?4:1;controls.target.copy(target);camera.lookAt(target);controls.update();controls.enableDamping=damping;resize();
     }
     function reference(){document.querySelector('#reference').src=base()+'renders/'+mode.value;}
     function dispose(root){root.traverse(o=>{if(o.isMesh){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms)m.dispose();}});}
@@ -128,6 +132,8 @@
         if(token!==request){dispose(gltf.scene);return;}
         if(model){scene.remove(model);dispose(model);}model=gltf.scene;scene.add(model);
         const box=new THREE.Box3().setFromObject(model);height=box.max.y-box.min.y;frameScale=Math.max(height*.78,box.getSize(new THREE.Vector3()).length()*.52);
+        const head=model.getObjectByName(next==='gale-caster'?'PointedHood':'Helmet');
+        new THREE.Box3().setFromObject(head).getCenter(faceTarget);
         let triangles=0,meshes=0;const materials=new Set();
         model.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){materials.add(m.uuid);m.wireframe=wire;}}});
         status.textContent=`${next[0].toUpperCase()+next.slice(1)} · ${triangles.toLocaleString()} triangles · ${materials.size} material · no animation`;

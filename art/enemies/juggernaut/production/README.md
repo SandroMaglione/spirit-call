@@ -7,7 +7,7 @@ named parts. Fine cracks, individual fingers, toes and layered armor seams
 are simplified to keep the enemy within its triangle budget.
 
 `juggernaut-model.blend` is the source. `juggernaut-model.glb` is a static
-review export with 1,984 triangles and one vertex-color material. It has no
+review export with 1,995 triangles and one vertex-color material. It has no
 armature or clips and is not registered in the game. Parts remain separate
 for design edits; joining and skinning belong to the later animation step.
 
@@ -15,7 +15,7 @@ The original attachment and seven view crops are in `reference/`.
 `spirit.json` labels the touching parts, and `sheet.json` records their row
 outlines, swatches and eye blobs. Front/back measurements supply widths;
 the side views supply depths. The yellow eyes use their measured polygon
-outline, mirrored and snapped above the helmet surface. Hidden neck and hip
+placement, with a simplified symmetric outline snapped above the helmet surface. Hidden neck and hip
 connections join the measured shells without adding surface detail.
 
 The sheet's size 32 is a game size, not meters. This source uses a nominal
@@ -36,6 +36,14 @@ for iteration, not a claim of an exact match. The sheet also varies the
 back peak and near/far arm positions between views; orthographic contours
 take priority over the more crouched hero pose. The gold gauntlet borders
 are broad colored facets rather than extra raised strips.
+
+The face revision centers the helmet on X = 0 and mirrors its facet colors.
+Raised gold cheek rails, angular brows, yellow eye cores, a forehead crest
+and a central nose guard strengthen the expression. `verification.json`
+checks the exported facial positions and colors within one micrometer.
+`renders/face-front.png` and `renders/face-three-quarter.png` show the revised
+face; the `-before` images preserve the preceding version under the same
+camera and lighting.
 
 From the repository root:
 

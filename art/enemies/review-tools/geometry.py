@@ -69,7 +69,7 @@ class Model:
         return ((f[0]+f[1]+b[0]+b[1])/4,(r[0]+r[1]+l[0]+l[1])/4,
                 max(.002,(f[1]-f[0]+b[1]-b[0])/4),max(.002,(r[1]-r[0]+l[1]-l[0])/4))
 
-    def loft(self,name,part,color,rings=9,segments=12,align=False):
+    def loft(self,name,part,color,rings=9,segments=12,align=False,symmetric=False):
         views=self.sheet['parts'][part]
         primary='front' if 'front' in views else 'back'
         rows=self.rows(part,primary)
@@ -81,6 +81,7 @@ class Model:
         verts=[];faces=[]
         for i,z in enumerate(zs):
             cx,cy,rx,ry=self.section(part,z,align)
+            if symmetric:cx=0
             for k in range(segments):
                 a=2*math.pi*k/segments
                 verts.append((cx+math.sin(a)*rx,cy-math.cos(a)*ry,z))
@@ -90,9 +91,19 @@ class Model:
                 faces.extend([(a,b,c),(b,d,c)] if (i+k)%2 else [(a,b,d),(a,d,c)])
         for ring,z in ((0,low),(rings-1,high)):
             cx,cy,_,_=self.section(part,z,align)
+            if symmetric:cx=0
             tip=len(verts);verts.append((cx,cy,z))
             for k in range(segments):faces.append((tip,ring*segments+k,ring*segments+(k+1)%segments))
-        return self.mesh(name,verts,faces,color)
+        obj=self.mesh(name,verts,faces,color)
+        if symmetric:
+            # Mirrored facets share colors as well as coordinates. Sheet
+            # sampling and random facet colors must not skew the expression.
+            colors={};attr=obj.data.color_attributes['Color']
+            for p in obj.data.polygons:
+                key=tuple(sorted((round(abs(obj.data.vertices[i].co.x),6),round(obj.data.vertices[i].co.y,6),round(obj.data.vertices[i].co.z,6)) for i in p.vertices))
+                value=colors.setdefault(key,tuple(attr.data[p.loop_start].color))
+                for i in p.loop_indices:attr.data[i].color=value
+        return obj
 
     def mirror(self,obj,name):
         clone=obj.copy();clone.data=obj.data.copy();clone.name=name

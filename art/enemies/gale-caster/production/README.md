@@ -6,7 +6,7 @@ split robe, gold binding, chest emblem and ring staff are editable named parts.
 Tiny cuffs, fingers, cloth pleats and staff carvings are simplified.
 
 The source is `gale-caster-model.blend`. `gale-caster-model.glb` is a portable
-static review export with one vertex-color material and 1,956 triangles.
+static review export with one vertex-color material and 1,950 triangles.
 It has no skeleton or animation and is not registered in the game. Keep the
 separate parts during design review; joining and skinning for the enemy batch
 belongs to the later rigging step.
@@ -32,6 +32,13 @@ face-on in both front and side views. This model uses four mint tails from the
 back and a fixed ring facing forward. The hood face is a dark faceted panel
 instead of a detailed hollow hood. These choices are easy to revise in the
 source before animation.
+
+The face revision centers the hood on X = 0 and mirrors its facet colors.
+The continuous ivory lip, dark cheek planes, shaped cyan eyes and pale eye
+cores are editable mirrored pairs. `verification.json` checks exported
+positions and colors within one micrometer. `renders/face-front.png` and
+`renders/face-three-quarter.png` show the revision; the `-before` images
+preserve the preceding model under the same camera and lighting.
 
 From the repository root, use Blender 4.5 LTS and `uv`:
 

@@ -2,10 +2,17 @@
   "date": "2026-10-04",
   "stage": "static model review before rigging, animation and game registration",
   "models": {
-    "gale-caster": { "triangles": 1956, "materials": 1, "animations": 0 },
-    "juggernaut": { "triangles": 1984, "materials": 1, "animations": 0 }
+    "gale-caster": { "triangles": 1950, "materials": 1, "animations": 0 },
+    "juggernaut": { "triangles": 1995, "materials": 1, "animations": 0 }
   },
-  "exports": "Both passed review-tools/verify.mjs through Three.js GLTFLoader. Per-model verification.json records bounds and SHA-256.",
+  "exports": "Both passed review-tools/verify.mjs through Three.js GLTFLoader. Per-model verification.json records bounds, SHA-256 and mirrored face positions and colors within 0.000001 meters.",
+  "face_revision": {
+    "gale-caster": "Centered hood, continuous ivory lip, dark cheek planes, shaped cyan eyes and pale cores.",
+    "juggernaut": "Centered helmet, raised gold cheek rails, angular brows, yellow eye cores, forehead crest and nose guard.",
+    "comparison": "gale-juggernaut-faces.png: preceding front, revised front and revised three-quarter under matching lighting.",
+    "maximum_exported_symmetry_error_m": 0.000000001862645149230957,
+    "maximum_mirrored_color_error": 0
+  },
   "browser": {
     "url": "http://192.168.40.47:5199/art/enemies/gale-juggernaut-review.html",
     "tool": "T3 collaborative browser",
@@ -13,7 +20,7 @@
     "both_models_loaded": true,
     "reference_images_loaded": true,
     "horizontal_overflow": false,
-    "camera_presets_and_wireframe": "exercised",
+    "camera_presets_and_wireframe": "exercised; face front and face three-quarter presets added and checked on desktop and phone-sized layouts",
     "touch": "Synthetic touch PointerEvents rotated both models in the phone-sized browser. Pointer capture was stubbed only during dispatch, then restored.",
     "physical_phone_performance": "not measured",
     "snapshot_note": "One snapshot attempt failed; retry saved a screenshot. A model-switch click was checked by readback and retried with the observed DOM control."
@@ -21,8 +28,8 @@
   "repository_checks": {
     "typecheck": "passed",
     "lint": "passed",
-    "pnpm_check": "Initially passed all 369 tests. Later default-worker runs timed out in existing simulation tests.",
-    "full_suite_with_two_workers": "pnpm exec vitest run --maxWorkers=2: 48 files, 369 tests passed"
+    "pnpm_check": "Typecheck and lint passed. Existing determinism test exceeded its 5000ms timeout, also with two workers.",
+    "full_suite": "pnpm exec vitest run --maxWorkers=1 --testTimeout=20000: all 48 files and 372 tests passed. The determinism test took 3187ms in this run. No repository test configuration changed."
   },
   "design_review": "Both models remain below the 90 percent silhouette target. Every measured view is retained in renders/overlap.json; model notes record simplifications and differences. Designer approval is pending."
 }
