@@ -2,7 +2,8 @@
 
 Static stone heavyweight measured from the attached sheet. The saved
 `brute-model.blend` and `brute-model.glb` use the lowered-fist front stance.
-The game's existing animated Brute is unchanged.
+These approved static files are preserved. The game now uses
+`animated/brute.glb`, with its editable rig in `animated/brute.blend`.
 
 The torso, brow, hunched back, shoulders, arms, fists, thighs and feet loft
 the labeled front and side silhouettes in `sheet.json`. The paired limbs
@@ -48,4 +49,22 @@ uv run --with pillow --with numpy art/enemies/production-tools/review.py brute
 ```
 
 Build regenerates the Blender source; render reads its saved meshes. Animation,
-skinning into a single batched enemy mesh and game registration follow review.
+skinning and game registration use a separate copy of this approved source:
+
+```sh
+blender --background --python-exit-code 1 --python art/enemies/production-tools/animate-approved.py -- brute build-export
+blender --background --python-exit-code 1 --python art/enemies/production-tools/verify-approved-animation.py -- brute
+blender --background --python-exit-code 1 --python art/enemies/production-tools/render-approved-animation.py -- brute
+```
+
+The copy has seven rigid bones, one mesh, one shared material and the same
+1,612 triangles and rest bounds. The head bone carries the cap, visor and
+both eyes together. The slam raises both fists, while the stomp lifts and
+plants the left foot with lower arms. The look selects stomp phase clips
+by moveset id; simulation phase progress drives both attacks.
+
+`animated/verification.json` checks every frame against a fresh GLB import,
+zero root motion, floor clearance, closed loops and continuous contact and
+recovery poses. Spawn, idle, run and hurt cover the live lifecycle. Kills
+keep the game's particle burst, now stone-colored. The Death file clip is
+unused by gameplay.

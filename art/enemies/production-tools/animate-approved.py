@@ -1,6 +1,6 @@
 """Rig the approved static sources without rebuilding their geometry.
 
-Usage: Blender --background --python animate-approved.py -- shooter [export|verify|render].
+Usage: Blender --background --python animate-approved.py -- shooter [build|export|build-export].
 The existing enemy action writer provides rigid skinning and loop conventions.
 """
 import hashlib

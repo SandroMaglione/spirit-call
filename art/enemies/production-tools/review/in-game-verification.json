@@ -1,0 +1,243 @@
+{
+  "date": "2026-10-04",
+  "networkUrl": "http://192.168.40.47:5199",
+  "integration": {
+    "models": [
+      {
+        "bodyDrawMeshes": 1,
+        "bones": 8,
+        "clips": [
+          "Active",
+          "ActiveSpray",
+          "Death",
+          "Hurt",
+          "Idle",
+          "Recovery",
+          "RecoverySpray",
+          "Run",
+          "Spawn",
+          "Windup",
+          "WindupSpray"
+        ],
+        "height": 0.9895833134651184,
+        "id": "enemyShooter",
+        "instanced": true,
+        "instances": 3,
+        "triangles": 1180,
+        "url": "/art/enemies/shooter/production/animated/shooter.glb"
+      },
+      {
+        "bodyDrawMeshes": 1,
+        "bones": 7,
+        "clips": [
+          "Active",
+          "ActiveStomp",
+          "Death",
+          "Hurt",
+          "Idle",
+          "Recovery",
+          "RecoveryStomp",
+          "Run",
+          "Spawn",
+          "Windup",
+          "WindupStomp"
+        ],
+        "height": 1.392391324043274,
+        "id": "enemyBrute",
+        "instanced": true,
+        "instances": 3,
+        "triangles": 1612,
+        "url": "/art/enemies/brute/production/animated/brute.glb"
+      },
+      {
+        "bodyDrawMeshes": 1,
+        "bones": 7,
+        "clips": [
+          "Active",
+          "Death",
+          "Hurt",
+          "Idle",
+          "Recovery",
+          "Run",
+          "Spawn",
+          "Windup"
+        ],
+        "height": 0.6123801469802856,
+        "id": "enemySwarmer",
+        "instanced": true,
+        "instances": 3,
+        "triangles": 984,
+        "url": "/art/enemies/swarmer/production/animated/swarmer.glb"
+      }
+    ],
+    "phases": [
+      {
+        "attack": 1,
+        "kind": "shooter",
+        "phase": "windup"
+      },
+      {
+        "attack": 1,
+        "kind": "shooter",
+        "phase": "recovery"
+      },
+      {
+        "attack": 0,
+        "kind": "brute",
+        "phase": "windup"
+      },
+      {
+        "attack": 1,
+        "kind": "shooter",
+        "phase": "ready"
+      },
+      {
+        "attack": 0,
+        "kind": "brute",
+        "phase": "active"
+      },
+      {
+        "attack": 0,
+        "kind": "shooter",
+        "phase": "windup"
+      },
+      {
+        "attack": 0,
+        "kind": "brute",
+        "phase": "recovery"
+      },
+      {
+        "attack": 0,
+        "kind": "shooter",
+        "phase": "recovery"
+      },
+      {
+        "attack": 0,
+        "kind": "brute",
+        "phase": "ready"
+      },
+      {
+        "attack": 0,
+        "kind": "shooter",
+        "phase": "ready"
+      },
+      {
+        "attack": 1,
+        "kind": "brute",
+        "phase": "windup"
+      },
+      {
+        "attack": 1,
+        "kind": "brute",
+        "phase": "active"
+      },
+      {
+        "attack": 1,
+        "kind": "brute",
+        "phase": "recovery"
+      },
+      {
+        "attack": 1,
+        "kind": "brute",
+        "phase": "ready"
+      },
+      {
+        "attack": 0,
+        "kind": "swarmer",
+        "phase": "windup"
+      },
+      {
+        "attack": 0,
+        "kind": "swarmer",
+        "phase": "active"
+      },
+      {
+        "attack": 0,
+        "kind": "swarmer",
+        "phase": "recovery"
+      },
+      {
+        "attack": 0,
+        "kind": "swarmer",
+        "phase": "ready"
+      }
+    ],
+    "touch": {
+      "after": {
+        "x": 1064.6836933896725,
+        "y": 744.3176923076923
+      },
+      "before": {
+        "x": 900,
+        "y": 900
+      },
+      "dashAfter": {
+        "x": 1204.8608315398856,
+        "y": 661.9458660666065
+      },
+      "dashDistance": 162.58766194971724,
+      "device": "touch",
+      "distance": 226.62237267504293,
+      "switchedTo": "tidecaller",
+      "syntheticTouch": true,
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    }
+  },
+  "crowd": {
+    "enemyCount": 305,
+    "models": [
+      {
+        "bodyDrawMeshes": 1,
+        "id": "enemyShooter",
+        "instanced": true,
+        "instances": 38,
+        "materials": 1
+      },
+      {
+        "bodyDrawMeshes": 1,
+        "id": "enemyBrute",
+        "instanced": true,
+        "instances": 38,
+        "materials": 1
+      },
+      {
+        "bodyDrawMeshes": 1,
+        "id": "enemySwarmer",
+        "instanced": true,
+        "instances": 37,
+        "materials": 1
+      }
+    ],
+    "sceneSkinnedMeshes": 0,
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "browserDiagnostics": {
+    "consoleErrorsSincePhoneReload": [],
+    "failedRequestsSincePhoneReload": []
+  },
+  "validation": {
+    "blender": "Each animated source preserves approved rest vertices and bounds; GLB round trip, phase contacts, loops, living floor clearance and no root motion pass.",
+    "typecheck": "passed",
+    "lint": "passed",
+    "tests": {
+      "command": "pnpm test --maxWorkers=1 --testTimeout=20000",
+      "files": 48,
+      "passed": 372,
+      "failed": 0,
+      "durationSeconds": 27.93,
+      "defaultCheck": "pnpm check typecheck and lint passed; parallel tests timed out in existing fairness and replay tests. No test configuration was changed."
+    },
+    "build": "pnpm build passed",
+    "phone": "390x844 browser layout with synthetic touch movement and mouse-driven touch dash and team switch; no physical-phone performance claim."
+  },
+  "screenshots": {
+    "desktop": "in-game-desktop.png",
+    "phone": "in-game-phone.png"
+  }
+}

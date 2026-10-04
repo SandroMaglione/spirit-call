@@ -5,6 +5,14 @@ import { enemyPose } from "../src/presentation/enemy-pose.ts"
 import { enemyLooks } from "../src/presentation/looks.ts"
 
 describe("enemy animation sampling", () => {
+  it("samples the stomp clips over the stomp's own phase duration", () => {
+    const stomp = enemies.brute.attacks.find((attack) => attack.id === "stomp")!
+    const look = enemyLooks.brute
+    if (look.kind !== "model") throw new Error("Brute needs its model")
+    expect(enemyPose(stomp, "windup", .375, look.attackClips?.stomp)).toEqual({ clip: "WindupStomp", progress: .5 })
+    expect(enemyPose(stomp, "active", .06, look.attackClips?.stomp)).toEqual({ clip: "ActiveStomp", progress: .5 })
+    expect(enemyPose(stomp, "recovery", .4, look.attackClips?.stomp)).toEqual({ clip: "RecoveryStomp", progress: .5 })
+  })
   it("uses the spray's release pose when its active phase has zero duration", () => {
     const spray = enemies.shooter.attacks.find((attack) => attack.id === "spray")!
     const look = enemyLooks.shooter

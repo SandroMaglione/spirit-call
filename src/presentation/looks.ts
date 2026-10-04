@@ -159,7 +159,9 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   shooter: enemyModel("shooter", "enemyShooter", 62, {
     spray: { windup: "WindupSpray", active: "ActiveSpray", recovery: "RecoverySpray" }
   }),
-  brute: enemyModel("brute", "enemyBrute", 60),
+  brute: enemyModel("brute", "enemyBrute", 60, {
+    stomp: { windup: "WindupStomp", active: "ActiveStomp", recovery: "RecoveryStomp" }
+  }),
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),
   charger: enemyModel("charger", "enemyCharger", 78),
   sniper: enemyModel("sniper", "enemySniper", 60),

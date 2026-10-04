@@ -2,7 +2,8 @@
 
 Static red-shell pest measured from the attached sheet. Open
 `swarmer-model.blend` to edit the source or `swarmer-model.glb` to inspect
-the static export. The existing animated game asset is unchanged.
+the static export. These approved files are preserved. The game uses
+`animated/swarmer.glb`, with its editable rig in `animated/swarmer.blend`.
 
 Front/back widths and left/right depths drive the shell loft. Measured
 cream spikes are seated on the actual shell surface. The bone jaw has a
@@ -48,5 +49,23 @@ blender --background --python-exit-code 1 --python art/enemies/production-tools/
 uv run --with pillow --with numpy art/enemies/production-tools/review.py swarmer
 ```
 
-Build regenerates the source; render reads the saved meshes. Animation,
-skinning into a single batched enemy mesh and game registration follow review.
+Build regenerates the source; render reads the saved meshes. Animation and
+skinning use a separate copy of the approved source:
+
+```sh
+blender --background --python-exit-code 1 --python art/enemies/production-tools/animate-approved.py -- swarmer build-export
+blender --background --python-exit-code 1 --python art/enemies/production-tools/verify-approved-animation.py -- swarmer
+blender --background --python-exit-code 1 --python art/enemies/production-tools/render-approved-animation.py -- swarmer
+```
+
+The copy has seven rigid bones, one mesh, one shared material and the same
+984 triangles and rest bounds. The forward fangs stay with the shell while
+the lower jaw opens. Paired front and back legs alternate during the run;
+the bite compresses the body, then lifts and pitches it at contact. The
+simulation owns travel, attack timing and hitboxes.
+
+`animated/verification.json` checks every frame against a fresh GLB import,
+zero root motion, floor clearance, closed loops and continuous contact and
+recovery poses. Spawn, idle, run and hurt cover the live lifecycle. Kills
+keep the game's particle burst, now shell-red. The Death file clip is unused
+by gameplay.

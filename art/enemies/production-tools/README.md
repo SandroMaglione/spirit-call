@@ -1,4 +1,4 @@
-# Static enemy review tools
+# Enemy model and animation tools
 
 These tools adapt the measured spirit workflow to pale enemy sheets with
 several touching materials. Static review files stay in Shooter, Brute and
@@ -36,7 +36,7 @@ For an interactive review, run `pnpm dev --host --port 5199` and open
 `/art/enemies/production-review.html` on the network address. It loads the
 static GLBs with Three.js, provides camera presets and orbit controls, and
 links each source, reference and overlay. It is a separate art review page;
-the game entry point does not import it or any of these models.
+the game entry point imports only the approved animated copies.
 
 `review/refinements.png` compares the initial Brute face and Swarmer side
 profile with their revisions. `refinement-board.py` rebuilds this board
@@ -61,3 +61,22 @@ unchanged rest bounds and height, floor clearance, closed loops and the
 windup/contact/recovery endpoints. Runtime atlas skinning is independently
 covered by `test/enemy-assets.test.ts`. Attack-specific phase clips belong
 to the enemy look, with simulation timings still determining their progress.
+
+## In-game verification
+
+`review/in-game-desktop.png` and `review/in-game-phone.png` show the approved
+models in the game. `review/in-game-verification.json` records loaded URLs,
+mesh budgets, atlas clips, observed attack phases and the 300-enemy mixed
+load. Each of the three models keeps one instanced body draw call, one
+material and no per-enemy skeleton in the live scene.
+
+The phone layout was checked at 390×844: synthetic touch moved the player,
+and the mouse-driven touch dash and team buttons worked. Review enemies
+were positioned and held still in that browser session to compare their
+sizes; no gameplay content or movement rule was changed.
+
+Typecheck, lint, export verification, skinning checks and the production
+build pass. The full 372-test suite passes with one worker and a 20-second
+timeout. The default parallel `pnpm check` run hits the existing five-second
+replay/fairness timeouts under concurrent machine load. Test configuration
+is unchanged. These browser checks do not measure a physical phone.
