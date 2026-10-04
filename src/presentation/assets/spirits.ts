@@ -4,3 +4,4 @@
  */
 export { fireSpiritModel } from "./fire-spirit.ts"
 export { waterSpiritModel } from "./water-spirit.ts"
+export { windSpiritModel } from "./wind-spirit.ts"

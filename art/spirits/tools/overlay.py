@@ -2,8 +2,8 @@
 
     uv run --with pillow --with numpy art/spirits/tools/overlay.py <spirit>
 
-Each image is scaled so the whole figure (its topmost piece to the body's
-bottom: every view of a sheet is the same scale) is the same height, its
+Each image is scaled so the whole figure (its topmost piece to its lowest:
+every view of a sheet is the same scale) is the same height, its
 body's widest row centered. Writes `<spirit>/renders/overlay-<view>.png`
 (the sheet with both outlines, sheet yellow and model red, and the two
 blended) and `overlay-all.png`, and prints the overlap of the silhouettes
@@ -23,10 +23,9 @@ VIEWS = ("front", "back", "left", "right", "top", "bottom", "hero")
 
 
 def figure_box(mask):
-    pieces = blobs(mask, 15)
-    body = max(pieces, key=len)
-    near = [p for p in pieces if len(p) > 120]
-    return min(p[:, 0].min() for p in near), body[:, 0].max()
+    """The whole figure's top and bottom rows: its pieces big enough not to be specks (parts can float above or hang below the body)."""
+    near = [p for p in blobs(mask, 15) if len(p) > 120]
+    return min(p[:, 0].min() for p in near), max(p[:, 0].max() for p in near)
 
 
 def normalized(spirit, path):

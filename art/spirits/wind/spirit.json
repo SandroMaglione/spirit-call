@@ -1,0 +1,9 @@
+{
+  "blend": "wind-spirit.blend",
+  "mask": "mint",
+  "eyes": "dark",
+  "background": "#092432",
+  "lights": { "sun": [2.2, [1.0, 1.0, 0.95]], "fill": [1.0, [0.6, 0.95, 0.85]], "rim": [2.0, [0.6, 1.0, 0.85]] },
+  "ortho": 0.8,
+  "sweep": { "turns": [-60, 0, 5], "elevations": [0, 5, 10, 15, 20, 25, 30, 35] }
+}
