@@ -35,7 +35,7 @@ def surface(image, color='all'):
         'gold': (r > 170) & (g > 110) & (r-b > 70) & (g-b > 35),
         'figure': (a.min(axis=2) < 153) | ((r-b > 1) & (g-b > -2)) | ((g-r > 15) & (b-r > 8)),
         'yellow': (r > 205) & (g > 155) & (b < 140),
-        'all': (a.min(axis=2) < 153) | ((r-b > 1) & (g-b > -2)) | ((g-r > 15) & (b-r > 8)),
+        'all': (a.min(axis=2) < 153) | ((a.min(axis=2) < 196) & (abs(b-r) < 10) & (abs(g-r) < 10)) | ((r-b > 1) & (g-b > -2)) | ((g-r > 15) & (b-r > 8)),
     }
     return masks[color]
 
@@ -48,6 +48,18 @@ def region_mask(image, points, origin):
 
 def rect(x0, y0, x1, y1):
     return [(x0,y0),(x1,y0),(x1,y1),(x0,y1)]
+
+def hull(points):
+    points=sorted(set(points))
+    def cross(a,b,c):return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+    sides=[]
+    for order in (points,list(reversed(points))):
+        side=[]
+        for point in order:
+            while len(side)>1 and cross(side[-2],side[-1],point)<=0:side.pop()
+            side.append(point)
+        sides.append(side[:-1])
+    return sides[0]+sides[1]
 
 
 def measure(kind):
@@ -105,7 +117,8 @@ def measure(kind):
             data['eyes'].append({'x':float((p[:,1].mean()+origin[0]-config['center']['front'])*config['meters_per_pixel']),
                                 'z':float((config['ground']['front']-p[:,0].mean()-origin[1])*config['meters_per_pixel']),
                                 'width':float((np.ptp(p[:,1])+1)*config['meters_per_pixel']),
-                                'height':float((np.ptp(p[:,0])+1)*config['meters_per_pixel'])})
+                                'height':float((np.ptp(p[:,0])+1)*config['meters_per_pixel']),
+                                'outline_pixels':hull([(int(x)+origin[0],int(y)+origin[1]) for y,x in p])})
     for view,im in debug.items():im.resize((im.width*3,im.height*3)).save(here/'renders'/f'measure-{view}.png')
     (here/'sheet.json').write_text(json.dumps(data,indent=2)+'\n')
     print(kind, 'measured',list(data['parts']), 'palette',data['palette'],'eyes',data['eyes'])

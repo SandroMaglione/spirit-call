@@ -29,7 +29,7 @@ cloth pose still differ from the drawing and need the designer's review.
 The reference also conflicts between views: the front's lower hanging panels
 are ivory while the back shows four mint scarf tails, and the staff ring is
 face-on in both front and side views. This model uses four mint tails from the
-back and a fixed ring facing forward. The hood face is a dark surface inset
+back and a fixed ring facing forward. The hood face is a dark faceted panel
 instead of a detailed hollow hood. These choices are easy to revise in the
 source before animation.
 
@@ -48,3 +48,6 @@ node art/enemies/review-tools/verify.mjs gale-caster
 `build.py` replaces generated models; manual design edits should be made in
 the recipe or preserved in a separate Blender file. Rendering only reads the
 saved source. `verification.json` records the Three.js loader checks and hash.
+
+Open `/art/enemies/gale-juggernaut-review.html` on the network dev server
+for the 3D review controls and downloadable source files.

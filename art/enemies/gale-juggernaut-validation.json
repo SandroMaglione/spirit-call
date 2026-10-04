@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-04",
+  "stage": "static model review before rigging, animation and game registration",
+  "models": {
+    "gale-caster": { "triangles": 1956, "materials": 1, "animations": 0 },
+    "juggernaut": { "triangles": 1984, "materials": 1, "animations": 0 }
+  },
+  "exports": "Both passed review-tools/verify.mjs through Three.js GLTFLoader. Per-model verification.json records bounds and SHA-256.",
+  "browser": {
+    "url": "http://192.168.40.47:5199/art/enemies/gale-juggernaut-review.html",
+    "tool": "T3 collaborative browser",
+    "viewports": [[1280, 800], [390, 844]],
+    "both_models_loaded": true,
+    "reference_images_loaded": true,
+    "horizontal_overflow": false,
+    "camera_presets_and_wireframe": "exercised",
+    "touch": "Synthetic touch PointerEvents rotated both models in the phone-sized browser. Pointer capture was stubbed only during dispatch, then restored.",
+    "physical_phone_performance": "not measured",
+    "snapshot_note": "One snapshot attempt failed; retry saved a screenshot. A model-switch click was checked by readback and retried with the observed DOM control."
+  },
+  "repository_checks": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "pnpm_check": "Initially passed all 369 tests. Later default-worker runs timed out in existing simulation tests.",
+    "full_suite_with_two_workers": "pnpm exec vitest run --maxWorkers=2: 48 files, 369 tests passed"
+  },
+  "design_review": "Both models remain below the 90 percent silhouette target. Every measured view is retained in renders/overlap.json; model notes record simplifications and differences. Designer approval is pending."
+}

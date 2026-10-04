@@ -1,0 +1,63 @@
+{
+  "kind": "juggernaut",
+  "loader": "Three.js GLTFLoader",
+  "meshes": [
+    "StoneTorso",
+    "HunchedBack",
+    "Helmet",
+    "FaceRecess",
+    "HelmetBindingL",
+    "HelmetBindingR",
+    "EyeL",
+    "EyeR",
+    "NeckBridge",
+    "ChestChevron",
+    "WaistChevron",
+    "ChestInset",
+    "PauldronL",
+    "PauldronR",
+    "PauldronRimL",
+    "PauldronRimR",
+    "PauldronStudL",
+    "PauldronStudR",
+    "UpperArmL",
+    "UpperArmR",
+    "GauntletL",
+    "GauntletR",
+    "FistL",
+    "FistR",
+    "ThighL",
+    "ThighR",
+    "AnkleL",
+    "AnkleR",
+    "FootL",
+    "FootR",
+    "HipJointL",
+    "HipJointR",
+    "KnuckleL0",
+    "KnuckleR0",
+    "KnuckleL1",
+    "KnuckleR1",
+    "KnuckleL2",
+    "KnuckleR2",
+    "BackRidgeL",
+    "BackRidgeR"
+  ],
+  "materials": 1,
+  "triangles": 1984,
+  "animations": 0,
+  "bounds_gltf_m": {
+    "min": [
+      -0.9320651888847351,
+      0,
+      -0.6226449012756348
+    ],
+    "max": [
+      0.9320651888847351,
+      1.377173900604248,
+      0.523097813129425
+    ]
+  },
+  "sha256": "bc2d569eee08a9681a0d82ab87a25f2be1201609d078628185d9bbddce9de1bc",
+  "status": "passed: static review asset, before rigging"
+}

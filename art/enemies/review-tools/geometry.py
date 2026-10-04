@@ -159,7 +159,7 @@ class Model:
         self.ellipsoid('MouthRecess',(cx,ytip+.19,cz),(rx*gap*.77,.012,rz*gap*.77),inner_color,segments,4)
         return cx,ytip,cz,rx,rz,obj
 
-    def eyes(self,body,background='#303341',core='#FFD18A',socket_scale=1.65,center=0):
+    def eyes(self,body,background='#303341',core='#FFD18A',socket_scale=1.65,center=0,segments=12):
         eyes=self.sheet['eyes']
         if len(eyes)!=2:raise ValueError(f'Expected two measured eye cores: {eyes}')
         x=float(np.mean([abs(e['x']) for e in eyes]));z=float(np.mean([e['z'] for e in eyes]))
@@ -167,7 +167,7 @@ class Model:
         tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
         for sign,side in ((-1,'L'),(1,'R')):
             for layer,scale,color in (('EyeSocket',socket_scale,background),('Eye',1,core)):
-                verts=[];faces=[];n=12
+                verts=[];faces=[];n=segments
                 for ring in (0,.5,1):
                     for k in range(1 if ring==0 else n):
                         a=2*math.pi*k/n
@@ -291,6 +291,8 @@ class Model:
         bpy.context.view_layer.update()
         points=[o.matrix_world@v.co for o in objects for v in o.data.vertices]
         triangles=sum(len(p.vertices)-2 for o in objects for p in o.data.polygons)
+        if triangles>=2000:
+            print({o.name:sum(len(p.vertices)-2 for p in o.data.polygons) for o in objects})
         assert triangles<2000,triangles
         assert not bpy.data.actions
         bounds=[[min(p[i] for p in points),max(p[i] for p in points)] for i in range(3)]
