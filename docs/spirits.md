@@ -1,7 +1,7 @@
 # Spirits
 
 In the arena each character shows as her **spirit**: a small, faceted,
-low-poly creature of her element (the water, fire, and wind spirits). Her
+low-poly creature of her element (water, fire, wind, or thunder). Her
 illustrations, story, and portrait live in the menus; the spirit is what
 moves, fights, and is hit. This records how a spirit goes from a character
 sheet to the game, and the principles that made it work, so the next one is
@@ -107,8 +107,7 @@ a repeat of the same steps. The rules for model files in general are in
 ## Steps for a new spirit
 
 From the repository root, with Blender 4.5 LTS and `uv`; `<spirit>` is its
-folder under `art/spirits/` (the water, fire, and wind spirits are the examples
-to copy).
+folder under `art/spirits/`. Choose the closest example below.
 
 1. **Reference.** Put the sheet in `<spirit>/reference/sheet.png` and crop
    its views into `front.png`, `back.png`, `left.png`, `right.png`,
@@ -173,6 +172,67 @@ to copy).
      comparison with the review. Check the address the dev server prints:
      when its port is taken (another session's server) it starts on the
      next one, and the old address shows someone else's branch.
+
+## References to start from
+
+Read `vision.md`, `models.md`, and this guide before changing a character.
+Then read the chosen spirit's README and inspect its sheet, current GLB,
+and gameplay look. A sheet establishes its shape; the current game also
+includes deliberate changes for personality and readable facing.
+
+| Character | Source and review notes | What to copy |
+| --- | --- | --- |
+| Tidecaller, water | [Water](../art/spirits/water/README.md) | Measured loft, glowing surface eyes, winding throws, tail fin and offset nub for rear facing |
+| Gunner, fire | [Fire](../art/spirits/fire/README.md) | Flame and separate shards, dark slanted eyes, recoil on shots, warm core and ember trail |
+| Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
+| Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
+
+Each folder keeps `reference/sheet.png`, cropped views, measurements,
+`build.py`, an editable `.blend`, `animate.py`, `export.py`, and its GLB.
+`renders/` contains model comparisons and, where recorded, gameplay and
+scale reviews. Those images and videos document the pass that produced
+them. They do not automatically update when the model or game changes;
+record fresh evidence for the version under review.
+
+The shared combat poses and contact frames are in
+`art/spirits/tools/moves.py`. Each spirit's `animate.py` sets `STYLE`;
+`build.py` sets `EYE_SHAPE`. Runtime wiring is in
+`src/presentation/assets/spirits.ts`, `models.ts`, and `looks.ts`.
+`puppet.ts` blends object animation and owns each copy's halo material;
+`actors.ts` applies eyes, aura, entrance, and movement sway;
+`effects.ts` handles falls and trails; `showcase.ts` frames portraits.
+Shared feedback numbers live in `src/config/view.ts` under `spirit`.
+Changing them affects every character, so compare the existing roster too.
+
+## Review before calling a character finished
+
+Start a server from the intended worktree with
+`pnpm dev --host --port 5199 --strictPort` and use its printed network
+address. `--strictPort` fails if another worktree already owns that port;
+choose another port explicitly. For a quiet review use
+`?play&challenge=trainingGround&team=gunner,swordsman,tidecaller`;
+repeat with `team=stormcaller,tidecaller,swordsman` to cover Thunder.
+`&touch` also lets the mouse drive the touch controls. Use actual or
+simulated touch events for the phone check, and record which was used.
+
+| Check | What must read at gameplay size |
+| --- | --- |
+| Shape and facing | Compare full height and central body width with Water and Fire on one ground line. Aim toward, across, and away from the camera, both still and moving. Back details and offset parts must distinguish facing without eyes. |
+| Locomotion | Idle breathes without wandering; run has weight; starting, stopping, and reversing lean and settle without a snap. Stationary particles stay sparse and rise rather than pile up at the feet. |
+| Attacks | Exercise every combo step and charged move, including interrupted chains. Contact poses coincide with hits, the final blow reads stronger, and recoil or lunge suits the character's kit. |
+| Skills and dash | Special and ultimate move as their effects appear, with no late windup. Dash stretches along travel and returns cleanly. Gameplay movement and timing stay in the simulation. |
+| Reactions | Take a hit, perform a perfect dodge, fill ultimate energy, and lower health. Check hurt motion, briefly widened eyes, the ready halo pulse, and low-health dimming. One copy's halo must not alter another's. |
+| Switching and falling | Switch during locomotion and attacks. Let a member fall with a survivor, then let the last member fall. The fallen body shuts its eyes, tips, and fades; the survivor's entrance follows. Check movement and skill input during that entrance, pause/resume, and retry for leftover bodies or effects. |
+| Portraits and touch | The whole spirit and both eyes fit in menu and party portraits. Repeat movement, attacks, skills, dash, and switching at phone size with touch input, with enemies and effects on screen. |
+
+Run `pnpm check` and `pnpm build`. `test/looks.test.ts` verifies clip
+registration, `test/puppet.test.ts` covers animation blending, and
+`test/spirit-assets.test.ts` checks Thunder's scale and exported animation.
+These checks cannot judge silhouette or combat feel; keep the browser
+review with the PR. In the spirit's README record intentional departures
+from the sheet, the scale measurement basis, character style, eye and part
+names, review evidence and its commit, and any unverified cases. A physical
+phone performance check is separate from a phone-sized browser review.
 
 ## Pitfalls met
 
