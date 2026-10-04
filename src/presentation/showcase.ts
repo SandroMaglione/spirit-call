@@ -28,9 +28,10 @@ const stage = {
   /** Radians the model turns from facing the camera, to show its shape. */
   turn: -0.45,
   fill: 0.86,
-  /** Portraits: their size in pixels, and how much of a character's height they show (from the top). */
+  /** Portraits: their size in pixels, how far a character turns from the camera in hers (nearly none: her face, eyes and all), and how much of the picture she fills (all of her shows: a spirit is small, and her eyes sit low). */
   portraitPixels: 256,
-  portraitHead: 0.62,
+  portraitTurn: -0.12,
+  portraitFill: 0.82,
   /** The rim lights' strength, and the key light's direction. */
   rim: 4.5,
   key: { x: 1.5, y: 2.5, z: 2.5 }
@@ -44,7 +45,7 @@ interface Shown {
   readonly rim: Color
 }
 
-const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, weapon: WeaponId | null): Puppet | null => {
+const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, weapon: WeaponId | null, turn = stage.turn): Puppet | null => {
   if (look.kind !== "model") return null
   const source = models.get(look.model)
   if (source === undefined) return null
@@ -53,7 +54,7 @@ const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, wea
   const held = weapon === null ? undefined : look.held?.weapons[weapon]
   const heldSource = held === undefined ? undefined : models.get(held)
   if (heldSource !== undefined && look.held !== undefined) puppet.hold(heldSource, look.held.grip)
-  puppet.face({ x: Math.sin(stage.turn), y: Math.cos(stage.turn) })
+  puppet.face({ x: Math.sin(turn), y: Math.cos(turn) })
   // Posed once, so its bounds are its idle's.
   puppet.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, 0, false)
   puppet.object.updateMatrixWorld(true)
@@ -205,12 +206,12 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
       pictures.set(id, url)
       return url
     }
-    const puppet = puppetOf(models, look, null)
+    const puppet = puppetOf(models, look, null, enemy === null ? stage.portraitTurn : stage.turn)
     if (puppet === null) return null
     const shown = add(id, puppet, cssColor(place, "--el"))
     show(shown)
-    // Characters show head and shoulders; enemies, whole.
-    frame(shown, 1, 1, enemy === null ? 0.95 : 0.8, enemy === null ? stage.portraitHead : 1)
+    // Each shows whole: a character facing the camera, an enemy turned to show its shape.
+    frame(shown, 1, 1, enemy === null ? stage.portraitFill : 0.8, 1)
     renderer.setRenderTarget(target)
     renderer.clear()
     renderer.render(scene, camera)

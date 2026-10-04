@@ -61,7 +61,7 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     } else if (action.kind === "switch") {
       // A fall is heard through the death; the one coming in after it, softer.
       sounds.play("switch", { volume: action.fell ? 0.6 : 1 })
-    } else sounds.play(action.kind)
+    } else if (action.kind !== "fall") sounds.play(action.kind)
   }
   for (const cast of events.cast.all()) {
     const sound = castSounds[cast.effect.kind]

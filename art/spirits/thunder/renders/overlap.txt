@@ -1,11 +1,16 @@
 Full-figure color-mask intersection over union, using tools/overlay.py.
-front: overlap 73.9%
-back: overlap 77.9%
-left: overlap 74.2%
-right: overlap 75.2%
-top: overlap 61.2%
-bottom: overlap 74.9%
-hero: overlap 59.4%
+front: overlap 75.9%
+back: overlap 79.0%
+left: overlap 72.4%
+right: overlap 74.8%
+top: overlap 64.5%
+bottom: overlap 78.7%
+hero: overlap 59.9%
 
-These are first-pass comparisons below the 90% target, including halo,
-pale electricity, and eye holes. See README.md for sheet contradictions.
+These are comparisons below the 90% target, including halo, pale
+electricity, and eye holes. See README.md for sheet contradictions.
+With the thin halo they were 73.9, 77.9, 74.2, 75.2, 61.2, 74.9, 59.4.
+The band halo gains on the front and back and loses a little side-on,
+where a physical ring cannot show the sheet's open ellipse. The left
+view's score also moved because overlay.py centred it on a different
+body row (504, not 617); centred on the same row it is 73.7%.

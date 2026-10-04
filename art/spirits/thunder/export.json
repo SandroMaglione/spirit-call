@@ -1,7 +1,7 @@
 {
-  "source_sha256": "c0217fea4b988618736cc1d0328b8de1e35dea2cbc8aca71bbdfd625c469bf3e",
-  "glb_sha256": "12d48d3b3fc09322c0f49acb0602ff32a4b2790ff52d2c4ea2c016d3cd5cd1d6",
-  "bytes": 184940,
+  "source_sha256": "f6e4e9e38e1740950e726acc471bcf52d4b0948068e258abb9bab28b94e9e5e8",
+  "glb_sha256": "22b8f6f7390bc48ac213bf683e92a35ed8c042a2a82fb6a4a915e12fc643cc23",
+  "bytes": 188628,
   "height_m": 0.6650000214576721,
   "height_basis": "ground origin to highest rest-pose mesh vertex, including floating parts",
   "clips": {
@@ -12,7 +12,39 @@
     "Run": {
       "lastKeySeconds": 0.5,
       "loopSeconds": 0.5333333333333333
+    },
+    "AttackA": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackB": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackC": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Power": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Dash": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Cast": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Ultimate": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": null
     }
   },
-  "triangles": 2628
+  "triangles": 1800
 }

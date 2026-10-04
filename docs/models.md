@@ -48,7 +48,9 @@ and every moment names a clip its model has.
 - **Animation:** one armature, at most four weights per vertex (or, for a
   model without a skeleton like the spirits, clips keyed on its objects),
   clips named as the moments will name them, played in place (no root motion: the game
-  moves the body). Loops leave out their closing key (the first pose
+  moves the body). A combat clip may lean into its blow over its feet (a
+  spirit's lunge or kick, well inside its own width) as long as it starts
+  and ends on the spot. Loops leave out their closing key (the first pose
   again); the spec's `loopSeconds` puts it back (`closeLoop`).
 - **The spec** (`ModelSpec`): the file's url, its rest height in meters,
   and each clip's last key time and loop length (`null` for one-shots).
@@ -65,7 +67,8 @@ freezes with the world during hit-stop. A clip never moves a body, and no
 hit or hitbox ever comes from a clip.
 
 Attack contact poses map to the simulation's hit time. Entry blends capture
-the visible outgoing bone pose and finish by contact, including when a new
+the visible outgoing pose (of its bones, or of the objects its clips move)
+and finish by contact, including when a new
 attack interrupts another range of the same clip. Recovery clips start at
 the previous section's endpoint and carry any elapsed frame remainder.
 

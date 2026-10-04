@@ -5,8 +5,8 @@
  * direction, plays its loops by how its body moves, and plays one-shot
  * moments over them (see `animation.ts`).
  */
-import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshStandardMaterial, SkinnedMesh } from "three"
-import type { AnimationAction, Material, Object3D, Quaternion, Skeleton, Vector3 } from "three"
+import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshStandardMaterial, PropertyBinding, SkinnedMesh, Sprite } from "three"
+import type { AnimationAction, Material, Object3D, Quaternion, Skeleton, SpriteMaterial, Vector3 } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
 
 import type { Vec2 } from "../math/vec.ts"
@@ -19,10 +19,19 @@ import type { ModelSource } from "./models.ts"
 /** A copy's materials that are its own, with their colors before any tint, and their own glow (glowing eyes) before any flash. */
 export type OwnMaterials = ReadonlyArray<{ readonly material: MeshStandardMaterial; readonly base: Color; readonly glow: Color }>
 
-/** A copy of `source`; with `ownMaterials`, its materials are copies too (to tint or fade it alone). */
-export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonly object: Object3D; readonly materials: OwnMaterials } => {
+/** A copy's own halo (see `glow.ts`): its sprite, with its opacity and size before the body's state changes them. */
+export interface OwnHalo {
+  readonly sprite: Sprite
+  readonly material: SpriteMaterial
+  readonly opacity: number
+  readonly size: number
+}
+
+/** A copy of `source`; with `ownMaterials`, its materials are copies too (to tint or fade it alone), and so is its halo's. */
+export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonly object: Object3D; readonly materials: OwnMaterials; readonly halo: OwnHalo | null } => {
   const object = clone(source.scene)
   const materials: Array<{ material: MeshStandardMaterial; base: Color; glow: Color }> = []
+  let halo: OwnHalo | null = null
   if (ownMaterials) {
     const copies = new Map<Material, MeshStandardMaterial>()
     // Parts sharing a material keep sharing the copy.
@@ -38,9 +47,13 @@ export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonl
     }
     object.traverse((part) => {
       if (part instanceof Mesh) part.material = Array.isArray(part.material) ? part.material.map(own) : own(part.material)
+      if (part instanceof Sprite && part.userData["halo"] === true) {
+        part.material = part.material.clone()
+        halo = { sprite: part, material: part.material, opacity: part.material.opacity, size: part.scale.x }
+      }
     })
   }
-  return { object, materials }
+  return { object, materials, halo }
 }
 
 /** Frees what a copy owns: its materials and skeletons (geometry and textures stay with the loaded model). */
@@ -89,23 +102,35 @@ export class Puppet {
   private readonly source: ModelSource
   /** A frozen outgoing pose lets a cut start from a run or another cut without snapping to idle. */
   private readonly joints: Array<{
-    bone: Bone; position: Vector3; rotation: Quaternion; scale: Vector3
+    bone: Object3D; position: Vector3; rotation: Quaternion; scale: Vector3
     targetPosition: Vector3; targetRotation: Quaternion; targetScale: Vector3
   }> = []
   private transition: { elapsed: number; seconds: number } | null = null
   private restorePose = false
+  private readonly halo: OwnHalo | null
+  /** Its eyes (and what blinks with them), and how they are held this frame: times their width and height. */
+  private readonly eyes: Array<Object3D> = []
+  private readonly look = { wide: 1, tall: 1 }
 
-  constructor(source: ModelSource, height: number, moments: Moments | null) {
+  constructor(source: ModelSource, height: number, moments: Moments | null, eyes: ReadonlyArray<string> = []) {
     this.source = source
     const copy = copyModel(source, true)
     this.object = copy.object
     if (source.spec.height === null) throw new Error(`Model ${source.id} has no height: it cannot be a body`)
     this.object.scale.setScalar(height / source.spec.height)
     this.materials = [...copy.materials]
+    this.halo = copy.halo
     this.moments = moments
     this.mixer = new AnimationMixer(this.object)
+    // What its clips move: bones, or (a model animated by its objects, like a spirit) the objects its clips name.
+    const keyed = new Set<string>()
+    for (const clip of source.clips.values()) for (const track of clip.tracks) keyed.add(PropertyBinding.parseTrackName(track.name).nodeName)
+    for (const name of eyes) {
+      const eye = this.object.getObjectByName(PropertyBinding.sanitizeNodeName(name))
+      if (eye !== undefined) this.eyes.push(eye)
+    }
     this.object.traverse((bone) => {
-      if (bone instanceof Bone) this.joints.push({
+      if (bone instanceof Bone || keyed.has(bone.name)) this.joints.push({
         bone, position: bone.position.clone(), rotation: bone.quaternion.clone(), scale: bone.scale.clone(),
         targetPosition: bone.position.clone(), targetRotation: bone.quaternion.clone(), targetScale: bone.scale.clone()
       })
@@ -235,6 +260,34 @@ export class Puppet {
       this.restorePose = weight < 1
       if (weight === 1) this.transition = null
     }
+    // Its eyes held wide or narrow, over whatever its clips do with them (a blink still shows).
+    if (this.eyes.length > 0 && (this.look.wide !== 1 || this.look.tall !== 1)) {
+      if (!this.restorePose) {
+        for (const joint of this.joints) {
+          joint.targetPosition.copy(joint.bone.position)
+          joint.targetRotation.copy(joint.bone.quaternion)
+          joint.targetScale.copy(joint.bone.scale)
+        }
+      }
+      for (const eye of this.eyes) {
+        eye.scale.x *= this.look.wide
+        eye.scale.y *= this.look.tall
+      }
+      this.restorePose = true
+    }
+  }
+
+  /** Holds its eyes at `wide` times their width and `tall` times their height (1 and 1: as its clips leave them). */
+  express(wide: number, tall: number): void {
+    this.look.wide = wide
+    this.look.tall = tall
+  }
+
+  /** Its halo at `level` times its own brightness (and a little bigger above 1); nothing for a model without one. */
+  aura(level: number): void {
+    if (this.halo === null) return
+    this.halo.material.opacity = Math.min(1, this.halo.opacity * level)
+    this.halo.sprite.scale.setScalar(this.halo.size * (1 + Math.max(0, level - 1) * 0.15))
   }
 
   paint(tint: number, glowColor: number, glow: number, opacity: number): void {
@@ -244,6 +297,7 @@ export class Puppet {
   dispose(): void {
     this.mixer.stopAllAction()
     this.mixer.uncacheRoot(this.object)
+    this.halo?.material.dispose()
     disposeCopy(this.object, this.materials)
   }
 

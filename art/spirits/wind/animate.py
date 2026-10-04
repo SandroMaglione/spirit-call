@@ -15,9 +15,17 @@ hanging down trails back with +X.
 """
 import math
 
+import sys
+from pathlib import Path
+
 import bpy
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import moves  # noqa: E402
+
 FPS = 30
+# The Swordsman cuts: a long lunge, rolling with the blade, her big blows a whole turn.
+STYLE = {"lunge": 0.11, "back": 0.04, "twist": 0.4, "roll": 0.3, "hop": 0.015, "spin": True, "cast": 0.2}
 PARTS = ("TopLeaf.L", "TopLeaf.R", "Tendril.L", "Tendril.R", "LowLeaf.Big", "LowLeaf.Small")
 
 
@@ -112,6 +120,8 @@ def add_clips():
             track.mute = True
             obj.animation_data.action = None
         timing[clip] = {"lastKeySeconds": (frames - 1) / FPS, "loopSeconds": frames / FPS}
+    # Its combat clips (shared by every spirit: tools/moves.py).
+    timing.update(moves.add(bpy, objects, base, "WindSpirit", STYLE))
     for name, obj in objects.items():
         for prop, value in base[name].items():
             setattr(obj, prop, value)

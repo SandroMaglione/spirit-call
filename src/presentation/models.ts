@@ -65,10 +65,10 @@ const windGlow: GlowSpec = {
   eyes: { nodes: ["Eye.L", "Eye.R"], color: 0, opacity: 0, size: 0 }
 }
 
-/** Violet edges and soft gold eye glows; the electrical ring is part of the model. */
+/** Violet edges and soft gold eye glows, as strong as the other spirits' (its body is the darkest: it needs them to stand off a dark floor); the electrical ring is part of the model. */
 const thunderGlow: GlowSpec = {
-  rim: { color: 0xc9b8ff, strength: 0.55, power: 2.8 },
-  halo: { color: 0x7a6bff, opacity: 0.22, size: 1.55 },
+  rim: { color: 0xc9b8ff, strength: 0.85, power: 2.5 },
+  halo: { color: 0x7a6bff, opacity: 0.34, size: 1.6 },
   eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffe66d, opacity: 0.5, size: 0.3 }
 }
 

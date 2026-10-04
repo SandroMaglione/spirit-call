@@ -1,8 +1,8 @@
 # Wind spirit
 
-The wind character's spirit: a faceted, near-white ball with dark eyes, two
-crystal leaves on top, a crescent horn on each side sweeping back and
-curling up, and two leaves hanging under it. Built only from its
+The wind character's spirit: a faceted, pale mint ball with dark eyes, two
+crystal leaves on top, a flat crescent blade on each side sweeping back and
+curling up to a sharp point, and two leaves hanging under it. Built only from its
 production model sheet (`reference/sheet.png`; the other images in
 `reference/` are its views, cropped). In the game it is the wind
 character's (the Swordsman's) spirit.
@@ -27,18 +27,22 @@ outlines yellow, model red). Beside the sheet, and at the game's camera:
    its own object, its origin at its base, to sway:
    - the leaves are crystal blades from base to tip, across and height
      from the front view, front to back from the left view, their blades
-     turned between the two so each view sees its own width;
+     turned between the two so each view sees its own width; the leaves
+     under it bend as the views draw their middle lines (where one view
+     loses a bent leaf, the other's widths are used);
    - the horns follow their middle lines (across from the front view, depth
      from the left view's, height halfway between theirs), rooted in the
-     body's sides (both views lose the root where it crosses the body),
-     thickest there and narrowing to a point; crescent blades, broad in the
-     plane they curl in;
+     body's sides (both views lose the root where it crosses the body) and
+     swept from there in one curve; flat crescent blades as wide as both
+     views draw them, turned between the views and tipped a little face up
+     (toward the game's camera), drawn to a sharp point;
    - the dark eyes are laid on the surface (`Eye.L`, `Eye.R`, to blink),
      one size, mirrored about the body's middle.
-3. Colors are the swatches, one per facet: the body white toward the light,
-   pale aqua, minty pale aqua away from it; the leaves mint to teal.
-4. `tools/overlay.py` scores the overlap: front 69%, back 60%, left 59%,
-   right 57%, the isometric render 53%, top 44%, bottom 45%.
+3. Colors are the swatches, one per facet: the body pale mint (nearly
+   white only toward the light, pale aqua round it, mint toward its edges
+   and lower facets); the leaves mint to teal.
+4. `tools/overlay.py` scores the overlap: front 74%, back 62%, left 64%,
+   right 61%, the isometric render 56%, top 46%, bottom 47%.
 
 **Where the sheet disagrees with itself.** The model follows the front and
 left views. The back view draws an S-shaped tail wrapping round the body
@@ -54,6 +58,10 @@ tall; its drawings measure about 0.24 m.
   that bobs and tilts on a breeze while the top leaves flutter, the horns
   sway, and the leaves under it swing, with a blink; a run that hops,
   squashes on landing, and leans in, its leaves and horns swept back.
+  Its combat clips (a combo's blows, the charged move, the dash, a hit
+  taken, the special, the ultimate) are every spirit's (`../tools/moves.py`),
+  in its character's `STYLE`: the Swordsman cuts, a long lunge rolling with the blade, her big blows a whole turn. Her eyes have her own shape
+  (`EYE_SHAPE` in `build.py`): tall and narrow, a slight slant.
 - **Glow** (`windGlow` in `src/presentation/models.ts`): teal edges and a
   teal halo, kept low (its palette is pale); its eyes stay dark.
 - **Wisps** while it moves (its look's `drops` with `kind: "wisp"`): mint

@@ -45,6 +45,8 @@ EYE_LIFT = 0.002
 EYE_GROW = 1.6
 
 COLORS = {"orange": "#FF8A3D", "ember": "#E6391F", "yellow": "#FFD54A", "glow": "#FFF176", "eye": "#2A0A06"}
+# Her eyes, from the sheet's ellipses: the Gunner is sharp (lidded and slanted, taking aim).
+EYE_SHAPE = {"wide": 1.05, "tall": 1.0, "lid": 0.45, "tilt": 0.32}
 
 
 def edges(view, z):
@@ -277,6 +279,14 @@ def eye_material():
     return m
 
 
+
+def eye_shape(u, v, tall, left):
+    """A point of the sheet's eye ellipse as this character wears it (`EYE_SHAPE`): wider or taller, its top cut flat by a lid, tilted (its inner end lower)."""
+    u, v = u * EYE_SHAPE["wide"], min(v * EYE_SHAPE["tall"], tall * EYE_SHAPE["lid"])
+    tilt = EYE_SHAPE["tilt"] * (1 if left else -1)
+    return u * math.cos(tilt) - v * math.sin(tilt), u * math.sin(tilt) + v * math.cos(tilt)
+
+
 def eye(tree, sheet_eye, material):
     """A dark ellipse snapped onto the body's surface (its own object, origin at the eye's center), as big as the front view draws it."""
     x, z = sheet_eye["offset"], sheet_eye["height"]
@@ -302,7 +312,7 @@ def eye(tree, sheet_eye, material):
     previous = None
     for r in range(1, rings + 1):
         f = r / rings
-        ring = [bm.verts.new(snap(math.cos(t) * width * f, math.sin(t) * tall * f)) for t in (2 * math.pi * k / segments for k in range(segments))]
+        ring = [bm.verts.new(snap(*eye_shape(math.cos(t) * width * f, math.sin(t) * tall * f, tall, x > 0))) for t in (2 * math.pi * k / segments for k in range(segments))]
         for k in range(segments):
             j = (k + 1) % segments
             bm.faces.new((middle, ring[k], ring[j]) if previous is None else (previous[k], ring[k], ring[j], previous[j]))

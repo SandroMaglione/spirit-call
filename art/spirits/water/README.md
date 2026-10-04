@@ -47,7 +47,15 @@ Beside the sheet (left, front, isometric), and at the game's camera:
 
 ## Animation
 
-`animate.py` keys two clips on its objects (no skeleton), exported with it:
+`animate.py` keys its two loops on its objects (no skeleton), exported with
+it, and adds every spirit's combat clips (`../tools/moves.py`: a combo's
+blows, the charged move, the dash, a hit taken, the special, the ultimate)
+in the Tidecaller's `STYLE` (and a `Tail`, not on the sheet: a fin curling up
+from low on its back, wagging in the idle and streaming in the run, so from
+behind it says which way she faces; the nub rests a little behind the tip
+for the same reason): she throws, winding far round and snapping
+through. Her eyes have her own shape (`EYE_SHAPE` in `build.py`: wide and
+half-lidded, calm). The loops:
 
 - **Idle** (2 s loop): a gentle bob, squashing a little at the bottom; the
   nub floats out of step with it, circling and spinning slowly; one blink

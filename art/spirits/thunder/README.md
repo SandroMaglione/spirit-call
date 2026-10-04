@@ -21,9 +21,15 @@ These are Blender renders, with no painted additions.
   wing, violet fin, crest, eye, eye rim, halo, and underside spark is a
   separate object. Each eye lies 2 mm above the body's actual facets.
 - Violet colors are flat per-facet vertex colors, using the sheet's
-  swatches. The pale gold wing fill is between its yellow and white.
+  swatches: around the middle violet, lighter toward the top and front,
+  each facet a clear step from its neighbours so they read at phone size.
+  The wings, eye rims, and underside spark are the sheet's gold.
+- The halo is a band of lightning: 32 diamond sections whose middle line
+  zig-zags and whose width swells and thins, with barbs forking off it.
+  It is level from the front and tilted front-down by the front view's
+  measured opening, thick enough to read side-on.
 - `audit.json` records actual bounds, triangles, materials, and objects.
-  The model has 2,628 triangles and four materials, without a skeleton.
+  The model has 1,620 triangles and four materials, without a skeleton.
 
 The model uses the front view's 220 pixel overall height as 0.62 m. The
 printed widths and the cross-section diagrams disagree with the upright
@@ -38,9 +44,11 @@ current full-figure color-mask scores. They are below the 90% target.
 
 The sheet shows the halo's interior from front, both sides, and the back,
 while leaving the body nearly orthographic. A single planar ring cannot
-reproduce all those projections. This version keeps a mildly tilted,
-jagged physical ring. Its thickness and tilt are review points, along
-with the crest's large facets and the body shading. Pale glow and white
+reproduce all those projections. This version keeps a tilted, jagged
+physical band: it matches the front and back views' open ring and shows
+edge-on from the sides, where it crosses the drawn ring's opening. Its
+thickness and tilt are review points, along with the crest's large facets
+and the body shading. Pale glow and white
 eyes also create gaps in the color masks; scores include those differences.
 The fitted camera is a candidate from the sweep, not proof of a perfect
 match to the illustrated isometric view.
@@ -80,8 +88,16 @@ movement along the floor axes. The eye rims blink with the eyes.
 
 `assets/spirits.ts` exports the generated spec, `models.ts` registers
 `thunderSpirit`, and `characterLooks.stormcaller` selects it. Its trail
-uses the existing batched ember particles in violet and pale gold. Attacks
-and skills continue over its locomotion clips, as with water and fire.
+uses the existing batched ember particles in violet and pale gold. Its
+combat clips (a combo's blows, the charged move, the dash, a hit taken,
+the special, the ultimate) are every spirit's (`../tools/moves.py`), in the
+Stormcaller's `STYLE`: she casts, with a small nod and a hop. They may lean
+along the floor into a blow, starting and ending on the spot. Her eyes
+have her own shape (`EYE_SHAPE` in `build.py`: big and round, their outer
+ends a little lower), and the halo turns about its own tilted axis, tipped
+a little further down in front while she stands. A gold bolt down its back
+(`BackBolt`, not on the sheet) says which way she faces when her eyes do
+not show.
 
 `renders/gameplay-desktop.mp4` records keyboard movement and the Spark
 Totem in the normal arena. `renders/gameplay-touch.mp4` records the

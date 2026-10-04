@@ -6,9 +6,22 @@ vertical, with no root movement on the floor.
 """
 import math
 
+import sys
+from pathlib import Path
+
 import bpy
+from mathutils import Euler, Matrix, Vector
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import moves  # noqa: E402
 
 FPS = 30
+# The Stormcaller casts: a small nod forward and a hop, steady, nothing spins.
+STYLE = {"lunge": 0.03, "back": 0.02, "twist": 0.1, "roll": 0.08, "hop": 0.035, "spin": False, "cast": -0.1}
+# The halo's own axis: it is built tilted, rising 0.24 per meter toward the back (`HALO_TILT` in build.py).
+HALO_AXIS = Vector((0, -0.24, 1)).normalized()
+# How much further the halo tips down in front while it stands (rad).
+HALO_FRONT = 0.12
 NAMES = ["ThunderSpirit", "LightningCrest", "Halo", "LightningWing.L", "LightningWing.R",
          "VioletFin.L", "VioletFin.R", "Eye.L", "Eye.R", "Rim.L", "Rim.R"]
 
@@ -34,7 +47,10 @@ def pose(t, base, running):
         elif name == "Halo":
             values[name] = {
                 "location": (x, y + (0.018 if running else 0), z + 0.008 * wave(t, -0.8)),
-                "rotation_euler": (-0.08 if running else 0.025 * wave(t, 0.4), 0.02 * wave(t, 1.2), 2 * math.pi * t),
+                # Turning about its own axis (the ring is modeled tilted: about the floor's it would wobble like a coin), swaying a little.
+                # Standing, it tips a little further down in front (`HALO_FRONT`): from any side it says which way she faces.
+                "rotation_euler": (Euler((-0.08 if running else HALO_FRONT + 0.025 * wave(t, 0.4), 0.02 * wave(t, 1.2), 0)).to_matrix()
+                                   @ Matrix.Rotation(2 * math.pi * t, 3, HALO_AXIS)).to_euler(),
             }
         elif name == "LightningCrest":
             values[name] = {
@@ -77,6 +93,8 @@ def add_clips():
             track.mute = True
             obj.animation_data.action = None
         timing[clip] = {"lastKeySeconds": (frames - 1) / FPS, "loopSeconds": frames / FPS}
+    # Its combat clips (shared by every spirit: tools/moves.py).
+    timing.update(moves.add(bpy, objects, base, "ThunderSpirit", STYLE, lids=("Rim.L", "Rim.R")))
     for name, obj in objects.items():
         for prop, value in base[name].items():
             setattr(obj, prop, value)

@@ -3,7 +3,7 @@
  * numbers, recoil, dust, explosions, heals, thunder's bolts, and elements
  * (reactions, and motes off bodies in a state).
  */
-import { Vector3 } from "three"
+import { Group, Vector3 } from "three"
 
 import { isMelee } from "../content/attacks.ts"
 import { projection, view } from "../config/view.ts"
@@ -13,8 +13,9 @@ import type { Vec2 } from "../math/vec.ts"
 import { arenaOf } from "../features/arena.ts"
 import { Action, Body, Broke, Camera, Cast, Challenge, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
+import { makeBody } from "./bodies.ts"
 import type { RenderHostValue } from "./host-types.ts"
-import { arenaLooks } from "./looks.ts"
+import { arenaLooks, characterLooks } from "./looks.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
 
 /** A world direction as a unit direction on screen. */
@@ -41,7 +42,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     cast: Game.System.readEvent(Cast)
   },
   resources: { tuning: Game.System.readResource(Tuning) },
-  services: { host: Game.System.service(RenderHost) }
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ events, resources, services }) => {
   const tuning = resources.tuning.get()
   const fx = services.host.fx
@@ -57,6 +58,19 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       fx.ring(at, (release ? 70 : 44) * projection.zoom, view.charge.full, release ? 0.3 : 0.25)
       if (release) feedback.shake = Math.max(feedback.shake, impact.shake)
     }
+    // She falls: her body is left behind for a moment, going down (see `PlayFalls`).
+    if (action.kind === "fall") {
+      const look = characterLooks[action.character]
+      const root = new Group()
+      const pivot = new Group()
+      const body = makeBody(services.host.assets, look, tuning.characters[action.character].radius, false, null)
+      pivot.add(body.object)
+      root.add(pivot)
+      root.position.set(action.at.x, 0, action.at.y)
+      body.face(action.facing)
+      services.host.actors.add(root)
+      services.host.fallen.push({ root, pivot, body, facing: action.facing, age: 0 })
+    }
     // A character comes in: a flash and a ring in her color.
     if (action.kind === "switch" && !action.fell) {
       const at = toScreen(projection, action.at)
@@ -64,8 +78,15 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       fx.flash({ x: at.x, y: at.y - impact.height * projection.zoom }, 40, color, 0.14)
       fx.ring(at, 56 * projection.zoom, color, 0.35)
     }
-    // After a fall she comes in for good: a column of light, rings, a flash, her name; protected a while (see `DrawPlayer`).
-    if (action.kind === "switch" && action.fell) {
+    // After a fall the next one comes in once the fallen one is down (see `PlayFalls`).
+    if (action.kind === "switch" && action.fell) feedback.stepIn = { at: action.at, character: action.character, wait: view.spirit.fall.seconds }
+  }
+  // She comes in for good: a column of light, rings, a flash, her name; protected a while (see `DrawPlayer`).
+  if (feedback.stepIn !== null) {
+    feedback.stepIn.wait -= services.clock.frameSeconds
+    if (feedback.stepIn.wait <= 0) {
+      const action = feedback.stepIn
+      feedback.stepIn = null
       const at = toScreen(projection, action.at)
       const color = view.characters[action.character]
       const spec = view.fallEntry
@@ -86,6 +107,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       void banner.offsetWidth // restart the CSS animation
       banner.classList.add("is-showing")
     }
+  }
+  for (const action of events.action.all()) {
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
     if (action.kind === "attack" && isMelee(action.move)) {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
@@ -348,7 +371,11 @@ const shedding = new WeakMap<object, { at: Vec2; owed: number }>()
  * the 3D scene so its body hides the ones behind it: each leaves from its
  * back, low on it, thrown back against its motion; drops fall to the
  * floor, about half leaving a ripple there, embers drift up and burn out,
- * wisps curl away and fade. More the faster it goes; none while it stands.
+ * wisps curl away and fade. More the faster it goes; standing, only a few
+ * still leave its back (`view.spirit.standing` of its rate), small and
+ * slow, behind where it faces: seen from behind, they say which way that
+ * is. Standing, drops rise like bubbles instead of falling (a body
+ * dripping on the spot reads wrong).
  */
 export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
   queries: {
@@ -368,12 +395,9 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
     last.at = at
     if (seconds <= 0) continue
     const speed = Math.hypot(moved.x, moved.y) / seconds
-    if (speed < 20) {
-      last.owed = 0
-      continue
-    }
-    last.owed += drops.rate * seconds * Math.min(1, speed / 290)
-    const back = { x: -moved.x / (speed * seconds), y: -moved.y / (speed * seconds) }
+    const standing = speed < 20
+    last.owed += drops.rate * seconds * (standing ? view.spirit.standing : Math.min(1, speed / 290))
+    const back = standing ? { x: -node.facing.x, y: -node.facing.y } : { x: -moved.x / (speed * seconds), y: -moved.y / (speed * seconds) }
     const radius = data.body.get().radius
     while (last.owed >= 1) {
       last.owed -= 1
@@ -381,10 +405,11 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
       // From its back, a little to either side, low on its body.
       const across = (Math.random() - 0.5) * radius * 1.1
       const from = { x: at.x + back.x * radius * 0.9 - back.y * across, y: at.y + back.y * radius * 0.9 + back.x * across }
-      const height = node.body.height * (0.12 + Math.random() * 0.3)
-      const kind = drops.kind ?? "drop"
+      const height = node.body.height * (standing ? 0.3 + Math.random() * 0.3 : 0.12 + Math.random() * 0.3)
+      const shed = drops.kind ?? "drop"
+      const kind = standing && shed === "drop" ? "ember" : shed
       const thrown = kind === "drop" ? 50 + Math.random() * 70 : kind === "ember" ? 25 + Math.random() * 40 : 60 + Math.random() * 50
-      services.host.drops.emit(from, height, back, thrown, drops.size * (0.7 + Math.random() * 0.6), color, kind)
+      services.host.drops.emit(from, height, back, standing ? thrown * 0.3 : thrown, drops.size * (standing ? 0.6 : 1) * (0.7 + Math.random() * 0.6), color, kind)
     }
   }
 })
@@ -442,6 +467,40 @@ const fxDust = (host: RenderHostValue, at: Vec2, push: Vec2, speed: number): voi
   const screen = toScreen(projection, at)
   host.fx.dust(screen, screenDirection({ x: push.x / speed, y: push.y / speed }), view.impact.dust)
 }
+
+/**
+ * Characters who just fell: each one's body tips back and sinks, her eyes
+ * shut and her light going out, then fades and is gone (`view.spirit.fall`).
+ * The next one pops up once she is down (see `DrawPlayer`).
+ */
+export const PlayFalls = Game.System("Shooter/PlayFalls", {
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ services }) => {
+  const fallen = services.host.fallen
+  const spec = view.spirit.fall
+  const seconds = services.clock.frameSeconds
+  for (let index = fallen.length - 1; index >= 0; index--) {
+    const one = fallen[index]!
+    one.age += seconds
+    if (one.age >= spec.seconds) {
+      services.host.actors.remove(one.root)
+      one.body.dispose()
+      fallen.splice(index, 1)
+      continue
+    }
+    const t = one.age / spec.seconds
+    // Quick at first, settling: knocked down, not lying down.
+    const down = 1 - (1 - t) * (1 - t)
+    one.pivot.scale.set(1 + 0.3 * down, 1 - (1 - spec.flat) * down, 1 + 0.3 * down)
+    // Tipped over her feet, her top away from where she faced.
+    leanAxis.set(-one.facing.y, 0, one.facing.x)
+    one.pivot.quaternion.setFromAxisAngle(leanAxis, spec.lean * down)
+    one.body.animate({ x: one.root.position.x, y: one.root.position.z }, one.facing, 0, true)
+    one.body.express?.(1, view.spirit.shut)
+    one.body.aura?.(1 - down)
+    one.body.paint(0xffffff, view.hitFlash, Math.max(0, 0.8 - t * 3), Math.min(1, (1 - t) / spec.fade))
+  }
+})
 
 export const UpdateFx = Game.System("Shooter/UpdateFx", {
   queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) }, with: [Player] }) },

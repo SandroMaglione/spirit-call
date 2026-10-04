@@ -1,4 +1,4 @@
-"""The wind spirit: a faceted, near-white ball with dark eyes, two leaves on top, a curling tendril on each side, and two leaves hanging under it.
+"""The wind spirit: a faceted, pale mint ball with dark eyes, two leaves on top, a curling tendril on each side, and two leaves hanging under it.
 
 Everything comes from its production sheet (reference/), measured by
 sheet.py into sheet.json:
@@ -10,18 +10,22 @@ sheet.py into sheet.json:
   right view is drawn as its mirror image), as wide as the views draw it
   at each point. Seen from the front it is as wide as the front view, from
   the side as wide as the side view: its blade is turned between the two.
-- Each tendril is a tapering faceted tube along its middle line: across
-  from the front view, front to back from the left view's, height halfway
-  between theirs, matched point by point from base to tip; rooted in the body's side
-  (both views lose it where it crosses the body), thickest there, and
-  narrowing to a point over its last half; a crescent blade, broad in the
-  plane it curls in (as wide as the wider view draws it), thin across it.
+  The leaves under it bend as the views draw their middle lines; where one
+  view loses a bent leaf (its straight line leaves it), the other's widths.
+- Each tendril (curl) is a flat crescent blade along its middle line:
+  across from the front view, front to back from the left view's, height
+  halfway between theirs, matched point by point from base to tip; rooted
+  in the body's side (both views lose it where it crosses the body) and
+  swept from there in one curve; as wide as both views draw it, its blade
+  turned between them and tipped a little face up (toward the game's
+  camera), thin across it, drawn to a sharp point over its last stretch.
 - The eyes are dark ellipses laid on its surface (their own objects,
   `Eye.L` and `Eye.R`, to blink and look later), mirrored: the front view's
   two eyes averaged, about the body's middle.
 - Every part is its own object with its origin at its base, to sway on its
-  own. Colors are the sheet's swatches, one per facet: the body pale aqua
-  to white, the leaves mint to teal.
+  own. Colors are the sheet's swatches, one per facet: the body pale mint
+  (nearly white only toward the light, mint toward its edges and lower
+  facets), the leaves mint to teal.
 
     blender --background --python-exit-code 1 --python art/spirits/wind/build.py
 
@@ -49,11 +53,18 @@ BODY_SEGMENTS = 14
 BODY_RINGS = 9
 JITTER = 0.025
 LEAF_RINGS = (0.1, 0.28, 0.46, 0.64, 0.8, 0.92)  # where a leaf's rings lie, from base to tip
-TUBE_SIDES = 6
-BLADE = 0.75  # a tendril's thickness across the plane it curls in, of its width
-TAPER = 0.5  # a tendril narrows to its point over this share of its length
+CURL_RINGS = 13  # rings along a curl, evenly spaced along its length
+CURL_TURN = 0.9  # how far a curl's blade turns from facing the front view toward facing the side view
+CURL_LIE = 0.5  # how far a curl's blade is tipped from standing toward lying flat, its face up
+CURL_BLADE = 0.32  # a curl's thickness across the plane it curls in, of its width: a flat blade, not a tube
+CURL_ROUND = 3  # how often a curl's line is smoothed into one sweep
+CURL_ROOT = 0.85  # a curl's width where it leaves the body (the views lose it there), of its widest
+CURL_TAPER = 0.4  # a curl is drawn to its sharp point over this last share of its length (before it, as wide as measured)
+BLADE_SHAPE = [(1.0, 0.0), (0.45, 0.8), (-0.45, 0.8), (-1.0, 0.0), (-0.45, -0.8), (0.45, -0.8)]  # a blade's section: two sharp edges
 THICKNESS = 0.3  # a leaf's thickness, of its width
 SINK = 0.12  # how far a leaf's base reaches into the body (share of its radius)
+BODY_PALEST = 0.75  # the body's lightest facets: this far from white to the pale aqua swatch
+BODY_GREENEST = 1.0  # its greenest facets: this far from pale aqua to the mint swatch
 EYE_LIFT = 0.002
 EYE_GROW = 1.0
 
@@ -63,6 +74,8 @@ LIGHT = Vector((-0.45, -0.6, 0.65)).normalized()  # the sheet's key light: upper
 # The body: an ellipsoid round (0, 0, CENTER) with these half extents (m).
 CENTER = (FRONT["body"]["height"] + SIDE["body"]["height"]) / 2 * UNIT + HOVER
 HALF = Vector((FRONT["body"]["half_wide"], SIDE["body"]["half_wide"], (FRONT["body"]["half_tall"] + SIDE["body"]["half_tall"]) / 2)) * UNIT
+# Her eyes, from the sheet's ellipses: the Swordsman is keen (tall, narrow, a slight slant, no lid).
+EYE_SHAPE = {"wide": 0.88, "tall": 1.12, "lid": 2.0, "tilt": 0.14}
 
 
 def at(front_point, side_point):
@@ -97,10 +110,13 @@ def lit(normal):
 
 
 def body_color(poly, rng):
-    """White toward the light, pale aqua, a minty pale aqua away from it (the sheet's body is never grey), each facet a little different."""
-    t = max(0.0, min(1.0, lit(poly.normal) + rng.uniform(-0.08, 0.08)))
-    shade, aqua, white = mix(linear(COLORS["mint"]), linear(COLORS["aqua"]), 0.5), linear(COLORS["aqua"]), linear(COLORS["white"])
-    return mix(shade, aqua, t / 0.45) if t < 0.45 else mix(aqua, white, min(1.0, (t - 0.45) / 0.4))
+    """Pale mint, as the sheet's body: nearly white only on the facets facing the light, pale aqua round them, and mint
+    toward its edges (the facets turned away from the light) and its lower facets; each facet a little different."""
+    green = (1 - lit(poly.normal)) * 1.3 + max(0.0, -poly.normal.z) * 0.35 + rng.uniform(-0.1, 0.1)
+    green = max(0.0, min(1.0, green))
+    white, aqua, mint = linear(COLORS["white"]), linear(COLORS["aqua"]), linear(COLORS["mint"])
+    pale = mix(white, aqua, BODY_PALEST)
+    return mix(pale, aqua, green / 0.4) if green < 0.4 else mix(aqua, mint, (green - 0.4) / 0.6 * BODY_GREENEST)
 
 
 def leaf_color(poly, rng):
@@ -184,8 +200,26 @@ def capped(widths, start, stop):
     return [min(w, top) for w in widths]
 
 
-def leaf(bm, front_leaf, side_leaf, outward):
-    """A crystal blade from base to tip, as wide as each view draws it; its blade turned so each view sees its own width. Returns its base."""
+def whole(widths, other):
+    """A leaf's widths in one view, or the other view's where this one lost it: a bent leaf leaves its straight
+    base-to-tip line, which then measures nothing (a gap in the middle) though the leaf goes on beside it."""
+    gaps = any(w < 0.01 for w in widths[2:-2])
+    return list(other) if gaps and not any(w < 0.01 for w in other[2:-2]) else list(widths)
+
+
+def bends(view_leaf, to_world):
+    """How far a leaf's middle lies off its straight base-to-tip line at each of its samples, as its view draws it (m):
+    nothing at its tip, at its base (where the leaves run into each other and the body), or where the view lost it."""
+    if any(w < 0.01 for w in view_leaf["widths"][2:-2]):
+        return [Vector()] * len(view_leaf["shifts"])
+    shifts = list(view_leaf["shifts"])
+    shifts[:3] = [shifts[3] * i / 3 for i in range(3)]
+    return [to_world(view_leaf["across"]) * (shift * UNIT) for shift in smooth(shifts)]
+
+
+def leaf(bm, front_leaf, side_leaf, outward, bent=False):
+    """A crystal blade from base to tip, as wide as each view draws it; its blade turned so each view sees its own width;
+    `bent` as the views draw its middle line. Returns its base."""
     base = into_body(at(front_leaf["base"], side_leaf["base"]), SINK)
     tip = at(front_leaf["tip"], side_leaf["tip"])
     axis = (tip - base).normalized()
@@ -195,50 +229,96 @@ def leaf(bm, front_leaf, side_leaf, outward):
     # The blade's diagonal: the one whose face looks out toward the front and its own side, as the sheet's leaves do.
     candidates = [(across_front + across_side * s).normalized() for s in (1, -1)]
     blade = max(candidates, key=lambda u: abs(axis.cross(u).dot(facing)))
-    front_widths = smooth(capped(front_leaf["widths"], 0.35, 0.9))
-    side_widths = smooth(capped(side_leaf["widths"], 0.35, 0.9))
-    shape = [(1.0, 0.0), (0.45, 0.8), (-0.45, 0.8), (-1.0, 0.0), (-0.45, -0.8), (0.45, -0.8)]
+    front_widths, side_widths = whole(front_leaf["widths"], side_leaf["widths"]), whole(side_leaf["widths"], front_leaf["widths"])
+    front_widths = smooth(capped(front_widths, 0.35, 0.9))
+    side_widths = smooth(capped(side_widths, 0.35, 0.9))
+    shape = BLADE_SHAPE
     normal = axis.cross(blade).normalized()
     shares = np.linspace(0, 1, len(front_widths))
+    bend = [Vector()] * len(shares)
+    if bent:
+        bend = [a + b for a, b in zip(bends(front_leaf, lambda v: Vector((v[0], 0, v[1]))), bends(side_leaf, lambda v: Vector((0, -v[0], v[1]))))]
     rings = []
     for f in LEAF_RINGS:
         wide = math.hypot(np.interp(f, shares, front_widths), np.interp(f, shares, side_widths)) / 2 * UNIT
         thick = wide * THICKNESS
-        center = base + (tip - base) * f
+        center = base + (tip - base) * f + Vector([np.interp(f, shares, [b[k] for b in bend]) for k in range(3)])
         rings.append([bm.verts.new(center + blade * u * wide + normal * v * thick) for u, v in shape])
     stitch(bm, rings, bm.verts.new(base), bm.verts.new(tip))
     return base
 
 
+def along(points, values, count):
+    """`count` points evenly spaced along the smooth line through `points` (its end left out), each with its value
+    (from `values`, one per point) and how far along it lies (0 to 1)."""
+    dense, carried = [], []
+    padded = [points[0]] + list(points) + [points[-1]]
+    for i in range(len(points) - 1):
+        a, b, c, d = padded[i:i + 4]
+        for step in range(8):
+            u = step / 8
+            dense.append(0.5 * ((2 * b) + (c - a) * u + (2 * a - 5 * b + 4 * c - d) * u * u + (3 * b - a - 3 * c + d) * u ** 3))
+            carried.append(values[i] + (values[i + 1] - values[i]) * u)
+    dense.append(points[-1])
+    carried.append(values[-1])
+    lengths = [0.0]
+    for a, b in zip(dense, dense[1:]):
+        lengths.append(lengths[-1] + (b - a).length)
+    out = []
+    for k in range(count):
+        want = lengths[-1] * k / count
+        i = max(j for j, l in enumerate(lengths) if l <= want)
+        u = (want - lengths[i]) / max(1e-9, lengths[i + 1] - lengths[i])
+        out.append((dense[i].lerp(dense[i + 1], u), carried[i] + (carried[i + 1] - carried[i]) * u, k / count))
+    return out
+
+
 def tendril(bm, front_line, side_line, front_widths, side_widths):
-    """A horn along the middle line (front view across, side view depth, height halfway; point by point), rooted in the body's side. Returns its base."""
+    """A curl: a flat crescent blade along the middle line (front view across, side view depth, height halfway; point
+    by point), rooted in the body's side, widest in its middle, narrowing to a sharp point. Returns its base."""
     points = [at((f[0], (f[1] + s[1]) / 2), s) for f, s in zip(front_line, side_line)]
     # Both views lose its root where it crosses the body: it grows from the body's side, level with its first point.
     side = math.copysign(1, points[0].x)
     root = Vector((side * HALF.x * 0.75, 0, points[0].z))
     base = into_body(root, 0.3)
     points = [base, into_body(root, 0.0)] + points[1:]
-    widths = [max(a, b) for a, b in zip(front_widths, side_widths)]
-    # Thickest at the body (where the views cannot see it), tapering to a point over its last stretch (where it curls,
-    # the views' widths run along it).
-    widths = [max(widths[i:]) for i in range(len(widths))]
-    count = len(points)
-    widths = [widths[0]] + [w * min(1.0, (1 - i / count) / TAPER) for i, w in enumerate(widths)]
-    tip = points[-1] + (points[-1] - points[-2]) * 0.8
-    # A crescent blade, not a tube: broad in the plane it curls in, thin across it.
-    plane = Vector()
-    for a, b, c in zip(points, points[1:], points[2:]):
-        plane += (b - a).cross(c - b)
-    plane.normalize()
+    # One sweep from the body's side to the tip: the corner where it leaves the body for the views' line rounded off.
+    # Its curl toward the tip stays as measured.
+    half = len(points) // 2
+    for _ in range(CURL_ROUND):
+        points = smooth(points[:half + 1]) + points[half + 1:]
+    # As wide as both views draw it at each point (its blade is turned between them, as a leaf's, so each sees its own
+    # width); near the body, where the views cannot see it, nearly as wide as its widest.
+    widths = smooth(smooth([math.hypot(a, b) for a, b in zip(front_widths, side_widths)]))
+    widest = max(widths)
+    crest = widths.index(widest)
+    widths = [max(w, widest * CURL_ROOT) if i <= crest else w for i, w in enumerate(widths)]
+    widths = [widest * CURL_ROOT] + widths
+    tip = points[-1]
+    # Its blade is turned between the two views, as a leaf's: across the line as the front view sees it (the front view
+    # sees its whole width along the crescent), leaning toward across it as the side view does; its face out toward the
+    # front and its own side.
+    facing = Vector((side, -1, 0)).normalized()
+    spine = along(points, widths, CURL_RINGS)
+    centers = [p for p, _, _ in spine]
     rings = []
-    for i, (p, (t, _, _)) in enumerate(zip(points, frames(points))):
-        broad = plane.cross(t).normalized()
+    broad = None
+    for (p, width, share), (t, _, _) in zip(spine, frames(centers + [tip])):
+        across_front, across_side = Vector((0, 1, 0)).cross(t), Vector((1, 0, 0)).cross(t)
+        candidates = [(across_front + across_side * s * CURL_TURN).normalized() for s in (1, -1)]
+        turned = max(candidates, key=lambda u: abs(t.cross(u).dot(facing)))
+        # Its face tipped up a little, toward the game's camera (30° down from every side it turns to).
+        face = t.cross(turned)
+        face = (face if face.dot(facing) >= 0 else -face) + (Vector((0, 0, 1)) - t * t.z) * CURL_LIE
+        turned = face.cross(t).normalized()
+        broad = turned if broad is None or turned.dot(broad) >= 0 else -turned
         thin = t.cross(broad).normalized()
-        radius = widths[i] / 2 * UNIT
-        turn = (i % 2) * math.pi / TUBE_SIDES
-        rings.append([bm.verts.new(p + (broad * math.cos(a) + thin * math.sin(a) * BLADE) * radius)
-                      for a in (turn + 2 * math.pi * k / TUBE_SIDES for k in range(TUBE_SIDES))])
-    stitch(bm, rings, bm.verts.new(base - (points[1] - base).normalized() * widths[0] / 2 * UNIT * 0.5), bm.verts.new(tip))
+        # Narrowing to its point: gently at first, then straight to the tip.
+        narrow = min(1.0, (1 - share) / CURL_TAPER)
+        wide = width / 2 * UNIT * narrow
+        thick = wide * CURL_BLADE
+        rings.append([bm.verts.new(p + broad * u * wide + thin * v * thick) for u, v in BLADE_SHAPE])
+    stitch(bm, rings, bm.verts.new(base - (centers[1] - base).normalized() * widths[0] / 4 * UNIT), bm.verts.new(tip))
     return base
 
 
@@ -267,6 +347,14 @@ def eye_material():
     return m
 
 
+
+def eye_shape(u, v, tall, left):
+    """A point of the sheet's eye ellipse as this character wears it (`EYE_SHAPE`): wider or taller, its top cut flat by a lid, tilted (its inner end lower)."""
+    u, v = u * EYE_SHAPE["wide"], min(v * EYE_SHAPE["tall"], tall * EYE_SHAPE["lid"])
+    tilt = EYE_SHAPE["tilt"] * (1 if left else -1)
+    return u * math.cos(tilt) - v * math.sin(tilt), u * math.sin(tilt) + v * math.cos(tilt)
+
+
 def eye(tree, sheet_eye, eyes):
     """A dark ellipse snapped onto the body's surface (its own object, origin at the eye's center), as big as the front view draws it."""
     x, z = sheet_eye["offset"] * UNIT, sheet_eye["height"] * UNIT + HOVER
@@ -290,7 +378,7 @@ def eye(tree, sheet_eye, eyes):
     previous = None
     for r in range(1, rings + 1):
         f = r / rings
-        ring = [bm.verts.new(snap(math.cos(t) * width * f, math.sin(t) * tall * f)) for t in (2 * math.pi * k / segments for k in range(segments))]
+        ring = [bm.verts.new(snap(*eye_shape(math.cos(t) * width * f, math.sin(t) * tall * f, tall, x > 0))) for t in (2 * math.pi * k / segments for k in range(segments))]
         for k in range(segments):
             j = (k + 1) % segments
             bm.faces.new((middle, ring[k], ring[j]) if previous is None else (previous[k], ring[k], ring[j], previous[j]))
@@ -369,7 +457,7 @@ def build():
     # The leaves under it: the bigger and the smaller, matched between the views.
     for name, front_leaf, side_leaf in zip(("LowLeaf.Big", "LowLeaf.Small"), FRONT["lower_leaves"], SIDE["lower_leaves"]):
         outward = 1 if front_leaf["tip"][0] > 0 else -1
-        part(name, lambda bm, f=front_leaf, s=side_leaf, o=outward: leaf(bm, f, s, o), rng, wind, body)
+        part(name, lambda bm, f=front_leaf, s=side_leaf, o=outward: leaf(bm, f, s, o, bent=True), rng, wind, body)
     # The tendrils: the front view's (its right first), sweeping back as the side view's.
     side_tendril = SIDE["tendrils"][0]
     for name, front_tendril in zip(("Tendril.R", "Tendril.L"), FRONT["tendrils"]):

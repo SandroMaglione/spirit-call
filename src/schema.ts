@@ -641,6 +641,8 @@ export const Action = Descriptor.Event<
   | { readonly kind: "charging" | "charged" | "dash"; readonly at: Vec2 }
   /** `character` came onto the field (`fell`: because the last one fell). */
   | { readonly kind: "switch"; readonly at: Vec2; readonly character: CharacterId; readonly fell: boolean }
+  /** `character` fell at `at`, facing `facing` (the next one, if any, comes in at once: a `switch` follows). */
+  | { readonly kind: "fall"; readonly at: Vec2; readonly character: CharacterId; readonly facing: Vec2 }
 >()("Shooter/Action")
 export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly wall: boolean; readonly shielded: boolean }>()("Shooter/Impact")
 

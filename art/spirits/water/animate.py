@@ -14,9 +14,19 @@ loop's end, see `closeLoop`).
 """
 import math
 
+import sys
+from pathlib import Path
+
 import bpy
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import moves  # noqa: E402
+
 FPS = 30
+# How far behind the body's tip the nub rests while it stands (m).
+NUB_BACK = 0.04
+# The Tidecaller throws: she winds far round and snaps through, turning with her big throws.
+STYLE = {"lunge": 0.05, "back": 0.03, "twist": 0.7, "roll": 0.16, "hop": 0.01, "spin": True, "cast": 0.12}
 
 
 def wave(t, phase=0.0):
@@ -41,9 +51,12 @@ def idle(t, base):
         },
         "Nub": {
             # A slow circle and a bob a quarter-loop behind the body's.
-            "location": (nub[0] + 0.013 * math.cos(2 * math.pi * t), nub[1] + 0.013 * math.sin(2 * math.pi * t), nub[2] + 0.018 * wave(t, -1.6)),
+            # It rests a little behind the tip (`NUB_BACK`), so from any side it says which way she faces.
+            "location": (nub[0] + 0.013 * math.cos(2 * math.pi * t), nub[1] + NUB_BACK + 0.013 * math.sin(2 * math.pi * t), nub[2] + 0.018 * wave(t, -1.6)),
             "rotation_euler": (0.3 * wave(t), 0.2 * wave(t, 1), 2 * math.pi * t),
         },
+        # Its tail wags slowly about its root, lifting a little with the bob.
+        "Tail": {"rotation_euler": (0.08 * wave(t, 0.5), 0, 0.28 * wave(t, 2.4))},
         "Eye.L": {"scale": eye_scale},
         "Eye.R": {"scale": eye_scale},
     }
@@ -66,6 +79,8 @@ def run(t, base):
             "location": (nub[0], nub[1] + 0.035, nub[2] - 0.02 + 0.03 * abs(math.sin(math.pi * t - 0.9))),
             "rotation_euler": (-0.4, 0, 2 * math.pi * t),
         },
+        # Its tail streams out flat behind it, flicking with each hop.
+        "Tail": {"rotation_euler": (-0.3 + 0.12 * hop, 0, 0.2 * math.sin(2 * math.pi * t))},
         "Eye.L": {"scale": (1, 1, 1)},
         "Eye.R": {"scale": (1, 1, 1)},
     }
@@ -76,7 +91,7 @@ CLIPS = {"Idle": (idle, 60), "Run": (run, 16)}
 
 def add_clips():
     """Keys every clip on the spirit's objects as NLA tracks; returns each clip's timing for the game."""
-    objects = {name: bpy.data.objects[name] for name in ("WaterSpirit", "Nub", "Eye.L", "Eye.R")}
+    objects = {name: bpy.data.objects[name] for name in ("WaterSpirit", "Nub", "Tail", "Eye.L", "Eye.R")}
     base = {name: {"location": tuple(o.location), "rotation_euler": tuple(o.rotation_euler), "scale": tuple(o.scale)} for name, o in objects.items()}
     timing = {}
     for clip, (pose, frames) in CLIPS.items():
@@ -96,7 +111,8 @@ def add_clips():
             track.mute = True
             obj.animation_data.action = None
         timing[clip] = {"lastKeySeconds": (frames - 1) / FPS, "loopSeconds": frames / FPS}
-    # Back to rest.
+    # Its combat clips (shared by every spirit: tools/moves.py).
+    timing.update(moves.add(bpy, objects, base, "WaterSpirit", STYLE))
     for name, obj in objects.items():
         for prop, value in base[name].items():
             setattr(obj, prop, value)

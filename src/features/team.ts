@@ -207,6 +207,7 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   // The body leaves the one on the field (the same components any body has), and her attack is interrupted.
   const outgoing = field.data.member.get()
   for (const [component] of fieldParts(tuning, outgoing, at, carried)) commands.remove(field.entity.id, component)
+  if (fell) events.action.emit({ kind: "fall", at, character: outgoing.character, facing: carried.facing })
   if (incoming === undefined) return
   commands.insert(field.entity.id, [Weapon, initialWeapon({ attack: field.data.weapon.get().attack })])
   commands.insert(incoming.entity, ...fieldParts(tuning, incoming, at, carried))

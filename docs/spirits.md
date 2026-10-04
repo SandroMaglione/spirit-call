@@ -1,7 +1,7 @@
 # Spirits
 
 In the arena each character shows as her **spirit**: a small, faceted,
-low-poly creature of her element (the water, fire, and wind spirits). Her
+low-poly creature of her element (water, fire, wind, or thunder). Her
 illustrations, story, and portrait live in the menus; the spirit is what
 moves, fights, and is hit. This records how a spirit goes from a character
 sheet to the game, and the principles that made it work, so the next one is
@@ -38,7 +38,11 @@ a repeat of the same steps. The rules for model files in general are in
    the eye's outward direction: it reads as drawn on from every side (a
    projected texture smears across side facets; a separate solid sinks in
    or sticks out). Named `Eye.L` and `Eye.R`, origin at the eye's center:
-   blinking is scaling, looking around is moving.
+   blinking is scaling, looking around is moving. Their shape is the
+   character's (`EYE_SHAPE` in `build.py`, over the sheet's ellipses:
+   wider, lidded, slanted): two characters of one mood should not look
+   alike. The game holds them wide or shut at moments of the fight
+   (`eyes` in her look).
 7. **Floating parts are their own objects** (the water spirit's nub, the
    fire spirit's shards), so they bob, sway, and trail on their own.
 8. **Faceted color is per facet, glow is the game's.** Each facet gets one
@@ -47,10 +51,40 @@ a repeat of the same steps. The rules for model files in general are in
    cannot travel in glTF: the game draws it (`glow.ts`, a `GlowSpec` per
    model), and the export keeps only a flat emission.
 9. **Animate objects, not bones.** A spirit has no skeleton: its clips
-   (`Idle`, `Run`) key the body's location, rotation, and scale and its
-   parts' (`animate.py`), one muted NLA track per object, exported together.
-   Loops leave out their closing key, as every model's do.
-10. **Model first, then the game.** Each spirit is built and reviewed as a
+   key the body's location, rotation, and scale and its parts'
+   (`animate.py`), one muted NLA track per object, exported together.
+   Loops (`Idle`, `Run`) leave out their closing key, as every model's do.
+   Its combat clips (a combo's blows, the charged move, the dash, a hit
+   taken, the special, the ultimate) are the same for every spirit
+   (`tools/moves.py`), shaped by a `STYLE` in its `animate.py`: how its
+   character strikes (a lunge for a blade, a kick back for a gun). A blow
+   may wind up (its `contact` pose is timed to the simulation's blow), but
+   a skill takes effect the moment it is cast: its clip leaves the ground
+   by its second frame, with no crouch first, or the leap comes after the
+   effect.
+10. **The body says how she is.** On a phone the eyes are on the
+    character, not the HUD, so what matters shows on her: her halo pulses
+    brighter while her ultimate is ready and dims as her health runs low,
+    she pops up when she comes onto the field, and her eyes narrow through
+    a blow, go wide after a perfect dodge, and shut when she falls. Her
+    body also leans with her changes of pace (digging in as she stops,
+    into a turn, kicking up dust from full speed), and falling she is left
+    behind for a moment, tipping back and fading, before the next one pops
+    up (`view.spirit`, `DrawPlayer`, `PlayFalls`). All of it is the
+    presentation's: the simulation switches at once, as before. A new spirit gets all of this from its
+    halo (`GlowSpec`) and its look's `eyes`; nothing is built per spirit.
+11. **Its back says which way it faces.** The camera sees the arena from
+    one side, so facing away a spirit shows no eyes. Four things say it
+    anyway, and a new spirit needs them all: something only its back has
+    (Water's tail, Thunder's bolt down its back, Fire's curl, Wind's
+    trailing leaves), floating parts that rest off-center front to back in
+    its `Idle` (Water's nub behind its tip, Thunder's ring tipped down in
+    front), a very few of its trail's particles still leaving its back
+    while it stands (`view.spirit.standing`: small, slow, and rising, never
+    falling at its feet), and a lean toward its aim when that is
+    away from the camera (`view.spirit.sway.aim`). Check it in the game
+    aiming away, sideways, and toward the camera.
+12. **Model first, then the game.** Each spirit is built and reviewed as a
     model against its sheet (overlays, renders from the game's camera, at
     game size) before it gets clips, glow, a trail, and its look.
 
@@ -73,8 +107,7 @@ a repeat of the same steps. The rules for model files in general are in
 ## Steps for a new spirit
 
 From the repository root, with Blender 4.5 LTS and `uv`; `<spirit>` is its
-folder under `art/spirits/` (the water, fire, and wind spirits are the examples
-to copy).
+folder under `art/spirits/`. Choose the closest example below.
 
 1. **Reference.** Put the sheet in `<spirit>/reference/sheet.png` and crop
    its views into `front.png`, `back.png`, `left.png`, `right.png`,
@@ -109,7 +142,8 @@ to copy).
    beside the model, and the game's camera) with the designer; iterate on
    `build.py` until they agree.
 6. **Animate and export.** Write `<spirit>/animate.py` (an `Idle` of 60
-   frames and a `Run` of 16, at 30 fps; see the examples) and
+   frames and a `Run` of 16, at 30 fps, and its `STYLE` for the shared
+   combat clips; see the examples) and
    `<spirit>/export.py`, which writes `<spirit>-spirit.glb` and
    `src/presentation/assets/<spirit>-spirit.ts` (its spec: file, height,
    clips' timing). For a compact spirit, measure `height` from the ground
@@ -122,7 +156,8 @@ to copy).
      (`models.ts`) with its `GlowSpec` (rim, optional core, halo, eye
      glows: the eye nodes by their Blender names);
    - give its character a look in `looks.ts`: `kind: "model"`, its model,
-     `moments: { idle: "Idle", run: { clip: "Run", distance } }`, and its
+     `moments: spiritMoments(...)` (her combo's length, her special, her
+     ultimate), her `eyes`, and its
      trail (`drops`, by `kind`: water drops falling and rippling, `"ember"`
      drifting up and burning out, or `"wisp"` curling away and fading);
    - compare the loaded model with Water and Fire on one ground line,
@@ -131,8 +166,73 @@ to copy).
      equal sheet dimensions or equal look factors do not guarantee equal
      arena size. Exclude runtime glow sprites from measured bounds;
    - `pnpm check`, then play it on the network address (desktop and a
-     phone-sized screen with touch) and record it moving and switching
-     to an existing character. Keep that size comparison with the review.
+     phone-sized screen with touch) and record it moving, striking
+     (every blow of its combo, the charged move, the dash, its special and
+     ultimate), and switching to an existing character. Keep that size
+     comparison with the review. Check the address the dev server prints:
+     when its port is taken (another session's server) it starts on the
+     next one, and the old address shows someone else's branch.
+
+## References to start from
+
+Read `vision.md`, `models.md`, and this guide before changing a character.
+Then read the chosen spirit's README and inspect its sheet, current GLB,
+and gameplay look. A sheet establishes its shape; the current game also
+includes deliberate changes for personality and readable facing.
+
+| Character | Source and review notes | What to copy |
+| --- | --- | --- |
+| Tidecaller, water | [Water](../art/spirits/water/README.md) | Measured loft, glowing surface eyes, winding throws, tail fin and offset nub for rear facing |
+| Gunner, fire | [Fire](../art/spirits/fire/README.md) | Flame and separate shards, dark slanted eyes, recoil on shots, warm core and ember trail |
+| Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
+| Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
+
+Each folder keeps `reference/sheet.png`, cropped views, measurements,
+`build.py`, an editable `.blend`, `animate.py`, `export.py`, and its GLB.
+`renders/` contains model comparisons and, where recorded, gameplay and
+scale reviews. Those images and videos document the pass that produced
+them. They do not automatically update when the model or game changes;
+record fresh evidence for the version under review.
+
+The shared combat poses and contact frames are in
+`art/spirits/tools/moves.py`. Each spirit's `animate.py` sets `STYLE`;
+`build.py` sets `EYE_SHAPE`. Runtime wiring is in
+`src/presentation/assets/spirits.ts`, `models.ts`, and `looks.ts`.
+`puppet.ts` blends object animation and owns each copy's halo material;
+`actors.ts` applies eyes, aura, entrance, and movement sway;
+`effects.ts` handles falls and trails; `showcase.ts` frames portraits.
+Shared feedback numbers live in `src/config/view.ts` under `spirit`.
+Changing them affects every character, so compare the existing roster too.
+
+## Review before calling a character finished
+
+Start a server from the intended worktree with
+`pnpm dev --host --port 5199 --strictPort` and use its printed network
+address. `--strictPort` fails if another worktree already owns that port;
+choose another port explicitly. For a quiet review use
+`?play&challenge=trainingGround&team=gunner,swordsman,tidecaller`;
+repeat with `team=stormcaller,tidecaller,swordsman` to cover Thunder.
+`&touch` also lets the mouse drive the touch controls. Use actual or
+simulated touch events for the phone check, and record which was used.
+
+| Check | What must read at gameplay size |
+| --- | --- |
+| Shape and facing | Compare full height and central body width with Water and Fire on one ground line. Aim toward, across, and away from the camera, both still and moving. Back details and offset parts must distinguish facing without eyes. |
+| Locomotion | Idle breathes without wandering; run has weight; starting, stopping, and reversing lean and settle without a snap. Stationary particles stay sparse and rise rather than pile up at the feet. |
+| Attacks | Exercise every combo step and charged move, including interrupted chains. Contact poses coincide with hits, the final blow reads stronger, and recoil or lunge suits the character's kit. |
+| Skills and dash | Special and ultimate move as their effects appear, with no late windup. Dash stretches along travel and returns cleanly. Gameplay movement and timing stay in the simulation. |
+| Reactions | Take a hit, perform a perfect dodge, fill ultimate energy, and lower health. Check hurt motion, briefly widened eyes, the ready halo pulse, and low-health dimming. One copy's halo must not alter another's. |
+| Switching and falling | Switch during locomotion and attacks. Let a member fall with a survivor, then let the last member fall. The fallen body shuts its eyes, tips, and fades; the survivor's entrance follows. Check movement and skill input during that entrance, pause/resume, and retry for leftover bodies or effects. |
+| Portraits and touch | The whole spirit and both eyes fit in menu and party portraits. Repeat movement, attacks, skills, dash, and switching at phone size with touch input, with enemies and effects on screen. |
+
+Run `pnpm check` and `pnpm build`. `test/looks.test.ts` verifies clip
+registration, `test/puppet.test.ts` covers animation blending, and
+`test/spirit-assets.test.ts` checks Thunder's scale and exported animation.
+These checks cannot judge silhouette or combat feel; keep the browser
+review with the PR. In the spirit's README record intentional departures
+from the sheet, the scale measurement basis, character style, eye and part
+names, review evidence and its commit, and any unverified cases. A physical
+phone performance check is separate from a phone-sized browser review.
 
 ## Pitfalls met
 
@@ -159,6 +259,23 @@ to copy).
   If future ornaments float far above the body, review an explicit scale
   exception against these references and record its basis. Height alone
   cannot make differently proportioned bodies have equal widths.
+- **A turning part modeled tilted:** Thunder's ring is built tilted; turned
+  about the floor's axis it wobbles like a coin. Turn such a part about its
+  own axis (`HALO_AXIS` in Thunder's `animate.py`).
+- **A ring seen edge-on:** a sheet may draw a floating ring as an open
+  ellipse from the front and from the sides; a real ring cannot be both.
+  Follow the front and the game's camera, give it thickness (a hairline
+  vanishes at game size), and accept the lower side scores.
+- **A clip that never moves an object has no track for it:** the exporter
+  drops constant tracks (the dash keeps the body on the spot), so code and
+  tests must not expect every clip to have every track.
+- **Portraits cropped to the head:** the party list and the menus draw a
+  character's portrait (`showcase.ts`). Cropped to the top of the figure,
+  as for a person, a spirit shows only its crest: its eyes sit low. A
+  portrait shows all of her, nearly facing the camera.
+- **Halos are shared by copies:** a copied model shares its glow sprites'
+  material; a body whose halo changes with its state needs its own
+  (`copyModel` gives a puppet one).
 - **Sheets that disagree:** score every view and report which ones the sheet
   itself contradicts, instead of bending the model to fit all of them.
 - **Parts crossing the body:** a view loses a part's root where the body

@@ -3,6 +3,7 @@ import type { BufferGeometry, Group, Object3D, OrthographicCamera, Scene, WebGLR
 import type { ActionButton, SafeArea } from "../config/input.ts"
 import type { StateId } from "../content/elements.ts"
 import type { ArenaId } from "../content/arena.ts"
+import type { CharacterId } from "../content/characters.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { ProjectileStyle } from "../schema.ts"
 import type { SkillSlot } from "../content/skills.ts"
@@ -194,6 +195,13 @@ export interface FeedbackState {
   punch: number
   /** Seconds left of the protection of a character who came in after a fall (shown around her feet). */
   protection: number
+  /** Seconds since the one on the field came onto it (she pops up), and seconds left of her eyes held wide (a perfect dodge, coming in after a fall). */
+  entrance: number
+  wideEyes: number
+  /** The one coming in after a fall, until her entrance shows (`wait` seconds from now: once the fallen one is down). */
+  stepIn: { readonly at: Vec2; readonly character: CharacterId; wait: number } | null
+  /** How the one on the field leans with her changes of pace (see `view.spirit.sway`): the lean on the floor (radians, toward where its top tips), how fast it changes, and her velocity last frame. */
+  readonly sway: { x: number; y: number; vx: number; vy: number; last: Vec2 | null }
   /** Recoil of recently hit bodies, by entity id: age, duration, the blow's direction on the floor, and strength. */
   readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
   /** The state the one on the field is in, and the most it had left (refreshed by a new hit), so its icon's ring shows what is left. */
@@ -229,6 +237,15 @@ export interface FrameStats {
  *   coordinates (`toScreen`), moving with the camera (health bars, numbers).
  * - `reticle` and `edges` (marks at the screen's edge) are in screen pixels.
  */
+/** A character who just fell, left behind for a moment (see `PlayFalls`): her body on its own pivot, tipping away from `facing`. */
+export interface Fallen {
+  readonly root: Group
+  readonly pivot: Group
+  readonly body: ActorBody
+  readonly facing: Vec2
+  age: number
+}
+
 export interface RenderHostValue {
   readonly renderer: WebGLRenderer
   readonly canvas: HTMLCanvasElement
@@ -260,6 +277,8 @@ export interface RenderHostValue {
   readonly hud: HudRefs
   readonly stats: FrameStats
   readonly feedback: FeedbackState
+  /** Characters who just fell, until they are gone (see `PlayFalls`). */
+  readonly fallen: Array<Fallen>
   /** Lays out the floor (none over `holes`, the hazards laid into it) and scenery of arena `id` (see `SyncArena`); nothing to do when it is already shown. */
   showArena(id: ArenaId, holes: ReadonlyArray<Box>): void
   /** A point `height` world units above the floor point `world`, in canvas pixels, as the camera shows it this frame. */

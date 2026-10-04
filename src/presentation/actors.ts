@@ -3,18 +3,22 @@
  * enemies (hit flash, windup tint, health bars, stars over stunned ones).
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
+import { Vector3 } from "three"
+
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
-import { lerp } from "../math/vec.ts"
-import { Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, Invulnerable, Member, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Weapon } from "../schema.ts"
+import { lerp, normalizeOr } from "../math/vec.ts"
+import { Action, Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/weapons.ts"
 import { mixColor } from "./draw.ts"
+
+const leanAxis = new Vector3()
 
 /** `color` tinted toward the color of `state`, if any. */
 export const stateTint = (color: number, state: ActiveState | null): number =>
@@ -32,20 +36,30 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         flash: Game.Query.read(HitFlash),
         skills: Game.Query.read(Skills),
         energy: Game.Query.read(Energy),
+        health: Game.Query.read(Health),
         weapon: Game.Query.read(Weapon),
         body: Game.Query.read(Body),
         state: Game.Query.read(ElementState),
-        member: Game.Query.read(Member)
+        member: Game.Query.read(Member),
+        velocity: Game.Query.read(Velocity)
       },
       with: [Player]
     })
   },
-  resources: { tuning: Game.System.readResource(Tuning) },
+  events: { action: Game.System.readEvent(Action), perfect: Game.System.readEvent(PerfectDodged) },
+  resources: { tuning: Game.System.readResource(Tuning), hitStop: Game.System.readResource(HitStop) },
   services: { nodes: Game.System.service(RenderNodes), host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
-}, ({ queries, resources, services }) => {
+}, ({ events, queries, resources, services }) => {
   const marks = services.host.groundMarks
   marks.clear()
   const tuning = resources.tuning.get()
+  // A character comes in: she pops up, once the one who fell is down, wide-eyed (she did not choose the moment); a perfect dodge widens her eyes too.
+  for (const action of events.action.all()) {
+    if (action.kind !== "switch") continue
+    services.host.feedback.entrance = action.fell ? -view.spirit.fall.seconds : 0
+    if (action.fell) services.host.feedback.wideEyes = view.spirit.wideSeconds + view.spirit.fall.seconds
+  }
+  if (events.perfect.all().length > 0) services.host.feedback.wideEyes = view.spirit.wideSeconds
   for (const { entity, data } of queries.player.each()) {
     const position = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
     const dash = data.dash.get()
@@ -129,6 +143,65 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : view.charge.full,
         flashing ? 1 : dash.remaining > 0 ? 0.65 : glow,
         data.invulnerable.get().remaining > 0 ? 0.55 : 1)
+      // Her body says how she is: its halo bright and pulsing while her ultimate is ready, dimming as her health runs low.
+      const spirit = view.spirit
+      const feedback = services.host.feedback
+      const ultimate = skills.ultimate
+      const ready = skillRecharge(tuning.skills[ultimate.skill], ultimate.cooldown, energy) <= 0
+      const health = data.health.get()
+      const left = health.max > 0 ? health.current / health.max : 1
+      const dim = spirit.low + (1 - spirit.low) * Math.min(1, left / spirit.lowHealth)
+      const beat = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * spirit.pulseHz * Math.PI * 2)
+      node.body.aura?.(dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
+      // Her eyes: shut once she has fallen, wide for a moment after a perfect dodge or coming in after a fall.
+      const wide = 1 + (spirit.wide - 1) * Math.min(1, feedback.wideEyes / (spirit.wideSeconds * 0.5))
+      if (health.current <= 0) node.body.express?.(1, spirit.shut)
+      else node.body.express?.(wide, wide)
+      // Her body leans with her changes of pace, sprung: digging in as she stops, into a turn, forward as she sets off.
+      const sway = feedback.sway
+      const springs = spirit.sway
+      const velocity = data.velocity.get()
+      const seconds = resources.hitStop.get().remaining > 0 ? 0 : Math.min(services.clock.frameSeconds, 0.05)
+      if (sway.last !== null && seconds > 0) {
+        const pace = tuning.characters[data.member.get().character].stats.speed
+        // A dash's burst counts as no more than a run's.
+        const change = { x: velocity.x - sway.last.x, y: velocity.y - sway.last.y }
+        const size = Math.hypot(change.x, change.y)
+        const most = size > pace ? pace / size : 1
+        sway.vx += change.x * most * springs.kick
+        sway.vy += change.y * most * springs.kick
+        // A stop or a turn back at full pace kicks up dust behind her.
+        if (size * most > pace * springs.dust && dash.remaining <= 0) {
+          const from = toScreen(projection, position)
+          for (let puff = 0; puff < 3; puff++) services.host.fx.dust(from, normalizeOr(toScreen(projection, { x: -change.x, y: -change.y }), { x: 0, y: -1 }), view.impact.dust)
+        }
+      }
+      if (seconds > 0) {
+        sway.vx += (-springs.stiffness * sway.x - springs.damping * sway.vx) * seconds
+        sway.vy += (-springs.stiffness * sway.y - springs.damping * sway.vy) * seconds
+        sway.x += sway.vx * seconds
+        sway.y += sway.vy * seconds
+        sway.last = { x: velocity.x, y: velocity.y }
+      }
+      // Standing, she leans toward where she aims (seen from behind, her body still says where that is); a run leans on its own.
+      const pace = tuning.characters[data.member.get().character].stats.speed
+      // Less the more she faces the camera: there her eyes say it, and leaning would tip them out of sight.
+      const onScreen = normalizeOr(toScreen(projection, aim), { x: 0, y: -1 })
+      const still = Math.max(0, 1 - Math.hypot(velocity.x, velocity.y) / (pace * 0.5)) * (0.5 - 0.5 * onScreen.y)
+      const tilt = { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
+      const lean = Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
+      if (lean > 1e-4) {
+        // Tipped over her feet, her top toward the lean: about the floor axis across it.
+        leanAxis.set(tilt.y, 0, -tilt.x).normalize()
+        node.pivot.quaternion.setFromAxisAngle(leanAxis, lean)
+      } else node.pivot.quaternion.identity()
+      // Only a change of pace squashes her, not her aim.
+      const squash = Math.min(springs.most, Math.hypot(sway.x, sway.y)) * springs.squash
+      // Coming onto the field she pops up to her size, a little past it (not before the one who fell is down).
+      const pop = Math.min(1, feedback.entrance / spirit.popSeconds)
+      const size = pop < 0 ? 0 : pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))
+      const stretch = pop < 0 || pop >= 1 ? 1 : 1 + 0.25 * Math.sin(pop * Math.PI)
+      node.pivot.scale.set(size * (1 + squash * 0.5), size * stretch * (1 - squash), size * (1 + squash * 0.5))
     }
   }
 })

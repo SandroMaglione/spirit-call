@@ -92,6 +92,8 @@ export type BodyLook =
       readonly heightFactor: number
       readonly moments?: Moments
       readonly held?: Held
+      /** Its eye nodes (and what blinks with them), by their Blender names: held wide or narrow at moments of the fight (see `DrawPlayer`). */
+      readonly eyes?: ReadonlyArray<string>
       /** Drops shed behind it while it moves (a water spirit's trail; see `ShedSpiritDrops`). */
       readonly drops?: Drops
     }
@@ -100,15 +102,31 @@ export type BodyLook =
  * In the arena each character shows as her spirit (art/spirits/). The
  * Swordsman is wind, Gunner is fire, Tidecaller is water, and Stormcaller
  * is thunder.
- * Their idle and movement clips follow the body; moves without clips
- * play over those loops.
+ * Their idle and movement clips follow the body; every spirit has the
+ * same combat clips (art/spirits/tools/moves.py), each in its character's
+ * style: a combo's blows (the last one bigger), the charged move, the
+ * dash, a hit taken, and her special and ultimate.
  */
+const spiritMoments = (blows: number, special: SkillId, ultimate: SkillId): Moments => ({
+  idle: "Idle",
+  run: { clip: "Run", distance: 120 },
+  // Her combo's blows, one way then the other, the last one bigger. Each blow's pose lands with the simulation's blow (`contact`: its frame in moves.py's `CONTACT`, at 30 a second).
+  attack: Array.from({ length: blows }, (_, blow) => blow === blows - 1 ? { clip: "AttackC", contact: 6 / 30 } : { clip: blow % 2 === 0 ? "AttackA" : "AttackB", contact: 4 / 30 }),
+  power: { clip: "Power", contact: 6 / 30 },
+  dash: "Dash",
+  hurt: "Hurt",
+  skills: { [special]: "Cast", [ultimate]: "Ultimate" }
+})
+
+const spiritEyes = ["Eye.L", "Eye.R"]
+
 const waterSpirit: BodyLook = {
   kind: "model",
   model: "waterSpirit",
   widthFactor: 1.5,
   heightFactor: view.bodyHeightFactor,
-  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  moments: spiritMoments(3, "tidalWave", "tide"),
+  eyes: spiritEyes,
   drops: { rate: 30, colors: [0x8eebff, 0x44b6ff, 0xe0f9ff], size: 2.4 }
 }
 
@@ -118,7 +136,8 @@ const fireSpirit: BodyLook = {
   model: "fireSpirit",
   widthFactor: 1.5,
   heightFactor: view.bodyHeightFactor,
-  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  moments: spiritMoments(3, "flareJump", "barrage"),
+  eyes: spiritEyes,
   drops: { rate: 34, colors: [0xffd54a, 0xff8a3d, 0xe6391f, 0xfff176], size: 2.6, kind: "ember" }
 }
 
@@ -128,7 +147,8 @@ const windSpirit: BodyLook = {
   model: "windSpirit",
   widthFactor: 1.5,
   heightFactor: view.bodyHeightFactor,
-  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  moments: spiritMoments(4, "bladeWave", "cyclone"),
+  eyes: spiritEyes,
   drops: { rate: 30, colors: [0x8ee3c1, 0x4cc7a7, 0xbfefdf, 0xffffff], size: 2.2, kind: "wisp" }
 }
 
@@ -138,7 +158,8 @@ const thunderSpirit: BodyLook = {
   model: "thunderSpirit",
   widthFactor: 1.5,
   heightFactor: view.bodyHeightFactor,
-  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  moments: spiritMoments(3, "sparkTotem", "thunderclap"),
+  eyes: [...spiritEyes, "Rim.L", "Rim.R"],
   drops: { rate: 26, colors: [0xffe66d, 0xc9b8ff, 0x7a6bff], size: 1.8, kind: "ember" }
 }
 
