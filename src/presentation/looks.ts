@@ -170,8 +170,10 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   warden: enemyCapsule("warden"),
   stalker: enemyCapsule("stalker"),
   volatile: enemyCapsule("volatile"),
-  galeCaster: enemyCapsule("galeCaster"),
-  juggernaut: enemyCapsule("juggernaut"),
+  galeCaster: enemyModel("galeCaster", "enemyGaleCaster", 70),
+  juggernaut: enemyModel("juggernaut", "enemyJuggernaut", 60, {
+    quake: { windup: "WindupQuake", active: "ActiveQuake", recovery: "RecoveryQuake" }
+  }),
   sparringDummy: enemyCapsule("sparringDummy"),
   heavyDummy: enemyCapsule("heavyDummy")
 }

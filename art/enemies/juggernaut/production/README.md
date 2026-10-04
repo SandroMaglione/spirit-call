@@ -1,6 +1,6 @@
 # Juggernaut model review
 
-Static model of the attached sheet for a design iteration before rigging.
+Approved simplified model of the attached sheet, with an animated game copy.
 The hunched back, small helmet, angular yellow eyes, broad gold-bordered
 shoulders, heavy gauntlets, segmented knuckles and short legs are editable
 named parts. Fine cracks, individual fingers, toes and layered armor seams
@@ -8,8 +8,9 @@ are simplified to keep the enemy within its triangle budget.
 
 `juggernaut-model.blend` is the source. `juggernaut-model.glb` is a static
 review export with 1,995 triangles and one vertex-color material. It has no
-armature or clips and is not registered in the game. Parts remain separate
-for design edits; joining and skinning belong to the later animation step.
+armature or clips. Its separate parts remain available for design edits.
+The game uses `animated/juggernaut.glb`, rigged from that approved source
+without changing its vertices or facet colors. See [the integration report](../../gale-juggernaut-integration.md).
 
 The original attachment and seven view crops are in `reference/`.
 `spirit.json` labels the touching parts, and `sheet.json` records their row
@@ -21,8 +22,8 @@ connections join the measured shells without adding surface detail.
 The sheet's size 32 is a game size, not meters. This source uses a nominal
 1.4-meter scale, measured from ground to the highest rest-pose vertex.
 `audit.json` and `verification.json` record the actual height, bounds,
-triangle count and export hash. Future game integration must use the
-existing enemy's scale rather than treating 32 as a model dimension.
+triangle count and export hash. Integration uses the existing enemy's
+gameplay scale rather than treating 32 as a model dimension.
 
 Review `renders/compare.png`, `renders/overlay-all.png`, `renders/game.png`
 and `renders/review-game-size.png`. The phone study contains a native
@@ -31,8 +32,8 @@ is selected by a scored sweep; the game render is 30 degrees above ground.
 
 The model remains below the spirits pipeline's 90% silhouette target.
 The shoulder/back mass, leg stance and hand pose still differ from the
-sheet, especially in the hero view. This is an unapproved simplified model
-for iteration, not a claim of an exact match. The sheet also varies the
+sheet, especially in the hero view. The user approved this simplified shape
+and its revised symmetric face before game integration. The sheet also varies the
 back peak and near/far arm positions between views; orthographic contours
 take priority over the more crouched hero pose. The gold gauntlet borders
 are broad colored facets rather than extra raised strips.

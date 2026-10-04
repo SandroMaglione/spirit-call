@@ -21,6 +21,16 @@ describe("enemy animation sampling", () => {
     expect(enemyPose(spray, "recovery", 0, look.attackClips?.spray)).toEqual({ clip: "RecoverySpray", progress: 0 })
     expect(enemyPose(spray, "ready", 0, look.attackClips?.spray)).toBeNull()
   })
+  it("keeps the Juggernaut's quake distinct from its sweep over the simulation phases", () => {
+    const look = enemyLooks.juggernaut
+    if (look.kind !== "model") throw new Error("Juggernaut needs its model")
+    const quake = enemies.juggernaut.attacks.find((attack) => attack.id === "quake")!
+    const sweep = enemies.juggernaut.attacks.find((attack) => attack.id === "sweep")!
+    expect(enemyPose(quake, "windup", quake.windup / 2, look.attackClips?.quake)).toEqual({ clip: "WindupQuake", progress: .5 })
+    expect(enemyPose(quake, "active", quake.active / 2, look.attackClips?.quake)).toEqual({ clip: "ActiveQuake", progress: .5 })
+    expect(enemyPose(quake, "recovery", quake.recovery / 2, look.attackClips?.quake)).toEqual({ clip: "RecoveryQuake", progress: .5 })
+    expect(enemyPose(sweep, "windup", sweep.windup / 2, look.attackClips?.sweep)).toEqual({ clip: "Windup", progress: .5 })
+  })
   it("wraps reversed locomotion and closes the last interval without skipping a pose", () => {
     const clip = { offset: 10, frames: 31, seconds: 1, loop: true }
     expect(atlasFrame(clip, -.1)[0]).toBe(37)

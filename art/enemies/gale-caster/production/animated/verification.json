@@ -1,0 +1,35 @@
+{
+  "sha256": "430edd0a6ca29a3a03edfcdc21bf168530d3b7d571a14e5f6cd49fb4f0c45d7f",
+  "triangles": 1950,
+  "bones": 9,
+  "materials": 1,
+  "meshes": 1,
+  "root_motion": false,
+  "approved_rest_bounds_preserved": true,
+  "round_trip_bounds_error_m": {
+    "Idle": 2.384185791015625e-07,
+    "Run": 2.384185791015625e-07,
+    "Windup": 2.384185791015625e-07,
+    "Active": 1.1920928955078125e-07,
+    "Recovery": 1.1920928955078125e-07,
+    "Hurt": 1.1920928955078125e-07,
+    "Death": 1.1920928955078125e-07,
+    "Spawn": 5.960464477539063e-08
+  },
+  "contact_pose_errors": {
+    "windup_active": 0.0,
+    "active_recovery": 0.0,
+    "recovery_idle": 0.0
+  },
+  "minimum_ground_m": {
+    "Idle": 0.0,
+    "Run": -0.0004068613052368164,
+    "Windup": 0.0,
+    "Active": 0.0447210967540741,
+    "Recovery": 0.0,
+    "Hurt": 0.0,
+    "Death": 0.0,
+    "Spawn": 0.0
+  },
+  "result": "passed"
+}
