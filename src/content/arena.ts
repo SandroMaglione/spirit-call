@@ -133,23 +133,18 @@ export const arenas = {
       { element: "water", column: 8, row: 8, columns: 2, rows: 2, walled: { y: "south", x: "east" } }
     ],
     props: [
-      // The waterworks on the north wall, the same on both sides of the outlet; pipes down the west wall, buttresses down the east.
-      prop(900, 24, 106, 48),
-      prop(200, 37, 100, 74),
-      prop(1600, 37, 100, 74),
-      prop(520, 13, 42, 26),
-      prop(1280, 13, 42, 26),
-      prop(15, 640, 30, 102),
-      prop(15, 1160, 30, 102),
-      prop(1768, 640, 64, 58),
-      prop(1768, 1160, 64, 58),
-      // Urns left where they were last filled.
-      prop(33, 300, 66, 58),
-      prop(34, 1560, 68, 70),
-      prop(1768, 380, 64, 70),
-      prop(600, 1765, 70, 70),
-      prop(667, 1772, 64, 56),
-      prop(1300, 1773, 64, 54)
+      prop(900, 25, 40, 50),
+      prop(340, 13, 42, 26),
+      prop(1460, 13, 42, 26),
+      prop(600, 13, 28, 26),
+      prop(1200, 13, 28, 26),
+      prop(10, 650, 20, 70),
+      prop(10, 1150, 20, 70),
+      prop(1790, 650, 20, 70),
+      prop(1790, 1150, 20, 70),
+      prop(1785, 1450, 30, 58),
+      prop(450, 1250, 58, 30),
+      prop(1350, 400, 42, 26)
     ]
   }),
   /** Fire trenches north and south of the middle: pull a pack in with wind, or keep out of them. */

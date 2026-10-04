@@ -365,16 +365,12 @@ export const courtyardArena: ArenaLook = {
   ]
 }
 
-/**
- * The flooded cistern (`art/environment/flooded-cistern`): pale flagstones
- * with a drain here and there, its waterworks along the north wall, pipes
- * and buttresses down the sides, urns left about (the water is the game's:
- * its basins are hazards, see `content/arena.ts`).
- */
+/** The basins and low walls keep their water tactics. Compact machinery and repair benches provide cover; pump banks, valves and a settling tank fill the exterior service yard. */
 export const cisternArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorCracked", "cisternFloorGrate"],
     color: 0x1f2a2c,
     border: ["cisternFloorWorn"],
@@ -396,23 +392,39 @@ export const cisternArena: ArenaLook = {
     sorted: { kind: "pillar", models: ["cisternPillarLarge", "cisternPillarSmall"] },
     inner: { kind: "run", model: "cisternWallLow" }
   },
-  scenery: [],
+  scenery: [
+    { model: "cisternStudyPumpBank", at: { x: 380, y: -135 }, turn: 0 },
+    { model: "cisternStudyValveManifold", at: { x: 900, y: -125 }, turn: 0 },
+    { model: "cisternStudyRepairCanopy", at: { x: 1440, y: -155 }, turn: 0 },
+    { model: "cisternStudySettlingTank", at: { x: -145, y: 900 }, turn: 0 },
+    { model: "cisternStudyPipeFitting", at: { x: 260, y: 65 }, turn: 0 },
+    { model: "cisternStudyGasketStack", at: { x: 410, y: 65 }, turn: 0 },
+    { model: "cisternStudyPressureGauge", at: { x: 640, y: 65 }, turn: 0 },
+    { model: "cisternStudyRepairTools", at: { x: 1400, y: 65 }, turn: 0 },
+    { model: "cisternStudyWaterJar", at: { x: 1540, y: 65 }, turn: 0 },
+    { model: "cisternStudyRepairTools", at: { x: 460, y: 1190 }, turn: 0 },
+    { model: "cisternStudyPipeFitting", at: { x: 390, y: 1240 }, turn: 0 },
+    { model: "cisternStudyWaterJar", at: { x: 70, y: 670 }, turn: 0 },
+    { model: "cisternStudyGasketStack", at: { x: 70, y: 1180 }, turn: 0 },
+    { model: "cisternStudyPressureGauge", at: { x: 1350, y: 460 }, turn: 0 },
+    { model: "cisternStudyRepairTools", at: { x: 1350, y: -140 }, turn: 0 },
+    { model: "cisternStudyWaterJar", at: { x: 1550, y: -150 }, turn: 0 },
+    { model: "cisternStudyPipeFitting", at: { x: -90, y: 980 }, turn: 0 },
+    { model: "cisternStudyGasketStack", at: { x: -180, y: 1010 }, turn: 0 }
+  ],
   props: [
-    { model: "cisternPipeOutlet", turn: 0 },
-    { model: "cisternPump", turn: 0 },
-    { model: "cisternPump", turn: 0 },
-    { model: "cisternValve", turn: 0 },
-    { model: "cisternValve", turn: 0 },
-    { model: "cisternPipeStraight", turn: Math.PI / 2 },
-    { model: "cisternPipeStraight", turn: Math.PI / 2 },
-    { model: "cisternButtress", turn: Math.PI / 2 },
-    { model: "cisternButtress", turn: Math.PI / 2 },
-    { model: "cisternUrn", turn: 0.3 },
-    { model: "cisternUrn", turn: 2.2 },
-    { model: "cisternUrn", turn: Math.PI / 2 - 0.47 },
-    { model: "cisternUrn", turn: 0.7 },
-    { model: "cisternUrn", turn: 2.9 },
-    { model: "cisternUrn", turn: 0.2 }
+    { model: "cisternStudyMasonryOutlet", turn: 0 },
+    { model: "cisternStudyHandPump", turn: 0 },
+    { model: "cisternStudyHandPump", turn: 0 },
+    { model: "cisternStudyValveWheel", turn: 0 },
+    { model: "cisternStudyValveWheel", turn: 0 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudyServiceBench", turn: Math.PI / 2 },
+    { model: "cisternStudyServiceBench", turn: 0 },
+    { model: "cisternStudyHandPump", turn: 0 }
   ],
   background: 0x14201f,
   // Basins in the cistern's own grey-green stone, their water a little greener.
