@@ -1,0 +1,118 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "6068007626b4205209cc4c1a132eea30984b6cb27597a44a272ca77fa8e6f276",
+  "assets": [
+    {
+      "id": "bell-tower",
+      "sha256": "6db4af7c8440a50343b61a0e7556310e3f12d9913cb82ed33a4fa4fce390761c",
+      "triangles": 1596,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "cloister-bench",
+      "sha256": "dce5cd831fc069c2c1e32c9e7d28c6823d9fde0406fcc1aab941d7914af0745d",
+      "triangles": 240,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "cloister-gateway",
+      "sha256": "b501583f3258b3c5e9bbd31a59016924fcc2e2bd7aaacc242a75402511b50905",
+      "triangles": 960,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "firewood-rack",
+      "sha256": "5aa16a2c25ea6bdba935afb540c5178ed0672277fcc6425cda96bd7bc8c14bfc",
+      "triangles": 320,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "fitted-lantern",
+      "sha256": "0c0ca1c78628be657c77ffb54f0e9671af644f747cee41d772db2d58c034b7ba",
+      "triangles": 520,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "folded-mat",
+      "sha256": "ecb88638a43af28c3d033c29b9031777b3226062443ea04078f741dbf54e72d4",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "ice-chips",
+      "sha256": "21727a0ee5332774093f288d97bc26f0b602d12291fa361972469aacfcefae2d",
+      "triangles": 96,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "incense-bowl",
+      "sha256": "72dc47e13150b1629f9ab8b9761e14c91ba442420dd78a86ab4a0f66a768fd30",
+      "triangles": 188,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "prayer-banner",
+      "sha256": "afe8fa8cde3fee2c74604ba052936787cbe25625a86aecb2dfaf597352375b58",
+      "triangles": 388,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "prayer-books",
+      "sha256": "388b31836d180dd2cfd1bfa0b6f83e84356e79854dbe39cca1b31bd4cdad6188",
+      "triangles": 540,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "shrine-pavilion",
+      "sha256": "a7070b230f5ca43b41da60c0da85b856693d61038096b388dd589cb3d184a07b",
+      "triangles": 2160,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "small-bell-frame",
+      "sha256": "f343b7e34de9d2c02e082b1c45251508962a3d1d517c33c24ef0c1c31dde98cd",
+      "triangles": 580,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "tea-cup",
+      "sha256": "bf6d56637e22e56b2d948746524ac4db7eba0e3cedb273ce249d19e98c03ef1b",
+      "triangles": 284,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "winter-hearth",
+      "sha256": "5f8055c0c3c5b8d37a88b7e5cf5ee0026dd0f8fe9bee77553ba72b2a4a5b86fe",
+      "triangles": 1176,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

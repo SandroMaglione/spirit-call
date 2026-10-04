@@ -1,0 +1,774 @@
+{
+  "tolerance_m": 0.002,
+  "method": "Closed shell BVH contact graph to ground",
+  "assets": {
+    "tea-cup": {
+      "primitives": 2,
+      "grounded_or_connected": 2,
+      "unsupported": [],
+      "support_links": []
+    },
+    "prayer-books": {
+      "primitives": 9,
+      "grounded_or_connected": 9,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 1,
+          "supported_by": 2
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 5,
+          "supported_by": 3
+        },
+        {
+          "part": 4,
+          "supported_by": 5
+        },
+        {
+          "part": 6,
+          "supported_by": 4
+        },
+        {
+          "part": 8,
+          "supported_by": 6
+        },
+        {
+          "part": 7,
+          "supported_by": 8
+        }
+      ]
+    },
+    "folded-mat": {
+      "primitives": 10,
+      "grounded_or_connected": 10,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 0
+        },
+        {
+          "part": 7,
+          "supported_by": 0
+        },
+        {
+          "part": 9,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 4
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        }
+      ]
+    },
+    "incense-bowl": {
+      "primitives": 5,
+      "grounded_or_connected": 5,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        }
+      ]
+    },
+    "ice-chips": {
+      "primitives": 3,
+      "grounded_or_connected": 3,
+      "unsupported": [],
+      "support_links": []
+    },
+    "cloister-bench": {
+      "primitives": 4,
+      "grounded_or_connected": 4,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        }
+      ]
+    },
+    "small-bell-frame": {
+      "primitives": 10,
+      "grounded_or_connected": 10,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 2
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        },
+        {
+          "part": 9,
+          "supported_by": 4
+        },
+        {
+          "part": 6,
+          "supported_by": 9
+        },
+        {
+          "part": 5,
+          "supported_by": 6
+        },
+        {
+          "part": 7,
+          "supported_by": 6
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        }
+      ]
+    },
+    "fitted-lantern": {
+      "primitives": 10,
+      "grounded_or_connected": 10,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 2
+        },
+        {
+          "part": 4,
+          "supported_by": 2
+        },
+        {
+          "part": 5,
+          "supported_by": 2
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 4
+        },
+        {
+          "part": 9,
+          "supported_by": 8
+        }
+      ]
+    },
+    "prayer-banner": {
+      "primitives": 7,
+      "grounded_or_connected": 7,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 3,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        },
+        {
+          "part": 5,
+          "supported_by": 1
+        },
+        {
+          "part": 6,
+          "supported_by": 1
+        }
+      ]
+    },
+    "firewood-rack": {
+      "primitives": 8,
+      "grounded_or_connected": 8,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 3
+        },
+        {
+          "part": 7,
+          "supported_by": 5
+        }
+      ]
+    },
+    "bell-tower": {
+      "primitives": 36,
+      "grounded_or_connected": 36,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 9,
+          "supported_by": 1
+        },
+        {
+          "part": 10,
+          "supported_by": 1
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 2
+        },
+        {
+          "part": 11,
+          "supported_by": 4
+        },
+        {
+          "part": 13,
+          "supported_by": 4
+        },
+        {
+          "part": 15,
+          "supported_by": 10
+        },
+        {
+          "part": 17,
+          "supported_by": 10
+        },
+        {
+          "part": 12,
+          "supported_by": 11
+        },
+        {
+          "part": 14,
+          "supported_by": 13
+        },
+        {
+          "part": 16,
+          "supported_by": 15
+        },
+        {
+          "part": 18,
+          "supported_by": 17
+        },
+        {
+          "part": 19,
+          "supported_by": 11
+        },
+        {
+          "part": 22,
+          "supported_by": 13
+        },
+        {
+          "part": 20,
+          "supported_by": 19
+        },
+        {
+          "part": 21,
+          "supported_by": 19
+        },
+        {
+          "part": 23,
+          "supported_by": 22
+        },
+        {
+          "part": 24,
+          "supported_by": 22
+        },
+        {
+          "part": 26,
+          "supported_by": 19
+        },
+        {
+          "part": 27,
+          "supported_by": 19
+        },
+        {
+          "part": 28,
+          "supported_by": 19
+        },
+        {
+          "part": 29,
+          "supported_by": 19
+        },
+        {
+          "part": 25,
+          "supported_by": 20
+        },
+        {
+          "part": 35,
+          "supported_by": 26
+        },
+        {
+          "part": 34,
+          "supported_by": 35
+        },
+        {
+          "part": 31,
+          "supported_by": 34
+        },
+        {
+          "part": 30,
+          "supported_by": 31
+        },
+        {
+          "part": 32,
+          "supported_by": 31
+        },
+        {
+          "part": 33,
+          "supported_by": 32
+        }
+      ]
+    },
+    "shrine-pavilion": {
+      "primitives": 48,
+      "grounded_or_connected": 48,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 5,
+          "supported_by": 0
+        },
+        {
+          "part": 11,
+          "supported_by": 1
+        },
+        {
+          "part": 4,
+          "supported_by": 2
+        },
+        {
+          "part": 6,
+          "supported_by": 2
+        },
+        {
+          "part": 7,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 2
+        },
+        {
+          "part": 9,
+          "supported_by": 2
+        },
+        {
+          "part": 10,
+          "supported_by": 2
+        },
+        {
+          "part": 12,
+          "supported_by": 2
+        },
+        {
+          "part": 13,
+          "supported_by": 5
+        },
+        {
+          "part": 15,
+          "supported_by": 5
+        },
+        {
+          "part": 17,
+          "supported_by": 11
+        },
+        {
+          "part": 19,
+          "supported_by": 11
+        },
+        {
+          "part": 14,
+          "supported_by": 13
+        },
+        {
+          "part": 16,
+          "supported_by": 15
+        },
+        {
+          "part": 18,
+          "supported_by": 17
+        },
+        {
+          "part": 20,
+          "supported_by": 19
+        },
+        {
+          "part": 21,
+          "supported_by": 13
+        },
+        {
+          "part": 24,
+          "supported_by": 15
+        },
+        {
+          "part": 32,
+          "supported_by": 6
+        },
+        {
+          "part": 33,
+          "supported_by": 6
+        },
+        {
+          "part": 34,
+          "supported_by": 9
+        },
+        {
+          "part": 35,
+          "supported_by": 9
+        },
+        {
+          "part": 44,
+          "supported_by": 6
+        },
+        {
+          "part": 45,
+          "supported_by": 9
+        },
+        {
+          "part": 22,
+          "supported_by": 21
+        },
+        {
+          "part": 23,
+          "supported_by": 21
+        },
+        {
+          "part": 25,
+          "supported_by": 24
+        },
+        {
+          "part": 26,
+          "supported_by": 24
+        },
+        {
+          "part": 28,
+          "supported_by": 21
+        },
+        {
+          "part": 29,
+          "supported_by": 21
+        },
+        {
+          "part": 30,
+          "supported_by": 21
+        },
+        {
+          "part": 31,
+          "supported_by": 21
+        },
+        {
+          "part": 36,
+          "supported_by": 32
+        },
+        {
+          "part": 37,
+          "supported_by": 32
+        },
+        {
+          "part": 38,
+          "supported_by": 33
+        },
+        {
+          "part": 46,
+          "supported_by": 44
+        },
+        {
+          "part": 47,
+          "supported_by": 44
+        },
+        {
+          "part": 27,
+          "supported_by": 22
+        },
+        {
+          "part": 39,
+          "supported_by": 36
+        },
+        {
+          "part": 40,
+          "supported_by": 36
+        },
+        {
+          "part": 41,
+          "supported_by": 40
+        },
+        {
+          "part": 42,
+          "supported_by": 40
+        },
+        {
+          "part": 43,
+          "supported_by": 40
+        }
+      ]
+    },
+    "cloister-gateway": {
+      "primitives": 16,
+      "grounded_or_connected": 16,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 1
+        },
+        {
+          "part": 7,
+          "supported_by": 6
+        },
+        {
+          "part": 3,
+          "supported_by": 2
+        },
+        {
+          "part": 8,
+          "supported_by": 7
+        },
+        {
+          "part": 14,
+          "supported_by": 2
+        },
+        {
+          "part": 15,
+          "supported_by": 7
+        },
+        {
+          "part": 4,
+          "supported_by": 3
+        },
+        {
+          "part": 9,
+          "supported_by": 8
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 10,
+          "supported_by": 9
+        },
+        {
+          "part": 11,
+          "supported_by": 5
+        },
+        {
+          "part": 12,
+          "supported_by": 11
+        },
+        {
+          "part": 13,
+          "supported_by": 11
+        }
+      ]
+    },
+    "winter-hearth": {
+      "primitives": 22,
+      "grounded_or_connected": 22,
+      "unsupported": [],
+      "support_links": [
+        {
+          "part": 1,
+          "supported_by": 0
+        },
+        {
+          "part": 2,
+          "supported_by": 0
+        },
+        {
+          "part": 3,
+          "supported_by": 0
+        },
+        {
+          "part": 6,
+          "supported_by": 0
+        },
+        {
+          "part": 14,
+          "supported_by": 0
+        },
+        {
+          "part": 4,
+          "supported_by": 1
+        },
+        {
+          "part": 7,
+          "supported_by": 6
+        },
+        {
+          "part": 8,
+          "supported_by": 6
+        },
+        {
+          "part": 15,
+          "supported_by": 14
+        },
+        {
+          "part": 16,
+          "supported_by": 2
+        },
+        {
+          "part": 17,
+          "supported_by": 14
+        },
+        {
+          "part": 18,
+          "supported_by": 14
+        },
+        {
+          "part": 19,
+          "supported_by": 2
+        },
+        {
+          "part": 21,
+          "supported_by": 2
+        },
+        {
+          "part": 5,
+          "supported_by": 4
+        },
+        {
+          "part": 9,
+          "supported_by": 7
+        },
+        {
+          "part": 10,
+          "supported_by": 7
+        },
+        {
+          "part": 11,
+          "supported_by": 7
+        },
+        {
+          "part": 12,
+          "supported_by": 7
+        },
+        {
+          "part": 13,
+          "supported_by": 7
+        },
+        {
+          "part": 20,
+          "supported_by": 17
+        }
+      ]
+    }
+  }
+}

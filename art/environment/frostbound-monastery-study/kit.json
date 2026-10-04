@@ -1,0 +1,133 @@
+{
+  "title": "Frostbound monastery study",
+  "style": "monastery",
+  "batch": "arena-prop-study",
+  "base_kit": "frostbound-monastery",
+  "palette": {
+    "stone": "8795A5",
+    "light": "A8B5BF",
+    "edge": "C9D2D4",
+    "dark": "536776",
+    "accent": "B5A477",
+    "metal": "586A77",
+    "wood": "80766A",
+    "earth": "A69B89",
+    "green": "829993",
+    "warm": "D2B17C",
+    "snow": "DFE7E2",
+    "cloth": "947979",
+    "wood-light": "9C9081",
+    "wood-dark": "5A534A",
+    "metal-light": "B1B8BB",
+    "rope": "BCAA82",
+    "sail": "CDC8B1",
+    "fish": "A8B5BF"
+  },
+  "assets": [
+    {
+      "id": "tea-cup",
+      "title": "Open tea cup",
+      "recipe": "study-tea-cup",
+      "group": "small"
+    },
+    {
+      "id": "prayer-books",
+      "title": "Grounded prayer book stack",
+      "recipe": "study-prayer-books",
+      "group": "small"
+    },
+    {
+      "id": "folded-mat",
+      "title": "Folded and tied prayer mat",
+      "recipe": "study-folded-mat",
+      "group": "small"
+    },
+    {
+      "id": "incense-bowl",
+      "title": "Incense fixed inside a bowl",
+      "recipe": "study-incense-bowl",
+      "group": "small"
+    },
+    {
+      "id": "ice-chips",
+      "title": "Grounded ice fragments",
+      "recipe": "study-ice-chips",
+      "group": "small"
+    },
+    {
+      "id": "cloister-bench",
+      "title": "Low cloister bench",
+      "recipe": "study-cloister-bench",
+      "group": "working"
+    },
+    {
+      "id": "small-bell-frame",
+      "title": "Bell connected to bearing rail",
+      "recipe": "study-small-bell-frame",
+      "group": "working"
+    },
+    {
+      "id": "fitted-lantern",
+      "title": "Stone lantern with roof supports",
+      "recipe": "study-fitted-lantern",
+      "group": "working"
+    },
+    {
+      "id": "prayer-banner",
+      "title": "Prayer cloth fixed to crossbar",
+      "recipe": "study-prayer-banner",
+      "group": "working"
+    },
+    {
+      "id": "firewood-rack",
+      "title": "Logs resting in a grounded rack",
+      "recipe": "study-firewood-rack",
+      "group": "working"
+    },
+    {
+      "id": "bell-tower",
+      "title": "Supported bell tower and attached snow",
+      "recipe": "study-bell-tower",
+      "group": "large"
+    },
+    {
+      "id": "shrine-pavilion",
+      "title": "Snow-roofed shrine pavilion",
+      "recipe": "study-shrine-pavilion",
+      "group": "large"
+    },
+    {
+      "id": "cloister-gateway",
+      "title": "Bonded cloister gate with snow cap",
+      "recipe": "study-cloister-gateway",
+      "group": "large"
+    },
+    {
+      "id": "winter-hearth",
+      "title": "Supported winter hearth and wood store",
+      "recipe": "study-winter-hearth",
+      "group": "large"
+    }
+  ],
+  "player_height_m": 0.5803955393237317,
+  "scope": "Reviewable art study with supported perimeter assemblies.",
+  "changes": [
+    "Reduced benches, lanterns and banners; connected every bell to a visible hanger and bearing rail.",
+    "Added tea cups, prayer books, folded mats, planted incense, grounded ice and stacked firewood.",
+    "Added a snow-roofed bell tower, shrine pavilion, bonded cloister gate and winter hearth outside the grid."
+  ],
+  "comparisons": [
+    {
+      "original": "bell",
+      "study": "small-bell-frame"
+    },
+    {
+      "original": "lantern-post",
+      "study": "fitted-lantern"
+    },
+    {
+      "original": "bench",
+      "study": "cloister-bench"
+    }
+  ]
+}
