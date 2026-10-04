@@ -19,6 +19,7 @@ import { citadelModels } from "./assets/citadel.ts"
 import { harborModels } from "./assets/harbor.ts"
 import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
+import { arenaPropModels } from "./assets/arena-props.ts"
 import { enemyModels } from "./assets/enemies.ts"
 import { fireSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
 import { addGlow } from "./glow.ts"
@@ -37,6 +38,8 @@ export interface ModelSpec {
   readonly height: number | null
   /** Its footprint on the floor (meters, X × Z), for pieces fitted to the arena's walls and floor. */
   readonly footprint?: readonly [number, number]
+  /** Ground-plane bounds center relative to the origin, for scenery with off-center handles or roots. */
+  readonly footprintCenter?: readonly [number, number]
   /** Its animation clips by name; a model without animation has none. */
   readonly clips: Readonly<Record<string, ClipTiming>>
   /** A glow from within (rim, halo, glowing eyes; see `glow.ts`). */
@@ -86,6 +89,7 @@ export const models = {
   ...harborModels,
   ...necropolisModels,
   ...monasteryModels,
+  ...arenaPropModels,
   ...enemyModels
 } as const satisfies Record<string, ModelSpec>
 

@@ -1,0 +1,488 @@
+{
+  "schema_version": 2,
+  "kit": "frostbound-monastery-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/frostbound-monastery-study.blend",
+  "source_sha256": "6068007626b4205209cc4c1a132eea30984b6cb27597a44a272ca77fa8e6f276",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "bell-tower",
+      "file": "models/bell-tower.glb",
+      "bounds_m": {
+        "min": [
+          -0.8370000123977661,
+          0.0,
+          -0.5799999833106995
+        ],
+        "max": [
+          0.8370000123977661,
+          2.055999994277954,
+          0.5799999833106995
+        ]
+      },
+      "dimensions_m": [
+        1.6740000247955322,
+        2.055999994277954,
+        1.159999966621399
+      ],
+      "triangles": 1596,
+      "mesh_count": 1,
+      "bytes": 105288,
+      "sha256": "6db4af7c8440a50343b61a0e7556310e3f12d9913cb82ed33a4fa4fce390761c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Supported bell tower and attached snow"
+    },
+    {
+      "id": "cloister-bench",
+      "file": "models/cloister-bench.glb",
+      "bounds_m": {
+        "min": [
+          -0.550000011920929,
+          0.0,
+          -0.2150000035762787
+        ],
+        "max": [
+          0.550000011920929,
+          0.30000001192092896,
+          0.2150000035762787
+        ]
+      },
+      "dimensions_m": [
+        1.100000023841858,
+        0.30000001192092896,
+        0.4300000071525574
+      ],
+      "triangles": 240,
+      "mesh_count": 1,
+      "bytes": 17156,
+      "sha256": "dce5cd831fc069c2c1e32c9e7d28c6823d9fde0406fcc1aab941d7914af0745d",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Low cloister bench"
+    },
+    {
+      "id": "cloister-gateway",
+      "file": "models/cloister-gateway.glb",
+      "bounds_m": {
+        "min": [
+          -1.024999976158142,
+          0.0,
+          -0.38999998569488525
+        ],
+        "max": [
+          1.024999976158142,
+          1.659999966621399,
+          0.38999998569488525
+        ]
+      },
+      "dimensions_m": [
+        2.049999952316284,
+        1.659999966621399,
+        0.7799999713897705
+      ],
+      "triangles": 960,
+      "mesh_count": 1,
+      "bytes": 66672,
+      "sha256": "b501583f3258b3c5e9bbd31a59016924fcc2e2bd7aaacc242a75402511b50905",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Bonded cloister gate with snow cap"
+    },
+    {
+      "id": "firewood-rack",
+      "file": "models/firewood-rack.glb",
+      "bounds_m": {
+        "min": [
+          -0.3449999988079071,
+          0.0,
+          -0.22499999403953552
+        ],
+        "max": [
+          0.3449999988079071,
+          0.35499998927116394,
+          0.22499999403953552
+        ]
+      },
+      "dimensions_m": [
+        0.6899999976158142,
+        0.35499998927116394,
+        0.44999998807907104
+      ],
+      "triangles": 320,
+      "mesh_count": 1,
+      "bytes": 21732,
+      "sha256": "5aa16a2c25ea6bdba935afb540c5178ed0672277fcc6425cda96bd7bc8c14bfc",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Logs resting in a grounded rack"
+    },
+    {
+      "id": "fitted-lantern",
+      "file": "models/fitted-lantern.glb",
+      "bounds_m": {
+        "min": [
+          -0.28999999165534973,
+          0.0,
+          -0.28999999165534973
+        ],
+        "max": [
+          0.28999999165534973,
+          0.9559999704360962,
+          0.28999999165534973
+        ]
+      },
+      "dimensions_m": [
+        0.5799999833106995,
+        0.9559999704360962,
+        0.5799999833106995
+      ],
+      "triangles": 520,
+      "mesh_count": 1,
+      "bytes": 36124,
+      "sha256": "0c0ca1c78628be657c77ffb54f0e9671af644f747cee41d772db2d58c034b7ba",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Stone lantern with roof supports"
+    },
+    {
+      "id": "folded-mat",
+      "file": "models/folded-mat.glb",
+      "bounds_m": {
+        "min": [
+          -0.1793999969959259,
+          0.0,
+          -0.11178000271320343
+        ],
+        "max": [
+          0.1793999969959259,
+          0.09245999902486801,
+          0.11125855892896652
+        ]
+      },
+      "dimensions_m": [
+        0.3587999939918518,
+        0.09245999902486801,
+        0.22303856164216995
+      ],
+      "triangles": 360,
+      "mesh_count": 1,
+      "bytes": 24780,
+      "sha256": "ecb88638a43af28c3d033c29b9031777b3226062443ea04078f741dbf54e72d4",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Folded and tied prayer mat"
+    },
+    {
+      "id": "ice-chips",
+      "file": "models/ice-chips.glb",
+      "bounds_m": {
+        "min": [
+          -0.17499999701976776,
+          0.0,
+          -0.09495190531015396
+        ],
+        "max": [
+          0.17499999701976776,
+          0.18000000715255737,
+          0.16495190560817719
+        ]
+      },
+      "dimensions_m": [
+        0.3499999940395355,
+        0.18000000715255737,
+        0.25990381091833115
+      ],
+      "triangles": 96,
+      "mesh_count": 1,
+      "bytes": 7700,
+      "sha256": "21727a0ee5332774093f288d97bc26f0b602d12291fa361972469aacfcefae2d",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Grounded ice fragments"
+    },
+    {
+      "id": "incense-bowl",
+      "file": "models/incense-bowl.glb",
+      "bounds_m": {
+        "min": [
+          -0.12999999523162842,
+          0.0,
+          -0.12999999523162842
+        ],
+        "max": [
+          0.12999999523162842,
+          0.25057923793792725,
+          0.12999999523162842
+        ]
+      },
+      "dimensions_m": [
+        0.25999999046325684,
+        0.25057923793792725,
+        0.25999999046325684
+      ],
+      "triangles": 188,
+      "mesh_count": 1,
+      "bytes": 13192,
+      "sha256": "72dc47e13150b1629f9ab8b9761e14c91ba442420dd78a86ab4a0f66a768fd30",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Incense fixed inside a bowl"
+    },
+    {
+      "id": "prayer-banner",
+      "file": "models/prayer-banner.glb",
+      "bounds_m": {
+        "min": [
+          -0.25,
+          0.0,
+          -0.17000000178813934
+        ],
+        "max": [
+          0.25,
+          1.034999966621399,
+          0.17000000178813934
+        ]
+      },
+      "dimensions_m": [
+        0.5,
+        1.034999966621399,
+        0.3400000035762787
+      ],
+      "triangles": 388,
+      "mesh_count": 1,
+      "bytes": 27616,
+      "sha256": "afe8fa8cde3fee2c74604ba052936787cbe25625a86aecb2dfaf597352375b58",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Prayer cloth fixed to crossbar"
+    },
+    {
+      "id": "prayer-books",
+      "file": "models/prayer-books.glb",
+      "bounds_m": {
+        "min": [
+          -0.10585000365972519,
+          0.0,
+          -0.07665000110864639
+        ],
+        "max": [
+          0.11680000275373459,
+          0.16425000131130219,
+          0.07665000110864639
+        ]
+      },
+      "dimensions_m": [
+        0.22265000641345978,
+        0.16425000131130219,
+        0.15330000221729279
+      ],
+      "triangles": 540,
+      "mesh_count": 1,
+      "bytes": 36880,
+      "sha256": "388b31836d180dd2cfd1bfa0b6f83e84356e79854dbe39cca1b31bd4cdad6188",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Grounded prayer book stack"
+    },
+    {
+      "id": "shrine-pavilion",
+      "file": "models/shrine-pavilion.glb",
+      "bounds_m": {
+        "min": [
+          -1.1339999437332153,
+          0.0,
+          -0.7540000081062317
+        ],
+        "max": [
+          1.1339999437332153,
+          1.6360000371932983,
+          0.7540000081062317
+        ]
+      },
+      "dimensions_m": [
+        2.2679998874664307,
+        1.6360000371932983,
+        1.5080000162124634
+      ],
+      "triangles": 2160,
+      "mesh_count": 1,
+      "bytes": 141648,
+      "sha256": "a7070b230f5ca43b41da60c0da85b856693d61038096b388dd589cb3d184a07b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Snow-roofed shrine pavilion"
+    },
+    {
+      "id": "small-bell-frame",
+      "file": "models/small-bell-frame.glb",
+      "bounds_m": {
+        "min": [
+          -0.4300000071525574,
+          0.0,
+          -0.18000000715255737
+        ],
+        "max": [
+          0.4300000071525574,
+          0.9150000214576721,
+          0.18000000715255737
+        ]
+      },
+      "dimensions_m": [
+        0.8600000143051147,
+        0.9150000214576721,
+        0.36000001430511475
+      ],
+      "triangles": 580,
+      "mesh_count": 1,
+      "bytes": 39692,
+      "sha256": "f343b7e34de9d2c02e082b1c45251508962a3d1d517c33c24ef0c1c31dde98cd",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Bell connected to bearing rail"
+    },
+    {
+      "id": "tea-cup",
+      "file": "models/tea-cup.glb",
+      "bounds_m": {
+        "min": [
+          -0.05999999865889549,
+          0.0,
+          -0.05999999865889549
+        ],
+        "max": [
+          0.05999999865889549,
+          0.11999999731779099,
+          0.05999999865889549
+        ]
+      },
+      "dimensions_m": [
+        0.11999999731779099,
+        0.11999999731779099,
+        0.11999999731779099
+      ],
+      "triangles": 284,
+      "mesh_count": 1,
+      "bytes": 19964,
+      "sha256": "bf6d56637e22e56b2d948746524ac4db7eba0e3cedb273ce249d19e98c03ef1b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Open tea cup"
+    },
+    {
+      "id": "winter-hearth",
+      "file": "models/winter-hearth.glb",
+      "bounds_m": {
+        "min": [
+          -0.8600000143051147,
+          0.0,
+          -0.5099999904632568
+        ],
+        "max": [
+          0.8600000143051147,
+          1.0049999952316284,
+          0.5099999904632568
+        ]
+      },
+      "dimensions_m": [
+        1.7200000286102295,
+        1.0049999952316284,
+        1.0199999809265137
+      ],
+      "triangles": 1176,
+      "mesh_count": 1,
+      "bytes": 82040,
+      "sha256": "5f8055c0c3c5b8d37a88b7e5cf5ee0026dd0f8fe9bee77553ba72b2a4a5b86fe",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Supported winter hearth and wood store"
+    }
+  ]
+}

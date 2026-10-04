@@ -1,0 +1,131 @@
+{
+  "courtyard": {
+    "kit": "courtyard",
+    "pillars": [[0.28,0.28,70],[0.72,0.28,70],[0.28,0.72,70],[0.72,0.72,70]],
+    "props": [
+      ["compact-brazier",0,0,0,"nw"],["compact-brazier",0,0,0,"ne"],["compact-brazier",0,0,0,"sw"],["compact-brazier",0,0,0,"se"],
+      ["handled-urn",500,0,0,"north"],["handled-urn",1300,0,0,"north"],["carved-tablet",900,0,0,"north"],
+      ["handled-urn",0,550,1,"west"],["handled-urn",0,1250,1,"west"],
+      ["fern-planter",900,288,0],["fern-planter",900,1512,0],["stone-bench",288,900,1],["stone-bench",1512,900,1]
+    ],
+    "scenery": [
+      ["courtyard-pergola",480,-150,0],["carved-gateway",900,-110,0],["offering-alcove",1360,-150,0],["tiered-fountain",-145,900,0],
+      ["jade-bowl",440,65,0],["incense-tray",870,60,0],["jade-jar",1240,60,0],["votive-plate",1370,60,0],["stone-chips",285,970,0],
+      ["jade-bowl",-100,960,0],["incense-tray",1270,-145,0],["jade-jar",550,-135,0],["votive-plate",800,-100,0],
+      ["stone-chips",930,350,1],["stone-chips",1450,930,2],["stone-chips",90,1240,1],["jade-bowl",75,560,0],["votive-plate",950,1460,0]
+    ],
+    "fires": [[17,17,28],[1783,17,28],[17,1783,28],[1783,1783,28]]
+  },
+  "cistern": {
+    "kit": "flooded-cistern",
+    "props": [
+      ["masonry-outlet",900,0,0,"north"],["hand-pump",340,0,0,"north"],["hand-pump",1460,0,0,"north"],
+      ["valve-wheel",600,0,0,"north"],["valve-wheel",1200,0,0,"north"],
+      ["supported-pipe",0,650,1,"west"],["supported-pipe",0,1150,1,"west"],
+      ["supported-pipe",0,650,1,"east"],["supported-pipe",0,1150,1,"east"],
+      ["service-bench",0,1450,1,"east"],["service-bench",450,1250,0],["hand-pump",1350,400,0]
+    ],
+    "scenery": [
+      ["pump-bank",380,-135,0],["valve-manifold",900,-125,0],["repair-canopy",1440,-155,0],["settling-tank",-145,900,0],
+      ["pipe-fitting",260,65,0],["gasket-stack",410,65,0],["pressure-gauge",640,65,0],["repair-tools",1400,65,0],["water-jar",1540,65,0],
+      ["repair-tools",460,1190,0],["pipe-fitting",390,1240,0],["water-jar",70,670,0],["gasket-stack",70,1180,0],
+      ["pressure-gauge",1350,460,0],["repair-tools",1350,-140,0],["water-jar",1550,-150,0],["pipe-fitting",-90,980,0],["gasket-stack",-180,1010,0]
+    ]
+  },
+  "kilnworks": {
+    "kit": "ember-kilnworks",
+    "props": [
+      ["hammer-rack",900,0,0,"north"],["coal-bin",420,0,0,"north"],["coal-bin",1380,0,0,"north"],
+      ["compact-boiler",0,650,0,"west"],["casting-bench",0,1150,1,"west"],["hammer-rack",0,650,1,"east"],["coal-bin",0,1150,1,"east"],
+      ["coal-bin",560,0,0,"south"],["casting-bench",1240,0,0,"south"],["casting-bench",540,900,0],["compact-anvil",1260,900,0],["compact-boiler",1260,550,0]
+    ],
+    "scenery": [
+      ["forging-bay",400,-155,0],["brick-furnace",900,-130,0],["buttressed-chimney",1300,-130,0],["casting-station",-145,1000,1],
+      ["iron-ingots",520,65,0],["tongs-tray",840,60,0],["coal-pile",1300,65,0],["small-crucible",1450,60,0],["casting-mould",1180,65,0],
+      ["iron-ingots",540,840,0],["tongs-tray",1260,950,0],["small-crucible",1280,490,0],["casting-mould",1190,1725,0],
+      ["coal-pile",65,690,0],["iron-ingots",-100,950,0],["casting-mould",-105,1050,0],["small-crucible",900,-75,0],["coal-pile",1230,-130,0]
+    ]
+  },
+  "sanctuary": {
+    "kit": "overgrown-sanctuary",
+    "pillars": [[0.5,0.33,50],[0.5,0.67,50]],
+    "props": [
+      ["rooted-sapling",360,360,0],["rooted-sapling",1440,360,0],["rooted-sapling",360,1440,0],["rooted-sapling",1440,1440,0],
+      ["compact-shrine",900,0,0,"north"],["hollow-stump",420,0,0,"north"],["hollow-stump",1380,0,0,"north"],
+      ["fallen-log",0,400,1,"west"],["fallen-log",0,1400,1,"west"],["fallen-log",0,500,1,"east"],["fallen-log",0,1400,1,"east"],
+      ["timber-seat",560,0,0,"south"],["timber-seat",1240,0,0,"south"]
+    ],
+    "scenery": [
+      ["root-gateway",900,-115,0],["shrine-grove",400,-155,0],["rooted-ruin",-145,600,1],["mushroom-garden",-145,1300,0],
+      ["ground-fern",330,300,0],["small-mushrooms",400,430,0],["fallen-leaves",1440,420,0],["seed-pods",1370,320,0],["moss-stone",350,1510,0],
+      ["ground-fern",1510,1480,1],["small-mushrooms",430,1440,0],["fallen-leaves",290,1380,1],["fallen-leaves",910,60,0],
+      ["ground-fern",70,420,0],["moss-stone",1740,480,0],["seed-pods",430,65,0],["small-mushrooms",1320,60,0],
+      ["ground-fern",840,-120,1],["fallen-leaves",500,-130,0],["seed-pods",-100,1360,0],["moss-stone",-170,700,0]
+    ]
+  },
+  "harbor": {
+    "kit": "saltwind-harbor",
+    "pillars": [[0.5,0.45,50]],
+    "props": [
+      ["net-rack",900,0,0,"north"],["barrel-stack",320,0,0,"north"],["barrel-stack",1480,0,0,"north"],
+      ["lantern-post",0,0,0,"nw"],["lantern-post",0,0,0,"ne"],["bollard",0,700,0,"west"],["bollard",0,700,0,"east"],
+      ["handcart",0,1050,0,"west"],["cargo-crate",0,1100,0,"east"],["barrel",0,1300,0,"east"],
+      ["life-ring-stand",0,1500,1,"east"],["mooring-cluster",560,0,0,"south"],["barrel",1240,0,0,"south"],
+      ["cargo-crate",450,1080,0],["mooring-cluster",1350,1080,0]
+    ],
+    "scenery": [
+      ["dock-crane",500,-155,0],["net-shed",1050,-155,0],["boat-on-cradle",1500,-140,0],["quay-loading-bay",-145,900,1],
+      ["rope-coil",380,65,0],["bucket",260,65,0],["fish-basket",1420,65,0],["folded-sail",830,60,0],
+      ["rope-coil",500,1080,0],["fish-basket",1740,1100,0],["bucket",75,1030,0],["folded-sail",1750,1280,1],
+      ["rope-coil",1330,1150,0],["bucket",620,1750,0],["folded-sail",1190,1730,0],["fish-basket",-100,960,0],["rope-coil",450,-100,0]
+    ]
+  },
+  "necropolis": {
+    "kit": "ochre-necropolis",
+    "props": [
+      ["handled-amphora",260,0,0,"north"],["handled-amphora",1540,0,0,"north"],["wing-guardian",600,0,0,"north"],["wing-guardian",1200,0,0,"north"],
+      ["offering-table",0,900,1,"west"],["offering-table",0,900,1,"east"],
+      ["fitted-sarcophagus",0,1400,0,"west"],["fitted-sarcophagus",0,1350,0,"east"],
+      ["canopic-trio",560,0,0,"south"],["canopic-trio",1300,0,0,"south"],["fitted-sarcophagus",550,1180,0],["wing-guardian",1250,620,0]
+    ],
+    "scenery": [
+      ["tomb-gateway",900,-115,0],["offering-awning",400,-155,0],["sun-altar",1400,-130,0],["burial-dais",-155,900,0],
+      ["offering-bowl",550,65,0],["canopic-jar",310,65,0],["pottery-shards",1460,70,0],["folded-linen",1220,60,0],["glyph-tablet",1590,65,0],
+      ["folded-linen",70,1400,0],["canopic-jar",1740,1400,0],["pottery-shards",500,1190,0],["glyph-tablet",1250,675,0],
+      ["offering-bowl",-110,975,0],["folded-linen",-170,1050,0],["canopic-jar",500,-150,0],["glyph-tablet",1330,-120,0],["pottery-shards",1380,1730,0]
+    ],
+    "fires": []
+  },
+  "citadel": {
+    "kit": "basalt-citadel",
+    "pillars": [[0.36,0.36,70],[0.64,0.36,70],[0.36,0.64,70],[0.64,0.64,70]],
+    "props": [
+      ["restrained-banner",270,270,0],["restrained-banner",1530,270,0],["restrained-banner",270,1530,0],["restrained-banner",1530,1530,0],
+      ["weapon-rack",550,0,0,"north"],["shield-rack",1250,0,0,"north"],["war-table",900,0,0,"north"],
+      ["weapon-rack",0,500,1,"west"],["shield-rack",0,500,1,"east"],["reinforced-crate",0,1300,0,"west"],["war-table",0,1300,1,"east"],
+      ["reinforced-crate",650,0,0,"south"],["reinforced-crate",1150,0,0,"south"],["reinforced-crate",600,1000,0],["reinforced-crate",1200,800,0]
+    ],
+    "scenery": [
+      ["throne-dais",900,-145,0],["guard-shelter",400,-155,0],["battlement-bay",1400,-140,0],["supported-ram",-145,900,1],
+      ["supply-pouch",830,65,0],["unlit-torches",480,65,1],["spare-rings",1210,65,0],["resting-shield",1320,65,0],["folded-banner",970,65,0],
+      ["supply-pouch",650,1000,0],["resting-shield",1150,820,0],["unlit-torches",1735,1300,0],["spare-rings",70,1300,0],
+      ["folded-banner",330,-140,0],["resting-shield",-100,980,0],["unlit-torches",-180,850,0],["supply-pouch",970,-130,0],["spare-rings",610,1750,0]
+    ],
+    "fires": []
+  },
+  "monastery": {
+    "kit": "frostbound-monastery",
+    "props": [
+      ["small-bell-frame",900,0,0,"north"],["prayer-banner",500,0,0,"north"],["prayer-banner",1300,0,0,"north"],
+      ["fitted-lantern",0,0,0,"nw"],["fitted-lantern",0,0,0,"ne"],
+      ["cloister-bench",0,500,1,"west"],["cloister-bench",0,500,1,"east"],["firewood-rack",0,1250,0,"west"],["firewood-rack",0,1250,0,"east"],
+      ["fitted-lantern",500,0,0,"south"],["fitted-lantern",1300,0,0,"south"],["cloister-bench",280,900,1],["cloister-bench",1520,900,1]
+    ],
+    "scenery": [
+      ["shrine-pavilion",900,-155,0],["bell-tower",400,-140,0],["cloister-gateway",1400,-115,0],["winter-hearth",-145,900,1],
+      ["tea-cup",430,60,0],["prayer-books",550,65,0],["folded-mat",830,60,0],["incense-bowl",970,60,0],["ice-chips",1390,60,0],
+      ["prayer-books",330,900,0],["folded-mat",1470,900,0],["tea-cup",1740,500,0],["incense-bowl",65,500,0],["ice-chips",1740,1250,0],
+      ["folded-mat",-105,960,0],["prayer-books",960,-110,0],["tea-cup",350,-110,0],["incense-bowl",830,-105,0],["ice-chips",1260,-110,0]
+    ]
+  }
+}

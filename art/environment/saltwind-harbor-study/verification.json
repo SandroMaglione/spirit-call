@@ -1,0 +1,142 @@
+{
+  "blender": "4.5.14 LTS",
+  "source_sha256": "12985da292f65a09a651702374d9e61562efbc123fe92c538a7a38cf53564641",
+  "assets": [
+    {
+      "id": "barrel",
+      "sha256": "b4dd0b3d223e663a1f3861d3f624e17c4e8bafe8a50f57f75021cf473bea8a93",
+      "triangles": 1036,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "barrel-stack",
+      "sha256": "0fcf23d2bba09787a996c27327c7b563827a38a52612c1f0fa714d5fa67daf37",
+      "triangles": 3108,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "boat-on-cradle",
+      "sha256": "fb70757ad9a49c89504f022ab4e0e4fa283333309b2fad14901b4bf8d628f230",
+      "triangles": 872,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bollard",
+      "sha256": "5a34e4cf8be5a1f83e4b553a38895cb8e031480a266ef09e9ed196d9dd120338",
+      "triangles": 484,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "bucket",
+      "sha256": "9d49a5a60b0a7e18bce32e96eb622f68fefbbf904fcb85f47a1ba9b43a57f4da",
+      "triangles": 432,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "cargo-crate",
+      "sha256": "46ce10ade2cc22299725810c79459f2890a2880e4cf4a081014764f3b82f1798",
+      "triangles": 1440,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "dock-crane",
+      "sha256": "07ac959c09f54a2994b5e25875ae1a461114a9f3d349e51afe2e67286ce43e09",
+      "triangles": 3048,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "fish-basket",
+      "sha256": "0056264f3b26d88ce1aefa9bdab68bcda4ee7bdfd647619ccea0b34f8a05794f",
+      "triangles": 1200,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "folded-sail",
+      "sha256": "9094a52dcb402981de68fe7cf3b91997fdf04cca489bdcd5df6de0c9ccbe7b72",
+      "triangles": 360,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "handcart",
+      "sha256": "c1f0290142c846115e830e512ab8583a8c801de2763eef7932cfaf28fbb12e90",
+      "triangles": 896,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "lantern-post",
+      "sha256": "8c1122e3e1be6bbfb08fb5a8fce83fb850e0ad114fbba55dcf3f89d62a198007",
+      "triangles": 560,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "life-ring-stand",
+      "sha256": "8366f1e9a11752ad70461e9cb72e26ff68877457906f2a213684b33ce53e3db7",
+      "triangles": 432,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "mooring-cluster",
+      "sha256": "adbb835ec5a392e9443eea802babee4ed7d7ddf71a5d5158d296fb9cbe4cd68e",
+      "triangles": 2944,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "net-rack",
+      "sha256": "415611adf83400189d1c5598aa67501bd67025c8e762d94a8fe4daac4e38ab77",
+      "triangles": 716,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "net-shed",
+      "sha256": "eb33440be9bc15e0f22dd1bf9a87397edfb01745ba18e96fb75c082cad555911",
+      "triangles": 3672,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "quay-loading-bay",
+      "sha256": "15273df7d03a4116b5f4d515f14b04f6847fd2d50c561b002b3be4d3e5765741",
+      "triangles": 7876,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    },
+    {
+      "id": "rope-coil",
+      "sha256": "7d47fda05381fa97ffe3999b81fb282f19c8a6f97c69b32958088e6f8e704ffc",
+      "triangles": 1800,
+      "round_trip": "pass",
+      "closed_shells": "pass",
+      "moving_parts_exercised": 0
+    }
+  ]
+}

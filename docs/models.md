@@ -129,6 +129,12 @@ manifest (`presentation/assets/<arena>.ts`, prefixed with the arena's id).
   looks solid is a prop.
 - **Floor:** besides its tiles, a `border` (other tiles along the walls) and
   `inlays` (single tiles chosen by hand: a medallion in the middle).
+- **Exterior paving:** `apronTiles` extends the tiled floor beyond the boundary
+  walls. Structures placed there are scenery, supported by the paving and
+  unreachable past the simulation's boundary. The apron changes no collisions.
+- **Off-center pieces:** `ModelSpec.footprintCenter` comes from the export bounds.
+  Static placements use it to center the visible footprint on its collision box
+  or scenery point, including when the model turns.
 - **Its own tones:** the color beyond the walls (`background`), its pools'
   tones and stone rim (`pools`), its light (`light`), and the flames in its
   props (`fires`: they flicker and shed embers).

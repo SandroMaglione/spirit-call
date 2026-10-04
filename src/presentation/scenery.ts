@@ -9,7 +9,7 @@ import { Instance } from "./batch.ts"
 import type { RenderAssets } from "./host-types.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { ArenaLook } from "./looks.ts"
-import { footprintOf, variantAt } from "./nodes.ts"
+import { footprintOf, groundOffsetOf, variantAt } from "./nodes.ts"
 import type { Shapes } from "./shapes.ts"
 
 /** A flat slab under the floor's tiles (showing in their joints) or carrying the grid. */
@@ -31,8 +31,11 @@ const makeFloor = (
   instances: Array<Instance>
 ): { readonly object: Group; readonly base: FloorBase } => {
   const floor = look.floor
+  const apron = floor.kind === "tiles" ? floor.apronTiles ?? 0 : 0
+  const extraX = apron * width / cells
+  const extraZ = apron * height / cells
   const object = new Group()
-  const geometry = new PlaneGeometry(width, height).rotateX(-Math.PI / 2).translate(width / 2, 0, height / 2)
+  const geometry = new PlaneGeometry(width + extraX * 2, height + extraZ * 2).rotateX(-Math.PI / 2).translate(width / 2, 0, height / 2)
   const base = new Mesh(geometry, new MeshLambertMaterial({ color: floor.color }))
   object.add(base)
   switch (floor.kind) {
@@ -50,13 +53,13 @@ const makeFloor = (
       const down = cells
       // The base sits a little under the tiles' top, so their joints show it.
       base.position.y = -0.05 * scale
-      for (let column = 0; column < across; column++) {
-        for (let row = 0; row < down; row++) {
+      for (let column = -apron; column < across + apron; column++) {
+        for (let row = -apron; row < down + apron; row++) {
           const at = { x: ((column + 0.5) * width) / across, y: ((row + 0.5) * height) / down }
           // A hazard takes the tile's place (see `presentation/hazards.ts`).
           if (holes.some((hole) => at.x > hole.minX && at.x < hole.maxX && at.y > hole.minY && at.y < hole.maxY)) continue
           // A tile chosen by hand, else one of the border's along the walls, else one of the floor's.
-          const edge = column === 0 || row === 0 || column === across - 1 || row === down - 1
+          const edge = column <= 0 || row <= 0 || column >= across - 1 || row >= down - 1
           const variants = edge && floor.border !== undefined ? floor.border : floor.tiles
           const inlay = floor.inlays?.find((inlay) => inlay.column === column && inlay.row === row)
           const tile = new Instance(assets.piece(inlay?.model ?? variants[variantAt(variants.length, at)]!, floor.tint))
@@ -82,7 +85,8 @@ const makeScenery = (assets: RenderAssets, look: ArenaLook, instances: Array<Ins
   const group = new Group()
   for (const piece of look.scenery) {
     const prop = new Instance(assets.piece(piece.model))
-    prop.object.position.set(piece.at.x, 0, piece.at.y)
+    const offset = groundOffsetOf(piece.model, piece.turn, look.unitsPerMeter)
+    prop.object.position.set(piece.at.x + offset.x, 0, piece.at.y + offset.y)
     prop.object.rotation.y = piece.turn
     prop.object.scale.setScalar(look.unitsPerMeter)
     prop.batch.add(prop)

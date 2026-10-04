@@ -1,0 +1,488 @@
+{
+  "schema_version": 2,
+  "kit": "ember-kilnworks-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/ember-kilnworks-study.blend",
+  "source_sha256": "680b316324ba00b3b1f165d4edf9e40141bba343895c2ee627f6c004d4590b69",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "brick-furnace",
+      "file": "models/brick-furnace.glb",
+      "bounds_m": {
+        "min": [
+          -0.5799999833106995,
+          0.0,
+          -0.44999998807907104
+        ],
+        "max": [
+          0.5799999833106995,
+          1.774999976158142,
+          0.4749999940395355
+        ]
+      },
+      "dimensions_m": [
+        1.159999966621399,
+        1.774999976158142,
+        0.9249999821186066
+      ],
+      "triangles": 1560,
+      "mesh_count": 1,
+      "bytes": 104944,
+      "sha256": "74520f48b14a6b5ac2ce3726193e19a07e6e40ad7846024945f7172cdbd39a93",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Compact bonded-brick furnace"
+    },
+    {
+      "id": "buttressed-chimney",
+      "file": "models/buttressed-chimney.glb",
+      "bounds_m": {
+        "min": [
+          -0.625,
+          0.0,
+          -0.46000000834465027
+        ],
+        "max": [
+          0.625,
+          1.8899999856948853,
+          0.46000000834465027
+        ]
+      },
+      "dimensions_m": [
+        1.25,
+        1.8899999856948853,
+        0.9200000166893005
+      ],
+      "triangles": 700,
+      "mesh_count": 1,
+      "bytes": 48028,
+      "sha256": "05e30ec8f679bbef432b72ae7c3f5914546ede799b168a3d06cf6954963b0b7d",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Bonded chimney with buttresses"
+    },
+    {
+      "id": "casting-bench",
+      "file": "models/casting-bench.glb",
+      "bounds_m": {
+        "min": [
+          -0.550000011920929,
+          0.0,
+          -0.2800000011920929
+        ],
+        "max": [
+          0.550000011920929,
+          0.4650000035762787,
+          0.2800000011920929
+        ]
+      },
+      "dimensions_m": [
+        1.100000023841858,
+        0.4650000035762787,
+        0.5600000023841858
+      ],
+      "triangles": 356,
+      "mesh_count": 1,
+      "bytes": 24492,
+      "sha256": "ac44424970b2bf715d31e256914556147fc2e75ebea5386d9538689e4a668c66",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Low casting bench"
+    },
+    {
+      "id": "casting-mould",
+      "file": "models/casting-mould.glb",
+      "bounds_m": {
+        "min": [
+          -0.20000000298023224,
+          0.0,
+          -0.11999999731779099
+        ],
+        "max": [
+          0.20000000298023224,
+          0.10000000149011612,
+          0.11999999731779099
+        ]
+      },
+      "dimensions_m": [
+        0.4000000059604645,
+        0.10000000149011612,
+        0.23999999463558197
+      ],
+      "triangles": 300,
+      "mesh_count": 1,
+      "bytes": 21092,
+      "sha256": "341900165bd4fa8d6211fd6b8bdd96254edbf9d0d123f769ab06038b4fb6cd91",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Open casting mould"
+    },
+    {
+      "id": "casting-station",
+      "file": "models/casting-station.glb",
+      "bounds_m": {
+        "min": [
+          -0.949999988079071,
+          0.0,
+          -0.550000011920929
+        ],
+        "max": [
+          0.949999988079071,
+          0.7149999737739563,
+          0.550000011920929
+        ]
+      },
+      "dimensions_m": [
+        1.899999976158142,
+        0.7149999737739563,
+        1.100000023841858
+      ],
+      "triangles": 1924,
+      "mesh_count": 1,
+      "bytes": 126588,
+      "sha256": "42c770aeed0b7ae8c1179b60ea1ad5d16445bcacc0276c0cdaccdf45a6518fdb",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Grounded casting station"
+    },
+    {
+      "id": "coal-bin",
+      "file": "models/coal-bin.glb",
+      "bounds_m": {
+        "min": [
+          -0.3799999952316284,
+          0.0,
+          -0.24500000476837158
+        ],
+        "max": [
+          0.3799999952316284,
+          0.3050000071525574,
+          0.24500000476837158
+        ]
+      },
+      "dimensions_m": [
+        0.7599999904632568,
+        0.3050000071525574,
+        0.49000000953674316
+      ],
+      "triangles": 1132,
+      "mesh_count": 1,
+      "bytes": 90584,
+      "sha256": "4bcbc456e39bee66c7210304d770a53726fb0f9e9e2dbc38570968e25e53d2ef",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Planked coal bin"
+    },
+    {
+      "id": "coal-pile",
+      "file": "models/coal-pile.glb",
+      "bounds_m": {
+        "min": [
+          -0.24249397218227386,
+          0.0,
+          -0.2116418331861496
+        ],
+        "max": [
+          0.25706836581230164,
+          0.2199999988079071,
+          0.20071199536323547
+        ]
+      },
+      "dimensions_m": [
+        0.4995623379945755,
+        0.2199999988079071,
+        0.41235382854938507
+      ],
+      "triangles": 260,
+      "mesh_count": 1,
+      "bytes": 23076,
+      "sha256": "496affe9062f9fc7c0f62a12533577e4853679912821de49694ef589a72c43c0",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Grounded coal pile"
+    },
+    {
+      "id": "compact-anvil",
+      "file": "models/compact-anvil.glb",
+      "bounds_m": {
+        "min": [
+          -0.29499998688697815,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          0.41999998688697815,
+          0.375,
+          0.15000000596046448
+        ]
+      },
+      "dimensions_m": [
+        0.7149999737739563,
+        0.375,
+        0.30000001192092896
+      ],
+      "triangles": 192,
+      "mesh_count": 1,
+      "bytes": 13772,
+      "sha256": "28bcf6abe9ae6d2b03cc87f03885b11b3d0a17160432acd7a44a5a7c2fbafd5b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Anvil with attached tapered horn"
+    },
+    {
+      "id": "compact-boiler",
+      "file": "models/compact-boiler.glb",
+      "bounds_m": {
+        "min": [
+          -0.2800000011920929,
+          0.0,
+          -0.2639999985694885
+        ],
+        "max": [
+          0.2800000011920929,
+          0.7900000214576721,
+          0.33799999952316284
+        ]
+      },
+      "dimensions_m": [
+        0.5600000023841858,
+        0.7900000214576721,
+        0.6019999980926514
+      ],
+      "triangles": 640,
+      "mesh_count": 1,
+      "bytes": 41440,
+      "sha256": "87a0d299d2f598e7dc192389295e74b5551b33a6794624519f0619d5542ddf4d",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Boiler with plinth and connected pipe"
+    },
+    {
+      "id": "forging-bay",
+      "file": "models/forging-bay.glb",
+      "bounds_m": {
+        "min": [
+          -1.1069999933242798,
+          0.0,
+          -0.6959999799728394
+        ],
+        "max": [
+          1.1069999933242798,
+          1.6699999570846558,
+          0.6959999799728394
+        ]
+      },
+      "dimensions_m": [
+        2.2139999866485596,
+        1.6699999570846558,
+        1.3919999599456787
+      ],
+      "triangles": 2256,
+      "mesh_count": 1,
+      "bytes": 147644,
+      "sha256": "866e14c234911471b522b87e77eb1fe76a273c5273d5e91d83af5e254a3e4b98",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Supported smithing canopy"
+    },
+    {
+      "id": "hammer-rack",
+      "file": "models/hammer-rack.glb",
+      "bounds_m": {
+        "min": [
+          -0.5400000214576721,
+          0.0,
+          -0.1850000023841858
+        ],
+        "max": [
+          0.5400000214576721,
+          0.8149999976158142,
+          0.1850000023841858
+        ]
+      },
+      "dimensions_m": [
+        1.0800000429153442,
+        0.8149999976158142,
+        0.3700000047683716
+      ],
+      "triangles": 532,
+      "mesh_count": 1,
+      "bytes": 35788,
+      "sha256": "674a6ac55eb3a658e6b95632c755f855274fc4e610445ade1c3a7c3b852d5166",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Tools resting on a bearing rail"
+    },
+    {
+      "id": "iron-ingots",
+      "file": "models/iron-ingots.glb",
+      "bounds_m": {
+        "min": [
+          -0.17499999701976776,
+          0.0,
+          -0.1599999964237213
+        ],
+        "max": [
+          0.17499999701976776,
+          0.11500000208616257,
+          0.1599999964237213
+        ]
+      },
+      "dimensions_m": [
+        0.3499999940395355,
+        0.11500000208616257,
+        0.3199999928474426
+      ],
+      "triangles": 180,
+      "mesh_count": 1,
+      "bytes": 13196,
+      "sha256": "7c193cfb664b59d6ed24d1ef4f37fe07a8a91b0bfe79849b47bba004e4127d87",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Stacked iron ingots"
+    },
+    {
+      "id": "small-crucible",
+      "file": "models/small-crucible.glb",
+      "bounds_m": {
+        "min": [
+          -0.18000000715255737,
+          0.0,
+          -0.18000000715255737
+        ],
+        "max": [
+          0.18000000715255737,
+          0.1599999964237213,
+          0.18000000715255737
+        ]
+      },
+      "dimensions_m": [
+        0.36000001430511475,
+        0.1599999964237213,
+        0.36000001430511475
+      ],
+      "triangles": 140,
+      "mesh_count": 1,
+      "bytes": 9888,
+      "sha256": "ee6b1eca8a0a21f3b64f7229aba015ad3c2df97f1ef28db16fa24f33ed218368",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Open crucible"
+    },
+    {
+      "id": "tongs-tray",
+      "file": "models/tongs-tray.glb",
+      "bounds_m": {
+        "min": [
+          -0.25999999046325684,
+          0.0,
+          -0.1743723750114441
+        ],
+        "max": [
+          0.25999999046325684,
+          0.09300000220537186,
+          0.18213719129562378
+        ]
+      },
+      "dimensions_m": [
+        0.5199999809265137,
+        0.09300000220537186,
+        0.35650956630706787
+      ],
+      "triangles": 228,
+      "mesh_count": 1,
+      "bytes": 16040,
+      "sha256": "7b0739d4c7679586b5f5103a534179cc57a7c6100c11825b56dfe9cba1dbc90b",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Tongs and hammer in a tray"
+    }
+  ]
+}

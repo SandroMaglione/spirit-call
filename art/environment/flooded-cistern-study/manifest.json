@@ -1,0 +1,488 @@
+{
+  "schema_version": 2,
+  "kit": "flooded-cistern-study",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "source": "source/flooded-cistern-study.blend",
+  "source_sha256": "580a9a084c239553b544ea12436d69340299a0fd81af8baa1298d61887667142",
+  "scope": "Art delivery metadata. Runtime must opt into traversal, collision and interactions.",
+  "assets": [
+    {
+      "id": "gasket-stack",
+      "file": "models/gasket-stack.glb",
+      "bounds_m": {
+        "min": [
+          -0.1420000046491623,
+          -0.0010525588877499104,
+          -0.1420000046491623
+        ],
+        "max": [
+          0.1420000046491623,
+          0.0990525558590889,
+          0.1420000046491623
+        ]
+      },
+      "dimensions_m": [
+        0.2840000092983246,
+        0.10010511474683881,
+        0.2840000092983246
+      ],
+      "triangles": 432,
+      "mesh_count": 1,
+      "bytes": 27016,
+      "sha256": "1e43ac9cbd882e6769dfc1fef0a4d830e6ca071e50be116a889b018c467b4f87",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Grounded gasket stack"
+    },
+    {
+      "id": "hand-pump",
+      "file": "models/hand-pump.glb",
+      "bounds_m": {
+        "min": [
+          -0.22499999403953552,
+          0.0,
+          -0.1899999976158142
+        ],
+        "max": [
+          0.4122239649295807,
+          0.8797959685325623,
+          0.1899999976158142
+        ]
+      },
+      "dimensions_m": [
+        0.6372239589691162,
+        0.8797959685325623,
+        0.3799999952316284
+      ],
+      "triangles": 316,
+      "mesh_count": 1,
+      "bytes": 21300,
+      "sha256": "4e41e26c59c84fe2dfaea282ba30c67988984e3da25c561afac778311e38bdef",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Compact hand pump"
+    },
+    {
+      "id": "masonry-outlet",
+      "file": "models/masonry-outlet.glb",
+      "bounds_m": {
+        "min": [
+          -0.3100000023841858,
+          0.0,
+          -0.20999999344348907
+        ],
+        "max": [
+          0.3100000023841858,
+          0.6399999856948853,
+          0.5600000023841858
+        ]
+      },
+      "dimensions_m": [
+        0.6200000047683716,
+        0.6399999856948853,
+        0.7699999958276749
+      ],
+      "triangles": 472,
+      "mesh_count": 1,
+      "bytes": 30828,
+      "sha256": "91ee2647ba7ed772708c712d6c1cb0848e0d853d00d25d5ca92bb0569f949a52",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Supported pipe outlet and channel"
+    },
+    {
+      "id": "pipe-fitting",
+      "file": "models/pipe-fitting.glb",
+      "bounds_m": {
+        "min": [
+          -0.1599999964237213,
+          0.0,
+          -0.1599999964237213
+        ],
+        "max": [
+          0.1599999964237213,
+          0.1599999964237213,
+          0.1599999964237213
+        ]
+      },
+      "dimensions_m": [
+        0.3199999928474426,
+        0.1599999964237213,
+        0.3199999928474426
+      ],
+      "triangles": 284,
+      "mesh_count": 1,
+      "bytes": 18428,
+      "sha256": "7568cdca461d49687ddba6611316054ad7f288772122e92c98b254da131e5924",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Bolted pipe fitting"
+    },
+    {
+      "id": "pressure-gauge",
+      "file": "models/pressure-gauge.glb",
+      "bounds_m": {
+        "min": [
+          -0.10999999940395355,
+          0.0,
+          -0.10999999940395355
+        ],
+        "max": [
+          0.10999999940395355,
+          0.07370634377002716,
+          0.10999999940395355
+        ]
+      },
+      "dimensions_m": [
+        0.2199999988079071,
+        0.07370634377002716,
+        0.2199999988079071
+      ],
+      "triangles": 240,
+      "mesh_count": 1,
+      "bytes": 16640,
+      "sha256": "13b435a21b1f2a191f72a68f158c64b07647eb9301da10bae0dfa0f362899a78",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Pressure gauge with attached dial"
+    },
+    {
+      "id": "pump-bank",
+      "file": "models/pump-bank.glb",
+      "bounds_m": {
+        "min": [
+          -0.875,
+          0.0,
+          -0.5299999713897705
+        ],
+        "max": [
+          0.9422239661216736,
+          1.0147960186004639,
+          0.5299999713897705
+        ]
+      },
+      "dimensions_m": [
+        1.8172239661216736,
+        1.0147960186004639,
+        1.059999942779541
+      ],
+      "triangles": 1800,
+      "mesh_count": 1,
+      "bytes": 118008,
+      "sha256": "7230ab5385582603e5b1c70334ed5bb0965e19f12309f013fc6d4a5e0d16f2c0",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Grounded twin pump bank"
+    },
+    {
+      "id": "repair-canopy",
+      "file": "models/repair-canopy.glb",
+      "bounds_m": {
+        "min": [
+          -1.0800000429153442,
+          0.0,
+          -0.7075999975204468
+        ],
+        "max": [
+          1.0800000429153442,
+          1.6099998950958252,
+          0.7075999975204468
+        ]
+      },
+      "dimensions_m": [
+        2.1600000858306885,
+        1.6099998950958252,
+        1.4151999950408936
+      ],
+      "triangles": 3204,
+      "mesh_count": 1,
+      "bytes": 206204,
+      "sha256": "a62b4f8d646399e73a4bcdff41591a3d9d3b4b1cef75913e5a1bd8d27118696c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Roofed maintenance station"
+    },
+    {
+      "id": "repair-tools",
+      "file": "models/repair-tools.glb",
+      "bounds_m": {
+        "min": [
+          -0.23000000417232513,
+          0.0,
+          -0.13500000536441803
+        ],
+        "max": [
+          0.23000000417232513,
+          0.05385640636086464,
+          0.125
+        ]
+      },
+      "dimensions_m": [
+        0.46000000834465027,
+        0.05385640636086464,
+        0.26000000536441803
+      ],
+      "triangles": 292,
+      "mesh_count": 1,
+      "bytes": 19236,
+      "sha256": "76b6f28c6e119d14305a095deb9f32657056f275ad4e5236787944232b84da6a",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Wrenches resting in a tray"
+    },
+    {
+      "id": "service-bench",
+      "file": "models/service-bench.glb",
+      "bounds_m": {
+        "min": [
+          -0.44999998807907104,
+          0.0,
+          -0.23000000417232513
+        ],
+        "max": [
+          0.44999998807907104,
+          0.5157063603401184,
+          0.23000000417232513
+        ]
+      },
+      "dimensions_m": [
+        0.8999999761581421,
+        0.5157063603401184,
+        0.46000000834465027
+      ],
+      "triangles": 888,
+      "mesh_count": 1,
+      "bytes": 57908,
+      "sha256": "6afc725e4980fefc11030f40cf60fb236c3093ce88eeb30da4ec2389263b0cd6",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Repair workbench"
+    },
+    {
+      "id": "settling-tank",
+      "file": "models/settling-tank.glb",
+      "bounds_m": {
+        "min": [
+          -0.6819999814033508,
+          0.0,
+          -0.6819999814033508
+        ],
+        "max": [
+          0.6819999814033508,
+          0.6649999618530273,
+          0.7300000190734863
+        ]
+      },
+      "dimensions_m": [
+        1.3639999628067017,
+        0.6649999618530273,
+        1.4120000004768372
+      ],
+      "triangles": 728,
+      "mesh_count": 1,
+      "bytes": 45676,
+      "sha256": "166b0e4f1ffcc3e190887868eb73ac0a494cea692a9511a2990857e01760d34c",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Open tank with grounded ladder"
+    },
+    {
+      "id": "supported-pipe",
+      "file": "models/supported-pipe.glb",
+      "bounds_m": {
+        "min": [
+          -0.5299999713897705,
+          0.0,
+          -0.1509999930858612
+        ],
+        "max": [
+          0.5299999713897705,
+          0.38099998235702515,
+          0.1509999930858612
+        ]
+      },
+      "dimensions_m": [
+        1.059999942779541,
+        0.38099998235702515,
+        0.3019999861717224
+      ],
+      "triangles": 452,
+      "mesh_count": 1,
+      "bytes": 28916,
+      "sha256": "ea0d5e3209871f7122b90f5511490c58460caf274859038ad6c88ec3ecf47411",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Pipe on paired saddles"
+    },
+    {
+      "id": "valve-manifold",
+      "file": "models/valve-manifold.glb",
+      "bounds_m": {
+        "min": [
+          -1.0499999523162842,
+          0.0,
+          -0.4749999940395355
+        ],
+        "max": [
+          1.0499999523162842,
+          1.2599999904632568,
+          0.4749999940395355
+        ]
+      },
+      "dimensions_m": [
+        2.0999999046325684,
+        1.2599999904632568,
+        0.949999988079071
+      ],
+      "triangles": 1220,
+      "mesh_count": 1,
+      "bytes": 75128,
+      "sha256": "f7aafda1e5e46c2edb5c5d0abf5e502deeb8663a5182042edd272724693ad0d7",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "large",
+      "title": "Connected valve manifold"
+    },
+    {
+      "id": "valve-wheel",
+      "file": "models/valve-wheel.glb",
+      "bounds_m": {
+        "min": [
+          -0.2150000035762787,
+          0.0,
+          -0.1899999976158142
+        ],
+        "max": [
+          0.2150000035762787,
+          0.652999997138977,
+          0.1899999976158142
+        ]
+      },
+      "dimensions_m": [
+        0.4300000071525574,
+        0.652999997138977,
+        0.3799999952316284
+      ],
+      "triangles": 352,
+      "mesh_count": 1,
+      "bytes": 22800,
+      "sha256": "b1bcd2ce6abea0035a89d983d367304709bbfdf30753d6f1c826ed8abc6ff9ea",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "working",
+      "title": "Wheel, axle and valve body"
+    },
+    {
+      "id": "water-jar",
+      "file": "models/water-jar.glb",
+      "bounds_m": {
+        "min": [
+          -0.14000000059604645,
+          0.0,
+          -0.14000000059604645
+        ],
+        "max": [
+          0.14000000059604645,
+          0.3199999928474426,
+          0.14000000059604645
+        ]
+      },
+      "dimensions_m": [
+        0.2800000011920929,
+        0.3199999928474426,
+        0.2800000011920929
+      ],
+      "triangles": 284,
+      "mesh_count": 1,
+      "bytes": 19960,
+      "sha256": "086a442e2e6ca812f78d128834d7bdd8b443b78c56d10ceab6f0bab819873e85",
+      "category": "prop",
+      "origin": "Ground center",
+      "collision": [],
+      "walk_surfaces": [],
+      "connections": [],
+      "moving_parts": [],
+      "sockets": [],
+      "study_group": "small",
+      "title": "Compact water jar"
+    }
+  ]
+}

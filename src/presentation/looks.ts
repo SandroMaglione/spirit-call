@@ -246,7 +246,7 @@ export interface Inlay {
  */
 export type FloorLook =
   | { readonly kind: "grid"; readonly color: number; readonly line: number; readonly spacing: number }
-  | { readonly kind: "tiles"; readonly tiles: ReadonlyArray<ModelId>; readonly color: number; readonly border?: ReadonlyArray<ModelId>; readonly inlays?: ReadonlyArray<Inlay>; readonly tint?: number }
+  | { readonly kind: "tiles"; readonly tiles: ReadonlyArray<ModelId>; readonly color: number; readonly border?: ReadonlyArray<ModelId>; readonly inlays?: ReadonlyArray<Inlay>; readonly tint?: number; readonly apronTiles?: number }
 
 /** A model placed for looks only (it blocks nothing): at a floor point, turned `turn` radians, at the arena's scale. */
 export interface Scenery {
@@ -306,17 +306,12 @@ export const placeholderArena: ArenaLook = {
   scenery: []
 }
 
-/**
- * The courtyard (`art/environment/courtyard`): paving, stone walls (low ones
- * in front, so they never hide the player), stone pillars. A brazier burns
- * in each corner and urns stand in pairs by the far walls; rocks lie where
- * they fell. 70 units per meter fits its large pillar to the arena's
- * 70-unit pillars.
- */
+/** Four stone pillars frame an open court, with low benches and planters for cover. Ritual goods dress the paving; a pergola, gate, alcove and fountain stand beyond the boundary. */
 export const courtyardArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["pavingPlain", "pavingPlain", "pavingPlain", "pavingCracked"],
     color: 0x2a2724
   },
@@ -327,43 +322,55 @@ export const courtyardArena: ArenaLook = {
     inner: { kind: "run", model: "wallLow" }
   },
   scenery: [
-    { model: "rubbleStones", at: { x: 640, y: 50 }, turn: 0.7 },
-    { model: "rubbleStones", at: { x: 46, y: 1320 }, turn: Math.PI / 2 + 0.53 },
-    { model: "rubbleStones", at: { x: 1690, y: 1240 }, turn: Math.PI / 2 - 0.27 }
+    { model: "courtyardStudyCourtyardPergola", at: { x: 480, y: -150 }, turn: 0 },
+    { model: "courtyardStudyCarvedGateway", at: { x: 900, y: -110 }, turn: 0 },
+    { model: "courtyardStudyOfferingAlcove", at: { x: 1360, y: -150 }, turn: 0 },
+    { model: "courtyardStudyTieredFountain", at: { x: -145, y: 900 }, turn: 0 },
+    { model: "courtyardStudyJadeBowl", at: { x: 440, y: 65 }, turn: 0 },
+    { model: "courtyardStudyIncenseTray", at: { x: 870, y: 60 }, turn: 0 },
+    { model: "courtyardStudyJadeJar", at: { x: 1240, y: 60 }, turn: 0 },
+    { model: "courtyardStudyVotivePlate", at: { x: 1370, y: 60 }, turn: 0 },
+    { model: "courtyardStudyStoneChips", at: { x: 285, y: 970 }, turn: 0 },
+    { model: "courtyardStudyJadeBowl", at: { x: -100, y: 960 }, turn: 0 },
+    { model: "courtyardStudyIncenseTray", at: { x: 1270, y: -145 }, turn: 0 },
+    { model: "courtyardStudyJadeJar", at: { x: 550, y: -135 }, turn: 0 },
+    { model: "courtyardStudyVotivePlate", at: { x: 800, y: -100 }, turn: 0 },
+    { model: "courtyardStudyStoneChips", at: { x: 930, y: 350 }, turn: Math.PI / 2 },
+    { model: "courtyardStudyStoneChips", at: { x: 1450, y: 930 }, turn: Math.PI },
+    { model: "courtyardStudyStoneChips", at: { x: 90, y: 1240 }, turn: Math.PI / 2 },
+    { model: "courtyardStudyJadeBowl", at: { x: 75, y: 560 }, turn: 0 },
+    { model: "courtyardStudyVotivePlate", at: { x: 950, y: 1460 }, turn: 0 }
   ],
   props: [
-    { model: "brazier", turn: 0 },
-    { model: "brazier", turn: 0 },
-    { model: "brazier", turn: 0 },
-    { model: "brazier", turn: 0 },
-    { model: "urnJade", turn: 0 },
-    { model: "urnJade", turn: 0 },
-    { model: "urnJade", turn: Math.PI / 2 },
-    { model: "urnJade", turn: Math.PI / 2 },
-    { model: "rocksTall", turn: Math.PI / 2 - 0.37 },
-    { model: "rocksLow", turn: 0.4 },
-    { model: "rocksLow", turn: 0.5 },
-    { model: "rocksTall", turn: 2.6 }
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyCompactBrazier", turn: 0 },
+    { model: "courtyardStudyHandledUrn", turn: 0 },
+    { model: "courtyardStudyHandledUrn", turn: 0 },
+    { model: "courtyardStudyCarvedTablet", turn: 0 },
+    { model: "courtyardStudyHandledUrn", turn: Math.PI / 2 },
+    { model: "courtyardStudyHandledUrn", turn: Math.PI / 2 },
+    { model: "courtyardStudyFernPlanter", turn: 0 },
+    { model: "courtyardStudyFernPlanter", turn: 0 },
+    { model: "courtyardStudyStoneBench", turn: Math.PI / 2 },
+    { model: "courtyardStudyStoneBench", turn: Math.PI / 2 }
   ],
   background: 0x1f1e1c,
   fires: [
-    { at: { x: 23, y: 23 }, height: 59 },
-    { at: { x: 1777, y: 23 }, height: 59 },
-    { at: { x: 23, y: 1777 }, height: 59 },
-    { at: { x: 1777, y: 1777 }, height: 59 }
+    { at: { x: 17, y: 17 }, height: 28 },
+    { at: { x: 1783, y: 17 }, height: 28 },
+    { at: { x: 17, y: 1783 }, height: 28 },
+    { at: { x: 1783, y: 1783 }, height: 28 }
   ]
 }
 
-/**
- * The flooded cistern (`art/environment/flooded-cistern`): pale flagstones
- * with a drain here and there, its waterworks along the north wall, pipes
- * and buttresses down the sides, urns left about (the water is the game's:
- * its basins are hazards, see `content/arena.ts`).
- */
+/** The basins and low walls keep their water tactics. Compact machinery and repair benches provide cover; pump banks, valves and a settling tank fill the exterior service yard. */
 export const cisternArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorPlain", "cisternFloorCracked", "cisternFloorGrate"],
     color: 0x1f2a2c,
     border: ["cisternFloorWorn"],
@@ -385,23 +392,39 @@ export const cisternArena: ArenaLook = {
     sorted: { kind: "pillar", models: ["cisternPillarLarge", "cisternPillarSmall"] },
     inner: { kind: "run", model: "cisternWallLow" }
   },
-  scenery: [],
+  scenery: [
+    { model: "cisternStudyPumpBank", at: { x: 380, y: -135 }, turn: 0 },
+    { model: "cisternStudyValveManifold", at: { x: 900, y: -125 }, turn: 0 },
+    { model: "cisternStudyRepairCanopy", at: { x: 1440, y: -155 }, turn: 0 },
+    { model: "cisternStudySettlingTank", at: { x: -145, y: 900 }, turn: 0 },
+    { model: "cisternStudyPipeFitting", at: { x: 260, y: 65 }, turn: 0 },
+    { model: "cisternStudyGasketStack", at: { x: 410, y: 65 }, turn: 0 },
+    { model: "cisternStudyPressureGauge", at: { x: 640, y: 65 }, turn: 0 },
+    { model: "cisternStudyRepairTools", at: { x: 1400, y: 65 }, turn: 0 },
+    { model: "cisternStudyWaterJar", at: { x: 1540, y: 65 }, turn: 0 },
+    { model: "cisternStudyRepairTools", at: { x: 460, y: 1190 }, turn: 0 },
+    { model: "cisternStudyPipeFitting", at: { x: 390, y: 1240 }, turn: 0 },
+    { model: "cisternStudyWaterJar", at: { x: 70, y: 670 }, turn: 0 },
+    { model: "cisternStudyGasketStack", at: { x: 70, y: 1180 }, turn: 0 },
+    { model: "cisternStudyPressureGauge", at: { x: 1350, y: 460 }, turn: 0 },
+    { model: "cisternStudyRepairTools", at: { x: 1350, y: -140 }, turn: 0 },
+    { model: "cisternStudyWaterJar", at: { x: 1550, y: -150 }, turn: 0 },
+    { model: "cisternStudyPipeFitting", at: { x: -90, y: 980 }, turn: 0 },
+    { model: "cisternStudyGasketStack", at: { x: -180, y: 1010 }, turn: 0 }
+  ],
   props: [
-    { model: "cisternPipeOutlet", turn: 0 },
-    { model: "cisternPump", turn: 0 },
-    { model: "cisternPump", turn: 0 },
-    { model: "cisternValve", turn: 0 },
-    { model: "cisternValve", turn: 0 },
-    { model: "cisternPipeStraight", turn: Math.PI / 2 },
-    { model: "cisternPipeStraight", turn: Math.PI / 2 },
-    { model: "cisternButtress", turn: Math.PI / 2 },
-    { model: "cisternButtress", turn: Math.PI / 2 },
-    { model: "cisternUrn", turn: 0.3 },
-    { model: "cisternUrn", turn: 2.2 },
-    { model: "cisternUrn", turn: Math.PI / 2 - 0.47 },
-    { model: "cisternUrn", turn: 0.7 },
-    { model: "cisternUrn", turn: 2.9 },
-    { model: "cisternUrn", turn: 0.2 }
+    { model: "cisternStudyMasonryOutlet", turn: 0 },
+    { model: "cisternStudyHandPump", turn: 0 },
+    { model: "cisternStudyHandPump", turn: 0 },
+    { model: "cisternStudyValveWheel", turn: 0 },
+    { model: "cisternStudyValveWheel", turn: 0 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudySupportedPipe", turn: Math.PI / 2 },
+    { model: "cisternStudyServiceBench", turn: Math.PI / 2 },
+    { model: "cisternStudyServiceBench", turn: 0 },
+    { model: "cisternStudyHandPump", turn: 0 }
   ],
   background: 0x14201f,
   // Basins in the cistern's own grey-green stone, their water a little greener.
@@ -412,16 +435,12 @@ export const cisternArena: ArenaLook = {
   light: { sky: 0xeafbff, ground: 0x809696, sun: 0xf4ffff }
 }
 
-/**
- * The ember kilnworks (`art/environment/ember-kilnworks`): flagstones dark
- * with soot, furnaces and chimneys along the north wall, the day's work
- * left by the others (its fire pits are the game's: see
- * `presentation/hazards.ts`).
- */
+/** Fire trenches divide the foundry. Low casting benches and compact machinery interrupt its flanks; the furnace, chimney and covered work bays stand on the exterior paving. */
 export const kilnworksArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["kilnworksFloorPlain", "kilnworksFloorPlain", "kilnworksFloorPlain", "kilnworksFloorCracked"],
     color: 0x1d1614,
     border: ["kilnworksFloorWorn"],
@@ -445,24 +464,38 @@ export const kilnworksArena: ArenaLook = {
     inner: { kind: "run", model: "kilnworksWallLow" }
   },
   scenery: [
-    { model: "kilnworksVent", at: { x: 1660, y: 150 }, turn: 0 },
-    { model: "kilnworksVent", at: { x: 140, y: 1660 }, turn: Math.PI / 2 }
+    { model: "kilnworksStudyForgingBay", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "kilnworksStudyBrickFurnace", at: { x: 900, y: -130 }, turn: 0 },
+    { model: "kilnworksStudyButtressedChimney", at: { x: 1300, y: -130 }, turn: 0 },
+    { model: "kilnworksStudyCastingStation", at: { x: -145, y: 1000 }, turn: Math.PI / 2 },
+    { model: "kilnworksStudyIronIngots", at: { x: 520, y: 65 }, turn: 0 },
+    { model: "kilnworksStudyTongsTray", at: { x: 840, y: 60 }, turn: 0 },
+    { model: "kilnworksStudyCoalPile", at: { x: 1300, y: 65 }, turn: 0 },
+    { model: "kilnworksStudySmallCrucible", at: { x: 1450, y: 60 }, turn: 0 },
+    { model: "kilnworksStudyCastingMould", at: { x: 1180, y: 65 }, turn: 0 },
+    { model: "kilnworksStudyIronIngots", at: { x: 540, y: 840 }, turn: 0 },
+    { model: "kilnworksStudyTongsTray", at: { x: 1260, y: 950 }, turn: 0 },
+    { model: "kilnworksStudySmallCrucible", at: { x: 1280, y: 490 }, turn: 0 },
+    { model: "kilnworksStudyCastingMould", at: { x: 1190, y: 1725 }, turn: 0 },
+    { model: "kilnworksStudyCoalPile", at: { x: 65, y: 690 }, turn: 0 },
+    { model: "kilnworksStudyIronIngots", at: { x: -100, y: 950 }, turn: 0 },
+    { model: "kilnworksStudyCastingMould", at: { x: -105, y: 1050 }, turn: 0 },
+    { model: "kilnworksStudySmallCrucible", at: { x: 900, y: -75 }, turn: 0 },
+    { model: "kilnworksStudyCoalPile", at: { x: 1230, y: -130 }, turn: 0 }
   ],
   props: [
-    { model: "kilnworksToolRack", turn: 0 },
-    { model: "kilnworksFurnace", turn: 0 },
-    { model: "kilnworksFurnace", turn: 0 },
-    { model: "kilnworksChimney", turn: 0 },
-    { model: "kilnworksChimney", turn: 0 },
-    { model: "kilnworksCrate", turn: 0.3 },
-    { model: "kilnworksBarrel", turn: 0 },
-    { model: "kilnworksCoalBin", turn: Math.PI / 2 },
-    { model: "kilnworksAnvil", turn: Math.PI / 2 + 0.1 },
-    { model: "kilnworksCrucible", turn: 0.4 },
-    { model: "kilnworksBarrel", turn: 0 },
-    { model: "kilnworksBoiler", turn: 0 },
-    { model: "kilnworksCrate", turn: Math.PI / 2 - 0.37 },
-    { model: "kilnworksCrate", turn: 0.2 }
+    { model: "kilnworksStudyHammerRack", turn: 0 },
+    { model: "kilnworksStudyCoalBin", turn: 0 },
+    { model: "kilnworksStudyCoalBin", turn: 0 },
+    { model: "kilnworksStudyCompactBoiler", turn: 0 },
+    { model: "kilnworksStudyCastingBench", turn: Math.PI / 2 },
+    { model: "kilnworksStudyHammerRack", turn: Math.PI / 2 },
+    { model: "kilnworksStudyCoalBin", turn: Math.PI / 2 },
+    { model: "kilnworksStudyCoalBin", turn: 0 },
+    { model: "kilnworksStudyCastingBench", turn: 0 },
+    { model: "kilnworksStudyCastingBench", turn: 0 },
+    { model: "kilnworksStudyCompactAnvil", turn: 0 },
+    { model: "kilnworksStudyCompactBoiler", turn: 0 }
   ],
   background: 0x1a1412,
   // Fire trenches framed in dark iron-grey stone.
@@ -474,15 +507,12 @@ export const kilnworksArena: ArenaLook = {
   light: { sky: 0xfff2e8, ground: 0x94847c, sun: 0xffe9d6 }
 }
 
-/**
- * The overgrown sanctuary (`art/environment/overgrown-sanctuary`): mossy
- * flagstones, its low walls and pillars taken by roots, a shrine between
- * two saplings, and what grew in along the walls.
- */
+/** Rooted saplings replace the corner pillars along the sanctuary's lanes. Low growth and fallen leaves dress the ground; rooted ruins and the shrine grove frame the exterior. */
 export const sanctuaryArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["sanctuaryFloorPlain", "sanctuaryFloorPlain", "sanctuaryFloorPlain", "sanctuaryFloorCracked"],
     color: 0x1f2a1d,
     border: ["sanctuaryFloorWorn"],
@@ -505,39 +535,53 @@ export const sanctuaryArena: ArenaLook = {
     inner: { kind: "run", model: "sanctuaryWallLow" }
   },
   scenery: [
-    { model: "sanctuaryFern", at: { x: 34, y: 1100 }, turn: Math.PI / 2 - 0.57 },
-    { model: "sanctuaryFern", at: { x: 1150, y: 1768 }, turn: 2.3 },
-    { model: "sanctuaryFern", at: { x: 1766, y: 980 }, turn: 0.4 }
+    { model: "sanctuaryStudyRootGateway", at: { x: 900, y: -115 }, turn: 0 },
+    { model: "sanctuaryStudyShrineGrove", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "sanctuaryStudyRootedRuin", at: { x: -145, y: 600 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudyMushroomGarden", at: { x: -145, y: 1300 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 330, y: 300 }, turn: 0 },
+    { model: "sanctuaryStudySmallMushrooms", at: { x: 400, y: 430 }, turn: 0 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 1440, y: 420 }, turn: 0 },
+    { model: "sanctuaryStudySeedPods", at: { x: 1370, y: 320 }, turn: 0 },
+    { model: "sanctuaryStudyMossStone", at: { x: 350, y: 1510 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 1510, y: 1480 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudySmallMushrooms", at: { x: 430, y: 1440 }, turn: 0 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 290, y: 1380 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 910, y: 60 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 70, y: 420 }, turn: 0 },
+    { model: "sanctuaryStudyMossStone", at: { x: 1740, y: 480 }, turn: 0 },
+    { model: "sanctuaryStudySeedPods", at: { x: 430, y: 65 }, turn: 0 },
+    { model: "sanctuaryStudySmallMushrooms", at: { x: 1320, y: 60 }, turn: 0 },
+    { model: "sanctuaryStudyGroundFern", at: { x: 840, y: -120 }, turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLeaves", at: { x: 500, y: -130 }, turn: 0 },
+    { model: "sanctuaryStudySeedPods", at: { x: -100, y: 1360 }, turn: 0 },
+    { model: "sanctuaryStudyMossStone", at: { x: -170, y: 700 }, turn: 0 }
   ],
   props: [
-    { model: "sanctuaryShrine", turn: 0 },
-    { model: "sanctuarySapling", turn: 0.6 },
-    { model: "sanctuarySapling", turn: Math.PI / 2 + 0.53 },
-    { model: "sanctuaryTimberPost", turn: 0 },
-    { model: "sanctuaryTimberPost", turn: 0 },
-    { model: "sanctuaryRootClump", turn: 0.8 },
-    { model: "sanctuaryStump", turn: 0 },
-    { model: "sanctuaryBush", turn: Math.PI / 2 },
-    { model: "sanctuaryFallenLog", turn: Math.PI / 2 + 0.15 },
-    { model: "sanctuaryMushrooms", turn: 0.2 },
-    { model: "sanctuaryShrineBroken", turn: -Math.PI / 2 },
-    { model: "sanctuaryBush", turn: 0.4 }
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyRootedSapling", turn: 0 },
+    { model: "sanctuaryStudyCompactShrine", turn: 0 },
+    { model: "sanctuaryStudyHollowStump", turn: 0 },
+    { model: "sanctuaryStudyHollowStump", turn: 0 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyFallenLog", turn: Math.PI / 2 },
+    { model: "sanctuaryStudyTimberSeat", turn: 0 },
+    { model: "sanctuaryStudyTimberSeat", turn: 0 }
   ],
   background: 0x161e15,
   light: { sky: 0xf3ffea, ground: 0x869480, sun: 0xfbffe8 }
 }
 
-/**
- * The basalt citadel (`art/environment/basalt-citadel`): a keep's court of
- * dark stone with a medallion in its middle. Its north wall is laid out the
- * same on both sides of a broken throne (banners, braziers); what the
- * garrison left lies about the other walls. All of it is props: it blocks
- * (see `content/arena.ts`).
- */
+/** A ring of four pillars surrounds the keep; banners and equipment racks mark the outer approaches. Small supplies dress the floor; a throne court and supported siege yard stand outside. */
 export const citadelArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["citadelFloorPlain", "citadelFloorPlain", "citadelFloorPlain", "citadelFloorCracked"],
     color: 0x1c1a1d,
     border: ["citadelFloorWorn"],
@@ -559,27 +603,42 @@ export const citadelArena: ArenaLook = {
     sorted: { kind: "pillar", models: ["citadelPillarLarge", "citadelPillarSmall"] },
     inner: { kind: "run", model: "citadelWallLow" }
   },
-  scenery: [],
+  scenery: [
+    { model: "citadelStudyThroneDais", at: { x: 900, y: -145 }, turn: 0 },
+    { model: "citadelStudyGuardShelter", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "citadelStudyBattlementBay", at: { x: 1400, y: -140 }, turn: 0 },
+    { model: "citadelStudySupportedRam", at: { x: -145, y: 900 }, turn: Math.PI / 2 },
+    { model: "citadelStudySupplyPouch", at: { x: 830, y: 65 }, turn: 0 },
+    { model: "citadelStudyUnlitTorches", at: { x: 480, y: 65 }, turn: Math.PI / 2 },
+    { model: "citadelStudySpareRings", at: { x: 1210, y: 65 }, turn: 0 },
+    { model: "citadelStudyRestingShield", at: { x: 1320, y: 65 }, turn: 0 },
+    { model: "citadelStudyFoldedBanner", at: { x: 970, y: 65 }, turn: 0 },
+    { model: "citadelStudySupplyPouch", at: { x: 650, y: 1000 }, turn: 0 },
+    { model: "citadelStudyRestingShield", at: { x: 1150, y: 820 }, turn: 0 },
+    { model: "citadelStudyUnlitTorches", at: { x: 1735, y: 1300 }, turn: 0 },
+    { model: "citadelStudySpareRings", at: { x: 70, y: 1300 }, turn: 0 },
+    { model: "citadelStudyFoldedBanner", at: { x: 330, y: -140 }, turn: 0 },
+    { model: "citadelStudyRestingShield", at: { x: -100, y: 980 }, turn: 0 },
+    { model: "citadelStudyUnlitTorches", at: { x: -180, y: 850 }, turn: 0 },
+    { model: "citadelStudySupplyPouch", at: { x: 970, y: -130 }, turn: 0 },
+    { model: "citadelStudySpareRings", at: { x: 610, y: 1750 }, turn: 0 }
+  ],
   props: [
-    { model: "citadelThroneBroken", turn: 0 },
-    { model: "citadelBrazierLarge", turn: 0 },
-    { model: "citadelBrazierLarge", turn: 0 },
-    { model: "citadelBannerTall", turn: 0 },
-    { model: "citadelBannerTall", turn: 0 },
-    { model: "citadelBrazierSmall", turn: 0 },
-    { model: "citadelBrazierSmall", turn: 0 },
-    { model: "citadelGargoyle", turn: 0 },
-    { model: "citadelGargoyle", turn: 0 },
-    { model: "citadelWeaponRack", turn: Math.PI / 2 },
-    { model: "citadelSiegeCrate", turn: 0.35 },
-    { model: "citadelBasaltRubble", turn: 1.1 },
-    { model: "citadelBasaltSpires", turn: 0.5 },
-    { model: "citadelBasaltRubble", turn: 2.5 },
-    { model: "citadelShieldRack", turn: -Math.PI / 2 },
-    { model: "citadelDrum", turn: 0.3 },
-    { model: "citadelWarTable", turn: Math.PI / 2 + 0.12 },
-    { model: "citadelSiegeCrate", turn: -0.5 },
-    { model: "citadelSupplyCache", turn: 0.15 }
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyRestrainedBanner", turn: 0 },
+    { model: "citadelStudyWeaponRack", turn: 0 },
+    { model: "citadelStudyShieldRack", turn: 0 },
+    { model: "citadelStudyWarTable", turn: 0 },
+    { model: "citadelStudyWeaponRack", turn: Math.PI / 2 },
+    { model: "citadelStudyShieldRack", turn: Math.PI / 2 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyWarTable", turn: Math.PI / 2 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 },
+    { model: "citadelStudyReinforcedCrate", turn: 0 }
   ],
   background: 0x191c23,
   // Fire pits framed in the court's stone, their fire a deeper ember than the plain orange.
@@ -590,23 +649,16 @@ export const citadelArena: ArenaLook = {
   // Cold light on the stone, so the braziers' and the pits' fire stands out.
   light: { sky: 0xeef2ff, ground: 0x84889a, sun: 0xfff4e6 },
   fires: [
-    { at: { x: 700, y: 35 }, height: 84 },
-    { at: { x: 1100, y: 35 }, height: 84 },
-    { at: { x: 24, y: 24 }, height: 58 },
-    { at: { x: 1776, y: 24 }, height: 58 }
+
   ]
 }
 
-/**
- * The saltwind harbor (`art/environment/saltwind-harbor`): a stone quay with
- * a boardwalk along its walls, nets and barrels at the back, bollards down
- * the sides, cargo and a boat hull where the dockers left them. Beyond the
- * walls: the sea's color.
- */
+/** Cargo and moorings provide low cover around the harbor's water channels. Small dock gear lies on the boards; a supported crane, net shed and boat cradle stand outside the quay. */
 export const harborArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["harborFloorPlain", "harborFloorPlain", "harborFloorPlain", "harborFloorCracked"],
     color: 0x26333a,
     border: ["harborFloorDeck"],
@@ -629,26 +681,40 @@ export const harborArena: ArenaLook = {
     inner: { kind: "run", model: "harborWallLow" }
   },
   scenery: [
-    { model: "harborLifeRing", at: { x: 56, y: 1420 }, turn: 0.3 },
-    { model: "harborLifeRing", at: { x: 1380, y: 1744 }, turn: Math.PI / 2 - 0.17 }
+    { model: "harborStudyDockCrane", at: { x: 500, y: -155 }, turn: 0 },
+    { model: "harborStudyNetShed", at: { x: 1050, y: -155 }, turn: 0 },
+    { model: "harborStudyBoatOnCradle", at: { x: 1500, y: -140 }, turn: 0 },
+    { model: "harborStudyQuayLoadingBay", at: { x: -145, y: 900 }, turn: Math.PI / 2 },
+    { model: "harborStudyRopeCoil", at: { x: 380, y: 65 }, turn: 0 },
+    { model: "harborStudyBucket", at: { x: 260, y: 65 }, turn: 0 },
+    { model: "harborStudyFishBasket", at: { x: 1420, y: 65 }, turn: 0 },
+    { model: "harborStudyFoldedSail", at: { x: 830, y: 60 }, turn: 0 },
+    { model: "harborStudyRopeCoil", at: { x: 500, y: 1080 }, turn: 0 },
+    { model: "harborStudyFishBasket", at: { x: 1740, y: 1100 }, turn: 0 },
+    { model: "harborStudyBucket", at: { x: 75, y: 1030 }, turn: 0 },
+    { model: "harborStudyFoldedSail", at: { x: 1750, y: 1280 }, turn: Math.PI / 2 },
+    { model: "harborStudyRopeCoil", at: { x: 1330, y: 1150 }, turn: 0 },
+    { model: "harborStudyBucket", at: { x: 620, y: 1750 }, turn: 0 },
+    { model: "harborStudyFoldedSail", at: { x: 1190, y: 1730 }, turn: 0 },
+    { model: "harborStudyFishBasket", at: { x: -100, y: 960 }, turn: 0 },
+    { model: "harborStudyRopeCoil", at: { x: 450, y: -100 }, turn: 0 }
   ],
   props: [
-    { model: "harborNetRack", turn: 0 },
-    { model: "harborBarrelStack", turn: 0 },
-    { model: "harborBarrelStack", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborBollard", turn: 0 },
-    { model: "harborAnchor", turn: Math.PI / 2 },
-    { model: "harborCargoPallet", turn: Math.PI / 2 + 0.2 },
-    { model: "harborFishCrate", turn: Math.PI / 2 - 0.3 },
-    { model: "harborCapstan", turn: 0.3 },
-    { model: "harborBuoy", turn: 0 },
-    { model: "harborWaveRock", turn: 0.7 },
-    { model: "harborJettyPost", turn: 0 },
-    { model: "harborBoatHull", turn: 0.05 },
-    { model: "harborLanternHook", turn: 0 }
+    { model: "harborStudyNetRack", turn: 0 },
+    { model: "harborStudyBarrelStack", turn: 0 },
+    { model: "harborStudyBarrelStack", turn: 0 },
+    { model: "harborStudyLanternPost", turn: 0 },
+    { model: "harborStudyLanternPost", turn: 0 },
+    { model: "harborStudyBollard", turn: 0 },
+    { model: "harborStudyBollard", turn: 0 },
+    { model: "harborStudyHandcart", turn: 0 },
+    { model: "harborStudyCargoCrate", turn: 0 },
+    { model: "harborStudyBarrel", turn: 0 },
+    { model: "harborStudyLifeRingStand", turn: Math.PI / 2 },
+    { model: "harborStudyMooringCluster", turn: 0 },
+    { model: "harborStudyBarrel", turn: 0 },
+    { model: "harborStudyCargoCrate", turn: 0 },
+    { model: "harborStudyMooringCluster", turn: 0 }
   ],
   background: 0x1b3a4a,
   // Channels framed in the quay's stone.
@@ -659,16 +725,12 @@ export const harborArena: ArenaLook = {
   light: { sky: 0xf0f8ff, ground: 0x84909a, sun: 0xffffff }
 }
 
-/**
- * The ochre necropolis (`art/environment/ochre-necropolis`): sand-worn
- * stone around a sun medallion, obelisks, urns and torches along the north
- * wall, a winged statue facing its offering table, and what the sand and
- * the robbers left.
- */
+/** The obelisk ring and elemental pools remain. Compact burial goods and folded-wing guardians provide cover; the tomb gate, burial dais and sun altar frame the burial ground. */
 export const necropolisArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["necropolisFloorPlain", "necropolisFloorPlain", "necropolisFloorPlain", "necropolisFloorCracked"],
     color: 0x3a2c1e,
     border: ["necropolisFloorWorn"],
@@ -691,26 +753,38 @@ export const necropolisArena: ArenaLook = {
     inner: { kind: "run", model: "necropolisWallLow" }
   },
   scenery: [
-    { model: "necropolisSandDrift", at: { x: 430, y: 1758 }, turn: 0 },
-    { model: "necropolisSandDrift", at: { x: 1520, y: 48 }, turn: Math.PI },
-    { model: "necropolisSandDrift", at: { x: 1752, y: 1620 }, turn: Math.PI / 2 }
+    { model: "necropolisStudyTombGateway", at: { x: 900, y: -115 }, turn: 0 },
+    { model: "necropolisStudyOfferingAwning", at: { x: 400, y: -155 }, turn: 0 },
+    { model: "necropolisStudySunAltar", at: { x: 1400, y: -130 }, turn: 0 },
+    { model: "necropolisStudyBurialDais", at: { x: -155, y: 900 }, turn: 0 },
+    { model: "necropolisStudyOfferingBowl", at: { x: 550, y: 65 }, turn: 0 },
+    { model: "necropolisStudyCanopicJar", at: { x: 310, y: 65 }, turn: 0 },
+    { model: "necropolisStudyPotteryShards", at: { x: 1460, y: 70 }, turn: 0 },
+    { model: "necropolisStudyFoldedLinen", at: { x: 1220, y: 60 }, turn: 0 },
+    { model: "necropolisStudyGlyphTablet", at: { x: 1590, y: 65 }, turn: 0 },
+    { model: "necropolisStudyFoldedLinen", at: { x: 70, y: 1400 }, turn: 0 },
+    { model: "necropolisStudyCanopicJar", at: { x: 1740, y: 1400 }, turn: 0 },
+    { model: "necropolisStudyPotteryShards", at: { x: 500, y: 1190 }, turn: 0 },
+    { model: "necropolisStudyGlyphTablet", at: { x: 1250, y: 675 }, turn: 0 },
+    { model: "necropolisStudyOfferingBowl", at: { x: -110, y: 975 }, turn: 0 },
+    { model: "necropolisStudyFoldedLinen", at: { x: -170, y: 1050 }, turn: 0 },
+    { model: "necropolisStudyCanopicJar", at: { x: 500, y: -150 }, turn: 0 },
+    { model: "necropolisStudyGlyphTablet", at: { x: 1330, y: -120 }, turn: 0 },
+    { model: "necropolisStudyPotteryShards", at: { x: 1380, y: 1730 }, turn: 0 }
   ],
   props: [
-    { model: "necropolisObelisk", turn: 0 },
-    { model: "necropolisObelisk", turn: 0 },
-    { model: "necropolisUrnTall", turn: 0 },
-    { model: "necropolisUrnTall", turn: 0 },
-    { model: "necropolisTorchStand", turn: 0 },
-    { model: "necropolisTorchStand", turn: 0 },
-    { model: "necropolisWingStatue", turn: Math.PI / 2 },
-    { model: "necropolisOfferingTable", turn: Math.PI / 2 },
-    { model: "necropolisSandRockLarge", turn: Math.PI / 2 - 0.37 },
-    { model: "necropolisSarcophagus", turn: 0 },
-    { model: "necropolisDeadShrub", turn: 0 },
-    { model: "necropolisSandRockSmall", turn: 0.4 },
-    { model: "necropolisUrnBroken", turn: 0.8 },
-    { model: "necropolisCanopicJars", turn: 0.3 },
-    { model: "necropolisObeliskBroken", turn: 0 }
+    { model: "necropolisStudyHandledAmphora", turn: 0 },
+    { model: "necropolisStudyHandledAmphora", turn: 0 },
+    { model: "necropolisStudyWingGuardian", turn: 0 },
+    { model: "necropolisStudyWingGuardian", turn: 0 },
+    { model: "necropolisStudyOfferingTable", turn: Math.PI / 2 },
+    { model: "necropolisStudyOfferingTable", turn: Math.PI / 2 },
+    { model: "necropolisStudyFittedSarcophagus", turn: 0 },
+    { model: "necropolisStudyFittedSarcophagus", turn: 0 },
+    { model: "necropolisStudyCanopicTrio", turn: 0 },
+    { model: "necropolisStudyCanopicTrio", turn: 0 },
+    { model: "necropolisStudyFittedSarcophagus", turn: 0 },
+    { model: "necropolisStudyWingGuardian", turn: 0 }
   ],
   background: 0x2b2118,
   // A fire trench and a basin framed in sandstone.
@@ -722,20 +796,16 @@ export const necropolisArena: ArenaLook = {
   // Late sun on the sand.
   light: { sky: 0xfff6e2, ground: 0x9a8a72, sun: 0xfff0d0 },
   fires: [
-    { at: { x: 460, y: 16 }, height: 86 },
-    { at: { x: 1340, y: 16 }, height: 86 }
+
   ]
 }
 
-/**
- * The frostbound monastery (`art/environment/frostbound-monastery`): cold
- * stone, a shrine between two banners, a bench and a brazier by each side
- * wall, ice and snow where the cold got in.
- */
+/** Low cloister walls retain their open corners. Benches, fitted lanterns and an attached bell provide cover; the bell tower, pavilion and winter hearth stand on the exterior paving. */
 export const monasteryArena: ArenaLook = {
   unitsPerMeter: 70,
   floor: {
     kind: "tiles",
+    apronTiles: 2,
     tiles: ["monasteryFloorPlain", "monasteryFloorPlain", "monasteryFloorPlain", "monasteryFloorCracked"],
     color: 0x2a3036,
     border: ["monasteryFloorWorn"],
@@ -758,31 +828,45 @@ export const monasteryArena: ArenaLook = {
     inner: { kind: "run", model: "monasteryWallLow" }
   },
   scenery: [
-    { model: "monasterySnowdrift", at: { x: 60, y: 1130 }, turn: 0.3 },
-    { model: "monasterySnowdrift", at: { x: 600, y: 1762 }, turn: 2.2 },
-    { model: "monasterySnowdrift", at: { x: 1740, y: 300 }, turn: Math.PI / 2 - 0.37 }
+    { model: "monasteryStudyShrinePavilion", at: { x: 900, y: -155 }, turn: 0 },
+    { model: "monasteryStudyBellTower", at: { x: 400, y: -140 }, turn: 0 },
+    { model: "monasteryStudyCloisterGateway", at: { x: 1400, y: -115 }, turn: 0 },
+    { model: "monasteryStudyWinterHearth", at: { x: -145, y: 900 }, turn: Math.PI / 2 },
+    { model: "monasteryStudyTeaCup", at: { x: 430, y: 60 }, turn: 0 },
+    { model: "monasteryStudyPrayerBooks", at: { x: 550, y: 65 }, turn: 0 },
+    { model: "monasteryStudyFoldedMat", at: { x: 830, y: 60 }, turn: 0 },
+    { model: "monasteryStudyIncenseBowl", at: { x: 970, y: 60 }, turn: 0 },
+    { model: "monasteryStudyIceChips", at: { x: 1390, y: 60 }, turn: 0 },
+    { model: "monasteryStudyPrayerBooks", at: { x: 330, y: 900 }, turn: 0 },
+    { model: "monasteryStudyFoldedMat", at: { x: 1470, y: 900 }, turn: 0 },
+    { model: "monasteryStudyTeaCup", at: { x: 1740, y: 500 }, turn: 0 },
+    { model: "monasteryStudyIncenseBowl", at: { x: 65, y: 500 }, turn: 0 },
+    { model: "monasteryStudyIceChips", at: { x: 1740, y: 1250 }, turn: 0 },
+    { model: "monasteryStudyFoldedMat", at: { x: -105, y: 960 }, turn: 0 },
+    { model: "monasteryStudyPrayerBooks", at: { x: 960, y: -110 }, turn: 0 },
+    { model: "monasteryStudyTeaCup", at: { x: 350, y: -110 }, turn: 0 },
+    { model: "monasteryStudyIncenseBowl", at: { x: 830, y: -105 }, turn: 0 },
+    { model: "monasteryStudyIceChips", at: { x: 1260, y: -110 }, turn: 0 }
   ],
   props: [
-    { model: "monasteryShrine", turn: 0 },
-    { model: "monasteryBanner", turn: 0 },
-    { model: "monasteryBanner", turn: 0 },
-    { model: "monasteryLanternPost", turn: 0 },
-    { model: "monasteryLanternPost", turn: 0 },
-    { model: "monasteryBench", turn: Math.PI / 2 },
-    { model: "monasteryBench", turn: -Math.PI / 2 },
-    { model: "monasteryBrazier", turn: 0 },
-    { model: "monasteryBrazier", turn: 0 },
-    { model: "monasteryIceCluster", turn: 0.6 },
-    { model: "monasterySnowRocks", turn: Math.PI / 2 - 0.47 },
-    { model: "monasteryBell", turn: 0.3 },
-    { model: "monasteryIceCluster", turn: 0.2 },
-    { model: "monasterySnowRocks", turn: 2.4 }
+    { model: "monasteryStudySmallBellFrame", turn: 0 },
+    { model: "monasteryStudyPrayerBanner", turn: 0 },
+    { model: "monasteryStudyPrayerBanner", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 },
+    { model: "monasteryStudyFirewoodRack", turn: 0 },
+    { model: "monasteryStudyFirewoodRack", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyFittedLantern", turn: 0 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 },
+    { model: "monasteryStudyCloisterBench", turn: Math.PI / 2 }
   ],
   background: 0x1c212a,
   light: { sky: 0xeaf2ff, ground: 0x8a93a3, sun: 0xf6faff },
   fires: [
-    { at: { x: 22, y: 900 }, height: 56 },
-    { at: { x: 1778, y: 900 }, height: 56 }
+
   ]
 }
 
