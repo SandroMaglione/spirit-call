@@ -1,7 +1,7 @@
 # Spirits
 
 In the arena each character shows as her **spirit**: a small, faceted,
-low-poly creature of her element (the water spirit, the fire spirit). Her
+low-poly creature of her element (the water, fire, and wind spirits). Her
 illustrations, story, and portrait live in the menus; the spirit is what
 moves, fights, and is hit. This records how a spirit goes from a character
 sheet to the game, and the principles that made it work, so the next one is
@@ -73,7 +73,7 @@ a repeat of the same steps. The rules for model files in general are in
 ## Steps for a new spirit
 
 From the repository root, with Blender 4.5 LTS and `uv`; `<spirit>` is its
-folder under `art/spirits/` (the water and fire spirits are the examples
+folder under `art/spirits/` (the water, fire, and wind spirits are the examples
 to copy).
 
 1. **Reference.** Put the sheet in `<spirit>/reference/sheet.png` and crop
@@ -81,13 +81,16 @@ to copy).
    `top.png`, `bottom.png`, `hero.png` (the isometric render), each with
    the whole figure and some background.
 2. **Config.** Write `<spirit>/spirit.json` (see `tools/common.py`): its
-   Blender file, the mask color (`blue` or `orange`; add one to `MASKS`
+   Blender file, the mask color (`blue`, `orange`, or `mint`; add one to `MASKS`
    for a new color), its eyes (`light` or `dark`), the sheet's background,
    the render lights, and where to search for the isometric camera.
 3. **Measure.** Write `<spirit>/sheet.py` from the closest example: it
    writes `sheet.json` (outlines, eyes, floating parts). Water measures a
    body with a floating nub and glowing eyes; fire a body with a nub under
-   a neck, floating shards, and dark eyes (holes).
+   a neck, floating shards, and dark eyes (holes); wind a ball (an ellipse
+   fitted where its outline meets the background) with parts growing from
+   it: leaves (base, tip, widths) and curling tendrils (a middle line and
+   its widths, matched between the views point by point).
 4. **Build.** Write `<spirit>/build.py` from the closest example: loft,
    eyes, floating parts, facet colors. It writes `<spirit>-spirit.blend`.
 5. **Fit the isometric camera and check:**
@@ -110,15 +113,16 @@ to copy).
    `<spirit>/export.py`, which writes `<spirit>-spirit.glb` and
    `src/presentation/assets/<spirit>-spirit.ts` (its spec: file, height,
    clips' timing). The height is the body's, without floating parts above
-   it, so every spirit stands as big as the others.
+   it (parts growing from it count: the wind spirit's top leaves), so every
+   spirit stands as big as the others.
 7. **Into the game:**
    - export its model from `assets/spirits.ts` and register it in `models`
      (`models.ts`) with its `GlowSpec` (rim, optional core, halo, eye
      glows: the eye nodes by their Blender names);
    - give its character a look in `looks.ts`: `kind: "model"`, its model,
      `moments: { idle: "Idle", run: { clip: "Run", distance } }`, and its
-     trail (`drops`: water drops falling and rippling, or `embers: true`
-     drifting up and burning out);
+     trail (`drops`, by `kind`: water drops falling and rippling, `"ember"`
+     drifting up and burning out, or `"wisp"` curling away and fading);
    - `pnpm check`, then play it on the network address (desktop and a
      phone-sized screen with touch) and record it moving.
 
@@ -139,3 +143,8 @@ to copy).
   shrinks a spirit whose parts float high above it; use the body's height.
 - **Sheets that disagree:** score every view and report which ones the sheet
   itself contradicts, instead of bending the model to fit all of them.
+- **Parts crossing the body:** a view loses a part's root where the body
+  hides it, or where it lies over the body in the body's color; root it on
+  the body's surface yourself (the wind spirit's horns grow from its sides).
+- **Pale spirits and glow:** a light palette washes out under a strong rim
+  or core; keep the `GlowSpec` low and in the darker swatch (wind: teal).

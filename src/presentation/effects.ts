@@ -321,11 +321,11 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
 const shedding = new WeakMap<object, { at: Vec2; owed: number }>()
 
 /**
- * Drops (or embers) off a moving spirit (a look's `drops`), into the 3D
- * scene so its body hides the ones behind it: each leaves from its back,
- * low on it, thrown back against its motion; drops fall to the floor,
- * about half leaving a ripple there, embers drift up and burn out. More
- * the faster it goes; none while it stands.
+ * Drops (or embers, or wisps) off a moving spirit (a look's `drops`), into
+ * the 3D scene so its body hides the ones behind it: each leaves from its
+ * back, low on it, thrown back against its motion; drops fall to the
+ * floor, about half leaving a ripple there, embers drift up and burn out,
+ * wisps curl away and fade. More the faster it goes; none while it stands.
  */
 export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
   queries: {
@@ -359,7 +359,9 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
       const across = (Math.random() - 0.5) * radius * 1.1
       const from = { x: at.x + back.x * radius * 0.9 - back.y * across, y: at.y + back.y * radius * 0.9 + back.x * across }
       const height = node.body.height * (0.12 + Math.random() * 0.3)
-      services.host.drops.emit(from, height, back, drops.embers === true ? 25 + Math.random() * 40 : 50 + Math.random() * 70, drops.size * (0.7 + Math.random() * 0.6), color, drops.embers === true)
+      const kind = drops.kind ?? "drop"
+      const thrown = kind === "drop" ? 50 + Math.random() * 70 : kind === "ember" ? 25 + Math.random() * 40 : 60 + Math.random() * 50
+      services.host.drops.emit(from, height, back, thrown, drops.size * (0.7 + Math.random() * 0.6), color, kind)
     }
   }
 })

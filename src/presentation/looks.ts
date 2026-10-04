@@ -12,6 +12,7 @@ import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { WallPlacement } from "../schema.ts"
+import type { TrailKind } from "./drop-trail.ts"
 import type { ModelId } from "./models.ts"
 
 /**
@@ -44,15 +45,16 @@ export interface Moments {
 
 /**
  * What a body sheds while it moves: about `rate` a second (at full speed),
- * thrown back from its back in `colors`, `size` world units across: drops
- * falling to the floor, about half leaving a ripple there, or (`embers`)
- * embers drifting up and burning out.
+ * thrown back from its back in `colors`, `size` world units across, each a
+ * `kind` (a drop unless said): drops falling to the floor, about half
+ * leaving a ripple there; embers drifting up and burning out; wisps curling
+ * away as they drift back and fade.
  */
 export interface Drops {
   readonly rate: number
   readonly colors: ReadonlyArray<number>
   readonly size: number
-  readonly embers?: boolean
+  readonly kind?: TrailKind
 }
 
 /** Weapons in hand: each weapon's model, attached to the body model's `grip` bone as it is (same scale and axes). */
@@ -89,7 +91,8 @@ export type BodyLook =
 
 /**
  * In the arena each character shows as her spirit (art/spirits/). The
- * Gunner (fire) is the fire spirit; the others are the water spirit for now: it bobs while it stands, hops
+ * Swordsman (wind) is the wind spirit, the Gunner (fire) the fire spirit;
+ * the others are the water spirit for now: it bobs while it stands, hops
  * while it runs (one hop per `distance` covered), and sheds drops behind
  * it; its moves have no clips yet (they play over its loops).
  */
@@ -109,11 +112,21 @@ const fireSpirit: BodyLook = {
   widthFactor: 1.5,
   heightFactor: view.bodyHeightFactor,
   moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
-  drops: { rate: 34, colors: [0xffd54a, 0xff8a3d, 0xe6391f, 0xfff176], size: 2.6, embers: true }
+  drops: { rate: 34, colors: [0xffd54a, 0xff8a3d, 0xe6391f, 0xfff176], size: 2.6, kind: "ember" }
+}
+
+/** The wind spirit, for the wind character (the Swordsman): it bobs on a breeze, its leaves fluttering, hops, and sheds curling wisps. */
+const windSpirit: BodyLook = {
+  kind: "model",
+  model: "windSpirit",
+  widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor,
+  moments: { idle: "Idle", run: { clip: "Run", distance: 120 } },
+  drops: { rate: 30, colors: [0x8ee3c1, 0x4cc7a7, 0xbfefdf, 0xffffff], size: 2.2, kind: "wisp" }
 }
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
-  swordsman: waterSpirit,
+  swordsman: windSpirit,
   gunner: fireSpirit,
   tidecaller: waterSpirit,
   stormcaller: waterSpirit
