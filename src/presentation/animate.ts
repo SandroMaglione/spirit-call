@@ -9,7 +9,7 @@ import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
-import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
+import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Ward, Weapon } from "../schema.ts"
 import { enemyPose } from "./enemy-pose.ts"
 import { enemyLooks } from "./looks.ts"
 import type { ActorNode } from "./host-types.ts"
@@ -38,7 +38,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
   queries: {
     player: Game.Query({ selection: { facing: Game.Query.read(Facing), dash: Game.Query.read(Dash) }, with: [Player] }),
     enemies: Game.Query({
-      selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), enemy: Game.Query.read(Enemy), stunned: Game.Query.read(Stunned), shield: Game.Query.optional(Shield) },
+      selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), enemy: Game.Query.read(Enemy), stunned: Game.Query.read(Stunned), shield: Game.Query.optional(Shield), ward: Game.Query.optional(Ward) },
       with: [Enemy]
     })
   },
@@ -73,6 +73,11 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     const clips = look.kind === "model" && spec !== undefined ? look.attackClips?.[spec.id] : undefined
     const pose = enemyPose(spec, data.phase.get(), data.attacker.get().elapsed, clips)
     if (pose !== null) node.body.sample?.(pose.clip, pose.progress)
+    else if (!held && look.kind === "model" && look.wardClip !== undefined && data.ward.present) {
+      const ward = data.ward.get()
+      const link = resources.tuning.get().enemies[kind].ward?.link
+      if (ward.ally !== null && link !== undefined) node.body.sample?.(look.wardClip, link > 0 ? Math.min(1, ward.formed / link) : 1)
+    }
     node.body.finishAnimation?.(held ? 0 : seconds)
   }
 })

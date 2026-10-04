@@ -1,0 +1,97 @@
+{
+  "source": "../volatile-model.blend",
+  "source_sha256": "e86e54c7feba18666cdc641b2148f87be5eec2d22fd6dfb04c1a9f6d3fdee647",
+  "triangles": 1768,
+  "bones": 5,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "Cracked rock body": {
+      "body": 688
+    },
+    "EyeSocket.R": {
+      "body": 10
+    },
+    "EyeSocket.L": {
+      "body": 10
+    },
+    "Eye.R": {
+      "body": 6
+    },
+    "Eye.L": {
+      "body": 6
+    },
+    "Mouth fissure": {
+      "body": 62
+    },
+    "Top rock": {
+      "body": 26
+    },
+    "Foot.L": {
+      "leg.L": 26
+    },
+    "Side rock.L": {
+      "body": 26
+    },
+    "Foot.R": {
+      "leg.R": 26
+    },
+    "Side rock.R": {
+      "body": 26
+    },
+    "Foot root.L": {
+      "body": 5,
+      "leg.L": 5
+    },
+    "Foot root.R": {
+      "body": 5,
+      "leg.R": 5
+    },
+    "Flame": {
+      "flame": 56
+    },
+    "Flame root": {
+      "flame": 12
+    },
+    "Flame inner light": {
+      "flame": 56
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true,
+  "rest_vertex_error_m": 2.9802322387695312e-08
+}

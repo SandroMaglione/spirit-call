@@ -1,16 +1,17 @@
-# Static enemy model review tools
+# Enemy model and animation review tools
 
 The model stage of `docs/spirits.md`, adapted for the Warden, Stalker and
 Volatile sheets. Each enemy has an independent `production/` folder with
 the preserved sheet, labeled config, measurements, build recipe, editable
-Blender file, static GLB, renders and verification. No runtime modules are
-generated here.
+Blender file, static GLB, renders and verification. Approved animation and
+game exports are saved in a separate `production/animated/` folder.
 
 For interactive 3D inspection, run `pnpm dev --host --port 5199` and open
 `http://localhost:5199/art/enemies/warden-stalker-volatile-review.html`.
 Choose an enemy, drag to orbit, scroll or pinch to zoom, or use the camera
 and wireframe buttons. Add `?kind=stalker` or `?kind=volatile` for a direct
 model link. The page loads the saved static GLBs and reference images.
+Add `?animated` to inspect the game GLBs, select a clip, or pause its pose.
 The Face close-up button centers the camera on the eyes; the comparison
 selector also includes the rendered face close-up.
 
@@ -44,5 +45,16 @@ Measurements retain the sheet's perspective and pose disagreements. The
 source recipes explain deliberate simplifications rather than silently
 changing the reference. Static GLBs keep separate editable parts and one
 vertex-color material. Enemy batching needs one skinned mesh after review.
-Animation timings, rigs, clips, runtime glow and game registration are later
-steps. Pixel studies here do not claim live gameplay or phone performance.
+The animated export preserves every approved rest vertex to within one
+millionth of a meter, joins the parts into one vertex-color mesh, and gives
+the game a shared animation atlas. It never rebuilds the approved sources.
+
+- `animate.py`: rig an approved model and export its game GLB and TypeScript
+  metadata. Run with `-- <kind> build-export` in Blender.
+- `verify-animation.py`: check every sampled frame after a fresh GLB import,
+  root motion, phase continuity, rest bounds, triangle and bone budgets.
+- `render-animation.py`: render the saved source's game-camera action poses.
+- `animation-board.py`: compose those poses into the animation review board.
+
+See `../warden-stalker-volatile-integration.md` for the runtime wiring and
+validation. Phone viewport checks do not claim physical-device performance.

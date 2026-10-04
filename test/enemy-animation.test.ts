@@ -5,6 +5,19 @@ import { enemyPose } from "../src/presentation/enemy-pose.ts"
 import { enemyLooks } from "../src/presentation/looks.ts"
 
 describe("enemy animation sampling", () => {
+  it("keeps Stalker's blink distinct from its close slash and uses each simulation phase", () => {
+    const look = enemyLooks.stalker
+    if (look.kind !== "model") throw new Error("Stalker needs its model")
+    for (const spec of enemies.stalker.attacks) {
+      const override = look.attackClips?.[spec.id]
+      for (const phase of ["windup", "active", "recovery"] as const) {
+        const name = phase === "windup" ? "Windup" : phase === "active" ? "Active" : "Recovery"
+        expect(enemyPose(spec, phase, spec[phase] / 2, override)).toEqual({
+          clip: name + (spec.id === "blink" ? "Blink" : ""), progress: .5
+        })
+      }
+    }
+  })
   it("samples the stomp clips over the stomp's own phase duration", () => {
     const stomp = enemies.brute.attacks.find((attack) => attack.id === "stomp")!
     const look = enemyLooks.brute

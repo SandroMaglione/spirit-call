@@ -1,0 +1,168 @@
+{
+  "source": "../warden-model.blend",
+  "source_sha256": "c77280456b7a40d31680730cc1d46a339cc350b8af9d0b359b4a9d1d1cff4ec0",
+  "triangles": 1775,
+  "bones": 10,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "Robe": {
+      "body": 162
+    },
+    "Hood": {
+      "head": 152
+    },
+    "Hood inner wall": {
+      "head": 28
+    },
+    "FaceRecess": {
+      "head": 15
+    },
+    "EyeSocket.L": {
+      "head": 11
+    },
+    "Eye.L": {
+      "head": 11
+    },
+    "EyeSocket.R": {
+      "head": 11
+    },
+    "Eye.R": {
+      "head": 11
+    },
+    "Collar": {
+      "body": 26
+    },
+    "Sleeve.L": {
+      "arm.L": 42
+    },
+    "Hand.L": {
+      "arm.L": 26
+    },
+    "Cuff.L": {
+      "arm.L": 12
+    },
+    "Sleeve.R": {
+      "arm.R": 42
+    },
+    "Hand.R": {
+      "arm.R": 26
+    },
+    "Cuff.R": {
+      "arm.R": 12
+    },
+    "Foot.L": {
+      "body": 26
+    },
+    "Foot.R": {
+      "body": 26
+    },
+    "Open robe inner cloth": {
+      "body": 31
+    },
+    "Robe trim.L": {
+      "body": 60
+    },
+    "Robe trim.R": {
+      "body": 58
+    },
+    "Chest trim.L": {
+      "body": 20
+    },
+    "Chest trim.R": {
+      "body": 20
+    },
+    "Chest emblem gold rim": {
+      "body": 8
+    },
+    "Chest emblem cyan": {
+      "body": 5
+    },
+    "Belt": {
+      "body": 24
+    },
+    "Belt clasp gold rim": {
+      "body": 8
+    },
+    "Belt clasp cyan": {
+      "body": 5
+    },
+    "Ribbon.Upper.R": {
+      "ribbon.Upper.R": 27
+    },
+    "Ribbon.Upper.L": {
+      "ribbon.Upper.L": 27
+    },
+    "Ribbon.Lower.R": {
+      "ribbon.Lower.R": 27
+    },
+    "Ribbon.Lower.L": {
+      "ribbon.Lower.L": 27
+    },
+    "Staff shaft": {
+      "staff": 24
+    },
+    "Staff ring": {
+      "staff": 36
+    },
+    "Staff cyan crystal": {
+      "staff": 34
+    },
+    "Staff crown point": {
+      "staff": 8
+    },
+    "Staff crown point.001": {
+      "staff": 8
+    },
+    "Staff crown point.002": {
+      "staff": 8
+    },
+    "Staff crown point.003": {
+      "staff": 8
+    },
+    "Staff gold ferrule": {
+      "staff": 12
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Buff": {
+      "lastKeySeconds": 0.8,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true,
+  "rest_vertex_error_m": 5.960464477539063e-08
+}

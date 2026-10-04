@@ -1,0 +1,180 @@
+{
+  "source": "../stalker-model.blend",
+  "source_sha256": "3328b780f7815a721af613b720c350dbb0a97d3a9eb98298bb0797cbffa7e174",
+  "triangles": 1860,
+  "bones": 7,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "Thorax": {
+      "body": 62
+    },
+    "Pointed head": {
+      "head": 145
+    },
+    "Hood inner wall": {
+      "head": 28
+    },
+    "FaceRecess": {
+      "head": 15
+    },
+    "EyeSocket.L": {
+      "head": 11
+    },
+    "Eye.L": {
+      "head": 11
+    },
+    "EyeSocket.R": {
+      "head": 11
+    },
+    "Eye.R": {
+      "head": 11
+    },
+    "Waist armor": {
+      "body": 34
+    },
+    "Shoulder.L": {
+      "body": 42
+    },
+    "Shoulder.R": {
+      "body": 42
+    },
+    "Upper arm.L": {
+      "arm.L": 34
+    },
+    "Upper arm.R": {
+      "arm.R": 34
+    },
+    "Arm blade.L": {
+      "arm.L": 50
+    },
+    "Arm blade.R": {
+      "arm.R": 50
+    },
+    "Thigh.L": {
+      "leg.L": 42
+    },
+    "Thigh.R": {
+      "leg.R": 42
+    },
+    "Shin.L": {
+      "leg.L": 26
+    },
+    "Shin.R": {
+      "leg.R": 26
+    },
+    "Foot.L": {
+      "leg.L": 34
+    },
+    "Foot.R": {
+      "leg.R": 34
+    },
+    "Dorsal armor": {
+      "body": 50
+    },
+    "Shoulder tip.L": {
+      "body": 8
+    },
+    "Shoulder joint.L": {
+      "body": 26
+    },
+    "Shoulder tip.R": {
+      "body": 8
+    },
+    "Shoulder joint.R": {
+      "body": 26
+    },
+    "Waist connection": {
+      "body": 10
+    },
+    "Limb connection.L.0": {
+      "body": 10
+    },
+    "Limb connection.L.1": {
+      "body": 5,
+      "arm.L": 5
+    },
+    "Limb connection.L.2": {
+      "arm.L": 10
+    },
+    "Limb connection.L.3": {
+      "body": 5,
+      "leg.L": 5
+    },
+    "Limb connection.L.4": {
+      "leg.L": 10
+    },
+    "Limb connection.L.5": {
+      "leg.L": 10
+    },
+    "Limb connection.R.0": {
+      "body": 10
+    },
+    "Limb connection.R.1": {
+      "body": 5,
+      "arm.R": 5
+    },
+    "Limb connection.R.2": {
+      "arm.R": 10
+    },
+    "Limb connection.R.3": {
+      "body": 5,
+      "leg.R": 5
+    },
+    "Limb connection.R.4": {
+      "leg.R": 10
+    },
+    "Limb connection.R.5": {
+      "leg.R": 10
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "WindupBlink": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "ActiveBlink": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "RecoveryBlink": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true,
+  "rest_vertex_error_m": 1.4901161193847656e-08
+}

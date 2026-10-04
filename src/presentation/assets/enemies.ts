@@ -8,6 +8,9 @@ import { bruteModel } from "./enemies/brute.ts"
 import { guardianModel } from "./enemies/guardian.ts"
 import { galeCasterModel } from "./enemies/gale-caster.ts"
 import { juggernautModel } from "./enemies/juggernaut.ts"
+import { wardenModel } from "./enemies/warden.ts"
+import { stalkerModel } from "./enemies/stalker.ts"
+import { volatileModel } from "./enemies/volatile.ts"
 
 export const enemyModels = {
   enemyDummy: dummyModel,
@@ -19,5 +22,8 @@ export const enemyModels = {
   enemySniper: sniperModel,
   enemyGuardian: guardianModel,
   enemyGaleCaster: galeCasterModel,
-  enemyJuggernaut: juggernautModel
+  enemyJuggernaut: juggernautModel,
+  enemyWarden: wardenModel,
+  enemyStalker: stalkerModel,
+  enemyVolatile: volatileModel
 }

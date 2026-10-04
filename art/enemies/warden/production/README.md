@@ -64,3 +64,11 @@ blender --background --python-exit-code 1 --python art/enemies/model-tools/verif
 
 Build replaces the generated source. Render and verify read the saved file,
 so manual edits can be reviewed without regenerating it.
+
+## Approved game export
+
+The approved model is now rigged and registered in the game. `animated/`
+contains the separate Blender source, game GLB, clip metadata, verification,
+and action renders. The static source above remains the model-review record.
+See [integration notes](../../warden-stalker-volatile-integration.md) for
+runtime behavior, commands, and browser validation.

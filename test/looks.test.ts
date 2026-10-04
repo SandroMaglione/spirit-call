@@ -80,6 +80,11 @@ describe("looks and models", () => {
     for (const kind of Object.keys(enemyLooks) as Array<EnemyKind>) {
       const look = enemyLooks[kind]
       if (look.kind !== "model") continue
+      if (look.wardClip !== undefined) {
+        expect(enemies[kind].ward, `${kind}: needs a simulated ward`).not.toBeNull()
+        const clips: Readonly<Record<string, ClipTiming>> = models[look.model].clips
+        expect(clips[look.wardClip], `${kind}: ward clip`).toBeDefined()
+      }
       for (const [attack, phases] of Object.entries(look.attackClips ?? {})) {
         expect(enemies[kind].attacks.some((spec) => spec.id === attack), `${kind}/${attack}`).toBe(true)
         const clips: Readonly<Record<string, ClipTiming>> = models[look.model].clips
