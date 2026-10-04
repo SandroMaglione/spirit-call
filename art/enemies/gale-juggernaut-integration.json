@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-04",
+  "initial_main": "e47184a",
+  "base_main": "9db5719",
+  "branch": "art/gale-juggernaut-game",
+  "network_url": "http://192.168.40.47:5207/",
+  "viewports": [
+    [
+      1280,
+      800
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "synthetic_touch": {
+    "movement_distance_world": 75.55264271437488,
+    "dash_charges_before": 2,
+    "dash_charges_after": 1
+  },
+  "phase_sampling": {
+    "batches": [
+      {
+        "id": "enemyGaleCaster",
+        "size": 3
+      },
+      {
+        "id": "enemyJuggernaut",
+        "size": 3
+      }
+    ],
+    "checked": 1743,
+    "maximumPoseCursorError": 0,
+    "phases": [
+      "juggernaut:quake:windup",
+      "juggernaut:quake:active",
+      "juggernaut:quake:recovery",
+      "galeCaster:gust:windup",
+      "juggernaut:sweep:windup",
+      "galeCaster:gust:active",
+      "galeCaster:gust:recovery",
+      "juggernaut:sweep:active",
+      "juggernaut:sweep:recovery"
+    ]
+  },
+  "lifecycle": {
+    "afterKill": [
+      {
+        "id": 43,
+        "kind": "galeCaster"
+      },
+      {
+        "id": 47,
+        "kind": "juggernaut"
+      },
+      {
+        "id": 64,
+        "kind": "galeCaster"
+      },
+      {
+        "id": 65,
+        "kind": "juggernaut"
+      }
+    ],
+    "afterRespawn": [
+      {
+        "id": 43,
+        "kind": "galeCaster"
+      },
+      {
+        "id": 47,
+        "kind": "juggernaut"
+      },
+      {
+        "id": 64,
+        "kind": "galeCaster"
+      },
+      {
+        "id": 65,
+        "kind": "juggernaut"
+      },
+      {
+        "id": 80,
+        "kind": "galeCaster"
+      },
+      {
+        "id": 81,
+        "kind": "juggernaut"
+      }
+    ],
+    "killBatches": [
+      2,
+      2
+    ],
+    "respawnBatches": [
+      3,
+      3
+    ],
+    "victims": [
+      {
+        "id": 40,
+        "kind": "galeCaster"
+      },
+      {
+        "id": 42,
+        "kind": "juggernaut"
+      }
+    ]
+  },
+  "body_instances_per_enemy": 1,
+  "separate_meshes_per_enemy": 0,
+  "physical_phone_performance": "not measured",
+  "checks": {
+    "pnpm_check": "typecheck, lint and 403 tests passed after rebasing",
+    "pnpm_build": "passed"
+  },
+  "note": "Browser session used an immortal player and controlled positions for inspection; simulation content is unchanged."
+}

@@ -35,7 +35,7 @@ export type Shot = string | { readonly clip: string; readonly from?: number; rea
  */
 export interface Moments {
   readonly idle: string
-  readonly run: { readonly clip: string; readonly distance: number }
+  readonly run: { readonly clip: string; readonly distance: number; readonly timeBased?: boolean }
   readonly attack?: ReadonlyArray<Shot>
   readonly power?: Shot
   readonly dash?: Shot
@@ -82,6 +82,8 @@ export type BodyLook =
       readonly model: ModelId
       /** Crowd models share a baked bone texture and one instance batch. */
       readonly batched?: boolean
+      /** Ease into or out of locomotion over these seconds; attack contacts remain exact. */
+      readonly transitionSeconds?: number
       /** Optional phase clips for a particular enemy attack, keyed by its moveset id. */
       readonly attackClips?: Readonly<Record<string, EnemyAttackClips>>
       readonly widthFactor: number
@@ -147,7 +149,7 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
 
 const enemyCapsule = (kind: EnemyKind): BodyLook => ({ kind: "capsule", color: view.enemies[kind].color, widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor })
 
-const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): BodyLook => ({
+const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({
   kind: "model", model, batched: true, ...(attackClips === undefined ? {} : { attackClips }),
   widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor,
   moments: { idle: "Idle", run: { clip: kind === "dummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
@@ -170,8 +172,15 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   warden: enemyCapsule("warden"),
   stalker: enemyCapsule("stalker"),
   volatile: enemyCapsule("volatile"),
-  galeCaster: enemyCapsule("galeCaster"),
-  juggernaut: enemyCapsule("juggernaut"),
+  galeCaster: {
+    ...enemyModel("galeCaster", "enemyGaleCaster", 140), transitionSeconds: .18,
+    moments: { idle: "Idle", run: { clip: "Run", distance: 140, timeBased: true }, hurt: "Hurt" }
+  },
+  juggernaut: {
+    ...enemyModel("juggernaut", "enemyJuggernaut", 90, {
+      quake: { windup: "WindupQuake", active: "ActiveQuake", recovery: "RecoveryQuake" }
+    }), transitionSeconds: .14
+  },
   sparringDummy: enemyCapsule("sparringDummy"),
   heavyDummy: enemyCapsule("heavyDummy")
 }

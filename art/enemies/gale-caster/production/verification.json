@@ -1,0 +1,80 @@
+{
+  "kind": "gale-caster",
+  "loader": "Three.js GLTFLoader",
+  "meshes": [
+    "SplitRobe",
+    "ShadowLegs",
+    "PointedFoot",
+    "PointedHood",
+    "FaceVoidL",
+    "FaceVoidR",
+    "HoodLipL",
+    "HoodLipR",
+    "ShadowCheekL",
+    "ShadowCheekR",
+    "EyeSocketL",
+    "EyeSocketR",
+    "EyeL",
+    "EyeR",
+    "EyeCoreL",
+    "EyeCoreR",
+    "Mantle",
+    "MantleBinding",
+    "SleeveL",
+    "SleeveR",
+    "StaffGrip",
+    "HandR",
+    "Belt",
+    "ChestStraps",
+    "ChestDiamond",
+    "DiamondInset",
+    "FrontBindingL",
+    "FrontBindingR",
+    "HemBinding",
+    "ScarfUpperR",
+    "ScarfUpperL",
+    "ScarfLowerR",
+    "ScarfLowerL",
+    "StaffShaft",
+    "ForearmL",
+    "CuffL",
+    "StaffRing",
+    "StaffCore",
+    "StaffPoint0",
+    "StaffPoint1",
+    "StaffPoint2",
+    "StaffPoint3"
+  ],
+  "materials": 1,
+  "triangles": 1950,
+  "face_symmetry": {
+    "centerline": "world X = 0",
+    "tolerance_m": 0.000001,
+    "max_position_error_m": 4.006853182580983e-10,
+    "max_color_error": 0,
+    "checked": [
+      "PointedHood",
+      "FaceVoid.L/.R",
+      "HoodLip.L/.R",
+      "ShadowCheek.L/.R",
+      "Eye.L/.R",
+      "EyeSocket.L/.R",
+      "EyeCore.L/.R"
+    ]
+  },
+  "animations": 0,
+  "bounds_gltf_m": {
+    "min": [
+      -0.5966851115226746,
+      0,
+      -0.5259153246879578
+    ],
+    "max": [
+      0.5966851115226746,
+      1.013712763786316,
+      0.4262310266494751
+    ]
+  },
+  "sha256": "b8a70330f51f631be77f5343b0f7c903dc2dc69b9a4b55c78a222156758d3cf2",
+  "status": "passed: static review asset, before rigging"
+}

@@ -1,0 +1,15 @@
+{
+  "metric": "silhouette intersection over union; independently normalized height, centered bounding box",
+  "target": 0.9,
+  "views": {
+    "front": 0.5697001273590367,
+    "back": 0.7273192643878217,
+    "left": 0.4680276326277566,
+    "right": 0.47637616758864604,
+    "top": 0.25801136156731364,
+    "bottom": 0.21401130112413297,
+    "hero": 0.5030526735833999
+  },
+  "orthographic_camera_elevation": 0,
+  "reference_note": "Unapproved simplified model pass. Score every view; see the model README for sheet conflicts and simplifications."
+}

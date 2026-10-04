@@ -42,6 +42,8 @@ export interface ActorBody {
   play(shot: Shot, seconds: number | null, hitAt: number | null): void
   /** A simulation-owned enemy phase, sampled directly rather than advanced by render time. */
   sample?(clip: string, progress: number): void
+  /** Finalize a blended pose after locomotion and simulation phase sampling. */
+  finishAnimation?(seconds: number): void
   shield?(relativeAngle: number): void
   dispose(): void
 }

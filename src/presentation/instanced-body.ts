@@ -19,9 +19,14 @@ export const instancedBody = (assets: RenderAssets, look: Extract<BodyLook, { ki
   const moments = look.moments ?? null
   const locomotion = freshLocomotion()
   let shot: { clip: string; elapsed: number; seconds: number } | null = atlas.clips.has("Spawn") ? { clip: "Spawn", elapsed: 0, seconds: atlas.clips.get("Spawn")!.seconds } : null
+  let selected: string | null = null
+  let previous: string | null = null
+  const previousPose = [0, 0, 0]
+  let transition = look.transitionSeconds ?? 0
   const pose = (name: string, seconds: number) => {
     const clip = atlas.clips.get(name)
     if (clip === undefined) return
+    selected = name
     const [a, b, weight] = atlasFrame(clip, seconds)
     instance.pose[0] = a; instance.pose[1] = b; instance.pose[2] = weight
   }
@@ -49,9 +54,26 @@ export const instancedBody = (assets: RenderAssets, look: Extract<BodyLook, { ki
         if (shot.elapsed >= shot.seconds) shot = null
       }
       if (shot !== null) pose(shot.clip, shot.elapsed / shot.seconds * atlas.clips.get(shot.clip)!.seconds)
-      else if (locomotion.running > .5 && run !== undefined) pose(moments.run.clip, locomotion.run * run.seconds)
+      else if (locomotion.running > .5 && run !== undefined) pose(moments.run.clip, (moments.run.timeBased ? locomotion.idle : locomotion.run) * run.seconds)
       else pose(moments.idle, locomotion.idle * (idle?.seconds ?? 2))
     },
+    ...(look.transitionSeconds === undefined ? {} : { finishAnimation(seconds: number) {
+      if (seconds <= 0 || selected === null) return
+      const duration = look.transitionSeconds!
+      if (previous !== null && selected !== previous) {
+        // Only loop boundaries blend. Windup → hit → recovery keeps the
+        // exact sampled contact poses, including a zero-length active phase.
+        if (atlas.clips.get(previous)?.loop || atlas.clips.get(selected)?.loop) {
+          for (let i = 0; i < 3; i++) instance.blendPose[i] = previousPose[i]!
+          transition = 0
+        } else transition = duration
+      }
+      const progress = duration <= 0 ? 1 : Math.min(1, transition / duration)
+      instance.blendPose[3] = progress * progress * (3 - 2 * progress)
+      transition += seconds
+      previous = selected
+      for (let i = 0; i < 3; i++) previousPose[i] = instance.pose[i]!
+    } }),
     dispose() {}
   }
 }

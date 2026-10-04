@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-04",
+  "branch": "art/gale-juggernaut-game",
+  "network_url": "http://192.168.40.47:5207/",
+  "static_sources_changed": false,
+  "simulation_content_changed": false,
+  "models": {
+    "galeCaster": {
+      "sha256": "4ad3f96b4c0dd7246e2be3ab45af6f77fb32ff0d5419c2b42de913736900caa3",
+      "hover_cycle_seconds": 2.4,
+      "source_hover_travel_m": 0.2,
+      "cast_forward_lean_degrees": 29.79380534680281,
+      "locomotion_transition_seconds": 0.18,
+      "maximum_reimport_error_m": 3.5762786865234375e-7
+    },
+    "juggernaut": {
+      "sha256": "556180069e13ae1a1dce09433a4a70f7f81236bfca003c9a2239d72ad2c9d083",
+      "stride_world_units": 90,
+      "stance_fraction": 0.62,
+      "source_foot_lift_m": 0.11,
+      "quake_forward_lean_degrees": 27.501974166279513,
+      "locomotion_transition_seconds": 0.14,
+      "maximum_reimport_error_m": 2.384185791015625e-7
+    }
+  },
+  "export_audits": {
+    "phase_contact_errors": 0,
+    "root_motion": false,
+    "ground_penetration": false,
+    "loop_closure": "passed",
+    "approved_rest_bounds": "preserved"
+  },
+  "browser": {
+    "desktop_viewport": [1280, 800],
+    "phone_viewport": [390, 844],
+    "atlas_shaders_compiled": true,
+    "active_phase_samples": 12,
+    "active_phase_blend_weight": 1,
+    "synthetic_touch": {
+      "maximum_distance_world": 552.488187050899,
+      "dash_charges_before": 2,
+      "minimum_dash_charges": 1,
+      "maximum_dash_remaining_seconds": 0.10666666666666669
+    },
+    "desktop_recording": "saved",
+    "final_phone_recording": "preview host disconnected; recording not retrieved",
+    "physical_phone_performance": "not measured"
+  },
+  "checks": {
+    "pnpm_check": "typecheck, lint and 407 tests passed",
+    "pnpm_build": "passed"
+  },
+  "note": "Browser inspection used an immortal player and controlled positions. Movement and dash were driven through synthetic touch pointer events."
+}

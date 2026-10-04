@@ -74,6 +74,7 @@ export const bakeAnimation = (source: ModelSource): AnimationAtlas => {
     shader.vertexShader = `
       uniform sampler2D enemyPoses;
       attribute vec4 instancePose;
+      attribute vec4 instancePoseBlend;
       attribute vec4 skinIndex;
       attribute vec4 skinWeight;
       mat4 enemyBone(float bone, float frame) {
@@ -96,6 +97,10 @@ export const bakeAnimation = (source: ModelSource): AnimationAtlas => {
     shader.vertexShader = shader.vertexShader
       .replace("#include <beginnormal_vertex>", `
         mat4 enemyTransform = enemySkin(instancePose.x) * (1.0 - instancePose.z) + enemySkin(instancePose.y) * instancePose.z;
+        if (instancePoseBlend.w < 1.0) {
+          mat4 outgoing = enemySkin(instancePoseBlend.x) * (1.0 - instancePoseBlend.z) + enemySkin(instancePoseBlend.y) * instancePoseBlend.z;
+          enemyTransform = outgoing * (1.0 - instancePoseBlend.w) + enemyTransform * instancePoseBlend.w;
+        }
         ${shield < 0 ? "" : `if (skinIndex.x == ${shield.toFixed(1)}) {
           float c = cos(instancePose.w), s = sin(instancePose.w);
           enemyTransform = mat4(c,0.0,-s,0.0, 0.0,1.0,0.0,0.0, s,0.0,c,0.0, 0.0,0.0,0.0,1.0) * enemyTransform;
@@ -104,6 +109,6 @@ export const bakeAnimation = (source: ModelSource): AnimationAtlas => {
       `)
       .replace("#include <begin_vertex>", "vec3 transformed = (enemyTransform * vec4(position, 1.0)).xyz;")
   }
-  material.customProgramCacheKey = () => `enemy-atlas-${bones}-${rows}-${shield}`
+  material.customProgramCacheKey = () => `enemy-atlas-blend-${bones}-${rows}-${shield}`
   return { geometry, material, texture, clips, dispose() { geometry.dispose(); material.dispose(); texture.dispose() } }
 }
