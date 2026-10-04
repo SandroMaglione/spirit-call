@@ -58,7 +58,14 @@ a repeat of the same steps. The rules for model files in general are in
    taken, the special, the ultimate) are the same for every spirit
    (`tools/moves.py`), shaped by a `STYLE` in its `animate.py`: how its
    character strikes (a lunge for a blade, a kick back for a gun).
-10. **Model first, then the game.** Each spirit is built and reviewed as a
+10. **The body says how she is.** On a phone the eyes are on the
+    character, not the HUD, so what matters shows on her: her halo pulses
+    brighter while her ultimate is ready and dims as her health runs low,
+    she pops up when she comes onto the field, and her eyes narrow through
+    a blow, go wide after a perfect dodge, and shut when she falls
+    (`view.spirit`, `DrawPlayer`). A new spirit gets all of this from its
+    halo (`GlowSpec`) and its look's `eyes`; nothing is built per spirit.
+11. **Model first, then the game.** Each spirit is built and reviewed as a
     model against its sheet (overlays, renders from the game's camera, at
     game size) before it gets clips, glow, a trail, and its look.
 
@@ -141,8 +148,12 @@ to copy).
      equal sheet dimensions or equal look factors do not guarantee equal
      arena size. Exclude runtime glow sprites from measured bounds;
    - `pnpm check`, then play it on the network address (desktop and a
-     phone-sized screen with touch) and record it moving and switching
-     to an existing character. Keep that size comparison with the review.
+     phone-sized screen with touch) and record it moving, striking
+     (every blow of its combo, the charged move, the dash, its special and
+     ultimate), and switching to an existing character. Keep that size
+     comparison with the review. Check the address the dev server prints:
+     when its port is taken (another session's server) it starts on the
+     next one, and the old address shows someone else's branch.
 
 ## Pitfalls met
 
@@ -169,6 +180,19 @@ to copy).
   If future ornaments float far above the body, review an explicit scale
   exception against these references and record its basis. Height alone
   cannot make differently proportioned bodies have equal widths.
+- **A turning part modeled tilted:** Thunder's ring is built tilted; turned
+  about the floor's axis it wobbles like a coin. Turn such a part about its
+  own axis (`HALO_AXIS` in Thunder's `animate.py`).
+- **A ring seen edge-on:** a sheet may draw a floating ring as an open
+  ellipse from the front and from the sides; a real ring cannot be both.
+  Follow the front and the game's camera, give it thickness (a hairline
+  vanishes at game size), and accept the lower side scores.
+- **A clip that never moves an object has no track for it:** the exporter
+  drops constant tracks (the dash keeps the body on the spot), so code and
+  tests must not expect every clip to have every track.
+- **Halos are shared by copies:** a copied model shares its glow sprites'
+  material; a body whose halo changes with its state needs its own
+  (`copyModel` gives a puppet one).
 - **Sheets that disagree:** score every view and report which ones the sheet
   itself contradicts, instead of bending the model to fit all of them.
 - **Parts crossing the body:** a view loses a part's root where the body
