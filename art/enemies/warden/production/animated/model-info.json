@@ -3,7 +3,7 @@
   "height_basis": "ground origin to highest approved rest-pose vertex",
   "triangles": 1775,
   "bones": 10,
-  "bytes": 374096,
+  "bytes": 380112,
   "clips": {
     "Idle": {
       "lastKeySeconds": 1.9666666666666666,

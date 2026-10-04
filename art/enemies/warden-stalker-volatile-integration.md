@@ -28,6 +28,34 @@ linked; attack poses take priority and stun prevents the ward pose.
 Volatile's face remains part of the body's rig, preserving the approved
 mirrored eyes and recessed sockets while its feet bounce and flame sways.
 
+## Stronger motion revision
+
+Locomotion now commits the body into its travel direction. Warden pitches
+forward into a glide, counters with its head and staff, and trails its four
+ribbons. Stalker leans into a low, long stride with its blades carried clear
+of the floor and its head aimed ahead. Volatile rocks forward over short,
+alternating steps with a compact bounce and a trailing flame. The planted
+half of each foot cycle travels backward under the moving body; the lifted
+half returns forward. Foot orientation and ground height compensate for
+the body lean, keeping Stalker's stance and Volatile's stubby proportions.
+
+Attacks build into a larger anticipation pose, hold it through the warning,
+then snap into contact over the final fifth of the windup. Warden retracts
+the staff and leans back before driving the orb forward with a torso twist;
+its cloth carries the release through recovery. Stalker coils one blade
+high and outside, then cuts across its body while the other blade guards.
+Its blink has a separate crouch, forward leap pose and landing settle.
+Volatile compresses and rocks back before a pronounced forward headbutt,
+with the flame lagging behind the impact. Active clips now finish the
+Stalker and Volatile swings, and recovery starts on that follow-through.
+Warden's zero-duration active phase instead starts recovery at release.
+
+The shared root remains stationary in every sampled frame, and the
+approved geometry and rig budgets are preserved. The pose board shows
+stride, anticipation, contact and follow-through for all three enemies.
+The viewer also plays complete attacks at the simulation's current timing
+and allows scrubbing; individual clips remain available for source review.
+
 Death follows the current game rule: the live body disappears with the
 existing colored burst. Volatile then leaves the existing 0.75-second fuse
 warning and explodes. Death clips are retained in the sources but do not
@@ -60,6 +88,14 @@ The same pages are reachable from a phone on the Mac's network address.
   viewport. Touch-pointer movement moves the player and selects touch HUD.
   Stalker's blink and slash phases, Warden's fully formed ward/Buff pose,
   and Volatile's body cleanup, fuse warning and explosion were exercised.
+- The stronger-motion revision was also reviewed in a local Chromium
+  browser at the network address after the shared browser disconnected.
+  All three full attack sequences and the separate blink sequence pass
+  the viewer's phase checks. An 844 x 390 mobile touch viewport runs the
+  mixed crowd with advancing animation-atlas poses and all attack phases;
+  a touch stick gesture moves the player 61.7 world units. No browser
+  errors were recorded. Portrait mobile view shows the existing rotation
+  prompt, so the playable phone review uses landscape.
 - The mixed crowd page held 300 injected enemies plus five training dummies
   and 2,000 projectiles. Warden, Stalker and Volatile each had 20 live copies
   in one animation batch. Its browser console had no errors or warnings.

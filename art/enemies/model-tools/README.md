@@ -12,6 +12,10 @@ Choose an enemy, drag to orbit, scroll or pinch to zoom, or use the camera
 and wireframe buttons. Add `?kind=stalker` or `?kind=volatile` for a direct
 model link. The page loads the saved static GLBs and reference images.
 Add `?animated` to inspect the game GLBs, select a clip, or pause its pose.
+The attack sequence options play windup, contact and recovery using the
+current content timings, including Stalker's separate blink sequence.
+The scrub slider pauses playback and lets you inspect any point in a clip
+or a complete attack.
 The Face close-up button centers the camera on the eyes; the comparison
 selector also includes the rendered face close-up.
 

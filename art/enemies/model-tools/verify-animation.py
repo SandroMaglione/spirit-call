@@ -49,6 +49,8 @@ def verify(kind):
         contacts['windup_active'+suffix]=difference(matrices('Windup'+suffix,31),matrices('Active'+suffix,1))
         contacts['active_recovery'+suffix]=difference(matrices('Active'+suffix,13),matrices('Recovery'+suffix,1))
         contacts['recovery_idle'+suffix]=difference(matrices('Recovery'+suffix,22),matrices('Idle',1))
+    if kind=='warden':
+        contacts['zero_active_windup_recovery']=difference(matrices('Windup',31),matrices('Recovery',1))
     assert max(contacts.values())<1e-6,contacts
     for name,spec in info['clips'].items():
         if spec['loopSeconds'] is not None:

@@ -28,7 +28,7 @@ target=Vector((0,0,info['height']*.56));turn=math.radians(45)
 camera.location=target+Vector((math.sin(turn)*math.cos(math.pi/6),-math.cos(turn)*math.cos(math.pi/6),.5))*5
 camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
 out=folder/'renders';out.mkdir(exist_ok=True)
-poses=[('Idle',0),('Run',.15),('Windup',.72),('Windup',1),('Recovery',.35),('Hurt',.1)]
+poses=[('Idle',0),('Run',.15),('Windup',.72),('Windup',1),('Active',.4),('Recovery',.35),('Hurt',.1)]
 suffix={'stalker':'Blink'}.get(kind)
 if suffix:poses += [('Windup'+suffix,.72),('Windup'+suffix,1),('Recovery'+suffix,.35)]
 if kind=='warden':poses += [('Buff',.4),('Buff',.8)]

@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Warden, Stalker and Volatile — 3D review</title>
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #e3e4ea; color: #252c3c; }
@@ -52,6 +53,13 @@
   </header>
   <main>
     <section class="model" aria-label="3D model">
+      <div class="views">
+        <label><input id="animated" type="checkbox"> Game animations</label>
+        <select id="clip" aria-label="Animation clip" hidden></select>
+        <button id="pause" hidden aria-pressed="false">Pause animation</button>
+        <label id="scrub-label" hidden>Scrub <input id="scrub" type="range" min="0" max="1" step="0.001" value="0" aria-label="Animation progress"></label>
+        <span id="phase-label"></span>
+      </div>
       <div id="viewport"></div>
       <div class="views" aria-label="Camera">
         <button data-view="game">Game camera</button><button data-view="front">Front</button>
@@ -61,11 +69,6 @@
         <button id="wire" aria-pressed="false">Wireframe</button>
       </div>
       <div id="status" role="status" aria-live="polite">Loading Warden…</div>
-      <div class="views">
-        <label><input id="animated" type="checkbox"> Game animations</label>
-        <select id="clip" aria-label="Animation clip" hidden></select>
-        <button id="pause" hidden aria-pressed="false">Pause animation</button>
-      </div>
       <p class="hint">Drag to rotate. Scroll or pinch to zoom. Choose a model above to inspect it from any angle.</p>
       <div class="native"><img id="native" alt="Native small model preview"><img id="pixels" alt="Enlarged pixels"><span id="pixel-label"></span></div>
       <p class="links"><a id="blend" href="#">Blender source</a> · <a id="glb" href="#">Static GLB</a> · <a id="readme" href="#">Model notes</a></p>
@@ -90,6 +93,7 @@
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { closeLoop } from '../../src/presentation/models.ts';
+    import { enemies } from '../../src/content/enemies.ts';
     const viewport=document.querySelector('#viewport');
     const renderer=new THREE.WebGLRenderer({antialias:true});
     renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -108,6 +112,8 @@
     const animated=document.querySelector('#animated'),clipPicker=document.querySelector('#clip'),pause=document.querySelector('#pause');
     animated.checked=new URLSearchParams(location.search).has('animated');
     let mixer=null,clips=[],paused=false,lastTime=0;
+    let sequenceTime=0,sequencePhase=null,currentAction=null;
+    const scrub=document.querySelector('#scrub'),scrubLabel=document.querySelector('#scrub-label'),phaseLabel=document.querySelector('#phase-label');
     const faceTarget=new THREE.Vector3();
     const status=document.querySelector('#status');
     controls.addEventListener('change',()=>{if(window.modelReview)window.modelReview.camera=camera.position.toArray();});
@@ -160,8 +166,12 @@
         model.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){materials.add(m.uuid);m.wireframe=wire;}}});
         clips=gltf.animations.map(c=>info?closeLoop(c,info.clips[c.name]):c);
         clipPicker.replaceChildren(...clips.map(c=>new Option(c.name,c.name)));
+        if(animated.checked){
+          clipPicker.add(new Option('Attack sequence (game timing)','Sequence'));
+          if(kind==='stalker')clipPicker.add(new Option('Blink sequence (game timing)','SequenceBlink'));
+        }
         clipPicker.value='Idle';
-        clipPicker.hidden=pause.hidden=!animated.checked;
+        clipPicker.hidden=pause.hidden=scrubLabel.hidden=!animated.checked;
         if(animated.checked){mixer=new THREE.AnimationMixer(model);playClip();}
         status.textContent=`${next[0].toUpperCase()+next.slice(1)} · ${triangles.toLocaleString()} triangles · ${materials.size} material · ${clips.length} animations`;
         window.modelReview={kind:next,triangles,meshes,materials:materials.size,animations:gltf.animations.length,bounds:{min:box.min.toArray(),max:box.max.toArray()},loaded:true};
@@ -171,19 +181,62 @@
     document.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>load(b.dataset.kind)));
     function playClip(){
       if(!mixer)return;
+      sequenceTime=0;sequencePhase=null;currentAction=null;scrub.value='0';phaseLabel.textContent='';
+      if(clipPicker.value.startsWith('Sequence')){sampleSequence(0);return;}
       mixer.stopAllAction();const clip=clips.find(c=>c.name===clipPicker.value);if(!clip)return;
       const action=mixer.clipAction(clip).reset();
       action.setLoop(['Idle','Run'].includes(clip.name)?THREE.LoopRepeat:THREE.LoopOnce,Infinity);
-      action.clampWhenFinished=true;action.play();
+      action.clampWhenFinished=true;action.play();currentAction=action;
+    }
+    function sequence(){
+      const blink=clipPicker.value==='SequenceBlink';
+      const attack=enemies[kind].attacks[kind==='stalker'&&!blink?1:0];
+      const suffix=blink?'Blink':'';
+      return [['Idle',.35],['Windup'+suffix,attack.windup],['Active'+suffix,attack.active],['Recovery'+suffix,attack.recovery],['Idle',.4]];
+    }
+    function sampleSequence(dt){
+      const phases=sequence(),duration=phases.reduce((sum,[,seconds])=>sum+seconds,0);
+      sequenceTime=(sequenceTime+dt)%duration;
+      let time=sequenceTime;
+      for(let i=0;i<phases.length;i++){
+        const [name,seconds]=phases[i];
+        if(seconds===0)continue;
+        if(time<seconds||i===phases.length-1){
+          const clip=clips.find(c=>c.name===name);
+          if(sequencePhase!==i){
+            mixer.stopAllAction();currentAction=mixer.clipAction(clip).reset();
+            currentAction.setLoop(THREE.LoopOnce,1);currentAction.clampWhenFinished=true;currentAction.play();sequencePhase=i;
+          }
+          currentAction.paused=true;currentAction.time=time/seconds*clip.duration;mixer.update(0);
+          phaseLabel.textContent=name;scrub.value=String(sequenceTime/duration);return;
+        }
+        time-=seconds;
+      }
     }
     animated.addEventListener('change',()=>load(kind));
     clipPicker.addEventListener('change',playClip);
     pause.addEventListener('click',()=>{paused=!paused;pause.textContent=paused?'Play animation':'Pause animation';pause.setAttribute('aria-pressed',String(paused));});
+    scrub.addEventListener('input',()=>{
+      paused=true;pause.textContent='Play animation';pause.setAttribute('aria-pressed','true');
+      if(clipPicker.value.startsWith('Sequence')){
+        sequenceTime=Number(scrub.value)*sequence().reduce((sum,[,seconds])=>sum+seconds,0);sampleSequence(0);
+      }else if(currentAction){
+        const clip=clips.find(c=>c.name===clipPicker.value);
+        currentAction.reset().play();currentAction.time=Number(scrub.value)*clip.duration;mixer.update(0);
+      }
+    });
     document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.view)));
     document.querySelector('#wire').addEventListener('click',event=>{wire=!wire;event.currentTarget.setAttribute('aria-pressed',String(wire));model?.traverse(o=>{if(o.isMesh){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms)m.wireframe=wire;}});});
     mode.addEventListener('change',reference);
     new ResizeObserver(resize).observe(viewport);
-    renderer.setAnimationLoop(time=>{const dt=Math.min(.1,(time-lastTime)/1000);lastTime=time;if(!paused)mixer?.update(dt);controls.update();renderer.render(scene,camera);});
+    renderer.setAnimationLoop(time=>{
+      const dt=Math.min(.1,(time-lastTime)/1000);lastTime=time;
+      if(!paused&&mixer){
+        if(clipPicker.value.startsWith('Sequence'))sampleSequence(dt);
+        else{mixer.update(dt);if(currentAction)scrub.value=String(currentAction.time/currentAction.getClip().duration);}
+      }
+      controls.update();renderer.render(scene,camera);
+    });
     const requested=new URLSearchParams(location.search).get('kind');
     load(['warden','stalker','volatile'].includes(requested)?requested:'warden');
   </script>

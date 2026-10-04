@@ -32,7 +32,50 @@ def upper(name):
     points = [p for p in points if p.z >= threshold]
     return sum(points, Vector()) / len(points)
 
-def pose(kind, action, t):
+def ease(t):
+    t = max(0, min(1, t))
+    return t*t*(3-2*t)
+
+def attack_drive(kind, action, t):
+    # Coil, hold the readable warning, then accelerate into contact. Active
+    # carries the swing onward; recovery starts on its last pose, not contact.
+    if action.startswith('Windup'):
+        charge = ease(t/.58)
+        strike = ease((t-.80)/.20)
+        return charge*(1-strike), strike, 0
+    if action.startswith('Active'):
+        return 0, 1, 0 if kind == 'warden' else ease(t)
+    settle = 1-ease(t)
+    # Warden's bolt has no active duration, so its recovery begins at contact.
+    follow = math.sin(math.pi*min(1, t/.35))*.28 if kind == 'warden' else settle
+    return 0, settle, follow
+
+def step(t, reach, lift):
+    phase = t % 1
+    # The planted half moves backward under the travelling body; the swing
+    # half lifts and returns the foot forward. A sinusoid would skid at plant.
+    if phase < .5:
+        return (0, -reach+4*reach*phase, 0)
+    return (0, reach-4*reach*(phase-.5), lift*math.sin(math.tau*(phase-.5)))
+
+def plant_legs(out, joints, strides=None, follow_body=False):
+    """Keep foot plants independent of the torso lean, without root travel."""
+    rotation, location, scale = out['body']
+    matrix = Euler(rotation).to_matrix()
+    pivot = Vector(joints['body'][0])
+    for side in ('L', 'R'):
+        name = 'leg.'+side
+        hip = Vector(joints[name][0])
+        offset = Vector((strides or {}).get(side, (0, 0, 0)))
+        desired = hip+offset
+        if follow_body:
+            carried = pivot+matrix@((hip-pivot)*scale[0])+Vector(location)
+            desired.x,desired.y = carried.x+offset.x,carried.y+offset.y
+        local = matrix.transposed()@(desired-pivot-Vector(location))/scale[0]-(hip-pivot)
+        out[name] = transform(matrix.transposed().to_euler(), local,
+            tuple(1/value for value in scale))
+
+def pose(kind, action, t, joints):
     s, c = math.sin(math.tau*t), math.cos(math.tau*t)
     out = {}
     if action in ('Idle', 'Run'):
@@ -40,19 +83,34 @@ def pose(kind, action, t):
         lift = (.015 if moving else .004)*(1-c)
         out['body'] = transform(location=(0, 0, lift))
         if kind == 'warden':
-            out['head'] = transform((.018*s, 0, 0))
-            out['arm.R'] = transform((.06*s if moving else .012*s, 0, 0))
+            if moving:
+                out['body'] = transform((.26+.035*c, .025*s, .035*s), (0,0,.045+.018*(1-c)))
+            out['head'] = transform((-.16+.025*s if moving else .018*s, 0, -.025*s if moving else 0))
+            out['arm.L'] = transform((-.17+.04*s,0,-.03)) if moving else transform()
+            out['staff'] = transform((-.09,0,0)) if moving else transform()
+            out['arm.R'] = transform((-.12+.20*s if moving else .012*s, 0, -.08 if moving else 0))
             for side, sign in (('L', -1), ('R', 1)):
                 for label in ('Upper', 'Lower'):
-                    out['ribbon.'+label+'.'+side] = transform((.04*s, sign*.025*s, sign*.07*s))
+                    lag = math.sin(math.tau*t-(.65 if label=='Lower' else .25))
+                    out['ribbon.'+label+'.'+side] = transform((-.34+.12*lag if moving else .04*s,
+                        sign*.06*lag if moving else sign*.025*s, sign*(.16+.10*lag) if moving else sign*.07*s))
         else:
-            for side, sign in (('L', 1), ('R', -1)):
-                if moving:
-                    out['leg.'+side] = transform(location=(0, .035*s*sign, .045*max(0, s*sign)))
-                if kind == 'stalker':
-                    out['arm.'+side] = transform((.07*s*sign if moving else .012*s*sign, 0, 0))
+            if moving:
+                stalker = kind == 'stalker'
+                out['body'] = transform((.34+.045*c if stalker else .22+.035*c,
+                    .035*s if stalker else .07*s, .055*s if stalker else .04*s),
+                    (0,0,.015+.026*(1-math.cos(2*math.tau*t)) if stalker else .008+.014*(1-math.cos(2*math.tau*t))))
+                plant_legs(out,joints,{side:step(t+offset,.085 if stalker else .035,.075 if stalker else .030)
+                    for side,offset in (('L',0),('R',.5))},follow_body=not stalker)
+            if kind == 'stalker':
+                out['head'] = transform((-.34,0,-.045*s)) if moving else transform()
+                for side,sign in (('L',-1),('R',1)):
+                    out['arm.'+side] = transform((-.70+.16*s*sign if moving else .012*s*sign,
+                        sign*.08 if moving else 0,sign*.10 if moving else 0))
             if kind == 'volatile':
-                out['flame'] = transform((.035*s, .025*s, 0), scale=(1+.035*s, 1, 1+.045*s))
+                lag = math.sin(math.tau*t-.6)
+                out['flame'] = transform((-.48+.14*lag if moving else .035*s,
+                    .09*lag if moving else .025*s,0), scale=(1+.08*lag if moving else 1+.035*s,1,1+.12*lag if moving else 1+.045*s))
     elif action == 'Buff':
         raised = math.sin(math.pi*t/2)
         out['body'] = transform(location=(0,0,.025*raised))
@@ -64,28 +122,44 @@ def pose(kind, action, t):
             for label in ('Upper','Lower'):
                 out['ribbon.'+label+'.'+side] = transform((.07*raised,0,sign*.1*raised))
     elif action.startswith(('Windup', 'Active', 'Recovery')):
-        ready, strike = approved.drive(action, t)
+        ready, strike, follow = attack_drive(kind,action,t)
         if kind == 'warden':
-            out['body'] = transform((-.025*ready+.055*strike, 0, 0), (0, 0, .035*ready))
-            out['head'] = transform((.045*ready-.09*strike, 0, 0))
-            out['arm.L'] = transform((-.45*ready+.9*strike, 0, -.06*ready))
-            out['arm.R'] = transform((-.30*ready+.45*strike, 0, -.16*ready))
+            out['body'] = transform((-.23*ready+.38*strike+.10*follow, 0, -.16*ready+.12*strike), (0,0,.065*ready+.10*strike))
+            out['head'] = transform((.18*ready-.25*strike,0,.12*ready-.09*strike))
+            out['arm.L'] = transform((-.75*ready+.38*strike+.16*follow,0,-.24*ready+.13*strike))
+            out['staff'] = transform((.24*ready-.16*strike,0,0))
+            out['arm.R'] = transform((-.70*ready+.65*strike, -.12*ready, -.30*ready+.18*strike))
             for side, sign in (('L', -1), ('R', 1)):
                 for label in ('Upper', 'Lower'):
-                    out['ribbon.'+label+'.'+side] = transform((.10*ready-.14*strike, 0, sign*.12*ready))
+                    out['ribbon.'+label+'.'+side] = transform((.25*ready-.50*strike-.22*follow,
+                        sign*.08*strike, sign*(.22*ready+.15*strike+.16*follow)))
         elif kind == 'stalker':
             blink = action.endswith('Blink')
-            out['body'] = transform((-.045*ready+.08*strike, 0, -.12*ready+.18*strike),
-                (0, 0, .025*ready+(.16 if blink else .075)*strike))
-            out['head'] = transform((.04*ready-.06*strike, 0, .04*ready-.04*strike))
+            out['body'] = transform((-.16*ready+.42*strike+.10*follow,0,
+                (-.12 if blink else -.48)*ready+(.10 if blink else .38)*strike+(.05 if blink else .28)*follow),
+                (0,0,-.018*ready+(.19 if blink else .075)*strike+.035*follow))
+            out['head'] = transform((.10*ready-.27*strike-.05*follow,0,
+                (.08 if blink else .30)*ready-(.08 if blink else .25)*strike-.12*follow))
             for side, sign in (('L', -1), ('R', 1)):
-                out['arm.'+side] = transform(((-.6 if blink else -1.05)*ready+(1.0 if blink else 1.20)*strike,
-                    sign*.035*ready, sign*(.15*ready-.28*strike)))
-                if blink: out['leg.'+side] = transform(location=(0, 0, .025*ready))
+                if blink:
+                    out['arm.'+side] = transform((-.85*ready-.70*strike-.08*follow,
+                        sign*(.15*ready+.12*strike),sign*(.40*ready-.32*strike-.15*follow)))
+                elif side == 'R':
+                    # One blade leads the cross-body cut; the other guards.
+                    out['arm.R'] = transform((-1.60*ready-1.00*strike+.30*follow,
+                        -.30*ready+.65*strike+.15*follow,.80*ready-.65*strike-.15*follow))
+                else:
+                    out['arm.L'] = transform((-.60*ready-.70*strike,
+                        .12*ready-.15*strike-.05*follow,-.20*ready+.18*strike+.02*follow))
+            plant_legs(out,joints,{side:(0,sign*.035*ready, .10*strike if blink else 0)
+                for side,sign in (('L',1),('R',-1))})
         else:
-            out['body'] = transform((-.055*ready+.13*strike, 0, 0), (0, 0, .035*ready+.035*strike),
-                (1+.06*ready-.025*strike, 1+.06*ready-.025*strike, 1+.04*ready))
-            out['flame'] = transform((-.05*ready+.12*strike, 0, 0), scale=(1+.13*ready, 1, 1+.18*ready))
+            size = 1-.07*ready+.035*strike
+            out['body'] = transform((-.28*ready+.43*strike+.07*follow,0,0),
+                (0,0,-.015*ready+.02*strike+.008*follow),(size,size,size))
+            plant_legs(out,joints,follow_body=True)
+            out['flame'] = transform((.20*ready-.72*strike-.20*follow,0,0),
+                scale=(1+.12*ready-.08*strike,1,1+.22*ready+.10*strike))
     elif action == 'Hurt':
         recoil = math.sin(math.pi*t)*(1-t)
         out['body'] = transform((-.12*recoil, .045*recoil, 0), (0, 0, .035*recoil))
@@ -163,7 +237,7 @@ def build(kind):
     creature.kind, creature.folder = kind, here/'animated'
     creature.folder.mkdir(exist_ok=True)
     creature.parts, creature.joints = parts, joints
-    creature.animate(lambda action,t: pose(kind,action,t))
+    creature.animate(lambda action,t: pose(kind,action,t,joints))
     rig = creature.armature
     extra = [('WindupBlink',1),('ActiveBlink',.4),('RecoveryBlink',.7)] if kind == 'stalker' else [('Buff',.8)] if kind == 'warden' else []
     if extra:
@@ -172,7 +246,7 @@ def build(kind):
             action.name, action.use_fake_user = name, True
             rig.animation_data.action = action
             for frame in range(round(seconds*30)+1):
-                transforms = pose(kind,name,frame/round(seconds*30))
+                transforms = pose(kind,name,frame/round(seconds*30),joints)
                 for bone in rig.pose.bones:
                     rotation,location,scale = transforms.get(bone.name,transform())
                     basis = bone.bone.matrix_local.to_3x3()
