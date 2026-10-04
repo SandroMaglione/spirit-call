@@ -4,7 +4,7 @@ A spirit's `spirit.json`:
 
     {
       "blend": "water-spirit.blend",        # its Blender file, in its folder
-      "mask": "blue",                       # how its body shows on the sheet: "blue" or "orange" (see MASKS)
+      "mask": "blue",                       # how its body shows on the sheet: "blue", "orange", or "mint" (see MASKS)
       "eyes": "light",                      # its eyes on the sheet: "light" (glowing pixels) or "dark" (holes in the body)
       "background": "#132332",              # the sheet's background, for renders
       "lights": {"sun": [3.2, [0.85, 0.95, 1.0]], "fill": [...], "rim": [...]},  # energy and color
@@ -25,6 +25,8 @@ SPIRITS = Path(__file__).resolve().parent.parent
 MASKS = {
     "blue": lambda im: ((im[..., 2] > 120) & (im[..., 2] - im[..., 0] > 50)) | (im.min(axis=2) > 225),
     "orange": lambda im: (im[..., 0] > 150) & (im[..., 0] - im[..., 2] > 80),
+    # Mint leaves and a near-white body.
+    "mint": lambda im: (im[..., 1] > 120) & ((im[..., 1] - im[..., 0] > 25) | (im.min(axis=2) > 190)),
 }
 
 
@@ -93,4 +95,14 @@ def eyes_in(spirit, image):
         mask = mask_of(spirit, im)
         body = max(blobs(mask, 15), key=len)
         found = holes(mask, (body[:, 0].min(), body[:, 0].max(), body[:, 1].min(), body[:, 1].max()))
+        if len(found) > 2:
+            # Gaps its parts close (a curl touching the body) are holes too: the eyes are the two the body rings most brightly.
+            def ring(p):
+                hole = np.zeros(mask.shape, bool)
+                hole[p[:, 0], p[:, 1]] = True
+                around = hole.copy()
+                for _ in range(3):
+                    around = around | np.roll(around, 1, 0) | np.roll(around, -1, 0) | np.roll(around, 1, 1) | np.roll(around, -1, 1)
+                return im[around & ~hole].sum(axis=1).mean()
+            found = sorted(found, key=ring)[-2:]
     return sorted((p[:, 1].mean(), p[:, 0].mean()) for p in found)
