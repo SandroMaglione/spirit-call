@@ -1,9 +1,9 @@
 // Generated from the saved Blender source by art/enemies/scripts/common.py.
-import url from "../../../../art/enemies/chaser/chaser.glb?url"
+import url from "../../../../art/enemies/chaser/production/animated/chaser.glb?url"
 import type { ModelSpec } from "../../models.ts"
 
 export const chaserModel = { url,
-  "height": 1.6392364501953125,
+  "height": 1.7999999523162842,
   "clips": {
     "Idle": {
       "lastKeySeconds": 1.9666666666666666,

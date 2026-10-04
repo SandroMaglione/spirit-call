@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chaser model review</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #132332; color: #e6edf3; font: 15px/1.5 system-ui, sans-serif; }
+    header { padding: 20px 24px 14px; border-bottom: 1px solid #354451; }
+    h1 { font-size: 24px; margin: 0 0 4px; }
+    p { margin: 0; color: #acbdcd; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 24px; align-items: center; }
+    button, label { font: inherit; }
+    button { color: #e6edf3; background: #22384b; border: 1px solid #50677b; padding: 7px 13px; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #354f64; }
+    label { display: flex; align-items: center; gap: 5px; margin-left: 8px; }
+    main { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr); gap: 20px; padding: 0 24px 24px; }
+    #stage { height: min(72vh, 800px); min-height: 460px; position: relative; background: #0e1c29; border: 1px solid #354451; border-radius: 8px; overflow: hidden; }
+    canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+    #hint { position: absolute; bottom: 14px; left: 18px; font-size: 13px; pointer-events: none; }
+    aside { min-width: 0; }
+    aside img { display: block; width: 100%; border-radius: 6px; }
+    aside p { margin: 12px 0; }
+    a { color: #a4d6ff; }
+    .links { display: flex; gap: 16px; flex-wrap: wrap; }
+    @media (max-width: 760px) {
+      header, nav { padding-left: 14px; padding-right: 14px; }
+      main { grid-template-columns: 1fr; padding: 0 14px 20px; }
+      #stage { height: 52vh; min-height: 370px; }
+      h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Chaser model review</h1>
+    <p id="stats">Loading the static model...</p>
+  </header>
+  <nav aria-label="Model views">
+    <button data-view="game">Game camera</button>
+    <button data-view="front">Front</button>
+    <button data-view="back">Back</button>
+    <button data-view="left">Left</button>
+    <button data-view="right">Right</button>
+    <button data-view="top">Top</button>
+    <label><input type="checkbox" id="wireframe" />Wireframe</label>
+    <label><input type="checkbox" id="silhouette" />Silhouette</label>
+  </nav>
+  <main>
+    <div id="stage"><p id="hint">Drag to rotate. Scroll or pinch to zoom.</p></div>
+    <aside>
+      <img src="reference/sheet.png" alt="Supplied Chaser low-poly production model sheet" />
+      <p>Static model only. Review the head, crest, stance and bone claw before rigging and animation.</p>
+      <div class="links">
+        <a href="renders/review.png">Angle renders</a>
+        <a href="renders/compare.png">Sheet comparison</a>
+        <a href="renders/overlay-all.png">Overlays</a>
+        <a href="renders/review-game-size.png">Pixel-size review</a>
+        <a href="chaser-production.blend">Blender source</a>
+      </div>
+    </aside>
+  </main>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const stage = document.getElementById('stage');
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setClearColor(0x0e1c29);
+    stage.prepend(renderer.domElement);
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1.5, 1.5, 1.5, -1.5, 0.1, 100);
+    camera.up.set(0, 0, 1);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, -0.25, 0.9);
+    controls.minZoom = 0.6;
+    controls.maxZoom = 3;
+    const hemi = new THREE.HemisphereLight(0xe3edf9, 0x50423c, 2.1);
+    hemi.position.set(0, 0, 5); scene.add(hemi);
+    for (const [position, intensity] of [[[-3,-4,6],2.4], [[4,-1,3],1.0], [[0,4,5],1.2]]) {
+      const light = new THREE.DirectionalLight(0xffffff, intensity);
+      light.position.set(...position); scene.add(light);
+    }
+    const data = await fetch('./review-mesh.json').then(response => {
+      if (!response.ok) throw new Error(`Mesh load failed: ${response.status}`);
+      return response.json();
+    });
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(data.colors, 3));
+    geometry.computeVertexNormals(); geometry.computeBoundingBox();
+    const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .86, metalness: 0, side: THREE.DoubleSide });
+    const silhouetteMaterial = new THREE.MeshBasicMaterial({ color: 0x070b10, side: THREE.DoubleSide });
+    const body = new THREE.Mesh(geometry, material); scene.add(body);
+    const grid = new THREE.GridHelper(6, 30, 0x354b5c, 0x243849);
+    grid.rotation.x = Math.PI / 2; grid.position.z = -.008; scene.add(grid);
+    document.getElementById('stats').textContent = `${data.triangles.toLocaleString()} triangles / 1.8 m / static model`;
+    const views = { game: [35,30], front: [0,0], back: [180,0], left: [90,0], right: [-90,0], top: [0,89.9] };
+    function view(name) {
+      controls.enableDamping = false; controls.update();
+      const [turn, elevation] = views[name].map(THREE.MathUtils.degToRad);
+      const direction = new THREE.Vector3(Math.sin(turn)*Math.cos(elevation), -Math.cos(turn)*Math.cos(elevation), Math.sin(elevation));
+      camera.position.copy(controls.target).addScaledVector(direction, 6);
+      camera.zoom = 1; camera.updateProjectionMatrix(); controls.update();
+      controls.enableDamping = true;
+    }
+    for (const button of document.querySelectorAll('[data-view]')) button.addEventListener('click', () => view(button.dataset.view));
+    document.getElementById('wireframe').addEventListener('change', event => {
+      material.wireframe = silhouetteMaterial.wireframe = event.target.checked;
+    });
+    document.getElementById('silhouette').addEventListener('change', event => {
+      body.material = event.target.checked ? silhouetteMaterial : material;
+    });
+    function resize() {
+      const width = stage.clientWidth, height = stage.clientHeight;
+      renderer.setSize(width, height);
+      camera.left = -1.5 * width / height; camera.right = 1.5 * width / height;
+      camera.updateProjectionMatrix();
+    }
+    new ResizeObserver(resize).observe(stage);
+    view('game'); resize();
+    renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+    window.chaserReview = { scene, camera, controls, body, renderer };
+  </script>
+</body>
+</html>

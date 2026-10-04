@@ -30,8 +30,8 @@ def capture(rig, mesh, clips, start):
         result[name] = poses
     return result
 
-def verify(kind):
-    folder = ROOT/kind
+def verify(kind, folder=None):
+    folder = ROOT/kind if folder is None else folder
     info = json.loads((folder/'model-info.json').read_text())
     binary = (folder/(kind+'.glb')).read_bytes()
     length = struct.unpack_from('<I', binary, 12)[0]
@@ -66,6 +66,7 @@ def verify(kind):
     (folder/'verification.json').write_text(json.dumps(report, indent=2)+'\n')
     print('VERIFIED', kind, json.dumps(report))
 
-args = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
-for kind in args or KINDS:
-    verify(kind)
+if __name__ == '__main__':
+    args = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
+    for kind in args or KINDS:
+        verify(kind)
