@@ -11,6 +11,7 @@ import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
 import { enemyPose } from "./enemy-pose.ts"
+import { enemyLooks } from "./looks.ts"
 import type { ActorNode } from "./host-types.ts"
 
 /** Where an attack area points from `from`, if anywhere. */
@@ -66,7 +67,11 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     const held = data.stunned.get().remaining > 0
     animate(node, facing, held, held ? 0 : seconds)
     if (shield !== null) node.body.shield?.(Math.atan2(shield.x, shield.y) - Math.atan2(facing.x, facing.y))
-    const pose = enemyPose(currentAttack(resources.tuning.get(), data.enemy.get().kind, data.attacker.get()), data.phase.get(), data.attacker.get().elapsed)
+    const kind = data.enemy.get().kind
+    const spec = currentAttack(resources.tuning.get(), kind, data.attacker.get())
+    const look = enemyLooks[kind]
+    const clips = look.kind === "model" && spec !== undefined ? look.attackClips?.[spec.id] : undefined
+    const pose = enemyPose(spec, data.phase.get(), data.attacker.get().elapsed, clips)
     if (pose !== null) node.body.sample?.(pose.clip, pose.progress)
   }
 })

@@ -1,9 +1,10 @@
 # Static enemy review tools
 
 These tools adapt the measured spirit workflow to pale enemy sheets with
-several touching materials. They write only the new Shooter, Brute and
-Swarmer `production/` folders. The existing animated assets and game looks
-stay in use until the models have been reviewed.
+several touching materials. Static review files stay in Shooter, Brute and
+Swarmer's `production/` folders. Approved animated copies live separately
+in `production/animated/`, with generated runtime specs in
+`src/presentation/assets/enemies/`.
 
 `prepare.py` preserves the input sheet, crops the views without rescaling,
 and writes the pixel region labels to `spirit.json`. `measure.py` extracts
@@ -41,6 +42,22 @@ the game entry point does not import it or any of these models.
 profile with their revisions. `refinement-board.py` rebuilds this board
 from the preserved before renders and current saved-model renders.
 
-The exports intentionally have no skeleton. After model review, the separate
-parts must become one mesh with rigid weights and simulation-timed clips
-before registration in the existing enemy animation atlas and batches.
+The static exports intentionally have no skeleton. After model approval,
+`animate-approved.py` reads the saved source, asserts that joining its parts
+preserves every rest vertex, and creates one rigidly weighted mesh with
+one material. It reuses the existing enemy action writer, keeps the root
+stationary and generates the runtime spec directly from the exported file.
+Run each kind in order:
+
+```sh
+blender --background --python-exit-code 1 --python art/enemies/production-tools/animate-approved.py -- shooter build-export
+blender --background --python-exit-code 1 --python art/enemies/production-tools/verify-approved-animation.py -- shooter
+blender --background --python-exit-code 1 --python art/enemies/production-tools/render-approved-animation.py -- shooter
+```
+
+Replace `shooter` with `brute` or `swarmer` for the other saved sources.
+Verification compares every exported frame in a fresh import, checks the
+unchanged rest bounds and height, floor clearance, closed loops and the
+windup/contact/recovery endpoints. Runtime atlas skinning is independently
+covered by `test/enemy-assets.test.ts`. Attack-specific phase clips belong
+to the enemy look, with simulation timings still determining their progress.

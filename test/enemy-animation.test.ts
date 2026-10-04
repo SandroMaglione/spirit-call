@@ -2,8 +2,17 @@ import { describe, expect, it } from "vitest"
 import { enemies } from "../src/content/enemies.ts"
 import { atlasFrame } from "../src/presentation/animation-atlas.ts"
 import { enemyPose } from "../src/presentation/enemy-pose.ts"
+import { enemyLooks } from "../src/presentation/looks.ts"
 
 describe("enemy animation sampling", () => {
+  it("uses the spray's release pose when its active phase has zero duration", () => {
+    const spray = enemies.shooter.attacks.find((attack) => attack.id === "spray")!
+    const look = enemyLooks.shooter
+    if (look.kind !== "model") throw new Error("Shooter needs its model")
+    expect(enemyPose(spray, "windup", spray.windup / 2, look.attackClips?.spray)).toEqual({ clip: "WindupSpray", progress: .5 })
+    expect(enemyPose(spray, "recovery", 0, look.attackClips?.spray)).toEqual({ clip: "RecoverySpray", progress: 0 })
+    expect(enemyPose(spray, "ready", 0, look.attackClips?.spray)).toBeNull()
+  })
   it("wraps reversed locomotion and closes the last interval without skipping a pose", () => {
     const clip = { offset: 10, frames: 31, seconds: 1, loop: true }
     expect(atlasFrame(clip, -.1)[0]).toBe(37)

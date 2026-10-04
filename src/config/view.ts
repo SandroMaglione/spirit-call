@@ -169,7 +169,7 @@ export const view = {
   enemies: {
     dummy: { color: 0xb86b77, widthFactor: 1.7, heightFactor: 2.1 },
     chaser: { color: 0xff7a45, widthFactor: 1.4, heightFactor: 2.2 },
-    shooter: { color: 0xb07cff, widthFactor: 1.5, heightFactor: 1.8 },
+    shooter: { color: 0x7b96c8, widthFactor: 1.5, heightFactor: 1.8 },
     brute: { color: 0xc2413b, widthFactor: 1.8, heightFactor: 1.9 },
     swarmer: { color: 0xffb347, widthFactor: 1.5, heightFactor: 1.5 },
     charger: { color: 0xe0527a, widthFactor: 1.7, heightFactor: 1.7 },

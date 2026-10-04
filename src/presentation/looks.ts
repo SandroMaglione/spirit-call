@@ -14,6 +14,7 @@ import type { Vec2 } from "../math/vec.ts"
 import type { WallPlacement } from "../schema.ts"
 import type { TrailKind } from "./drop-trail.ts"
 import type { ModelId } from "./models.ts"
+import type { EnemyAttackClips } from "./enemy-pose.ts"
 
 /**
  * A one-shot: a clip, or part of one (`from`–`to`, in clip seconds). For a
@@ -81,6 +82,8 @@ export type BodyLook =
       readonly model: ModelId
       /** Crowd models share a baked bone texture and one instance batch. */
       readonly batched?: boolean
+      /** Optional phase clips for a particular enemy attack, keyed by its moveset id. */
+      readonly attackClips?: Readonly<Record<string, EnemyAttackClips>>
       readonly widthFactor: number
       readonly heightFactor: number
       readonly moments?: Moments
@@ -144,16 +147,18 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
 
 const enemyCapsule = (kind: EnemyKind): BodyLook => ({ kind: "capsule", color: view.enemies[kind].color, widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor })
 
-const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({
-  kind: "model", model, batched: true,
+const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): BodyLook => ({
+  kind: "model", model, batched: true, ...(attackClips === undefined ? {} : { attackClips }),
   widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor,
   moments: { idle: "Idle", run: { clip: kind === "dummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
 })
 
 export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   dummy: enemyModel("dummy", "enemyDummy", 1),
-  chaser: enemyModel("chaser", "enemyChaser", 68),
-  shooter: enemyModel("shooter", "enemyShooter", 62),
+  chaser: enemyModel("chaser", "enemyChaser", 48),
+  shooter: enemyModel("shooter", "enemyShooter", 62, {
+    spray: { windup: "WindupSpray", active: "ActiveSpray", recovery: "RecoverySpray" }
+  }),
   brute: enemyModel("brute", "enemyBrute", 60),
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),
   charger: enemyModel("charger", "enemyCharger", 78),

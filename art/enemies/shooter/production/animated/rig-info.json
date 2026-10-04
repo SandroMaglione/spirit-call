@@ -1,0 +1,97 @@
+{
+  "source": "../shooter-model.blend",
+  "source_sha256": "f2572105ee3ea9b6ccf3a758d5d929da917ed8bd53173afda35cb9ee34421f63",
+  "triangles": 1180,
+  "bones": 8,
+  "materials": 1,
+  "mesh_objects": 1,
+  "part_bindings": {
+    "ShooterBody": {
+      "body": 228
+    },
+    "DorsalSpike": {
+      "body": 32
+    },
+    "SideFin.L": {
+      "arm.L": 50
+    },
+    "SideFin.R": {
+      "arm.R": 50
+    },
+    "Foot.L": {
+      "leg.L": 34
+    },
+    "Foot.R": {
+      "leg.R": 34
+    },
+    "TailFin": {
+      "tail": 32
+    },
+    "BellMouth": {
+      "jaw": 80
+    },
+    "MouthRecess": {
+      "jaw": 17
+    },
+    "EyeSocket.L": {
+      "body": 25
+    },
+    "Eye.L": {
+      "body": 25
+    },
+    "EyeSocket.R": {
+      "body": 25
+    },
+    "Eye.R": {
+      "body": 25
+    }
+  },
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2
+    },
+    "Run": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": 0.6
+    },
+    "Windup": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "Active": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "Recovery": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Death": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    },
+    "Spawn": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "WindupSpray": {
+      "lastKeySeconds": 1,
+      "loopSeconds": null
+    },
+    "ActiveSpray": {
+      "lastKeySeconds": 0.4,
+      "loopSeconds": null
+    },
+    "RecoverySpray": {
+      "lastKeySeconds": 0.7,
+      "loopSeconds": null
+    }
+  },
+  "root_motion": false,
+  "rest_vertices_preserved": true
+}
