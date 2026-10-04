@@ -48,6 +48,7 @@ import {
   Time,
   Tuning,
   Velocity,
+  Ward,
   Waves
 } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
@@ -87,9 +88,11 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     ? body
     : Game.Command.insert(body, [Elite, { element: elite, trail: tuning.elites.trailEvery, discharge: tuning.elites.discharge.every * (0.5 + (at.x % 97) / 194), charging: null }])
   const shield = stats.shield
-  return shield === null
+  const shielded = shield === null
     ? draft
     : Game.Command.insert(draft, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (shield.arcDegrees * Math.PI) / 360, turnRate: (shield.turnRate * Math.PI) / 180 }])
+  // A warder reaches for an ally as soon as it is out.
+  return stats.ward === null ? shielded : Game.Command.insert(shielded, [Ward, { ally: null, formed: 0, wait: 0 }])
 }
 
 /** Spawn warnings for one wave slot: the enemy's whole `group`, clustered around `at`; an elite slot's first one is the elite. */

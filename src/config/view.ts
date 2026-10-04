@@ -174,7 +174,12 @@ export const view = {
     swarmer: { color: 0xffb347, widthFactor: 1.5, heightFactor: 1.5 },
     charger: { color: 0xe0527a, widthFactor: 1.7, heightFactor: 1.7 },
     sniper: { color: 0x7cc4ff, widthFactor: 1.2, heightFactor: 2.6 },
-    guardian: { color: 0x8fa3b8, widthFactor: 1.8, heightFactor: 2.0 }
+    guardian: { color: 0x8fa3b8, widthFactor: 1.8, heightFactor: 2.0 },
+    warden: { color: 0x5fe0d0, widthFactor: 1.4, heightFactor: 2.3 },
+    stalker: { color: 0x6b5cff, widthFactor: 1.5, heightFactor: 2.2 },
+    volatile: { color: 0xffa020, widthFactor: 1.7, heightFactor: 1.6 },
+    galeCaster: { color: 0xa8f0d8, widthFactor: 1.4, heightFactor: 2.4 },
+    juggernaut: { color: 0x7d8794, widthFactor: 1.9, heightFactor: 2.0 }
   },
   /**
    * Elements and states: each element's color (hits, pools, numbers); bodies
@@ -215,6 +220,10 @@ export const view = {
   stunStars: { radius: 12, turnsPerSecond: 1.2 },
   /** Guardian shields. */
   shield: 0xd6e4f0,
+  /** A warder's tether and the ring under the ally it wards (see `features/wards.ts`). */
+  ward: 0x7ff0e0,
+  /** An armored enemy's plates, a ring under it until it breaks. */
+  armor: 0xc9d3dd,
   shieldBlock: 0xffffff,
   /** Enemy bodies pulse toward this color while winding up an attack. */
   windupTint: 0xfff1b8,

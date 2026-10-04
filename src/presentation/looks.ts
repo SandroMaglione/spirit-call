@@ -142,6 +142,8 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   stormcaller: thunderSpirit
 }
 
+const enemyCapsule = (kind: EnemyKind): BodyLook => ({ kind: "capsule", color: view.enemies[kind].color, widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor })
+
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number): BodyLook => ({
   kind: "model", model, batched: true,
   widthFactor: view.enemies[kind].widthFactor, heightFactor: view.enemies[kind].heightFactor,
@@ -156,7 +158,13 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),
   charger: enemyModel("charger", "enemyCharger", 78),
   sniper: enemyModel("sniper", "enemySniper", 60),
-  guardian: enemyModel("guardian", "enemyGuardian", 54)
+  guardian: enemyModel("guardian", "enemyGuardian", 54),
+  // Placeholders until they have models: a capsule in their color.
+  warden: enemyCapsule("warden"),
+  stalker: enemyCapsule("stalker"),
+  volatile: enemyCapsule("volatile"),
+  galeCaster: enemyCapsule("galeCaster"),
+  juggernaut: enemyCapsule("juggernaut")
 }
 
 /**

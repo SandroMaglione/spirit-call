@@ -54,6 +54,11 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
       problems.push(`${at}: minRange must be from 0 to below triggerRange (is ${attack.minRange})`)
     }
     if (attack.followUp !== null && !ids.includes(attack.followUp)) problems.push(`${at}: unknown follow-up ${attack.followUp}`)
+    if (attack.kind === "gust") positive(problems, at, { reach: attack.reach, arcDegrees: attack.arcDegrees })
+    if (attack.kind === "blink") {
+      positive(problems, at, { radius: attack.radius })
+      if (!(attack.maxReach >= 0)) problems.push(`${at}: maxReach must not be negative (is ${attack.maxReach})`)
+    }
     if (attack.kind === "lob") {
       positive(problems, at, { radius: attack.radius })
       if (!(attack.flightTime >= 0 && attack.fuse >= 0 && attack.maxReach >= 0)) problems.push(`${at}: flightTime, fuse, and maxReach must not be negative`)
@@ -254,6 +259,23 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     // Every enemy has at least two answers, so no element (no character) is required against it.
     if (traits.filter(([, affinity]) => affinity === "immune").length > 1) problems.push(`enemy ${id}: immune to more than one element`)
     checkMoveset(problems, `enemy ${id}`, enemy.attacks, tuning.fairness.minTelegraph)
+    if (enemy.ward !== null) {
+      positive(problems, `enemy ${id} ward`, { range: enemy.ward.range })
+      if (!(enemy.ward.taken > 0 && enemy.ward.taken <= 1)) problems.push(`enemy ${id} ward: taken must be a share in (0, 1] (is ${enemy.ward.taken})`)
+      if (!(enemy.ward.link >= 0 && enemy.ward.cooldown >= 0)) problems.push(`enemy ${id} ward: link and cooldown must not be negative`)
+    }
+    if (enemy.armor !== null) {
+      if (!(enemy.armor.taken > 0 && enemy.armor.taken <= 1)) problems.push(`enemy ${id} armor: taken must be a share in (0, 1] (is ${enemy.armor.taken})`)
+      // Armor gives way only to a break: one that never breaks would never be open.
+      if (!(enemy.poise > 0)) problems.push(`enemy ${id} armor: it never breaks (poise 0), so its armor never drops`)
+    }
+    if (enemy.burst !== null) {
+      positive(problems, `enemy ${id} burst`, { radius: enemy.burst.radius })
+      if (!(enemy.burst.power >= 0 && enemy.burst.knockback >= 0)) problems.push(`enemy ${id} burst: power and knockback must not be negative`)
+      if (enemy.burst.element !== null && !has(elements, enemy.burst.element)) problems.push(`enemy ${id} burst: unknown element ${enemy.burst.element}`)
+      // Its ring is its telegraph: it shows at least as long as any attack's.
+      if (!(enemy.burst.fuse >= tuning.fairness.minTelegraph)) problems.push(`enemy ${id} burst: its fuse of ${enemy.burst.fuse}s is under the fairness floor of ${tuning.fairness.minTelegraph}s`)
+    }
   }
 
   const cheapest = Math.min(...Object.values(tuning.enemies).map((enemy) => enemy.cost).filter((cost) => cost > 0))

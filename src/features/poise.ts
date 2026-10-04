@@ -5,7 +5,8 @@
  * by reactions on it (a wall slam most), and drained once it has taken
  * none for a while, so chipping from afar never breaks anything. A full bar
  * breaks it: stunned for a while, its attack cut off, taking more damage
- * (see `Tuning.breaking`). It fills again only once it has recovered.
+ * (see `Tuning.breaking`). It fills again only once it has recovered. An
+ * armored enemy's armor is down while it is broken (see `ArmorSpec`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EnemyKind } from "../content/enemies.ts"
@@ -47,10 +48,12 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
       data.poise.set({ current: broken > 0 ? poise.current : 0, broken, quiet: 0 })
       continue
     }
+    // An armored one (see `ArmorSpec`) fills by the blows as dealt, before its armor took its share.
+    const armor = tuning.enemies[kind].armor?.taken ?? 1
     let gained = 0
     for (const hit of hits) {
       if (hit.entity !== entity.id.value || hit.killed) continue
-      gained += hit.amount * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1)
+      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1)
     }
     const at = data.position.get()
     const reach = data.hurtbox.get().radius

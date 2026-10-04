@@ -55,6 +55,32 @@ elements they attack with, are in `docs/elements.md`.
   bullet, the Firebomber lobs bombs whose landing ring shows from the
   windup until they burst.
 
+- **Some enemies change the fight around them** rather than hit harder:
+  - **The Warden wards an ally** (the one nearest the player): a tether
+    that forms over a moment, after which that ally takes only a share of
+    its damage. Crossing the tether (a dash through it too) or striking the
+    Warden cuts it; it reaches out again after a while. It asks which enemy
+    first, never how fast: a ward cuts damage, it never heals, so it is no
+    damage race.
+  - **The Stalker blinks from afar**: its mark fills the floor where the
+    player stood when its aim locked, then it appears in the mark's middle
+    and strikes it, and stands there through its recovery, the moment to
+    strike back. Keeping one's distance is no refuge. It never slides along
+    the floor: it fades out and appears.
+  - **The Volatile bursts where it falls**: a ring shows for its fuse
+    (at least the fairness floor), then blasts every body in it, enemies as
+    much as the player. Where it falls is the question: knocked into a crowd
+    before the last blow, or stepped back from.
+  - **The Gale Caster blows a cone of wind** (telegraphed like any attack):
+    little damage, a hard push, and its own side is blown along too (pushed
+    and driven by the wind, so a wall slams them, unhurt). Where it blows the
+    player is the danger (a pool, a wall, the others); baited, it blows them.
+  - **The Juggernaut is armored until broken**: it takes a share of the
+    damage and cannot be pushed until its break bar fills (by the blows as
+    dealt: heavy blows, reactions, and perfect dodges break it soonest);
+    broken, its armor is down for the whole stun. A weaker team takes
+    longer; nothing runs out.
+
 ## Behaviors
 
 How an enemy moves when it is not attacking (`features/behaviors.ts`):

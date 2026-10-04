@@ -401,6 +401,34 @@ export interface AttackerValue {
 }
 export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker")
 
+/**
+ * A warder's tether (see `WardSpec`): the ally it wards and how long the
+ * tether has been forming (it wards once that reaches the spec's `link`), or
+ * no ally and the wait before it reaches for one.
+ */
+export interface WardValue {
+  readonly ally: { readonly handle: Entity.Handle<typeof Root, typeof Position>; readonly id: number } | null
+  readonly formed: number
+  readonly wait: number
+}
+export const Ward = Descriptor.Component<WardValue>()("Shooter/Ward")
+
+/**
+ * A burst about to go off where a body fell (see `BurstSpec`): its ring shows
+ * for `fuse` seconds (`remaining` left), then it hurts every body in it,
+ * either side.
+ */
+export interface BurstValue {
+  readonly at: Vec2
+  readonly radius: number
+  readonly fuse: number
+  readonly remaining: number
+  readonly damage: number
+  readonly knockback: number
+  readonly element: ElementHit | null
+}
+export const Burst = Descriptor.Component<BurstValue>()("Shooter/Burst")
+
 /** A frontal shield: blocks projectiles hitting within `halfAngle` (radians) of `facing`. */
 export const Shield = Descriptor.Component<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>()("Shooter/Shield")
 
@@ -527,8 +555,8 @@ export const Hit = Descriptor.Event<{
 export type { ReactionKind }
 export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind; readonly faction: Faction | null }>()("Shooter/Reaction")
 
-/** An entity with health died. */
-export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined }>()("Shooter/Death")
+/** An entity with health died, with its ATK (what a burst when it falls deals, see `BurstSpec`). */
+export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined; readonly atk: number }>()("Shooter/Death")
 
 /**
  * A blow passed through an invulnerable body (a hitbox or a shot touching
@@ -853,6 +881,8 @@ export const Game = Schema.bind(
       Attacker,
       AttackPhase,
       Shield,
+      Ward,
+      Burst,
       Brain,
       EnemyMode,
       Hitbox,

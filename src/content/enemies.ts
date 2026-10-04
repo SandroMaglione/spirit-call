@@ -1,6 +1,6 @@
 /**
  * Enemies: what each kind is made of (health, body, movement, behavior,
- * moveset, an optional shield), how it takes each element (`elements`: weak,
+ * moveset, an optional shield, ward, burst, or armor), how it takes each element (`elements`: weak,
  * resists, or immune; see docs/elements.md), and its `cost` in a wave's
  * budget (0: never in random waves). Numbers are live-tunable: they are part
  * of the `Tuning` resource.
@@ -114,13 +114,80 @@ export interface LobAttack extends AttackTiming {
   readonly leaves: GroundSpec | null
 }
 
-export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack | LobAttack
+/**
+ * A blink: it fades where it stands, its mark (a circle of `radius`) on the
+ * floor where the target stood when its aim locked (clamped to `maxReach`),
+ * then appears in the mark's middle as the windup ends and strikes the whole
+ * mark. It stays there through its recovery: the moment to strike back.
+ */
+export interface BlinkAttack extends AttackTiming {
+  readonly kind: "blink"
+  readonly radius: number
+  readonly maxReach: number
+}
+
+/**
+ * A gust: a cone of wind in front of the attacker that blows everything in
+ * it along its way, the player (a push, and its `power` in damage) and the
+ * attacker's own side (pushed and driven by the wind, so a wall slams them,
+ * no damage). Where it blows her is the question: into a pool, against a
+ * wall, among the others.
+ */
+export interface GustAttack extends AttackTiming {
+  readonly kind: "gust"
+  readonly reach: number
+  readonly arcDegrees: number
+}
+
+export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack | LobAttack | BlinkAttack | GustAttack
 
 /** A frontal shield that blocks projectiles hitting within `arcDegrees / 2` of where it faces. */
 export interface ShieldSpec {
   readonly arcDegrees: number
   /** How fast it turns toward the target, in degrees per second. */
   readonly turnRate: number
+}
+
+/**
+ * A ward: a tether to one ally (the one nearest the target, within `range`),
+ * which takes only `taken` of the damage it would while the tether holds. The
+ * tether takes `link` seconds to form (it shows forming); it is cut by the
+ * target's body crossing it (a dash through it included), any blow on the
+ * warder, the warder stunned, or the ally leaving its range; it forms again
+ * `cooldown` seconds later. Not healing: what it asks is which enemy first,
+ * never a damage race (docs/vision.md).
+ */
+export interface WardSpec {
+  readonly range: number
+  readonly taken: number
+  readonly link: number
+  readonly cooldown: number
+}
+
+/**
+ * A burst when it falls: a ring of `radius` around where it fell, showing
+ * for `fuse` seconds, then a blast hurting every body in it, enemies as much
+ * as the player (`power` of its ATK), carrying `element`. Where it falls is
+ * the question: knocked into a crowd before the last blow, or left alone.
+ */
+export interface BurstSpec {
+  readonly radius: number
+  readonly fuse: number
+  readonly power: number
+  readonly knockback: number
+  readonly element: ElementId | null
+}
+
+/**
+ * Armor: until its break bar fills, it takes only `taken` of the damage it
+ * would and cannot be pushed; broken, the armor is down for the whole stun
+ * (full damage, the break's bonus, pushed as its `knockbackTaken` says). Its
+ * break bar fills by the blows as dealt, not as taken, so what breaks it is
+ * what breaks anything (heavy blows, reactions, perfect dodges); a weaker
+ * team takes longer, never runs out of time.
+ */
+export interface ArmorSpec {
+  readonly taken: number
 }
 
 export type Behavior =
@@ -175,6 +242,12 @@ export interface EnemySpec {
   /** Its moveset; empty for an enemy that never attacks (tuning or a test can empty any). */
   readonly attacks: ReadonlyArray<AttackSpec>
   readonly shield: ShieldSpec | null
+  /** Its tether to an ally, if it wards one. */
+  readonly ward: WardSpec | null
+  /** Its burst when it falls, if it bursts. */
+  readonly burst: BurstSpec | null
+  /** Its armor until broken, if armored. */
+  readonly armor: ArmorSpec | null
   /** Enemies spawned together per wave slot. */
   readonly group: number
   /** Delay before a destroyed enemy comes back (training dummies; 0: it does not). */
@@ -194,6 +267,8 @@ const melee = (id: string, spec: AttackInput<MeleeAttack>): AttackSpec => ({ kin
 const volley = (id: string, spec: AttackInput<VolleyAttack>): AttackSpec => ({ kind: "volley", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const slam = (id: string, spec: AttackInput<SlamAttack>): AttackSpec => ({ kind: "slam", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const lob = (id: string, spec: AttackInput<LobAttack>): AttackSpec => ({ kind: "lob", id, ...attackDefaults, aimLock: spec.windup, ...spec })
+const blink = (id: string, spec: AttackInput<BlinkAttack>): AttackSpec => ({ kind: "blink", id, ...attackDefaults, aimLock: spec.windup, ...spec })
+const gust = (id: string, spec: AttackInput<GustAttack>): AttackSpec => ({ kind: "gust", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const affinities = (spec: Affinities): Affinities => spec
 const shield = (spec: ShieldSpec): ShieldSpec | null => spec
 const idle = (): Behavior => ({ kind: "idle" })
@@ -201,7 +276,9 @@ const chase = (stopDistance: number): Behavior => ({ kind: "chase", stopDistance
 const kite = (spec: { minDistance: number; maxDistance: number; strafeSeconds: number }): Behavior => ({ kind: "kite", ...spec })
 const skirmish = (spec: { stopDistance: number; orbit: number; retreatSeconds: number; engageSeconds: number; strafeSeconds: number }): Behavior =>
   ({ kind: "skirmish", ...spec })
-const enemy = (spec: EnemySpec): EnemySpec => spec
+/** An enemy; it wards no one, does not burst, and wears no armor unless it says so. */
+const enemy = (spec: Omit<EnemySpec, "ward" | "burst" | "armor"> & Partial<Pick<EnemySpec, "ward" | "burst" | "armor">>): EnemySpec =>
+  ({ ward: null, burst: null, armor: null, ...spec })
 
 /**
  * The fairness floor: every attack gives at least `minTelegraph` seconds
@@ -418,6 +495,150 @@ export const enemies = {
       melee("swipe", { triggerRange: 95, reach: 105, arcDegrees: 110, windup: 0.55, aimLock: 0.35, active: 0.1, recovery: 0.55, cooldown: 0.6, power: 16, knockback: 360 }),
       // A long thrust from behind the shield at a player keeping just out of reach.
       melee("thrust", { minRange: 85, triggerRange: 165, reach: 180, arcDegrees: 24, windup: 0.6, aimLock: 0.3, active: 0.1, recovery: 0.6, cooldown: 0.8, power: 18, knockback: 380, lead: 0.3 })
+    ],
+    respawnDelay: 0
+  }),
+  /**
+   * Hangs back and wards an ally (the one nearest you), who then takes little
+   * damage: cut the tether (cross it, or strike the Warden) or fell the
+   * Warden first. Its own bolt is slow and weak.
+   */
+  warden: enemy({
+    name: "Warden",
+    description: "Wards an ally from afar: cross its tether or strike it to break the ward.",
+    elements: affinities({ thunder: "weak", water: "resists" }),
+    hp: 90,
+    atk: 80,
+    def: 0,
+    radius: 17,
+    hurtboxRadius: 18,
+    knockbackTaken: 1,
+    speed: 115,
+    acceleration: 900,
+    poise: 0.5,
+    cost: 3,
+    behavior: kite({ minDistance: 330, maxDistance: 520, strafeSeconds: 2.6 }),
+    shield: null,
+    ward: { range: 420, taken: 0.25, link: 0.6, cooldown: 3 },
+    group: 1,
+    attacks: [
+      volley("bolt", {
+        triggerRange: 600, windup: 0.8, aimLock: 0.35, active: 0, recovery: 0.5, cooldown: 2.6,
+        count: 1, spreadDegrees: 0, projectileSpeed: 380, projectileRadius: 8, range: 700, power: 10, knockback: 160
+      })
+    ],
+    respawnDelay: 0
+  }),
+  /**
+   * Keeping your distance is no refuge: from afar it blinks to you, its mark
+   * on the floor where it will land, then stands there through its recovery.
+   * Up close it slashes.
+   */
+  stalker: enemy({
+    name: "Stalker",
+    description: "From afar it blinks to you: its mark shows where it lands.",
+    elements: affinities({ wind: "weak", fire: "resists" }),
+    hp: 110,
+    atk: 100,
+    def: 0,
+    radius: 18,
+    hurtboxRadius: 19,
+    knockbackTaken: 0.8,
+    speed: 140,
+    acceleration: 1000,
+    poise: 0.4,
+    cost: 3,
+    behavior: chase(70),
+    shield: null,
+    group: 1,
+    attacks: [
+      blink("blink", { minRange: 240, triggerRange: 650, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.8, cooldown: 3, radius: 85, maxReach: 650, power: 18, knockback: 380 }),
+      melee("slash", { triggerRange: 90, reach: 100, arcDegrees: 100, windup: 0.5, aimLock: 0.3, active: 0.1, recovery: 0.5, cooldown: 0.9, power: 14, knockback: 320 })
+    ],
+    respawnDelay: 0
+  }),
+  /**
+   * Rushes in, light and fragile, and bursts in fire where it falls, hurting
+   * its own side as much as you: step back from the last blow, or knock it
+   * into a crowd first.
+   */
+  volatile: enemy({
+    name: "Volatile",
+    description: "Bursts in fire when it falls, enemies around it too.",
+    elements: affinities({ water: "weak", fire: "immune" }),
+    hp: 45,
+    atk: 100,
+    def: 0,
+    radius: 15,
+    hurtboxRadius: 16,
+    knockbackTaken: 1.3,
+    speed: 175,
+    acceleration: 1200,
+    poise: 0,
+    cost: 1,
+    behavior: chase(40),
+    shield: null,
+    burst: { radius: 120, fuse: 0.75, power: 30, knockback: 520, element: "fire" },
+    group: 2,
+    attacks: [
+      melee("bite", { triggerRange: 70, reach: 80, arcDegrees: 90, windup: 0.45, aimLock: 0.3, active: 0.1, recovery: 0.4, cooldown: 1, power: 8, knockback: 200 })
+    ],
+    respawnDelay: 0
+  }),
+  /**
+   * Keeps its distance and blows a cone of wind: little damage, a hard push,
+   * and it blows its own side along too. Where it blows her is the danger
+   * (a pool, a wall, the others); baited well, it blows them instead.
+   */
+  galeCaster: enemy({
+    name: "Gale Caster",
+    description: "Blows a cone of wind that pushes everyone in it, its own side too.",
+    elements: affinities({ fire: "weak", wind: "immune" }),
+    hp: 70,
+    atk: 90,
+    def: 0,
+    radius: 16,
+    hurtboxRadius: 17,
+    knockbackTaken: 1.1,
+    speed: 125,
+    acceleration: 900,
+    poise: 0.5,
+    cost: 2,
+    // It keeps where its gust reaches.
+    behavior: kite({ minDistance: 200, maxDistance: 300, strafeSeconds: 2.4 }),
+    shield: null,
+    group: 1,
+    attacks: [
+      gust("gust", { triggerRange: 320, reach: 320, arcDegrees: 60, windup: 0.8, aimLock: 0.35, active: 0.12, recovery: 0.6, cooldown: 3.2, power: 4, knockback: 900 })
+    ],
+    respawnDelay: 0
+  }),
+  /**
+   * Slow and armored: blows barely scratch it and do not move it until its
+   * break bar fills; broken, the armor is down for the whole stun. Heavy
+   * blows, reactions, and perfect dodges break it soonest.
+   */
+  juggernaut: enemy({
+    name: "Juggernaut",
+    description: "Armored until broken: blows barely scratch it and never push it. Break it, then strike.",
+    elements: affinities({ thunder: "weak", wind: "resists" }),
+    hp: 300,
+    atk: 110,
+    def: 0,
+    radius: 26,
+    hurtboxRadius: 27,
+    knockbackTaken: 0.5,
+    speed: 85,
+    acceleration: 700,
+    poise: 0.3,
+    cost: 5,
+    behavior: chase(90),
+    shield: null,
+    armor: { taken: 0.3 },
+    group: 1,
+    attacks: [
+      melee("sweep", { triggerRange: 110, reach: 130, arcDegrees: 170, windup: 0.65, aimLock: 0.35, active: 0.12, recovery: 0.7, cooldown: 1, power: 18, knockback: 460 }),
+      slam("quake", { triggerRange: 260, radius: 120, maxReach: 220, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.9, cooldown: 1.6, power: 24, knockback: 520, lead: 0.3 })
     ],
     respawnDelay: 0
   })

@@ -40,6 +40,7 @@ import {
   Attacker,
   AttackPhase,
   Body,
+  Burst,
   CombatStats,
   Dash,
   ElementState,
@@ -111,6 +112,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     projectiles: Game.Query({ selection: { position: Game.Query.read(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.read(Projectile) } }),
     hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
+    bursts: Game.Query({ selection: { burst: Game.Query.read(Burst) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
     elites: Game.Query({ selection: { elite: Game.Query.read(Elite) } }),
     walls: Game.Query({ selection: { wall: Game.Query.read(Wall) } })
@@ -162,6 +164,11 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     if (lobbed.faction !== "enemy") continue
     const bursts = Math.max(0, lobbed.effect.flightTime + lobbed.effect.fuse - lobbed.elapsed)
     threats.push({ kind: "area", area: { kind: "circle", center: lobbed.to, radius: lobbed.effect.radius }, from: bursts, to: bursts + blast, seen: Infinity })
+  }
+  // A fallen enemy's burst: its ring, once the fuse has burnt.
+  for (const { data } of queries.bursts.each()) {
+    const burst = data.burst.get()
+    threats.push({ kind: "area", area: { kind: "circle", center: burst.at, radius: burst.radius }, from: burst.remaining, to: burst.remaining + blast * 2, seen: burst.fuse - burst.remaining })
   }
   // A thunder elite's discharge winding up: its ring, once it strikes.
   for (const { data } of queries.elites.each()) {

@@ -44,7 +44,8 @@
     "eliteHunt",
     "swarmNight",
     "stormFront",
-    "untilFall"
+    "untilFall",
+    "strangeCompany"
   ],
   "attacks": [
     "sword",
@@ -60,7 +61,12 @@
     "swarmer",
     "charger",
     "sniper",
-    "guardian"
+    "guardian",
+    "warden",
+    "stalker",
+    "volatile",
+    "galeCaster",
+    "juggernaut"
   ],
   "quests": [
     "theSwarm",
@@ -75,7 +81,8 @@
     "theWarlord",
     "nightOfPacks",
     "eliteHunt",
-    "stormFront"
+    "stormFront",
+    "strangeCompany"
   ],
   "chapters": [
     "one",

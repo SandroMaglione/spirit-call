@@ -20,6 +20,8 @@ import { TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
 import { PerfectDodge } from "./features/dodge.ts"
 import { UpdateElites } from "./features/elites.ts"
+import { ArmBursts, UpdateBursts } from "./features/bursts.ts"
+import { UpdateWards } from "./features/wards.ts"
 import { BuildPoise } from "./features/poise.ts"
 import { BlowPools, DriveWithWind } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
@@ -107,6 +109,7 @@ const gameplay = Game.Schedule.when(
   SteerEnemies,
   UpdateAttacks,
   UpdateElites,
+  UpdateBursts,
   IntegrateBodies,
   // Right after moving and before pushes die down (and the wind's drive runs
   // down with them): it compares how far a driven body moved with its push.
@@ -143,6 +146,10 @@ const runOutcome = Game.Schedule.when(
   // blows and reactions of the step fill break bars.
   PerfectDodge,
   BuildPoise,
+  // What the step's blows and deaths set off (a kill's hit-stop must not drop them): a fallen enemy's burst,
+  // a warder's tether cut.
+  ArmBursts,
+  UpdateWards,
   DetectGameOver,
   SwitchCharacter,
   CheckObjective,

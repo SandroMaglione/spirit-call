@@ -293,6 +293,28 @@ export const challenges = {
       endless: null
     }
   }),
+  /** The newer threats, one at a time, then together: a Volatile's burst, a Warden's ward, a Stalker's blink, a Gale Caster's gust, a Juggernaut's armor. */
+  strangeCompany: challenge({
+    name: "Strange Company",
+    description: "Ten waves of stranger foes: they burst, ward, blink, blow you around, or shrug blows off until broken.",
+    objective: clearWaves(),
+    arena: "courtyard",
+    waves: {
+      scripted: [
+        ["volatile", "chaser", "chaser"],
+        ["warden", "chaser", "chaser", "shooter"],
+        ["stalker", "shooter", "shooter"],
+        ["galeCaster", "chaser", "chaser", "swarmer"],
+        ["volatile", "volatile", "swarmer", "brute"],
+        ["juggernaut", "chaser", "shooter"],
+        ["warden", "brute", "guardian", "galeCaster"],
+        ["stalker", "stalker", "sniper", "chaser"],
+        ["warden", "juggernaut", "volatile", "volatile"],
+        ["warden", "stalker", "galeCaster", "juggernaut", "volatile"]
+      ],
+      endless: null
+    }
+  }),
   /** Packs at night: swarms in a cloister, then ever-growing waves. */
   swarmNight: challenge({
     name: "Night of Packs",
