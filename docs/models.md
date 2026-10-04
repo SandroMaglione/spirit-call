@@ -116,8 +116,19 @@ manifest (`presentation/assets/<arena>.ts`, prefixed with the arena's id).
 - **Pillars:** a `pillar` model standing on each pillar's box, scaled evenly
   to its footprint, picked by the footprint closest to the box (variants of
   that size by place). They fade when the player is behind them.
-- **Scenery:** props placed for looks only, at the arena's scale. They must
-  not look solid where nothing blocks: keep them against the edges.
+- **Props:** what stands in the arena and blocks (`props` in
+  `content/arena.ts`: a throne, a brazier, a crate). The look names each
+  one's model and turn, in the same order; it stands on its box at the
+  arena's scale and fades like a pillar in front of the player.
+  `test/looks.test.ts` keeps the model about the size of its box.
+- **Scenery:** pieces placed for looks only, at the arena's scale. Only for
+  what nobody would expect to block (flat or tiny things): anything that
+  looks solid is a prop.
+- **Floor:** besides its tiles, a `border` (other tiles along the walls) and
+  `inlays` (single tiles chosen by hand: a medallion in the middle).
+- **Its own tones:** the color beyond the walls (`background`), its pools'
+  tones and stone rim (`pools`), its light (`light`), and the flames in its
+  props (`fires`: they flicker and shed embers).
 
 Floor tiles, wall segments, and props must be one mesh with one material,
 so each model is drawn as one batch however many copies there are.

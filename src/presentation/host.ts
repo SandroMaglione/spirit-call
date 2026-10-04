@@ -171,8 +171,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     const look = arenaLooks[id]
     dressing = { id, dressing: dressArena(assets, look, arena, holes, grid) }
     scene.add(dressing.dressing.object)
-    // What shows past its surroundings, and the arena's own light.
-    renderer.setClearColor(look.surround?.background ?? view.background)
+    // What shows beyond its walls, and the arena's own light.
+    renderer.setClearColor(look.background ?? view.background)
     sky.color.set(look.light?.sky ?? light.sky)
     sky.groundColor.set(look.light?.ground ?? light.ground)
     sun.color.set(look.light?.sun ?? 0xffffff)

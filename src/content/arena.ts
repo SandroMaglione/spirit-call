@@ -45,13 +45,32 @@ export interface HazardSpec {
   readonly walled: { readonly y: "north" | "south"; readonly x: "west" | "east" }
 }
 
+/**
+ * Something standing in the arena (a throne, a brazier, a pile of crates):
+ * its center and its size across (x) and down (y), in world units. It blocks
+ * movement and shots like a pillar; what it is (its model, which way it is
+ * turned) is its look's, in the same order (`presentation/looks.ts`). Stand
+ * it flush against a wall or another prop, or leave room to pass
+ * (`test/arenas.test.ts`).
+ */
+export interface PropSpec {
+  readonly x: number
+  readonly y: number
+  readonly width: number
+  readonly depth: number
+}
+
 export interface ArenaSpec {
   /** Shown in menus. */
   readonly name: string
   readonly pillars: ReadonlyArray<PillarSpec>
   readonly walls: ReadonlyArray<WallSpec>
   readonly hazards: ReadonlyArray<HazardSpec>
+  readonly props?: ReadonlyArray<PropSpec>
 }
+
+/** A prop `width` × `depth` centered at (`x`, `y`), all in world units. */
+const prop = (x: number, y: number, width: number, depth: number): PropSpec => ({ x, y, width, depth })
 
 const arena = (spec: ArenaSpec): ArenaSpec => spec
 
@@ -166,6 +185,31 @@ export const arenas = {
     hazards: [
       { element: "fire", column: 1, row: 5, columns: 2, rows: 2, walled: { y: "north", x: "east" } },
       { element: "fire", column: 10, row: 6, columns: 2, rows: 2, walled: { y: "south", x: "west" } }
+    ],
+    props: [
+      // The north wall, the same on both sides of the throne: banners, braziers, and a brazier in each corner.
+      prop(900, 39, 110, 78),
+      prop(700, 35, 70, 70),
+      prop(1100, 35, 70, 70),
+      prop(500, 14, 78, 28),
+      prop(1300, 14, 78, 28),
+      prop(24, 24, 48, 48),
+      prop(1776, 24, 48, 48),
+      // Two gargoyles on the south wall.
+      prop(560, 1774, 120, 52),
+      prop(1240, 1774, 120, 52),
+      // What the garrison left lying around: arms and a crate by the west wall, fallen basalt further down, and more of it loose near the corner.
+      prop(14, 440, 28, 98),
+      prop(34, 522, 68, 68),
+      prop(48, 1290, 96, 90),
+      prop(44, 1378, 88, 88),
+      prop(142, 1662, 92, 92),
+      // By the east wall: shields and a drum, then the war table and a crate; a cache against the south wall.
+      prop(1786, 520, 28, 98),
+      prop(1766, 602, 68, 68),
+      prop(1762, 1300, 76, 122),
+      prop(1766, 1394, 68, 68),
+      prop(1010, 1770, 88, 60)
     ]
   }),
   /** Docks: two water channels across the north, posts and low walls to put between you and the shooters. */

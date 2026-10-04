@@ -147,7 +147,9 @@ slots.
 
 Each challenge is fought in an arena (`content/arena.ts`): its pillars (tall,
 fading in front of the player), low walls (cover that blocks movement and
-shots without hiding anyone), and hazards. Hazards are permanent pools laid
+shots without hiding anyone), props (what furnishes it, a throne or a
+crate: they block like pillars, and stand flush against a wall or leave
+room to pass), and hazards. Hazards are permanent pools laid
 into the floor's tiles, level with it, that affect everyone, enemies
 included: **fire trenches** burn (water puts one out for a while, then it
 burns again), and **basins** of water soak and carry thunder. Both feed a

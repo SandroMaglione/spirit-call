@@ -203,6 +203,17 @@ const wallNode = (assets: RenderAssets, look: WallLook, scale: number, box: Box,
       dispose = () => disposeCopy(copy.object, copy.materials)
       break
     }
+    case "prop": {
+      // Its model as it is, at the arena's scale, turned its own way on the box.
+      const copy = copyModel(assets.model(look.model), true)
+      copy.object.scale.setScalar(scale)
+      copy.object.rotation.y = look.turn
+      root.add(copy.object)
+      height = heightOf(models[look.model]) * scale
+      fade = (alpha) => paintMaterials(copy.materials, 0xffffff, 0x000000, 0, alpha)
+      dispose = () => disposeCopy(copy.object, copy.materials)
+      break
+    }
   }
   // Its outline on screen: the box's corners at the floor and at its top.
   const xs: Array<number> = []
@@ -249,7 +260,9 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
       return projectileNode(assets, projectilePool, renderable.faction, renderable.style, renderable.radius, renderable.element)
     case "wall": {
       const arena = arenaLooks[renderable.arena]
-      return wallNode(assets, arena.walls[renderable.placement], arena.unitsPerMeter, renderable.box, renderable.placement === "front")
+      const prop = renderable.prop === undefined ? undefined : arena.props?.[renderable.prop]
+      const look: WallLook = prop === undefined ? arena.walls[renderable.placement] : { kind: "prop", ...prop }
+      return wallNode(assets, look, arena.unitsPerMeter, renderable.box, renderable.placement === "front")
     }
     case "totem":
       return totemNode(assets, renderable.element)
