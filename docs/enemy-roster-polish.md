@@ -46,10 +46,13 @@ through Three.js, retain normalized skin weights and valid luminous masks, and
 GPU atlas samples match Three.js skinning.
 
 The network-address browser review covers desktop 1280×800, phone landscape
-844×390, all combat enemies through windup/contact/recovery, native mouse taps
+844×390 and portrait 390×844, all combat enemies through windup/contact/recovery, native mouse taps
 on the touch-enabled controls, and a synthetic touch-stick drag through the
 real input binding. Synthetic capture was bypassed only in the review page;
 the player moved and returned to neutral input without errors. This is desktop
 browser evidence, not physical-phone performance testing.
+
+The touch HUD now refreshes its resting layout immediately after a viewport
+rotation. An active gesture keeps its original layout until release.
 
 ![Finished roster](../art/enemies/polish-tools/evidence/roster-idle.png)
