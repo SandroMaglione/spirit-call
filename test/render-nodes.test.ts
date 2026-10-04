@@ -61,6 +61,8 @@ describe("batches", () => {
     const members = Array.from({ length: 100 }, (_, index) => {
       const instance = new Instance(batch)
       instance.pose.splice(0, 4, index, index + 1, .25, -.5)
+      instance.glow.setRGB(index / 100, .2, .3)
+      instance.glowAmount = index / 100
       batch.add(instance)
       return instance
     })
@@ -70,6 +72,10 @@ describe("batches", () => {
     expect(poses.count).toBe(128)
     expect([poses.getX(10), poses.getY(10), poses.getZ(10), poses.getW(10)]).toEqual([99, 100, .25, -.5])
     expect([poses.getX(11), poses.getY(11), poses.getZ(11), poses.getW(11)]).toEqual([11, 12, .25, -.5])
+    const glows = geometry.getAttribute("instanceGlow")
+    expect(glows.count).toBe(128)
+    expect(glows.getX(10)).toBeCloseTo(.99)
+    expect(glows.getW(10)).toBeCloseTo(.99)
     expect(parent.children).toHaveLength(1)
   })
   it("keep their members packed when one leaves, and grow past their first size", () => {

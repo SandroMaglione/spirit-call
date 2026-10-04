@@ -15,7 +15,7 @@ from mathutils import Matrix, Vector
 
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parents[1]/"scripts"))
-from common import Creature, motion, transform
+from common import Creature, keep_off_floor, motion, transform
 
 SOURCE=HERE/"chaser-production.blend"
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
@@ -58,6 +58,11 @@ bindings={o.name:assigned_bone(o.name) for o in parts}
 for obj in parts:
     group=obj.vertex_groups.new(name=bindings[obj.name])
     group.add(list(range(len(obj.data.vertices))),1,"REPLACE")
+# Eye cores carry `_GLOW` 1: the game's enemy shader makes such vertices
+# shine in their own color (one material, no emission map).
+for obj in parts:
+    glow=obj.data.attributes.new("_GLOW","FLOAT","POINT")
+    for item in glow.data:item.value=1 if obj.name.startswith("Eye.") else 0
 material=parts[0].data.materials[0]
 shader=material.node_tree.nodes["Principled BSDF"]
 for link in list(shader.inputs["Emission Color"].links):material.node_tree.links.remove(link)
@@ -66,11 +71,17 @@ shader.inputs["Emission Strength"].default_value=0
 
 def pose(action,t):
     s,c=math.sin(math.tau*t),math.cos(math.tau*t)
+    s2,c2=math.sin(2*math.tau*t),math.cos(2*math.tau*t)
     if action=="Idle":
+        # Never still: it breathes into a crouch, its head scans from side
+        # to side, and the claw arm flexes. Sized for a 60 px body.
         return {
-            "body":transform((0,.005*s,0),(0,0,.008*(1-c))),
-            "head":transform((.015*s,0,.018*s)),
-            "tail":transform((0,0,.035*s)),
+            "body":transform((.04*(1-c)/2,.02*s,0),(0,0,-.022*(1-c)/2)),
+            "head":transform((.05*(1-c2)/2,0,.22*s)),
+            "tail":transform((0,0,.14*s)),
+            "arm.R":transform((.08*s,0,.05*(1-c)/2)),
+            "forearm.R":transform((-.14*(1-c)/2,0,0)),
+            "arm.L":transform((-.06*s,0,0)),
         }
     if action=="Run":
         # A brief planted push followed by a fast, high return: the stance
@@ -110,29 +121,52 @@ def pose(action,t):
             strike=max(0,(t-.82)/.18)
         elif action=="Active":ready,strike=1,1
         else:ready,strike=(1-t)**2,(1-t)**2
+        # The whole body coils away from the claw arm and sinks, the arm
+        # drawn far back; the strike unwinds through the trunk and lunges.
         return {
-            "body":transform((-.025*ready,0,-.23*ready+.42*strike),(0,0,.025*ready)),
-            "head":transform((.018*ready,0,.12*ready-.20*strike)),
-            "arm.R":transform((-.40*ready+.20*strike,-.08*ready,-.65*ready+1.20*strike)),
-            "forearm.R":transform((-.10*ready,0,.18*ready-.25*strike)),
-            "arm.L":transform((-.08*ready,0,.10*ready)),
-            "tail":transform((0,0,-.05*ready)),
+            "body":transform((-.12*ready+.34*strike,0,-.45*ready+.85*strike),(0,.04*ready-.14*strike,-.07*ready+.03*strike)),
+            "head":transform((.04*ready,0,.24*ready-.42*strike)),
+            "arm.R":transform((-.60*ready+.32*strike,-.10*ready,-.95*ready+1.75*strike)),
+            "forearm.R":transform((-.22*ready+.10*strike,0,.30*ready-.45*strike)),
+            "arm.L":transform((-.15*ready+.25*strike,0,.22*ready-.20*strike)),
+            "tail":transform((0,0,-.14*ready+.22*strike)),
         }
-    result=motion("chaser",action,t)
-    if action=="Spawn":
-        scale=.6+.4*math.sin(t*math.pi/2)
-        for side in ("L","R"):result[f"leg.{side}"]=transform(scale=(scale,scale,scale))
-    return result
+    if action=="Hurt":
+        # The code adds its own squash and lean to a hit; the clip throws the parts.
+        recoil=math.sin(math.pi*t)*(1-t)*2.6
+        return {
+            "body":transform((-.26*recoil,.08*recoil,0)),
+            "head":transform((-.24*recoil,0,.16*recoil)),
+            "arm.R":transform((-.30*recoil,0,-.25*recoil)),
+            "arm.L":transform((-.30*recoil,0,.25*recoil)),
+            "tail":transform((.2*recoil,0,0)),
+        }
+    if action in ("Spawn","Death"):
+        # In one piece: every part hanging off the root scales about the ground origin.
+        if action=="Spawn":
+            back=1+2.70158*(t-1)**3+1.70158*(t-1)**2
+            size=.25+.75*back;squash=1+.30*math.sin(math.pi*t)*(1-t)
+        else:size=max(.02,1-max(0,(t-.55)/.45));squash=1
+        result={}
+        for name,(at,parent) in creature.joints.items():
+            if parent=="root":
+                at=Vector(at)
+                result[name]=transform(location=((size-1)*at.x,(size-1)*at.y,(size*squash-1)*at.z),scale=(size,size,size*squash))
+        if action=="Death":result["body"]=transform((.7*math.sin(t*math.pi/2),0,0),result["body"][1],result["body"][2])
+        return result
+    return motion("chaser",action,t)
 
 creature.animate(pose)
 rig=creature.armature
+keep_off_floor(rig,creature.mesh)
 rig.animation_data.action=None
 rig.data.pose_position="REST"
 bpy.context.view_layer.update()
 mesh=creature.mesh
 mesh.data.calc_loop_triangles()
 points=[mesh.matrix_world@v.co for v in mesh.data.vertices]
-assert len(mesh.data.loop_triangles)==1890
+triangles=len(mesh.data.loop_triangles)
+assert triangles<2000
 assert len(rig.data.bones)==12
 assert len(mesh.data.materials)==1
 assert abs(max(v.z for v in points)-1.8)<1e-5
@@ -141,7 +175,7 @@ rig.animation_data.action=bpy.data.actions["Idle"]
 bpy.context.scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(creature.folder/"chaser.blend"))
 report={"source":"../chaser-production.blend","source_sha256":hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
-        "triangles":1890,"bones":12,"materials":1,"mesh_objects":1,"part_bindings":bindings,
+        "triangles":triangles,"bones":12,"materials":1,"mesh_objects":1,"part_bindings":bindings,
         "run":{"forward_lean_degrees":math.degrees(.27),"foot_travel_meters":.68,"stance_fraction":.28,"runtime_distance":48},
         "clips":creature.clips,"root_motion":False}
 (creature.folder/"rig-info.json").write_text(json.dumps(report,indent=2)+"\n")

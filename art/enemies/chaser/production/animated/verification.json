@@ -1,39 +1,30 @@
 {
-  "sha256": "fe9649c772623f6399dc9d3a0201db136986f6169de155c736b570bd7628d4ab",
+  "sha256": "bb4298c0d763a6c7be4b6b444c52887fb23665691309c9ca63e6ee3fa7e78abc",
   "roundTripBoundsError": {
-    "Idle": 2.980232238769531e-07,
+    "Idle": 4.76837158203125e-07,
     "Run": 3.5762786865234375e-07,
-    "Windup": 3.5762786865234375e-07,
-    "Active": 1.7881393432617188e-07,
-    "Recovery": 3.5762786865234375e-07,
+    "Windup": 4.76837158203125e-07,
+    "Active": 1.1920928955078125e-07,
+    "Recovery": 2.384185791015625e-07,
     "Hurt": 3.5762786865234375e-07,
-    "Death": 4.470348358154297e-07,
-    "Spawn": 2.384185791015625e-07
+    "Death": 2.682209014892578e-07,
+    "Spawn": 1.7881393432617188e-07
   },
   "groundMinimum": {
-    "Idle": 0.0,
+    "Idle": -0.0008859913796186447,
     "Run": -5.960464477539063e-08,
     "Windup": 0.0,
     "Active": 0.0,
     "Recovery": 0.0,
     "Hurt": 0.0,
-    "Death": -0.429728627204895,
-    "Spawn": 0.0
+    "Death": -0.3417624235153198,
+    "Spawn": -2.9802322387695312e-08
   },
-  "triangles": 1890,
+  "triangles": 1950,
   "bones": 12,
-  "bytes": 359308,
-  "contactPoseErrors": {
-    "windup_to_active": 0.0,
-    "active_to_recovery": 0.0,
-    "recovery_to_idle": 0.0
-  },
-  "runFeet": {
-    "stanceGroundError": 0.0019091665744781494,
-    "levelRotationError": 0.0,
-    "returnLift": {
-      "L": 0.1806720495223999,
-      "R": 0.18040594458580017
-    }
+  "bytes": 393676,
+  "phaseBoundaryVertexError": {
+    "Windup\u2192Active": 0.0,
+    "Active\u2192Recovery": 0.0
   }
 }

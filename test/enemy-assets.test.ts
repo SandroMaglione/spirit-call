@@ -9,6 +9,41 @@ import { closeLoop } from "../src/presentation/models.ts"
 import type { ModelId, ModelSpec } from "../src/presentation/models.ts"
 
 describe("exported enemy animation atlases", () => {
+  const readableIdles = ["enemySniper", "enemyGuardian", "enemyCharger", "enemyStalker", "enemyJuggernaut"] as const
+  it.each(readableIdles)("%s Idle visibly moves at a 40 px model height", async (id) => {
+    const spec = enemyModels[id]
+    const bytes = readFileSync(path.join(import.meta.dirname, "..", spec.url))
+    const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
+    const clip = closeLoop(gltf.animations.find((clip) => clip.name === "Idle")!, spec.clips.Idle)
+    let mesh: SkinnedMesh | undefined
+    gltf.scene.traverse((node) => { if (node instanceof SkinnedMesh) mesh = node })
+    if (mesh === undefined) throw new Error("Missing skinned mesh")
+    const mixer = new AnimationMixer(gltf.scene)
+    mixer.clipAction(clip).setLoop(LoopOnce, 1).play()
+    const positions = mesh.geometry.getAttribute("position")
+    const sample = (seconds: number) => {
+      mixer.setTime(seconds)
+      gltf.scene.updateMatrixWorld(true)
+      mesh!.skeleton.update()
+      return Array.from({ length: positions.count }, (_, vertex) =>
+        mesh!.applyBoneTransform(vertex, new Vector3().fromBufferAttribute(positions, vertex)).applyMatrix4(mesh!.matrixWorld))
+    }
+    const start = sample(0)
+    const poses = Array.from({ length: 8 }, (_, frame) => sample((frame + 1) / 9 * clip.duration))
+    // Project from the game's 30-degree camera, in two perpendicular facings.
+    // Check a broad part of the model, so a moving decorative tip cannot hide
+    // a frozen body. The previous clips moved less than one pixel even enlarged.
+    for (const yaw of [0, Math.PI / 2]) {
+      const movement = start.map((point, vertex) => Math.max(...poses.map((pose) => {
+        const delta = pose[vertex]!.clone().sub(point).applyAxisAngle(new Vector3(0, 1, 0), yaw)
+        const x = (delta.x - delta.z) * Math.SQRT1_2
+        const y = delta.y * Math.sqrt(.75) - (delta.x + delta.z) * Math.SQRT1_2 * .5
+        return Math.hypot(x, y) * 40 / spec.height
+      }))).sort((a, b) => a - b)
+      expect(movement[Math.floor(movement.length * .9)], `${id} silhouette motion`).toBeGreaterThan(1.2)
+      expect(movement.reduce((sum, value) => sum + value, 0) / movement.length, `${id} body motion`).toBeGreaterThan(.4)
+    }
+  })
   it.each(Object.entries(enemyModels))("%s matches Three.js skinning at baked frames", async (id, spec: ModelSpec) => {
     const bytes = readFileSync(path.join(import.meta.dirname, "..", spec.url))
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
@@ -18,6 +53,15 @@ describe("exported enemy animation atlases", () => {
     gltf.scene.traverse((node) => { if (node instanceof SkinnedMesh) mesh = node })
     if (mesh === undefined) throw new Error("Missing skinned mesh")
     const positions = mesh.geometry.getAttribute("position")
+    expect(mesh.geometry.index!.count / 3).toBeLessThan(2000)
+    expect(mesh.skeleton.bones.length).toBeLessThanOrEqual(12)
+    const glow = mesh.geometry.getAttribute("_glow")
+    expect(glow.count).toBe(positions.count)
+    const mask = Array.from({ length: glow.count }, (_, i) => glow.getX(i))
+    expect(mask.every((amount) => Number.isFinite(amount) && amount >= 0 && amount <= 1)).toBe(true)
+    expect(mask.some((amount) => amount === 0)).toBe(true)
+    if (["enemyDummy", "enemySparringDummy", "enemyHeavyDummy", "enemySwarmer"].includes(id)) expect(mask.every((amount) => amount === 0)).toBe(true)
+    else expect(mask.some((amount) => amount === 1)).toBe(true)
     const indices = mesh.geometry.getAttribute("skinIndex")
     const weights = mesh.geometry.getAttribute("skinWeight")
     const mixer = new AnimationMixer(gltf.scene)

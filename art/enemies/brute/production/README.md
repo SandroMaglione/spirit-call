@@ -16,6 +16,15 @@ Small stone chips are simplified into broad facets and color variation.
 The source has 1,612 triangles, one vertex-color material and no skeleton
 or clips.
 
+## Game-size refinement
+
+After the first in-game review the limbs were grown about their own centers
+(`GROW` in `build.py`: fists and shoulders most) and their rings roughened
+(`ROUGH`) so the stone breaks into planes; the eyes are a third wider and
+slant down toward the nose. At 60 px the measured limbs read as thin lumps
+and the round eye cores as two dots. Front/back sheet overlap is now
+86%/88%. The triangle count is unchanged.
+
 ## Review evidence
 
 `renders/compare.png` pairs the front, right and hero with the reference.

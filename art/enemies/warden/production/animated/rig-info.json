@@ -1,7 +1,7 @@
 {
   "source": "../warden-model.blend",
   "source_sha256": "c77280456b7a40d31680730cc1d46a339cc350b8af9d0b359b4a9d1d1cff4ec0",
-  "triangles": 1775,
+  "triangles": 1807,
   "bones": 10,
   "materials": 1,
   "mesh_objects": 1,
@@ -163,6 +163,9 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true,
-  "rest_vertex_error_m": 5.960464477539063e-08
+  "rest_vertices_preserved": false,
+  "rest_vertex_error_m": 5.960464477539063e-08,
+  "base_triangles": 1775,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

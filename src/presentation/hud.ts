@@ -7,7 +7,7 @@
  * energy). Colors follow the element of
  * the character on the field (`data-element`).
  */
-import { actionButtons, partyLayout, stickRest } from "../config/input.ts"
+import { actionButtons, partyLayout, stickRest, touchLayout } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
@@ -45,11 +45,15 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   }
   if (!touchMode) return
   const live = services.touch.view()
+  // Input refreshes its hit regions on the next touch. At rest, draw the
+  // current viewport immediately so rotation never leaves buttons offscreen.
+  const layout = live.stick !== null || actionButtons.some((name) => live.buttons[name].held)
+    ? live.layout : touchLayout(services.host.size, services.host.safeArea())
   const place = (element: HTMLElement, x: number, y: number, radius: number) => {
     element.style.transform = `translate(${x - radius}px, ${y - radius}px)`
     element.style.width = element.style.height = `${radius * 2}px`
   }
-  const stickRadius = live.layout.stick.radius
+  const stickRadius = layout.stick.radius
   if (live.stick === null) {
     // Where the thumb usually rests: a hint of the floating stick.
     const rest = stickRest(services.host.size, services.host.safeArea())
@@ -86,7 +90,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     for (const slot of skillSlots) showIcon(pad.buttons[slot].icon, skillIcons, player.data.skills.get()[slot].skill)
   }
   for (const name of actionButtons) {
-    const zone = live.layout.buttons[name]
+    const zone = layout.buttons[name]
     const refs = pad.buttons[name]
     const state = live.buttons[name]
     place(refs.root, zone.center.x, zone.center.y, zone.radius)

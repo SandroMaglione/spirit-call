@@ -1,7 +1,7 @@
 {
   "source": "../guardian-model.blend",
   "source_sha256": "8730a2da79575738e9c2b754cfba143c5fffcb272a158608b1b3d5f41941db88",
-  "triangles": 1934,
+  "triangles": 1974,
   "bones": 7,
   "materials": 1,
   "mesh_objects": 1,
@@ -201,5 +201,8 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true
+  "rest_vertices_preserved": false,
+  "base_triangles": 1934,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

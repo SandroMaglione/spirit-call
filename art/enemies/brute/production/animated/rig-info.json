@@ -1,7 +1,7 @@
 {
   "source": "../brute-model.blend",
-  "source_sha256": "1254f0bf76a8613c7348566d305d0ec43d7dc903449dadf24295831fc6dd194d",
-  "triangles": 1612,
+  "source_sha256": "ba00ed3300bae67ab9acc34fc6928449b3ee1e662094b3c0fb1ee6bf01bc6e23",
+  "triangles": 1652,
   "bones": 7,
   "materials": 1,
   "mesh_objects": 1,
@@ -120,5 +120,8 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true
+  "rest_vertices_preserved": false,
+  "base_triangles": 1612,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

@@ -1,18 +1,30 @@
 {
-  "sha256": "a6ecf955ac6c0e1b380eab78b00036e5905890668c9d356d139980d8cc596f06",
+  "sha256": "266c3f5517394be8c7a6addc9e3d11c2f2bb4e327570ba7d0855b6c360379319",
   "roundTripBoundsError": {
     "Idle": 3.5762786865234375e-07,
-    "Hurt": 2.384185791015625e-07,
+    "Run": 2.384185791015625e-07,
+    "Windup": 1.1920928955078125e-07,
+    "Active": 1.1920928955078125e-07,
+    "Recovery": 2.384185791015625e-07,
+    "Hurt": 3.5762786865234375e-07,
     "Death": 2.384185791015625e-07,
     "Spawn": 1.1920928955078125e-07
   },
   "groundMinimum": {
     "Idle": 0.0,
+    "Run": 0.0,
+    "Windup": 0.0,
+    "Active": 0.0,
+    "Recovery": 0.0,
     "Hurt": 0.0,
     "Death": 0.0,
     "Spawn": 0.0
   },
-  "triangles": 676,
+  "triangles": 740,
   "bones": 3,
-  "bytes": 116544
+  "bytes": 153840,
+  "phaseBoundaryVertexError": {
+    "Windup\u2192Active": 0.0,
+    "Active\u2192Recovery": 0.0
+  }
 }

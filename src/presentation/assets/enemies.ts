@@ -1,6 +1,8 @@
 import { chaserModel } from "./enemies/chaser.ts"
 import { swarmerModel } from "./enemies/swarmer.ts"
 import { dummyModel } from "./enemies/dummy.ts"
+import { sparringDummyModel } from "./enemies/sparring-dummy.ts"
+import { heavyDummyModel } from "./enemies/heavy-dummy.ts"
 import { shooterModel } from "./enemies/shooter.ts"
 import { sniperModel } from "./enemies/sniper.ts"
 import { chargerModel } from "./enemies/charger.ts"
@@ -14,6 +16,8 @@ import { volatileModel } from "./enemies/volatile.ts"
 
 export const enemyModels = {
   enemyDummy: dummyModel,
+  enemySparringDummy: sparringDummyModel,
+  enemyHeavyDummy: heavyDummyModel,
   enemyChaser: chaserModel,
   enemyShooter: shooterModel,
   enemyBrute: bruteModel,

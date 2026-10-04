@@ -1,7 +1,7 @@
 {
   "source": "../charger-model.blend",
   "source_sha256": "ce87ade5748a3494a7f1a14e67a7c518abc9df7dd047050987a57b9d3c634c67",
-  "triangles": 1890,
+  "triangles": 1954,
   "bones": 9,
   "materials": 1,
   "mesh_objects": 1,
@@ -174,5 +174,8 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true
+  "rest_vertices_preserved": false,
+  "base_triangles": 1890,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

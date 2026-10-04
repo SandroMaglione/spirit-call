@@ -5,7 +5,8 @@ import { Instance } from "./batch.ts"
 import type { ActorBody } from "./bodies.ts"
 import type { RenderAssets } from "./host-types.ts"
 import type { BodyLook } from "./looks.ts"
-import { mixColor } from "./draw.ts"
+
+let idlePhase = 0
 
 /** One transform and pose cursor per enemy; geometry, material and bones are shared. */
 export const instancedBody = (assets: RenderAssets, look: Extract<BodyLook, { kind: "model" }>, radius: number, height: number): ActorBody => {
@@ -18,11 +19,16 @@ export const instancedBody = (assets: RenderAssets, look: Extract<BodyLook, { ki
   instance.object.scale.setScalar(height / reference)
   const moments = look.moments ?? null
   const locomotion = freshLocomotion()
+  // A repeatable phase sequence spreads a crowd across its breathing loop.
+  idlePhase = (idlePhase + .61803398875) % 1
+  locomotion.idle = idlePhase
   let shot: { clip: string; elapsed: number; seconds: number } | null = atlas.clips.has("Spawn") ? { clip: "Spawn", elapsed: 0, seconds: atlas.clips.get("Spawn")!.seconds } : null
   let selected: string | null = null
   let previous: string | null = null
   const previousPose = [0, 0, 0]
   let transition = look.transitionSeconds ?? 0
+  let yaw: number | null = null
+  let shieldAngle = 0
   const pose = (name: string, seconds: number) => {
     const clip = atlas.clips.get(name)
     if (clip === undefined) return
@@ -32,9 +38,21 @@ export const instancedBody = (assets: RenderAssets, look: Extract<BodyLook, { ki
   }
   return {
     object, radius, height, instances: [instance], moments,
-    shield(angle) { instance.pose[3] = angle },
-    face(direction) { if (direction.x !== 0 || direction.y !== 0) object.rotation.y = Math.atan2(direction.x, direction.y) },
-    paint(tint, glowColor, glow) { instance.color.setHex(mixColor(tint, glowColor, glow)) },
+    shield(angle) {
+      shieldAngle = angle
+      instance.pose[3] = angle + (yaw ?? object.rotation.y) - object.rotation.y
+    },
+    face(direction) {
+      if (direction.x === 0 && direction.y === 0) return
+      const next = Math.atan2(direction.x, direction.y)
+      if (yaw === null) object.rotation.y = next
+      yaw = next
+    },
+    paint(tint, glowColor, glow) {
+      instance.color.setHex(tint)
+      instance.glow.setHex(glowColor)
+      instance.glowAmount = glow
+    },
     play(spec, seconds) {
       const clip = typeof spec === "string" ? spec : spec.clip
       const info = atlas.clips.get(clip)
@@ -42,9 +60,19 @@ export const instancedBody = (assets: RenderAssets, look: Extract<BodyLook, { ki
     },
     sample(clip, progress) {
       const info = atlas.clips.get(clip)
-      if (info !== undefined) pose(clip, progress * info.seconds)
+      if (info !== undefined) {
+        // An aimed attack must agree with its simulation telegraph immediately.
+        if (yaw !== null) object.rotation.y = yaw
+        instance.pose[3] = shieldAngle
+        pose(clip, progress * info.seconds)
+      }
     },
     animate(position, facing, seconds, holding) {
+      if (yaw !== null && seconds > 0) {
+        const delta = Math.atan2(Math.sin(yaw - object.rotation.y), Math.cos(yaw - object.rotation.y))
+        object.rotation.y += Math.sign(delta) * Math.min(Math.abs(delta), 14 * seconds)
+        instance.pose[3] = shieldAngle + yaw - object.rotation.y
+      }
       if (moments === null) return
       const idle = atlas.clips.get(moments.idle)
       const run = atlas.clips.get(moments.run.clip)

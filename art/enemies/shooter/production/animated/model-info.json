@@ -1,9 +1,9 @@
 {
   "height": 0.9895833134651184,
-  "height_basis": "ground origin to highest approved rest-pose vertex",
-  "triangles": 1180,
+  "height_basis": "ground origin to highest polished rest vertex",
+  "triangles": 1244,
   "bones": 8,
-  "bytes": 291868,
+  "bytes": 337872,
   "clips": {
     "Idle": {
       "lastKeySeconds": 1.9666666666666666,

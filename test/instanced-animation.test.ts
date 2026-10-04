@@ -69,9 +69,31 @@ describe("batched animation transitions", () => {
     const actor = body(.18, true)
     actor.animate({ x: 0, y: 0 }, { x: 1, y: 0 }, .1, false)
     actor.animate({ x: 10, y: 0 }, { x: 1, y: 0 }, .1, false)
-    expect(actor.instances[0]!.pose[0]).toBe(67)
+    const pose = actor.instances[0]!.pose
+    const before = pose[0]! - 61 + pose[2]!
     actor.animate({ x: 0, y: 0 }, { x: 1, y: 0 }, .1, false)
-    expect(actor.instances[0]!.pose[0]).toBe(70)
+    const after = pose[0]! - 61 + pose[2]!
+    expect((after - before + 60) % 60).toBeCloseTo(3)
+  })
+
+  it("spreads idle phases, keeps flash separate from tint, and locks aimed poses and shields", () => {
+    const actor = body(.1)
+    const other = body(.1)
+    for (const item of [actor, other]) item.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, .01, false)
+    expect(actor.instances[0]!.pose).not.toEqual(other.instances[0]!.pose)
+    actor.paint(0x554433, 0xffffff, 1, 1)
+    expect(actor.instances[0]!.color.getHex()).toBe(0x554433)
+    expect(actor.instances[0]!.glow.getHex()).toBe(0xffffff)
+    expect(actor.instances[0]!.glowAmount).toBe(1)
+    actor.face({ x: 0, y: 1 })
+    actor.face({ x: 1, y: 0 })
+    actor.animate({ x: 0, y: 0 }, { x: 1, y: 0 }, .01, false)
+    expect(actor.object.rotation.y).toBeCloseTo(.14)
+    actor.shield!(.2)
+    expect(actor.object.rotation.y + actor.instances[0]!.pose[3]!).toBeCloseTo(Math.PI / 2 + .2)
+    actor.sample!("Windup", .5)
+    expect(actor.object.rotation.y).toBeCloseTo(Math.PI / 2)
+    expect(actor.instances[0]!.pose[3]).toBe(.2)
   })
 
   it("leaves enemies without transition settings on their existing playback path", () => {

@@ -31,19 +31,19 @@
   "armatures": 0,
   "bounds_blender_m": [
     [
-      -0.8369565010070801,
-      0.8369565010070801
+      -0.9090152382850647,
+      0.9090152382850647
     ],
     [
-      -0.502173900604248,
+      -0.5644293427467346,
       0.42989131808280945
     ],
     [
       0.0,
-      1.392391324043274
+      1.4064674377441406
     ]
   ],
-  "height_m": 1.392391324043274,
+  "height_m": 1.4064674377441406,
   "height_basis": "ground origin to highest rest-pose mesh vertex",
   "axes_glb": "meters, +Y up, +Z forward",
   "reference": "reference/sheet.png"

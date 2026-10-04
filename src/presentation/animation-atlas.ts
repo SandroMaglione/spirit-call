@@ -1,7 +1,8 @@
 /** Bake GLB skeletons once at load. Crowds then sample poses on the GPU. */
-import { AnimationMixer, DataTexture, FloatType, LoopOnce, Matrix4, MeshLambertMaterial, NearestFilter, RGBAFormat, SkinnedMesh } from "three"
+import { AnimationMixer, BufferAttribute, Color, DataTexture, FloatType, LoopOnce, Matrix4, MeshLambertMaterial, NearestFilter, RGBAFormat, SkinnedMesh } from "three"
 import type { BufferGeometry } from "three"
 import type { ModelSource } from "./models.ts"
+import { view } from "../config/view.ts"
 
 export interface BakedClip {
   readonly offset: number
@@ -68,13 +69,20 @@ export const bakeAnimation = (source: ModelSource): AnimationAtlas => {
   texture.minFilter = texture.magFilter = NearestFilter
   texture.needsUpdate = true
   const geometry = mesh.geometry.clone()
+  // Older exports have no luminous regions; make their shader input explicit.
+  if (!geometry.hasAttribute("_glow")) geometry.setAttribute("_glow", new BufferAttribute(new Float32Array(geometry.getAttribute("position").count), 1))
   const material = new MeshLambertMaterial({ vertexColors: true })
+  const rim = new Color(view.enemyRim.color)
   material.onBeforeCompile = (shader) => {
     shader.uniforms.enemyPoses = { value: texture }
     shader.vertexShader = `
       uniform sampler2D enemyPoses;
       attribute vec4 instancePose;
       attribute vec4 instancePoseBlend;
+      attribute vec4 instanceGlow;
+      attribute float _glow;
+      varying vec4 vEnemyGlow;
+      varying float vEnemyShine;
       attribute vec4 skinIndex;
       attribute vec4 skinWeight;
       mat4 enemyBone(float bone, float frame) {
@@ -107,8 +115,15 @@ export const bakeAnimation = (source: ModelSource): AnimationAtlas => {
         }`}
         vec3 objectNormal = mat3(enemyTransform) * normal;
       `)
-      .replace("#include <begin_vertex>", "vec3 transformed = (enemyTransform * vec4(position, 1.0)).xyz;")
+      .replace("#include <begin_vertex>", "vec3 transformed = (enemyTransform * vec4(position, 1.0)).xyz;\nvEnemyGlow = instanceGlow;\nvEnemyShine = _glow;")
+    shader.fragmentShader = "varying vec4 vEnemyGlow;\nvarying float vEnemyShine;\n" + shader.fragmentShader.replace("#include <opaque_fragment>", `
+      float enemyRim = pow(1.0 - abs(normalize(vNormal).z), ${view.enemyRim.power.toFixed(1)});
+      outgoingLight += vec3(${rim.r.toFixed(3)}, ${rim.g.toFixed(3)}, ${rim.b.toFixed(3)}) * enemyRim * ${view.enemyRim.strength.toFixed(2)};
+      outgoingLight = mix(outgoingLight, vColor.rgb * ${view.enemyRim.emission.toFixed(2)}, vEnemyShine);
+      outgoingLight = mix(outgoingLight, outgoingLight * 0.35 + vEnemyGlow.rgb * 0.75, vEnemyGlow.a);
+      #include <opaque_fragment>
+    `)
   }
-  material.customProgramCacheKey = () => `enemy-atlas-blend-${bones}-${rows}-${shield}`
+  material.customProgramCacheKey = () => `enemy-atlas-light-${bones}-${rows}-${shield}`
   return { geometry, material, texture, clips, dispose() { geometry.dispose(); material.dispose(); texture.dispose() } }
 }

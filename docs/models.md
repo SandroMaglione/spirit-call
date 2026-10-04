@@ -81,7 +81,7 @@ the previous section's endpoint and carry any elapsed frame remainder.
   load time; `batch.ts` supplies each instance's pose and interpolation.
   Each enemy kind costs one body draw call, regardless of its population.
   No per-enemy skeleton or animation mixer runs during play.
-- Enemy rigs currently use 3–11 bones and 676–1,934 triangles. Keep new
+- Enemy rigs currently use 3–12 bones and 740–1,974 triangles. Keep new
   ordinary enemies under 2,000 triangles and 12 bones unless a measured
   need justifies more. See `art/enemies/README.md` for sources and checks.
 - Keep a character under about 5,000 triangles and a 512 px texture; check
@@ -91,12 +91,13 @@ Enemy attack poses follow `AttackPhase` and `Attacker.elapsed` directly:
 `Windup`, `Active`, and `Recovery` stretch to content timings. Ranged attacks
 with no active interval start recovery in their release pose. The guardian's
 shield follows the simulation's shield facing independently of its attack.
-`Idle`, `Run`, `Spawn`, and `Hurt` cover the rest of the lifecycle; the
-training dummy has no locomotion or attack clips. A killed enemy does not
+`Idle`, `Run`, `Spawn`, and `Hurt` cover the rest of the lifecycle. The three
+training dummy variants keep Idle during knockback; the Sparring Dummy's
+striking arm follows its simulated swing. A killed enemy does not
 fall: its body is gone at the kill and bursts into particles in its color
 (`view.death`). The models' `Death` clips stay in the files, unused.
 
-Use `?stress=300,2000,mixed` to exercise all eight animated kinds in the live
+Use `?stress=300,2000,mixed` to exercise all fifteen animated kinds in the live
 arena (invulnerable test actors). The original `?stress=300,2000` still uses
 stationary training dummies.
 
@@ -145,3 +146,12 @@ so each model is drawn as one batch however many copies there are.
 The courtyard kit is used straight from `art/environment/courtyard/models/`
 (`assets/courtyard.ts` registers the pieces in use, with sizes from its
 `manifest.json`); the build bundles the files it uses.
+
+## Finished enemy roster
+
+Enemy game exports receive a finishing pass after their reference-fitting
+animation recipes. See [the roster changes](enemy-roster-polish.md) and
+[rebuild instructions](../art/enemies/polish-tools/README.md). The final animated
+source is editable; static production sources preserve the reference benchmark.
+Joint sleeves follow both adjoining bones, and `_GLOW` marks luminous regions
+within the same crowd material. Simulation owns contact timing and facing.

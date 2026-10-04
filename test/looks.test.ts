@@ -43,6 +43,33 @@ const nodesInFile = (id: ModelId): ReadonlyArray<string> => {
 }
 
 describe("looks and models", () => {
+  it("covers every enemy and dummy with a batched animated model", () => {
+    expect(Object.keys(enemyLooks).sort()).toEqual(Object.keys(enemies).sort())
+    for (const kind of Object.keys(enemies) as Array<EnemyKind>) {
+      const look = enemyLooks[kind]
+      expect(look.kind, kind).toBe("model")
+      if (look.kind !== "model") throw new Error(`${kind}: placeholder enemy`)
+      expect(look.batched, kind).toBe(true)
+      expect(look.moments, kind).toBeDefined()
+      const clips: Readonly<Record<string, ClipTiming>> = models[look.model].clips
+      for (const name of ["Idle", "Hurt", "Spawn", ...(enemies[kind].attacks.length === 0 ? [] : ["Windup", "Active", "Recovery"])]) {
+        expect(clips[name], `${kind}/${name}`).toBeDefined()
+      }
+    }
+  })
+
+  it("the three training roles have distinct models and stay targets during knockback", () => {
+    const ids = ["dummy", "sparringDummy", "heavyDummy"] as const
+    const assigned = ids.map((kind) => {
+      const look = enemyLooks[kind]
+      if (look.kind !== "model") throw new Error(`${kind}: placeholder dummy`)
+      expect(look.moments!.run.clip, kind).toBe("Idle")
+      return look.model
+    })
+    expect(new Set(assigned).size).toBe(3)
+    expect(new Set(assigned.map((id) => models[id].url)).size).toBe(3)
+  })
+
   it("each model file has exactly the clips its spec lists", () => {
     for (const id of Object.keys(models) as Array<ModelId>) {
       expect([...clipsInFile(id)].sort(), id).toEqual(Object.keys(models[id].clips).sort())

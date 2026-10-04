@@ -47,13 +47,35 @@ for name in ('Eye','EyeSocket'):
     # The visor is a second surface above the stone. Give the eyes clearance
     # over that surface even where its facets turn sharply away from -Y.
     for vertex in left.data.vertices:vertex.co.y-=.004
+    # Game-size refinement: larger eyes, slanted down toward the nose, so the
+    # scowl of the sheet survives at 60 px (round cores read as two dots).
+    middle=sum((v.co for v in left.data.vertices),Vector())/len(left.data.vertices)
+    for vertex in left.data.vertices:
+        offset=vertex.co-middle
+        vertex.co.x=middle.x+offset.x*1.35
+        outward=offset.x*1.35*(1 if middle.x>0 else -1)
+        vertex.co.z=middle.z+offset.z*1.2+.5*outward
+        vertex.co.y-=.003
     right=m.mirror(left,name+'.R')
     assert all((Vector((-a.co.x,a.co.y,a.co.z))-b.co).length<.000001
                for a,b in zip(left.data.vertices,right.data.vertices))
+GROW={'shoulder':(1.16,1.2,1.12),'upperarm':(1.25,1.25,1),'forearm':(1.28,1.28,1.05),
+      'fist':(1.3,1.3,1.22),'thigh':(1.3,1.3,1),'foot':(1.25,1.2,1.1)}
+ROUGH={'shoulder':.09,'upperarm':.05,'forearm':.07,'fist':.1,'thigh':.05,'foot':.07}
 for part,name,color,rings in (
     ('shoulder','Shoulder','light',5),('upperarm','UpperArm','dark',4),
     ('forearm','Forearm','warm',5),('fist','Fist','dark',5),
     ('thigh','Thigh','warm',4),('foot','Foot','dark',5)):
     obj=m.loft(name+'.L',part,color,rings,8,align=True)
+    # Game-size refinement: at 60 px the measured limbs read as thin lumps
+    # beside the torso. Each grows about its own center (fists and shoulders
+    # most, as the sheet's hero view weights them), and its rings are pushed
+    # in and out so the stone breaks into planes instead of a smooth egg.
+    grow=GROW[part]
+    center=sum((v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
+    for vertex in obj.data.vertices:
+        offset=vertex.co-center
+        chip=1+m.rng.uniform(-ROUGH[part],ROUGH[part])
+        vertex.co=center+Vector((offset.x*grow[0]*chip,offset.y*grow[1]*chip,offset.z*grow[2]))
     m.mirror(obj,name+'.R')
 m.finish(body)

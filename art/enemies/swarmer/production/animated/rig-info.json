@@ -1,7 +1,7 @@
 {
   "source": "../swarmer-model.blend",
   "source_sha256": "c38a73db52ad7bfacf53418b0acd010232a9461487d1db57ed75e343547efa20",
-  "triangles": 984,
+  "triangles": 1016,
   "bones": 7,
   "materials": 1,
   "mesh_objects": 1,
@@ -106,5 +106,8 @@
     }
   },
   "root_motion": false,
-  "rest_vertices_preserved": true
+  "rest_vertices_preserved": false,
+  "base_triangles": 984,
+  "finishing_recipe": "art/enemies/polish-tools/polish.py",
+  "finishing_audit": "polish-info.json"
 }

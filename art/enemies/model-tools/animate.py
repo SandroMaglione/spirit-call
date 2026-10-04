@@ -107,6 +107,16 @@ def pose(kind, action, t, joints):
                 for side,sign in (('L',-1),('R',1)):
                     out['arm.'+side] = transform((-.70+.16*s*sign if moving else .012*s*sign,
                         sign*.08 if moving else 0,sign*.10 if moving else 0))
+                if not moving:
+                    # A prowling breath: hood scans and blades drift against
+                    # the shoulders. Cancel torso motion at the planted feet.
+                    breath = (1-c)/2
+                    out['body'] = transform((.06*breath, .035*s, 0), (-.015*s, 0, .025*breath))
+                    out['head'] = transform((-.04*breath, 0, .16*s))
+                    for side,sign in (('L',-1),('R',1)):
+                        out['arm.'+side] = transform((.14*math.sin(math.tau*t-.4)*sign,
+                            sign*.05*breath, sign*.09*breath))
+                    plant_legs(out,joints)
             if kind == 'volatile':
                 lag = math.sin(math.tau*t-.6)
                 out['flame'] = transform((-.48+.14*lag if moving else .035*s,

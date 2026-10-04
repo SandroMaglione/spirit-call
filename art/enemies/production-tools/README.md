@@ -55,6 +55,14 @@ blender --background --python-exit-code 1 --python art/enemies/production-tools/
 blender --background --python-exit-code 1 --python art/enemies/production-tools/render-approved-animation.py -- shooter
 ```
 
+The poses in `animate-approved.py` are sized for the game's camera (a body
+is 20-60 px tall there): loops move by tenths of a meter and radians, and
+windups rear, swell or lift a knee before the strike. `keep_off_floor`
+(`scripts/common.py`) then lifts any part a pose pushed under the ground,
+frame by frame. Spawn and Death scale every part about the ground origin,
+so the figure stays in one piece. Eye cores are exported with the custom
+vertex attribute `_GLOW`; the game's enemy shader makes them shine.
+
 Replace `shooter` with `brute` or `swarmer` for the other saved sources.
 Verification compares every exported frame in a fresh import, checks the
 unchanged rest bounds and height, floor clearance, closed loops and the

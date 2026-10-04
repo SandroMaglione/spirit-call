@@ -1,13 +1,7 @@
 {
-  "sha256": "5a66aabb38ce77ffb7084aa0022c689938788638f8ba0168f1800e1eade6b084",
-  "triangles": 1860,
-  "bones": 7,
-  "material_count": 1,
-  "mesh_count": 1,
-  "root_motion": false,
-  "approved_rest_bounds_preserved": true,
+  "sha256": "427bb7f4db6a323c98660f9a5370afc02b4dbbf9a105bec618114eb24f4ab094",
   "roundTripBoundsError": {
-    "Idle": 5.960464477539063e-08,
+    "Idle": 2.384185791015625e-07,
     "Run": 1.7881393432617188e-07,
     "Windup": 2.384185791015625e-07,
     "Active": 2.980232238769531e-07,
@@ -19,26 +13,26 @@
     "ActiveBlink": 2.384185791015625e-07,
     "RecoveryBlink": 1.7881393432617188e-07
   },
-  "contactPoseErrors": {
-    "windup_active": 0.0,
-    "active_recovery": 0.0,
-    "recovery_idle": 0.0,
-    "windup_activeBlink": 0.0,
-    "active_recoveryBlink": 0.0,
-    "recovery_idleBlink": 0.0
-  },
   "groundMinimum": {
-    "Idle": 0.0,
+    "Idle": -8.195638656616211e-08,
     "Run": -3.926339786630706e-08,
     "Windup": -3.193970599113527e-08,
     "Active": -3.508291968046251e-08,
     "Recovery": -4.6901405426069687e-08,
     "Hurt": 0.0,
     "Death": -0.07964961230754852,
-    "Spawn": 0.0,
+    "Spawn": -2.9802322387695312e-08,
     "WindupBlink": -3.8655706191548234e-08,
     "ActiveBlink": 0.09999993443489075,
     "RecoveryBlink": 0.0
   },
-  "result": "passed"
+  "triangles": 1884,
+  "bones": 7,
+  "bytes": 405752,
+  "phaseBoundaryVertexError": {
+    "Windup\u2192Active": 0.0,
+    "Active\u2192Recovery": 0.0,
+    "WindupBlink\u2192ActiveBlink": 0.0,
+    "ActiveBlink\u2192RecoveryBlink": 0.0
+  }
 }

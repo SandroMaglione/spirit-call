@@ -9,7 +9,7 @@ while the network dev server is running. The first wave has three Chasers.
 The same link supports keyboard/mouse and phone touch controls.
 
 The runtime export has one skinned mesh, one vertex-color material, twelve
-bones and 1,890 triangles. Its eight clips use the existing enemy lifecycle:
+bones and 1,894 triangles. Its eight clips use the existing enemy lifecycle:
 Idle, Run, Windup, Active, Recovery, Hurt, Death and Spawn. The simulation
 still controls attack timing, movement and hit areas; the renderer samples
 these clips through the existing shared GPU animation atlas. Death is
@@ -27,7 +27,7 @@ Drag to rotate, or pinch to zoom on a phone.
 - [Small-size review](renders/review-game-size.png)
 - [Source audit](audit.json)
 
-The model has 1,890 triangles, one vertex-color material and 52 separately
+The model has 1,894 triangles, one vertex-color material and 52 separately
 editable mesh parts. Its full height is 1.8 m and its lowest mesh point is
 on the ground. Blender uses Z up and -Y forward. This static source has no
 rig or animation. `animate.py` joins weighted parts into one skinned mesh,
@@ -46,6 +46,14 @@ come from the sheet pixels recorded in `sheet.json`. Part labels separate
 touching shapes before measuring them. The saved masks make that separation
 reviewable. The forehead is an explicit angular shield over the measured
 skull, rather than a rounded primitive.
+
+## Game-size refinement
+
+After the first in-game review the limb shells were made a third thicker
+than the measured widths (`LIMB` in `build.py`), the claw half again as
+thick at its root, and the eyes a third larger. At 60 px the measured limbs
+thinned to single-pixel sticks between ball joints. Front overlap moved
+from 69.0% to 70.0%; `renders/overlap.json` has every view.
 
 ## Sheet agreement
 
@@ -145,7 +153,7 @@ stance corresponds to 47.03 world units, keeping foot drift small.
 
 `verify-animation.py` also checks interpolated foot poses: planted ground
 error stays below 0.002 m, feet remain level, and both returns clear 0.16 m.
-The mesh remains 1,890 triangles; the rig now uses the twelve-bone budget.
+The mesh has 1,894 triangles; the rig now uses the twelve-bone budget.
 Gameplay was checked again on the network address at desktop and phone
 sizes, including touch movement/dash and all attack phases at the enemy's
 215-unit chase speed. No new page errors or WebGL context loss occurred.
