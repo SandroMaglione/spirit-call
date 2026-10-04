@@ -18,6 +18,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import * as Ref from "effect/Ref"
+import * as Semaphore from "effect/Semaphore"
 
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
@@ -117,6 +118,7 @@ export const layer = (options: AccountOptions) =>
       const store = yield* KeyValueStore.KeyValueStore
       const loaded = yield* load(store, options)
       const current = yield* Ref.make(loaded.account)
+      const transaction = yield* Semaphore.make(1)
       const save = (account: Account) =>
         write(store, accountKey, LatestAccountJson, toStored(account)).pipe(
           Effect.as(account),
@@ -130,18 +132,20 @@ export const layer = (options: AccountOptions) =>
         Effect.gen(function*() {
           const now = yield* Clock.currentTimeMillis
           const next = change(yield* Ref.get(current), now)
+          yield* save(next)
           yield* Ref.set(current, next)
-          return yield* save(next)
-        })
+          return next
+        }).pipe(transaction.withPermit)
 
       /** Applies a checked change, saving it when allowed. */
       const change = (apply: (account: Account) => Checked<Account>) =>
         Effect.gen(function*() {
           const checked = apply(yield* Ref.get(current))
           if (!checked.ok) return yield* Effect.fail(new AccountRefused({ refusal: checked.refusal }))
+          yield* save(checked.value)
           yield* Ref.set(current, checked.value)
-          return yield* save(checked.value)
-        })
+          return checked.value
+        }).pipe(transaction.withPermit)
 
       return AccountStore.of({
         get: Ref.get(current),
@@ -156,10 +160,10 @@ export const layer = (options: AccountOptions) =>
           Effect.gen(function*() {
             const now = yield* Clock.currentTimeMillis
             const recorded = recordRun(options.tuning, yield* Ref.get(current), play, result, now)
-            yield* Ref.set(current, recorded.account)
             yield* save(recorded.account)
+            yield* Ref.set(current, recorded.account)
             return recorded
-          })
+          }).pipe(transaction.withPermit)
       })
     })
   )

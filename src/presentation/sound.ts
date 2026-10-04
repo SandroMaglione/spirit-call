@@ -26,6 +26,10 @@
  * profile's job (see `profile/store.ts`).
  */
 export type SoundName =
+  | "uiTap"
+  | "uiSuccess"
+  | "uiError"
+  | "uiReward"
   | "slash"
   | "thrust"
   | "spin"
@@ -192,6 +196,10 @@ const metal = (voice: Voice, base: number, duration: number, gain: number, delay
 const click = (voice: Voice, gain: number): void => noise(voice, "highpass", 5000, 3000, 0.016, gain, 0.8, 0, 0.001)
 
 const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
+  uiTap: [{ reverb: 0.1, interval: 0.035 }, (v) => { tone(v, "sine", 880, 660, 0.055, 0.08) }],
+  uiSuccess: [{ reverb: 0.25, interval: 0.12 }, (v) => { tone(v, "sine", 660, 990, 0.22, 0.12) }],
+  uiError: [{ reverb: 0.05, interval: 0.15 }, (v) => { tone(v, "sine", 240, 180, 0.14, 0.1) }],
+  uiReward: [{ reverb: 0.35, interval: 0.3 }, (v) => { tone(v, "sine", 880, 1320, 0.5, 0.16) }],
   // A side slash: the whoosh of the blade, a thin whistle riding on top, and a soft body of moving air.
   slash: [{ reverb: 0.12 }, (v) => {
     swish(v, { low: 650, peak: 3000, duration: 0.2, peakAt: 0.42, q: 1.2, gain: 0.8 })

@@ -16,11 +16,18 @@ import type { CharacterId } from "../content/characters.ts"
 import type { WeaponId } from "../content/weapons.ts"
 import type { BuildValue, FlowState, PracticeValue, RunResultValue } from "../schema.ts"
 import type { Screen } from "./menu/parts.tsx"
+import type { TeamDraft } from "./draft.ts"
 
 /** An Extra to play (nothing recorded): the Training Ground, or Enemy Practice with its picks. */
 export type Extra = { readonly kind: "training" } | { readonly kind: "practice"; readonly picks: PracticeValue }
 
 export interface UiStore {
+  readonly busy: Signal<boolean>
+  readonly feedback: Signal<{ readonly message: string; readonly error: boolean } | null>
+  readonly recording: Signal<"idle" | "saving" | "saved" | "failed">
+  readonly menuPlay: Signal<Play>
+  readonly menuDraft: Signal<TeamDraft>
+  readonly menuScreens: Signal<ReadonlyArray<Screen>>
   readonly flow: Signal<FlowState>
   /** Whether the run going on is paused (its in-game menu open). */
   readonly paused: Signal<boolean>
@@ -65,6 +72,12 @@ export const createUiStore = (initial: {
   readonly notices: ReadonlyArray<string>
   readonly sound: Sound
 }): UiStore => ({
+  busy: signal(false),
+  feedback: signal(null),
+  recording: signal("idle"),
+  menuPlay: signal(initial.account.selection.play),
+  menuDraft: signal({ team: initial.account.selection.team, focus: 0 }),
+  menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
   paused: signal(false),
   device: signal("desktop"),
@@ -86,6 +99,7 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
+  readonly saveTeam: (team: ReadonlyArray<CharacterId>) => void
   /** Enter the arena with `team` (in order, each as equipped) to play `play`. */
   readonly enter: (team: ReadonlyArray<CharacterId>, play: Play) => void
   /** Enter an Extra with `team`: nothing it does is recorded on the account. */
