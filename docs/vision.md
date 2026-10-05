@@ -163,7 +163,18 @@ The game has two areas, and Extras for practice.
   be temporary and take various formats, while keeping the quest shape
   (chapters, a clear end). Each chapter ends with a **champion**: one of the
   game's own enemies, much tougher, that stays through several waves (see
-  "Champions, not bosses" below).
+  "Champions, not bosses" below). The rules are in `docs/quests.md`; in
+  short:
+  - **Each quest is a question.** A main quest brings in one new thing (an
+    enemy, a hazard, or a rule), named on its card, and later quests mix
+    what came before. You know what you will face before you enter.
+  - **Three stars** per quest, for how well it was played: never for
+    speed, and never for bringing a character, an element, or a class (any
+    team can earn every star). A chapter's stars open its **chests**.
+  - **Ranks.** A quest is replayed at higher ranks (fixed, higher enemy
+    levels) once the main line is further on, so an old quest stays worth
+    playing and gives better materials.
+  - The main line opens in order; nothing else gates it.
 - **Hardcore**: combat waves, champions, and the more grinding challenges. These are the goals you
   are aiming to beat, where preparation and skill are tested fully. It is
   organized in **tiers** of mostly the same kind of content, each harder in
@@ -213,11 +224,8 @@ The game has two areas, and Extras for practice.
 Decided so far (the rest is in the open questions):
 
 - **Two kinds of level.** The **account level** rises by playing, in every
-  mode, and paces the game: later quests **require** an account level. The
-  gate is there to encourage trying the other modes rather than grinding
-  quests one after another; it is about progress, not power, so it never
-  checks the characters' levels (a skilled player can enter with a
-  low-level team). Each **character has her own level**, which gives stats.
+  mode, and is a reward track (crystals at each level); it gates nothing.
+  Each **character has her own level**, which gives stats.
 - **Characters grow by resources spent on them**, not by fighting with
   them (as in Genshin): nobody falls behind for sitting on the bench, and a
   new character catches up the same way. Playing earns the resources, and
@@ -227,9 +235,18 @@ Decided so far (the rest is in the open questions):
 - **Growth stays simple:** character levels, and nothing else gives stats.
   Aspects change how she plays and have no levels. A closed set of
   accessories may come later, only if the collecting side gets dull.
-- **Two currencies:** one for pulls (crystals), one for upgrades (gold,
-  for leveling characters), so it is always clear where each
-  comes from.
+- **Two currencies and the materials,** each from one clear place:
+  crystals for pulls, gold for leveling characters, and **ascension
+  materials** for the steps between a character's level phases.
+- **Ascension.** A character's levels come in phases (1–10, 10–20, 20–30,
+  30–40); gold buys the levels within a phase, and crossing into the next
+  costs gold and **her element's material**. Each element has one material
+  in three grades, one per step. Materials come from clearing quests (each
+  quest gives its element's, at the grade its enemy level sets), more from
+  champions and hardcore, a lump from first clears and chests; a loss gives
+  none (only its share of gold). Amounts are fixed (never random), and a
+  lower grade combines into a higher one with gold, so no single quest is
+  ever a wall. They gate levels; they never give stats of their own.
 - **Gold comes from every run.** A clear pays by its enemies' level, so
   the best place to earn is at the edge of what you can beat: rising
   difficulty is the reason to replay, and a skilled player taking a
@@ -238,7 +255,7 @@ Decided so far (the rest is in the open questions):
   trying is never wasted. Nothing pays for kills or for speed. No stamina,
   no daily tasks, no weekly caps: play as much or as little as you like.
 - **Crystals come from milestones only**, never from repeating content: a
-  quest's first clear, a hardcore tier once per period, account levels, a
+  quest's first clear, its stars' chests, a hardcore tier once per period, account levels, a
   short list of **discoveries** (the first clear with each character, with
   a full team, the first burst of each element's state), and later
   duplicates. New characters come at the pace of progress, not of grinding.
@@ -287,7 +304,19 @@ Decided directions are above; these are not decided yet.
    luck is protected (a guarantee after a number of pulls, or a way to get a
    specific thing directly), the exact duplicate rewards, the formats of
    secondary quests, and how pulls stay meaningful once a player owns most
-   things.
+   things. Quest rewards show crystals as pulls once a pull has a price.
 2. **Element details**: the open questions at the end of `docs/elements.md`.
 3. **Team details**, for later: reviving a fallen character, several saved
    teams, and whether off-field characters contribute more than energy.
+
+## Later
+
+Agreed, waiting for their time:
+
+- **Weekly hardcore rulesets.** Each period, the hardcore tiers come with a
+  ruleset (a set of enemies and a twist: burning floors, rock elites,
+  Gunners leading every wave), so every week is a new preparation puzzle.
+  No server is needed: the period is computed on the device (as the reset
+  is), and its ruleset picked from a list in content by its number.
+- **Character trials**, with the gacha: a short quest built around each
+  character's kit, teaching her, with sideways rewards at harder levels.
