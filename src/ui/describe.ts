@@ -44,6 +44,12 @@ export const describeMove = (move: MoveFilter): string => {
       return "the combo finisher"
     case "power":
       return "the charged attack"
+    case "dash":
+      return "the dash strike"
+    case "counter":
+      return "a counter (the dash strike after a perfect dodge)"
+    case "lastRound":
+      return "the last round of the magazine"
   }
 }
 
@@ -61,6 +67,10 @@ const describeCondition = (condition: HitCondition): string => {
       return ` with ${describeMove(condition.move)}`
     case "targetHealthBelow":
       return ` to enemies below ${Math.round(condition.fraction * 100)}% HP`
+    case "targetInState":
+      return " to enemies in a state (any one)"
+    case "targetHeld":
+      return " to stunned or broken enemies"
   }
 }
 
@@ -108,7 +118,7 @@ const describeTriggered = (effect: TriggeredEffect): string => {
     case "heal":
       return `heal ${effect.percent}% of max HP`
     case "cast":
-      return `set off ${describeEffect(effect.effect)}`
+      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? " of her element" : ""}`
   }
 }
 

@@ -12,7 +12,7 @@ import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
 
 import { everything } from "../account/account.ts"
-import type { Account, Earned, Play } from "../account/account.ts"
+import type { Account, Earned, Play, TeamAspects } from "../account/account.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { AccountStore, layer as accountLayer } from "../account/store.ts"
@@ -36,8 +36,8 @@ export interface App {
   readonly onAccount: (listener: (account: Account) => void) => void
   /** Takes a character to its next level with gold (refused without enough, or at the maximum). */
   readonly train: (character: CharacterId) => Promise<Account | undefined>
-  /** Selects the team to enter the arena with and what for; the account after it, or `undefined` when refused (not owned, or not open). */
-  readonly select: (team: ReadonlyArray<CharacterId>, play: Play) => Promise<Account | undefined>
+  /** Selects the team to enter the arena with (and the aspects equipped in it) and what for; the account after it, or `undefined` when refused (not owned, aspects breaking the rules, or not open). */
+  readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Promise<Account | undefined>
   /** Owns every character and aspect, and adds plenty of each currency (a dev tool). */
   readonly unlockEverything: () => void
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
@@ -79,7 +79,7 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
       listeners.push(listener)
     },
     train: (character) => run(accounts.train(character)),
-    select: (team, play) => run(accounts.select(team, play)),
+    select: (team, play, aspects) => run(accounts.select(team, play, aspects)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (play, result) => attempt(accounts.recordRun(play, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
     setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),

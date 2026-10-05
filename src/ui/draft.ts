@@ -2,6 +2,7 @@
  * Menu helpers over content: a character's element and the aspects of her
  * class, how a team answers a quest's enemies, and setting up the team.
  */
+import type { TeamAspects } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import { aspectOf } from "../content/aspects.ts"
 import { teamSize } from "../content/characters.ts"
@@ -23,10 +24,25 @@ export const answers = (tuning: Tuning, team: ReadonlyArray<CharacterId>, enemy:
     return tuning.enemies[enemy].elements[elementOf(tuning, character)] === "weak"
   })
 
-/** A team being set up in the menu, and the slot being edited (it may be the empty one after the last member). */
+/** A team being set up in the menu, the slot being edited (it may be the empty one after the last member), and the aspects equipped in it. */
 export interface TeamDraft {
   readonly team: ReadonlyArray<CharacterId>
   readonly focus: number
+  readonly aspects: TeamAspects
+}
+
+/**
+ * `aspect` equipped on `character` in the draft (`null`: her plain one). An
+ * aspect already on another member moves to her: in a team it is on one
+ * character at most (see `teamProblems`).
+ */
+export const equipInDraft = (draft: TeamDraft, character: CharacterId, aspect: AspectId | null): TeamDraft => {
+  const aspects: { [Id in CharacterId]?: AspectId } = {}
+  for (const [member, equipped] of Object.entries(draft.aspects) as Array<[CharacterId, AspectId]>) {
+    if (member !== character && equipped !== aspect) aspects[member] = equipped
+  }
+  if (aspect !== null) aspects[character] = aspect
+  return { ...draft, aspects }
 }
 
 /**
@@ -39,19 +55,32 @@ export const placeInTeam = (draft: TeamDraft, character: CharacterId): TeamDraft
   const { team, focus } = draft
   const at = team.indexOf(character)
   if (focus >= team.length) {
-    if (at >= 0) return { team, focus: at }
+    if (at >= 0) return { ...draft, focus: at }
     if (team.length >= teamSize) return draft
-    return { team: [...team, character], focus: team.length }
+    return membersOnly({ ...draft, team: [...team, character], focus: team.length })
   }
   const next = [...team]
   if (at >= 0) next[at] = team[focus]!
   next[focus] = character
-  return { team: next, focus }
+  return membersOnly({ ...draft, team: next, focus })
 }
 
 /** The team without the member in `slot` (the others move up); a team keeps at least one. */
 export const removeFromTeam = (draft: TeamDraft, slot: number): TeamDraft => {
   if (draft.team.length <= 1 || slot >= draft.team.length) return draft
   const team = draft.team.filter((_, index) => index !== slot)
-  return { team, focus: Math.min(draft.focus, team.length - 1) }
+  return membersOnly({ ...draft, team, focus: Math.min(draft.focus, team.length - 1) })
+}
+
+/** The draft's aspects on its members only, each on one of them (the first in the team keeps it). */
+const membersOnly = (draft: TeamDraft): TeamDraft => {
+  const aspects: { [Id in CharacterId]?: AspectId } = {}
+  const taken = new Set<AspectId>()
+  for (const member of draft.team) {
+    const aspect = draft.aspects[member]
+    if (aspect === undefined || taken.has(aspect)) continue
+    aspects[member] = aspect
+    taken.add(aspect)
+  }
+  return { ...draft, aspects }
 }

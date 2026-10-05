@@ -48,6 +48,7 @@ export interface ChapterSpec {
 
 const quest = (spec: QuestSpec): QuestSpec => spec
 const character = (id: CharacterId): Unlock => ({ kind: "character", id })
+const aspect = (id: AspectId): Unlock => ({ kind: "aspect", id })
 
 /** The main line's chapters, in order. */
 export const chapters = {
@@ -76,7 +77,7 @@ export const quests = {
     enemyLevel: 3,
     level: 2,
     after: "theSwarm",
-    rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [] }
+    rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [aspect("marksman")] }
   }),
   theBrute: quest({
     name: "The Brute",
@@ -86,7 +87,7 @@ export const quests = {
     enemyLevel: 5,
     level: 3,
     after: "crossfire",
-    rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("tidecaller")] }
+    rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("tidecaller"), aspect("riptide"), aspect("duelist")] }
   }),
   outposts: quest({
     name: "Outposts",
@@ -96,7 +97,7 @@ export const quests = {
     enemyLevel: 8,
     level: 4,
     after: "theBrute",
-    rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [character("stormcaller")] }
+    rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [character("stormcaller"), aspect("arc")] }
   }),
   ashfall: quest({
     name: "Ashfall",

@@ -81,6 +81,47 @@ export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBu
   }
 }
 
+/** What breaks the aspect rules in a team (see docs/aspects.md): an aspect of another class than hers, or one on two members. */
+export type AspectProblem =
+  | { readonly kind: "otherClass"; readonly character: CharacterId; readonly aspect: AspectId }
+  | { readonly kind: "twice"; readonly aspect: AspectId; readonly characters: ReadonlyArray<CharacterId> }
+
+/** What breaks the aspect rules in `team` (each member with the aspect equipped on her, if any). */
+export const aspectProblems = (tuning: TuningValue, team: ReadonlyArray<{ readonly character: CharacterId; readonly aspect?: AspectId | undefined }>): Array<AspectProblem> => {
+  const problems: Array<AspectProblem> = []
+  const holders = new Map<AspectId, Array<CharacterId>>()
+  for (const { character, aspect } of team) {
+    if (aspect === undefined) continue
+    if (!Object.hasOwn(tuning.aspects, aspect) || aspectOf(tuning.aspects, aspect).class !== tuning.characters[character].class) {
+      problems.push({ kind: "otherClass", character, aspect })
+      continue
+    }
+    holders.set(aspect, [...(holders.get(aspect) ?? []), character])
+  }
+  for (const [aspect, characters] of holders) if (characters.length > 1) problems.push({ kind: "twice", aspect, characters })
+  return problems
+}
+
+/**
+ * `team` keeping only the aspects the rules allow: one of her class, on one
+ * member (the first to hold it keeps it); the others fight with their plain
+ * aspect. What enters the arena goes through it, quick-start links included.
+ */
+export const withValidAspects = <Build extends { readonly character: CharacterId; readonly aspect?: AspectId | undefined }>(tuning: TuningValue, team: ReadonlyArray<Build>): ReadonlyArray<Build> => {
+  const taken = new Set<AspectId>()
+  return team.map((build) => {
+    const { aspect } = build
+    if (aspect === undefined) return build
+    const fits = Object.hasOwn(tuning.aspects, aspect) && aspectOf(tuning.aspects, aspect).class === tuning.characters[build.character].class
+    if (fits && !taken.has(aspect)) {
+      taken.add(aspect)
+      return build
+    }
+    const { aspect: _dropped, ...plain } = build
+    return plain as Build
+  })
+}
+
 const attacks = new WeakMap<TuningValue, Map<string, BasicAttackSpec>>()
 
 /** The basic attack `ref` names: its class's handling and its aspect's moves (made once per tuning, see `basicAttack`). */

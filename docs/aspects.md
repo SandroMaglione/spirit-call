@@ -98,8 +98,8 @@ Every character can feed an aspect alone: every element leaves a state, so
 - **Edge** (plain): a slash, a backhand, a thrust, and a spin that
   launches. Charged: a lunging stab. Dash strike: a lunging thrust.
 - **Duelist**: three thrusts, each harder than the last. Charged: a long
-  lunge. **Counter**: her dash strike right after a perfect dodge is a
-  heavy blow that fills the break bar, and carries her element. For
+  lunge. **Counter**: her dash strike out of a dash that perfectly dodged
+  a blow is a heavy blow that deals double, and carries her element. For
   elites and armored enemies, weaker against a crowd.
 - **Gathering Edge**: two slashes, then a spin that draws enemies in
   instead of throwing them out, carrying her element. Charged: a wide sweep
@@ -132,8 +132,8 @@ Every character can feed an aspect alone: every element leaves a state, so
 
 - **Spark** (plain): two sparks that pierce the first enemy, then a pair
   in a V. Charged: a slow orb through a line of enemies.
-- **Arc**: her sparks jump on to one more enemy nearby; the pair in a V
-  carries her element. For spread-out groups.
+- **Arc**: her bolts jump on to one more enemy nearby, with 60% of the
+  damage; the pair in a V carries her element. For spread-out groups.
 - **Lightning Rod**: her charged attack plants a rod that zaps the
   nearest enemy around it for a few seconds, carrying her element; her
   sparks deal more to enemies in a state. A place to fight from.

@@ -166,6 +166,12 @@ export interface MoveContext {
   readonly finisher: boolean
   /** The charged power move. */
   readonly power: boolean
+  /** The dash strike. */
+  readonly dash: boolean
+  /** The dash strike out of a dash that perfectly dodged a blow. */
+  readonly counter: boolean
+  /** The round that empties the magazine. */
+  readonly lastRound: boolean
 }
 
 /** Who dealt a blow (so their passives apply), and with which move of their basic attack (none: a skill). */

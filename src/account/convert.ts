@@ -9,11 +9,10 @@ import type { QuestId } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import type { DiscoveryId } from "../content/discoveries.ts"
-import { aspectOf } from "../content/aspects.ts"
 import type { AspectId } from "../content/aspects.ts"
 import { teamSize } from "../content/characters.ts"
-import { createAccount, owns, select, unlock, withClearedRewards } from "./account.ts"
-import type { Account, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TeamAspects, TierProgress } from "./account.ts"
+import { createAccount, owns, select, unlock, validAspects, withClearedRewards } from "./account.ts"
+import type { Account, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -94,7 +93,12 @@ export const fromStored = (
     if (!nothing) dropped.push("the last selection")
     account = { ...account, selection: { ...starterSelection, team } }
   }
-  const aspects = aspectsFrom(tuning, account, stored.selection.aspects)
+  // The aspects saved for the team, as far as the rules allow (see `teamProblems`).
+  const saved: { [Id in CharacterId]?: AspectId } = {}
+  for (const [character, aspect] of Object.entries(stored.selection.aspects)) {
+    if (known(tuning.characters, character) && known(tuning.aspects, aspect)) saved[character] = aspect
+  }
+  const aspects = validAspects(tuning, account, account.selection.team, saved)
   if (Object.keys(aspects).length < Object.keys(stored.selection.aspects).length) dropped.push("an aspect equipped")
   account = { ...account, selection: { ...account.selection, aspects } }
   return { account, dropped, granted: rewarded.granted }
@@ -104,23 +108,6 @@ export const fromStored = (
 const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"]): Play | undefined => {
   if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest } : undefined
   return known(tuning.tracks, saved.track) ? { kind: "tier", track: saved.track, tier: saved.tier } : undefined
-}
-
-/**
- * The team's saved aspects that still hold: an owned aspect that exists, on
- * an owned character of its class, and on no one else (the first keeps it).
- */
-const aspectsFrom = (tuning: Tuning, account: Account, saved: Readonly<Record<string, string>>): TeamAspects => {
-  const kept: { [Id in CharacterId]?: AspectId } = {}
-  const taken = new Set<string>()
-  for (const [character, aspect] of Object.entries(saved)) {
-    if (!known(tuning.characters, character) || !owns(account, { kind: "character", id: character })) continue
-    if (!known(tuning.aspects, aspect) || !owns(account, { kind: "aspect", id: aspect }) || taken.has(aspect)) continue
-    if (aspectOf(tuning.aspects, aspect).class !== tuning.characters[character].class) continue
-    kept[character] = aspect
-    taken.add(aspect)
-  }
-  return kept
 }
 
 /** The account as saved, in the latest version. */

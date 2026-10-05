@@ -23,7 +23,7 @@ export const Home = ({ store, nav, draft, play, enter }: {
       <button type="button" class="icon-button" aria-label="Challenges" onClick={() => { store.menuBriefing.value = false; nav.go({ kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line }) }}><Icon name="challenge" /></button>
     </div>
     <div class="home__identity"><ElementBadge element={elementOf(tuning, leader)} /><h1>{tuning.characters[leader].name}</h1><span>Lv {characterLevel(tuning, account, leader).level}</span>
-      {team.length > 1 && <div class="lobby-party">{team.map((member) => <button type="button" key={member} aria-label={`Lead with ${tuning.characters[member].name}`} aria-pressed={member === leader} onClick={() => (draft.value = placeInTeam({ team, focus: 0 }, member))}><Portrait of={{ character: member }} /></button>)}</div>}
+      {team.length > 1 && <div class="lobby-party">{team.map((member) => <button type="button" key={member} aria-label={`Lead with ${tuning.characters[member].name}`} aria-pressed={member === leader} onClick={() => (draft.value = placeInTeam({ ...draft.value, focus: 0 }, member))}><Portrait of={{ character: member }} /></button>)}</div>}
     </div>
     <div class="lobby-play">
       <button type="button" class="lobby-challenge" aria-label="Choose challenge" onClick={() => { store.menuBriefing.value = true; nav.go({ kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line }) }}><Icon name="challenge" /><span>{describePlay(tuning, play)}</span><Icon name="next" /></button>

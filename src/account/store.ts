@@ -27,7 +27,7 @@ import type { Amounts } from "../content/currencies.ts"
 import { aspectOf } from "../content/aspects.ts"
 import type { RunResultValue } from "../schema.ts"
 import { createAccount, earn, recordRun, select, train, unlock } from "./account.ts"
-import type { Account, Checked, Earned, Item, Play, Refusal } from "./account.ts"
+import type { Account, Checked, Earned, Item, Play, Refusal, TeamAspects } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
 import { LatestAccountJson, LegacyProfileJson, migrateAccount, StoredAccountJson } from "./stored.ts"
@@ -44,8 +44,8 @@ export interface AccountStoreShape {
   readonly get: Effect.Effect<Account>
   /** What loading had to do (create, migrate, drop content, start fresh), for a notice; empty when nothing. */
   readonly notes: ReadonlyArray<string>
-  /** Selects a team of owned characters and an open quest or tier: what the arena is entered with. */
-  readonly select: (team: ReadonlyArray<CharacterId>, play: Play) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Selects a team of owned characters, the aspects equipped in it (as they were, when not given), and an open quest or tier: what the arena is entered with. */
+  readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
   /** Takes an owned character to its next level with gold. */
@@ -146,7 +146,7 @@ export const layer = (options: AccountOptions) =>
       return AccountStore.of({
         get: Ref.get(current),
         notes: loaded.notes,
-        select: (team, play) => change((account) => select(options.tuning, account, team, play)),
+        select: (team, play, aspects) => change((account) => select(options.tuning, account, team, play, aspects)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
         earn: (amounts) => apply((account) => earn(account, amounts)),
         train: (character) => change((account) => train(options.tuning, account, character)),

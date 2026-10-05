@@ -258,11 +258,20 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
     const spec = tuning.classes[aspect.class]
     checkMoves(problems, where, spec, aspect)
-    aspect.passives.forEach((passive, index) => checkPassive(problems, `${where} passive ${index + 1}`, passive))
+    aspect.passives.forEach((passive, index) => {
+      checkPassive(problems, `${where} passive ${index + 1}`, passive)
+      // An aspect never names an element: what it sets off carries none, or hers (`castOwn`).
+      if (passive.kind === "on" && passive.effect.kind === "cast" && (passive.effect.effect.element !== null || ("leaves" in passive.effect.effect && passive.effect.effect.leaves !== null))) {
+        problems.push(`${where} passive ${index + 1}: names an element (an aspect gives one moment to her element instead)`)
+      }
+    })
+    const moments = (aspect.infuse === null ? 0 : 1) + aspect.passives.filter((passive) => passive.kind === "on" && passive.effect.kind === "cast" && passive.effect.own).length
+    if (moments > 1) problems.push(`${where}: gives her element ${moments} moments (one at most)`)
     if (aspect.infuse !== null) checkFilter(problems, `${where} elemental moment`, aspect.infuse)
     const plain = sustainedDamage(basicAttack(spec, null))
     const own = sustainedDamage(basicAttack(spec, aspect))
-    if (Math.abs(own / plain - 1) > aspectBudget) {
+    // (A plain aspect with no combo is reported on its own.)
+    if (plain > 0 && Math.abs(own / plain - 1) > aspectBudget) {
       problems.push(`${where}: deals ${own.toFixed(0)} a second against ${plain.toFixed(0)} for the plain aspect (aspects are different, never stronger or weaker: within ${aspectBudget * 100}%)`)
     }
   }

@@ -124,7 +124,12 @@
     "disc",
     "staff"
   ],
-  "aspects": [],
+  "aspects": [
+    "duelist",
+    "marksman",
+    "riptide",
+    "arc"
+  ],
   "retired": {
     "skills": [
       "nova",

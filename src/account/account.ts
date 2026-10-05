@@ -19,6 +19,8 @@ import type { ChallengeId } from "../content/challenges.ts"
 import type { ResetSpec, TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, Unlock } from "../content/quests.ts"
 import type { AspectId } from "../content/aspects.ts"
+import { aspectProblems, withValidAspects } from "../features/build.ts"
+import type { AspectProblem } from "../features/build.ts"
 import type { BuildValue, RunResultValue } from "../schema.ts"
 import { levelOf } from "./progression.ts"
 import type { LevelProgress } from "./progression.ts"
@@ -261,11 +263,43 @@ export const tierRewardsAvailable = (tuning: Tuning, account: Account, track: Tr
   return given === null || given < periodOf(tuning.reset, now)
 }
 
+/**
+ * What breaks the rules of a team's aspects (see docs/aspects.md): an
+ * aspect not owned, of another class than hers, or on two members.
+ */
+export type TeamProblem = AspectProblem | { readonly kind: "notOwned"; readonly character: CharacterId; readonly aspect: AspectId }
+
+/**
+ * The one check of a team's aspects: each owned, of her class, and on one
+ * member at most. Equipping (`select`), a save loaded (`validAspects`), and
+ * entering the arena (`withValidAspects`) all hold to it.
+ */
+export const teamProblems = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects): Array<TeamProblem> => [
+  ...team.flatMap((character): Array<TeamProblem> => {
+    const aspect = aspects[character]
+    return aspect !== undefined && !owns(account, { kind: "aspect", id: aspect }) ? [{ kind: "notOwned", character, aspect }] : []
+  }),
+  ...aspectProblems(tuning, team.map((character) => ({ character, aspect: aspects[character] })))
+]
+
+/** `aspects` on `team` as far as the rules allow (see `teamProblems`): the rest are taken off, the first holder of one keeping it. */
+export const validAspects = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects): TeamAspects => {
+  const owned = team.map((character) => {
+    const aspect = aspects[character]
+    return aspect !== undefined && owns(account, { kind: "aspect", id: aspect }) ? { character, aspect } : { character }
+  })
+  const kept: { [Id in CharacterId]?: AspectId } = {}
+  for (const build of withValidAspects(tuning, owned)) if ("aspect" in build && build.aspect !== undefined) kept[build.character] = build.aspect
+  return kept
+}
+
 /** Why an action was refused. */
 export type Refusal =
   | { readonly kind: "notOwned"; readonly item: Item }
   /** A team of none, of more than `teamSize`, or with someone twice. */
   | { readonly kind: "badTeam"; readonly team: ReadonlyArray<CharacterId> }
+  /** Aspects that break the rules (see `teamProblems`). */
+  | { readonly kind: "badAspects"; readonly problems: ReadonlyArray<TeamProblem> }
   | { readonly kind: "locked"; readonly play: Play; readonly lock: Lock }
   | { readonly kind: "notEnough"; readonly currency: CurrencyId; readonly needed: number; readonly held: number }
   | { readonly kind: "maxLevel"; readonly item: Item }
@@ -308,14 +342,23 @@ export const train = (tuning: Tuning, account: Account, character: CharacterId):
 export const validTeam = (team: ReadonlyArray<CharacterId>): boolean =>
   team.length >= 1 && team.length <= teamSize && new Set(team).size === team.length
 
-/** `account` with `team` and `play` selected, if it is a team the account owns and `play` is open. */
-export const select = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, play: Play): Checked<Account> => {
+/**
+ * `account` with `team`, the aspects equipped in it (by default, as they
+ * were), and `play` selected, if it is a team the account owns, its aspects
+ * keep the rules (see `teamProblems`), and `play` is open. Aspects are kept
+ * for the team's members only.
+ */
+export const select = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, play: Play, aspects: TeamAspects = account.selection.aspects): Checked<Account> => {
   if (!validTeam(team)) return refuse({ kind: "badTeam", team })
   const missing = team.find((character) => !owns(account, { kind: "character", id: character }))
   if (missing !== undefined) return refuse({ kind: "notOwned", item: { kind: "character", id: missing } })
+  const problems = teamProblems(tuning, account, team, aspects)
+  if (problems.length > 0) return refuse({ kind: "badAspects", problems })
   const lock = playLock(tuning, account, play)
   if (lock !== null) return refuse({ kind: "locked", play, lock })
-  return { ok: true, value: { ...account, selection: { ...account.selection, team, play } } }
+  const kept: { [Id in CharacterId]?: AspectId } = {}
+  for (const character of team) if (aspects[character] !== undefined) kept[character] = aspects[character]
+  return { ok: true, value: { ...account, selection: { team, aspects: kept, play } } }
 }
 
 /** Levels before and after something. */
@@ -450,8 +493,8 @@ export const recordRun = (
 }
 
 /** The build `character` enters the arena with: at her level, with the aspect equipped on her in the team (her class's plain one when none). */
-export const buildOf = (tuning: Tuning, account: Account, character: CharacterId): BuildValue => {
-  const aspect = account.selection.aspects[character]
+export const buildOf = (tuning: Tuning, account: Account, character: CharacterId, aspects: TeamAspects = account.selection.aspects): BuildValue => {
+  const aspect = aspects[character]
   return {
     character,
     level: characterLevel(tuning, account, character).level,
@@ -459,6 +502,6 @@ export const buildOf = (tuning: Tuning, account: Account, character: CharacterId
   }
 }
 
-/** The builds `team` enters the arena with, in order (see `buildOf`). */
-export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>): ReadonlyArray<BuildValue> =>
-  team.map((character) => buildOf(tuning, account, character))
+/** The builds `team` enters the arena with, in order, with `aspects` equipped (see `buildOf`). */
+export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects = account.selection.aspects): ReadonlyArray<BuildValue> =>
+  team.map((character) => buildOf(tuning, account, character, aspects))

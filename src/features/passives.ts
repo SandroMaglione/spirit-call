@@ -14,7 +14,7 @@
  * kill is not lost to the freeze the kill starts.
  */
 import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
-import { Action, Aim, Cast, CombatStats, Game, Heal, Health, Hit, Hurtbox, Passives, Player, Position, TriggeredEffects } from "../schema.ts"
+import { Action, Aim, Cast, CombatStats, Game, Heal, Health, Hit, Hurtbox, Member, Passives, Player, Position, TriggeredEffects, Tuning } from "../schema.ts"
 import type { MoveContext, TriggeredEffectsValue } from "../schema.ts"
 import { skillAim } from "./skills.ts"
 
@@ -28,10 +28,26 @@ export const moveMatches = (filter: MoveFilter, move: MoveContext | undefined): 
       return move.finisher
     case "power":
       return move.power
+    case "dash":
+      return move.dash
+    case "counter":
+      return move.counter
+    case "lastRound":
+      return move.lastRound
   }
 }
 
-const holds = (condition: HitCondition, move: MoveContext | undefined, target: { readonly current: number; readonly max: number }): boolean => {
+/** What a passive's condition may read of the target: facts that belong to no element (see docs/aspects.md). */
+export interface TargetFacts {
+  readonly current: number
+  readonly max: number
+  /** In a state, any one. */
+  readonly inState: boolean
+  /** Stunned or broken. */
+  readonly held: boolean
+}
+
+const holds = (condition: HitCondition, move: MoveContext | undefined, target: TargetFacts): boolean => {
   switch (condition.kind) {
     case "always":
       return true
@@ -39,14 +55,18 @@ const holds = (condition: HitCondition, move: MoveContext | undefined, target: {
       return moveMatches(condition.move, move)
     case "targetHealthBelow":
       return target.current < target.max * condition.fraction
+    case "targetInState":
+      return target.inState
+    case "targetHeld":
+      return target.held
   }
 }
 
-/** The damage bonus (percent, bonuses add up) `passives` give a blow dealt with `move` to a target with `target` health. */
+/** The damage bonus (percent, bonuses add up) `passives` give a blow dealt with `move` to a target as `target` says. */
 export const damageBonusPercent = (
   passives: ReadonlyArray<Passive>,
   move: MoveContext | undefined,
-  target: { readonly current: number; readonly max: number }
+  target: TargetFacts
 ): number => {
   let percent = 0
   for (const passive of passives) {
@@ -93,24 +113,25 @@ export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
   if (queued.length > 0) resources.queue.update((queue) => [...queue, ...queued])
 })
 
-/** Who carries out a triggered effect: where they are, where they aim, their health, ATK, and side. */
+/** Who carries out a triggered effect: where they are, where they aim, their health, ATK, side, and (a team member) who she is. */
 const Wielders = Game.Query({
   selection: {
     position: Game.Query.read(Position),
     aim: Game.Query.read(Aim),
     health: Game.Query.write(Health),
     stats: Game.Query.read(CombatStats),
-    hurtbox: Game.Query.read(Hurtbox)
+    hurtbox: Game.Query.read(Hurtbox),
+    member: Game.Query.optional(Member)
   }
 })
 
 /**
  * Carries out queued triggered effects: heals, and skill effects cast from
- * the wielder along its aim (without generating energy). Effects of a
- * wielder that is gone are dropped.
+ * the wielder along its aim (without generating energy), with her element
+ * when the effect says so. Effects of a wielder that is gone are dropped.
  */
 export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects", {
-  resources: { queue: Game.System.writeResource(TriggeredEffects) },
+  resources: { queue: Game.System.writeResource(TriggeredEffects), tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.writeEvent(Cast), heal: Game.System.writeEvent(Heal) }
 }, ({ resources, events, lookup }) => {
   const queue = resources.queue.get()
@@ -135,12 +156,14 @@ export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects"
         const aim = skillAim(effect.effect)
         const reach = aim.kind === "direction" ? aim.reach : aim.kind === "point" ? aim.range : 0
         const at = { x: from.x + direction.x * reach, y: from.y + direction.y * reach }
+        // Her aspect's elemental moment: the effect carries her element.
+        const element = effect.own && data.member.present ? resources.tuning.get().characters[data.member.get().character].element : null
         events.cast.emit({
           caster: holder,
           faction: data.hurtbox.get().faction,
           atk: data.stats.get().atk,
           skill: null,
-          effect: effect.effect,
+          effect: effect.own ? { ...effect.effect, element } : effect.effect,
           from,
           at,
           direction,

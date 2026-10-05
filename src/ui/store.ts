@@ -9,7 +9,7 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, Earned, Play } from "../account/account.ts"
+import type { Account, Earned, Play, TeamAspects } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
@@ -77,7 +77,7 @@ export const createUiStore = (initial: {
   recording: signal("idle"),
   menuPlay: signal(initial.account.selection.play),
   menuBriefing: signal(false),
-  menuDraft: signal({ team: initial.account.selection.team, focus: 0 }),
+  menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects }),
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
   paused: signal(false),
@@ -100,11 +100,12 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
-  readonly saveTeam: (team: ReadonlyArray<CharacterId>) => void
-  /** Enter the arena with `team` (in order, each as equipped) to play `play`. */
-  readonly enter: (team: ReadonlyArray<CharacterId>, play: Play) => void
-  /** Enter an Extra with `team`: nothing it does is recorded on the account. */
-  readonly enterExtra: (team: ReadonlyArray<CharacterId>, extra: Extra) => void
+  /** Save `team` and the aspects equipped in it (refused when they break the rules, see `teamProblems`). */
+  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects) => void
+  /** Enter the arena with `team` (in order, with `aspects` equipped) to play `play`. */
+  readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play) => void
+  /** Enter an Extra with `team` and `aspects`: nothing it does is recorded on the account. */
+  readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra) => void
   /** Take an owned character to its next level with gold (saved at once). */
   readonly train: (character: CharacterId) => void
   /** From the results or the in-game menu: the same challenge again, from the start. */

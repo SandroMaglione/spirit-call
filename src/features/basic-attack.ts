@@ -169,7 +169,16 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     }
 
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
-      const context: MoveContext = { step: nextStep, finisher: !power && nextStep === spec.combo.length - 1, power }
+      const striking = move === spec.dash
+      const context: MoveContext = {
+        step: nextStep,
+        finisher: !power && !striking && nextStep === spec.combo.length - 1,
+        power,
+        dash: striking,
+        // Out of a dash that perfectly dodged a blow.
+        counter: striking && dash.perfect,
+        lastRound: !power && spec.magazine !== null && spent + 1 >= spec.magazine.rounds
+      }
       // A power move from a magazine fires every round left: its damage is their share of a full one. The
       // press that started the charge fired a round of its own, so it still counts toward the share.
       const left = spec.magazine === null ? 0 : spec.magazine.rounds - spent

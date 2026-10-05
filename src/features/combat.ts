@@ -50,6 +50,7 @@ import {
   SlowMotion,
   StateBurst,
   Stats,
+  Stunned,
   Time,
   Tuning,
   Velocity,
@@ -223,6 +224,7 @@ const Damageable = Game.Query({
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns),
     poise: Game.Query.optional(Poise),
+    stunned: Game.Query.optional(Stunned),
     immortal: Game.Query.optional(Immortal)
   }
 })
@@ -295,8 +297,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
 
     const health = data.health.get()
     const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
-    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, health) : 0
     const state = data.state.get().current
+    const held = (data.stunned.present && data.stunned.get().remaining > 0) || (data.poise.present && data.poise.get().broken > 0)
+    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, { ...health, inState: state !== null, held }) : 0
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
     const factor = blow.element === null ? 1 : affinityDamage(tuning, affinity)

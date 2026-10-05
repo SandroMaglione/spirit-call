@@ -38,7 +38,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     }
   }
   const enter = () => {
-    if (playLock(store.tuning.value, store.account.value, play.value) === null) actions.enter(draft.value.team, play.value)
+    if (playLock(store.tuning.value, store.account.value, play.value) === null) actions.enter(draft.value.team, draft.value.aspects, play.value)
   }
   useEffect(() => {
     const requested = store.menuOpens.peek()
@@ -66,13 +66,13 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     switch (screen.kind) {
       case "home": {
         const playable = playLock(store.tuning.value, store.account.value, play.value) === null ? play.value : store.account.value.selection.play
-        return <Home store={store} nav={nav} draft={draft} play={playable} enter={() => actions.enter(draft.value.team, playable)} />
+        return <Home store={store} nav={nav} draft={draft} play={playable} enter={() => actions.enter(draft.value.team, draft.value.aspects, playable)} />
       }
       case "quests": return <Quests store={store} nav={nav} tab={screen.tab} play={play} enter={enter} />
       case "team": return <Team store={store} actions={actions} nav={nav} draft={draft} play={play.value} enter={enter} />
       case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
       case "discoveries": return <Discoveries store={store} nav={nav} />
-      case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} team={draft.value.team} />
+      case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} team={draft.value.team} aspects={draft.value.aspects} />
       case "settings": return <Settings store={store} actions={actions} />
     }
   }

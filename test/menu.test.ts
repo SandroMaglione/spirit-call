@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
-import { answers, aspectsFor, elementOf, placeInTeam, removeFromTeam } from "../src/ui/draft.ts"
-import { start, testAspect, withAspect } from "./helpers.ts"
+import { answers, aspectsFor, elementOf, equipInDraft, placeInTeam, removeFromTeam } from "../src/ui/draft.ts"
+import { start, aspectId } from "./helpers.ts"
 import { cast, damageBonus, doing, finisher, heal, kill, on, targetHealthBelow } from "../src/content/passives.ts"
 import { nova } from "../src/content/skills.ts"
 
@@ -136,21 +136,38 @@ describe("menu helpers", () => {
 
   it("sets up a team like Genshin: a slot, then a character for it", () => {
     // A newcomer in the empty slot joins at the end.
-    expect(placeInTeam({ team: ["swordsman"], focus: 1 }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1 })
+    expect(placeInTeam({ team: ["swordsman"], focus: 1, aspects: {} }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1, aspects: {} })
     // In a filled slot she takes its place; one already in the team swaps places.
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0 }, "tidecaller")).toEqual({ team: ["tidecaller", "gunner"], focus: 0 })
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0 }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0 })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {} }, "tidecaller")).toEqual({ team: ["tidecaller", "gunner"], focus: 0, aspects: {} })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {} }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0, aspects: {} })
     // Picking one already in the team for the empty slot just goes to her.
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2 }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0 })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2, aspects: {} }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0, aspects: {} })
     // Removing moves the others up, and never empties the team.
-    expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2 }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1 })
-    expect(removeFromTeam({ team: ["swordsman"], focus: 0 }, 0)).toEqual({ team: ["swordsman"], focus: 0 })
+    expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2, aspects: {} }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1, aspects: {} })
+    expect(removeFromTeam({ team: ["swordsman"], focus: 0, aspects: {} }, 0)).toEqual({ team: ["swordsman"], focus: 0, aspects: {} })
   })
 
+  it("equips an aspect in the team on one member only: one on another moves to her, and leaving the team takes it off", () => {
+    const duelist = aspectId("duelist"), arc = aspectId("arc")
+    const draft = { team: ["swordsman", "stormcaller"] as const, focus: 0, aspects: {} }
+    const equipped = equipInDraft(draft, "swordsman", duelist)
+    expect(equipped.aspects).toEqual({ swordsman: duelist })
+    // Equipped again on someone else (a test: two of one class), it moves.
+    expect(equipInDraft(equipped, "stormcaller", duelist).aspects).toEqual({ stormcaller: duelist })
+    expect(equipInDraft(equipInDraft(equipped, "stormcaller", arc), "swordsman", null).aspects).toEqual({ stormcaller: arc })
+    // A member who leaves the team takes hers off.
+    expect(removeFromTeam(equipInDraft(equipped, "stormcaller", arc), 0).aspects).toEqual({ stormcaller: arc })
+  })
+
+
+
   it("offers a character only aspects of her class", () => {
-    const tuning = withAspect(withAspect(defaultTuning, "blade1", testAspect(defaultTuning, "blade")), "gun1", testAspect(defaultTuning, "gun"))
-    expect(aspectsFor(tuning, "swordsman")).toEqual(["blade1"])
-    expect(aspectsFor(tuning, "gunner")).toEqual(["gun1"])
+    for (const character of ["swordsman", "gunner", "tidecaller", "stormcaller"] as const) {
+      const offered = aspectsFor(defaultTuning, character)
+      expect(offered.length).toBeGreaterThan(0)
+      expect(offered.every((id) => defaultTuning.aspects[id].class === defaultTuning.characters[character].class)).toBe(true)
+    }
+    expect(aspectsFor(defaultTuning, "swordsman")).toContain("duelist")
   })
 
   it("names a character's element, and whether a team answers an enemy", () => {
