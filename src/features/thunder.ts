@@ -156,8 +156,8 @@ export const CastTotems = Game.System("Shooter/CastTotems", {
 
 /**
  * Totems zap every tick: the one on the field, if she is within reach
- * hurt, heals; otherwise the nearest body of the other side within reach
- * is struck (jumping on). One reach for both, touching it with the body. A totem keeps going while its caster is on
+ * hurt (and the totem heals at all), heals; otherwise the nearest body of
+ * the other side within reach is struck (jumping on). One reach for both, touching it with the body. A totem keeps going while its caster is on
  * the bench, for whoever is on the field.
  */
 export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
@@ -186,7 +186,7 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
       const center: Struck = { id: -1, entity: null, at, radius: 0, faction: totem.faction, protected: false }
       const health = field?.data.health.get()
       const close = field !== undefined && Math.hypot(field.data.position.get().x - at.x, field.data.position.get().y - at.y) <= effect.radius + field.data.hurtbox.get().radius
-      if (field !== undefined && health !== undefined && close && health.current > 0 && health.current < health.max) {
+      if (effect.heal > 0 && field !== undefined && health !== undefined && close && health.current > 0 && health.current < health.max) {
         const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)
         field.data.health.set({ current: health.current + amount, max: health.max })
         events.heal.emit({ at: field.data.position.get(), amount })

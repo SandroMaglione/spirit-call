@@ -107,7 +107,7 @@ export const quests = {
     enemyLevel: 12,
     level: 5,
     after: "outposts",
-    rewards: { experience: 220, currencies: { crystals: 150, gold: 5500 }, unlocks: [] }
+    rewards: { experience: 220, currencies: { crystals: 150, gold: 5500 }, unlocks: [aspect("gatheringEdge")] }
   }),
   highTide: quest({
     name: "High Tide",
@@ -117,7 +117,7 @@ export const quests = {
     enemyLevel: 16,
     level: 6,
     after: "ashfall",
-    rewards: { experience: 260, currencies: { crystals: 150, gold: 15000 }, unlocks: [] }
+    rewards: { experience: 260, currencies: { crystals: 150, gold: 15000 }, unlocks: [aspect("whirlpool")] }
   }),
   sandstorm: quest({
     name: "Sandstorm",
@@ -127,7 +127,7 @@ export const quests = {
     enemyLevel: 21,
     level: 7,
     after: "highTide",
-    rewards: { experience: 300, currencies: { crystals: 200, gold: 24000 }, unlocks: [] }
+    rewards: { experience: 300, currencies: { crystals: 200, gold: 24000 }, unlocks: [aspect("lightningRod")] }
   }),
   theCloister: quest({
     name: "The Cloister",
@@ -157,7 +157,7 @@ export const quests = {
     enemyLevel: 4,
     level: 2,
     after: null,
-    rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [] }
+    rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [aspect("scattergun")] }
   }),
   nightOfPacks: quest({
     name: "Night of Packs",

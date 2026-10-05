@@ -15,7 +15,7 @@ import { nova } from "../src/content/skills.ts"
 import { sustainedDamage, validateContent } from "../src/content/validate.ts"
 import { aspectProblems, damageDealt, resolveBuild, withValidAspects } from "../src/features/build.ts"
 import { moveMatches } from "../src/features/passives.ts"
-import { Dash, ElementState, Enemy, Game, Health, Player, Position } from "../src/schema.ts"
+import { Dash, ElementState, Enemy, Game, Health, Player, Position, Totem } from "../src/schema.ts"
 import type { BuildValue, MoveContext } from "../src/schema.ts"
 import { cursorAt, placeDummies, start, testAspect, withAspect } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -168,6 +168,63 @@ describe("Marksman (Gun)", () => {
     const three = arena(marksman, [{ x: 200, y: 0 }], { x: 300, y: 0 }, { pointer: taps(3, 2, gap) })
     three.step(2 + gap * 3 + 10)
     expect(three.world().enemies[0]!.state).toBe("burning")
+  })
+})
+
+/** A press held to a full charge, then released (the charged attack). */
+const charge = (cls: "blade" | "gun" | "disc" | "staff", first = 2) => {
+  const held = defaultTuning.classes[cls].handling.holdDelay + (defaultTuning.classes[cls].plain.charged?.chargeTime ?? 0)
+  return [{ frame: first, press: ["primary" as const] }, { frame: first + steps(held) + 3, release: ["primary" as const] }]
+}
+
+describe("Gathering Edge (Blade)", () => {
+  const gathering = { character: "swordsman" as const, aspect: "gatheringEdge" as AspectId }
+  const pullable = tuningWith({ enemies: { dummy: { hp: 2000 } } })
+
+  it("ends its combo with a spin that draws enemies in, carrying her element (the Swordsman's sweeps)", () => {
+    const attack = basicAttack(defaultTuning.classes.blade, defaultTuning.aspects.gatheringEdge)
+    const gap = steps(Math.max(...attack.combo.map((move) => move.recovery))) + 3
+    // Behind her, inside the spin's reach only: only the finisher reaches it.
+    const run = arena(gathering, [{ x: -150, y: 0 }], { x: 300, y: 0 }, { tuning: pullable, pointer: taps(3, 2, gap) })
+    run.step(2 + gap * 3 + 30)
+    const [dummy] = run.world().enemies
+    expect(dummy!.health).toBeLessThan(2000)
+    expect(dummy!.position.x - (defaultTuning.arena.width / 2)).toBeGreaterThan(-150)
+    expect(dummy!.state).toBe("swept")
+  })
+})
+
+describe("Scattergun (Gun)", () => {
+  it("fires a point-blank blast when charged, carrying her element (the Gunner's burns)", () => {
+    const run = arena({ character: "gunner", aspect: "scattergun" as AspectId }, [{ x: 120, y: 0 }], { x: 300, y: 0 }, { pointer: charge("gun") })
+    run.step(steps(1.5))
+    expect(run.world().enemies[0]!.state).toBe("burning")
+  })
+})
+
+describe("Whirlpool (Disc)", () => {
+  it("hovers its charged disc long, carrying her element (the Tidecaller's soaks)", () => {
+    const run = arena({ character: "tidecaller", aspect: "whirlpool" as AspectId }, [{ x: 300, y: 0 }], { x: 320, y: 0 }, { pointer: charge("disc") })
+    run.step(steps(1.6))
+    const [dummy] = run.world().enemies
+    expect(dummy!.health).toBeLessThan(2000)
+    expect(dummy!.state).toBe("soaked")
+  })
+})
+
+describe("Lightning Rod (Staff)", () => {
+  it("plants a rod with its charged attack, which zaps the nearest enemy with her element (the Stormcaller's charges)", () => {
+    const Rods = Game.Inspector("Test/Rods", { queries: { totems: Game.Query({ selection: { totem: Game.Query.read(Totem) } }) } }, ({ queries }) => queries.totems.each().map(({ data }) => data.totem.get()))
+    // Off her line, so only the rod (not the charged bolt) reaches it.
+    const run = arena({ character: "stormcaller", aspect: "lightningRod" as AspectId }, [{ x: 100, y: 120 }], { x: 300, y: 0 }, { pointer: charge("staff") })
+    run.step(steps(1.4))
+    const [rod] = run.runtime.inspect(Rods)
+    expect(rod?.effect.element).toBe("thunder")
+    expect(rod?.effect.heal).toBe(0)
+    run.step(steps(1))
+    const [dummy] = run.world().enemies
+    expect(dummy!.health).toBeLessThan(2000)
+    expect(dummy!.state).toBe("charged")
   })
 })
 

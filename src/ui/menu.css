@@ -301,7 +301,8 @@ body:has(.menu,.pause,.results) .btm-toggle { display:none; }
   .upgrade-action { margin-top:12px; }
   .columns { bottom:64px; }
   .column__banner b { font-size:19px; }
-  .column__banner { margin-bottom:40px; }
+  .column__banner { margin-bottom:84px; }
+  .column__aspect { bottom:42px; min-height:26px; padding:2px 10px; }
   .party-actions { gap:14px; }
   .brief { gap:12px; padding-top:4px; }
   .brief__content { gap:5px; }

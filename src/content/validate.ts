@@ -109,7 +109,9 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       if (!(effect.pull >= 0 && effect.pull <= 1)) problems.push(`${where}: pull must be a share in [0, 1] (is ${effect.pull})`)
       return
     case "totem":
-      positive(problems, where, { seconds: effect.seconds, tick: effect.tick, radius: effect.radius, heal: effect.heal })
+      positive(problems, where, { seconds: effect.seconds, tick: effect.tick, radius: effect.radius })
+      // A totem that heals none only strikes (a rod).
+      if (!(effect.heal >= 0)) problems.push(`${where}: heal must not be negative (is ${effect.heal})`)
       if (!(effect.offset >= 0)) problems.push(`${where}: offset must not be negative (is ${effect.offset})`)
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
       return
