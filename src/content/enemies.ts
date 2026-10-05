@@ -419,7 +419,7 @@ export const enemies = {
   brute: enemy({
     name: "Brute",
     description: "Slams where you are headed; stomps up close.",
-    elements: affinities({ wind: "immune", water: "weak", thunder: "resists" }),
+    elements: affinities({ wind: "immune", water: "weak", thunder: "resists", rock: "weak" }),
     hp: 260,
     atk: 100,
     def: 0,
@@ -444,7 +444,7 @@ export const enemies = {
   swarmer: enemy({
     name: "Swarmer",
     description: "Tiny, fast; comes in packs.",
-    elements: affinities({ fire: "weak", thunder: "weak" }),
+    elements: affinities({ fire: "weak", thunder: "weak", rock: "resists" }),
     hp: 26,
     atk: 100,
     def: 0,
@@ -525,7 +525,7 @@ export const enemies = {
   guardian: enemy({
     name: "Guardian",
     description: "Its shield blocks shots from the front; it thrusts far.",
-    elements: affinities({ fire: "weak", wind: "resists" }),
+    elements: affinities({ fire: "weak", wind: "resists", rock: "weak" }),
     hp: 150,
     atk: 100,
     def: 0,
@@ -585,7 +585,7 @@ export const enemies = {
   stalker: enemy({
     name: "Stalker",
     description: "From afar it blinks to you: its mark shows where it lands.",
-    elements: affinities({ wind: "weak", fire: "resists" }),
+    elements: affinities({ wind: "weak", fire: "resists", rock: "resists" }),
     hp: 110,
     atk: 100,
     def: 0,
@@ -669,7 +669,7 @@ export const enemies = {
   juggernaut: enemy({
     name: "Juggernaut",
     description: "Armored until broken: blows barely scratch it and never push it. Break it, then strike.",
-    elements: affinities({ thunder: "weak", wind: "resists" }),
+    elements: affinities({ thunder: "weak", wind: "resists", rock: "weak" }),
     hp: 300,
     atk: 110,
     def: 0,

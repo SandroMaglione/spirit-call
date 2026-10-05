@@ -87,13 +87,6 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
 const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect): void => {
   if (effect.element !== null && !has(elements, effect.element)) problems.push(`${where}: unknown element ${effect.element}`)
   switch (effect.kind) {
-    case "stoneGuard":
-      positive(problems, where, { seconds: effect.seconds, stones: effect.stones })
-      if (!(Number.isInteger(effect.stones) && effect.stones <= 3)) problems.push(`${where}: stones must be a whole number from 1 to 3`)
-      return
-    case "stoneRise":
-      positive(problems, where, { spacing: effect.spacing, radius: effect.radius, active: effect.active })
-      return
     case "cut":
       positive(problems, where, { length: effect.length, width: effect.width, active: effect.active })
       return
@@ -125,6 +118,17 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
     case "thunderclap":
       positive(problems, where, { radius: effect.radius, strikes: effect.strikes, heal: effect.heal })
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
+      return
+    case "earthrise":
+      positive(problems, where, { radius: effect.radius, rocks: effect.rocks, size: effect.size, ring: effect.ring })
+      if (!Number.isInteger(effect.rocks)) problems.push(`${where}: rocks must be a whole number (is ${effect.rocks})`)
+      if (!(effect.warning >= 0 && effect.interval >= 0 && effect.stun >= 0)) problems.push(`${where}: warning, interval, and stun must not be negative`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
+      return
+    case "guard":
+      positive(problems, where, { raise: effect.raise, plates: effect.plates, radius: effect.radius, shove: effect.shove.radius })
+      if (!Number.isInteger(effect.plates)) problems.push(`${where}: plates must be a whole number (is ${effect.plates})`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
       return
     case "barrage":
       positive(problems, where, { maxRange: effect.maxRange, shells: effect.shells, radius: effect.radius, flightTime: effect.flightTime })

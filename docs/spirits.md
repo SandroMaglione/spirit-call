@@ -186,7 +186,7 @@ includes deliberate changes for personality and readable facing.
 | Gunner, fire | [Fire](../art/spirits/fire/README.md) | Flame and separate shards, dark slanted eyes, recoil on shots, warm core and ember trail |
 | Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
 | Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
-| Stonekeeper, rock | [Rock](../art/spirits/rock/README.md) | Broad grounded boulder, round optimistic eyes, weight-bearing feet, short rear heel, floating ornaments, planted Disc recoil and ground slam |
+| Bastion, rock | [Rock](../art/spirits/rock/README.md) | Broad grounded boulder, round optimistic eyes, weight-bearing feet, short rear heel, floating ornaments, planted Disc recoil and ground slam |
 
 Each folder keeps `reference/sheet.png`, cropped views, measurements,
 `build.py`, an editable `.blend`, `animate.py`, `export.py`, and its GLB.

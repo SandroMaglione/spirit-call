@@ -26,6 +26,7 @@ import {
   Energy,
   EnergyLedger,
   Game,
+  Guard,
   Health,
   Hit,
   HitFlash,
@@ -36,11 +37,10 @@ import {
   Invulnerable,
   Knockback,
   Member,
+  PlateShatter,
   Player,
   Paused,
   Poise,
-  StoneGuard,
-  GuardBlocked,
   Position,
   PrevPosition,
   Projectile,
@@ -63,6 +63,7 @@ import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
 import { affinityDamage, afflict } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
+import { plateTakes } from "./guard.ts"
 import { damageBonusPercent, PassiveHolders } from "./passives.ts"
 import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
 import { paceOf } from "./time.ts"
@@ -231,7 +232,6 @@ const Damageable = Game.Query({
   }
 })
 
-const Guarded = Game.Query({ selection: { health: Game.Query.read(Health), guard: Game.Query.write(StoneGuard) } })
 
 /** A team member on the bench: no body, so only a fire she carries off reaches her (see `TickStates`). */
 const Benched = Game.Query({
@@ -249,6 +249,9 @@ const Benched = Game.Query({
  * blows) land through invulnerability and give none, with no hit-stop or
  * push; they are the only blows that reach a team member on the bench.
  *
+ * A stone plate (see `GuardEffect`) takes an enemy's blow on the one on the
+ * field whole: nothing of it lands, and the plate shatters (`PlateShatter`).
+ *
  * A team member who falls stays in the team, fallen (`SwitchCharacter`
  * brings in the next one); an enemy that dies is gone. Energy from damage
  * the team deals goes to the one on the field, and a share of it to each
@@ -263,8 +266,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death),
-    reaction: Game.System.writeEvent(Reaction),
-    guardBlocked: Game.System.writeEvent(GuardBlocked)
+    reaction: Game.System.writeEvent(Reaction)
   },
   resources: {
     tuning: Game.System.readResource(Tuning),
@@ -272,7 +274,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     energyLedger: Game.System.writeResource(EnergyLedger),
     time: Game.System.readResource(Time),
     hitStop: Game.System.writeResource(HitStop),
-    challenge: Game.System.readResource(Challenge)
+    challenge: Game.System.readResource(Challenge),
+    guard: Game.System.writeResource(Guard)
   }
 }, ({ queries, events, resources, lookup, commands }) => {
   const tuning = resources.tuning.get()
@@ -299,16 +302,13 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const { blow } = damage
     const invulnerable = data.invulnerable.get().remaining
     if (invulnerable > 0 && !blow.periodic) continue
-
-    // Each stone stops one direct enemy blow, including its element and push.
-    // Ground burns still hurt; protection never replaces dodging indefinitely.
-    const guarded = data.player.present ? lookup.getHandle(damage.target, Guarded) : null
-    const guard = guarded?.ok === true ? guarded.value.data.guard.get() : null
-    if (data.player.present && damage.faction === "enemy" && !blow.periodic && blow.damage > 0 && guard !== null && guard.remaining > 0 && guard.stones > 0) {
-      const stones = guard.stones - 1
-      if (guarded?.ok === true) guarded.value.data.guard.set({ ...guard, stones })
-      data.invulnerable.set({ remaining: .12 })
-      events.guardBlocked.emit({ at: data.position.get(), direction: damage.direction, stones })
+    const guard = resources.guard.get()
+    if (plateTakes(guard, data.player.present, damage.faction, blow.periodic) && guard.effect !== null) {
+      resources.guard.set({ ...guard, plates: guard.plates - 1 })
+      // Untouchable for the usual moment after, so one flurry does not spend every plate.
+      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+      hitStop = Math.max(hitStop, guard.effect.hitStop)
+      commands.spawnIn(RunScope, Game.Command.spawn([PlateShatter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, effect: guard.effect, atk: guard.atk, charges: guard.charges }]))
       continue
     }
 

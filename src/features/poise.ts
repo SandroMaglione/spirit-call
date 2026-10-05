@@ -3,14 +3,16 @@
  * effects. Every enemy that can break (`EnemySpec.poise` above 0) has a
  * bar under its health, filled by the blows it takes (heavy ones more) and
  * by bursts on it and wall slams, and drained once it has taken
- * none for a while, so chipping from afar never breaks anything. A full bar
+ * none for a while, so chipping from afar never breaks anything; a cracked
+ * one fills faster from everything, and a Shatter (a cracked one burst)
+ * fills a large share at once (see `elementRules.cracked`). A full bar
  * breaks it: stunned for a while, its attack cut off, taking more damage
  * (see `Tuning.breaking`). It fills again only once it has recovered. An
  * armored enemy's armor is down while it is broken (see `ArmorSpec`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EnemyKind } from "../content/enemies.ts"
-import { Broke, Enemy, Game, Health, HitStop, Hit, Hurtbox, Poise, Position, Reaction, Stunned, Time, Tuning, ElementState } from "../schema.ts"
+import { Broke, ElementState, Enemy, Game, Health, HitStop, Hit, Hurtbox, Poise, Position, Reaction, Stunned, Time, Tuning } from "../schema.ts"
 
 /** The size of an enemy's break bar at `maxHealth`; 0 when it never breaks. */
 export const poiseOf = (tuning: TuningValue, kind: EnemyKind, maxHealth: number, champion = false): number =>
@@ -39,7 +41,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
   const dt = resources.time.get().dt
   const hits = events.hit.all()
   // Bursts and wall slams the team set off (an enemy's own on the player do not count), on the body they happened to.
-  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && reaction.state !== "cracked" && (reaction.kind === "burst" || reaction.kind === "slam"))
+  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && (reaction.kind === "burst" || reaction.kind === "slam"))
   for (const { entity, data } of queries.enemies.each()) {
     const kind = data.enemy.get().kind
     const bar = poiseOf(tuning, kind, data.health.get().max, data.enemy.get().champion)
@@ -55,15 +57,15 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
     let gained = 0
     for (const hit of hits) {
       if (hit.entity !== entity.id.value || hit.killed) continue
-      const cracked = data.state.get().current?.id === "cracked" ? tuning.elements.cracked.breakFactor : 1
-      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1) * cracked
+      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1)
     }
     const at = data.position.get()
     const reach = data.hurtbox.get().radius
     for (const reaction of reactions) {
       if ((reaction.at.x - at.x) ** 2 + (reaction.at.y - at.y) ** 2 > reach * reach) continue
-      gained += bar * (reaction.kind === "slam" ? rules.slam : rules.burst)
+      gained += bar * (reaction.kind === "slam" ? rules.slam : reaction.state === "cracked" ? tuning.elements.bursts.cracked.break : rules.burst)
     }
+    if (data.state.get().current?.id === "cracked") gained *= 1 + tuning.elements.cracked.breakBonus
     const quiet = gained > 0 ? 0 : poise.quiet + dt
     const drained = quiet > rules.quietSeconds ? bar * rules.drain * dt : 0
     const current = Math.max(0, Math.min(bar, poise.current + gained - drained))

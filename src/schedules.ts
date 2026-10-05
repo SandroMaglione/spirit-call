@@ -25,9 +25,10 @@ import { UpdateWards } from "./features/wards.ts"
 import { MendInTraining } from "./features/training.ts"
 import { KeepPracticeField } from "./features/practice.ts"
 import { BuildPoise } from "./features/poise.ts"
-import { CastRock, TickStoneGuard } from "./features/rock.ts"
 import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
+import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
+import { CastEarthrise, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { ClearRun, DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, ResetRun, TrackRun } from "./features/flow.ts"
@@ -92,7 +93,8 @@ const gameplay = Game.Schedule.when(
   TrackRun,
   TickCombatTimers,
   TickBench,
-  TickStoneGuard,
+  // A guard raised (or lost) before she moves: rooted while it rises.
+  RaiseGuards,
   ControlPlayer,
   // Casts (from skills, and from passives queued last step) are carried out
   // right after they are made, in the same step.
@@ -107,7 +109,8 @@ const gameplay = Game.Schedule.when(
   CastVortices,
   CastTotems,
   CastThunderclaps,
-  CastRock,
+  CastGuards,
+  CastEarthrise,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
@@ -121,17 +124,19 @@ const gameplay = Game.Schedule.when(
   SlamSwept,
   DecayKnockback,
   // Everything that hurts emits `Damage`: things in flight, hitboxes, then
-  // pools and states (pools set states; states burn), and last step's bursts
-  // and arcs.
+  // pools and states (pools set states; states burn), and last step's bursts,
+  // arcs, and shattered plates.
   MoveProjectiles,
   MoveDiscs,
   ResolveHitboxes,
   UpdateVortices,
   UpdateTotems,
+  UpdateRocks,
   UpdateGround,
   TickStates,
   ApplyStateBursts,
   ArcCharges,
+  ShatterPlates,
   ApplyDamage,
   MendInTraining,
   ProcessPendingSpawns,

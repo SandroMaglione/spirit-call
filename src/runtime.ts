@@ -5,6 +5,7 @@ import type { Tuning } from "./config/tuning.ts"
 import type { ChallengeId } from "./content/challenges.ts"
 import { defaultTeam } from "./features/build.ts"
 import { defaultChallenge } from "./features/challenges.ts"
+import { noGuard } from "./features/guard.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
@@ -26,6 +27,7 @@ export const initialResources = (
   Tuning: tuning,
   Team: team,
   TeamSwitch: { cooldown: 0 },
+  Guard: noGuard,
   Challenge: challenge,
   EnemyLevel: enemyLevel,
   TriggeredEffects: [],

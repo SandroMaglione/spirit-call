@@ -94,8 +94,8 @@ export type BodyLook =
 
 /**
  * In the arena each character shows as her spirit (art/spirits/). The
- * Swordsman is wind, Gunner is fire, Tidecaller is water, and Stormcaller
- * is thunder.
+ * Swordsman is wind, Gunner is fire, Tidecaller is water, Stormcaller is
+ * thunder, and Bastion is rock.
  * Their idle and movement clips follow the body; every spirit has the
  * same combat clips (art/spirits/tools/moves.py), each in its character's
  * style: a combo's blows (the last one bigger), the charged move, the
@@ -161,7 +161,7 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   stonekeeper: {
     kind: "model", model: "rockSpirit", widthFactor: 1.5,
     heightFactor: view.bodyHeightFactor, grounded: true,
-    moments: { ...spiritMoments(3, "stoneGuard", "stoneRise"), run: { clip: "Run", distance: 115 } },
+    moments: { ...spiritMoments(3, "stoneRise", "stoneGuard"), run: { clip: "Run", distance: 115 } },
     eyes: spiritEyes,
     drops: { rate: 12, colors: [0xbfa181, 0x8e7660, 0xffd17e], size: 1.5, kind: "wisp" }
   },

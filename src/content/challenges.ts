@@ -38,8 +38,8 @@ export type Objective =
    */
   | { readonly kind: "practice"; readonly most: number; readonly fewest: number; readonly respawn: number }
 
-/** The elements an elite enemy can carry (see `Tuning.elites`). */
-export type EliteElement = Exclude<ElementId, "wind">
+/** The elements an elite enemy can carry (see `Tuning.elites`): wind and rock leave nothing behind, so they make no elites. */
+export type EliteElement = Exclude<ElementId, "wind" | "rock">
 
 /**
  * One slot of a wave: an enemy kind (spawning its `group`), or an elite of
@@ -404,6 +404,26 @@ export const challenges = {
         [elite("chaser", "thunder"), "sniper", "sniper", "shooter"],
         ["guardian", "guardian", elite("sniper", "thunder"), "swarmer"],
         [elite("sniper", "thunder"), elite("sniper", "thunder"), elite("shooter", "water"), "chaser", "chaser"]
+      ],
+      endless: null
+    }
+  }),
+  /** The heaviest foes, wave on wave: brutes, guardians, and juggernauts that are best broken before they fall. */
+  heavyGround: challenge({
+    name: "Heavy Ground",
+    description: "Eight waves of the heaviest foes in the citadel: brutes, guardians, and juggernauts, best broken before they fall.",
+    objective: clearWaves(),
+    arena: "citadel",
+    waves: {
+      scripted: [
+        ["brute", "chaser", "chaser"],
+        ["guardian", "shooter", "swarmer"],
+        ["juggernaut", "chaser", "chaser"],
+        ["brute", "guardian", "swarmer", "swarmer"],
+        [elite("guardian", "water"), "brute", "shooter"],
+        ["juggernaut", "guardian", "chaser", "chaser"],
+        [elite("brute", "fire"), "juggernaut", "swarmer", "swarmer"],
+        [elite("juggernaut", "thunder"), elite("guardian", "fire"), "brute", "chaser"]
       ],
       endless: null
     }

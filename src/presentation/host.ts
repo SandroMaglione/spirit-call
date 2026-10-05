@@ -7,7 +7,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
 import { DropTrail } from "./drop-trail.ts"
-import { RockEffects } from "./rock-effects.ts"
+import { Stones } from "./stones.ts"
 import { Fx } from "./fx.ts"
 import { trackPartyTaps } from "./party-taps.ts"
 import { readSafeArea } from "./safe-area.ts"
@@ -246,7 +246,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     projected,
     fx,
     drops: new DropTrail(scene),
-    rocks: new RockEffects(scene),
+    stones: new Stones(scene),
     trails: new SlashTrails(trails),
     reticle,
     edges,
@@ -305,7 +305,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       host.drops.dispose()
-      host.rocks.dispose()
+      host.stones.dispose()
       assets.dispose()
       dressing?.dressing.dispose()
       for (const source of models.values()) disposeModel(source)

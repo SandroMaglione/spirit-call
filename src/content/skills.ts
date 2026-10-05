@@ -159,22 +159,49 @@ export interface ThunderclapEffect extends EffectBase {
   readonly breakFill: number
 }
 
-/** Three orbiting stones: each absorbs one direct enemy blow, until the guard expires. */
-export interface StoneGuardEffect extends EffectBase {
-  readonly kind: "stoneGuard"
-  readonly seconds: number
-  readonly stones: number
-}
-
-/** Three separate impacts rising ahead of the caster, with one hit per pillar. */
-export interface StoneRiseEffect extends EffectBase {
-  readonly kind: "stoneRise"
-  readonly spacing: number
+/**
+ * A guard raised over `raise` seconds, the caster rooted meanwhile (she
+ * cannot run or attack; switched out or dashing, it is lost). As she casts
+ * it a ring of stone bursts out around her (`shove`: its blow, carrying
+ * the effect's element, on the other side within `radius`, thrown out),
+ * clearing room to raise it in. Then the team
+ * holds `plates` stone plates (casting again fills them up to it), worn by
+ * whoever is on the field. A plate takes one enemy blow whole (burns and
+ * bursts pass through), then shatters: its blow (`power`, its element,
+ * `knockback`) lands on the other side within `radius` of her, and the
+ * attacker's break bar fills by `breakFill` of it.
+ */
+export interface GuardEffect extends EffectBase {
+  readonly kind: "guard"
+  readonly raise: number
+  readonly plates: number
   readonly radius: number
-  readonly active: number
+  readonly breakFill: number
+  readonly shove: { readonly radius: number; readonly power: number; readonly knockback: number }
 }
 
-export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | StoneGuardEffect | StoneRiseEffect
+/**
+ * Rocks erupting around the caster: under the `rocks` toughest bodies of
+ * the other side within `radius` of her (champions first, then elites, then
+ * the most health, then the nearest), each followed by its crack for
+ * `warning` seconds, one after the other `interval` apart; rocks left over
+ * rise on a ring `ring` around her. Each strikes the bodies within `size`
+ * of it (its blow, thrown away from it), stuns them `stun` seconds, and
+ * fills `breakFill` of their break bars.
+ */
+export interface EarthriseEffect extends EffectBase {
+  readonly kind: "earthrise"
+  readonly radius: number
+  readonly rocks: number
+  readonly warning: number
+  readonly interval: number
+  readonly size: number
+  readonly ring: number
+  readonly stun: number
+  readonly breakFill: number
+}
+
+export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -205,24 +232,12 @@ export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kin
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
 export const totem = (spec: Omit<TotemEffect, "kind">): TotemEffect => ({ kind: "totem", ...spec })
 export const thunderclap = (spec: Omit<ThunderclapEffect, "kind">): ThunderclapEffect => ({ kind: "thunderclap", ...spec })
+export const guard = (spec: Omit<GuardEffect, "kind">): GuardEffect => ({ kind: "guard", ...spec })
+export const earthrise = (spec: Omit<EarthriseEffect, "kind">): EarthriseEffect => ({ kind: "earthrise", ...spec })
 const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<Effect> => spec
 
 /** Every skill, by id. */
 export const skills = {
-  stoneGuard: skill({
-    name: "Stone Guard",
-    cooldown: 14,
-    energy: 0,
-    invulnerability: 0,
-    effect: { kind: "stoneGuard", seconds: 8, stones: 3, power: 0, element: null, knockback: 0, hitStop: 0, heavy: false } as StoneGuardEffect
-  }),
-  stoneRise: skill({
-    name: "Earthrise",
-    cooldown: 10,
-    energy: 100,
-    invulnerability: .5,
-    effect: { kind: "stoneRise", spacing: 110, radius: 65, active: .12, power: 40, element: "rock", knockback: 500, hitStop: .08, heavy: true } as StoneRiseEffect
-  }),
   /**
    * The sword's special (id `bladeWave`, from when it was a cut): a gust
    * blasting out all around her, driving everything it catches far back:
@@ -328,6 +343,43 @@ export const skills = {
     energy: 100,
     invulnerability: 0.5,
     effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1.5, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
+  }),
+  /**
+   * Bastion's ultimate (id `stoneGuard`, from her first kit's special): a ring of stone bursts out around her, throwing
+   * back and cracking what crowds her, and she plants her feet (untouchable)
+   * while stone gathers; then the team wears stone plates. Each takes a blow
+   * whole and shatters outward, cracking and throwing back what is around
+   * and filling the attacker's break bar.
+   */
+  stoneGuard: skill({
+    name: "Stoneguard",
+    cooldown: 10,
+    energy: 100,
+    invulnerability: 0.9,
+    effect: guard({
+      raise: 0.9,
+      plates: 4,
+      radius: 150,
+      breakFill: 0.3,
+      shove: { radius: 190, power: 40, knockback: 1100 },
+      power: 30,
+      element: "rock",
+      knockback: 900,
+      hitStop: 0.06,
+      heavy: true
+    })
+  }),
+  /**
+   * Bastion's special (id `stoneRise`): three rocks erupt from the ground around her, under
+   * the toughest enemies near her, each after its crack: they stun what
+   * they catch a moment, crack it, and fill its break bar.
+   */
+  stoneRise: skill({
+    name: "Earthrise",
+    cooldown: 8,
+    energy: 0,
+    invulnerability: 0,
+    effect: earthrise({ radius: 300, rocks: 3, warning: 0.35, interval: 0.1, size: 58, ring: 120, stun: 0.9, breakFill: 0.25, power: 30, element: "rock", knockback: 380, hitStop: 0.05, heavy: false })
   })
 }
 

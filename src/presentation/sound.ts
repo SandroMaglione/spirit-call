@@ -57,6 +57,9 @@ export type SoundName =
   | "disc"
   | "zap"
   | "mend"
+  | "crack"
+  | "shatter"
+  | "quake"
 
 export interface PlayOptions {
   /** Loudness factor, 1 by default. */
@@ -345,6 +348,29 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
   mend: [{ reverb: 0.4, interval: 0.08 }, (v) => {
     tone(v, "sine", 880, 1320, 0.22, 0.12)
     tone(v, "triangle", 1320, 1760, 0.25, 0.06, 0.05)
+  }],
+  // Stone cracking: a dry snap and a short grind.
+  crack: [{ reverb: 0.15, interval: 0.06 }, (v) => {
+    click(v, 0.5)
+    crunch(v, 2600, 900, 0.06, 0.35)
+    noise(v, "bandpass", 1400, 600, 0.12, 0.16, 2)
+  }],
+  // Stone shattering: a deep crack, then gravel scattering.
+  shatter: [{ reverb: 0.3, heavy: true, interval: 0.06 }, (v) => {
+    click(v, 0.6)
+    tone(v, "sine", 150, 40, 0.3, 0.8, 0, 0.002)
+    crunch(v, 1900, 300, 0.18, 0.55)
+    noise(v, "bandpass", 3600, 900, 0.32, 0.22, 1.5, 0.04)
+    noise(v, "highpass", 6000, 3000, 0.22, 0.08, 0.8, 0.08)
+  }],
+  // The ground erupting: a deep rumble under a crack, gravel raining after.
+  quake: [{ reverb: 0.45, heavy: true, interval: 0.05 }, (v) => {
+    click(v, 0.5)
+    tone(v, "sine", 85, 28, 0.55, 1)
+    tone(v, "triangle", 60, 30, 0.45, 0.35, 0.01)
+    crunch(v, 1300, 200, 0.25, 0.6)
+    noise(v, "lowpass", 900, 80, 0.6, 0.45)
+    noise(v, "bandpass", 3000, 1200, 0.35, 0.12, 1.4, 0.12)
   }],
   // A new wave: two rising notes.
   waveStart: [{ reverb: 0.4 }, (v) => {

@@ -77,16 +77,6 @@ export const characters = {
     class: "disc",
     skills: { special: "tidalWave", ultimate: "tide" }
   }),
-  /** Rock, Disc: a slow, sturdy defender whose ground impacts help break enemies. */
-  stonekeeper: character({
-    name: "Stonekeeper",
-    stats: { hp: 75, atk: 100, def: 20, speed: 235 },
-    radius: 16,
-    hurtboxRadius: 11,
-    element: "rock",
-    class: "disc",
-    skills: { special: "stoneGuard", ultimate: "stoneRise" }
-  }),
   /** Thunder, Staff: support at middle range; a totem that zaps enemies or heals whoever stands by it, and a thunderclap that heals the team. */
   stormcaller: character({
     name: "Stormcaller",
@@ -96,6 +86,16 @@ export const characters = {
     element: "thunder",
     class: "staff",
     skills: { special: "sparkTotem", ultimate: "thunderclap" }
+  }),
+  /** Rock, Disc: the sturdiest and slowest; cracks the toughest with an Earthrise, and guards the team with stone plates. */
+  stonekeeper: character({
+    name: "Bastion",
+    stats: { hp: 84, atk: 100, def: 26, speed: 280 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "rock",
+    class: "disc",
+    skills: { special: "stoneRise", ultimate: "stoneGuard" }
   })
 }
 

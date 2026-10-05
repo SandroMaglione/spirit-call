@@ -15,7 +15,7 @@
 /** The elements in play. */
 export type ElementId = "fire" | "water" | "wind" | "thunder" | "rock"
 
-/** The state each element leaves on a body: fire burns, water soaks, thunder charges, wind sweeps. */
+/** The state each element leaves on a body: fire burns, water soaks, thunder charges, wind sweeps, rock cracks. */
 export type StateId = "burning" | "soaked" | "charged" | "swept" | "cracked"
 
 /**
@@ -46,6 +46,7 @@ export const elements: { readonly [Id in ElementId]: ElementSpec } = {
   wind: { name: "Wind", state: "swept" },
   /** Strikes at once and charges: blows on a charged body arc on to the next. For spread-out groups, and enemies at range. */
   thunder: { name: "Thunder", state: "charged" },
+  /** Cracks: a cracked body's break bar fills faster, and shatters a large share at once. For tanky enemies. */
   rock: { name: "Rock", state: "cracked" }
 }
 
@@ -75,8 +76,6 @@ export type Affinities = { readonly [Element in ElementId]?: Affinity }
  * within its `radius` (edge to edge), the struck body first.
  */
 export const elementRules = {
-  /** Cracked enemies build their break bar faster from landed blows. */
-  cracked: { seconds: 4, breakFactor: 1.6 },
   /** Burning: damage over time, a percentage of the ATK of whoever set it, per second; it spreads to bodies in no state it touches. */
   burning: {
     seconds: 3.5,
@@ -119,6 +118,14 @@ export const elementRules = {
     stunSeconds: 1.4
   },
   /**
+   * Cracked: every blow and burst fills its break bar `breakBonus` more
+   * (0.5: half as much again). On the team it does nothing until it bursts.
+   */
+  cracked: {
+    seconds: 4,
+    breakBonus: 0.5
+  },
+  /**
    * Thunder's strikes (the skills that strike): a strike jumps on from the
    * body it hits to the nearest body of the same side within `jumpRange`
    * (edge to edge), as many times as its skill allows, never twice to the
@@ -147,7 +154,12 @@ export const elementRules = {
      * seconds, each taking `power` percent of the ATK of whoever swept it.
      */
     swept: { radius: 130, knockback: 1100, stun: 0.6, power: 10 },
-    cracked: { radius: 100, breakFill: .45, power: 8 }
+    /**
+     * Shatter: the struck body's break bar fills by `break` of it at once
+     * (instead of `Tuning.breaking.burst`), and it takes `power` percent of
+     * the ATK of whoever cracked it, `share` of that to the bodies around.
+     */
+    cracked: { radius: 110, power: 24, share: 0.5, break: 0.5 }
   },
   /** An enemy's affinity scales an element's damage and how long its state lasts (immune: no state, damage as it is). */
   affinity: {

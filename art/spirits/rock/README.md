@@ -9,8 +9,8 @@ and `rock-spirit.glb` is the game and inspection export. It has
 textures, cameras or lights, and ten object-animation clips.
 
 The accepted rest shape is preserved from commit `b1677bf`. It now drives
-Stonekeeper, a Rock character of the Disc class. Her speed is 235 against
-the roster's 290–305. Her broad body and small rear heel stay grounded.
+Bastion (id `stonekeeper`), a Rock character of the Disc class, the
+slowest of the roster. Her broad body and small rear heel stay grounded.
 
 ## Construction
 
@@ -150,20 +150,15 @@ Cast braces while summoning, and Ultimate presses down immediately then
 settles. All clips return to their spot; the simulation owns movement and
 hits. The grounded look bypasses the floating spirits' extra pivot sway.
 
-Stone Guard summons three protective stones for eight seconds. Each stops
-one direct enemy blow, including its state and push, then breaks into
-debris. Periodic ground damage bypasses it. Protection belongs to its
-owner and expires on the bench. Earthrise raises three stones down her aim
-line (110 world units apart, radius 65 each), dealing Rock impacts and
-applying Cracked. Cracked raises break buildup by 1.6 for four seconds;
-another element triggers Shatter, filling 45% of nearby break bars. Rock
-immunity excludes the state and Shatter control. The skill has a planted
-slam, impact rings, dust, chips, sound and camera feedback. The effects are
-one bounded instance batch and clear on restart or leaving the arena.
+Her kit (Earthrise as her special, Stoneguard as her ultimate) and rock's
+rules are in `docs/elements.md` and `src/content/skills.ts`; the stone they
+raise is drawn in code (`src/presentation/stones.ts`). Her special plays
+the Cast clip, her ultimate the Ultimate clip's press down. The first kit
+recorded in the renders below (three stones down her aim, a timed guard)
+was replaced; its skill, quest and discovery ids carry the new ones.
 
-The character is unlocked by the new `A Sturdy Friend` secondary quest
-after `The Brute`, so completing an older quest before this addition does
-not miss its unlock. Character, skill, quest and discovery ids are permanent.
+She is unlocked by the `Heavy Ground` secondary quest (id `stoneTrial`)
+after `The Brute`. Character, skill, quest and discovery ids are permanent.
 
 Open the game with
 `/?play&challenge=trainingGround&team=stonekeeper,tidecaller,gunner&character=stonekeeper&aspect=riptide`.

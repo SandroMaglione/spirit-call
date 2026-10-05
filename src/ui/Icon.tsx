@@ -39,5 +39,5 @@ export type IconName = keyof typeof paths | CurrencyId | EmblemKind
 export const Icon = ({ name }: { readonly name: IconName }) => {
   if (name === "gold" || name === "crystals") return <CurrencyIcon currency={name} />
   if (name === "xp" || name === "wind" || name === "water" || name === "fire" || name === "thunder" || name === "rock") return <EmblemIcon kind={name} />
-  return <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={name === "more" ? 4 : 2} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>
+  return <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={name === "more" ? 4 : 1.8} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>
 }

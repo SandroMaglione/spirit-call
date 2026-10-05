@@ -39,7 +39,11 @@ walls) and gauntlets (very close and fast, around the dash).
 
 One character per class and element, unless her role is clearly
 different (a second wind Blade who supports the team is a new way to play;
-a second wind Blade who fights the same is not).
+a second wind Blade who fights the same is not). Two characters may share a
+class in different elements when their roles differ: the Tidecaller
+(water) and Bastion (rock) both throw discs, one to slow and scatter, the
+other to guard the team and break the toughest enemies, and the Disc
+aspects go to whichever of them the team gives them to.
 
 ## Aspects
 
