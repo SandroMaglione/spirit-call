@@ -102,16 +102,6 @@ export const Extra = ({ store, actions, nav, mode, team, aspects }: {
   return (
     <div class="screen quests extra">
       <div class="page-intro"><h1>Extras</h1></div>
-      <div class="quests__list">
-        <div class="group">
-          {(Object.keys(modes) as Array<Mode>).map((id) => (
-            <button key={id} type="button" class={`entry${id === mode ? " is-selected" : ""}`} aria-pressed={id === mode} onClick={() => nav.replace({ kind: "extra", mode: id })}>
-              <span class="entry__number"><Icon name={id === "training" ? "practice" : "challenge"} /></span>
-              <span class="entry__name">{modes[id].name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
       {brief()}
       {information.value && <Dialog title={modes[mode].name} close={() => (information.value = false)}><p>{tuning.challenges[mode === "training" ? "trainingGround" : "practice"].description}</p><p>No account progress or rewards are recorded.</p></Dialog>}
     </div>

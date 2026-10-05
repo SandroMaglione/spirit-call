@@ -23,7 +23,7 @@ export const Dialog = ({ title, close, children, variant = "panel" }: { readonly
   }, [])
   return <div class="dialog-backdrop" data-variant={variant} onClick={(event) => { if (event.target === event.currentTarget) close() }}>
     <div class="dialog" ref={ref} role="dialog" aria-modal="true" aria-label={title}>
-      <header><h2>{title}</h2><button type="button" class="icon-button" aria-label="Close dialog" onClick={close}><Icon name="close" /></button></header>
+      <header><button type="button" class="icon-button" aria-label="Back" onClick={close}><Icon name="back" /></button><h2>{title}</h2></header>
       {children}
     </div>
   </div>

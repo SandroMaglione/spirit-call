@@ -50,23 +50,22 @@ export const TopBar = ({ nav, title, children }: { readonly nav: Nav; readonly t
 )
 
 /** The currencies the account holds. */
-export const Wallet = ({ store }: { readonly store: UiStore }) => {
+export const Wallet = ({ store, currencies }: { readonly store: UiStore; readonly currencies?: ReadonlyArray<CurrencyId> }) => {
   const tuning = store.tuning.value
   const wallet = store.account.value.wallet
   return (
     <div class="wallet">
-      {ids(tuning.currencies).map((id: CurrencyId) => (
-        <span key={id} class={`wallet__item currency--${id}`} title={`${tuning.currencies[id].name}: for ${tuning.currencies[id].use}`}>
-          <i />
-          <span class="wallet__name">{tuning.currencies[id].name}</span>
-          {(wallet[id] ?? 0).toLocaleString("en-US")}
+      {(currencies ?? ids(tuning.currencies)).map((id: CurrencyId) => (
+        <span key={id} class={`wallet__item currency--${id}`} aria-label={`${tuning.currencies[id].name}: ${wallet[id] ?? 0}`} title={`${tuning.currencies[id].name}: for ${tuning.currencies[id].use}`}>
+          <Icon name={id} />
+          <span class="wallet__amount">{(wallet[id] ?? 0).toLocaleString("en-US")}</span>
         </span>
       ))}
     </div>
   )
 }
 
-/** An element's badge (its initial on its color); nothing for no element. */
+/** Element names use the same faceted symbols as skills and enemy details. */
 export const ElementBadge = ({ element }: { readonly element: ElementId | null }) =>
   element === null ? null : (
     <span class="element" data-element={element} title={elements[element].name}>
