@@ -148,8 +148,8 @@ is left, and keep text off it.
   the party (an aspect is on one member of a party; see `aspects.md`). The
   party screen links to it.
 - **The party's roster opens beside a place** when it is tapped (a panel of
-  cards that scrolls, since the roster will grow), and the places make room
-  for it; a tap on a card puts her there and closes it.
+  cards that scrolls, since the roster will grow), over the left of the
+  screen; a tap on a card puts her there and closes it.
 - **Leading**: a tap on a party face on the home leads the next run with
   her, without changing the party's order.
 - **Locked things stay visible** and say where they come from, from shipped

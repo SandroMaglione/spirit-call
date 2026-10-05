@@ -1,6 +1,6 @@
 /**
  * The party: three places, in the order they fight in (1 starts). A tap on
- * a place opens the roster beside it, as cards (it scrolls: the roster will
+ * a place opens the roster over the left of the screen, as cards (it scrolls: the roster will
  * grow); a tap on a card puts her there (one already in the party swaps
  * places). Nothing here needs confirming, the party is kept as it is set up.
  */
@@ -33,7 +33,7 @@ export const Team = ({ store, nav, draft, play, enter }: {
     const aspect = aspects[member]
     return aspect === undefined ? tuning.classes[tuning.characters[member].class].plain.name : aspectOf(tuning.aspects, aspect).name
   }
-  return <Screen name={`lineup${picking.value ? " is-picking" : ""}`}>
+  return <Screen name="lineup">
     <TopBar icon="team" title="Party" close={nav.back} />
     <div class="lineup__places">{Array.from({ length: teamSize }, (_, place) => {
       const member = team[place]
