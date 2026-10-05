@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111d27">
+  <title>Rock Spirit · Static model review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #e9e2d6; background: #111d27; font: 15px/1.5 system-ui, sans-serif; }
+    main { display: grid; grid-template-columns: minmax(0, 1fr) 310px; height: 100dvh; }
+    #view { position: relative; min-width: 0; min-height: 0; background: #111d27; }
+    canvas { display: block; touch-action: none; }
+    #hint { position: absolute; bottom: 16px; left: 20px; pointer-events: none; color: #b2bac1; font-size: 12px; }
+    aside { padding: 26px 22px; border-left: 1px solid #31404d; overflow: auto; }
+    h1 { font-size: 25px; font-weight: 650; margin: 0 0 4px; }
+    p { margin: 8px 0 20px; color: #bfc5c9; }
+    .eyebrow { color: #deb78c; letter-spacing: .13em; text-transform: uppercase; font-size: 11px; margin-bottom: 8px; }
+    h2 { font-size: 13px; font-weight: 600; margin: 22px 0 8px; color: #cbd1d5; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+    button, a.download { border: 1px solid #43515e; border-radius: 6px; padding: 8px 11px; background: #23313c; color: #eee8dd; font: inherit; font-size: 13px; cursor: pointer; }
+    button:hover, button[aria-pressed="true"] { background: #c5a78f; color: #1a2228; border-color: #c5a78f; }
+    label { display: block; margin: 10px 0; cursor: pointer; }
+    input { accent-color: #dabb91; }
+    a { color: #e3c399; text-underline-offset: 3px; }
+    a.download { display: inline-block; text-decoration: none; margin: 6px 3px 0 0; }
+    #status { color: #dec4a5; font-size: 12px; }
+    #error { color: #ffaf94; white-space: pre-wrap; }
+    .note { font-size: 12px; }
+    @media (max-width: 700px) {
+      main { height: 100dvh; grid-template-columns: 1fr; grid-template-rows: 57dvh minmax(0, 1fr); }
+      #view { min-height: 0; }
+      aside { border-left: 0; border-top: 1px solid #31404d; padding: 18px; }
+      h2 { margin-top: 16px; }
+      h1 { font-size: 22px; }
+      p { margin-bottom: 12px; }
+      button { min-height: 42px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div id="view" aria-label="Interactive Rock Spirit model">
+    <div id="hint">Drag to orbit · pinch or scroll to zoom</div>
+  </div>
+  <aside>
+    <div class="eyebrow">Elemental spirits / model review</div>
+    <h1>Rock Spirit</h1>
+    <p>Static rest model from the supplied sheet. A recessed face, amber eyes, grounded feet, and floating stone.</p>
+    <div id="status" role="status">Loading model…</div>
+    <h2>View</h2>
+    <div class="buttons">
+      <button data-view="hero" aria-pressed="true">Hero</button>
+      <button data-view="front">Front</button>
+      <button data-view="back">Back</button>
+      <button data-view="left">Left</button>
+      <button data-view="right">Right</button>
+      <button data-view="top">Top</button>
+      <button data-view="bottom">Bottom</button>
+      <button data-view="game">Game camera</button>
+    </div>
+    <h2>Inspect details</h2>
+    <div class="buttons">
+      <button data-detail="face">Face &amp; eyes</button>
+      <button data-detail="feet">Feet</button>
+      <button data-detail="rocks">Floating rocks</button>
+      <button data-detail="all">Whole model</button>
+    </div>
+    <label><input id="wireframe" type="checkbox"> Wireframe</label>
+    <label><input id="small" type="checkbox"> Gameplay size, 32 px high</label>
+    <label><input id="floor" type="checkbox" checked> Ground &amp; shadows</label>
+    <h2>Reference &amp; source</h2>
+    <p class="note"><a href="./reference/sheet.png" target="_blank" rel="noopener">Open the model sheet</a> · <a href="./renders/overlay-all.png" target="_blank" rel="noopener">Silhouette overlays</a></p>
+    <a class="download" href="./rock-spirit.glb" download>Download GLB</a>
+    <a class="download" href="./rock-spirit.blend" download>Blender source</a>
+    <p class="note">Turnaround contours set the proportions. The sheet's printed dimensions conflict with those drawings. No animation has been added.</p>
+    <pre id="error" role="alert"></pre>
+  </aside>
+</main>
+<script type="module" src="./viewer.mjs"></script>
+</body>
+</html>

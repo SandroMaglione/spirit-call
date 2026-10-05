@@ -1,0 +1,42 @@
+{
+  "status": "static model review; no character kit or animation",
+  "triangles": 800,
+  "materials": [
+    "Amber eyes",
+    "Dark face cavity",
+    "Stone facets"
+  ],
+  "objects": [
+    "Eye.L",
+    "Eye.R",
+    "FaceInset",
+    "Float.L",
+    "Float.R",
+    "Foot.L",
+    "Foot.R",
+    "RockSpirit",
+    "TopRock"
+  ],
+  "bounds_m": [
+    [
+      -0.26894038915634155,
+      0.26894038915634155
+    ],
+    [
+      -0.19503311812877655,
+      0.19374172389507294
+    ],
+    [
+      0.0,
+      0.6221059560775757
+    ]
+  ],
+  "height_m": 0.6221059560775757,
+  "height_basis": "ground origin to highest rest mesh vertex including floating cap",
+  "animations": 0,
+  "skeletons": 0,
+  "bytes": 87236,
+  "source_sha256": "9f25e3031da868f15360efabd689c393c6323aea2eb67db5a2ba34d82034558d",
+  "glb_sha256": "43be2a072d02c2c420f45fe502ec00559fb1cd06502c92b3d7e1655a303ad707",
+  "clips": {}
+}
