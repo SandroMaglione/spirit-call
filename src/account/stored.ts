@@ -133,9 +133,23 @@ export const StoredAccountV6 = Schema.Struct({
   selection: Schema.Struct({ team: Schema.Array(Schema.String), aspects: Schema.Record(Schema.String, Schema.String), play: Play })
 })
 
+const QuestProgressV7 = Schema.Struct({ ...QuestProgress.fields, stars: Schema.Array(Schema.Number) })
+
+/**
+ * Version 7: each quest's stars (by their place in the quest), and how many
+ * of each group's chests are open (see docs/quests.md).
+ */
+export const StoredAccountV7 = Schema.Struct({
+  ...StoredAccountV6.fields,
+  version: Schema.Literal(7),
+  quests: Schema.Record(Schema.String, QuestProgressV7),
+  /** By star group (a chapter id, or "secondary"). */
+  chests: Schema.Record(Schema.String, Schema.Number)
+})
+
 /** Any account version ever saved. */
-export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4, StoredAccountV5, StoredAccountV6])
-export const StoredAccountLatest = StoredAccountV6
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4, StoredAccountV5, StoredAccountV6, StoredAccountV7])
+export const StoredAccountLatest = StoredAccountV7
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
@@ -176,9 +190,14 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
     case 5: {
       // Weapons are gone, with their levels and what was equipped: characters fight with their class's plain aspect.
       const { equipment: _dropped, ...rest } = stored
-      return { ...rest, version: 6, owned: { characters: stored.owned.characters, aspects: {} }, selection: { ...stored.selection, aspects: {} } }
+      return migrateAccount({ ...rest, version: 6, owned: { characters: stored.owned.characters, aspects: {} }, selection: { ...stored.selection, aspects: {} } })
     }
-    case 6:
+    case 6: {
+      // Stars came: a quest already cleared has its first star (clearing it), and the chests open as the account loads.
+      const quests = Object.fromEntries(Object.entries(stored.quests).map(([id, progress]) => [id, { ...progress, stars: progress.firstClearedAt === null ? [] : [0] }]))
+      return { ...stored, version: 7, quests, chests: {} }
+    }
+    case 7:
       return stored
   }
 }

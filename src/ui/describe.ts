@@ -194,8 +194,6 @@ export const describePlay = (tuning: Tuning, play: Play): string =>
 /** Why something is locked, in a few words. */
 export const describeLock = (tuning: Tuning, lock: Lock): string => {
   switch (lock.kind) {
-    case "level":
-      return `Needs account Lv ${lock.level}`
     case "after":
       return `Clear ${tuning.quests[lock.quest].name} first`
     case "tier":

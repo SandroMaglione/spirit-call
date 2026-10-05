@@ -74,7 +74,7 @@ describe("account store", () => {
     expect(result.account.id).toBe("account-1")
     expect(Object.keys(result.account.owned.characters)).toEqual(newAccount.characters)
     expect(result.notes).toEqual([])
-    expect(result.saved).toMatchObject({ version: 6, id: "account-1", selection: starterSelection })
+    expect(result.saved).toMatchObject({ version: 7, id: "account-1", selection: starterSelection })
   })
 
   it("keeps changes across visits", async () => {
@@ -109,7 +109,7 @@ describe("account store", () => {
         return { before, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.before).toEqual({ runs: 0, clears: 0, kills: 0, secondsPlayed: 0 })
-    expect(result.saved.version).toBe(6)
+    expect(result.saved.version).toBe(7)
     expect(result.saved.totals).toEqual({ runs: 1, clears: 1, kills: 9, secondsPlayed: 60 })
   })
 
@@ -123,7 +123,7 @@ describe("account store", () => {
       }))
     expect(result.account.selection).toEqual(starterSelection)
     expect(result.notes).toEqual([])
-    expect(result.saved).toMatchObject({ version: 6, selection: starterSelection })
+    expect(result.saved).toMatchObject({ version: 7, selection: starterSelection })
   })
 
   it("opens a save from before experience was gold (version 3), keeping the gold each character was trained with", async () => {
@@ -139,7 +139,7 @@ describe("account store", () => {
     // 120 experience was bought at 2 gold each.
     expect(result.account.owned.characters.swordsman).toEqual({ unlockedAt: 5, experience: 240 })
     expect(result.account.discoveries).toEqual({})
-    expect(result.saved).toMatchObject({ version: 6, discoveries: {} })
+    expect(result.saved).toMatchObject({ version: 7, discoveries: {} })
   })
 
   it("opens a save from before kits were fixed (version 4): skills are no longer owned or equipped, and nothing is reported lost", async () => {
@@ -150,7 +150,7 @@ describe("account store", () => {
         return { account: yield* store.get, notes: store.notes, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.notes).toEqual([])
-    expect(result.saved.version).toBe(6)
+    expect(result.saved.version).toBe(7)
     expect(result.saved.owned).not.toHaveProperty("skills")
   })
 
@@ -164,9 +164,26 @@ describe("account store", () => {
     expect(result.notes).toEqual([])
     expect(result.account.owned.aspects).toEqual({})
     expect(result.account.selection).toEqual(starterSelection)
-    expect(result.saved.version).toBe(6)
+    expect(result.saved.version).toBe(7)
     expect(result.saved).not.toHaveProperty("equipment")
     expect(result.saved.owned).not.toHaveProperty("weapons")
+  })
+
+  it("opens a save from before stars (version 6): each quest cleared has its first star, and chests those reach open", async () => {
+    const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
+    const latest = JSON.parse(fresh!)
+    const cleared = { attempts: 1, clears: 1, firstClearedAt: 5 }
+    const v6 = JSON.stringify({ ...latest, version: 6, chests: undefined, quests: { theSwarm: cleared, crossfire: cleared, theBrute: cleared, outposts: { attempts: 1, clears: 0, firstClearedAt: null } } })
+    const result = await withAccount({ [accountKey]: v6 }, (store, kv) =>
+      Effect.gen(function*() {
+        return { account: yield* store.get, notes: store.notes, saved: yield* savedJson(kv, accountKey) }
+      }))
+    // Only the characters those clears unlock are new: nothing is lost.
+    expect(result.notes.filter((note) => note.includes("no longer exist"))).toEqual([])
+    expect(result.account.quests.theSwarm?.stars).toEqual([0])
+    expect(result.account.quests.outposts?.stars).toEqual([])
+    expect(result.account.chests).toEqual({ one: 1 })
+    expect(result.saved.version).toBe(7)
   })
 
   it("keeps the characters of the saved team it still owns, in order, saying when some are gone", async () => {
@@ -185,7 +202,7 @@ describe("account store", () => {
         const account = yield* store.get
         yield* kv.set(accountKey, JSON.stringify({
           ...JSON.parse((yield* kv.get(accountKey))!),
-          experience: 1e6,
+          quests: { crossfire: { attempts: 1, clears: 1, firstClearedAt: 4, stars: [0] } },
           hardcore: { gauntlet: { "1": { attempts: 2, clears: 1, firstClearedAt: 5, rewardedPeriod: 3 }, "9": { attempts: 1, clears: 0, firstClearedAt: null, rewardedPeriod: null } }, unknownTrack: {} },
           selection: { team: account.selection.team, aspects: {}, play: { kind: "tier", track: "gauntlet", tier: 2 } }
         }))
@@ -194,8 +211,8 @@ describe("account store", () => {
     const result = await withAccount({ [accountKey]: saved! }, (store) => Effect.map(store.get, (account) => ({ account, notes: store.notes })))
     expect(result.account.hardcore).toEqual({ gauntlet: { 1: { attempts: 2, clears: 1, firstClearedAt: 5, rewardedPeriod: 3 } } })
     expect(result.account.selection.play).toEqual({ kind: "tier", track: "gauntlet", tier: 2 })
-    expect(result.notes[0]).toContain("hardcore track unknownTrack")
-    expect(result.notes[0]).toContain("Gauntlet tier 9")
+    expect(result.notes.join(" ")).toContain("hardcore track unknownTrack")
+    expect(result.notes.join(" ")).toContain("Gauntlet tier 9")
   })
 
   it("keeps the discoveries made, dropping ones that no longer exist", async () => {

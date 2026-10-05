@@ -30,7 +30,7 @@ const cleared = (store: UiStore, play: Play): boolean => {
 const RowEnd = ({ store, play }: { readonly store: UiStore; readonly play: Play }) => {
   const tuning = store.tuning.value, lock = playLock(tuning, store.account.value, play)
   if (cleared(store, play)) return <span class="done"><Icon name="check" /></span>
-  if (lock !== null) return <><Icon name="lock" />{lock.kind === "level" ? `Account Lv ${lock.level}` : ""}</>
+  if (lock !== null) return <Icon name="lock" />
   return <>Lv {encounterOf(tuning, play).enemyLevel}</>
 }
 
@@ -61,7 +61,7 @@ const TrackList = ({ store, play, now }: { readonly store: UiStore; readonly pla
       const best = Math.max(0, ...spec.tiers.map((_, index) => tierProgress(account, track, index + 1)?.bestWave ?? 0))
       const done = spec.tiers.filter((_, index) => cleared(store, { kind: "tier", track, tier: index + 1 })).length
       return <Row key={track} tall selected={play.value.kind === "tier" && play.value.track === track} locked={lock !== null} onClick={() => (play.value = open(track))}
-        end={lock !== null ? <><Icon name="lock" />{lock.kind === "level" ? `Account Lv ${lock.level}` : ""}</> : tuning.challenges[spec.challenge].objective.kind === "endure" && best > 0 ? `Best wave ${best}` : `${done} / ${spec.tiers.length}`}>{spec.name}</Row>
+        end={lock !== null ? <Icon name="lock" /> : tuning.challenges[spec.challenge].objective.kind === "endure" && best > 0 ? `Best wave ${best}` : `${done} / ${spec.tiers.length}`}>{spec.name}</Row>
     })}
   </>
 }

@@ -23,7 +23,7 @@ import { elementRules } from "../content/elements.ts"
 import { enemies, fairness } from "../content/enemies.ts"
 import { reset, tracks } from "../content/hardcore.ts"
 import { progression } from "../content/progression.ts"
-import { chapters, quests } from "../content/quests.ts"
+import { chapters, chests, quests } from "../content/quests.ts"
 import { skills } from "../content/skills.ts"
 
 /** Fixed-step timing. Changing these needs a reload. */
@@ -81,6 +81,8 @@ export const defaultTuning = {
   /** Every quest, by id, and the main line's chapters (see content/quests.ts). */
   quests,
   chapters,
+  /** The chests each group of quests opens with its stars (see content/quests.ts). */
+  chests,
 
   /** Hardcore tracks in tiers, and the periodic reset of their rewards (see content/hardcore.ts). */
   tracks,

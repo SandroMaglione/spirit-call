@@ -17,7 +17,8 @@ import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
 import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { ResetSpec, TrackId } from "../content/hardcore.ts"
-import type { QuestId, Rewards, Unlock } from "../content/quests.ts"
+import type { QuestId, Rewards, StarGroup, Unlock } from "../content/quests.ts"
+import { meets } from "../content/stars.ts"
 import type { AspectId } from "../content/aspects.ts"
 import { aspectProblems, withValidAspects } from "../features/build.ts"
 import type { AspectProblem } from "../features/build.ts"
@@ -59,16 +60,24 @@ export interface Totals {
 
 export const noTotals: Totals = { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 }
 
-/** How far the account got in a quest. */
-export interface QuestProgress {
+/** How often something was played and cleared. */
+export interface RunCount {
   readonly attempts: number
   readonly clears: number
   /** When it was first cleared (its rewards were given then), or `null`. */
   readonly firstClearedAt: number | null
 }
 
+/** How far the account got in a quest. */
+export interface QuestProgress extends RunCount {
+  /** The stars earned (by their place in the quest's `stars`), each once. */
+  readonly stars: ReadonlyArray<number>
+}
+
+export const noQuestProgress: QuestProgress = { attempts: 0, clears: 0, firstClearedAt: null, stars: [] }
+
 /** How far the account got in a hardcore tier. */
-export interface TierProgress extends QuestProgress {
+export interface TierProgress extends RunCount {
   /** The last period (see `periodOf`) its rewards were given in, or `null`. */
   readonly rewardedPeriod: number | null
   /** The furthest wave a run reached (lasting until the team falls, how far it got); absent before any run. */
@@ -100,6 +109,8 @@ export interface Account {
   readonly hardcore: { readonly [Id in TrackId]?: { readonly [tier: number]: TierProgress } }
   /** The discoveries made, and when (epoch milliseconds); each pays its rewards once. */
   readonly discoveries: { readonly [Id in DiscoveryId]?: { readonly madeAt: number } }
+  /** How many of each group's chests are open (they open in order, see `Tuning.chests`). */
+  readonly chests: { readonly [Group in StarGroup]?: number }
   /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects equipped in it, and what for. */
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly play: Play }
 }
@@ -174,6 +185,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     quests: {},
     hardcore: {},
     discoveries: {},
+    chests: {},
     selection: { team: [starter.selection.character], aspects: {}, play: { kind: "quest", quest: starter.selection.quest } }
   }
   const items: Array<Item> = [
@@ -213,19 +225,20 @@ export const earn = (account: Account, amounts: Amounts): Account => {
   return { ...account, wallet }
 }
 
-/** Why something cannot be played yet: the account level it needs, the quest to clear first, or the tier before it to clear first. */
+/** Why something cannot be played yet: the quest to clear first, or the tier before it to clear first. */
 export type Lock =
-  | { readonly kind: "level"; readonly level: number }
   | { readonly kind: "after"; readonly quest: QuestId }
   | { readonly kind: "tier"; readonly track: TrackId; readonly tier: number }
+
+/** Whether `account` has cleared `quest`. */
+export const questCleared = (account: Account, quest: QuestId): boolean => (account.quests[quest]?.firstClearedAt ?? null) !== null
 
 const isQuest = (tuning: Tuning, id: string | null): id is QuestId => id !== null && Object.hasOwn(tuning.quests, id)
 
 /** What keeps `quest` closed to `account`, or `null` when it can be started. */
 export const questLock = (tuning: Tuning, account: Account, quest: QuestId): Lock | null => {
   const spec = tuning.quests[quest]
-  if (isQuest(tuning, spec.after) && (account.quests[spec.after]?.firstClearedAt ?? null) === null) return { kind: "after", quest: spec.after }
-  if (accountLevel(tuning, account).level < spec.level) return { kind: "level", level: spec.level }
+  if (isQuest(tuning, spec.after) && !questCleared(account, spec.after)) return { kind: "after", quest: spec.after }
   return null
 }
 
@@ -236,7 +249,7 @@ export const tierProgress = (account: Account, track: TrackId, tier: number): Ti
 export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | null => {
   if (play.kind === "quest") return questLock(tuning, account, play.quest)
   const spec = tuning.tracks[play.track]
-  if (accountLevel(tuning, account).level < spec.level) return { kind: "level", level: spec.level }
+  if (!questCleared(account, spec.after)) return { kind: "after", quest: spec.after }
   const exists = Number.isInteger(play.tier) && play.tier >= 1 && play.tier <= spec.tiers.length
   if (!exists || (play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null)) {
     return { kind: "tier", track: play.track, tier: Math.max(1, Math.min(play.tier, spec.tiers.length + 1) - 1) }
@@ -261,6 +274,50 @@ export const nextReset = (reset: ResetSpec, now: number): number => reset.anchor
 export const tierRewardsAvailable = (tuning: Tuning, account: Account, track: TrackId, tier: number, now: number): boolean => {
   const given = tierProgress(account, track, tier)?.rewardedPeriod ?? null
   return given === null || given < periodOf(tuning.reset, now)
+}
+
+/** The quests whose stars count toward `group`: a chapter's, or the secondary ones. */
+export const questsOf = (tuning: Tuning, group: StarGroup): ReadonlyArray<QuestId> =>
+  (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => {
+    const spec = tuning.quests[id]
+    return group === "secondary" ? spec.line === "secondary" : spec.chapter === group
+  })
+
+/** The stars `account` earned in `group`'s quests, and how many there are. */
+export const groupStars = (tuning: Tuning, account: Account, group: StarGroup): { readonly earned: number; readonly total: number } => {
+  const quests = questsOf(tuning, group)
+  return {
+    earned: quests.reduce((sum, id) => sum + (account.quests[id]?.stars.length ?? 0), 0),
+    total: quests.reduce((sum, id) => sum + tuning.quests[id].stars.length, 0)
+  }
+}
+
+/** A chest, by its group and its place in it. */
+export interface ChestRef {
+  readonly group: StarGroup
+  readonly index: number
+}
+
+/**
+ * `account` with every chest its stars reach opened (in order, each once),
+ * its rewards added, and the chests opened. Run after stars are earned, and
+ * when the account loads (chests added to content later are not missed).
+ */
+export const withEarnedChests = (tuning: Tuning, account: Account): { readonly account: Account; readonly opened: ReadonlyArray<ChestRef> } => {
+  let next = account
+  const opened: Array<ChestRef> = []
+  for (const group of Object.keys(tuning.chests) as Array<StarGroup>) {
+    const { earned } = groupStars(tuning, next, group)
+    const chests = tuning.chests[group]
+    let open = next.chests[group] ?? 0
+    while (open < chests.length && chests[open]!.stars <= earned) {
+      next = earn(next, chests[open]!.rewards)
+      opened.push({ group, index: open })
+      open += 1
+    }
+    if (open !== (next.chests[group] ?? 0)) next = { ...next, chests: { ...next.chests, [group]: open } }
+  }
+  return { account: next, opened }
 }
 
 /**
@@ -381,6 +438,10 @@ export interface Earned {
   readonly discoveries: ReadonlyArray<DiscoveryId>
   /** A quest's first-clear rewards, or a tier's rewards for the period, when this run earned them. */
   readonly rewards: Rewards | null
+  /** The quest's stars this run earned for the first time (by their place in its `stars`). */
+  readonly stars: ReadonlyArray<number>
+  /** The chests those stars opened (their rewards are paid with them). */
+  readonly chests: ReadonlyArray<ChestRef>
 }
 
 /**
@@ -413,7 +474,8 @@ export const discovered = (check: DiscoveryCheck, result: RunResultValue): boole
 }
 
 /** `progress` with one more attempt, and a clear when `result` is one (the first clear's time kept). */
-const counted = (progress: QuestProgress, result: RunResultValue, now: number): QuestProgress => ({
+const counted = <P extends RunCount>(progress: P, result: RunResultValue, now: number): P => ({
+  ...progress,
   attempts: progress.attempts + 1,
   clears: progress.clears + (result.cleared ? 1 : 0),
   firstClearedAt: progress.firstClearedAt ?? (result.cleared ? now : null)
@@ -452,11 +514,15 @@ export const recordRun = (
     }
   }
   let rewards: Rewards | null = null
+  let stars: ReadonlyArray<number> = []
   if (play?.kind === "quest") {
     const quest = play.quest
-    const progress = account.quests[quest] ?? { attempts: 0, clears: 0, firstClearedAt: null }
+    const progress = account.quests[quest] ?? noQuestProgress
     const firstClear = result.cleared && progress.firstClearedAt === null
-    next = { ...next, quests: { ...next.quests, [quest]: counted(progress, result, now) } }
+    // Each star once, in any run that clears (see docs/quests.md).
+    stars = tuning.quests[quest].stars.flatMap((goal, index) => !progress.stars.includes(index) && meets(goal, result.cleared, result.tally) ? [index] : [])
+    const updated: QuestProgress = { ...counted(progress, result, now), stars: [...progress.stars, ...stars].sort((a, b) => a - b) }
+    next = { ...next, quests: { ...next.quests, [quest]: updated } }
     if (firstClear) rewards = tuning.quests[quest].rewards
   }
   if (play?.kind === "tier") {
@@ -473,6 +539,8 @@ export const recordRun = (
     if (rewarded) rewards = { ...spec.rewards, unlocks: [] }
   }
   next = earn(next, pay)
+  const chests = withEarnedChests(tuning, next)
+  next = chests.account
   const made: Array<DiscoveryId> = []
   if (play !== null) {
     for (const [id, spec] of Object.entries(tuning.discoveries) as Array<[DiscoveryId, (typeof tuning.discoveries)[DiscoveryId]]>) {
@@ -489,7 +557,7 @@ export const recordRun = (
   const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
   const levelRewards = times(progression.account.levelUp, level.after - level.before)
   next = earn(next, levelRewards)
-  return { account: next, earned: { experience, level, pay, levelRewards, discoveries: made, rewards } }
+  return { account: next, earned: { experience, level, pay, levelRewards, discoveries: made, rewards, stars, chests: chests.opened } }
 }
 
 /** The build `character` enters the arena with: at her level, with the aspect equipped on her in the team (her class's plain one when none). */
