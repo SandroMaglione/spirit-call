@@ -37,6 +37,47 @@ const positive = (problems: Array<string>, where: string, values: Record<string,
   }
 }
 
+/**
+ * The Spirit Call (see docs/calls.md): every character comes from
+ * somewhere (the new account, a quest, or a banner) and from one place
+ * only, so a call never brings what a quest gives; banners hold
+ * characters; the odds are shares and the guarantees can be reached.
+ */
+const checkCalls = (problems: Array<string>, tuning: Tuning): void => {
+  const rules = tuning.calls
+  const fromQuests = new Set(Object.values(tuning.quests).flatMap((quest) => quest.rewards.unlocks.filter((item) => item.kind === "character").map((item) => item.id as string)))
+  const fromStarter = new Set<string>(newAccount.characters)
+  const onBanners = new Map<string, string>()
+  for (const [id, spec] of Object.entries(tuning.banners)) {
+    const where = `banner ${id}`
+    if (spec.characters.length === 0) problems.push(`${where}: holds no character`)
+    for (const character of spec.characters) {
+      if (!has(tuning.characters, character)) problems.push(`${where}: unknown character ${character}`)
+      if (fromQuests.has(character) || fromStarter.has(character)) problems.push(`${where}: ${character} already comes from a quest or the new account`)
+      const other = onBanners.get(character)
+      if (other !== undefined && other !== id) problems.push(`${where}: ${character} is on banner ${other} too`)
+      onBanners.set(character, id)
+    }
+  }
+  for (const character of Object.keys(tuning.characters)) {
+    if (!fromQuests.has(character) && !fromStarter.has(character) && !onBanners.has(character)) problems.push(`character ${character}: comes from no quest, banner, or the new account`)
+  }
+  if (Object.keys(tuning.banners).length === 0) problems.push("the Spirit Call: needs a banner")
+  if (!has(tuning.quests, rules.opensAfter)) problems.push(`the Spirit Call: opens after unknown quest ${rules.opensAfter}`)
+  checkAmounts(problems, "the Spirit Call's price", tuning, rules.price)
+  const { character, aspect } = rules
+  for (const [name, share] of [["character rate", character.rate], ["character softStep", character.softStep], ["aspect rate", aspect.rate]] as const) {
+    if (!(share >= 0 && share <= 1)) problems.push(`the Spirit Call: ${name} must be a share from 0 to 1 (is ${share})`)
+  }
+  for (const [name, count] of [["character softFrom", character.softFrom], ["character guarantee", character.guarantee], ["character firstGuarantee", character.firstGuarantee], ["aspect guarantee", aspect.guarantee], ["history", rules.history]] as const) {
+    if (!(Number.isInteger(count) && count >= 1)) problems.push(`the Spirit Call: ${name} must be a whole number of calls, at least 1 (is ${count})`)
+  }
+  if (character.firstGuarantee > character.guarantee) problems.push("the Spirit Call: the first character's guarantee must come no later than the others'")
+  positive(problems, "the Spirit Call's supply", { gold: rules.supply.gold })
+  if (!(Number.isInteger(rules.supply.material) && rules.supply.material >= 0)) problems.push(`the Spirit Call's supply: material must be a whole number (is ${rules.supply.material})`)
+  positive(problems, "the Spirit Call's rotation", { days: rules.rotation.days })
+}
+
 const checkMove = (problems: Array<string>, where: string, move: AttackMove): void => {
   positive(problems, where, { recovery: move.recovery })
   if (isMelee(move)) positive(problems, where, { reach: move.reach })
@@ -528,5 +569,6 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   if (first === undefined) problems.push(`${where}: selects unknown quest ${starter.selection.quest}`)
   else if (first.after !== null) problems.push(`${where}: selects quest ${starter.selection.quest}, which a new account cannot start`)
 
+  checkCalls(problems, tuning)
   return problems
 }

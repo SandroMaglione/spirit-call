@@ -14,6 +14,7 @@
  */
 import { arenas } from "../content/arena.ts"
 import { aspects } from "../content/aspects.ts"
+import { banners, callRules } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { classes } from "../content/classes.ts"
@@ -94,6 +95,10 @@ export const defaultTuning = {
 
   /** One-time goals that point at something worth trying, for crystals (see content/discoveries.ts). */
   discoveries,
+
+  /** The Spirit Call: its banners, and what a call costs and brings (see content/calls.ts). */
+  banners,
+  calls: callRules,
 
   /** Every class, by id: how it handles, and its plain aspect (see content/classes.ts). */
   classes,

@@ -1,7 +1,7 @@
 /**
  * The two currencies, each for one thing, so it is always clear where each
  * comes from and what it is for (see docs/vision.md, "Progression"):
- * crystals for pulls (the gacha, later), from milestones only (first
+ * crystals for calls (the Spirit Call, see content/calls.ts), from milestones only (first
  * clears, hardcore tiers once per period, account levels, discoveries);
  * gold for upgrades (character levels), from every run, and on
  * top from first clears and hardcore tiers. The wallet also holds the

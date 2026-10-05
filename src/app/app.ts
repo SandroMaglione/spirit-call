@@ -14,7 +14,8 @@ import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
 
 import { everything } from "../account/account.ts"
-import type { Account, Earned, Play, TeamAspects } from "../account/account.ts"
+import type { Account, CallResult, Earned, Play, TeamAspects } from "../account/account.ts"
+import type { BannerId } from "../content/calls.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { AccountStore, layer as accountLayer } from "../account/store.ts"
@@ -42,6 +43,10 @@ export interface App {
   readonly ascend: (character: CharacterId) => Promise<Account | undefined>
   /** Makes one material from the grade below it (refused without enough). */
   readonly combine: (material: MaterialId) => Promise<Account | undefined>
+  /** Makes `count` calls on `banner`: what each brought, or `undefined` when refused (not open, not running, nothing left, short of crystals) or not saved. */
+  readonly call: (banner: BannerId, count: number) => Promise<ReadonlyArray<CallResult> | undefined>
+  /** Focuses `character` on `banner`. */
+  readonly focus: (banner: BannerId, character: CharacterId) => Promise<Account | undefined>
   /** Selects the team to enter the arena with (and the aspects equipped in it) and what for; the account after it, or `undefined` when refused (not owned, aspects breaking the rules, or not open). */
   readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Promise<Account | undefined>
   /** Owns every character and aspect, and adds plenty of each currency (a dev tool). */
@@ -87,6 +92,8 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     train: (character) => run(accounts.train(character)),
     ascend: (character) => run(accounts.ascend(character)),
     combine: (material) => run(accounts.combine(material)),
+    call: (banner, count) => attempt(accounts.call(banner, count), (called) => called.account).then((called) => called?.results),
+    focus: (banner, character) => run(accounts.focus(banner, character)),
     select: (team, play, aspects) => run(accounts.select(team, play, aspects)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (play, result) => attempt(accounts.recordRun(play, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),

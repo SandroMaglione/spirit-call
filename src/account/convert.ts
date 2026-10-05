@@ -10,9 +10,10 @@ import type { CharacterId } from "../content/characters.ts"
 import type { ResourceId } from "../content/currencies.ts"
 import type { DiscoveryId } from "../content/discoveries.ts"
 import type { AspectId } from "../content/aspects.ts"
+import type { BannerId } from "../content/calls.ts"
 import { teamSize } from "../content/characters.ts"
 import { characterLevel, createAccount, owns, select, unlock, validAspects, withClearedRewards, withEarnedChests } from "./account.ts"
-import type { Account, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
+import type { Account, CallRecord, CallResult, CallState, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -75,6 +76,7 @@ export const fromStored = (
     hardcore,
     discoveries: keep<DiscoveryId, { readonly madeAt: number }>(tuning.discoveries, stored.discoveries, "discovery", dropped),
     chests: keep<StarGroup, number>(tuning.chests, stored.chests, "chest group", dropped),
+    calls: callsFrom(tuning, stored.calls),
     selection: starterSelection
   }
 
@@ -118,6 +120,32 @@ export const fromStored = (
   return { account, dropped, granted: rewarded.granted }
 }
 
+/**
+ * The saved Spirit Call with typed ids: a focus on a banner or a character
+ * that no longer exists is let go (the first one left is focused instead),
+ * and the history keeps the calls that still name content.
+ */
+const callsFrom = (tuning: Tuning, saved: StoredAccountLatest["calls"]): CallState => {
+  const focus: { [Id in BannerId]?: CharacterId } = {}
+  for (const [banner, character] of Object.entries(saved.focus)) if (known(tuning.banners, banner) && known(tuning.characters, character)) focus[banner] = character
+  const resultFrom = (result: StoredAccountLatest["calls"]["history"][number]["result"]): CallResult | null => {
+    switch (result.kind) {
+      case "character":
+        return known(tuning.characters, result.id) ? { kind: "character", id: result.id } : null
+      case "aspect":
+        return known(tuning.aspects, result.id) ? { kind: "aspect", id: result.id } : null
+      case "supply":
+        return { kind: "supply", amounts: Object.fromEntries(Object.entries(result.amounts).filter(([id]) => known({ ...tuning.currencies, ...tuning.materials }, id))) }
+    }
+  }
+  const history: Array<CallRecord> = []
+  for (const record of saved.history) {
+    const result = resultFrom(record.result)
+    if (result !== null && known(tuning.banners, record.banner)) history.push({ at: record.at, banner: record.banner, result })
+  }
+  return { seed: saved.seed >>> 0, sinceCharacter: saved.sinceCharacter, sinceAspect: saved.sinceAspect, firstCharacter: saved.firstCharacter, focus, history }
+}
+
 /** A saved selection with typed ids, or `undefined` when it names no content. */
 const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"]): Play | undefined => {
   if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest, ...(saved.rank === undefined || saved.rank === 1 ? {} : { rank: saved.rank }) } : undefined
@@ -126,7 +154,7 @@ const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"
 
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 7,
+  version: 8,
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,
@@ -137,6 +165,7 @@ export const toStored = (account: Account): StoredAccountLatest => ({
   hardcore: account.hardcore,
   discoveries: account.discoveries,
   chests: account.chests,
+  calls: account.calls,
   selection: account.selection
 })
 

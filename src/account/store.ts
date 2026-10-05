@@ -27,8 +27,10 @@ import type { Amounts } from "../content/currencies.ts"
 import { aspectOf } from "../content/aspects.ts"
 import type { RunResultValue } from "../schema.ts"
 import type { MaterialId } from "../content/materials.ts"
+import type { BannerId } from "../content/calls.ts"
 import { ascend, combine, createAccount, earn, recordRun, select, train, unlock } from "./account.ts"
-import type { Account, Checked, Earned, Item, Play, Refusal, TeamAspects } from "./account.ts"
+import type { Account, CallResult, Checked, Earned, Item, Play, Refusal, TeamAspects } from "./account.ts"
+import { call, setFocus } from "./calls.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
 import { LatestAccountJson, LegacyProfileJson, migrateAccount, StoredAccountJson } from "./stored.ts"
@@ -55,6 +57,10 @@ export interface AccountStoreShape {
   readonly ascend: (character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Makes one `material` from the grade below it, with gold. */
   readonly combine: (material: MaterialId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Makes `count` calls on `banner` (the one running now), paid at once: the account after them, and what each brought. */
+  readonly call: (banner: BannerId, count: number) => Effect.Effect<{ readonly account: Account; readonly results: ReadonlyArray<CallResult> }, AccountRefused | AccountSaveError>
+  /** Focuses `character` on `banner`: the character a call there brings. */
+  readonly focus: (banner: BannerId, character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Adds `amounts` of currency (a reward, or a dev tool). */
   readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
   /**
@@ -157,6 +163,16 @@ export const layer = (options: AccountOptions) =>
         train: (character) => change((account) => train(options.tuning, account, character)),
         ascend: (character) => change((account) => ascend(options.tuning, account, character)),
         combine: (material) => change((account) => combine(options.tuning, account, material)),
+        focus: (banner, character) => change((account) => setFocus(options.tuning, account, banner, character)),
+        call: (banner, count) =>
+          Effect.gen(function*() {
+            const now = yield* Clock.currentTimeMillis
+            const called = call(options.tuning, yield* Ref.get(current), banner, count, now)
+            if (!called.ok) return yield* Effect.fail(new AccountRefused({ refusal: called.refusal }))
+            yield* save(called.value.account)
+            yield* Ref.set(current, called.value.account)
+            return called.value
+          }).pipe(transaction.withPermit),
         recordRun: (play, result) =>
           Effect.gen(function*() {
             const now = yield* Clock.currentTimeMillis

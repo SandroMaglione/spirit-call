@@ -15,6 +15,8 @@
  */
 import * as Schema from "effect/Schema"
 
+import { seedOf } from "./account.ts"
+
 // ── Account ───────────────────────────────────────────────────────────────
 
 const Unlocked = Schema.Struct({ unlockedAt: Schema.Number })
@@ -152,9 +154,35 @@ export const StoredAccountV7 = Schema.Struct({
   chests: Schema.Record(Schema.String, Schema.Number)
 })
 
+const CallResult = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("character"), id: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal("aspect"), id: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal("supply"), amounts: Schema.Record(Schema.String, Schema.Number) })
+])
+
+/**
+ * Version 8: the Spirit Call (see docs/calls.md): where the account's draws
+ * stand, the calls since the last character and the last aspect, whether
+ * its first character came, the character focused on each banner, and the
+ * last calls.
+ */
+export const StoredAccountV8 = Schema.Struct({
+  ...StoredAccountV7.fields,
+  version: Schema.Literal(8),
+  calls: Schema.Struct({
+    seed: Schema.Number,
+    sinceCharacter: Schema.Number,
+    sinceAspect: Schema.Number,
+    firstCharacter: Schema.Boolean,
+    /** By banner id: the character focused. */
+    focus: Schema.Record(Schema.String, Schema.String),
+    history: Schema.Array(Schema.Struct({ at: Schema.Number, banner: Schema.String, result: CallResult }))
+  })
+})
+
 /** Any account version ever saved. */
-export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4, StoredAccountV5, StoredAccountV6, StoredAccountV7])
-export const StoredAccountLatest = StoredAccountV7
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4, StoredAccountV5, StoredAccountV6, StoredAccountV7, StoredAccountV8])
+export const StoredAccountLatest = StoredAccountV8
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
@@ -202,9 +230,13 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
       const quests = Object.fromEntries(Object.entries(stored.quests).map(([id, progress]) => [id, { ...progress, stars: progress.firstClearedAt === null ? [] : [0] }]))
       // Ascension came: none taken yet; loading takes the steps a character's level is already past (see `fromStored`).
       const characters = Object.fromEntries(Object.entries(stored.owned.characters).map(([id, owned]) => [id, { ...owned, ascension: 0 }]))
-      return { ...stored, version: 7, owned: { ...stored.owned, characters }, quests, chests: {} }
+      return migrateAccount({ ...stored, version: 7, owned: { ...stored.owned, characters }, quests, chests: {} })
     }
     case 7:
+      // The Spirit Call came: no calls yet, drawing from the account's own seed. What the account
+      // owns stays; a character it already has is never called again.
+      return { ...stored, version: 8, calls: { seed: seedOf(stored.id), sinceCharacter: 0, sinceAspect: 0, firstCharacter: false, focus: {}, history: [] } }
+    case 8:
       return stored
   }
 }

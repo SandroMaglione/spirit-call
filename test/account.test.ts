@@ -35,9 +35,9 @@ describe("account rules", () => {
   })
 
   it("gives the rewards a cleared quest gained since, once (new content is not missed)", () => {
-    const cleared = { ...fresh(), quests: { theBrute: { attempts: 1, clears: 1, firstClearedAt: 1500, stars: [0] } } }
+    const cleared = { ...fresh(), quests: { highTide: { attempts: 1, clears: 1, firstClearedAt: 1500, stars: [0] } } }
     const { account, granted } = withClearedRewards(defaultTuning, cleared, 3000)
-    expect(granted).toEqual(defaultTuning.quests.theBrute.rewards.unlocks)
+    expect(granted).toEqual(defaultTuning.quests.highTide.rewards.unlocks)
     expect(owns(account, { kind: "character", id: "tidecaller" })).toBe(true)
     expect(withClearedRewards(defaultTuning, account, 4000).granted).toEqual([])
     expect(withClearedRewards(defaultTuning, fresh(), 4000).granted).toEqual([])
@@ -157,7 +157,8 @@ describe("account rules", () => {
     expect(won.earned.rewards).toEqual(rewards)
     expect(won.earned.experience).toBe(recordRun(defaultTuning, fresh(), null, { ...run, cleared: true, progress: 1 }, 0).earned.experience + rewards.experience)
     expect(won.account.quests.theSwarm).toEqual({ attempts: 2, clears: 1, firstClearedAt: 3000, stars: [0, 2] })
-    expect(owns(won.account, { kind: "character", id: "gunner" })).toBe(true)
+    // The Gunner comes at the end of chapter one, not with its first quest.
+    expect(owns(won.account, { kind: "character", id: "gunner" })).toBe(false)
     // On top of what both runs paid, and of the account level the rewards' experience reached.
     expect(won.account.wallet).toEqual({
       crystals: rewards.currencies.crystals! + (won.earned.levelRewards.crystals ?? 0) + discoveryCrystals(won.earned.discoveries) + chestCrystals(won.earned.chests),

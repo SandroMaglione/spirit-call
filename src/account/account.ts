@@ -24,6 +24,7 @@ import type { ResetSpec, TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, StarGroup, Unlock } from "../content/quests.ts"
 import { meets } from "../content/stars.ts"
 import type { AspectId } from "../content/aspects.ts"
+import type { BannerId } from "../content/calls.ts"
 import { aspectProblems, withValidAspects } from "../features/build.ts"
 import type { AspectProblem } from "../features/build.ts"
 import type { BuildValue, RunResultValue } from "../schema.ts"
@@ -106,6 +107,45 @@ export const rankOf = (play: Extract<Play, { kind: "quest" }>): number => play.r
 export const samePlay = (a: Play, b: Play): boolean =>
   a.kind === "quest" ? b.kind === "quest" && a.quest === b.quest && rankOf(a) === rankOf(b) : b.kind === "tier" && a.track === b.track && a.tier === b.tier
 
+/** What one call brought: a character, an aspect (each new to the account), or a supply bundle. */
+export type CallResult =
+  | { readonly kind: "character"; readonly id: CharacterId }
+  | { readonly kind: "aspect"; readonly id: AspectId }
+  | { readonly kind: "supply"; readonly amounts: Amounts }
+
+/** A call in the history: when, on which banner, and what it brought. */
+export interface CallRecord {
+  readonly at: number
+  readonly banner: BannerId
+  readonly result: CallResult
+}
+
+/**
+ * The account's Spirit Call (see `account/calls.ts`): where its random
+ * draws stand (saved, so reloading never draws again), the calls since the
+ * last character and since the last aspect (or character), whether its first
+ * character came yet, the character focused on each banner, and the last
+ * calls, newest first.
+ */
+export interface CallState {
+  readonly seed: number
+  readonly sinceCharacter: number
+  readonly sinceAspect: number
+  readonly firstCharacter: boolean
+  readonly focus: { readonly [Id in BannerId]?: CharacterId }
+  readonly history: ReadonlyArray<CallRecord>
+}
+
+/** A 32-bit seed from `text` (an account id): each account draws its own sequence. */
+export const seedOf = (text: string): number => {
+  let hash = 2166136261
+  for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619)
+  return hash >>> 0
+}
+
+/** No calls made yet, drawing from `seed`. */
+export const noCalls = (seed: number): CallState => ({ seed, sinceCharacter: 0, sinceAspect: 0, firstCharacter: false, focus: {}, history: [] })
+
 export interface Account {
   readonly id: string
   /** Epoch milliseconds. */
@@ -124,6 +164,8 @@ export interface Account {
   readonly discoveries: { readonly [Id in DiscoveryId]?: { readonly madeAt: number } }
   /** How many of each group's chests are open (they open in order, see `Tuning.chests`). */
   readonly chests: { readonly [Group in StarGroup]?: number }
+  /** The Spirit Call: guarantees, focus, and history. */
+  readonly calls: CallState
   /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects equipped in it, and what for. */
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly play: Play }
 }
@@ -199,6 +241,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     hardcore: {},
     discoveries: {},
     chests: {},
+    calls: noCalls(seedOf(id)),
     selection: { team: [starter.selection.character], aspects: {}, play: { kind: "quest", quest: starter.selection.quest } }
   }
   const items: Array<Item> = [
@@ -394,6 +437,14 @@ export type Refusal =
   | { readonly kind: "notAtStep"; readonly item: Item }
   /** A material that is made by nothing (the lowest grade). */
   | { readonly kind: "notCombinable"; readonly material: MaterialId }
+  /** Calls open once `quest` is cleared (see `Tuning.calls.opensAfter`). */
+  | { readonly kind: "callsLocked"; readonly quest: QuestId }
+  /** The banner is not running now (see `activeBanner`). */
+  | { readonly kind: "bannerClosed"; readonly banner: BannerId }
+  /** Every character on the banner is owned: a call there could bring none. */
+  | { readonly kind: "bannerComplete"; readonly banner: BannerId }
+  /** A focus that is not on the banner, or already owned. */
+  | { readonly kind: "badFocus"; readonly banner: BannerId; readonly character: CharacterId }
 
 export type Checked<A> = { readonly ok: true; readonly value: A } | { readonly ok: false; readonly refusal: Refusal }
 
