@@ -33,7 +33,8 @@ const paths = {
   def: "M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z",
   speed: "m5 6 6 6-6 6 M13 6l6 6-6 6",
   star: "m12 3 2.7 5.7 6.2.8-4.5 4.3 1.1 6.2L12 17l-5.5 3 1.1-6.2-4.5-4.3 6.2-.8z",
-  chest: "M3 11h18v9H3z M3 11l2-5h14l2 5 M10 11v4h4v-4"
+  chest: "M3 11h18v9H3z M3 11l2-5h14l2 5 M10 11v4h4v-4",
+  call: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20 M12 5.5l1.9 4.6L18.5 12l-4.6 1.9L12 18.5l-1.9-4.6L5.5 12l4.6-1.9z"
 } as const
 
 export type IconName = keyof typeof paths | CurrencyId | EmblemKind

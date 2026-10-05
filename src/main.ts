@@ -38,6 +38,10 @@ import {
 import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
+/** What each moment of a call sounds like, and how long it buzzes (milliseconds; a list is buzz, pause, buzz). */
+const callSounds = { crack: "sealCrack", burst: "sealBurst", aspect: "revealAspect", character: "revealCharacter" } as const
+const callBuzz: Record<keyof typeof callSounds, number | Array<number>> = { crack: 12, burst: 40, aspect: [20, 40, 20], character: [30, 50, 30, 50, 60] }
+
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(window.location.search)
@@ -124,14 +128,30 @@ const start = async (mount: HTMLElement) => {
       recording = false
       uiStore.play.value = null
       uiStore.extra.value = extra
+      // A trial: her alone, at the party's level (owned or not), on the Training Ground.
+      const level = teamLevel(tuning, account, team)
       uiRequests.pending.push({
         kind: "start",
         // Not saved: the draft's aspects, as far as the rules allow.
-        team: teamOf(tuning, account, team, validAspects(tuning, account, team, aspects)),
-        challenge: extra.kind === "training" ? "trainingGround" : "practice",
-        enemyLevel: teamLevel(tuning, account, team),
+        team: extra.kind === "trial" ? [{ character: extra.character, level }] : teamOf(tuning, account, team, validAspects(tuning, account, team, aspects)),
+        challenge: extra.kind === "practice" ? "practice" : "trainingGround",
+        enemyLevel: level,
         ...(extra.kind === "practice" ? { practice: extra.picks } : {})
       })
+    },
+    call: (banner, count) => {
+      if (uiStore.busy.peek()) return
+      uiStore.busy.value = true
+      void shell.call(banner, count).then((results) => {
+        if (results === undefined) notify("The call could not be made. Please try again.", true)
+        else uiStore.callReveal.value = { banner, results }
+      }).finally(() => (uiStore.busy.value = false))
+    },
+    focus: (banner, character) => change(() => shell.focus(banner, character), null),
+    cue: (cue) => {
+      sounds.play(callSounds[cue])
+      // A short buzz where the phone allows it (not on iOS Safari): longer for what matters more.
+      navigator.vibrate?.(callBuzz[cue])
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),

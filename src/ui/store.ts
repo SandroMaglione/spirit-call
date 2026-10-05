@@ -10,7 +10,8 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, Earned, Play, TeamAspects } from "../account/account.ts"
+import type { Account, CallResult, Earned, Play, TeamAspects } from "../account/account.ts"
+import type { BannerId } from "../content/calls.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
@@ -18,8 +19,20 @@ import type { BuildValue, FlowState, PracticeValue, RunResultValue } from "../sc
 import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
-/** An Extra to play (nothing recorded): the Training Ground, or Enemy Practice with its picks. */
-export type Extra = { readonly kind: "training" } | { readonly kind: "practice"; readonly picks: PracticeValue }
+/** An Extra to play (nothing recorded): the Training Ground, Enemy Practice with its picks, or a character's trial (the Training Ground with her alone, owned or not: trying her before calling). */
+export type Extra =
+  | { readonly kind: "training" }
+  | { readonly kind: "practice"; readonly picks: PracticeValue }
+  | { readonly kind: "trial"; readonly character: CharacterId }
+
+/** Calls just made, to reveal: on which banner, and what each brought, in the order they came. */
+export interface CallReveal {
+  readonly banner: BannerId
+  readonly results: ReadonlyArray<CallResult>
+}
+
+/** Moments of a call that sound (and, on a phone, buzz): the seal cracking, bursting, and what comes out of it. */
+export type CallCue = "crack" | "burst" | "aspect" | "character"
 
 export interface UiStore {
   readonly busy: Signal<boolean>
@@ -58,6 +71,8 @@ export interface UiStore {
   readonly practicePicks: Signal<PracticeValue>
   /** A screen the menu opens on when it shows next (from the results: back to the practice picks), or `null`. */
   readonly menuOpens: Signal<Screen | null>
+  /** Calls made and not revealed yet (the seal is showing), or `null`. */
+  readonly callReveal: Signal<CallReveal | null>
 }
 
 export interface Sound {
@@ -95,7 +110,8 @@ export const createUiStore = (initial: {
   sound: signal(initial.sound),
   extra: signal(null),
   practicePicks: signal({ kinds: [], elites: false }),
-  menuOpens: signal(null)
+  menuOpens: signal(null),
+  callReveal: signal(null)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
@@ -114,6 +130,12 @@ export interface UiActions {
   readonly ascend: (character: CharacterId) => void
   /** Make one material from the grade below it (saved at once). */
   readonly combine: (material: MaterialId) => void
+  /** Make `count` calls on `banner` (saved at once); what they brought shows through `callReveal`. */
+  readonly call: (banner: BannerId, count: number) => void
+  /** Focus `character` on `banner`: the character a call there brings. */
+  readonly focus: (banner: BannerId, character: CharacterId) => void
+  /** Sound (and buzz, on a phone) a moment of a call. */
+  readonly cue: (cue: CallCue) => void
   /** From the results or the in-game menu: the same challenge again, from the start. */
   readonly retry: () => void
   /** From the results or the in-game menu: back to the menu. */

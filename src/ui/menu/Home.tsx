@@ -5,6 +5,7 @@
  * over one Play.
  */
 import { accountLevel, ascend, characterLevel, encounterOf, owns, train } from "../../account/account.ts"
+import { activeBanner, callProblem, callsHeld } from "../../account/calls.ts"
 import type { Play } from "../../account/account.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import { challengeEnemies, describePlay } from "../describe.ts"
@@ -32,10 +33,13 @@ export const Home = ({ store, nav, leader, play, enter }: {
   const tuning = store.tuning.value, account = store.account.value, team = store.menuDraft.value.team
   const level = accountLevel(tuning, account), encounter = encounterOf(tuning, play)
   const canTrain = ids(tuning.characters).some((id) => owns(account, { kind: "character", id }) && (train(tuning, account, id).ok || ascend(tuning, account, id).ok))
+  // Something to do at the Call: a call held, and someone on the banner to bring.
+  const now = Date.now(), canCall = callProblem(tuning, account, activeBanner(tuning, now).banner, now) === null && callsHeld(tuning, account) > 0
   const places: { readonly [Id in string]: Place } = {
     characters: { kind: "character", character: leader, tab: "overview" },
     party: { kind: "team" },
     challenges: { kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line },
+    call: { kind: "call", tab: "banner" },
     practice: { kind: "extra", mode: "training" },
     discoveries: { kind: "discoveries" }
   }
@@ -54,6 +58,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
       { id: "characters", label: "Characters", badge: canTrain },
       { id: "party", label: "Party" },
       { id: "challenges", label: "Challenges" },
+      { id: "call", label: "Spirit Call", badge: canCall },
       { id: "practice", label: "Practice" },
       { id: "discoveries", label: "Discoveries" }
     ]} />

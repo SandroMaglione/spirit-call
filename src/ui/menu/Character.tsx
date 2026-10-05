@@ -34,8 +34,11 @@ const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", shot: "Shot", 
 
 /** Where something not owned comes from, from shipped rewards only. */
 const sourceNote = (store: UiStore, item: Parameters<typeof sourceOf>[1]): string => {
-  const quest = sourceOf(store.tuning.value, item)
-  return quest === null ? "Not owned yet." : `A reward for clearing ${store.tuning.value.quests[quest].name}.`
+  const tuning = store.tuning.value, quest = sourceOf(tuning, item)
+  if (quest !== null) return `A reward for clearing ${tuning.quests[quest].name}.`
+  const banner = item.kind === "character" ? Object.values(tuning.banners).find((spec) => spec.characters.includes(item.id)) : undefined
+  if (banner !== undefined) return `Comes from the Spirit Call (the ${banner.name} banner).`
+  return item.kind === "aspect" ? "Comes from the Spirit Call." : "Not owned yet."
 }
 
 const Attributes = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {

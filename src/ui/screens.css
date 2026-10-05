@@ -232,3 +232,101 @@
 .results__newcomer { position: absolute; left: 3%; top: 20px; bottom: 20px; width: 36%; }
 .results__newcomer .model { position: absolute; inset: 0; }
 .results.has-newcomer .results__content { margin-left: 32%; width: min(480px, 64%); }
+
+/* ---------- the Spirit Call ---------- */
+.call__banner { position: absolute; left: var(--left); top: 58px; width: 212px; z-index: 3; display: grid; gap: 6px; text-shadow: 0 1px 4px #0009; }
+.call__banner h1 { font-size: 26px; font-weight: 800; line-height: 1.05; }
+.call__banner > p { font-size: 12.5px; color: var(--dim); }
+.call__banner .cards { margin: 4px 0 2px; padding: 3px; }
+.call__counts { display: grid; }
+.call__counts .menu-icon { color: var(--gold-hi); }
+.call__stage { position: absolute; left: calc(var(--left) + 210px); right: calc(var(--right) + 258px); top: 40px; bottom: 58px; }
+.call__focus { position: absolute; right: var(--right); top: 58px; width: 250px; max-height: calc(100% - 128px); z-index: 3; }
+.call__focus .pill { justify-self: start; }
+.call__button { display: grid; justify-items: center; line-height: 1; }
+.call__button small { display: flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 700; opacity: .8; margin-top: 2px; }
+.call__button small .menu-icon { font-size: 12px; }
+.call .actions .pill { min-width: 132px; }
+.call__details { position: absolute; left: var(--left); top: 58px; width: 300px; max-height: calc(100% - 128px); z-index: 3; }
+.call__details .fact__value { display: flex; align-items: center; gap: 3px; }
+.call__left { position: absolute; right: var(--right); top: 58px; width: calc(100% - var(--left) - var(--right) - 318px); max-width: 330px; max-height: calc(100% - 128px); z-index: 3; }
+.call__left .cards { padding: 3px; }
+.call__aspects { display: grid; gap: 4px; }
+.call__aspects span { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.call__aspects small { margin-left: auto; color: var(--dim); font-weight: 700; font-size: 12px; }
+.call__aspects .menu-icon { font-size: 18px; color: var(--gold-hi); }
+.call__history { position: absolute; left: var(--left); top: 58px; width: 360px; bottom: 70px; z-index: 3; }
+.call__history ~ .call__counts { position: absolute; right: var(--right); top: 62px; width: 240px; z-index: 3; }
+.call__record { display: grid; grid-template-columns: 12px 1fr; column-gap: 8px; align-items: center; font-size: 14px; font-weight: 700; padding: 3px 0; border-bottom: 1px solid var(--band); }
+.call__record small { grid-column: 2; font-size: 11px; color: var(--dim); font-weight: 600; }
+.call__light { width: 9px; height: 9px; border-radius: 50%; background: #dfe6f3; box-shadow: 0 0 6px #dfe6f3; }
+.call__record[data-kind="aspect"] .call__light { background: #b98bff; box-shadow: 0 0 8px #b98bff; }
+.call__record[data-kind="character"] .call__light { background: #ffd56b; box-shadow: 0 0 10px #ffd56b; }
+/* What one character does: her special and her ultimate, each a line. */
+.kit-lines { display: grid; gap: 8px; }
+.kit-lines__one { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: start; font-size: 12.5px; line-height: 1.3; }
+.kit-lines__one b { font-size: 14px; font-weight: 800; }
+.kit-lines__one small { margin-left: 6px; font-size: 11px; color: var(--gold-hi); font-weight: 700; }
+.kit-lines__one > span:last-child > span { display: block; color: var(--dim); }
+.kit-lines__orb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35); }
+
+/* ---------- the seal ---------- */
+.reveal { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; --white: #eef3ff; --purple: #b98bff; --gold: #ffd56b; --light: var(--white); }
+.reveal[data-light="purple"] { --light: var(--purple); }
+.reveal[data-light="gold"] { --light: var(--gold); }
+.reveal__light { position: absolute; left: 50%; top: 50%; width: 520px; height: 520px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--light) 70%, transparent), color-mix(in srgb, var(--light) 18%, transparent) 55%, transparent); opacity: calc(var(--p) * .9); scale: calc(.55 + var(--p) * .55); pointer-events: none; }
+.reveal__seal { position: relative; width: 236px; height: 236px; border-radius: 50%; touch-action: none !important; animation: seal-in .6s cubic-bezier(.2, .9, .3, 1.2) both; filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .6)); transform: scale(calc(1 + var(--p) * .04)) rotate(calc(var(--p) * 4deg)); }
+.ui .reveal__seal:active { transform: scale(calc(1 + var(--p) * .04)) rotate(calc(var(--p) * 4deg)); filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .6)); }
+.reveal__seal svg { width: 100%; height: 100%; overflow: visible; }
+.reveal__rim { fill: none; stroke: #c9b98f; stroke-width: 3; }
+.reveal__ring { fill: none; stroke: rgba(201, 185, 143, .55); stroke-width: 1.2; }
+.reveal__rune { fill: #c9b98f; opacity: .75; }
+.reveal__cracks path { fill: none; stroke: var(--light); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; filter: drop-shadow(0 0 4px var(--light)) drop-shadow(0 0 10px var(--light)); }
+.reveal__hint { position: absolute; left: 0; right: 0; bottom: 44px; text-align: center; font-size: 15px; font-weight: 700; color: var(--dim); letter-spacing: .02em; animation: hint 2s ease-in-out infinite; }
+.reveal__skip { position: absolute; right: var(--right); top: var(--top); }
+.reveal__flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 50%, #fff 0, var(--light) 18%, color-mix(in srgb, var(--light) 40%, transparent) 45%, transparent 75%); }
+.reveal__flash--element { background: radial-gradient(circle at 50% 50%, #fff 0, var(--glow) 22%, color-mix(in srgb, var(--glow) 40%, transparent) 50%, transparent 80%); }
+.reveal[data-phase="burst"] .reveal__seal { animation: seal-burst .45s ease-in forwards; }
+.reveal[data-phase="burst"] .reveal__flash:not(.reveal__flash--element) { animation: flash .75s ease-out both; }
+/* A character's gold turns her element's colour before she shows. */
+.reveal[data-phase="burst"][data-light="gold"][data-element] .reveal__flash--element { animation: flash 1.1s ease-out .45s both; }
+.reveal[data-phase="burst"] .reveal__light { opacity: 1; scale: 1.6; transition: scale .5s ease-out; }
+@keyframes seal-in { from { opacity: 0; transform: scale(.6) rotate(-30deg); } }
+@keyframes seal-burst { 40% { transform: scale(1.12); opacity: 1; } to { transform: scale(1.7); opacity: 0; } }
+@keyframes flash { 0% { opacity: 0; scale: .4; } 25% { opacity: 1; } 100% { opacity: 0; scale: 1.6; } }
+@keyframes hint { 50% { opacity: .55; } }
+/* What came out: rays behind it, then the prize. */
+.reveal__rays { position: absolute; left: 34%; top: 52%; width: 760px; height: 760px; translate: -50% -50%; pointer-events: none; opacity: .5; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--glow) 45%, transparent) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(closest-side, #000, transparent); mask: radial-gradient(closest-side, #000, transparent); animation: rays 24s linear infinite, rays-in .8s ease-out both; }
+.reveal--aspect { --glow: #b98bff; }
+.reveal--aspect .reveal__rays { left: 50%; }
+@keyframes rays { to { rotate: 1turn; } }
+@keyframes rays-in { from { opacity: 0; scale: .5; } }
+.reveal__stage { position: absolute; left: var(--left); right: 44%; top: 10px; bottom: 10px; }
+.reveal__about { position: absolute; right: var(--right); top: 50%; translate: 0 -50%; width: 290px; display: grid; gap: 7px; text-shadow: 0 1px 4px #0009; animation: from-right .5s cubic-bezier(.2, .8, .2, 1) .35s both; }
+.reveal__about h1 { font-size: 40px; font-weight: 800; line-height: 1; }
+.reveal__kind { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--gold-hi); }
+.reveal__kind .menu-icon { font-size: 18px; }
+.reveal__about .kit-lines { padding: 10px 12px; border-radius: 8px; background: var(--panel); text-shadow: none; }
+.reveal__actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 4px; }
+.reveal__actions .pill:not([data-size]) { min-width: 120px; }
+.reveal__count { font-size: 12px; font-weight: 800; color: var(--dim); letter-spacing: .08em; }
+.reveal__prize { position: relative; width: 340px; display: grid; gap: 8px; justify-items: center; text-align: center; text-shadow: 0 1px 4px #0009; animation: prize-in .55s cubic-bezier(.2, .9, .3, 1.25) both; }
+.reveal__prize h1 { font-size: 34px; font-weight: 800; line-height: 1; }
+.reveal__prize p { font-size: 13px; color: var(--dim); }
+.reveal__prize .pill { margin-top: 6px; }
+.reveal__orb { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; font-size: 50px; color: var(--gold-hi); background: radial-gradient(circle at 35% 30%, #5a4a8e, #1b1830 70%); box-shadow: 0 0 0 3px #b98bff, 0 0 30px #b98bff; }
+.reveal__supply { display: flex; gap: 22px; font-size: 30px; font-weight: 800; }
+.reveal__supply span { display: flex; align-items: center; gap: 8px; }
+.reveal__supply .menu-icon, .reveal__supply .material-icon { font-size: 32px; }
+@keyframes prize-in { from { opacity: 0; transform: scale(.7); } }
+@keyframes from-right { from { opacity: 0; transform: translateX(40px); } }
+/* All of it in a row: a card each, lit by its light. */
+.reveal__summary { display: grid; gap: 16px; justify-items: center; max-width: calc(100% - var(--left) - var(--right)); }
+.reveal__summary h1 { font-size: 28px; font-weight: 800; text-shadow: 0 1px 4px #0009; }
+.reveal__row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.reveal__item { display: grid; justify-items: center; gap: 4px; width: 64px; animation: prize-in .4s cubic-bezier(.2, .9, .3, 1.25) both; }
+.reveal__item small { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.1; color: var(--dim); }
+.reveal__item[data-light="purple"] .card { box-shadow: 0 0 0 2px #b98bff, 0 0 14px #b98bff; }
+.reveal__item[data-light="gold"] .card { box-shadow: 0 0 0 2px #ffd56b, 0 0 18px #ffd56b; }
+.reveal__item[data-light="gold"] small { color: var(--gold-hi); }
+@media (prefers-reduced-motion: reduce) { .reveal *, .reveal { animation-duration: .01s !important; animation-delay: 0s !important; } }
