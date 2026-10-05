@@ -54,7 +54,7 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
   </div>
 }
 
-/** The aspects `member` can fight with: her class's plain one, and every aspect of her class (owned, or locked); one on another member moves to her. */
+/** The aspects `member` can fight with: her class's plain one, and owned aspects of her class; one on another member moves to her. */
 const AspectPicker = ({ store, member, team, aspects, close, choose }: {
   readonly store: UiStore; readonly member: CharacterId; readonly team: ReadonlyArray<CharacterId>; readonly aspects: Readonly<Partial<Record<CharacterId, AspectId>>>
   readonly close: () => void; readonly choose: (aspect: AspectId | null) => void
@@ -63,12 +63,11 @@ const AspectPicker = ({ store, member, team, aspects, close, choose }: {
   const plain = tuning.classes[tuning.characters[member].class].plain
   const equipped = aspects[member] ?? null
   return <Dialog variant="gallery" title={`${tuning.characters[member].name} · Aspect`} close={close}><div class="aspect-picker">
-    {[null, ...aspectsFor(tuning, member)].map((option) => {
+    {[null, ...aspectsFor(tuning, member).filter((id) => owns(account, { kind: "aspect", id }))].map((option) => {
       const spec = option === null ? null : aspectOf(tuning.aspects, option)
-      const owned = option === null || owns(account, { kind: "aspect", id: option })
       const holder = option === null ? undefined : team.find((other) => other !== member && aspects[other] === option)
-      return <button key={option ?? "plain"} type="button" aria-label={`Equip ${spec?.name ?? plain.name}`} aria-pressed={option === equipped} disabled={!owned} onClick={() => choose(option)}>
-        <Icon name="aspect" /><b>{spec?.name ?? plain.name}</b><small>{!owned ? "Locked" : option === equipped ? "Equipped" : option === null ? "Plain" : "Owned"}</small>
+      return <button key={option ?? "plain"} type="button" aria-label={`Equip ${spec?.name ?? plain.name}`} aria-pressed={option === equipped} onClick={() => choose(option)}>
+        <Icon name="aspect" /><b>{spec?.name ?? plain.name}</b><small>{option === equipped ? "Equipped" : option === null ? "Plain" : "Owned"}</small>
         {holder !== undefined && <span class="aspect-picker__note">On {tuning.characters[holder].name}: moves here</span>}
       </button>
     })}

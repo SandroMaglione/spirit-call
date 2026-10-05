@@ -76,7 +76,7 @@
 .game-nav button::before { content:""; width:6px; height:6px; flex:none; transform:rotate(45deg); background:currentColor; }
 .game-nav button[aria-selected="true"] { color:var(--text); opacity:1; }
 .game-nav button[aria-selected="true"]::before { background:var(--gold); outline:1px solid #fff8; outline-offset:3px; }
-.lobby-shortcuts { position:absolute; left:calc(var(--edge-x) + 12px); top:calc(var(--edge-y) + 76px); }
+.lobby-shortcuts { position:absolute; left:var(--edge-x); top:calc(var(--edge-y) + 76px); }
 .home__tag,.character__tag { position:absolute; top:calc(var(--edge-y) + 4px); left:calc(var(--edge-x) + 52px); display:flex; align-items:center; gap:8px; height:36px; font-size:12px; color:var(--gold); z-index:4; pointer-events:none; }
 .home__tag .element .menu-icon,.character__tag .element .menu-icon { width:30px; height:30px; }
 .identity-divider { opacity:.55; }
@@ -135,7 +135,7 @@
 .roster__lock .menu-icon { width:12px; height:12px; }
 .character__panel { position:absolute; right:var(--edge-x); top:calc(var(--edge-y) + 76px); bottom:var(--edge-y); width:clamp(164px,23vw,300px); display:flex; flex-direction:column; z-index:4; }
 .character__panel,.brief { text-shadow:0 1px 4px #1a344cb3; }
-.ui .character-name { font:clamp(22px,2.6vw,34px)/1.1 var(--display); margin-bottom:12px; flex:none; }
+.ui .character-name { font:14px/1.2 var(--display); margin-bottom:8px; opacity:.7; flex:none; }
 .character-tabs { position:absolute; left:var(--edge-x); top:calc(var(--edge-y) + 76px); width:clamp(110px,17vw,210px); }
 #character-details { overflow-y:auto; min-height:0; flex:1; touch-action:pan-y; scrollbar-width:none; }
 .panel { background:transparent; border:0; }
@@ -175,24 +175,21 @@
 .success-message { color:var(--gold); }
 .aspect-class { font-size:12px; opacity:.85; margin:0 0 10px; }
 .aspect-class b { font-weight:600; }
-.aspects { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.aspect { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; background:transparent; border:0; padding:8px 4px; min-height:78px!important; text-align:center; }
-.aspect b { font-size:10px; font-weight:500; }
-.aspect.is-selected { background:radial-gradient(ellipse,#ffefc930,transparent 72%); color:#fff1be; }
-.aspect small { font-size:10px; }
-.aspect-detail { padding-top:20px; }
-.aspect-detail h2 { font-size:25px; margin:6px 0; }
-.aspect-detail>p { opacity:.85; font-size:13px; }
-.aspect-detail .aspect-passive { font-size:12px; opacity:.8; margin:6px 0; }
-.aspect-detail .lock-message { margin:16px 0; }
+.current-aspect>p { font-size:12px; line-height:1.5; opacity:.85; }
+.aspect-heading { display:flex; align-items:center; gap:10px; margin:12px 0; }
+.aspect-heading .ability-icon { width:32px; height:32px; flex:none; }
+.aspect-heading h2 { font:18px var(--display); }
+.current-aspect .text-button { margin-top:8px; padding-left:0; }
+.lock-message { margin:16px 0; }
 .lock-message { border-left:2px solid var(--gold); padding:10px 14px; font-size:12px; color:var(--text); background:#fff1; }
 .lock-message p { margin:4px 0; }
 .lock-message .text-button { margin-top:6px; }
-.skill-wheel { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 12px; padding-top:8px; }
-.skill-button { border:0; background:transparent; display:flex; flex-direction:column; align-items:center; gap:8px; padding:0; text-align:center; }
-.skill-button>span:first-child { width:50px; height:50px; border:1px solid #fff8; border-radius:50%; background:#fff1; display:grid; place-items:center; box-shadow:0 0 0 4px #fff1; }
-.skill-button .menu-icon { width:26px; height:26px; }
-.skill-button small { font-size:11px; }
+.skill-wheel { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:8px; height:100%; min-height:0; }
+.skill-button { border:0; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:0; text-align:center; min-width:0; }
+.skill-button:last-of-type { grid-column:1 / -1; width:calc(50% - 4px); justify-self:center; }
+.skill-button>span:first-child { width:40px; height:40px; display:grid; place-items:center; background:radial-gradient(ellipse,#fff1ca18,transparent 70%); }
+.skill-button .ability-icon { width:34px; height:34px; filter:drop-shadow(0 1px 3px #263a4650); }
+.skill-button small { font-size:10px; line-height:12px; min-height:24px; display:flex; align-items:center; justify-content:center; }
 .columns { position:absolute; inset:0 6% 80px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4%; }
 .column { position:relative; min-width:0; }
 .column__pick { height:calc(100% - 52px); width:100%; display:flex; flex-direction:column; align-items:center; border:0; background:transparent; padding:0; position:relative; }
@@ -378,6 +375,11 @@
 .quest-enemies>div>span { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
 .quest-enemies small { display:inline-flex; align-items:center; gap:4px; font-size:10px; }
 .quest-enemies .menu-icon { width:16px; height:16px; }
+.quest-repeat { display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid var(--line); padding-top:16px; margin-top:16px; font-size:13px; }
+.quest-repeat .reward-items { flex-wrap:nowrap; justify-content:flex-end; gap:12px; }
+.quest-repeat .reward-mini { flex-direction:row; min-width:0; height:24px; padding:0; gap:4px; font-size:12px; }
+.quest-repeat .reward-mini .menu-icon { width:18px; height:18px; }
+
 @keyframes quest-next { from { opacity:0; transform:translateX(55px); } to { opacity:1; transform:none; } }
 @keyframes quest-previous { from { opacity:0; transform:translateX(-55px); } to { opacity:1; transform:none; } }
 body:has(.menu,.pause,.results) .btm-toggle { display:none; }
@@ -409,7 +411,6 @@ body:has(.menu,.pause,.results) .btm-toggle { display:none; }
   .brief__foes .foe { gap:4px; }
   .reward-mini { height:48px; }
   .reward-mini.unlock { flex-direction:row; }
-  .skill-wheel { gap:14px 10px; }
   .quest-heading h1 { margin:8px 0; font-size:34px; }
   .quest-rewards { margin-top:8px; }
   .quest-rewards .reward-items { gap:14px; }

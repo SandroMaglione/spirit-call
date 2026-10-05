@@ -32,25 +32,29 @@ descriptions appear only when requested.
   portrait row in the header, left-edge Attributes/Aspects/Skills menu, central animated spirit, and
   open details at the right. Level and equipped stats are visible together in
   compact rows, with next-level gains before right-aligned totals and a Level up action at the bottom.
-  Characters display no XP. Passives and skill descriptions open on tap.
+  The character name is a small label. All five skills fit without scrolling,
+  with silhouettes drawn for each action. Characters display no XP; skill
+  descriptions and aspect effects open on tap. Only the current party aspect
+  is shown here, including a choice not yet confirmed in party preparation.
   Locked characters keep their spirit and name, with a glowing lock seal in
-  place of all tabs, stats, level, and unlock instructions. Aspect unlock
-  details remain available for owned characters.
+  place of all tabs, stats, level, and unlock instructions.
 - Party members stand openly on the stage. Tapping a slot summons a translucent
   portrait gallery with staggered entrances and light selection markers.
   Spaced slot markers sit above the models. Character names open details;
   removal lives in the picker, which keeps at least one member. Confirm saves changes;
-  starting also saves them. There is no party matchup dialog.
+  starting also saves them. The aspect picker offers the plain aspect and
+  owned aspects only. There is no party matchup dialog.
 - Challenges use a full-screen horizontal carousel, with drag feedback,
   directional transitions, arrow controls, and category tabs. Each quest
   shows its name, objective, enemy level, and rewards without enemy models
-  or a sidebar. Enemy names and elemental traits are available in Details.
+  or a sidebar. Enemy names and elemental traits are available in Details,
+  followed by a divider and a single Each clear row with rewards on the right.
   The enter action stays fixed at the lower right. Inspecting a locked
   choice does not prevent the lobby from starting the saved playable choice.
 - Results show reward symbols, account progress, and unlocked items over the
   arena. A newly earned character takes the large stage, turns into the light,
   and receives a brief ring reveal. Tapping skips the reveal. Unlocks open the
-  character's abilities or matching aspect screen. Run details contain the
+  character's abilities or party preparation for an aspect. Run details contain the
   discovery breakdown and partial-reward rule. No extra rewards are invented.
 - Pause opens a small drawer over the visible arena. Resume stays visible;
   Restart and Leave require a separate confirmation. Sound controls open on
@@ -91,10 +95,14 @@ descriptions appear only when requested.
 - Network-browser checks at 667 × 375 and 844 × 390 cover header navigation,
   contextual currencies, locked characters, and touch quest swipes. Attributes
   and Level up fit without scrolling; totals share the same right edge.
+  Home and Characters share the left-menu edge. All five skill actions fit for
+  every character at 667 × 375; the larger landscape also fits without scrolling.
+  Quest details separate enemies from one reward row aligned to the right.
 - A separate localhost account verifies selecting and saving plain and owned
-  aspects, locked choices, and entering with the saved aspect. The compact
-  picker fits at 667 × 375 with 44-pixel targets. Temporary account changes
-  are restored afterward.
+  aspects, entering with the saved aspect, and showing an unconfirmed choice
+  in character inspection. The picker excludes unowned aspects and fits at
+  667 × 375 with 44-pixel targets. Current-aspect effects open on tap.
+  Temporary account changes are restored afterward.
 - XP rewards show only the shared emblem and amount. Currency artwork remains
   shared by balances, costs, and rewards. Browser touch events cover gesture
   behavior; these checks are not a physical-phone playtest.

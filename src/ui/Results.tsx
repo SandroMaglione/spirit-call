@@ -1,7 +1,6 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 import { accountLevel, playLock } from "../account/account.ts"
-import { aspectOf } from "../content/aspects.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import { Dialog } from "./Dialog.tsx"
 import { Icon } from "./Icon.tsx"
@@ -48,10 +47,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
             <div class="results__xp"><div><span>{earned.level.after > earned.level.before ? `Account Lv ${earned.level.before} → ${earned.level.after}` : `Account Lv ${level.level}`}</span><span>{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed}`}</span></div><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
             {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <section class="results__unlocks">{earned.rewards.unlocks.map((unlock) => <button key={`${unlock.kind}-${unlock.id}`} type="button" class="unlock-card" disabled={!enabled} onClick={() => {
               if (unlock.kind === "character") open({ kind: "character", character: unlock.id, tab: "kit" })
-              else {
-                const member = (Object.keys(tuning.characters) as Array<keyof typeof tuning.characters>).find((id) => tuning.characters[id].class === aspectOf(tuning.aspects, unlock.id).class)!
-                open({ kind: "character", character: member, tab: "aspect" })
-              }
+              else open({ kind: "team" })
             }}>{unlock.kind === "character" ? <Portrait of={{ character: unlock.id }} /> : <span class="unlock-symbol"><Icon name="aspect" /></span>}<span><small>NEW</small><b>{describeUnlock(tuning, unlock)}</b></span><Icon name="next" /></button>)}</section>}
           </>}
         </>}
