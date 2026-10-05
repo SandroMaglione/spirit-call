@@ -125,7 +125,6 @@
 .quests__enemies { display: grid; gap: 5px; }
 .quests__goals { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 16px; }
 .quests__goals > div { display: grid; gap: 4px; align-content: start; }
-.quests__side-by-side > div { display: grid; gap: 3px; align-content: start; }
 .quests__goals > div { gap: 2px; }
 .quests__brief .panel__body { padding-top: 8px; padding-bottom: 8px; }
 .quests__goals > .quests__side-by-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -150,7 +149,9 @@
 /* Small headings in the brief, with the room they save given to what is under them. */
 .quests__brief .label { font-size: 9.5px; letter-spacing: .1em; }
 .quests__goals .label { margin-bottom: 3px; }
-.quests__side-by-side .label:not(:first-child) { margin-top: 16px; }
+/* First clear over every clear, well apart (side by side for a hardcore tier). */
+.quests__goals > .quests__rewards { gap: 18px; }
+.quests__rewards > div { display: grid; gap: 3px; align-content: start; }
 /* The enemies close the brief, under a rule across it. */
 .quests__enemies { margin: 8px -14px 0; padding: 14px 14px 0; border-top: 1px solid var(--line); }
 .goal { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
