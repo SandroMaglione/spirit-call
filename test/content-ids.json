@@ -50,7 +50,8 @@
     "untilFall",
     "strangeCompany",
     "trainingGround",
-    "practice"
+    "practice",
+    "heavyGround"
   ],
   "attacks": [
     "sword",
@@ -90,7 +91,7 @@
     "eliteHunt",
     "stormFront",
     "strangeCompany",
-    "stoneTrial"
+    "heavyGround"
   ],
   "chapters": [
     "one",

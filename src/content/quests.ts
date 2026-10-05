@@ -199,6 +199,16 @@ export const quests = {
     after: null,
     rewards: { experience: 120, currencies: { crystals: 60, gold: 1100 }, unlocks: [] }
   }),
+  heavyGround: quest({
+    name: "Heavy Ground",
+    line: "secondary",
+    chapter: null,
+    challenge: "heavyGround",
+    enemyLevel: 10,
+    level: 4,
+    after: null,
+    rewards: { experience: 160, currencies: { crystals: 80, gold: 1300 }, unlocks: [character("bastion")] }
+  }),
   stormFront: quest({
     name: "Storm Front",
     line: "secondary",

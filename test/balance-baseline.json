@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "a73b4a2dbbe74c6c4e605f45893904e1f023de6e891e82b440fee2cd459cd437",
+  "tuningHash": "80380a238e0ee8ca2ba8f8ce7c01596afd2b591b3d86464a2d94fb5b34269e79",
   "stats": [
     {
       "level": 1,
@@ -294,6 +294,38 @@
       "targets": 6,
       "specials": 6,
       "ultimates": 2
+    },
+    {
+      "id": "bastion/1/1",
+      "character": "bastion",
+      "level": 1,
+      "targets": 1,
+      "specials": 5,
+      "ultimates": 1
+    },
+    {
+      "id": "bastion/1/6",
+      "character": "bastion",
+      "level": 1,
+      "targets": 6,
+      "specials": 4,
+      "ultimates": 1
+    },
+    {
+      "id": "bastion/40/1",
+      "character": "bastion",
+      "level": 40,
+      "targets": 1,
+      "specials": 5,
+      "ultimates": 1
+    },
+    {
+      "id": "bastion/40/6",
+      "character": "bastion",
+      "level": 40,
+      "targets": 6,
+      "specials": 4,
+      "ultimates": 1
     }
   ],
   "rows": [

@@ -408,6 +408,26 @@ export const challenges = {
       endless: null
     }
   }),
+  /** The heaviest foes, wave on wave: brutes, guardians, and juggernauts that are best broken before they fall. */
+  heavyGround: challenge({
+    name: "Heavy Ground",
+    description: "Eight waves of the heaviest foes in the citadel: brutes, guardians, and juggernauts, best broken before they fall.",
+    objective: clearWaves(),
+    arena: "citadel",
+    waves: {
+      scripted: [
+        ["brute", "chaser", "chaser"],
+        ["guardian", "shooter", "swarmer"],
+        ["juggernaut", "chaser", "chaser"],
+        ["brute", "guardian", "swarmer", "swarmer"],
+        [elite("guardian", "water"), "brute", "shooter"],
+        ["juggernaut", "guardian", "chaser", "chaser"],
+        [elite("brute", "fire"), "juggernaut", "swarmer", "swarmer"],
+        [elite("juggernaut", "thunder"), elite("guardian", "fire"), "brute", "chaser"]
+      ],
+      endless: null
+    }
+  }),
   /** No end: ever-growing waves of ever-stronger enemies, until the team falls. */
   untilFall: challenge({
     name: "Until Fall",
