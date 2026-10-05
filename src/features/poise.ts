@@ -2,7 +2,7 @@
  * Breaking enemies: the payoff of pressing an attack and of combining
  * effects. Every enemy that can break (`EnemySpec.poise` above 0) has a
  * bar under its health, filled by the blows it takes (heavy ones more) and
- * by reactions on it (a wall slam most), and drained once it has taken
+ * by bursts on it and wall slams, and drained once it has taken
  * none for a while, so chipping from afar never breaks anything. A full bar
  * breaks it: stunned for a while, its attack cut off, taking more damage
  * (see `Tuning.breaking`). It fills again only once it has recovered. An
@@ -36,8 +36,8 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
   const rules = tuning.breaking
   const dt = resources.time.get().dt
   const hits = events.hit.all()
-  // Reactions the team set off (an enemy's own on the player do not count), on the body they happened to.
-  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy")
+  // Bursts and wall slams the team set off (an enemy's own on the player do not count), on the body they happened to.
+  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && (reaction.kind === "burst" || reaction.kind === "slam"))
   for (const { entity, data } of queries.enemies.each()) {
     const kind = data.enemy.get().kind
     const bar = poiseOf(tuning, kind, data.health.get().max)
@@ -59,7 +59,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
     const reach = data.hurtbox.get().radius
     for (const reaction of reactions) {
       if ((reaction.at.x - at.x) ** 2 + (reaction.at.y - at.y) ** 2 > reach * reach) continue
-      gained += bar * (reaction.kind === "stun" ? rules.slam : rules.reaction)
+      gained += bar * (reaction.kind === "slam" ? rules.slam : rules.burst)
     }
     const quiet = gained > 0 ? 0 : poise.quiet + dt
     const drained = quiet > rules.quietSeconds ? bar * rules.drain * dt : 0

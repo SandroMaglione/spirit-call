@@ -27,16 +27,11 @@ import {
   CombatStats,
   Controls,
   Damage,
-  ElementAffinities,
-  ElementState,
   Enemy,
   Energy,
   Explosion,
   Game,
-  Ground,
-  Gust,
   Health,
-  Hit,
   Hitbox,
   Hurtbox,
   Impact,
@@ -46,7 +41,6 @@ import {
   Player,
   Position,
   Projectile,
-  Reaction,
   RunScope,
   Skills,
   SlowMotion,
@@ -54,11 +48,9 @@ import {
   Tuning,
   Vortex
 } from "../schema.ts"
-import type { ElementId } from "../content/elements.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
-import { durationFactor } from "./elements.ts"
-import { active, makeGround } from "./ground.ts"
+import { makeGround } from "./ground.ts"
 import { knockbackTaken, Walls, wallBoxes } from "./motion.ts"
 import { paceOf } from "./time.ts"
 
@@ -326,51 +318,8 @@ export const CastVortices = Game.System("Shooter/CastVortices", {
       effect,
       blow: castBlow(cast, effect),
       remaining: effect.seconds,
-      nextTick: 0,
-      absorbed: null
+      nextTick: 0
     }]))
-  }
-})
-
-/**
- * A wind whirl takes on the first other element that touches it: a fire
- * pool or a puddle under it, a burning or soaked body of the other side
- * inside it, or a thunder strike landing inside it. It whirls that element
- * from then on (each strike carries it, see `UpdateVortices`) and lasts
- * `elements.wind.absorbSeconds` longer.
- */
-export const AbsorbIntoVortices = Game.System("Shooter/AbsorbIntoVortices", {
-  queries: {
-    vortices: Game.Query({ selection: { vortex: Game.Query.write(Vortex) } }),
-    pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
-    bodies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), state: Game.Query.read(ElementState) } })
-  },
-  resources: { tuning: Game.System.readResource(Tuning) },
-  events: { hit: Game.System.readEvent(Hit), reaction: Game.System.writeEvent(Reaction) }
-}, ({ queries, resources, events }) => {
-  const hits = events.hit.all()
-  for (const { data } of queries.vortices.each()) {
-    const vortex = data.vortex.get()
-    if (vortex.absorbed !== null || vortex.effect.element !== "wind") continue
-    const { center } = vortex
-    const reach = vortex.effect.radius
-    const inside = (at: Vec2, extra: number) => (at.x - center.x) ** 2 + (at.y - center.y) ** 2 <= (reach + extra) ** 2
-    let absorbed: ElementId | null = null
-    for (const { data: pool } of queries.pools.each()) {
-      const ground = pool.ground.get()
-      if (active(ground) && inside(ground.center, ground.radius * 0.5)) absorbed ??= ground.element
-    }
-    for (const { data: body } of queries.bodies.each()) {
-      const state = body.state.get().current
-      if (state === null || body.hurtbox.get().faction === vortex.faction || !inside(body.position.get(), 0)) continue
-      absorbed ??= state.id === "burning" ? "fire" : "water"
-    }
-    for (const hit of hits) {
-      if (hit.element === "thunder" && hit.faction !== vortex.faction && inside(hit.at, 0)) absorbed ??= "thunder"
-    }
-    if (absorbed === null || absorbed === "wind") continue
-    data.vortex.set({ ...vortex, absorbed, remaining: vortex.remaining + resources.tuning.get().elements.wind.absorbSeconds })
-    events.reaction.emit({ at: center, kind: "swirl", faction: vortex.faction })
   }
 })
 
@@ -378,11 +327,10 @@ export const AbsorbIntoVortices = Game.System("Shooter/AbsorbIntoVortices", {
  * Whirls strike every tick: each body of the other side within reach is
  * pulled toward the center, and takes the blow when the whirl has power.
  * The pull is a push toward it sized to close `pull` of the distance (with
- * the drive of wind, see `Tuning.elements.wind.decay`; a body that is pushed
- * less, or not driven, comes less far), so bodies gather without being flung
- * past the center. A whirl with no power lands no blow at all (no flash, no
- * number): only the pull, and a wind whirl's drive. A wind whirl that has
- * taken on an element (see `AbsorbIntoVortices`) strikes with it instead.
+ * the glide of a swept body, see `Tuning.elements.swept.decay`; a body that
+ * is pushed less, or not swept, comes less far), so bodies gather without
+ * being flung past the center. A whirl with no power lands no blow at all
+ * (no flash, no number): only the pull.
  */
 export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
   queries: {
@@ -393,8 +341,6 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
         hurtbox: Game.Query.read(Hurtbox),
         invulnerable: Game.Query.optional(Invulnerable),
         knockback: Game.Query.write(Knockback),
-        gust: Game.Query.write(Gust),
-        affinities: Game.Query.read(ElementAffinities),
         enemy: Game.Query.optional(Enemy)
       },
       with: [Health]
@@ -405,14 +351,12 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
-  const decay = tuning.elements.wind.decay
+  const decay = tuning.elements.swept.decay
   for (const { entity, data } of queries.vortices.each()) {
     const vortex = data.vortex.get()
     const { effect, center } = vortex
     // What its strikes carry: the element it took on, else its own.
-    const struck: Blow = vortex.absorbed === null || vortex.blow.element === null
-      ? { ...vortex.blow, knockback: 0 }
-      : { ...vortex.blow, knockback: 0, element: { id: vortex.absorbed, atk: vortex.blow.element.atk } }
+    const struck: Blow = { ...vortex.blow, knockback: 0 }
     let nextTick = vortex.nextTick - dt
     if (nextTick <= 1e-9) {
       nextTick += effect.tick
@@ -428,9 +372,6 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
         const enemy = target.data.enemy.present ? target.data.enemy.get().kind : undefined
         const push = effect.pull * distance * decay * knockbackTaken(tuning, enemy)
         target.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
-        const affinity = effect.element === null ? undefined : target.data.affinities.get()[effect.element]
-        const gust = effect.element === "wind" ? tuning.elements.wind.seconds * durationFactor(tuning, affinity) : 0
-        if (gust > 0) target.data.gust.update((current) => ({ remaining: Math.max(current.remaining, gust) }))
         if (effect.power <= 0) continue
         events.damage.emit({ target: Game.Entity.handle(target.entity.id, Health), faction: vortex.faction, direction, blow: struck })
       }

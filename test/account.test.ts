@@ -91,20 +91,20 @@ describe("account rules", () => {
     expect(won.earned.pay).toEqual({ gold: clear(level) })
   })
 
-  it("makes discoveries: clears with a character or a full team, and reactions set off", () => {
-    const run = { cleared: true, progress: 1, team: ["swordsman" as const, "gunner" as const], reactions: ["ignite" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
+  it("makes discoveries: clears with a character or a full team, and bursts set off", () => {
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const, "gunner" as const], reactions: ["burning" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
     expect(discovered({ kind: "clearWith", character: "gunner" }, run)).toBe(true)
     expect(discovered({ kind: "clearWith", character: "gunner" }, { ...run, cleared: false, progress: 0.9 })).toBe(false)
     expect(discovered({ kind: "clearWith", character: "tidecaller" }, run)).toBe(false)
     expect(discovered({ kind: "fullTeam" }, run)).toBe(false)
     expect(discovered({ kind: "fullTeam" }, { ...run, team: ["swordsman", "gunner", "tidecaller"] })).toBe(true)
-    // A reaction counts in a lost run too.
-    expect(discovered({ kind: "reaction", reaction: "ignite" }, { ...run, cleared: false, progress: 0 })).toBe(true)
-    expect(discovered({ kind: "reaction", reaction: "steam" }, run)).toBe(false)
+    // A burst counts in a lost run too.
+    expect(discovered({ kind: "reaction", reaction: "burning" }, { ...run, cleared: false, progress: 0 })).toBe(true)
+    expect(discovered({ kind: "reaction", reaction: "soaked" }, run)).toBe(false)
   })
 
   it("pays each discovery once, only in quests and tiers", () => {
-    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: ["stun" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: ["slam" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
     const { discoveries } = defaultTuning
     const quick = recordRun(defaultTuning, fresh(), null, run, 2000)
     expect(quick.earned.discoveries).toEqual([])

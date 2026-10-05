@@ -147,7 +147,7 @@ export const defaultTuning = {
   /** Every skill, by id; a character starts with one per slot, and a build can equip others. */
   skills,
 
-  /** States (burning, soaked), wind, and how elements interact (see content/elements.ts). */
+  /** States, bursts, thunder's strikes, and affinities (see content/elements.ts). */
   elements: elementRules,
 
   /** Energy, spent by skills that cost it (the Nova). */
@@ -195,12 +195,12 @@ export const defaultTuning = {
   /**
    * Breaking enemies (see `features/poise.ts`). A blow fills an enemy's bar
    * by the damage it deals (a heavy blow `heavy` times that, a burn `burn`
-   * times); a reaction on it fills `reaction` of the bar, a wall slam
+   * times); a burst on it fills `burst` of the bar, a wall slam
    * `slam`. After `quietSeconds` without any, the bar drains `drain` of
    * itself per second. Full, the enemy breaks: stunned for `seconds`, its
    * attack cut off, taking `damageTaken` times the damage, with a hit-stop.
    */
-  breaking: { heavy: 2, burn: 0.25, reaction: 0.2, slam: 0.25, quietSeconds: 1.2, drain: 0.35, seconds: 2.5, damageTaken: 1.25, hitStop: 0.16 },
+  breaking: { heavy: 2, burn: 0.25, burst: 0.2, slam: 0.25, quietSeconds: 1.2, drain: 0.35, seconds: 2.5, damageTaken: 1.25, hitStop: 0.16 },
 
   /** Every enemy kind, by id. */
   enemies,
@@ -263,8 +263,8 @@ export const defaultTuning = {
 
   /**
    * Arena hazards (see `content/arena.ts`): permanent pools burning or
-   * soaking with the strength of an ATK of `atk`. Water puts a fire pit out
-   * for `relightSeconds`.
+   * soaking with the strength of an ATK of `atk`. A newer pool of another
+   * element puts one out for `relightSeconds`.
    */
   hazards: { atk: 60, relightSeconds: 6 },
 

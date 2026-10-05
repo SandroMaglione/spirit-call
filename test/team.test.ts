@@ -74,7 +74,7 @@ const putIn = (slot: number, state: ActiveState) => {
 }
 
 /** A fire that burns `dps` for `seconds`. */
-const fire = (dps: number, seconds = 30): ActiveState => ({ id: "burning", remaining: seconds, dps, nextTick: 0.01, charges: false })
+const fire = (dps: number, seconds = 30): ActiveState => ({ id: "burning", remaining: seconds, atk: (dps * 100) / defaultTuning.elements.burning.power, nextTick: 0.01, charges: false })
 
 const flowOf = (started: ReturnType<typeof start>) => started.runtime.debug.dump().machines["Shooter/Flow"]?.current
 

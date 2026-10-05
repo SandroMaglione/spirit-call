@@ -14,6 +14,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
+  Arc,
   Challenge,
   CombatStats,
   Damage,
@@ -22,7 +23,6 @@ import {
   ElementAffinities,
   ElementState,
   Enemy,
-  Gust,
   Energy,
   EnergyLedger,
   Game,
@@ -48,6 +48,7 @@ import {
   Respawns,
   RunScope,
   SlowMotion,
+  StateBurst,
   Stats,
   Time,
   Tuning,
@@ -57,7 +58,7 @@ import {
 import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken } from "./build.ts"
-import { afflict, durationFactor, elementDamageFactor } from "./elements.ts"
+import { affinityDamage, afflict } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { damageBonusPercent, PassiveHolders } from "./passives.ts"
 import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
@@ -218,7 +219,6 @@ const Damageable = Game.Query({
     stats: Game.Query.read(CombatStats),
     state: Game.Query.write(ElementState),
     affinities: Game.Query.read(ElementAffinities),
-    gust: Game.Query.write(Gust),
     player: Game.Query.optional(Player),
     enemy: Game.Query.optional(Enemy),
     respawns: Game.Query.optional(Respawns),
@@ -299,7 +299,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const state = data.state.get().current
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
-    const factor = blow.element === null ? 1 : elementDamageFactor(tuning, blow.element.id, state, affinity)
+    const factor = blow.element === null ? 1 : affinityDamage(tuning, affinity)
+    // The blow's element takes hold (a burn only burns): its state, bursting another first (see `afflict`).
+    const afflicted = blow.element !== null && !blow.periodic ? afflict(tuning, state, blow.element, blow.charges, affinity) : null
     // A broken enemy takes more (see `Tuning.breaking`), and so does one in the state the blow is made against.
     // Armor (see `ArmorSpec`) holds until the break bar fills: a share of the damage, and no push.
     const armored = enemy !== undefined && tuning.enemies[enemy].armor !== null && !(data.poise.present && data.poise.get().broken > 0)
@@ -330,7 +332,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
         data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
         hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
       }
-      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy)
+      // A swept body is light: pushed further (see `elementRules.swept`).
+      const light = (afflicted?.state ?? state)?.id === "swept" ? tuning.elements.swept.knockback : 1
+      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy) * light
       data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
       // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
       if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
@@ -350,13 +354,20 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       periodic: blow.periodic,
       element: blow.element?.id ?? null
     })
-    // The blow's element takes hold of a body that survives it (a burn only burns); wind drives it.
-    if (!killed && blow.element !== null && !blow.periodic) {
-      const afflicted = afflict(tuning, state, blow.element, blow.charges, affinity)
+    // The state it held bursts, even on the blow that ends it; the new state holds on a body that survives.
+    const side = data.hurtbox.get().faction
+    if (afflicted?.burst != null) {
+      commands.spawnIn(RunScope, Game.Command.spawn([StateBurst, { at, state: afflicted.burst, target: entity.id.value, side, by: damage.faction, direction: damage.direction }]))
+    }
+    if (afflicted !== null && !killed) {
       data.state.set({ current: afflicted.state })
-      if (afflicted.reaction !== null) events.reaction.emit({ at, kind: afflicted.reaction, faction: damage.faction })
-      const gust = blow.element.id === "wind" ? tuning.elements.wind.seconds * durationFactor(tuning, affinity) : 0
-      if (gust > 0) data.gust.set({ remaining: gust })
+      if (afflicted.state !== null && afflicted.state.id !== state?.id) events.reaction.emit({ at, kind: "apply", state: afflicted.state.id, faction: damage.faction })
+    }
+    // A blow on a charged body arcs on to the next (an arc or a burn never does).
+    const charged = afflicted === null ? state : afflicted.state
+    if (!blow.periodic && !blow.arc && damage.faction !== null && charged?.id === "charged" && charged.nextTick <= 0 && amount > 0) {
+      commands.spawnIn(RunScope, Game.Command.spawn([Arc, { from: entity.id.value, at, side, by: damage.faction, damage: blow.damage * tuning.elements.charged.arcShare, atk: charged.atk, charges: false }]))
+      if (!killed) data.state.set({ current: { ...charged, nextTick: tuning.elements.charged.arcEvery } })
     }
     if (!killed) continue
 
@@ -385,7 +396,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   if (hitStop > 0) resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, hitStop) }))
 })
 
-/** A burn on a team member on the bench: it lands like any burn (her DEF, a soaked body's fizzle), and she falls when it ends her. */
+/** A burn on a team member on the bench: it lands like any burn (her DEF), and she falls when it ends her. */
 const burnOnBench = (
   tuning: TuningValue,
   data: {
@@ -397,8 +408,7 @@ const burnOnBench = (
 ): void => {
   const health = data.health.get()
   if (health.current <= 0) return
-  const factor = struck.element === null ? 1 : elementDamageFactor(tuning, struck.element.id, data.state.get().current)
-  const current = Math.max(0, health.current - damageTaken(tuning, struck.damage * factor, data.stats.get().def))
+  const current = Math.max(0, health.current - damageTaken(tuning, struck.damage, data.stats.get().def))
   data.health.set({ current, max: health.max })
   if (current <= 0) data.state.set({ current: null })
 }
@@ -431,24 +441,18 @@ export const TickCombatTimers = Game.System("Shooter/TickCombatTimers", {
   }
 })
 
-/**
- * Knockback velocity decays exponentially (frame-rate independent), slower
- * while wind drives the body (see `pushDecay`); the wind's drive runs down
- * here too, after the step's movement used it.
- */
+/** Knockback velocity decays exponentially (frame-rate independent), slower while the body is swept (see `pushDecay`). */
 export const DecayKnockback = Game.System("Shooter/DecayKnockback", {
-  queries: { pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback), gust: Game.Query.write(Gust) } }) },
+  queries: { pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback), state: Game.Query.optional(ElementState) } }) },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
 }, ({ queries, resources }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
   for (const { data } of queries.pushed.each()) {
-    const gust = data.gust.get()
     const current = data.knockback.get()
     if (current.x !== 0 || current.y !== 0) {
-      const next = scale(current, Math.exp(-pushDecay(tuning, gust) * dt))
+      const next = scale(current, Math.exp(-pushDecay(tuning, data.state.present ? data.state.get().current : undefined) * dt))
       data.knockback.set(Math.hypot(next.x, next.y) < 0.5 ? { x: 0, y: 0 } : next)
     }
-    if (gust.remaining > 0) data.gust.set({ remaining: Math.max(0, gust.remaining - dt) })
   }
 })

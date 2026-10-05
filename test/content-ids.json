@@ -112,13 +112,22 @@
     "wallSlam",
     "carried",
     "withStormcaller",
-    "shocked"
+    "shocked",
+    "flare",
+    "splash",
+    "discharge",
+    "gale"
   ],
   "retired": {
     "skills": [
       "nova",
       "grenade",
       "splash"
+    ],
+    "discoveries": [
+      "steam",
+      "carried",
+      "shocked"
     ]
   }
 }

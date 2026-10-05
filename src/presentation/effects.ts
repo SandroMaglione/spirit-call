@@ -6,6 +6,8 @@
 import { Group, Vector3 } from "three"
 
 import { isMelee } from "../content/attacks.ts"
+import type { StateId } from "../content/elements.ts"
+import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
@@ -244,7 +246,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })
     services.host.feedback.shake = Math.max(services.host.feedback.shake, nova ? view.ultimateShake : view.explosionShake)
   }
-  for (const reaction of events.reaction.all()) react(services.host, toScreen(projection, reaction.at), reaction.kind)
+  for (const reaction of events.reaction.all()) react(services.host, toScreen(projection, reaction.at), reaction.kind, reaction.state, resources.tuning.get())
   // Thunder: a bolt along its path at body height, a spark where it lands; a healing zap in the heal color.
   for (const zap of events.zap.all()) {
     const color = zap.heal ? view.totem.heal : view.elements.thunder
@@ -269,50 +271,42 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   }
 })
 
-/** The effect of elements meeting at `at` (projected coordinates). */
-const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind): void => {
+/** The effect of what elements do at `at` (projected coordinates): a state taking hold, a burst (a ring as far as it reaches), an arc, a slam, a pool put out. */
+const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind, state: StateId | null, tuning: TuningValue): void => {
   const fx = host.fx
   const body = { x: at.x, y: at.y - view.impact.height * projection.zoom }
+  const color = state === null ? view.stun : view.states[state]
   switch (kind) {
-    case "ignite":
-      fx.flash(body, 30, view.elements.fire, 0.14)
-      fx.burst(body, { color: view.elements.fire, count: 10, speed: 160, size: 3.5, life: 0.4, gravity: -260 })
+    case "apply":
+      if (state === "burning") fx.burst(body, { color, count: 10, speed: 160, size: 3.5, life: 0.4, gravity: -260 })
+      else if (state === "soaked") fx.burst(body, { color, count: 12, speed: 200, size: 3.5, life: 0.4, gravity: 420 })
+      else if (state === "charged") fx.burst(body, { color, count: 8, speed: 260, size: 2.5, life: 0.25, stretch: 3 })
+      else fx.burst(body, { color, count: 8, speed: 220, size: 3, life: 0.3 })
       return
-    case "soak":
-      fx.burst(body, { color: view.elements.water, count: 12, speed: 200, size: 3.5, life: 0.4, gravity: 420 })
-      return
-    case "steam":
-      fx.flash(body, 40, view.steam, 0.2)
-      fx.burst(body, { color: view.steam, count: 16, speed: 120, size: 7, life: 0.8, gravity: -200, drag: 3, alpha: 0.6 })
-      return
-    case "fizzle":
-      fx.burst(body, { color: view.steam, count: 6, speed: 90, size: 5, life: 0.5, gravity: -160, drag: 3, alpha: 0.5 })
-      return
-    case "carry":
-      fx.burst(body, { color: view.elements.wind, count: 8, speed: 220, size: 3, life: 0.3 })
-      return
-    case "shock":
-      fx.flash(body, 42, view.elements.thunder, 0.16)
-      fx.ring(at, 46 * projection.zoom, view.elements.thunder, 0.3)
-      fx.burst(body, { color: view.elements.thunder, count: 12, speed: 280, size: 3, life: 0.3, stretch: 3 })
-      return
-    case "swirl":
-      // A whirl taking on an element: a gust bursting out from its center (the whirl turns the element's color).
-      fx.flash(body, 60, view.elements.wind, 0.2)
-      fx.ring(at, 120 * projection.zoom, view.elements.wind, 0.4)
-      fx.burst(body, { color: view.elements.wind, count: 18, speed: 320, size: 4, life: 0.45, drag: 2 })
+    case "burst": {
+      const reach = state === null ? 100 : tuning.elements.bursts[state].radius
+      fx.flash(body, 56, color, 0.2)
+      fx.ring(at, reach * projection.zoom, color, 0.45)
+      fx.burst(body, { color, count: 22, speed: 340, size: 4, life: 0.45, drag: 2, ...(state === "charged" ? { stretch: 3 } : {}) })
       host.feedback.shake = Math.max(host.feedback.shake, view.impact.heavyShake)
       return
-    case "stun":
+    }
+    case "arc":
+      return
+    case "slam":
       fx.flash(body, 44, view.stun, 0.16)
       fx.ring(at, 50 * projection.zoom, view.stun, 0.35)
       fx.burst(body, { color: view.stun, count: 12, speed: 260, size: 3.5, life: 0.35 })
       host.feedback.shake = Math.max(host.feedback.shake, view.impact.heavyShake)
       return
+    case "out":
+      fx.flash(body, 40, view.steam, 0.2)
+      fx.burst(body, { color: view.steam, count: 16, speed: 120, size: 7, life: 0.8, gravity: -200, drag: 3, alpha: 0.6 })
+      return
   }
 }
 
-/** Motes off bodies in a state (embers rising off burning ones, drops falling off soaked ones), and embers off fire pools. */
+/** Motes off bodies in a state (embers rising off burning ones, drops falling off soaked ones, sparks off charged ones, wisps off swept ones), and embers off fire pools. */
 export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
   queries: {
     bodies: Game.Query({
@@ -330,7 +324,9 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
     const r = data.body.get().radius * projection.zoom
     const from = { x: at.x + (Math.random() - 0.5) * r * 1.6, y: at.y - Math.random() * r * view.bodyHeightFactor }
     if (state.id === "burning") services.host.fx.mote(from, (Math.random() - 0.5) * 30, -60 - Math.random() * 50, { color: view.states.burning, size: 3 + Math.random() * 2, life: 0.5, gravity: -80, drag: 1 })
-    else services.host.fx.mote(from, (Math.random() - 0.5) * 16, 10, { color: view.states.soaked, size: 2.5, life: 0.45, gravity: 520, drag: 0.5 })
+    else if (state.id === "soaked") services.host.fx.mote(from, (Math.random() - 0.5) * 16, 10, { color: view.states.soaked, size: 2.5, life: 0.45, gravity: 520, drag: 0.5 })
+    else if (state.id === "charged") services.host.fx.mote(from, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, { color: view.states.charged, size: 2, life: 0.15, drag: 4 })
+    else services.host.fx.mote(from, (Math.random() - 0.5) * 50, -30 - Math.random() * 30, { color: view.states.swept, size: 3, life: 0.4, gravity: -40, drag: 2, alpha: 0.6 })
   }
   for (const { data } of queries.pools.each()) {
     const pool = data.ground.get()

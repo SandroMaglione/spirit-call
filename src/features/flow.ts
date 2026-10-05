@@ -3,6 +3,7 @@
  * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
  * screen, and a restart that clears the run and starts over.
  */
+import type { ReactionRecord } from "../content/elements.ts"
 import { Challenge, EnergyLedger, Flow, Game, Health, HitStop, Keys, Member, Paused, PracticeField, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { initialWaves } from "./waves.ts"
@@ -14,13 +15,16 @@ export const TrackRun = Game.System("Shooter/TrackRun", {
   resources.run.update((run) => ({ ...run, time: run.time + dt }))
 })
 
-/** Notes each kind of reaction the team sets off in the run, for its result (discoveries count them; an enemy's do not). */
+/** Notes each burst (by its state) and wall slam the team sets off in the run, for its result (discoveries count them; an enemy's do not). */
 export const RecordReactions = Game.System("Shooter/RecordReactions", {
   events: { reaction: Game.System.readEvent(Reaction) },
   resources: { stats: Game.System.writeResource(Stats) }
 }, ({ events, resources }) => {
   const seen = resources.stats.get().reactions
-  const added = [...new Set(events.reaction.all().filter((reaction) => reaction.faction !== "enemy").map((reaction) => reaction.kind))].filter((kind) => !seen.includes(kind))
+  const records = events.reaction.all().flatMap((reaction): ReadonlyArray<ReactionRecord> =>
+    reaction.faction !== "player" ? [] : reaction.kind === "slam" ? ["slam"] : reaction.kind === "burst" && reaction.state !== null ? [reaction.state] : []
+  )
+  const added = [...new Set(records)].filter((record) => !seen.includes(record))
   if (added.length > 0) resources.stats.update((stats) => ({ ...stats, reactions: [...stats.reactions, ...added] }))
 })
 

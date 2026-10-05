@@ -173,9 +173,9 @@ describe("account store", () => {
 
   it("keeps the discoveries made, dropping ones that no longer exist", async () => {
     const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
-    const saved = JSON.stringify({ ...JSON.parse(fresh!), discoveries: { steam: { madeAt: 5 }, oldThing: { madeAt: 6 } } })
+    const saved = JSON.stringify({ ...JSON.parse(fresh!), discoveries: { flare: { madeAt: 5 }, oldThing: { madeAt: 6 } } })
     const result = await withAccount({ [accountKey]: saved }, (store) => Effect.map(store.get, (account) => ({ account, notes: store.notes })))
-    expect(result.account.discoveries).toEqual({ steam: { madeAt: 5 } })
+    expect(result.account.discoveries).toEqual({ flare: { madeAt: 5 } })
     expect(result.notes[0]).toContain("discovery oldThing")
   })
 

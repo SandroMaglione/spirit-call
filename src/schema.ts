@@ -12,7 +12,7 @@ import type { AttackId, AttackMove } from "./content/attacks.ts"
 import type { ArenaId } from "./content/arena.ts"
 import type { ChallengeId, EliteElement, WaveEntry } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
-import type { Affinities, ElementId, ReactionKind, StateId } from "./content/elements.ts"
+import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
@@ -131,8 +131,6 @@ export interface VortexValue {
   readonly remaining: number
   /** Time until its next strike. */
   readonly nextTick: number
-  /** The element a wind whirl has taken on (see `AbsorbIntoVortices`), whirled with each strike; `null` before it does. */
-  readonly absorbed: ElementId | null
 }
 export const Vortex = Descriptor.Component<VortexValue>()("Shooter/Vortex")
 
@@ -204,6 +202,8 @@ export interface Blow {
   readonly periodic: boolean
   /** It deals `factor` times its damage to a body in `state` (see `BasicAttackSpec.against`); `null` for none. */
   readonly against: { readonly state: StateId; readonly factor: number } | null
+  /** An arc off a charged body (see `elementRules.charged`): it never arcs on itself. */
+  readonly arc: boolean
   /** It jumps on to the nearest other body of the side it hits within `range` with `share` of its damage (see `BasicAttackSpec.chain`); `null` for none. */
   readonly chain: { readonly range: number; readonly share: number } | null
 }
@@ -216,23 +216,23 @@ export interface ElementHit {
 
 /** A blow of `damage` and `knockback`; the other fields default to none. */
 export const blow = (spec: Pick<Blow, "damage" | "knockback"> & Partial<Blow>): Blow =>
-  ({ charges: false, hitStop: 0, heavy: false, source: null, element: null, periodic: false, against: null, chain: null, ...spec })
+  ({ charges: false, hitStop: 0, heavy: false, source: null, element: null, periodic: false, against: null, chain: null, arc: false, ...spec })
 
 /**
- * A state lasting on a body (see `content/elements.ts`): burning (taking
- * `dps` damage per second, a burn every `tick` seconds, the next in
- * `nextTick`) or soaked (slowed). `charges`: set by the player, so its burns
- * fill energy.
+ * A state lasting on a body (see `content/elements.ts`), set by a blow of
+ * its element from whoever has `atk` (what its burns, arcs, and burst deal
+ * comes from it). `nextTick`: until its next burn (burning) or until it can
+ * arc again (charged). `charges`: set by the player, so its burns fill energy.
  */
 export interface ActiveState {
   readonly id: StateId
   readonly remaining: number
-  readonly dps: number
+  readonly atk: number
   readonly nextTick: number
   readonly charges: boolean
 }
 
-/** The state a body is in, if any: one at a time, since water and fire cancel each other. */
+/** The state a body is in, if any: one at a time (another element bursts it, see `features/elements.ts`). */
 export const ElementState = Descriptor.Component<{ readonly current: ActiveState | null }>()("Shooter/ElementState")
 
 /** How the body takes each element (an enemy's kind's; none for the player), fixed when it spawns. */
@@ -248,8 +248,6 @@ export interface GroundValue {
   readonly element: ElementId
   readonly center: Vec2
   readonly radius: number
-  /** Velocity it is blown along by wind, decaying like knockback. */
-  readonly drift: Vec2
   readonly remaining: number
   readonly duration: number
   readonly atk: number
@@ -258,17 +256,11 @@ export interface GroundValue {
   readonly permanent: boolean
   /** A pool laid into the floor's tiles is a box this far each way from its center (`radius` then reaches its corners); `null`: a round pool. */
   readonly half: Vec2 | null
-  /** A fire pit put out by water: seconds until it burns again (0: burning). */
+  /** An arena pool put out by a newer pool of another element: seconds until it is back (0: in play). */
   readonly out: number
 }
 export const Ground = Descriptor.Component<GroundValue>()("Shooter/Ground")
 
-/**
- * Driven by wind for `remaining` seconds (see `features/wind.ts`): the body
- * carries its state to bodies it is pushed into, and is stunned if slammed
- * into a wall.
- */
-export const Gust = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Gust")
 
 /**
  * How close an enemy is to breaking (see `features/poise.ts`): `current`
@@ -566,13 +558,46 @@ export const Hit = Descriptor.Event<{
 }>()("Shooter/Hit")
 
 /**
- * Elements meeting on a body or on the ground (see `ReactionKind`), for
- * effects and the run's record. `faction`: who set it off: an enemy's blow
- * (on the team), the team (its blows, pools, and winds), or nobody (a fire
- * spreading); the run records only what the team set off.
+ * What elements do that can be seen (see `ReactionKind`), for effects and the
+ * run's record: `state` is the state that took hold, burst, arced, or (for a
+ * pool put out) went out. `faction`: who set it off: an enemy's blow (on the
+ * team), the team (its blows and pools), or nobody (a fire spreading); the
+ * run records only what the team set off.
  */
-export type { ReactionKind }
-export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind; readonly faction: Faction | null }>()("Shooter/Reaction")
+export type { ReactionKind, ReactionRecord }
+export const Reaction = Descriptor.Event<{ readonly at: Vec2; readonly kind: ReactionKind; readonly state: StateId | null; readonly faction: Faction | null }>()("Shooter/Reaction")
+
+/**
+ * A state burst by a blow of another element (see `features/elements.ts`),
+ * waiting to go off (an entity, so a hit-stop the blow starts holds it rather
+ * than losing it): `state` is what the struck body held, `target` its entity
+ * id (gone, if the blow killed it), `side` the struck body's side (the burst
+ * reaches its side only), `by` who set it off, and `direction` the blow's.
+ */
+export const StateBurst = Descriptor.Component<{
+  readonly at: Vec2
+  readonly state: ActiveState
+  readonly target: number
+  readonly side: Faction
+  readonly by: Faction | null
+  readonly direction: Vec2
+}>()("Shooter/StateBurst")
+
+/**
+ * A blow on a charged body arcing on (see `elementRules.charged`), waiting to
+ * go off (an entity, like `StateBurst`): from the body `from` at `at` (its
+ * side `side`), `damage` before DEF, as thunder from `atk` (whoever charged
+ * it), dealt by `by`.
+ */
+export const Arc = Descriptor.Component<{
+  readonly from: number
+  readonly at: Vec2
+  readonly side: Faction
+  readonly by: Faction
+  readonly damage: number
+  readonly atk: number
+  readonly charges: boolean
+}>()("Shooter/Arc")
 
 /** An entity with health died, with its ATK (what a burst when it falls deals, see `BurstSpec`). */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined; readonly atk: number }>()("Shooter/Death")
@@ -847,16 +872,16 @@ export interface RunResultValue {
   readonly time: number
   /** The team the run was played with, in order. */
   readonly team: ReadonlyArray<CharacterId>
-  /** Each kind of reaction the run set off, once. */
-  readonly reactions: ReadonlyArray<ReactionKind>
+  /** Each burst (by the state it paid out) and wall slam the run set off, once. */
+  readonly reactions: ReadonlyArray<ReactionRecord>
 }
 export const RunResult = Descriptor.Resource<RunResultValue | null>()("Shooter/RunResult")
 
 export interface StatsValue {
   readonly kills: number
   readonly shots: number
-  /** Each kind of reaction set off so far, once, in the order first seen. */
-  readonly reactions: ReadonlyArray<ReactionKind>
+  /** Each burst (by its state) and wall slam set off so far, once, in the order first seen. */
+  readonly reactions: ReadonlyArray<ReactionRecord>
 }
 export const Stats = Descriptor.Resource<StatsValue>()("Shooter/Stats")
 
@@ -908,7 +933,6 @@ export const Game = Schema.bind(
       ElementState,
       ElementAffinities,
       Ground,
-      Gust,
       Poise,
       Elite,
       Stunned,
@@ -928,6 +952,8 @@ export const Game = Schema.bind(
       Shield,
       Ward,
       Burst,
+      StateBurst,
+      Arc,
       Immortal,
       PracticeUnit,
       Brain,

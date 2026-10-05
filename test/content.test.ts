@@ -86,9 +86,9 @@ describe("content", () => {
 
   it("reports discoveries that pay gold or leave a character out", () => {
     const { withGunner: _, ...others } = defaultTuning.discoveries
-    const broken = { ...defaultTuning, discoveries: { ...others, steam: { ...defaultTuning.discoveries.steam, rewards: { gold: 100 } } } } as unknown as Tuning
+    const broken = { ...defaultTuning, discoveries: { ...others, flare: { ...defaultTuning.discoveries.flare, rewards: { gold: 100 } } } } as unknown as Tuning
     expect(validateContent(broken)).toEqual([
-      "discovery steam: rewards must be crystals only",
+      "discovery flare: rewards must be crystals only",
       "character gunner: needs a discovery for clearing with her"
     ])
   })

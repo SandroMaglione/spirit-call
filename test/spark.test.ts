@@ -1,14 +1,12 @@
 /**
  * What gives the fight its peaks: the Gunner's magazine (fire, then reload
- * or switch out), wind whirls taking on other elements, and enemies
- * breaking under pressure.
+ * or switch out), and enemies breaking under pressure.
  */
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { makeGround } from "../src/features/ground.ts"
-import { Attacker, AttackPhase, Dash, ElementState, Enemy, Game, Health, Player, Poise, RunScope, SlowMotion, Stunned, Vortex, Weapon } from "../src/schema.ts"
-import { center, cursorAt, doubleTap, gale, gunner, placeDummies, start, steps, withGale } from "./helpers.ts"
+import { Attacker, AttackPhase, Dash, ElementState, Enemy, Game, Health, Player, Poise, SlowMotion, Stunned, Vortex, Weapon } from "../src/schema.ts"
+import { cursorAt, doubleTap, gunner, placeDummies, start, steps } from "./helpers.ts"
 
 const Fight = Game.Inspector("Test/Spark", {
   queries: {
@@ -94,38 +92,6 @@ describe("the Gunner's charged shot", () => {
     const run = charged(2)
     // Two shots, then the press's own (which counts toward the charge), and the three rounds left.
     expect(run.runtime.inspect(Fight).enemies[0]!.health).toBeCloseTo(500 - 3 * shot - (full * 4) / rounds, 6)
-  })
-})
-
-describe("a wind whirl taking on an element", () => {
-  const absorbSeconds = defaultTuning.elements.wind.absorbSeconds
-
-  it("takes on the fire of a pool under it, lasts longer, and sets what it pulls burning", () => {
-    const run = start({ tuning: withGale(), pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 2, press: ["special"], release: ["special"] }] })
-    run.runtime.tick(placeDummies([{ x: 180, y: 0 }, { x: -160, y: 60 }]))
-    const Pool = Game.System("Test/FirePool", {}, ({ commands }) => {
-      commands.spawnIn(RunScope, makeGround({ element: "fire", radius: 40, seconds: 1 }, { x: center.x, y: center.y - 120 }, 80, true))
-    })
-    run.runtime.tick(Game.Schedule(Pool, Game.Schedule.applyDeferred()))
-    run.step(6)
-    const [whirl] = run.runtime.inspect(Fight).vortices
-    expect(whirl?.absorbed).toBe("fire")
-    expect(whirl!.remaining).toBeGreaterThan(gale.seconds)
-    run.step(steps(1))
-    expect(run.runtime.inspect(Fight).enemies.map((enemy) => enemy.state)).toEqual(["burning", "burning"])
-    // It ends later than a plain one would.
-    run.step(steps(gale.seconds - 1))
-    expect(run.runtime.inspect(Fight).vortices).toHaveLength(1)
-    run.step(steps(absorbSeconds) + 2)
-    expect(run.runtime.inspect(Fight).vortices).toHaveLength(0)
-  })
-
-  it("stays plain wind with nothing to take on", () => {
-    const run = start({ tuning: withGale(), keys: [{ frame: 2, press: ["special"], release: ["special"] }] })
-    run.runtime.tick(placeDummies([{ x: 180, y: 0 }]))
-    run.step(steps(1))
-    expect(run.runtime.inspect(Fight).vortices[0]?.absorbed).toBeNull()
-    expect(run.runtime.inspect(Fight).enemies[0]?.state).toBeNull()
   })
 })
 

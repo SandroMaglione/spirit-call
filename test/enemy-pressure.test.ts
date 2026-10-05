@@ -46,14 +46,14 @@ describe("enemy elements", () => {
     expect(run.world().player!.state?.id).toBe("soaked")
   })
 
-  it("leave the run's record to the team: a reaction an enemy sets off is no discovery", () => {
-    // Soaked by one bolt, then shocked through the water by a thunder bolt.
+  it("leave the run's record to the team: a burst an enemy sets off is no discovery", () => {
+    // Soaked, then a thunder bolt bursts the soak.
     const tuning = tuningWith({
       enemies: { shooter: { attacks: [{ ...defaultTuning.enemies.shooter.attacks[0]!, element: "thunder" } as AttackSpec] } }
     })
     const run = arena("shooter", [{ x: 300, y: 0 }], tuning)
     const Soak = Game.System("Test/Soak", { queries: { player: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Player] }) } }, ({ queries }) => {
-      for (const { data } of queries.player.each()) data.state.set({ current: { id: "soaked", remaining: 30, dps: 0, nextTick: 0, charges: false } })
+      for (const { data } of queries.player.each()) data.state.set({ current: { id: "soaked", remaining: 30, atk: 0, nextTick: 0, charges: false } })
     })
     run.runtime.tick(Game.Schedule(Soak))
     const before = run.world().player!.health

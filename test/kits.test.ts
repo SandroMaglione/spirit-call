@@ -45,7 +45,7 @@ const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Quer
   for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
 })
 const Soak = Game.System("Test/SoakAll", { queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) } }, ({ queries }) => {
-  for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, dps: 0, nextTick: 0, charges: false } })
+  for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, atk: 0, nextTick: 0, charges: false } })
 })
 
 describe("the Gunner's Flare Jump", () => {

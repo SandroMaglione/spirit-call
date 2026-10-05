@@ -12,7 +12,7 @@
  */
 import type { CharacterId } from "./characters.ts"
 import type { Amounts } from "./currencies.ts"
-import type { ReactionKind } from "./elements.ts"
+import type { ReactionRecord } from "./elements.ts"
 
 /** What makes a discovery. */
 export type DiscoveryCheck =
@@ -20,8 +20,8 @@ export type DiscoveryCheck =
   | { readonly kind: "clearWith"; readonly character: CharacterId }
   /** Clearing anything with a full team. */
   | { readonly kind: "fullTeam" }
-  /** Setting off this reaction once, cleared or not. */
-  | { readonly kind: "reaction"; readonly reaction: ReactionKind }
+  /** Setting off this burst (by the state it pays out) or a wall slam once, cleared or not. */
+  | { readonly kind: "reaction"; readonly reaction: ReactionRecord }
 
 export interface DiscoverySpec {
   readonly name: string
@@ -33,7 +33,7 @@ export interface DiscoverySpec {
 
 const discovery = (spec: DiscoverySpec): DiscoverySpec => spec
 const clearWith = (character: CharacterId): DiscoveryCheck => ({ kind: "clearWith", character })
-const reaction = (kind: ReactionKind): DiscoveryCheck => ({ kind: "reaction", reaction: kind })
+const reaction = (kind: ReactionRecord): DiscoveryCheck => ({ kind: "reaction", reaction: kind })
 
 /** Every discovery, by id, in the order the menu lists them. */
 export const discoveries = {
@@ -67,28 +67,34 @@ export const discoveries = {
     check: { kind: "fullTeam" },
     rewards: { crystals: 60 }
   }),
-  steam: discovery({
-    name: "Steam",
-    description: "Put out a fire with water.",
-    check: reaction("steam"),
-    rewards: { crystals: 40 }
-  }),
   wallSlam: discovery({
     name: "Wall slam",
-    description: "Drive an enemy into a wall with wind.",
-    check: reaction("stun"),
+    description: "Slam a swept enemy into a wall.",
+    check: reaction("slam"),
     rewards: { crystals: 40 }
   }),
-  carried: discovery({
-    name: "Carried along",
-    description: "Drive a burning or soaked enemy into another with wind.",
-    check: reaction("carry"),
+  flare: discovery({
+    name: "Flare",
+    description: "Burst a burning enemy with another element.",
+    check: reaction("burning"),
     rewards: { crystals: 40 }
   }),
-  shocked: discovery({
-    name: "Shocked",
-    description: "Strike a soaked enemy, or a puddle, with thunder.",
-    check: reaction("shock"),
+  splash: discovery({
+    name: "Splash",
+    description: "Burst a soaked enemy with another element.",
+    check: reaction("soaked"),
+    rewards: { crystals: 40 }
+  }),
+  discharge: discovery({
+    name: "Discharge",
+    description: "Burst a charged enemy with another element.",
+    check: reaction("charged"),
+    rewards: { crystals: 40 }
+  }),
+  gale: discovery({
+    name: "Gale",
+    description: "Burst a swept enemy with another element.",
+    check: reaction("swept"),
     rewards: { crystals: 40 }
   })
 }

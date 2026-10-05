@@ -19,7 +19,6 @@ import {
   ElementAffinities,
   ElementState,
   Game,
-  Gust,
   Health,
   HitFlash,
   Hurtbox,
@@ -72,7 +71,6 @@ export const bodyParts = (spec: BodySpec, motion: BodyMotion = { previous: spec.
   [Hurtbox, { radius: spec.hurtboxRadius, faction: spec.faction }],
   [HitFlash, { remaining: 0 }],
   [Invulnerable, { remaining: motion.invulnerable }],
-  [Gust, { remaining: 0 }],
   [Stunned, { remaining: 0 }]
 ] as const
 

@@ -3,9 +3,8 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { chainFrom } from "../src/features/thunder.ts"
 import type { Struck } from "../src/features/thunder.ts"
-import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { ElementState, Enemy, Energy, Game, Health, Member, Player, Position, RunScope, Stats, Totem } from "../src/schema.ts"
+import { ElementState, Enemy, Energy, Game, Health, Member, Player, Position, Stats, Totem } from "../src/schema.ts"
 import { center, cursorAt, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
@@ -59,22 +58,19 @@ const FillEnergy = Game.System("Test/ThunderEnergy", {
 const Soak = Game.System("Test/Soak", {
   queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, dps: 0, nextTick: 0, charges: false } })
+  for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, atk: 100, nextTick: 0, charges: false } })
 })
 
-const body = (id: number, x: number, extra: Partial<Struck> = {}): Struck => ({ id, entity: null, at: { x, y: 0 }, radius: 10, faction: "enemy", soaked: false, protected: false, ...extra })
+const body = (id: number, x: number, extra: Partial<Struck> = {}): Struck => ({ id, entity: null, at: { x, y: 0 }, radius: 10, faction: "enemy", protected: false, ...extra })
 
 describe("thunder", () => {
-  it("jumps on to the nearest body of the same side within reach, further from a soaked one, never twice", () => {
+  it("jumps on to the nearest body of the same side within reach, never twice", () => {
     const first = body(1, 0)
     const near = body(2, 20 + rules.jumpRange - 5)
     const far = body(3, near.at.x + 20 + rules.jumpRange + 40)
     const ally = body(4, 30, { faction: "player" })
     expect(chainFrom(defaultTuning, first, [first, near, far, ally], 5).map((struck) => struck.id)).toEqual([1, 2])
-    // From a soaked body it reaches the far one too.
-    const soaked = { ...near, soaked: true }
-    expect(chainFrom(defaultTuning, first, [first, soaked, far, ally], 5).map((struck) => struck.id)).toEqual([1, 2, 3])
-    expect(chainFrom(defaultTuning, first, [first, soaked, far], 1).map((struck) => struck.id)).toEqual([1, 2])
+    expect(chainFrom(defaultTuning, first, [first, near, far], 1).map((struck) => struck.id)).toEqual([1, 2])
     // A protected body is passed over, and so is one struck already.
     expect(chainFrom(defaultTuning, first, [first, { ...near, protected: true }], 5).map((struck) => struck.id)).toEqual([1])
     expect(chainFrom(defaultTuning, first, [first, near], 5, new Set([2])).map((struck) => struck.id)).toEqual([1])
@@ -88,8 +84,9 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
     const [totem] = run.world().totems
     expect(Math.hypot(totem!.at.x - center.x - totemSpec.offset, totem!.at.y - center.y)).toBeLessThan(3)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([1000 - totemSpec.power, 1000 - totemSpec.power])
+    // Both now charged: blows on them arc on to each other too.
     run.step(steps(totemSpec.tick))
-    expect(run.world().enemies[0]!.health).toBe(1000 - 2 * totemSpec.power)
+    expect(run.world().enemies[0]!.health).toBeLessThan(1000 - 2 * totemSpec.power)
   })
 
   it("zaps an enemy stepping into its reach and throws it back out", () => {
@@ -144,24 +141,13 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
   })
 })
 
-describe("thunder through water", () => {
-  it("strikes a soaked enemy harder, with a shock", () => {
+describe("thunder on a soaked enemy", () => {
+  it("bursts the soak: the struck enemy stops a moment, and is left charged", () => {
     const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
     run.runtime.tick(Game.Schedule(Soak))
-    run.step(3)
-    expect(run.world().enemies[0]!.health).toBeCloseTo(1000 - totemSpec.power * defaultTuning.elements.reactions.shock, 6)
-    expect(run.world().reactions).toContain("shock")
-  })
-
-  it("shocks everyone else standing in a puddle it strikes through, the player too", () => {
-    const Puddle = Game.System("Test/Puddle", {}, ({ commands }) => {
-      commands.spawnIn(RunScope, makeGround({ element: "water", radius: 400, seconds: 30 }, { x: center.x + 150, y: center.y }, 0, true))
-    })
-    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
-    run.runtime.tick(Game.Schedule(Puddle, Game.Schedule.applyDeferred()))
-    run.step(3)
-    expect(run.world().reactions).toContain("shock")
-    expect(run.world().player!.current).toBeLessThan(run.world().player!.max)
+    run.step(4)
+    expect(run.world().enemies[0]!.health).toBeLessThan(1000 - totemSpec.power)
+    expect(run.world().reactions).toContain("soaked")
   })
 })
 

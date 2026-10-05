@@ -110,14 +110,15 @@ describe("a cut of wind (Space)", () => {
     expect(run.player().aim.x).toBeCloseTo(1, 6)
   })
 
-  it("drives what it hits back along the cut in a glide: the wind's push dies down slowly while it drives", () => {
+  it("sweeps what it hits back along the cut in a glide: light, pushed further, its push dying down slowly while it is swept", () => {
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)], tuning })
     run.step(120)
     const [dummy] = run.world().enemies
-    // Gliding at the wind's decay while driven, then at the usual one.
-    const { decay, seconds } = defaultTuning.elements.wind
+    // Gliding at the swept decay while swept, then at the usual one.
+    const { decay, seconds, knockback: light } = defaultTuning.elements.swept
+    const push = wave.knockback * light
     const left = Math.exp(-decay * seconds)
-    const glide = (wave.knockback / decay) * (1 - left) + (wave.knockback * left) / defaultTuning.knockback.decay
+    const glide = (push / decay) * (1 - left) + (push * left) / defaultTuning.knockback.decay
     expect(dummy!.position.x - center.x - 100).toBeCloseTo(glide, -1)
     expect(glide).toBeGreaterThan(2 * (wave.knockback / defaultTuning.knockback.decay))
   })

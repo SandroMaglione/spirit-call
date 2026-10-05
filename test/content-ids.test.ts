@@ -13,7 +13,9 @@ import { defaultTuning } from "../src/config/tuning.ts"
  * something else): the Nova, shared by everyone, retired when every
  * character got her own ultimate (save version 5); the Grenade and the
  * Splash, when the Gunner and the Tidecaller got new specials (skills have
- * not been saved since version 5).
+ * not been saved since version 5); the discoveries of reactions between two
+ * elements (Steam, Carried along, Shocked), when elements became one rule
+ * (a save keeps only the discoveries that still exist).
  */
 const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>> & {
   readonly retired?: Record<string, ReadonlyArray<string>>

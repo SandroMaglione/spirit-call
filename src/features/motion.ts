@@ -6,7 +6,8 @@ import { moveCircle } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EnemyKind } from "../content/enemies.ts"
-import { Body, Enemy, Game, Gust, Knockback, Position, PrevPosition, SlowMotion, Time, Tuning, Velocity, Wall } from "../schema.ts"
+import { Body, ElementState, Enemy, Game, Knockback, Position, PrevPosition, SlowMotion, Time, Tuning, Velocity, Wall } from "../schema.ts"
+import type { ActiveState } from "../schema.ts"
 import { enemyPace } from "./time.ts"
 
 const Interpolated = Game.Query({
@@ -31,9 +32,9 @@ export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall:
 export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined): number =>
   enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken
 
-/** How fast a body's push dies down: slower while wind drives it (a glide), else `knockback.decay`. */
-export const pushDecay = (tuning: TuningValue, gust: { readonly remaining: number } | undefined): number =>
-  gust !== undefined && gust.remaining > 0 ? tuning.elements.wind.decay : tuning.knockback.decay
+/** How fast a body's push dies down: slower while it is swept (a glide), else `knockback.decay`. */
+export const pushDecay = (tuning: TuningValue, state: ActiveState | null | undefined): number =>
+  state?.id === "swept" ? tuning.elements.swept.decay : tuning.knockback.decay
 
 /** The share of a push's speed a body covers over a step of `dt`, as its push dies down at `decay`. */
 export const pushShare = (decay: number, dt: number): number => (decay > 0 ? (1 - Math.exp(-decay * dt)) / (decay * dt) : 1)
@@ -52,7 +53,7 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
         velocity: Game.Query.read(Velocity),
         body: Game.Query.read(Body),
         knockback: Game.Query.optional(Knockback),
-        gust: Game.Query.optional(Gust),
+        state: Game.Query.optional(ElementState),
         enemy: Game.Query.optional(Enemy)
       }
     }),
@@ -69,7 +70,7 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
     const own = data.velocity.get()
     const velocity = data.enemy.present && pace !== 1 ? { x: own.x * pace, y: own.y * pace } : own
     const knockback = data.knockback.present ? data.knockback.get() : zero
-    const knockbackShare = pushShare(pushDecay(tuning, data.gust.present ? data.gust.get() : undefined), dt)
+    const knockbackShare = pushShare(pushDecay(tuning, data.state.present ? data.state.get().current : undefined), dt)
     const vx = velocity.x + knockback.x * knockbackShare
     const vy = velocity.y + knockback.y * knockbackShare
     if (vx === 0 && vy === 0) continue
