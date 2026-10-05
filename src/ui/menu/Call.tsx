@@ -36,7 +36,7 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
   const problem = callProblem(tuning, account, banner, now), held = callsHeld(tuning, account), left = guarantees(tuning, account)
   // With one banner, it runs on (there is nothing to end into).
   const following = tuning.banners[nextBanner(tuning, now)]
-  const ends = following === spec ? "Runs until a new banner comes" : `Ends in ${describeTimeUntil(running.until, now)} · then ${following.name}`
+  const ends = following === spec ? "Runs on" : `Ends in ${describeTimeUntil(running.until, now)}`
   const note = problem?.kind === "callsLocked"
     ? `Calls open after ${tuning.quests[problem.quest as QuestId].name}, the end of chapter one.`
     : problem?.kind === "bannerComplete" ? "Every spirit on this banner is yours." : undefined
@@ -60,7 +60,7 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
       <Fact label="Rising from call" value={`${tuning.calls.character.softFrom}, +${percent(tuning.calls.character.softStep)} each`} />
       <Fact label="Certain by call" value={`${tuning.calls.character.guarantee} (your first: ${tuning.calls.character.firstGuarantee})`} />
       <Fact label="Aspect" value={`${percent(tuning.calls.aspect.rate)}, certain by call ${tuning.calls.aspect.guarantee}`} />
-      <Fact label="Otherwise, a supply" value={describeAmounts(tuning, { gold: tuning.calls.supply.gold })} />
+      <Fact label="Otherwise, a supply" value={`${describeAmounts(tuning, { gold: tuning.calls.supply.gold })} · ${tuning.calls.supply.material} ${elements[elementOf(tuning, focus)].name} Shards`} />
       <p class="dim">A character that comes is always the one you focus. Nothing you own comes again while something is left to get. The counts carry over from banner to banner.</p>
     </Panel>
     <Panel class="call__left in-right" title="Left to get" detail={`${leftOn(tuning, account, banner).length + aspectsLeft(tuning, account).length}`}>
@@ -90,19 +90,21 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
   return <Screen name="call">
     {top}
     <section class="call__banner in-left">
-      <Label>Banner · {ends}</Label>
+      <Label end={ends}>Banner</Label>
       <h1>{spec.name}</h1>
       <p>{spec.theme}</p>
       <Cards>{spec.characters.map((id) => <CharacterCard key={id} store={store} character={id} selected={id === focus && !owned(id)} mark={owned(id) ? "tick" : undefined}
-        foot={owned(id) ? "Yours" : id === focus ? "Focus" : "Tap to focus"} onClick={owned(id) || id === focus ? undefined : () => actions.focus(banner, id)} />)}</Cards>
+        foot={owned(id) ? "Yours" : id === focus ? "Focus" : "Pick"} onClick={owned(id) || id === focus ? undefined : () => actions.focus(banner, id)} />)}</Cards>
       {counts}
     </section>
     <div class="call__stage" data-element={elementOf(tuning, focus)}><ModelStage key={focus} character={focus} /></div>
     <Panel class="call__focus in-right" element={elementOf(tuning, focus)} icon={<Icon name={elementOf(tuning, focus)} />} title={tuning.characters[focus].name}
       subtitle={`${elements[elementOf(tuning, focus)].name} · ${tuning.classes[tuning.characters[focus].class].name} · ${owned(focus) ? "Yours" : "The focus"}`} note={note}>
       <KitLines store={store} character={focus} />
-      <Pill size="small" tone="dark" onClick={() => actions.enterExtra([focus], {}, { kind: "trial", character: focus })}>Try her</Pill>
     </Panel>
-    <Actions>{callButton(1, "dark")}{callButton(10, "cream")}</Actions>
+    <Actions>
+      <Pill size="small" tone="dark" icon="play" label={`Try ${tuning.characters[focus].name} on the Training Ground`} onClick={() => actions.enterExtra([focus], {}, { kind: "trial", character: focus })}>Try her</Pill>
+      {callButton(1, "dark")}{callButton(10, "cream")}
+    </Actions>
   </Screen>
 }

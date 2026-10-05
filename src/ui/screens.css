@@ -242,11 +242,12 @@
 .call__counts .menu-icon { color: var(--gold-hi); }
 .call__stage { position: absolute; left: calc(var(--left) + 210px); right: calc(var(--right) + 258px); top: 40px; bottom: 58px; }
 .call__focus { position: absolute; right: var(--right); top: 58px; width: 250px; max-height: calc(100% - 128px); z-index: 3; }
-.call__focus .pill { justify-self: start; }
 .call__button { display: grid; justify-items: center; line-height: 1; }
 .call__button small { display: flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 700; opacity: .8; margin-top: 2px; }
 .call__button small .menu-icon { font-size: 12px; }
-.call .actions .pill { min-width: 132px; }
+.call .actions .pill:not([data-size]) { min-width: 132px; }
+.call .actions .pill[data-size="small"] { padding-left: 4px; }
+.call .actions .pill[data-size="small"] .pill__dot { width: 24px; height: 24px; font-size: 12px; }
 .call__details { position: absolute; left: var(--left); top: 58px; width: 300px; max-height: calc(100% - 128px); z-index: 3; }
 .call__details .fact__value { display: flex; align-items: center; gap: 3px; }
 .call__left { position: absolute; right: var(--right); top: 58px; width: calc(100% - var(--left) - var(--right) - 318px); max-width: 330px; max-height: calc(100% - 128px); z-index: 3; }
@@ -302,6 +303,7 @@
 @keyframes rays { to { rotate: 1turn; } }
 @keyframes rays-in { from { opacity: 0; scale: .5; } }
 .reveal__stage { position: absolute; left: var(--left); right: 44%; top: 10px; bottom: 10px; }
+.reveal__stage .model { position: absolute; inset: 0; }
 .reveal__about { position: absolute; right: var(--right); top: 50%; translate: 0 -50%; width: 290px; display: grid; gap: 7px; text-shadow: 0 1px 4px #0009; animation: from-right .5s cubic-bezier(.2, .8, .2, 1) .35s both; }
 .reveal__about h1 { font-size: 40px; font-weight: 800; line-height: 1; }
 .reveal__kind { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--gold-hi); }
@@ -323,8 +325,9 @@
 /* All of it in a row: a card each, lit by its light. */
 .reveal__summary { display: grid; gap: 16px; justify-items: center; max-width: calc(100% - var(--left) - var(--right)); }
 .reveal__summary h1 { font-size: 28px; font-weight: 800; text-shadow: 0 1px 4px #0009; }
-.reveal__row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-.reveal__item { display: grid; justify-items: center; gap: 4px; width: 64px; animation: prize-in .4s cubic-bezier(.2, .9, .3, 1.25) both; }
+.reveal__row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.reveal__item .card { width: 54px; }
+.reveal__item { display: grid; justify-items: center; gap: 4px; width: 56px; animation: prize-in .4s cubic-bezier(.2, .9, .3, 1.25) both; }
 .reveal__item small { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.1; color: var(--dim); }
 .reveal__item[data-light="purple"] .card { box-shadow: 0 0 0 2px #b98bff, 0 0 14px #b98bff; }
 .reveal__item[data-light="gold"] .card { box-shadow: 0 0 0 2px #ffd56b, 0 0 18px #ffd56b; }

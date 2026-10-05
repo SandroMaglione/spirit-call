@@ -12,6 +12,7 @@ import { Descriptor } from "@typeonce/bevy-ts"
 
 import type { Account, CallResult, Earned, Play, TeamAspects } from "../account/account.ts"
 import type { BannerId } from "../content/calls.ts"
+import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
@@ -73,6 +74,8 @@ export interface UiStore {
   readonly menuOpens: Signal<Screen | null>
   /** Calls made and not revealed yet (the seal is showing), or `null`. */
   readonly callReveal: Signal<CallReveal | null>
+  /** The menu's sky while the seal shows: plain stone, or an element's (a character arriving); `null` when the menu decides (see `menuElement`). */
+  readonly sky: Signal<ElementId | "plain" | null>
 }
 
 export interface Sound {
@@ -111,7 +114,8 @@ export const createUiStore = (initial: {
   extra: signal(null),
   practicePicks: signal({ kinds: [], elites: false }),
   menuOpens: signal(null),
-  callReveal: signal(null)
+  callReveal: signal(null),
+  sky: signal(null)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")

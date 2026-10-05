@@ -106,6 +106,10 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
   }
   const element = best.kind === "character" ? elementOf(tuning, best.id) : undefined
   const current = phase.value === "show" ? shown[index.value] : undefined
+  // The sky is plain stone around the seal; a character arriving brings hers.
+  const sky = current?.kind === "character" ? elementOf(tuning, current.id) : phase.value === "burst" && element !== undefined ? element : "plain"
+  useEffect(() => { store.sky.value = sky }, [sky])
+  useEffect(() => () => { store.sky.value = null }, [])
 
   if (phase.value === "seal" || phase.value === "burst") {
     const p = progress.value
@@ -128,7 +132,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
           {runes.map((points, at) => <polygon key={at} points={points} class="reveal__rune" />)}
           <polygon points={triangle(0)} class="reveal__ring" />
           <polygon points={triangle(Math.PI)} class="reveal__ring" />
-          <g class="reveal__cracks">{cracks.map((path, at) => <path key={at} d={path} pathLength={1} style={{ strokeDashoffset: Math.max(0, 1 - p * 1.25 + at * 0.04) }} />)}</g>
+          <g class="reveal__cracks">{cracks.map((path, at) => <path key={at} d={path} pathLength={1} style={{ strokeDashoffset: Math.min(1, Math.max(0, 1 - p * 1.25 + at * 0.04)) }} />)}</g>
         </svg>
       </button>
       <div class="reveal__flash" aria-hidden="true" />

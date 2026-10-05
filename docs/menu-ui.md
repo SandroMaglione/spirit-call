@@ -100,7 +100,11 @@ as one to three gold dots beneath), `Stars` (a quest's three, lit when earned, p
 earned just now), `UnlockBadge` (a character or an aspect a reward makes
 yours: her face, or the aspect's class on a dark disc, in a turning gold ring
 that pulses; rewards show unlocks on a line of their own, named), and
-`PartyStrip`.
+`PartyStrip`, `KitLines` (a character's special and ultimate, a line each:
+the Spirit Call), and `describeResult` (what a call brought, in a few words).
+The Spirit Call's seal (`menu/CallReveal.tsx`) shows over its screen, and
+sets the sky (`store.sky`) while it does: plain stone, then the arriving
+character's element.
 
 Icons are `src/ui/Icon.tsx` (line icons, currencies, elements, XP) and
 `src/ui/AbilityIcon.tsx` (a class or a skill). They size with the text:
