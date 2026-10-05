@@ -69,7 +69,7 @@
 }
 
 /* ---------- party ---------- */
-.lineup__places { position: absolute; inset: 52px var(--right) 94px var(--left); display: grid; grid-template-columns: repeat(3, 1fr); z-index: 2; }
+.lineup__places { position: absolute; inset: 52px var(--right) 70px var(--left); transition: left .25s cubic-bezier(.2, .8, .2, 1); display: grid; grid-template-columns: repeat(3, 1fr); z-index: 2; }
 .lineup__place { position: relative; display: grid; justify-items: center; align-content: end; gap: 3px; text-shadow: 0 1px 4px #0009; }
 .lineup__pick { position: absolute; inset: -12px 0 52px; }
 .ui .lineup__pick:active { transform: none; }
@@ -77,7 +77,7 @@
 .lineup__number { position: absolute; left: 50%; top: 14px; translate: -50% 0; font-size: 12px; font-weight: 800; letter-spacing: .1em; color: rgba(255, 255, 255, .5); }
 .lineup__place.is-on .lineup__number { color: var(--gold-hi); }
 .lineup__place.is-on .lineup__number::before, .lineup__place.is-on .lineup__number::after { content: "◆"; font-size: 8px; margin: 0 5px; vertical-align: 1px; }
-.lineup__ring { position: absolute; left: 50%; bottom: 0; width: 150px; height: 26px; translate: -50% 0; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 20px color-mix(in srgb, var(--glow) 40%, transparent); background: radial-gradient(color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%); transition: box-shadow .2s; }
+.lineup__ring { position: absolute; left: 50%; bottom: 0; width: min(150px, 92%); height: 26px; translate: -50% 0; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 20px color-mix(in srgb, var(--glow) 40%, transparent); background: radial-gradient(color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%); transition: box-shadow .2s; }
 .lineup__place.is-on .lineup__ring { box-shadow: inset 0 0 0 2px var(--gold-hi), 0 0 24px var(--gold-hi); }
 .lineup__plus { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 64px; height: 64px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4); display: grid; place-items: center; font-size: 24px; }
 .lineup__pick:disabled .lineup__plus { opacity: .35; }
@@ -86,8 +86,13 @@
 .lineup__aspect { z-index: 1; height: 24px; padding: 0 10px; border-radius: 12px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; position: relative; text-shadow: none; }
 .lineup__aspect::after { content: ""; position: absolute; inset: -4px -8px -10px; }
 .lineup__aspect .menu-icon { font-size: 13px; }
-.lineup__tray { position: absolute; left: calc(var(--left) - 4px); right: calc(var(--right) + 166px); bottom: calc(var(--bottom) - 4px); z-index: 3; display: flex; align-items: center; gap: 10px; }
-.lineup__roster { display: flex; gap: 8px; padding: 4px; min-width: 0; }
+/* The roster opens at the left, and the places make room for it. */
+.lineup__picker { position: absolute; left: var(--left); top: 60px; bottom: 62px; width: 294px; z-index: 3; }
+.lineup__picker .cards { padding: 3px; }
+.lineup__picker-actions { position: absolute; left: var(--left); bottom: var(--bottom); z-index: 3; display: flex; gap: 8px; }
+.lineup.is-picking .lineup__places { left: calc(var(--left) + 304px); }
+.lineup.is-picking .lineup__name { font-size: 15px; }
+.lineup.is-picking .lineup__name small { display: none; }
 
 /* ---------- challenges ---------- */
 .quests__list { --list: clamp(200px, 31cqw, 262px); position: absolute; left: var(--left); top: 62px; bottom: 0; width: var(--list); z-index: 3; display: grid; gap: 5px; align-content: start; padding-bottom: 28px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }
