@@ -56,9 +56,12 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   (`test/camera.test.ts`), so input and the overlay work in projected
   coordinates. Things that come in numbers (enemies, projectiles, shadows,
   damage numbers) are drawn in batches, never a mesh each.
-- `src/ui/`: the menu and results screens (Preact with signals). The UI
+- `src/ui/`: the menu, pause, and results screens (Preact with signals). The UI
   mirrors state and calls plain action functions; it never changes game
-  state directly.
+  state directly. Screens are built from a kit of shared pieces
+  (`src/ui/kit/`, and the game's own in `src/ui/menu/parts.tsx`), laid out
+  for a phone in landscape and scaled as one piece: read `docs/menu-ui.md`
+  before adding or changing one.
 - `src/account/` and `src/app/`: the player's account and device settings,
   saved with Effect (Schema, versioned saves with migrations, a
   `KeyValueStore`). `src/account/account.ts` holds the account's pure rules.
