@@ -19,7 +19,7 @@ import type { MoveContext, TriggeredEffectsValue } from "../schema.ts"
 import { skillAim } from "./skills.ts"
 
 /** Whether a move of the basic attack matches `filter`; no move (a skill) never does. */
-const moveMatches = (filter: MoveFilter, move: MoveContext | undefined): boolean => {
+export const moveMatches = (filter: MoveFilter, move: MoveContext | undefined): boolean => {
   if (move === undefined) return false
   switch (filter.kind) {
     case "combo":

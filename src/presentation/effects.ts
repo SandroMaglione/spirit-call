@@ -65,7 +65,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       const look = characterLooks[action.character]
       const root = new Group()
       const pivot = new Group()
-      const body = makeBody(services.host.assets, look, tuning.characters[action.character].radius, false, null)
+      const body = makeBody(services.host.assets, look, tuning.characters[action.character].radius, false)
       pivot.add(body.object)
       root.add(pivot)
       root.position.set(action.at.x, 0, action.at.y)

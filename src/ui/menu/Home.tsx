@@ -1,5 +1,5 @@
 import type { Signal } from "@preact/signals"
-import { characterLevel, equipmentOf } from "../../account/account.ts"
+import { characterLevel } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import { Icon } from "../Icon.tsx"
 import { describePlay } from "../describe.ts"
@@ -14,9 +14,9 @@ export const Home = ({ store, nav, draft, play, enter }: {
   readonly store: UiStore; readonly nav: Nav; readonly draft: Signal<TeamDraft>; readonly play: Play; readonly enter: () => void
 }) => {
   const tuning = store.tuning.value, account = store.account.value, team = draft.value.team
-  const leader = team[0]!, weapon = equipmentOf(tuning, account, leader).weapon
+  const leader = team[0]!
   return <div class="screen home">
-    <div class="home__spirit"><div class="stage-orbit" aria-hidden="true" /><ModelStage character={leader} weapon={weapon} /></div>
+    <div class="home__spirit"><div class="stage-orbit" aria-hidden="true" /><ModelStage character={leader} /></div>
     <div class="lobby-shortcuts">
       <button type="button" class="icon-button" aria-label="Characters" onClick={() => nav.go({ kind: "character", character: leader, tab: "overview" })}><Icon name="character" /></button>
       <button type="button" class="icon-button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}><Icon name="team" /></button>

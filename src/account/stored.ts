@@ -114,9 +114,28 @@ export const StoredAccountV5 = Schema.Struct({
   equipment: Schema.Record(Schema.String, Schema.Struct({ weapon: Schema.String }))
 })
 
+const OwnedAspect = Schema.Struct({ unlockedAt: Schema.Number, copies: Schema.Number })
+
+/**
+ * Version 6: weapons are gone (characters fight with their class and an
+ * aspect, see docs/aspects.md): aspects are owned instead, and the team
+ * selected holds the aspect equipped on each of its characters.
+ */
+const { equipment: _equipment, ...withoutEquipment } = StoredAccountV5.fields
+export const StoredAccountV6 = Schema.Struct({
+  ...withoutEquipment,
+  version: Schema.Literal(6),
+  owned: Schema.Struct({
+    characters: Schema.Record(Schema.String, OwnedCharacter),
+    aspects: Schema.Record(Schema.String, OwnedAspect)
+  }),
+  /** By character id: the aspect equipped on her in the team. */
+  selection: Schema.Struct({ team: Schema.Array(Schema.String), aspects: Schema.Record(Schema.String, Schema.String), play: Play })
+})
+
 /** Any account version ever saved. */
-export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4, StoredAccountV5])
-export const StoredAccountLatest = StoredAccountV5
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3, StoredAccountV4, StoredAccountV5, StoredAccountV6])
+export const StoredAccountLatest = StoredAccountV6
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
@@ -154,7 +173,12 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
       const equipment = Object.fromEntries(Object.entries(stored.equipment).map(([id, equipped]) => [id, { weapon: equipped.weapon }]))
       return migrateAccount({ ...stored, version: 5, owned: { characters: stored.owned.characters, weapons: stored.owned.weapons }, equipment })
     }
-    case 5:
+    case 5: {
+      // Weapons are gone, with their levels and what was equipped: characters fight with their class's plain aspect.
+      const { equipment: _dropped, ...rest } = stored
+      return { ...rest, version: 6, owned: { characters: stored.owned.characters, aspects: {} }, selection: { ...stored.selection, aspects: {} } }
+    }
+    case 6:
       return stored
   }
 }

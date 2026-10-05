@@ -15,8 +15,8 @@ import type { StartOptions } from "./helpers.ts"
 const tuning = defaultTuning
 const rules = tuning.elements
 const grenade = grenadeSkill.effect
-/** The gunner's ATK: hers with the training pistol. */
-const atk = tuning.characters.gunner.stats.atk + tuning.weapons.trainingPistol.atk
+/** The gunner's ATK. */
+const atk = tuning.characters.gunner.stats.atk
 /** Dummies that take many blows. */
 const sturdy = () => tuningWith({ enemies: { dummy: { hp: 100_000 } } })
 

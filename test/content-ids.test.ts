@@ -15,7 +15,9 @@ import { defaultTuning } from "../src/config/tuning.ts"
  * Splash, when the Gunner and the Tidecaller got new specials (skills have
  * not been saved since version 5); the discoveries of reactions between two
  * elements (Steam, Carried along, Shocked), when elements became one rule
- * (a save keeps only the discoveries that still exist).
+ * (a save keeps only the discoveries that still exist); weapons, and the
+ * attacks that were by weapon type, when characters got classes and aspects
+ * (save version 6 drops weapons).
  */
 const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>> & {
   readonly retired?: Record<string, ReadonlyArray<string>>
@@ -23,10 +25,10 @@ const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-
 
 const current: Record<string, ReadonlyArray<string>> = {
   characters: Object.keys(defaultTuning.characters),
-  weapons: Object.keys(defaultTuning.weapons),
+  classes: Object.keys(defaultTuning.classes),
+  aspects: Object.keys(defaultTuning.aspects),
   skills: Object.keys(defaultTuning.skills),
   challenges: Object.keys(defaultTuning.challenges),
-  attacks: Object.keys(defaultTuning.attacks),
   enemies: Object.keys(defaultTuning.enemies),
   quests: Object.keys(defaultTuning.quests),
   chapters: Object.keys(defaultTuning.chapters),

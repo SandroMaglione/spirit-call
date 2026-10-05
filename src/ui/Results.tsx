@@ -1,8 +1,8 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
-import { accountLevel, equipmentOf, playLock } from "../account/account.ts"
+import { accountLevel, playLock } from "../account/account.ts"
+import { aspectOf } from "../content/aspects.ts"
 import type { CurrencyId } from "../content/currencies.ts"
-import { resolveBuild } from "../features/build.ts"
 import { Dialog } from "./Dialog.tsx"
 import { Icon } from "./Icon.tsx"
 import { describeAmounts, describePlay, describeUnlock } from "./describe.ts"
@@ -21,7 +21,6 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const leader = store.team.value[0], objective = tuning.challenges[result.challenge].objective
   const newcomer = earned?.rewards?.unlocks.find((unlock) => unlock.kind === "character")
   const companion = newcomer?.kind === "character" ? newcomer.id : leader?.character
-  const companionWeapon = newcomer?.kind === "character" ? equipmentOf(tuning, account, newcomer.id).weapon : leader === undefined ? undefined : resolveBuild(tuning, leader).weapon
   const name = play === null ? tuning.challenges[result.challenge].name : describePlay(tuning, play)
   const enabled = ready.value && store.recording.value !== "saving"
   const open = (screen: Screen) => { store.menuOpens.value = screen; actions.menu() }
@@ -30,7 +29,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const title = extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}${revealed.value ? " is-revealed" : ""}`} data-element={companion === undefined ? undefined : elementOf(tuning, companion) ?? undefined}>
     <button type="button" class="icon-button results__info" aria-label="Run details" onClick={() => (details.value = true)}><Icon name="info" /></button>
-    {companion !== undefined && companionWeapon !== undefined && <div class="results__companion"><div class="stage-orbit" /><Model character={companion} weapon={companionWeapon} reveal={newcomer !== undefined && !revealed.value} class="results__model" /></div>}
+    {companion !== undefined && <div class="results__companion"><div class="stage-orbit" /><Model character={companion} reveal={newcomer !== undefined && !revealed.value} class="results__model" /></div>}
     <section class="results__content">
       <h1 class="results__banner">{title}</h1><p class="results__name">{name}</p>
       <div class="results__loot" onClick={() => (revealed.value = true)}>
@@ -50,10 +49,10 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
             {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <section class="results__unlocks">{earned.rewards.unlocks.map((unlock) => <button key={`${unlock.kind}-${unlock.id}`} type="button" class="unlock-card" disabled={!enabled} onClick={() => {
               if (unlock.kind === "character") open({ kind: "character", character: unlock.id, tab: "kit" })
               else {
-                const member = (Object.keys(tuning.characters) as Array<keyof typeof tuning.characters>).find((id) => tuning.characters[id].weaponType === tuning.weapons[unlock.id].type)!
-                open({ kind: "character", character: member, tab: "weapon" })
+                const member = (Object.keys(tuning.characters) as Array<keyof typeof tuning.characters>).find((id) => tuning.characters[id].class === aspectOf(tuning.aspects, unlock.id).class)!
+                open({ kind: "character", character: member, tab: "aspect" })
               }
-            }}>{unlock.kind === "character" ? <Portrait of={{ character: unlock.id }} /> : <span class="unlock-symbol"><Icon name="weapon" /></span>}<span><small>NEW</small><b>{describeUnlock(tuning, unlock)}</b></span><Icon name="next" /></button>)}</section>}
+            }}>{unlock.kind === "character" ? <Portrait of={{ character: unlock.id }} /> : <span class="unlock-symbol"><Icon name="aspect" /></span>}<span><small>NEW</small><b>{describeUnlock(tuning, unlock)}</b></span><Icon name="next" /></button>)}</section>}
           </>}
         </>}
       </div>

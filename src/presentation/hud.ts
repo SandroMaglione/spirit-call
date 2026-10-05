@@ -12,13 +12,13 @@ import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import { view } from "../config/view.ts"
-import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, Weapon } from "../schema.ts"
+import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, BasicAttack } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { elementOf } from "../ui/draft.ts"
 import { setText } from "./draw.ts"
-import { skillIcons, stateIcons, weaponIcons } from "./icons.ts"
+import { skillIcons, stateIcons, classIcons } from "./icons.ts"
 
 /**
  * The on-screen touch controls: the stick under the thumb (or a faint hint
@@ -28,7 +28,7 @@ import { skillIcons, stateIcons, weaponIcons } from "./icons.ts"
 export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   queries: {
     player: Game.Query({
-      selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), weapon: Game.Query.read(Weapon), member: Game.Query.read(Member) },
+      selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), basicAttack: Game.Query.read(BasicAttack), member: Game.Query.read(Member) },
       with: [Player]
     })
   },
@@ -71,7 +71,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const slots = player === undefined ? undefined : skillStatus(tuning, player.data.skills.get(), player.data.energy.get().current)
   const fill = {
     // The attack recharges between moves.
-    attack: player === undefined ? 0 : recharge(player.data.weapon.get()),
+    attack: player === undefined ? 0 : recharge(player.data.basicAttack.get()),
     special: slots?.special.recharge ?? 0,
     // Ready while a charge is left; otherwise waiting for the next one.
     dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
@@ -84,9 +84,9 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown,
     ultimate: player === undefined ? 0 : player.data.skills.get().ultimate.cooldown
   }
-  // Icons: the attack's by the weapon in hand, the skills' by the skill in each slot.
+  // Icons: the attack's by her class, the skills' by the skill in each slot.
   if (player !== undefined) {
-    showIcon(pad.buttons.attack.icon, weaponIcons, tuning.characters[player.data.member.get().character].weaponType)
+    showIcon(pad.buttons.attack.icon, classIcons, tuning.characters[player.data.member.get().character].class)
     for (const slot of skillSlots) showIcon(pad.buttons[slot].icon, skillIcons, player.data.skills.get()[slot].skill)
   }
   for (const name of actionButtons) {
@@ -233,8 +233,8 @@ const showWaves = (marks: HTMLElement, total: number, waves: WavesValue): void =
 }
 
 /** How much of the current move's recovery is left, 0..1. */
-const recharge = (weapon: { readonly cooldown: number; readonly recovery: number }): number =>
-  weapon.recovery <= 0 ? 0 : weapon.cooldown / weapon.recovery
+const recharge = (attack: { readonly cooldown: number; readonly recovery: number }): number =>
+  attack.recovery <= 0 ? 0 : attack.cooldown / attack.recovery
 
 export const SyncHud = Game.System("Shooter/SyncHud", {
   queries: {

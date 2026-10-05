@@ -5,12 +5,12 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { Attacker, AttackPhase, Dash, ElementState, Enemy, Game, Health, Player, Poise, SlowMotion, Stunned, Vortex, Weapon } from "../src/schema.ts"
-import { cursorAt, doubleTap, gunner, placeDummies, start, steps } from "./helpers.ts"
+import { Attacker, AttackPhase, Dash, ElementState, Enemy, Game, Health, Player, Poise, SlowMotion, Stunned, Vortex, BasicAttack } from "../src/schema.ts"
+import { cursorAt, doubleTap, gunner, placeDummies, start, steps, plainAttack } from "./helpers.ts"
 
 const Fight = Game.Inspector("Test/Spark", {
   queries: {
-    weapon: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }),
+    weapon: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack) }, with: [Player] }),
     enemies: Game.Query({
       selection: { health: Game.Query.read(Health), state: Game.Query.read(ElementState), poise: Game.Query.read(Poise), stunned: Game.Query.read(Stunned), phase: Game.Query.read(AttackPhase) },
       with: [Enemy]
@@ -18,7 +18,7 @@ const Fight = Game.Inspector("Test/Spark", {
     vortices: Game.Query({ selection: { vortex: Game.Query.read(Vortex) } })
   }
 }, ({ queries }) => ({
-  weapon: queries.weapon.each()[0]?.data.weapon.get(),
+  weapon: queries.weapon.each()[0]?.data.basicAttack.get(),
   enemies: queries.enemies.each().map(({ data }) => ({
     health: data.health.get().current,
     state: data.state.get().current?.id ?? null,
@@ -37,7 +37,7 @@ const clicks = (from: number, count: number, every: number) =>
   ]).flat()
 
 describe("the Gunner's magazine", () => {
-  const magazine = defaultTuning.attacks.gun.magazine!
+  const magazine = plainAttack(defaultTuning, "gun").magazine!
 
   it("fires its rounds, then reloads before firing again, full", () => {
     const run = start({ build: gunner, pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...clicks(1, 40, 12)] })
@@ -60,12 +60,10 @@ describe("the Gunner's magazine", () => {
 
 describe("the Gunner's charged shot", () => {
   // Single shots only (no spread), at a sturdy dummy straight ahead.
-  const gun = defaultTuning.attacks.gun
+  const gun = plainAttack(defaultTuning, "gun")
   const single = gun.combo[0]!
-  // Its grenade without fire (no burns, no pool), so only the blast counts.
-  const tuning = tuningWith({ attacks: { gun: { combo: [single, single, single], power: { move: { element: null, leaves: null } } } }, enemies: { dummy: { hp: 500 } } })
-  // Her ATK with her starting weapon's.
-  const atk = defaultTuning.characters.gunner.stats.atk + defaultTuning.weapons.trainingPistol.atk
+  const tuning = tuningWith({ classes: { gun: { plain: { combo: [single, single, single] } } }, enemies: { dummy: { hp: 500 } } })
+  const atk = defaultTuning.characters.gunner.stats.atk
   const rounds = gun.magazine!.rounds
   /** `shots` quick shots, then a press held to a full charge and released. */
   const charged = (shots: number) => {
@@ -232,10 +230,10 @@ describe("a perfect dodge", () => {
 })
 
 describe("the dash strike", () => {
-  const sword = defaultTuning.attacks.sword
+  const sword = plainAttack(defaultTuning, "blade")
   const DashWeapon = Game.Inspector("Test/DashWeapon", {
-    queries: { player: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }) }
-  }, ({ queries }) => queries.player.each()[0]!.data.weapon.get())
+    queries: { player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack) }, with: [Player] }) }
+  }, ({ queries }) => queries.player.each()[0]!.data.basicAttack.get())
   /** A dash toward a sturdy dummy, and an attack pressed `after` steps into it. */
   const strike = (after: number) => {
     const tuning = tuningWith({ enemies: { dummy: { hp: 500 } } })

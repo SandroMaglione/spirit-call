@@ -1,30 +1,33 @@
 /**
  * Builds and the damage formula.
  *
- * A build (a character plus the weapon equipped on her) resolves into the
- * final stats, kit (her own skills), and passives she enters the arena with. The weapon
- * adds its ATK to the character's, then its bonus raises one stat by a
- * percentage.
+ * A build (a character, at her level, with the aspect equipped on her)
+ * resolves into the final stats, kit (her own skills), basic attack (her
+ * class's, shaped by the aspect), and passives she enters the arena with.
+ * Her level gives all her stats; an aspect gives none.
  *
  * Damage comes from stats: an attack deals its `power` as a percentage of the
  * attacker's ATK, and the target's DEF reduces it (see `Tuning.combat`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import type { AttackId } from "../content/attacks.ts"
+import { aspectOf, basicAttack } from "../content/aspects.ts"
+import type { AspectId } from "../content/aspects.ts"
+import type { BasicAttackSpec } from "../content/attacks.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
+import type { ElementId } from "../content/elements.ts"
 import type { StatCurve } from "../content/progression.ts"
 import type { Passive } from "../content/passives.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
-import type { WeaponId, WeaponSpec } from "../content/weapons.ts"
-import type { BuildValue } from "../schema.ts"
+import type { AttackRef, BuildValue } from "../schema.ts"
 
 export interface ResolvedBuild {
   readonly character: CharacterId
   readonly stats: Stats
   readonly radius: number
   readonly hurtboxRadius: number
-  readonly attack: AttackId
-  readonly weapon: WeaponId
+  readonly element: ElementId
+  /** Her basic attack: her class, and the aspect equipped (`null`: its plain one). */
+  readonly attack: AttackRef
   readonly skills: { readonly [Slot in SkillSlot]: SkillId }
   readonly passives: ReadonlyArray<Passive>
 }
@@ -46,41 +49,54 @@ export const statsAtLevel = (tuning: TuningValue, base: Stats, level: number): S
   return { hp: Math.round(base.hp * scale), atk: Math.round(base.atk * scale), def: Math.round(base.def * scale), speed: base.speed }
 }
 
-/** `weapon`'s ATK at level `level` (to a whole number). */
-export const weaponAtk = (tuning: TuningValue, weapon: WeaponSpec, level: number): number =>
-  Math.round(weapon.atk * levelScale(tuning.progression.stats, level, tuning.progression.weapon.cost.maxLevel))
-
-/** The build the game starts with: the first character, with her own weapon. */
+/** The build the game starts with: the first character, fighting with her class's plain aspect. */
 export const defaultBuild: BuildValue = { character: "swordsman" }
 
 /** The team the game starts with: the default build alone. */
 export const defaultTeam: ReadonlyArray<BuildValue> = [defaultBuild]
 
+/** The aspect `id`, when it is one of `character`'s class; otherwise none (her plain one). */
+export const aspectFor = (tuning: TuningValue, character: CharacterId, id: AspectId | null | undefined): AspectId | null => {
+  if (id === null || id === undefined || !Object.hasOwn(tuning.aspects, id)) return null
+  return aspectOf(tuning.aspects, id).class === tuning.characters[character].class ? id : null
+}
+
 /**
- * Final stats and kit of `build`: the character's stats at its level, with
- * its weapon at its level (the equipped one if it is of the character's
- * type, else the character's own), and her own skills.
+ * Final stats and kit of `build`: the character's stats at its level, her
+ * own skills, and her basic attack (her class with the aspect equipped, if
+ * it is of her class) with its passives.
  */
 export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBuild => {
   const character = tuning.characters[build.character]
-  const weapon = build.weapon !== undefined && tuning.weapons[build.weapon].type === character.weaponType ? build.weapon : character.weapon
+  const aspect = aspectFor(tuning, build.character, build.aspect)
   return {
     character: build.character,
-    stats: withWeapon(statsAtLevel(tuning, character.stats, build.level ?? 1), tuning.weapons[weapon], weaponAtk(tuning, tuning.weapons[weapon], build.weaponLevel ?? 1)),
+    stats: statsAtLevel(tuning, character.stats, build.level ?? 1),
     radius: character.radius,
     hurtboxRadius: character.hurtboxRadius,
-    attack: character.attack,
-    weapon,
+    element: character.element,
+    attack: { class: character.class, aspect },
     skills: character.skills,
-    passives: tuning.weapons[weapon].passives
+    passives: aspect === null ? [] : aspectOf(tuning.aspects, aspect).passives
   }
 }
 
-/** `base` with `weapon`'s ATK (`atk`, its level's) added, then its bonus stat raised by its percentage (rounded to a whole number). */
-export const withWeapon = (base: Stats, weapon: WeaponSpec, atk = weapon.atk): Stats => {
-  const stats = { ...base, atk: base.atk + atk }
-  if (weapon.bonus === null) return stats
-  return { ...stats, [weapon.bonus.stat]: Math.round(stats[weapon.bonus.stat] * (1 + weapon.bonus.percent / 100)) }
+const attacks = new WeakMap<TuningValue, Map<string, BasicAttackSpec>>()
+
+/** The basic attack `ref` names: its class's handling and its aspect's moves (made once per tuning, see `basicAttack`). */
+export const attackOf = (tuning: TuningValue, ref: AttackRef): BasicAttackSpec => {
+  let made = attacks.get(tuning)
+  if (made === undefined) {
+    made = new Map()
+    attacks.set(tuning, made)
+  }
+  const key = `${ref.class}/${ref.aspect ?? ""}`
+  let attack = made.get(key)
+  if (attack === undefined) {
+    attack = basicAttack(tuning.classes[ref.class], ref.aspect === null ? null : aspectOf(tuning.aspects, ref.aspect))
+    made.set(key, attack)
+  }
+  return attack
 }
 
 /** Damage an attack of `power` (percent) deals from an attacker with `atk`, before the target's DEF. */

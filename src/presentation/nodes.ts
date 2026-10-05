@@ -7,7 +7,6 @@ import { BoxGeometry, CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshBa
 
 import { projection, view } from "../config/view.ts"
 import { depthOf, toScreenAt, worldHeight } from "../math/iso.ts"
-import type { WeaponId } from "../content/weapons.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { ElementId } from "../content/elements.ts"
@@ -25,13 +24,13 @@ import type { ModelId, ModelSpec } from "./models.ts"
 import { copyModel, disposeCopy, paintMaterials } from "./puppet.ts"
 
 /** An upright body on the floor: its feet (`root`), the pivot it leans on, its blob shadow, and the body its look gives it. */
-const actorParts = (assets: RenderAssets, look: BodyLook, radius: number, batched: boolean, weapon: WeaponId | null) => {
+const actorParts = (assets: RenderAssets, look: BodyLook, radius: number, batched: boolean) => {
   const root = new Group()
   const shadow = new Instance(assets.shadows)
   shadow.object.scale.set(radius, 1, radius)
   shadow.object.position.y = floorLayers.shadows.height
   const pivot = new Group()
-  const body = makeBody(assets, look, radius, batched, weapon)
+  const body = makeBody(assets, look, radius, batched)
   pivot.add(body.object)
   root.add(shadow.object, pivot)
   return { root, pivot, shadow, body, drops: look.kind === "model" ? look.drops ?? null : null }
@@ -263,9 +262,9 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
   switch (renderable.kind) {
     case "player":
       // Her own mesh even as a capsule: she turns see-through while protected.
-      return { kind: "player", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, characterLooks[renderable.character], renderable.radius, false, renderable.weapon) }
+      return { kind: "player", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, characterLooks[renderable.character], renderable.radius, false) }
     case "enemy":
-      return { kind: "enemy", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, enemyLooks[renderable.enemy], renderable.radius, true, null) }
+      return { kind: "enemy", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, enemyLooks[renderable.enemy], renderable.radius, true) }
     case "projectile":
       return projectileNode(assets, projectilePool, renderable.faction, renderable.style, renderable.radius, renderable.element)
     case "wall": {

@@ -46,7 +46,7 @@ const start = async (mount: HTMLElement) => {
   const shell = await startApp(tuning)
   const { account } = shell
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
-  // entering with the account's selection or the URL's `?team=gunner,swordsman&weapon=…&challenge=swarm` (see dev/build.ts).
+  // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
   const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
@@ -129,9 +129,7 @@ const start = async (mount: HTMLElement) => {
         ...(extra.kind === "practice" ? { practice: extra.picks } : {})
       })
     },
-    equip: (character, equipment) => change(() => shell.equip(character, equipment), "Weapon equipped"),
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
-    upgrade: (weapon) => change(() => shell.upgrade(weapon), `${tuning.weapons[weapon].name} upgraded`),
     retry: () => uiRequests.pending.push({ kind: "retry" }),
     menu: () => uiRequests.pending.push({ kind: "menu" }),
     pause: () => uiRequests.pending.push({ kind: "pause" }),

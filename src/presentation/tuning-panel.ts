@@ -52,7 +52,7 @@ const stepFor = (value: number): number => {
 
 /** Dev actions on the account, from the app shell. */
 export interface DevAccountActions {
-  /** Own every character, weapon, and skill, with plenty of each currency. */
+  /** Own every character and aspect, with plenty of each currency. */
   readonly unlockEverything: () => void
 }
 
@@ -77,7 +77,7 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
       <div class="tuning__actions">
         <button data-copy>Copy JSON</button>
         <button data-reset>Reset</button>
-        <button data-unlock title="Own every character, weapon, and skill on this account, with plenty of each currency">Unlock all</button>
+        <button data-unlock title="Own every character and aspect on this account, with plenty of each currency">Unlock all</button>
       </div>
     </header>
     <section class="tuning__spawn">
@@ -160,7 +160,7 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
       } else if (typeof value === "object" && value !== null && (Array.isArray(value) ? isListOfRecords(value) : !("kind" in value && Object.keys(value).length === 1))) {
         const group = document.createElement("details")
         group.className = "tuning__group"
-        group.open = path.length === 0 && ["player", "dash", "perfectDodge", "breaking", "weapon", "feedback"].includes(key)
+        group.open = path.length === 0 && ["player", "dash", "perfectDodge", "breaking", "elements", "feedback"].includes(key)
         const summary = document.createElement("summary")
         summary.textContent = key
         group.append(summary)

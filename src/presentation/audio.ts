@@ -105,7 +105,7 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }
-  // An ultimate's deep boom; lighter blasts (a grenade, a weapon's shockwave) a shorter one; water bursts with a splash, thunder crackles.
+  // An ultimate's deep boom; lighter blasts (a grenade, an aspect's shockwave) a shorter one; water bursts with a splash, thunder crackles.
   for (const explosion of events.explosion.all()) {
     const light = explosion.element === "water" ? "splash" : explosion.element === "thunder" ? "zap" : "boom"
     sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : light, { pan: pan(explosion.at) })

@@ -43,15 +43,15 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
   const dt = resources.time.get().dt
   const boxes = wallBoxes(queries.walls.each())
   const targets = queries.targets.each().map(({ entity, data }) => targetOf(entity.id, data))
-  // Who is soaked: a disc hitting one turns toward the next (see `DiscMove.bounces`).
-  const soaked = new Set(queries.states.each().filter(({ data }) => data.state.get().current?.id === "soaked").map(({ entity }) => entity.id.value))
+  // Who is in a state (any one, whoever set it): a disc hitting one turns toward the next (see `DiscMove.bounces`).
+  const marked = new Set(queries.states.each().filter(({ data }) => data.state.get().current !== null).map(({ entity }) => entity.id.value))
   const bounceRange = resources.tuning.get().discBounce.range
 
   for (const { entity, data } of queries.discs.each()) {
     let disc = data.disc.get()
     const origin = data.position.get()
     const hit = [...disc.hit]
-    // Where it turns after hitting a soaked enemy: toward the nearest other soaked one in range.
+    // Where it turns after hitting an enemy in a state: toward the nearest other one in range.
     let bounce: { readonly at: Vec2; readonly toward: Vec2 } | undefined
     /** Hits everything it meets along `delta` (up to `until`, a fraction of it), once each; `true` when a shield turns it back. */
     const sweep = (delta: Vec2, until: number, push: Vec2): boolean => {
@@ -62,11 +62,11 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         }
         hit.push(contact.target.id)
         events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: disc.faction, direction: push, blow: disc.blow })
-        if (disc.phase === "out" && disc.bounces > 0 && bounce === undefined && soaked.has(contact.target.id)) {
+        if (disc.phase === "out" && disc.bounces > 0 && bounce === undefined && marked.has(contact.target.id)) {
           let next: (typeof targets)[number] | undefined
           const away = (other: (typeof targets)[number]) => Math.hypot(other.at.x - contact.at.x, other.at.y - contact.at.y)
           for (const other of targets) {
-            if (hit.includes(other.id) || other.faction === disc.faction || !soaked.has(other.id) || away(other) > bounceRange) continue
+            if (hit.includes(other.id) || other.faction === disc.faction || !marked.has(other.id) || away(other) > bounceRange) continue
             if (next === undefined || away(other) < away(next)) next = other
           }
           if (next !== undefined) {
@@ -86,7 +86,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         const until = wall?.time ?? 1
         const blocked = sweep(delta, until, disc.direction)
         if (bounce !== undefined) {
-          // Off the soaked enemy toward the next, with the way there (and a little more) to fly.
+          // Off the enemy toward the next, with the way there (and a little more) to fly.
           const toward = sub(bounce.toward, bounce.at)
           data.position.set(bounce.at)
           disc = { ...disc, direction: normalizeOr(toward, disc.direction), range: Math.hypot(toward.x, toward.y) + disc.radius * 2, bounces: disc.bounces - 1, hit }

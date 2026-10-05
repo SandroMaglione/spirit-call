@@ -13,7 +13,7 @@ import { makeGround } from "../src/features/ground.ts"
 import { pickSpawnPoint } from "../src/features/waves.ts"
 import { Random } from "../src/math/rng.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
-import { center, ClearEnemies, cursorAt, start } from "./helpers.ts"
+import { center, ClearEnemies, cursorAt, start, plainAttack } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const middleOf = (box: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number }) => ({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 })
@@ -204,16 +204,16 @@ describe("enemies keeping out of hazards", () => {
 })
 
 describe("enemies reading her", () => {
-  const ready = { attack: "sword" as const, cooldown: 0, recovery: 0, reloading: 0 }
-  const her = { at: { x: 0, y: 0 }, aim: { x: 1, y: 0 }, weapon: ready, dashes: 2 }
-  const reach = defaultTuning.attacks.sword.combo[0]!
+  const ready = { attack: { class: "blade" as const, aspect: null }, cooldown: 0, recovery: 0, reloading: 0 }
+  const her = { at: { x: 0, y: 0 }, aim: { x: 1, y: 0 }, attack: ready, dashes: 2 }
+  const reach = plainAttack(defaultTuning, "blade").combo[0]!
   const threat = ("reach" in reach ? reach.reach : 0) + defaultTuning.reading.threatMargin
 
   it("see her open while a long move recovers, while she reloads, and with no dash left", () => {
     expect(readPlayer(defaultTuning, her).opening).toBe(false)
-    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, cooldown: 0.2, recovery: 0.7 } }).opening).toBe(true)
-    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, cooldown: 0.1, recovery: 0.13 } }).opening).toBe(false)
-    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, reloading: 1 } }).opening).toBe(true)
+    expect(readPlayer(defaultTuning, { ...her, attack: { ...ready, cooldown: 0.2, recovery: 0.7 } }).opening).toBe(true)
+    expect(readPlayer(defaultTuning, { ...her, attack: { ...ready, cooldown: 0.1, recovery: 0.13 } }).opening).toBe(false)
+    expect(readPlayer(defaultTuning, { ...her, attack: { ...ready, reloading: 1 } }).opening).toBe(true)
     expect(readPlayer(defaultTuning, { ...her, dashes: 0 }).opening).toBe(true)
   })
 
@@ -222,7 +222,7 @@ describe("enemies reading her", () => {
     expect(read.threatens({ x: threat - 10, y: 0 })).toBe(true)
     expect(read.threatens({ x: -(threat - 10), y: 0 })).toBe(false)
     expect(read.threatens({ x: threat + 30, y: 0 })).toBe(false)
-    expect(readPlayer(defaultTuning, { ...her, weapon: { ...ready, cooldown: 0.2, recovery: 0.7 } }).threatens({ x: threat - 10, y: 0 })).toBe(false)
+    expect(readPlayer(defaultTuning, { ...her, attack: { ...ready, cooldown: 0.2, recovery: 0.7 } }).threatens({ x: threat - 10, y: 0 })).toBe(false)
   })
 
   it("keep a chaser whose turn it is out of her reach while she faces it, ready", () => {

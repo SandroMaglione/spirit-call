@@ -8,7 +8,6 @@ import type { ArenaId } from "../content/arena.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import type { SkillId } from "../content/skills.ts"
-import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { WallPlacement } from "../schema.ts"
@@ -58,12 +57,6 @@ export interface Drops {
   readonly kind?: TrailKind
 }
 
-/** Weapons in hand: each weapon's model, attached to the body model's `grip` bone as it is (same scale and axes). */
-export interface Held {
-  readonly grip: string
-  readonly weapons: Partial<Record<WeaponId, ModelId>>
-}
-
 /**
  * A body's look. Both kinds stand on the body's circle: `widthFactor` and
  * `heightFactor` (times the body's radius) are its size on screen.
@@ -91,7 +84,6 @@ export type BodyLook =
       readonly widthFactor: number
       readonly heightFactor: number
       readonly moments?: Moments
-      readonly held?: Held
       /** Its eye nodes (and what blinks with them), by their Blender names: held wide or narrow at moments of the fight (see `DrawPlayer`). */
       readonly eyes?: ReadonlyArray<string>
       /** Drops shed behind it while it moves (a water spirit's trail; see `ShedSpiritDrops`). */
@@ -890,7 +882,6 @@ export const modelsInLooks = (): ReadonlySet<ModelId> => {
   for (const look of [...Object.values(characterLooks), ...Object.values(enemyLooks)]) {
     if (look.kind !== "model") continue
     ids.add(look.model)
-    for (const weapon of Object.values(look.held?.weapons ?? {})) ids.add(weapon)
   }
   for (const arena of Object.values(arenaLooks)) {
     for (const look of Object.values(arena.walls)) {

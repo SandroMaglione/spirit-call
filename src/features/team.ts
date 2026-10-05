@@ -4,18 +4,17 @@
  *
  * Every member is her own entity for the whole run, holding what is hers
  * (`makeMember`): health, stats, state, energy, skill cooldowns, her basic
- * attack, and her weapon's passives. The one on the field also has a body
+ * attack, and her aspect's passives. The one on the field also has a body
  * (`fieldParts`: position, movement, hurtbox, aim, dash, and the `Player`
  * tag), which every system about the player reads. Switching moves the body
  * to another member. A member on the bench has none, so nothing hits her
  * (only a fire she carries off keeps burning, see `TickStates`), her
- * weapon's effects stop (they look up a body), and a disc flying back to her
+ * aspect's effects stop (they look up a body), and a disc flying back to her
  * is dropped. Her cooldowns run on (`TickBench`), and she gains a share of
  * the energy the one on the field earns (`ApplyDamage`).
  */
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { WeaponId } from "../content/weapons.ts"
 import { bySlot } from "../content/skills.ts"
 import type { Vec2 } from "../math/vec.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
@@ -44,7 +43,7 @@ import {
   Time,
   Tuning,
   Velocity,
-  Weapon
+  BasicAttack
 } from "../schema.ts"
 import type { DashValue } from "../schema.ts"
 import { bodyParts, fighterParts } from "./bodies.ts"
@@ -52,15 +51,15 @@ import type { BodyMotion } from "./bodies.ts"
 import { resolveBuild } from "./build.ts"
 import type { ResolvedBuild } from "./build.ts"
 import { initialSkills } from "./skills.ts"
-import { initialWeapon } from "./weapons.ts"
+import { initialBasicAttack } from "./basic-attack.ts"
 
 /** A team member in `slot`, at full health, with her build's kit (taking every element as it is). */
 export const makeMember = (build: ResolvedBuild, slot: number) =>
   Game.Command.spawn(
     ...fighterParts({ stats: build.stats, affinities: {} }),
-    [Member, { slot, character: build.character, weapon: build.weapon }],
+    [Member, { slot, character: build.character, aspect: build.attack.aspect }],
     [Passives, build.passives],
-    [Weapon, initialWeapon(build)],
+    [BasicAttack, initialBasicAttack(build)],
     [Skills, initialSkills(build)],
     [Energy, { current: 0 }]
   )
@@ -81,9 +80,9 @@ const fresh = (tuning: TuningValue, at: Vec2): Carried => ({
   dash: { remaining: 0, charges: tuning.dash.charges, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
 })
 
-/** `member`'s body on the field at `at`: her size and look (with her weapon), and what it carries. */
-export const fieldParts = (tuning: TuningValue, member: { readonly character: CharacterId; readonly weapon: WeaponId }, at: Vec2, carried: Carried) => {
-  const { character, weapon } = member
+/** `member`'s body on the field at `at`: her size and look, and what it carries. */
+export const fieldParts = (tuning: TuningValue, member: { readonly character: CharacterId }, at: Vec2, carried: Carried) => {
+  const { character } = member
   const { radius, hurtboxRadius } = tuning.characters[character]
   return [
     ...bodyParts({ at, faction: "player", radius, hurtboxRadius }, carried.motion),
@@ -91,7 +90,7 @@ export const fieldParts = (tuning: TuningValue, member: { readonly character: Ch
     [Aim, carried.aim],
     [Facing, { direction: carried.facing, hold: 0 }],
     [Dash, carried.dash],
-    [Renderable, { kind: "player", character, weapon, radius }]
+    [Renderable, { kind: "player", character, radius }]
   ] as const
 }
 
@@ -158,7 +157,7 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
         facing: Game.Query.read(Facing),
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
-        weapon: Game.Query.read(Weapon)
+        basicAttack: Game.Query.read(BasicAttack)
       },
       with: [Player]
     }),
@@ -182,7 +181,6 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
     entity: entity.id,
     slot: data.member.get().slot,
     character: data.member.get().character,
-    weapon: data.member.get().weapon,
     alive: data.health.get().current > 0
   }))
   const fell = field.data.health.get().current <= 0
@@ -209,7 +207,7 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   for (const [component] of fieldParts(tuning, outgoing, at, carried)) commands.remove(field.entity.id, component)
   if (fell) events.action.emit({ kind: "fall", at, character: outgoing.character, facing: carried.facing })
   if (incoming === undefined) return
-  commands.insert(field.entity.id, [Weapon, initialWeapon({ attack: field.data.weapon.get().attack })])
+  commands.insert(field.entity.id, [BasicAttack, initialBasicAttack({ attack: field.data.basicAttack.get().attack })])
   commands.insert(incoming.entity, ...fieldParts(tuning, incoming, at, carried))
   resources.teamSwitch.set({ cooldown: tuning.team.switchCooldown })
   // After a fall, a beat: the enemies slow for a moment as she comes in.

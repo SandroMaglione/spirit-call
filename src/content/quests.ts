@@ -11,12 +11,12 @@
 import type { ChallengeId } from "./challenges.ts"
 import type { CharacterId } from "./characters.ts"
 import type { Amounts } from "./currencies.ts"
-import type { WeaponId } from "./weapons.ts"
+import type { AspectId } from "./aspects.ts"
 
 /** Something a reward can give to own. */
 export type Unlock =
   | { readonly kind: "character"; readonly id: CharacterId }
-  | { readonly kind: "weapon"; readonly id: WeaponId }
+  | { readonly kind: "aspect"; readonly id: AspectId }
 
 /** What a quest gives the first time it is cleared, on top of what the run pays: gold worth several runs at its level. */
 export interface Rewards {
@@ -48,7 +48,6 @@ export interface ChapterSpec {
 
 const quest = (spec: QuestSpec): QuestSpec => spec
 const character = (id: CharacterId): Unlock => ({ kind: "character", id })
-const weapon = (id: WeaponId): Unlock => ({ kind: "weapon", id })
 
 /** The main line's chapters, in order. */
 export const chapters = {
@@ -77,7 +76,7 @@ export const quests = {
     enemyLevel: 3,
     level: 2,
     after: "theSwarm",
-    rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [weapon("executioner")] }
+    rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [] }
   }),
   theBrute: quest({
     name: "The Brute",
@@ -87,7 +86,7 @@ export const quests = {
     enemyLevel: 5,
     level: 3,
     after: "crossfire",
-    rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("tidecaller"), weapon("crescendo"), weapon("echoSaber"), weapon("undertow")] }
+    rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("tidecaller")] }
   }),
   outposts: quest({
     name: "Outposts",
@@ -97,7 +96,7 @@ export const quests = {
     enemyLevel: 8,
     level: 4,
     after: "theBrute",
-    rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [character("stormcaller"), weapon("lightningRod")] }
+    rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [character("stormcaller")] }
   }),
   ashfall: quest({
     name: "Ashfall",
@@ -157,7 +156,7 @@ export const quests = {
     enemyLevel: 4,
     level: 2,
     after: null,
-    rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [weapon("bloodthirst")] }
+    rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [] }
   }),
   nightOfPacks: quest({
     name: "Night of Packs",

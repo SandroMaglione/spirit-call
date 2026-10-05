@@ -38,7 +38,7 @@ import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
 import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
-import { UseBasicAttack } from "./features/weapons.ts"
+import { UseBasicAttack } from "./features/basic-attack.ts"
 import { DirectWaves } from "./features/waves.ts"
 import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema.ts"
 

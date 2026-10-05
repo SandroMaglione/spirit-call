@@ -302,12 +302,11 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const factor = blow.element === null ? 1 : affinityDamage(tuning, affinity)
     // The blow's element takes hold (a burn only burns): its state, bursting another first (see `afflict`).
     const afflicted = blow.element !== null && !blow.periodic ? afflict(tuning, state, blow.element, blow.charges, affinity) : null
-    // A broken enemy takes more (see `Tuning.breaking`), and so does one in the state the blow is made against.
+    // A broken enemy takes more (see `Tuning.breaking`).
     // Armor (see `ArmorSpec`) holds until the break bar fills: a share of the damage, and no push.
     const armored = enemy !== undefined && tuning.enemies[enemy].armor !== null && !(data.poise.present && data.poise.get().broken > 0)
     const armor = armored ? tuning.enemies[enemy].armor!.taken : 1
-    const broken = armor * (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1) *
-      (blow.against !== null && state?.id === blow.against.state ? blow.against.factor : 1)
+    const broken = armor * (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1)
     const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
     const current = data.immortal.present

@@ -1,8 +1,8 @@
 /**
  * Picks the team and the challenge from the page URL, over the account's
  * last ones, to try them without the menu: `?team=swordsman,tidecaller`,
- * the first one's build with `?character=gunner&weapon=bloodthirst`,
- * everyone's levels with `?level=20&weaponLevel=10`, and
+ * the first one's build with `?character=gunner&aspect=marksman`,
+ * everyone's levels with `?level=20`, and
  * `?challenge=swarm&enemyLevel=15`, and `?arena=cistern` to fight every
  * challenge in one arena. Unknown ids and levels that are not whole numbers
  * from 1 are ignored, so a typo keeps the default.
@@ -12,7 +12,7 @@ import type { ArenaId } from "../content/arena.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { WeaponId } from "../content/weapons.ts"
+import type { AspectId } from "../content/aspects.ts"
 import { defaultBuild, defaultTeam } from "../features/build.ts"
 import { defaultChallenge } from "../features/challenges.ts"
 import type { BuildValue, EnemyKind, PracticeValue } from "../schema.ts"
@@ -50,24 +50,24 @@ const levelFromQuery = (query: URLSearchParams, key: string): number | undefined
 /** The URL's enemy level, or `fallback` when it has none. */
 export const enemyLevelFromQuery = (search: string, fallback: number): number => levelFromQuery(new URLSearchParams(search), "enemyLevel") ?? fallback
 
-/** `build` with the URL's character and weapon levels over its own. */
+/** `build` with the URL's character level over its own. */
 const withLevels = (query: URLSearchParams, build: BuildValue): BuildValue => {
   const level = levelFromQuery(query, "level")
-  const weaponLevel = levelFromQuery(query, "weaponLevel")
-  return { ...build, ...(level === undefined ? {} : { level }), ...(weaponLevel === undefined ? {} : { weaponLevel }) }
+  return { ...build, ...(level === undefined ? {} : { level }) }
 }
 
-const buildKeys = ["character", "weapon"] as const
+const buildKeys = ["character", "aspect"] as const
 
 /** The URL's build (missing parts are the defaults), or `fallback` when it names no part of one. */
 export const buildFromQuery = (tuning: Tuning, search: string, fallback: BuildValue = defaultBuild): BuildValue => {
   const query = new URLSearchParams(search)
   if (!buildKeys.some((key) => query.has(key))) return withLevels(query, fallback)
   const character = query.get("character")
-  const weapon = query.get("weapon")
+  const aspect = query.get("aspect")
+  // An aspect of another class is ignored when the build resolves (see `aspectFor`).
   return withLevels(query, {
     character: known<CharacterId>(tuning.characters, character) ? character : defaultBuild.character,
-    ...(known<WeaponId>(tuning.weapons, weapon) ? { weapon } : {})
+    ...(known<AspectId>(tuning.aspects, aspect) ? { aspect } : {})
   })
 }
 

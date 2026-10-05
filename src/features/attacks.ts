@@ -59,7 +59,7 @@ import {
   Time,
   Tuning,
   Velocity,
-  Weapon
+  BasicAttack
 } from "../schema.ts"
 import type { Faction } from "../schema.ts"
 import { lob } from "../content/skills.ts"
@@ -123,7 +123,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         velocity: Game.Query.read(Velocity),
         stats: Game.Query.read(CombatStats),
         aim: Game.Query.read(Aim),
-        weapon: Game.Query.read(Weapon),
+        basicAttack: Game.Query.read(BasicAttack),
         dash: Game.Query.read(Dash)
       },
       with: [Player]
@@ -151,7 +151,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   // While she is open (see `readPlayer`), the melee enemies' attacks come round faster (never their telegraphs);
   // those keeping their distance keep their rhythm.
   const open = player !== undefined && target !== undefined &&
-    readPlayer(tuning, { at: target, aim: player.data.aim.get(), weapon: player.data.weapon.get(), dashes: player.data.dash.get().charges }).opening
+    readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges }).opening
   const cooldownRate = open ? tuning.reading.cooldownRate : 1
   const random = new Random(resources.rng.get().state)
 

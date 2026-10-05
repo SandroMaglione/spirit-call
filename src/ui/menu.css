@@ -130,16 +130,18 @@
 .stats__item b { font-weight:500; font-variant-numeric:tabular-nums; }
 .stats__item i { font-size:12px; color:#47896d; font-style:normal; padding-left:10px; }
 .success-message { color:var(--gold); }
-.weapons { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.weapon { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; background:transparent; border:0; padding:8px 4px; min-height:78px!important; text-align:center; }
-.weapon b { font-size:10px; font-weight:500; }
-.weapon.is-selected { background:radial-gradient(ellipse,#ffefc930,transparent 72%); color:#fff1be; }
-.weapon small { font-size:10px; }
-.weapon-detail { padding-top:20px; }
-.weapon-detail h2 { font-size:25px; margin:6px 0; }
-.weapon-detail>p { opacity:.85; font-size:13px; }
-.weapon-detail .text-button { float:right; }
-.weapon-detail .lock-message { margin:16px 0; }
+.aspect-class { font-size:12px; opacity:.85; margin:0 0 10px; }
+.aspect-class b { font-weight:600; }
+.aspects { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.aspect { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; background:transparent; border:0; padding:8px 4px; min-height:78px!important; text-align:center; }
+.aspect b { font-size:10px; font-weight:500; }
+.aspect.is-selected { background:radial-gradient(ellipse,#ffefc930,transparent 72%); color:#fff1be; }
+.aspect small { font-size:10px; }
+.aspect-detail { padding-top:20px; }
+.aspect-detail h2 { font-size:25px; margin:6px 0; }
+.aspect-detail>p { opacity:.85; font-size:13px; }
+.aspect-detail .aspect-passive { font-size:12px; opacity:.8; margin:6px 0; }
+.aspect-detail .lock-message { margin:16px 0; }
 .lock-message { border-left:2px solid var(--gold); padding:10px 14px; font-size:12px; color:var(--text); background:#fff1; }
 .lock-message p { margin:4px 0; }
 .lock-message .text-button { margin-top:6px; }

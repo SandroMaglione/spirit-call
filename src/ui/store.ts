@@ -9,11 +9,10 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, Earned, Equipment, Play } from "../account/account.ts"
+import type { Account, Earned, Play } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { WeaponId } from "../content/weapons.ts"
 import type { BuildValue, FlowState, PracticeValue, RunResultValue } from "../schema.ts"
 import type { Screen } from "./menu/parts.tsx"
 import type { TeamDraft } from "./draft.ts"
@@ -34,12 +33,12 @@ export interface UiStore {
   readonly paused: Signal<boolean>
   /** The input in use: keyboard and mouse, or touch (for hints). */
   readonly device: Signal<"desktop" | "touch">
-  /** The content (characters, weapons, skills, challenges) and its numbers. */
+  /** The content (characters, classes, aspects, skills, challenges) and its numbers. */
   readonly tuning: Signal<Tuning>
   /** The team and challenge of the run going on, or of the last one. */
   readonly team: Signal<ReadonlyArray<BuildValue>>
   readonly challenge: Signal<ChallengeId>
-  /** The player's account: what it owns, each character's equipment, and the last selection (the menu starts from it). */
+  /** The player's account: what it owns, and the last selection with its aspects (the menu starts from it). */
   readonly account: Signal<Account>
   /** The quest or tier being played, or last played; `null` for a run of nothing (a dev quick start). */
   readonly play: Signal<Play | null>
@@ -106,12 +105,8 @@ export interface UiActions {
   readonly enter: (team: ReadonlyArray<CharacterId>, play: Play) => void
   /** Enter an Extra with `team`: nothing it does is recorded on the account. */
   readonly enterExtra: (team: ReadonlyArray<CharacterId>, extra: Extra) => void
-  /** Equip an owned character (saved at once). */
-  readonly equip: (character: CharacterId, equipment: Equipment) => void
   /** Take an owned character to its next level with gold (saved at once). */
   readonly train: (character: CharacterId) => void
-  /** Take an owned weapon a level higher with gold (saved at once). */
-  readonly upgrade: (weapon: WeaponId) => void
   /** From the results or the in-game menu: the same challenge again, from the start. */
   readonly retry: () => void
   /** From the results or the in-game menu: back to the menu. */

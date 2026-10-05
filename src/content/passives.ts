@@ -1,5 +1,5 @@
 /**
- * Passives: special effects of equipment (weapons now), made of small
+ * Passives: special effects of aspects (see `content/aspects.ts`), made of small
  * composable parts so new ones are data:
  *
  * - a damage bonus while a condition holds (`damageBonus`), or

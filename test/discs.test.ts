@@ -6,16 +6,16 @@ import type { DiscMove } from "../src/content/attacks.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Disc, Enemy, Game, Health } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { cursorAt, placeDummies, start, steps, plainAttack } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
 const tidecaller: BuildValue = { character: "tidecaller" }
-const attack = tuning.attacks.disc
+const attack = plainAttack(tuning, "disc")
 const first = attack.combo[0] as DiscMove
 const power = attack.power!.move as DiscMove
-/** The Tidecaller's ATK with the training disc. */
-const atk = tuning.characters.tidecaller.stats.atk + tuning.weapons.trainingDisc.atk
+/** The Tidecaller's ATK. */
+const atk = tuning.characters.tidecaller.stats.atk
 const hp = tuning.enemies.dummy.hp
 
 const World = Game.Inspector("Test/Discs", {

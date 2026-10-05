@@ -6,7 +6,7 @@ import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut } from "./helpers.ts"
+import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -174,7 +174,7 @@ describe("ultimates (Shift)", () => {
     run.step(20)
     const dealt = hp - run.world().enemies[0]!.health
     expect(dealt).toBeGreaterThan(0)
-    expect(run.world().energy).toBe(defaultTuning.energy.attack * defaultTuning.attacks.sword.combo[0]!.recovery)
+    expect(run.world().energy).toBe(defaultTuning.energy.attack * plainAttack(defaultTuning, "blade").combo[0]!.recovery)
   })
 
   it("caps a crowded special and gives the same energy at high level", () => {

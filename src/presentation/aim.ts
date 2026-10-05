@@ -8,9 +8,10 @@ import type { SkillEffect } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Aim, Controls, Enemy, Game, Hurtbox, Player, Position, PrevPosition, RenderClock, RenderHost, Skills, Tuning, Weapon } from "../schema.ts"
+import { attackOf } from "../features/build.ts"
+import { Aim, Controls, Enemy, Game, Hurtbox, Player, Position, PrevPosition, RenderClock, RenderHost, Skills, Tuning, BasicAttack } from "../schema.ts"
 import { barrageTargets, lobTarget } from "../features/skills.ts"
-import { chargeOf, moveArea, moveReach } from "../features/weapons.ts"
+import { chargeOf, moveArea, moveReach } from "../features/basic-attack.ts"
 import { drawArea } from "./draw.ts"
 import type { Shapes } from "./shapes.ts"
 
@@ -26,7 +27,7 @@ import type { Shapes } from "./shapes.ts"
 export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   queries: {
     player: Game.Query({
-      selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim), weapon: Game.Query.read(Weapon), skills: Game.Query.read(Skills) },
+      selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), aim: Game.Query.read(Aim), basicAttack: Game.Query.read(BasicAttack), skills: Game.Query.read(Skills) },
       with: [Player]
     }),
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
@@ -40,7 +41,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   const g = services.host.telegraphs
   const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
   const tuning = resources.tuning.get()
-  const first = tuning.attacks[player.data.weapon.get().attack].combo[0]
+  const first = attackOf(tuning, player.data.basicAttack.get().attack).combo[0]
   if (first !== undefined && isMelee(first)) {
     const cue = services.host.feedback.slashCue
     const range = first.reach + tuning.touch.assist.range
@@ -48,7 +49,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
       const enemy = data.position.get()
       return Math.hypot(enemy.x - at.x, enemy.y - at.y) - data.hurtbox.get().radius <= range
     })
-    const recharging = player.data.weapon.get().cooldown > 0
+    const recharging = player.data.basicAttack.get().cooldown > 0
     const seconds = services.clock.frameSeconds
     if (nearby || recharging) {
       cue.idle = 0
@@ -68,9 +69,9 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     }
   }
   // Charging: the power move's area fills up with the charge, bright once full.
-  const weapon = player.data.weapon.get()
-  const power = tuning.attacks[weapon.attack].power
-  const charge = power === null ? 0 : chargeOf(power, weapon.held)
+  const current = player.data.basicAttack.get()
+  const power = attackOf(tuning, current.attack).power
+  const charge = power === null ? 0 : chargeOf(power, current.held)
   if (power !== null && charge > 0) {
     const aim = player.data.aim.get()
     const move = power.move

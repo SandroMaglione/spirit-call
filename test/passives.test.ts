@@ -6,14 +6,17 @@ import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ShotMove } from "../src/content/attacks.ts"
-import type { NovaEffect } from "../src/content/skills.ts"
+import type { CharacterId } from "../src/content/characters.ts"
+import { cast, combo, damageBonus, doing, finisher, heal, kill, on, targetHealthBelow, withMove } from "../src/content/passives.ts"
+import type { Passive } from "../src/content/passives.ts"
+import { nova } from "../src/content/skills.ts"
 import { damageDealt, resolveBuild } from "../src/features/build.ts"
 import { Enemy, Game, Health, Player } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { placeDummies, start } from "./helpers.ts"
+import { aspectId, placeDummies, plainAttack, start, testAspect, withAspect } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
-const sword = defaultTuning.attacks.sword
+const sword = plainAttack(defaultTuning, "blade")
 
 const Healths = Game.Inspector("Test/Healths", {
   queries: {
@@ -51,17 +54,24 @@ const taps = (moves: ReadonlyArray<{ readonly recovery: number }>) => {
 }
 
 /** Dummies that stay put and last: no knockback, lots of health; lunges off so distances hold. */
-const sturdy = (tuning: Tuning): Tuning => ({
-  ...tuningWith({ enemies: { dummy: { hp: 100_000, knockbackTaken: 0 } } }),
-  attacks: { ...tuning.attacks, sword: { ...sword, combo: sword.combo.map((move) => ({ ...move, lunge: 0 })) } }
-})
+const sturdy = (tuning: Tuning): Tuning => {
+  const sturdier = tuningWith({ enemies: { dummy: { hp: 100_000, knockbackTaken: 0 } } })
+  const blade = tuning.classes.blade
+  return { ...sturdier, aspects: tuning.aspects, classes: { ...tuning.classes, blade: { ...blade, plain: { ...blade.plain, combo: blade.plain.combo.map((move) => ({ ...move, lunge: 0 })) } } } }
+}
 
-describe("weapon passives", () => {
-  it("Crescendo: each move of the combo deals more than the last, the finisher most", () => {
-    const build: BuildValue = { character: "swordsman", weapon: "crescendo" }
-    const atk = resolveBuild(defaultTuning, build).stats.atk
+/** `tuning` with a made-up aspect of `cls` holding `passives`, and the build that equips it on `character`. */
+const equipped = (tuning: Tuning, character: CharacterId, passives: ReadonlyArray<Passive>) => {
+  const cls = defaultTuning.characters[character].class
+  return { tuning: withAspect(tuning, "test", testAspect(tuning, cls, { passives })), build: { character, aspect: aspectId("test") } satisfies BuildValue }
+}
+
+describe("aspect passives", () => {
+  it("a damage bonus by combo move: each move deals more than the last, the finisher most", () => {
+    const { tuning, build } = equipped(sturdy(defaultTuning), "swordsman", [damageBonus(10, withMove(combo(2))), damageBonus(20, withMove(combo(3))), damageBonus(40, withMove(finisher()))])
+    const atk = resolveBuild(tuning, build).stats.atk
     const { frames, timeline } = taps(sword.combo)
-    const run = arena(build, [{ x: 70, y: 0 }], timeline, sturdy(defaultTuning))
+    const run = arena(build, [{ x: 70, y: 0 }], timeline, tuning)
     const dealt: Array<number> = []
     let last = 100_000
     // Room for the blows' hit-stops, which hold the world (and the taps waiting) still.
@@ -76,12 +86,12 @@ describe("weapon passives", () => {
     dealt.forEach((amount, index) => expect(amount).toBeCloseTo(damageDealt(atk, sword.combo[index]!.power) * (1 + bonuses[index]! / 100), 6))
   })
 
-  it("Executioner: +50% damage to targets below 30% health", () => {
-    const build: BuildValue = { character: "gunner", weapon: "executioner" }
-    const shot = defaultTuning.attacks.gun.combo[0] as ShotMove
-    const dealt = damageDealt(resolveBuild(defaultTuning, build).stats.atk, shot.power)
+  it("a damage bonus to the wounded: +50% to targets below 30% health", () => {
+    const { tuning, build } = equipped(tuningWith({ enemies: { dummy: { hp: 100 } } }), "gunner", [damageBonus(50, targetHealthBelow(0.3))])
+    const shot = plainAttack(defaultTuning, "gun").combo[0] as ShotMove
+    const dealt = damageDealt(resolveBuild(tuning, build).stats.atk, shot.power)
     const hit = (health: number) => {
-      const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuningWith({ enemies: { dummy: { hp: 100 } } }))
+      const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuning)
       run.runtime.tick(Game.Schedule(setHealth(health)))
       run.step(12)
       return health - run.world().enemies[0]!
@@ -90,9 +100,9 @@ describe("weapon passives", () => {
     expect(hit(25)).toBeCloseTo(dealt * 1.5, 6)
   })
 
-  it("Bloodthirst: each kill heals 2% of maximum health, even through the kill's hit-stop", () => {
-    const build: BuildValue = { character: "gunner", weapon: "bloodthirst" }
-    const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuningWith({ enemies: { dummy: { hp: 1, respawnDelay: 100 } } }))
+  it("a heal on each kill: 2% of maximum health, even through the kill's hit-stop", () => {
+    const { tuning, build } = equipped(tuningWith({ enemies: { dummy: { hp: 1, respawnDelay: 100 } } }), "gunner", [on(kill(), heal(2))])
+    const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuning)
     run.runtime.tick(Game.Schedule(setHealth(undefined, 40)))
     run.step(steps(defaultTuning.feedback.hitStopOnKill) + 20)
     const { player } = run.world()
@@ -100,21 +110,22 @@ describe("weapon passives", () => {
     expect(player.current).toBeCloseTo(40 + player.max * 0.02, 6)
   })
 
-  it("Echo Saber: the finisher sets off a shockwave that reaches past the spin", () => {
-    const build: BuildValue = { character: "swordsman", weapon: "echoSaber" }
-    const echo = (defaultTuning.weapons.echoSaber.passives[0] as { effect: { effect: NovaEffect } }).effect.effect
+  it("a cast set off by a move: the finisher's shockwave reaches past the spin", () => {
+    const echo = nova({ radius: 150, power: 30, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.03, heavy: false })
+    const { tuning, build } = equipped(sturdy(defaultTuning), "swordsman", [on(doing(finisher()), cast(echo))])
     const spin = sword.combo.at(-1)!
     const hurtbox = defaultTuning.enemies.dummy.hurtboxRadius
     // Behind the player (the arcs and thrust face +x), just out of the spin's reach, inside the shockwave's.
     const behind = -(("reach" in spin ? spin.reach : 0) + hurtbox + 4)
-    expect(-behind).toBeLessThan(echo.radius + hurtbox)
+    const radius = echo.kind === "nova" ? echo.radius : 0
+    expect(-behind).toBeLessThan(radius + hurtbox)
     const { frames, timeline } = taps(sword.combo)
-    const run = arena(build, [{ x: behind, y: 0 }], timeline, sturdy(defaultTuning))
+    const run = arena(build, [{ x: behind, y: 0 }], timeline, tuning)
     run.step(frames.at(-1)!)
     expect(run.world().enemies).toEqual([100_000])
     run.step(20)
     // One blow, of the shockwave's damage (not the spin's).
-    const atk = resolveBuild(defaultTuning, build).stats.atk
-    expect(100_000 - run.world().enemies[0]!).toBeCloseTo(damageDealt(atk, echo.power), 6)
+    const atk = resolveBuild(tuning, build).stats.atk
+    expect(100_000 - run.world().enemies[0]!).toBeCloseTo(damageDealt(atk, echo.kind === "nova" ? echo.power : 0), 6)
   })
 })

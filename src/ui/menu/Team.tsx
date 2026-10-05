@@ -1,6 +1,6 @@
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, encounterOf, equipmentOf, owns, playLock } from "../../account/account.ts"
+import { characterLevel, encounterOf, owns, playLock } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import { teamSize } from "../../content/characters.ts"
 import { challengeEnemies, describePlay } from "../describe.ts"
@@ -25,7 +25,7 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
       return <section key={slot} class={`column${slot === focus ? " is-selected" : ""}${member === undefined ? " is-empty" : ""}`} data-element={member === undefined ? undefined : elementOf(tuning, member) ?? undefined}>
         <button type="button" class="column__pick" aria-label={member === undefined ? `Choose slot ${slot + 1}` : `Change ${tuning.characters[member].name}`} disabled={slot > team.length} onClick={() => { draft.value = { team, focus: slot }; picking.value = true }}>
           <span class="column__number">{slot + 1}</span>
-          {member === undefined ? <span class="column__empty"><Icon name="plus" /></span> : <><Model character={member} weapon={equipmentOf(tuning, account, member).weapon} class="column__model" /><span class="column__banner"><b>{tuning.characters[member].name}</b><small>Lv {characterLevel(tuning, account, member).level}</small></span></>}
+          {member === undefined ? <span class="column__empty"><Icon name="plus" /></span> : <><Model character={member} class="column__model" /><span class="column__banner"><b>{tuning.characters[member].name}</b><small>Lv {characterLevel(tuning, account, member).level}</small></span></>}
         </button>
         {member !== undefined && <div class="column__actions"><button type="button" class="icon-button" aria-label={`Details for ${tuning.characters[member].name}`} onClick={() => nav.go({ kind: "character", character: member, tab: "overview" })}><Icon name="info" /></button><button type="button" class="icon-button" aria-label={`Remove ${tuning.characters[member].name}`} disabled={team.length === 1} onClick={() => (draft.value = removeFromTeam(draft.value, slot))}><Icon name="close" /></button></div>}
       </section>

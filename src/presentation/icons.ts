@@ -1,6 +1,6 @@
 /**
  * The HUD's icons, as Genshin's: what a button does at a glance, no words.
- * One per weapon type (the attack button), the dash, each skill, and each
+ * One per class (the attack button), the dash, each skill, and each
  * state (over the health bar), keyed by content id like the looks (content
  * holds no art). Inline SVG on a 24 unit grid, drawn in `currentColor`: line
  * art, with a few solid shapes where a line would read too thin at a
@@ -8,7 +8,7 @@
  */
 import type { StateId } from "../content/elements.ts"
 import type { SkillId } from "../content/skills.ts"
-import type { WeaponType } from "../content/weapons.ts"
+import type { ClassId } from "../content/classes.ts"
 
 const icon = (body: string): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`
@@ -17,10 +17,10 @@ const icon = (body: string): string =>
 const flame = `<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5.5.5 1.5 1.5 2.5 2.5 3 0-3 0-5 0-7.5z" fill="currentColor" fill-opacity="0.35"/>`
 const drop = `<path d="M12 2.5c3 4.5 6.5 7.5 6.5 11.5a6.5 6.5 0 0 1-13 0c0-4 3.5-7 6.5-11.5z" fill="currentColor" fill-opacity="0.35"/>`
 
-/** The attack button, by the weapon in hand. */
-export const weaponIcons: { readonly [Type in WeaponType]: string } = {
+/** The attack button, by her class. */
+export const classIcons: { readonly [Class in ClassId]: string } = {
   // A blade, its guard, and the grip.
-  sword: icon(`<path d="M20 4v4L10.5 17.5l-4-4L16 4z" fill="currentColor" fill-opacity="0.35"/><path d="M5 12.5l6.5 6.5M8 16l-4 4"/>`),
+  blade: icon(`<path d="M20 4v4L10.5 17.5l-4-4L16 4z" fill="currentColor" fill-opacity="0.35"/><path d="M5 12.5l6.5 6.5M8 16l-4 4"/>`),
   // A pistol in profile.
   gun: icon(`<path d="M3 7h16l2 2v2h-9l-1 6H6.5l1-6H3z" fill="currentColor" fill-opacity="0.35"/><path d="M11 11h2v2"/>`),
   // A ring with four blades.

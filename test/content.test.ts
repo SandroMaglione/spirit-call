@@ -6,22 +6,22 @@ import { clearWaves } from "../src/content/challenges.ts"
 import { validateContent } from "../src/content/validate.ts"
 
 describe("content", () => {
-  it("follows every rule: references exist, combos have moves, weapons fit, challenges can be won", () => {
+  it("follows every rule: references exist, combos have moves, aspects keep to their class, challenges can be won", () => {
     expect(validateContent(defaultTuning)).toEqual([])
   })
 
   it("reports broken rules readably", () => {
     const broken: Tuning = {
       ...defaultTuning,
-      attacks: { ...defaultTuning.attacks, gun: { ...defaultTuning.attacks.gun, combo: [] } },
-      characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman, weapon: "executioner" } },
+      classes: { ...defaultTuning.classes, gun: { ...defaultTuning.classes.gun, plain: { ...defaultTuning.classes.gun.plain, combo: [] } } },
+      characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman, class: "lance" as never } },
       skills: { ...defaultTuning.skills, flareJump: { ...defaultTuning.skills.flareJump, cooldown: 0 } },
       challenges: { ...defaultTuning.challenges, endless: { ...defaultTuning.challenges.endless, objective: clearWaves(), waves: { ...defaultTuning.challenges.endless.waves, endless: { baseBudget: 6, budgetPerWave: 2 } } } }
     }
     expect(validateContent(broken)).toEqual([
-      "attack gun: the combo needs at least one move",
+      "class gun plain aspect: the combo needs at least one move",
       "skill flareJump: needs a cooldown or an energy cost, or it can be spammed",
-      "character swordsman: its weapon executioner is a gun, not a sword",
+      "character swordsman: unknown class lance",
       "challenge endless: clearing every wave can never happen with endless waves"
     ])
   })

@@ -8,7 +8,7 @@ import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
-import type { AttackId, AttackMove } from "./content/attacks.ts"
+import type { AttackMove } from "./content/attacks.ts"
 import type { ArenaId } from "./content/arena.ts"
 import type { ChallengeId, EliteElement, WaveEntry } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
@@ -16,7 +16,8 @@ import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } fro
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { LobEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
-import type { WeaponId } from "./content/weapons.ts"
+import type { AspectId } from "./content/aspects.ts"
+import type { ClassId } from "./content/classes.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
 import type { Box } from "./physics/shapes.ts"
@@ -42,12 +43,12 @@ export const Player = Descriptor.Tag("Shooter/Player")
 
 /**
  * A member of the player's team (see `features/team.ts`): her `slot` in the
- * team (0 first, also her switch key) and who she is. She keeps her own
- * health, stats, state, energy, skills, and weapon for the whole run, on the
- * field or on the bench.
+ * team (0 first, also her switch key), who she is, and the aspect she fights
+ * with (`null`: her class's plain one). She keeps her own health, stats,
+ * state, energy, skills, and basic attack for the whole run, on the field or
+ * on the bench.
  */
-/** A team member: her slot, who she is, and the weapon she carries. */
-export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly weapon: WeaponId }>()("Shooter/Member")
+export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly aspect: AspectId | null }>()("Shooter/Member")
 /** Unit direction the entity aims at: where its attacks and skills go (the cursor, or the touch aim). */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
 
@@ -200,8 +201,6 @@ export interface Blow {
    * none, no hit-stop, and no push; its element only scales its damage.
    */
   readonly periodic: boolean
-  /** It deals `factor` times its damage to a body in `state` (see `BasicAttackSpec.against`); `null` for none. */
-  readonly against: { readonly state: StateId; readonly factor: number } | null
   /** An arc off a charged body (see `elementRules.charged`): it never arcs on itself. */
   readonly arc: boolean
   /** It jumps on to the nearest other body of the side it hits within `range` with `share` of its damage (see `BasicAttackSpec.chain`); `null` for none. */
@@ -216,7 +215,7 @@ export interface ElementHit {
 
 /** A blow of `damage` and `knockback`; the other fields default to none. */
 export const blow = (spec: Pick<Blow, "damage" | "knockback"> & Partial<Blow>): Blow =>
-  ({ charges: false, hitStop: 0, heavy: false, source: null, element: null, periodic: false, against: null, chain: null, arc: false, ...spec })
+  ({ charges: false, hitStop: 0, heavy: false, source: null, element: null, periodic: false, chain: null, arc: false, ...spec })
 
 /**
  * A state lasting on a body (see `content/elements.ts`), set by a blow of
@@ -301,13 +300,19 @@ export const Knockback = Descriptor.Component<Vec2>()("Shooter/Knockback")
 /** Time left on the white flash shown after being hit. */
 export const HitFlash = Descriptor.Component<{ readonly remaining: number }>()("Shooter/HitFlash")
 
+/** Which basic attack: a class, with an aspect of it (`null`: its plain one; see `attackOf`). */
+export interface AttackRef {
+  readonly class: ClassId
+  readonly aspect: AspectId | null
+}
+
 /**
- * The basic attack in use (see `Tuning.attacks`) and where it is: the time
- * until the next move (`cooldown`, of `recovery` in total), how long an early
- * press stays queued, the combo so far, and the charge of the power attack.
+ * The basic attack in use (see `attackOf`) and where it is: the time until
+ * the next move (`cooldown`, of `recovery` in total), how long an early press
+ * stays queued, the combo so far, and the charge of the power attack.
  */
-export interface WeaponValue {
-  readonly attack: AttackId
+export interface BasicAttackValue {
+  readonly attack: AttackRef
   readonly cooldown: number
   readonly recovery: number
   readonly buffered: number
@@ -328,7 +333,7 @@ export interface WeaponValue {
   /** Seconds since her last dash strike (one per dash, see `BasicAttackSpec.dash`). */
   readonly sinceDashStrike: number
 }
-export const Weapon = Descriptor.Component<WeaponValue>()("Shooter/Weapon")
+export const BasicAttack = Descriptor.Component<BasicAttackValue>()("Shooter/BasicAttack")
 
 export type ProjectileStyle = "bolt" | "disc"
 
@@ -510,7 +515,7 @@ export const Elite = Descriptor.Component<EliteValue>()("Shooter/Elite")
 export type WallPlacement = "back" | "front" | "sorted" | "inner"
 
 export type RenderableValue =
-  | { readonly kind: "player"; readonly character: CharacterId; readonly weapon: WeaponId; readonly radius: number }
+  | { readonly kind: "player"; readonly character: CharacterId; readonly radius: number }
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number; readonly elite?: EliteElement }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number; readonly element: ElementId | null }
   /** A wall of the arena; `prop`, when it is one of the arena's props (its place among them: see `content/arena.ts`). */
@@ -627,13 +632,13 @@ export const Explosion = Descriptor.Event<{
   readonly radius: number
   readonly faction: Faction
   readonly kind: "blast" | "nova"
-  /** A heavy one (an ultimate) gets the big effects; a light one (a weapon's shockwave) a smaller ring. */
+  /** A heavy one (an ultimate) gets the big effects; a light one (an aspect's shockwave) a smaller ring. */
   readonly heavy: boolean
   /** Its element, if any, for its color and sound. */
   readonly element: ElementId | null
 }>()("Shooter/Explosion")
 
-/** Health restored to an entity at `at` (a weapon's passive, a totem, a thunderclap), for effects. */
+/** Health restored to an entity at `at` (an aspect's passive, a totem, a thunderclap), for effects. */
 export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: number }>()("Shooter/Heal")
 
 /**
@@ -687,18 +692,17 @@ export const Impact = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fa
 export const Tuning = Descriptor.Resource<TuningValue>()("Shooter/Tuning")
 
 /**
- * A character as she enters the arena: at her level, with the weapon
- * equipped over her own (her skills are always her own). `resolveBuild`
- * turns it into final stats and kit when the team spawns.
+ * A character as she enters the arena: at her level, with the aspect of her
+ * class equipped on her (her plain one when missing; her skills are always
+ * her own). `resolveBuild` turns it into final stats and kit when the team
+ * spawns.
  */
 export interface BuildValue {
   readonly character: CharacterId
   /** The character's level (1 when missing). */
   readonly level?: number
-  /** A weapon of the character's type in place of its own. */
-  readonly weapon?: WeaponId
-  /** The weapon's level (1 when missing). */
-  readonly weaponLevel?: number
+  /** An aspect of her class in place of its plain one. */
+  readonly aspect?: AspectId
 }
 /** Who enters the arena: one to three characters (see `teamSize`), in team order; the first starts on the field. */
 export const Team = Descriptor.Resource<ReadonlyArray<BuildValue>>()("Shooter/Team")
@@ -943,7 +947,7 @@ export const Game = Schema.bind(
       Hurtbox,
       Knockback,
       HitFlash,
-      Weapon,
+      BasicAttack,
       Projectile,
       Disc,
       Enemy,

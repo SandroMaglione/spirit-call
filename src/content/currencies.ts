@@ -3,7 +3,7 @@
  * comes from and what it is for (see docs/vision.md, "Progression"):
  * crystals for pulls (the gacha, later), from milestones only (first
  * clears, hardcore tiers once per period, account levels, discoveries);
- * gold for upgrades (character and weapon levels), from every run, and on
+ * gold for upgrades (character levels), from every run, and on
  * top from first clears and hardcore tiers.
  */
 export interface CurrencySpec {

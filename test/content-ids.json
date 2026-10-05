@@ -118,6 +118,13 @@
     "discharge",
     "gale"
   ],
+  "classes": [
+    "blade",
+    "gun",
+    "disc",
+    "staff"
+  ],
+  "aspects": [],
   "retired": {
     "skills": [
       "nova",
@@ -128,6 +135,24 @@
       "steam",
       "carried",
       "shocked"
+    ],
+    "weapons": [
+      "trainingBlade",
+      "crescendo",
+      "echoSaber",
+      "trainingPistol",
+      "executioner",
+      "bloodthirst",
+      "trainingDisc",
+      "undertow",
+      "trainingStaff",
+      "lightningRod"
+    ],
+    "attacks": [
+      "sword",
+      "gun",
+      "disc",
+      "staff"
     ]
   }
 }
