@@ -268,7 +268,7 @@ Escape-only clears fail independently of the baseline.
 
 CI runs the representative 42-scenario suite at seeds 1337 and 42 against
 `test/balance-baseline.json` before deployment and uploads its JSON report.
-It also checks 16 controlled energy probes across all kits, levels 1 and
+It also checks 20 controlled energy probes across all kits, levels 1 and
 40, and one and six durable targets. These probes remove displacement and
 self-damaging pools to measure sustained contact without the movement
 planner. Level must not accelerate this cadence. The report includes

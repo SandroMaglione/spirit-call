@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "1e5c36d6f3779549890d9789974eee9d2d063d99ff3933cd553e5d69661dd067",
+  "tuningHash": "a73b4a2dbbe74c6c4e605f45893904e1f023de6e891e82b440fee2cd459cd437",
   "stats": [
     {
       "level": 1,
@@ -230,6 +230,38 @@
       "targets": 6,
       "specials": 8,
       "ultimates": 2
+    },
+    {
+      "id": "stonekeeper/1/1",
+      "character": "stonekeeper",
+      "level": 1,
+      "targets": 1,
+      "specials": 4,
+      "ultimates": 1
+    },
+    {
+      "id": "stonekeeper/1/6",
+      "character": "stonekeeper",
+      "level": 1,
+      "targets": 6,
+      "specials": 4,
+      "ultimates": 1
+    },
+    {
+      "id": "stonekeeper/40/1",
+      "character": "stonekeeper",
+      "level": 40,
+      "targets": 1,
+      "specials": 4,
+      "ultimates": 1
+    },
+    {
+      "id": "stonekeeper/40/6",
+      "character": "stonekeeper",
+      "level": 40,
+      "targets": 6,
+      "specials": 4,
+      "ultimates": 1
     },
     {
       "id": "stormcaller/1/1",
