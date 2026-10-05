@@ -55,7 +55,7 @@ no other burst and leaves no state.
 | **Water** | Fast enemies | **Soaked**: slowed | **Splash**: it and the bodies around it stop for a moment |
 | **Thunder** | Spread-out groups, enemies at range | **Charged**: a blow on it arcs on to the nearest body of its side, with a share of the damage, charging it | **Discharge**: thunder strikes the bodies around it |
 | **Wind** | Groups to scatter or bunch up | **Swept**: light, pushed further and gliding; slammed into a wall, stunned | **Gale**: it is launched along the blow, the bodies around it thrown away from it, all stunned a moment |
-| **Rock** | Tanky enemies | **Cracked**: its break bar fills faster | **Shatter**: a large share of its break bar at once |
+| **Rock** | Tanky enemies | **Cracked**: its break bar fills faster | **Shatter**: a large share of its break bar at once, and a blow to it and the bodies around it |
 
 Wind's push or pull is the kit's choice (a Gust throws out, a Cyclone
 draws in): Swept only makes a body light. Thunder's strikes jump between
@@ -65,7 +65,10 @@ Every character applies her own element: each one can build on her own
 state alone, and each pair of characters gets bursts on top. For example,
 the Stormcaller charges a spread-out group, and her blows arc between them;
 with the Tidecaller, thunder on soaked enemies splashes the whole group to
-a stop, and leaves it charged.
+a stop, and leaves it charged. Bastion cracks the toughest enemies (her
+Rockfall raises stone under the toughest around her, stunning them), so
+they break sooner under her own blows, and any other element shatters
+them.
 
 ### Adding an element
 
@@ -98,11 +101,30 @@ The Stormcaller heals through her kit, and healing always costs something:
 - **Her Thunderclap** heals the whole team, the bench included, so the
   health of the characters waiting is worth looking after.
 
+## Guarding
+
+Bastion guards the team through her kit, and a guard always costs
+something:
+
+- **Her Stoneguard** takes a moment to raise: she stands rooted while the
+  stone gathers (switched out before it is done, it is lost). It gives the
+  team **stone plates**, a few at most, shown as slabs of stone around the
+  character on the field. They belong to the team, not to her: they stay
+  through switches and waves until spent, and casting again fills them up.
+- **A plate takes one blow whole**, then shatters outward: the bodies
+  around are cracked and thrown back, and the attacker's break bar fills.
+  Only blows break plates: burns, bursts, and the arena's hazards pass
+  through. A blow taken on a plate leaves her untouchable for the usual
+  moment, so one flurry does not spend them all.
+- So a guard is set up in the quiet (between waves, behind the team) and
+  pays off in the fight: an enemy hitting the team cracks itself for the
+  next blow of any element.
+
 ## Ground
 
 - Some skills leave their element on the ground where they land (a fire
-  pool, a puddle), and arenas have pools of their own laid into the floor
-  (fire trenches, water basins) that never run out.
+  pool, a puddle; rock leaves nothing), and arenas have pools of their own
+  laid into the floor (fire trenches, water basins) that never run out.
 - **A pool holds its state for whoever stands in it**, either side, the
   player included (her own fire pool burns her too): it gives its state to
   a body in none, and refreshes it on a body already in it. It never bursts
@@ -117,7 +139,8 @@ The Stormcaller heals through her kit, and healing always costs something:
 
 - **The player takes states too**, from enemy blows and pools: Burning
   hurts her over time, Soaked slows her, Swept makes her light (pushed
-  further), and Charged has no one of her side to arc to.
+  further), and Charged has no one of her side to arc to, nor Cracked a
+  break bar to fill: those two only wait to burst.
 - **Bursts on her deal their damage, never take control**: she is never
   stopped, stunned, or launched by one. Control stays with the player.
 - **A state stays with the character** when she is switched out, and runs
@@ -148,7 +171,7 @@ The Stormcaller heals through her kit, and healing always costs something:
 
 - A burst is worth about the same for every state at the same moment:
   fire's leans to damage, water's and wind's to control, thunder's to
-  reach. The lab measures them side by side.
+  reach, rock's to breaking. The lab measures them side by side.
 - Weaknesses are modest: tens of percent, so the best case stays well
   under twice the damage. Strategy should feel worth it without becoming a
   requirement.

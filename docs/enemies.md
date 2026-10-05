@@ -140,6 +140,10 @@ element. Its element shows as a ring under its feet and a glow on its body.
   where it stood: it charges what it strikes, and bursts the state a body
   already holds.
 
+Wind and rock make no elites: neither has anything of its own to leave
+behind or set off around an enemy, so an elite of either would be a plain
+one with a color.
+
 Elites make the elements part of the fight on the enemies' side, ready to be
 turned against them. Endless waves make elites of a growing share of their
 slots.
@@ -212,7 +216,8 @@ has a bar under its health:
 
 - Blows fill it by the damage they deal, heavy ones (finishers, charged
   attacks) more, burns a little; a burst on it (see `docs/elements.md`) or
-  a wall slam fills a share of it at once.
+  a wall slam fills a share of it at once, a Shatter (rock's burst) a
+  large one. A cracked enemy's bar fills faster from everything.
 - It **drains** once the enemy has taken nothing for a moment, so chipping
   at it from afar never breaks it.
 - Full, the enemy **breaks**: its attack is cut off, it is stunned for a
