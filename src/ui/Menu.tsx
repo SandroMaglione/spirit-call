@@ -6,6 +6,7 @@
 import { useEffect } from "preact/hooks"
 import { owns, playLock, teamProblems } from "../account/account.ts"
 import { menuElement } from "./Backdrop.tsx"
+import { Call } from "./menu/Call.tsx"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
 import { Extra } from "./menu/Extra.tsx"
@@ -66,6 +67,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       case "discoveries": return <Discoveries store={store} nav={nav} />
       case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} leader={leader} />
       case "settings": return <Settings store={store} actions={actions} nav={nav} />
+      case "call": return <Call store={store} actions={actions} nav={nav} tab={screen.tab} />
     }
   }
   return <div class="menu" data-element={menuElement(store)}>{current()}</div>

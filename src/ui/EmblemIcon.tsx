@@ -1,10 +1,11 @@
 import { useId } from "preact/hooks"
 import type { ElementId } from "../content/elements.ts"
 
-export type EmblemKind = ElementId | "xp"
+export type EmblemKind = ElementId | "xp" | "call"
 
 const emblems = {
   rock: { shape: "M7 5 19 2 28 10 30 22 21 30 8 28 2 17Z", light: "#ffe6ba", middle: "#c5a282", dark: "#786253" },
+  call: { shape: "M11 2h10l7 7v14l-7 7H11l-7-7V9Z", light: "#efe4ff", middle: "#9a78ee", dark: "#3b2a86" },
   xp: { shape: "M16 2 27 8 30 20 23 29H9L2 20 5 8Z", light: "#f0edff", middle: "#a9b7f3", dark: "#6263a9" },
   wind: { shape: "M3 8 14 3 29 7 22 12 11 11 18 16 29 15 23 23 12 29 14 21 4 18 10 14Z", light: "#e8fff2", middle: "#78e6c7", dark: "#278a88" },
   fire: { shape: "M17 2 18 10 23 6 27 14 28 21 23 28 16 31 7 28 3 21 5 13 11 8 11 15 15 12Z", light: "#fff2b9", middle: "#ffad63", dark: "#c95a49" },
@@ -15,6 +16,12 @@ const emblems = {
 /** Filled silhouettes and light-catching facets remain readable at wallet size. */
 export const EmblemIcon = ({ kind }: { readonly kind: EmblemKind }) => {
   const id = useId(), spec = emblems[kind]
+  // The Spirit Call's seal stays plain: one gradient and a star, no facets.
+  if (kind === "call") return <svg class="menu-icon emblem-icon emblem-icon--call" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+    <defs><linearGradient id={`${id}-surface`} x1="0" y1="0" x2="1" y2="1"><stop stop-color={spec.light} /><stop offset=".5" stop-color={spec.middle} /><stop offset="1" stop-color={spec.dark} /></linearGradient></defs>
+    <path d={spec.shape} fill={`url(#${id}-surface)`} stroke={spec.light} stroke-width=".8" stroke-linejoin="round" />
+    <path d="m16 7 2.2 6.8L25 16l-6.8 2.2L16 25l-2.2-6.8L7 16l6.8-2.2Z" fill="#ffe7ad" />
+  </svg>
   return <svg class={`menu-icon emblem-icon emblem-icon--${kind}`} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id={`${id}-surface`} x1="0" y1="0" x2="1" y2="1"><stop stop-color={spec.light} /><stop offset=".45" stop-color={spec.middle} /><stop offset="1" stop-color={spec.dark} /></linearGradient>

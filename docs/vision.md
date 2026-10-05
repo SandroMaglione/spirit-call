@@ -270,12 +270,22 @@ Decided so far (the rest is in the open questions):
 
 ## The gacha
 
+The rules are in `docs/calls.md` (the Spirit Call); in short:
+
 - **Every pull is meaningful.** The opposite of pools where most results
   are thrown away: fewer results per pull (even a single one), but each one
-  worth having. The pool holds only things that matter, and a result you
-  already own still turns into progress (see duplicates).
+  worth having. The pool holds only things that matter: a character, an
+  aspect not owned yet, or a supply that helps a character grow. Nothing
+  owned comes twice while something is left to get.
 - **What it can give:** characters (the main excitement: a new way to play),
-  aspects, resources, and cosmetics.
+  aspects, resources, and later cosmetics.
+- **Banners, in turn.** A banner is a pool of characters that runs for a
+  while, then the next one; each comes back later (nothing is missable).
+  The player chooses which of its characters to call for: a
+  character that comes is always that one.
+- **Bad luck is capped and shown**: a character within a known number of
+  pulls, an aspect within fewer, and the counts are on screen and carry
+  across banners.
 - **Duplicates never add raw power.** Direction (details to settle): a
   duplicate character unlocks a skin, a duplicate aspect a variant of its
   look, and further ones convert into currency.
@@ -300,11 +310,9 @@ Decided so far (the rest is in the open questions):
 Decided directions are above; these are not decided yet.
 
 1. **Progression details**, to settle while building: the stat band (about
-   4x), how generous pulls are (a pull's price in crystals) and how bad
-   luck is protected (a guarantee after a number of pulls, or a way to get a
-   specific thing directly), the exact duplicate rewards, the formats of
-   secondary quests, and how pulls stay meaningful once a player owns most
-   things. Quest rewards show crystals as pulls once a pull has a price.
+   4x), the pace of pulls (measured, see `docs/calls.md`), the exact
+   duplicate rewards, the formats of secondary quests, and how pulls stay
+   meaningful once a player owns most things. Quest rewards show crystals as pulls once a pull has a price.
 2. **Element details**: the open questions at the end of `docs/elements.md`.
 3. **Team details**, for later: reviving a fallen character, several saved
    teams, and whether off-field characters contribute more than energy.

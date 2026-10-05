@@ -7,6 +7,8 @@
  */
 import type { CharacterId } from "../../content/characters.ts"
 import { characterLevel, owns } from "../../account/account.ts"
+import type { CallResult } from "../../account/account.ts"
+import { skillSlots } from "../../content/skills.ts"
 import type { Amounts as Held, CurrencyId } from "../../content/currencies.ts"
 import type { MaterialId } from "../../content/materials.ts"
 import { elements } from "../../content/elements.ts"
@@ -15,7 +17,7 @@ import type { EnemyKind } from "../../content/enemies.ts"
 import type { Rewards, Unlock } from "../../content/quests.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
-import { affinityList, affinityNames, attackElements, describeUnlock, resourceName } from "../describe.ts"
+import { affinityList, affinityNames, attackElements, describeAmounts, describeSkill, describeUnlock, resourceName } from "../describe.ts"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import { Face, Portrait } from "../kit/art.tsx"
@@ -142,5 +144,32 @@ export const PartyStrip = ({ store, team, leader, pick, edit, size = 38 }: {
   return <div class="party-strip">
     {team.map((member) => <button type="button" class="face-button" key={member} aria-label={tuning.characters[member].name} aria-pressed={member === leader} onClick={() => pick(member)}><Face of={{ character: member }} tint={elementOf(tuning, member)} selected={member === leader} size={member === leader ? size + 4 : size} /></button>)}
     <RoundButton icon="swap" tone="dark" label="Change party" onClick={edit} />
+  </div>
+}
+
+/** A call's result named in a few words (the history, the summary). */
+export const describeResult = (store: UiStore, result: CallResult): string => {
+  const tuning = store.tuning.value
+  switch (result.kind) {
+    case "character":
+      return tuning.characters[result.id].name
+    case "aspect":
+      return `${aspectOf(tuning.aspects, result.id).name} (${tuning.classes[aspectOf(tuning.aspects, result.id).class].name} aspect)`
+    case "supply":
+      return describeAmounts(tuning, result.amounts)
+  }
+}
+
+/** What one character does, in a few lines: her element and class, then her special and her ultimate. */
+export const KitLines = ({ store, character }: { readonly store: UiStore; readonly character: CharacterId }) => {
+  const tuning = store.tuning.value, spec = tuning.characters[character]
+  return <div class="kit-lines">
+    {skillSlots.map((slot) => {
+      const skill = tuning.skills[spec.skills[slot]]
+      return <div key={slot} class="kit-lines__one">
+        <span class="kit-lines__orb"><AbilityIcon kind={spec.skills[slot]} /></span>
+        <span><b>{skill.name}</b><small>{slot === "special" ? "Special" : "Ultimate"}</small><span>{describeSkill(skill).split(" · ")[0]}.</span></span>
+      </div>
+    })}
   </div>
 }

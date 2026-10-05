@@ -98,7 +98,7 @@ export const quests = {
     after: null,
     introduces: brings("Fast packs that rush you: keep moving, strike back", "chaser"),
     stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 10)],
-    rewards: { experience: 60, currencies: { crystals: 100, gold: 500 }, unlocks: [character("gunner")] }
+    rewards: { experience: 60, currencies: { crystals: 100, gold: 500 }, unlocks: [] }
   }),
   crossfire: quest({
     name: "Crossfire",
@@ -111,7 +111,7 @@ export const quests = {
     after: "theSwarm",
     introduces: brings("Shooters and snipers fighting from cover", "sniper"),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
-    rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [aspect("marksman")] }
+    rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [aspect("duelist")] }
   }),
   theBrute: quest({
     name: "The Brute",
@@ -124,7 +124,7 @@ export const quests = {
     after: "crossfire",
     introduces: brings("The Brute: break it, then punish it", "brute"),
     stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 12)],
-    rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("tidecaller"), aspect("riptide"), aspect("duelist")] }
+    rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("gunner"), aspect("marksman")] }
   }),
   outposts: quest({
     name: "Outposts",
@@ -137,7 +137,7 @@ export const quests = {
     after: "theBrute",
     introduces: brings("Shooters spread out, swarms running between them", "shooter"),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
-    rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [character("stormcaller"), aspect("arc")] }
+    rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [] }
   }),
   ashfall: quest({
     name: "Ashfall",
@@ -150,7 +150,7 @@ export const quests = {
     after: "outposts",
     introduces: brings("Fire everywhere: firebombers and burning elites", null),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 18)],
-    rewards: { experience: 220, currencies: { crystals: 150, gold: 5500 }, unlocks: [aspect("gatheringEdge")] }
+    rewards: { experience: 220, currencies: { crystals: 150, gold: 5500 }, unlocks: [] }
   }),
   highTide: quest({
     name: "High Tide",
@@ -163,7 +163,7 @@ export const quests = {
     after: "ashfall",
     introduces: brings("A champion guardian of the tide", "guardian"),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 8)],
-    rewards: { experience: 260, currencies: { crystals: 150, gold: 15000 }, unlocks: [aspect("whirlpool")] }
+    rewards: { experience: 260, currencies: { crystals: 150, gold: 15000 }, unlocks: [character("tidecaller"), aspect("riptide")] }
   }),
   sandstorm: quest({
     name: "Sandstorm",
@@ -176,7 +176,7 @@ export const quests = {
     after: "highTide",
     introduces: brings("Stranger foes among the obelisks", "warden"),
     stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 6)],
-    rewards: { experience: 300, currencies: { crystals: 200, gold: 24000 }, unlocks: [aspect("lightningRod")] }
+    rewards: { experience: 300, currencies: { crystals: 200, gold: 24000 }, unlocks: [] }
   }),
   theCloister: quest({
     name: "The Cloister",
@@ -215,9 +215,9 @@ export const quests = {
     after: "theSwarm",
     introduces: brings("Mixed waves, ending with an elite formation", null),
     stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 20)],
-    rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [aspect("scattergun")] }
+    rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [] }
   }),
-  /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes, and Bastion. */
+  /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes. */
   stoneTrial: quest({
     name: "Heavy Ground",
     line: "secondary",
@@ -229,7 +229,7 @@ export const quests = {
     after: "theBrute",
     introduces: brings("The heaviest foes: break them before they fall", "juggernaut"),
     stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 6)],
-    rewards: { experience: 160, currencies: { crystals: 80, gold: 1300 }, unlocks: [character("stonekeeper")] }
+    rewards: { experience: 160, currencies: { crystals: 80, gold: 1300 }, unlocks: [] }
   }),
   nightOfPacks: quest({
     name: "Night of Packs",

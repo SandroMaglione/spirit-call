@@ -74,7 +74,7 @@ describe("account store", () => {
     expect(result.account.id).toBe("account-1")
     expect(Object.keys(result.account.owned.characters)).toEqual(newAccount.characters)
     expect(result.notes).toEqual([])
-    expect(result.saved).toMatchObject({ version: 7, id: "account-1", selection: starterSelection })
+    expect(result.saved).toMatchObject({ version: 8, id: "account-1", selection: starterSelection })
   })
 
   it("keeps changes across visits", async () => {
@@ -109,7 +109,7 @@ describe("account store", () => {
         return { before, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.before).toEqual({ runs: 0, clears: 0, kills: 0, secondsPlayed: 0 })
-    expect(result.saved.version).toBe(7)
+    expect(result.saved.version).toBe(8)
     expect(result.saved.totals).toEqual({ runs: 1, clears: 1, kills: 9, secondsPlayed: 60 })
   })
 
@@ -123,7 +123,7 @@ describe("account store", () => {
       }))
     expect(result.account.selection).toEqual(starterSelection)
     expect(result.notes).toEqual([])
-    expect(result.saved).toMatchObject({ version: 7, selection: starterSelection })
+    expect(result.saved).toMatchObject({ version: 8, selection: starterSelection })
   })
 
   it("opens a save from before experience was gold (version 3), keeping the gold each character was trained with", async () => {
@@ -139,7 +139,7 @@ describe("account store", () => {
     // 120 experience was bought at 2 gold each.
     expect(result.account.owned.characters.swordsman).toEqual({ unlockedAt: 5, experience: 240, ascension: 0 })
     expect(result.account.discoveries).toEqual({})
-    expect(result.saved).toMatchObject({ version: 7, discoveries: {} })
+    expect(result.saved).toMatchObject({ version: 8, discoveries: {} })
   })
 
   it("opens a save from before kits were fixed (version 4): skills are no longer owned or equipped, and nothing is reported lost", async () => {
@@ -150,7 +150,7 @@ describe("account store", () => {
         return { account: yield* store.get, notes: store.notes, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.notes).toEqual([])
-    expect(result.saved.version).toBe(7)
+    expect(result.saved.version).toBe(8)
     expect(result.saved.owned).not.toHaveProperty("skills")
   })
 
@@ -164,7 +164,7 @@ describe("account store", () => {
     expect(result.notes).toEqual([])
     expect(result.account.owned.aspects).toEqual({})
     expect(result.account.selection).toEqual(starterSelection)
-    expect(result.saved.version).toBe(7)
+    expect(result.saved.version).toBe(8)
     expect(result.saved).not.toHaveProperty("equipment")
     expect(result.saved.owned).not.toHaveProperty("weapons")
   })
@@ -183,7 +183,28 @@ describe("account store", () => {
     expect(result.account.quests.theSwarm?.stars).toEqual([0])
     expect(result.account.quests.outposts?.stars).toEqual([])
     expect(result.account.chests).toEqual({ one: 1 })
-    expect(result.saved.version).toBe(7)
+    expect(result.saved.version).toBe(8)
+  })
+
+  it("opens a save from before the Spirit Call (version 7) with no calls made, and keeps calls made since across a reload", async () => {
+    const fresh = await withAccount({}, (_, kv) => kv.get(accountKey))
+    const { calls: _, ...latest } = JSON.parse(fresh!)
+    const cleared = { attempts: 1, clears: 1, firstClearedAt: 5, stars: [0] }
+    const v7 = JSON.stringify({ ...latest, version: 7, quests: { [defaultTuning.calls.opensAfter]: cleared }, wallet: { crystals: 10 * (defaultTuning.calls.price.crystals ?? 0) } })
+    const first = await withAccount({ [accountKey]: v7 }, (store, kv) =>
+      Effect.gen(function*() {
+        const before = yield* store.get
+        const called = yield* store.call("stormAndStone", 10)
+        return { before, called, saved: yield* savedJson(kv, accountKey), raw: yield* kv.get(accountKey) }
+      }))
+    expect(first.before.calls).toMatchObject({ sinceCharacter: 0, sinceAspect: 0, firstCharacter: false, focus: {}, history: [] })
+    expect(first.called.results).toHaveLength(10)
+    expect(first.saved.version).toBe(8)
+    expect(first.saved.calls.history).toHaveLength(10)
+    // Reloading opens the same account: the calls made stay made.
+    const reloaded = await withAccount({ [accountKey]: first.raw! }, (store) => store.get)
+    expect(reloaded.calls).toEqual(first.called.account.calls)
+    expect(reloaded.wallet.crystals ?? 0).toBe(0)
   })
 
   it("keeps the characters of the saved team it still owns, in order, saying when some are gone", async () => {

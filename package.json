@@ -14,6 +14,7 @@
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "debug": "node --import tsx scripts/debug.ts",
     "lab": "node --import tsx scripts/lab.ts",
+    "calls": "node --import tsx scripts/calls.ts",
     "balance": "node --import tsx scripts/balance.ts",
     "shot": "node --import tsx scripts/screenshot.ts"
   },

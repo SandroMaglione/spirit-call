@@ -34,8 +34,11 @@ const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", shot: "Shot", 
 
 /** Where something not owned comes from, from shipped rewards only. */
 const sourceNote = (store: UiStore, item: Parameters<typeof sourceOf>[1]): string => {
-  const quest = sourceOf(store.tuning.value, item)
-  return quest === null ? "Not owned yet." : `A reward for clearing ${store.tuning.value.quests[quest].name}.`
+  const tuning = store.tuning.value, quest = sourceOf(tuning, item)
+  if (quest !== null) return `A reward for clearing ${tuning.quests[quest].name}.`
+  const banner = item.kind === "character" ? Object.values(tuning.banners).find((spec) => spec.characters.includes(item.id)) : undefined
+  if (banner !== undefined) return `Comes from the Spirit Call (the ${banner.name} banner).`
+  return item.kind === "aspect" ? "Comes from the Spirit Call." : "Not owned yet."
 }
 
 const Attributes = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {
@@ -165,7 +168,6 @@ export const Character = ({ store, actions, nav, character, tab, save }: {
   const tuning = store.tuning.value, account = store.account.value
   const roster = ids(tuning.characters), element = elementOf(tuning, character)
   const owned = owns(account, { kind: "character", id: character })
-  const step = (by: number) => nav.replace({ kind: "character", character: roster[(roster.indexOf(character) + by + roster.length) % roster.length]!, tab })
   return <Screen name="character" element={element}>
     <div class="character__stage" data-tab={tab}><ModelStage key={character} character={character} /></div>
     <TopBar icon={element} lead={elements[element].name} title={tuning.characters[character].name} close={nav.back} end={tab === "overview" && owned ? <Wallet store={store} currencies={["gold"]} /> : undefined}>
@@ -176,10 +178,6 @@ export const Character = ({ store, actions, nav, character, tab, save }: {
       { id: "aspect", label: "Aspect" },
       { id: "kit", label: "Skills" }
     ]} />
-    {tab === "overview" && roster.length > 1 && <>
-      <button type="button" class="character__step" data-side="left" aria-label="Previous character" onClick={() => step(-1)}><Icon name="back" /></button>
-      <button type="button" class="character__step" data-side="right" aria-label="Next character" onClick={() => step(1)}><Icon name="next" /></button>
-    </>}
     {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "aspect" ? <Aspects key={character} store={store} character={character} save={save} /> : <Skills key={character} store={store} character={character} />}
   </Screen>
 }

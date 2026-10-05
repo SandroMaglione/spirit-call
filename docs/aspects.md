@@ -85,8 +85,8 @@ Every character can feed an aspect alone: every element leaves a state, so
 
 ## Owning and equipping
 
-- The account **owns** aspects, one of each: quests unlock them (and the
-  gacha, later). Owning one is enough for every character of its class.
+- The account **owns** aspects, one of each: quests unlock a few, and the
+  Spirit Call the rest (see `calls.md`). Owning one is enough for every character of its class.
 - **In a team, an aspect is on one character only**: no fight has the same
   aspect twice. It is equipped in the team (each build holds its own), so
   saved teams never compete for one.

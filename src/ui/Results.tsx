@@ -39,7 +39,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const level = accountLevel(tuning, account), next = nextMainQuest(tuning, account)
   const canContinue = extra === null && result.cleared && next !== null && playLock(tuning, account, next) === null
   const leveled = earned !== null && earned.level.after > earned.level.before
-  const title = extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
+  const title = extra?.kind === "trial" ? `${tuning.characters[extra.character].name} · Trial` : extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   const time = `${Math.floor(result.time / 60)}:${String(Math.floor(result.time % 60)).padStart(2, "0")}`
   // What the chests these stars opened gave, beside what the run gave.
   const chestRewards = (earned?.chests ?? []).map((chest) => tuning.chests[chest.group][chest.index]!.rewards)
@@ -54,7 +54,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       {starred !== null && earned !== null && <div class="results__stars"><Stars earned={account.quests[starred.quest]?.stars ?? []} fresh={earned.stars} /></div>}
       <p class="dim"><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
       <div class="results__rule" />
-      {extra !== null ? <p class="dim">Practice records nothing.</p> : <>
+      {extra !== null ? <p class="dim">{extra.kind === "trial" ? "A trial records nothing." : "Practice records nothing."}</p> : <>
         {store.recording.value === "saving" && <p role="status" class="dim">Saving…</p>}
         {store.recording.value === "failed" && <p role="alert" class="results__error">Rewards could not be saved.</p>}
         {earned !== null && <>
@@ -84,7 +84,9 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       {canContinue && next?.kind === "quest" && <p class="results__next"><b>Next · {tuning.quests[next.quest].name}</b> {tuning.quests[next.quest].introduces.text}</p>}
       <footer class="results__actions">
         <RoundButton icon="home" tone="dark" label="Home" disabled={!enabled} onClick={() => open({ kind: "home" })} />
-        <RoundButton icon={extra?.kind === "practice" ? "practice" : "team"} tone="dark" label={extra?.kind === "practice" ? "Change enemies" : "Adjust party"} disabled={!enabled} onClick={() => open(extra?.kind === "practice" ? { kind: "extra", mode: "practice" } : { kind: "team" })} />
+        {extra?.kind === "trial"
+          ? <RoundButton icon="call" tone="dark" label="Back to the Spirit Call" disabled={!enabled} onClick={() => open({ kind: "call", tab: "banner" })} />
+          : <RoundButton icon={extra?.kind === "practice" ? "practice" : "team"} tone="dark" label={extra?.kind === "practice" ? "Change enemies" : "Adjust party"} disabled={!enabled} onClick={() => open(extra?.kind === "practice" ? { kind: "extra", mode: "practice" } : { kind: "team" })} />}
         {canContinue && <RoundButton icon="retry" tone="dark" label="Retry" disabled={!enabled} onClick={actions.retry} />}
         <Pill icon={canContinue ? "next" : "retry"} disabled={!enabled} onClick={() => {
           if (canContinue && next !== null) { store.menuPlay.value = next; open({ kind: "quests", tab: "main" }) }

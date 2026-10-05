@@ -158,6 +158,9 @@
     "rockCore",
     "rockHeart"
   ],
+  "banners": [
+    "stormAndStone"
+  ],
   "retired": {
     "skills": [
       "nova",

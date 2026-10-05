@@ -14,13 +14,15 @@ import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
 
 import { everything } from "../account/account.ts"
-import type { Account, Earned, Play, TeamAspects } from "../account/account.ts"
+import type { Account, CallResult, Earned, Play, TeamAspects } from "../account/account.ts"
+import type { BannerId } from "../content/calls.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { AccountStore, layer as accountLayer } from "../account/store.ts"
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { QuestId } from "../content/quests.ts"
 import type { Amounts } from "../content/currencies.ts"
 import type { RunResultValue } from "../schema.ts"
 import { randomId } from "./ids.ts"
@@ -42,8 +44,16 @@ export interface App {
   readonly ascend: (character: CharacterId) => Promise<Account | undefined>
   /** Makes one material from the grade below it (refused without enough). */
   readonly combine: (material: MaterialId) => Promise<Account | undefined>
+  /** Makes `count` calls on `banner`: what each brought, or `undefined` when refused (not open, not running, nothing left, short of crystals) or not saved. */
+  readonly call: (banner: BannerId, count: number) => Promise<ReadonlyArray<CallResult> | undefined>
+  /** Focuses `character` on `banner`. */
+  readonly focus: (banner: BannerId, character: CharacterId) => Promise<Account | undefined>
   /** Selects the team to enter the arena with (and the aspects equipped in it) and what for; the account after it, or `undefined` when refused (not owned, aspects breaking the rules, or not open). */
   readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Promise<Account | undefined>
+  /** Clears chapter one (calls open, its rewards owned) and adds crystals for 30 calls (a dev tool, to try the Spirit Call). */
+  readonly openCalls: () => void
+  /** `openCalls`, done when saved. */
+  readonly openCallsNow: () => Promise<Account | undefined>
   /** Owns every character and aspect, and adds plenty of each currency (a dev tool). */
   readonly unlockEverything: () => void
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
@@ -77,6 +87,8 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
       Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),
       Effect.ignore
     ))
+  const chapterOne = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].chapter === "one")
+  const openCalls = () => run(accounts.clearQuests(chapterOne).pipe(Effect.andThen(accounts.earn({ crystals: 30 * (tuning.calls.price.crystals ?? 0) }))))
   return {
     account: await runtime.runPromise(accounts.get),
     settings: await runtime.runPromise(settings.get),
@@ -87,7 +99,11 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
     train: (character) => run(accounts.train(character)),
     ascend: (character) => run(accounts.ascend(character)),
     combine: (material) => run(accounts.combine(material)),
+    call: (banner, count) => attempt(accounts.call(banner, count), (called) => called.account).then((called) => called?.results),
+    focus: (banner, character) => run(accounts.focus(banner, character)),
     select: (team, play, aspects) => run(accounts.select(team, play, aspects)),
+    openCalls: () => void openCalls(),
+    openCallsNow: () => openCalls(),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (play, result) => attempt(accounts.recordRun(play, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),
     setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),

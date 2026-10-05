@@ -27,7 +27,7 @@ const layers = [
     packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-browser"]
   },
   // The account's rules are pure (no Effect), so the UI can use them; storing the account is the Effect side.
-  { name: "account rules", paths: ["src/account/account.ts", "src/account/progression.ts"], parts: ["content", "simulation", "account rules"], packages: [] },
+  { name: "account rules", paths: ["src/account/account.ts", "src/account/calls.ts", "src/account/progression.ts"], parts: ["content", "simulation", "account rules"], packages: [] },
   { name: "persistence", paths: ["src/account/", "src/app/"], parts: ["content", "simulation", "account rules", "persistence"], packages: ["effect", "@effect/"] },
   { name: "ui", paths: ["src/ui/"], parts: ["content", "simulation", "account rules", "ui"], packages: ["preact", "@preact/", "@typeonce/bevy-ts"] },
   {

@@ -24,7 +24,7 @@ const paths = {
   back: "m15 5-7 7 7 7",
   next: "m9 5 7 7-7 7",
   close: "m6 6 12 12 M6 18 18 6",
-  settings: "m9 3-.7 3-2.8 1-2.5-1.2-2 3.4L3 11v3l-2 1.8 2 3.4L5.5 18l2.8 1 .7 3h6l.7-3 2.8-1 2.5 1.2 2-3.4-2-1.8v-3l2-1.8-2-3.4L18.5 7l-2.8-1L15 3z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6",
+  settings: "M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6",
   lock: "M6 10h12v11H6z M8 10V7a4 4 0 0 1 8 0v3 M12 14v3",
   check: "m5 12 4 4L19 6",
   swap: "M4 8h14l-4-4 M20 16H6l4 4",
@@ -40,6 +40,6 @@ export type IconName = keyof typeof paths | CurrencyId | EmblemKind
 
 export const Icon = ({ name }: { readonly name: IconName }) => {
   if (name === "gold" || name === "crystals") return <CurrencyIcon currency={name} />
-  if (name === "xp" || name === "wind" || name === "water" || name === "fire" || name === "thunder" || name === "rock") return <EmblemIcon kind={name} />
+  if (name === "xp" || name === "call" || name === "wind" || name === "water" || name === "fire" || name === "thunder" || name === "rock") return <EmblemIcon kind={name} />
   return <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={name === "more" ? 4 : 1.8} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>
 }

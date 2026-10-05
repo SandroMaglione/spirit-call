@@ -30,6 +30,10 @@ export type SoundName =
   | "uiSuccess"
   | "uiError"
   | "uiReward"
+  | "sealCrack"
+  | "sealBurst"
+  | "revealAspect"
+  | "revealCharacter"
   | "slash"
   | "thrust"
   | "spin"
@@ -203,6 +207,25 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
   uiSuccess: [{ reverb: 0.25, interval: 0.12 }, (v) => { tone(v, "sine", 660, 990, 0.22, 0.12) }],
   uiError: [{ reverb: 0.05, interval: 0.15 }, (v) => { tone(v, "sine", 240, 180, 0.14, 0.1) }],
   uiReward: [{ reverb: 0.35, interval: 0.3 }, (v) => { tone(v, "sine", 880, 1320, 0.5, 0.16) }],
+  // The Spirit Call's seal: stone cracking under the light, then bursting open with a rising shimmer.
+  sealCrack: [{ reverb: 0.3, interval: 0.08 }, (v) => {
+    crunch(v, 2200, 700, 0.14, 0.32)
+    tone(v, "triangle", 150, 95, 0.22, 0.1)
+  }],
+  sealBurst: [{ reverb: 0.55, heavy: true, interval: 0.3 }, (v) => {
+    noise(v, "bandpass", 300, 5200, 0.7, 0.32, 0.7, 0, 0.02)
+    tone(v, "sine", 55, 40, 0.6, 0.22)
+    tone(v, "sine", 440, 880, 0.8, 0.08, 0.05, 0.05)
+    tone(v, "sine", 660, 1320, 0.9, 0.06, 0.1, 0.05)
+  }],
+  // What came out: a rising third for an aspect, a full major arpeggio ringing out for a character.
+  revealAspect: [{ reverb: 0.5, interval: 0.3 }, (v) => {
+    for (const [index, pitch] of [440, 554, 659].entries()) tone(v, "sine", pitch, pitch, 0.7, 0.08, index * 0.07, 0.01)
+  }],
+  revealCharacter: [{ reverb: 0.65, interval: 0.4 }, (v) => {
+    for (const [index, pitch] of [523, 659, 784, 1047, 1319].entries()) tone(v, "sine", pitch, pitch, 1.3, 0.085, index * 0.075, 0.01)
+    tone(v, "triangle", 131, 131, 1.4, 0.07, 0, 0.05)
+  }],
   // A side slash: the whoosh of the blade, a thin whistle riding on top, and a soft body of moving air.
   slash: [{ reverb: 0.12 }, (v) => {
     swish(v, { low: 650, peak: 3000, duration: 0.2, peakAt: 0.42, q: 1.2, gain: 0.8 })
