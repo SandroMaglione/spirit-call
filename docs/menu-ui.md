@@ -98,6 +98,9 @@ descriptions appear only when requested.
   Home and Characters share the left-menu edge. All five skill actions fit for
   every character at 667 × 375; the larger landscape also fits without scrolling.
   Quest details separate enemies from one reward row aligned to the right.
+  Quest arrows retain their position while pressed. Touch-pointer swipes in
+  either direction work from quest content, including a child's capture release;
+  short drags, vertical gestures, and gestures under a dialog do not change quests.
 - A separate localhost account verifies selecting and saving plain and owned
   aspects, entering with the saved aspect, and showing an unconfirmed choice
   in character inspection. The picker excludes unowned aspects and fits at

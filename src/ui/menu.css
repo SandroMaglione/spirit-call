@@ -355,7 +355,7 @@
 .quest-arrow--previous { left:var(--edge-x); }
 .quest-arrow--next { right:var(--edge-x); }
 .quest-arrow .menu-icon { width:30px; height:30px; }
-.ui .quest-arrow:active { transform:translateY(-50%) scale(.9); }
+.ui button.quest-arrow:not(:disabled):active { transform:translateY(-50%); }
 .ui .quest-arrow:disabled { opacity:.18; }
 .quest-pagination { position:absolute; left:50%; bottom:var(--edge-y); transform:translateX(-50%); height:44px; display:flex; align-items:center; flex-direction:column; justify-content:center; gap:8px; pointer-events:none; }
 .quest-pagination>span { font-size:13px; font-variant-numeric:tabular-nums; letter-spacing:.15em; }

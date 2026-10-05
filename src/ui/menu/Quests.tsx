@@ -54,7 +54,6 @@ export const Quests = ({ store, nav, tab, play, enter }: {
       if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { cancel(); return }
       if (Math.abs(dx) < 12 || Math.abs(dx) <= Math.abs(dy)) return
       start.horizontal = true
-      if (event.isTrusted) event.currentTarget.setPointerCapture(event.pointerId)
     }
     event.preventDefault()
     const atEnd = dx > 0 ? index <= 0 : index >= choices.length - 1
@@ -78,7 +77,11 @@ export const Quests = ({ store, nav, tab, play, enter }: {
   return <div class="screen quest-browser" aria-label="Quest carousel" onPointerDown={(event) => {
     if (touch.current !== null || !event.isPrimary || event.button !== 0 || information.value || (event.target instanceof Element && event.target.closest('button,input,summary,[role="dialog"]'))) return
     touch.current = { id: event.pointerId, x: event.clientX, y: event.clientY, horizontal: false }
-  }} onPointerMove={move} onPointerUp={finish} onPointerCancel={cancel} onLostPointerCapture={cancel}>
+    // Capture before moving: touch otherwise captures a child, whose release can cancel the swipe.
+    if (event.isTrusted) event.currentTarget.setPointerCapture(event.pointerId)
+  }} onPointerMove={move} onPointerUp={finish} onPointerCancel={cancel} onLostPointerCapture={(event) => {
+    if (event.target === event.currentTarget && event.pointerId === touch.current?.id) cancel()
+  }}>
     <div class="quest-drag" data-dragging={touch.current?.horizontal || undefined} style={{ transform: `translateX(${offset.value}px)` }}>
       <section key={key} class="quest-slide" data-direction={direction.value > 0 ? "next" : "previous"} aria-label={describePlay(tuning, selected)}>
         <svg class="quest-sigil" viewBox="0 0 240 240" fill="none" aria-hidden="true"><path d="m120 12 108 108-108 108L12 120Z M120 32l88 88-88 88-88-88Z" /><path d="M52 120h136M120 52v136" /><circle cx="120" cy="120" r="56" /><path d="m120 66 15 39 39 15-39 15-15 39-15-39-39-15 39-15Z" /></svg>
