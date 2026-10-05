@@ -80,7 +80,7 @@ describe("content", () => {
     }
     expect(validateContent(broken)).toEqual([
       `hardcore track gauntlet tier 2: enemies must be a higher level than the tier before (${gauntlet.tiers[0]!.enemyLevel} after ${gauntlet.tiers[0]!.enemyLevel})`,
-      "hardcore track gauntlet tier 2: unknown currency gems"
+      "hardcore track gauntlet tier 2: unknown currency or material gems"
     ])
   })
 

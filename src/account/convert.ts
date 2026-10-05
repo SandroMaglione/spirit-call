@@ -7,11 +7,11 @@ import type { StarterSet } from "../content/account.ts"
 import type { TrackId } from "../content/hardcore.ts"
 import type { QuestId, StarGroup } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { CurrencyId } from "../content/currencies.ts"
+import type { ResourceId } from "../content/currencies.ts"
 import type { DiscoveryId } from "../content/discoveries.ts"
 import type { AspectId } from "../content/aspects.ts"
 import { teamSize } from "../content/characters.ts"
-import { createAccount, owns, select, unlock, validAspects, withClearedRewards, withEarnedChests } from "./account.ts"
+import { characterLevel, createAccount, owns, select, unlock, validAspects, withClearedRewards, withEarnedChests } from "./account.ts"
 import type { Account, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
@@ -69,7 +69,7 @@ export const fromStored = (
     createdAt: stored.createdAt,
     experience: stored.experience,
     totals: stored.totals,
-    wallet: keep<CurrencyId, number>(tuning.currencies, stored.wallet, "currency", dropped),
+    wallet: keep<ResourceId, number>({ ...tuning.currencies, ...tuning.materials }, stored.wallet, "currency", dropped),
     owned,
     quests,
     hardcore,
@@ -77,6 +77,14 @@ export const fromStored = (
     chests: keep<StarGroup, number>(tuning.chests, stored.chests, "chest group", dropped),
     selection: starterSelection
   }
+
+  // A character never stands below a step her level is already past (levels trained before ascension, or steps moved since).
+  const characters: { [Id in CharacterId]?: OwnedCharacter } = {}
+  for (const [id, owned] of Object.entries(account.owned.characters) as Array<[CharacterId, OwnedCharacter]>) {
+    const level = characterLevel(tuning, account, id).level
+    characters[id] = { ...owned, ascension: Math.max(owned.ascension, tuning.materialRules.ascension.filter((step) => level > step.level).length) }
+  }
+  account = { ...account, owned: { ...account.owned, characters } }
 
   // Never left with nothing to play: the starter's characters come back.
   if (Object.keys(owned.characters).length === 0) account = starter.characters.reduce((next, id) => unlock(tuning, next, { kind: "character", id }, now), account)
@@ -112,7 +120,7 @@ export const fromStored = (
 
 /** A saved selection with typed ids, or `undefined` when it names no content. */
 const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"]): Play | undefined => {
-  if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest } : undefined
+  if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest, ...(saved.rank === undefined || saved.rank === 1 ? {} : { rank: saved.rank }) } : undefined
   return known(tuning.tracks, saved.track) ? { kind: "tier", track: saved.track, tier: saved.tier } : undefined
 }
 

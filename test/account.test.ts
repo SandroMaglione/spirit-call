@@ -1,20 +1,23 @@
-import { noTally } from "../src/content/stars.ts"
+import { experienceTo } from "../src/account/progression.ts"
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests, ascend, ascensionCost, combine, levelCap } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import type { Play } from "../src/account/account.ts"
+import type { ChestRef, Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
 import type { DiscoveryId } from "../src/content/discoveries.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
 import type { QuestId } from "../src/content/quests.ts"
 import { aspectId, testAspect, withAspect } from "./helpers.ts"
+import { noTally } from "../src/content/stars.ts"
 
 const fresh = () => createAccount(defaultTuning, newAccount, "account-1", 1000)
 const quest = (id: QuestId): Play => ({ kind: "quest", quest: id })
 const tier = (track: TrackId, number: number): Play => ({ kind: "tier", track, tier: number })
 /** The crystals `made` discoveries paid. */
 const discoveryCrystals = (made: ReadonlyArray<DiscoveryId>): number => made.reduce((sum, id) => sum + (defaultTuning.discoveries[id].rewards.crystals ?? 0), 0)
+const chestCrystals = (opened: ReadonlyArray<ChestRef>): number => opened.reduce((sum, chest) => sum + (defaultTuning.chests[chest.group][chest.index]!.rewards.crystals ?? 0), 0)
+const chestGold = (opened: ReadonlyArray<ChestRef>): number => opened.reduce((sum, chest) => sum + (defaultTuning.chests[chest.group][chest.index]!.rewards.gold ?? 0), 0)
 
 describe("account rules", () => {
   it("a new account owns exactly the starter set, its characters fighting with their class's plain aspect", () => {
@@ -28,7 +31,7 @@ describe("account rules", () => {
 
   it("unlocking a character owns her, at level 1", () => {
     const account = unlock(defaultTuning, fresh(), { kind: "character", id: "gunner" }, 2000)
-    expect(account.owned.characters.gunner).toEqual({ unlockedAt: 2000, experience: 0 })
+    expect(account.owned.characters.gunner).toEqual({ unlockedAt: 2000, experience: 0, ascension: 0 })
   })
 
   it("gives the rewards a cleared quest gained since, once (new content is not missed)", () => {
@@ -157,9 +160,13 @@ describe("account rules", () => {
     expect(owns(won.account, { kind: "character", id: "gunner" })).toBe(true)
     // On top of what both runs paid, and of the account level the rewards' experience reached.
     expect(won.account.wallet).toEqual({
-      crystals: rewards.currencies.crystals! + (won.earned.levelRewards.crystals ?? 0) + discoveryCrystals(won.earned.discoveries),
-      gold: (lost.account.wallet.gold ?? 0) + rewards.currencies.gold! + won.earned.pay.gold!
+      crystals: rewards.currencies.crystals! + (won.earned.levelRewards.crystals ?? 0) + discoveryCrystals(won.earned.discoveries) + chestCrystals(won.earned.chests),
+      gold: (lost.account.wallet.gold ?? 0) + rewards.currencies.gold! + won.earned.pay.gold! + chestGold(won.earned.chests),
+      // The clear pays its element's material, and a first clear more (see docs/quests.md).
+      fireShard: defaultTuning.materialRules.perClear + defaultTuning.materialRules.firstClear
     })
+    expect(won.earned.materials).toEqual({ fireShard: 5 })
+    expect(lost.earned.materials).toEqual({})
     const again = recordRun(defaultTuning, won.account, quest("theSwarm"), { ...run, cleared: true, progress: 1 }, 4000)
     expect(again.earned.rewards).toBeNull()
     expect(again.account.quests.theSwarm).toEqual({ attempts: 3, clears: 2, firstClearedAt: 3000, stars: [0, 2] })
@@ -196,6 +203,53 @@ describe("account rules", () => {
     expect(groupStars(defaultTuning, opened.account, "one")).toEqual({ earned: 6, total: 9 })
   })
 
+  it("opens a quest's higher ranks once it and its rank's quest are cleared; they pay a higher grade, with no stars or first clear", () => {
+    const clear = () => ({ cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: noTally, challenge: "swarm" as const, wave: 8, kills: 40, time: 170 })
+    const rank2: Play = { kind: "quest", quest: "theSwarm", rank: 2 }
+    const swarm = defaultTuning.quests.theSwarm
+    const highTide = swarm.ranks[0]!.after as "highTide"
+    expect(playLock(defaultTuning, fresh(), rank2)).toEqual({ kind: "after", quest: "theSwarm" })
+    const cleared = recordRun(defaultTuning, fresh(), quest("theSwarm"), clear(), 1000).account
+    expect(playLock(defaultTuning, cleared, rank2)).toEqual({ kind: "after", quest: highTide })
+    const later = { ...cleared, quests: { ...cleared.quests, [highTide]: { attempts: 1, clears: 1, firstClearedAt: 2000, stars: [0] } } }
+    expect(playLock(defaultTuning, later, rank2)).toBeNull()
+    expect(playLock(defaultTuning, later, { kind: "quest", quest: "theSwarm", rank: 9 })).not.toBeNull()
+    expect(encounterOf(defaultTuning, rank2)).toEqual({ challenge: "swarm", enemyLevel: swarm.ranks[0]!.enemyLevel })
+    const played = recordRun(defaultTuning, later, rank2, { ...clear(), tally: { hitsTaken: 0, perfectDodges: 9, breaks: 0 } }, 3000)
+    expect(played.earned.rewards).toBeNull()
+    expect(played.earned.stars).toEqual([])
+    expect(played.earned.materials).toEqual({ fireCore: defaultTuning.materialRules.perClear })
+    expect(played.account.quests.theSwarm).toMatchObject({ clears: 2, firstClearedAt: 1000, stars: [0, 2] })
+  })
+
+  it("stops a character's levels at each step until she ascends with gold and her element's material", () => {
+    const curve = defaultTuning.progression.character.curve
+    const step = defaultTuning.materialRules.ascension[0]!
+    const atStep = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: experienceTo(curve, step.level), ascension: 0 } } } }
+    expect(characterLevel(defaultTuning, atStep, "swordsman").level).toBe(step.level)
+    expect(levelCap(defaultTuning, atStep, "swordsman")).toBe(step.level)
+    expect(trainingCost(defaultTuning, atStep, "swordsman")).toBeNull()
+    expect(train(defaultTuning, earn(atStep, { gold: 1e6 }), "swordsman")).toEqual({ ok: false, refusal: { kind: "needsAscension", item: { kind: "character", id: "swordsman" } } })
+    // The swordsman is wind: wind shards.
+    expect(ascensionCost(defaultTuning, atStep, "swordsman")).toEqual({ gold: step.gold, windShard: step.count })
+    expect(ascend(defaultTuning, earn(atStep, { gold: step.gold }), "swordsman")).toEqual({ ok: false, refusal: { kind: "notEnough", currency: "windShard", needed: step.count, held: 0 } })
+    const ascended = ascend(defaultTuning, earn(atStep, { gold: step.gold + 1, windShard: step.count }), "swordsman")
+    expect(ascended.ok && ascended.value.owned.characters.swordsman?.ascension).toBe(1)
+    expect(ascended.ok && ascended.value.wallet).toEqual({ gold: 1, windShard: 0 })
+    expect(ascended.ok && trainingCost(defaultTuning, ascended.value, "swordsman")).not.toBeNull()
+    // Below a step there is nothing to ascend.
+    expect(ascend(defaultTuning, earn(fresh(), { gold: 1e6, windShard: 99 }), "swordsman")).toMatchObject({ ok: false, refusal: { kind: "notAtStep" } })
+  })
+
+  it("combines three of a grade and some gold into one of the grade above", () => {
+    const { count, gold } = defaultTuning.materialRules.combine
+    const held = earn(fresh(), { fireShard: count + 1, gold: gold[0]! })
+    const made = combine(defaultTuning, held, "fireCore")
+    expect(made.ok && made.value.wallet).toEqual({ fireShard: 1, fireCore: 1, gold: 0 })
+    expect(combine(defaultTuning, held, "fireHeart")).toMatchObject({ ok: false, refusal: { kind: "notEnough", currency: "fireCore" } })
+    expect(combine(defaultTuning, held, "fireShard")).toEqual({ ok: false, refusal: { kind: "notCombinable", material: "fireShard" } })
+  })
+
   it("spends currency only when the wallet holds enough of each", () => {
     const account = earn(earn(fresh(), { gold: 100 }), { gold: 50, crystals: 5 })
     expect(account.wallet).toEqual({ gold: 150, crystals: 5 })
@@ -207,7 +261,7 @@ describe("account rules", () => {
   it("never grows characters from runs: they are trained with gold, so none falls behind on the bench", () => {
     const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: noTally, challenge: "swarm" as const, wave: 3, kills: 10, time: 60 }
     const curve = defaultTuning.progression.character.curve
-    const almost = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: curve.base - 1 } } } }
+    const almost = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: curve.base - 1, ascension: 0 } } } }
     const { account } = recordRun(defaultTuning, almost, null, run, 2000)
     expect(account.owned.characters.swordsman?.experience).toBe(curve.base - 1)
     expect(buildOf(defaultTuning, account, "swordsman").level).toBe(characterLevel(defaultTuning, account, "swordsman").level)
@@ -215,7 +269,7 @@ describe("account rules", () => {
 
   it("trains a character to its next level with gold: her experience is the gold trained into her", () => {
     const curve = defaultTuning.progression.character.curve
-    const account = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: 30 } } } }
+    const account = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: { unlockedAt: 1000, experience: 30, ascension: 0 } } } }
     const cost = curve.base - 30
     expect(trainingCost(defaultTuning, account, "swordsman")).toEqual({ gold: cost })
     expect(train(defaultTuning, account, "swordsman")).toEqual({ ok: false, refusal: { kind: "notEnough", currency: "gold", needed: cost, held: 0 } })
@@ -223,7 +277,7 @@ describe("account rules", () => {
     expect(trained.ok && characterLevel(defaultTuning, trained.value, "swordsman")).toEqual({ level: 2, into: 0, needed: curve.base + curve.growth + curve.square })
     expect(trained.ok && trained.value.wallet.gold).toBe(5)
     expect(train(defaultTuning, account, "gunner")).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
-    const maxed = { ...account, owned: { ...account.owned, characters: { swordsman: { unlockedAt: 1000, experience: 1e9 } } } }
+    const maxed = { ...account, owned: { ...account.owned, characters: { swordsman: { unlockedAt: 1000, experience: 1e9, ascension: 3 } } } }
     expect(train(defaultTuning, maxed, "swordsman")).toEqual({ ok: false, refusal: { kind: "maxLevel", item: { kind: "character", id: "swordsman" } } })
   })
 
@@ -262,7 +316,8 @@ describe("account rules", () => {
     const first = recordRun(defaultTuning, leveled, tier("gauntlet", 1), run, monday + 1000)
     expect(first.earned.rewards).toEqual({ ...rewards, unlocks: [] })
     // On top of what the run pays (and its discoveries).
-    expect(first.account.wallet).toEqual({ crystals: rewards.currencies.crystals! + discoveryCrystals(first.earned.discoveries), gold: rewards.currencies.gold! + first.earned.pay.gold! })
+    expect(first.account.wallet).toEqual({ crystals: rewards.currencies.crystals! + discoveryCrystals(first.earned.discoveries), gold: rewards.currencies.gold! + first.earned.pay.gold!, ...first.earned.materials })
+    expect(first.earned.materials).toEqual({ [`${defaultTuning.tracks.gauntlet.element}Shard`]: defaultTuning.materialRules.perClear })
     expect(first.account.hardcore.gauntlet?.[1]).toEqual({ attempts: 1, clears: 1, firstClearedAt: monday + 1000, rewardedPeriod: 10, bestWave: 3 })
     const sameWeek = recordRun(defaultTuning, first.account, tier("gauntlet", 1), run, monday + week - 1)
     expect(sameWeek.earned.rewards).toBeNull()

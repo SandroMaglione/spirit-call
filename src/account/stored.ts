@@ -53,7 +53,8 @@ const TierProgress = Schema.Struct({
   bestWave: Schema.optionalKey(Schema.Number)
 })
 const Play = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("quest"), quest: Schema.String }),
+  // `rank` came with version 7 (a quest at a higher enemy level); none is rank 1.
+  Schema.Struct({ kind: Schema.Literal("quest"), quest: Schema.String, rank: Schema.optionalKey(Schema.Number) }),
   Schema.Struct({ kind: Schema.Literal("tier"), track: Schema.String, tier: Schema.Number })
 ])
 
@@ -135,13 +136,17 @@ export const StoredAccountV6 = Schema.Struct({
 
 const QuestProgressV7 = Schema.Struct({ ...QuestProgress.fields, stars: Schema.Array(Schema.Number) })
 
+const OwnedCharacterV7 = Schema.Struct({ ...OwnedCharacter.fields, ascension: Schema.Number })
+
 /**
- * Version 7: each quest's stars (by their place in the quest), and how many
- * of each group's chests are open (see docs/quests.md).
+ * Version 7: each quest's stars (by their place in the quest), how many of
+ * each group's chests are open, and each character's ascension steps taken
+ * (see docs/quests.md). The wallet holds materials too.
  */
 export const StoredAccountV7 = Schema.Struct({
   ...StoredAccountV6.fields,
   version: Schema.Literal(7),
+  owned: Schema.Struct({ characters: Schema.Record(Schema.String, OwnedCharacterV7), aspects: Schema.Record(Schema.String, OwnedAspect) }),
   quests: Schema.Record(Schema.String, QuestProgressV7),
   /** By star group (a chapter id, or "secondary"). */
   chests: Schema.Record(Schema.String, Schema.Number)
@@ -195,7 +200,9 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
     case 6: {
       // Stars came: a quest already cleared has its first star (clearing it), and the chests open as the account loads.
       const quests = Object.fromEntries(Object.entries(stored.quests).map(([id, progress]) => [id, { ...progress, stars: progress.firstClearedAt === null ? [] : [0] }]))
-      return { ...stored, version: 7, quests, chests: {} }
+      // Ascension came: none taken yet; loading takes the steps a character's level is already past (see `fromStored`).
+      const characters = Object.fromEntries(Object.entries(stored.owned.characters).map(([id, owned]) => [id, { ...owned, ascension: 0 }]))
+      return { ...stored, version: 7, owned: { ...stored.owned, characters }, quests, chests: {} }
     }
     case 7:
       return stored

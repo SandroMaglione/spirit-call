@@ -12,7 +12,11 @@ import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { Amounts, CurrencyId } from "../content/currencies.ts"
+import type { Amounts, ResourceId } from "../content/currencies.ts"
+import { entryChampion } from "../content/challenges.ts"
+import type { ElementId } from "../content/elements.ts"
+import { gradeAt, materialOf } from "../content/materials.ts"
+import type { AscensionStep, MaterialId } from "../content/materials.ts"
 import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
 import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
@@ -31,9 +35,15 @@ export interface Unlocked {
   readonly unlockedAt: number
 }
 
-/** A character owned, and its experience: the gold trained into her (her level comes from it, see `characterLevel` and `train`). */
+/**
+ * A character owned, and its experience: the gold trained into her (her
+ * level comes from it, see `characterLevel` and `train`); and how many
+ * ascension steps she has taken (her levels stop at each step until she
+ * takes it, see `ascend`).
+ */
 export interface OwnedCharacter extends Unlocked {
   readonly experience: number
+  readonly ascension: number
 }
 
 /** An aspect owned, once: `copies` counts it coming again (duplicates add no power; see docs/aspects.md). */
@@ -84,14 +94,17 @@ export interface TierProgress extends RunCount {
   readonly bestWave?: number
 }
 
-/** What the arena is entered for: a quest, or a hardcore track's tier (numbered from 1). */
+/** What the arena is entered for: a quest (at a rank, 1 when absent), or a hardcore track's tier (both numbered from 1). */
 export type Play =
-  | { readonly kind: "quest"; readonly quest: QuestId }
+  | { readonly kind: "quest"; readonly quest: QuestId; readonly rank?: number }
   | { readonly kind: "tier"; readonly track: TrackId; readonly tier: number }
 
-/** Whether `a` and `b` are the same quest or the same tier. */
+/** The rank a quest is played at (1: its own enemy level). */
+export const rankOf = (play: Extract<Play, { kind: "quest" }>): number => play.rank ?? 1
+
+/** Whether `a` and `b` are the same quest at the same rank, or the same tier. */
 export const samePlay = (a: Play, b: Play): boolean =>
-  a.kind === "quest" ? b.kind === "quest" && a.quest === b.quest : b.kind === "tier" && a.track === b.track && a.tier === b.tier
+  a.kind === "quest" ? b.kind === "quest" && a.quest === b.quest && rankOf(a) === rankOf(b) : b.kind === "tier" && a.track === b.track && a.tier === b.tier
 
 export interface Account {
   readonly id: string
@@ -138,7 +151,7 @@ export const unlock = (_tuning: Tuning, account: Account, item: Item, now: numbe
   switch (item.kind) {
     case "character": {
       if (owns(account, item)) return account
-      return { ...account, owned: { ...owned, characters: { ...owned.characters, [item.id]: { unlockedAt: now, experience: 0 } } } }
+      return { ...account, owned: { ...owned, characters: { ...owned.characters, [item.id]: { unlockedAt: now, experience: 0, ascension: 0 } } } }
     }
     case "aspect": {
       const current = owned.aspects[item.id] as OwnedAspect | undefined
@@ -220,8 +233,8 @@ const addCharacterExperience = (account: Account, character: CharacterId, experi
 
 /** `amounts` added to `account`'s wallet. */
 export const earn = (account: Account, amounts: Amounts): Account => {
-  const wallet: { [Id in CurrencyId]?: number } = { ...account.wallet }
-  for (const [id, amount] of Object.entries(amounts) as Array<[CurrencyId, number]>) wallet[id] = (wallet[id] ?? 0) + amount
+  const wallet: { [Id in ResourceId]?: number } = { ...account.wallet }
+  for (const [id, amount] of Object.entries(amounts) as Array<[ResourceId, number]>) wallet[id] = (wallet[id] ?? 0) + amount
   return { ...account, wallet }
 }
 
@@ -245,9 +258,21 @@ export const questLock = (tuning: Tuning, account: Account, quest: QuestId): Loc
 /** `account`'s progress in `track`'s tier `tier`, if it attempted it. */
 export const tierProgress = (account: Account, track: TrackId, tier: number): TierProgress | undefined => account.hardcore[track]?.[tier]
 
-/** What keeps `play` closed to `account`, or `null` when it can be started. A tier that does not exist is closed behind the one before it. */
+/**
+ * What keeps `play` closed to `account`, or `null` when it can be started. A
+ * higher rank opens once the quest and its rank's quest are cleared; a tier
+ * once the one before it is. One that does not exist stays closed.
+ */
 export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | null => {
-  if (play.kind === "quest") return questLock(tuning, account, play.quest)
+  if (play.kind === "quest") {
+    const rank = rankOf(play)
+    if (rank === 1) return questLock(tuning, account, play.quest)
+    const spec = tuning.quests[play.quest].ranks[rank - 2]
+    if (spec === undefined || !Number.isInteger(rank)) return { kind: "after", quest: play.quest }
+    if (!questCleared(account, play.quest)) return { kind: "after", quest: play.quest }
+    if (isQuest(tuning, spec.after) && !questCleared(account, spec.after)) return { kind: "after", quest: spec.after }
+    return null
+  }
   const spec = tuning.tracks[play.track]
   if (!questCleared(account, spec.after)) return { kind: "after", quest: spec.after }
   const exists = Number.isInteger(play.tier) && play.tier >= 1 && play.tier <= spec.tiers.length
@@ -259,7 +284,10 @@ export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | n
 
 /** What the arena is entered with for `play`: its challenge and its enemies' level. */
 export const encounterOf = (tuning: Tuning, play: Play): { readonly challenge: ChallengeId; readonly enemyLevel: number } => {
-  if (play.kind === "quest") return { challenge: tuning.quests[play.quest].challenge, enemyLevel: tuning.quests[play.quest].enemyLevel }
+  if (play.kind === "quest") {
+    const spec = tuning.quests[play.quest], rank = rankOf(play)
+    return { challenge: spec.challenge, enemyLevel: rank === 1 ? spec.enemyLevel : (spec.ranks[rank - 2]?.enemyLevel ?? spec.enemyLevel) }
+  }
   const track = tuning.tracks[play.track]
   return { challenge: track.challenge, enemyLevel: track.tiers[play.tier - 1]?.enemyLevel ?? 1 }
 }
@@ -358,8 +386,14 @@ export type Refusal =
   /** Aspects that break the rules (see `teamProblems`). */
   | { readonly kind: "badAspects"; readonly problems: ReadonlyArray<TeamProblem> }
   | { readonly kind: "locked"; readonly play: Play; readonly lock: Lock }
-  | { readonly kind: "notEnough"; readonly currency: CurrencyId; readonly needed: number; readonly held: number }
+  | { readonly kind: "notEnough"; readonly currency: ResourceId; readonly needed: number; readonly held: number }
   | { readonly kind: "maxLevel"; readonly item: Item }
+  /** Her levels stop here until she ascends (see `ascend`). */
+  | { readonly kind: "needsAscension"; readonly item: Item }
+  /** Not at a step: she has levels to train first, or none left. */
+  | { readonly kind: "notAtStep"; readonly item: Item }
+  /** A material that is made by nothing (the lowest grade). */
+  | { readonly kind: "notCombinable"; readonly material: MaterialId }
 
 export type Checked<A> = { readonly ok: true; readonly value: A } | { readonly ok: false; readonly refusal: Refusal }
 
@@ -367,8 +401,8 @@ const refuse = <A>(refusal: Refusal): Checked<A> => ({ ok: false, refusal })
 
 /** `account` with `amounts` paid from its wallet, if it holds enough of each. */
 export const spend = (account: Account, amounts: Amounts): Checked<Account> => {
-  const wallet: { [Id in CurrencyId]?: number } = { ...account.wallet }
-  for (const [currency, needed] of Object.entries(amounts) as Array<[CurrencyId, number]>) {
+  const wallet: { [Id in ResourceId]?: number } = { ...account.wallet }
+  for (const [currency, needed] of Object.entries(amounts) as Array<[ResourceId, number]>) {
     const held = wallet[currency] ?? 0
     if (held < needed) return refuse({ kind: "notEnough", currency, needed, held })
     wallet[currency] = held - needed
@@ -376,17 +410,65 @@ export const spend = (account: Account, amounts: Amounts): Checked<Account> => {
   return { ok: true, value: { ...account, wallet } }
 }
 
-/** The gold that takes `character` to its next level from where it is, or `null` at the maximum level. */
+/** The ascension step `character` stands at (her level is its level and she has not taken it), or `null`. */
+export const ascensionStep = (tuning: Tuning, account: Account, character: CharacterId): AscensionStep | null => {
+  const owned = account.owned.characters[character]
+  if (owned === undefined) return null
+  const step = tuning.materialRules.ascension[owned.ascension]
+  return step !== undefined && characterLevel(tuning, account, character).level >= step.level ? step : null
+}
+
+/** The highest level `character` can be trained to before her next ascension step (the maximum when none is left). */
+export const levelCap = (tuning: Tuning, account: Account, character: CharacterId): number =>
+  tuning.materialRules.ascension[account.owned.characters[character]?.ascension ?? 0]?.level ?? tuning.progression.character.curve.maxLevel
+
+/** What taking the step she stands at costs `character`: gold, and her element's material of its grade; `null` when she stands at none. */
+export const ascensionCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
+  const step = ascensionStep(tuning, account, character)
+  if (step === null) return null
+  return { gold: step.gold, [materialOf(tuning.characters[character].element, step.grade)]: step.count }
+}
+
+/** `account` with `character` past the step she stands at (her next levels open), if it owns her, she stands at one, and it holds the cost. */
+export const ascend = (tuning: Tuning, account: Account, character: CharacterId): Checked<Account> => {
+  const item: Item = { kind: "character", id: character }
+  const owned = account.owned.characters[character]
+  if (owned === undefined) return refuse({ kind: "notOwned", item })
+  const cost = ascensionCost(tuning, account, character)
+  if (cost === null) return refuse({ kind: "notAtStep", item })
+  const paid = spend(account, cost)
+  if (!paid.ok) return paid
+  return { ok: true, value: { ...paid.value, owned: { ...paid.value.owned, characters: { ...paid.value.owned.characters, [character]: { ...owned, ascension: owned.ascension + 1 } } } } }
+}
+
+/** What making one `material` costs: `combine.count` of the grade below of its element, and gold; `null` for the lowest grade. */
+export const combineCost = (tuning: Tuning, material: MaterialId): Amounts | null => {
+  const spec = tuning.materials[material]
+  if (spec.grade === 1) return null
+  const { count, gold } = tuning.materialRules.combine
+  return { [materialOf(spec.element, spec.grade === 3 ? 2 : 1)]: count, gold: gold[spec.grade - 2] ?? 0 }
+}
+
+/** `account` with one `material` made from the grade below it (see `combineCost`), if it holds the cost. */
+export const combine = (tuning: Tuning, account: Account, material: MaterialId): Checked<Account> => {
+  const cost = combineCost(tuning, material)
+  if (cost === null) return refuse({ kind: "notCombinable", material })
+  const paid = spend(account, cost)
+  return paid.ok ? { ok: true, value: earn(paid.value, { [material]: 1 }) } : paid
+}
+
+/** The gold that takes `character` to its next level from where it is, or `null` at the maximum level or at an ascension step. */
 export const trainingCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
   const progress = characterLevel(tuning, account, character)
-  if (progress.needed === 0) return null
+  if (progress.needed === 0 || progress.level >= levelCap(tuning, account, character)) return null
   return { gold: Math.ceil(progress.needed - progress.into) }
 }
 
-/** `account` with `character` taken to its next level with gold, if it owns it, it is not at the maximum, and the gold is there. */
+/** `account` with `character` taken to its next level with gold, if it owns it, it is below the maximum and its next step, and the gold is there. */
 export const train = (tuning: Tuning, account: Account, character: CharacterId): Checked<Account> => {
   const item: Item = { kind: "character", id: character }
   if (!owns(account, item)) return refuse({ kind: "notOwned", item })
+  if (ascensionStep(tuning, account, character) !== null) return refuse({ kind: "needsAscension", item })
   const cost = trainingCost(tuning, account, character)
   if (cost === null) return refuse({ kind: "maxLevel", item })
   const paid = spend(account, cost)
@@ -432,6 +514,8 @@ export interface Earned {
   readonly level: LevelChange
   /** What the run itself paid (gold, by its enemies' level and how far it got). */
   readonly pay: Amounts
+  /** The materials a clear paid (its element's, at the grade of its enemy level; more on a first clear). */
+  readonly materials: Amounts
   /** What the account levels gained gave. */
   readonly levelRewards: Amounts
   /** The discoveries the run made (their rewards are paid with them). */
@@ -456,6 +540,18 @@ export const runPay = (pay: RunPay, loss: number, enemyLevel: number, result: Ru
 
 /** What a clear against enemies of `enemyLevel` pays along `pay`. */
 export const clearPay = (pay: RunPay, enemyLevel: number): number => pay.base + pay.perLevel * enemyLevel
+
+/**
+ * What a clear of `challenge` against enemies of `enemyLevel` pays of
+ * `element`'s material (see `content/materials.ts`): its grade from the
+ * level, more when a champion fights in it, and more on a first clear. A
+ * loss pays none.
+ */
+export const materialPay = (tuning: Tuning, element: ElementId, challenge: ChallengeId, enemyLevel: number, firstClear: boolean): Amounts => {
+  const rules = tuning.materialRules
+  const champion = tuning.challenges[challenge].waves.scripted.some((wave) => wave.some(entryChampion))
+  return { [materialOf(element, gradeAt(rules, enemyLevel))]: rules.perClear + (champion ? rules.champion : 0) + (firstClear ? rules.firstClear : 0) }
+}
 
 /** `amounts` times `times`. */
 const times = (amounts: Amounts, count: number): Amounts =>
@@ -501,7 +597,8 @@ export const recordRun = (
   now: number
 ): { readonly account: Account; readonly earned: Earned } => {
   const { progression } = tuning
-  const enemyLevel = play === null ? 1 : encounterOf(tuning, play).enemyLevel
+  const encounter = play === null ? null : encounterOf(tuning, play)
+  const enemyLevel = encounter?.enemyLevel ?? 1
   let experience = runPay(progression.account.run, progression.loss, enemyLevel, result)
   const pay: Amounts = play === null ? {} : { gold: runPay(progression.gold, progression.loss, enemyLevel, result) }
   let next: Account = {
@@ -515,13 +612,18 @@ export const recordRun = (
   }
   let rewards: Rewards | null = null
   let stars: ReadonlyArray<number> = []
+  let materials: Amounts = {}
   if (play?.kind === "quest") {
     const quest = play.quest
     const progress = account.quests[quest] ?? noQuestProgress
-    const firstClear = result.cleared && progress.firstClearedAt === null
-    // Each star once, in any run that clears (see docs/quests.md).
-    stars = tuning.quests[quest].stars.flatMap((goal, index) => !progress.stars.includes(index) && meets(goal, result.cleared, result.tally) ? [index] : [])
-    const updated: QuestProgress = { ...counted(progress, result, now), stars: [...progress.stars, ...stars].sort((a, b) => a - b) }
+    // A higher rank has no first clear and no stars: it pays what its level pays (see docs/quests.md).
+    const first = rankOf(play) === 1
+    const firstClear = first && result.cleared && progress.firstClearedAt === null
+    if (result.cleared) materials = materialPay(tuning, tuning.quests[quest].element, encounter!.challenge, enemyLevel, firstClear)
+    // Each star once, in any run that clears.
+    stars = !first ? [] : tuning.quests[quest].stars.flatMap((goal, index) => !progress.stars.includes(index) && meets(goal, result.cleared, result.tally) ? [index] : [])
+    const counts = counted(progress, result, now)
+    const updated: QuestProgress = { ...counts, firstClearedAt: first ? counts.firstClearedAt : progress.firstClearedAt, stars: [...progress.stars, ...stars].sort((a, b) => a - b) }
     next = { ...next, quests: { ...next.quests, [quest]: updated } }
     if (firstClear) rewards = tuning.quests[quest].rewards
   }
@@ -536,9 +638,10 @@ export const recordRun = (
       bestWave: Math.max(progress.bestWave ?? 0, result.wave)
     }
     next = { ...next, hardcore: { ...next.hardcore, [play.track]: { ...next.hardcore[play.track], [play.tier]: updated } } }
+    if (result.cleared) materials = materialPay(tuning, tuning.tracks[play.track].element, encounter!.challenge, enemyLevel, false)
     if (rewarded) rewards = { ...spec.rewards, unlocks: [] }
   }
-  next = earn(next, pay)
+  next = earn(earn(next, pay), materials)
   const chests = withEarnedChests(tuning, next)
   next = chests.account
   const made: Array<DiscoveryId> = []
@@ -557,7 +660,7 @@ export const recordRun = (
   const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
   const levelRewards = times(progression.account.levelUp, level.after - level.before)
   next = earn(next, levelRewards)
-  return { account: next, earned: { experience, level, pay, levelRewards, discoveries: made, rewards, stars, chests: chests.opened } }
+  return { account: next, earned: { experience, level, pay, materials, levelRewards, discoveries: made, rewards, stars, chests: chests.opened } }
 }
 
 /** The build `character` enters the arena with: at her level, with the aspect equipped on her in the team (her class's plain one when none). */

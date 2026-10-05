@@ -1,9 +1,9 @@
-import { noTally } from "../src/content/stars.ts"
 import { describe, expect, it } from "vitest"
 import { createAccount, recordRun } from "../src/account/account.ts"
 import { defaultTuning as tuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 import { nextMainQuest, playsIn, selectionIn, sourceOf } from "../src/ui/navigation.ts"
+import { noTally } from "../src/content/stars.ts"
 
 const account = createAccount(tuning, newAccount, "menu-test", 0)
 

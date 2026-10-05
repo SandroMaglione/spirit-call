@@ -33,6 +33,7 @@ const current: Record<string, ReadonlyArray<string>> = {
   quests: Object.keys(defaultTuning.quests),
   chapters: Object.keys(defaultTuning.chapters),
   currencies: Object.keys(defaultTuning.currencies),
+  materials: Object.keys(defaultTuning.materials),
   tracks: Object.keys(defaultTuning.tracks),
   discoveries: Object.keys(defaultTuning.discoveries)
 }

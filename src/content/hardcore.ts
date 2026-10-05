@@ -19,6 +19,7 @@
  */
 import type { ChallengeId } from "./challenges.ts"
 import type { Amounts } from "./currencies.ts"
+import type { ElementId } from "./elements.ts"
 import type { QuestId } from "./quests.ts"
 
 /** What a tier gives when cleared, once per period. */
@@ -36,6 +37,8 @@ export interface TierSpec {
 export interface TrackSpec {
   readonly name: string
   readonly challenge: ChallengeId
+  /** The element whose material a clear pays (see `content/materials.ts`). */
+  readonly element: ElementId
   /** The quest to clear before its first tier opens. */
   readonly after: QuestId
   /** Tier 1 first; a tier is known by its number (its place here), which never changes once shipped. */
@@ -51,6 +54,7 @@ export const tracks = {
   gauntlet: track({
     name: "Gauntlet",
     challenge: "endless",
+    element: "water",
     after: "crossfire",
     tiers: [tier(6, 100, { crystals: 20, gold: 1500 }), tier(20, 150, { crystals: 30, gold: 2400 }), tier(32, 200, { crystals: 40, gold: 3300 })]
   }),
@@ -58,6 +62,7 @@ export const tracks = {
   siege: track({
     name: "Brute Siege",
     challenge: "brute",
+    element: "rock",
     after: "theBrute",
     tiers: [tier(8, 120, { crystals: 20, gold: 1800 }), tier(24, 180, { crystals: 30, gold: 2700 }), tier(36, 240, { crystals: 40, gold: 3600 })]
   }),
@@ -65,6 +70,7 @@ export const tracks = {
   untilFall: track({
     name: "Until Fall",
     challenge: "untilFall",
+    element: "wind",
     after: "crossfire",
     tiers: [
       tier(3, 120, { crystals: 20, gold: 1600 }),
@@ -77,6 +83,7 @@ export const tracks = {
   keep: track({
     name: "The Keep",
     challenge: "warlord",
+    element: "fire",
     after: "theWarlord",
     tiers: [tier(28, 260, { crystals: 30, gold: 4000 }), tier(34, 320, { crystals: 40, gold: 5000 }), tier(40, 380, { crystals: 50, gold: 6000 })]
   })

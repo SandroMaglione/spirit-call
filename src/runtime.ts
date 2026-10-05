@@ -1,8 +1,8 @@
-import { noTally } from "./content/stars.ts"
 import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchButtons } from "./config/input.ts"
 import type { Tuning } from "./config/tuning.ts"
+import { noTally } from "./content/stars.ts"
 import type { ChallengeId } from "./content/challenges.ts"
 import { defaultTeam } from "./features/build.ts"
 import { defaultChallenge } from "./features/challenges.ts"

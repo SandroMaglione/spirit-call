@@ -1,4 +1,3 @@
-import { noTally } from "../src/content/stars.ts"
 import { describe, expect, it } from "vitest"
 
 import { entryKind } from "../src/content/challenges.ts"
@@ -12,6 +11,7 @@ import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Inv
 import type { EnemyKind } from "../src/schema.ts"
 import { doubleTap, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
+import { noTally } from "../src/content/stars.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 

@@ -1,4 +1,3 @@
-import { noTally } from "../src/content/stars.ts"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as KeyValueStore from "effect/persistence/KeyValueStore"
@@ -9,6 +8,7 @@ import { accountKey, AccountStore, layer as accountLayer, legacyProfileKey } fro
 import type { AccountStoreShape } from "../src/account/store.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
+import { noTally } from "../src/content/stars.ts"
 
 const options = { tuning: defaultTuning, starter: newAccount, newId: () => "account-1" }
 const starterSelection = { team: [newAccount.selection.character], aspects: {}, play: { kind: "quest", quest: newAccount.selection.quest } }
@@ -137,7 +137,7 @@ describe("account store", () => {
         return { account: yield* store.get, saved: yield* savedJson(kv, accountKey) }
       }))
     // 120 experience was bought at 2 gold each.
-    expect(result.account.owned.characters.swordsman).toEqual({ unlockedAt: 5, experience: 240 })
+    expect(result.account.owned.characters.swordsman).toEqual({ unlockedAt: 5, experience: 240, ascension: 0 })
     expect(result.account.discoveries).toEqual({})
     expect(result.saved).toMatchObject({ version: 7, discoveries: {} })
   })

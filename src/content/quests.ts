@@ -12,6 +12,7 @@ import type { ChallengeId } from "./challenges.ts"
 import type { CharacterId } from "./characters.ts"
 import type { Amounts } from "./currencies.ts"
 import type { AspectId } from "./aspects.ts"
+import type { ElementId } from "./elements.ts"
 import type { EnemyKind } from "./enemies.ts"
 import { atLeast, atMost, cleared } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
@@ -38,6 +39,10 @@ export interface QuestSpec {
   readonly challenge: ChallengeId
   /** The level of its enemies (fixed; never scaled to the player). */
   readonly enemyLevel: number
+  /** The element whose material a clear pays (see `content/materials.ts`). */
+  readonly element: ElementId
+  /** Its higher ranks (rank 2 first): the same quest at a higher enemy level, open once it and `after` are cleared. */
+  readonly ranks: ReadonlyArray<RankSpec>
   /** A quest to clear first (the main line's order; an id of `quests`), or `null`. */
   readonly after: string | null
   /** The one new thing it brings, in a line, and the enemy that shows it (if one does). */
@@ -45,6 +50,12 @@ export interface QuestSpec {
   /** Its three stars: the clear, a goal about its idea, and a hit budget (see `content/stars.ts`). */
   readonly stars: readonly [StarGoal, StarGoal, StarGoal]
   readonly rewards: Rewards
+}
+
+/** A higher rank of a quest: its enemies' level, and the quest that opens it (an id of `quests`). */
+export interface RankSpec {
+  readonly enemyLevel: number
+  readonly after: string
 }
 
 export interface ChapterSpec {
@@ -61,6 +72,8 @@ export interface ChestSpec {
 export type StarGroup = keyof typeof chapters | "secondary"
 
 const quest = (spec: QuestSpec): QuestSpec => spec
+/** Ranks opening after chapter two and after chapter three, at these enemy levels. */
+const ranks = (...levels: ReadonlyArray<readonly [number, "highTide" | "theWarlord"]>): ReadonlyArray<RankSpec> => levels.map(([enemyLevel, after]) => ({ enemyLevel, after }))
 const brings = (text: string, enemy: EnemyKind | null = null): QuestSpec["introduces"] => ({ text, enemy })
 const character = (id: CharacterId): Unlock => ({ kind: "character", id })
 const aspect = (id: AspectId): Unlock => ({ kind: "aspect", id })
@@ -80,6 +93,8 @@ export const quests = {
     chapter: "one",
     challenge: "swarm",
     enemyLevel: 1,
+    element: "fire",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: null,
     introduces: brings("Fast packs that rush you: keep moving, strike back", "chaser"),
     stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 16)],
@@ -91,6 +106,8 @@ export const quests = {
     chapter: "one",
     challenge: "crossfire",
     enemyLevel: 3,
+    element: "wind",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theSwarm",
     introduces: brings("Shooters and snipers fighting from cover", "sniper"),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 16)],
@@ -102,6 +119,8 @@ export const quests = {
     chapter: "one",
     challenge: "brute",
     enemyLevel: 5,
+    element: "thunder",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "crossfire",
     introduces: brings("The Brute: break it, then punish it", "brute"),
     stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 18)],
@@ -113,6 +132,8 @@ export const quests = {
     chapter: "two",
     challenge: "outposts",
     enemyLevel: 8,
+    element: "water",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theBrute",
     introduces: brings("Shooters spread out, swarms running between them", "shooter"),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 18)],
@@ -124,6 +145,8 @@ export const quests = {
     chapter: "two",
     challenge: "ashfall",
     enemyLevel: 12,
+    element: "fire",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "outposts",
     introduces: brings("Fire everywhere: firebombers and burning elites", null),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 18)],
@@ -135,6 +158,8 @@ export const quests = {
     chapter: "two",
     challenge: "highTide",
     enemyLevel: 16,
+    element: "water",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "ashfall",
     introduces: brings("A champion guardian of the tide", "guardian"),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 20)],
@@ -146,6 +171,8 @@ export const quests = {
     chapter: "three",
     challenge: "sandstorm",
     enemyLevel: 21,
+    element: "wind",
+    ranks: ranks([34, "theWarlord"]),
     after: "highTide",
     introduces: brings("Stranger foes among the obelisks", "warden"),
     stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 20)],
@@ -157,6 +184,8 @@ export const quests = {
     chapter: "three",
     challenge: "cloister",
     enemyLevel: 26,
+    element: "thunder",
+    ranks: ranks([34, "theWarlord"]),
     after: "sandstorm",
     introduces: brings("Close quarters: no room to run", "galeCaster"),
     stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 22)],
@@ -168,6 +197,8 @@ export const quests = {
     chapter: "three",
     challenge: "warlord",
     enemyLevel: 32,
+    element: "fire",
+    ranks: ranks([38, "theWarlord"]),
     after: "theCloister",
     introduces: brings("A champion stalker hunting you through every wave", "stalker"),
     stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 22)],
@@ -179,6 +210,8 @@ export const quests = {
     chapter: null,
     challenge: "endless",
     enemyLevel: 4,
+    element: "rock",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theSwarm",
     introduces: brings("Mixed waves, ending with an elite formation", null),
     stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 16)],
@@ -191,6 +224,8 @@ export const quests = {
     chapter: null,
     challenge: "heavyGround",
     enemyLevel: 10,
+    element: "rock",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theBrute",
     introduces: brings("The heaviest foes: break them before they fall", "juggernaut"),
     stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 18)],
@@ -202,6 +237,8 @@ export const quests = {
     chapter: null,
     challenge: "swarmNight",
     enemyLevel: 8,
+    element: "water",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "crossfire",
     introduces: brings("Packs at night, led by elites", "swarmer"),
     stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 16)],
@@ -213,6 +250,8 @@ export const quests = {
     chapter: null,
     challenge: "eliteHunt",
     enemyLevel: 12,
+    element: "thunder",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theBrute",
     introduces: brings("Elites leading every wave", null),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 18)],
@@ -224,6 +263,8 @@ export const quests = {
     chapter: null,
     challenge: "strangeCompany",
     enemyLevel: 9,
+    element: "wind",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "crossfire",
     introduces: brings("Foes that burst, ward, blink, and blow you around", "volatile"),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 18)],
@@ -235,6 +276,8 @@ export const quests = {
     chapter: null,
     challenge: "stormFront",
     enemyLevel: 16,
+    element: "thunder",
+    ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "outposts",
     introduces: brings("Snipers and thunder elites at the harbor", "sniper"),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 18)],

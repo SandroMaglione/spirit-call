@@ -22,6 +22,7 @@ import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
 import { enemies, fairness } from "../content/enemies.ts"
 import { reset, tracks } from "../content/hardcore.ts"
+import { materialRules, materials } from "../content/materials.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, chests, quests } from "../content/quests.ts"
 import { skills } from "../content/skills.ts"
@@ -77,6 +78,9 @@ export const defaultTuning = {
 
   /** The pull and upgrade currencies (see content/currencies.ts). */
   currencies,
+  /** The ascension materials, and how they are paid and spent (see content/materials.ts). */
+  materials,
+  materialRules,
 
   /** Every quest, by id, and the main line's chapters (see content/quests.ts). */
   quests,

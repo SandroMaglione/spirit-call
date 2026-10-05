@@ -1,4 +1,3 @@
-import { noTally } from "../src/content/stars.ts"
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
@@ -9,6 +8,7 @@ import { objectiveProgress, runResultOf, waveLevelBonus } from "../src/features/
 import { Enemy, Game, Invulnerable, Player, RunResult, Waves } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
+import { noTally } from "../src/content/stars.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 
