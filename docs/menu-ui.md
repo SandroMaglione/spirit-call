@@ -178,5 +178,5 @@ party of one and of three, a run to its results, and the pause menu.
 - Badges for a new character or aspect not looked at yet (needs a "seen"
   record on the device).
 - One-line character blurbs and move tips, if wanted: content, not UI.
-- Pull pricing, guarantees, duplicates, several saved parties, and revive
-  rules remain the vision's open decisions.
+- Duplicates, several saved parties, and revive rules remain the vision's
+  open decisions.

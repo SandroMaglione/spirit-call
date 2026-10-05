@@ -28,6 +28,9 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   Bumping `bevyTsRelease` is automatic: `.github/workflows/bevy-ts.yml`
   checks npm hourly, checks the game against a new release, commits the
   bump to main, and deploys prod.
+- `pnpm calls`: the Spirit Call's pace (when characters come from calls
+  along the quest line; see `docs/calls.md`). Run it after changing crystal
+  rewards or call numbers.
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
@@ -39,7 +42,8 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 
 - `src/content/`: the game's content as data (characters, classes, aspects
   and their passives, skills, enemies, challenges, quests, hardcore tracks,
-  discoveries, currencies, progression numbers, the starter set). Adding
+  discoveries, currencies, progression numbers, the starter set, the Spirit
+  Call's banners and odds). Adding
   content is mostly adding entries; new kinds (a new effect, condition, or
   objective) extend the vocabulary in one place.
 - The arena is a black box to everything around it: it is entered with a
