@@ -59,7 +59,6 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           </div>
           {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <p class="results__new">New: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</p>}
           {earned.discoveries.length > 0 && <p class="results__new">Discovered: {earned.discoveries.map((id) => tuning.discoveries[id].name).join(", ")}</p>}
-          {!result.cleared && result.progress > 0 && <p class="dim">{Math.round(result.progress * 100)}% of the way there pays {Math.round(result.progress * tuning.progression.loss * 100)}% of a clear.</p>}
           <div class="results__account">
             <div><span>{earned.level.after > earned.level.before ? <>Account Lv {earned.level.before} → <b>{earned.level.after}</b></> : `Account Lv ${level.level}`}</span><span class="dim">{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed}`}</span></div>
             <Bar value={level.needed === 0 ? 1 : level.into / level.needed} label="Account experience" />
