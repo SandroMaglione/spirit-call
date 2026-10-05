@@ -35,6 +35,7 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
           {member === undefined ? <span class="column__empty"><Icon name="plus" /></span> : <Model character={member} class="column__model" />}
         </button>
         {member !== undefined && <button type="button" class="column__banner" aria-label={`Details for ${tuning.characters[member].name}`} onClick={() => nav.go({ kind: "character", character: member, tab: "overview" })}><span><b>{tuning.characters[member].name}</b><Icon name="next" /></span><small>Lv {characterLevel(tuning, account, member).level}</small></button>}
+        {member !== undefined && <button type="button" class="column__aspect" aria-label={`Aspect of ${tuning.characters[member].name}: ${aspectName(member)}`} onClick={() => (equipping.value = member)}><Icon name="aspect" /><small>{aspectName(member)}</small></button>}
       </section>
     })}</div>
     <footer class="party-actions">
@@ -66,9 +67,8 @@ const AspectPicker = ({ store, member, team, aspects, close, choose }: {
       const spec = option === null ? null : aspectOf(tuning.aspects, option)
       const owned = option === null || owns(account, { kind: "aspect", id: option })
       const holder = option === null ? undefined : team.find((other) => other !== member && aspects[other] === option)
-      return <button key={option ?? "plain"} type="button" aria-pressed={option === equipped} disabled={!owned} onClick={() => choose(option)}>
-        <b>{spec?.name ?? plain.name}</b><small>{spec?.description ?? plain.description}</small>
-        {!owned && <span class="aspect-picker__note"><Icon name="lock" /> Locked</span>}
+      return <button key={option ?? "plain"} type="button" aria-label={`Equip ${spec?.name ?? plain.name}`} aria-pressed={option === equipped} disabled={!owned} onClick={() => choose(option)}>
+        <Icon name="aspect" /><b>{spec?.name ?? plain.name}</b><small>{!owned ? "Locked" : option === equipped ? "Equipped" : option === null ? "Plain" : "Owned"}</small>
         {holder !== undefined && <span class="aspect-picker__note">On {tuning.characters[holder].name}: moves here</span>}
       </button>
     })}

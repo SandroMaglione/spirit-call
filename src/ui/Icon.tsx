@@ -6,7 +6,7 @@ import type { CurrencyId } from "../content/currencies.ts"
 /** Menu symbols share a fixed box, independent of the device's text font. */
 const paths = {
   retry: "M4 10a8 8 0 1 1 1 8 M4 4v6h6",
-  aspect: "m16 3 5 0 0 5-11 11-5-5z M3 21l4-4 M3 12l9 9 M14 7l3 3",
+  aspect: "m12 3 9 9-9 9-9-9z M8 8c7-3 11 1 8 8 M8 16c-3-7 1-11 8-8 M9 12l3-3 3 3-3 3z",
   play: "m9 5 11 7-11 7z",
   info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 10v7 M12 7h.01",
   plus: "M12 5v14 M5 12h14",

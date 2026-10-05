@@ -12,10 +12,10 @@ import type { UiActions, UiStore } from "../store.ts"
 import { Dialog } from "../Dialog.tsx"
 import { Icon } from "../Icon.tsx"
 import { ModelStage } from "./ModelStage.tsx"
-import { Cta, ElementBadge, ids, Portrait } from "./parts.tsx"
+import { Cta, ElementBadge } from "./parts.tsx"
 import type { CharacterTab, Nav } from "./parts.tsx"
 
-const tabNames = { overview: "Attributes", aspect: "Aspects", kit: "Abilities" } as const
+const tabNames = { overview: "Attributes", aspect: "Aspects", kit: "Skills" } as const
 const moveNames = { arc: "Sweeping slash", thrust: "Forward thrust", spin: "Full spin", shot: "Projectile", disc: "Returning disc", lob: "Lobbed blast" } as const
 
 const Overview = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {
@@ -25,7 +25,7 @@ const Overview = ({ store, actions, character }: { readonly store: UiStore; read
   const owned = owns(account, { kind: "character", id: character })
   return <div class="panel character-overview">
     <h2 class="character-level"><span>Lv</span><strong>{progress.level}</strong><small>/ {tuning.progression.character.curve.maxLevel}</small></h2>
-    <div class="stats character-stats" aria-label="Equipped attributes">{statOrder.map((stat) => <span key={stat} class="stats__item"><small>{statNames[stat]}</small><b>{Math.round(now[stat])}{owned && cost !== null && next[stat] > now[stat] && <i>+{Math.round(next[stat] - now[stat])}</i>}</b></span>)}</div>
+    <div class="stats character-stats" aria-label="Equipped attributes">{statOrder.map((stat) => <span key={stat} class="stats__item"><small>{statNames[stat]}</small><span class="stats__numbers">{owned && cost !== null && next[stat] > now[stat] && <i>+{Math.round(next[stat] - now[stat])}</i>}<b>{Math.round(now[stat])}</b></span></span>)}</div>
     {owned && (cost !== null ? <div class="upgrade-action"><span class="upgrade-cost" aria-label={describeAmounts(tuning, cost)}><Icon name="gold" />{cost.gold}</span><Cta disabled={!train(tuning, account, character).ok || store.busy.value} onClick={() => actions.train(character)}>{store.busy.value ? "…" : "Level up"}</Cta></div> : <p class="success-message">Maximum level</p>)}
   </div>
 }
@@ -41,7 +41,7 @@ const Aspects = ({ store, character, nav }: { readonly store: UiStore; readonly 
   const source = id === null ? null : sourceOf(tuning, { kind: "aspect", id })
   const holder = id === null ? undefined : account.selection.team.find((member) => account.selection.aspects[member] === id)
   return <div class="panel">
-    <p class="aspect-class"><b>{classSpec.name}</b> · {classSpec.range} range · {classSpec.description}</p>
+    <p class="aspect-class"><b>{classSpec.name}</b> · {classSpec.range} range</p>
     <div class="aspects">{[null, ...aspectsFor(tuning, character)].map((option) => {
       const name = option === null ? classSpec.plain.name : aspectOf(tuning.aspects, option).name
       const status = option === equipped ? "Equipped" : option === null ? "Plain" : owns(account, { kind: "aspect", id: option }) ? "Owned" : "Locked"
@@ -80,9 +80,8 @@ export const Character = ({ store, actions, nav, character, tab }: {
   const owned = owns(account, { kind: "character", id: character }), element = elementOf(tuning, character)
   return <div class="screen character" data-element={element ?? undefined} data-locked={!owned}>
     <section class="character__stage">
-      <div class="character__tag"><ElementBadge element={element} /><span class="identity-divider">/</span><span>{tuning.characters[character].name}</span></div>
+      <div class="character__tag"><ElementBadge element={element} /></div>
       <div class="stage-orbit" aria-hidden="true" /><div class="character__model-stage"><ModelStage key={character} character={character} /></div>
-      <div class="roster roster--small">{ids(tuning.characters).map((id) => <button key={id} type="button" class={`roster__pick${id === character ? " is-in" : ""}`} aria-label={`View ${tuning.characters[id].name}`} aria-pressed={id === character} data-element={elementOf(tuning, id) ?? undefined} onClick={() => nav.replace({ kind: "character", character: id, tab })}><Portrait of={{ character: id }} />{!owns(account, { kind: "character", id }) && <span class="roster__lock" aria-label="Locked"><Icon name="lock" /></span>}</button>)}</div>
     </section>
     {owned && <div class="character-tabs game-nav" role="tablist" aria-label="Character details">{(Object.keys(tabNames) as Array<CharacterTab>).map((id) => <button key={id} type="button" role="tab" aria-label={tabNames[id]} aria-selected={id === tab} aria-controls="character-details" onClick={() => nav.replace({ kind: "character", character, tab: id })}>{tabNames[id]}</button>)}</div>}
     <section class="character__panel">

@@ -50,12 +50,12 @@ export const TopBar = ({ nav, title, children }: { readonly nav: Nav; readonly t
 )
 
 /** The currencies the account holds. */
-export const Wallet = ({ store }: { readonly store: UiStore }) => {
+export const Wallet = ({ store, currencies }: { readonly store: UiStore; readonly currencies?: ReadonlyArray<CurrencyId> }) => {
   const tuning = store.tuning.value
   const wallet = store.account.value.wallet
   return (
     <div class="wallet">
-      {ids(tuning.currencies).map((id: CurrencyId) => (
+      {(currencies ?? ids(tuning.currencies)).map((id: CurrencyId) => (
         <span key={id} class={`wallet__item currency--${id}`} aria-label={`${tuning.currencies[id].name}: ${wallet[id] ?? 0}`} title={`${tuning.currencies[id].name}: for ${tuning.currencies[id].use}`}>
           <Icon name={id} />
           <span class="wallet__amount">{(wallet[id] ?? 0).toLocaleString("en-US")}</span>

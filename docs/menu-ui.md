@@ -28,10 +28,10 @@ descriptions appear only when requested.
   and level sit at the right, above the quest-name play button. Party portraits
   run across the top center in their saved order. Selecting a spirit keeps
   those circles in place, while that spirit leads the next run.
-- Character inspection follows the reference's proportions: a narrow portrait
-  rail, vertical Attributes/Aspects/Skills menu, central animated spirit, and
+- Character inspection follows the reference's proportions: a horizontal scrolling
+  portrait row in the header, left-edge Attributes/Aspects/Skills menu, central animated spirit, and
   open details at the right. Level and equipped stats are visible together in
-  compact rows, with next-level gains and a Level up action at the bottom.
+  compact rows, with next-level gains before right-aligned totals and a Level up action at the bottom.
   Characters display no XP. Passives and skill descriptions open on tap.
   Locked characters keep their spirit and name, with a glowing lock seal in
   place of all tabs, stats, level, and unlock instructions. Aspect unlock
@@ -62,16 +62,17 @@ descriptions appear only when requested.
   guard applies to menus as well as combat; there is no separate portrait UI.
 - Screens use the same edge spacing, with symmetric safe-area allowances.
   The header uses small borderless back arrows and titles while retaining
-  44-pixel touch targets. The wallet stays fixed at the upper right in menus,
-  pause, and results, with 20-pixel symbols, 3-pixel icon-number gaps, and
-  12-pixel gaps between currencies.
+  44-pixel touch targets. Gold appears at the upper right only for leveling
+  an owned character; the account drawer holds both balances. Symbols are
+  20 pixels, with 3-pixel icon-number gaps and 12-pixel gaps between currencies.
   Currency artwork is shared by wallet balances, upgrade costs, and rewards.
   XP and the four elements use filled, faceted emblems. Currencies and emblems
   catch a brief shimmer and glint every six seconds, with staggered timing.
   Reduced motion disables these effects. XP artwork is shared by quest rewards,
   results, and the account drawer; element artwork is shared by headers,
   abilities, and enemy details.
-  Back handles return navigation; screens have no duplicate close action.
+  Quest categories and practice modes sit in the header. XP rewards show their
+  emblem and amount, with the name available to accessibility. Back handles return navigation; screens have no duplicate close action.
 - Successful saves give a brief glow and sound without a toast. Failures open
   an explicit dialog. Account writes are serialized and become visible only
   after durable storage succeeds; duplicate upgrade taps are guarded. Each
@@ -83,36 +84,20 @@ descriptions appear only when requested.
 
 ## Validation
 
-- `pnpm check`: typecheck, lint, and all 454 tests pass, with one existing skip. Tests include account
-  save failures and serialization, paused timers, menu input, and routing.
-- Production build passes.
-- Browser checks use the network address in phone landscape at 667 × 375 and
-  844 × 390. Exercised lobby, portrait selection, party saving, challenge
-  categories, locked previews, skill details, practice, sound, pause,
-  confirmations, dialog focus, and results.
-- Synthetic touch pointers rotate the spirit and trigger its ring. Button
-  measurements confirm centered action labels and 44-pixel targets. This is
-  browser touch-event coverage, not a physical-phone playtest.
-- The follow-up checks cover quest swipe boundaries and cancellation,
-  fixed wallet coordinates, party-circle order, and visible level-up controls
-  at 667 × 375. A separate localhost account fixture verifies a saved level
-  increase and the results layout; the original account is restored afterward.
-- The compact controls pass browser checks at both landscape sizes. Party
-  details, selection, swapping, removal, and the final-member guard still work.
-  The picker fits without scrolling at 667 × 375, including its removal action
-  above the bottom safe edge. Tabs remain 44 pixels tall and wallet symbols
-  and balances share the same vertical center.
-- Reference-layout checks cover owned and locked characters across the three
-  routes, all four element symbols, and XP reward artwork. Attributes and
-  Level up fit without scrolling at 667 × 375. A temporary account verifies
-  level-up persistence and a three-member portrait row; the empty header area
-  passes touches through to those portraits. Spirit rotation still responds
-  to touch pointers. Temporary account changes are restored after checks.
-- A completed-wave fixture follows the normal result/save path: one clear,
-  105 XP, 190 crystals, 625 gold, one discovery, and Gunner unlocked. The totals
-  include discovery rewards once and persist on reload. This verifies the
-  reward flow; it is not a manually played victory. The preview account is
-  backed up and restored after first-unlock checks.
+- Rebased onto the aspects rework on main. Character stats depend on character
+  level only; aspects have no levels and travel with the selected team.
+- `pnpm check`: typecheck, lint, 57 test files and 467 tests pass, with one
+  existing skip. Production build passes with the existing large-chunk warning.
+- Network-browser checks at 667 × 375 and 844 × 390 cover header navigation,
+  contextual currencies, locked characters, and touch quest swipes. Attributes
+  and Level up fit without scrolling; totals share the same right edge.
+- A separate localhost account verifies selecting and saving plain and owned
+  aspects, locked choices, and entering with the saved aspect. The compact
+  picker fits at 667 × 375 with 44-pixel targets. Temporary account changes
+  are restored afterward.
+- XP rewards show only the shared emblem and amount. Currency artwork remains
+  shared by balances, costs, and rewards. Browser touch events cover gesture
+  behavior; these checks are not a physical-phone playtest.
 
 ## Follow-up
 

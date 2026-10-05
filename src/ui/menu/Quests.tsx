@@ -14,7 +14,6 @@ import { Cta } from "./parts.tsx"
 import type { Nav, QuestTab } from "./parts.tsx"
 import { RewardItems } from "./RewardItems.tsx"
 
-const tabNames = { main: "Main", secondary: "Side", hardcore: "Hardcore" } as const
 type Touch = { readonly id: number; readonly x: number; readonly y: number; horizontal: boolean }
 
 /** A whole-screen quest carousel. Locked quests remain available to preview. */
@@ -80,7 +79,6 @@ export const Quests = ({ store, nav, tab, play, enter }: {
     if (touch.current !== null || !event.isPrimary || event.button !== 0 || information.value || (event.target instanceof Element && event.target.closest('button,input,summary,[role="dialog"]'))) return
     touch.current = { id: event.pointerId, x: event.clientX, y: event.clientY, horizontal: false }
   }} onPointerMove={move} onPointerUp={finish} onPointerCancel={cancel} onLostPointerCapture={cancel}>
-    <div class="quest-categories" role="tablist" aria-label="Quest categories">{(Object.keys(tabNames) as Array<QuestTab>).map((id) => <button key={id} type="button" role="tab" class={`tab${id === tab ? " is-selected" : ""}`} aria-selected={id === tab} onClick={() => { cancel(); nav.replace({ kind: "quests", tab: id }) }}>{tabNames[id]}</button>)}</div>
     <div class="quest-drag" data-dragging={touch.current?.horizontal || undefined} style={{ transform: `translateX(${offset.value}px)` }}>
       <section key={key} class="quest-slide" data-direction={direction.value > 0 ? "next" : "previous"} aria-label={describePlay(tuning, selected)}>
         <svg class="quest-sigil" viewBox="0 0 240 240" fill="none" aria-hidden="true"><path d="m120 12 108 108-108 108L12 120Z M120 32l88 88-88 88-88-88Z" /><path d="M52 120h136M120 52v136" /><circle cx="120" cy="120" r="56" /><path d="m120 66 15 39 39 15-39 15-15 39-15-39-39-15 39-15Z" /></svg>
