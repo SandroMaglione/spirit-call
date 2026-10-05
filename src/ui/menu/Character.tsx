@@ -168,7 +168,6 @@ export const Character = ({ store, actions, nav, character, tab, save }: {
   const tuning = store.tuning.value, account = store.account.value
   const roster = ids(tuning.characters), element = elementOf(tuning, character)
   const owned = owns(account, { kind: "character", id: character })
-  const step = (by: number) => nav.replace({ kind: "character", character: roster[(roster.indexOf(character) + by + roster.length) % roster.length]!, tab })
   return <Screen name="character" element={element}>
     <div class="character__stage" data-tab={tab}><ModelStage key={character} character={character} /></div>
     <TopBar icon={element} lead={elements[element].name} title={tuning.characters[character].name} close={nav.back} end={tab === "overview" && owned ? <Wallet store={store} currencies={["gold"]} /> : undefined}>
@@ -179,10 +178,6 @@ export const Character = ({ store, actions, nav, character, tab, save }: {
       { id: "aspect", label: "Aspect" },
       { id: "kit", label: "Skills" }
     ]} />
-    {tab === "overview" && roster.length > 1 && <>
-      <button type="button" class="character__step" data-side="left" aria-label="Previous character" onClick={() => step(-1)}><Icon name="back" /></button>
-      <button type="button" class="character__step" data-side="right" aria-label="Next character" onClick={() => step(1)}><Icon name="next" /></button>
-    </>}
     {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "aspect" ? <Aspects key={character} store={store} character={character} save={save} /> : <Skills key={character} store={store} character={character} />}
   </Screen>
 }

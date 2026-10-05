@@ -40,8 +40,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
     party: { kind: "team" },
     challenges: { kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line },
     call: { kind: "call", tab: "banner" },
-    practice: { kind: "extra", mode: "training" },
-    discoveries: { kind: "discoveries" }
+    practice: { kind: "extra", mode: "training" }
   }
   return <Screen name="home">
     <div class="home__stage"><ModelStage key={leader} character={leader} /></div>
@@ -59,8 +58,6 @@ export const Home = ({ store, nav, leader, play, enter }: {
       { id: "party", label: "Party" },
       { id: "challenges", label: "Challenges" },
       { id: "call", label: "Spirit Call", badge: canCall },
-      { id: "practice", label: "Practice" },
-      { id: "discoveries", label: "Discoveries" }
     ]} />
     {store.notices.value.length > 0 && <div class="home__notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<Pill size="small" tone="dark" onClick={() => (store.notices.value = [])}>Dismiss</Pill></div>}
     <div class="home__party in-left">
@@ -74,7 +71,10 @@ export const Home = ({ store, nav, leader, play, enter }: {
         {challengeEnemies(tuning.challenges[encounter.challenge]).slice(0, 4).map((kind) => <Face key={kind} of={{ enemy: kind }} size={26} />)}
         <span>Lv {encounter.enemyLevel}</span><Icon name="next" />
       </button>
-      <Pill icon="play" size="large" disabled={store.busy.value} onClick={enter}>Play</Pill>
+      <div class="home__play">
+        <Pill tone="dark" size="small" icon="practice" onClick={() => nav.go(places["practice"]!)}>Practice</Pill>
+        <Pill icon="play" size="large" disabled={store.busy.value} onClick={enter}>Play</Pill>
+      </div>
     </div>
   </Screen>
 }

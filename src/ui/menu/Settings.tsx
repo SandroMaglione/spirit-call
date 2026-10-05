@@ -1,4 +1,4 @@
-/** This device's settings: sound, and how the game is controlled. */
+/** This device's settings: sound, and how the game is controlled; and the way to the discoveries. */
 import { useSignal } from "@preact/signals"
 import { Slider, Toggle } from "../kit/controls.tsx"
 import { Fact } from "../kit/panel.tsx"
@@ -22,7 +22,8 @@ export const Settings = ({ store, actions, nav }: { readonly store: UiStore; rea
   const tab = useSignal<"sound" | "controls">("sound")
   return <Screen name="settings">
     <TopBar icon="settings" title="Settings" close={nav.back} />
-    <SideTabs label="Settings" current={tab.value} onChange={(id) => (tab.value = id)} tabs={[{ id: "sound", label: "Sound" }, { id: "controls", label: "Controls" }]} />
+    <SideTabs label="Settings" current={tab.value} onChange={(id) => (id === "discoveries" ? nav.go({ kind: "discoveries" }) : (tab.value = id))}
+      tabs={[{ id: "sound", label: "Sound" }, { id: "controls", label: "Controls" }, { id: "discoveries", label: "Discoveries" }]} />
     <div class="settings__content in-right" key={tab.value}>{tab.value === "sound" ? <SoundSettings store={store} actions={actions} /> : <div class="settings__rows">
       {(store.device.value === "touch" ? touchControls : desktopControls).map(([what, how]) => <Fact tall key={what} label={what} value={how} />)}
       <Fact tall label="In the menu" value="Drag a spirit to turn it" />

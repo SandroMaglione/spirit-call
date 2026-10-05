@@ -64,19 +64,27 @@
 .home__leader { display: grid; text-shadow: 0 1px 4px #0009; }
 .home__leader b { font-size: 16px; font-weight: 800; }
 .home__leader small { font-size: 12px; color: var(--dim); font-weight: 700; }
-.home__next { position: absolute; right: var(--right); bottom: var(--bottom); width: 250px; z-index: 3; display: grid; gap: 7px; justify-items: end; text-align: right; text-shadow: 0 1px 4px #0009; }
+.home__next { position: absolute; right: var(--right); bottom: var(--bottom); width: 340px; z-index: 3; display: grid; gap: 7px; justify-items: end; text-align: right; text-shadow: 0 1px 4px #0009; }
 .home__next h2 { font-size: 24px; font-weight: 800; line-height: 1; }
+.home__play { display: flex; align-items: center; gap: 10px; }
+.home__play .pill[data-size="small"] { height: 36px; padding-left: 4px; }
+.home__play .pill[data-size="small"] .pill__dot { width: 28px; height: 28px; font-size: 15px; }
 .home__foes { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; position: relative; margin-bottom: 14px; }
 .home__foes::after { content: ""; position: absolute; inset: -8px; }
 .home__foes .face { background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); }
 .home__foes .menu-icon { font-size: 14px; }
 
 /* ---------- character ---------- */
-.character__stage { position: absolute; inset: 20px 262px 10px 150px; }
+.character__stage { position: absolute; inset: 34px 262px 10px 150px; }
 .character__stage[data-tab="aspect"] { right: calc(var(--right) + 334px); }
 .character__stage[data-tab="kit"] { right: calc(var(--right) + 456px); left: 130px; }
-.roster { display: flex; gap: 8px; padding: 6px; max-width: 100%; }
-.character__side { position: absolute; right: var(--right); top: 62px; width: 236px; z-index: 3; display: grid; gap: 6px; text-shadow: 0 1px 3px #0007; }
+/* Room around the faces, so the picked one's glow is never cut square by the scrolling row. */
+.roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); }
+/* The roster stands in the middle of the bar whatever sits beside it (a longer name, the gold shown only for one owned), so the faces never shift. */
+.character .topbar__fill { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: max-content; max-width: calc(100% - 400px); }
+.character .crumb { max-width: 190px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.character .crumb { margin-right: auto; }
+.character__side { position: absolute; right: var(--right); top: 76px; width: 236px; z-index: 3; display: grid; gap: 6px; text-shadow: 0 1px 3px #0007; }
 .character__side h1 { font-size: 26px; font-weight: 800; line-height: 1.05; }
 .character__level { display: flex; align-items: baseline; gap: 6px; font-size: 19px; font-weight: 800; }
 .character__level small { font-size: 15px; color: var(--dim); font-weight: 700; }
@@ -84,13 +92,10 @@
 .character__class { margin-left: auto; align-self: center; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--gold-hi); }
 .character__stats { margin-top: 4px; }
 .character__side p { font-size: 12.5px; }
-.character__step { position: absolute; top: 50%; width: 44px; height: 44px; margin-top: -22px; display: grid; place-items: center; font-size: 22px; color: var(--cream); opacity: .7; z-index: 3; }
-.character__step[data-side="left"] { left: 164px; }
-.character__step[data-side="right"] { right: 268px; }
-.character__panel { position: absolute; right: var(--right); top: 60px; width: 330px; max-height: calc(100% - 128px); z-index: 3; }
+.character__panel { position: absolute; right: var(--right); top: 74px; width: 330px; max-height: calc(100% - 142px); z-index: 3; }
 .character__panel .cards { padding: 3px; }
-.character__panel--skill { right: calc(var(--right) + 190px); width: 262px; max-height: calc(100% - 76px); }
-.skills { position: absolute; right: var(--right); top: 58px; width: 178px; z-index: 3; display: grid; gap: 4px; }
+.character__panel--skill { right: calc(var(--right) + 190px); width: 262px; max-height: calc(100% - 90px); }
+.skills { position: absolute; right: var(--right); top: 74px; width: 178px; z-index: 3; display: grid; gap: 4px; }
 .skill { height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 8px; border-radius: 24px; font-size: 14px; font-weight: 700; line-height: 1.15; text-shadow: 0 1px 3px #0008; }
 .skill small { display: block; font-size: 11px; color: var(--dim); }
 .skill__orb { width: 40px; height: 40px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 22px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35); }
@@ -234,35 +239,49 @@
 .results.has-newcomer .results__content { margin-left: 32%; width: min(480px, 64%); }
 
 /* ---------- the Spirit Call ---------- */
-.call__banner { position: absolute; left: var(--left); top: 58px; width: 212px; z-index: 3; display: grid; gap: 6px; text-shadow: 0 1px 4px #0009; }
+.call__banner { position: absolute; left: var(--left); top: 74px; width: 212px; z-index: 3; display: grid; gap: 6px; text-shadow: 0 1px 4px #0009; }
 .call__banner h1 { font-size: 26px; font-weight: 800; line-height: 1.05; }
 .call__banner > p { font-size: 12.5px; color: var(--dim); }
 .call__banner .cards { margin: 4px 0 2px; padding: 3px; }
+.call__note { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 6px; background: var(--cream); color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1.25; text-shadow: none; }
+.call__note .menu-icon { font-size: 14px; flex: none; }
 .call__counts { display: grid; }
 .call__counts .menu-icon { color: var(--gold-hi); }
-.call__stage { position: absolute; left: calc(var(--left) + 210px); right: calc(var(--right) + 258px); top: 40px; bottom: 58px; }
-.call__focus { position: absolute; right: var(--right); top: 58px; width: 250px; max-height: calc(100% - 128px); z-index: 3; }
+/* The focus stands in all the room between the banner and the right edge; her details open over the right. */
+.call__stage { position: absolute; left: calc(var(--left) + 200px); right: var(--right); top: 60px; bottom: 64px; transition: right .25s; }
+.call__tag { position: absolute; right: var(--right); top: 74px; z-index: 3; display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 6px 12px 6px 10px; border-radius: 22px; background: rgba(22, 28, 44, .7); box-shadow: inset 0 0 0 1px var(--line); text-shadow: none; }
+.call__tag > .menu-icon:first-child { font-size: 24px; }
+.call__tag > .menu-icon:last-child { font-size: 16px; color: var(--gold-hi); }
+.call__tag b { display: block; font-size: 16px; font-weight: 800; line-height: 1.1; }
+.call__tag small { display: block; font-size: 11.5px; font-weight: 700; color: var(--gold-hi); }
 .call__button { display: grid; justify-items: center; line-height: 1; }
 .call__button small { display: flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 700; opacity: .8; margin-top: 2px; }
 .call__button small .menu-icon { font-size: 12px; }
-.call .actions .pill:not([data-size]) { min-width: 132px; }
-.call .actions .pill[data-size="small"] { padding-left: 4px; }
-.call .actions .pill[data-size="small"] .pill__dot { width: 24px; height: 24px; font-size: 12px; }
-.call__details { position: absolute; left: var(--left); top: 58px; width: 300px; max-height: calc(100% - 128px); z-index: 3; }
+/* The trial and the calls: one height, one row. */
+.call .actions { align-items: stretch; }
+.call .actions .pill { height: 46px; min-height: 46px; max-height: 46px; border-radius: 23px; min-width: 0; padding-right: 20px; box-shadow: 0 3px 10px rgba(0, 0, 0, .3), inset 0 0 0 1px var(--line); }
+.call .actions .pill:not(:first-child) { min-width: 136px; }
+.call .actions .pill__dot { width: 32px; height: 32px; font-size: 17px; }
+.call__details { position: absolute; left: var(--left); top: 74px; width: 300px; max-height: calc(100% - 150px); z-index: 3; }
 .call__details .fact__value { display: flex; align-items: center; gap: 3px; }
-.call__left { position: absolute; right: var(--right); top: 58px; width: calc(100% - var(--left) - var(--right) - 318px); max-width: 330px; max-height: calc(100% - 128px); z-index: 3; }
+.call__gap { width: 8px; }
+.call__explain { margin-top: 6px; }
+.call__left { position: absolute; left: calc(var(--left) + 314px); right: var(--right); top: 74px; max-height: calc(100% - 150px); z-index: 3; }
 .call__left .cards { padding: 3px; }
 .call__aspects { display: grid; gap: 4px; }
 .call__aspects span { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
 .call__aspects small { margin-left: auto; color: var(--dim); font-weight: 700; font-size: 12px; }
 .call__aspects .menu-icon { font-size: 18px; color: var(--gold-hi); }
-.call__history { position: absolute; left: var(--left); top: 58px; width: 360px; bottom: 70px; z-index: 3; }
-.call__history ~ .call__counts { position: absolute; right: var(--right); top: 62px; width: 240px; z-index: 3; }
-.call__record { display: grid; grid-template-columns: 12px 1fr; column-gap: 8px; align-items: center; font-size: 14px; font-weight: 700; padding: 3px 0; border-bottom: 1px solid var(--band); }
-.call__record small { grid-column: 2; font-size: 11px; color: var(--dim); font-weight: 600; }
-.call__light { width: 9px; height: 9px; border-radius: 50%; background: #dfe6f3; box-shadow: 0 0 6px #dfe6f3; }
-.call__record[data-kind="aspect"] .call__light { background: #b98bff; box-shadow: 0 0 8px #b98bff; }
-.call__record[data-kind="character"] .call__light { background: #ffd56b; box-shadow: 0 0 10px #ffd56b; }
+.call__history { position: absolute; left: var(--left); top: 74px; width: 360px; bottom: 74px; z-index: 3; }
+.call__history ~ .call__counts { position: absolute; right: var(--right); top: 74px; width: 240px; z-index: 3; }
+.call__record { display: grid; gap: 3px; padding: 6px 0; border-bottom: 1px solid var(--band); }
+.call__record small { font-size: 11px; color: var(--dim); font-weight: 600; }
+.call__what { display: flex; align-items: center; gap: 8px; min-height: 26px; font-size: 14px; font-weight: 700; }
+.call__aspect-icon { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; color: var(--gold-hi); background: radial-gradient(circle at 35% 30%, #5a4a8e, #1b1830 70%); box-shadow: 0 0 0 1.5px #b98bff; }
+.call__record[data-kind="character"] .face { box-shadow: 0 0 0 1.5px #ffd56b, 0 0 8px #ffd56b; }
+.call__amount { display: flex; align-items: center; gap: 4px; }
+.call__amount .menu-icon, .call__amount .material-icon { font-size: 18px; }
+.call__amount + .call__amount { margin-left: 6px; }
 /* What one character does: her special and her ultimate, each a line. */
 .kit-lines { display: grid; gap: 8px; }
 .kit-lines__one { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: start; font-size: 12.5px; line-height: 1.3; }
@@ -333,3 +352,4 @@
 .reveal__item[data-light="gold"] .card { box-shadow: 0 0 0 2px #ffd56b, 0 0 18px #ffd56b; }
 .reveal__item[data-light="gold"] small { color: var(--gold-hi); }
 @media (prefers-reduced-motion: reduce) { .reveal *, .reveal { animation-duration: .01s !important; animation-delay: 0s !important; } }
+.character .side-tabs { top: 92px; }
