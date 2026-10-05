@@ -9,10 +9,12 @@
  * its scripted waves, then (if the plan is endless) random mixes within a
  * growing budget, some of them elites, drawn from the seeded `Rng`, so a run
  * replays exactly. A plan that ends is `complete` once its last wave is
- * cleared.
+ * cleared. A champion (see `Tuning.champions`) stays across waves: it never
+ * counts toward clearing a wave, but the plan is complete only once every
+ * champion has fallen too.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { elite, entryElite, entryKind } from "../content/challenges.ts"
+import { elite, entryChampion, entryElite, entryKind } from "../content/challenges.ts"
 import type { EliteElement, WaveEntry, WavePlan } from "../content/challenges.ts"
 import { Random } from "../math/rng.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -159,7 +161,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       while (timer <= 0 && queue.length > 0) {
         const entry = queue.shift()!
         const kind = entryKind(entry)
-        for (const spawn of makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry))) {
+        for (const spawn of makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry), entryChampion(entry))) {
           commands.spawnIn(RunScope, spawn)
         }
         timer += tuning.waves.spawnInterval
@@ -168,9 +170,13 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       break
     }
     case "fighting": {
-      const left = queries.enemies.each().length + queries.pending.each().length
-      if (left === 0) {
-        // The last wave of a plan that ends completes it at once.
+      // Champions stay across waves: the waves go on around them, and only the plan's end waits for them.
+      const enemies = queries.enemies.each()
+      const pending = queries.pending.each()
+      const champions = enemies.filter(({ data }) => data.enemy.get().champion).length + pending.filter(({ data }) => data.pending.get().champion === true).length
+      const left = enemies.length + pending.length - champions
+      if (left === 0 && (hasWave(plan, number + 1) || champions === 0)) {
+        // The last wave of a plan that ends completes it at once (with every champion down).
         phase = hasWave(plan, number + 1) ? "break" : "complete"
         timer = tuning.waves.breakDuration
       } else if (left <= tuning.waves.reinforceAt && hasWave(plan, number + 1)) {

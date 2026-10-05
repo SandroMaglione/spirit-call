@@ -33,12 +33,14 @@ export const challengeFromQuery = (tuning: Tuning, search: string, fallback: Cha
   return known<ChallengeId>(tuning.challenges, challenge) ? challenge : fallback
 }
 
-/** Combat enemies selected for a direct Enemy Practice link; unknown ids and dummies are ignored. */
+/** Combat enemies selected for a direct Enemy Practice link (`?practice=brute,chaser&champion`); unknown ids and dummies are ignored. */
 export const practiceFromQuery = (tuning: Tuning, search: string): PracticeValue | undefined => {
   const value = new URLSearchParams(search).get("practice")
   const kinds = [...new Set((value ?? "").split(","))].filter((id): id is EnemyKind =>
     known<EnemyKind>(tuning.enemies, id) && tuning.enemies[id].cost > 0)
-  return kinds.length === 0 ? undefined : { kinds, elites: false }
+  const query = new URLSearchParams(search)
+  // `&elites` and `&champion` ask for them too.
+  return kinds.length === 0 ? undefined : { kinds, elites: query.has("elites"), ...(query.has("champion") ? { champion: true } : {}) }
 }
 
 /** The URL's `key` as a level (a whole number from 1), or `undefined`. */

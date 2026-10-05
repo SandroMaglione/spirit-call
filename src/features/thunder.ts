@@ -212,7 +212,7 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
         const pushed = queries.pushed.each().find(({ entity: other }) => other.id.value === body.id)
         if (pushed !== undefined) {
           const out = normalizeOr(sub(body.at, at), { x: 1, y: 0 })
-          const push = effect.repel * knockbackTaken(tuning, pushed.data.enemy.present ? pushed.data.enemy.get().kind : undefined)
+          const push = effect.repel * knockbackTaken(tuning, pushed.data.enemy.present ? pushed.data.enemy.get().kind : undefined, pushed.data.enemy.present && pushed.data.enemy.get().champion)
           pushed.data.knockback.update((current) => ({ x: current.x + out.x * push, y: current.y + out.y * push }))
         }
       }
@@ -266,7 +266,7 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
     for (const { entity, data } of queries.stunnable.each()) {
       if (!struck.has(entity.id.value)) continue
       if (effect.stun > 0) data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
-      const bar = poiseOf(tuning, data.enemy.get().kind, data.health.get().max)
+      const bar = poiseOf(tuning, data.enemy.get().kind, data.health.get().max, data.enemy.get().champion)
       if (bar > 0 && effect.breakFill > 0 && data.poise.get().broken <= 0) {
         data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
       }

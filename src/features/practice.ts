@@ -6,7 +6,9 @@
  * they take turns. An enemy holds its spot (`PracticeUnit`); when it falls
  * the spot fills again a few seconds later, behind a spawn warning, with
  * the same kind or, taking turns, the next pick. Some come as elites when
- * the picks say so. It goes on until the team falls.
+ * the picks say so, and a champion of the first pick that fights up close
+ * holds a spot of its own when asked (see `Tuning.champions`). It goes on
+ * until the team falls.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EliteElement } from "../content/challenges.ts"
@@ -19,6 +21,8 @@ import { pickSpawnPoint } from "./waves.ts"
 
 /** The share of practice spawns that come as elites, when the picks ask for elites. */
 const eliteShare = 0.25
+/** A champion's spot fills again after this many times the objective's wait. */
+const championRespawn = 3
 const eliteElements: ReadonlyArray<EliteElement> = ["fire", "water", "thunder"]
 
 /**
@@ -66,13 +70,18 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
     const kinds = practiceSpots(tuning, picks, objective)
     spots = kinds.map((kind, index) => ({ kind, wait: tuning.waves.firstDelay + index * tuning.waves.spawnInterval }))
     turn = new Set(kinds).size
+    // The champion's spot, after the others: of the first pick that is not ranged (a champion never is).
+    const leader = picks.find((kind) => tuning.enemies[kind].behavior.kind !== "kite")
+    if (resources.practice.get().champion === true && leader !== undefined) {
+      spots = [...spots, { kind: leader, wait: tuning.waves.firstDelay + spots.length * tuning.waves.spawnInterval, champion: true }]
+    }
   }
   const held = new Set([
     ...queries.units.each().map(({ data }) => data.unit.get().slot),
     ...queries.pending.each().flatMap(({ data }) => (data.pending.get().slot === undefined ? [] : [data.pending.get().slot!]))
   ])
-  // More picks than fit: a spot that empties takes the next pick in turn.
-  const turns = new Set(spots.map((spot) => spot.kind)).size < picks.length
+  // More picks than fit: a spot that empties takes the next pick in turn (the champion's keeps its kind).
+  const turns = new Set(spots.filter((spot) => spot.champion !== true).map((spot) => spot.kind)).size < picks.length
   const dt = resources.time.get().dt
   const random = new Random(resources.rng.get().state)
   const player = queries.player.each()[0]?.data.position.get()
@@ -81,16 +90,18 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
   spots = spots.map((spot, slot) => {
     if (spot.wait === null) {
       if (held.has(slot)) return spot
-      // Its enemy fell: the spot fills again after a while.
+      // Its enemy fell: the spot fills again after a while (a champion's, after longer).
+      if (spot.champion === true) return { ...spot, wait: objective.respawn * championRespawn }
       const kind = turns ? picks[turn++ % picks.length]! : spot.kind
       return { kind, wait: objective.respawn }
     }
     const wait = spot.wait - dt
     if (wait > 0) return { ...spot, wait }
     const front = random.next() * Math.PI * 2
-    const elite = elites && random.next() < eliteShare ? random.pick(eliteElements) : null
+    const champion = spot.champion === true
+    const elite = champion || (elites && random.next() < eliteShare) ? random.pick(eliteElements) : null
     const at = pickSpawnPoint(tuning, spot.kind, player, boxes, random, front)
-    commands.spawnIn(RunScope, makePendingSpawn(spot.kind, at, tuning.waves.spawnWarning, elite, slot))
+    commands.spawnIn(RunScope, makePendingSpawn(spot.kind, at, tuning.waves.spawnWarning, elite, slot, champion))
     return { ...spot, wait: null }
   })
   resources.field.set({ spots, turn })

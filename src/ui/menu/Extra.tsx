@@ -2,8 +2,8 @@
  * The Extras: practice that records nothing (no experience, gold, or
  * discoveries), with the team as set up. The Training Ground (dummies that
  * never fall, a breakable one, one that swings to dodge, fire to push them
- * into) and Enemy Practice (endless waves of only the enemies picked, until
- * the team falls). Both are played at the team's own level.
+ * into) and Enemy Practice (endless waves of only the enemies picked, with
+ * elites or a champion when asked, until the team falls). Both are played at the team's own level.
  */
 import { useSignal } from "@preact/signals"
 import { Dialog } from "../Dialog.tsx"
@@ -73,6 +73,9 @@ export const Extra = ({ store, actions, nav, mode, team, aspects }: {
           <span>Enemies Lv {level}</span>
           <button type="button" class={`chip${picks.elites ? " is-on" : ""}`} aria-pressed={picks.elites} onClick={() => (store.practicePicks.value = { ...picks, elites: !picks.elites })}>
             Elites {picks.elites ? "on" : "off"}
+          </button>
+          <button type="button" class={`chip${picks.champion === true ? " is-on" : ""}`} aria-pressed={picks.champion === true} onClick={() => (store.practicePicks.value = { ...picks, champion: picks.champion !== true })}>
+            Champion {picks.champion === true ? "on" : "off"}
           </button>
           <button type="button" class="chip" onClick={() => (store.practicePicks.value = { ...picks, kinds: picks.kinds.length === pickable.length ? [] : pickable })}>
             {picks.kinds.length === pickable.length ? "None" : "All"}

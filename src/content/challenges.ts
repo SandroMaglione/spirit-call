@@ -44,15 +44,20 @@ export type EliteElement = Exclude<ElementId, "wind">
 /**
  * One slot of a wave: an enemy kind (spawning its `group`), or an elite of
  * it: the group's first one is bigger and tougher, and carries an element
- * (see `Tuning.elites`).
+ * (see `Tuning.elites`); or a champion of it, an elite pushed further that
+ * stays across waves (see `Tuning.champions`), alone.
  */
-export type WaveEntry = EnemyKind | { readonly kind: EnemyKind; readonly elite: EliteElement }
+export type WaveEntry = EnemyKind | { readonly kind: EnemyKind; readonly elite: EliteElement; readonly champion?: true }
 
 /** One wave: its entries spawned in order. */
 export type Wave = ReadonlyArray<WaveEntry>
 
 /** An elite `kind` carrying `element`, for a wave. */
 export const elite = (kind: EnemyKind, element: EliteElement): WaveEntry => ({ kind, elite: element })
+/** A champion `kind` carrying `element`, for a wave: it comes alone (not its group), and stays until it falls. */
+export const champion = (kind: EnemyKind, element: EliteElement): WaveEntry => ({ kind, elite: element, champion: true })
+/** Whether a wave entry is a champion. */
+export const entryChampion = (entry: WaveEntry): boolean => typeof entry !== "string" && entry.champion === true
 /** The enemy kind of a wave entry. */
 export const entryKind = (entry: WaveEntry): EnemyKind => (typeof entry === "string" ? entry : entry.kind)
 /** The element of an elite wave entry, or `null`. */
@@ -125,10 +130,10 @@ export const challenges = {
       endless: null
     }
   }),
-  /** Warm-up waves, then brutes, and a thunder brute with its guards as the finale. */
+  /** Warm-up waves, then a thunder champion brute that stays through the waves after it, until it falls. */
   brute: challenge({
     name: "The Brute",
-    description: "Nine waves building up to a brute charged with thunder and its guards.",
+    description: "Nine waves; midway a champion brute charged with thunder joins, and stays until it falls.",
     objective: clearWaves(),
     arena: "courtyard",
     waves: {
@@ -138,10 +143,10 @@ export const challenges = {
         ["chaser", "chaser", "charger", "swarmer"],
         ["brute", "chaser"],
         ["guardian", "guardian", "shooter", "swarmer"],
-        ["brute", "charger", "chaser", "chaser"],
+        [champion("brute", "thunder"), "charger", "chaser", "chaser"],
         [elite("guardian", "fire"), "shooter", "sniper", "swarmer"],
-        ["brute", "brute", "chaser", "chaser"],
-        [elite("brute", "thunder"), "guardian", "guardian", "charger"]
+        ["brute", "chaser", "chaser", "swarmer"],
+        [elite("guardian", "thunder"), "guardian", "charger", "chaser"]
       ],
       endless: null
     }
@@ -211,7 +216,7 @@ export const challenges = {
   /** Water everywhere: soaking sprays and puddles in a harbor; thunder hits the soaked hard. */
   highTide: challenge({
     name: "High Tide",
-    description: "Nine waves at the harbor: soaking elites, shooters, and snipers that strike the soaked.",
+    description: "Nine waves at the harbor: soaking elites, snipers that strike the soaked, and a champion guardian of the tide.",
     objective: clearWaves(),
     arena: "harbor",
     waves: {
@@ -219,7 +224,7 @@ export const challenges = {
         ["shooter", "chaser", "chaser"],
         ["shooter", "shooter", "swarmer"],
         [elite("chaser", "water"), "shooter", "swarmer"],
-        ["sniper", "shooter", "chaser", "chaser"],
+        [champion("guardian", "water"), "sniper", "shooter", "chaser"],
         ["guardian", elite("shooter", "water"), "swarmer", "swarmer"],
         ["sniper", "sniper", "chaser", "chaser", "shooter"],
         [elite("guardian", "water"), "shooter", "shooter", "swarmer"],
@@ -275,7 +280,7 @@ export const challenges = {
   /** The last stand of the citadel: brutes and elites of every element. */
   warlord: challenge({
     name: "The Warlord",
-    description: "Ten waves in the citadel, ending with two elite brutes and their guard.",
+    description: "Ten waves in the citadel, hunted by a burning champion stalker, ending with two elite brutes and their guard.",
     objective: clearWaves(),
     arena: "citadel",
     waves: {
@@ -284,7 +289,7 @@ export const challenges = {
         ["brute", "swarmer", "swarmer"],
         ["charger", "sniper", "chaser", "chaser"],
         [elite("guardian", "fire"), "shooter", "shooter", "swarmer"],
-        ["brute", "brute", "chaser"],
+        [champion("stalker", "fire"), "brute", "chaser"],
         [elite("sniper", "thunder"), "sniper", "guardian", "swarmer", "swarmer"],
         [elite("charger", "fire"), "charger", "brute", "chaser"],
         [elite("chaser", "water"), elite("chaser", "thunder"), "guardian", "guardian", "shooter"],

@@ -164,12 +164,14 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   for (const { entity, data } of order.map((index) => attackers[index]!)) {
     const kind = data.enemy.get().kind
     const attacks = tuning.enemies[kind].attacks
+    // A champion waits less between attacks (its telegraphs are its kind's, see `Tuning.champions`).
+    const rest = data.enemy.get().champion ? tuning.champions.cooldown : 1
     // A broken enemy's windup is cut off (it starts over once it recovers).
     if (data.poise.get().broken > 0 && data.phase.get() === "windup") {
       const cut = data.attacker.get()
       data.phase.transition("windup", "ready")
       windingUp -= 1
-      data.attacker.set({ ...cut, elapsed: 0, area: null, cooldown: attacks[cut.attack ?? -1]?.cooldown ?? 0 })
+      data.attacker.set({ ...cut, elapsed: 0, area: null, cooldown: (attacks[cut.attack ?? -1]?.cooldown ?? 0) * rest })
     }
     // A stunned enemy's attack waits, its telegraph still showing, until the stun wears off.
     if (attacks.length === 0 || data.stunned.get().remaining > 0) continue
@@ -309,7 +311,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       phase.transition("recovery", "ready")
       elapsed = 0
       area = null
-      cooldown = spec.cooldown
+      cooldown = spec.cooldown * rest
       // A combo: the follow-up starts at once when it can, with no cooldown in between.
       const next = spec.followUp === null ? -1 : attacks.findIndex((candidate) => candidate.id === spec.followUp)
       if (next >= 0 && moving !== undefined && canStart(attacks[next]!, position, moving.at, boxes)) {

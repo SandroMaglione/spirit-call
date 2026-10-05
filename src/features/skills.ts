@@ -370,7 +370,7 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
         if (distance > effect.radius + hurtbox.radius) continue
         const direction = normalizeOr(sub(center, at), { x: 0, y: 0 })
         const enemy = target.data.enemy.present ? target.data.enemy.get().kind : undefined
-        const push = effect.pull * distance * decay * knockbackTaken(tuning, enemy)
+        const push = effect.pull * distance * decay * knockbackTaken(tuning, enemy, target.data.enemy.present && target.data.enemy.get().champion)
         target.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
         if (effect.power <= 0) continue
         events.damage.emit({ target: Game.Entity.handle(target.entity.id, Health), faction: vortex.faction, direction, blow: struck })

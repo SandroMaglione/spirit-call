@@ -8,7 +8,7 @@
  * immediately; values copied at spawn (radius, HP) apply to entities spawned
  * afterwards, so restart the run to see them everywhere.
  */
-import { entryElite, entryKind } from "../content/challenges.ts"
+import { entryChampion, entryElite, entryKind } from "../content/challenges.ts"
 import type { WaveEntry } from "../content/challenges.ts"
 import { Descriptor } from "@typeonce/bevy-ts"
 import type { ReadonlyValue } from "@typeonce/bevy-ts/Query"
@@ -106,7 +106,7 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
     for (const entry of queue.spawns) {
       const kind = entryKind(entry)
       const at = pickNearPoint(tuning, kind, player, boxes, random)
-      for (const spawn of makeGroupSpawns(tuning, kind, at, devSpawnWarning, entryElite(entry))) commands.spawnIn(RunScope, spawn)
+      for (const spawn of makeGroupSpawns(tuning, kind, at, devSpawnWarning, entryElite(entry), entryChampion(entry))) commands.spawnIn(RunScope, spawn)
     }
     queue.spawns.length = 0
     resources.rng.set({ state: random.state })

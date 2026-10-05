@@ -48,7 +48,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     // The attacker's break bar fills (it breaks right after, see `BuildPoise`, if that fills it).
     const attacker = dodged.attacker === null ? undefined : lookup.getHandle(dodged.attacker, Attackers)
     if (attacker?.ok === true && attacker.value.data.poise.get().broken <= 0) {
-      const bar = poiseOf(tuning, attacker.value.data.enemy.get().kind, attacker.value.data.health.get().max)
+      const bar = poiseOf(tuning, attacker.value.data.enemy.get().kind, attacker.value.data.health.get().max, attacker.value.data.enemy.get().champion)
       attacker.value.data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * rules.breakFill), quiet: 0 }))
     }
     events.perfect.emit({ at: data.position.get() })

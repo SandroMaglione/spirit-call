@@ -316,6 +316,29 @@ export const defaultTuning = {
     endless: { fromWave: 3, chance: 0.12, perWave: 0.04, max: 0.4 }
   },
 
+  /**
+   * Champions (a wave entry marked champion, see `champion`): an elite
+   * pushed further, the hardest enemy of a challenge. It comes alone, `scale`
+   * times its kind's size, with `health` times its health (it survives a few
+   * waves), `atk` times its ATK, `speed` times its running speed, and waits
+   * `cooldown` times as long between attacks (its telegraphs are its kind's).
+   * It takes `knockback` times its kind's push, and its break bar is
+   * `poise` times its kind's share of its health. It leaves no trail (it
+   * stays for waves: an elite's trail would flood the floor); a thunder
+   * champion discharges as an elite does. It stays across waves:
+   * it does not count toward clearing the wave it came in, and the
+   * challenge clears only once it has fallen too (see `DirectWaves`).
+   */
+  champions: {
+    scale: 1.5,
+    health: 9,
+    atk: 1.4,
+    speed: 1.2,
+    cooldown: 0.6,
+    knockback: 0.45,
+    poise: 0.35
+  },
+
   flow: {
     /** Time on the game-over screen before restart input is accepted. */
     restartDelay: 0.8

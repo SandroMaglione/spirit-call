@@ -1,7 +1,7 @@
 /**
  * Hardcore: the goals to aim for, where preparation and skill are tested
  * fully (see docs/vision.md, "Structure"). Each track is one kind of
- * content (mixed waves, a tanky boss) in tiers, each harder than the last;
+ * content (mixed waves, champions) in tiers, each harder than the last;
  * lower tiers are within reach of a low-level team. A track opens at an
  * account level, and each tier once the one before it is cleared.
  *

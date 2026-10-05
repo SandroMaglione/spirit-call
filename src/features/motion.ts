@@ -28,9 +28,9 @@ export const Walls = Game.Query({ selection: { wall: Game.Query.read(Wall) } })
 export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box } } }>): Array<Box> =>
   walls.map((match) => match.data.wall.get())
 
-/** The share of a push a body takes: an enemy kind's, or the player's. */
-export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined): number =>
-  enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken
+/** The share of a push a body takes: an enemy kind's (less for a champion), or the player's. */
+export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined, champion = false): number =>
+  enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken * (champion ? tuning.champions.knockback : 1)
 
 /** How fast a body's push dies down: slower while it is swept (a glide), else `knockback.decay`. */
 export const pushDecay = (tuning: TuningValue, state: ActiveState | null | undefined): number =>
