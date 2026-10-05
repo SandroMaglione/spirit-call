@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crusher Behemoth | static model review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px/1.55 system-ui,sans-serif; color: #e9e6df; background: #202329; }
+    header { padding: 22px 28px 16px; border-bottom: 1px solid #44464b; }
+    .eyebrow { color: #d4b26a; letter-spacing: .14em; font-size: 11px; text-transform: uppercase; }
+    h1 { font-size: 28px; margin: 3px 0; font-weight: 650; }
+    p { margin: 5px 0 12px; }
+    main { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); }
+    .model { min-width: 0; }
+    #viewport { height: 590px; width: 100%; touch-action: none; }
+    canvas { display: block; }
+    nav, .options, .downloads { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 24px; }
+    button,select { font: inherit; background: #30343b; color: #e9e6df; border: 1px solid #56585f; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+    button[aria-pressed="true"] { background: #d4b26a; color: #202329; border-color: #d4b26a; }
+    button:focus-visible,select:focus-visible,a:focus-visible { outline: 2px solid #ffb52e; outline-offset: 3px; }
+    a { color: #e9ca89; }
+    #status,.hint { margin: 10px 24px; }
+    #status { color: #d4b26a; }
+    .hint { color: #b1b3ba; font-size: 12px; }
+    aside { padding: 24px; border-left: 1px solid #44464b; min-width: 0; }
+    aside label { display: block; margin-bottom: 14px; }
+    #reference { width: 100%; display: block; background: #f4f5f7; border-radius: 5px; }
+    .note { margin: 18px 0; color: #b1b3ba; }
+    .native { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 24px; }
+    .native img { width: 128px; height: 128px; background: #31373a; }
+    .native #small { width: 64px; height: 64px; }
+    .native span { font-size: 12px; color: #b1b3ba; }
+    @media(max-width:800px) {
+      main { display: block; }
+      header { padding: 16px; }
+      h1 { font-size: 24px; }
+      #viewport { height: 410px; }
+      aside { border-left: 0; border-top: 1px solid #44464b; padding: 16px; }
+      nav,.options,.downloads,#status,.hint,.native { margin-left: 16px; margin-right: 16px; }
+      button { padding: 7px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">First boss / model pass 01</div>
+    <h1>Crusher Behemoth</h1>
+    <p>Static model review. Drag to orbit, scroll or pinch to zoom.</p>
+  </header>
+  <main>
+    <section class="model" aria-label="Interactive 3D model">
+      <div id="viewport"></div>
+      <nav aria-label="Camera">
+        <button data-view="hero">Hero</button><button data-view="game">Game camera</button>
+        <button data-view="front">Front</button><button data-view="back">Back</button>
+        <button data-view="left">Left</button><button data-view="right">Right</button>
+        <button data-view="top">Top</button><button data-view="bottom">Bottom</button>
+        <button data-view="face">Face</button>
+      </nav>
+      <div class="options">
+        <button id="wire" aria-pressed="false">Wireframe</button>
+        <button id="spin" aria-pressed="false">Turntable</button>
+        <button id="light" aria-pressed="false">Light background</button>
+        <button id="scale" aria-pressed="false">1.8 m scale figure</button>
+      </div>
+      <p id="status" role="status" aria-live="polite">Loading model...</p>
+      <p class="hint">Game camera uses a 45° turn and 30° elevation. Turntable rotates the review camera.</p>
+      <div class="downloads">
+        <a href="production/crusher-behemoth-model.blend" download>Blender source</a>
+        <a href="production/crusher-behemoth-model.glb" download>Static GLB</a>
+        <a href="production/README.md">Model notes</a>
+      </div>
+      <div class="native">
+        <img src="production/renders/game-size.png" alt="128 pixel game camera preview">
+        <img id="small" src="production/renders/game-size-64.png" alt="64 pixel game camera preview">
+        <span>Native 128 px and 64 px studies.<br>Final in-game size awaits integration.</span>
+      </div>
+    </section>
+    <aside aria-label="Reference and model comparisons">
+      <label>Compare with the sheet
+        <select id="reference-mode">
+          <option value="reference/hero.png">Original hero</option>
+          <option value="renders/compare.png">Sheet beside model</option>
+          <option value="renders/overlay-all.png">All silhouette overlays</option>
+          <option value="renders/game.png">Game camera render</option>
+          <option value="renders/game-back.png">Game camera, rear facing</option>
+          <option value="renders/face-front.png">Face close-up</option>
+          <option value="renders/measure-front.png">Measured front parts</option>
+          <option value="reference/sheet.png">Full handoff sheet</option>
+        </select>
+      </label>
+      <a id="image-link" href="production/reference/hero.png" target="_blank"><img id="reference" src="production/reference/hero.png" alt="Selected reference or comparison"></a>
+      <p class="note">The model preserves the drawn silhouette, 8.5 m ground-to-apex height, and 0.8 m floating clearance. The sheet's 16 × 12 m footprint labels conflict with its drawn orthographic proportions. Actual export dimensions are shown after loading.</p>
+      <p class="note">Overlays show the sheet in yellow and the model in red. Side and plan views disagree with the front in shoulder height and arm depth. This first pass keeps those differences visible for revision.</p>
+    </aside>
+  </main>
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    const viewport=document.querySelector('#viewport');
+    const renderer=new THREE.WebGLRenderer({antialias:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.15;
+    viewport.append(renderer.domElement);
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#292e34');
+    const camera=new THREE.OrthographicCamera(-1,1,1,-1,.01,150);
+    const controls=new OrbitControls(camera,renderer.domElement);
+    controls.enableDamping=true;controls.enablePan=false;controls.minZoom=.5;controls.maxZoom=5;
+    controls.autoRotateSpeed=1.5;
+    scene.add(new THREE.HemisphereLight('#dce5ff','#6c645a',1.65));
+    const key=new THREE.DirectionalLight('#fff1dc',2.8);key.position.set(-8,14,10);scene.add(key);
+    const fill=new THREE.DirectionalLight('#d9e8ff',.9);fill.position.set(10,5,-10);scene.add(fill);
+    const grid=new THREE.GridHelper(22,22,'#5a5c5f','#3d4248');scene.add(grid);
+    const figure=new THREE.Group();figure.position.x=-7.4;figure.visible=false;
+    const neutral=new THREE.MeshStandardMaterial({color:'#aeb2b9',roughness:.9});
+    const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.8,2,6),neutral);torso.position.y=.95;figure.add(torso);
+    const head=new THREE.Mesh(new THREE.IcosahedronGeometry(.16,0),neutral);head.position.y=1.64;figure.add(head);
+    for(const x of [-.12,.12]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.085,.07,.55,5),neutral);leg.position.set(x,.275,0);figure.add(leg);}
+    scene.add(figure);
+    const sheet=await fetch('production/sheet.json').then(r=>r.json());
+    let model=null,frameScale=6.5,wire=false,currentView='hero';
+    function resize(){const w=viewport.clientWidth,h=viewport.clientHeight;const scale=frameScale*Math.max(1,h/w);camera.left=-scale*w/h;camera.right=scale*w/h;camera.top=scale;camera.bottom=-scale;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+    function view(name){
+      currentView=name;controls.autoRotate=false;document.querySelector('#spin').setAttribute('aria-pressed','false');
+      const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
+      const angles={hero:[sheet.hero.turn,sheet.hero.elevation],game:[45,30],front:[0,0],back:[180,0],right:[90,0],left:[-90,0],top:[0,89.99],bottom:[0,-89.99],face:[0,0]};
+      const [turn,elevation]=angles[name].map(THREE.MathUtils.degToRad);
+      const target=name==='face'?new THREE.Vector3(0,7.5,0):new THREE.Vector3(0,4.55,0);
+      camera.position.copy(target).add(new THREE.Vector3(Math.sin(turn)*Math.cos(elevation),Math.sin(elevation),Math.cos(turn)*Math.cos(elevation)).multiplyScalar(30));
+      camera.up.set(0,1,0);camera.zoom=name==='face'?4:1;controls.target.copy(target);camera.lookAt(target);controls.update();controls.enableDamping=damping;resize();
+      document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===name)));
+      if(window.modelReview)window.modelReview.view=name;
+    }
+    document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.view)));
+    document.querySelector('#wire').addEventListener('click',e=>{wire=!wire;e.currentTarget.setAttribute('aria-pressed',String(wire));model?.traverse(o=>{if(o.isMesh)o.material.wireframe=wire;});});
+    document.querySelector('#spin').addEventListener('click',e=>{controls.autoRotate=!controls.autoRotate;e.currentTarget.setAttribute('aria-pressed',String(controls.autoRotate));});
+    document.querySelector('#light').addEventListener('click',e=>{const light=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',String(light));scene.background.set(light?'#e3e4ea':'#292e34');});
+    document.querySelector('#scale').addEventListener('click',e=>{figure.visible=!figure.visible;e.currentTarget.setAttribute('aria-pressed',String(figure.visible));frameScale=figure.visible?9:6.5;resize();});
+    document.querySelector('#reference-mode').addEventListener('change',e=>{const url='production/'+e.target.value;document.querySelector('#reference').src=url;document.querySelector('#image-link').href=url;});
+    controls.addEventListener('change',()=>{if(window.modelReview)window.modelReview.camera=camera.position.toArray();});
+    new ResizeObserver(resize).observe(viewport);
+    renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});
+    try {
+      const gltf=await new GLTFLoader().loadAsync('production/crusher-behemoth-model.glb');model=gltf.scene;scene.add(model);
+      const box=new THREE.Box3().setFromObject(model),dimensions=box.getSize(new THREE.Vector3());
+      let triangles=0,meshes=0;const materials=new Set();
+      model.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;materials.add(o.material.uuid);}});
+      document.querySelector('#status').textContent=`${triangles.toLocaleString()} triangles · ${materials.size} materials · ${dimensions.x.toFixed(2)} m wide × ${dimensions.z.toFixed(2)} m deep · 8.50 m ground to apex`;
+      window.modelReview={loaded:true,triangles,meshes,materials:materials.size,animations:gltf.animations.length,bounds:{min:box.min.toArray(),max:box.max.toArray()},view:currentView};
+      view('hero');
+    } catch(error){document.querySelector('#status').textContent=`Could not load model: ${error.message}`;window.modelReview={loaded:false,error:error.message};}
+  </script>
+</body>
+</html>

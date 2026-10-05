@@ -1,0 +1,69 @@
+{
+  "kind": "crusher-behemoth",
+  "status": "static review; no animation or game registration",
+  "triangles": 2418,
+  "materials": 2,
+  "mesh_parts": [
+    "ChestBezel",
+    "ChestCore",
+    "ChestStem",
+    "CollarBinding",
+    "CoreRecess",
+    "ElbowJoint.L",
+    "ElbowJoint.R",
+    "Eye.L",
+    "Eye.R",
+    "FistShell.L",
+    "FistShell.R",
+    "ForeheadRidge",
+    "Helmet",
+    "Knuckle.L.0",
+    "Knuckle.L.1",
+    "Knuckle.L.2",
+    "Knuckle.R.0",
+    "Knuckle.R.1",
+    "Knuckle.R.2",
+    "LowerKeystone",
+    "NoseGuard",
+    "Pauldron.L",
+    "Pauldron.R",
+    "ShoulderJoint.L",
+    "ShoulderJoint.R",
+    "StoneTorso",
+    "Thumb.L",
+    "Thumb.R",
+    "VisorRecess",
+    "WristArmor.L",
+    "WristArmor.R"
+  ],
+  "animations": 0,
+  "armatures": 0,
+  "bounds_blender_m": [
+    [
+      -5.466179370880127,
+      5.466179370880127
+    ],
+    [
+      -2.379669189453125,
+      2.6452293395996094
+    ],
+    [
+      0.7999999523162842,
+      8.5
+    ]
+  ],
+  "height_m": 8.5,
+  "ground_clearance_m": 0.8,
+  "height_basis": "ground origin to helmet apex, including floating clearance",
+  "axes_glb": "meters, +Y up, +Z forward",
+  "reference": "reference/sheet.png",
+  "dimension_conflict": {
+    "sheet_annotation_m": [
+      16,
+      12,
+      8.5
+    ],
+    "rule": "Preserve orthographic shape and use 8.5 m rest height. Do not stretch the front to the inconsistent 16 m label.",
+    "height_basis": "ground origin to helmet apex; floating clearance 0.8 m"
+  }
+}

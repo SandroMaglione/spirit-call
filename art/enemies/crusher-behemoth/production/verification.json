@@ -1,0 +1,30 @@
+{
+  "result": "passed",
+  "sha256": "ad1f6d14862e58f7e15bca9a1c999b204b545d73c72cf57f905cf64750cd9eb1",
+  "triangles": 2418,
+  "materials": 2,
+  "animations": 0,
+  "skins": 0,
+  "cameras": 0,
+  "lights": 0,
+  "named_parts": 31,
+  "source_world_vertices_preserved": true,
+  "paired_parts_symmetric": true,
+  "bounds_blender_m": [
+    [
+      -5.46618,
+      5.46618
+    ],
+    [
+      -2.37967,
+      2.64523
+    ],
+    [
+      0.8,
+      8.5
+    ]
+  ],
+  "height_m": 8.5,
+  "floating_clearance_m": 0.8,
+  "axes_glb": "meters, +Y up, +Z forward"
+}

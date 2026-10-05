@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-05",
+  "url": "http://192.168.40.47:5209/art/enemies/crusher-behemoth/review.html",
+  "glb_sha256": "ad1f6d14862e58f7e15bca9a1c999b204b545d73c72cf57f905cf64750cd9eb1",
+  "loader": "Three.js GLTFLoader, actual exported asset",
+  "triangles": 2418,
+  "meshes": 31,
+  "materials": 2,
+  "animations": 0,
+  "phone_css_viewport": [390, 844],
+  "horizontal_overflow": false,
+  "download_http_status": {"blend": 200, "glb": 200, "notes": 200},
+  "review_images_loaded": true,
+  "controls_exercised": ["hero", "game", "front", "wireframe", "turntable", "scale figure", "background", "comparison selector"],
+  "turntable_camera_moved": true,
+  "touch_orbit_camera_moved": true,
+  "touch_method": "Synthetic touch PointerEvents. Pointer capture methods temporarily bypassed because synthetic pointers have no native capture; original methods restored after the test.",
+  "native_capture_verified": false,
+  "physical_phone_verified": false,
+  "pnpm_check": {"test_files_passed": 54, "tests_passed": 448, "tests_skipped": 1},
+  "pnpm_build": "passed"
+}
