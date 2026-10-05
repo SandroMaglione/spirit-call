@@ -14,6 +14,37 @@ import type { WallPlacement } from "../schema.ts"
 import type { TrailKind } from "./drop-trail.ts"
 import type { ModelId } from "./models.ts"
 import type { EnemyAttackClips } from "./enemy-pose.ts"
+import enemyRosterUrl from "../../art/enemies/portraits/roster.png?url"
+
+/** A square close-up in the original roster poster, measured in source pixels. */
+export interface EnemyPortrait {
+  readonly url: string
+  readonly sheet: { readonly width: number; readonly height: number }
+  readonly crop: { readonly x: number; readonly y: number; readonly size: number }
+}
+
+const enemyPortrait = (x: number, y: number, size: number): EnemyPortrait => ({
+  url: enemyRosterUrl, sheet: { width: 1448, height: 1086 }, crop: { x, y, size }
+})
+
+/** Faces and identifying equipment, without the poster's labels or panel borders. Null keeps the model portrait for targets missing from the poster. */
+export const enemyPortraits: Readonly<Record<EnemyKind, EnemyPortrait | null>> = {
+  dummy: enemyPortrait(143, 46, 105),
+  chaser: enemyPortrait(446, 85, 128),
+  shooter: enemyPortrait(817, 61, 160),
+  brute: enemyPortrait(1187, 85, 140),
+  swarmer: enemyPortrait(139, 377, 101),
+  charger: enemyPortrait(466, 304, 160),
+  sniper: enemyPortrait(851, 306, 120),
+  guardian: enemyPortrait(1198, 318, 150),
+  warden: enemyPortrait(117, 561, 143),
+  stalker: enemyPortrait(479, 574, 155),
+  volatile: enemyPortrait(823, 613, 145),
+  galeCaster: enemyPortrait(1203, 560, 140),
+  juggernaut: enemyPortrait(622, 830, 190),
+  sparringDummy: enemyPortrait(1128, 832, 176),
+  heavyDummy: enemyPortrait(141, 831, 165)
+}
 
 /**
  * A one-shot: a clip, or part of one (`from`–`to`, in clip seconds). For a
