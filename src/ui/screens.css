@@ -130,7 +130,7 @@
 
 /* ---------- challenges ---------- */
 .quests__list { --list: clamp(200px, 31cqw, 262px); position: absolute; left: var(--left); top: 62px; bottom: 0; width: var(--list); z-index: 3; display: grid; gap: 5px; align-content: start; padding-bottom: 28px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }
-.quests__list .label { margin-top: 5px; }
+.quests__list .label { margin-top: 18px; }
 .quests__list .label:first-child { margin-top: 0; }
 .quests__list .label > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .quests__list .label > span:last-child { flex: none; white-space: nowrap; }
@@ -144,7 +144,7 @@
 .claimed { display: flex; align-items: center; gap: 5px; min-height: 26px; }
 .claimed .menu-icon { color: var(--up); }
 /* A quest's ranks or a track's tiers: each a chip with its enemies' level; the one picked is cream. */
-.steps { display: flex; align-items: center; gap: 6px; }
+.steps { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
 .steps .label { margin-right: 4px; }
 .step { height: 28px; padding: 0 10px; border-radius: 15px; display: flex; align-items: center; gap: 6px; background: var(--band); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; color: var(--dim); position: relative; }
 .step::after { content: ""; position: absolute; inset: -7px -2px; }
