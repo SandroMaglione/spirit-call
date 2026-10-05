@@ -15,7 +15,7 @@ assert not gltf.get("cameras") and "KHR_lights_punctual" not in gltf.get("extens
 assert all(not b.get("uri") for b in gltf["buffers"]),"external buffers"
 assert not gltf.get("images"),"unexpected textures"
 assert "KHR_draco_mesh_compression" not in gltf.get("extensionsUsed",[]),"decoder required"
-expected={"RockSpirit","TopRock","Foot.L","Foot.R","Float.L","Float.R","Eye.L","Eye.R","FaceInset"}
+expected={"RockSpirit","TopRock","Foot.L","Foot.R","Float.L","Float.R","Eye.L","Eye.R","RearRock"}
 assert {n["name"] for n in gltf["nodes"]}==expected,"missing or extra part"
 primitives=[p for m in gltf["meshes"] for p in m["primitives"]]
 assert all(p.get("mode",4)==4 for p in primitives),"non-triangle primitive"

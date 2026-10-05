@@ -1,7 +1,7 @@
-"""Build a static, faceted Rock Spirit from measured turnaround contours.
+"""Build the static Rock Spirit with the designer's broader, friendly shape.
 
 Blender Z up, -Y forward. export.py converts to glTF +Y up, +Z forward.
-The face is cut into the body, with a dark inset behind separate eyes.
+The face's walls and backing are cut into the main body, never a front plate.
 All moving parts are independent objects, ready for a later animation pass.
 """
 import json
@@ -19,6 +19,12 @@ HERE=Path(__file__).resolve().parent
 SHEET=json.loads((HERE/"sheet.json").read_text())
 PIXEL=SHEET["meters_per_pixel"]
 RNG=random.Random(41)
+# Deliberate departures from the sheet, requested in model review.
+BODY_SECTIONS=[
+    (0.118,0.196,0.130), (0.185,0.252,0.180), (0.25,0.285,0.216),
+    (0.325,0.278,0.211), (0.385,0.234,0.171), (0.438,0.125,0.09),
+]
+EYE_SHAPE={"width":0.066,"height":0.069,"spacing":0.128,"height_m":0.270}
 
 def linear(color):
     rgb=[int(color[i:i+2],16)/255 for i in (1,3,5)]
@@ -89,16 +95,63 @@ def loft(name,part,heights,segments,mat,parent=None):
     obj=mesh_object(name,verts,faces,mat,parent);shade(obj)
     return obj
 
+def boulder(mat):
+    """Broad shoulders and a blunt base replace the sheet's tapered drop."""
+    verts=[];faces=[];n=12
+    for j,(z,rx,ry) in enumerate(BODY_SECTIONS):
+        for i in range(n):
+            angle=i*math.tau/n
+            if i%3:angle+=(-1 if j%2 else 1)*0.065
+            # A rounded polygon gives the stone broad front/side planes.
+            s,c=math.sin(angle),math.cos(angle)
+            x=rx*math.copysign(abs(s)**0.85,s)
+            y=0.014-ry*math.copysign(abs(c)**0.85,c)
+            lift=0.008*math.sin(i*2.7+j) if 0<j<len(BODY_SECTIONS)-1 and i%3 else 0
+            verts.append((x,y,z+lift))
+    for j in range(len(BODY_SECTIONS)-1):
+        for i in range(n):
+            a=j*n+i;b=j*n+(i+1)%n;c=b+n;d=a+n
+            faces.extend([(a,b,d),(b,c,d)] if (i+j)%2 else [(a,b,c),(a,c,d)])
+    faces.extend([tuple(reversed(range(n))),tuple(range((len(BODY_SECTIONS)-1)*n,len(BODY_SECTIONS)*n))])
+    obj=mesh_object("RockSpirit",verts,faces,mat);shade(obj)
+    return obj
+
+def rear_rock(body,mat):
+    """A short angular heel joins the underside and rests on a flat sole."""
+    verts=[];faces=[];n=8
+    for j,(z,width,front,back) in enumerate((
+        (-.004,.072,.054,.192),(.072,.110,.018,.235),(.178,.078,.012,.168)
+    )):
+        corners=[(-width*.65,front),(width*.62,front),(width,front+.032),
+                 (width,back-.035),(width*.55,back),(-width*.61,back),
+                 (-width,back-.038),(-width,front+.028)]
+        for i,(x,y) in enumerate(corners):
+            lift=.007*math.sin(i*2.4) if j==1 else 0
+            verts.append((x,y,z+lift))
+    for j in range(2):
+        for i in range(n):
+            a=j*n+i;b=j*n+(i+1)%n;c=b+n;d=a+n
+            faces.extend([(a,b,c),(a,c,d)] if (j+i)%2 else [(a,b,d),(b,c,d)])
+    faces.extend([tuple(reversed(range(n))),tuple(range(2*n,3*n))])
+    obj=mesh_object("RearRock",verts,faces,mat,body)
+    center=sum((v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
+    for v in obj.data.vertices:v.co-=center
+    obj.location=center;shade(obj)
+    return obj
+
 def rock_piece(name,front,side,mat,xsign=1,parent=None):
     rows=np.asarray(front);zmin,zmax=rows[:,0].min(),rows[:,0].max()
     verts=[];faces=[];n=8
     # Sparse measured sections give each foot a sturdy, irregular outline.
     for j,t in enumerate((0,0.16,0.43,0.72,0.9,1)):
         z=zmin+(zmax-zmin)*t
-        a,b=section("front",front_name[name],z)
+        # The feet keep their height but stand on broad, flat soles.
+        # Sampling the lower shoulder avoids the sheet's pointed tips.
+        sample_z=zmin+(zmax-zmin)*max(t,.16) if name.startswith("Foot") else z
+        a,b=section("front",front_name[name],sample_z)
         cx,rx=(a+b)/2,(b-a)/2
         if side:
-            c,d=section("left","foot",z);cy,ry=-(c+d)/2,(d-c)/2
+            c,d=section("left","foot",sample_z);cy,ry=-(c+d)/2,(d-c)/2
         else:cy,ry=0.04,max(0.008,rx*0.8)
         for i in range(n):
             angle=2*math.pi*i/n
@@ -120,18 +173,16 @@ def rock_piece(name,front,side,mat,xsign=1,parent=None):
 front_name={"Foot.L":"foot","Foot.R":"foot","Float.L":"float","Float.R":"float"}
 
 def cavity(body,dark):
-    measured=SHEET["front"]["cavity_pixels"]
-    middle=(min(x for x,y in measured)+max(x for x,y in measured))/2
-    points=[((x-middle)*PIXEL,(285-y)*PIXEL) for x,y in measured]
-    # Mirror paired corners, preserving the measured widths and heights.
-    for a,b in ((0,3),(1,2),(4,7),(5,6)):
-        width=(abs(points[a][0])+abs(points[b][0]))/2
-        z=(points[a][1]+points[b][1])/2
-        points[a]=(-width if points[a][0]<0 else width,z)
-        points[b]=(-width if points[b][0]<0 else width,z)
-    # A sloped rear surface keeps the recessed eyes visible looking down.
-    def back(z):return -0.14+0.22*(z-0.19)
-    rear_points=[(x*.82,.19+(z-.19)*.84) for x,z in points]
+    points=[(-.144,.270),(-.103,.351),(.103,.351),(.144,.270),
+            (.129,.237),(.083,.222),(-.083,.222),(-.129,.237)]
+    # The opening follows the broader body. Its inset back wall is part
+    # of the boolean result, so no separate liner can protrude side-on.
+    def back(z):return -0.130+0.10*(z-.270)
+    rear_points=[(x*.90,.270+(z-.270)*.91) for x,z in points]
+    shell=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
+    for x,z in rear_points:
+        hit,_,_,_=shell.ray_cast(Vector((x,-1,z)),Vector((0,1,0)))
+        assert hit is not None and back(z)-hit.y>0.018,f"cavity backing leaves main body at {x,z}: surface {hit}, rear {back(z)}"
     verts=[(x,-0.36,z) for x,z in points]+[(x,back(z),z) for x,z in rear_points]
     n=len(points)
     faces=[tuple(reversed(range(n))),tuple(range(n,2*n))]
@@ -142,28 +193,35 @@ def cavity(body,dark):
     bpy.context.view_layer.objects.active=body
     bpy.ops.object.modifier_apply(modifier=mod.name)
     bpy.data.objects.remove(cutter,do_unlink=True)
-    # A separate closed dark liner also gives the eye surface a stable
-    # target for snapping, independent of the boolean's generated facets.
-    rear=[(x,back(z)-0.0008,z) for x,z in rear_points]
-    inset=mesh_object("FaceInset",rear,[tuple(range(n))],dark,body)
-    return inset
+    bm=bmesh.new();bm.from_mesh(body.data)
+    assert all(e.is_manifold for e in bm.edges),"main body or cavity is open"
+    bm.free()
+    return shell
 
-def eye(side,inset,mat,body):
-    width=np.mean([e["width"] for e in SHEET["front"]["eyes"]])
-    height=np.mean([e["height"] for e in SHEET["front"]["eyes"]])
-    x=side*abs(SHEET["front"]["eyes"][1]["x"]-SHEET["front"]["eyes"][0]["x"])/2
-    z=np.mean([e["z"] for e in SHEET["front"]["eyes"]])
-    tree=BVHTree.FromPolygons([v.co for v in inset.data.vertices],[p.vertices for p in inset.data.polygons])
-    coords=[(x,z)]+[(x+math.cos(i*math.tau/24)*width/2,z+math.sin(i*math.tau/24)*height/2) for i in range(24)]
-    verts=[]
+def eye(side,shell,mat,body):
+    width,height=EYE_SHAPE["width"],EYE_SHAPE["height"]
+    x=side*EYE_SHAPE["spacing"]/2;z=EYE_SHAPE["height_m"]
+    tree=BVHTree.FromPolygons([v.co for v in body.data.vertices],[p.vertices for p in body.data.polygons])
+    # Open round eyes, with a gentle upward sweep at their outer ends.
+    coords=[(x,z)]
+    for i in range(32):
+        dx=math.cos(i*math.tau/32)*width/2
+        dz=math.sin(i*math.tau/32)*height/2+side*dx*.10
+        coords.append((x+dx,z+dz))
+    verts=[];clearances=[]
     for px,pz in coords:
-        hit,_,_,_=tree.ray_cast(Vector((px,-1,pz)),Vector((0,1,0)))
+        hit,normal,_,_=tree.ray_cast(Vector((px,-1,pz)),Vector((0,1,0)))
         if hit is None:raise ValueError("eye leaves its recessed surface")
-        verts.append((hit.x,hit.y-0.002,hit.z))
-    obj=mesh_object(f"Eye.{'L' if side<0 else 'R'}",verts,[(0,i+1,(i+1)%24+1) for i in range(24)],mat,body)
+        point=hit+normal*.002
+        exterior,_,_,_=shell.ray_cast(Vector((px,-1,pz)),Vector((0,1,0)))
+        assert exterior is not None and point.y-exterior.y>0.018,"eye protrudes outside boulder"
+        clearances.append(point.y-exterior.y)
+        verts.append(tuple(point))
+    obj=mesh_object(f"Eye.{'L' if side<0 else 'R'}",verts,[(0,i+1,(i+1)%32+1) for i in range(32)],mat,body)
     center=Vector(verts[0])
     for v in obj.data.vertices:v.co-=center
     obj.location=center
+    return min(clearances)
 
 def main():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -178,20 +236,24 @@ def main():
     # Emission supplies the eye color; direct light must not wash the
     # amber out to saturated yellow or leave a shadow across an eye.
     amber.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value=(0,0,0,1)
-    body=loft("RockSpirit","body",[0.065,0.09,0.145,0.215,0.29,0.355,0.40,0.438],12,stone)
-    inset=cavity(body,dark)
+    body=boulder(stone)
+    shell=cavity(body,dark)
     # Boolean geometry carries interpolated vertex colors; fresh flat
     # colors prevent a stretched gradient along the opening's rim.
     body.data.color_attributes.remove(body.data.color_attributes["Color"]);shade(body)
+    rear_rock(body,stone)
     cap=loft("TopRock","cap",[0.456,0.475,0.51,0.555,0.588,0.618],12,stone,body)
     center=sum((v.co for v in cap.data.vertices),Vector())/len(cap.data.vertices)
     for v in cap.data.vertices:v.co-=center
     cap.location=center
+    eye_clearances=[]
     for side in (-1,1):
         name="L" if side<0 else "R"
-        rock_piece(f"Foot.{name}",SHEET["front"]["foot"],True,stone,-side,body)
-        rock_piece(f"Float.{name}",SHEET["front"]["float"],False,stone,-side,body)
-        eye(side,inset,amber,body)
+        foot=rock_piece(f"Foot.{name}",SHEET["front"]["foot"],True,stone,-side,body)
+        foot.location.x+=side*.061
+        floating=rock_piece(f"Float.{name}",SHEET["front"]["float"],False,stone,-side,body)
+        floating.location.x+=side*.085
+        eye_clearances.append(eye(side,shell,amber,body))
     bpy.context.view_layer.update()
     meshes=[o for o in bpy.data.objects if o.type=="MESH"]
     points=[o.matrix_world@v.co for o in meshes for v in o.data.vertices]
@@ -201,7 +263,10 @@ def main():
     bpy.context.view_layer.update()
     points=[o.matrix_world@v.co for o in meshes for v in o.data.vertices]
     bounds=[[min(p[k] for p in points),max(p[k] for p in points)] for k in range(3)]
-    audit={"status":"static model review; no character kit or animation", "triangles":sum(len(p.vertices)-2 for o in meshes for p in o.data.polygons),"materials":[m.name for m in bpy.data.materials],"objects":[o.name for o in meshes],"bounds_m":bounds,"height_m":bounds[2][1],"height_basis":"ground origin to highest rest mesh vertex including floating cap","animations":0,"skeletons":0}
+    body_points=[v.co for v in body.data.vertices]
+    body_width=max(p.x for p in body_points)-min(p.x for p in body_points)
+    body_height=max(p.z for p in body_points)-min(p.z for p in body_points)
+    audit={"status":"static model review; designer-requested broader boulder and friendly round eyes", "triangles":sum(len(p.vertices)-2 for o in meshes for p in o.data.polygons),"materials":[m.name for m in bpy.data.materials],"objects":[o.name for o in meshes],"bounds_m":bounds,"height_m":bounds[2][1],"body_width_m":body_width,"body_height_m":body_height,"body_width_to_height":body_width/body_height,"eye_shape":EYE_SHAPE,"cavity_and_eyes_inside_body":True,"minimum_eye_recess_m":min(eye_clearances),"main_body_closed":True,"height_basis":"ground origin to highest rest mesh vertex including floating cap","animations":0,"skeletons":0}
     (HERE/"audit.json").write_text(json.dumps(audit,indent=2)+"\n")
     bpy.context.scene.unit_settings.system="METRIC"
     bpy.context.scene.render.engine="BLENDER_EEVEE_NEXT"

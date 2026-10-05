@@ -12,7 +12,7 @@ from overlay import normalized
 BACKGROUND=(16,32,45)
 board=Image.new("RGB",(1300,1100),BACKGROUND)
 draw=ImageDraw.Draw(board)
-draw.text((24,12),"ROCK SPIRIT / STATIC MODEL REVIEW / reference beside mesh",fill=(235,222,201))
+draw.text((24,12),"ROCK SPIRIT / REVISED STATIC MODEL / deliberate departures from reference",fill=(235,222,201))
 for i,view in enumerate(("front","back","left","right")):
     x=(i%2)*650;y=40+(i//2)*370
     draw.text((x+20,y),view.upper()+"  |  sheet / model",fill=(226,195,157))
@@ -27,9 +27,10 @@ draw.text((350,795),"GAME SIZE / actual 30 x 32 px, enlarged 8x",fill=(226,195,1
 small=Image.open(HERE/"renders/game-size.png").convert("RGB")
 board.paste(small.resize((240,256),Image.Resampling.NEAREST),(350,825))
 board.paste(small,(630,930))
-draw.text((730,825),"Eyes: separate emissive ellipses in a real recess.",fill=(211,216,220))
+draw.text((730,825),"Eyes: friendly round shapes inside the main boulder.",fill=(211,216,220))
 draw.text((730,855),"Feet: two independent, grounded faceted stones.",fill=(211,216,220))
-draw.text((730,885),"Decorations: floating cap and two side stones.",fill=(211,216,220))
-draw.text((730,925),"800 triangles / 3 materials / no clips or bones",fill=(211,216,220))
+draw.text((730,885),"Rear: short angular heel, with a flat grounded sole.",fill=(211,216,220))
+info=json.loads((HERE/"export.json").read_text())
+draw.text((730,925),f"{info['triangles']} triangles / 3 materials / no clips or bones",fill=(211,216,220))
 board.save(HERE/"renders/review.png")
 print("wrote renders/review.png")

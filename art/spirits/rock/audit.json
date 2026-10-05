@@ -1,6 +1,6 @@
 {
-  "status": "static model review; no character kit or animation",
-  "triangles": 800,
+  "status": "static model review; designer-requested broader boulder and friendly round eyes",
+  "triangles": 808,
   "materials": [
     "Amber eyes",
     "Dark face cavity",
@@ -9,22 +9,22 @@
   "objects": [
     "Eye.L",
     "Eye.R",
-    "FaceInset",
     "Float.L",
     "Float.R",
     "Foot.L",
     "Foot.R",
+    "RearRock",
     "RockSpirit",
     "TopRock"
   ],
   "bounds_m": [
     [
-      -0.26894038915634155,
-      0.26894038915634155
+      -0.3539403975009918,
+      0.3539403975009918
     ],
     [
-      -0.19503311812877655,
-      0.19374172389507294
+      -0.18831288814544678,
+      0.23499999940395355
     ],
     [
       0.0,
@@ -32,6 +32,18 @@
     ]
   ],
   "height_m": 0.6221059560775757,
+  "body_width_m": 0.5699999928474426,
+  "body_height_m": 0.3199999928474426,
+  "body_width_to_height": 1.7812500174622987,
+  "eye_shape": {
+    "width": 0.066,
+    "height": 0.069,
+    "spacing": 0.128,
+    "height_m": 0.27
+  },
+  "cavity_and_eyes_inside_body": true,
+  "minimum_eye_recess_m": 0.04905456304550171,
+  "main_body_closed": true,
   "height_basis": "ground origin to highest rest mesh vertex including floating cap",
   "animations": 0,
   "skeletons": 0

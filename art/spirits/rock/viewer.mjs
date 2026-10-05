@@ -73,7 +73,7 @@ try {
   }
   function detail(name) {
     $('#small').checked = false;
-    const settings = { face: { target: [0, .196, .15], span: .34, view: 'front' }, feet: { target: [0, .10, 0], span: .64, view: 'hero' }, rocks: { target: [0, .48, 0], span: .65, view: 'hero' }, all: { target: [0, info.height_m / 2, 0], span: .86, view: 'hero' } };
+    const settings = { face: { target: [0, .27, .16], span: .36, view: 'front' }, feet: { target: [0, .13, 0], span: .76, view: 'hero' }, rocks: { target: [0, .48, 0], span: .78, view: 'hero' }, rear: { target: [0, .19, -.15], span: .58, view: 'back' }, all: { target: [0, info.height_m / 2, 0], span: .86, view: 'hero' } };
     const spec = settings[name]; center.set(...spec.target); span = spec.span;
     document.querySelectorAll('[data-detail]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.detail === name)));
     choose(spec.view);
