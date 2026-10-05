@@ -167,6 +167,8 @@
 .panel { background: var(--panel); border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; flex-direction: column; text-shadow: none; }
 .panel__head { flex: none; min-height: 38px; padding: 8px 14px; background: linear-gradient(90deg, color-mix(in srgb, var(--mid) 85%, #000), color-mix(in srgb, var(--glow) 45%, var(--mid))); font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; line-height: 1.1; }
 .panel__head .menu-icon { font-size: 20px; }
+.panel__title { display: grid; gap: 2px; min-width: 0; }
+.panel__title em { font-style: normal; font-size: 12.5px; font-weight: 700; color: var(--gold-hi); opacity: .95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .panel__head small { font-size: 12px; font-weight: 700; opacity: .88; margin-left: auto; text-align: right; display: flex; align-items: center; gap: 4px; }
 .panel__head small .menu-icon { font-size: 15px; }
 .panel__body { flex: 1; min-height: 0; padding: 10px 14px; display: grid; gap: 8px; align-content: start; overflow-y: auto; touch-action: pan-y; scrollbar-width: none; }

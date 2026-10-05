@@ -61,6 +61,14 @@ export const Enemies = ({ store, kinds, inspected, inspect }: { readonly store: 
   </div>)}</div>
 )
 
+/** A fight's enemies as faces over what they are weak to, where room is short (a brief): tap one to read about it, again to put it back. */
+export const EnemyFaces = ({ store, kinds, inspected, inspect }: { readonly store: UiStore; readonly kinds: ReadonlyArray<EnemyKind>; readonly inspected: EnemyKind | null; readonly inspect: (kind: EnemyKind | null) => void }) => (
+  <div class="enemies scroll-x">{kinds.map((kind) => <button type="button" key={kind} class="enemies__face face-button" aria-label={store.tuning.value.enemies[kind].name} aria-pressed={kind === inspected} onClick={() => inspect(kind === inspected ? null : kind)}>
+    <Face of={{ enemy: kind }} selected={kind === inspected} size={32} />
+    <Affinities traits={store.tuning.value.enemies[kind].elements} />
+  </button>)}</div>
+)
+
 const affinityLabels = { weak: "Weak to", resists: "Resists", immune: "Immune to" } as const
 
 /** What to know about an enemy: what it does, what each element does to it, and what its attacks carry. */
@@ -97,16 +105,16 @@ export const Stars = ({ earned, total = 3, fresh = [] }: { readonly earned: Read
   <span class="stars" aria-label={`${earned.length} of ${total} stars`}>{Array.from({ length: total }, (_, index) => <span key={index} class={`star${earned.includes(index) ? " is-earned" : ""}${fresh.includes(index) ? " is-fresh" : ""}`}><Icon name="star" /></span>)}</span>
 )
 
-/** What something gives: experience, currencies and materials, and what it unlocks (`preview` opens an unlocked character). */
-export const Amounts = ({ store, rewards, preview }: { readonly store: UiStore; readonly rewards: Rewards; readonly preview?: (character: CharacterId) => void }) => {
+/** What something gives: experience, currencies and materials, and what it unlocks (`preview` opens an unlocked character; `compact`: unlocks as their picture alone, named on touch). */
+export const Amounts = ({ store, rewards, preview, compact = false }: { readonly store: UiStore; readonly rewards: Rewards; readonly preview?: (character: CharacterId) => void; readonly compact?: boolean }) => {
   const tuning = store.tuning.value
   return <div class="amounts">
     {rewards.experience > 0 && <span aria-label={`${rewards.experience} account XP`}><Icon name="xp" />{rewards.experience}</span>}
     {ids(tuning.currencies).filter((id) => (rewards.currencies[id] ?? 0) > 0).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${tuning.currencies[id].name}`}><Icon name={id} />{(rewards.currencies[id] ?? 0).toLocaleString("en-US")}</span>)}
     {materialsIn(store, rewards.currencies).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${resourceName(tuning, id)}`}><MaterialIcon store={store} material={id} />{rewards.currencies[id]}</span>)}
     {rewards.unlocks.map((unlock) => unlock.kind === "aspect"
-      ? <span key={unlock.id}><Icon name="aspect" />{describeUnlock(tuning, unlock)}</span>
-      : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} onClick={() => preview?.(unlock.id)}><Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} />{describeUnlock(tuning, unlock)}</button>)}
+      ? <span key={unlock.id} aria-label={describeUnlock(tuning, unlock)} title={describeUnlock(tuning, unlock)}><Icon name="aspect" />{compact ? null : describeUnlock(tuning, unlock)}</span>
+      : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} onClick={() => preview?.(unlock.id)}><Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} {...(compact ? { size: 26 } : {})} />{compact ? null : describeUnlock(tuning, unlock)}</button>)}
   </div>
 }
 

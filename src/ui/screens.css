@@ -123,24 +123,35 @@
 .quests__list .label > span:last-child { flex: none; white-space: nowrap; }
 .quests__brief { position: absolute; left: calc(var(--left) + clamp(200px, 31cqw, 262px) + 18px); right: var(--right); top: 62px; bottom: 70px; z-index: 3; }
 .quests__enemies { display: grid; gap: 5px; }
-.quests__rewards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
-.quests__rewards > div { display: grid; gap: 4px; align-content: start; }
-.quests__arena { white-space: nowrap; }
-.quests__new { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; background: rgba(255, 231, 173, .1); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .25); font-size: 14px; font-weight: 700; }
-.quests__new > span { display: grid; gap: 1px; }
-.quests__stars { display: grid; gap: 3px; }
+.quests__goals { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 16px; }
+.quests__goals > div { display: grid; gap: 4px; align-content: start; }
+.quests__side-by-side > div { display: grid; gap: 3px; align-content: start; }
+.quests__goals > div { gap: 2px; }
+.quests__brief .panel__body { padding-top: 8px; padding-bottom: 8px; }
+.quests__goals > .quests__side-by-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
+.claimed { display: flex; align-items: center; gap: 5px; min-height: 26px; }
+.claimed .menu-icon { color: var(--up); }
+/* A quest's ranks or a track's tiers: each a chip with its enemies' level; the one picked is cream. */
+.steps { display: flex; align-items: center; gap: 6px; }
+.steps .label { margin-right: 4px; }
+.step { height: 28px; padding: 0 10px; border-radius: 15px; display: flex; align-items: center; gap: 6px; background: var(--band); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; color: var(--dim); position: relative; }
+.step::after { content: ""; position: absolute; inset: -7px -2px; }
+.step b { font-size: 14px; color: var(--text); }
+.step span { display: flex; align-items: center; gap: 3px; }
+.step .menu-icon { font-size: 12px; }
+.step.is-locked { opacity: .55; }
+.step[aria-checked="true"] { background: var(--cream); color: #6a7184; box-shadow: none; opacity: 1; }
+.step[aria-checked="true"] b { color: var(--ink); }
+.step.is-only::after { display: none; }
+.enemies__face { display: grid; justify-items: center; gap: 2px; flex: none; }
+.enemies__face .affinities { font-size: 11px; }
+.quests__brief .panel__body { gap: 7px; }
+.quests__brief .goal { min-height: 19px; }
 .goal { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
 .goal .menu-icon { font-size: 15px; color: rgba(255, 255, 255, .3); }
 .goal.is-earned { color: var(--text); }
 .goal.is-earned .menu-icon { color: var(--gold-hi); }
 .goal.is-earned .menu-icon path { fill: currentColor; }
-.quests__tiers { display: flex; align-items: center; gap: 8px; }
-.quests__tiers .label { margin-right: 6px; }
-.pip { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; font-weight: 800; background: var(--band); box-shadow: inset 0 0 0 1px var(--line); position: relative; }
-.pip::after { content: ""; position: absolute; inset: -6px -4px; }
-.pip.is-done { box-shadow: inset 0 0 0 1.5px var(--up); color: var(--up); }
-.pip.is-locked { opacity: .4; }
-.pip[aria-pressed="true"] { background: var(--cream); color: var(--ink); opacity: 1; box-shadow: none; }
 
 /* ---------- practice, discoveries ---------- */
 .practice__picks { position: absolute; left: calc(var(--left) - 3px); top: 62px; bottom: 0; width: 394px; z-index: 3; display: grid; gap: 12px; align-content: start; padding: 3px 3px 28px; }
