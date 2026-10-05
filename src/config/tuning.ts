@@ -8,14 +8,15 @@
  * `engine` is read once by the host when the loop starts. `defaultTuning` is
  * loaded into the `Tuning` resource, so systems read it through the ECS, tests
  * can run with overrides (`tuningWith`), and a live tweak panel can edit it.
- * The content (characters, weapons, attacks, skills, enemies, challenges) lives in
+ * The content (characters, classes, aspects, skills, enemies, challenges) lives in
  * `src/content/` and is part of the tuning, so its numbers are live-tunable
  * too.
  */
 import { arenas } from "../content/arena.ts"
-import { attacks } from "../content/attacks.ts"
+import { aspects } from "../content/aspects.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
+import { classes } from "../content/classes.ts"
 import { currencies } from "../content/currencies.ts"
 import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
@@ -24,7 +25,6 @@ import { reset, tracks } from "../content/hardcore.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, quests } from "../content/quests.ts"
 import { skills } from "../content/skills.ts"
-import { weapons } from "../content/weapons.ts"
 
 /** Fixed-step timing. Changing these needs a reload. */
 export const engine = {
@@ -89,8 +89,11 @@ export const defaultTuning = {
   /** One-time goals that point at something worth trying, for crystals (see content/discoveries.ts). */
   discoveries,
 
-  /** Every weapon, by id; a character wields one of its type. */
-  weapons,
+  /** Every class, by id: how it handles, and its plain aspect (see content/classes.ts). */
+  classes,
+
+  /** Every aspect, by id: a way of using a class (see content/aspects.ts). */
+  aspects,
 
   /**
    * Damage: an attack deals its `power` as a percentage of the attacker's
@@ -121,12 +124,9 @@ export const defaultTuning = {
     doubleTapWindow: 0.25,
     /** Fraction of dash speed kept as velocity when the dash ends. */
     exitSpeedFactor: 0.35,
-    /** An attack pressed during a dash or this long after it is the weapon's dash strike (see `BasicAttackSpec.dash`). */
+    /** An attack pressed during a dash or this long after it is her dash strike (see `BasicAttackSpec.dash`). */
     attackWindow: 0.15
   },
-
-  /** Every basic attack, by id; each character has one (its weapon). */
-  attacks,
 
   /** On-screen touch controls (see `touchLayout` in config/input.ts). */
   touch: {
@@ -147,7 +147,7 @@ export const defaultTuning = {
   /** Every skill, by id; a character starts with one per slot, and a build can equip others. */
   skills,
 
-  /** States (burning, soaked), wind, and how elements interact (see content/elements.ts). */
+  /** States, bursts, thunder's strikes, and affinities (see content/elements.ts). */
   elements: elementRules,
 
   /** Energy, spent by skills that cost it (the Nova). */
@@ -195,12 +195,12 @@ export const defaultTuning = {
   /**
    * Breaking enemies (see `features/poise.ts`). A blow fills an enemy's bar
    * by the damage it deals (a heavy blow `heavy` times that, a burn `burn`
-   * times); a reaction on it fills `reaction` of the bar, a wall slam
+   * times); a burst on it fills `burst` of the bar, a wall slam
    * `slam`. After `quietSeconds` without any, the bar drains `drain` of
    * itself per second. Full, the enemy breaks: stunned for `seconds`, its
    * attack cut off, taking `damageTaken` times the damage, with a hit-stop.
    */
-  breaking: { heavy: 2, burn: 0.25, reaction: 0.2, slam: 0.25, quietSeconds: 1.2, drain: 0.35, seconds: 2.5, damageTaken: 1.25, hitStop: 0.16 },
+  breaking: { heavy: 2, burn: 0.25, burst: 0.2, slam: 0.25, quietSeconds: 1.2, drain: 0.35, seconds: 2.5, damageTaken: 1.25, hitStop: 0.16 },
 
   /** Every enemy kind, by id. */
   enemies,
@@ -237,14 +237,14 @@ export const defaultTuning = {
    * speed, circling ones take their turn at once, and their attack
    * cooldowns run `cooldownRate` times as fast (not those of enemies keeping
    * their distance). She threatens an enemy while
-   * her weapon is ready and aimed within `threatDegrees` of it, it within
+   * her attack is ready and aimed within `threatDegrees` of it, it within
    * her melee reach and `threatMargin` more: a melee enemy then keeps just
    * out of reach, circling, for up to `patience` seconds of its turn, then
    * commits anyway. Telegraphs never get shorter.
    */
   reading: { openingRecovery: 0.3, rushSpeed: 1.1, cooldownRate: 2, threatDegrees: 60, threatMargin: 40, patience: 1.2 },
 
-  /** A disc that hits a soaked enemy turns toward the nearest other soaked enemy this close (see `DiscMove.bounces`). */
+  /** A disc that bounces turns, off an enemy in a state, toward the nearest other one this close (see `DiscMove.bounces`). */
   discBounce: { range: 300 },
 
   /** How enemies find their way around walls to the player (see physics/paths.ts). */
@@ -263,8 +263,8 @@ export const defaultTuning = {
 
   /**
    * Arena hazards (see `content/arena.ts`): permanent pools burning or
-   * soaking with the strength of an ATK of `atk`. Water puts a fire pit out
-   * for `relightSeconds`.
+   * soaking with the strength of an ATK of `atk`. A newer pool of another
+   * element puts one out for `relightSeconds`.
    */
   hazards: { atk: 60, relightSeconds: 6 },
 

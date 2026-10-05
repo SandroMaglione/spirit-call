@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { nextAlive } from "../src/features/team.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, TeamSwitch, Weapon } from "../src/schema.ts"
+import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, TeamSwitch, BasicAttack } from "../src/schema.ts"
 import type { ActiveState, BuildValue } from "../src/schema.ts"
-import { cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
+import { cursorAt, doubleTap, placeDummies, start, steps, plainAttack } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
@@ -22,7 +22,7 @@ const TeamState = Game.Inspector("Test/Team", {
         energy: Game.Query.read(Energy),
         skills: Game.Query.read(Skills),
         state: Game.Query.read(ElementState),
-        weapon: Game.Query.read(Weapon),
+        basicAttack: Game.Query.read(BasicAttack),
         position: Game.Query.optional(Position),
         invulnerable: Game.Query.optional(Invulnerable),
         player: Game.Query.optional(Player)
@@ -39,7 +39,7 @@ const TeamState = Game.Inspector("Test/Team", {
       energy: data.energy.get().current,
       special: data.skills.get().special.cooldown,
       state: data.state.get().current,
-      step: data.weapon.get().step,
+      step: data.basicAttack.get().step,
       position: data.position.present ? data.position.get() : undefined,
       invulnerable: data.invulnerable.present ? data.invulnerable.get().remaining : undefined,
       onField: data.player.present
@@ -74,7 +74,7 @@ const putIn = (slot: number, state: ActiveState) => {
 }
 
 /** A fire that burns `dps` for `seconds`. */
-const fire = (dps: number, seconds = 30): ActiveState => ({ id: "burning", remaining: seconds, dps, nextTick: 0.01, charges: false })
+const fire = (dps: number, seconds = 30): ActiveState => ({ id: "burning", remaining: seconds, atk: (dps * 100) / defaultTuning.elements.burning.power, nextTick: 0.01, charges: false })
 
 const flowOf = (started: ReturnType<typeof start>) => started.runtime.debug.dump().machines["Shooter/Flow"]?.current
 
@@ -262,7 +262,7 @@ describe("what a character leaves behind", () => {
     team.step(4)
     expect(team.world().discs).toBe(1)
     // Out to its range, then it would come back: there is no one to come back to.
-    const out = tuning.attacks.disc.combo[0]!
+    const out = plainAttack(tuning, "disc").combo[0]!
     team.step(steps(("range" in out ? out.range : 0) / ("speed" in out ? out.speed : 1)) + 5)
     expect(team.world().discs).toBe(0)
   })

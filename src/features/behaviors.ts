@@ -7,11 +7,11 @@
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
-import type { AttackId } from "../content/attacks.ts"
 import type { Behavior } from "../content/enemies.ts"
 import { normalizeOr, scale, zero } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import type { AttackPhase, BrainValue, EnemyMode } from "../schema.ts"
+import type { AttackPhase, AttackRef, BrainValue, EnemyMode } from "../schema.ts"
+import { attackOf } from "./build.ts"
 
 /** Where an enemy stands relative to its target. */
 export interface Situation {
@@ -148,7 +148,7 @@ export const keepOut = (desired: Vec2, at: Vec2, radius: number, speed: number, 
 /**
  * How the enemies read the player (see `Tuning.reading`): whether she is
  * open (a long move recovering, reloading, or out of dashes), and whether a
- * body at `at` is under her threat (her weapon ready, aimed its way, it
+ * body at `at` is under her threat (her attack ready, aimed its way, it
  * within her melee reach and a little more).
  */
 export interface PlayerRead {
@@ -163,16 +163,16 @@ export const readPlayer = (
   player: {
     readonly at: Vec2
     readonly aim: Vec2
-    readonly weapon: { readonly attack: AttackId; readonly cooldown: number; readonly recovery: number; readonly reloading: number }
+    readonly attack: { readonly attack: AttackRef; readonly cooldown: number; readonly recovery: number; readonly reloading: number }
     readonly dashes: number
   }
 ): PlayerRead => {
   const rules = tuning.reading
-  const { weapon } = player
-  const opening = (weapon.cooldown > 0 && weapon.recovery >= rules.openingRecovery) || weapon.reloading > 0 || player.dashes <= 0
-  const first = tuning.attacks[weapon.attack].combo[0]
+  const { attack } = player
+  const opening = (attack.cooldown > 0 && attack.recovery >= rules.openingRecovery) || attack.reloading > 0 || player.dashes <= 0
+  const first = attackOf(tuning, attack.attack).combo[0]
   const reach = first !== undefined && isMelee(first) ? first.reach + rules.threatMargin : 0
-  const ready = weapon.cooldown <= 0 && weapon.reloading <= 0
+  const ready = attack.cooldown <= 0 && attack.reloading <= 0
   const cos = Math.cos((rules.threatDegrees * Math.PI) / 180)
   return {
     opening,

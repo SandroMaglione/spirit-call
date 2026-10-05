@@ -1,15 +1,14 @@
 import { useSignal } from "@preact/signals"
 import { useRef } from "preact/hooks"
 import type { CharacterId } from "../../content/characters.ts"
-import type { WeaponId } from "../../content/weapons.ts"
 import { Model } from "./parts.tsx"
 
 /** Drag the preview itself to turn it; this never sends input to the arena. */
-export const ModelStage = ({ character, weapon }: { readonly character: CharacterId; readonly weapon: WeaponId }) => {
+export const ModelStage = ({ character }: { readonly character: CharacterId }) => {
   const turn = useSignal(-0.45), pulse = useSignal({ id: 0, x: 50, y: 50 })
   const drag = useRef<{ readonly pointer: number; readonly x: number; readonly turn: number } | null>(null)
   return <div class="model-stage">
-    <Model character={character} weapon={weapon} turn={turn.value} />
+    <Model character={character} turn={turn.value} />
     <button type="button" class="spirit-touch" aria-label={`Rotate ${character}`}
       onPointerDown={(event) => {
         const rect = event.currentTarget.getBoundingClientRect()

@@ -1,6 +1,6 @@
 /**
  * Plain-language descriptions of content, generated from its data, so new
- * content describes itself: objectives, stats, weapon bonuses, passives,
+ * content describes itself: objectives, stats, aspects and their passives,
  * skills (with their element), enemies' affinities, rewards, and what
  * something is and why it is locked.
  */
@@ -16,7 +16,7 @@ import type { Stats } from "../content/characters.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
 import type { Rewards, Unlock } from "../content/quests.ts"
 import type { SkillEffect, SkillSpec } from "../content/skills.ts"
-import type { StatBonus } from "../content/weapons.ts"
+import { aspectOf } from "../content/aspects.ts"
 
 export const statNames: { readonly [Stat in keyof Stats]: string } = { hp: "HP", atk: "ATK", def: "DEF", speed: "SPD" }
 
@@ -36,9 +36,7 @@ export const describeObjective = (objective: Objective, waves: number): string =
   }
 }
 
-export const describeBonus = (bonus: StatBonus): string => `+${bonus.percent}% ${statNames[bonus.stat]}`
-
-const describeMove = (move: MoveFilter): string => {
+export const describeMove = (move: MoveFilter): string => {
   switch (move.kind) {
     case "combo":
       return `combo move ${move.move}`
@@ -46,8 +44,20 @@ const describeMove = (move: MoveFilter): string => {
       return "the combo finisher"
     case "power":
       return "the charged attack"
+    case "dash":
+      return "the dash strike"
+    case "counter":
+      return "a counter (the dash strike after a perfect dodge)"
+    case "lastRound":
+      return "the last round of the magazine"
   }
 }
+
+/** An aspect's elemental moment for a character of `element`: which move carries it, and what her element leaves. */
+export const describeInfuse = (move: MoveFilter, element: ElementId): string =>
+  `${capitalized(describeMove(move))} carries her element (${elements[element].name}): it leaves ${elements[element].state}, or bursts another state.`
+
+const capitalized = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
 
 const describeCondition = (condition: HitCondition): string => {
   switch (condition.kind) {
@@ -57,6 +67,10 @@ const describeCondition = (condition: HitCondition): string => {
       return ` with ${describeMove(condition.move)}`
     case "targetHealthBelow":
       return ` to enemies below ${Math.round(condition.fraction * 100)}% HP`
+    case "targetInState":
+      return " to enemies in a state (any one)"
+    case "targetHeld":
+      return " to stunned or broken enemies"
   }
 }
 
@@ -104,7 +118,7 @@ const describeTriggered = (effect: TriggeredEffect): string => {
     case "heal":
       return `heal ${effect.percent}% of max HP`
     case "cast":
-      return `set off ${describeEffect(effect.effect)}`
+      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? " of her element" : ""}`
   }
 }
 
@@ -151,8 +165,8 @@ export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
   switch (unlock.kind) {
     case "character":
       return tuning.characters[unlock.id].name
-    case "weapon":
-      return tuning.weapons[unlock.id].name
+    case "aspect":
+      return aspectOf(tuning.aspects, unlock.id).name
   }
 }
 

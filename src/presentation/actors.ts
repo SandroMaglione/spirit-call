@@ -11,11 +11,12 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
-import { Action, Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, Weapon } from "../schema.ts"
+import { attackOf } from "../features/build.ts"
+import { Action, Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
-import { chargeOf } from "../features/weapons.ts"
+import { chargeOf } from "../features/basic-attack.ts"
 import { mixColor } from "./draw.ts"
 
 const leanAxis = new Vector3()
@@ -37,7 +38,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         skills: Game.Query.read(Skills),
         energy: Game.Query.read(Energy),
         health: Game.Query.read(Health),
-        weapon: Game.Query.read(Weapon),
+        basicAttack: Game.Query.read(BasicAttack),
         body: Game.Query.read(Body),
         state: Game.Query.read(ElementState),
         member: Game.Query.read(Member),
@@ -67,8 +68,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
 
     // Stella Sora-style facing: a subtle ring at a melee attack's reach (close around a gun), with a small arrow on it.
     const aim = data.aim.get()
-    const weapon = data.weapon.get()
-    const attack = tuning.attacks[weapon.attack]
+    const current = data.basicAttack.get()
+    const attack = attackOf(tuning, current.attack)
     const first = attack.combo[0]
     const around = first !== undefined && isMelee(first) ? first.reach : radius + view.facingRing.gap
     marks.strokeCircle(position.x, position.y, around, 2, view.aim, view.facingRing.alpha)
@@ -97,7 +98,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     }
 
     // Charging the power attack: a ring filling up around the feet, brighter and thicker once full.
-    const charge = attack.power === null ? 0 : chargeOf(attack.power, weapon.held)
+    const charge = attack.power === null ? 0 : chargeOf(attack.power, current.held)
     if (charge > 0) {
       const full = charge >= 1
       const chargeRing = radius + view.charge.gap
@@ -109,14 +110,14 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const spec = view.ammo
       const ammoRing = radius + spec.gap
       const from = Math.PI / 2 - spec.spread / 2
-      if (weapon.reloading > 0) {
-        const done = 1 - weapon.reloading / attack.magazine.reload
+      if (current.reloading > 0) {
+        const done = 1 - current.reloading / attack.magazine.reload
         marks.strokeArc(position.x, position.y, ammoRing, from, from + spec.spread, spec.width, spec.empty, 0.6)
         marks.strokeArc(position.x, position.y, ammoRing, from, from + spec.spread * done, spec.width, spec.reloading, 0.9)
       } else {
         const each = spec.spread / attack.magazine.rounds
         for (let round = 0; round < attack.magazine.rounds; round++) {
-          const left = round < attack.magazine.rounds - weapon.spent
+          const left = round < attack.magazine.rounds - current.spent
           marks.strokeArc(position.x, position.y, ammoRing, from + round * each + spec.space / 2, from + (round + 1) * each - spec.space / 2, spec.width, left ? spec.round : spec.empty, left ? 0.95 : 0.6)
         }
       }

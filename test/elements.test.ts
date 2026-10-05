@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import { afflict, elementDamageFactor, stateSpeed } from "../src/features/elements.ts"
+import { elements } from "../src/content/elements.ts"
+import type { ElementId, StateId } from "../src/content/elements.ts"
+import { afflict, affinityDamage, burnDps, stateSpeed } from "../src/features/elements.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { ElementState, Enemy, Energy, Game, Ground, Gust, Health, Invulnerable, Knockback, Player, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
+import { blow, Damage, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -13,10 +15,12 @@ import type { StartOptions } from "./helpers.ts"
 const tuning = defaultTuning
 const rules = tuning.elements
 const grenade = grenadeSkill.effect
-/** The gunner's ATK: hers with the training pistol. */
-const atk = tuning.characters.gunner.stats.atk + tuning.weapons.trainingPistol.atk
+/** The gunner's ATK. */
+const atk = tuning.characters.gunner.stats.atk
+/** Dummies that take many blows. */
+const sturdy = () => tuningWith({ enemies: { dummy: { hp: 100_000 } } })
 
-/** The kinds of reaction the run has set off so far. */
+/** The bursts and slams the run has set off so far. */
 const Reactions = Game.Inspector("Test/Reactions", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().reactions)
 
 const World = Game.Inspector("Test/Elements", {
@@ -26,13 +30,20 @@ const World = Game.Inspector("Test/Elements", {
         position: Game.Query.read(Position),
         health: Game.Query.read(Health),
         state: Game.Query.read(ElementState),
-        gust: Game.Query.read(Gust),
-        stunned: Game.Query.read(Stunned)
+        stunned: Game.Query.read(Stunned),
+        knockback: Game.Query.read(Knockback)
       },
       with: [Enemy]
     }),
     player: Game.Query({
-      selection: { health: Game.Query.read(Health), state: Game.Query.read(ElementState), energy: Game.Query.read(Energy), invulnerable: Game.Query.read(Invulnerable) },
+      selection: {
+        health: Game.Query.read(Health),
+        state: Game.Query.read(ElementState),
+        energy: Game.Query.read(Energy),
+        invulnerable: Game.Query.read(Invulnerable),
+        stunned: Game.Query.read(Stunned),
+        knockback: Game.Query.read(Knockback)
+      },
       with: [Player]
     }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } })
@@ -41,18 +52,21 @@ const World = Game.Inspector("Test/Elements", {
   const [player] = queries.player.each()
   return {
     pools: queries.pools.each().map(({ data }) => data.ground.get()),
-    enemies: queries.enemies.each().map(({ data }) => ({
+    enemies: queries.enemies.each().map(({ entity, data }) => ({
+      id: entity.id.value,
       position: data.position.get(),
       health: data.health.get().current,
       state: data.state.get().current,
-      gust: data.gust.get().remaining,
-      stunned: data.stunned.get().remaining
+      stunned: data.stunned.get().remaining,
+      knockback: data.knockback.get()
     })),
     player: {
       health: player!.data.health.get().current,
       state: player!.data.state.get().current,
       energy: player!.data.energy.get().current,
-      invulnerable: player!.data.invulnerable.get().remaining
+      invulnerable: player!.data.invulnerable.get().remaining,
+      stunned: player!.data.stunned.get().remaining,
+      knockback: player!.data.knockback.get()
     }
   }
 })
@@ -61,19 +75,44 @@ const World = Game.Inspector("Test/Elements", {
 const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = {}) => {
   const run = start({ ...options, pointer: [{ frame: 0, move: cursorAt(aim) }] })
   run.runtime.tick(placeDummies(dummies, options.tuning))
-  /** Puts every body (player and enemies) in `state`. */
-  const putIn = (state: ActiveState | null, who: "player" | "enemies" = "enemies") => {
+  const world = () => run.runtime.inspect(World)
+  /** Puts the player, or the enemies (all, or the one at offset `at`), in `state`. */
+  const putIn = (state: ActiveState | null, who: "player" | "enemies" | Vec2 = "enemies") => {
     const Put = Game.System("Test/PutInState", {
-      queries: who === "player"
-        ? { bodies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Player] }) }
-        : { bodies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) }
+      queries: { bodies: Game.Query({ selection: { state: Game.Query.write(ElementState), position: Game.Query.read(Position), player: Game.Query.optional(Player) }, with: [Health] }) }
     }, ({ queries }) => {
-      for (const { data } of queries.bodies.each()) data.state.set({ current: state })
+      for (const { data } of queries.bodies.each()) {
+        const there = data.position.get()
+        const chosen = who === "player"
+          ? data.player.present
+          : who === "enemies" ? !data.player.present : !data.player.present && Math.hypot(there.x - center.x - who.x, there.y - center.y - who.y) < 1
+        if (chosen) data.state.set({ current: state })
+      }
     })
     run.runtime.tick(Game.Schedule(Put))
   }
+  /** A blow of `damage` carrying `element` on the player, or on the enemy at offset `at`, from the other side. */
+  const strike = (at: Vec2 | "player", element: ElementId | null, damage = 1, direction: Vec2 = { x: 1, y: 0 }) => {
+    const Strike = Game.System("Test/Strike", {
+      queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), player: Game.Query.optional(Player) }, with: [Health] }) },
+      events: { damage: Game.System.writeEvent(Damage) }
+    }, ({ queries, events }) => {
+      for (const { entity, data } of queries.bodies.each()) {
+        const there = data.position.get()
+        const hit = at === "player" ? data.player.present : !data.player.present && Math.hypot(there.x - center.x - at.x, there.y - center.y - at.y) < 1
+        if (!hit) continue
+        events.damage.emit({
+          target: Game.Entity.handle(entity.id, Health),
+          faction: at === "player" ? "enemy" : "player",
+          direction,
+          blow: blow({ damage, knockback: 0, element: element === null ? null : { id: element, atk: 100 } })
+        })
+      }
+    })
+    run.runtime.tick(Game.Schedule(Strike))
+  }
   /** Leaves pools of `element` at offsets from the player. */
-  const pour = (pools: ReadonlyArray<{ readonly element: "fire" | "water"; readonly at: Vec2; readonly radius?: number; readonly seconds?: number }>) => {
+  const pour = (pools: ReadonlyArray<{ readonly element: ElementId; readonly at: Vec2; readonly radius?: number; readonly seconds?: number }>) => {
     const Pour = Game.System("Test/Pour", {}, ({ commands }) => {
       for (const pool of pools) {
         commands.spawnIn(RunScope, makeGround({ element: pool.element, radius: pool.radius ?? 80, seconds: pool.seconds ?? 5 }, { x: center.x + pool.at.x, y: center.y + pool.at.y }, 100, true))
@@ -81,44 +120,59 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
     })
     run.runtime.tick(Game.Schedule(Pour, Game.Schedule.applyDeferred()))
   }
-  return { ...run, world: () => run.runtime.inspect(World), putIn, pour }
+  /** The dummy nearest offset `at`. */
+  const dummy = (at: Vec2) => {
+    const away = (enemy: { readonly position: Vec2 }) => Math.hypot(enemy.position.x - center.x - at.x, enemy.position.y - center.y - at.y)
+    return [...world().enemies].sort((left, right) => away(left) - away(right))[0]!
+  }
+  return { ...run, world, putIn, strike, pour, dummy }
 }
 
 const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
-const burning = (dps: number, remaining: number = rules.burning.seconds): ActiveState => ({ id: "burning", remaining, dps, nextTick: rules.burning.tick, charges: true })
-const soaked = (remaining: number = rules.soaked.seconds): ActiveState => ({ id: "soaked", remaining, dps: 0, nextTick: 0, charges: true })
+const state = (id: StateId, remaining: number = rules[id].seconds, setBy = 100): ActiveState =>
+  ({ id, remaining, atk: setBy, nextTick: id === "burning" ? rules.burning.tick : 0, charges: true })
 
-describe("afflict", () => {
-  const fire = { id: "fire" as const, atk: 100 }
-  const water = { id: "water" as const, atk: 100 }
+describe("the rule", () => {
+  const hit = (id: ElementId) => ({ id, atk: 100 })
 
-  it("sets a body burning with fire, for a burn from the ATK of whoever set it", () => {
-    const { state, reaction } = afflict(tuning, null, fire, true)
-    expect(state).toEqual({ id: "burning", remaining: rules.burning.seconds, dps: rules.burning.power, nextTick: rules.burning.tick, charges: true })
-    expect(reaction).toBe("ignite")
+  it("every element leaves its own state, from the ATK of whoever set it", () => {
+    for (const id of Object.keys(elements) as Array<ElementId>) {
+      const { state: after, burst } = afflict(tuning, null, hit(id), true)
+      expect(after).toEqual(state(elements[id].state))
+      expect(burst).toBeNull()
+    }
   })
 
-  it("refreshes a fire without restarting its rhythm, keeping the stronger burn", () => {
-    const current = { ...burning(20, 1), nextTick: 0.1 }
-    const { state, reaction } = afflict(tuning, current, fire, false)
-    expect(state).toEqual({ id: "burning", remaining: rules.burning.seconds, dps: 20, nextTick: 0.1, charges: true })
-    expect(reaction).toBeNull()
+  it("the same element refreshes its state, keeping the stronger hand and a burn's rhythm", () => {
+    const current = { ...state("burning", 1, 300), nextTick: 0.1 }
+    const { state: after, burst } = afflict(tuning, current, hit("fire"), false)
+    expect(after).toEqual({ id: "burning", remaining: rules.burning.seconds, atk: 300, nextTick: 0.1, charges: true })
+    expect(burst).toBeNull()
   })
 
-  it("soaks with water, putting a fire out", () => {
-    expect(afflict(tuning, null, water, true)).toEqual({ state: soaked(), reaction: "soak" })
-    expect(afflict(tuning, burning(6), water, true)).toEqual({ state: soaked(), reaction: "steam" })
+  it("another element bursts the state, then leaves its own, in any pair and either order", () => {
+    for (const first of Object.keys(elements) as Array<ElementId>) {
+      for (const second of Object.keys(elements) as Array<ElementId>) {
+        if (first === second) continue
+        const held = state(elements[first].state)
+        const { state: after, burst } = afflict(tuning, held, hit(second), true)
+        expect(burst).toEqual(held)
+        expect(after?.id).toBe(elements[second].state)
+      }
+    }
   })
 
-  it("lets fire fizzle on a soaked body, for less damage", () => {
-    expect(afflict(tuning, soaked(2), fire, true)).toEqual({ state: soaked(2), reaction: "fizzle" })
-    expect(elementDamageFactor(tuning, "fire", soaked(), undefined)).toBe(rules.reactions.fizzle)
-    expect(elementDamageFactor(tuning, "fire", null, undefined)).toBe(1)
+  it("a body immune to the element takes no state, but what it held still bursts", () => {
+    const { state: after, burst } = afflict(tuning, state("soaked"), hit("fire"), true, "immune")
+    expect(after).toBeNull()
+    expect(burst?.id).toBe("soaked")
   })
 
-  it("slows soaked bodies", () => {
-    expect(stateSpeed(tuning, { current: soaked() })).toBeCloseTo(1 - rules.soaked.slow, 9)
-    expect(stateSpeed(tuning, { current: burning(6) })).toBe(1)
+  it("affinities scale damage; soaked bodies are slowed", () => {
+    expect(affinityDamage(tuning, "weak")).toBe(rules.affinity.weak.damage)
+    expect(affinityDamage(tuning, undefined)).toBe(1)
+    expect(stateSpeed(tuning, { current: state("soaked") })).toBeCloseTo(1 - rules.soaked.slow, 9)
+    expect(stateSpeed(tuning, { current: state("burning") })).toBe(1)
   })
 })
 
@@ -136,7 +190,7 @@ describe("the grenade's fire", () => {
     const [after] = run.world().enemies
     const burns = Math.floor(rules.burning.seconds / rules.burning.tick)
     expect(after!.state).toBeNull()
-    expect(after!.health).toBeCloseTo(hit - burns * (atk * rules.burning.power / 100) * rules.burning.tick, 6)
+    expect(after!.health).toBeCloseTo(hit - burns * burnDps(tuning, atk) * rules.burning.tick, 6)
   })
 
   it("burn ticks do not refill the grenade's action budget", () => {
@@ -148,64 +202,192 @@ describe("the grenade's fire", () => {
   })
 })
 
-describe("burning", () => {
-  it("burns through invulnerability, and gives none, so a burning player can still dodge a blow", () => {
+describe("states alone", () => {
+  it("burning burns through invulnerability, and gives none, so a burning player can still dodge a blow", () => {
     const run = range([], { x: 200, y: 0 })
-    run.putIn(burning(10), "player")
+    run.putIn(state("burning", 10, 200), "player")
     run.step(steps(rules.burning.tick) + 1)
     const { health, invulnerable } = run.world().player
     expect(health).toBeLessThan(tuning.characters.swordsman.stats.hp)
     expect(invulnerable).toBe(0)
   })
 
-  it("spreads to bodies it touches, for the time it has left, and not to bodies apart", () => {
+  it("burning spreads to bodies in no state it touches, for the time it has left, and to none apart or in another state", () => {
     const radius = tuning.enemies.dummy.radius
-    const run = range([{ x: 200, y: 0 }, { x: 200 + radius * 2 + 2, y: 0 }, { x: 200, y: 300 }], { x: 200, y: 0 })
-    // Only the first dummy burns.
-    const First = Game.System("Test/LightFirst", {
-      queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), state: Game.Query.write(ElementState) }, with: [Enemy] }) }
-    }, ({ queries }) => {
-      for (const { data } of queries.bodies.each()) {
-        if (Math.abs(data.position.get().x - center.x - 200) < 1 && Math.abs(data.position.get().y - center.y) < 1) data.state.set({ current: burning(6, 2) })
-      }
-    })
-    run.runtime.tick(Game.Schedule(First))
+    const touching = { x: 200 + radius * 2 + 2, y: 0 }
+    const wet = { x: 200, y: radius * 2 + 2 }
+    const run = range([{ x: 200, y: 0 }, touching, wet, { x: 200, y: 300 }], { x: 200, y: 0 })
+    run.putIn(state("soaked", 10), wet)
+    run.putIn(state("burning", 2), { x: 200, y: 0 })
     run.step(2)
-    const states = run.world().enemies.map((enemy) => enemy.state)
-    expect(states[0]?.id).toBe("burning")
-    expect(states[1]?.id).toBe("burning")
-    expect(states[1]!.remaining).toBeLessThanOrEqual(2)
-    expect(states[2]).toBeNull()
+    expect(run.dummy(touching).state?.id).toBe("burning")
+    expect(run.dummy(touching).state!.remaining).toBeLessThanOrEqual(2)
+    expect(run.dummy(wet).state?.id).toBe("soaked")
+    expect(run.dummy({ x: 200, y: 300 }).state).toBeNull()
   })
-})
 
-describe("soaked", () => {
-  it("slows the player down", () => {
+  it("soaked slows the player down", () => {
     const right = [{ frame: 0, press: ["right" as const] }]
     const dry = range([], { x: 200, y: 0 }, { keys: right })
     const wet = range([], { x: 200, y: 0 }, { keys: right })
-    wet.putIn(soaked(10), "player")
+    wet.putIn(state("soaked", 10), "player")
     dry.step(40)
     wet.step(40)
     const moved = (run: typeof dry) => Math.hypot(run.player().position.x - center.x, run.player().position.y - center.y)
     expect(moved(wet) / moved(dry)).toBeCloseTo(1 - rules.soaked.slow, 1)
   })
 
-  it("does not catch fire from the grenade, which deals less to it", () => {
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)] })
-    run.putIn(soaked(10))
-    run.step(steps(grenade.flightTime + grenade.fuse) + 4)
-    const [dummy] = run.world().enemies
-    expect(dummy!.state?.id).toBe("soaked")
-    expect(dummy!.health).toBeCloseTo(tuning.enemies.dummy.hp - (atk * grenade.power) / 100 * rules.reactions.fizzle, 6)
+  it("a blow on a charged body arcs on to the nearest other body of its side, charging it", () => {
+    const run = range([{ x: 200, y: 0 }, { x: 300, y: 0 }, { x: 200, y: 500 }], { x: 200, y: 0 }, { tuning: sturdy() })
+    run.putIn(state("charged"), { x: 200, y: 0 })
+    run.strike({ x: 200, y: 0 }, null, 50)
+    run.step(4)
+    const next = run.dummy({ x: 300, y: 0 })
+    expect(next.health).toBeCloseTo(100_000 - 50 * rules.charged.arcShare, 6)
+    expect(next.state?.id).toBe("charged")
+    expect(run.dummy({ x: 200, y: 500 }).health).toBe(100_000)
   })
 
-  it("puts out a fire when water lands", () => {
-    const watery = withGrenade({ element: "water", leaves: null })
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: watery })
-    run.putIn(burning(6, 10))
-    run.step(steps(grenade.flightTime + grenade.fuse) + 4)
-    expect(run.world().enemies[0]!.state?.id).toBe("soaked")
+  it("a cut of wind sweeps what it hits: light, it glides further", () => {
+    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [{ frame: 1, press: ["special"], release: ["special"] }], tuning: withWindCut() })
+    run.step(4)
+    expect(run.world().enemies[0]!.state?.id).toBe("swept")
+  })
+})
+
+describe("bursts", () => {
+  const near = { x: 280, y: 0 }
+  const far = { x: 200, y: 500 }
+  const struck = { x: 200, y: 0 }
+  const field = () => range([struck, near, far], { x: 200, y: 0 }, { tuning: sturdy() })
+
+  it("Flare: water on a burning body pays out the burn left at once, a share to those around, and soaks it", () => {
+    const run = field()
+    run.putIn(state("burning", 2, 200), struck)
+    run.strike(struck, "water")
+    run.step(4)
+    const left = burnDps(tuning, 200) * 2
+    expect(run.dummy(struck).state?.id).toBe("soaked")
+    // The blow itself (1), and the burn left at once (the burn's own ticks having stopped).
+    expect(100_000 - run.dummy(struck).health).toBeCloseTo(1 + left, 0)
+    expect(100_000 - run.dummy(near).health).toBeCloseTo(left * rules.bursts.burning.share, 0)
+    expect(run.dummy(far).health).toBe(100_000)
+    expect(run.runtime.inspect(Reactions)).toEqual(["burning"])
+  })
+
+  it("Splash: another element on a soaked body stops it and those around", () => {
+    const run = field()
+    run.putIn(state("soaked"), struck)
+    run.strike(struck, "fire")
+    run.step(4)
+    expect(run.dummy(struck).stunned).toBeGreaterThan(0)
+    expect(run.dummy(near).stunned).toBeGreaterThan(0)
+    expect(run.dummy(far).stunned).toBe(0)
+    expect(run.dummy(struck).state?.id).toBe("burning")
+  })
+
+  it("Discharge: another element on a charged body strikes those around", () => {
+    const run = field()
+    run.putIn(state("charged", 4, 200), struck)
+    run.strike(struck, "water")
+    run.step(4)
+    expect(100_000 - run.dummy(near).health).toBeCloseTo((200 * rules.bursts.charged.power) / 100, 6)
+    expect(run.dummy(far).health).toBe(100_000)
+  })
+
+  it("Gale: another element on a swept body throws those around away from it, stunned", () => {
+    const run = field()
+    run.putIn(state("swept"), struck)
+    run.strike(struck, "thunder")
+    run.step(3)
+    expect(run.dummy(near).stunned).toBeGreaterThan(0)
+    expect(run.dummy(near).position.x - center.x).toBeGreaterThan(near.x)
+  })
+
+  it("a burst still goes off when the blow ends the body that held it", () => {
+    const run = range([struck, near], { x: 200, y: 0 })
+    run.putIn(state("burning", 3, 300), struck)
+    run.strike(struck, "water", 100_000)
+    // Past the kill's pause.
+    run.step(steps(0.5))
+    expect(run.world().enemies).toHaveLength(1)
+    expect(run.dummy(near).health).toBeLessThan(tuning.enemies.dummy.hp)
+  })
+
+  it("never chains: what a burst deals carries no element", () => {
+    const run = field()
+    run.putIn(state("charged", 4, 200), struck)
+    run.putIn(state("burning", 4, 200), near)
+    run.strike(struck, "water")
+    run.step(4)
+    // The discharge struck the burning one, which burns on.
+    expect(run.dummy(near).state?.id).toBe("burning")
+    expect(run.runtime.inspect(Reactions)).toEqual(["charged"])
+  })
+
+  it("on the player a burst deals its damage, and never stops or launches her", () => {
+    const run = range([], { x: 200, y: 0 })
+    run.putIn(state("swept", 3, 300), "player")
+    run.strike("player", "fire")
+    // Past the pause of a blow on her.
+    run.step(steps(0.5))
+    const { health, stunned, knockback } = run.world().player
+    expect(health).toBeLessThan(tuning.characters.swordsman.stats.hp - 1)
+    expect(stunned).toBe(0)
+    expect(Math.hypot(knockback.x, knockback.y)).toBe(0)
+    // An enemy's burst is not the team's: nothing recorded.
+    expect(run.runtime.inspect(Reactions)).toEqual([])
+  })
+})
+
+describe("swept", () => {
+  /** Sweeps the dummies and gives them a push of `push`, as a wind blow would. */
+  const drive = (run: ReturnType<typeof range>, push: Vec2) => {
+    const Drive = Game.System("Test/Drive", {
+      queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
+    }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) {
+        data.state.set({ current: state("swept") })
+        data.knockback.set(push)
+      }
+    })
+    run.runtime.tick(Game.Schedule(Drive))
+  }
+
+  it("stuns a swept body slammed into a wall, which then stands still", () => {
+    // The pillar north of the center: its south face is at 288 + 25.
+    const pillar = { x: 0, y: 0.16 * tuning.arena.height + 25 - center.y }
+    const run = range([{ x: 0, y: pillar.y + tuning.enemies.dummy.radius + 20 }], { x: 200, y: 0 })
+    drive(run, { x: 0, y: -900 })
+    run.step(10)
+    const [dummy] = run.world().enemies
+    expect(dummy!.stunned).toBeGreaterThan(rules.swept.stunSeconds - 0.3)
+    // The run notes it, once (discoveries count what a run set off).
+    expect(run.runtime.inspect(Reactions)).toEqual(["slam"])
+    run.step(steps(rules.swept.stunSeconds))
+    expect(run.world().enemies[0]!.stunned).toBe(0)
+  })
+
+  it("does not stun a body pushed in the open", () => {
+    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 })
+    drive(run, { x: 900, y: 0 })
+    run.step(30)
+    expect(run.world().enemies[0]!.stunned).toBe(0)
+  })
+
+  it("leaves a stunned enemy's attack on hold", () => {
+    const run = range([], { x: 200, y: 0 })
+    const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
+      commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 200, y: center.y }))
+    })
+    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    const Stun = Game.System("Test/Stun", { queries: { enemies: Game.Query({ selection: { stunned: Game.Query.write(Stunned) }, with: [Enemy] }) } }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) data.stunned.set({ remaining: 1 })
+    })
+    run.runtime.tick(Game.Schedule(Stun))
+    run.step(30)
+    const [chaser] = run.world().enemies
+    expect(chaser!.position.x - center.x).toBeCloseTo(200, 6)
   })
 })
 
@@ -243,126 +425,23 @@ describe("ground", () => {
     expect(run.world().player.state).toBeNull()
   })
 
-  it("soaks and slows everyone standing in a puddle, putting a burning one out", () => {
+  it("never bursts a state: a burning body in a puddle burns on", () => {
     const run = range([], { x: 300, y: 0 })
-    run.putIn(burning(6, 10), "player")
+    run.putIn(state("burning", 10), "player")
     run.pour([{ element: "water", at: { x: 0, y: 0 } }])
     run.step(2)
-    expect(run.world().player.state?.id).toBe("soaked")
+    expect(run.world().player.state?.id).toBe("burning")
+    expect(run.runtime.inspect(Reactions)).toEqual([])
   })
 
-  it("water puts out the fire pools it touches", () => {
+  it("the newer pool puts out an older one of another element where they meet, and only there", () => {
     const run = range([], { x: 300, y: 0 })
-    run.pour([{ element: "fire", at: { x: 400, y: 0 } }, { element: "water", at: { x: 520, y: 0 }, radius: 60 }, { element: "fire", at: { x: -400, y: 0 } }])
+    run.pour([{ element: "fire", at: { x: 400, y: 0 } }, { element: "fire", at: { x: -400, y: 0 } }])
+    run.step(2)
+    run.pour([{ element: "water", at: { x: 520, y: 0 }, radius: 60 }])
     run.step(2)
     expect(run.world().pools.map((pool) => pool.element).sort()).toEqual(["fire", "water"])
     expect(run.world().pools.find((pool) => pool.element === "fire")!.center.x - center.x).toBeCloseTo(-400, 6)
-  })
-})
-
-describe("wind", () => {
-  const cut = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
-
-  /** Drives the dummy at `at` (world) with a push of `push`, as a wind blow would. */
-  const drive = (run: ReturnType<typeof range>, push: Vec2) => {
-    const Drive = Game.System("Test/Drive", {
-      queries: { enemies: Game.Query({ selection: { gust: Game.Query.write(Gust), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
-    }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) {
-        data.gust.set({ remaining: rules.wind.seconds })
-        data.knockback.set(push)
-      }
-    })
-    run.runtime.tick(Game.Schedule(Drive))
-  }
-
-  it("a cut of wind drives what it hits", () => {
-    const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)], tuning: withWindCut() })
-    run.step(4)
-    expect(run.world().enemies[0]!.gust).toBeGreaterThan(0)
-  })
-
-  it("stuns a driven body slammed into a wall, which then stands still", () => {
-    // The pillar north of the center: its south face is at 288 + 25.
-    const pillar = { x: 0, y: 0.16 * tuning.arena.height + 25 - center.y }
-    const run = range([{ x: 0, y: pillar.y + tuning.enemies.dummy.radius + 20 }], { x: 200, y: 0 })
-    drive(run, { x: 0, y: -900 })
-    run.step(10)
-    const [dummy] = run.world().enemies
-    expect(dummy!.stunned).toBeGreaterThan(rules.wind.stunSeconds - 0.3)
-    expect(dummy!.gust).toBe(0)
-    // The run notes it, once (discoveries count the reactions a run set off).
-    expect(run.runtime.inspect(Reactions)).toEqual(["stun"])
-    run.step(steps(rules.wind.stunSeconds))
-    expect(run.world().enemies[0]!.stunned).toBe(0)
-  })
-
-  it("does not stun a body driven in the open", () => {
-    const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 })
-    drive(run, { x: 900, y: 0 })
-    run.step(30)
-    expect(run.world().enemies[0]!.stunned).toBe(0)
-  })
-
-  it("carries a driven body's state to the bodies it is pushed into", () => {
-    const run = range([{ x: 150, y: 0 }, { x: 260, y: 0 }], { x: 200, y: 0 })
-    const First = Game.System("Test/LightFirst", {
-      queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), state: Game.Query.write(ElementState), gust: Game.Query.write(Gust), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
-    }, ({ queries }) => {
-      for (const { data } of queries.bodies.each()) {
-        if (data.position.get().x - center.x > 200) continue
-        data.state.set({ current: soaked(3) })
-        data.gust.set({ remaining: rules.wind.seconds })
-        data.knockback.set({ x: 1500, y: 0 })
-      }
-    })
-    run.runtime.tick(Game.Schedule(First))
-    run.step(20)
-    expect(run.world().enemies.map((enemy) => enemy.state?.id)).toEqual(["soaked", "soaked"])
-  })
-
-  it("puts out a burning body a soaked one is driven into", () => {
-    const run = range([{ x: 150, y: 0 }, { x: 260, y: 0 }], { x: 200, y: 0 })
-    const Light = Game.System("Test/Light", {
-      queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), state: Game.Query.write(ElementState), gust: Game.Query.write(Gust), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
-    }, ({ queries }) => {
-      for (const { data } of queries.bodies.each()) {
-        const first = data.position.get().x - center.x < 200
-        data.state.set({ current: first ? soaked(3) : burning(6, 3) })
-        if (first) {
-          data.gust.set({ remaining: rules.wind.seconds })
-          data.knockback.set({ x: 1500, y: 0 })
-        }
-      }
-    })
-    run.runtime.tick(Game.Schedule(Light))
-    run.step(20)
-    expect(run.world().enemies.map((enemy) => enemy.state?.id)).toEqual(["soaked", "soaked"])
-  })
-
-  it("blows the pools it sweeps over along its push", () => {
-    const run = range([], { x: 200, y: 0 }, { keys: [cut(1)], tuning: withWindCut() })
-    run.pour([{ element: "fire", at: { x: 150, y: 0 }, radius: 50 }])
-    run.step(40)
-    // Blown once, gliding to a stop like a body the wind drives.
-    const [pool] = run.world().pools
-    expect(pool!.center.x - center.x - 150).toBeCloseTo(rules.wind.poolSpeed / rules.wind.decay, -1)
-    expect(pool!.center.y - center.y).toBeCloseTo(0, 6)
-  })
-
-  it("leaves a stunned enemy's attack on hold", () => {
-    const run = range([], { x: 200, y: 0 })
-    const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
-      commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 200, y: center.y }))
-    })
-    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
-    const Stun = Game.System("Test/Stun", { queries: { enemies: Game.Query({ selection: { stunned: Game.Query.write(Stunned) }, with: [Enemy] }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) data.stunned.set({ remaining: 1 })
-    })
-    run.runtime.tick(Game.Schedule(Stun))
-    run.step(30)
-    const [chaser] = run.world().enemies
-    expect(chaser!.position.x - center.x).toBeCloseTo(200, 6)
   })
 })
 
@@ -370,7 +449,7 @@ describe("affinities", () => {
   const noPool = (elements: object) => withGrenade({ leaves: null }, tuningWith({ enemies: { dummy: { elements } } }))
   const blast = (atk * grenade.power) / 100
 
-  it("an enemy weak to an element takes more of its damage, and its effect lasts longer", () => {
+  it("an enemy weak to an element takes more of its damage, and its state lasts longer", () => {
     const weak = noPool({ fire: "weak" })
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: weak })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
@@ -379,7 +458,7 @@ describe("affinities", () => {
     expect(dummy!.state!.remaining).toBeGreaterThan(rules.burning.seconds)
   })
 
-  it("an immune enemy takes the damage, but not the effect", () => {
+  it("an immune enemy takes the damage, but not the state", () => {
     const immune = noPool({ fire: "immune" })
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: immune })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
@@ -388,13 +467,13 @@ describe("affinities", () => {
     expect(dummy!.state).toBeNull()
   })
 
-  it("an enemy immune to wind is pushed by its blow, but not driven", () => {
+  it("an enemy immune to wind is pushed by its blow, but not swept", () => {
     const immune = withWindCut(tuningWith({ enemies: { dummy: { elements: { wind: "immune" } } } }))
     const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [{ frame: 1, press: ["special"], release: ["special"] }], tuning: immune })
     run.step(4)
     const [dummy] = run.world().enemies
     expect(dummy!.health).toBeLessThan(tuning.enemies.dummy.hp)
-    expect(dummy!.gust).toBe(0)
+    expect(dummy!.state).toBeNull()
   })
 
   it("the brute is immune to wind, and every enemy answers to at least two elements", () => {

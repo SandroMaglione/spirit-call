@@ -1,7 +1,8 @@
 /**
- * The player's basic attack (see `Tuning.attacks`; the one in use is on the
- * player's `Weapon`: its character's). Moves deal their `power` as a
- * percentage of the player's ATK.
+ * The player's basic attack (her class's, shaped by her aspect: see
+ * `attackOf`; the one in use is on the player's `BasicAttack`). Moves deal
+ * their `power` as a percentage of the player's ATK, and the moves of its
+ * elemental moment (`BasicAttackSpec.infuse`) carry her element.
  *
  * Each press does the next move of the combo; presses in rhythm chain
  * through it, and a press made during a recovery is kept for `inputBuffer`.
@@ -17,21 +18,22 @@
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"
-import type { AttackId, AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
+import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim,
-  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Lobbed, Player, Position, RunScope, Stats, Time, Tuning, Weapon } from "../schema.ts"
-import type { HitboxValue, MoveContext, WeaponValue } from "../schema.ts"
-import { damageDealt } from "./build.ts"
+  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
+import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
+import { attackOf, damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { makeDisc } from "./discs.ts"
+import { moveMatches } from "./passives.ts"
 import { lobTarget } from "./skills.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
-export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue => ({
+export const initialBasicAttack = (build: { readonly attack: AttackRef }): BasicAttackValue => ({
   attack: build.attack,
   cooldown: 0,
   recovery: 0,
@@ -50,9 +52,9 @@ export const initialWeapon = (build: { readonly attack: AttackId }): WeaponValue
 export const chargeOf = (power: PowerAttack, held: number): number =>
   Math.max(0, Math.min(1, (held - power.holdDelay) / power.chargeTime))
 
-/** Whether the weapon is charging its power attack (so the player slows down). */
-export const charging = (spec: BasicAttackSpec, weapon: WeaponValue): boolean =>
-  spec.power !== null && chargeOf(spec.power, weapon.held) > 0
+/** Whether her basic attack is charging its power attack (so the player slows down). */
+export const charging = (spec: BasicAttackSpec, attack: BasicAttackValue): boolean =>
+  spec.power !== null && chargeOf(spec.power, attack.held) > 0
 
 /** How far a move reaches from the player's center: a melee move's reach, a projectile's or a disc's range, a grenade's throw. */
 export const moveReach = (move: AttackMove): number => (isMelee(move) ? move.reach : move.shape === "lob" ? move.maxRange : move.range)
@@ -109,11 +111,12 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         position: Game.Query.read(Position),
         aim: Game.Query.read(Aim),
         facing: Game.Query.write(Facing),
-        weapon: Game.Query.write(Weapon),
+        basicAttack: Game.Query.write(BasicAttack),
         knockback: Game.Query.write(Knockback),
         body: Game.Query.read(Body),
         stats: Game.Query.read(CombatStats),
-        dash: Game.Query.read(Dash)
+        dash: Game.Query.read(Dash),
+        member: Game.Query.read(Member)
       },
       with: [Player]
     }),
@@ -135,9 +138,10 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
   for (const { entity, data } of queries.player.each()) {
     const position = data.position.get()
     const aim = data.aim.get()
-    const current = data.weapon.get()
+    const current = data.basicAttack.get()
     const atk = data.stats.get().atk
-    const spec: BasicAttackSpec = tuning.attacks[current.attack]
+    const spec: BasicAttackSpec = attackOf(tuning, current.attack)
+    const element = tuning.characters[data.member.get().character].element
     const cooldown = Math.max(0, current.cooldown - dt)
     const buffered = controls.attackPressed ? spec.inputBuffer : Math.max(0, current.buffered - dt)
     // Time idle since the recovery ended; the combo lapses after `comboWindow`, and ends with its last move.
@@ -165,7 +169,16 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     }
 
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
-      const context: MoveContext = { step: nextStep, finisher: !power && nextStep === spec.combo.length - 1, power }
+      const striking = move === spec.dash
+      const context: MoveContext = {
+        step: nextStep,
+        finisher: !power && !striking && nextStep === spec.combo.length - 1,
+        power,
+        dash: striking,
+        // Out of a dash that perfectly dodged a blow.
+        counter: striking && dash.perfect,
+        lastRound: !power && spec.magazine !== null && spent + 1 >= spec.magazine.rounds
+      }
       // A power move from a magazine fires every round left: its damage is their share of a full one. The
       // press that started the charge fired a round of its own, so it still counts toward the share.
       const left = spec.magazine === null ? 0 : spec.magazine.rounds - spent
@@ -179,8 +192,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         hitStop: move.hitStop,
         heavy: move.heavy,
         source: { attacker: Game.Entity.handle(entity.id, Position), move: context },
-        against: spec.against,
-        chain: spec.chain
+        chain: spec.chain,
+        // Her aspect's elemental moment: these blows carry her element.
+        element: spec.infuse !== null && moveMatches(spec.infuse, context) ? { id: element, atk } : null
       })
       if (move.shape === "shot") {
         const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))
@@ -254,7 +268,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       const slowed = move.heavy ? 0 : spec.attackingSpeed
       const fired = power && spec.magazine !== null ? spec.magazine.rounds : spent + 1
       const empty = spec.magazine !== null && fired >= spec.magazine.rounds
-      data.weapon.set({
+      data.basicAttack.set({
         ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed,
         spent: spec.magazine === null ? 0 : fired, reloading: empty && spec.magazine !== null ? spec.magazine.reload : 0,
         sinceDashStrike: move === spec.dash ? 0 : sinceDashStrike
@@ -279,7 +293,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       use(move, next, false)
       continue
     }
-    data.weapon.set({ ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading, sinceDashStrike })
+    data.basicAttack.set({ ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading, sinceDashStrike })
   }
   if (moves > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + moves }))
 })

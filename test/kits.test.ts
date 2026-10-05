@@ -44,9 +44,6 @@ const press = (slot: "special" | "ultimate", frame: number) => ({ frame, press: 
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
   for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
 })
-const Soak = Game.System("Test/SoakAll", { queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) } }, ({ queries }) => {
-  for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, dps: 0, nextTick: 0, charges: false } })
-})
 
 describe("the Gunner's Flare Jump", () => {
   const spec = defaultTuning.skills.flareJump.effect
@@ -72,47 +69,9 @@ describe("the Tidecaller", () => {
     expect(enemy!.position.x - center.x).toBeGreaterThan(200)
     expect(run.world().pools.filter((pool) => pool.element === "water").length).toBeGreaterThan(1)
   })
-
-  it("hits a soaked enemy harder with her discs", () => {
-    const disc = defaultTuning.attacks.disc
-    const throwOne = { pointer: [{ frame: 2, press: ["primary" as const] }, { frame: 3, release: ["primary" as const] }] }
-    const dry = arena([{ x: 150, y: 0 }], { x: 300, y: 0 }, { build: tidecaller, ...throwOne })
-    dry.step(20)
-    const wet = arena([{ x: 150, y: 0 }], { x: 300, y: 0 }, { build: tidecaller, ...throwOne })
-    wet.runtime.tick(Game.Schedule(Soak))
-    wet.step(20)
-    const dryLoss = 2000 - dry.world().enemies[0]!.health
-    const wetLoss = 2000 - wet.world().enemies[0]!.health
-    expect(wetLoss).toBeCloseTo(dryLoss * disc.against!.factor, 6)
-  })
-
-  it("bounces a disc off a soaked enemy to the next soaked one nearby", () => {
-    // The second dummy is far off her line: only a bounce reaches it.
-    const run = arena([{ x: 150, y: 0 }, { x: 150, y: 200 }], { x: 300, y: 0 }, {
-      build: tidecaller,
-      pointer: [{ frame: 2, press: ["primary"] }, { frame: 3, release: ["primary"] }]
-    })
-    run.runtime.tick(Game.Schedule(Soak))
-    run.step(40)
-    const [first, second] = run.world().enemies
-    expect(first!.health).toBeLessThan(2000)
-    expect(second!.health).toBeLessThan(2000)
-  })
 })
 
 describe("the Stormcaller", () => {
-  it("throws sparks that jump on to one more enemy nearby", () => {
-    const run = arena([{ x: 200, y: 0 }, { x: 260, y: 70 }], { x: 300, y: 0 }, {
-      build: { character: "stormcaller" },
-      pointer: [{ frame: 2, press: ["primary"] }, { frame: 3, release: ["primary"] }]
-    })
-    run.step(40)
-    const [struck, near] = run.world().enemies
-    expect(struck!.health).toBeLessThan(2000)
-    expect(near!.health).toBeLessThan(2000)
-    expect(2000 - near!.health).toBeCloseTo((2000 - struck!.health) * defaultTuning.attacks.staff.chain!.share, 6)
-  })
-
   it("holds what her Thunderclap strikes: stunned, its break bar filled", () => {
     const breakable = tuningWith({ enemies: { dummy: { hp: 2000, poise: 0.5 } } })
     const run = arena([{ x: 120, y: 0 }], { x: 300, y: 0 }, { build: { character: "stormcaller" }, tuning: breakable, keys: [press("ultimate", 1)] })

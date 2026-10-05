@@ -1,7 +1,6 @@
 /**
  * The menu's models: each place the UI marks with `data-model` (a
- * character, and `data-weapon` for what she holds) shows her model playing
- * her idle, lit with a rim in her element's color (the place's `--el`); each
+ * character) shows her model playing her idle, lit with a rim in her element's color (the place's `--el`); each
  * `data-portrait` (a character, or `enemy:<kind>`) gets a picture of the
  * model, rendered once and kept. The UI only marks the places, so it never
  * touches the renderer (see `ui/menu/parts.tsx`).
@@ -15,7 +14,6 @@ import type { Object3D } from "three"
 
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
-import type { WeaponId } from "../content/weapons.ts"
 import { view } from "../config/view.ts"
 import { characterLooks, enemyLooks } from "./looks.ts"
 import type { BodyLook } from "./looks.ts"
@@ -45,15 +43,12 @@ interface Shown {
   readonly rim: Color
 }
 
-const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, weapon: WeaponId | null, turn = stage.turn): Puppet | null => {
+const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, turn = stage.turn): Puppet | null => {
   if (look.kind !== "model") return null
   const source = models.get(look.model)
   if (source === undefined) return null
   // A height of one: the camera frames it by its bounds.
   const puppet = new Puppet(source, 1, look.moments ?? null)
-  const held = weapon === null ? undefined : look.held?.weapons[weapon]
-  const heldSource = held === undefined ? undefined : models.get(held)
-  if (heldSource !== undefined && look.held !== undefined) puppet.hold(heldSource, look.held.grip)
   puppet.face({ x: Math.sin(turn), y: Math.cos(turn) })
   // Posed once, so its bounds are its idle's.
   puppet.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, 0, false)
@@ -170,18 +165,17 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
     shown.puppet.dispose()
   }
 
-  // Keep each character and weapon idle running when the UI changes places.
+  // Keep each character's idle running when the UI changes places.
   const live = new Map<string, Shown>()
   const reveals = new WeakMap<HTMLElement, number>()
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
   const liveFor = (place: HTMLElement): Shown | null => {
     const character = place.dataset["model"] as CharacterId | undefined
     if (character === undefined || !(character in characterLooks)) return null
-    const weapon = (place.dataset["weapon"] as WeaponId | undefined) ?? null
-    const key = `${character}:${weapon ?? ""}`
+    const key = character
     const known = live.get(key)
     if (known !== undefined) return known
-    const puppet = puppetOf(models, characterLooks[character], weapon)
+    const puppet = puppetOf(models, characterLooks[character])
     if (puppet === null) return null
     const shown = add(key, puppet, cssColor(place, "--el"))
     live.set(key, shown)
@@ -207,7 +201,7 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
       pictures.set(id, url)
       return url
     }
-    const puppet = puppetOf(models, look, null, enemy === null ? stage.portraitTurn : stage.turn)
+    const puppet = puppetOf(models, look, enemy === null ? stage.portraitTurn : stage.turn)
     if (puppet === null) return null
     const shown = add(id, puppet, cssColor(place, "--el"))
     show(shown)
@@ -240,7 +234,7 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
         place.style.backgroundImage = `url(${url})`
         place.dataset["drawn"] = id
       }
-      // Keep the finite set of character/weapon previews alive across tabs so their idle never restarts.
+      // Keep the finite set of character previews alive across tabs so their idle never restarts.
       const places = document.querySelectorAll<HTMLElement>("[data-model]")
       if (places.length === 0 && !drawn) return
       renderer.setScissorTest(false)

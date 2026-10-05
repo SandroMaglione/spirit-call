@@ -9,11 +9,10 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, Earned, Equipment, Play } from "../account/account.ts"
+import type { Account, Earned, Play, TeamAspects } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { WeaponId } from "../content/weapons.ts"
 import type { BuildValue, FlowState, PracticeValue, RunResultValue } from "../schema.ts"
 import type { Screen } from "./menu/parts.tsx"
 import type { TeamDraft } from "./draft.ts"
@@ -34,12 +33,12 @@ export interface UiStore {
   readonly paused: Signal<boolean>
   /** The input in use: keyboard and mouse, or touch (for hints). */
   readonly device: Signal<"desktop" | "touch">
-  /** The content (characters, weapons, skills, challenges) and its numbers. */
+  /** The content (characters, classes, aspects, skills, challenges) and its numbers. */
   readonly tuning: Signal<Tuning>
   /** The team and challenge of the run going on, or of the last one. */
   readonly team: Signal<ReadonlyArray<BuildValue>>
   readonly challenge: Signal<ChallengeId>
-  /** The player's account: what it owns, each character's equipment, and the last selection (the menu starts from it). */
+  /** The player's account: what it owns, and the last selection with its aspects (the menu starts from it). */
   readonly account: Signal<Account>
   /** The quest or tier being played, or last played; `null` for a run of nothing (a dev quick start). */
   readonly play: Signal<Play | null>
@@ -78,7 +77,7 @@ export const createUiStore = (initial: {
   recording: signal("idle"),
   menuPlay: signal(initial.account.selection.play),
   menuBriefing: signal(false),
-  menuDraft: signal({ team: initial.account.selection.team, focus: 0 }),
+  menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects }),
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
   paused: signal(false),
@@ -101,17 +100,14 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
-  readonly saveTeam: (team: ReadonlyArray<CharacterId>) => void
-  /** Enter the arena with `team` (in order, each as equipped) to play `play`. */
-  readonly enter: (team: ReadonlyArray<CharacterId>, play: Play) => void
-  /** Enter an Extra with `team`: nothing it does is recorded on the account. */
-  readonly enterExtra: (team: ReadonlyArray<CharacterId>, extra: Extra) => void
-  /** Equip an owned character (saved at once). */
-  readonly equip: (character: CharacterId, equipment: Equipment) => void
+  /** Save `team` and the aspects equipped in it (refused when they break the rules, see `teamProblems`). */
+  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects) => void
+  /** Enter the arena with `team` (in order, with `aspects` equipped) to play `play`. */
+  readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play) => void
+  /** Enter an Extra with `team` and `aspects`: nothing it does is recorded on the account. */
+  readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra) => void
   /** Take an owned character to its next level with gold (saved at once). */
   readonly train: (character: CharacterId) => void
-  /** Take an owned weapon a level higher with gold (saved at once). */
-  readonly upgrade: (weapon: WeaponId) => void
   /** From the results or the in-game menu: the same challenge again, from the start. */
   readonly retry: () => void
   /** From the results or the in-game menu: back to the menu. */

@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
-import { withWeapon } from "../src/features/build.ts"
 import { Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
-import { answers, elementOf, placeInTeam, removeFromTeam, weaponsFor } from "../src/ui/draft.ts"
-import { start } from "./helpers.ts"
+import { answers, aspectsFor, elementOf, equipInDraft, placeInTeam, removeFromTeam } from "../src/ui/draft.ts"
+import { start, aspectId } from "./helpers.ts"
+import { cast, damageBonus, doing, finisher, heal, kill, on, targetHealthBelow } from "../src/content/passives.ts"
+import { nova } from "../src/content/skills.ts"
 
 const Screen = Game.Inspector("Test/Screen", {
   queries: { player: Game.Query({ selection: { stats: Game.Query.read(CombatStats) }, with: [Player] }) },
@@ -21,14 +22,14 @@ const flowOf = (run: ReturnType<typeof start>) => run.runtime.debug.dump().machi
 describe("menu requests", () => {
   it("enter the arena from the menu with the chosen team and challenge, in a fresh run, the first one on the field", () => {
     const run = start({ flow: "Menu" })
-    const team = [{ character: "gunner" as const, weapon: "bloodthirst" as const, skills: { special: "bladeWave" as const } }, { character: "swordsman" as const }]
+    const team = [{ character: "gunner" as const }, { character: "swordsman" as const }]
     run.requests.pending.push({ kind: "start", team, challenge: "crossfire", enemyLevel: 1 })
     run.step()
     const screen = run.runtime.inspect(Screen)
     expect(flowOf(run)).toBe("Playing")
     expect(screen.team).toEqual(team)
     expect(screen.challenge).toBe("crossfire")
-    expect(screen.stats).toEqual(withWeapon(defaultTuning.characters.gunner.stats, defaultTuning.weapons.bloodthirst))
+    expect(screen.stats).toEqual(defaultTuning.characters.gunner.stats)
   })
 
   it("retry and back to the menu only from the results screen; start again from the menu", () => {
@@ -48,7 +49,7 @@ describe("menu requests", () => {
     run.step()
     expect(flowOf(run)).toBe("Menu")
 
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman", weapon: "crescendo" }], challenge: "swarm", enemyLevel: 1 })
+    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "swarm", enemyLevel: 1 })
     run.step()
     expect(flowOf(run)).toBe("Playing")
     expect(run.runtime.inspect(Screen).challenge).toBe("swarm")
@@ -135,23 +136,41 @@ describe("menu helpers", () => {
 
   it("sets up a team like Genshin: a slot, then a character for it", () => {
     // A newcomer in the empty slot joins at the end.
-    expect(placeInTeam({ team: ["swordsman"], focus: 1 }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1 })
+    expect(placeInTeam({ team: ["swordsman"], focus: 1, aspects: {} }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1, aspects: {} })
     // In a filled slot she takes its place; one already in the team swaps places.
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0 }, "tidecaller")).toEqual({ team: ["tidecaller", "gunner"], focus: 0 })
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0 }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0 })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {} }, "tidecaller")).toEqual({ team: ["tidecaller", "gunner"], focus: 0, aspects: {} })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {} }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0, aspects: {} })
     // Picking one already in the team for the empty slot just goes to her.
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2 }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0 })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2, aspects: {} }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0, aspects: {} })
     // Removing moves the others up, and never empties the team.
-    expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2 }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1 })
-    expect(removeFromTeam({ team: ["swordsman"], focus: 0 }, 0)).toEqual({ team: ["swordsman"], focus: 0 })
+    expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2, aspects: {} }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1, aspects: {} })
+    expect(removeFromTeam({ team: ["swordsman"], focus: 0, aspects: {} }, 0)).toEqual({ team: ["swordsman"], focus: 0, aspects: {} })
   })
 
-  it("offers a character only weapons of its type", () => {
-    expect(weaponsFor(defaultTuning, "gunner").every((id) => defaultTuning.weapons[id].type === "gun")).toBe(true)
-    expect(weaponsFor(defaultTuning, "swordsman")).toContain("crescendo")
+  it("equips an aspect in the team on one member only: one on another moves to her, and leaving the team takes it off", () => {
+    const duelist = aspectId("duelist"), arc = aspectId("arc")
+    const draft = { team: ["swordsman", "stormcaller"] as const, focus: 0, aspects: {} }
+    const equipped = equipInDraft(draft, "swordsman", duelist)
+    expect(equipped.aspects).toEqual({ swordsman: duelist })
+    // Equipped again on someone else (a test: two of one class), it moves.
+    expect(equipInDraft(equipped, "stormcaller", duelist).aspects).toEqual({ stormcaller: duelist })
+    expect(equipInDraft(equipInDraft(equipped, "stormcaller", arc), "swordsman", null).aspects).toEqual({ stormcaller: arc })
+    // A member who leaves the team takes hers off.
+    expect(removeFromTeam(equipInDraft(equipped, "stormcaller", arc), 0).aspects).toEqual({ stormcaller: arc })
   })
 
-  it("names a character's element by her kit, and whether a team answers an enemy", () => {
+
+
+  it("offers a character only aspects of her class", () => {
+    for (const character of ["swordsman", "gunner", "tidecaller", "stormcaller"] as const) {
+      const offered = aspectsFor(defaultTuning, character)
+      expect(offered.length).toBeGreaterThan(0)
+      expect(offered.every((id) => defaultTuning.aspects[id].class === defaultTuning.characters[character].class)).toBe(true)
+    }
+    expect(aspectsFor(defaultTuning, "swordsman")).toContain("duelist")
+  })
+
+  it("names a character's element, and whether a team answers an enemy", () => {
     expect(elementOf(defaultTuning, "swordsman")).toBe("wind")
     expect(elementOf(defaultTuning, "gunner")).toBe("fire")
     // The chaser is weak to water: only a team bringing water answers it.
@@ -164,9 +183,10 @@ describe("menu helpers", () => {
   it("describes content from its data", () => {
     expect(describeObjective(defaultTuning.challenges.swarm.objective, 3)).toBe("Clear 3 waves")
     expect(describeObjective(defaultTuning.challenges.endless.objective, 8)).toBe("Clear 8 waves")
-    expect(defaultTuning.weapons.executioner.passives.map(describePassive)).toEqual(["+50% damage to enemies below 30% HP"])
-    expect(defaultTuning.weapons.bloodthirst.passives.map(describePassive)).toEqual(["On kill: heal 2% of max HP"])
-    expect(describePassive(defaultTuning.weapons.echoSaber.passives[0]!)).toMatch(/^On the combo finisher: set off a shockwave/)
+    expect(describePassive(damageBonus(50, targetHealthBelow(0.3)))).toBe("+50% damage to enemies below 30% HP")
+    expect(describePassive(on(kill(), heal(2)))).toBe("On kill: heal 2% of max HP")
+    const shockwave = nova({ radius: 150, power: 30, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.03, heavy: false })
+    expect(describePassive(on(doing(finisher()), cast(shockwave)))).toMatch(/^On the combo finisher: set off a shockwave/)
     expect(describeSkill(defaultTuning.skills.tide)).toBe("A water shockwave around you (50% ATK) · 10s cooldown, 100 energy, untouchable as it goes off")
     expect(describeSkill(defaultTuning.skills.flareJump)).toBe("A fire burst around you (22% ATK) as you leap away from your aim, leaving a fire pool · 7s cooldown, untouchable as it goes off")
   })

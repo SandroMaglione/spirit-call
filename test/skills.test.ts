@@ -6,7 +6,7 @@ import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut } from "./helpers.ts"
+import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -110,14 +110,15 @@ describe("a cut of wind (Space)", () => {
     expect(run.player().aim.x).toBeCloseTo(1, 6)
   })
 
-  it("drives what it hits back along the cut in a glide: the wind's push dies down slowly while it drives", () => {
+  it("sweeps what it hits back along the cut in a glide: light, pushed further, its push dying down slowly while it is swept", () => {
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1)], tuning })
     run.step(120)
     const [dummy] = run.world().enemies
-    // Gliding at the wind's decay while driven, then at the usual one.
-    const { decay, seconds } = defaultTuning.elements.wind
+    // Gliding at the swept decay while swept, then at the usual one.
+    const { decay, seconds, knockback: light } = defaultTuning.elements.swept
+    const push = wave.knockback * light
     const left = Math.exp(-decay * seconds)
-    const glide = (wave.knockback / decay) * (1 - left) + (wave.knockback * left) / defaultTuning.knockback.decay
+    const glide = (push / decay) * (1 - left) + (push * left) / defaultTuning.knockback.decay
     expect(dummy!.position.x - center.x - 100).toBeCloseTo(glide, -1)
     expect(glide).toBeGreaterThan(2 * (wave.knockback / defaultTuning.knockback.decay))
   })
@@ -173,7 +174,7 @@ describe("ultimates (Shift)", () => {
     run.step(20)
     const dealt = hp - run.world().enemies[0]!.health
     expect(dealt).toBeGreaterThan(0)
-    expect(run.world().energy).toBe(defaultTuning.energy.attack * defaultTuning.attacks.sword.combo[0]!.recovery)
+    expect(run.world().energy).toBe(defaultTuning.energy.attack * plainAttack(defaultTuning, "blade").combo[0]!.recovery)
   })
 
   it("caps a crowded special and gives the same energy at high level", () => {

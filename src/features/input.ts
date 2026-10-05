@@ -38,11 +38,12 @@ import {
   TouchState,
   Tuning,
   Viewport,
-  Weapon
+  BasicAttack
 } from "../schema.ts"
 import type { ControlsValue, SkillControl, SkillsValue } from "../schema.ts"
 import { skillAim } from "./skills.ts"
-import { moveReach } from "./weapons.ts"
+import { moveReach } from "./basic-attack.ts"
+import { attackOf } from "./build.ts"
 
 export const CaptureKeys = InputCapture.system(Game, { name: "Shooter/CaptureKeys", source: KeyboardInput, resource: Keys })
 
@@ -83,7 +84,7 @@ export const CaptureViewport = Game.System("Shooter/CaptureViewport", {
 export const ResolveControls = Game.System("Shooter/ResolveControls", {
   queries: {
     player: Game.Query({
-      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.read(Skills), weapon: Game.Query.read(Weapon), member: Game.Query.read(Member) },
+      selection: { position: Game.Query.read(Position), aim: Game.Query.read(Aim), skills: Game.Query.read(Skills), basicAttack: Game.Query.read(BasicAttack), member: Game.Query.read(Member) },
       with: [Player]
     }),
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox) }, with: [Enemy] })
@@ -113,7 +114,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, position: data.position.get(), radius: data.hurtbox.get().radius }))
     const state = player === undefined
       ? undefined
-      : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get(), attack: resources.tuning.get().attacks[player.data.weapon.get().attack] }
+      : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get(), attack: attackOf(resources.tuning.get(), player.data.basicAttack.get().attack) }
     resources.controls.set(party(resolveTouch(touch, previous, state, enemies, resources.tuning.get())))
     return
   }

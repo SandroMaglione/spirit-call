@@ -112,13 +112,56 @@
     "wallSlam",
     "carried",
     "withStormcaller",
-    "shocked"
+    "shocked",
+    "flare",
+    "splash",
+    "discharge",
+    "gale"
+  ],
+  "classes": [
+    "blade",
+    "gun",
+    "disc",
+    "staff"
+  ],
+  "aspects": [
+    "duelist",
+    "marksman",
+    "riptide",
+    "arc",
+    "gatheringEdge",
+    "scattergun",
+    "whirlpool",
+    "lightningRod"
   ],
   "retired": {
     "skills": [
       "nova",
       "grenade",
       "splash"
+    ],
+    "discoveries": [
+      "steam",
+      "carried",
+      "shocked"
+    ],
+    "weapons": [
+      "trainingBlade",
+      "crescendo",
+      "echoSaber",
+      "trainingPistol",
+      "executioner",
+      "bloodthirst",
+      "trainingDisc",
+      "undertow",
+      "trainingStaff",
+      "lightningRod"
+    ],
+    "attacks": [
+      "sword",
+      "gun",
+      "disc",
+      "staff"
     ]
   }
 }

@@ -8,7 +8,7 @@
  * attacker's break bar, the dash back, energy, a full magazine, and a
  * moment more of invulnerability to strike back in.
  */
-import { Dash, Dodged, Energy, Enemy, Game, Health, Invulnerable, PerfectDodged, Player, Poise, Position, SlowMotion, Tuning, Weapon } from "../schema.ts"
+import { Dash, Dodged, Energy, Enemy, Game, Health, Invulnerable, PerfectDodged, Player, Poise, Position, SlowMotion, Tuning, BasicAttack } from "../schema.ts"
 import { poiseOf } from "./poise.ts"
 
 const Attackers = Game.Query({ selection: { position: Game.Query.read(Position), enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise) } })
@@ -20,7 +20,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
         position: Game.Query.read(Position),
         dash: Game.Query.write(Dash),
         energy: Game.Query.write(Energy),
-        weapon: Game.Query.write(Weapon),
+        basicAttack: Game.Query.write(BasicAttack),
         invulnerable: Game.Query.write(Invulnerable)
       },
       with: [Player]
@@ -43,7 +43,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     data.dash.set({ ...dash, perfect: true, charges, cooldown: charges >= tuning.dash.charges ? 0 : dash.cooldown })
     if (rules.slowSeconds > 0) resources.slowMotion.set({ remaining: rules.slowSeconds, scale: rules.slowScale, dodge: true })
     if (rules.energy > 0) data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + rules.energy) }))
-    if (rules.reload) data.weapon.update((weapon) => ({ ...weapon, spent: 0, reloading: 0 }))
+    if (rules.reload) data.basicAttack.update((attack) => ({ ...attack, spent: 0, reloading: 0 }))
     data.invulnerable.update(({ remaining }) => ({ remaining: remaining + rules.invulnerability }))
     // The attacker's break bar fills (it breaks right after, see `BuildPoise`, if that fills it).
     const attacker = dodged.attacker === null ? undefined : lookup.getHandle(dodged.attacker, Attackers)

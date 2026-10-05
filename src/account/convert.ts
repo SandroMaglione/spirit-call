@@ -9,10 +9,10 @@ import type { QuestId } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CurrencyId } from "../content/currencies.ts"
 import type { DiscoveryId } from "../content/discoveries.ts"
-import type { WeaponId } from "../content/weapons.ts"
+import type { AspectId } from "../content/aspects.ts"
 import { teamSize } from "../content/characters.ts"
-import { createAccount, defaultEquipment, equip, owns, select, unlock, withClearedRewards } from "./account.ts"
-import type { Account, Equipment, Item, Owned, OwnedCharacter, OwnedWeapon, Play, QuestProgress, TierProgress } from "./account.ts"
+import { createAccount, owns, select, unlock, validAspects, withClearedRewards } from "./account.ts"
+import type { Account, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -29,8 +29,9 @@ const keep = <Id extends string, V>(ids: Record<Id, unknown>, saved: Readonly<Re
 
 /**
  * The account a (migrated) save describes. Content that no longer exists is
- * dropped; equipment that is no longer valid goes back to the character's
- * own; a team keeps the characters it still owns (or falls back to one it
+ * dropped; an aspect equipped in the team that is no longer valid (not
+ * owned, not of her class, or on someone else in the team too) goes back to
+ * her plain one; a team keeps the characters it still owns (or falls back to one it
  * owns), and something not open goes back to the starter's quest; and an
  * account left with no character gets the starter's back. Rewards added to quests it had already cleared are given
  * (see `withClearedRewards`). `dropped` says what was removed and `granted`
@@ -45,7 +46,7 @@ export const fromStored = (
   const dropped: Array<string> = []
   const owned: Owned = {
     characters: keep<CharacterId, OwnedCharacter>(tuning.characters, stored.owned.characters, "character", dropped),
-    weapons: keep<WeaponId, OwnedWeapon>(tuning.weapons, stored.owned.weapons, "weapon", dropped)
+    aspects: keep<AspectId, OwnedAspect>(tuning.aspects, stored.owned.aspects, "aspect", dropped)
   }
   const quests = keep<QuestId, QuestProgress>(tuning.quests, stored.quests, "quest", dropped)
   const hardcore: { [Id in TrackId]?: { readonly [tier: number]: TierProgress } } = {}
@@ -58,7 +59,7 @@ export const fromStored = (
     }
     hardcore[track] = kept
   }
-  const starterSelection: Account["selection"] = { team: [starter.selection.character], play: { kind: "quest", quest: starter.selection.quest } }
+  const starterSelection: Account["selection"] = { team: [starter.selection.character], aspects: {}, play: { kind: "quest", quest: starter.selection.quest } }
   let account: Account = {
     id: stored.id,
     createdAt: stored.createdAt,
@@ -66,7 +67,6 @@ export const fromStored = (
     totals: stored.totals,
     wallet: keep<CurrencyId, number>(tuning.currencies, stored.wallet, "currency", dropped),
     owned,
-    equipment: {},
     quests,
     hardcore,
     discoveries: keep<DiscoveryId, { readonly madeAt: number }>(tuning.discoveries, stored.discoveries, "discovery", dropped),
@@ -77,21 +77,6 @@ export const fromStored = (
   if (Object.keys(owned.characters).length === 0) account = starter.characters.reduce((next, id) => unlock(tuning, next, { kind: "character", id }, now), account)
   const rewarded = withClearedRewards(tuning, account, now)
   account = rewarded.account
-
-  for (const character of Object.keys(account.owned.characters) as Array<CharacterId>) {
-    const saved = stored.equipment[character]
-    const equipped = equip(tuning, account, character, saved === undefined ? defaultEquipment(tuning, character) : equipmentFrom(tuning, character, saved))
-    if (equipped.ok) {
-      account = equipped.value
-      continue
-    }
-    // Not valid any more: back to its own equipment, owning whatever of it was lost.
-    if (saved !== undefined) dropped.push(`${character}'s equipment`)
-    const own = defaultEquipment(tuning, character)
-    account = unlockIfMissing(tuning, account, { kind: "weapon", id: own.weapon }, now)
-    const reset = equip(tuning, account, character, own)
-    if (reset.ok) account = reset.value
-  }
 
   // The team keeps the characters that still exist and are owned, each once, in order.
   const savedTeam = [...new Set(stored.selection.team)]
@@ -108,6 +93,14 @@ export const fromStored = (
     if (!nothing) dropped.push("the last selection")
     account = { ...account, selection: { ...starterSelection, team } }
   }
+  // The aspects saved for the team, as far as the rules allow (see `teamProblems`).
+  const saved: { [Id in CharacterId]?: AspectId } = {}
+  for (const [character, aspect] of Object.entries(stored.selection.aspects)) {
+    if (known(tuning.characters, character) && known(tuning.aspects, aspect)) saved[character] = aspect
+  }
+  const aspects = validAspects(tuning, account, account.selection.team, saved)
+  if (Object.keys(aspects).length < Object.keys(stored.selection.aspects).length) dropped.push("an aspect equipped")
+  account = { ...account, selection: { ...account.selection, aspects } }
   return { account, dropped, granted: rewarded.granted }
 }
 
@@ -117,24 +110,15 @@ const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"
   return known(tuning.tracks, saved.track) ? { kind: "tier", track: saved.track, tier: saved.tier } : undefined
 }
 
-const unlockIfMissing = (tuning: Tuning, account: Account, item: Item, now: number): Account =>
-  owns(account, item) ? account : unlock(tuning, account, item, now)
-
-/** Saved equipment with typed ids; a weapon that names no content falls back to the character's own. */
-const equipmentFrom = (tuning: Tuning, character: CharacterId, saved: StoredAccountLatest["equipment"][string]): Equipment => ({
-  weapon: known(tuning.weapons, saved.weapon) ? saved.weapon : defaultEquipment(tuning, character).weapon
-})
-
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 5,
+  version: 6,
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,
   totals: account.totals,
   wallet: account.wallet,
   owned: account.owned,
-  equipment: account.equipment,
   quests: account.quests,
   hardcore: account.hardcore,
   discoveries: account.discoveries,
@@ -143,20 +127,16 @@ export const toStored = (account: Account): StoredAccountLatest => ({
 
 /**
  * The account for a device that saved a profile before accounts: a new
- * account (owning the starter set), keeping what it can of that profile's
- * last build (only what the new account owns; skills are each character's
- * own now). Challenges became quests, so its last challenge is not kept.
+ * account (owning the starter set), keeping that profile's last character if
+ * the new account owns her (her weapon and skills are gone: each character
+ * has her own kit and class now). Challenges became quests, so its last
+ * challenge is not kept.
  */
 export const accountFromLegacy = (tuning: Tuning, starter: StarterSet, legacy: LegacyProfileV1, id: string, now: number): Account => {
   let account = createAccount(tuning, starter, id, now)
   const { build } = legacy.selection
   if (known(tuning.characters, build.character) && owns(account, { kind: "character", id: build.character })) {
-    const character = build.character
-    const own = defaultEquipment(tuning, character)
-    const weapon = build.weapon !== undefined && known(tuning.weapons, build.weapon) ? build.weapon : own.weapon
-    const equipped = equip(tuning, account, character, { weapon })
-    if (equipped.ok) account = equipped.value
-    account = { ...account, selection: { ...account.selection, team: [character] } }
+    account = { ...account, selection: { ...account.selection, team: [build.character] } }
   }
   return account
 }

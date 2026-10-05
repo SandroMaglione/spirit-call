@@ -10,8 +10,9 @@
 import { Descriptor } from "@typeonce/bevy-ts"
 
 import type { ChallengeId } from "../content/challenges.ts"
-import { Challenge, EnemyLevel, Flow, Game, Paused, Practice, RunResult, Team } from "../schema.ts"
+import { Challenge, EnemyLevel, Flow, Game, Paused, Practice, RunResult, Team, Tuning } from "../schema.ts"
 import type { BuildValue, PracticeValue } from "../schema.ts"
+import { withValidAspects } from "./build.ts"
 
 export type UiRequest =
   /** Enter the arena with this team (in order) to face this challenge. */
@@ -48,7 +49,8 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
     enemyLevel: Game.System.writeResource(EnemyLevel),
     paused: Game.System.writeResource(Paused),
     result: Game.System.readResource(RunResult),
-    practice: Game.System.writeResource(Practice)
+    practice: Game.System.writeResource(Practice),
+    tuning: Game.System.readResource(Tuning)
   },
   machines: { flow: Game.System.machine(Flow) },
   nextMachines: { flow: Game.System.nextState(Flow) },
@@ -63,7 +65,8 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
     switch (request.kind) {
       case "start":
         if (flow !== "Menu" && !onResults) break
-        resources.team.set(request.team)
+        // One aspect on one member at most, each of her class (see `withValidAspects`).
+        resources.team.set(withValidAspects(resources.tuning.get(), request.team))
         resources.challenge.set(request.challenge)
         resources.enemyLevel.set(request.enemyLevel)
         resources.practice.set(request.practice ?? { kinds: [], elites: false })

@@ -30,7 +30,7 @@ export interface RunPay {
 
 /**
  * How stats grow with level, the same for everything that has a level
- * (characters, weapons, enemies): at level 1 a stat is its base, and at the
+ * (characters and enemies): at level 1 a stat is its base, and at the
  * maximum level `band` times it, along a curve of `shape` (1 is a straight
  * line; above 1 grows slowly at first and faster near the top). Keeping the
  * band narrow is what lets a skilled low-level team clear hard content (see
@@ -51,7 +51,7 @@ export const progression = {
    * kills or for speed.
    */
   loss: 0.5,
-  /** Gold every run pays (see `RunPay`): the steady income for training characters and weapons. */
+  /** Gold every run pays (see `RunPay`): the steady income for training characters. */
   gold: { base: 100, perLevel: 25 } satisfies RunPay,
   /** The account level: it rises by playing, in every mode, and gates later quests. */
   account: {
@@ -70,13 +70,5 @@ export const progression = {
    */
   character: {
     curve: { maxLevel: 40, base: 60, growth: 40, square: 5 } satisfies LevelCurve
-  },
-  /**
-   * Each weapon's level: bought with gold only, along `cost` (a level curve
-   * in gold). A level raises the weapon's ATK along the stat curve; its
-   * bonus and passives stay as they are.
-   */
-  weapon: {
-    cost: { maxLevel: 20, base: 100, growth: 80, square: 10 } satisfies LevelCurve
   }
 }

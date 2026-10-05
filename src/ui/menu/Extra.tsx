@@ -9,6 +9,7 @@ import { useSignal } from "@preact/signals"
 import { Dialog } from "../Dialog.tsx"
 import { Icon } from "../Icon.tsx"
 import { teamLevel } from "../../account/account.ts"
+import type { TeamAspects } from "../../account/account.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import type { UiActions, UiStore } from "../store.ts"
@@ -22,12 +23,13 @@ const modes: { readonly [M in Mode]: { readonly name: string } } = {
   practice: { name: "Enemy Practice" }
 }
 
-export const Extra = ({ store, actions, nav, mode, team }: {
+export const Extra = ({ store, actions, nav, mode, team, aspects }: {
   readonly store: UiStore
   readonly actions: UiActions
   readonly nav: Nav
   readonly mode: Mode
   readonly team: ReadonlyArray<CharacterId>
+  readonly aspects: TeamAspects
 }) => {
   const information = useSignal(false)
   const tuning = store.tuning.value
@@ -56,7 +58,7 @@ export const Extra = ({ store, actions, nav, mode, team }: {
           <div class="brief__end">
             <div class="brief__actions">
               <button type="button" class="icon-button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}><Icon name="team" /></button>
-              <Cta onClick={() => actions.enterExtra(team, { kind: "training" })}>Train</Cta>
+              <Cta onClick={() => actions.enterExtra(team, aspects, { kind: "training" })}>Train</Cta>
             </div>
           </div>
         </section>
@@ -88,7 +90,7 @@ export const Extra = ({ store, actions, nav, mode, team }: {
           <span class="brief__done">{picks.kinds.length === 0 ? "Tap the enemies to face" : `${picks.kinds.length} picked`}</span>
           <div class="brief__actions">
             <button type="button" class="icon-button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}><Icon name="team" /></button>
-            <Cta disabled={picks.kinds.length === 0} onClick={() => actions.enterExtra(team, { kind: "practice", picks })}>
+            <Cta disabled={picks.kinds.length === 0} onClick={() => actions.enterExtra(team, aspects, { kind: "practice", picks })}>
               Start
             </Cta>
           </div>

@@ -16,7 +16,7 @@ import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { MoveDiscs } from "./features/discs.ts"
-import { TickStates } from "./features/elements.ts"
+import { ApplyStateBursts, ArcCharges, TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
 import { PerfectDodge } from "./features/dodge.ts"
 import { UpdateElites } from "./features/elites.ts"
@@ -25,7 +25,7 @@ import { UpdateWards } from "./features/wards.ts"
 import { MendInTraining } from "./features/training.ts"
 import { KeepPracticeField } from "./features/practice.ts"
 import { BuildPoise } from "./features/poise.ts"
-import { BlowPools, DriveWithWind } from "./features/wind.ts"
+import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
@@ -36,9 +36,9 @@ import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
-import { AbsorbIntoVortices, CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
+import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
-import { UseBasicAttack } from "./features/weapons.ts"
+import { UseBasicAttack } from "./features/basic-attack.ts"
 import { DirectWaves } from "./features/waves.ts"
 import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema.ts"
 
@@ -113,21 +113,22 @@ const gameplay = Game.Schedule.when(
   UpdateElites,
   UpdateBursts,
   IntegrateBodies,
-  // Right after moving and before pushes die down (and the wind's drive runs
-  // down with them): it compares how far a driven body moved with its push.
-  DriveWithWind,
+  // Right after moving and before pushes die down: it compares how far a
+  // swept body moved with its push.
+  SlamSwept,
   DecayKnockback,
   // Everything that hurts emits `Damage`: things in flight, hitboxes, then
-  // pools and states (pools set states; states burn).
+  // pools and states (pools set states; states burn), and last step's bursts
+  // and arcs.
   MoveProjectiles,
   MoveDiscs,
   ResolveHitboxes,
-  AbsorbIntoVortices,
   UpdateVortices,
   UpdateTotems,
-  BlowPools,
   UpdateGround,
   TickStates,
+  ApplyStateBursts,
+  ArcCharges,
   ApplyDamage,
   MendInTraining,
   ProcessPendingSpawns,

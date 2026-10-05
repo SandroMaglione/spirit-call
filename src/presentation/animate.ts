@@ -9,7 +9,8 @@ import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
-import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Ward, Weapon } from "../schema.ts"
+import { attackOf } from "../features/build.ts"
+import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Ward, BasicAttack } from "../schema.ts"
 import { enemyPose } from "./enemy-pose.ts"
 import { enemyLooks } from "./looks.ts"
 import type { ActorNode } from "./host-types.ts"
@@ -91,7 +92,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
 export const PlayMoments = Game.System("Shooter/PlayMoments", {
   events: { action: Game.System.readEvent(Action), cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit) },
   queries: {
-    player: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }),
+    player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack) }, with: [Player] }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
@@ -107,7 +108,7 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     if (action.kind === "attack") {
       const shot = action.power ? moments.power : moments.attack?.[Math.min(action.step, moments.attack.length - 1)]
       // A melee blow lands while its hitbox is out (in its middle); a shot leaves at once.
-      const hitAt = isMelee(action.move) ? tuning.attacks[player.data.weapon.get().attack].active / 2 : 0
+      const hitAt = isMelee(action.move) ? attackOf(tuning, player.data.basicAttack.get().attack).active / 2 : 0
       if (shot !== undefined) hers.body.play(shot, action.move.recovery, hitAt)
     } else if (action.kind === "dash" && moments.dash !== undefined) {
       hers.body.play(moments.dash, tuning.dash.duration, null)

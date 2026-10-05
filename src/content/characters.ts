@@ -1,17 +1,16 @@
 /**
- * Characters: base stats, body, their own moveset, the type of weapon they
- * wield (and the one they start with), and their kit (their own special and
- * ultimate).
+ * Characters: base stats, body, her element and her class (fixed), and her
+ * kit (her own special and ultimate).
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  *
- * What enters the arena is a team of builds (a character plus the weapon
- * equipped on her), each resolved into final stats and kit by
- * `resolveBuild`. Base stats are before the weapon: a character's ATK is
- * mostly its weapon's.
+ * What enters the arena is a team of builds (a character at her level, and
+ * the aspect of her class equipped on her), each resolved into final stats
+ * and kit by `resolveBuild`. Her level gives all her stats; an aspect gives
+ * none (see docs/aspects.md).
  */
-import type { AttackId } from "./attacks.ts"
+import type { ClassId } from "./classes.ts"
+import type { ElementId } from "./elements.ts"
 import type { SkillId, SkillSlot } from "./skills.ts"
-import type { WeaponId, WeaponType } from "./weapons.ts"
 
 /** The most characters a team holds (one on the field, the others on the bench). */
 export const teamSize = 3
@@ -36,12 +35,10 @@ export interface CharacterSpec {
   readonly radius: number
   /** Radius enemy attacks test against; smaller than the body, so near misses read as misses. */
   readonly hurtboxRadius: number
-  /** The character's moveset (see `content/attacks.ts`). */
-  readonly attack: AttackId
-  /** The weapons it can wield. */
-  readonly weaponType: WeaponType
-  /** The weapon it wields unless the build equips another of its type. */
-  readonly weapon: WeaponId
+  /** Her element: what her skills, and her aspect's elemental moment, carry (see docs/elements.md). */
+  readonly element: ElementId
+  /** Her class: how her basic attack fights, shaped by the aspect equipped on her (see docs/aspects.md). */
+  readonly class: ClassId
   /** Her kit: her own skill in each slot (no other character has them). */
   readonly skills: { readonly [Slot in SkillSlot]: SkillId }
 }
@@ -50,48 +47,44 @@ const character = (spec: CharacterSpec): CharacterSpec => spec
 
 /** Every character, by id. */
 export const characters = {
-  /** Close range: sturdy, with the sword combo, the Gale that gathers enemies around her, and the Cyclone (wind). */
+  /** Wind, Blade: sturdy and close; the Gust throws a crowd off, the Cyclone draws it in. */
   swordsman: character({
     name: "Swordsman",
-    stats: { hp: 75, atk: 80, def: 20, speed: 290 },
+    stats: { hp: 75, atk: 100, def: 20, speed: 290 },
     radius: 16,
     hurtboxRadius: 11,
-    attack: "sword",
-    weaponType: "sword",
-    weapon: "trainingBlade",
+    element: "wind",
+    class: "blade",
     skills: { special: "bladeWave", ultimate: "cyclone" }
   }),
-  /** Range: quicker and frailer, with the gun, grenades, and the Barrage (fire). */
+  /** Fire, Gun: quicker and frailer, at range; the Flare Jump leaps out of a crowd, the Barrage rains fire. */
   gunner: character({
     name: "Gunner",
-    stats: { hp: 64, atk: 80, def: 10, speed: 305 },
+    stats: { hp: 64, atk: 100, def: 10, speed: 305 },
     radius: 16,
     hurtboxRadius: 11,
-    attack: "gun",
-    weaponType: "gun",
-    weapon: "trainingPistol",
+    element: "fire",
+    class: "gun",
     skills: { special: "flareJump", ultimate: "barrage" }
   }),
-  /** Middle range: discs that cut there and back, water that soaks and slows, and the Tide. */
+  /** Water, Disc: at middle range; the Tidal Wave shoves and soaks, the Tide soaks everything around her. */
   tidecaller: character({
     name: "Tidecaller",
-    stats: { hp: 69, atk: 80, def: 15, speed: 298 },
+    stats: { hp: 69, atk: 100, def: 15, speed: 298 },
     radius: 16,
     hurtboxRadius: 11,
-    attack: "disc",
-    weaponType: "disc",
-    weapon: "trainingDisc",
+    element: "water",
+    class: "disc",
     skills: { special: "tidalWave", ultimate: "tide" }
   }),
-  /** Support at middle range: a staff, a totem that zaps enemies or heals whoever stands by it, and a thunderclap that heals the team. */
+  /** Thunder, Staff: support at middle range; a totem that zaps enemies or heals whoever stands by it, and a thunderclap that heals the team. */
   stormcaller: character({
     name: "Stormcaller",
-    stats: { hp: 66, atk: 80, def: 12, speed: 298 },
+    stats: { hp: 66, atk: 100, def: 12, speed: 298 },
     radius: 16,
     hurtboxRadius: 11,
-    attack: "staff",
-    weaponType: "staff",
-    weapon: "trainingStaff",
+    element: "thunder",
+    class: "staff",
     skills: { special: "sparkTotem", ultimate: "thunderclap" }
   })
 }

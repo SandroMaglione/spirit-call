@@ -7,32 +7,32 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { LobMove, MeleeMove, ShotMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Stats, Weapon } from "../src/schema.ts"
+import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Stats, BasicAttack } from "../src/schema.ts"
 
 const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map(({ data }) => data.lobbed.get()))
 import type { BuildValue } from "../src/schema.ts"
-import { ClearEnemies, gunner, start, swordsman } from "./helpers.ts"
+import { ClearEnemies, gunner, start, swordsman, plainAttack } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
 const hp = defaultTuning.enemies.dummy.hp
-const sword = defaultTuning.attacks.sword
+const sword = plainAttack(defaultTuning, "blade")
 const swordPower = sword.power!
-const gun = defaultTuning.attacks.gun
+const gun = plainAttack(defaultTuning, "gun")
 const gunPower = gun.power!
 
 const World = Game.Inspector("Test/Weapons", {
   queries: {
     enemies: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Enemy] }),
     projectiles: Game.Query({ selection: { projectile: Game.Query.read(Projectile) } }),
-    player: Game.Query({ selection: { position: Game.Query.read(Position), weapon: Game.Query.read(Weapon) }, with: [Player] })
+    player: Game.Query({ selection: { position: Game.Query.read(Position), basicAttack: Game.Query.read(BasicAttack) }, with: [Player] })
   },
   resources: { stats: Game.System.readResource(Stats) }
 }, ({ queries, resources }) => ({
   enemies: queries.enemies.each().map(({ data }) => data.health.get().current),
   projectiles: queries.projectiles.each().map(({ data }) => data.projectile.get()),
   player: queries.player.each()[0]!.data.position.get(),
-  weapon: queries.player.each()[0]!.data.weapon.get(),
+  weapon: queries.player.each()[0]!.data.basicAttack.get(),
   moves: resources.stats.get().shots
 }))
 
@@ -109,7 +109,7 @@ describe("gun", () => {
     expect(run.world().projectiles).toHaveLength(expected)
   })
 
-  it("charges a grenade, lobbed over walls toward the cursor, bursting in fire", () => {
+  it("charges a grenade, lobbed over walls toward the cursor, carrying no element (her element is her skills' and her aspect's moment)", () => {
     const grenade = gunPower.move as LobMove
     const full = gunPower.holdDelay + gunPower.chargeTime
     const run = range([], hold(full + 0.05), gunner)
@@ -117,7 +117,7 @@ describe("gun", () => {
     const [thrown] = run.runtime.inspect(Grenades)
     expect(thrown?.effect.radius).toBe(grenade.radius)
     expect(thrown?.blow.heavy).toBe(true)
-    expect(thrown?.blow.element?.id).toBe("fire")
+    expect(thrown?.blow.element).toBeNull()
     run.step(steps(grenade.flightTime + grenade.fuse) + 2)
     expect(run.runtime.inspect(Grenades)).toEqual([])
   })
@@ -126,8 +126,8 @@ describe("gun", () => {
 describe("stats in play", () => {
   it("scale damage by the character's ATK", () => {
     const first = sword.combo[0] as MeleeMove
-    // 130 base plus the training blade's 20: 150.
-    const strong = tuningWith({ characters: { swordsman: { stats: { atk: 130 } } } })
+    // Her ATK is all her own: 150.
+    const strong = tuningWith({ characters: { swordsman: { stats: { atk: 150 } } } })
     const run = range([60], taps([first]), undefined, strong)
     run.step(4)
     expect(run.world().enemies).toEqual([hp - first.power * 1.5])

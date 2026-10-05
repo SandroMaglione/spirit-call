@@ -1,6 +1,6 @@
 /**
- * The player's account on this device: what it owns, how each character is
- * equipped, its experience, currency, and lifetime totals, how far it got in
+ * The player's account on this device: what it owns (characters, and aspects
+ * for their classes), its experience, currency, and lifetime totals, how far it got in
  * each quest and hardcore tier, and what it last entered. These are the account's rules as pure
  * functions; `AccountStore` loads, saves, and exposes them as named actions
  * (a server can later expose the same actions and validate them).
@@ -18,9 +18,11 @@ import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { ResetSpec, TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, Unlock } from "../content/quests.ts"
-import type { WeaponId } from "../content/weapons.ts"
+import type { AspectId } from "../content/aspects.ts"
+import { aspectProblems, withValidAspects } from "../features/build.ts"
+import type { AspectProblem } from "../features/build.ts"
 import type { BuildValue, RunResultValue } from "../schema.ts"
-import { experienceFor, levelOf } from "./progression.ts"
+import { levelOf } from "./progression.ts"
 import type { LevelProgress } from "./progression.ts"
 
 /** When something was unlocked (epoch milliseconds). */
@@ -33,21 +35,18 @@ export interface OwnedCharacter extends Unlocked {
   readonly experience: number
 }
 
-/** A weapon owned: its level (bought with gold, see `upgrade`), and `copies` counting duplicates. */
-export interface OwnedWeapon extends Unlocked {
+/** An aspect owned, once: `copies` counts it coming again (duplicates add no power; see docs/aspects.md). */
+export interface OwnedAspect extends Unlocked {
   readonly copies: number
-  readonly level: number
 }
 
 export interface Owned {
   readonly characters: { readonly [Id in CharacterId]?: OwnedCharacter }
-  readonly weapons: { readonly [Id in WeaponId]?: OwnedWeapon }
+  readonly aspects: { readonly [Id in AspectId]?: OwnedAspect }
 }
 
-/** What a character has equipped: a weapon of its type (her skills are her own, see `CharacterSpec.skills`). */
-export interface Equipment {
-  readonly weapon: WeaponId
-}
+/** The aspect equipped on each character in the team (none: her class's plain one), one character each at most (see `teamProblems`). */
+export type TeamAspects = { readonly [Id in CharacterId]?: AspectId }
 
 /** Lifetime totals over every run. */
 export interface Totals {
@@ -95,16 +94,14 @@ export interface Account {
   /** Currency held. */
   readonly wallet: Amounts
   readonly owned: Owned
-  /** Each owned character's equipment. */
-  readonly equipment: { readonly [Id in CharacterId]?: Equipment }
   /** Each quest attempted so far. */
   readonly quests: { readonly [Id in QuestId]?: QuestProgress }
   /** Each hardcore tier attempted so far, by track and tier number. */
   readonly hardcore: { readonly [Id in TrackId]?: { readonly [tier: number]: TierProgress } }
   /** The discoveries made, and when (epoch milliseconds); each pays its rewards once. */
   readonly discoveries: { readonly [Id in DiscoveryId]?: { readonly madeAt: number } }
-  /** What the menu starts from: the team last entered with (in order; see `teamSize`), and what for. */
-  readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly play: Play }
+  /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects equipped in it, and what for. */
+  readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly play: Play }
 }
 
 /** Something that can be owned. */
@@ -114,37 +111,28 @@ export const owns = (account: Account, item: Item): boolean => {
   switch (item.kind) {
     case "character":
       return account.owned.characters[item.id] !== undefined
-    case "weapon":
-      return account.owned.weapons[item.id] !== undefined
+    case "aspect":
+      return account.owned.aspects[item.id] !== undefined
   }
 }
 
-/** A character's own equipment (her starting weapon). */
-export const defaultEquipment = (tuning: Tuning, character: CharacterId): Equipment => ({ weapon: tuning.characters[character].weapon })
-
 /**
- * `account` with `item` owned. A character comes with her own weapon, so
- * she can always be equipped, and starts with it equipped. A
- * weapon owned again gains a copy; anything else owned again is unchanged.
+ * `account` with `item` owned. A character comes with her kit, and fights
+ * with her class's plain aspect until another is equipped. An aspect owned
+ * again counts a copy (it adds no power); a character owned again is
+ * unchanged.
  */
-export const unlock = (tuning: Tuning, account: Account, item: Item, now: number): Account => {
+export const unlock = (_tuning: Tuning, account: Account, item: Item, now: number): Account => {
   const owned = account.owned
   switch (item.kind) {
     case "character": {
       if (owns(account, item)) return account
-      const equipment = defaultEquipment(tuning, item.id)
-      let next: Account = {
-        ...account,
-        owned: { ...owned, characters: { ...owned.characters, [item.id]: { unlockedAt: now, experience: 0 } } },
-        equipment: { ...account.equipment, [item.id]: equipment }
-      }
-      if (!owns(next, { kind: "weapon", id: equipment.weapon })) next = unlock(tuning, next, { kind: "weapon", id: equipment.weapon }, now)
-      return next
+      return { ...account, owned: { ...owned, characters: { ...owned.characters, [item.id]: { unlockedAt: now, experience: 0 } } } }
     }
-    case "weapon": {
-      const current = owned.weapons[item.id]
-      const weapon: OwnedWeapon = current === undefined ? { unlockedAt: now, copies: 1, level: 1 } : { ...current, copies: current.copies + 1 }
-      return { ...account, owned: { ...owned, weapons: { ...owned.weapons, [item.id]: weapon } } }
+    case "aspect": {
+      const current = owned.aspects[item.id] as OwnedAspect | undefined
+      const aspect: OwnedAspect = current === undefined ? { unlockedAt: now, copies: 1 } : { ...current, copies: current.copies + 1 }
+      return { ...account, owned: { ...owned, aspects: { ...owned.aspects, [item.id]: aspect } } }
     }
   }
 }
@@ -171,7 +159,7 @@ export const withClearedRewards = (tuning: Tuning, account: Account, now: number
 /** Every item in the content, for unlocking everything (a dev tool). */
 export const everything = (tuning: Tuning): ReadonlyArray<Item> => [
   ...(Object.keys(tuning.characters) as Array<CharacterId>).map((id) => ({ kind: "character" as const, id })),
-  ...(Object.keys(tuning.weapons) as Array<WeaponId>).map((id) => ({ kind: "weapon" as const, id }))
+  ...(Object.keys(tuning.aspects) as Array<AspectId>).map((id) => ({ kind: "aspect" as const, id }))
 ]
 
 /** A new account owning `starter` and nothing else. */
@@ -182,15 +170,14 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     experience: 0,
     totals: noTotals,
     wallet: {},
-    owned: { characters: {}, weapons: {} },
-    equipment: {},
+    owned: { characters: {}, aspects: {} },
     quests: {},
     hardcore: {},
     discoveries: {},
-    selection: { team: [starter.selection.character], play: { kind: "quest", quest: starter.selection.quest } }
+    selection: { team: [starter.selection.character], aspects: {}, play: { kind: "quest", quest: starter.selection.quest } }
   }
   const items: Array<Item> = [
-    ...starter.weapons.map((id) => ({ kind: "weapon" as const, id })),
+    ...starter.aspects.map((id) => ({ kind: "aspect" as const, id })),
     ...starter.characters.map((id) => ({ kind: "character" as const, id }))
   ]
   return items.reduce((account, item) => unlock(tuning, account, item, now), empty)
@@ -276,12 +263,43 @@ export const tierRewardsAvailable = (tuning: Tuning, account: Account, track: Tr
   return given === null || given < periodOf(tuning.reset, now)
 }
 
+/**
+ * What breaks the rules of a team's aspects (see docs/aspects.md): an
+ * aspect not owned, of another class than hers, or on two members.
+ */
+export type TeamProblem = AspectProblem | { readonly kind: "notOwned"; readonly character: CharacterId; readonly aspect: AspectId }
+
+/**
+ * The one check of a team's aspects: each owned, of her class, and on one
+ * member at most. Equipping (`select`), a save loaded (`validAspects`), and
+ * entering the arena (`withValidAspects`) all hold to it.
+ */
+export const teamProblems = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects): Array<TeamProblem> => [
+  ...team.flatMap((character): Array<TeamProblem> => {
+    const aspect = aspects[character]
+    return aspect !== undefined && !owns(account, { kind: "aspect", id: aspect }) ? [{ kind: "notOwned", character, aspect }] : []
+  }),
+  ...aspectProblems(tuning, team.map((character) => ({ character, aspect: aspects[character] })))
+]
+
+/** `aspects` on `team` as far as the rules allow (see `teamProblems`): the rest are taken off, the first holder of one keeping it. */
+export const validAspects = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects): TeamAspects => {
+  const owned = team.map((character) => {
+    const aspect = aspects[character]
+    return aspect !== undefined && owns(account, { kind: "aspect", id: aspect }) ? { character, aspect } : { character }
+  })
+  const kept: { [Id in CharacterId]?: AspectId } = {}
+  for (const build of withValidAspects(tuning, owned)) if ("aspect" in build && build.aspect !== undefined) kept[build.character] = build.aspect
+  return kept
+}
+
 /** Why an action was refused. */
 export type Refusal =
   | { readonly kind: "notOwned"; readonly item: Item }
   /** A team of none, of more than `teamSize`, or with someone twice. */
   | { readonly kind: "badTeam"; readonly team: ReadonlyArray<CharacterId> }
-  | { readonly kind: "wrongWeaponType"; readonly character: CharacterId; readonly weapon: WeaponId }
+  /** Aspects that break the rules (see `teamProblems`). */
+  | { readonly kind: "badAspects"; readonly problems: ReadonlyArray<TeamProblem> }
   | { readonly kind: "locked"; readonly play: Play; readonly lock: Lock }
   | { readonly kind: "notEnough"; readonly currency: CurrencyId; readonly needed: number; readonly held: number }
   | { readonly kind: "maxLevel"; readonly item: Item }
@@ -320,52 +338,27 @@ export const train = (tuning: Tuning, account: Account, character: CharacterId):
   return { ok: true, value: addCharacterExperience(paid.value, character, progress.needed - progress.into) }
 }
 
-/** `weapon`'s level in `account` (1 when not owned). */
-export const weaponLevel = (account: Account, weapon: WeaponId): number => account.owned.weapons[weapon]?.level ?? 1
-
-/** The gold that takes `weapon` to its next level, or `null` at the maximum level. */
-export const upgradeCost = (tuning: Tuning, account: Account, weapon: WeaponId): Amounts | null => {
-  const level = weaponLevel(account, weapon)
-  const cost = tuning.progression.weapon.cost
-  return level >= cost.maxLevel ? null : { gold: experienceFor(cost, level) }
-}
-
-/** `account` with `weapon` a level higher, paid with gold, if it owns it and it is not at the maximum. */
-export const upgrade = (tuning: Tuning, account: Account, weapon: WeaponId): Checked<Account> => {
-  const item: Item = { kind: "weapon", id: weapon }
-  const owned = account.owned.weapons[weapon]
-  if (owned === undefined) return refuse({ kind: "notOwned", item })
-  const cost = upgradeCost(tuning, account, weapon)
-  if (cost === null) return refuse({ kind: "maxLevel", item })
-  const paid = spend(account, cost)
-  if (!paid.ok) return paid
-  const weapons = { ...paid.value.owned.weapons, [weapon]: { ...owned, level: owned.level + 1 } }
-  return { ok: true, value: { ...paid.value, owned: { ...paid.value.owned, weapons } } }
-}
-
-/** `account` with `character` equipped with `equipment`, if it owns all of it and the weapon fits. */
-export const equip = (tuning: Tuning, account: Account, character: CharacterId, equipment: Equipment): Checked<Account> => {
-  const needed: Array<Item> = [{ kind: "character", id: character }, { kind: "weapon", id: equipment.weapon }]
-  const missing = needed.find((item) => !owns(account, item))
-  if (missing !== undefined) return refuse({ kind: "notOwned", item: missing })
-  if (tuning.weapons[equipment.weapon].type !== tuning.characters[character].weaponType) {
-    return refuse({ kind: "wrongWeaponType", character, weapon: equipment.weapon })
-  }
-  return { ok: true, value: { ...account, equipment: { ...account.equipment, [character]: equipment } } }
-}
-
 /** Whether `team` is a team: one to `teamSize` characters, each once. */
 export const validTeam = (team: ReadonlyArray<CharacterId>): boolean =>
   team.length >= 1 && team.length <= teamSize && new Set(team).size === team.length
 
-/** `account` with `team` and `play` selected, if it is a team the account owns and `play` is open. */
-export const select = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, play: Play): Checked<Account> => {
+/**
+ * `account` with `team`, the aspects equipped in it (by default, as they
+ * were), and `play` selected, if it is a team the account owns, its aspects
+ * keep the rules (see `teamProblems`), and `play` is open. Aspects are kept
+ * for the team's members only.
+ */
+export const select = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, play: Play, aspects: TeamAspects = account.selection.aspects): Checked<Account> => {
   if (!validTeam(team)) return refuse({ kind: "badTeam", team })
   const missing = team.find((character) => !owns(account, { kind: "character", id: character }))
   if (missing !== undefined) return refuse({ kind: "notOwned", item: { kind: "character", id: missing } })
+  const problems = teamProblems(tuning, account, team, aspects)
+  if (problems.length > 0) return refuse({ kind: "badAspects", problems })
   const lock = playLock(tuning, account, play)
   if (lock !== null) return refuse({ kind: "locked", play, lock })
-  return { ok: true, value: { ...account, selection: { team, play } } }
+  const kept: { [Id in CharacterId]?: AspectId } = {}
+  for (const character of team) if (aspects[character] !== undefined) kept[character] = aspects[character]
+  return { ok: true, value: { ...account, selection: { team, aspects: kept, play } } }
 }
 
 /** Levels before and after something. */
@@ -499,21 +492,16 @@ export const recordRun = (
   return { account: next, earned: { experience, level, pay, levelRewards, discoveries: made, rewards } }
 }
 
-/** `character`'s equipment in `account` (its own when it has none saved). */
-export const equipmentOf = (tuning: Tuning, account: Account, character: CharacterId): Equipment =>
-  account.equipment[character] ?? defaultEquipment(tuning, character)
-
-/** The build `character` enters the arena with: at its level, as equipped, with the weapon at its level. */
-export const buildOf = (tuning: Tuning, account: Account, character: CharacterId): BuildValue => {
-  const equipment = equipmentOf(tuning, account, character)
+/** The build `character` enters the arena with: at her level, with the aspect equipped on her in the team (her class's plain one when none). */
+export const buildOf = (tuning: Tuning, account: Account, character: CharacterId, aspects: TeamAspects = account.selection.aspects): BuildValue => {
+  const aspect = aspects[character]
   return {
     character,
     level: characterLevel(tuning, account, character).level,
-    weapon: equipment.weapon,
-    weaponLevel: weaponLevel(account, equipment.weapon)
+    ...(aspect === undefined ? {} : { aspect })
   }
 }
 
-/** The builds `team` enters the arena with, in order (see `buildOf`). */
-export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>): ReadonlyArray<BuildValue> =>
-  team.map((character) => buildOf(tuning, account, character))
+/** The builds `team` enters the arena with, in order, with `aspects` equipped (see `buildOf`). */
+export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects = account.selection.aspects): ReadonlyArray<BuildValue> =>
+  team.map((character) => buildOf(tuning, account, character, aspects))

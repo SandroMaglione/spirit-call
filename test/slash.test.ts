@@ -7,11 +7,11 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, Weapon } from "../src/schema.ts"
-import { start, windCut, withWindCut } from "./helpers.ts"
+import { Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, BasicAttack } from "../src/schema.ts"
+import { start, windCut, withWindCut, plainAttack } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const sword = defaultTuning.attacks.sword
+const sword = plainAttack(defaultTuning, "blade")
 const [first, second, third, finisher] = sword.combo as [MeleeMove, MeleeMove, MeleeMove, MeleeMove]
 /** The sword with its combo moves by name. */
 const slash = { ...sword, first, second, third, finisher }
@@ -38,8 +38,8 @@ const HitStopLeft = Game.Inspector("Test/HitStopLeft", {
 
 /** The sword move done last, by name ("ready": none, the next press starts the combo). */
 const ComboState = Game.Inspector("Test/Combo", {
-  queries: { player: Game.Query({ selection: { weapon: Game.Query.read(Weapon) }, with: [Player] }) }
-}, ({ queries }) => ["first", "second", "third", "finisher"][queries.player.each()[0]!.data.weapon.get().step] ?? "ready")
+  queries: { player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack) }, with: [Player] }) }
+}, ({ queries }) => ["first", "second", "third", "finisher"][queries.player.each()[0]!.data.basicAttack.get().step] ?? "ready")
 
 /** Replaces the training dummies with dummies at `offsets` from the player. Facing starts at world +x. */
 const arena = (

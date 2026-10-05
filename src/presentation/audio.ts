@@ -8,6 +8,7 @@ import { projection, viewZoom } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Action, Broke, Camera, PerfectDodged, Cast, Death, Explosion, Game, Hit, Impact, Reaction, RenderHost, Sounds, Zap } from "../schema.ts"
+import type { StateId } from "../content/elements.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { SoundName } from "./sound.ts"
 
@@ -19,8 +20,25 @@ const powerPitch = 0.85
 /** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`; a volley as its shells land). */
 const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", blast: "wave", leap: "boom", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", thunderclap: null }
 
-/** The sound of elements meeting (wind carrying a state is heard as the blow that pushed it). */
-const reactionSounds: Record<ReactionKind, SoundName | null> = { ignite: "ignite", soak: "splash", steam: "sizzle", fizzle: "sizzle", carry: null, stun: "slam", shock: "zap", swirl: "nova" }
+/** The sound of a state taking hold (a charge and a sweep are heard in their blow), and of each state bursting. */
+const applySounds: Record<StateId, SoundName | null> = { burning: "ignite", soaked: "splash", charged: null, swept: null }
+const burstSounds: Record<StateId, SoundName> = { burning: "nova", soaked: "splash", charged: "zap", swept: "spin" }
+
+/** The sound of what elements do (an arc is heard as its zap). */
+const reactionSound = (kind: ReactionKind, state: StateId | null): SoundName | null => {
+  switch (kind) {
+    case "apply":
+      return state === null ? null : applySounds[state]
+    case "burst":
+      return state === null ? null : burstSounds[state]
+    case "slam":
+      return "slam"
+    case "out":
+      return "sizzle"
+    case "arc":
+      return null
+  }
+}
 
 /**
  * Sounds for what happened since the last frame: the player's actions (each
@@ -70,8 +88,8 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   // Thunder crackles as it strikes; a healing zap chimes.
   for (const zap of events.zap.all()) sounds.play(zap.heal ? "mend" : "zap", { pan: pan(zap.path[zap.path.length - 1] ?? zap.path[0]!), volume: zap.heal ? 0.7 : 0.8 })
   for (const reaction of events.reaction.all()) {
-    const sound = reactionSounds[reaction.kind]
-    if (sound !== null) sounds.play(sound, { pan: pan(reaction.at), volume: reaction.kind === "fizzle" ? 0.5 : 1 })
+    const sound = reactionSound(reaction.kind, reaction.state)
+    if (sound !== null) sounds.play(sound, { pan: pan(reaction.at), volume: reaction.kind === "out" ? 0.5 : 1 })
   }
   for (const hit of events.hit.all()) {
     // Burns are heard through their crackle, not as blows.
@@ -87,7 +105,7 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
   }
-  // An ultimate's deep boom; lighter blasts (a grenade, a weapon's shockwave) a shorter one; water bursts with a splash, thunder crackles.
+  // An ultimate's deep boom; lighter blasts (a grenade, an aspect's shockwave) a shorter one; water bursts with a splash, thunder crackles.
   for (const explosion of events.explosion.all()) {
     const light = explosion.element === "water" ? "splash" : explosion.element === "thunder" ? "zap" : "boom"
     sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : light, { pan: pan(explosion.at) })

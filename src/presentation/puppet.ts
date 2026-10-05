@@ -142,16 +142,6 @@ export class Puppet {
     if (direction.x !== 0 || direction.y !== 0) this.object.rotation.y = Math.atan2(direction.x, direction.y)
   }
 
-  /** Puts a copy of `source` in its `bone` as it is (a weapon in hand); it is lit and tinted with the body. */
-  hold(source: ModelSource, bone: string): void {
-    const grip = this.object.getObjectByName(bone)
-    if (grip === undefined) throw new Error(`Model ${this.source.id} has no ${bone} to hold ${source.id} in`)
-    const copy = copyModel(source, true)
-    grip.add(copy.object)
-    // Its materials are freed with the body's.
-    this.materials.push(...copy.materials)
-  }
-
   /**
    * Plays `shot` once over `seconds` of game time (its own length when
    * `null`), over the loops; a new one replaces the last. `hitAt` is when

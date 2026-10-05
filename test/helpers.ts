@@ -6,11 +6,13 @@ import type { Direction, PartyTap, TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { projection, viewZoom } from "../src/config/view.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import type { ShotMove } from "../src/content/attacks.ts"
+import type { BasicAttackSpec, ShotMove } from "../src/content/attacks.ts"
+import type { AspectId, AspectSpec } from "../src/content/aspects.ts"
+import type { ClassId } from "../src/content/classes.ts"
 import { cut, lob, vortex } from "../src/content/skills.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
-import { damageDealt, damageTaken } from "../src/features/build.ts"
+import { attackOf, damageDealt, damageTaken } from "../src/features/build.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
@@ -55,7 +57,21 @@ export const doubleTap = (direction: Direction, frame: number, options: { readon
     : [{ frame, press: [direction], release: [direction] }, { frame: frame + 2, press: [direction], release: [direction] }]
 
 /** The gun's opening shot: what a single press fires. */
-export const gunShot = defaultTuning.attacks.gun.combo[0] as ShotMove
+/** A class's plain basic attack (its handling and moves together), as a character of it fights with no aspect equipped. */
+export const plainAttack = (tuning: Tuning, cls: ClassId): BasicAttackSpec => attackOf(tuning, { class: cls, aspect: null })
+
+/** `tuning` with one more aspect, `id`: tests of aspects use made-up ones, so they hold whatever ships. */
+export const withAspect = (tuning: Tuning, id: string, spec: AspectSpec): Tuning =>
+  ({ ...tuning, aspects: { ...tuning.aspects, [id]: spec } }) as unknown as Tuning
+
+/** `id` as an aspect's id (one added by `withAspect`). */
+export const aspectId = (id: string): AspectId => id as AspectId
+
+/** A made-up aspect of `cls`: its plain aspect's moves, with `extra` over them. */
+export const testAspect = (tuning: Tuning, cls: ClassId, extra: Partial<AspectSpec> = {}): AspectSpec =>
+  ({ ...tuning.classes[cls].plain, name: "Test", description: "A test aspect.", class: cls, passives: [], infuse: null, ...extra })
+
+export const gunShot = defaultTuning.classes.gun.plain.combo[0] as ShotMove
 
 /**
  * A cut of wind (what the Swordsman's special was before it became the
@@ -135,11 +151,11 @@ export const swordsman = defaultTuning.characters.swordsman.stats
 export const playerLoss = (tuning: Tuning, kind: EnemyKind, power: number): number =>
   damageTaken(tuning, damageDealt(tuning.enemies[kind].atk, power), tuning.characters.swordsman.stats.def)
 
-/** The gun with `shot` overriding its opening shot, for tests about shooting (with `gunner`). */
+/** The gun's plain aspect with `shot` overriding its opening shot, for tests about shooting (with `gunner`). */
 export const withGun = (tuning: Tuning, shot: Partial<Omit<ShotMove, "shape">> = {}): Tuning => {
-  const gun = tuning.attacks.gun
-  const [first, ...rest] = gun.combo
-  return { ...tuning, attacks: { ...tuning.attacks, gun: { ...gun, combo: [{ ...(first as ShotMove), ...shot }, ...rest] } } }
+  const gun = tuning.classes.gun
+  const [first, ...rest] = gun.plain.combo
+  return { ...tuning, classes: { ...tuning.classes, gun: { ...gun, plain: { ...gun.plain, combo: [{ ...(first as ShotMove), ...shot }, ...rest] } } } }
 }
 
 const withWaves = (tuning: Tuning, enabled: boolean): Tuning => ({ ...tuning, waves: { ...tuning.waves, enabled } })

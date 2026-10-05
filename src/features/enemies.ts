@@ -39,7 +39,7 @@ import {
   RunScope,
   Shield,
   Elite,
-  Weapon,
+  BasicAttack,
   Dash,
   ElementAffinities,
   Ground,
@@ -214,7 +214,7 @@ export const SteerEnemies = (() => {
       pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
       shields: Game.Query({ selection: { position: Game.Query.read(Position), shield: Game.Query.write(Shield) } }),
       player: Game.Query({
-        selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), aim: Game.Query.read(Aim), weapon: Game.Query.read(Weapon), dash: Game.Query.read(Dash) },
+        selection: { position: Game.Query.read(Position), body: Game.Query.read(Body), aim: Game.Query.read(Aim), basicAttack: Game.Query.read(BasicAttack), dash: Game.Query.read(Dash) },
         with: [Player]
       }),
       walls: Walls
@@ -228,7 +228,7 @@ export const SteerEnemies = (() => {
     // What the enemies make of her: open to a rush, or a threat to keep out of reach of (see `readPlayer`).
     const read = player === undefined || target === undefined
       ? undefined
-      : readPlayer(tuning, { at: target, aim: player.data.aim.get(), weapon: player.data.weapon.get(), dashes: player.data.dash.get().charges })
+      : readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges })
     const boxes = wallBoxes(queries.walls.each())
     // Pools enemies keep out of: fire anywhere, and the arena's basins (each enemy minds those it is not immune to).
     // The arena's hazards they also path around, as if walls (they are not: a push still sends them in).

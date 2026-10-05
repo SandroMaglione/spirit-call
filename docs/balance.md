@@ -5,6 +5,21 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Elements and aspects (October 2026)
+
+Weapons are gone (see `docs/aspects.md`): a character's level gives all her
+stats (her ATK took in the starting weapon's 20), and gold only trains
+characters, so the economy rows below that mention weapon levels describe
+the earlier state. Elements became one rule (each leaves its state, another
+bursts it; see `docs/elements.md`). The baseline was recorded again after
+both, with the plain aspects (no bonus on soaked enemies for the Tidecaller,
+no jumping bolts for the Stormcaller until Riptide and Arc are equipped):
+measurements before it are not comparable. The `matched` profiles are now
+the `skills` ones at the enemy's level, with no weapon level to match. Every
+aspect deals within 25% of its class's plain aspect by the numbers
+(`validateContent`); what passives, bounces, and chains add is for the lab
+and play to judge.
+
 ## Implemented tuning
 
 The audit below records the original problems. The playable update now uses:
@@ -17,7 +32,7 @@ The audit below records the original problems. The playable update now uses:
 | Ultimate cooldown | 10 seconds, plus 100 energy |
 | Bench energy | 30% per living member |
 | Totem / Thunderclap healing | 2% per tick / 8% per member |
-| Bloodthirst healing | 2% max HP per kill |
+| Kill healing (now Scattergun's passive) | 2% max HP per kill |
 | Perfect-dodge slow / break fill / energy | 0.7 seconds / 25% / 4 |
 | Wall-slam / reaction break fill | 25% / 20% |
 | Chaser swipe / follow-up | 18% / 14% ATK |
@@ -258,15 +273,15 @@ pnpm balance --output test/balance-baseline.json
 ```
 
 Profiles include basic attacks, skills used whenever available, levels
-matched to the enemy with a proportionate weapon level, a slower learner,
+matched to the enemy, a slower learner,
 escape-only play, and low-level and matched three-character rotations. Full sweeps
-exercise every quest and each character's starting weapon. They are
+exercise every quest and each character's plain aspect. They are
 hypothetical builds, not a claim that an account can own every character
 at that point. Seeds are fixed and reports include the tuning hash.
 
 The bot uses touch input, aims specials and ultimates toward a visible
 target, and counts emitted casts rather than failed input attempts. It
-does not optimize charged attacks, team reactions, or every weapon passive.
+does not optimize charged attacks, bursts, or every aspect's passive.
 Range preferences are approximate. Its movement planner extrapolates
 visible threats; human success rates cannot be inferred from it. A learner
 can outperform the quick profile on a seed through a different path.
@@ -274,5 +289,5 @@ can outperform the quick profile on a seed through a different path.
 Keep fairness tests separate. Use full sweeps to find outliers, compare
 candidate tunings on the same scenarios, then play them on a phone. The
 tool monitors balance; it does not decide good gameplay or silently
-retune content. Longer term, add weapon comparisons, explicit counterplay
+retune content. Longer term, add aspect comparisons, explicit counterplay
 bots, enemy attack opportunities and stun uptime.

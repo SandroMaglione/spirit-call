@@ -1,35 +1,39 @@
 /**
  * Elements: what a character's skills apply, each with a job against a kind
- * of enemy situation (see docs/elements.md for the rules). Only water and
- * fire leave a state on a body (Soaked, Burning); the others act at once and
- * react with what is there. Numbers are live-tunable: they are part of the
- * `Tuning` resource.
+ * of enemy situation (see docs/elements.md for the rules). One rule holds
+ * for every pair: an element leaves its state on what it hits (one state per
+ * body), and a different element bursts that state (pays it out at once)
+ * before leaving its own. So each element is two definitions, its state and
+ * its burst, and nothing is ever written for a pair of elements. Numbers
+ * are live-tunable: they are part of the `Tuning` resource.
  *
- * A new element is a new entry here, its case in `afflict` (see
- * `features/elements.ts`), and its look in `config/view.ts`.
+ * A new element is a new entry here (its state and its rules, its burst in
+ * `ApplyStateBursts`, see `features/elements.ts`), and its look in
+ * `config/view.ts`.
  */
 
 /** The elements in play. Rock comes with a later character. */
 export type ElementId = "fire" | "water" | "wind" | "thunder"
 
-/**
- * Elements meeting on a body or on the ground: a body catching fire or
- * getting soaked, water putting fire out (`steam`), fire fizzling on a
- * soaked body, wind carrying a state to another body, a body slammed
- * into a wall (`stun`), thunder through water (`shock`: a soaked body
- * struck, or a puddle it runs through), and a wind whirl taking on another
- * element (`swirl`).
- */
-export type ReactionKind = "ignite" | "soak" | "steam" | "fizzle" | "carry" | "stun" | "shock" | "swirl"
+/** The state each element leaves on a body: fire burns, water soaks, thunder charges, wind sweeps. */
+export type StateId = "burning" | "soaked" | "charged" | "swept"
 
-/** The states that last on a body: water soaks, fire burns. */
-export type StateId = "burning" | "soaked"
+/**
+ * What can be seen to happen between elements, for effects and the run's
+ * record: a state taking hold (`apply`), a state paid out at once by
+ * another element (`burst`), a charge arcing on (`arc`), a swept body
+ * slammed into a wall (`slam`), and a pool put out by a newer one (`out`).
+ */
+export type ReactionKind = "apply" | "burst" | "arc" | "slam" | "out"
+
+/** What a run records the team setting off, once each (for discoveries): a state, for its burst, or a wall slam. */
+export type ReactionRecord = StateId | "slam"
 
 export interface ElementSpec {
   /** Shown in menus. */
   readonly name: string
-  /** The state it leaves on a body, if any. */
-  readonly state: StateId | null
+  /** The state it leaves on a body. */
+  readonly state: StateId
 }
 
 /** Every element, by id. */
@@ -38,10 +42,22 @@ export const elements: { readonly [Id in ElementId]: ElementSpec } = {
   fire: { name: "Fire", state: "burning" },
   /** Soaks and slows: for fast enemies. */
   water: { name: "Water", state: "soaked" },
-  /** Pushes, carrying states between bodies and slamming them into walls: to scatter or group. */
-  wind: { name: "Wind", state: null },
-  /** Strikes at once and jumps between nearby bodies (further through soaked ones): for groups spread apart, and enemies at range. */
-  thunder: { name: "Thunder", state: null }
+  /** Pushes, and leaves bodies light: gliding further, slammed into walls. To scatter or group. */
+  wind: { name: "Wind", state: "swept" },
+  /** Strikes at once and charges: blows on a charged body arc on to the next. For spread-out groups, and enemies at range. */
+  thunder: { name: "Thunder", state: "charged" }
+}
+
+/** The element whose state `state` is. */
+export const elementOf = (state: StateId): ElementId =>
+  state === "burning" ? "fire" : state === "soaked" ? "water" : state === "charged" ? "thunder" : "wind"
+
+/** What each state is called when it bursts, shown as it happens. */
+export const burstNames: { readonly [State in StateId]: string } = {
+  burning: "Flare",
+  soaked: "Splash",
+  charged: "Discharge",
+  swept: "Gale"
 }
 
 /** How strongly an enemy kind takes an element (none: as it is). */
@@ -51,18 +67,20 @@ export type Affinity = "weak" | "resists" | "immune"
 export type Affinities = { readonly [Element in ElementId]?: Affinity }
 
 /**
- * The numbers behind elements, states, and their interactions (see
- * `features/elements.ts`).
+ * The numbers behind states and bursts (see `features/elements.ts`). Every
+ * state lasts `seconds` (scaled by the body's affinity; refreshed by the same
+ * element again); every burst reaches the bodies of the struck body's side
+ * within its `radius` (edge to edge), the struck body first.
  */
 export const elementRules = {
-  /** Burning: damage over time, a percentage of the ATK of whoever set it, per second. */
+  /** Burning: damage over time, a percentage of the ATK of whoever set it, per second; it spreads to bodies in no state it touches. */
   burning: {
     seconds: 3.5,
     /** Damage per second, as a percentage of the ATK of whoever set it. */
     power: 6,
     /** Seconds between two burns. */
     tick: 0.5,
-    /** Bodies this close (edge to edge) touch, for fire spreading and wind carrying. */
+    /** Bodies this close (edge to edge) touch, for fire spreading. */
     contact: 6
   },
   /** Soaked: slowed. */
@@ -72,42 +90,61 @@ export const elementRules = {
     slow: 0.35
   },
   /**
-   * Wind: a body hit by it is driven for `seconds`: its push dies down
-   * slower (`decay`, against `knockback.decay`), so it glides away rather
-   * than being knocked back; meanwhile it carries its state to bodies it is
-   * pushed into, and is stunned for `stunSeconds` if slammed into a wall
-   * while still moving faster than `slamSpeed`. A pool a wind blow sweeps
-   * over is blown along at `poolSpeed`, dying down the same way. A wind
-   * whirl takes on the first other element it touches (a pool, a body in a
-   * state, a thunder strike) and whirls it for `absorbSeconds` more.
+   * Charged: a blow on a charged body (any blow but a burn or an arc) arcs
+   * on to the nearest other body of its side within `arcRange` (edge to
+   * edge), with `arcShare` of its damage, as thunder (charging it, or
+   * bursting the state it holds); at most once every `arcEvery` seconds.
    */
-  wind: {
-    seconds: 0.75,
-    decay: 4.5,
-    slamSpeed: 150,
-    stunSeconds: 1.4,
-    poolSpeed: 600,
-    absorbSeconds: 1.5
+  charged: {
+    seconds: 4,
+    arcRange: 160,
+    arcShare: 0.4,
+    arcEvery: 0.2
   },
   /**
-   * Thunder: a strike jumps on from the body it hits to the nearest body
-   * of the same side within `jumpRange` (edge to edge), `soakedJumpRange`
-   * from a soaked body, as many times as its skill allows, never twice to
-   * the same body. A strike on a body standing in a puddle shocks everyone
-   * else in that puddle, either side (the player too), for `puddlePower`
-   * percent of the striker's ATK.
+   * Swept: a light body. Pushes on it are `knockback` times stronger and
+   * glide (dying down at `decay`, against `knockback.decay`); slammed into a
+   * wall while still faster than `slamSpeed`, it is stunned for
+   * `stunSeconds` (an enemy: the team is never stunned).
+   */
+  swept: {
+    seconds: 2.5,
+    knockback: 1.3,
+    decay: 4.5,
+    slamSpeed: 150,
+    stunSeconds: 1.4
+  },
+  /**
+   * Thunder's strikes (the skills that strike): a strike jumps on from the
+   * body it hits to the nearest body of the same side within `jumpRange`
+   * (edge to edge), as many times as its skill allows, never twice to the
+   * same body.
    */
   thunder: {
-    jumpRange: 130,
-    soakedJumpRange: 230,
-    puddlePower: 12
+    jumpRange: 130
   },
-  /** Damage factors of the interactions: fire on a soaked body fizzles; thunder on a soaked body shocks. */
-  reactions: {
-    fizzle: 0.75,
-    shock: 1.25
+  /**
+   * Bursts: a state paid out at once when another element lands on it. What
+   * a burst deals carries no element (it bursts nothing and leaves no state)
+   * and fills no energy; on an enemy struck, it fills a share of its break
+   * bar (`Tuning.breaking.burst`). On the team a burst deals its damage
+   * only: it never stuns, stops, or launches her.
+   */
+  bursts: {
+    /** Flare: the burn left (its damage per second times the seconds left), at once, `share` of it to the bodies around. */
+    burning: { radius: 110, share: 0.6 },
+    /** Splash: the struck body and the bodies around stop (are stunned) for `stun` seconds, and take `power` percent of the ATK of whoever soaked it. */
+    soaked: { radius: 120, stun: 1, power: 8 },
+    /** Discharge: thunder strikes up to `strikes` bodies around (the struck one first), `power` percent of the ATK of whoever charged it each. */
+    charged: { radius: 200, strikes: 4, power: 16 },
+    /**
+     * Gale: the struck body is launched along the blow, the bodies around
+     * thrown away from it (pushes of `knockback`), all stunned for `stun`
+     * seconds, each taking `power` percent of the ATK of whoever swept it.
+     */
+    swept: { radius: 130, knockback: 1100, stun: 0.6, power: 10 }
   },
-  /** An enemy's affinity scales an element's damage and the duration of its effect (immune: no effect, damage as it is). */
+  /** An enemy's affinity scales an element's damage and how long its state lasts (immune: no state, damage as it is). */
   affinity: {
     weak: { damage: 1.25, duration: 1.5 },
     resists: { damage: 0.75, duration: 0.5 },

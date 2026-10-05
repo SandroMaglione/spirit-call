@@ -220,10 +220,11 @@ export const view = {
   /**
    * Elements and states: each element's color (hits, pools, numbers); bodies
    * in a state are tinted `tint` of the way toward its color and shed motes
-   * (embers rising, drops falling) about `motes` times a second.
+   * (embers rising, drops falling, sparks crackling, wisps curling) about
+   * `motes` times a second.
    */
   elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1, thunder: 0xb48cff },
-  states: { burning: 0xff7b2e, soaked: 0x4aa8ff, tint: 0.5, motes: 14 },
+  states: { burning: 0xff7b2e, soaked: 0x4aa8ff, charged: 0xb48cff, swept: 0xc9fff1, tint: 0.5, motes: 14 },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6, ash: 0x3a3330 },
   /**
@@ -251,9 +252,9 @@ export const view = {
   disc: { color: 0x9fe8ff, ring: 0x4aa8ff, turnsPerSecond: 3, size: 1, height: 8 },
   /** Flames in an arena's scenery (see `ArenaLook.fires`): their two colors, flame motes and embers per second each, and how near the camera (world units) one must be to burn. */
   arenaFires: { flame: 0xffc04a, ember: 0xff7a2e, flames: 14, embers: 2.5, reach: 1100 },
-  /** The puff of water putting fire out. */
+  /** The puff of a pool put out by a newer one. */
   steam: 0xe6edf3,
-  /** A body slammed into a wall by wind, and stunned: its color, and the stars circling over its head. */
+  /** A swept body slammed into a wall, and stunned (by a slam, a burst, a break): its color, and the stars circling over its head. */
   stun: 0xffe066,
   stunStars: { radius: 12, turnsPerSecond: 1.2 },
   /** Guardian shields. */

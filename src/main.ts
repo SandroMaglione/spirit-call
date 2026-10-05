@@ -12,7 +12,8 @@ import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
-import { buildOf, encounterOf, teamLevel, teamOf } from "./account/account.ts"
+import { withValidAspects } from "./features/build.ts"
+import { buildOf, encounterOf, teamLevel, teamOf, validAspects } from "./account/account.ts"
 import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { createBrowserHost } from "./presentation/host.ts"
@@ -46,11 +47,12 @@ const start = async (mount: HTMLElement) => {
   const shell = await startApp(tuning)
   const { account } = shell
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
-  // entering with the account's selection or the URL's `?team=gunner,swordsman&weapon=…&challenge=swarm` (see dev/build.ts).
+  // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
   const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
-  const team = quickStart ? teamFromQuery(tuning, window.location.search, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam
+  // A quick start may name aspects the account does not own (a dev tool), but never one twice, or of another class.
+  const team = withValidAspects(tuning, quickStart ? teamFromQuery(tuning, window.location.search, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam)
   const selected = encounterOf(tuning, account.selection.play)
   const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
   const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, selected.enemyLevel) : selected.enemyLevel
@@ -101,12 +103,12 @@ const start = async (mount: HTMLElement) => {
   }
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
-    saveTeam: (team) => change(() => shell.select(team, uiStore.account.peek().selection.play), "Team saved"),
-    enter: (team, play) => {
+    saveTeam: (team, aspects) => change(() => shell.select(team, uiStore.account.peek().selection.play, aspects), "Team saved"),
+    enter: (team, aspects, play) => {
       // Entering is remembered on the account; a character not owned or something not open is refused, and nothing starts.
       if (uiStore.busy.peek()) return
       uiStore.busy.value = true
-      void shell.select(team, play).then((selected) => {
+      void shell.select(team, play, aspects).then((selected) => {
         if (selected === undefined) { notify("This challenge is locked or your selection could not be saved.", true); return }
         playing = play
         recording = true
@@ -115,7 +117,7 @@ const start = async (mount: HTMLElement) => {
         uiRequests.pending.push({ kind: "start", team: teamOf(tuning, selected, team), ...encounterOf(tuning, play) })
       }).finally(() => (uiStore.busy.value = false))
     },
-    enterExtra: (team, extra) => {
+    enterExtra: (team, aspects, extra) => {
       const account = uiStore.account.value
       playing = null
       recording = false
@@ -123,15 +125,14 @@ const start = async (mount: HTMLElement) => {
       uiStore.extra.value = extra
       uiRequests.pending.push({
         kind: "start",
-        team: teamOf(tuning, account, team),
+        // Not saved: the draft's aspects, as far as the rules allow.
+        team: teamOf(tuning, account, team, validAspects(tuning, account, team, aspects)),
         challenge: extra.kind === "training" ? "trainingGround" : "practice",
         enemyLevel: teamLevel(tuning, account, team),
         ...(extra.kind === "practice" ? { practice: extra.picks } : {})
       })
     },
-    equip: (character, equipment) => change(() => shell.equip(character, equipment), "Weapon equipped"),
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
-    upgrade: (weapon) => change(() => shell.upgrade(weapon), `${tuning.weapons[weapon].name} upgraded`),
     retry: () => uiRequests.pending.push({ kind: "retry" }),
     menu: () => uiRequests.pending.push({ kind: "menu" }),
     pause: () => uiRequests.pending.push({ kind: "pause" }),

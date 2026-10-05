@@ -24,10 +24,10 @@ import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts } from "../content/currencies.ts"
-import type { WeaponId } from "../content/weapons.ts"
+import { aspectOf } from "../content/aspects.ts"
 import type { RunResultValue } from "../schema.ts"
-import { createAccount, earn, equip, recordRun, select, train, unlock, upgrade } from "./account.ts"
-import type { Account, Checked, Earned, Equipment, Item, Play, Refusal } from "./account.ts"
+import { createAccount, earn, recordRun, select, train, unlock } from "./account.ts"
+import type { Account, Checked, Earned, Item, Play, Refusal, TeamAspects } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
 import { LatestAccountJson, LegacyProfileJson, migrateAccount, StoredAccountJson } from "./stored.ts"
@@ -44,16 +44,12 @@ export interface AccountStoreShape {
   readonly get: Effect.Effect<Account>
   /** What loading had to do (create, migrate, drop content, start fresh), for a notice; empty when nothing. */
   readonly notes: ReadonlyArray<string>
-  /** Equips an owned character with owned items (the weapon of its type). */
-  readonly equip: (character: CharacterId, equipment: Equipment) => Effect.Effect<Account, AccountRefused | AccountSaveError>
-  /** Selects a team of owned characters and an open quest or tier: what the arena is entered with. */
-  readonly select: (team: ReadonlyArray<CharacterId>, play: Play) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Selects a team of owned characters, the aspects equipped in it (as they were, when not given), and an open quest or tier: what the arena is entered with. */
+  readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Owns `items` (a reward, or a dev tool). */
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
   /** Takes an owned character to its next level with gold. */
   readonly train: (character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
-  /** Takes an owned weapon a level higher with gold. */
-  readonly upgrade: (weapon: WeaponId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Adds `amounts` of currency (a reward, or a dev tool). */
   readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
   /**
@@ -78,8 +74,8 @@ const itemName = (tuning: Tuning, item: Item): string => {
   switch (item.kind) {
     case "character":
       return tuning.characters[item.id].name
-    case "weapon":
-      return tuning.weapons[item.id].name
+    case "aspect":
+      return aspectOf(tuning.aspects, item.id).name
   }
 }
 
@@ -150,12 +146,10 @@ export const layer = (options: AccountOptions) =>
       return AccountStore.of({
         get: Ref.get(current),
         notes: loaded.notes,
-        equip: (character, equipment) => change((account) => equip(options.tuning, account, character, equipment)),
-        select: (team, play) => change((account) => select(options.tuning, account, team, play)),
+        select: (team, play, aspects) => change((account) => select(options.tuning, account, team, play, aspects)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
         earn: (amounts) => apply((account) => earn(account, amounts)),
         train: (character) => change((account) => train(options.tuning, account, character)),
-        upgrade: (weapon) => change((account) => upgrade(options.tuning, account, weapon)),
         recordRun: (play, result) =>
           Effect.gen(function*() {
             const now = yield* Clock.currentTimeMillis

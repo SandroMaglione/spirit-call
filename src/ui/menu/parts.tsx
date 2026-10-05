@@ -13,7 +13,6 @@ import type { CurrencyId } from "../../content/currencies.ts"
 import { elements } from "../../content/elements.ts"
 import type { ElementId } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
-import type { WeaponId } from "../../content/weapons.ts"
 import { affinityList, attackElements } from "../describe.ts"
 import type { UiStore } from "../store.ts"
 
@@ -28,7 +27,7 @@ export type Screen =
   | { readonly kind: "settings" }
 
 export type QuestTab = "main" | "secondary" | "hardcore"
-export type CharacterTab = "overview" | "weapon" | "kit"
+export type CharacterTab = "overview" | "aspect" | "kit"
 
 /** Moving between screens: `go` opens one over the current one, `back` returns to the one before. */
 export interface Nav {
@@ -83,9 +82,9 @@ export const Cta = ({ onClick, disabled, children }: { readonly onClick: () => v
   </button>
 )
 
-/** Where a character's model stands, holding `weapon` and playing her idle (drawn by the presentation). */
-export const Model = ({ character, weapon, turn, reveal, class: className = "" }: { readonly character: CharacterId; readonly weapon: WeaponId; readonly turn?: number; readonly reveal?: boolean; readonly class?: string }) => (
-  <div class={`model ${className}`} data-model={character} data-weapon={weapon} data-turn={turn} data-reveal={reveal ? "true" : undefined} />
+/** Where a character's model stands, playing her idle (drawn by the presentation). */
+export const Model = ({ character, turn, reveal, class: className = "" }: { readonly character: CharacterId; readonly turn?: number; readonly reveal?: boolean; readonly class?: string }) => (
+  <div class={`model ${className}`} data-model={character} data-turn={turn} data-reveal={reveal ? "true" : undefined} />
 )
 
 /** What a portrait shows: a character, or an enemy kind. */

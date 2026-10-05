@@ -35,13 +35,6 @@ const shotsOf = (moments: Moments): ReadonlyArray<{ readonly clip: string; reado
   return shots.flatMap((shot) => typeof shot === "string" ? [{ clip: shot }] : [shot, ...(shot.next === undefined ? [] : [{ clip: shot.next }])])
 }
 
-/** The node names inside a GLB file. */
-const nodesInFile = (id: ModelId): ReadonlyArray<string> => {
-  const file = readFileSync(path.join(import.meta.dirname, "..", models[id].url))
-  const json = JSON.parse(file.toString("utf8", 20, 20 + file.readUInt32LE(12))) as { nodes?: ReadonlyArray<{ name?: string }> }
-  return (json.nodes ?? []).flatMap((node) => node.name === undefined ? [] : [node.name])
-}
-
 describe("looks and models", () => {
   it("covers every enemy and dummy with a batched animated model", () => {
     expect(Object.keys(enemyLooks).sort()).toEqual(Object.keys(enemies).sort())
@@ -88,14 +81,6 @@ describe("looks and models", () => {
         expect(shot.to ?? length).toBeLessThanOrEqual(length + 1e-9)
       }
       expect(look.moments.run.distance).toBeGreaterThan(0)
-    }
-  })
-
-  it("held weapons are models without a body height, and the holder has the grip", () => {
-    for (const look of Object.values(characterLooks)) {
-      if (look.kind !== "model" || look.held === undefined) continue
-      expect(nodesInFile(look.model)).toContain(look.held.grip)
-      for (const weapon of Object.values(look.held.weapons)) expect(models[weapon].height).toBeNull()
     }
   })
 

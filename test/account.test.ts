@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, equip, equipmentOf, owns, encounterOf, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, upgrade, upgradeCost, withClearedRewards } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, owns, encounterOf, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
 import type { DiscoveryId } from "../src/content/discoveries.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
 import type { QuestId } from "../src/content/quests.ts"
+import { aspectId, testAspect, withAspect } from "./helpers.ts"
 
 const fresh = () => createAccount(defaultTuning, newAccount, "account-1", 1000)
 const quest = (id: QuestId): Play => ({ kind: "quest", quest: id })
@@ -15,20 +16,17 @@ const tier = (track: TrackId, number: number): Play => ({ kind: "tier", track, t
 const discoveryCrystals = (made: ReadonlyArray<DiscoveryId>): number => made.reduce((sum, id) => sum + (defaultTuning.discoveries[id].rewards.crystals ?? 0), 0)
 
 describe("account rules", () => {
-  it("a new account owns exactly the starter set, with its characters equipped with their own gear", () => {
+  it("a new account owns exactly the starter set, its characters fighting with their class's plain aspect", () => {
     const account = fresh()
     expect(Object.keys(account.owned.characters)).toEqual(newAccount.characters)
-    expect(Object.keys(account.owned.weapons)).toEqual(newAccount.weapons)
-    expect(account.selection).toEqual({ team: [newAccount.selection.character], play: quest(newAccount.selection.quest) })
-    expect(account.equipment.swordsman).toEqual({ weapon: defaultTuning.characters.swordsman.weapon })
+    expect(Object.keys(account.owned.aspects)).toEqual(newAccount.aspects)
+    expect(account.selection).toEqual({ team: [newAccount.selection.character], aspects: {}, play: quest(newAccount.selection.quest) })
+    expect(buildOf(defaultTuning, account, "swordsman")).toEqual({ character: "swordsman", level: 1 })
     expect(owns(account, { kind: "character", id: "gunner" })).toBe(false)
   })
 
-  it("unlocking a character brings her own weapon, equipped", () => {
+  it("unlocking a character owns her, at level 1", () => {
     const account = unlock(defaultTuning, fresh(), { kind: "character", id: "gunner" }, 2000)
-    const gunner = defaultTuning.characters.gunner
-    expect(owns(account, { kind: "weapon", id: gunner.weapon })).toBe(true)
-    expect(account.equipment.gunner).toEqual({ weapon: gunner.weapon })
     expect(account.owned.characters.gunner).toEqual({ unlockedAt: 2000, experience: 0 })
   })
 
@@ -37,25 +35,15 @@ describe("account rules", () => {
     const { account, granted } = withClearedRewards(defaultTuning, cleared, 3000)
     expect(granted).toEqual(defaultTuning.quests.theBrute.rewards.unlocks)
     expect(owns(account, { kind: "character", id: "tidecaller" })).toBe(true)
-    expect(account.equipment.tidecaller).toEqual({ weapon: "trainingDisc" })
     expect(withClearedRewards(defaultTuning, account, 4000).granted).toEqual([])
     expect(withClearedRewards(defaultTuning, fresh(), 4000).granted).toEqual([])
   })
 
-  it("a weapon owned again gains a copy", () => {
-    const account = unlock(defaultTuning, fresh(), { kind: "weapon", id: "trainingBlade" }, 2000)
-    expect(account.owned.weapons.trainingBlade).toEqual({ unlockedAt: 1000, copies: 2, level: 1 })
-  })
-
-  it("equips only owned things, and only weapons of the character's type", () => {
-    const account = fresh()
-    const own = equipmentOf(defaultTuning, account, "swordsman")
-    expect(equip(defaultTuning, account, "swordsman", { ...own, weapon: "crescendo" })).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "weapon", id: "crescendo" } } })
-    const withGun = unlock(defaultTuning, account, { kind: "weapon", id: "executioner" }, 2000)
-    expect(equip(defaultTuning, withGun, "swordsman", { ...own, weapon: "executioner" })).toEqual({ ok: false, refusal: { kind: "wrongWeaponType", character: "swordsman", weapon: "executioner" } })
-    const withCrescendo = unlock(defaultTuning, account, { kind: "weapon", id: "crescendo" }, 2000)
-    const equipped = equip(defaultTuning, withCrescendo, "swordsman", { ...own, weapon: "crescendo" })
-    expect(equipped.ok && buildOf(defaultTuning, equipped.value, "swordsman").weapon).toBe("crescendo")
+  it("an aspect owned again counts a copy, and adds nothing else", () => {
+    const tuning = withAspect(defaultTuning, "test", testAspect(defaultTuning, "blade"))
+    const once = unlock(tuning, fresh(), { kind: "aspect", id: aspectId("test") }, 2000)
+    const twice = unlock(tuning, once, { kind: "aspect", id: aspectId("test") }, 3000)
+    expect(twice.owned.aspects).toEqual({ test: { unlockedAt: 2000, copies: 2 } })
   })
 
   it("adds every run to the lifetime totals and the account's experience", () => {
@@ -91,20 +79,20 @@ describe("account rules", () => {
     expect(won.earned.pay).toEqual({ gold: clear(level) })
   })
 
-  it("makes discoveries: clears with a character or a full team, and reactions set off", () => {
-    const run = { cleared: true, progress: 1, team: ["swordsman" as const, "gunner" as const], reactions: ["ignite" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
+  it("makes discoveries: clears with a character or a full team, and bursts set off", () => {
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const, "gunner" as const], reactions: ["burning" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
     expect(discovered({ kind: "clearWith", character: "gunner" }, run)).toBe(true)
     expect(discovered({ kind: "clearWith", character: "gunner" }, { ...run, cleared: false, progress: 0.9 })).toBe(false)
     expect(discovered({ kind: "clearWith", character: "tidecaller" }, run)).toBe(false)
     expect(discovered({ kind: "fullTeam" }, run)).toBe(false)
     expect(discovered({ kind: "fullTeam" }, { ...run, team: ["swordsman", "gunner", "tidecaller"] })).toBe(true)
-    // A reaction counts in a lost run too.
-    expect(discovered({ kind: "reaction", reaction: "ignite" }, { ...run, cleared: false, progress: 0 })).toBe(true)
-    expect(discovered({ kind: "reaction", reaction: "steam" }, run)).toBe(false)
+    // A burst counts in a lost run too.
+    expect(discovered({ kind: "reaction", reaction: "burning" }, { ...run, cleared: false, progress: 0 })).toBe(true)
+    expect(discovered({ kind: "reaction", reaction: "soaked" }, run)).toBe(false)
   })
 
   it("pays each discovery once, only in quests and tiers", () => {
-    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: ["stun" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: ["slam" as const], challenge: "swarm" as const, wave: 3, kills: 0, time: 60 }
     const { discoveries } = defaultTuning
     const quick = recordRun(defaultTuning, fresh(), null, run, 2000)
     expect(quick.earned.discoveries).toEqual([])
@@ -141,7 +129,7 @@ describe("account rules", () => {
     expect(select(defaultTuning, fresh(), ["swordsman"], quest("crossfire"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("crossfire"), lock: { kind: "after", quest: "theSwarm" } } })
     expect(select(defaultTuning, fresh(), ["swordsman"], quest("holdTheLine"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("holdTheLine"), lock: { kind: "level", level: 2 } } })
     const selected = select(defaultTuning, fresh(), ["swordsman"], quest("theSwarm"))
-    expect(selected.ok && selected.value.selection).toEqual({ team: ["swordsman"], play: quest("theSwarm") })
+    expect(selected.ok && selected.value.selection).toEqual({ team: ["swordsman"], aspects: {}, play: quest("theSwarm") })
   })
 
   it("selects a team of one to three, each once, in order", () => {
@@ -207,21 +195,6 @@ describe("account rules", () => {
     expect(train(defaultTuning, maxed, "swordsman")).toEqual({ ok: false, refusal: { kind: "maxLevel", item: { kind: "character", id: "swordsman" } } })
   })
 
-  it("upgrades an owned weapon a level with gold, and enters with it at that level", () => {
-    const cost = defaultTuning.progression.weapon.cost
-    const account = earn(fresh(), { gold: cost.base + cost.base + cost.growth + cost.square })
-    expect(upgradeCost(defaultTuning, account, "trainingBlade")).toEqual({ gold: cost.base })
-    const once = upgrade(defaultTuning, account, "trainingBlade")
-    const twice = once.ok ? upgrade(defaultTuning, once.value, "trainingBlade") : once
-    expect(twice.ok && twice.value.owned.weapons.trainingBlade?.level).toBe(3)
-    expect(twice.ok && twice.value.wallet.gold).toBe(0)
-    expect(twice.ok && buildOf(defaultTuning, twice.value, "swordsman").weaponLevel).toBe(3)
-    expect(twice.ok && upgrade(defaultTuning, twice.value, "trainingBlade")).toMatchObject({ ok: false, refusal: { kind: "notEnough", currency: "gold" } })
-    expect(upgrade(defaultTuning, account, "crescendo")).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "weapon", id: "crescendo" } } })
-    const maxed = { ...account, owned: { ...account.owned, weapons: { trainingBlade: { unlockedAt: 1000, copies: 1, level: cost.maxLevel } } } }
-    expect(upgradeCost(defaultTuning, maxed, "trainingBlade")).toBeNull()
-    expect(upgrade(defaultTuning, maxed, "trainingBlade")).toEqual({ ok: false, refusal: { kind: "maxLevel", item: { kind: "weapon", id: "trainingBlade" } } })
-  })
 
   it("opens a hardcore track at its account level, and each tier once the one before is cleared", () => {
     const gauntlet = defaultTuning.tracks.gauntlet

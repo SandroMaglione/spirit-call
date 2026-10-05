@@ -1,7 +1,8 @@
 /**
  * Rules content must follow that its types cannot express: references that
  * must point at existing entries (the tuning panel can edit content live),
- * combos with at least one move, weapons that fit their character,
+ * combos with at least one move, aspects that keep to their class and
+ * deal about what its plain aspect deals (different, never stronger),
  * challenges that can be won, quests that can be reached, hardcore tiers
  * that get harder, level curves that rise, a new account that can play, and
  * enemies that every team can answer (no element is ever required: an
@@ -14,8 +15,11 @@ import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import { entryKind } from "./challenges.ts"
 import { elements } from "./elements.ts"
+import { basicAttack } from "./aspects.ts"
+import type { AspectSpec } from "./aspects.ts"
 import { isMelee } from "./attacks.ts"
-import type { AttackMove } from "./attacks.ts"
+import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
+import type { ClassSpec, Moves } from "./classes.ts"
 import type { AttackSpec } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
@@ -105,7 +109,9 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       if (!(effect.pull >= 0 && effect.pull <= 1)) problems.push(`${where}: pull must be a share in [0, 1] (is ${effect.pull})`)
       return
     case "totem":
-      positive(problems, where, { seconds: effect.seconds, tick: effect.tick, radius: effect.radius, heal: effect.heal })
+      positive(problems, where, { seconds: effect.seconds, tick: effect.tick, radius: effect.radius })
+      // A totem that heals none only strikes (a rod).
+      if (!(effect.heal >= 0)) problems.push(`${where}: heal must not be negative (is ${effect.heal})`)
       if (!(effect.offset >= 0)) problems.push(`${where}: offset must not be negative (is ${effect.offset})`)
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
       return
@@ -167,6 +173,49 @@ const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, am
   }
 }
 
+/** How far an aspect's damage over a fight may be from its class's plain aspect's (see docs/aspects.md). */
+const aspectBudget = 0.25
+
+/** The blows a move lands on one target: a shot's projectiles, a disc's (out and back). */
+const hitsOf = (move: AttackMove): number => (isMelee(move) || move.shape === "lob" ? 1 : move.shape === "disc" ? move.count * 2 : move.count)
+
+/**
+ * Damage a second of `attack`'s combo, pressed in rhythm against one target
+ * (its moves' power over their recoveries, with a magazine's reload): what
+ * keeps aspects of a class on one budget. Pierce, chains, bounces, and
+ * passives are left out: the lab measures those in play.
+ */
+export const sustainedDamage = (attack: BasicAttackSpec): number => {
+  if (attack.combo.length === 0) return 0
+  const moves = attack.magazine === null
+    ? attack.combo
+    : Array.from({ length: attack.magazine.rounds }, (_, round) => attack.combo[round % attack.combo.length]!)
+  const damage = moves.reduce((sum, move) => sum + move.power * hitsOf(move), 0)
+  const seconds = moves.reduce((sum, move) => sum + move.recovery, 0) + (attack.magazine?.reload ?? 0)
+  return seconds > 0 ? damage / seconds : 0
+}
+
+/** The moves of an aspect (or a plain one) of `spec`'s class: its shapes only, a magazine when the class fires from one. */
+const checkMoves = (problems: Array<string>, where: string, spec: ClassSpec, moves: Moves): void => {
+  if (moves.combo.length === 0) problems.push(`${where}: the combo needs at least one move`)
+  const all: Array<[string, AttackMove]> = [
+    ...moves.combo.map((move, index): [string, AttackMove] => [`move ${index + 1}`, move]),
+    ["dash strike", moves.dash],
+    ...(moves.charged === null ? [] : [["charged attack", moves.charged.move] as [string, AttackMove]])
+  ]
+  for (const [name, move] of all) {
+    checkMove(problems, `${where} ${name}`, move)
+    if (!spec.shapes.includes(move.shape)) problems.push(`${where} ${name}: a ${move.shape} is not a ${spec.name} move (${spec.shapes.join(", ")})`)
+    if ((move.shape === "lob" && move.element !== null) || (move.shape === "lob" && move.leaves !== null)) problems.push(`${where} ${name}: names an element (an aspect gives one moment to her element instead)`)
+  }
+  if (moves.charged !== null) positive(problems, `${where} charged attack`, { chargeTime: moves.charged.chargeTime })
+  if (spec.magazine !== (moves.magazine !== null)) problems.push(`${where}: ${spec.magazine ? "needs" : "has no"} magazine (${spec.name})`)
+  if (moves.magazine !== null) {
+    positive(problems, `${where} magazine`, { reload: moves.magazine.reload })
+    if (!(Number.isInteger(moves.magazine.rounds) && moves.magazine.rounds >= 1)) problems.push(`${where} magazine: rounds must be a whole number from 1`)
+  }
+}
+
 /** Every rule the content in `tuning` breaks, as readable messages; empty when all is well. */
 export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
@@ -177,7 +226,6 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   if (!(tuning.team.benchEnergyShare >= 0 && tuning.team.benchEnergyShare <= 1)) problems.push("team: benchEnergyShare must be between 0 and 1")
   checkCurve(problems, "account levels", progression.account.curve)
   checkCurve(problems, "character levels", progression.character.curve)
-  checkCurve(problems, "weapon level costs", progression.weapon.cost)
   checkPay(problems, "run gold", progression.gold)
   checkPay(problems, "run account experience", progression.account.run)
   checkAmounts(problems, "account level-up", tuning, progression.account.levelUp)
@@ -199,17 +247,34 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     })
   }
 
-  for (const [id, attack] of Object.entries(tuning.attacks)) {
-    if (attack.combo.length === 0) problems.push(`attack ${id}: the combo needs at least one move`)
-    attack.combo.forEach((move, index) => checkMove(problems, `attack ${id} move ${index + 1}`, move))
-    checkMove(problems, `attack ${id} dash strike`, attack.dash)
-    if (attack.power !== null) {
-      checkMove(problems, `attack ${id} power move`, attack.power.move)
-      positive(problems, `attack ${id} power`, { chargeTime: attack.power.chargeTime })
+  // Classes and their aspects: each keeps to its class's moves, and deals about what its plain aspect deals.
+  for (const [id, spec] of Object.entries(tuning.classes)) {
+    checkMoves(problems, `class ${id} plain aspect`, spec, spec.plain)
+    positive(problems, `class ${id}`, { comboWindow: spec.handling.comboWindow, active: spec.handling.active })
+  }
+  for (const [id, aspect] of Object.entries(tuning.aspects) as Array<[string, AspectSpec]>) {
+    const where = `aspect ${id}`
+    if (!has(tuning.classes, aspect.class)) {
+      problems.push(`${where}: unknown class ${aspect.class}`)
+      continue
     }
-    if (attack.magazine !== null) {
-      positive(problems, `attack ${id} magazine`, { reload: attack.magazine.reload })
-      if (!(Number.isInteger(attack.magazine.rounds) && attack.magazine.rounds >= 1)) problems.push(`attack ${id} magazine: rounds must be a whole number from 1`)
+    const spec = tuning.classes[aspect.class]
+    checkMoves(problems, where, spec, aspect)
+    aspect.passives.forEach((passive, index) => {
+      checkPassive(problems, `${where} passive ${index + 1}`, passive)
+      // An aspect never names an element: what it sets off carries none, or hers (`castOwn`).
+      if (passive.kind === "on" && passive.effect.kind === "cast" && (passive.effect.effect.element !== null || ("leaves" in passive.effect.effect && passive.effect.effect.leaves !== null))) {
+        problems.push(`${where} passive ${index + 1}: names an element (an aspect gives one moment to her element instead)`)
+      }
+    })
+    const moments = (aspect.infuse === null ? 0 : 1) + aspect.passives.filter((passive) => passive.kind === "on" && passive.effect.kind === "cast" && passive.effect.own).length
+    if (moments > 1) problems.push(`${where}: gives her element ${moments} moments (one at most)`)
+    if (aspect.infuse !== null) checkFilter(problems, `${where} elemental moment`, aspect.infuse)
+    const plain = sustainedDamage(basicAttack(spec, null))
+    const own = sustainedDamage(basicAttack(spec, aspect))
+    // (A plain aspect with no combo is reported on its own.)
+    if (plain > 0 && Math.abs(own / plain - 1) > aspectBudget) {
+      problems.push(`${where}: deals ${own.toFixed(0)} a second against ${plain.toFixed(0)} for the plain aspect (aspects are different, never stronger or weaker: within ${aspectBudget * 100}%)`)
     }
   }
 
@@ -234,18 +299,11 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (owners.length > 1) problems.push(`skill ${id}: in more than one kit slot (${owners.join(", ")}); each character's skills are her own`)
   }
 
-  for (const [id, weapon] of Object.entries(tuning.weapons)) {
-    weapon.passives.forEach((passive, index) => checkPassive(problems, `weapon ${id} passive ${index + 1}`, passive))
-  }
-
   for (const [id, character] of Object.entries(tuning.characters)) {
     const where = `character ${id}`
     positive(problems, where, { hp: character.stats.hp, speed: character.stats.speed, radius: character.radius, hurtboxRadius: character.hurtboxRadius })
-    if (!has(tuning.attacks, character.attack)) problems.push(`${where}: unknown attack ${character.attack}`)
-    if (!has(tuning.weapons, character.weapon)) problems.push(`${where}: unknown weapon ${character.weapon}`)
-    else if (tuning.weapons[character.weapon].type !== character.weaponType) {
-      problems.push(`${where}: its weapon ${character.weapon} is a ${tuning.weapons[character.weapon].type}, not a ${character.weaponType}`)
-    }
+    if (!has(tuning.classes, character.class)) problems.push(`${where}: unknown class ${character.class}`)
+    if (!has(elements, character.element)) problems.push(`${where}: unknown element ${character.element}`)
     for (const [slot, skill] of Object.entries(character.skills)) {
       if (!has(tuning.skills, skill)) problems.push(`${where}: unknown ${slot} skill ${skill}`)
     }
@@ -312,7 +370,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }
 
-  const unlockKinds = { character: tuning.characters, weapon: tuning.weapons }
+  const unlockKinds = { character: tuning.characters, aspect: tuning.aspects }
   for (const [id, quest] of Object.entries(tuning.quests)) {
     const where = `quest ${id}`
     if (!has(tuning.challenges, quest.challenge)) problems.push(`${where}: unknown challenge ${quest.challenge}`)
@@ -374,7 +432,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const where = "the new account"
   for (const [kind, ids, record] of [
     ["character", starter.characters, tuning.characters],
-    ["weapon", starter.weapons, tuning.weapons]
+    ["aspect", starter.aspects, tuning.aspects]
   ] as const) {
     for (const id of ids) if (!has(record, id)) problems.push(`${where}: unknown ${kind} ${id}`)
   }
