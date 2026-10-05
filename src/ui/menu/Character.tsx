@@ -88,7 +88,7 @@ export const Character = ({ store, actions, nav, character, tab }: {
     </section>
     <section class="character__panel">
       {!owned && <div class="lock-message"><p>{source === null ? "Not yet available through quests." : `First clear: ${tuning.quests[source].name}`}</p>{source !== null && <button type="button" class="text-button" onClick={() => { store.menuPlay.value = { kind: "quest", quest: source }; nav.go({ kind: "quests", tab: tuning.quests[source].line }) }}>View quest <Icon name="next" /></button>}</div>}
-      <div class="character-tabs" role="tablist" aria-label="Character details">{(Object.keys(tabNames) as Array<CharacterTab>).map((id) => <button key={id} type="button" role="tab" aria-label={tabNames[id]} aria-selected={id === tab} aria-controls="character-details" onClick={() => nav.replace({ kind: "character", character, tab: id })}><Icon name={id === "overview" ? "character" : id === "aspect" ? "aspect" : "thunder"} /></button>)}</div>
+      <div class="character-tabs" role="tablist" aria-label="Character details">{(Object.keys(tabNames) as Array<CharacterTab>).map((id) => <button key={id} type="button" role="tab" aria-label={tabNames[id]} aria-selected={id === tab} aria-controls="character-details" onClick={() => nav.replace({ kind: "character", character, tab: id })}>{tabNames[id]}</button>)}</div>
       <div id="character-details" role="tabpanel" aria-label={tabNames[tab]}>{tab === "overview" ? <Overview store={store} actions={actions} character={character} /> : tab === "aspect" ? <Aspects key={character} store={store} character={character} nav={nav} /> : <Kit store={store} character={character} />}</div>
     </section>
   </div>

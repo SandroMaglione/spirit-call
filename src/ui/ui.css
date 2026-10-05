@@ -4,10 +4,12 @@
 .ui-screen>* { pointer-events:auto; }
 .dialog-backdrop { position:fixed; inset:0; z-index:40; display:grid; place-items:center; padding:var(--edge-y) var(--edge-x); background:#15354c26; backdrop-filter:blur(3px); pointer-events:auto; }
 .dialog { --text:#425367; --dim:#677488; --gold:#967d4a; --line:#42536724; color:var(--text); width:min(520px,100%); max-height:100%; overflow-y:auto; touch-action:pan-y; padding:28px; background:#eee9dc; border:1px solid #fffcdf; border-radius:3px; box-shadow:0 0 0 6px #eee9dc32,0 10px 40px #16374730; animation:dialog-enter 220ms ease-out; }
-.dialog>header { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+.dialog>header { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
 .dialog { text-shadow:none; }
-.dialog>header h2 { font:24px var(--display); }
+.dialog>header h2 { font:18px var(--display); }
 .dialog .icon-button { background:#fff6; color:#425367; border-color:#a49b7d6b; box-shadow:none; }
+.dialog>header>.icon-button { border:0; background:transparent; }
+.dialog>header>.icon-button .menu-icon { width:20px; height:20px; }
 .dialog>p { margin:16px 0; font-size:13px; }
 .dialog>h3 { margin:18px 0 8px; }
 .dialog .ghost { border-color:#42536740; background:#fff3; }
@@ -15,7 +17,8 @@
 .dialog-backdrop[data-variant="drawer"] { place-items:stretch start; padding:0; background:#15354c0e; backdrop-filter:none; }
 .dialog-backdrop[data-variant="drawer"] .dialog { width:min(360px,44vw); height:100%; max-height:100%; border:0; border-radius:0; padding:var(--edge-y) var(--edge-x); background:linear-gradient(120deg,#f5f0e3,#e5dfd0); border-right:2px solid #fff8; box-shadow:12px 0 60px #203a4428; animation:drawer-enter 260ms ease-out; }
 .dialog-backdrop[data-variant="gallery"] { place-items:stretch start; padding:0; backdrop-filter:blur(3px); background:linear-gradient(90deg,#153b54cf,transparent 80%); }
-.dialog-backdrop[data-variant="gallery"] .dialog { --text:#fff8e9; --dim:#daeee9; --gold:#ffe6ac; width:min(360px,44vw); height:100%; max-height:100%; border:0; border-radius:0; background:transparent; box-shadow:none; padding:var(--edge-y) var(--edge-x); animation:gallery-enter 240ms ease-out; }
+.dialog-backdrop[data-variant="gallery"] .dialog { --text:#fff8e9; --dim:#daeee9; --gold:#ffe6ac; width:min(360px,44vw); height:100%; max-height:100%; display:flex; flex-direction:column; overflow:hidden; border:0; border-radius:0; background:transparent; box-shadow:none; padding:var(--edge-y) var(--edge-x); animation:gallery-enter 240ms ease-out; }
+.dialog-backdrop[data-variant="gallery"] .dialog>header { flex:none; }
 .dialog-backdrop[data-variant="gallery"] .icon-button { color:var(--text); background:transparent; border-color:#fff6; }
 .enemy-summary { display:flex; align-items:center; gap:18px; }
 .enemy-summary .portrait { width:76px; height:84px; }
@@ -35,7 +38,7 @@
 .results { position:absolute; inset:0; overflow:hidden; background:radial-gradient(ellipse at 38% 50%,color-mix(in srgb,var(--el) 45%,transparent),transparent 58%),linear-gradient(120deg,color-mix(in srgb,var(--shade) 80%,transparent),color-mix(in srgb,var(--sky) 65%,transparent)); }
 .results.has-newcomer::before { content:""; position:absolute; width:70vw; height:70vw; left:30%; top:50%; pointer-events:none; background:radial-gradient(circle,transparent 47%,#fff5cd66 48%,transparent 49%); animation:recruit-ring 1400ms ease-out both; }
 .results.is-revealed::before { animation:none; opacity:0; }
-.results__content { position:absolute; top:calc(var(--edge-y) + 64px); right:var(--edge-x); bottom:var(--edge-y); width:38%; max-width:490px; z-index:4; display:flex; flex-direction:column; }
+.results__content { position:absolute; top:calc(var(--edge-y) + 48px); right:var(--edge-x); bottom:var(--edge-y); width:38%; max-width:490px; z-index:4; display:flex; flex-direction:column; }
 .results__banner { font:clamp(28px,4vw,46px) var(--display)!important; color:#fff0bd; margin-bottom:8px!important; }
 .results__name { font:17px var(--display); opacity:.8; margin-bottom:24px!important; }
 .results__loot { overflow-y:auto; min-height:0; flex:1; padding:4px; scrollbar-width:none; touch-action:pan-y; }
@@ -92,7 +95,8 @@
   .dialog .game-menu { padding:20px 0; gap:14px 8px; }
   .dialog .game-menu button { gap:7px; }
   .dialog .game-menu .menu-icon { width:28px; height:28px; }
-  .dialog .party-picker { gap:14px; }
+  .dialog .party-picker { gap:10px; }
+  .dialog .party-picker button { padding:4px; gap:6px; }
   .dialog .party-picker .portrait { width:58px; height:66px; }
   .pause__body>h2 { font-size:24px; margin:8px 0; }
   .pause-options { margin-top:20px; }

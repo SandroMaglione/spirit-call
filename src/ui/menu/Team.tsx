@@ -32,10 +32,9 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
       return <section key={slot} class={`column${slot === focus ? " is-selected" : ""}${member === undefined ? " is-empty" : ""}`} data-element={member === undefined ? undefined : elementOf(tuning, member) ?? undefined}>
         <button type="button" class="column__pick" aria-label={member === undefined ? `Choose slot ${slot + 1}` : `Change ${tuning.characters[member].name}`} disabled={slot > team.length} onClick={() => { draft.value = { ...draft.value, focus: slot }; picking.value = true }}>
           <span class="column__number">{slot + 1}</span>
-          {member === undefined ? <span class="column__empty"><Icon name="plus" /></span> : <><Model character={member} class="column__model" /><span class="column__banner"><b>{tuning.characters[member].name}</b><small>Lv {characterLevel(tuning, account, member).level}</small></span></>}
+          {member === undefined ? <span class="column__empty"><Icon name="plus" /></span> : <Model character={member} class="column__model" />}
         </button>
-        {member !== undefined && <button type="button" class="column__aspect" aria-label={`Aspect of ${tuning.characters[member].name}: ${aspectName(member)}`} onClick={() => (equipping.value = member)}><Icon name="aspect" /><small>{aspectName(member)}</small></button>}
-        {member !== undefined && <div class="column__actions"><button type="button" class="icon-button" aria-label={`Details for ${tuning.characters[member].name}`} onClick={() => nav.go({ kind: "character", character: member, tab: "overview" })}><Icon name="info" /></button><button type="button" class="icon-button" aria-label={`Remove ${tuning.characters[member].name}`} disabled={team.length === 1} onClick={() => (draft.value = removeFromTeam(draft.value, slot))}><Icon name="close" /></button></div>}
+        {member !== undefined && <button type="button" class="column__banner" aria-label={`Details for ${tuning.characters[member].name}`} onClick={() => nav.go({ kind: "character", character: member, tab: "overview" })}><span><b>{tuning.characters[member].name}</b><Icon name="next" /></span><small>Lv {characterLevel(tuning, account, member).level}</small></button>}
       </section>
     })}</div>
     <footer class="party-actions">
@@ -49,7 +48,7 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
         if (owned) draft.value = placeInTeam(draft.value, id)
         else nav.go({ kind: "character", character: id, tab: "overview" })
       }}><Portrait of={{ character: id }} /><b>{tuning.characters[id].name}</b>{!owned && <Icon name="lock" />}</button>
-    })}</div></Dialog>}
+    })}</div>{team[focus] !== undefined && <footer class="party-picker__actions"><button type="button" class="text-button" aria-label={`Remove ${tuning.characters[team[focus]!].name}`} disabled={team.length === 1} onClick={() => { draft.value = removeFromTeam(draft.value, focus); picking.value = false }}>Remove from party</button></footer>}</Dialog>}
     {equipping.value !== null && <AspectPicker store={store} member={equipping.value} team={team} aspects={aspects} close={() => (equipping.value = null)} choose={(aspect) => { draft.value = equipInDraft(draft.value, equipping.value!, aspect); equipping.value = null }} />}
   </div>
 }

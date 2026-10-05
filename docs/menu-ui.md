@@ -23,18 +23,20 @@ descriptions appear only when requested.
 
 - Full-screen lobby with a large idle spirit, drag rotation, touch rings,
   drifting motes, and luminous backgrounds keyed to the character's element.
-  Profile opens a compact menu drawer. Floating icons open Characters, Party,
-  and Challenges; the quest name is the play button at the lower right,
-  with a separate Quests action above it. Selecting the spirit keeps party
+  Profile opens a compact menu drawer. A vertical group at the right opens
+  Characters, Party, and Challenges with a spirit portrait, formation banners,
+  and crossed swords. Short labels identify each action. The quest name is the
+  play button at the lower right. Selecting the spirit keeps party
   circles in place, while that spirit leads the next run.
-- Character inspection keeps the model central. Portraits and icon tabs select
+- Character inspection keeps the model central. Portraits and compact text tabs select
   characters, attributes, aspects, and skills. Level and equipped stats are
   visible together, with next-level gains and an explicit Level up action.
   Characters display no XP. Passives and skill descriptions open on tap.
   Locked previews link to actual shipped unlock quests.
 - Party members stand openly on the stage. Tapping a slot summons a translucent
   portrait gallery with staggered entrances and light selection markers.
-  Details and removal are separate icon actions. Confirm saves changes;
+  Spaced slot markers sit above the models. Character names open details;
+  removal lives in the picker, which keeps at least one member. Confirm saves changes;
   starting also saves them. There is no party matchup dialog.
 - Challenges use a full-screen horizontal carousel, with drag feedback,
   directional transitions, arrow controls, and category tabs. Each quest
@@ -56,7 +58,10 @@ descriptions appear only when requested.
   Reduced motion suppresses UI effects and the model reveal. The phone rotate
   guard applies to menus as well as combat; there is no separate portrait UI.
 - Screens use the same edge spacing, with symmetric safe-area allowances.
-  The wallet stays fixed at the upper right in menus, pause, and results.
+  The header uses small borderless back arrows and titles while retaining
+  44-pixel touch targets. The wallet stays fixed at the upper right in menus,
+  pause, and results, with 20-pixel symbols, 3-pixel icon-number gaps, and
+  12-pixel gaps between currencies.
   Currency artwork is shared by wallet balances, upgrade costs, and rewards.
   Back handles return navigation; screens have no duplicate close action.
 - Successful saves give a brief glow and sound without a toast. Failures open
@@ -84,6 +89,11 @@ descriptions appear only when requested.
   fixed wallet coordinates, party-circle order, and visible level-up controls
   at 667 × 375. A separate localhost account fixture verifies a saved level
   increase and the results layout; the original account is restored afterward.
+- The compact controls pass browser checks at both landscape sizes. Party
+  details, selection, swapping, removal, and the final-member guard still work.
+  The picker fits without scrolling at 667 × 375, including its removal action
+  above the bottom safe edge. Tabs remain 44 pixels tall and wallet symbols
+  and balances share the same vertical center.
 - A completed-wave fixture follows the normal result/save path: one clear,
   105 XP, 190 crystals, 625 gold, one discovery, and Gunner unlocked. The totals
   include discovery rewards once and persist on reload. This verifies the

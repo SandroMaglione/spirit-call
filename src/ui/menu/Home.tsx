@@ -18,15 +18,14 @@ export const Home = ({ store, nav, draft, play, enter }: {
   return <div class="screen home">
     <div class="home__spirit"><div class="stage-orbit" aria-hidden="true" /><ModelStage character={leader} /></div>
     <div class="lobby-shortcuts">
-      <button type="button" class="icon-button" aria-label="Characters" onClick={() => nav.go({ kind: "character", character: leader, tab: "overview" })}><Icon name="character" /></button>
-      <button type="button" class="icon-button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}><Icon name="team" /></button>
-      <button type="button" class="icon-button" aria-label="Challenges" onClick={() => nav.go({ kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line })}><Icon name="challenge" /></button>
+      <button type="button" aria-label="Characters" onClick={() => nav.go({ kind: "character", character: leader, tab: "overview" })}><small>Characters</small><Portrait of={{ character: leader }} /></button>
+      <button type="button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}><small>Party</small><Icon name="formation" /></button>
+      <button type="button" aria-label="Challenges" onClick={() => nav.go({ kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line })}><small>Challenges</small><Icon name="quests" /></button>
     </div>
     <div class="home__identity"><ElementBadge element={elementOf(tuning, leader)} /><h1>{tuning.characters[leader].name}</h1><span>Lv {characterLevel(tuning, account, leader).level}</span>
       {team.length > 1 && <div class="lobby-party">{team.map((member) => <button type="button" key={member} aria-label={`Lead with ${tuning.characters[member].name}`} aria-pressed={member === leader} onClick={() => (store.menuCharacter.value = member)}><Portrait of={{ character: member }} /></button>)}</div>}
     </div>
     <div class="lobby-play">
-      <button type="button" class="lobby-challenge" aria-label="Choose quest" onClick={() => nav.go({ kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line })}>Quests</button>
       <Cta disabled={store.busy.value} onClick={enter}>{store.busy.value ? "…" : describePlay(tuning, play)}</Cta>
     </div>
   </div>
