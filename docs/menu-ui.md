@@ -125,7 +125,10 @@ Colours are variables in `kit.css`: `--cream` and `--ink` (what you press),
 From the back: the arena, the backdrop (`.ui-backdrop`), the menu's models
 (the showcase canvas, `src/presentation/showcase.ts`), then the UI (`.ui`).
 The UI only marks where a model or a portrait goes (`data-model`,
-`data-portrait`); the presentation draws it. Because models draw under the
+`data-portrait`); the presentation draws it. Enemy portraits use close-ups of
+the supplied roster illustration, framed by `enemyPortraits` in `looks.ts`;
+targets missing from that illustration keep their model portraits. Character
+portraits are rendered from their models. Because models draw under the
 UI, a panel covers a model behind it: give a model's place the room that
 is left, and keep text off it.
 

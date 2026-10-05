@@ -1,9 +1,9 @@
 /**
  * The menu's models: each place the UI marks with `data-model` (a
  * character) shows her model playing her idle, lit with a rim in her element's color (the place's `--el`); each
- * `data-portrait` (a character, or `enemy:<kind>`) gets a picture of the
- * model, rendered once and kept. The UI only marks the places, so it never
- * touches the renderer (see `ui/menu/parts.tsx`).
+ * `data-portrait` (a character, or `enemy:<kind>`) gets an illustration
+ * close-up, or a model rendered once and kept. The UI only marks the
+ * places, so it never touches the renderer (see `ui/menu/parts.tsx`).
  *
  * It draws on its own transparent canvas over the UI (it lets every touch
  * and click through), only where a model's place is, and draws nothing
@@ -15,7 +15,7 @@ import type { Object3D } from "three"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import { view } from "../config/view.ts"
-import { characterLooks, enemyLooks } from "./looks.ts"
+import { characterLooks, enemyLooks, enemyPortraits } from "./looks.ts"
 import type { BodyLook } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import { Puppet } from "./puppet.ts"
@@ -231,6 +231,19 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
       for (const place of document.querySelectorAll<HTMLElement>("[data-portrait]")) {
         const id = place.dataset["portrait"]!
         if (place.dataset["drawn"] === id) continue
+        const illustration = id.startsWith("enemy:") ? enemyPortraits[id.slice("enemy:".length) as EnemyKind] : null
+        if (illustration != null) {
+          const { url, sheet, crop } = illustration
+          // Percentage sizing keeps the same close-up in cards and round indicators at any UI scale.
+          place.style.backgroundImage = `url(${url})`
+          place.style.backgroundSize = `${sheet.width / crop.size * 100}% ${sheet.height / crop.size * 100}%`
+          place.style.backgroundPosition = `${crop.x / (sheet.width - crop.size) * 100}% ${crop.y / (sheet.height - crop.size) * 100}%`
+          place.dataset["drawn"] = id
+          continue
+        }
+        // A reused place may have shown an illustration before its model portrait.
+        place.style.backgroundSize = ""
+        place.style.backgroundPosition = ""
         const url = portraitOf(id, place)
         if (url === null) continue
         place.style.backgroundImage = `url(${url})`
