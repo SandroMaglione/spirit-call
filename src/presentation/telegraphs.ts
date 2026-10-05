@@ -7,7 +7,7 @@ import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Burst, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Burst, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
@@ -36,6 +36,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }),
     vortices: Game.Query({ selection: { vortex: Game.Query.read(Vortex) } }),
     totems: Game.Query({ selection: { totem: Game.Query.read(Totem), position: Game.Query.read(Position) } }),
+    rocks: Game.Query({ selection: { rock: Game.Query.read(Rock) } }),
     shields: Game.Query({
       selection: { shield: Game.Query.read(Shield), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }
     })
@@ -227,6 +228,30 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     // A sweep around it counting down to the next zap.
     const next = 1 - Math.max(0, totem.nextTick) / effect.tick
     g.strokeArc(at.x, at.y, effect.radius + 6, -Math.PI / 2, -Math.PI / 2 + next * Math.PI * 2, 2, color, 0.7 * fade)
+  }
+  // A Rockfall's rocks about to erupt: the floor cracking out from where each will rise, amber light welling up through the cracks.
+  for (const { entity, data } of queries.rocks.each()) {
+    const rock = data.rock.get()
+    const { effect, at } = rock
+    const grown = Math.max(0, Math.min(1, 1 - rock.remaining / effect.warning))
+    if (grown <= 0) continue
+    const spec = view.rockfall
+    const glow = 0.5 + 0.5 * Math.sin(now * 30 + entity.id.value)
+    g.fillCircle(at.x, at.y, effect.size * grown, view.stone.glow, (0.1 + 0.08 * glow) * grown)
+    g.strokeCircle(at.x, at.y, effect.size, 2, view.stone.glow, 0.35 * grown)
+    for (let crack = 0; crack < spec.cracks; crack++) {
+      // Each crack zigzags out, the same way every frame (its turns come from the rock and the crack).
+      let angle = (crack / spec.cracks) * Math.PI * 2 + entity.id.value
+      let from = at
+      const steps = 3
+      for (let step = 1; step <= steps; step++) {
+        angle += Math.sin(entity.id.value * 7.1 + crack * 3.3 + step * 5.7) * 0.5
+        const out = effect.size * grown * (step / steps) * (0.8 + 0.25 * Math.sin(crack * 2.9 + entity.id.value))
+        const to = { x: at.x + Math.cos(angle) * out, y: at.y + Math.sin(angle) * out }
+        g.line(from.x, from.y, to.x, to.y, spec.width * (1.4 - step / steps), view.stone.glow, 0.85 * grown)
+        from = to
+      }
+    }
   }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
   for (const { data } of queries.discs.each()) {

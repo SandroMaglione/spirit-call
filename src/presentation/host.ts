@@ -7,7 +7,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
 import { DropTrail } from "./drop-trail.ts"
-import { RockEffects } from "./rock-effects.ts"
+import { Stones } from "./stones.ts"
 import { Fx } from "./fx.ts"
 import { trackPartyTaps } from "./party-taps.ts"
 import { readSafeArea } from "./safe-area.ts"
@@ -36,6 +36,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div><div class="hud__meter" data-meter hidden><b data-damage></b><span data-hits></span></div></div>
     <div class="hud__vitals">
       <span class="hud__state" data-state hidden></span>
+      <span class="hud__plates" data-plates hidden></span>
       <div class="hud__health"><div class="hud__health-fill" data-health></div><span class="hud__health-text" data-health-text></span></div>
     </div>
     <div class="team" data-team>
@@ -87,6 +88,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       state: root.querySelector<HTMLElement>("[data-state]")!,
+      plates: root.querySelector<HTMLElement>("[data-plates]")!,
       team: {
         root: root.querySelector<HTMLElement>("[data-team]")!,
         members: teamSlots.map((slot) => {
@@ -246,7 +248,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     projected,
     fx,
     drops: new DropTrail(scene),
-    rocks: new RockEffects(scene),
+    stones: new Stones(scene),
     trails: new SlashTrails(trails),
     reticle,
     edges,
@@ -305,7 +307,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       host.drops.dispose()
-      host.rocks.dispose()
+      host.stones.dispose()
       assets.dispose()
       dressing?.dressing.dispose()
       for (const source of models.values()) disposeModel(source)

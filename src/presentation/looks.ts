@@ -94,8 +94,8 @@ export type BodyLook =
 
 /**
  * In the arena each character shows as her spirit (art/spirits/). The
- * Swordsman is wind, Gunner is fire, Tidecaller is water, and Stormcaller
- * is thunder.
+ * Swordsman is wind, Gunner is fire, Tidecaller is water, Stormcaller is
+ * thunder, and Bastion is rock.
  * Their idle and movement clips follow the body; every spirit has the
  * same combat clips (art/spirits/tools/moves.py), each in its character's
  * style: a combo's blows (the last one bigger), the charged move, the
@@ -157,6 +157,20 @@ const thunderSpirit: BodyLook = {
   drops: { rate: 26, colors: [0xffe66d, 0xc9b8ff, 0x7a6bff], size: 1.8, kind: "ember" }
 }
 
+/**
+ * Bastion's rock spirit (for now the static model under review, given its
+ * clips by art/spirits/rock-interim): it stands firm, its stones floating
+ * over it, and waddles as it runs.
+ */
+const rockSpirit: BodyLook = {
+  kind: "model",
+  model: "rockSpirit",
+  widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor,
+  moments: spiritMoments(3, "stoneguard", "rockfall"),
+  eyes: spiritEyes
+}
+
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   stonekeeper: {
     kind: "model", model: "rockSpirit", widthFactor: 1.5,
@@ -169,8 +183,7 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   gunner: fireSpirit,
   tidecaller: waterSpirit,
   stormcaller: thunderSpirit,
-  // A placeholder until her rock spirit (art/spirits/rock) comes in.
-  bastion: { kind: "capsule", color: view.characters.bastion, widthFactor: 1.5, heightFactor: view.bodyHeightFactor }
+  bastion: rockSpirit
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({

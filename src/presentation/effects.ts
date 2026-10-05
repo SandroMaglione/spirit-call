@@ -13,7 +13,7 @@ import { toScreen, toScreenAt } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { arenaOf } from "../features/arena.ts"
-import { Action, Body, Broke, Camera, Cast, Challenge, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
+import { Action, Body, Broke, Camera, Cast, Challenge, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Guard, Guarded, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Raising, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import { makeBody } from "./bodies.ts"
 import type { RenderHostValue } from "./host-types.ts"
@@ -41,7 +41,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     heal: Game.System.readEvent(Heal),
     reaction: Game.System.readEvent(Reaction),
     zap: Game.System.readEvent(Zap),
-    cast: Game.System.readEvent(Cast)
+    cast: Game.System.readEvent(Cast),
+    guarded: Game.System.readEvent(Guarded)
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
@@ -239,12 +240,37 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)
+    // A rock erupting: stone shooting out of the floor (see `Stones`), a burst of dust and grit, a heavy jolt.
+    if (explosion.kind === "eruption") {
+      const spec = view.rockfall
+      services.host.stones.erupt(explosion.at, explosion.radius, spec.tall)
+      fx.flash({ x: at.x, y: at.y - 20 * projection.zoom }, spec.flash, view.stone.glow, 0.16)
+      fx.ring(at, explosion.radius * 1.3 * projection.zoom, view.stone.glow, 0.35)
+      fx.burst(at, { color: view.stone.light, count: 22, speed: 260, size: 7, life: 0.7, gravity: -120, drag: 3, alpha: 0.55 })
+      fx.burst({ x: at.x, y: at.y - 30 * projection.zoom }, { color: view.stone.dark, count: 16, speed: 480, size: 4.5, life: 0.6, gravity: 1100 })
+      services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake)
+      services.host.feedback.punch = Math.max(services.host.feedback.punch, 0.6)
+      continue
+    }
     const nova = explosion.kind === "nova" && explosion.heavy
     const color = explosion.element !== null ? view.elements[explosion.element] : nova ? view.ultimate : view.playerArea
     fx.ring(at, explosion.radius * projection.zoom, color, nova ? 0.45 : 0.3)
     fx.burst({ x: at.x, y: at.y - 10 }, { color, count: nova ? 48 : 26, speed: nova ? 620 : 380, size: 6, life: 0.5 })
     fx.burst({ x: at.x, y: at.y - 10 }, { color: view.hitFlash, count: 10, speed: 200, size: 4, life: 0.3 })
     services.host.feedback.shake = Math.max(services.host.feedback.shake, nova ? view.ultimateShake : view.explosionShake)
+  }
+  // A guard: its plates rising around her in a puff of dust; a plate breaking, its chunks thrown out.
+  for (const guarded of events.guarded.all()) {
+    const at = toScreen(projection, guarded.at)
+    if (guarded.kind === "raised") {
+      fx.ring(at, 60 * projection.zoom, view.stone.glow, 0.3)
+      fx.burst(at, { color: view.stone.light, count: 14, speed: 160, size: 6, life: 0.6, gravity: -80, drag: 3, alpha: 0.5 })
+      continue
+    }
+    services.host.stones.shatter(guarded.at, 12, 22, 3.5, 360)
+    fx.flash({ x: at.x, y: at.y - impact.height * projection.zoom }, 46, view.stone.glow, 0.14)
+    fx.ring(at, 90 * projection.zoom, view.stone.middle, 0.3)
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, view.impact.heavyShake)
   }
   for (const reaction of events.reaction.all()) react(services.host, toScreen(projection, reaction.at), reaction.kind, reaction.state, resources.tuning.get())
   // Thunder: a bolt along its path at body height, a spark where it lands; a healing zap in the heal color.
@@ -503,6 +529,33 @@ export const PlayFalls = Game.System("Shooter/PlayFalls", {
   }
 })
 
+/**
+ * The team's stone plates (see `Guard`), circling whoever is on the field
+ * at her middle; while she raises a guard, the plates rise out of the floor
+ * around her as it gathers.
+ */
+export const ShowPlates = Game.System("Shooter/ShowPlates", {
+  queries: {
+    player: Game.Query({
+      selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body), raising: Game.Query.optional(Raising) },
+      with: [Player]
+    })
+  },
+  resources: { guard: Game.System.readResource(Guard) },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ queries, resources, services }) => {
+  const [player] = queries.player.each()
+  const time = performance.now() / 1000
+  if (player === undefined) {
+    services.host.stones.plates(null, 0, 0, 0, 0, time)
+    return
+  }
+  const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
+  const radius = player.data.body.get().radius
+  const raising = player.data.raising.present ? 1 - player.data.raising.get().remaining / player.data.raising.get().effect.raise : 0
+  services.host.stones.plates(at, radius * 2.3, radius * view.bodyHeightFactor * 0.45, resources.guard.get().plates, raising, time)
+})
+
 export const UpdateFx = Game.System("Shooter/UpdateFx", {
   queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) }, with: [Player] }) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
@@ -510,6 +563,7 @@ export const UpdateFx = Game.System("Shooter/UpdateFx", {
   const seconds = services.clock.frameSeconds
   services.host.fx.update(seconds)
   services.host.drops.update(seconds)
+  services.host.stones.update(seconds)
   const [player] = queries.player.each()
   services.host.trails.update(seconds, player === undefined ? undefined : lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha))
 })

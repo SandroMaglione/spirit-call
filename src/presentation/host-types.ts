@@ -12,7 +12,7 @@ import type { Vec2 } from "../math/vec.ts"
 import type { Batch, Instance } from "./batch.ts"
 import type { ActorBody } from "./bodies.ts"
 import type { DropTrail } from "./drop-trail.ts"
-import type { RockEffects } from "./rock-effects.ts"
+import type { Stones } from "./stones.ts"
 import type { Drops } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import type { Fx } from "./fx.ts"
@@ -173,6 +173,8 @@ export interface HudRefs {
   readonly health: HTMLElement
   readonly healthText: HTMLElement
   readonly state: HTMLElement
+  /** The team's stone plates (see `Guard`), a stone each, beside her state; hidden with none. */
+  readonly plates: HTMLElement
   readonly team: TeamRefs
   readonly banner: HTMLElement
   readonly vignette: HTMLElement
@@ -268,7 +270,8 @@ export interface RenderHostValue {
   readonly fx: Fx
   /** Drops shed by moving spirits, in the 3D scene (hidden behind bodies). */
   readonly drops: DropTrail
-  readonly rocks: RockEffects
+  /** Rock's stone (plates, a Rockfall's spikes, chunks), in the 3D scene. */
+  readonly stones: Stones
   readonly trails: SlashTrails
   readonly reticle: Shapes
   readonly edges: Shapes
