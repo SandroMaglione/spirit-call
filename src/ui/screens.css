@@ -139,10 +139,11 @@
 .quests__brief { position: absolute; left: calc(var(--left) + clamp(200px, 31cqw, 262px) + 18px); right: var(--right); top: 62px; bottom: 70px; z-index: 3; }
 .quests__enemies { display: grid; gap: 5px; }
 /* A chest's brief: the chest beside what it holds. */
-.chest-brief { display: flex; align-items: center; gap: 16px; padding: 6px 0 10px; }
-.chest-brief__icon { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; font-size: 38px; color: var(--gold-hi); background: radial-gradient(circle at 40% 30%, rgba(255, 231, 173, .25), rgba(255, 231, 173, .05) 70%); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .35), 0 0 18px rgba(255, 220, 140, .25); flex: none; }
+.chest-brief { display: flex; align-items: center; gap: 16px; }
+.chest-brief__icon { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; color: var(--gold-hi); background: radial-gradient(circle at 40% 30%, rgba(255, 231, 173, .25), rgba(255, 231, 173, .05) 70%); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .35), 0 0 18px rgba(255, 220, 140, .25); flex: none; }
 .chest-brief.is-open .chest-brief__icon { color: var(--up); box-shadow: inset 0 0 0 1px rgba(165, 232, 106, .4); background: rgba(165, 232, 106, .08); }
-.chest-brief > div { display: grid; gap: 4px; }
+.chest-brief > div { flex: 1; display: grid; gap: 4px; }
+.chest-brief .bar { margin-top: 4px; }
 .quests__goals { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 16px; }
 .quests__goals > div { display: grid; gap: 4px; align-content: start; }
 .quests__goals > div { gap: 2px; }
@@ -173,8 +174,13 @@
 .quests__goals > .quests__rewards { gap: 18px; }
 .quests__rewards > div { display: grid; gap: 0; align-content: start; }
 .quests__rewards .label { margin-bottom: 0; }
-/* The enemies close the brief, under a rule across it. */
-.quests__enemies { margin: 14px -14px 0; padding: 18px 14px 4px; border-top: 1px solid var(--line); }
+/* A brief's last part (its enemies, a chest's quests), under a rule across it. */
+.brief-section { margin: 14px -14px 0; padding: 18px 14px 4px; border-top: 1px solid var(--line); display: grid; gap: 8px; align-content: start; }
+.chest-quests { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 14px; }
+.chest-quest { min-height: 32px; padding: 0 10px; border-radius: 6px; background: var(--band); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 700; text-align: left; }
+.chest-quest > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chest-quest .stars { font-size: 14px; }
+.chest-quest.is-locked { opacity: .5; }
 .enemies--wrap { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 10px 6px; }
 .goal { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
 .goal .menu-icon { font-size: 15px; color: rgba(255, 255, 255, .3); }

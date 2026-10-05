@@ -53,8 +53,8 @@ const ChestTrack = ({ store, group, picked, pick }: { readonly store: UiStore; r
   </div>
 }
 
-/** What a chest holds, how many stars it needs, and how far the group is from it. */
-const ChestBrief = ({ store, chest }: { readonly store: UiStore; readonly chest: ChestRef }) => {
+/** What a chest holds, how many stars it needs, how far the group is from it, and under a rule the group's quests with their stars (tap one to see its brief). */
+const ChestBrief = ({ store, chest, open }: { readonly store: UiStore; readonly chest: ChestRef; readonly open: (play: Play) => void }) => {
   const tuning = store.tuning.value, account = store.account.value, spec = tuning.chests[chest.group][chest.index]!
   const { earned } = groupStars(tuning, account, chest.group)
   const opened = (account.chests[chest.group] ?? 0) > chest.index
@@ -64,9 +64,22 @@ const ChestBrief = ({ store, chest }: { readonly store: UiStore; readonly chest:
     note={opened ? undefined : `${spec.stars - Math.min(earned, spec.stars)} more ${spec.stars - earned === 1 ? "star" : "stars"} to open it.`} noteIcon="star">
     <div class={`chest-brief${opened ? " is-open" : ""}`}>
       <span class="chest-brief__icon"><Icon name="chest" /></span>
-      <div><Label>{opened ? "It gave" : "It holds"}</Label><Amounts store={store} rewards={{ experience: 0, currencies: spec.rewards, unlocks: [] }} /></div>
+      <div>
+        <Label>{opened ? "It gave" : "It holds"}</Label>
+        <Amounts store={store} rewards={{ experience: 0, currencies: spec.rewards, unlocks: [] }} />
+        {!opened && <Bar value={Math.min(1, earned / spec.stars)} label="Stars toward this chest" />}
+      </div>
     </div>
-    {!opened && <Bar value={Math.min(1, earned / spec.stars)} label="Stars toward this chest" />}
+    <div class="brief-section">
+      <Label>Stars in {chest.group === "secondary" ? "side quests" : "this chapter"}</Label>
+      <div class="chest-quests">{questsOf(tuning, chest.group).map((quest) => {
+        const play: Play = { kind: "quest", quest }, locked = playLock(tuning, account, play) !== null
+        return <button type="button" key={quest} class={`chest-quest${locked ? " is-locked" : ""}`} onClick={() => open(play)}>
+          <span>{tuning.quests[quest].name}</span>
+          {locked ? <Icon name="lock" /> : <Stars earned={account.quests[quest]?.stars ?? []} total={tuning.quests[quest].stars.length} />}
+        </button>
+      })}</div>
+    </div>
   </Panel>
 }
 
@@ -169,7 +182,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         </div>
       </div>
     </div>
-    <div class="quests__enemies" aria-label="Enemies, over what they are weak to">
+    <div class="quests__enemies brief-section" aria-label="Enemies, over what they are weak to">
       <EnemyFaces store={store} kinds={challengeEnemies(challenge)} inspected={inspected.value} inspect={(kind) => (inspected.value = kind)} />
     </div>
     {inspected.value !== null && <EnemyFacts store={store} kind={inspected.value} />}
@@ -189,7 +202,7 @@ export const Quests = ({ store, nav, tab, play, leader, enter }: {
       <TopTabs label="Kinds of challenge" current={tab} onChange={(id) => nav.replace({ kind: "quests", tab: id })} tabs={[{ id: "main", label: "Main" }, { id: "secondary", label: "Side" }, { id: "hardcore", label: "Hardcore" }]} />
     </TopBar>
     <div class="quests__list scroll in-left" key={tab}>{tab === "hardcore" ? <TrackList store={store} play={play} now={now} /> : <QuestList store={store} tab={tab} play={play} chest={chest} />}</div>
-    {shownChest !== null ? <ChestBrief key={`${shownChest.group}-${shownChest.index}`} store={store} chest={shownChest} /> : <Brief key={key} store={store} nav={nav} play={play} now={now} />}
+    {shownChest !== null ? <ChestBrief key={`${shownChest.group}-${shownChest.index}`} store={store} chest={shownChest} open={(quest) => { play.value = quest; chest.value = null }} /> : <Brief key={key} store={store} nav={nav} play={play} now={now} />}
     <Actions>
       <PartyStrip store={store} team={store.menuDraft.value.team} leader={leader} size={34} pick={() => nav.go({ kind: "team" })} edit={() => nav.go({ kind: "team" })} />
       <Pill icon="play" disabled={playLock(tuning, store.account.value, selected) !== null || store.busy.value} onClick={enter}>Enter</Pill>
