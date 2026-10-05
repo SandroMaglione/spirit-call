@@ -1,3 +1,4 @@
+import { noTally } from "./content/stars.ts"
 import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchButtons } from "./config/input.ts"
@@ -38,7 +39,7 @@ export const initialResources = (
   PartyState: [],
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   Viewport: viewport,
-  Stats: { kills: 0, shots: 0, reactions: [] },
+  Stats: { kills: 0, shots: 0, reactions: [], tally: noTally },
   EnergyLedger: {},
   Waves: initialWaves(tuning),
   Rng: { state: tuning.waves.seed },

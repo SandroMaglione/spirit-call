@@ -12,6 +12,7 @@ import type { AttackMove } from "./content/attacks.ts"
 import type { ArenaId } from "./content/arena.ts"
 import type { ChallengeId, EliteElement, WaveEntry } from "./content/challenges.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
+import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
@@ -941,6 +942,8 @@ export interface RunResultValue {
   readonly team: ReadonlyArray<CharacterId>
   /** Each burst (by the state it paid out) and wall slam the run set off, once. */
   readonly reactions: ReadonlyArray<ReactionRecord>
+  /** What the run counted for stars (see `content/stars.ts`). */
+  readonly tally: Tally
 }
 export const RunResult = Descriptor.Resource<RunResultValue | null>()("Shooter/RunResult")
 
@@ -949,6 +952,8 @@ export interface StatsValue {
   readonly shots: number
   /** Each burst (by its state) and wall slam set off so far, once, in the order first seen. */
   readonly reactions: ReadonlyArray<ReactionRecord>
+  /** What the run counted so far, for stars. */
+  readonly tally: Tally
 }
 export const Stats = Descriptor.Resource<StatsValue>()("Shooter/Stats")
 

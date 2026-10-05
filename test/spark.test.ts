@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { Attacker, AttackPhase, Dash, ElementState, Enemy, Game, Health, Player, Poise, SlowMotion, Stunned, Vortex, BasicAttack } from "../src/schema.ts"
+import { Attacker, AttackPhase, Dash, ElementState, Enemy, Game, Health, Player, Poise, SlowMotion, Stats, Stunned, Vortex, BasicAttack } from "../src/schema.ts"
 import { cursorAt, doubleTap, gunner, placeDummies, start, steps, plainAttack } from "./helpers.ts"
 
 const Fight = Game.Inspector("Test/Spark", {
@@ -187,6 +187,16 @@ describe("a perfect dodge", () => {
     expect(state.slow.remaining).toBeGreaterThan(0)
     expect(state.health).toBe(hp)
     expect(run.runtime.inspect(Fight).enemies[0]!.poise.current).toBeGreaterThan(0)
+  })
+
+  it("tallies a perfect dodge for stars, and a blow that lands as a hit taken", () => {
+    const Tally = Game.Inspector("Test/Tally", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().tally)
+    const dodged = dodging(1)
+    dodged.step(landsAt + 3)
+    expect(dodged.runtime.inspect(Tally)).toMatchObject({ perfectDodges: 1, hitsTaken: 0 })
+    const struck = dodging(null)
+    struck.step(landsAt + 3)
+    expect(struck.runtime.inspect(Tally)).toMatchObject({ perfectDodges: 0, hitsTaken: 1 })
   })
 
   it("counts the blow landing where she dashed from, though the dash already carried her out of it", () => {

@@ -78,7 +78,8 @@ export const runResultOf = (
     kills: stats.kills,
     time: run.time,
     team: team.map((build) => build.character),
-    reactions: stats.reactions
+    reactions: stats.reactions,
+    tally: stats.tally
   }
 }
 

@@ -1,3 +1,4 @@
+import { noTally } from "../src/content/stars.ts"
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
@@ -114,7 +115,7 @@ describe("lasting until the team falls", () => {
   it("counts as cleared once the team falls past its goal wave, as far as it got otherwise", () => {
     const spec = { ...defaultTuning.challenges.swarm, objective: endure(3, 1), waves: plan }
     const run = { time: 60, endedAt: 60 }
-    const stats = { kills: 0, shots: 0, reactions: [] }
+    const stats = { kills: 0, shots: 0, reactions: [], tally: noTally }
     const at = (number: number) => ({ number, phase: "fighting" as const, timer: 0, queue: [], front: 0 })
     expect(runResultOf(false, "swarm", spec, run, at(2), stats, []).cleared).toBe(false)
     expect(runResultOf(false, "swarm", spec, run, at(2), stats, []).progress).toBeCloseTo(1 / 3)

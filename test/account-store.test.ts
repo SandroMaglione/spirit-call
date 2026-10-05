@@ -1,3 +1,4 @@
+import { noTally } from "../src/content/stars.ts"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as KeyValueStore from "effect/persistence/KeyValueStore"
@@ -80,7 +81,7 @@ describe("account store", () => {
     const { saved, wallet } = await withAccount({}, (store, kv) =>
       Effect.gen(function*() {
         yield* store.unlock([{ kind: "character", id: "gunner" }])
-        const recorded = yield* store.recordRun({ kind: "quest", quest: "theSwarm" }, { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], challenge: "swarm", wave: 3, kills: 9, time: 60 })
+        const recorded = yield* store.recordRun({ kind: "quest", quest: "theSwarm" }, { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: noTally, challenge: "swarm", wave: 3, kills: 9, time: 60 })
         yield* store.select(["gunner", "swordsman"], { kind: "quest", quest: "holdTheLine" })
         return { saved: yield* kv.get(accountKey), wallet: recorded.account.wallet }
       }))
@@ -104,7 +105,7 @@ describe("account store", () => {
     const result = await withAccount({ [accountKey]: v1 }, (store, kv) =>
       Effect.gen(function*() {
         const before = (yield* store.get).totals
-        yield* store.recordRun(null, { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], challenge: "swarm", wave: 3, kills: 9, time: 60 })
+        yield* store.recordRun(null, { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: noTally, challenge: "swarm", wave: 3, kills: 9, time: 60 })
         return { before, saved: yield* savedJson(kv, accountKey) }
       }))
     expect(result.before).toEqual({ runs: 0, clears: 0, kills: 0, secondsPlayed: 0 })
