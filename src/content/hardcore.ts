@@ -2,8 +2,8 @@
  * Hardcore: the goals to aim for, where preparation and skill are tested
  * fully (see docs/vision.md, "Structure"). Each track is one kind of
  * content (mixed waves, champions) in tiers, each harder than the last;
- * lower tiers are within reach of a low-level team. A track opens at an
- * account level, and each tier once the one before it is cleared.
+ * lower tiers are within reach of a low-level team. A track opens once a
+ * quest is cleared, and each tier once the one before it is cleared.
  *
  * A tier's rewards (experience and currency, never unlocks; gold worth
  * about six runs at its level) are given on top of what the run pays, the
@@ -19,6 +19,8 @@
  */
 import type { ChallengeId } from "./challenges.ts"
 import type { Amounts } from "./currencies.ts"
+import type { ElementId } from "./elements.ts"
+import type { QuestId } from "./quests.ts"
 
 /** What a tier gives when cleared, once per period. */
 export interface TierRewards {
@@ -35,8 +37,10 @@ export interface TierSpec {
 export interface TrackSpec {
   readonly name: string
   readonly challenge: ChallengeId
-  /** The account level needed to start its first tier. */
-  readonly level: number
+  /** The element whose material a clear pays (see `content/materials.ts`). */
+  readonly element: ElementId
+  /** The quest to clear before its first tier opens. */
+  readonly after: QuestId
   /** Tier 1 first; a tier is known by its number (its place here), which never changes once shipped. */
   readonly tiers: ReadonlyArray<TierSpec>
 }
@@ -50,21 +54,24 @@ export const tracks = {
   gauntlet: track({
     name: "Gauntlet",
     challenge: "endless",
-    level: 3,
+    element: "water",
+    after: "crossfire",
     tiers: [tier(6, 100, { crystals: 20, gold: 1500 }), tier(20, 150, { crystals: 30, gold: 2400 }), tier(32, 200, { crystals: 40, gold: 3300 })]
   }),
   /** The brute and its guards, tougher every tier. */
   siege: track({
     name: "Brute Siege",
     challenge: "brute",
-    level: 4,
+    element: "rock",
+    after: "theBrute",
     tiers: [tier(8, 120, { crystals: 20, gold: 1800 }), tier(24, 180, { crystals: 30, gold: 2700 }), tier(36, 240, { crystals: 40, gold: 3600 })]
   }),
   /** No end: every wave stronger than the last, until the team falls; a tier is cleared at its goal wave. */
   untilFall: track({
     name: "Until Fall",
     challenge: "untilFall",
-    level: 3,
+    element: "wind",
+    after: "crossfire",
     tiers: [
       tier(3, 120, { crystals: 20, gold: 1600 }),
       tier(10, 180, { crystals: 30, gold: 2600 }),
@@ -76,7 +83,8 @@ export const tracks = {
   keep: track({
     name: "The Keep",
     challenge: "warlord",
-    level: 9,
+    element: "fire",
+    after: "theWarlord",
     tiers: [tier(28, 260, { crystals: 30, gold: 4000 }), tier(34, 320, { crystals: 40, gold: 5000 }), tier(40, 380, { crystals: 50, gold: 6000 })]
   })
 }

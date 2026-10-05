@@ -31,7 +31,9 @@ const paths = {
   hp: "M12 20C6 15 3 12 3 8.5a4.5 4.5 0 0 1 9-1 4.5 4.5 0 0 1 9 1C21 12 18 15 12 20z",
   atk: "M5 19 19 5 M13 5h6v6 M5 14l5 5",
   def: "M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z",
-  speed: "m5 6 6 6-6 6 M13 6l6 6-6 6"
+  speed: "m5 6 6 6-6 6 M13 6l6 6-6 6",
+  star: "m12 3 2.7 5.7 6.2.8-4.5 4.3 1.1 6.2L12 17l-5.5 3 1.1-6.2-4.5-4.3 6.2-.8z",
+  chest: "M3 11h18v9H3z M3 11l2-5h14l2 5 M10 11v4h4v-4"
 } as const
 
 export type IconName = keyof typeof paths | CurrencyId | EmblemKind

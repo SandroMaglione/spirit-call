@@ -15,6 +15,10 @@ import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import { entryChampion, entryKind } from "./challenges.ts"
 import { elements } from "./elements.ts"
+import type { ElementId } from "./elements.ts"
+import { gradeAt, materialOf } from "./materials.ts"
+import { tallies } from "./stars.ts"
+import type { StarGoal } from "./stars.ts"
 import { basicAttack } from "./aspects.ts"
 import type { AspectSpec } from "./aspects.ts"
 import { isMelee } from "./attacks.ts"
@@ -162,6 +166,27 @@ const checkPassive = (problems: Array<string>, where: string, passive: Passive):
   }
 }
 
+/**
+ * A quest's stars (see docs/quests.md): the first is the clear, and each
+ * other a tally the arena counts for any team (never a character, element,
+ * class, or time: `TallyId` holds only those) with a sensible bound.
+ */
+const checkStars = (problems: Array<string>, where: string, stars: ReadonlyArray<StarGoal>): void => {
+  if (stars.length !== 3) problems.push(`${where}: needs exactly three stars (has ${stars.length})`)
+  if (stars[0]?.kind !== "cleared") problems.push(`${where}: its first star must be the clear`)
+  stars.forEach((goal, index) => {
+    if (goal.kind === "cleared") {
+      if (index > 0) problems.push(`${where}: star ${index + 1} repeats the clear`)
+      return
+    }
+    if (!Object.hasOwn(tallies, goal.tally)) problems.push(`${where}: star ${index + 1} counts unknown tally ${goal.tally}`)
+    const bounds = [goal.least, goal.most].filter((bound) => bound !== undefined)
+    if (bounds.length === 0) problems.push(`${where}: star ${index + 1} needs a bound`)
+    if (bounds.some((bound) => !(Number.isInteger(bound) && bound >= 0))) problems.push(`${where}: star ${index + 1}: bounds must be whole numbers, not negative`)
+    if (goal.least !== undefined && goal.most !== undefined && goal.least > goal.most) problems.push(`${where}: star ${index + 1} can never be met`)
+  })
+}
+
 /** A level curve that rises and ends. */
 const checkCurve = (problems: Array<string>, where: string, curve: LevelCurve): void => {
   if (!(Number.isInteger(curve.maxLevel) && curve.maxLevel >= 1)) problems.push(`${where}: maxLevel must be a whole number from 1 (is ${curve.maxLevel})`)
@@ -179,7 +204,7 @@ const checkPay = (problems: Array<string>, where: string, pay: RunPay): void => 
 /** Amounts of currency: known currencies, in whole positive numbers. */
 const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, amounts: Readonly<Record<string, number | undefined>>): void => {
   for (const [id, amount] of Object.entries(amounts)) {
-    if (!has(tuning.currencies, id)) problems.push(`${where}: unknown currency ${id}`)
+    if (!has(tuning.currencies, id) && !has(tuning.materials, id)) problems.push(`${where}: unknown currency or material ${id}`)
     else if (amount === undefined || !(Number.isInteger(amount) && amount > 0)) problems.push(`${where}: ${id} must be a whole number above 0 (is ${amount})`)
   }
 }
@@ -391,15 +416,23 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (!has(tuning.challenges, quest.challenge)) problems.push(`${where}: unknown challenge ${quest.challenge}`)
     if (quest.line === "main" && (quest.chapter === null || !has(tuning.chapters, quest.chapter))) problems.push(`${where}: a main quest needs a known chapter`)
     if (quest.line === "secondary" && quest.chapter !== null) problems.push(`${where}: a secondary quest belongs to no chapter`)
-    if (!(Number.isInteger(quest.level) && quest.level >= 1 && quest.level <= tuning.progression.account.curve.maxLevel)) {
-      problems.push(`${where}: level must be a whole number from 1 to the account's maximum (is ${quest.level})`)
-    }
     if (!(Number.isInteger(quest.enemyLevel) && quest.enemyLevel >= 1 && quest.enemyLevel <= tuning.progression.character.curve.maxLevel)) {
       problems.push(`${where}: enemyLevel must be a whole number from 1 to the characters' maximum level (is ${quest.enemyLevel})`)
     }
     if (quest.after !== null && !has(tuning.quests, quest.after)) problems.push(`${where}: comes after unknown quest ${quest.after}`)
     for (const item of quest.rewards.unlocks) if (!has(unlockKinds[item.kind], item.id)) problems.push(`${where}: rewards unknown ${item.kind} ${item.id}`)
     checkAmounts(problems, where, tuning, quest.rewards.currencies)
+    if (quest.introduces.enemy !== null && !has(tuning.enemies, quest.introduces.enemy)) problems.push(`${where}: introduces unknown enemy ${quest.introduces.enemy}`)
+    checkStars(problems, where, quest.stars)
+    if (!has(elements, quest.element)) problems.push(`${where}: pays the material of unknown element ${quest.element}`)
+    quest.ranks.forEach((rank, index) => {
+      const at = `${where} rank ${index + 2}`
+      const below = index === 0 ? quest.enemyLevel : quest.ranks[index - 1]!.enemyLevel
+      if (!(Number.isInteger(rank.enemyLevel) && rank.enemyLevel > below && rank.enemyLevel <= tuning.progression.character.curve.maxLevel)) {
+        problems.push(`${at}: enemyLevel must be a whole number above the rank below (${below}) and at most the characters' maximum level (is ${rank.enemyLevel})`)
+      }
+      if (!has(tuning.quests, rank.after)) problems.push(`${at}: opens after unknown quest ${rank.after}`)
+    })
     // The main line's order must end: following `after` never comes back around.
     const seen = new Set<string>([id])
     for (let before = quest.after; before !== null && has(tuning.quests, before); before = tuning.quests[before as keyof typeof tuning.quests].after) {
@@ -414,9 +447,8 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   for (const [id, track] of Object.entries(tuning.tracks)) {
     const where = `hardcore track ${id}`
     if (!has(tuning.challenges, track.challenge)) problems.push(`${where}: unknown challenge ${track.challenge}`)
-    if (!(Number.isInteger(track.level) && track.level >= 1 && track.level <= tuning.progression.account.curve.maxLevel)) {
-      problems.push(`${where}: level must be a whole number from 1 to the account's maximum (is ${track.level})`)
-    }
+    if (!has(tuning.quests, track.after)) problems.push(`${where}: opens after unknown quest ${track.after}`)
+    if (!has(elements, track.element)) problems.push(`${where}: pays the material of unknown element ${track.element}`)
     if (track.tiers.length === 0) problems.push(`${where}: needs at least one tier`)
     track.tiers.forEach((tier, index) => {
       const at = `${where} tier ${index + 1}`
@@ -427,6 +459,45 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (before !== undefined && tier.enemyLevel <= before.enemyLevel) problems.push(`${at}: enemies must be a higher level than the tier before (${tier.enemyLevel} after ${before.enemyLevel})`)
       if (!(tier.rewards.experience >= 0)) problems.push(`${at}: experience must not be negative (is ${tier.rewards.experience})`)
       checkAmounts(problems, at, tuning, tier.rewards.currencies)
+    })
+  }
+
+  // Every element has its three materials, each with somewhere to come from (a quest, a rank, or a tier at its grade).
+  const rules = tuning.materialRules
+  const levels: Array<{ readonly element: string; readonly level: number }> = [
+    ...Object.values(tuning.quests).flatMap((quest) => [quest.enemyLevel, ...quest.ranks.map((rank) => rank.enemyLevel)].map((level) => ({ element: quest.element, level }))),
+    ...Object.values(tuning.tracks).flatMap((track) => track.tiers.map((tier) => ({ element: track.element, level: tier.enemyLevel })))
+  ]
+  for (const element of Object.keys(elements) as Array<ElementId>) {
+    for (const grade of [1, 2, 3] as const) {
+      const id = materialOf(element, grade)
+      const spec = has(tuning.materials, id) ? tuning.materials[id] : undefined
+      if (spec === undefined || spec.element !== element || spec.grade !== grade) problems.push(`materials: ${element} needs its grade ${grade} material, ${id}`)
+      if (!levels.some((source) => source.element === element && gradeAt(rules, source.level) === grade)) problems.push(`materials: nothing pays ${id}`)
+    }
+  }
+  if (!(rules.grades.length === 3 && rules.grades[0] === 1 && rules.grades[0] < rules.grades[1]! && rules.grades[1]! < rules.grades[2]!)) problems.push("materials: grades must start at level 1 and rise (three of them)")
+  if (rules.combine.gold.length !== 2) problems.push("materials: combining needs a gold cost for grade 2 and for grade 3")
+  positive(problems, "materials", { perClear: rules.perClear, combine: rules.combine.count })
+  rules.ascension.forEach((step, index) => {
+    const before = rules.ascension[index - 1]
+    if (!(Number.isInteger(step.level) && step.level > (before?.level ?? 1) && step.level < tuning.progression.character.curve.maxLevel)) problems.push(`ascension step ${index + 1}: level must rise and stay below the maximum (is ${step.level})`)
+    if (!(step.count >= 1 && step.gold >= 0)) problems.push(`ascension step ${index + 1}: needs at least one material, and no negative gold`)
+  })
+
+  // Chests open in order, each needing more stars than the last, and no more than its group has.
+  for (const [group, list] of Object.entries(tuning.chests)) {
+    const where = `chests of ${group}`
+    if (group !== "secondary" && !has(tuning.chapters, group)) problems.push(`${where}: unknown chapter`)
+    const total = Object.values(tuning.quests)
+      .filter((quest) => (group === "secondary" ? quest.line === "secondary" : quest.chapter === group))
+      .reduce((sum, quest) => sum + quest.stars.length, 0)
+    list.forEach((chest, index) => {
+      const before = list[index - 1]
+      if (!(Number.isInteger(chest.stars) && chest.stars >= 1)) problems.push(`${where} ${index + 1}: stars must be a whole number of at least 1`)
+      if (before !== undefined && chest.stars <= before.stars) problems.push(`${where} ${index + 1}: needs more stars than the chest before`)
+      if (chest.stars > total) problems.push(`${where} ${index + 1}: needs ${chest.stars} stars, but its quests have ${total}`)
+      checkAmounts(problems, `${where} ${index + 1}`, tuning, chest.rewards)
     })
   }
 
@@ -455,7 +526,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   if (!starter.characters.includes(starter.selection.character)) problems.push(`${where}: selects ${starter.selection.character}, which it does not own`)
   const first = has(tuning.quests, starter.selection.quest) ? tuning.quests[starter.selection.quest] : undefined
   if (first === undefined) problems.push(`${where}: selects unknown quest ${starter.selection.quest}`)
-  else if (first.level > 1 || first.after !== null) problems.push(`${where}: selects quest ${starter.selection.quest}, which a new account cannot start`)
+  else if (first.after !== null) problems.push(`${where}: selects quest ${starter.selection.quest}, which a new account cannot start`)
 
   return problems
 }

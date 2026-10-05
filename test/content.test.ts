@@ -80,7 +80,7 @@ describe("content", () => {
     }
     expect(validateContent(broken)).toEqual([
       `hardcore track gauntlet tier 2: enemies must be a higher level than the tier before (${gauntlet.tiers[0]!.enemyLevel} after ${gauntlet.tiers[0]!.enemyLevel})`,
-      "hardcore track gauntlet tier 2: unknown currency gems"
+      "hardcore track gauntlet tier 2: unknown currency or material gems"
     ])
   })
 
@@ -100,7 +100,7 @@ describe("content", () => {
       quests: {
         ...quests,
         theSwarm: { ...quests.theSwarm, after: "theBrute" },
-        holdTheLine: { ...quests.holdTheLine, chapter: "one", level: 0 }
+        holdTheLine: { ...quests.holdTheLine, chapter: "one", after: null, stars: [{ kind: "tally", tally: "breaks", least: 2 }, { kind: "cleared" }, { kind: "tally", tally: "hitsTaken", most: -1 }] }
       }
     }
     expect(validateContent(broken)).toEqual([
@@ -114,8 +114,14 @@ describe("content", () => {
       "quest theCloister: its order loops back through theBrute",
       "quest theWarlord: its order loops back through theBrute",
       "quest holdTheLine: a secondary quest belongs to no chapter",
-      "quest holdTheLine: level must be a whole number from 1 to the account's maximum (is 0)",
+      "quest holdTheLine: its first star must be the clear",
+      "quest holdTheLine: star 2 repeats the clear",
+      "quest holdTheLine: star 3: bounds must be whole numbers, not negative",
       "quest stoneTrial: its order loops back through theBrute",
+      "quest nightOfPacks: its order loops back through crossfire",
+      "quest eliteHunt: its order loops back through theBrute",
+      "quest strangeCompany: its order loops back through crossfire",
+      "quest stormFront: its order loops back through theBrute",
       "the new account: selects quest theSwarm, which a new account cannot start"
     ])
   })

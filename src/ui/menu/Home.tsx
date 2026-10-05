@@ -4,7 +4,7 @@
  * a face leads with her), and the next thing to play, with its enemies,
  * over one Play.
  */
-import { accountLevel, characterLevel, encounterOf, owns, train } from "../../account/account.ts"
+import { accountLevel, ascend, characterLevel, encounterOf, owns, train } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import { challengeEnemies, describePlay } from "../describe.ts"
@@ -31,7 +31,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
 }) => {
   const tuning = store.tuning.value, account = store.account.value, team = store.menuDraft.value.team
   const level = accountLevel(tuning, account), encounter = encounterOf(tuning, play)
-  const canTrain = ids(tuning.characters).some((id) => owns(account, { kind: "character", id }) && train(tuning, account, id).ok)
+  const canTrain = ids(tuning.characters).some((id) => owns(account, { kind: "character", id }) && (train(tuning, account, id).ok || ascend(tuning, account, id).ok))
   const places: { readonly [Id in string]: Place } = {
     characters: { kind: "character", character: leader, tab: "overview" },
     party: { kind: "team" },

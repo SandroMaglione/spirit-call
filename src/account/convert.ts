@@ -5,13 +5,13 @@
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
 import type { TrackId } from "../content/hardcore.ts"
-import type { QuestId } from "../content/quests.ts"
+import type { QuestId, StarGroup } from "../content/quests.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { CurrencyId } from "../content/currencies.ts"
+import type { ResourceId } from "../content/currencies.ts"
 import type { DiscoveryId } from "../content/discoveries.ts"
 import type { AspectId } from "../content/aspects.ts"
 import { teamSize } from "../content/characters.ts"
-import { createAccount, owns, select, unlock, validAspects, withClearedRewards } from "./account.ts"
+import { characterLevel, createAccount, owns, select, unlock, validAspects, withClearedRewards, withEarnedChests } from "./account.ts"
 import type { Account, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
 import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
 
@@ -48,7 +48,11 @@ export const fromStored = (
     characters: keep<CharacterId, OwnedCharacter>(tuning.characters, stored.owned.characters, "character", dropped),
     aspects: keep<AspectId, OwnedAspect>(tuning.aspects, stored.owned.aspects, "aspect", dropped)
   }
-  const quests = keep<QuestId, QuestProgress>(tuning.quests, stored.quests, "quest", dropped)
+  // Stars kept are those the quest still has.
+  const quests: { [Id in QuestId]?: QuestProgress } = {}
+  for (const [id, progress] of Object.entries(keep<QuestId, QuestProgress>(tuning.quests, stored.quests, "quest", dropped)) as Array<[QuestId, QuestProgress]>) {
+    quests[id] = { ...progress, stars: [...new Set(progress.stars)].filter((star) => Number.isInteger(star) && star >= 0 && star < tuning.quests[id].stars.length).sort((a, b) => a - b) }
+  }
   const hardcore: { [Id in TrackId]?: { readonly [tier: number]: TierProgress } } = {}
   for (const [track, tiers] of Object.entries(keep<TrackId, Readonly<Record<string, TierProgress>>>(tuning.tracks, stored.hardcore, "hardcore track", dropped)) as Array<[TrackId, Readonly<Record<string, TierProgress>>]>) {
     const kept: { [tier: number]: TierProgress } = {}
@@ -65,18 +69,28 @@ export const fromStored = (
     createdAt: stored.createdAt,
     experience: stored.experience,
     totals: stored.totals,
-    wallet: keep<CurrencyId, number>(tuning.currencies, stored.wallet, "currency", dropped),
+    wallet: keep<ResourceId, number>({ ...tuning.currencies, ...tuning.materials }, stored.wallet, "currency", dropped),
     owned,
     quests,
     hardcore,
     discoveries: keep<DiscoveryId, { readonly madeAt: number }>(tuning.discoveries, stored.discoveries, "discovery", dropped),
+    chests: keep<StarGroup, number>(tuning.chests, stored.chests, "chest group", dropped),
     selection: starterSelection
   }
+
+  // A character never stands below a step her level is already past (levels trained before ascension, or steps moved since).
+  const characters: { [Id in CharacterId]?: OwnedCharacter } = {}
+  for (const [id, owned] of Object.entries(account.owned.characters) as Array<[CharacterId, OwnedCharacter]>) {
+    const level = characterLevel(tuning, account, id).level
+    characters[id] = { ...owned, ascension: Math.max(owned.ascension, tuning.materialRules.ascension.filter((step) => level > step.level).length) }
+  }
+  account = { ...account, owned: { ...account.owned, characters } }
 
   // Never left with nothing to play: the starter's characters come back.
   if (Object.keys(owned.characters).length === 0) account = starter.characters.reduce((next, id) => unlock(tuning, next, { kind: "character", id }, now), account)
   const rewarded = withClearedRewards(tuning, account, now)
-  account = rewarded.account
+  // Chests the stars already reach (stars from before chests, or chests added since) open now.
+  account = withEarnedChests(tuning, rewarded.account).account
 
   // The team keeps the characters that still exist and are owned, each once, in order.
   const savedTeam = [...new Set(stored.selection.team)]
@@ -106,13 +120,13 @@ export const fromStored = (
 
 /** A saved selection with typed ids, or `undefined` when it names no content. */
 const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"]): Play | undefined => {
-  if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest } : undefined
+  if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest, ...(saved.rank === undefined || saved.rank === 1 ? {} : { rank: saved.rank }) } : undefined
   return known(tuning.tracks, saved.track) ? { kind: "tier", track: saved.track, tier: saved.tier } : undefined
 }
 
 /** The account as saved, in the latest version. */
 export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 6,
+  version: 7,
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,
@@ -122,6 +136,7 @@ export const toStored = (account: Account): StoredAccountLatest => ({
   quests: account.quests,
   hardcore: account.hardcore,
   discoveries: account.discoveries,
+  chests: account.chests,
   selection: account.selection
 })
 

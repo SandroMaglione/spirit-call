@@ -141,6 +141,23 @@
     "whirlpool",
     "lightningRod"
   ],
+  "materials": [
+    "fireShard",
+    "fireCore",
+    "fireHeart",
+    "waterShard",
+    "waterCore",
+    "waterHeart",
+    "windShard",
+    "windCore",
+    "windHeart",
+    "thunderShard",
+    "thunderCore",
+    "thunderHeart",
+    "rockShard",
+    "rockCore",
+    "rockHeart"
+  ],
   "retired": {
     "skills": [
       "nova",

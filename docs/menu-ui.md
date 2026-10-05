@@ -85,7 +85,7 @@ there, with a comment saying when to use it.
 | `Toggle`, `Slider` | `kit/controls.tsx` | On or off; an amount. |
 | `Badge` | `kit/controls.tsx` | Something to do there. |
 | `Card`, `Cards` | `kit/Card.tsx` | One of a set: art over a cream foot. `mark` for picked or a place in the party, `selected` for the one looked at, `locked`, `fresh` for just earned. |
-| `Panel` | `kit/panel.tsx` | What is selected, explained: a coloured head, a body that scrolls, a cream `note` for the one thing not to miss (why it is locked). |
+| `Panel` | `kit/panel.tsx` | What is selected, explained: a coloured head (a `subtitle` for the one line that sets it apart), a body that scrolls, a cream `note` for the one thing not to miss (why it is locked). |
 | `Row` | `kit/panel.tsx` | One of a list to pick from; the selected one turns cream. |
 | `Fact` | `kit/panel.tsx` | A name and its value on a banded line: a stat, a cooldown, a setting (`tall`). |
 | `Label`, `Bar`, `Chips` | `kit/panel.tsx` | A gold heading over a group; progress; a short sequence. |
@@ -94,7 +94,12 @@ there, with a comment saying when to use it.
 
 The game's pieces (`menu/parts.tsx`): `Wallet`, `CharacterCard`,
 `EnemyCard`, `Affinities`, `Enemies` (a fight's enemies over their
-weaknesses, tap to inspect), `EnemyFacts`, `Amounts` (rewards), and
+weaknesses, tap to inspect), `EnemyFacts`, `Amounts` (rewards, materials
+included), `MaterialIcon` (an element's emblem, open like a currency, its grade
+as one to three gold dots beneath), `Stars` (a quest's three, lit when earned, popping in when
+earned just now), `UnlockBadge` (a character or an aspect a reward makes
+yours: her face, or the aspect's class on a dark disc, in a turning gold ring
+that pulses; rewards show unlocks on a line of their own, named), and
 `PartyStrip`.
 
 Icons are `src/ui/Icon.tsx` (line icons, currencies, elements, XP) and

@@ -9,10 +9,49 @@
 .party-strip { display: flex; align-items: center; gap: 8px; }
 .enemies { display: flex; gap: 8px; padding: 3px; margin: -3px; }
 .enemies__one { display: grid; gap: 2px; justify-items: center; flex: none; }
-.amounts__unlock { display: flex; align-items: center; gap: 5px; font-weight: 800; min-height: 28px; }
+.amounts__unlocks { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; }
+.amounts__unlock { display: flex; align-items: center; gap: 8px; font-weight: 800; min-height: 28px; color: var(--gold-hi); }
+/* A reward that makes something yours (a character, an aspect): a prize, in a turning gold ring that pulses, with a passing glint. */
+.unlock-badge { position: relative; width: 34px; height: 34px; display: grid; place-items: center; flex: none; border-radius: 50%; animation: unlock-pulse 2.4s ease-in-out infinite; }
+.unlock-badge__ring { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, #fff6d6, var(--gold) 20%, #8a6a2e 35%, var(--gold-hi) 50%, #fff6d6 55%, var(--gold) 70%, #8a6a2e 85%, #fff6d6); -webkit-mask: radial-gradient(circle, transparent 14.5px, #000 15px); mask: radial-gradient(circle, transparent 14.5px, #000 15px); animation: unlock-turn 4s linear infinite; }
+.unlock-badge .face { position: relative; box-shadow: none; }
+.unlock-badge__aspect { position: relative; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; color: var(--gold-hi); background: radial-gradient(circle at 35% 30%, #4a3f6e, #1b1830 70%); }
+.unlock-badge__glint { position: absolute; inset: 3px; border-radius: 50%; overflow: hidden; pointer-events: none; }
+.unlock-badge__glint::before { content: ""; position: absolute; top: -20%; bottom: -20%; width: 35%; left: -60%; rotate: 20deg; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); animation: unlock-glint 3.2s ease-in-out infinite; }
+.unlock-badge::after { content: ""; position: absolute; right: -3px; top: -4px; width: 9px; height: 9px; background: #fffbe8; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: unlock-twinkle 2.4s ease-in-out infinite; }
+@keyframes unlock-turn { to { rotate: 1turn; } }
+@keyframes unlock-pulse { 0%, 100% { box-shadow: 0 0 6px 1px rgba(255, 220, 140, .35); } 50% { box-shadow: 0 0 14px 4px rgba(255, 220, 140, .6); } }
+@keyframes unlock-glint { 0%, 55% { left: -60%; } 85%, 100% { left: 130%; } }
+@keyframes unlock-twinkle { 0%, 100% { opacity: .2; scale: .6; } 50% { opacity: 1; scale: 1; } }
 .confirm .panel__body { padding: 0; display: block; }
 .cost { display: flex; align-items: center; gap: 5px; font-size: 16px; font-weight: 800; color: var(--gold-hi); text-shadow: 0 1px 3px #0008; }
 .cost .menu-icon { font-size: 20px; }
+.cost .material-icon { margin-left: 8px; }
+.cost__short { color: var(--red); }
+/* Stars: dim outlines, lit gold when earned; one earned just now pops in. */
+.stars { display: inline-flex; gap: 1px; }
+.star { display: grid; color: rgba(255, 255, 255, .28); }
+.star.is-earned { color: var(--gold-hi); filter: drop-shadow(0 0 3px rgba(255, 231, 173, .55)); }
+.star.is-earned svg path { fill: currentColor; }
+.star.is-fresh { animation: star-in .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes star-in { from { transform: scale(0) rotate(-40deg); } }
+.row[aria-pressed="true"] .star { color: rgba(59, 66, 85, .3); }
+.row[aria-pressed="true"] .star.is-earned { color: #b8862d; filter: none; }
+/* A material: its element's emblem, open like a currency, over its grade as gold dots. */
+.material-icon { position: relative; display: inline-grid; place-items: center; line-height: 1; }
+.material-icon i { position: absolute; left: 50%; bottom: -.3em; translate: -50% 0; display: flex; gap: max(2px, .08em); }
+.material-icon i b { width: max(3px, .13em); height: max(3px, .13em); border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 0 1px rgba(14, 18, 30, .8); }
+.label .menu-icon { display: inline-block; vertical-align: -1px; margin-right: 3px; color: var(--gold-hi); }
+/* A group's chests along its star bar. */
+.chests { position: relative; height: 26px; margin: 2px 12px 4px 4px; }
+.chests__bar { position: absolute; left: 0; right: 0; top: 12px; height: 3px; border-radius: 2px; background: var(--band); overflow: hidden; }
+.chests__bar span { display: block; height: 100%; background: var(--gold-hi); }
+.chests__one { position: absolute; top: 0; translate: -50% 0; display: grid; justify-items: center; font-size: 15px; color: var(--gold); }
+.chests__one::after { content: ""; position: absolute; inset: -9px -10px; }
+.chests__one[aria-pressed="true"] .menu-icon { box-shadow: 0 0 0 2px var(--gold-hi), 0 0 10px var(--gold-hi); }
+.chests__one small { font-size: 9px; font-weight: 800; margin-top: -1px; }
+.chests__one .menu-icon { background: rgba(22, 28, 44, .9); border-radius: 4px; box-shadow: 0 0 0 2px rgba(22, 28, 44, .9); }
+.chests__one.is-open { color: var(--up); }
 
 /* ---------- home ---------- */
 .home__stage { position: absolute; inset: 6px 24% 14px 24%; }
@@ -93,20 +132,61 @@
 
 /* ---------- challenges ---------- */
 .quests__list { --list: clamp(200px, 31cqw, 262px); position: absolute; left: var(--left); top: 62px; bottom: 0; width: var(--list); z-index: 3; display: grid; gap: 5px; align-content: start; padding-bottom: 28px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }
-.quests__list .label { margin-top: 5px; }
+.quests__list .label { margin-top: 18px; }
 .quests__list .label:first-child { margin-top: 0; }
+.quests__list .label > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quests__list .label > span:last-child { flex: none; white-space: nowrap; }
 .quests__brief { position: absolute; left: calc(var(--left) + clamp(200px, 31cqw, 262px) + 18px); right: var(--right); top: 62px; bottom: 70px; z-index: 3; }
 .quests__enemies { display: grid; gap: 5px; }
-.quests__rewards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
-.quests__rewards > div { display: grid; gap: 4px; align-content: start; }
-.quests__arena { white-space: nowrap; }
-.quests__tiers { display: flex; align-items: center; gap: 8px; }
-.quests__tiers .label { margin-right: 6px; }
-.pip { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; font-weight: 800; background: var(--band); box-shadow: inset 0 0 0 1px var(--line); position: relative; }
-.pip::after { content: ""; position: absolute; inset: -6px -4px; }
-.pip.is-done { box-shadow: inset 0 0 0 1.5px var(--up); color: var(--up); }
-.pip.is-locked { opacity: .4; }
-.pip[aria-pressed="true"] { background: var(--cream); color: var(--ink); opacity: 1; box-shadow: none; }
+/* A chest's brief: the chest beside what it holds. */
+.chest-brief { display: flex; align-items: center; gap: 16px; }
+.chest-brief__icon { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; color: var(--gold-hi); background: radial-gradient(circle at 40% 30%, rgba(255, 231, 173, .25), rgba(255, 231, 173, .05) 70%); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .35), 0 0 18px rgba(255, 220, 140, .25); flex: none; }
+.chest-brief.is-open .chest-brief__icon { color: var(--up); box-shadow: inset 0 0 0 1px rgba(165, 232, 106, .4); background: rgba(165, 232, 106, .08); }
+.chest-brief > div { flex: 1; display: grid; gap: 4px; }
+.chest-brief .bar { margin-top: 4px; }
+.quests__goals { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 16px; }
+.quests__goals > div { display: grid; gap: 4px; align-content: start; }
+.quests__goals > div { gap: 2px; }
+.quests__brief .panel__body { padding-top: 14px; padding-bottom: 10px; }
+.quests__goals > .quests__side-by-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
+.claimed { display: flex; align-items: center; gap: 5px; min-height: 26px; }
+.claimed .menu-icon { color: var(--up); }
+/* A quest's ranks or a track's tiers: each a chip with its enemies' level; the one picked is cream. */
+.steps { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.steps .label { margin-right: 4px; }
+.step { height: 28px; padding: 0 10px; border-radius: 15px; display: flex; align-items: center; gap: 6px; background: var(--band); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; color: var(--dim); position: relative; }
+.step::after { content: ""; position: absolute; inset: -7px -2px; }
+.step b { width: 22px; height: 18px; margin-left: -4px; border-radius: 9px; display: grid; place-items: center; font-size: 11px; font-weight: 800; line-height: 1; letter-spacing: .5px; background: rgba(255, 255, 255, .1); color: var(--text); }
+.step span { display: flex; align-items: center; gap: 3px; line-height: 1; }
+.step .menu-icon { font-size: 12px; }
+.step.is-locked { opacity: .55; }
+.step[aria-checked="true"] { background: var(--cream); color: #6a7184; box-shadow: none; opacity: 1; }
+.step[aria-checked="true"] b { color: var(--cream); background: var(--ink); }
+.step.is-only::after { display: none; }
+.enemies__face { display: grid; justify-items: center; gap: 2px; flex: none; }
+.enemies__face .affinities { font-size: 11px; }
+.quests__brief .panel__body { gap: 7px; }
+.quests__brief .goal { min-height: 19px; }
+/* Small headings in the brief, with the room they save given to what is under them. */
+.quests__brief .label { font-size: 9.5px; letter-spacing: .1em; }
+.quests__goals .label { margin-bottom: 3px; }
+/* First clear over every clear, well apart (side by side for a hardcore tier). */
+.quests__goals > .quests__rewards { gap: 18px; }
+.quests__rewards > div { display: grid; gap: 0; align-content: start; }
+.quests__rewards .label { margin-bottom: 0; }
+/* A brief's last part (its enemies, a chest's quests), under a rule across it. */
+.brief-section { margin: 14px -14px 0; padding: 18px 14px 4px; border-top: 1px solid var(--line); display: grid; gap: 8px; align-content: start; }
+.chest-quests { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 14px; }
+.chest-quest { min-height: 32px; padding: 0 10px; border-radius: 6px; background: var(--band); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 700; text-align: left; }
+.chest-quest > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chest-quest .stars { font-size: 14px; }
+.chest-quest.is-locked { opacity: .5; }
+.enemies--wrap { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 10px 6px; }
+.goal { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
+.goal .menu-icon { font-size: 15px; color: rgba(255, 255, 255, .3); }
+.goal.is-earned { color: var(--text); }
+.goal.is-earned .menu-icon { color: var(--gold-hi); }
+.goal.is-earned .menu-icon path { fill: currentColor; }
 
 /* ---------- practice, discoveries ---------- */
 .practice__picks { position: absolute; left: calc(var(--left) - 3px); top: 62px; bottom: 0; width: 394px; z-index: 3; display: grid; gap: 12px; align-content: start; padding: 3px 3px 28px; }
@@ -131,11 +211,16 @@
 .results__content { width: min(540px, 92%); display: grid; justify-items: center; gap: 8px; text-align: center; text-shadow: 0 1px 3px #0008; }
 .results__content h1 { font-size: 46px; font-weight: 800; letter-spacing: .06em; line-height: 1; text-transform: uppercase; color: var(--cream); }
 .results.is-cleared .results__content h1 { color: var(--gold-hi); text-shadow: 0 0 24px rgba(255, 231, 173, .5); }
-.results__name { font-size: 15px; font-weight: 700; }
+.results__name { color: var(--text); font-weight: 700; }
+/* What a chest gave: its card carries the chest in a gold badge. */
+.results__loot .card.is-new .card__corner { left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: var(--gold-hi); color: var(--ink); filter: none; box-shadow: 0 1px 3px #0008; }
+.results__stars { font-size: 26px; margin: -2px 0; }
 .results__rule { width: min(420px, 100%); height: 1px; margin: 3px 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
 .results__loot { display: flex; justify-content: center; gap: 10px; }
 .results__loot .card { animation: from-below .45s ease-out backwards; }
 .results__loot .card:nth-child(2) { animation-delay: .1s; } .results__loot .card:nth-child(3) { animation-delay: .2s; } .results__loot .card:nth-child(4) { animation-delay: .3s; } .results__loot .card:nth-child(5) { animation-delay: .4s; }
+.results__next { max-width: min(460px, 100%); font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.results__next b { color: var(--gold-hi); margin-right: 8px; }
 .results__new { font-size: 13px; font-weight: 700; color: var(--gold-hi); }
 .results__error { color: #ffc9b8; font-weight: 700; }
 .results__account { width: 300px; display: grid; gap: 4px; font-size: 13px; font-weight: 700; }

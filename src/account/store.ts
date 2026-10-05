@@ -26,7 +26,8 @@ import type { CharacterId } from "../content/characters.ts"
 import type { Amounts } from "../content/currencies.ts"
 import { aspectOf } from "../content/aspects.ts"
 import type { RunResultValue } from "../schema.ts"
-import { createAccount, earn, recordRun, select, train, unlock } from "./account.ts"
+import type { MaterialId } from "../content/materials.ts"
+import { ascend, combine, createAccount, earn, recordRun, select, train, unlock } from "./account.ts"
 import type { Account, Checked, Earned, Item, Play, Refusal, TeamAspects } from "./account.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
 import { read, write } from "./persisted.ts"
@@ -50,6 +51,10 @@ export interface AccountStoreShape {
   readonly unlock: (items: ReadonlyArray<Item>) => Effect.Effect<Account, AccountSaveError>
   /** Takes an owned character to its next level with gold. */
   readonly train: (character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Takes an owned character past the ascension step she stands at, with gold and her element's material. */
+  readonly ascend: (character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Makes one `material` from the grade below it, with gold. */
+  readonly combine: (material: MaterialId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
   /** Adds `amounts` of currency (a reward, or a dev tool). */
   readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
   /**
@@ -150,6 +155,8 @@ export const layer = (options: AccountOptions) =>
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
         earn: (amounts) => apply((account) => earn(account, amounts)),
         train: (character) => change((account) => train(options.tuning, account, character)),
+        ascend: (character) => change((account) => ascend(options.tuning, account, character)),
+        combine: (material) => change((account) => combine(options.tuning, account, material)),
         recordRun: (play, result) =>
           Effect.gen(function*() {
             const now = yield* Clock.currentTimeMillis

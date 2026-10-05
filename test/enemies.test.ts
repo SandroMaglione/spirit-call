@@ -11,6 +11,7 @@ import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Inv
 import type { EnemyKind } from "../src/schema.ts"
 import { doubleTap, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
+import { noTally } from "../src/content/stars.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
@@ -205,7 +206,7 @@ describe("game over and restart", () => {
     const fresh = run.world()
     expect(fresh.player!.health).toBe(tuning.characters.swordsman.stats.hp)
     expect(fresh.player!.position).toEqual(center)
-    expect(fresh.stats).toEqual({ kills: 0, shots: 0, reactions: [] })
+    expect(fresh.stats).toEqual({ kills: 0, shots: 0, reactions: [], tally: noTally })
     // The duel chaser belonged to the old run; training mode has no dummies here.
     expect(fresh.enemies.map((enemy) => enemy.kind).every((kind) => kind === "dummy")).toBe(true)
   })

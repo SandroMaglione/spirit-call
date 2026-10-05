@@ -8,7 +8,8 @@ for one area live next to it (`docs/elements.md`: elements, states, bursts,
 ground effects, enemy traits; `docs/aspects.md`: classes, aspects, and how
 they are owned and equipped; `docs/enemies.md`: enemy movesets, behaviors,
 fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
-`docs/spirits.md`: characters' spirits, from a character sheet to the game).
+`docs/spirits.md`: characters' spirits, from a character sheet to the game;
+`docs/quests.md`: quests, stars, ranks, materials, and ascension).
 
 ## Commands
 

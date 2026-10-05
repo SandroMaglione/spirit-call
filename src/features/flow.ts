@@ -4,7 +4,8 @@
  * screen, and a restart that clears the run and starts over.
  */
 import type { ReactionRecord } from "../content/elements.ts"
-import { Challenge, EnergyLedger, Flow, Game, Guard, Health, HitStop, Keys, Member, Paused, PracticeField, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { noTally } from "../content/stars.ts"
+import { Broke, Challenge, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PerfectDodged, PracticeField, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -27,6 +28,25 @@ export const RecordReactions = Game.System("Shooter/RecordReactions", {
   )
   const added = [...new Set(records)].filter((record) => !seen.includes(record))
   if (added.length > 0) resources.stats.update((stats) => ({ ...stats, reactions: [...stats.reactions, ...added] }))
+})
+
+/**
+ * Counts the step's tallies for stars (see `content/stars.ts`): blows that
+ * landed on the team (not a burn's ticks), perfect dodges, and enemies
+ * broken. Runs after the step's breaks, before its result is made.
+ */
+export const RecordTally = Game.System("Shooter/RecordTally", {
+  events: { hit: Game.System.readEvent(Hit), perfect: Game.System.readEvent(PerfectDodged), broke: Game.System.readEvent(Broke) },
+  resources: { stats: Game.System.writeResource(Stats) }
+}, ({ events, resources }) => {
+  const hitsTaken = events.hit.all().filter((hit) => hit.faction === "player" && !hit.periodic && hit.amount > 0).length
+  const perfectDodges = events.perfect.all().length
+  const breaks = events.broke.all().length
+  if (hitsTaken + perfectDodges + breaks === 0) return
+  resources.stats.update((stats) => ({
+    ...stats,
+    tally: { hitsTaken: stats.tally.hitsTaken + hitsTaken, perfectDodges: stats.tally.perfectDodges + perfectDodges, breaks: stats.tally.breaks + breaks }
+  }))
 })
 
 /** The whole team fallen ends the run, lost (one falling brings in the next, see `SwitchCharacter`). */
@@ -105,7 +125,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   }
 }, ({ resources }) => {
   const tuning = resources.tuning.get()
-  resources.stats.set({ kills: 0, shots: 0, reactions: [] })
+  resources.stats.set({ kills: 0, shots: 0, reactions: [], tally: noTally })
   resources.energyLedger.set({})
   resources.waves.set(initialWaves(tuning))
   resources.rng.set({ state: tuning.waves.seed })
