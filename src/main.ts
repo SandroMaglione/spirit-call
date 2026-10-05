@@ -134,6 +134,8 @@ const start = async (mount: HTMLElement) => {
       })
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
+    ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
+    combine: (material) => change(() => shell.combine(material), `${tuning.materials[material].name} made`),
     retry: () => uiRequests.pending.push({ kind: "retry" }),
     menu: () => uiRequests.pending.push({ kind: "menu" }),
     pause: () => uiRequests.pending.push({ kind: "pause" }),

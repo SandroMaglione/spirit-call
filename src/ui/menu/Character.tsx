@@ -5,7 +5,8 @@
  */
 import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
-import { characterLevel, owns, train, trainingCost } from "../../account/account.ts"
+import { ascend, ascensionCost, ascensionStep, characterLevel, combine, combineCost, levelCap, owns, train, trainingCost } from "../../account/account.ts"
+import { materialOf } from "../../content/materials.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import type { AspectId } from "../../content/aspects.ts"
 import type { CharacterId } from "../../content/characters.ts"
@@ -24,7 +25,7 @@ import { Bar, Chips, Fact, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, SideTabs, TopBar } from "../kit/shell.tsx"
 import { sourceOf } from "../navigation.ts"
 import type { UiActions, UiStore } from "../store.ts"
-import { ids, Wallet } from "./parts.tsx"
+import { ids, MaterialIcon, Wallet } from "./parts.tsx"
 import type { CharacterTab, Nav } from "./screens.ts"
 
 const statLabels = { hp: "Max HP", atk: "ATK", def: "DEF", speed: "Speed" } as const
@@ -40,20 +41,42 @@ const sourceNote = (store: UiStore, item: Parameters<typeof sourceOf>[1]): strin
 const Attributes = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {
   const tuning = store.tuning.value, account = store.account.value, spec = tuning.characters[character], classSpec = tuning.classes[spec.class]
   const progress = characterLevel(tuning, account, character), cost = trainingCost(tuning, account, character)
+  const step = ascensionStep(tuning, account, character), cap = levelCap(tuning, account, character)
   const now = statsAtLevel(tuning, spec.stats, progress.level), next = statsAtLevel(tuning, spec.stats, progress.level + 1)
   const owned = owns(account, { kind: "character", id: character }), maxLevel = tuning.progression.character.curve.maxLevel
   return <>
     <section class="character__side in-right">
       <h1>{spec.name}</h1>
-      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {maxLevel}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name} · {classSpec.range} range</span></div>
+      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name} · {classSpec.range} range</span></div>
       {owned && <Bar value={progress.level / maxLevel} label="Level" />}
       <div class="character__stats" aria-label="Attributes">{statOrder.map((stat) => <Fact key={stat} icon={statIcons[stat]} label={statLabels[stat]} gain={owned && cost !== null && next[stat] > now[stat] ? `+${Math.round(next[stat] - now[stat])}` : undefined} value={Math.round(now[stat])} />)}</div>
       <p class="dim">{owned ? classSpec.description : sourceNote(store, { kind: "character", id: character })}</p>
     </section>
-    {owned && <Actions>{cost === null ? <span class="dim">Maximum level</span> : <>
+    {owned && <Actions>{step !== null ? <Ascension store={store} actions={actions} character={character} /> : cost === null ? <span class="dim">Maximum level</span> : <>
       <span class="cost" aria-label={describeAmounts(tuning, cost)}><Icon name="gold" />{(cost.gold ?? 0).toLocaleString("en-US")}</span>
       <Pill icon="plus" disabled={!train(tuning, account, character).ok || store.busy.value} onClick={() => actions.train(character)}>Level Up</Pill>
     </>}</Actions>}
+  </>
+}
+
+/**
+ * Her ascension, at a step: its gold and her element's material (held over
+ * needed), and the Ascend button; when the material is short and some can
+ * be made from the grade below, a button to make one.
+ */
+const Ascension = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {
+  const tuning = store.tuning.value, account = store.account.value
+  const step = ascensionStep(tuning, account, character), cost = ascensionCost(tuning, account, character)
+  if (step === null || cost === null) return null
+  const material = materialOf(tuning.characters[character].element, step.grade), held = account.wallet[material] ?? 0
+  const makeable = held < step.count && combineCost(tuning, material) !== null && combine(tuning, account, material).ok
+  return <>
+    <span class="cost" aria-label={describeAmounts(tuning, cost)}>
+      <Icon name="gold" />{step.gold.toLocaleString("en-US")}
+      <MaterialIcon store={store} material={material} /><span class={held < step.count ? "cost__short" : undefined}>{held}</span>/{step.count}
+    </span>
+    {makeable && <Pill tone="dark" icon="plus" disabled={store.busy.value} onClick={() => actions.combine(material)}>Make {tuning.materials[material].name}</Pill>}
+    <Pill icon="next" disabled={!ascend(tuning, account, character).ok || store.busy.value} onClick={() => actions.ascend(character)}>Ascend</Pill>
   </>
 }
 
@@ -149,7 +172,7 @@ export const Character = ({ store, actions, nav, character, tab, save }: {
       <div class="roster scroll-x" aria-label="Characters">{roster.map((id) => <button key={id} type="button" class="face-button" aria-label={`View ${tuning.characters[id].name}`} aria-pressed={id === character} onClick={() => nav.replace({ kind: "character", character: id, tab })}><Face of={{ character: id }} tint={elementOf(tuning, id)} selected={id === character} locked={!owns(account, { kind: "character", id })} /></button>)}</div>
     </TopBar>
     <SideTabs label="Character details" current={tab} onChange={(id) => nav.replace({ kind: "character", character, tab: id })} tabs={[
-      { id: "overview", label: "Attributes", badge: owned && train(tuning, account, character).ok },
+      { id: "overview", label: "Attributes", badge: owned && (train(tuning, account, character).ok || ascend(tuning, account, character).ok) },
       { id: "aspect", label: "Aspect" },
       { id: "kit", label: "Skills" }
     ]} />

@@ -11,7 +11,8 @@ import type { ChallengeSpec, Objective } from "../content/challenges.ts"
 import { elements } from "../content/elements.ts"
 import type { Affinities, Affinity, ElementId } from "../content/elements.ts"
 import type { AttackSpec, EnemyKind } from "../content/enemies.ts"
-import type { Amounts, CurrencyId } from "../content/currencies.ts"
+import type { Amounts, CurrencyId, ResourceId } from "../content/currencies.ts"
+import type { MaterialId } from "../content/materials.ts"
 import type { Stats } from "../content/characters.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
 import type { Rewards, Unlock } from "../content/quests.ts"
@@ -174,11 +175,15 @@ export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
   }
 }
 
-/** Amounts of currency, like "100 Crystals · 300 Gold" (each after `sign`, like "+"). */
+/** What a currency or a material is called. */
+export const resourceName = (tuning: Tuning, id: ResourceId): string =>
+  Object.hasOwn(tuning.currencies, id) ? tuning.currencies[id as CurrencyId].name : tuning.materials[id as MaterialId].name
+
+/** Amounts of currency and materials, like "100 Crystals · 300 Gold · 2 Fire Shard" (each after `sign`, like "+"). */
 export const describeAmounts = (tuning: Tuning, amounts: Amounts, sign = ""): string =>
-  (Object.entries(amounts) as Array<[CurrencyId, number]>)
+  (Object.entries(amounts) as Array<[ResourceId, number]>)
     .filter(([, amount]) => amount > 0)
-    .map(([id, amount]) => `${sign}${amount} ${tuning.currencies[id].name}`)
+    .map(([id, amount]) => `${sign}${amount} ${resourceName(tuning, id)}`)
     .join(" · ")
 
 /** What a first clear gives, in a few words. */
@@ -187,9 +192,9 @@ export const describeRewards = (tuning: Tuning, rewards: Rewards): string =>
     .filter((part) => part !== "")
     .join(" · ")
 
-/** What `play` is called: a quest's name, or a track's name and tier. */
+/** What `play` is called: a quest's name (and its rank above the first), or a track's name and tier. */
 export const describePlay = (tuning: Tuning, play: Play): string =>
-  play.kind === "quest" ? tuning.quests[play.quest].name : `${tuning.tracks[play.track].name} · Tier ${play.tier}`
+  play.kind === "quest" ? `${tuning.quests[play.quest].name}${(play.rank ?? 1) > 1 ? ` · Rank ${play.rank}` : ""}` : `${tuning.tracks[play.track].name} · Tier ${play.tier}`
 
 /** Why something is locked, in a few words. */
 export const describeLock = (tuning: Tuning, lock: Lock): string => {

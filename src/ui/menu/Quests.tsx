@@ -1,13 +1,17 @@
 /**
  * The challenges: a list beside a brief. The list shows a whole line at a
- * glance (chapters, what is cleared, what is locked); the brief always
- * shows the enemies and what they are weak to, since preparing is half the
- * game. Hardcore lists its tracks; a track's tiers are numbered in its brief.
+ * glance (chapters, each quest's stars, what is locked, and the chests a
+ * chapter's stars open); the brief says first what is new in a quest, then
+ * always shows the enemies and what they are weak to, since preparing is
+ * half the game, then its stars and what a clear gives. A quest's ranks and
+ * a hardcore track's tiers are numbered in its brief.
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { clearPay, encounterOf, nextReset, playLock, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
+import { clearPay, encounterOf, groupStars, materialPay, nextReset, playLock, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
+import type { StarGroup } from "../../content/quests.ts"
+import { describeGoal } from "../../content/stars.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import type { TrackId } from "../../content/hardcore.ts"
@@ -18,7 +22,8 @@ import { Fact, Label, Panel, Row } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { playsIn } from "../navigation.ts"
 import type { UiStore } from "../store.ts"
-import { Amounts, Enemies, EnemyFacts, ids, PartyStrip } from "./parts.tsx"
+import { Face } from "../kit/art.tsx"
+import { Amounts, Enemies, EnemyFacts, ids, PartyStrip, Stars } from "./parts.tsx"
 import type { Nav, QuestTab } from "./screens.ts"
 
 const cleared = (store: UiStore, play: Play): boolean => {
@@ -26,24 +31,39 @@ const cleared = (store: UiStore, play: Play): boolean => {
   return play.kind === "quest" ? account.quests[play.quest]?.firstClearedAt != null : tierProgress(account, play.track, play.tier)?.firstClearedAt != null
 }
 
-/** What a row says at its right: cleared, why it is locked, or its enemies' level. */
+/** What a row says at its right: a quest's stars once cleared (a tier's tick), why it is locked, or its enemies' level. */
 const RowEnd = ({ store, play }: { readonly store: UiStore; readonly play: Play }) => {
   const tuning = store.tuning.value, lock = playLock(tuning, store.account.value, play)
+  if (play.kind === "quest" && cleared(store, play)) return <Stars earned={store.account.value.quests[play.quest]?.stars ?? []} />
   if (cleared(store, play)) return <span class="done"><Icon name="check" /></span>
   if (lock !== null) return <Icon name="lock" />
   return <>Lv {encounterOf(tuning, play).enemyLevel}</>
 }
 
+/** A group's chests along its stars: each at the stars it needs, opened ones ticked. */
+const ChestTrack = ({ store, group }: { readonly store: UiStore; readonly group: StarGroup }) => {
+  const tuning = store.tuning.value, account = store.account.value, chests = tuning.chests[group], open = account.chests[group] ?? 0
+  const { earned, total } = groupStars(tuning, account, group)
+  return <div class="chests" aria-label={`${earned} of ${total} stars; ${open} of ${chests.length} chests open`}>
+    <span class="chests__bar"><span style={{ width: `${(Math.min(earned, total) / total) * 100}%` }} /></span>
+    {chests.map((chest, index) => <span key={index} class={`chests__one${index < open ? " is-open" : ""}`} style={{ left: `${(chest.stars / total) * 100}%` }}><Icon name={index < open ? "check" : "chest"} /><small>{chest.stars}</small></span>)}
+  </div>
+}
+
 const QuestList = ({ store, tab, play }: { readonly store: UiStore; readonly tab: "main" | "secondary"; readonly play: Signal<Play> }) => {
   const tuning = store.tuning.value, account = store.account.value
   const plays = playsIn(tuning, tab)
-  const groups = tab === "main"
-    ? ids(tuning.chapters).map((chapter) => ({ name: tuning.chapters[chapter].name, plays: plays.filter((each) => each.kind === "quest" && tuning.quests[each.quest].chapter === chapter) }))
-    : [{ name: "Side quests", plays }]
-  return <>{groups.filter((group) => group.plays.length > 0).map((group) => <>
-    <Label key={group.name} end={`${group.plays.filter((each) => cleared(store, each)).length} / ${group.plays.length}`}>{group.name}</Label>
-    {group.plays.map((each) => <Row key={describePlay(tuning, each)} lead={plays.indexOf(each) + 1} selected={samePlay(each, play.value)} locked={playLock(tuning, account, each) !== null} end={<RowEnd store={store} play={each} />} onClick={() => (play.value = each)}>{describePlay(tuning, each)}</Row>)}
-  </>)}</>
+  const groups: ReadonlyArray<{ readonly group: StarGroup; readonly name: string; readonly plays: ReadonlyArray<Play> }> = tab === "main"
+    ? ids(tuning.chapters).map((chapter) => ({ group: chapter, name: tuning.chapters[chapter].name, plays: plays.filter((each) => each.kind === "quest" && tuning.quests[each.quest].chapter === chapter) }))
+    : [{ group: "secondary", name: "Side quests", plays }]
+  return <>{groups.filter((group) => group.plays.length > 0).map((group) => {
+    const stars = groupStars(tuning, account, group.group)
+    return <>
+      <Label key={group.name} end={<><Icon name="star" />{stars.earned} / {stars.total}</>}>{group.name}</Label>
+      {questsOf(tuning, group.group).length > 0 && <ChestTrack key={`${group.name}-chests`} store={store} group={group.group} />}
+      {group.plays.map((each) => <Row key={describePlay(tuning, each)} lead={plays.indexOf(each) + 1} selected={each.kind === "quest" && play.value.kind === "quest" ? each.quest === play.value.quest : samePlay(each, play.value)} locked={playLock(tuning, account, each) !== null} end={<RowEnd store={store} play={each} />} onClick={() => (play.value = each)}>{describePlay(tuning, each)}</Row>)}
+    </>
+  })}</>
 }
 
 const TrackList = ({ store, play, now }: { readonly store: UiStore; readonly play: Signal<Play>; readonly now: number }) => {
@@ -72,10 +92,27 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const tuning = store.tuning.value, account = store.account.value, selected = play.value
   const lock = playLock(tuning, account, selected), encounter = encounterOf(tuning, selected), challenge = tuning.challenges[encounter.challenge]
   const done = cleared(store, selected)
-  const everyClear = { currencies: { gold: clearPay(tuning.progression.gold, encounter.enemyLevel) }, experience: clearPay(tuning.progression.account.run, encounter.enemyLevel), unlocks: [] }
+  const element = selected.kind === "quest" ? tuning.quests[selected.quest].element : tuning.tracks[selected.track].element
+  const everyClear = {
+    currencies: { gold: clearPay(tuning.progression.gold, encounter.enemyLevel), ...materialPay(tuning, element, encounter.challenge, encounter.enemyLevel, false) },
+    experience: clearPay(tuning.progression.account.run, encounter.enemyLevel),
+    unlocks: []
+  }
+  const quest = selected.kind === "quest" ? tuning.quests[selected.quest] : null
+  const rank = selected.kind === "quest" ? rankOf(selected) : 1
+  const earnedStars = selected.kind === "quest" ? account.quests[selected.quest]?.stars ?? [] : []
+  const firstClear = quest === null ? null : { ...quest.rewards, currencies: { ...quest.rewards.currencies, ...materialPay(tuning, element, encounter.challenge, encounter.enemyLevel, true) } }
   const preview = (character: CharacterId) => nav.go({ kind: "character", character, tab: "kit" })
   const progress = selected.kind === "tier" ? tierProgress(account, selected.track, selected.tier) : undefined
-  return <Panel class="quests__brief in-right" title={selected.kind === "quest" ? tuning.quests[selected.quest].name : tuning.tracks[selected.track].name} detail={`${describeObjective(challenge.objective, challenge.waves.scripted.length)} · Enemies Lv ${encounter.enemyLevel}`} note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
+  return <Panel class="quests__brief in-right" title={selected.kind === "quest" ? describePlay(tuning, selected) : tuning.tracks[selected.track].name} detail={`${describeObjective(challenge.objective, challenge.waves.scripted.length)} · Enemies Lv ${encounter.enemyLevel}`} note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
+    {quest !== null && rank === 1 && <div class="quests__new">
+      {quest.introduces.enemy !== null && <Face of={{ enemy: quest.introduces.enemy }} size={34} />}
+      <span><Label>New</Label>{quest.introduces.text}</span>
+    </div>}
+    {selected.kind === "quest" && quest !== null && quest.ranks.length > 0 && <div class="quests__tiers"><Label>Rank</Label>{[1, ...quest.ranks.map((_, index) => index + 2)].map((each) => {
+      const at: Play = each === 1 ? { kind: "quest", quest: selected.quest } : { kind: "quest", quest: selected.quest, rank: each }
+      return <button type="button" key={each} class={`pip${playLock(tuning, account, at) !== null ? " is-locked" : ""}`} aria-label={`Rank ${each}`} aria-pressed={each === rank} onClick={() => (play.value = at)}>{each}</button>
+    })}</div>}
     {selected.kind === "tier" && <div class="quests__tiers"><Label>Tier</Label>{tuning.tracks[selected.track].tiers.map((_, index) => {
       const tier: Play = { kind: "tier", track: selected.track, tier: index + 1 }
       return <button type="button" key={index} class={`pip${cleared(store, tier) ? " is-done" : ""}${playLock(tuning, account, tier) !== null ? " is-locked" : ""}`} aria-label={`Tier ${index + 1}`} aria-pressed={index + 1 === selected.tier} onClick={() => (play.value = tier)}>{cleared(store, tier) && index + 1 !== selected.tier ? <Icon name="check" /> : index + 1}</button>
@@ -84,9 +121,15 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
     {inspected.value !== null ? <EnemyFacts store={store} kind={inspected.value} /> : <>
       <p class="dim">{challenge.description} <span class="quests__arena">{tuning.arenas[challenge.arena].name}.</span></p>
       {challenge.objective.kind === "endure" && <div><Fact label="Each wave" value={`Enemies +${challenge.objective.levelPerWave} Lv`} />{progress?.bestWave !== undefined && <Fact label="Best wave" value={progress.bestWave} />}</div>}
+      {quest !== null && <div class="quests__stars">
+        <Label>Stars</Label>
+        {rank === 1
+          ? quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)
+          : <span class="dim">Stars are earned at rank 1.</span>}
+      </div>}
       <div class="quests__rewards">
         <div><Label>{selected.kind === "quest" ? "First clear" : "Milestone · once per period"}</Label>{selected.kind === "quest"
-          ? done ? <span class="dim">Claimed</span> : <Amounts store={store} rewards={tuning.quests[selected.quest].rewards} preview={preview} />
+          ? firstClear === null || rank > 1 ? <span class="dim">None at higher ranks</span> : done ? <span class="dim">Claimed</span> : <Amounts store={store} rewards={firstClear} preview={preview} />
           : tierRewardsAvailable(tuning, account, selected.track, selected.tier, now) ? <Amounts store={store} rewards={{ ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards, unlocks: [] }} /> : <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span>}</div>
         <div><Label>Every clear</Label><Amounts store={store} rewards={everyClear} /></div>
       </div>
@@ -98,7 +141,7 @@ export const Quests = ({ store, nav, tab, play, leader, enter }: {
   readonly store: UiStore; readonly nav: Nav; readonly tab: QuestTab; readonly play: Signal<Play>; readonly leader: CharacterId; readonly enter: () => void
 }) => {
   const tuning = store.tuning.value, now = Date.now(), selected = play.value
-  const key = selected.kind === "quest" ? selected.quest : `${selected.track}-${selected.tier}`
+  const key = selected.kind === "quest" ? `${selected.quest}-${rankOf(selected)}` : `${selected.track}-${selected.tier}`
   return <Screen name="quests">
     <TopBar icon="quests" title="Challenges" close={nav.back}>
       <TopTabs label="Kinds of challenge" current={tab} onChange={(id) => nav.replace({ kind: "quests", tab: id })} tabs={[{ id: "main", label: "Main" }, { id: "secondary", label: "Side" }, { id: "hardcore", label: "Hardcore" }]} />

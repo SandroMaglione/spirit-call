@@ -6,6 +6,8 @@
  * programs on the app runtime. A refused action or a failed save is logged
  * and the game goes on.
  */
+import { materials } from "../content/materials.ts"
+import type { MaterialId } from "../content/materials.ts"
 import * as BrowserKeyValueStore from "@effect/platform-browser/BrowserKeyValueStore"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
@@ -23,8 +25,8 @@ import type { Amounts } from "../content/currencies.ts"
 import type { RunResultValue } from "../schema.ts"
 import { randomId } from "./ids.ts"
 
-/** What the dev tool adds: enough to level anything while testing. */
-const plenty: Amounts = { crystals: 10_000, gold: 100_000 }
+/** What the dev tool adds: enough to level and ascend anything while testing. */
+const plenty: Amounts = { crystals: 10_000, gold: 100_000, ...Object.fromEntries(Object.keys(materials).map((id) => [id, 50])) }
 
 export interface App {
   /** The account as loaded when the game started. */
@@ -36,6 +38,10 @@ export interface App {
   readonly onAccount: (listener: (account: Account) => void) => void
   /** Takes a character to its next level with gold (refused without enough, or at the maximum). */
   readonly train: (character: CharacterId) => Promise<Account | undefined>
+  /** Takes a character past the ascension step she stands at (refused without the gold or the material). */
+  readonly ascend: (character: CharacterId) => Promise<Account | undefined>
+  /** Makes one material from the grade below it (refused without enough). */
+  readonly combine: (material: MaterialId) => Promise<Account | undefined>
   /** Selects the team to enter the arena with (and the aspects equipped in it) and what for; the account after it, or `undefined` when refused (not owned, aspects breaking the rules, or not open). */
   readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Promise<Account | undefined>
   /** Owns every character and aspect, and adds plenty of each currency (a dev tool). */
@@ -79,6 +85,8 @@ export const startApp = async (tuning: Tuning): Promise<App> => {
       listeners.push(listener)
     },
     train: (character) => run(accounts.train(character)),
+    ascend: (character) => run(accounts.ascend(character)),
+    combine: (material) => run(accounts.combine(material)),
     select: (team, play, aspects) => run(accounts.select(team, play, aspects)),
     unlockEverything: () => void run(accounts.unlock(everything(tuning)).pipe(Effect.andThen(accounts.earn(plenty)))),
     recordRun: (play, result) => attempt(accounts.recordRun(play, result), (recorded) => recorded.account).then((recorded) => recorded?.earned),

@@ -7,12 +7,13 @@
  */
 import type { CharacterId } from "../../content/characters.ts"
 import { characterLevel, owns } from "../../account/account.ts"
-import type { CurrencyId } from "../../content/currencies.ts"
+import type { Amounts as Held, CurrencyId } from "../../content/currencies.ts"
+import type { MaterialId } from "../../content/materials.ts"
 import { elements } from "../../content/elements.ts"
 import type { Affinities as Traits } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import type { Rewards } from "../../content/quests.ts"
-import { affinityList, affinityNames, attackElements, describeUnlock } from "../describe.ts"
+import { affinityList, affinityNames, attackElements, describeUnlock, resourceName } from "../describe.ts"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import { Face, Portrait } from "../kit/art.tsx"
@@ -79,12 +80,30 @@ export const EnemyFacts = ({ store, kind }: { readonly store: UiStore; readonly 
   </>
 }
 
-/** What something gives: experience, currencies, and what it unlocks (`preview` opens an unlocked character). */
+const gradeMarks = { 1: "I", 2: "II", 3: "III" } as const
+
+/** A material: its element's emblem on a gem, its grade (I to III) in the corner. */
+export const MaterialIcon = ({ store, material }: { readonly store: UiStore; readonly material: MaterialId }) => {
+  const spec = store.tuning.value.materials[material]
+  return <span class="material-icon" data-element={spec.element} data-grade={spec.grade}><Icon name={spec.element} /><i aria-hidden="true">{gradeMarks[spec.grade]}</i></span>
+}
+
+/** The materials among `amounts`, in the content's order (each element, lowest grade first). */
+export const materialsIn = (store: UiStore, amounts: Held): ReadonlyArray<MaterialId> =>
+  ids(store.tuning.value.materials).filter((id) => (amounts[id] ?? 0) > 0)
+
+/** A star per goal, lit when earned (`fresh`: earned just now). */
+export const Stars = ({ earned, total = 3, fresh = [] }: { readonly earned: ReadonlyArray<number>; readonly total?: number; readonly fresh?: ReadonlyArray<number> }) => (
+  <span class="stars" aria-label={`${earned.length} of ${total} stars`}>{Array.from({ length: total }, (_, index) => <span key={index} class={`star${earned.includes(index) ? " is-earned" : ""}${fresh.includes(index) ? " is-fresh" : ""}`}><Icon name="star" /></span>)}</span>
+)
+
+/** What something gives: experience, currencies and materials, and what it unlocks (`preview` opens an unlocked character). */
 export const Amounts = ({ store, rewards, preview }: { readonly store: UiStore; readonly rewards: Rewards; readonly preview?: (character: CharacterId) => void }) => {
   const tuning = store.tuning.value
   return <div class="amounts">
     {rewards.experience > 0 && <span aria-label={`${rewards.experience} account XP`}><Icon name="xp" />{rewards.experience}</span>}
     {ids(tuning.currencies).filter((id) => (rewards.currencies[id] ?? 0) > 0).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${tuning.currencies[id].name}`}><Icon name={id} />{(rewards.currencies[id] ?? 0).toLocaleString("en-US")}</span>)}
+    {materialsIn(store, rewards.currencies).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${resourceName(tuning, id)}`}><MaterialIcon store={store} material={id} />{rewards.currencies[id]}</span>)}
     {rewards.unlocks.map((unlock) => unlock.kind === "aspect"
       ? <span key={unlock.id}><Icon name="aspect" />{describeUnlock(tuning, unlock)}</span>
       : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} onClick={() => preview?.(unlock.id)}><Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} />{describeUnlock(tuning, unlock)}</button>)}

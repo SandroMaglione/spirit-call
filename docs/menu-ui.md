@@ -94,8 +94,10 @@ there, with a comment saying when to use it.
 
 The game's pieces (`menu/parts.tsx`): `Wallet`, `CharacterCard`,
 `EnemyCard`, `Affinities`, `Enemies` (a fight's enemies over their
-weaknesses, tap to inspect), `EnemyFacts`, `Amounts` (rewards), and
-`PartyStrip`.
+weaknesses, tap to inspect), `EnemyFacts`, `Amounts` (rewards, materials
+included), `MaterialIcon` (an element's emblem on a gem, its grade I–III in
+the corner), `Stars` (a quest's three, lit when earned, popping in when
+earned just now), and `PartyStrip`.
 
 Icons are `src/ui/Icon.tsx` (line icons, currencies, elements, XP) and
 `src/ui/AbilityIcon.tsx` (a class or a skill). They size with the text:

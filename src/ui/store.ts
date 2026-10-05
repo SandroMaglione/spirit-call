@@ -5,6 +5,7 @@
  * updates after every change. The UI never changes this state itself; it
  * calls its actions (see `UiActions`).
  */
+import type { MaterialId } from "../content/materials.ts"
 import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
@@ -109,6 +110,10 @@ export interface UiActions {
   readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra) => void
   /** Take an owned character to its next level with gold (saved at once). */
   readonly train: (character: CharacterId) => void
+  /** Take an owned character past the ascension step she stands at (saved at once). */
+  readonly ascend: (character: CharacterId) => void
+  /** Make one material from the grade below it (saved at once). */
+  readonly combine: (material: MaterialId) => void
   /** From the results or the in-game menu: the same challenge again, from the start. */
   readonly retry: () => void
   /** From the results or the in-game menu: back to the menu. */
