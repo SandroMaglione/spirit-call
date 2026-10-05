@@ -40,3 +40,16 @@ if 'sweep' not in sys.argv:
         board.paste(im,(x+(750-im.width)//2,y+55),im)
         d.text((x+24,y+15),name,font=font(24),fill='#252c3c')
     board.save(out/'review-board.png')
+    board=Image.new('RGB',(1360,1400),'#dfdfe8')
+    d=ImageDraw.Draw(board)
+    for row,view in enumerate(('front','game')):
+        y=row*700
+        for col,(name,file) in enumerate((('Before',f'previous-{view}.png'),('Revised',f'{view}.png'))):
+            im=Image.open(out/file)
+            # Both renders use the same orthographic scale. Align the older
+            # ground framing rather than resizing its shorter silhouette.
+            shift=13 if view=='front' else 11
+            board.paste(im,(col*680+20,y+48-(shift if col==0 else 0)),im)
+            d.text((col*680+24,y+12),f'{name} | {view}',font=font(24),fill='#252c3c')
+    d.text((24,1370),'Same world scale. Torso and helmet keep their previous dimensions.',font=font(18),fill='#252c3c')
+    board.save(out/'revision.png')

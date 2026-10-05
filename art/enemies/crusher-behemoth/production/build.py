@@ -6,7 +6,6 @@ from pathlib import Path
 
 import bpy
 import bmesh
-import numpy as np
 from mathutils import Matrix, Vector
 
 HERE = Path(__file__).resolve().parent
@@ -82,20 +81,23 @@ m.surface_patch('ChestStem', body, [(530,191),(537,191),(537,201),(548,210),(540
 paint(keystone, lambda p: p.z > 1.55 and p.z < 1.95, 'gold')
 
 
-def beveled_block(name, center, radii, color):
+def beveled_block(name, center, radii, color, banded=False):
     # Broad flat ends preserve a clenched fist instead of pointed fingertips.
     outline=[(-.7,-1),(.7,-1),(1,-.7),(1,.7),(.7,1),(-.7,1),(-1,.7),(-1,-.7)]
     verts=[];faces=[]
-    for height,width in [(-1,.72),(-.72,1),(-.15,1),(.32,1),(.72,1),(1,.72)]:
+    profile=[(-1,.72),(-.72,1),(.72,1),(1,.72)]
+    if banded:profile=[(-1,.72),(-.72,1),(-.15,1),(.32,1),(.72,1),(1,.72)]
+    for height,width in profile:
         for x,y in outline:verts.append((center[0]+x*radii[0]*width,center[1]+y*radii[1]*width,center[2]+height*radii[2]))
-    for j in range(5):
+    for j in range(len(profile)-1):
         for k in range(8):
             a=j*8+k;b=j*8+(k+1)%8
             faces.append((a,b,b+8,a+8))
-    faces.extend([tuple(reversed(range(8))),tuple(range(40,48))])
+    end=(len(profile)-1)*8
+    faces.extend([tuple(reversed(range(8))),tuple(range(end,end+8))])
     return m.mesh(name,verts,faces,color)
 
-for part, name, color, rings in [('shoulder','Pauldron','dark',6),('wrist','WristArmor','stone',4),('fist','FistShell','dark',7)]:
+for part, name, color, rings in [('shoulder','Pauldron','dark',6)]:
     obj=m.loft(name+'.L',part,color,rings,12,align=True)
     rows=m.rows(part,'front')
     lo,hi=rows[:,0].min(),rows[:,0].max()
@@ -106,49 +108,74 @@ for part, name, color, rings in [('shoulder','Pauldron','dark',6),('wrist','Wris
             plane_co=(-2.65,0,0),plane_no=(1,0,0),dist=.000001)
         bm.to_mesh(obj.data);bm.free();obj.data.update()
         paint(obj, lambda p: p.x > -2.65, 'gold')
-    elif part=='wrist':
-        paint(obj, lambda p: lo+(hi-lo)*.4 < p.z < lo+(hi-lo)*.8, 'gold')
-    else:
-        paint(obj, lambda p: lo+(hi-lo)*.3 < p.z < lo+(hi-lo)*.52, 'gold')
     m.mirror(obj,name+'.R')
 
-# Three broad finger blocks give each fist visible seams and gold knuckle bands.
-# Their root is behind the front shell; only the beveled ends protrude.
-rows=m.rows('fist','front'); z=float(rows[:,0].mean())
-cx,cy,rx,ry=m.section('fist',z,True)
-for i,u in enumerate((-.52,0,.52)):
-    x=cx+rx*u
-    finger=beveled_block(f'Knuckle.L.{i}',(x,cy-ry*.82,z-.15),(rx*.28,.4,1.35),'dark')
-    paint(finger,lambda p: z-.38 < p.z < z+.32,'gold')
-    m.mirror(finger,f'Knuckle.R.{i}')
-thumb=m.ellipsoid('Thumb.L',(cx+rx*.92,cy-ry*.47,z+.08),(.48,.63,.91),'stone',8,4)
-paint(thumb,lambda p: z-.12 < p.z < z+.37,'gold')
-m.mirror(thumb,'Thumb.R')
+def curled_finger(name, center, half_width):
+    # Closed fingers bend forward at the knuckle and return into the palm.
+    # This side profile reads as a grip from the side as well as four knuckles in front.
+    profile=[(.18,1.0),(-.60,1.0),(-1.0,.70),(-1.08,-.34),(-.80,-.70),
+             (-.23,-.87),(.12,-.63),(.36,.22)]
+    verts=[];faces=[]
+    for x,scale in [(-half_width,.76),(-half_width+.10,1),(half_width-.10,1),(half_width,.76)]:
+        for y,z in profile:verts.append((center[0]+x,center[1]+y*scale,center[2]+z*scale))
+    for j in range(3):
+        for k in range(8):
+            a=j*8+k;b=j*8+(k+1)%8
+            faces.append((a,b,b+8,a+8))
+    faces.extend([tuple(reversed(range(8))),tuple(range(24,32))])
+    return m.mesh(name,verts,faces,'stone',.035)
 
-# The same outward cant applies to each fist's shell, fingers, and thumb.
-# It keeps the gold bands and finger seams continuous across the silhouette.
-for side,sign in [('L',-1),('R',1)]:
-    pivot=Vector((sign*abs(cx),cy,z))
-    rotation=Matrix.Rotation(sign*math.radians(16),3,'Y')
-    for obj in bpy.data.objects:
-        if obj.type=='MESH' and (obj.name.startswith('FistShell.'+side) or obj.name.startswith('Knuckle.'+side) or obj.name=='Thumb.'+side):
-            for v in obj.data.vertices:v.co=pivot+rotation@(v.co-pivot)
 
-# Dark articulated links are visible in the gaps between the armor masses.
-for sign,side in [(-1,'L'),(1,'R')]:
-    m.ellipsoid('ShoulderJoint.'+side,(sign*2.55,.15,5.42),(.75,.95,.84),'recess',8,4)
-    m.ellipsoid('ElbowJoint.'+side,(sign*3.7,.08,4.42),(.68,.83,.7),'recess',8,4)
+# A compact palm, four curled fingers, and a thumb crossing the grip replace
+# the hanging armor bars. The wrist has one plain band and no pointed caps.
+cx,cy,rx,ry=m.section('fist',2.8,True)
+hand=[]
+hand.append(beveled_block('FistShell.L',(cx,cy+.15,2.78),(rx*.96,1.20,1.30),'dark'))
+for i,u in enumerate((-.72,-.24,.24,.72)):
+    finger=curled_finger(f'Finger.L.{i}',(cx+rx*u,cy-.70,2.99),rx*.215)
+    hand.append(finger)
+hand.append(beveled_block('ThumbBase.L',(cx+rx*.89,cy-.84,2.76),(.42,.65,.63),'stone'))
+thumb=beveled_block('Thumb.L',(cx+rx*.57,cy-1.68,2.56),(.67,.40,.37),'stone')
+hand.append(thumb)
+for obj in hand:
+    pivot=Vector((cx,cy,2.8))
+    rotation=Matrix.Rotation(-math.radians(12),3,'Y')
+    for v in obj.data.vertices:v.co=pivot+rotation@(v.co-pivot)
+    m.mirror(obj,obj.name.replace('.L','.R'))
+
+wrist=beveled_block('WristArmor.L',(cx+.16,cy+.24,4.48),(.90,.90,.51),'dark',banded=True)
+paint(wrist,lambda p: 4.35<p.z<4.66,'gold')
+m.mirror(wrist,'WristArmor.R')
+link=beveled_block('WristLink.L',(cx+.14,cy+.24,4.04),(.62,.67,.39),'recess')
+m.mirror(link,'WristLink.R')
+joint=m.ellipsoid('ShoulderJoint.L',(-2.55,.15,5.42),(.75,.95,.84),'recess',8,4)
+m.mirror(joint,'ShoulderJoint.R')
+arm=beveled_block('Forearm.L',(cx+.20,cy+.24,5.13),(.65,.75,.60),'dark')
+m.mirror(arm,'Forearm.R')
 
 # Raised rear plates create facing cues without copying the front's luminous core.
 m.surface_patch('CollarBinding', body, [(513,177),(521,184),(533,190),(546,184),(553,177),(550,184),(534,196),(516,188)], 'dark')
 
 objects=[o for o in bpy.data.objects if o.type=='MESH']
-raw=[v.co for o in objects for v in o.data.vertices]
-low=min(v.z for v in raw); high=max(v.z for v in raw)
-scale=(8.5-.8)/(high-low)
+# Preserve the previous torso's world bounds when revising the hands.
+# These values come from its measured raw contour and the pass-01 GLB.
+scale=.9484295753787207
+offset=.6272933914000729
 for obj in objects:
     for v in obj.data.vertices:
-        v.co.x*=scale; v.co.y*=scale; v.co.z=.8+(v.co.z-low)*scale
+        v.co.x*=scale; v.co.y*=scale; v.co.z=offset+v.co.z*scale
+
+# Short legs fill the space under the torso, with flat soles at the origin's floor.
+# Wide feet and slightly separated knees give the heavy body a stable stance.
+beveled_block('Pelvis',(0,.38,2.0),(1.38,.78,.56),'dark')
+for name,center,radii,color in [
+        ('Thigh.L',(-1.04,.37,1.78),(.57,.61,.64),'dark'),
+        ('Shin.L',(-1.15,.24,1.07),(.57,.65,.61),'stone'),
+        ('Foot.L',(-1.25,-.35,.39),(.81,1.10,.39),'dark')]:
+    obj=beveled_block(name,center,radii,color)
+    m.mirror(obj,name.replace('.L','.R'))
+objects=[o for o in bpy.data.objects if o.type=='MESH']
+for obj in objects:
     if obj!=body:
         origin=sum((v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
         for v in obj.data.vertices: v.co-=origin
@@ -162,7 +189,8 @@ bounds=[[min(p[i] for p in points),max(p[i] for p in points)] for i in range(3)]
 audit={'kind':'crusher-behemoth','status':'static review; no animation or game registration',
        'triangles':triangles,'materials':2,'mesh_parts':[o.name for o in objects],
        'animations':0,'armatures':0,'bounds_blender_m':bounds,'height_m':8.5,
-       'ground_clearance_m':.8,'height_basis':'ground origin to helmet apex, including floating clearance',
+       'ground_clearance_m':0,'height_basis':'ground between flat soles to helmet apex',
+       'revision':'four curled fingers, crossing thumbs, plain wrists, short grounded legs',
        'axes_glb':'meters, +Y up, +Z forward','reference':'reference/sheet.png',
        'dimension_conflict':m.sheet['dimension_conflict']}
 bpy.context.scene.unit_settings.system='METRIC'
@@ -172,7 +200,7 @@ bpy.context.view_layer.objects.active=body
 # A neutral material viewport opens with the entire model in view.
 for area in bpy.context.screen.areas:
     if area.type=='VIEW_3D':
-        area.spaces.active.shading.color_type='MATERIAL'
+        area.spaces.active.shading.type='MATERIAL'
         area.spaces.active.region_3d.view_distance=23
         area.spaces.active.region_3d.view_location=(0,0,4.2)
 bpy.ops.wm.save_as_mainfile(filepath=str(HERE/m.config['blend']))

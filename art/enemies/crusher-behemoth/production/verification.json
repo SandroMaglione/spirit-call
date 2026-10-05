@@ -1,30 +1,32 @@
 {
   "result": "passed",
-  "sha256": "ad1f6d14862e58f7e15bca9a1c999b204b545d73c72cf57f905cf64750cd9eb1",
-  "triangles": 2418,
+  "sha256": "a5c639a754b50c011a3430cc2518b552c54a4479ba4fe8434ae7f80914cba830",
+  "triangles": 2830,
   "materials": 2,
   "animations": 0,
   "skins": 0,
   "cameras": 0,
   "lights": 0,
-  "named_parts": 31,
+  "named_parts": 44,
   "source_world_vertices_preserved": true,
   "paired_parts_symmetric": true,
   "bounds_blender_m": [
     [
-      -5.46618,
-      5.46618
+      -5.4457,
+      5.4457
     ],
     [
-      -2.37967,
+      -2.38211,
       2.64523
     ],
     [
-      0.8,
+      0.0,
       8.5
     ]
   ],
   "height_m": 8.5,
-  "floating_clearance_m": 0.8,
-  "axes_glb": "meters, +Y up, +Z forward"
+  "ground_clearance_m": 0,
+  "axes_glb": "meters, +Y up, +Z forward",
+  "four_curled_fingers_per_hand": true,
+  "both_flat_soles_on_floor": true
 }

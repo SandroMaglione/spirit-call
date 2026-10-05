@@ -35,7 +35,7 @@ for name,rot in [('sun',(35,0,-35)),('fill',(65,0,155)),('rim',(-90,0,20))]:
 camera=bpy.data.objects.new('Review camera',bpy.data.cameras.new('Review camera'))
 camera.data.type='ORTHO';camera.data.ortho_scale=config['ortho']
 scene.collection.objects.link(camera);scene.camera=camera
-target=Vector((0,0,4.55))
+target=Vector((0,0,4.25))
 
 
 def render(name,turn,elevation,size=640,ortho=None):
@@ -63,3 +63,11 @@ else:
     target=Vector((0,-.2,7.5))
     render('face-front',0,0,640,3.5)
     render('face-three-quarter',30,12,640,3.5)
+    parts=[o for o in bpy.data.objects if o.type=='MESH' and
+           (o.name=='FistShell.L' or o.name.startswith('Finger.L.') or o.name in ('Thumb.L','ThumbBase.L','WristArmor.L','WristLink.L'))]
+    for obj in bpy.data.objects:
+        if obj.type=='MESH':obj.hide_render=obj not in parts
+    pts=[obj.matrix_world@v.co for obj in parts for v in obj.data.vertices]
+    target=Vector(tuple((min(p[i] for p in pts)+max(p[i] for p in pts))/2 for i in range(3)))
+    render('hand-front',0,0,640,5.8)
+    render('hand-three-quarter',35,15,640,5.8)

@@ -63,5 +63,6 @@ data['hero'] = dict(turn=0, elevation=20)
 data['dimension_conflict'] = {
     'sheet_annotation_m': [16,12,8.5],
     'rule': 'Preserve orthographic shape and use 8.5 m rest height. Do not stretch the front to the inconsistent 16 m label.',
-    'height_basis': 'ground origin to helmet apex; floating clearance 0.8 m'}
+    'height_basis': 'ground between feet to helmet apex after requested leg revision',
+    'reference_ground_clearance_m': .8}
 p.write_text(json.dumps(data, indent=2) + '\n')

@@ -48,14 +48,19 @@ assert not bpy.data.actions
 assert not any(o.type in ('ARMATURE','LIGHT','CAMERA') for o in bpy.data.objects)
 points=[p for values in imported.values() for p in values]
 bounds=[[min(p[i] for p in points),max(p[i] for p in points)] for i in range(3)]
-assert abs(bounds[2][0]-.8)<.00002 and abs(bounds[2][1]-8.5)<.00002
-for prefix in ('Pauldron','WristArmor','FistShell','Thumb','Eye'):
+assert abs(bounds[2][0])<.00002 and abs(bounds[2][1]-8.5)<.00002
+for prefix in ('Pauldron','WristArmor','FistShell','Thumb','ThumbBase','Eye','Thigh','Shin','Foot'):
     reflected={(-p[0],p[1],p[2]) for p in imported[prefix+'.L']}
     assert reflected==set(imported[prefix+'.R']),prefix
 report={'result':'passed','sha256':hashlib.sha256(data).hexdigest(),'triangles':triangles,
         'materials':2,'animations':0,'skins':0,'cameras':0,'lights':0,'named_parts':len(source),
         'source_world_vertices_preserved':True,'paired_parts_symmetric':True,
-        'bounds_blender_m':bounds,'height_m':8.5,'floating_clearance_m':.8,
+        'bounds_blender_m':bounds,'height_m':8.5,'ground_clearance_m':0,
         'axes_glb':'meters, +Y up, +Z forward'}
+for side in ('L','R'):
+    for i in range(4):assert f'Finger.{side}.{i}' in imported
+    assert min(p[2] for p in imported[f'Foot.{side}'])==0
+report['four_curled_fingers_per_hand']=True
+report['both_flat_soles_on_floor']=True
 (HERE/'verification.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report))

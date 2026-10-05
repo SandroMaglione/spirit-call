@@ -1,62 +1,62 @@
 [
   {
     "turn": 0,
-    "elevation": 10,
-    "silhouette_iou": 0.809775258435159
-  },
-  {
-    "turn": -15,
-    "elevation": 10,
-    "silhouette_iou": 0.8074014707501804
+    "elevation": 30,
+    "silhouette_iou": 0.7488688877597929
   },
   {
     "turn": 0,
     "elevation": 20,
-    "silhouette_iou": 0.8059030598429461
+    "silhouette_iou": 0.7333203277409286
   },
   {
     "turn": 0,
-    "elevation": 30,
-    "silhouette_iou": 0.793960721988875
+    "elevation": 10,
+    "silhouette_iou": 0.7218001061901536
+  },
+  {
+    "turn": -15,
+    "elevation": 10,
+    "silhouette_iou": 0.7176551238582254
   },
   {
     "turn": 15,
     "elevation": 10,
-    "silhouette_iou": 0.7844833314205291
+    "silhouette_iou": 0.6981614796089709
   },
   {
     "turn": -15,
     "elevation": 20,
-    "silhouette_iou": 0.745190398172972
+    "silhouette_iou": 0.6975920328989744
+  },
+  {
+    "turn": -15,
+    "elevation": 30,
+    "silhouette_iou": 0.6932732200110386
+  },
+  {
+    "turn": 15,
+    "elevation": 20,
+    "silhouette_iou": 0.6761664210185123
+  },
+  {
+    "turn": 15,
+    "elevation": 30,
+    "silhouette_iou": 0.6678109385880254
   },
   {
     "turn": 30,
     "elevation": 10,
-    "silhouette_iou": 0.7320075356033026
-  },
-  {
-    "turn": 15,
-    "elevation": 20,
-    "silhouette_iou": 0.718105223283294
-  },
-  {
-    "turn": -15,
-    "elevation": 30,
-    "silhouette_iou": 0.6988928332050741
-  },
-  {
-    "turn": 15,
-    "elevation": 30,
-    "silhouette_iou": 0.6741419799897258
+    "silhouette_iou": 0.6511176076496742
   },
   {
     "turn": 30,
     "elevation": 20,
-    "silhouette_iou": 0.6285899426587277
+    "silhouette_iou": 0.6079147677984532
   },
   {
     "turn": 30,
     "elevation": 30,
-    "silhouette_iou": 0.5606841999008938
+    "silhouette_iou": 0.5821303827459027
   }
 ]
