@@ -195,7 +195,11 @@
 .fact__gain { margin-left: auto; color: var(--up); font-weight: 700; font-size: 13px; }
 .fact__gain + .fact__value { margin-left: 8px; min-width: 34px; justify-content: flex-end; }
 .fact[data-size="tall"] { min-height: 44px; padding: 0 14px; font-size: 15px; font-weight: 700; border-radius: 6px; }
-.bar { height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .18); overflow: hidden; }
+.bar { height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .18); overflow: hidden; position: relative; }
+/* What was just gained: brighter, growing in from where the bar stood. */
+.bar b { position: absolute; top: 0; bottom: 0; background: #fff; box-shadow: 0 0 8px var(--gold-hi); transform-origin: 0 50%; animation: bar-gain .9s cubic-bezier(.2, .8, .2, 1) .6s backwards; }
+.bar:has(b) i { background: var(--gold); }
+@keyframes bar-gain { from { transform: scaleX(0); } }
 .bar i { display: block; height: 100%; background: var(--gold-hi); transition: width .4s; }
 .amounts { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-weight: 800; font-size: 14px; }
 .amounts > span { display: flex; align-items: center; gap: 4px; }

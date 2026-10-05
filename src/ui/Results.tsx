@@ -34,6 +34,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const open = (screen: Screen) => { store.menuOpens.value = screen; actions.menu() }
   const level = accountLevel(tuning, account), next = nextMainQuest(tuning, account)
   const canContinue = extra === null && result.cleared && next !== null && playLock(tuning, account, next) === null
+  const leveled = earned !== null && earned.level.after > earned.level.before
   const title = extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   const time = `${Math.floor(result.time / 60)}:${String(Math.floor(result.time % 60)).padStart(2, "0")}`
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}`} onClick={() => (revealed.value = true)}>
@@ -60,8 +61,9 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <p class="results__new">New: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</p>}
           {earned.discoveries.length > 0 && <p class="results__new">Discovered: {earned.discoveries.map((id) => tuning.discoveries[id].name).join(", ")}</p>}
           <div class="results__account">
-            <div><span>{earned.level.after > earned.level.before ? <>Account Lv {earned.level.before} → <b>{earned.level.after}</b></> : `Account Lv ${level.level}`}</span><span class="dim">{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed}`}</span></div>
-            <Bar value={level.needed === 0 ? 1 : level.into / level.needed} label="Account experience" />
+            <div><span>{leveled ? <>Account Lv {earned.level.before} → <b>{earned.level.after}</b></> : `Account Lv ${level.level}`}</span><span>{earned.experience > 0 && <span class="results__gain">+{earned.experience}</span>}<span class="dim">{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed}`}</span></span></div>
+            {/* What the run added grows in from where the bar stood (from empty after a level-up: the new level's bar is all new). */}
+            <Bar value={level.needed === 0 ? 1 : level.into / level.needed} from={level.needed === 0 ? undefined : leveled ? 0 : (level.into - earned.experience) / level.needed} label="Account experience" />
           </div>
         </>}
       </>}

@@ -2,7 +2,7 @@
  * Where things are explained. A `Panel` stays open beside what it explains
  * (a quest's brief, a skill, an enemy): descriptions never open in a
  * dialog. Inside it, and in lists: a `Label` over a group, a `Row` to pick
- * from a list, a `Fact` for a name and its value, a `Bar` for progress,
+ * from a list, a `Fact` for a name and its value, a `Bar` for progress (and what was just gained),
  * and `Chips` for a short sequence.
  */
 import type { ComponentChildren } from "preact"
@@ -63,10 +63,14 @@ export const Fact = ({ icon, label, value, gain, tall = false }: { readonly icon
   </div>
 )
 
-/** Progress, from 0 to 1. */
-export const Bar = ({ value, label }: { readonly value: number; readonly label?: string }) => (
-  <div class="bar" role="progressbar" aria-label={label} aria-valuenow={Math.round(value * 100)} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${Math.max(0, Math.min(1, value)) * 100}%` }} /></div>
-)
+/** Progress, from 0 to 1. With `from` (where it stood before), what was just gained shows brighter and grows in from there. */
+export const Bar = ({ value, from, label }: { readonly value: number; readonly from?: number | undefined; readonly label?: string }) => {
+  const now = Math.max(0, Math.min(1, value)), before = from === undefined ? now : Math.max(0, Math.min(now, from))
+  return <div class="bar" role="progressbar" aria-label={label} aria-valuenow={Math.round(now * 100)} aria-valuemin={0} aria-valuemax={100}>
+    <i style={{ width: `${before * 100}%` }} />
+    {now > before && <b style={{ left: `${before * 100}%`, width: `${(now - before) * 100}%` }} />}
+  </div>
+}
 
 /** A short sequence, in order: a combo's moves. */
 export const Chips = ({ items }: { readonly items: ReadonlyArray<string> }) => (

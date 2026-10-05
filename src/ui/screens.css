@@ -141,6 +141,8 @@
 .results__account { width: 300px; display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 .results__account > div:first-child { display: flex; justify-content: space-between; }
 .results__account b { color: var(--gold-hi); }
+.results__account .bar { height: 6px; border-radius: 3px; }
+.results__gain { color: var(--up); margin-right: 8px; }
 .results__actions { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
 .results__newcomer { position: absolute; left: 3%; top: 20px; bottom: 20px; width: 36%; }
 .results__newcomer .model { position: absolute; inset: 0; }
