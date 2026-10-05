@@ -24,10 +24,10 @@
 @keyframes star-in { from { transform: scale(0) rotate(-40deg); } }
 .row[aria-pressed="true"] .star { color: rgba(59, 66, 85, .3); }
 .row[aria-pressed="true"] .star.is-earned { color: #b8862d; filter: none; }
-/* A material: its element's emblem over its grade as pips. */
-.material-icon { position: relative; display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 30%; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .28), rgba(255, 255, 255, .06)); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .45); line-height: 1; }
-.material-icon > .menu-icon, .material-icon > svg { width: .85em; height: .85em; }
-.material-icon i { position: absolute; right: -5px; bottom: -5px; min-width: 11px; height: 11px; padding: 0 2px; border-radius: 6px; background: #1b2132; box-shadow: 0 0 0 1px rgba(255, 231, 173, .55); display: grid; place-items: center; font-style: normal; font-size: 8px; font-weight: 800; color: var(--gold-hi); }
+/* A material: its element's emblem, open like a currency, over its grade as gold dots. */
+.material-icon { position: relative; display: inline-grid; place-items: center; line-height: 1; }
+.material-icon i { position: absolute; left: 50%; bottom: -.3em; translate: -50% 0; display: flex; gap: max(2px, .08em); }
+.material-icon i b { width: max(3px, .13em); height: max(3px, .13em); border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 0 1px rgba(14, 18, 30, .8); }
 .label .menu-icon { display: inline-block; vertical-align: -1px; margin-right: 3px; color: var(--gold-hi); }
 /* A group's chests along its star bar. */
 .chests { position: relative; height: 26px; margin: 2px 12px 4px 4px; }
@@ -150,9 +150,9 @@
 /* Small headings in the brief, with the room they save given to what is under them. */
 .quests__brief .label { font-size: 9.5px; letter-spacing: .1em; }
 .quests__goals .label { margin-bottom: 3px; }
-.quests__side-by-side .label:not(:first-child) { margin-top: 6px; }
+.quests__side-by-side .label:not(:first-child) { margin-top: 16px; }
 /* The enemies close the brief, under a rule across it. */
-.quests__enemies { margin: 2px -14px 0; padding: 8px 14px 0; border-top: 1px solid var(--line); }
+.quests__enemies { margin: 8px -14px 0; padding: 14px 14px 0; border-top: 1px solid var(--line); }
 .goal { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
 .goal .menu-icon { font-size: 15px; color: rgba(255, 255, 255, .3); }
 .goal.is-earned { color: var(--text); }

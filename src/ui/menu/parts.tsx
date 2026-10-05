@@ -88,12 +88,10 @@ export const EnemyFacts = ({ store, kind }: { readonly store: UiStore; readonly 
   </>
 }
 
-const gradeMarks = { 1: "I", 2: "II", 3: "III" } as const
-
-/** A material: its element's emblem on a gem, its grade (I to III) in the corner. */
+/** A material: its element's emblem, its grade as one to three gold dots beneath (named in full for touch and screen readers). */
 export const MaterialIcon = ({ store, material }: { readonly store: UiStore; readonly material: MaterialId }) => {
   const spec = store.tuning.value.materials[material]
-  return <span class="material-icon" data-element={spec.element} data-grade={spec.grade}><Icon name={spec.element} /><i aria-hidden="true">{gradeMarks[spec.grade]}</i></span>
+  return <span class="material-icon" data-element={spec.element} data-grade={spec.grade} title={spec.name}><Icon name={spec.element} /><i aria-hidden="true">{Array.from({ length: spec.grade }, (_, index) => <b key={index} />)}</i></span>
 }
 
 /** The materials among `amounts`, in the content's order (each element, lowest grade first). */
