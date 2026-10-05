@@ -49,7 +49,15 @@ const start = async (mount: HTMLElement) => {
   const tuning = arenaFromQuery(stressLoad === undefined ? loadSavedTuning() : stressTuning(), window.location.search)
   // The account loads first (created on the first visit): the menu starts from its last selection.
   const shell = await startApp(tuning)
-  const { account } = shell
+  let account = shell.account
+  // `?openCalls` clears chapter one and adds crystals, once (a dev tool to try the Spirit Call on a phone,
+  // where the tuning panel's keys are out of reach); the parameter is dropped so a reload does not repeat it.
+  const query = new URLSearchParams(window.location.search)
+  if (query.has("openCalls")) {
+    query.delete("openCalls")
+    window.history.replaceState(null, "", `${window.location.pathname}${query.size > 0 ? `?${query}` : ""}`)
+    account = (await shell.openCallsNow()) ?? account
+  }
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
   const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
@@ -238,7 +246,7 @@ const start = async (mount: HTMLElement) => {
   })
   // The menu's models and portraits, over the UI.
   const showcase = createShowcase(mount, browser.models)
-  createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })
+  createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything, openCalls: shell.openCalls })
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.
   const step = Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())

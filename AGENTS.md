@@ -35,8 +35,9 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
   `?character=`, `?aspect=`, `?challenge=` for a quick start, and `?arena=` to
-  fight every challenge in one arena); backquote (or the key left of 1 or of Z)
-  opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all").
+  fight every challenge in one arena, and `?openCalls` to clear chapter one
+  and add crystals once, to try the Spirit Call); backquote (or the key left of 1 or of Z)
+  opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all", "Open the Call").
 
 ## How the code is organized
 

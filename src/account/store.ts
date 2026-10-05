@@ -28,7 +28,8 @@ import { aspectOf } from "../content/aspects.ts"
 import type { RunResultValue } from "../schema.ts"
 import type { MaterialId } from "../content/materials.ts"
 import type { BannerId } from "../content/calls.ts"
-import { ascend, combine, createAccount, earn, recordRun, select, train, unlock } from "./account.ts"
+import type { QuestId } from "../content/quests.ts"
+import { ascend, combine, createAccount, earn, noQuestProgress, recordRun, select, train, unlock, withClearedRewards } from "./account.ts"
 import type { Account, CallResult, Checked, Earned, Item, Play, Refusal, TeamAspects } from "./account.ts"
 import { call, setFocus } from "./calls.ts"
 import { accountFromLegacy, fromStored, toStored } from "./convert.ts"
@@ -61,6 +62,8 @@ export interface AccountStoreShape {
   readonly call: (banner: BannerId, count: number) => Effect.Effect<{ readonly account: Account; readonly results: ReadonlyArray<CallResult> }, AccountRefused | AccountSaveError>
   /** Focuses `character` on `banner`: the character a call there brings. */
   readonly focus: (banner: BannerId, character: CharacterId) => Effect.Effect<Account, AccountRefused | AccountSaveError>
+  /** Marks `quests` cleared, with what their first clears unlock (a dev tool: to reach the Spirit Call quickly). */
+  readonly clearQuests: (quests: ReadonlyArray<QuestId>) => Effect.Effect<Account, AccountSaveError>
   /** Adds `amounts` of currency (a reward, or a dev tool). */
   readonly earn: (amounts: Amounts) => Effect.Effect<Account, AccountSaveError>
   /**
@@ -160,6 +163,10 @@ export const layer = (options: AccountOptions) =>
         select: (team, play, aspects) => change((account) => select(options.tuning, account, team, play, aspects)),
         unlock: (items) => apply((account, now) => items.reduce((next, item) => unlock(options.tuning, next, item, now), account)),
         earn: (amounts) => apply((account) => earn(account, amounts)),
+        clearQuests: (quests) => apply((account, now) => {
+          const cleared = Object.fromEntries(quests.map((quest) => [quest, { ...noQuestProgress, ...account.quests[quest], firstClearedAt: account.quests[quest]?.firstClearedAt ?? now }]))
+          return withClearedRewards(options.tuning, { ...account, quests: { ...account.quests, ...cleared } }, now).account
+        }),
         train: (character) => change((account) => train(options.tuning, account, character)),
         ascend: (character) => change((account) => ascend(options.tuning, account, character)),
         combine: (material) => change((account) => combine(options.tuning, account, material)),
