@@ -152,6 +152,10 @@ export interface TotemValue {
 }
 export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
 
+/** A character's remaining protective stones; the timer also runs on the bench. */
+export const StoneGuard = Descriptor.Component<{ readonly remaining: number; readonly stones: number }>()("Shooter/StoneGuard")
+export const GuardBlocked = Descriptor.Event<{ readonly at: Vec2; readonly direction: Vec2; readonly stones: number }>()("Shooter/GuardBlocked")
+
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
 
@@ -955,6 +959,7 @@ export const Game = Schema.bind(
       Lobbed,
       Vortex,
       Totem,
+      StoneGuard,
       Health,
       Hurtbox,
       Knockback,
@@ -1006,7 +1011,7 @@ export const Game = Schema.bind(
       Practice,
       PracticeField
     },
-    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Reaction, Zap }
+    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Reaction, Zap, GuardBlocked }
   }),
   Root
 )

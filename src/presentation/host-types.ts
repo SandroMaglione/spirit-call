@@ -12,6 +12,7 @@ import type { Vec2 } from "../math/vec.ts"
 import type { Batch, Instance } from "./batch.ts"
 import type { ActorBody } from "./bodies.ts"
 import type { DropTrail } from "./drop-trail.ts"
+import type { RockEffects } from "./rock-effects.ts"
 import type { Drops } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import type { Fx } from "./fx.ts"
@@ -267,6 +268,7 @@ export interface RenderHostValue {
   readonly fx: Fx
   /** Drops shed by moving spirits, in the 3D scene (hidden behind bodies). */
   readonly drops: DropTrail
+  readonly rocks: RockEffects
   readonly trails: SlashTrails
   readonly reticle: Shapes
   readonly edges: Shapes

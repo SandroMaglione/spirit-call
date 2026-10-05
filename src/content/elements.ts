@@ -12,11 +12,11 @@
  * `config/view.ts`.
  */
 
-/** The elements in play. Rock comes with a later character. */
-export type ElementId = "fire" | "water" | "wind" | "thunder"
+/** The elements in play. */
+export type ElementId = "fire" | "water" | "wind" | "thunder" | "rock"
 
 /** The state each element leaves on a body: fire burns, water soaks, thunder charges, wind sweeps. */
-export type StateId = "burning" | "soaked" | "charged" | "swept"
+export type StateId = "burning" | "soaked" | "charged" | "swept" | "cracked"
 
 /**
  * What can be seen to happen between elements, for effects and the run's
@@ -45,19 +45,21 @@ export const elements: { readonly [Id in ElementId]: ElementSpec } = {
   /** Pushes, and leaves bodies light: gliding further, slammed into walls. To scatter or group. */
   wind: { name: "Wind", state: "swept" },
   /** Strikes at once and charges: blows on a charged body arc on to the next. For spread-out groups, and enemies at range. */
-  thunder: { name: "Thunder", state: "charged" }
+  thunder: { name: "Thunder", state: "charged" },
+  rock: { name: "Rock", state: "cracked" }
 }
 
 /** The element whose state `state` is. */
 export const elementOf = (state: StateId): ElementId =>
-  state === "burning" ? "fire" : state === "soaked" ? "water" : state === "charged" ? "thunder" : "wind"
+  state === "burning" ? "fire" : state === "soaked" ? "water" : state === "charged" ? "thunder" : state === "cracked" ? "rock" : "wind"
 
 /** What each state is called when it bursts, shown as it happens. */
 export const burstNames: { readonly [State in StateId]: string } = {
   burning: "Flare",
   soaked: "Splash",
   charged: "Discharge",
-  swept: "Gale"
+  swept: "Gale",
+  cracked: "Shatter"
 }
 
 /** How strongly an enemy kind takes an element (none: as it is). */
@@ -73,6 +75,8 @@ export type Affinities = { readonly [Element in ElementId]?: Affinity }
  * within its `radius` (edge to edge), the struck body first.
  */
 export const elementRules = {
+  /** Cracked enemies build their break bar faster from landed blows. */
+  cracked: { seconds: 4, breakFactor: 1.6 },
   /** Burning: damage over time, a percentage of the ATK of whoever set it, per second; it spreads to bodies in no state it touches. */
   burning: {
     seconds: 3.5,
@@ -142,7 +146,8 @@ export const elementRules = {
      * thrown away from it (pushes of `knockback`), all stunned for `stun`
      * seconds, each taking `power` percent of the ATK of whoever swept it.
      */
-    swept: { radius: 130, knockback: 1100, stun: 0.6, power: 10 }
+    swept: { radius: 130, knockback: 1100, stun: 0.6, power: 10 },
+    cracked: { radius: 100, breakFill: .45, power: 8 }
   },
   /** An enemy's affinity scales an element's damage and how long its state lasts (immune: no state, damage as it is). */
   affinity: {

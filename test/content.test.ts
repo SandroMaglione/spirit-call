@@ -115,6 +115,7 @@ describe("content", () => {
       "quest theWarlord: its order loops back through theBrute",
       "quest holdTheLine: a secondary quest belongs to no chapter",
       "quest holdTheLine: level must be a whole number from 1 to the account's maximum (is 0)",
+      "quest stoneTrial: its order loops back through theBrute",
       "the new account: selects quest theSwarm, which a new account cannot start"
     ])
   })

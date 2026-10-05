@@ -23,6 +23,8 @@ SPIRITS = Path(__file__).resolve().parent.parent
 
 # Body pixels on a dark navy sheet, by the spirit's color.
 MASKS = {
+    # Warm stone and amber eyes on the rock spirit's navy sheet.
+    "stone": lambda im: (im[..., 0] > 35) & (im[..., 0] - im[..., 2] > 6) & (im[..., 1] > 20),
     "blue": lambda im: ((im[..., 2] > 120) & (im[..., 2] - im[..., 0] > 50)) | (im.min(axis=2) > 225),
     "orange": lambda im: (im[..., 0] > 150) & (im[..., 0] - im[..., 2] > 80),
     # Mint leaves and a near-white body.
@@ -94,6 +96,12 @@ def eyes_in(spirit, image):
     im = np.asarray(image.convert("RGB") if isinstance(image, Image.Image) else image).astype(int)
     if config(spirit)["eyes"] == "light":
         white = im.min(axis=2) > 230
+        if config(spirit)["mask"] == "stone":
+            stone = mask_of(spirit, im)
+            ys, xs = np.nonzero(stone)
+            lower = np.zeros_like(white)
+            lower[int(ys.min() + (ys.max() - ys.min()) * 0.5):, :] = True
+            white = lower & (white | ((im[..., 0] > 225) & (im[..., 1] > 150) & (im[..., 2] < 190)))
         if config(spirit)["mask"] == "purple":
             # Thunder's white backdrop is below 248. Restrict its brighter
             # eye cores to the body's box, including eyes at a side edge.
@@ -109,6 +117,8 @@ def eyes_in(spirit, image):
             inside[top:body[:, 0].max()+1, :] = True
             white = (im.min(axis=2) > 248) & inside
         found = blobs(white, 30)
+        if config(spirit)["mask"] == "stone":
+            found = sorted(found, key=len, reverse=True)[:2]
     else:
         mask = mask_of(spirit, im)
         body = max(blobs(mask, 15), key=len)

@@ -25,6 +25,7 @@ import { UpdateWards } from "./features/wards.ts"
 import { MendInTraining } from "./features/training.ts"
 import { KeepPracticeField } from "./features/practice.ts"
 import { BuildPoise } from "./features/poise.ts"
+import { CastRock, TickStoneGuard } from "./features/rock.ts"
 import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
@@ -91,6 +92,7 @@ const gameplay = Game.Schedule.when(
   TrackRun,
   TickCombatTimers,
   TickBench,
+  TickStoneGuard,
   ControlPlayer,
   // Casts (from skills, and from passives queued last step) are carried out
   // right after they are made, in the same step.
@@ -105,6 +107,7 @@ const gameplay = Game.Schedule.when(
   CastVortices,
   CastTotems,
   CastThunderclaps,
+  CastRock,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.

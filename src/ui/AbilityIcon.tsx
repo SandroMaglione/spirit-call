@@ -6,6 +6,8 @@ type AbilityKind = ClassId | SkillId | "dash"
 
 /** Each silhouette describes a move: its direction, projectile, or area of effect. */
 const shapes = {
+  stoneGuard: "M16 2 21 6 20 12 12 12 11 6Z M5 16 10 19 9 26 3 28 1 21Z M27 16 31 21 29 28 23 26 22 19Z M16 14 21 17v5l-5 5-5-5v-5Z",
+  stoneRise: "M1 28 3 17 7 13 11 28Z M10 28 12 9 17 3 22 28Z M21 28 24 15 28 18 31 28Z M1 30h30v2H1Z",
   blade: "M28 3C25 17 16 27 3 29 9 25 14 20 18 13 14 17 10 19 5 20 15 14 20 8 28 3Z",
   gun: "M5 22 23 4 28 4 28 9 10 27 4 28Z M4 13l9-9 2 2-9 9Z M17 28l9-9 2 2-9 9Z",
   disc: "M16 3A13 13 0 1 1 3 16 13 13 0 0 1 16 3ZM16 8A8 8 0 1 0 24 16 8 8 0 0 0 16 8ZM16 12l4 4-4 4-4-4Z",

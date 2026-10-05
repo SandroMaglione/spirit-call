@@ -88,6 +88,8 @@ export type BodyLook =
       readonly eyes?: ReadonlyArray<string>
       /** Drops shed behind it while it moves (a water spirit's trail; see `ShedSpiritDrops`). */
       readonly drops?: Drops
+      /** Planted walkers keep the supporting feet level; their clip owns weight shifts. */
+      readonly grounded?: boolean
     }
 
 /**
@@ -156,6 +158,13 @@ const thunderSpirit: BodyLook = {
 }
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
+  stonekeeper: {
+    kind: "model", model: "rockSpirit", widthFactor: 1.5,
+    heightFactor: view.bodyHeightFactor, grounded: true,
+    moments: { ...spiritMoments(3, "stoneGuard", "stoneRise"), run: { clip: "Run", distance: 115 } },
+    eyes: spiritEyes,
+    drops: { rate: 12, colors: [0xbfa181, 0x8e7660, 0xffd17e], size: 1.5, kind: "wisp" }
+  },
   swordsman: windSpirit,
   gunner: fireSpirit,
   tidecaller: waterSpirit,

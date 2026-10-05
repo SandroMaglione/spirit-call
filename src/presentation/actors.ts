@@ -18,6 +18,7 @@ import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { chargeOf } from "../features/basic-attack.ts"
 import { mixColor } from "./draw.ts"
+import { characterLooks } from "./looks.ts"
 
 const leanAxis = new Vector3()
 
@@ -190,14 +191,16 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const onScreen = normalizeOr(toScreen(projection, aim), { x: 0, y: -1 })
       const still = Math.max(0, 1 - Math.hypot(velocity.x, velocity.y) / (pace * 0.5)) * (0.5 - 0.5 * onScreen.y)
       const tilt = { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
-      const lean = Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
+      const look = characterLooks[data.member.get().character]
+      const grounded = look.kind === "model" && look.grounded === true
+      const lean = grounded ? 0 : Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
       if (lean > 1e-4) {
         // Tipped over her feet, her top toward the lean: about the floor axis across it.
         leanAxis.set(tilt.y, 0, -tilt.x).normalize()
         node.pivot.quaternion.setFromAxisAngle(leanAxis, lean)
       } else node.pivot.quaternion.identity()
       // Only a change of pace squashes her, not her aim.
-      const squash = Math.min(springs.most, Math.hypot(sway.x, sway.y)) * springs.squash
+      const squash = grounded ? 0 : Math.min(springs.most, Math.hypot(sway.x, sway.y)) * springs.squash
       // Coming onto the field she pops up to her size, a little past it (not before the one who fell is down).
       const pop = Math.min(1, feedback.entrance / spirit.popSeconds)
       const size = pop < 0 ? 0 : pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))

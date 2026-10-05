@@ -70,6 +70,8 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
   switch (effect.kind) {
     case "cut":
       return { kind: "direction", reach: effect.length }
+    case "stoneRise":
+      return { kind: "direction", reach: effect.spacing * 3 + effect.radius }
     case "blast":
       return { kind: "direction", reach: effect.radius }
     case "leap":
@@ -82,6 +84,7 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "barrage":
       return { kind: "point", range: effect.maxRange }
     case "nova":
+    case "stoneGuard":
     case "totem":
     case "thunderclap":
       return { kind: "self" }

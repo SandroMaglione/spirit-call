@@ -17,6 +17,7 @@ import { ApplyCamera, FadeOccluders, InterpolateActors, OrientBolts, SyncArena, 
 import { DrawOffscreenEnemies } from "./offscreen.ts"
 import { DrawTelegraphs } from "./telegraphs.ts"
 import { ShowHazards } from "./hazards.ts"
+import { DrawRockEffects } from "./rock-effects.ts"
 
 export const frame = Game.Schedule(
   SyncArena,
@@ -33,6 +34,7 @@ export const frame = Game.Schedule(
   DrawTouchAim,
   PlaySounds,
   SpawnFx,
+  DrawRockEffects,
   PlayFalls,
   ReactToHits,
   ShedStateMotes,

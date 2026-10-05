@@ -21,7 +21,7 @@ import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { arenaPropModels } from "./assets/arena-props.ts"
 import { enemyModels } from "./assets/enemies.ts"
-import { fireSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
+import { fireSpiritModel, rockSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
 import { addGlow } from "./glow.ts"
 import type { GlowSpec } from "./glow.ts"
 
@@ -75,12 +75,20 @@ const thunderGlow: GlowSpec = {
   eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffe66d, opacity: 0.5, size: 0.3 }
 }
 
+/** Restrained amber light preserves the rock's matte facets and dark recess. */
+const rockGlow: GlowSpec = {
+  rim: { color: 0xc8a575, strength: .25, power: 3 },
+  halo: { color: 0xe5ad58, opacity: .16, size: 1.3 },
+  eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffe088, opacity: .28, size: .21 }
+}
+
 /** Every model the game can show. Add new ones here (with their module in `assets/`). */
 export const models = {
   waterSpirit: { ...waterSpiritModel, glow: waterGlow },
   fireSpirit: { ...fireSpiritModel, glow: fireGlow },
   windSpirit: { ...windSpiritModel, glow: windGlow },
   thunderSpirit: { ...thunderSpiritModel, glow: thunderGlow },
+  rockSpirit: { ...rockSpiritModel, glow: rockGlow },
   ...courtyardModels,
   ...cisternModels,
   ...kilnworksModels,

@@ -4,6 +4,7 @@ import type { ElementId } from "../content/elements.ts"
 export type EmblemKind = ElementId | "xp"
 
 const emblems = {
+  rock: { shape: "M7 5 19 2 28 10 30 22 21 30 8 28 2 17Z", light: "#ffe6ba", middle: "#c5a282", dark: "#786253" },
   xp: { shape: "M16 2 27 8 30 20 23 29H9L2 20 5 8Z", light: "#f0edff", middle: "#a9b7f3", dark: "#6263a9" },
   wind: { shape: "M3 8 14 3 29 7 22 12 11 11 18 16 29 15 23 23 12 29 14 21 4 18 10 14Z", light: "#e8fff2", middle: "#78e6c7", dark: "#278a88" },
   fire: { shape: "M17 2 18 10 23 6 27 14 28 21 23 28 16 31 7 28 3 21 5 13 11 8 11 15 15 12Z", light: "#fff2b9", middle: "#ffad63", dark: "#c95a49" },

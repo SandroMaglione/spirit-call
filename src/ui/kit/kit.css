@@ -30,12 +30,14 @@
 [data-element="fire"] { --deep: #2a0d14; --mid: #8f2f2b; --glow: #ff9b58; }
 [data-element="water"] { --deep: #0b1838; --mid: #234f9c; --glow: #6ec6ff; }
 [data-element="thunder"] { --deep: #180f36; --mid: #55359c; --glow: #c9a0ff; }
+[data-element="rock"] { --deep: #251d19; --mid: #715441; --glow: #e5ad58; }
 /* A card's art takes two colours: an element's, or the neutral ones of an enemy or an item. */
 .ui [data-tint] { --a: #343c52; --b: #68728c; }
 .ui [data-tint="wind"] { --a: #1c6f6a; --b: #63e7ca; }
 .ui [data-tint="fire"] { --a: #8f2f2b; --b: #ff9b58; }
 .ui [data-tint="water"] { --a: #234f9c; --b: #6ec6ff; }
 .ui [data-tint="thunder"] { --a: #55359c; --b: #c9a0ff; }
+.ui [data-tint="rock"] { --a: #715441; --b: #e5ad58; }
 
 /* ---------- the two layers ---------- */
 /* Both are laid out in units and scaled from the top left (`fitToScreen`). The models draw between them. */

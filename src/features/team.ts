@@ -38,6 +38,7 @@ import {
   Renderable,
   RunScope,
   Skills,
+  StoneGuard,
   Team,
   TeamSwitch,
   Time,
@@ -61,7 +62,8 @@ export const makeMember = (build: ResolvedBuild, slot: number) =>
     [Passives, build.passives],
     [BasicAttack, initialBasicAttack(build)],
     [Skills, initialSkills(build)],
-    [Energy, { current: 0 }]
+    [Energy, { current: 0 }],
+    [StoneGuard, { remaining: 0, stones: 0 }]
   )
 
 /** What the body on the field carries from one character to the next: how it moves, where it aims, and the dash. */

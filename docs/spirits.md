@@ -1,7 +1,7 @@
 # Spirits
 
 In the arena each character shows as her **spirit**: a small, faceted,
-low-poly creature of her element (water, fire, wind, or thunder). Her
+low-poly creature of her element (water, fire, wind, thunder, or rock). Her
 illustrations, story, and portrait live in the menus; the spirit is what
 moves, fights, and is hit. This records how a spirit goes from a character
 sheet to the game, and the principles that made it work, so the next one is
@@ -186,6 +186,7 @@ includes deliberate changes for personality and readable facing.
 | Gunner, fire | [Fire](../art/spirits/fire/README.md) | Flame and separate shards, dark slanted eyes, recoil on shots, warm core and ember trail |
 | Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
 | Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
+| Stonekeeper, rock | [Rock](../art/spirits/rock/README.md) | Broad grounded boulder, round optimistic eyes, weight-bearing feet, short rear heel, floating ornaments, planted Disc recoil and ground slam |
 
 Each folder keeps `reference/sheet.png`, cropped views, measurements,
 `build.py`, an editable `.blend`, `animate.py`, `export.py`, and its GLB.
