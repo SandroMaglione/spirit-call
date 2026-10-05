@@ -26,6 +26,8 @@ const stage = {
   /** Radians the model turns from facing the camera, to show its shape. */
   turn: -0.45,
   fill: 0.86,
+  /** How much wider and taller than its place a model's view is, for its halo to fade in. */
+  spill: 2,
   /** Portraits: their size in pixels, how far a character turns from the camera in hers (nearly none: her face, eyes and all), and how much of the picture she fills (all of her shows: a spirit is small, and her eyes sit low). */
   portraitPixels: 256,
   portraitTurn: -0.12,
@@ -256,12 +258,14 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
         const turn = (place.dataset["turn"] === undefined ? stage.turn : Number(place.dataset["turn"])) + 0.6 * (1 - arrival)
         shown.puppet.face({ x: Math.sin(turn), y: Math.cos(turn) })
         show(shown)
-        frame(shown, rect.width, rect.height, stage.fill * (0.78 + 0.22 * arrival), 1)
-        renderer.setViewport(rect.left, height - rect.bottom, rect.width, rect.height)
-        const clip = place.closest(".shell-content")?.getBoundingClientRect()
-        const top = Math.max(rect.top, clip?.top ?? 0), bottom = Math.min(rect.bottom, clip?.bottom ?? height)
-        if (bottom <= top) continue
-        renderer.setScissor(rect.left, height - bottom, rect.width, bottom - top)
+        // Drawn into a wider view than its place, so its halo fades out instead of ending at the place's edge.
+        const width = rect.width * stage.spill, tall = rect.height * stage.spill
+        frame(shown, width, tall, (stage.fill * (0.78 + 0.22 * arrival)) / stage.spill, 1)
+        const left = rect.left - (width - rect.width) / 2, bottom = height - rect.bottom - (tall - rect.height) / 2
+        renderer.setViewport(left, bottom, width, tall)
+        renderer.setScissor(left, bottom, width, tall)
+        // Views overlap now: each model is drawn on its own depth.
+        renderer.clearDepth()
         renderer.render(scene, camera)
         drawn = true
       }

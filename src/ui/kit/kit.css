@@ -52,19 +52,22 @@
 .ui-screen { position: absolute; inset: 0; }
 .ui-screen > * { pointer-events: auto; }
 
-/* The backdrop: an element's dark sky, a floor line, and motes. Over a run it only dims the arena. */
-.backdrop { position: absolute; inset: 0; transition: opacity .3s; background:
-  radial-gradient(46% 70% at 50% 60%, color-mix(in srgb, var(--glow) 34%, transparent), transparent 72%),
-  radial-gradient(70% 55% at 86% 6%, color-mix(in srgb, var(--mid) 75%, transparent), transparent 70%),
-  radial-gradient(60% 50% at 6% 96%, color-mix(in srgb, var(--mid) 60%, transparent), transparent 70%),
-  linear-gradient(180deg, var(--deep), color-mix(in srgb, var(--deep) 62%, var(--mid)) 68%, var(--deep)); }
+/* The backdrop: an element's dark sky with no hard edge anywhere: two slow lights, a pool of light low in the middle, rising motes, darker corners. Over a run it only dims the arena. */
+.backdrop { position: absolute; inset: 0; overflow: hidden; background:
+  radial-gradient(120% 120% at 50% 45%, transparent 45%, rgba(0, 0, 0, .38)),
+  radial-gradient(60% 80% at 50% 55%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 75%),
+  linear-gradient(160deg, color-mix(in srgb, var(--deep) 80%, var(--mid)), var(--deep) 45%, color-mix(in srgb, var(--deep) 70%, var(--mid))); }
 .backdrop[data-over] { background: rgba(8, 10, 18, .64); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-.backdrop__floor { position: absolute; left: 0; right: 0; top: 75%; bottom: 0; border-top: 1px solid rgba(255, 255, 255, .1); background: radial-gradient(48% 100% at 50% 0, color-mix(in srgb, var(--glow) 30%, transparent), transparent 75%), linear-gradient(180deg, rgba(255, 255, 255, .07), transparent 40%); }
-.backdrop[data-over] .backdrop__floor { display: none; }
-.backdrop__motes i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px 1px var(--glow); opacity: .5; animation: mote 4s ease-in-out infinite; }
+.backdrop__light { position: absolute; width: 90%; height: 120%; left: 38%; top: -70%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--mid) 80%, transparent), transparent); animation: drift 26s ease-in-out infinite alternate; }
+.backdrop__light + .backdrop__light { left: -42%; top: 30%; opacity: .75; animation-duration: 34s; animation-direction: alternate-reverse; }
+.backdrop__pool { position: absolute; left: 50%; bottom: -34%; width: 78%; height: 62%; translate: -50% 0; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 34%, transparent), color-mix(in srgb, var(--glow) 10%, transparent) 55%, transparent); animation: breathe 7s ease-in-out infinite; }
+.backdrop[data-over] :is(.backdrop__light, .backdrop__pool) { display: none; }
+.backdrop__motes i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px 1px var(--glow); opacity: 0; animation: mote 9s linear infinite; }
 .backdrop__motes i:nth-child(3n) { width: 2px; height: 2px; }
 .backdrop__motes i:nth-child(7n) { width: 4px; height: 4px; rotate: 45deg; border-radius: 1px; background: var(--gold-hi); }
-@keyframes mote { 50% { opacity: .1; transform: translateY(-6px); } }
+@keyframes mote { 0% { opacity: 0; transform: translate(0, 14px); } 25% { opacity: .65; } 75% { opacity: .35; } 100% { opacity: 0; transform: translate(8px, -26px); } }
+@keyframes drift { to { transform: translate(-9%, 12%) scale(1.12); } }
+@keyframes breathe { 50% { opacity: .7; transform: scale(1.06); } }
 
 /* ---------- icons, art ---------- */
 .menu-icon { display: block; flex: none; width: 1em; height: 1em; }

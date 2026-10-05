@@ -8,7 +8,7 @@ import { elementOf } from "./draft.ts"
 import type { UiStore } from "./store.ts"
 
 /** Motes at fixed places: the same sky on every visit. */
-const motes = Array.from({ length: 24 }, (_, i) => ({ left: `${(i * 37 + 7) % 98}%`, top: `${(i * 23 + 11) % 96}%`, animationDelay: `${-(i * 0.8) % 4}s` }))
+const motes = Array.from({ length: 28 }, (_, i) => ({ left: `${(i * 37 + 7) % 98}%`, top: `${(i * 23 + 11) % 96}%`, animationDelay: `${-(i * 1.7) % 9}s`, animationDuration: `${7 + (i % 5) * 1.5}s` }))
 
 /** The element the menu shows in: the inspected character's, else the leader's. */
 export const menuElement = (store: UiStore): string => {
@@ -23,7 +23,9 @@ export const Backdrop = ({ store }: { readonly store: UiStore }) => {
   if (flow === "Playing" && !store.paused.value) return null
   const over = flow !== "Menu"
   return <div class="backdrop" data-over={over ? "" : undefined} data-element={over ? undefined : menuElement(store)} aria-hidden="true">
-    <div class="backdrop__floor" />
+    <div class="backdrop__light" />
+    <div class="backdrop__light" />
+    <div class="backdrop__pool" />
     <div class="backdrop__motes">{motes.map((style, i) => <i key={i} style={style} />)}</div>
   </div>
 }
