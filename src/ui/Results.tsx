@@ -40,7 +40,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           {store.recording.value === "failed" && <p role="alert" class="results__saved-error">Rewards could not be saved.</p>}
           {earned !== null && <>
             <div class="results__rewards">
-              {earned.experience > 0 && <div class="reward" aria-label={`${earned.experience} account XP`}><Icon name="account" /><b>+{earned.experience}<small>Account XP</small></b></div>}
+              {earned.experience > 0 && <div class="reward" aria-label={`${earned.experience} account XP`}><Icon name="xp" /><b>+{earned.experience}<small>Account XP</small></b></div>}
               {(Object.keys(tuning.currencies) as Array<CurrencyId>).map((id) => {
                 const total = (earned.pay[id] ?? 0) + (earned.levelRewards[id] ?? 0) + (earned.rewards?.currencies[id] ?? 0) + earned.discoveries.reduce((sum, discovery) => sum + (tuning.discoveries[discovery].rewards[id] ?? 0), 0)
                 return total <= 0 ? null : <div key={id} class={`reward reward--${id}`} aria-label={`${total} ${tuning.currencies[id].name}`}><Icon name={id} /><b>+{total.toLocaleString("en-US")}</b></div>

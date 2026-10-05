@@ -8,6 +8,7 @@ export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyId }) =>
     <defs>
       <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3c5" /><stop offset=".45" stop-color="#dfb560" /><stop offset="1" stop-color="#a77336" /></linearGradient>
       <linearGradient id={`${id}-gem`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9ffff" /><stop offset=".5" stop-color="#8cdde9" /><stop offset="1" stop-color="#8f94d6" /></linearGradient>
+      <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
     </defs>
     {currency === "gold" ? <>
       <circle cx="16" cy="16" r="12.5" fill={`url(#${id}-gold)`} stroke="#f8d98c" stroke-width="1" />
@@ -24,5 +25,7 @@ export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyId }) =>
       <path d="m11 12 5 18 5-18Z" fill="#e6fbff" fill-opacity=".6" />
       <path d="M6 10h20M3 18l8-6h10l8 6" fill="none" stroke="#e9ffff" stroke-width=".6" />
     </>}
+    <g clip-path={`url(#${id}-shape)`}><path class="icon-sheen" d="M-12 0h5L22 32h-5Z" fill="#fff" /></g>
+    <path class="icon-glint" d="m24 4 1.2 3.8L29 9l-3.8 1.2L24 14l-1.2-3.8L19 9l3.8-1.2Z" fill="#fffef2" />
   </svg>
 }

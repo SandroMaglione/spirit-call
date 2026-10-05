@@ -56,8 +56,8 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
   }, [screen.kind, screen.kind === "character" ? screen.character : ""])
   const destinations: ReadonlyArray<{ readonly label: string; readonly icon: IconName; readonly to: Screen }> = [
     { label: "Characters", icon: "character", to: { kind: "character", character: leader, tab: "overview" } },
-    { label: "Party", icon: "team", to: { kind: "team" } },
-    { label: "Challenges", icon: "challenge", to: { kind: "quests", tab: "main" } },
+    { label: "Party", icon: "formation", to: { kind: "team" } },
+    { label: "Challenges", icon: "quests", to: { kind: "quests", tab: "main" } },
     { label: "Discoveries", icon: "discovery", to: { kind: "discoveries" } },
     { label: "Practice", icon: "practice", to: { kind: "extra", mode: "training" } },
     { label: "Settings", icon: "settings", to: { kind: "settings" } }
@@ -89,7 +89,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     <main class="shell-content" ref={content} tabIndex={-1} aria-label={screen.kind === "home" ? "Lobby" : section(screen)}>{current()}</main>
     {menuOpen.value && <Dialog title="Menu" variant="drawer" close={() => (menuOpen.value = false)}>
       <div class="menu-profile"><Portrait of={{ character: leader }} /><div><h2>Account</h2><span>Lv {level.level}</span></div></div>
-      <div class="menu-profile__xp"><span>{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed} XP`}</span><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
+      <div class="menu-profile__xp"><span><Icon name="xp" />{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed} XP`}</span><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
       <div class="game-menu">{destinations.map(({ label, icon, to }) => <button type="button" key={label} onClick={() => { menuOpen.value = false; nav.go(to) }}><Icon name={icon} /><span>{label}</span></button>)}</div>
       {store.notices.value.length > 0 && <div class="save-notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<button type="button" class="ghost" onClick={() => (store.notices.value = [])}>Dismiss</button></div>}
     </Dialog>}

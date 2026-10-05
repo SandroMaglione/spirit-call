@@ -23,7 +23,7 @@ const Overview = ({ store, actions, character }: { readonly store: UiStore; read
   const progress = characterLevel(tuning, account, character), cost = trainingCost(tuning, account, character)
   const now = statsAtLevel(tuning, tuning.characters[character].stats, progress.level), next = statsAtLevel(tuning, tuning.characters[character].stats, progress.level + 1)
   const owned = owns(account, { kind: "character", id: character })
-  return <div class="panel">
+  return <div class="panel character-overview">
     <h2 class="character-level"><span>Lv</span><strong>{progress.level}</strong><small>/ {tuning.progression.character.curve.maxLevel}</small></h2>
     <div class="stats character-stats" aria-label="Equipped attributes">{statOrder.map((stat) => <span key={stat} class="stats__item"><small>{statNames[stat]}</small><b>{Math.round(now[stat])}{owned && cost !== null && next[stat] > now[stat] && <i>+{Math.round(next[stat] - now[stat])}</i>}</b></span>)}</div>
     {owned && (cost !== null ? <div class="upgrade-action"><span class="upgrade-cost" aria-label={describeAmounts(tuning, cost)}><Icon name="gold" />{cost.gold}</span><Cta disabled={!train(tuning, account, character).ok || store.busy.value} onClick={() => actions.train(character)}>{store.busy.value ? "…" : "Level up"}</Cta></div> : <p class="success-message">Maximum level</p>)}
@@ -78,18 +78,16 @@ export const Character = ({ store, actions, nav, character, tab }: {
 }) => {
   const tuning = store.tuning.value, account = store.account.value
   const owned = owns(account, { kind: "character", id: character }), element = elementOf(tuning, character)
-  const source = sourceOf(tuning, { kind: "character", id: character })
-  return <div class="screen character" data-element={element ?? undefined}>
+  return <div class="screen character" data-element={element ?? undefined} data-locked={!owned}>
     <section class="character__stage">
-      <h1>{tuning.characters[character].name}</h1>
-      <div class="character__tag"><ElementBadge element={element} /></div>
+      <div class="character__tag"><ElementBadge element={element} /><span class="identity-divider">/</span><span>{tuning.characters[character].name}</span></div>
       <div class="stage-orbit" aria-hidden="true" /><div class="character__model-stage"><ModelStage key={character} character={character} /></div>
       <div class="roster roster--small">{ids(tuning.characters).map((id) => <button key={id} type="button" class={`roster__pick${id === character ? " is-in" : ""}`} aria-label={`View ${tuning.characters[id].name}`} aria-pressed={id === character} data-element={elementOf(tuning, id) ?? undefined} onClick={() => nav.replace({ kind: "character", character: id, tab })}><Portrait of={{ character: id }} />{!owns(account, { kind: "character", id }) && <span class="roster__lock" aria-label="Locked"><Icon name="lock" /></span>}</button>)}</div>
     </section>
+    {owned && <div class="character-tabs game-nav" role="tablist" aria-label="Character details">{(Object.keys(tabNames) as Array<CharacterTab>).map((id) => <button key={id} type="button" role="tab" aria-label={tabNames[id]} aria-selected={id === tab} aria-controls="character-details" onClick={() => nav.replace({ kind: "character", character, tab: id })}>{tabNames[id]}</button>)}</div>}
     <section class="character__panel">
-      {!owned && <div class="lock-message"><p>{source === null ? "Not yet available through quests." : `First clear: ${tuning.quests[source].name}`}</p>{source !== null && <button type="button" class="text-button" onClick={() => { store.menuPlay.value = { kind: "quest", quest: source }; nav.go({ kind: "quests", tab: tuning.quests[source].line }) }}>View quest <Icon name="next" /></button>}</div>}
-      <div class="character-tabs" role="tablist" aria-label="Character details">{(Object.keys(tabNames) as Array<CharacterTab>).map((id) => <button key={id} type="button" role="tab" aria-label={tabNames[id]} aria-selected={id === tab} aria-controls="character-details" onClick={() => nav.replace({ kind: "character", character, tab: id })}>{tabNames[id]}</button>)}</div>
-      <div id="character-details" role="tabpanel" aria-label={tabNames[tab]}>{tab === "overview" ? <Overview store={store} actions={actions} character={character} /> : tab === "aspect" ? <Aspects key={character} store={store} character={character} nav={nav} /> : <Kit store={store} character={character} />}</div>
+      <h1 class="character-name">{tuning.characters[character].name}</h1>
+      {owned ? <div id="character-details" role="tabpanel" aria-label={tabNames[tab]}>{tab === "overview" ? <Overview store={store} actions={actions} character={character} /> : tab === "aspect" ? <Aspects key={character} store={store} character={character} nav={nav} /> : <Kit store={store} character={character} />}</div> : <div class="character-sealed" role="group" aria-label={`${tuning.characters[character].name} locked`}><span class="character-seal"><Icon name="lock" /></span><span>Locked</span></div>}
     </section>
   </div>
 }

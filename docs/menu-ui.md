@@ -23,16 +23,19 @@ descriptions appear only when requested.
 
 - Full-screen lobby with a large idle spirit, drag rotation, touch rings,
   drifting motes, and luminous backgrounds keyed to the character's element.
-  Profile opens a compact menu drawer. A vertical group at the right opens
-  Characters, Party, and Challenges with a spirit portrait, formation banners,
-  and crossed swords. Short labels identify each action. The quest name is the
-  play button at the lower right. Selecting the spirit keeps party
-  circles in place, while that spirit leads the next run.
-- Character inspection keeps the model central. Portraits and compact text tabs select
-  characters, attributes, aspects, and skills. Level and equipped stats are
-  visible together, with next-level gains and an explicit Level up action.
+  Profile opens a compact menu drawer. A vertical text menu on the left opens
+  Characters, Party, and Challenges. The spirit occupies the center; its name
+  and level sit at the right, above the quest-name play button. Party portraits
+  run across the top center in their saved order. Selecting a spirit keeps
+  those circles in place, while that spirit leads the next run.
+- Character inspection follows the reference's proportions: a narrow portrait
+  rail, vertical Attributes/Aspects/Skills menu, central animated spirit, and
+  open details at the right. Level and equipped stats are visible together in
+  compact rows, with next-level gains and a Level up action at the bottom.
   Characters display no XP. Passives and skill descriptions open on tap.
-  Locked previews link to actual shipped unlock quests.
+  Locked characters keep their spirit and name, with a glowing lock seal in
+  place of all tabs, stats, level, and unlock instructions. Aspect unlock
+  details remain available for owned characters.
 - Party members stand openly on the stage. Tapping a slot summons a translucent
   portrait gallery with staggered entrances and light selection markers.
   Spaced slot markers sit above the models. Character names open details;
@@ -63,6 +66,11 @@ descriptions appear only when requested.
   pause, and results, with 20-pixel symbols, 3-pixel icon-number gaps, and
   12-pixel gaps between currencies.
   Currency artwork is shared by wallet balances, upgrade costs, and rewards.
+  XP and the four elements use filled, faceted emblems. Currencies and emblems
+  catch a brief shimmer and glint every six seconds, with staggered timing.
+  Reduced motion disables these effects. XP artwork is shared by quest rewards,
+  results, and the account drawer; element artwork is shared by headers,
+  abilities, and enemy details.
   Back handles return navigation; screens have no duplicate close action.
 - Successful saves give a brief glow and sound without a toast. Failures open
   an explicit dialog. Account writes are serialized and become visible only
@@ -94,6 +102,12 @@ descriptions appear only when requested.
   The picker fits without scrolling at 667 × 375, including its removal action
   above the bottom safe edge. Tabs remain 44 pixels tall and wallet symbols
   and balances share the same vertical center.
+- Reference-layout checks cover owned and locked characters across the three
+  routes, all four element symbols, and XP reward artwork. Attributes and
+  Level up fit without scrolling at 667 × 375. A temporary account verifies
+  level-up persistence and a three-member portrait row; the empty header area
+  passes touches through to those portraits. Spirit rotation still responds
+  to touch pointers. Temporary account changes are restored after checks.
 - A completed-wave fixture follows the normal result/save path: one clear,
   105 XP, 190 crystals, 625 gold, one discovery, and Gunner unlocked. The totals
   include discovery rewards once and persist on reload. This verifies the

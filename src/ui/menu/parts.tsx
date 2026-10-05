@@ -65,7 +65,7 @@ export const Wallet = ({ store }: { readonly store: UiStore }) => {
   )
 }
 
-/** An element's badge (its initial on its color); nothing for no element. */
+/** Element names use the same faceted symbols as skills and enemy details. */
 export const ElementBadge = ({ element }: { readonly element: ElementId | null }) =>
   element === null ? null : (
     <span class="element" data-element={element} title={elements[element].name}>
