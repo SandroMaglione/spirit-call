@@ -1,13 +1,16 @@
 # Enemy UI illustrations
 
-`roster.png` is the supplied Low-Poly Enemy Roster Poster, preserved unchanged.
+`roster.png` is the complete supplied Hand-Painted Fantasy Monster Roster,
+preserved unchanged at full resolution. `roster-original.png` preserves the
+earlier Low-Poly Enemy Roster Poster before the two new dummies were added.
 `enemyPortraits` in `src/presentation/looks.ts` frames it with CSS backgrounds.
 Cards and round enemy indicators share each crop. No new artwork is generated.
 Faces, upper bodies and identifying equipment fill the frame; labels and panel
 borders stay outside it. Compact creatures show most of their body.
 
-The poster covers all twelve combat enemies and Training Dummy. Sparring Dummy
-and Heavy Dummy are missing, so their distinct model portraits remain in use.
+The complete poster covers all twelve combat enemies and all three training
+targets. Heavy Dummy's crop shows its blue target and iron shoulder weights;
+Sparring Dummy's crop shows its red padded striking arms and red target.
 The Firebomber illustration maps to the permanent content id `charger`.
 
 Differences to review against the current models and individual reference sheets:
@@ -39,6 +42,12 @@ phone review. UI animations were temporarily disabled for stable screenshots.
 - [Round indicators at 667 × 375](evidence/home667.png)
 - [Challenge cards at 667 × 375](evidence/quest667.png)
 - [Desktop practice](evidence/desktop.png)
+
+The earlier screenshots above precede the complete sheet. The updated training
+portraits are shown in [844 × 390](evidence/training844.png) and
+[667 × 375](evidence/training667.png).
+Both dummies' facts opened correctly, including a synthetic touch tap on Heavy
+Dummy. Checks and the build passed again after the sheet update.
 
 The preview stores screenshots at a larger display resolution while preserving
 the tested viewport's proportions.

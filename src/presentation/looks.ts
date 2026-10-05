@@ -42,8 +42,8 @@ export const enemyPortraits: Readonly<Record<EnemyKind, EnemyPortrait | null>> =
   volatile: enemyPortrait(823, 613, 145),
   galeCaster: enemyPortrait(1203, 560, 140),
   juggernaut: enemyPortrait(622, 830, 190),
-  sparringDummy: null,
-  heavyDummy: null
+  sparringDummy: enemyPortrait(1128, 832, 176),
+  heavyDummy: enemyPortrait(141, 831, 165)
 }
 
 /**
