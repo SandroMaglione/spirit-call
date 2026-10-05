@@ -35,7 +35,7 @@ new account, a quest, or a banner); an aspect no quest gives is the Call's.
 
 ## A call
 
-One call costs `price` (160 crystals). It brings one of three things:
+One call costs `price` (200 crystals). It brings one of three things:
 
 | Light | Result | Odds |
 | --- | --- | --- |
@@ -62,6 +62,10 @@ measured by `pnpm calls`: it plays the quest line at a fixed number of runs
 per quest and calls with everything earned, many times over, and reports
 when characters come). Crystals come from milestones only (see vision.md,
 "Progression"); the price is the knob, then what quests and chests pay.
+At 200 crystals a call, with 3 runs a quest and a week of hardcore a
+chapter, the first character comes in chapter two, and about one every
+two chapters after it (0.5 a chapter; the unlucky tenth one fewer by
+chapter three).
 
 ## On screen
 

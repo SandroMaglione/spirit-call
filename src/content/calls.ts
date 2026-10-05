@@ -61,7 +61,7 @@ export interface CallRules {
 }
 
 export const callRules: CallRules = {
-  price: { crystals: 160 },
+  price: { crystals: 200 },
   opensAfter: "theBrute",
   character: { rate: 0.03, softFrom: 20, softStep: 0.1, guarantee: 30, firstGuarantee: 10 },
   aspect: { rate: 0.12, guarantee: 10 },
