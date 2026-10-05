@@ -7,13 +7,16 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { blow, Damage, ElementState, Enemy, Game, Guard, Health, Invulnerable, Knockback, Player, Poise, Position } from "../src/schema.ts"
+import { blow, Damage, ElementState, Enemy, Energy, Game, Guard, Health, Invulnerable, Knockback, Player, Poise, Position } from "../src/schema.ts"
 import { center, cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const effect = defaultTuning.skills.stoneguard.effect
 const bastion = { character: "bastion" } as const
-const raise = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
+const raise = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
+const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
+  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+})
 
 const World = Game.Inspector("Test/Guard", {
   queries: {
@@ -41,6 +44,7 @@ const field = (dummies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
   const tuning = tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } } })
   const run = start({ tuning, build: bastion, pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }) }], ...options })
   run.runtime.tick(placeDummies(dummies, tuning))
+  run.runtime.tick(Game.Schedule(FillEnergy))
   const world = () => run.runtime.inspect(World)
   /** A blow on the player from the dummy at `from` (its attacker), or from no one; `periodic`: a burn. */
   const strike = (from: Vec2 | null, damage: number, periodic = false) => {
@@ -63,13 +67,31 @@ const field = (dummies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
     })
     run.runtime.tick(Game.Schedule(Strike))
   }
-  return { ...run, world, strike }
+  /** Replaces the dummies with ones at `offsets`. */
+  const place = (offsets: ReadonlyArray<Vec2>) => run.runtime.tick(placeDummies(offsets, tuning))
+  return { ...run, world, strike, place }
 }
 
 describe("raising a guard", () => {
-  it("is Bastion's special", () => {
-    expect(defaultTuning.characters.bastion.skills.special).toBe("stoneguard")
+  it("is Bastion's ultimate", () => {
+    expect(defaultTuning.characters.bastion.skills.ultimate).toBe("stoneguard")
     expect(effect.kind).toBe("guard")
+  })
+
+  it("bursts a ring of stone out as she casts it: what crowds her is struck, cracked, and thrown out", () => {
+    const run = field([{ x: 70, y: 0 }, { x: 600, y: 0 }], { keys: [raise(1)] })
+    run.step(steps(0.4))
+    const [crowding, away] = [...run.world().enemies].sort((left, right) => left.offset.x - right.offset.x)
+    expect(crowding!.offset.x).toBeGreaterThan(effect.shove.radius * 0.8)
+    expect(crowding!.state).toBe("cracked")
+    expect(crowding!.health).toBeLessThan(100_000)
+    expect(away!.health).toBe(100_000)
+  })
+
+  it("leaves her untouchable while it rises", () => {
+    const run = field([], { keys: [raise(1)] })
+    run.step(3)
+    expect(run.world().player.invulnerable).toBeGreaterThan(effect.raise - 0.2)
   })
 
   it("roots her while the stone gathers, then the team holds its plates", () => {
@@ -106,9 +128,12 @@ describe("stone plates", () => {
   const far = { x: 400, y: 0 }
   /** A field with its guard raised. */
   const guarded = (options: StartOptions = {}) => {
-    const run = field([near, far], { keys: [raise(1)], ...options })
+    const run = field([], { keys: [raise(1)], ...options })
     run.step(steps(effect.raise) + 3)
     expect(run.world().plates).toBe(effect.plates)
+    // Past the moment she is untouchable as it rises; then the enemies come.
+    run.step(steps(0.3))
+    run.place([near, far])
     return run
   }
 

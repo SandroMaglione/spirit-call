@@ -670,12 +670,12 @@ export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; read
 /** An enemy broke (see `Poise`), for effects. */
 export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind }>()("Shooter/Broke")
 
-/** An area went off (a lobbed skill's blast, a nova, a rock erupting), for effects. */
+/** An area went off (a lobbed skill's blast, a nova, a rock erupting, a ring of stone bursting out), for effects. */
 export const Explosion = Descriptor.Event<{
   readonly at: Vec2
   readonly radius: number
   readonly faction: Faction
-  readonly kind: "blast" | "nova" | "eruption"
+  readonly kind: "blast" | "nova" | "eruption" | "upheaval"
   /** A heavy one (an ultimate) gets the big effects; a light one (an aspect's shockwave) a smaller ring. */
   readonly heavy: boolean
   /** Its element, if any, for its color and sound. */

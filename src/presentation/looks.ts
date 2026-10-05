@@ -167,7 +167,7 @@ const rockSpirit: BodyLook = {
   model: "rockSpirit",
   widthFactor: 1.5,
   heightFactor: view.bodyHeightFactor,
-  moments: spiritMoments(3, "stoneguard", "rockfall"),
+  moments: spiritMoments(3, "rockfall", "stoneguard"),
   eyes: spiritEyes
 }
 

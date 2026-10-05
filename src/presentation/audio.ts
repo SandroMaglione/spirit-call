@@ -111,7 +111,7 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const explosion of events.explosion.all()) {
     const light = explosion.element === "water" ? "splash" : explosion.element === "thunder" ? "zap" : "boom"
     // A rock erupting: a deep quake and gravel.
-    if (explosion.kind === "eruption") sounds.play("quake", { pan: pan(explosion.at) })
+    if (explosion.kind === "eruption" || explosion.kind === "upheaval") sounds.play("quake", { pan: pan(explosion.at) })
     else sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : light, { pan: pan(explosion.at) })
   }
 })

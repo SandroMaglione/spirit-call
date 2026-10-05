@@ -173,8 +173,6 @@ export interface HudRefs {
   readonly health: HTMLElement
   readonly healthText: HTMLElement
   readonly state: HTMLElement
-  /** The team's stone plates (see `Guard`), a stone each, beside her state; hidden with none. */
-  readonly plates: HTMLElement
   readonly team: TeamRefs
   readonly banner: HTMLElement
   readonly vignette: HTMLElement

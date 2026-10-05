@@ -66,9 +66,9 @@ state alone, and each pair of characters gets bursts on top. For example,
 the Stormcaller charges a spread-out group, and her blows arc between them;
 with the Tidecaller, thunder on soaked enemies splashes the whole group to
 a stop, and leaves it charged. Bastion cracks the toughest enemies (her
-Rockfall raises stone under the toughest around her, stunning them), so
-they break sooner under her own blows, and any other element shatters
-them.
+Rockfall, her special, raises stone under the toughest around her,
+stunning them a moment), so they break sooner under her own blows, and
+any other element shatters them.
 
 ### Adding an element
 
@@ -106,11 +106,14 @@ The Stormcaller heals through her kit, and healing always costs something:
 Bastion guards the team through her kit, and a guard always costs
 something:
 
-- **Her Stoneguard** takes a moment to raise: she stands rooted while the
-  stone gathers (switched out before it is done, it is lost). It gives the
-  team **stone plates**, a few at most, shown as slabs of stone around the
-  character on the field. They belong to the team, not to her: they stay
-  through switches and waves until spent, and casting again fills them up.
+- **Her Stoneguard** (her ultimate) takes a moment to raise. As she casts
+  it a ring of stone bursts out around her, cracking and throwing back
+  what crowds her, and she stands rooted and untouchable while the stone
+  gathers (switched out or dashing before it is done, it is lost). It
+  gives the team **stone plates**, a few at most, shown as slabs of stone
+  around the character on the field. They belong to the team, not to her:
+  they stay through switches and waves until spent, and casting again
+  fills them up.
 - **A plate takes one blow whole**, then shatters outward: the bodies
   around are cracked and thrown back, and the attacker's break bar fills.
   Only blows break plates: burns, bursts, and the arena's hazards pass

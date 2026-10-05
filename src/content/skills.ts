@@ -161,7 +161,10 @@ export interface ThunderclapEffect extends EffectBase {
 
 /**
  * A guard raised over `raise` seconds, the caster rooted meanwhile (she
- * cannot run or attack; switched out or dashing, it is lost). Then the team
+ * cannot run or attack; switched out or dashing, it is lost). As she casts
+ * it a ring of stone bursts out around her (`shove`: its blow, carrying
+ * the effect's element, on the other side within `radius`, thrown out),
+ * clearing room to raise it in. Then the team
  * holds `plates` stone plates (casting again fills them up to it), worn by
  * whoever is on the field. A plate takes one enemy blow whole (burns and
  * bursts pass through), then shatters: its blow (`power`, its element,
@@ -174,6 +177,7 @@ export interface GuardEffect extends EffectBase {
   readonly plates: number
   readonly radius: number
   readonly breakFill: number
+  readonly shove: { readonly radius: number; readonly power: number; readonly knockback: number }
 }
 
 /**
@@ -355,30 +359,41 @@ export const skills = {
     effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1.5, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
   }),
   /**
-   * Bastion's special: she plants her feet while stone gathers around her,
-   * then the team wears stone plates. Each takes a blow whole and shatters
-   * outward, cracking and throwing back what is around and filling the
-   * attacker's break bar: set up in the quiet, it pays off in the fight.
+   * Bastion's ultimate: a ring of stone bursts out around her, throwing
+   * back and cracking what crowds her, and she plants her feet (untouchable)
+   * while stone gathers; then the team wears stone plates. Each takes a blow
+   * whole and shatters outward, cracking and throwing back what is around
+   * and filling the attacker's break bar.
    */
   stoneguard: skill({
     name: "Stoneguard",
-    cooldown: 12,
-    energy: 0,
-    invulnerability: 0,
-    effect: guard({ raise: 0.9, plates: 3, radius: 130, breakFill: 0.25, power: 20, element: "rock", knockback: 800, hitStop: 0.05, heavy: false })
+    cooldown: 10,
+    energy: 100,
+    invulnerability: 0.9,
+    effect: guard({
+      raise: 0.9,
+      plates: 4,
+      radius: 150,
+      breakFill: 0.3,
+      shove: { radius: 190, power: 40, knockback: 1100 },
+      power: 30,
+      element: "rock",
+      knockback: 900,
+      hitStop: 0.06,
+      heavy: true
+    })
   }),
   /**
-   * Bastion's ultimate: three great rocks erupt from the ground around her,
-   * under the toughest enemies near her, each after its crack: they launch
-   * and stun what they catch, crack it, and fill its break bar. Rock's
-   * moment: breaking champions and Brutes.
+   * Bastion's special: three rocks erupt from the ground around her, under
+   * the toughest enemies near her, each after its crack: they stun what
+   * they catch a moment, crack it, and fill its break bar.
    */
   rockfall: skill({
     name: "Rockfall",
-    cooldown: 10,
-    energy: 100,
-    invulnerability: 0.5,
-    effect: rockfall({ radius: 340, rocks: 3, warning: 0.35, interval: 0.12, size: 80, ring: 140, stun: 1.6, breakFill: 0.5, power: 70, element: "rock", knockback: 500, hitStop: 0.08, heavy: true })
+    cooldown: 8,
+    energy: 0,
+    invulnerability: 0,
+    effect: rockfall({ radius: 300, rocks: 3, warning: 0.35, interval: 0.1, size: 58, ring: 120, stun: 0.9, breakFill: 0.25, power: 30, element: "rock", knockback: 380, hitStop: 0.05, heavy: false })
   })
 }
 

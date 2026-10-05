@@ -133,7 +133,7 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
       return
     case "guard":
-      positive(problems, where, { raise: effect.raise, plates: effect.plates, radius: effect.radius })
+      positive(problems, where, { raise: effect.raise, plates: effect.plates, radius: effect.radius, shove: effect.shove.radius })
       if (!Number.isInteger(effect.plates)) problems.push(`${where}: plates must be a whole number (is ${effect.plates})`)
       if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
       return

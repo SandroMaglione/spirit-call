@@ -1,29 +1,40 @@
 /**
- * Guards (see `GuardEffect` and docs/elements.md, "Guarding"): a guard is
- * raised over a moment, its caster rooted (`Raising`, lost if she leaves
+ * Guards (see `GuardEffect` and docs/elements.md, "Guarding"): a ring of
+ * stone bursts out as it is cast, then a guard is raised over a moment, its
+ * caster rooted (`Raising`, lost if she leaves
  * the field or dashes), then the team holds stone plates (`Guard`), worn by
  * whoever is on the field. `ApplyDamage` spends a plate on an enemy blow on
  * her (burns and bursts pass through), which takes nothing of it and
  * shatters (a `PlateShatter`, carried out by `ShatterPlates`): its blow lands
  * around her, and the attacker's break bar fills.
  */
-import { blow, Cast, Dash, Enemy, Game, Guard, Guarded, Health, Hitbox, Member, Player, Poise, PlateShatter, Position, Raising, RunScope, Time, Tuning } from "../schema.ts"
+import { blow, Cast, Dash, Enemy, Explosion, Game, Guard, Guarded, Health, Hitbox, Member, Player, Poise, PlateShatter, Position, Raising, RunScope, Time, Tuning } from "../schema.ts"
 import type { Faction, GuardValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { poiseOf } from "./poise.ts"
+import { castBlow } from "./skills.ts"
 
 /** No plates: how a run starts. */
 export const noGuard: GuardValue = { plates: 0, effect: null, atk: 0, charges: false }
 
 const Casters = Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Member] })
 
-/** Guards cast: the caster starts raising (casting again while raising starts over). */
+/** Guards cast: a ring of stone bursts out around the caster, throwing back what crowds her, and she starts raising (casting again while raising starts over). */
 export const CastGuards = Game.System("Shooter/CastGuards", {
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
 }, ({ events, lookup, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "guard") continue
+    const { shove } = effect
+    commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+      area: { kind: "circle", center: cast.from, radius: shove.radius },
+      faction: cast.faction,
+      blow: castBlow(cast, { ...effect, power: shove.power, knockback: shove.knockback }),
+      remaining: 0.08,
+      hit: []
+    }]))
+    events.explosion.emit({ at: cast.from, radius: shove.radius, faction: cast.faction, kind: "upheaval", heavy: effect.heavy, element: effect.element })
     const caster = lookup.getHandle(cast.caster, Casters)
     if (!caster.ok) continue
     commands.insert(caster.value.entity.id, [Raising, { remaining: effect.raise, effect, atk: cast.atk, charges: cast.charges }])

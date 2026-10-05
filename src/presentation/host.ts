@@ -36,7 +36,6 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div><div class="hud__meter" data-meter hidden><b data-damage></b><span data-hits></span></div></div>
     <div class="hud__vitals">
       <span class="hud__state" data-state hidden></span>
-      <span class="hud__plates" data-plates hidden></span>
       <div class="hud__health"><div class="hud__health-fill" data-health></div><span class="hud__health-text" data-health-text></span></div>
     </div>
     <div class="team" data-team>
@@ -88,7 +87,6 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       health: root.querySelector<HTMLElement>("[data-health]")!,
       healthText: root.querySelector<HTMLElement>("[data-health-text]")!,
       state: root.querySelector<HTMLElement>("[data-state]")!,
-      plates: root.querySelector<HTMLElement>("[data-plates]")!,
       team: {
         root: root.querySelector<HTMLElement>("[data-team]")!,
         members: teamSlots.map((slot) => {

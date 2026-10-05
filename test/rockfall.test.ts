@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { rockfallTargets } from "../src/features/rockfall.ts"
 import type { RockTarget } from "../src/features/rockfall.ts"
-import { ElementState, Enemy, Energy, Game, Health, Player, Poise, Position, Rock, Stunned } from "../src/schema.ts"
+import { ElementState, Enemy, Game, Health, Poise, Position, Rock, Stunned } from "../src/schema.ts"
 import { center, cursorAt, placeDummies, start, steps } from "./helpers.ts"
 
 const effect = defaultTuning.skills.rockfall.effect
@@ -64,17 +64,14 @@ const World = Game.Inspector("Test/Rockfall", {
   }))
 }))
 
-const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
-})
 
 describe("Bastion's Rockfall", () => {
   it("cracks the ground under the enemies around her, then erupts: struck, stunned, cracked, their break bars filled", () => {
     const tuning = tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } } })
     const offsets = [{ x: 150, y: 0 }, { x: -120, y: 90 }, { x: 900, y: 0 }]
-    const run = start({ tuning, build: { character: "bastion" }, kits: "shipped", pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
+    expect(defaultTuning.characters.bastion.skills.special).toBe("rockfall")
+    const run = start({ tuning, build: { character: "bastion" }, kits: "shipped", pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
     run.runtime.tick(placeDummies(offsets, tuning))
-    run.runtime.tick(Game.Schedule(FillEnergy))
     run.step(4)
     // The cracks are out; nothing has erupted yet.
     expect(run.runtime.inspect(World).rocks).toBe(effect.rocks)

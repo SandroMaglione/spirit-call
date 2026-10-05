@@ -12,7 +12,7 @@ import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import { view } from "../config/view.ts"
-import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Guard, Health, Hit, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, BasicAttack } from "../schema.ts"
+import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, BasicAttack } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -249,8 +249,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     tuning: Game.System.readResource(Tuning),
     challenge: Game.System.readResource(Challenge),
     enemyLevel: Game.System.readResource(EnemyLevel),
-    stats: Game.System.readResource(Stats),
-    guard: Game.System.readResource(Guard)
+    stats: Game.System.readResource(Stats)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
@@ -314,13 +313,6 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     showIcon(hud.state, stateIcons, state.id)
     hud.state.className = `hud__state hud__state--${state.id}`
     hud.state.style.setProperty("--left", String(clock.full <= 0 ? 0 : Math.min(1, state.remaining / clock.full)))
-  }
-  // The team's stone plates: a stone each, beside her state.
-  const plates = resources.guard.get().plates
-  hud.plates.hidden = plates <= 0
-  if (hud.plates.dataset["count"] !== String(plates)) {
-    hud.plates.dataset["count"] = String(plates)
-    hud.plates.innerHTML = "<i></i>".repeat(Math.max(0, plates))
   }
   // What is being played, and how far the run is: small, out of the way.
   if (!tuning.waves.enabled) {

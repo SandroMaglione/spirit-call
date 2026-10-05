@@ -117,7 +117,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "rockfall":
       return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them and filling their break bars`
     case "guard":
-      return `after standing still ${effect.raise}s, ${effect.plates} ${elementWord(effect.element)}plates for the team, each taking a blow whole and shattering around you (${effect.power}% ATK)`
+      return `a ${elementWord(effect.element)}ring throwing back what is around you (${effect.shove.power}% ATK), then, after standing still ${effect.raise}s, ${effect.plates} plates for the team, each taking a blow whole and shattering around you (${effect.power}% ATK)`
   }
 }
 

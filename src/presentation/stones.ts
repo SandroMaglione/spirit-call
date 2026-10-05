@@ -145,6 +145,21 @@ export class Stones {
     this.shatter(at, 14, size * 0.5, 4 + size * 0.04, 420)
   }
 
+  /** A ring of spikes `radius` around `at` (a floor point), leaning out, about `tall` high, with chunks thrown out. */
+  ring(at: Vec2, radius: number, tall: number): void {
+    const count = 12
+    for (let index = 0; index < count && this.spikes.length < MAX_SPIKES; index++) {
+      const angle = (index / count) * Math.PI * 2 + Math.random() * 0.25
+      const out = radius * (0.85 + Math.random() * 0.3)
+      const x = at.x + Math.cos(angle) * out
+      const z = at.y + Math.sin(angle) * out
+      const lean = 0.45 + Math.random() * 0.2
+      const tilt = new Quaternion().setFromEuler(new Euler(Math.sin(angle) * lean, Math.random() * Math.PI * 2, -Math.cos(angle) * lean))
+      this.spikes.push({ x, z, height: tall * (0.6 + Math.random() * 0.5), width: radius * (0.1 + Math.random() * 0.05), tilt, color: tone(), age: -index * 0.012 })
+    }
+    this.shatter(at, 18, 10, 4, 460)
+  }
+
   /** Chunks of stone thrown up and out from `at` (a floor point), `height` up. */
   shatter(at: Vec2, count: number, height: number, size: number, speed: number): void {
     for (let index = 0; index < count && this.chunks.length < MAX_CHUNKS; index++) {

@@ -228,7 +228,7 @@ export const view = {
   /** Rock's stone (from the rock spirit's sheet): chips, plates, and the stone a Rockfall raises; `glow` lights the cracks. */
   stone: { light: 0xd9c0a2, middle: 0xb3937a, dark: 0x7f6d62, glow: 0xffc44a },
   /** A Rockfall: its tallest spike (world units), the flash and jolt as each rock erupts, and its crack on the floor before (`cracks` lines, `width` pixels). */
-  rockfall: { tall: 78, flash: 70, shake: 9, cracks: 7, width: 3 },
+  rockfall: { tall: 54, flash: 50, shake: 6, cracks: 6, width: 2.5 },
   /**
    * A champion (see `Tuning.champions`): its mark under its feet (a filled
    * ring pulsing `pulse` around `fill`, `points` points out to `outer`
