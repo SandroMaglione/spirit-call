@@ -12,7 +12,9 @@ import type { MaterialId } from "../../content/materials.ts"
 import { elements } from "../../content/elements.ts"
 import type { Affinities as Traits } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
-import type { Rewards } from "../../content/quests.ts"
+import type { Rewards, Unlock } from "../../content/quests.ts"
+import { aspectOf } from "../../content/aspects.ts"
+import { AbilityIcon } from "../AbilityIcon.tsx"
 import { affinityList, affinityNames, attackElements, describeUnlock, resourceName } from "../describe.ts"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
@@ -103,16 +105,32 @@ export const Stars = ({ earned, total = 3, fresh = [] }: { readonly earned: Read
   <span class="stars" aria-label={`${earned.length} of ${total} stars`}>{Array.from({ length: total }, (_, index) => <span key={index} class={`star${earned.includes(index) ? " is-earned" : ""}${fresh.includes(index) ? " is-fresh" : ""}`}><Icon name="star" /></span>)}</span>
 )
 
-/** What something gives: experience, currencies and materials, and what it unlocks (`preview` opens an unlocked character; `compact`: unlocks as their picture alone, named on touch). */
+/**
+ * Something a reward makes yours, shown as the prize it is: a character's
+ * face, or an aspect's class on a dark disc, inside a turning gold ring
+ * with a soft pulse and a passing glint.
+ */
+export const UnlockBadge = ({ store, unlock }: { readonly store: UiStore; readonly unlock: Unlock }) => {
+  const tuning = store.tuning.value
+  return <span class="unlock-badge" data-kind={unlock.kind}>
+    <span class="unlock-badge__ring" aria-hidden="true" />
+    {unlock.kind === "character"
+      ? <Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} size={28} />
+      : <span class="unlock-badge__aspect"><AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} /></span>}
+    <span class="unlock-badge__glint" aria-hidden="true" />
+  </span>
+}
+
+/** What something gives: experience, currencies and materials, then what it unlocks on a line of its own (`preview` opens an unlocked character; `compact`: unlocks as their badge alone, named on touch). */
 export const Amounts = ({ store, rewards, preview, compact = false }: { readonly store: UiStore; readonly rewards: Rewards; readonly preview?: (character: CharacterId) => void; readonly compact?: boolean }) => {
   const tuning = store.tuning.value
   return <div class="amounts">
     {rewards.experience > 0 && <span aria-label={`${rewards.experience} account XP`}><Icon name="xp" />{rewards.experience}</span>}
     {ids(tuning.currencies).filter((id) => (rewards.currencies[id] ?? 0) > 0).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${tuning.currencies[id].name}`}><Icon name={id} />{(rewards.currencies[id] ?? 0).toLocaleString("en-US")}</span>)}
     {materialsIn(store, rewards.currencies).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${resourceName(tuning, id)}`}><MaterialIcon store={store} material={id} />{rewards.currencies[id]}</span>)}
-    {rewards.unlocks.map((unlock) => unlock.kind === "aspect"
-      ? <span key={unlock.id} aria-label={describeUnlock(tuning, unlock)} title={describeUnlock(tuning, unlock)}><Icon name="aspect" />{compact ? null : describeUnlock(tuning, unlock)}</span>
-      : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} onClick={() => preview?.(unlock.id)}><Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} {...(compact ? { size: 26 } : {})} />{compact ? null : describeUnlock(tuning, unlock)}</button>)}
+    {rewards.unlocks.length > 0 && <span class="amounts__unlocks">{rewards.unlocks.map((unlock) => unlock.kind === "aspect"
+      ? <span key={unlock.id} class="amounts__unlock" aria-label={`Aspect: ${describeUnlock(tuning, unlock)}`} title={describeUnlock(tuning, unlock)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</span>
+      : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} title={describeUnlock(tuning, unlock)} onClick={() => preview?.(unlock.id)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</button>)}</span>}
   </div>
 }
 
