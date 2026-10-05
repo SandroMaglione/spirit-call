@@ -20,7 +20,9 @@ const shapes = {
   barrage: "M10 2 5 13l5-3 3-7Z M20 1 12 17l6-4 5-10Z M29 7 21 23l6-4 4-10Z M9 14l4 5-4 5-4-5Z M18 18l4 6-4 6-4-6Z M27 23l3 4-3 4-3-4Z",
   tide: "M16 2 24 13 25 19 22 24H10L7 19l1-6Z M2 20l3 2 1 5 5 3H5l-4-5Z M30 20l-3 2-1 5-5 3h6l4-5Z",
   sparkTotem: "M13 10h6v16l5 4H8l5-4Z M16 3l7 7-7 5-7-5Z M7 2 2 11h4l-2 7 7-10H7Z M27 3l-4 8h4l-2 6 6-9h-4Z",
-  thunderclap: "M16 1 7 12h7l-2 10 12-14h-8Z M3 14l4 3-2 5 5 5-6-1-3-6Z M29 14l-4 3 2 5-5 5 6-1 3-6Z M13 25h6v2h-6Z M15 23h2v6h-2Z"
+  thunderclap: "M16 1 7 12h7l-2 10 12-14h-8Z M3 14l4 3-2 5 5 5-6-1-3-6Z M29 14l-4 3 2 5-5 5 6-1 3-6Z M13 25h6v2h-6Z M15 23h2v6h-2Z",
+  stoneguard: "M16 9 21 12 21 19 16 23 11 19 11 12Z M3 8 9 5 9 13 4 16Z M29 8 23 5 23 13 28 16Z M6 21l6 4-2 5-6-4Z M26 21l-6 4 2 5 6-4Z",
+  rockfall: "M16 2 20 9 19 20H13L12 9Z M5 10 8 15 8 21H3L2 15Z M27 10 30 15 29 21H24L24 15Z M1 24h30v3H1Z M6 28h4l-1 3H5Z M22 28h4l1 3h-4Z"
 } satisfies Record<AbilityKind, string>
 
 export const AbilityIcon = ({ kind, charged = false }: { readonly kind: AbilityKind; readonly charged?: boolean }) => {

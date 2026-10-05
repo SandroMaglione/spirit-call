@@ -3,7 +3,7 @@
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import { Action, Aim, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Player, Position, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { stateSpeed } from "./elements.ts"
 import { charging } from "./basic-attack.ts"
 import { attackOf } from "./build.ts"
@@ -13,7 +13,8 @@ import { attackOf } from "./build.ts"
  * (or the touch aim) but faces where she runs, as in Death's Door, except
  * while an attack or a skill holds her facing the way it went (see
  * `Facing`). While a move recovers she runs slower, or stands for a heavy
- * one (see `BasicAttackValue.slowed`). A dash moves the player a fixed distance
+ * one (see `BasicAttackValue.slowed`), and stands while raising a guard
+ * (see `Raising`). A dash moves the player a fixed distance
  * over a fixed time in a committed direction: the movement input, or the
  * way she faces when standing still. Its displacement is exact regardless
  * of the step length, because the last dash step only covers the time left.
@@ -30,7 +31,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         invulnerable: Game.Query.write(Invulnerable),
         basicAttack: Game.Query.read(BasicAttack),
         stats: Game.Query.read(CombatStats),
-        state: Game.Query.read(ElementState)
+        state: Game.Query.read(ElementState),
+        raising: Game.Query.optional(Raising)
       },
       with: [Player]
     })
@@ -97,7 +99,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       const attack = data.basicAttack.get()
       const spec = attackOf(tuning, attack.attack)
       const charge = spec.power !== null && charging(spec, attack) ? spec.power.moveSpeedMultiplier : 1
-      const speed = runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
+      const speed = data.raising.present ? 0 : runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
       data.velocity.set(moveToward(carried, target, rate * dt))

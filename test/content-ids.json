@@ -4,7 +4,7 @@
     "gunner",
     "tidecaller",
     "stormcaller",
-    "stonekeeper"
+    "bastion"
   ],
   "weapons": [
     "trainingBlade",
@@ -30,8 +30,8 @@
     "thunderclap",
     "flareJump",
     "tidalWave",
-    "stoneGuard",
-    "stoneRise"
+    "stoneguard",
+    "rockfall"
   ],
   "challenges": [
     "swarm",
@@ -121,7 +121,8 @@
     "splash",
     "discharge",
     "gale",
-    "shatter"
+    "shatter",
+    "withBastion"
   ],
   "classes": [
     "blade",

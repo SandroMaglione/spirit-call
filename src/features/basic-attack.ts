@@ -24,7 +24,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim,
-  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
+  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
 import { attackOf, damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
@@ -116,7 +116,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         body: Game.Query.read(Body),
         stats: Game.Query.read(CombatStats),
         dash: Game.Query.read(Dash),
-        member: Game.Query.read(Member)
+        member: Game.Query.read(Member),
+        raising: Game.Query.optional(Raising)
       },
       with: [Player]
     }),
@@ -151,7 +152,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     // An empty magazine reloads before she fires again (a press meanwhile stays buffered).
     const reloading = Math.max(0, current.reloading - dt)
     const spent = current.reloading > 0 && reloading <= 0 ? 0 : current.spent
-    const ready = cooldown <= 0 && reloading <= 0
+    // Raising a guard (see `Raising`), she does not attack.
+    const ready = cooldown <= 0 && reloading <= 0 && !data.raising.present
     // A press during a dash, or just after it, is the dash strike: once per dash, cutting a recovery short.
     const dash = data.dash.get()
     const sinceDashStrike = current.sinceDashStrike + dt

@@ -59,6 +59,7 @@ export type SoundName =
   | "mend"
   | "crack"
   | "shatter"
+  | "quake"
 
 export interface PlayOptions {
   /** Loudness factor, 1 by default. */
@@ -361,6 +362,15 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     crunch(v, 1900, 300, 0.18, 0.55)
     noise(v, "bandpass", 3600, 900, 0.32, 0.22, 1.5, 0.04)
     noise(v, "highpass", 6000, 3000, 0.22, 0.08, 0.8, 0.08)
+  }],
+  // The ground erupting: a deep rumble under a crack, gravel raining after.
+  quake: [{ reverb: 0.45, heavy: true, interval: 0.05 }, (v) => {
+    click(v, 0.5)
+    tone(v, "sine", 85, 28, 0.55, 1)
+    tone(v, "triangle", 60, 30, 0.45, 0.35, 0.01)
+    crunch(v, 1300, 200, 0.25, 0.6)
+    noise(v, "lowpass", 900, 80, 0.6, 0.45)
+    noise(v, "bandpass", 3000, 1200, 0.35, 0.12, 1.4, 0.12)
   }],
   // A new wave: two rising notes.
   waveStart: [{ reverb: 0.4 }, (v) => {

@@ -168,7 +168,9 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   swordsman: windSpirit,
   gunner: fireSpirit,
   tidecaller: waterSpirit,
-  stormcaller: thunderSpirit
+  stormcaller: thunderSpirit,
+  // A placeholder until her rock spirit (art/spirits/rock) comes in.
+  bastion: { kind: "capsule", color: view.characters.bastion, widthFactor: 1.5, heightFactor: view.bodyHeightFactor }
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({

@@ -114,6 +114,10 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
     case "barrage":
       return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
+    case "rockfall":
+      return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them and filling their break bars`
+    case "guard":
+      return `after standing still ${effect.raise}s, ${effect.plates} ${elementWord(effect.element)}plates for the team, each taking a blow whole and shattering around you (${effect.power}% ATK)`
   }
 }
 

@@ -15,7 +15,7 @@ import type { CharacterId, Stats as CharacterStats } from "./content/characters.
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { LobEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { GuardEffect, LobEffect, RockfallEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { ClassId } from "./content/classes.ts"
 import type { Vec2 } from "./math/vec.ts"
@@ -152,9 +152,40 @@ export interface TotemValue {
 }
 export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
 
-/** A character's remaining protective stones; the timer also runs on the bench. */
-export const StoneGuard = Descriptor.Component<{ readonly remaining: number; readonly stones: number }>()("Shooter/StoneGuard")
-export const GuardBlocked = Descriptor.Event<{ readonly at: Vec2; readonly direction: Vec2; readonly stones: number }>()("Shooter/GuardBlocked")
+/**
+ * A guard being raised (see `GuardEffect`), on the member raising it: she is
+ * rooted for `remaining` more seconds, then the team holds its plates, from
+ * her `atk`. Lost if she leaves the field or dashes first.
+ */
+export const Raising = Descriptor.Component<{ readonly remaining: number; readonly effect: GuardEffect; readonly atk: number; readonly charges: boolean }>()("Shooter/Raising")
+
+/**
+ * A rock of a Rockfall (see `RockfallEffect`) about to erupt: its crack
+ * follows `target` (while it stands) for `remaining` more seconds (below 0:
+ * not cracking yet), then the rock erupts where the crack is (`at`), its
+ * blow `blow`.
+ */
+export const Rock = Descriptor.Component<{
+  readonly at: Vec2
+  readonly target: Entity.Handle<typeof Root, typeof Position> | null
+  readonly remaining: number
+  readonly effect: RockfallEffect
+  readonly faction: Faction
+  readonly blow: Blow
+}>()("Shooter/Rock")
+
+/**
+ * A plate taking a blow (see `GuardEffect`), waiting to shatter (an entity,
+ * like `StateBurst`, so a hit-stop holds it rather than losing it): around
+ * `at`, from `atk`; `attacker` (when known) has its break bar filled.
+ */
+export const PlateShatter = Descriptor.Component<{
+  readonly at: Vec2
+  readonly attacker: DamageSource["attacker"] | null
+  readonly effect: GuardEffect
+  readonly atk: number
+  readonly charges: boolean
+}>()("Shooter/PlateShatter")
 
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
@@ -639,17 +670,20 @@ export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; read
 /** An enemy broke (see `Poise`), for effects. */
 export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind }>()("Shooter/Broke")
 
-/** An area went off (a lobbed skill's blast, a nova), for effects. */
+/** An area went off (a lobbed skill's blast, a nova, a rock erupting), for effects. */
 export const Explosion = Descriptor.Event<{
   readonly at: Vec2
   readonly radius: number
   readonly faction: Faction
-  readonly kind: "blast" | "nova"
+  readonly kind: "blast" | "nova" | "eruption"
   /** A heavy one (an ultimate) gets the big effects; a light one (an aspect's shockwave) a smaller ring. */
   readonly heavy: boolean
   /** Its element, if any, for its color and sound. */
   readonly element: ElementId | null
 }>()("Shooter/Explosion")
+
+/** The team's guard changed (see `GuardEffect`): its plates raised around the one on the field at `at`, or one shattered there, for effects. */
+export const Guarded = Descriptor.Event<{ readonly at: Vec2; readonly kind: "raised" | "shattered" }>()("Shooter/Guarded")
 
 /** Health restored to an entity at `at` (an aspect's passive, a totem, a thunderclap), for effects. */
 export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: number }>()("Shooter/Heal")
@@ -722,6 +756,19 @@ export const Team = Descriptor.Resource<ReadonlyArray<BuildValue>>()("Shooter/Te
 
 /** Time until the team can switch again (see `Tuning.team.switchCooldown`). */
 export const TeamSwitch = Descriptor.Resource<{ readonly cooldown: number }>()("Shooter/TeamSwitch")
+
+/**
+ * The team's stone plates (see `GuardEffect`): how many it holds, worn by
+ * whoever is on the field, and the guard that raised them (its shatter, from
+ * `atk`); `null` before any.
+ */
+export interface GuardValue {
+  readonly plates: number
+  readonly effect: GuardEffect | null
+  readonly atk: number
+  readonly charges: boolean
+}
+export const Guard = Descriptor.Resource<GuardValue>()("Shooter/Guard")
 
 /** The challenge being played (see `content/challenges.ts`). */
 export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
@@ -959,7 +1006,9 @@ export const Game = Schema.bind(
       Lobbed,
       Vortex,
       Totem,
-      StoneGuard,
+      Raising,
+      PlateShatter,
+      Rock,
       Health,
       Hurtbox,
       Knockback,
@@ -988,6 +1037,7 @@ export const Game = Schema.bind(
       Tuning,
       Team,
       TeamSwitch,
+      Guard,
       Challenge,
       EnemyLevel,
       TriggeredEffects,
@@ -1011,7 +1061,7 @@ export const Game = Schema.bind(
       Practice,
       PracticeField
     },
-    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Reaction, Zap, GuardBlocked }
+    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Guarded, Reaction, Zap }
   }),
   Root
 )

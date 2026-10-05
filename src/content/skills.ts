@@ -159,22 +159,45 @@ export interface ThunderclapEffect extends EffectBase {
   readonly breakFill: number
 }
 
-/** Three orbiting stones: each absorbs one direct enemy blow, until the guard expires. */
-export interface StoneGuardEffect extends EffectBase {
-  readonly kind: "stoneGuard"
-  readonly seconds: number
-  readonly stones: number
-}
-
-/** Three separate impacts rising ahead of the caster, with one hit per pillar. */
-export interface StoneRiseEffect extends EffectBase {
-  readonly kind: "stoneRise"
-  readonly spacing: number
+/**
+ * A guard raised over `raise` seconds, the caster rooted meanwhile (she
+ * cannot run or attack; switched out or dashing, it is lost). Then the team
+ * holds `plates` stone plates (casting again fills them up to it), worn by
+ * whoever is on the field. A plate takes one enemy blow whole (burns and
+ * bursts pass through), then shatters: its blow (`power`, its element,
+ * `knockback`) lands on the other side within `radius` of her, and the
+ * attacker's break bar fills by `breakFill` of it.
+ */
+export interface GuardEffect extends EffectBase {
+  readonly kind: "guard"
+  readonly raise: number
+  readonly plates: number
   readonly radius: number
-  readonly active: number
+  readonly breakFill: number
 }
 
-export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | StoneGuardEffect | StoneRiseEffect
+/**
+ * Rocks erupting around the caster: under the `rocks` toughest bodies of
+ * the other side within `radius` of her (champions first, then elites, then
+ * the most health, then the nearest), each followed by its crack for
+ * `warning` seconds, one after the other `interval` apart; rocks left over
+ * rise on a ring `ring` around her. Each strikes the bodies within `size`
+ * of it (its blow, thrown away from it), stuns them `stun` seconds, and
+ * fills `breakFill` of their break bars.
+ */
+export interface RockfallEffect extends EffectBase {
+  readonly kind: "rockfall"
+  readonly radius: number
+  readonly rocks: number
+  readonly warning: number
+  readonly interval: number
+  readonly size: number
+  readonly ring: number
+  readonly stun: number
+  readonly breakFill: number
+}
+
+export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | RockfallEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -205,6 +228,8 @@ export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kin
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
 export const totem = (spec: Omit<TotemEffect, "kind">): TotemEffect => ({ kind: "totem", ...spec })
 export const thunderclap = (spec: Omit<ThunderclapEffect, "kind">): ThunderclapEffect => ({ kind: "thunderclap", ...spec })
+export const guard = (spec: Omit<GuardEffect, "kind">): GuardEffect => ({ kind: "guard", ...spec })
+export const rockfall = (spec: Omit<RockfallEffect, "kind">): RockfallEffect => ({ kind: "rockfall", ...spec })
 const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<Effect> => spec
 
 /** Every skill, by id. */
@@ -328,6 +353,32 @@ export const skills = {
     energy: 100,
     invulnerability: 0.5,
     effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1.5, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
+  }),
+  /**
+   * Bastion's special: she plants her feet while stone gathers around her,
+   * then the team wears stone plates. Each takes a blow whole and shatters
+   * outward, cracking and throwing back what is around and filling the
+   * attacker's break bar: set up in the quiet, it pays off in the fight.
+   */
+  stoneguard: skill({
+    name: "Stoneguard",
+    cooldown: 12,
+    energy: 0,
+    invulnerability: 0,
+    effect: guard({ raise: 0.9, plates: 3, radius: 130, breakFill: 0.25, power: 20, element: "rock", knockback: 800, hitStop: 0.05, heavy: false })
+  }),
+  /**
+   * Bastion's ultimate: three great rocks erupt from the ground around her,
+   * under the toughest enemies near her, each after its crack: they launch
+   * and stun what they catch, crack it, and fill its break bar. Rock's
+   * moment: breaking champions and Brutes.
+   */
+  rockfall: skill({
+    name: "Rockfall",
+    cooldown: 10,
+    energy: 100,
+    invulnerability: 0.5,
+    effect: rockfall({ radius: 340, rocks: 3, warning: 0.35, interval: 0.12, size: 80, ring: 140, stun: 1.6, breakFill: 0.5, power: 70, element: "rock", knockback: 500, hitStop: 0.08, heavy: true })
   })
 }
 

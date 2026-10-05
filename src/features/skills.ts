@@ -87,6 +87,8 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "stoneGuard":
     case "totem":
     case "thunderclap":
+    case "guard":
+    case "rockfall":
       return { kind: "self" }
   }
 }

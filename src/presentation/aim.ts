@@ -154,6 +154,8 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
     }
     case "totem":
     case "thunderclap":
+    case "guard":
+    case "rockfall":
       g.fillCircle(at.x, at.y, effect.radius, view.reticle, 0.08).strokeCircle(at.x, at.y, effect.radius, 2, view.reticle, 0.6)
       return
     case "barrage": {

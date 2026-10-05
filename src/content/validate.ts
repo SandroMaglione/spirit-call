@@ -126,6 +126,17 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       positive(problems, where, { radius: effect.radius, strikes: effect.strikes, heal: effect.heal })
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
       return
+    case "rockfall":
+      positive(problems, where, { radius: effect.radius, rocks: effect.rocks, size: effect.size, ring: effect.ring })
+      if (!Number.isInteger(effect.rocks)) problems.push(`${where}: rocks must be a whole number (is ${effect.rocks})`)
+      if (!(effect.warning >= 0 && effect.interval >= 0 && effect.stun >= 0)) problems.push(`${where}: warning, interval, and stun must not be negative`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
+      return
+    case "guard":
+      positive(problems, where, { raise: effect.raise, plates: effect.plates, radius: effect.radius })
+      if (!Number.isInteger(effect.plates)) problems.push(`${where}: plates must be a whole number (is ${effect.plates})`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
+      return
     case "barrage":
       positive(problems, where, { maxRange: effect.maxRange, shells: effect.shells, radius: effect.radius, flightTime: effect.flightTime })
       if (!Number.isInteger(effect.shells)) problems.push(`${where}: shells must be a whole number (is ${effect.shells})`)

@@ -96,6 +96,16 @@ export const characters = {
     element: "thunder",
     class: "staff",
     skills: { special: "sparkTotem", ultimate: "thunderclap" }
+  }),
+  /** Rock, Disc: the sturdiest and slowest; guards the team with stone plates, and breaks the toughest with a Rockfall. */
+  bastion: character({
+    name: "Bastion",
+    stats: { hp: 84, atk: 100, def: 26, speed: 280 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "rock",
+    class: "disc",
+    skills: { special: "stoneguard", ultimate: "rockfall" }
   })
 }
 
