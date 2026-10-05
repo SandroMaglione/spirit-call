@@ -11,7 +11,6 @@ import type { Vec2 } from "../math/vec.ts"
 import { attackOf } from "../features/build.ts"
 import { Aim, Controls, Enemy, Game, Hurtbox, Player, Position, PrevPosition, RenderClock, RenderHost, Skills, Tuning, BasicAttack } from "../schema.ts"
 import { barrageTargets, lobTarget } from "../features/skills.ts"
-import { stoneRiseTargets } from "../features/rock.ts"
 import { chargeOf, moveArea, moveReach } from "../features/basic-attack.ts"
 import { drawArea } from "./draw.ts"
 import type { Shapes } from "./shapes.ts"
@@ -133,16 +132,6 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
       g.fillCircle(target.x, target.y, effect.radius, view.reticle, 0.08).strokeCircle(target.x, target.y, effect.radius, 2, view.reticle, 0.6)
       return
     }
-    case "stoneGuard":
-      g.strokeCircle(at.x, at.y, 37, 2, view.elements.rock, 0.6)
-      return
-    case "stoneRise": {
-      const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })
-      for (const target of stoneRiseTargets(at, direction, effect.spacing)) {
-        g.fillCircle(target.x, target.y, effect.radius, view.reticle, 0.08).strokeCircle(target.x, target.y, effect.radius, 2, view.reticle, 0.6)
-      }
-      return
-    }
     case "nova":
       g.fillCircle(at.x, at.y, effect.radius, view.reticle, 0.08).strokeCircle(at.x, at.y, effect.radius, 2, view.reticle, 0.6)
       return
@@ -155,7 +144,7 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
     case "totem":
     case "thunderclap":
     case "guard":
-    case "rockfall":
+    case "earthrise":
       g.fillCircle(at.x, at.y, effect.radius, view.reticle, 0.08).strokeCircle(at.x, at.y, effect.radius, 2, view.reticle, 0.6)
       return
     case "barrage": {

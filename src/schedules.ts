@@ -25,11 +25,10 @@ import { UpdateWards } from "./features/wards.ts"
 import { MendInTraining } from "./features/training.ts"
 import { KeepPracticeField } from "./features/practice.ts"
 import { BuildPoise } from "./features/poise.ts"
-import { CastRock, TickStoneGuard } from "./features/rock.ts"
 import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
-import { CastRockfalls, UpdateRocks } from "./features/rockfall.ts"
+import { CastEarthrise, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { ClearRun, DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, ResetRun, TrackRun } from "./features/flow.ts"
@@ -111,7 +110,7 @@ const gameplay = Game.Schedule.when(
   CastTotems,
   CastThunderclaps,
   CastGuards,
-  CastRockfalls,
+  CastEarthrise,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.

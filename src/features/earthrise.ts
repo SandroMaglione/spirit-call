@@ -1,5 +1,5 @@
 /**
- * Rockfalls (see `RockfallEffect`): rocks erupting around the caster, under
+ * Earthrises (see `EarthriseEffect`): rocks erupting around the caster, under
  * the toughest bodies of the other side near her (champions first, then
  * elites, then the most health, then the nearest), the rocks left over on a
  * ring around her. Each rock's crack follows its target for a moment (`Rock`),
@@ -7,7 +7,7 @@
  * other side it catches, thrown away from it, stunned, and its break bar
  * filled (a full one breaks, see `BuildPoise`).
  */
-import type { RockfallEffect } from "../content/skills.ts"
+import type { EarthriseEffect } from "../content/skills.ts"
 import { normalizeOr, rotate, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Cast, Damage, Elite, Enemy, Explosion, Game, Health, Hurtbox, Invulnerable, Poise, Position, Rock, RunScope, Stunned, Time, Tuning } from "../schema.ts"
@@ -32,8 +32,8 @@ export interface RockTarget {
  * to edge), toughest first, then on a ring around her for the ones left over
  * (spread evenly, starting ahead of her).
  */
-export const rockfallTargets = (
-  effect: RockfallEffect,
+export const earthriseTargets = (
+  effect: EarthriseEffect,
   faction: Faction,
   from: Vec2,
   direction: Vec2,
@@ -66,14 +66,14 @@ const Bodies = Game.Query({
   }
 })
 
-/** Rockfalls cast: a rock for each target, its crack following it, one after the other. */
-export const CastRockfalls = Game.System("Shooter/CastRockfalls", {
+/** Earthrises cast: a rock for each target, its crack following it, one after the other. */
+export const CastEarthrise = Game.System("Shooter/CastEarthrise", {
   queries: { bodies: Bodies },
   events: { cast: Game.System.readEvent(Cast) }
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
-    if (effect.kind !== "rockfall") continue
+    if (effect.kind !== "earthrise") continue
     const all = queries.bodies.each()
     const bodies = all.map(({ entity, data }) => ({
       id: entity.id.value,
@@ -85,7 +85,7 @@ export const CastRockfalls = Game.System("Shooter/CastRockfalls", {
       maxHealth: data.health.get().max
     }))
     const blow = castBlow(cast, effect)
-    rockfallTargets(effect, cast.faction, cast.from, cast.direction, bodies).forEach(({ at, target }, index) => {
+    earthriseTargets(effect, cast.faction, cast.from, cast.direction, bodies).forEach(({ at, target }, index) => {
       const body = target === null ? undefined : all.find(({ entity }) => entity.id.value === target)
       commands.spawnIn(RunScope, Game.Command.spawn([Rock, {
         at,

@@ -27,7 +27,7 @@ export const balanceCases = (tuning: Tuning, quests: ReadonlyArray<QuestId>, see
         run: { tuning, challenge: spec.challenge, enemyLevel: spec.enemyLevel, seconds, seed, mortal: true, measurePressure: false, ...patch } })
       for (const character of characters) {
         // The movement planner is approximate; each kit gets its own preferred range.
-        const disc = character === "tidecaller" || character === "bastion"
+        const disc = character === "tidecaller" || character === "stonekeeper"
         const comfort = character === "gunner" ? 250 : disc ? 180 : character === "stormcaller" ? 160 : 95
         const style = { ...fighter, comfort, reach: character === "gunner" ? 420 : disc ? 300 : character === "stormcaller" ? 210 : 125 }
         add(`${character}-basic`, { team: [{ character }], style })

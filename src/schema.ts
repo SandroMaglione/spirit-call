@@ -15,7 +15,7 @@ import type { CharacterId, Stats as CharacterStats } from "./content/characters.
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { GuardEffect, LobEffect, RockfallEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { ClassId } from "./content/classes.ts"
 import type { Vec2 } from "./math/vec.ts"
@@ -160,7 +160,7 @@ export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
 export const Raising = Descriptor.Component<{ readonly remaining: number; readonly effect: GuardEffect; readonly atk: number; readonly charges: boolean }>()("Shooter/Raising")
 
 /**
- * A rock of a Rockfall (see `RockfallEffect`) about to erupt: its crack
+ * A rock of an Earthrise (see `EarthriseEffect`) about to erupt: its crack
  * follows `target` (while it stands) for `remaining` more seconds (below 0:
  * not cracking yet), then the rock erupts where the crack is (`at`), its
  * blow `blow`.
@@ -169,7 +169,7 @@ export const Rock = Descriptor.Component<{
   readonly at: Vec2
   readonly target: Entity.Handle<typeof Root, typeof Position> | null
   readonly remaining: number
-  readonly effect: RockfallEffect
+  readonly effect: EarthriseEffect
   readonly faction: Faction
   readonly blow: Blow
 }>()("Shooter/Rock")

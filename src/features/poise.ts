@@ -29,7 +29,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
         enemy: Game.Query.read(Enemy),
         poise: Game.Query.write(Poise),
         stunned: Game.Query.write(Stunned),
-        state: Game.Query.optional(ElementState)
+        state: Game.Query.read(ElementState)
       }
     })
   },
@@ -41,7 +41,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
   const dt = resources.time.get().dt
   const hits = events.hit.all()
   // Bursts and wall slams the team set off (an enemy's own on the player do not count), on the body they happened to.
-  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && reaction.state !== "cracked" && (reaction.kind === "burst" || reaction.kind === "slam"))
+  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && (reaction.kind === "burst" || reaction.kind === "slam"))
   for (const { entity, data } of queries.enemies.each()) {
     const kind = data.enemy.get().kind
     const bar = poiseOf(tuning, kind, data.health.get().max, data.enemy.get().champion)
@@ -57,8 +57,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
     let gained = 0
     for (const hit of hits) {
       if (hit.entity !== entity.id.value || hit.killed) continue
-      const cracked = data.state.get().current?.id === "cracked" ? tuning.elements.cracked.breakFactor : 1
-      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1) * cracked
+      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1)
     }
     const at = data.position.get()
     const reach = data.hurtbox.get().radius
@@ -66,7 +65,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
       if ((reaction.at.x - at.x) ** 2 + (reaction.at.y - at.y) ** 2 > reach * reach) continue
       gained += bar * (reaction.kind === "slam" ? rules.slam : reaction.state === "cracked" ? tuning.elements.bursts.cracked.break : rules.burst)
     }
-    if (data.state.present && data.state.get().current?.id === "cracked") gained *= 1 + tuning.elements.cracked.breakBonus
+    if (data.state.get().current?.id === "cracked") gained *= 1 + tuning.elements.cracked.breakBonus
     const quiet = gained > 0 ? 0 : poise.quiet + dt
     const drained = quiet > rules.quietSeconds ? bar * rules.drain * dt : 0
     const current = Math.max(0, Math.min(bar, poise.current + gained - drained))

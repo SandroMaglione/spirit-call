@@ -76,8 +76,6 @@ export type Affinities = { readonly [Element in ElementId]?: Affinity }
  * within its `radius` (edge to edge), the struck body first.
  */
 export const elementRules = {
-  /** Cracked enemies build their break bar faster from landed blows. */
-  cracked: { seconds: 4, breakFactor: 1.6 },
   /** Burning: damage over time, a percentage of the ATK of whoever set it, per second; it spreads to bodies in no state it touches. */
   burning: {
     seconds: 3.5,

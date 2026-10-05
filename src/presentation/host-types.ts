@@ -268,7 +268,7 @@ export interface RenderHostValue {
   readonly fx: Fx
   /** Drops shed by moving spirits, in the 3D scene (hidden behind bodies). */
   readonly drops: DropTrail
-  /** Rock's stone (plates, a Rockfall's spikes, chunks), in the 3D scene. */
+  /** Rock's stone (plates, an Earthrise's spikes, chunks), in the 3D scene. */
   readonly stones: Stones
   readonly trails: SlashTrails
   readonly reticle: Shapes

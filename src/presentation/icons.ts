@@ -50,10 +50,6 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   tide: icon(`${drop}<path d="M9 14.5a3 3 0 0 0 3 3"/>`),
   // Spark Totem: a post with a spark over it.
   sparkTotem: icon(`<path d="M8 21h8M10 21V10h4v11M9 10l3-3.5L15 10"/><path d="M12 1.5l-1.5 2.5h3L12 6.5" />`),
-  // Stoneguard: a stone between two plates.
-  stoneguard: icon(`<path d="M12 7l4 2.5v5L12 17l-4-2.5v-5z" fill="currentColor" fill-opacity="0.35"/><path d="M4 6l3-1.5v8L4 14zM20 6l-3-1.5v8l3 1.5z"/><path d="M6 18l4 2.5M18 18l-4 2.5"/>`),
-  // Rockfall: three spikes of stone out of the ground.
-  rockfall: icon(`<path d="M12 3l3 6-1 9h-4l-1-9z" fill="currentColor" fill-opacity="0.35"/><path d="M5 10l2 4v4H3v-4zM19 10l-2 4v4h4v-4z"/><path d="M2 21h20"/>`),
   // Thunderclap: a bolt.
   thunderclap: icon(`<path d="M13.5 2L4.5 13.5h6.5L9.5 22l9.5-12h-6.5z" fill="currentColor" fill-opacity="0.35"/>`)
 }
@@ -66,7 +62,5 @@ export const stateIcons: { readonly [Id in StateId]: string } = {
   // Charged: a small bolt.
   charged: icon(`<path d="M13.5 3L6 13h5l-1.5 8L18 11h-5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Swept: three gusts.
-  swept: icon(`<path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/>`),
-  // Cracked: a stone split by a crack.
-  cracked: icon(`<path d="M7 3h10l4 6-3 11H6L3 9z"/><path d="M12 3l-1.5 5 3 3-2 4 1 5"/>`)
+  swept: icon(`<path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/>`)
 }

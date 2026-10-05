@@ -66,7 +66,7 @@ state alone, and each pair of characters gets bursts on top. For example,
 the Stormcaller charges a spread-out group, and her blows arc between them;
 with the Tidecaller, thunder on soaked enemies splashes the whole group to
 a stop, and leaves it charged. Bastion cracks the toughest enemies (her
-Rockfall, her special, raises stone under the toughest around her,
+Earthrise, her special, raises stone under the toughest around her,
 stunning them a moment), so they break sooner under her own blows, and
 any other element shatters them.
 

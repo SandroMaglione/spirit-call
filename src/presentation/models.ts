@@ -75,11 +75,11 @@ const thunderGlow: GlowSpec = {
   eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffe66d, opacity: 0.5, size: 0.3 }
 }
 
-/** The rock spirit's glow, after its sheet: warm sandstone edges, a low amber halo, and amber eyes glowing out of its dark face. */
+/** Restrained amber light preserves the rock's matte facets and dark recess. */
 const rockGlow: GlowSpec = {
-  rim: { color: 0xf2cf8e, strength: 0.55, power: 2.5 },
-  halo: { color: 0xffb547, opacity: 0.22, size: 1.5 },
-  eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffc44a, opacity: 0.6, size: 0.3 }
+  rim: { color: 0xc8a575, strength: .25, power: 3 },
+  halo: { color: 0xe5ad58, opacity: .16, size: 1.3 },
+  eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffe088, opacity: .28, size: .21 }
 }
 
 /** Every model the game can show. Add new ones here (with their module in `assets/`). */

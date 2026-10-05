@@ -92,10 +92,6 @@ const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire p
 /** A skill effect in a few words. */
 export const describeEffect = (effect: SkillEffect): string => {
   switch (effect.kind) {
-    case "stoneGuard":
-      return `${effect.stones} protective stones for ${effect.seconds}s; each stops one direct enemy hit, but not burns`
-    case "stoneRise":
-      return `three rocks erupt ahead of you (${effect.power}% ATK each), cracking enemies so their break bars fill faster`
     case "cut":
       return `a ${elementWord(effect.element)}wave ahead of you (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
     case "leap":
@@ -114,7 +110,7 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
     case "barrage":
       return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
-    case "rockfall":
+    case "earthrise":
       return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them and filling their break bars`
     case "guard":
       return `a ${elementWord(effect.element)}ring throwing back what is around you (${effect.shove.power}% ATK), then, after standing still ${effect.raise}s, ${effect.plates} plates for the team, each taking a blow whole and shattering around you (${effect.power}% ATK)`

@@ -157,33 +157,18 @@ const thunderSpirit: BodyLook = {
   drops: { rate: 26, colors: [0xffe66d, 0xc9b8ff, 0x7a6bff], size: 1.8, kind: "ember" }
 }
 
-/**
- * Bastion's rock spirit (for now the static model under review, given its
- * clips by art/spirits/rock-interim): it stands firm, its stones floating
- * over it, and waddles as it runs.
- */
-const rockSpirit: BodyLook = {
-  kind: "model",
-  model: "rockSpirit",
-  widthFactor: 1.5,
-  heightFactor: view.bodyHeightFactor,
-  moments: spiritMoments(3, "rockfall", "stoneguard"),
-  eyes: spiritEyes
-}
-
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   stonekeeper: {
     kind: "model", model: "rockSpirit", widthFactor: 1.5,
     heightFactor: view.bodyHeightFactor, grounded: true,
-    moments: { ...spiritMoments(3, "stoneGuard", "stoneRise"), run: { clip: "Run", distance: 115 } },
+    moments: { ...spiritMoments(3, "stoneRise", "stoneGuard"), run: { clip: "Run", distance: 115 } },
     eyes: spiritEyes,
     drops: { rate: 12, colors: [0xbfa181, 0x8e7660, 0xffd17e], size: 1.5, kind: "wisp" }
   },
   swordsman: windSpirit,
   gunner: fireSpirit,
   tidecaller: waterSpirit,
-  stormcaller: thunderSpirit,
-  bastion: rockSpirit
+  stormcaller: thunderSpirit
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({

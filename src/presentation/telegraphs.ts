@@ -229,13 +229,13 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const next = 1 - Math.max(0, totem.nextTick) / effect.tick
     g.strokeArc(at.x, at.y, effect.radius + 6, -Math.PI / 2, -Math.PI / 2 + next * Math.PI * 2, 2, color, 0.7 * fade)
   }
-  // A Rockfall's rocks about to erupt: the floor cracking out from where each will rise, amber light welling up through the cracks.
+  // An Earthrise's rocks about to erupt: the floor cracking out from where each will rise, amber light welling up through the cracks.
   for (const { entity, data } of queries.rocks.each()) {
     const rock = data.rock.get()
     const { effect, at } = rock
     const grown = Math.max(0, Math.min(1, 1 - rock.remaining / effect.warning))
     if (grown <= 0) continue
-    const spec = view.rockfall
+    const spec = view.earthrise
     const glow = 0.5 + 0.5 * Math.sin(now * 30 + entity.id.value)
     g.fillCircle(at.x, at.y, effect.size * grown, view.stone.glow, (0.1 + 0.08 * glow) * grown)
     g.strokeCircle(at.x, at.y, effect.size, 2, view.stone.glow, 0.35 * grown)

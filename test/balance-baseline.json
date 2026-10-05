@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "b58bb3ccf88fd2c2df97eafd2b7f97e66613819955f65903bd7e398a2d1bfb71",
+  "tuningHash": "d2a491caf69fd9ed34fa78c86939f03e3a0902d9211293c32894a119e17e406f",
   "stats": [
     {
       "level": 1,
@@ -232,38 +232,6 @@
       "ultimates": 2
     },
     {
-      "id": "stonekeeper/1/1",
-      "character": "stonekeeper",
-      "level": 1,
-      "targets": 1,
-      "specials": 4,
-      "ultimates": 1
-    },
-    {
-      "id": "stonekeeper/1/6",
-      "character": "stonekeeper",
-      "level": 1,
-      "targets": 6,
-      "specials": 4,
-      "ultimates": 1
-    },
-    {
-      "id": "stonekeeper/40/1",
-      "character": "stonekeeper",
-      "level": 40,
-      "targets": 1,
-      "specials": 4,
-      "ultimates": 1
-    },
-    {
-      "id": "stonekeeper/40/6",
-      "character": "stonekeeper",
-      "level": 40,
-      "targets": 6,
-      "specials": 4,
-      "ultimates": 1
-    },
-    {
       "id": "stormcaller/1/1",
       "character": "stormcaller",
       "level": 1,
@@ -296,32 +264,32 @@
       "ultimates": 2
     },
     {
-      "id": "bastion/1/1",
-      "character": "bastion",
+      "id": "stonekeeper/1/1",
+      "character": "stonekeeper",
       "level": 1,
       "targets": 1,
       "specials": 6,
       "ultimates": 1
     },
     {
-      "id": "bastion/1/6",
-      "character": "bastion",
+      "id": "stonekeeper/1/6",
+      "character": "stonekeeper",
       "level": 1,
       "targets": 6,
       "specials": 6,
       "ultimates": 2
     },
     {
-      "id": "bastion/40/1",
-      "character": "bastion",
+      "id": "stonekeeper/40/1",
+      "character": "stonekeeper",
       "level": 40,
       "targets": 1,
       "specials": 6,
       "ultimates": 1
     },
     {
-      "id": "bastion/40/6",
-      "character": "bastion",
+      "id": "stonekeeper/40/6",
+      "character": "stonekeeper",
       "level": 40,
       "targets": 6,
       "specials": 6,

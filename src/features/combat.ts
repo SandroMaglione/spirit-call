@@ -41,8 +41,6 @@ import {
   Player,
   Paused,
   Poise,
-  StoneGuard,
-  GuardBlocked,
   Position,
   PrevPosition,
   Projectile,
@@ -234,7 +232,6 @@ const Damageable = Game.Query({
   }
 })
 
-const Guarded = Game.Query({ selection: { health: Game.Query.read(Health), guard: Game.Query.write(StoneGuard) } })
 
 /** A team member on the bench: no body, so only a fire she carries off reaches her (see `TickStates`). */
 const Benched = Game.Query({
@@ -269,8 +266,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death),
-    reaction: Game.System.writeEvent(Reaction),
-    guardBlocked: Game.System.writeEvent(GuardBlocked)
+    reaction: Game.System.writeEvent(Reaction)
   },
   resources: {
     tuning: Game.System.readResource(Tuning),
@@ -313,18 +309,6 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
       hitStop = Math.max(hitStop, guard.effect.hitStop)
       commands.spawnIn(RunScope, Game.Command.spawn([PlateShatter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, effect: guard.effect, atk: guard.atk, charges: guard.charges }]))
-      continue
-    }
-
-    // Each stone stops one direct enemy blow, including its element and push.
-    // Ground burns still hurt; protection never replaces dodging indefinitely.
-    const guarded = data.player.present ? lookup.getHandle(damage.target, Guarded) : null
-    const guard = guarded?.ok === true ? guarded.value.data.guard.get() : null
-    if (data.player.present && damage.faction === "enemy" && !blow.periodic && blow.damage > 0 && guard !== null && guard.remaining > 0 && guard.stones > 0) {
-      const stones = guard.stones - 1
-      if (guarded?.ok === true) guarded.value.data.guard.set({ ...guard, stones })
-      data.invulnerable.set({ remaining: .12 })
-      events.guardBlocked.emit({ at: data.position.get(), direction: damage.direction, stones })
       continue
     }
 

@@ -159,15 +159,16 @@ export const quests = {
     after: null,
     rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [aspect("scattergun")] }
   }),
+  /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes, and Bastion. */
   stoneTrial: quest({
-    name: "A Sturdy Friend",
+    name: "Heavy Ground",
     line: "secondary",
     chapter: null,
-    challenge: "brute",
-    enemyLevel: 5,
-    level: 3,
+    challenge: "heavyGround",
+    enemyLevel: 10,
+    level: 4,
     after: "theBrute",
-    rewards: { experience: 100, currencies: { crystals: 60, gold: 1000 }, unlocks: [character("stonekeeper")] }
+    rewards: { experience: 160, currencies: { crystals: 80, gold: 1300 }, unlocks: [character("stonekeeper")] }
   }),
   nightOfPacks: quest({
     name: "Night of Packs",
@@ -198,16 +199,6 @@ export const quests = {
     level: 3,
     after: null,
     rewards: { experience: 120, currencies: { crystals: 60, gold: 1100 }, unlocks: [] }
-  }),
-  heavyGround: quest({
-    name: "Heavy Ground",
-    line: "secondary",
-    chapter: null,
-    challenge: "heavyGround",
-    enemyLevel: 10,
-    level: 4,
-    after: null,
-    rewards: { experience: 160, currencies: { crystals: 80, gold: 1300 }, unlocks: [character("bastion")] }
   }),
   stormFront: quest({
     name: "Storm Front",

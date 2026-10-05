@@ -242,7 +242,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     const at = toScreen(projection, explosion.at)
     // A ring of stone bursting out around her (a guard cast): spikes all around, leaning out, dust, a heavy jolt.
     if (explosion.kind === "upheaval") {
-      services.host.stones.ring(explosion.at, explosion.radius * 0.7, view.rockfall.tall * 0.7)
+      services.host.stones.ring(explosion.at, explosion.radius * 0.7, view.earthrise.tall * 0.7)
       fx.ring(at, explosion.radius * projection.zoom, view.stone.glow, 0.4)
       fx.burst(at, { color: view.stone.light, count: 30, speed: 340, size: 7, life: 0.7, gravity: -120, drag: 3, alpha: 0.55 })
       services.host.feedback.shake = Math.max(services.host.feedback.shake, view.ultimateShake)
@@ -251,7 +251,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     }
     // A rock erupting: stone shooting out of the floor (see `Stones`), a burst of dust and grit, a heavy jolt.
     if (explosion.kind === "eruption") {
-      const spec = view.rockfall
+      const spec = view.earthrise
       services.host.stones.erupt(explosion.at, explosion.radius, spec.tall)
       fx.flash({ x: at.x, y: at.y - 20 * projection.zoom }, spec.flash, view.stone.glow, 0.16)
       fx.ring(at, explosion.radius * 1.3 * projection.zoom, view.stone.glow, 0.35)

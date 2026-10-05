@@ -1,7 +1,7 @@
 /**
  * Rock's stone, in the 3D scene (low-poly, flat-shaded, in the rock
  * spirit's colors): the plates of a guard circling whoever wears them, the
- * spikes of a Rockfall shooting out of the floor and sinking back, and
+ * spikes of an Earthrise shooting out of the floor and sinking back, and
  * chunks thrown when stone breaks. Three instanced meshes, reused; positions
  * in world units (the floor's x, height, the floor's y). No model: the
  * shapes are made here.
@@ -12,7 +12,7 @@ import type { BufferAttribute, BufferGeometry, Object3D } from "three"
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
 
-/** A spike of a Rockfall: where it stands, how tall and wide, its tilt and turn, and its life (rising, standing, sinking). */
+/** A spike of an Earthrise: where it stands, how tall and wide, its tilt and turn, and its life (rising, standing, sinking). */
 interface Spike {
   x: number
   z: number

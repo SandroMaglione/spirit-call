@@ -1,17 +1,17 @@
 /**
- * Bastion's Rockfall (see `RockfallEffect`): rocks erupting under the
+ * Bastion's Earthrise (see `EarthriseEffect`): rocks erupting under the
  * toughest enemies around her, each after its crack, launching, stunning,
  * cracking, and filling break bars; rocks left over rise around her.
  */
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import { rockfallTargets } from "../src/features/rockfall.ts"
-import type { RockTarget } from "../src/features/rockfall.ts"
+import { earthriseTargets } from "../src/features/earthrise.ts"
+import type { RockTarget } from "../src/features/earthrise.ts"
 import { ElementState, Enemy, Game, Health, Poise, Position, Rock, Stunned } from "../src/schema.ts"
 import { center, cursorAt, placeDummies, start, steps } from "./helpers.ts"
 
-const effect = defaultTuning.skills.rockfall.effect
+const effect = defaultTuning.skills.stoneRise.effect
 const from = { x: 0, y: 0 }
 const body = (id: number, at: { x: number; y: number }, extra: Partial<RockTarget> = {}): RockTarget =>
   ({ id, at, radius: 20, faction: "enemy", champion: false, elite: false, maxHealth: 100, ...extra })
@@ -27,13 +27,13 @@ describe("where the rocks rise", () => {
       body(6, { x: 900, y: 0 }, { champion: true }),
       body(7, { x: 10, y: 0 }, { faction: "player", maxHealth: 9999 })
     ]
-    expect(rockfallTargets(effect, "player", from, { x: 1, y: 0 }, bodies).map(({ target }) => target)).toEqual([4, 3, 2])
+    expect(earthriseTargets(effect, "player", from, { x: 1, y: 0 }, bodies).map(({ target }) => target)).toEqual([4, 3, 2])
     // With health tied, the nearest.
-    expect(rockfallTargets({ ...effect, rocks: 2 }, "player", from, { x: 1, y: 0 }, [body(1, { x: 100, y: 0 }), body(5, { x: 60, y: 0 }), body(8, { x: 80, y: 0 })]).map(({ target }) => target)).toEqual([5, 8])
+    expect(earthriseTargets({ ...effect, rocks: 2 }, "player", from, { x: 1, y: 0 }, [body(1, { x: 100, y: 0 }), body(5, { x: 60, y: 0 }), body(8, { x: 80, y: 0 })]).map(({ target }) => target)).toEqual([5, 8])
   })
 
   it("on a ring around her for the rocks left over, the first ahead of her", () => {
-    const rocks = rockfallTargets(effect, "player", from, { x: 0, y: 1 }, [body(1, { x: 100, y: 0 })])
+    const rocks = earthriseTargets(effect, "player", from, { x: 0, y: 1 }, [body(1, { x: 100, y: 0 })])
     expect(rocks).toHaveLength(effect.rocks)
     expect(rocks[0]!.target).toBe(1)
     const ring = rocks.slice(1)
@@ -45,7 +45,7 @@ describe("where the rocks rise", () => {
   })
 })
 
-const World = Game.Inspector("Test/Rockfall", {
+const World = Game.Inspector("Test/Earthrise", {
   queries: {
     enemies: Game.Query({
       selection: { position: Game.Query.read(Position), health: Game.Query.read(Health), state: Game.Query.read(ElementState), stunned: Game.Query.read(Stunned), poise: Game.Query.read(Poise) },
@@ -65,12 +65,12 @@ const World = Game.Inspector("Test/Rockfall", {
 }))
 
 
-describe("Bastion's Rockfall", () => {
+describe("Bastion's Earthrise", () => {
   it("cracks the ground under the enemies around her, then erupts: struck, stunned, cracked, their break bars filled", () => {
     const tuning = tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } } })
     const offsets = [{ x: 150, y: 0 }, { x: -120, y: 90 }, { x: 900, y: 0 }]
-    expect(defaultTuning.characters.bastion.skills.special).toBe("rockfall")
-    const run = start({ tuning, build: { character: "bastion" }, kits: "shipped", pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
+    expect(defaultTuning.characters.stonekeeper.skills.special).toBe("stoneRise")
+    const run = start({ tuning, build: { character: "stonekeeper" }, kits: "shipped", pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
     run.runtime.tick(placeDummies(offsets, tuning))
     run.step(4)
     // The cracks are out; nothing has erupted yet.
