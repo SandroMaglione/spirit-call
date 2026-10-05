@@ -148,8 +148,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         </div>
       </div>
     </div>
-    <div class="quests__enemies">
-      <Label>Enemies · weak to</Label>
+    <div class="quests__enemies" aria-label="Enemies, over what they are weak to">
       <EnemyFaces store={store} kinds={challengeEnemies(challenge)} inspected={inspected.value} inspect={(kind) => (inspected.value = kind)} />
     </div>
     {inspected.value !== null && <EnemyFacts store={store} kind={inspected.value} />}

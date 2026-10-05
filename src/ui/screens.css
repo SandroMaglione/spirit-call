@@ -136,17 +136,23 @@
 .steps .label { margin-right: 4px; }
 .step { height: 28px; padding: 0 10px; border-radius: 15px; display: flex; align-items: center; gap: 6px; background: var(--band); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; color: var(--dim); position: relative; }
 .step::after { content: ""; position: absolute; inset: -7px -2px; }
-.step b { font-size: 14px; color: var(--text); }
-.step span { display: flex; align-items: center; gap: 3px; }
+.step b { width: 22px; height: 18px; margin-left: -4px; border-radius: 9px; display: grid; place-items: center; font-size: 11px; font-weight: 800; line-height: 1; letter-spacing: .5px; background: rgba(255, 255, 255, .1); color: var(--text); }
+.step span { display: flex; align-items: center; gap: 3px; line-height: 1; }
 .step .menu-icon { font-size: 12px; }
 .step.is-locked { opacity: .55; }
 .step[aria-checked="true"] { background: var(--cream); color: #6a7184; box-shadow: none; opacity: 1; }
-.step[aria-checked="true"] b { color: var(--ink); }
+.step[aria-checked="true"] b { color: var(--cream); background: var(--ink); }
 .step.is-only::after { display: none; }
 .enemies__face { display: grid; justify-items: center; gap: 2px; flex: none; }
 .enemies__face .affinities { font-size: 11px; }
 .quests__brief .panel__body { gap: 7px; }
 .quests__brief .goal { min-height: 19px; }
+/* Small headings in the brief, with the room they save given to what is under them. */
+.quests__brief .label { font-size: 9.5px; letter-spacing: .1em; }
+.quests__goals .label { margin-bottom: 3px; }
+.quests__side-by-side .label:not(:first-child) { margin-top: 6px; }
+/* The enemies close the brief, under a rule across it. */
+.quests__enemies { margin: 2px -14px 0; padding: 8px 14px 0; border-top: 1px solid var(--line); }
 .goal { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
 .goal .menu-icon { font-size: 15px; color: rgba(255, 255, 255, .3); }
 .goal.is-earned { color: var(--text); }
@@ -176,16 +182,16 @@
 .results__content { width: min(540px, 92%); display: grid; justify-items: center; gap: 8px; text-align: center; text-shadow: 0 1px 3px #0008; }
 .results__content h1 { font-size: 46px; font-weight: 800; letter-spacing: .06em; line-height: 1; text-transform: uppercase; color: var(--cream); }
 .results.is-cleared .results__content h1 { color: var(--gold-hi); text-shadow: 0 0 24px rgba(255, 231, 173, .5); }
-.results__name { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-.results__name .stars { font-size: 22px; }
+.results__name { color: var(--text); font-weight: 700; }
+/* What a chest gave: its card carries the chest in a gold badge. */
+.results__loot .card.is-new .card__corner { left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: var(--gold-hi); color: var(--ink); filter: none; box-shadow: 0 1px 3px #0008; }
+.results__stars { font-size: 26px; margin: -2px 0; }
 .results__rule { width: min(420px, 100%); height: 1px; margin: 3px 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
 .results__loot { display: flex; justify-content: center; gap: 10px; }
 .results__loot .card { animation: from-below .45s ease-out backwards; }
 .results__loot .card:nth-child(2) { animation-delay: .1s; } .results__loot .card:nth-child(3) { animation-delay: .2s; } .results__loot .card:nth-child(4) { animation-delay: .3s; } .results__loot .card:nth-child(5) { animation-delay: .4s; }
-.results__chest { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; color: var(--gold-hi); }
-.results__chest .menu-icon { font-size: 18px; }
 .results__next { max-width: min(460px, 100%); font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.results__next b { color: var(--gold-hi); }
+.results__next b { color: var(--gold-hi); margin-right: 8px; }
 .results__new { font-size: 13px; font-weight: 700; color: var(--gold-hi); }
 .results__error { color: #ffc9b8; font-weight: 700; }
 .results__account { width: 300px; display: grid; gap: 4px; font-size: 13px; font-weight: 700; }

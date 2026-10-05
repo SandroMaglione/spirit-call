@@ -1,7 +1,8 @@
 /**
  * How a run ended, over the arena: a quest's stars (the ones earned now pop
  * in), what it earned as cards (a new character glows, and stands beside
- * them; materials and what chests gave too), the account's progress, and
+ * them; materials too, and what chests gave as their own cards, a chest in
+ * the corner), the account's progress, and
  * the next thing to do as the main button, with home, party, and retry
  * beside it.
  */
@@ -10,7 +11,8 @@ import { useEffect } from "preact/hooks"
 import { accountLevel, playLock, rankOf } from "../account/account.ts"
 import type { Amounts, CurrencyId, ResourceId } from "../content/currencies.ts"
 import { AbilityIcon } from "./AbilityIcon.tsx"
-import { describePlay, describeUnlock } from "./describe.ts"
+import { describeAmounts, describePlay, describeUnlock } from "./describe.ts"
+import type { MaterialId } from "../content/materials.ts"
 import { elementOf } from "./draft.ts"
 import { Icon } from "./Icon.tsx"
 import { Model } from "./kit/art.tsx"
@@ -42,17 +44,15 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   // What the chests these stars opened gave, beside what the run gave.
   const chestRewards = (earned?.chests ?? []).map((chest) => tuning.chests[chest.group][chest.index]!.rewards)
   const fromChests = (id: ResourceId) => chestRewards.reduce((sum, rewards) => sum + (rewards[id] ?? 0), 0)
-  const materials: Amounts = Object.fromEntries(ids(tuning.materials).map((id) => [id, (earned?.materials[id] ?? 0) + fromChests(id)]))
+  const materials: Amounts = earned?.materials ?? {}
+  const chestGave = ([...ids(tuning.currencies), ...ids(tuning.materials)] as Array<ResourceId>).filter((id) => fromChests(id) > 0)
   const starred = play?.kind === "quest" && rankOf(play) === 1 && extra === null ? play : null
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}`} onClick={() => (revealed.value = true)}>
     {newcomer?.kind === "character" && <div class="results__newcomer" data-element={elementOf(tuning, newcomer.id)}><Model character={newcomer.id} reveal={!revealed.value} /></div>}
     <section class="results__content">
       <h1>{title}</h1>
-      <p class="results__name">{name}{starred !== null && earned !== null && <>
-        <Stars earned={account.quests[starred.quest]?.stars ?? []} fresh={earned.stars} />
-        {earned.chests.length > 0 && <span class="results__chest"><Icon name="chest" />{earned.chests.length === 1 ? "Chest opened" : `${earned.chests.length} chests opened`}</span>}
-      </>}</p>
-      <p class="dim">Wave {result.wave} · {result.kills} defeated · {time}</p>
+      {starred !== null && earned !== null && <div class="results__stars"><Stars earned={account.quests[starred.quest]?.stars ?? []} fresh={earned.stars} /></div>}
+      <p class="dim"><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
       <div class="results__rule" />
       {extra !== null ? <p class="dim">Practice records nothing.</p> : <>
         {store.recording.value === "saving" && <p role="status" class="dim">Saving…</p>}
@@ -61,10 +61,13 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           <div class="results__loot">
             {earned.experience > 0 && <Card tint="thunder" art={<Icon name="xp" />} foot={`+${earned.experience}`} label={`${earned.experience} account XP`} />}
             {(Object.keys(tuning.currencies) as Array<CurrencyId>).map((id) => {
-              const total = (earned.pay[id] ?? 0) + (earned.levelRewards[id] ?? 0) + (earned.rewards?.currencies[id] ?? 0) + earned.discoveries.reduce((sum, discovery) => sum + (tuning.discoveries[discovery].rewards[id] ?? 0), 0) + fromChests(id)
+              const total = (earned.pay[id] ?? 0) + (earned.levelRewards[id] ?? 0) + (earned.rewards?.currencies[id] ?? 0) + earned.discoveries.reduce((sum, discovery) => sum + (tuning.discoveries[discovery].rewards[id] ?? 0), 0)
               return total <= 0 ? null : <Card key={id} tint={id === "crystals" ? "water" : undefined} art={<Icon name={id} />} foot={`+${total.toLocaleString("en-US")}`} label={`${total} ${tuning.currencies[id].name}`} />
             })}
             {materialsIn(store, materials).map((id) => <Card key={id} tint={tuning.materials[id].element} art={<MaterialIcon store={store} material={id} />} foot={`+${materials[id]}`} label={`${materials[id]} ${tuning.materials[id].name}`} />)}
+            {chestGave.map((id) => <Card key={`chest-${id}`} fresh corner="chest" tint={id === "crystals" ? "water" : id === "gold" ? undefined : tuning.materials[id as MaterialId].element}
+              art={id === "crystals" || id === "gold" ? <Icon name={id} /> : <MaterialIcon store={store} material={id as MaterialId} />}
+              foot={`+${fromChests(id).toLocaleString("en-US")}`} label={`${fromChests(id)} ${describeAmounts(tuning, { [id]: 1 }).replace(/^1 /, "")} from a chest`} />)}
             {earned.rewards?.unlocks.map((unlock) => unlock.kind === "character"
               ? <CharacterCard key={unlock.id} store={store} character={unlock.id} foot="NEW" fresh onClick={enabled ? () => open({ kind: "character", character: unlock.id, tab: "kit" }) : undefined} />
               : <Card key={unlock.id} fresh tint={tuning.characters[store.team.value[0]?.character ?? "swordsman"].element} art={<AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} />} foot="NEW" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />)}
