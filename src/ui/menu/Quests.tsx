@@ -140,7 +140,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
       <div class={`quests__rewards${quest === null && challenge.objective.kind !== "endure" ? " quests__side-by-side" : ""}`}>
         <div>
           <Label>{selected.kind === "quest" ? "First clear" : "Once per period"}</Label>
-          {once === null ? <span class="dim">Only at rank I</span> : once === "claimed" ? <span class="dim claimed"><Icon name="check" />Claimed</span> : once === "restocking" ? <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span> : <Amounts store={store} rewards={once} preview={preview} />}
+          {once === null ? <span class="dim">Only at rank I</span> : once === "claimed" ? <span class="dim claimed"><Icon name="check" />Claimed</span> : once === "restocking" ? <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span> : <Amounts store={store} rewards={once} preview={preview} compact />}
         </div>
         <div>
           <Label>Every clear</Label>

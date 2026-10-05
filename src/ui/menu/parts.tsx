@@ -63,9 +63,9 @@ export const Enemies = ({ store, kinds, inspected, inspect }: { readonly store: 
   </div>)}</div>
 )
 
-/** A fight's enemies as faces over what they are weak to, where room is short (a brief): tap one to read about it, again to put it back. */
+/** A fight's enemies as faces over what they are weak to, where room is short (a brief), wrapping onto as many lines as they need: tap one to read about it, again to put it back. */
 export const EnemyFaces = ({ store, kinds, inspected, inspect }: { readonly store: UiStore; readonly kinds: ReadonlyArray<EnemyKind>; readonly inspected: EnemyKind | null; readonly inspect: (kind: EnemyKind | null) => void }) => (
-  <div class="enemies scroll-x">{kinds.map((kind) => <button type="button" key={kind} class="enemies__face face-button" aria-label={store.tuning.value.enemies[kind].name} aria-pressed={kind === inspected} onClick={() => inspect(kind === inspected ? null : kind)}>
+  <div class="enemies enemies--wrap">{kinds.map((kind) => <button type="button" key={kind} class="enemies__face face-button" aria-label={store.tuning.value.enemies[kind].name} aria-pressed={kind === inspected} onClick={() => inspect(kind === inspected ? null : kind)}>
     <Face of={{ enemy: kind }} selected={kind === inspected} size={32} />
     <Affinities traits={store.tuning.value.enemies[kind].elements} />
   </button>)}</div>

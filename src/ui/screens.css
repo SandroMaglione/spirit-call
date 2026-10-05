@@ -9,7 +9,7 @@
 .party-strip { display: flex; align-items: center; gap: 8px; }
 .enemies { display: flex; gap: 8px; padding: 3px; margin: -3px; }
 .enemies__one { display: grid; gap: 2px; justify-items: center; flex: none; }
-.amounts__unlocks { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 4px; }
+.amounts__unlocks { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; }
 .amounts__unlock { display: flex; align-items: center; gap: 8px; font-weight: 800; min-height: 28px; color: var(--gold-hi); }
 /* A reward that makes something yours (a character, an aspect): a prize, in a turning gold ring that pulses, with a passing glint. */
 .unlock-badge { position: relative; width: 34px; height: 34px; display: grid; place-items: center; flex: none; border-radius: 50%; animation: unlock-pulse 2.4s ease-in-out infinite; }
@@ -139,7 +139,7 @@
 .quests__goals { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 16px; }
 .quests__goals > div { display: grid; gap: 4px; align-content: start; }
 .quests__goals > div { gap: 2px; }
-.quests__brief .panel__body { padding-top: 8px; padding-bottom: 8px; }
+.quests__brief .panel__body { padding-top: 14px; padding-bottom: 10px; }
 .quests__goals > .quests__side-by-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
 .claimed { display: flex; align-items: center; gap: 5px; min-height: 26px; }
 .claimed .menu-icon { color: var(--up); }
@@ -164,9 +164,11 @@
 .quests__goals .label { margin-bottom: 3px; }
 /* First clear over every clear, well apart (side by side for a hardcore tier). */
 .quests__goals > .quests__rewards { gap: 18px; }
-.quests__rewards > div { display: grid; gap: 3px; align-content: start; }
+.quests__rewards > div { display: grid; gap: 0; align-content: start; }
+.quests__rewards .label { margin-bottom: 0; }
 /* The enemies close the brief, under a rule across it. */
-.quests__enemies { margin: 8px -14px 0; padding: 14px 14px 0; border-top: 1px solid var(--line); }
+.quests__enemies { margin: 14px -14px 0; padding: 18px 14px 4px; border-top: 1px solid var(--line); }
+.enemies--wrap { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 10px 6px; }
 .goal { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
 .goal .menu-icon { font-size: 15px; color: rgba(255, 255, 255, .3); }
 .goal.is-earned { color: var(--text); }
