@@ -14,7 +14,7 @@ known set of enemies: part of the challenge is preparing the right strategy
 (which characters, which effects, against which enemies), and part is
 executing it well (dodging out of a bad spot and striking back with a chain of
 moves). You collect characters with the excitement of a gacha game, but skill
-is always enough: nothing requires the newest character or the best weapon.
+is always enough: nothing requires the newest character or the best aspect.
 It is a personal project, not a commercial one.
 
 ## Pillars
@@ -48,7 +48,7 @@ It is a personal project, not a commercial one.
 ## Non-goals
 
 - **No power creep.** A skilled player can clear everything, including the
-  hardest content, with early characters and basic weapons, even at a low
+  hardest content, with early characters and plain aspects, even at a low
   level (in the extreme, by avoiding every attack for a long time). Newer or
   rarer things bring new options and playstyles, not a requirement to keep
   up.
@@ -84,29 +84,39 @@ It is a personal project, not a commercial one.
 
 ## Characters
 
-- **Each character owns her kit**: her moveset, special, ultimate, and her own
-  mechanics. Kits are designed as a whole; they are not assembled from a
-  shared pool of skills.
+- **Each character owns her kit**: her element, her class, her special and
+  her ultimate, and her own mechanics. Kits are designed as a whole; they
+  are not assembled from a shared pool of skills.
 - **Discovery is the fun**, for players and for development alike: what is
   she strong at, what are her mechanics, which teams and matchups suit her.
 - **Effects define strategy.** A character applies something (an element, a
   status) to enemies, or something to the team (healing, buffs), and that is
   what a strategy is built from.
-- Weapons belong to a character's type and change how she plays (their
-  special effects), not just her numbers.
+- **Her basic attack is her class's, shaped by an aspect** (the rules are in
+  `docs/aspects.md`). A class (Blade, Gun, Disc, Staff) is a way of fighting
+  with its own range and rhythm, shared by every character of it. An aspect
+  is one way of using that class (its combo, charged attack, dash strike,
+  and one passive), owned by the account and equipped on one character of
+  its class per team: it changes how she plays, never how strong she is.
+  Characters appear as spirits that hold nothing, so an aspect is how she
+  fights, not an item in her hands.
 
 ## Elements
 
 The rules are in `docs/elements.md`; in short:
 
+- **Works alone, better together.** Every element does its whole job on its
+  own; two together do more, in any pair, and none ever needs another.
+- **One rule, not a table**, so the elements can grow to many: every element
+  leaves its **state** on what it hits (one state per body), and a
+  different element **bursts** that state, paying it out at once, then
+  leaves its own. Each element defines only its state and its burst.
 - **Designed around enemies.** Each element does a job against a kind of
   enemy situation (fire for packs, water for fast enemies, thunder for
-  spread-out groups, wind to scatter or group, rock for tanky enemies).
-- **An element belongs to a character**, applied through her skills.
-- **Interactions follow intuition** (water conducts thunder and puts out
-  fire), change what happens before they change numbers, and add only a
-  modest damage bonus or penalty. Some teams are weaker together: that is
-  strategy.
+  spread-out groups, wind to scatter or group, rock for tanky enemies), and
+  each state changes something different about a fight.
+- **An element belongs to a character**, applied through her skills and one
+  moment of her aspect.
 - **Ground effects** (fire pools, puddles) affect everyone standing in them,
   the player included.
 - **Enemies are weak to, resist, or are immune to elements.** Immunity
@@ -135,7 +145,7 @@ The rules are in `docs/elements.md`; in short:
 - **Each character keeps her own** health, skill cooldowns, ultimate
   energy, and state (see `docs/elements.md`). Cooldowns run on the bench;
   benched characters gain a share of the energy the one on the field earns.
-  A weapon's effects work only while its character is on the field.
+  An aspect's passive works only while its character is on the field.
 - **Falling.** When the character on the field falls, the next one in order
   comes in, with a moment of protection (she did not choose the moment). The
   fall is seen (she goes down before the next one appears), but the switch
@@ -202,10 +212,11 @@ Decided so far (the rest is in the open questions):
   account experience.
 - **The stat band is to be set later**: roughly 4x between level 1 and the
   maximum sounds right, to confirm once there is content to measure it on.
-- **Growth stays simple:** character levels and **weapon levels**. A closed
-  set of accessories may come later, only if the collecting side gets dull.
+- **Growth stays simple:** character levels, and nothing else gives stats.
+  Aspects change how she plays and have no levels. A closed set of
+  accessories may come later, only if the collecting side gets dull.
 - **Two currencies:** one for pulls (crystals), one for upgrades (gold,
-  for leveling characters and weapons), so it is always clear where each
+  for leveling characters), so it is always clear where each
   comes from.
 - **Gold comes from every run.** A clear pays by its enemies' level, so
   the best place to earn is at the edge of what you can beat: rising
@@ -217,13 +228,13 @@ Decided so far (the rest is in the open questions):
 - **Crystals come from milestones only**, never from repeating content: a
   quest's first clear, a hardcore tier once per period, account levels, a
   short list of **discoveries** (the first clear with each character, with
-  a full team, the first time of each element reaction), and later
+  a full team, the first burst of each element's state), and later
   duplicates. New characters come at the pace of progress, not of grinding.
   Discoveries stay few, and each one points at something worth trying.
 - First clears and hardcore tiers also give gold worth several runs: goals
   on top of the steady income.
 - **Pacing is slow, as in Genshin, but every step shows.** Maxing one
-  character and her weapon takes on the order of 200 runs (about 15 hours)
+  character takes on the order of 200 runs (about 15 hours)
   at content of her level, and a whole team several times that. The first
   levels take a run or less each, the last ones several runs; every level
   adds stats, so each run moves something forward.
@@ -235,16 +246,16 @@ Decided so far (the rest is in the open questions):
   worth having. The pool holds only things that matter, and a result you
   already own still turns into progress (see duplicates).
 - **What it can give:** characters (the main excitement: a new way to play),
-  weapons, resources, and cosmetics.
+  aspects, resources, and cosmetics.
 - **Duplicates never add raw power.** Direction (details to settle): a
-  duplicate character unlocks a skin, then a signature weapon (an add-on,
-  not much stronger), and further ones convert into currency.
+  duplicate character unlocks a skin, a duplicate aspect a variant of its
+  look, and further ones convert into currency.
 - It sits inside the stat band like everything else: pulls help reach the
   cap sooner and bring new playstyles, never a higher ceiling.
 
 ## Rules of thumb for design and implementation
 
-- A new character, weapon, or effect must be beatable content's peer, never
+- A new character, aspect, or effect must be beatable content's peer, never
   its requirement: check the hardest content stays clearable without it.
 - Prefer new options over bigger numbers (horizontal over vertical).
 - Prefer mechanics that create combinations with others (knockback into a

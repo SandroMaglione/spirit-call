@@ -26,7 +26,7 @@ descriptions appear only when requested.
   Profile opens a compact menu drawer. Floating icons open Characters, Party,
   and Challenges; the selected challenge and Start sit at the lower right.
 - Character inspection keeps the model central. Portraits and icon tabs select
-  characters, attributes, weapons, and abilities. Stats, passives, and skill
+  characters, attributes, aspects, and abilities. Stats, passives, and skill
   descriptions open on tap. Upgrades show their cost and commit explicitly.
   Locked previews link to actual shipped unlock quests.
 - Party members stand openly on the stage. Tapping a slot summons a translucent
@@ -40,14 +40,14 @@ descriptions appear only when requested.
 - Results show reward symbols, account progress, and unlocked items over the
   arena. A newly earned character takes the large stage, turns into the light,
   and receives a brief ring reveal. Tapping skips the reveal. Unlocks open the
-  character's abilities or matching weapon screen. Run details contain the
+  character's abilities or matching aspect screen. Run details contain the
   discovery breakdown and partial-reward rule. No extra rewards are invented.
 - Pause opens a small drawer over the visible arena. Resume stays visible;
   Restart and Leave require a separate confirmation. Sound controls open on
   request. Escape cancels a confirmation before resuming.
 - Controls have fixed SVG boxes, centered icon-label groups, touch targets of
   at least 44 CSS pixels, press feedback, and synthesized menu sounds. Portrait
-  galleries, weapon choices, party members, and rewards avoid enclosing cards.
+  galleries, aspect choices, party members, and rewards avoid enclosing cards.
   Reduced motion suppresses UI effects and the model reveal. The phone rotate
   guard applies to menus as well as combat; there is no separate portrait UI.
 - Successful saves give a brief glow and sound without a toast. Failures open

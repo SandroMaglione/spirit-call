@@ -133,11 +133,12 @@ tougher, immune to its element, and every blow it deals carries that
 element. Its element shows as a ring under its feet and a glow on its body.
 
 - **Fire** leaves fire on the ground behind it as it moves: it burns its own
-  side too, and a wind whirl takes it in.
-- **Water** leaves puddles: they slow and soak (the player as much as the
-  enemies standing in them), and carry thunder.
+  side too.
+- **Water** leaves puddles: they slow and soak the player as much as the
+  enemies standing in them.
 - **Thunder** discharges around itself now and then, a ring telegraphed
-  where it stood: the soaked are shocked.
+  where it stood: it charges what it strikes, and bursts the state a body
+  already holds.
 
 Elites make the elements part of the fight on the enemies' side, ready to be
 turned against them. Endless waves make elites of a growing share of their
@@ -152,8 +153,7 @@ crate: they block like pillars, and stand flush against a wall or leave
 room to pass), and hazards. Hazards are permanent pools laid
 into the floor's tiles, level with it, that affect everyone, enemies
 included: **fire trenches** burn (water puts one out for a while, then it
-burns again), and **basins** of water soak and carry thunder. Both feed a
-wind whirl. An arena's look comes from an environment kit, by the same id
+burns again), and **basins** of water soak. An arena's look comes from an environment kit, by the same id
 (`presentation/looks.ts`); hazards are drawn flat, in few tones, like the
 rest of the game.
 
@@ -161,7 +161,7 @@ rest of the game.
 hazards as around walls, slide along the edge of any pool they would take
 harm from instead of stepping in (fire anywhere, the player's included),
 and walk straight out of one they were pushed into. Only force puts them
-there: a wind whirl's pull, a push. An enemy immune to an element ignores
+there: a whirl's pull, a push. An enemy immune to an element ignores
 its pools.
 
 Pools are few and small (at most two in an arena, of at most four tiles),
@@ -180,8 +180,8 @@ above 0, a share of its health; Swarmers and training dummies never do)
 has a bar under its health:
 
 - Blows fill it by the damage they deal, heavy ones (finishers, charged
-  attacks) more, burns a little; a reaction on it (a body catching fire, a
-  shock, a wall slam above all) fills a share of it at once.
+  attacks) more, burns a little; a burst on it (see `docs/elements.md`) or
+  a wall slam fills a share of it at once.
 - It **drains** once the enemy has taken nothing for a moment, so chipping
   at it from afar never breaks it.
 - Full, the enemy **breaks**: its attack is cut off, it is stunned for a
@@ -209,7 +209,7 @@ Enemies read the player (`Tuning.reading`), so a fight has a give and take:
   then take their turn at once, a touch faster, and their attacks come
   round sooner; their telegraphs never get shorter. Enemies keeping their
   distance keep their rhythm.
-- **She is a threat** to a melee enemy her ready weapon is aimed at, within
+- **She is a threat** to a melee enemy her ready attack is aimed at, within
   her reach: it keeps just out of that reach, circling, until it runs out
   of patience and commits anyway. Enemies behind her do not hesitate.
 

@@ -4,8 +4,9 @@ A top-down action game for the phone (and the browser), built on the
 `@typeonce/bevy-ts` ECS. **Read `docs/vision.md` first**: it is the game's
 design direction (pillars, non-goals, open questions). Design decisions are
 checked against it; open questions are asked, not guessed. Detailed rules
-for one area live next to it (`docs/elements.md`: elements, states, ground
-effects, enemy traits; `docs/enemies.md`: enemy movesets, behaviors,
+for one area live next to it (`docs/elements.md`: elements, states, bursts,
+ground effects, enemy traits; `docs/aspects.md`: classes, aspects, and how
+they are owned and equipped; `docs/enemies.md`: enemy movesets, behaviors,
 fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 `docs/spirits.md`: characters' spirits, from a character sheet to the game).
 
@@ -29,20 +30,20 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
-  `?character=`, `?weapon=`, `?challenge=` for a quick start, and `?arena=` to
+  `?character=`, `?aspect=`, `?challenge=` for a quick start, and `?arena=` to
   fight every challenge in one arena); backquote (or the key left of 1 or of Z)
   opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all").
 
 ## How the code is organized
 
-- `src/content/`: the game's content as data (characters, weapons and their
-  passives, attacks, skills, enemies, challenges, quests, hardcore tracks,
+- `src/content/`: the game's content as data (characters, classes, aspects
+  and their passives, skills, enemies, challenges, quests, hardcore tracks,
   discoveries, currencies, progression numbers, the starter set). Adding
   content is mostly adding entries; new kinds (a new effect, condition, or
   objective) extend the vocabulary in one place.
 - The arena is a black box to everything around it: it is entered with a
-  team (one to three builds: character and weapon at their levels; each
-  character brings her own kit), a challenge, and an enemy level, and
+  team (one to three builds: a character at her level and the aspect
+  equipped on her; each character brings her own kit), a challenge, and an enemy level, and
   reports a `RunResult`. Quests, hardcore tiers, levels,
   currencies, and rewards live in the account and the shell, never in the
   simulation.
