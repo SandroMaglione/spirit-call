@@ -7,7 +7,7 @@ import { Dialog } from "./Dialog.tsx"
 import { Icon } from "./Icon.tsx"
 import { describeAmounts, describePlay, describeUnlock } from "./describe.ts"
 import { elementOf } from "./draft.ts"
-import { Cta, Model, Portrait } from "./menu/parts.tsx"
+import { Cta, Model, Portrait, Wallet } from "./menu/parts.tsx"
 import type { Screen } from "./menu/parts.tsx"
 import { nextMainQuest } from "./navigation.ts"
 import type { UiActions, UiStore } from "./store.ts"
@@ -28,6 +28,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const canContinue = extra === null && result.cleared && next !== null && playLock(tuning, account, next) === null
   const title = extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}${revealed.value ? " is-revealed" : ""}`} data-element={companion === undefined ? undefined : elementOf(tuning, companion) ?? undefined}>
+    <header class="shell-header"><Wallet store={store} /></header>
     <button type="button" class="icon-button results__info" aria-label="Run details" onClick={() => (details.value = true)}><Icon name="info" /></button>
     {companion !== undefined && <div class="results__companion"><div class="stage-orbit" /><Model character={companion} reveal={newcomer !== undefined && !revealed.value} class="results__model" /></div>}
     <section class="results__content">
@@ -39,13 +40,13 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           {store.recording.value === "failed" && <p role="alert" class="results__saved-error">Rewards could not be saved.</p>}
           {earned !== null && <>
             <div class="results__rewards">
-              {earned.experience > 0 && <div class="reward" aria-label={`${earned.experience} account XP`}><Icon name="character" /><b>+{earned.experience}<small>XP</small></b></div>}
+              {earned.experience > 0 && <div class="reward" aria-label={`${earned.experience} account XP`}><Icon name="account" /><b>+{earned.experience}<small>Account XP</small></b></div>}
               {(Object.keys(tuning.currencies) as Array<CurrencyId>).map((id) => {
                 const total = (earned.pay[id] ?? 0) + (earned.levelRewards[id] ?? 0) + (earned.rewards?.currencies[id] ?? 0) + earned.discoveries.reduce((sum, discovery) => sum + (tuning.discoveries[discovery].rewards[id] ?? 0), 0)
                 return total <= 0 ? null : <div key={id} class={`reward reward--${id}`} aria-label={`${total} ${tuning.currencies[id].name}`}><Icon name={id} /><b>+{total.toLocaleString("en-US")}</b></div>
               })}
             </div>
-            <div class="results__xp"><div><span>{earned.level.after > earned.level.before ? `Lv ${earned.level.before} → ${earned.level.after}` : `Lv ${level.level}`}</span><span>{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed} XP`}</span></div><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
+            <div class="results__xp"><div><span>{earned.level.after > earned.level.before ? `Account Lv ${earned.level.before} → ${earned.level.after}` : `Account Lv ${level.level}`}</span><span>{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed} XP`}</span></div><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
             {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <section class="results__unlocks">{earned.rewards.unlocks.map((unlock) => <button key={`${unlock.kind}-${unlock.id}`} type="button" class="unlock-card" disabled={!enabled} onClick={() => {
               if (unlock.kind === "character") open({ kind: "character", character: unlock.id, tab: "kit" })
               else {
@@ -61,7 +62,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
         <button type="button" class="icon-button" aria-label={extra?.kind === "practice" ? "Change enemies" : "Adjust party"} disabled={!enabled} onClick={() => open(extra?.kind === "practice" ? { kind: "extra", mode: "practice" } : { kind: "team" })}><Icon name={extra?.kind === "practice" ? "practice" : "team"} /></button>
         {canContinue && <button type="button" class="icon-button" aria-label="Retry" disabled={!enabled} onClick={actions.retry}><Icon name="retry" /></button>}
         <Cta disabled={!enabled} onClick={() => {
-          if (canContinue && next !== null) { store.menuPlay.value = next; store.menuBriefing.value = true; open({ kind: "quests", tab: "main" }) }
+          if (canContinue && next !== null) { store.menuPlay.value = next; open({ kind: "quests", tab: "main" }) }
           else actions.retry()
         }}>{canContinue ? "Continue" : extra !== null ? "Again" : "Retry"}</Cta>
       </footer>

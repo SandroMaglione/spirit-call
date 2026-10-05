@@ -1,13 +1,12 @@
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, encounterOf, owns, playLock, teamProblems } from "../../account/account.ts"
+import { characterLevel, owns, playLock, teamProblems } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import type { AspectId } from "../../content/aspects.ts"
 import { teamSize } from "../../content/characters.ts"
 import type { CharacterId } from "../../content/characters.ts"
-import { challengeEnemies, describePlay } from "../describe.ts"
-import { answers, aspectsFor, elementOf, equipInDraft, placeInTeam, removeFromTeam } from "../draft.ts"
+import { aspectsFor, elementOf, equipInDraft, placeInTeam, removeFromTeam } from "../draft.ts"
 import type { TeamDraft } from "../draft.ts"
 import { Dialog } from "../Dialog.tsx"
 import { Icon } from "../Icon.tsx"
@@ -18,9 +17,8 @@ import type { Nav } from "./parts.tsx"
 export const Team = ({ store, actions, nav, draft, play, enter }: {
   readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly draft: Signal<TeamDraft>; readonly play: Play; readonly enter: () => void
 }) => {
-  const picking = useSignal(false), matchups = useSignal(false), equipping = useSignal<CharacterId | null>(null)
+  const picking = useSignal(false), equipping = useSignal<CharacterId | null>(null)
   const tuning = store.tuning.value, account = store.account.value, { team, focus, aspects } = draft.value
-  const enemies = challengeEnemies(tuning.challenges[encounterOf(tuning, play).challenge])
   const dirty = JSON.stringify(team) !== JSON.stringify(account.selection.team) || JSON.stringify(aspects) !== JSON.stringify(account.selection.aspects)
   // The UI keeps to the rules (an aspect moves rather than doubling up), so this only guards against a stale draft.
   const valid = teamProblems(tuning, account, team, aspects).length === 0
@@ -41,7 +39,6 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
       </section>
     })}</div>
     <footer class="party-actions">
-      <button type="button" class="icon-button" aria-label="Team matchups" onClick={() => (matchups.value = true)}><Icon name="challenge" /></button>
       <button type="button" class="ghost" aria-label={dirty ? "Save party" : "Party saved"} disabled={!dirty || !valid || store.busy.value} onClick={() => actions.saveTeam(team, aspects)}>{dirty ? "Confirm" : <Icon name="check" />}</button>
       <Cta disabled={store.busy.value || !valid || playLock(tuning, account, play) !== null} onClick={enter}><Icon name="play" />Start</Cta>
     </footer>
@@ -54,7 +51,6 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
       }}><Portrait of={{ character: id }} /><b>{tuning.characters[id].name}</b>{!owned && <Icon name="lock" />}</button>
     })}</div></Dialog>}
     {equipping.value !== null && <AspectPicker store={store} member={equipping.value} team={team} aspects={aspects} close={() => (equipping.value = null)} choose={(aspect) => { draft.value = equipInDraft(draft.value, equipping.value!, aspect); equipping.value = null }} />}
-    {matchups.value && <Dialog title={describePlay(tuning, play)} close={() => (matchups.value = false)}><div class="matchup">{enemies.map((kind) => <div key={kind}><Portrait of={{ enemy: kind }} /><span><b>{tuning.enemies[kind].name}</b><small>{answers(tuning, team, kind) ? "Weakness covered" : "Neutral"}</small></span></div>)}</div></Dialog>}
   </div>
 }
 

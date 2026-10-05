@@ -45,6 +45,10 @@ export const equipInDraft = (draft: TeamDraft, character: CharacterId, aspect: A
   return { ...draft, aspects }
 }
 
+/** Start with the lobby's selected spirit without moving its party portrait. */
+export const startingWith = (team: ReadonlyArray<CharacterId>, character: CharacterId): ReadonlyArray<CharacterId> =>
+  team.includes(character) ? [character, ...team.filter((member) => member !== character)] : team
+
 /**
  * `character` put in the slot being edited, as in Genshin's team setup: a
  * character already in the team swaps places with whoever is there; in the

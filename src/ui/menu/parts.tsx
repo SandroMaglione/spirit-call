@@ -56,10 +56,9 @@ export const Wallet = ({ store }: { readonly store: UiStore }) => {
   return (
     <div class="wallet">
       {ids(tuning.currencies).map((id: CurrencyId) => (
-        <span key={id} class={`wallet__item currency--${id}`} title={`${tuning.currencies[id].name}: for ${tuning.currencies[id].use}`}>
-          <i />
-          <span class="wallet__name">{tuning.currencies[id].name}</span>
-          {(wallet[id] ?? 0).toLocaleString("en-US")}
+        <span key={id} class={`wallet__item currency--${id}`} aria-label={`${tuning.currencies[id].name}: ${wallet[id] ?? 0}`} title={`${tuning.currencies[id].name}: for ${tuning.currencies[id].use}`}>
+          <Icon name={id} />
+          <span class="wallet__amount">{(wallet[id] ?? 0).toLocaleString("en-US")}</span>
         </span>
       ))}
     </div>

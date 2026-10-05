@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
-import { answers, aspectsFor, elementOf, equipInDraft, placeInTeam, removeFromTeam } from "../src/ui/draft.ts"
+import { answers, aspectsFor, elementOf, equipInDraft, placeInTeam, removeFromTeam, startingWith } from "../src/ui/draft.ts"
 import { start, aspectId } from "./helpers.ts"
 import { cast, damageBonus, doing, finisher, heal, kill, on, targetHealthBelow } from "../src/content/passives.ts"
 import { nova } from "../src/content/skills.ts"
@@ -128,6 +128,13 @@ describe("the in-game menu", () => {
 })
 
 describe("menu helpers", () => {
+  it("starts with the selected lobby spirit while keeping party slots in place", () => {
+    const team = ["swordsman", "gunner", "tidecaller"] as const
+    expect(startingWith(team, "gunner")).toEqual(["gunner", "swordsman", "tidecaller"])
+    expect(team).toEqual(["swordsman", "gunner", "tidecaller"])
+    expect(startingWith(team, "stormcaller")).toEqual(team)
+  })
+
   it("list the elements an enemy attacks with, once each", () => {
     expect(attackElements(defaultTuning.enemies.charger.attacks)).toEqual(["fire"])
     expect(attackElements(defaultTuning.enemies.shooter.attacks)).toEqual(["water"])

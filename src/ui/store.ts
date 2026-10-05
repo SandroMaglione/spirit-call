@@ -25,7 +25,8 @@ export interface UiStore {
   readonly feedback: Signal<{ readonly message: string; readonly error: boolean } | null>
   readonly recording: Signal<"idle" | "saving" | "saved" | "failed">
   readonly menuPlay: Signal<Play>
-  readonly menuBriefing: Signal<boolean>
+  /** The spirit on the lobby stage; selecting one never reorders party slots. */
+  readonly menuCharacter: Signal<CharacterId>
   readonly menuDraft: Signal<TeamDraft>
   readonly menuScreens: Signal<ReadonlyArray<Screen>>
   readonly flow: Signal<FlowState>
@@ -76,7 +77,7 @@ export const createUiStore = (initial: {
   feedback: signal(null),
   recording: signal("idle"),
   menuPlay: signal(initial.account.selection.play),
-  menuBriefing: signal(false),
+  menuCharacter: signal(initial.account.selection.team[0]!),
   menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects }),
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),

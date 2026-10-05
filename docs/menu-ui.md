@@ -24,18 +24,23 @@ descriptions appear only when requested.
 - Full-screen lobby with a large idle spirit, drag rotation, touch rings,
   drifting motes, and luminous backgrounds keyed to the character's element.
   Profile opens a compact menu drawer. Floating icons open Characters, Party,
-  and Challenges; the selected challenge and Start sit at the lower right.
+  and Challenges; the quest name is the play button at the lower right,
+  with a separate Quests action above it. Selecting the spirit keeps party
+  circles in place, while that spirit leads the next run.
 - Character inspection keeps the model central. Portraits and icon tabs select
-  characters, attributes, aspects, and abilities. Stats, passives, and skill
-  descriptions open on tap. Upgrades show their cost and commit explicitly.
+  characters, attributes, aspects, and skills. Level and equipped stats are
+  visible together, with next-level gains and an explicit Level up action.
+  Characters display no XP. Passives and skill descriptions open on tap.
   Locked previews link to actual shipped unlock quests.
 - Party members stand openly on the stage. Tapping a slot summons a translucent
   portrait gallery with staggered entrances and light selection markers.
   Details and removal are separate icon actions. Confirm saves changes;
-  starting also saves them. Matchups open only when requested.
-- Challenge categories and selections sit beside a compact briefing. Enemy
-  portraits open details; reward icons and character previews show what is
-  earned. Start stays outside the scrolling briefing. Inspecting a locked
+  starting also saves them. There is no party matchup dialog.
+- Challenges use a full-screen horizontal carousel, with drag feedback,
+  directional transitions, arrow controls, and category tabs. Each quest
+  shows its name, objective, enemy level, and rewards without enemy models
+  or a sidebar. Enemy names and elemental traits are available in Details.
+  The enter action stays fixed at the lower right. Inspecting a locked
   choice does not prevent the lobby from starting the saved playable choice.
 - Results show reward symbols, account progress, and unlocked items over the
   arena. A newly earned character takes the large stage, turns into the light,
@@ -50,6 +55,10 @@ descriptions appear only when requested.
   galleries, aspect choices, party members, and rewards avoid enclosing cards.
   Reduced motion suppresses UI effects and the model reveal. The phone rotate
   guard applies to menus as well as combat; there is no separate portrait UI.
+- Screens use the same edge spacing, with symmetric safe-area allowances.
+  The wallet stays fixed at the upper right in menus, pause, and results.
+  Currency artwork is shared by wallet balances, upgrade costs, and rewards.
+  Back handles return navigation; screens have no duplicate close action.
 - Successful saves give a brief glow and sound without a toast. Failures open
   an explicit dialog. Account writes are serialized and become visible only
   after durable storage succeeds; duplicate upgrade taps are guarded. Each
@@ -61,7 +70,7 @@ descriptions appear only when requested.
 
 ## Validation
 
-- `pnpm check`: typecheck, lint, and all 422 tests pass. Tests include account
+- `pnpm check`: typecheck, lint, and all 454 tests pass, with one existing skip. Tests include account
   save failures and serialization, paused timers, menu input, and routing.
 - Production build passes.
 - Browser checks use the network address in phone landscape at 667 × 375 and
@@ -71,6 +80,10 @@ descriptions appear only when requested.
 - Synthetic touch pointers rotate the spirit and trigger its ring. Button
   measurements confirm centered action labels and 44-pixel targets. This is
   browser touch-event coverage, not a physical-phone playtest.
+- The follow-up checks cover quest swipe boundaries and cancellation,
+  fixed wallet coordinates, party-circle order, and visible level-up controls
+  at 667 × 375. A separate localhost account fixture verifies a saved level
+  increase and the results layout; the original account is restored afterward.
 - A completed-wave fixture follows the normal result/save path: one clear,
   105 XP, 190 crystals, 625 gold, one discovery, and Gunner unlocked. The totals
   include discovery rewards once and persist on reload. This verifies the

@@ -19,18 +19,14 @@ const tabNames = { overview: "Attributes", aspect: "Aspects", kit: "Abilities" }
 const moveNames = { arc: "Sweeping slash", thrust: "Forward thrust", spin: "Full spin", shot: "Projectile", disc: "Returning disc", lob: "Lobbed blast" } as const
 
 const Overview = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {
-  const showingStats = useSignal(false)
   const tuning = store.tuning.value, account = store.account.value
   const progress = characterLevel(tuning, account, character), cost = trainingCost(tuning, account, character)
-  const base = tuning.characters[character].stats
-  const now = statsAtLevel(tuning, base, progress.level), next = statsAtLevel(tuning, base, progress.level + 1)
+  const now = statsAtLevel(tuning, tuning.characters[character].stats, progress.level), next = statsAtLevel(tuning, tuning.characters[character].stats, progress.level + 1)
   const owned = owns(account, { kind: "character", id: character })
   return <div class="panel">
-    <h2 class="character-level">Lv {progress.level}<small> / {tuning.progression.character.curve.maxLevel}</small></h2>
-
-    <button type="button" class="ghost" onClick={() => (showingStats.value = true)}>Details <Icon name="info" /></button>
-    {showingStats.value && <Dialog title="Attributes" close={() => (showingStats.value = false)}><div class="stats">{statOrder.map((stat) => <span key={stat} class="stats__item"><small>{statNames[stat]}</small><b>{Math.round(now[stat])}{cost !== null && next[stat] > now[stat] && <i> +{Math.round(next[stat] - now[stat])}</i>}</b></span>)}</div></Dialog>}
-    {cost !== null ? <div class="upgrade-action"><span class="upgrade-cost" aria-label={describeAmounts(tuning, cost)}><Icon name="gold" />{cost.gold}</span><Cta disabled={!owned || !train(tuning, account, character).ok || store.busy.value} onClick={() => actions.train(character)}>{store.busy.value ? "Saving…" : "Enhance"}</Cta></div> : <p class="success-message">Maximum level reached.</p>}
+    <h2 class="character-level"><span>Lv</span><strong>{progress.level}</strong><small>/ {tuning.progression.character.curve.maxLevel}</small></h2>
+    <div class="stats character-stats" aria-label="Equipped attributes">{statOrder.map((stat) => <span key={stat} class="stats__item"><small>{statNames[stat]}</small><b>{Math.round(now[stat])}{owned && cost !== null && next[stat] > now[stat] && <i>+{Math.round(next[stat] - now[stat])}</i>}</b></span>)}</div>
+    {owned && (cost !== null ? <div class="upgrade-action"><span class="upgrade-cost" aria-label={describeAmounts(tuning, cost)}><Icon name="gold" />{cost.gold}</span><Cta disabled={!train(tuning, account, character).ok || store.busy.value} onClick={() => actions.train(character)}>{store.busy.value ? "…" : "Level up"}</Cta></div> : <p class="success-message">Maximum level</p>)}
   </div>
 }
 
@@ -58,7 +54,7 @@ const Aspects = ({ store, character, nav }: { readonly store: UiStore; readonly 
       {aspect !== null && aspect.passives.map((passive, index) => <p key={index} class="aspect-passive">{describePassive(passive)}</p>)}
       {aspect !== null && aspect.infuse !== null && <p class="aspect-passive" data-element={spec.element}>{describeInfuse(aspect.infuse, spec.element)}</p>}
       {holder !== undefined && holder !== character && <p class="aspect-passive">Equipped on {tuning.characters[holder].name} in your team.</p>}
-      {!owned && <div class="lock-message">{source === null ? "Not yet available through quests." : `First clear: ${tuning.quests[source].name}`}{source !== null && <button type="button" class="text-button" onClick={() => { store.menuPlay.value = { kind: "quest", quest: source }; store.menuBriefing.value = true; nav.go({ kind: "quests", tab: tuning.quests[source].line }) }}>View unlock quest <Icon name="next" /></button>}</div>}
+      {!owned && <div class="lock-message">{source === null ? "Not yet available through quests." : `First clear: ${tuning.quests[source].name}`}{source !== null && <button type="button" class="text-button" onClick={() => { store.menuPlay.value = { kind: "quest", quest: source }; nav.go({ kind: "quests", tab: tuning.quests[source].line }) }}>View unlock quest <Icon name="next" /></button>}</div>}
     </div>
   </div>
 }
@@ -91,7 +87,7 @@ export const Character = ({ store, actions, nav, character, tab }: {
       <div class="roster roster--small">{ids(tuning.characters).map((id) => <button key={id} type="button" class={`roster__pick${id === character ? " is-in" : ""}`} aria-label={`View ${tuning.characters[id].name}`} aria-pressed={id === character} data-element={elementOf(tuning, id) ?? undefined} onClick={() => nav.replace({ kind: "character", character: id, tab })}><Portrait of={{ character: id }} />{!owns(account, { kind: "character", id }) && <span class="roster__lock" aria-label="Locked"><Icon name="lock" /></span>}</button>)}</div>
     </section>
     <section class="character__panel">
-      {!owned && <div class="lock-message"><p>{source === null ? "Not yet available through quests." : `First clear: ${tuning.quests[source].name}`}</p>{source !== null && <button type="button" class="text-button" onClick={() => { store.menuPlay.value = { kind: "quest", quest: source }; store.menuBriefing.value = true; nav.go({ kind: "quests", tab: tuning.quests[source].line }) }}>View quest <Icon name="next" /></button>}</div>}
+      {!owned && <div class="lock-message"><p>{source === null ? "Not yet available through quests." : `First clear: ${tuning.quests[source].name}`}</p>{source !== null && <button type="button" class="text-button" onClick={() => { store.menuPlay.value = { kind: "quest", quest: source }; nav.go({ kind: "quests", tab: tuning.quests[source].line }) }}>View quest <Icon name="next" /></button>}</div>}
       <div class="character-tabs" role="tablist" aria-label="Character details">{(Object.keys(tabNames) as Array<CharacterTab>).map((id) => <button key={id} type="button" role="tab" aria-label={tabNames[id]} aria-selected={id === tab} aria-controls="character-details" onClick={() => nav.replace({ kind: "character", character, tab: id })}><Icon name={id === "overview" ? "character" : id === "aspect" ? "aspect" : "thunder"} /></button>)}</div>
       <div id="character-details" role="tabpanel" aria-label={tabNames[tab]}>{tab === "overview" ? <Overview store={store} actions={actions} character={character} /> : tab === "aspect" ? <Aspects key={character} store={store} character={character} nav={nav} /> : <Kit store={store} character={character} />}</div>
     </section>

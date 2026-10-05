@@ -13,7 +13,7 @@ import { Settings } from "./menu/Settings.tsx"
 import { Team } from "./menu/Team.tsx"
 import { Portrait, Wallet } from "./menu/parts.tsx"
 import type { Nav, Screen } from "./menu/parts.tsx"
-import { elementOf } from "./draft.ts"
+import { elementOf, startingWith } from "./draft.ts"
 import { selectionIn } from "./navigation.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
@@ -24,7 +24,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
   const play = store.menuPlay, draft = store.menuDraft, screens = store.menuScreens
   const content = useRef<HTMLElement>(null)
   const screen = screens.value[screens.value.length - 1]!
-  const leader = draft.value.team[0]!
+  const leader = draft.value.team.includes(store.menuCharacter.value) ? store.menuCharacter.value : draft.value.team[0]!
   const prepare = (next: Screen) => {
     if (next.kind === "quests") play.value = selectionIn(store.tuning.value, store.account.value, next.tab, play.value)
     return next
@@ -38,7 +38,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     }
   }
   const enter = () => {
-    if (playLock(store.tuning.value, store.account.value, play.value) === null) actions.enter(draft.value.team, draft.value.aspects, play.value)
+    if (playLock(store.tuning.value, store.account.value, play.value) === null) actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, play.value)
   }
   useEffect(() => {
     const requested = store.menuOpens.peek()
@@ -66,10 +66,10 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     switch (screen.kind) {
       case "home": {
         const playable = playLock(store.tuning.value, store.account.value, play.value) === null ? play.value : store.account.value.selection.play
-        return <Home store={store} nav={nav} draft={draft} play={playable} enter={() => actions.enter(draft.value.team, draft.value.aspects, playable)} />
+        return <Home store={store} nav={nav} draft={draft} play={playable} enter={() => actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, playable)} />
       }
       case "quests": return <Quests store={store} nav={nav} tab={screen.tab} play={play} enter={enter} />
-      case "team": return <Team store={store} actions={actions} nav={nav} draft={draft} play={play.value} enter={enter} />
+      case "team": return <Team store={store} actions={actions} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value)} />
       case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
       case "discoveries": return <Discoveries store={store} nav={nav} />
       case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} team={draft.value.team} aspects={draft.value.aspects} />
@@ -85,13 +85,12 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
         {screen.kind !== "home" && screen.kind !== "character" && <span class="shell-title">{section(screen)}</span>}
       </div>
       <Wallet store={store} />
-      {screen.kind !== "home" && <button type="button" class="icon-button" aria-label="Return to lobby" onClick={() => (screens.value = [{ kind: "home" }])}><Icon name="close" /></button>}
     </header>
     <main class="shell-content" ref={content} tabIndex={-1} aria-label={screen.kind === "home" ? "Lobby" : section(screen)}>{current()}</main>
     {menuOpen.value && <Dialog title="Menu" variant="drawer" close={() => (menuOpen.value = false)}>
-      <div class="menu-profile"><Portrait of={{ character: leader }} /><div><h2>{store.tuning.value.characters[leader].name}</h2><span>Account Lv {level.level}</span></div></div>
+      <div class="menu-profile"><Portrait of={{ character: leader }} /><div><h2>Account</h2><span>Lv {level.level}</span></div></div>
       <div class="menu-profile__xp"><span>{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed} XP`}</span><div class="progress-track"><i style={{ width: `${level.needed === 0 ? 100 : 100 * level.into / level.needed}%` }} /></div></div>
-      <div class="game-menu">{destinations.map(({ label, icon, to }) => <button type="button" key={label} onClick={() => { menuOpen.value = false; if (to.kind === "quests") store.menuBriefing.value = false; nav.go(to) }}><Icon name={icon} /><span>{label}</span></button>)}</div>
+      <div class="game-menu">{destinations.map(({ label, icon, to }) => <button type="button" key={label} onClick={() => { menuOpen.value = false; nav.go(to) }}><Icon name={icon} /><span>{label}</span></button>)}</div>
       {store.notices.value.length > 0 && <div class="save-notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<button type="button" class="ghost" onClick={() => (store.notices.value = [])}>Dismiss</button></div>}
     </Dialog>}
   </div>
