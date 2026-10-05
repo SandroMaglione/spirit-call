@@ -49,7 +49,7 @@ assert not any(o.type in ('ARMATURE','LIGHT','CAMERA') for o in bpy.data.objects
 points=[p for values in imported.values() for p in values]
 bounds=[[min(p[i] for p in points),max(p[i] for p in points)] for i in range(3)]
 assert abs(bounds[2][0])<.00002 and abs(bounds[2][1]-8.5)<.00002
-for prefix in ('Pauldron','WristArmor','FistShell','Thumb','ThumbBase','Eye','Thigh','Shin','Foot'):
+for prefix in ('Pauldron','WristArmor','FistShell','Eye','Thigh','Shin','Foot','Knee','ShinGuard','KneeBinding'):
     reflected={(-p[0],p[1],p[2]) for p in imported[prefix+'.L']}
     assert reflected==set(imported[prefix+'.R']),prefix
 report={'result':'passed','sha256':hashlib.sha256(data).hexdigest(),'triangles':triangles,
@@ -58,9 +58,9 @@ report={'result':'passed','sha256':hashlib.sha256(data).hexdigest(),'triangles':
         'bounds_blender_m':bounds,'height_m':8.5,'ground_clearance_m':0,
         'axes_glb':'meters, +Y up, +Z forward'}
 for side in ('L','R'):
-    for i in range(4):assert f'Finger.{side}.{i}' in imported
     assert min(p[2] for p in imported[f'Foot.{side}'])==0
-report['four_curled_fingers_per_hand']=True
+assert not any(name.startswith(('Finger.','Thumb')) for name in imported)
+report['single_rock_per_fist_without_fingers']=True
 report['both_flat_soles_on_floor']=True
 (HERE/'verification.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report))

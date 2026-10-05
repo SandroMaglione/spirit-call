@@ -1,0 +1,149 @@
+{
+  "result": "passed",
+  "glb_sha256": "b75cdcea4682a051b4f60fb4c3012fcf8b042703026e60f4656b4cd1aaeb2ba6",
+  "method": "Triangle intersection or solid containment, without bounding-box contact assumptions",
+  "structural_joins": [
+    {
+      "a": "StoneTorso",
+      "b": "Waist",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Waist",
+      "b": "Pelvis",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "StoneTorso",
+      "b": "Helmet",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "StoneTorso",
+      "b": "LowerKeystone",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "StoneTorso",
+      "b": "ShoulderJoint.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "ShoulderJoint.L",
+      "b": "Pauldron.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Pauldron.L",
+      "b": "Forearm.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Forearm.L",
+      "b": "WristArmor.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "WristArmor.L",
+      "b": "WristLink.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "WristLink.L",
+      "b": "FistShell.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Pelvis",
+      "b": "Thigh.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Thigh.L",
+      "b": "Shin.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.L",
+      "b": "Foot.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.L",
+      "b": "Knee.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.L",
+      "b": "ShinGuard.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.L",
+      "b": "KneeBinding.L",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "StoneTorso",
+      "b": "ShoulderJoint.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "ShoulderJoint.R",
+      "b": "Pauldron.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Pauldron.R",
+      "b": "Forearm.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Forearm.R",
+      "b": "WristArmor.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "WristArmor.R",
+      "b": "WristLink.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "WristLink.R",
+      "b": "FistShell.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Pelvis",
+      "b": "Thigh.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Thigh.R",
+      "b": "Shin.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.R",
+      "b": "Foot.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.R",
+      "b": "Knee.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.R",
+      "b": "ShinGuard.R",
+      "contact": "intersecting surfaces"
+    },
+    {
+      "a": "Shin.R",
+      "b": "KneeBinding.R",
+      "contact": "intersecting surfaces"
+    }
+  ],
+  "missing_joins": [],
+  "scope": "Load-bearing body, pelvis, shoulders, arms, fists, legs and attached leg armor. Face color patches and inset jewel surfaces are reviewed separately."
+}

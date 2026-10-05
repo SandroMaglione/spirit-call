@@ -1,7 +1,7 @@
 {
   "kind": "crusher-behemoth",
   "status": "static review; no animation or game registration",
-  "triangles": 2830,
+  "triangles": 3125,
   "materials": 2,
   "mesh_parts": [
     "ChestBezel",
@@ -11,14 +11,6 @@
     "CoreRecess",
     "Eye.L",
     "Eye.R",
-    "Finger.L.0",
-    "Finger.L.1",
-    "Finger.L.2",
-    "Finger.L.3",
-    "Finger.R.0",
-    "Finger.R.1",
-    "Finger.R.2",
-    "Finger.R.3",
     "FistShell.L",
     "FistShell.R",
     "Foot.L",
@@ -27,6 +19,10 @@
     "Forearm.R",
     "ForeheadRidge",
     "Helmet",
+    "Knee.L",
+    "Knee.R",
+    "KneeBinding.L",
+    "KneeBinding.R",
     "LowerKeystone",
     "NoseGuard",
     "Pauldron.L",
@@ -34,16 +30,15 @@
     "Pelvis",
     "Shin.L",
     "Shin.R",
+    "ShinGuard.L",
+    "ShinGuard.R",
     "ShoulderJoint.L",
     "ShoulderJoint.R",
     "StoneTorso",
     "Thigh.L",
     "Thigh.R",
-    "Thumb.L",
-    "Thumb.R",
-    "ThumbBase.L",
-    "ThumbBase.R",
     "VisorRecess",
+    "Waist",
     "WristArmor.L",
     "WristArmor.R",
     "WristLink.L",
@@ -53,11 +48,11 @@
   "armatures": 0,
   "bounds_blender_m": [
     [
-      -5.4456987380981445,
-      5.4456987380981445
+      -6.046993732452393,
+      6.046993732452393
     ],
     [
-      -2.3821141719818115,
+      -2.7385706901550293,
       2.6452293395996094
     ],
     [
@@ -68,7 +63,7 @@
   "height_m": 8.5,
   "ground_clearance_m": 0,
   "height_basis": "ground between flat soles to helmet apex",
-  "revision": "four curled fingers, crossing thumbs, plain wrists, short grounded legs",
+  "revision": "oversized rock fists without fingers, shaped V stance, bulkier helmet, small eye slits and solid waist support",
   "axes_glb": "meters, +Y up, +Z forward",
   "reference": "reference/sheet.png",
   "dimension_conflict": {

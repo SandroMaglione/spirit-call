@@ -44,12 +44,31 @@ if 'sweep' not in sys.argv:
     d=ImageDraw.Draw(board)
     for row,view in enumerate(('front','game')):
         y=row*700
-        for col,(name,file) in enumerate((('Before',f'previous-{view}.png'),('Revised',f'{view}.png'))):
+        for col,(name,file) in enumerate((('Pass 02',f'pass-02-{view}.png'),('Pass 03',f'{view}.png'))):
             im=Image.open(out/file)
-            # Both renders use the same orthographic scale. Align the older
-            # ground framing rather than resizing its shorter silhouette.
-            shift=13 if view=='front' else 11
-            board.paste(im,(col*680+20,y+48-(shift if col==0 else 0)),im)
+            # Matching camera, scale and target preserve the actual size change.
+            board.paste(im,(col*680+20,y+48),im)
             d.text((col*680+24,y+12),f'{name} | {view}',font=font(24),fill='#252c3c')
-    d.text((24,1370),'Same world scale. Torso and helmet keep their previous dimensions.',font=font(18),fill='#252c3c')
+    d.text((24,1370),'Same world scale. Rock fists, shaped V stance, thicker helmet and smaller eyes.',font=font(18),fill='#252c3c')
     board.save(out/'revision.png')
+    board=Image.new('RGB',(1360,1380),'#dfdfe8')
+    d=ImageDraw.Draw(board)
+    for row,view in enumerate(('hand-three-quarter','face-front')):
+        for col,name in enumerate(('Pass 02','Pass 03')):
+            im=Image.open(out/(('pass-02-' if col==0 else '')+view+'.png'))
+            # Fist studies use their stated camera scales; head studies share 3.5 m.
+            if row==0 and col==0:
+                im=im.resize((round(640*5.8/6.3),)*2)
+            board.paste(im,(col*680+20+(640-im.width)//2,row*690+45+(640-im.height)//2),im)
+            d.text((col*680+24,row*690+12),f'{name} | {"Fist" if row==0 else "Helmet"}',font=font(24),fill='#252c3c')
+    board.save(out/'revision-details.png')
+    board=Image.new('RGB',(1360,1400),'#dfdfe8')
+    d=ImageDraw.Draw(board)
+    for col,(label,name) in enumerate((('Before waist connection','before-waist-game-back'),('Connected rear','game-back'))):
+        im=Image.open(out/(name+'.png'))
+        board.paste(im,(col*680+20,48),im)
+        d.text((col*680+24,12),label,font=font(24),fill='#252c3c')
+    im=Image.open(out/'rear-waist.png')
+    board.paste(im,(360,740),im)
+    d.text((24,706),'Rear detail | solid waist enters both torso and hip base',font=font(24),fill='#252c3c')
+    board.save(out/'revision-connections.png')

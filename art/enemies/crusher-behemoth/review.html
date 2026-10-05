@@ -44,7 +44,7 @@
 </head>
 <body>
   <header>
-    <div class="eyebrow">First boss / model pass 02</div>
+    <div class="eyebrow">First boss / model pass 03</div>
     <h1>Crusher Behemoth</h1>
     <p>Static model review. Drag to orbit, scroll or pinch to zoom.</p>
   </header>
@@ -56,7 +56,7 @@
         <button data-view="front">Front</button><button data-view="back">Back</button>
         <button data-view="left">Left</button><button data-view="right">Right</button>
         <button data-view="top">Top</button><button data-view="bottom">Bottom</button>
-        <button data-view="face">Face</button><button data-view="hand">Hand</button>
+        <button data-view="face">Face</button><button data-view="hand">Hand</button><button data-view="legs">Legs</button>
       </nav>
       <div class="options">
         <button id="wire" aria-pressed="false">Wireframe</button>
@@ -65,7 +65,7 @@
         <button id="scale" aria-pressed="false">1.8 m scale figure</button>
       </div>
       <p id="status" role="status" aria-live="polite">Loading model...</p>
-      <p class="hint">Game camera uses a 45° turn and 30° elevation. Hand isolates one fist for inspection.</p>
+      <p class="hint">Game camera uses a 45° turn and 30° elevation. Hand and Legs isolate those parts for inspection.</p>
       <div class="downloads">
         <a href="production/crusher-behemoth-model.blend" download>Blender source</a>
         <a href="production/crusher-behemoth-model.glb" download>Static GLB</a>
@@ -82,7 +82,10 @@
         <select id="reference-mode">
           <option value="reference/hero.png">Original hero</option>
           <option value="renders/revision.png" selected>Before and after revision</option>
-          <option value="renders/hand-three-quarter.png">Clenched hand close-up</option>
+          <option value="renders/revision-details.png">Fist and helmet before / after</option>
+          <option value="renders/revision-connections.png">Rear waist connection</option>
+          <option value="renders/hand-three-quarter.png">Rock fist close-up</option>
+          <option value="renders/legs-three-quarter.png">V stance close-up</option>
           <option value="renders/compare.png">Sheet beside model</option>
           <option value="renders/overlay-all.png">All silhouette overlays</option>
           <option value="renders/game.png">Game camera render</option>
@@ -93,7 +96,7 @@
         </select>
       </label>
       <a id="image-link" href="production/renders/revision.png" target="_blank"><img id="reference" src="production/renders/revision.png" alt="Selected reference or comparison"></a>
-      <p class="note">Revision 02 has four curled fingers per fist, thumbs crossing the grip, plain wrist bands, and short legs with flat feet on the floor. Height remains 8.5 m. The sheet's 16 × 12 m footprint labels conflict with its drawn proportions; actual export dimensions are shown after loading.</p>
+      <p class="note">Revision 03 has larger solid rock fists, a wider V stance with shaped knee and shin armor, and a bulkier helmet around smaller eyes. A solid waist joins the torso to the hip base. Height remains 8.5 m. The sheet's 16 × 12 m footprint labels conflict with its drawn proportions; actual export dimensions are shown after loading.</p>
       <p class="note">Overlays show the sheet in yellow and the model in red. The legs and simplified hands follow the requested revision, so silhouette scores also measure those deliberate changes.</p>
     </aside>
   </main>
@@ -126,18 +129,23 @@
     const sheet=await fetch('production/sheet.json').then(r=>r.json());
     let model=null,frameScale=6.5,wire=false,currentView='hero',handTarget=new THREE.Vector3();
     function resize(){const w=viewport.clientWidth,h=viewport.clientHeight;const scale=frameScale*Math.max(1,h/w);camera.left=-scale*w/h;camera.right=scale*w/h;camera.top=scale;camera.bottom=-scale;camera.updateProjectionMatrix();renderer.setSize(w,h);}
-    const handPart=o=>o.isMesh&&(o.name==='FistShellL'||o.name.startsWith('FingerL')||['ThumbL','ThumbBaseL','WristArmorL','WristLinkL'].includes(o.name));
+    const handPart=o=>o.isMesh&&['FistShellL','WristArmorL','WristLinkL'].includes(o.name);
+    const legPart=o=>o.isMesh&&/^(Thigh|Shin|Foot|Knee|ShinGuard|KneeBinding)[LR]$/.test(o.name);
     function view(name){
       currentView=name;controls.autoRotate=false;document.querySelector('#spin').setAttribute('aria-pressed','false');
-      model?.traverse(o=>{if(o.isMesh)o.visible=name!=='hand'||handPart(o);});
+      model?.traverse(o=>{if(o.isMesh)o.visible=name==='hand'?handPart(o):name==='legs'?legPart(o):true;});
       const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
-      const angles={hero:[sheet.hero.turn,sheet.hero.elevation],game:[45,30],front:[0,0],back:[180,0],right:[90,0],left:[-90,0],top:[0,89.99],bottom:[0,-89.99],face:[0,0],hand:[35,15]};
+      const angles={hero:[sheet.hero.turn,sheet.hero.elevation],game:[45,30],front:[0,0],back:[180,0],right:[90,0],left:[-90,0],top:[0,89.99],bottom:[0,-89.99],face:[0,0],hand:[35,15],legs:[0,0]};
       const [turn,elevation]=angles[name].map(THREE.MathUtils.degToRad);
-      const target=name==='hand'?handTarget:name==='face'?new THREE.Vector3(0,7.5,0):new THREE.Vector3(0,4.25,0);
+      const target=name==='hand'?handTarget:name==='legs'?new THREE.Vector3(0,1.2,0):name==='face'?new THREE.Vector3(0,7.5,0):new THREE.Vector3(0,4.25,0);
       camera.position.copy(target).add(new THREE.Vector3(Math.sin(turn)*Math.cos(elevation),Math.sin(elevation),Math.cos(turn)*Math.cos(elevation)).multiplyScalar(30));
-      camera.up.set(0,1,0);camera.zoom=name==='face'?4:name==='hand'?2.1:1;controls.target.copy(target);camera.lookAt(target);controls.update();controls.enableDamping=damping;resize();
+      camera.up.set(0,1,0);camera.zoom=name==='face'?4:name==='hand'||name==='legs'?1.9:1;controls.target.copy(target);camera.lookAt(target);controls.update();controls.enableDamping=damping;resize();
       document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===name)));
-      if(window.modelReview)window.modelReview.view=name;
+      if(window.modelReview){
+        window.modelReview.view=name;
+        const visibleParts=[];model?.traverse(o=>{if(o.isMesh&&o.visible)visibleParts.push(o.name);});
+        window.modelReview.visibleParts=visibleParts;
+      }
     }
     document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.view)));
     document.querySelector('#wire').addEventListener('click',e=>{wire=!wire;e.currentTarget.setAttribute('aria-pressed',String(wire));model?.traverse(o=>{if(o.isMesh)o.material.wireframe=wire;});});

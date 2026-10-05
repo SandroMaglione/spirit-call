@@ -63,11 +63,18 @@ else:
     target=Vector((0,-.2,7.5))
     render('face-front',0,0,640,3.5)
     render('face-three-quarter',30,12,640,3.5)
+    target=Vector((0,.25,2.35))
+    render('rear-waist',225,15,640,5.4)
     parts=[o for o in bpy.data.objects if o.type=='MESH' and
-           (o.name=='FistShell.L' or o.name.startswith('Finger.L.') or o.name in ('Thumb.L','ThumbBase.L','WristArmor.L','WristLink.L'))]
+           o.name in ('FistShell.L','WristArmor.L','WristLink.L')]
     for obj in bpy.data.objects:
         if obj.type=='MESH':obj.hide_render=obj not in parts
     pts=[obj.matrix_world@v.co for obj in parts for v in obj.data.vertices]
     target=Vector(tuple((min(p[i] for p in pts)+max(p[i] for p in pts))/2 for i in range(3)))
-    render('hand-front',0,0,640,5.8)
-    render('hand-three-quarter',35,15,640,5.8)
+    render('hand-front',0,0,640,6.3)
+    render('hand-three-quarter',35,15,640,6.3)
+    for obj in bpy.data.objects:
+        if obj.type=='MESH':obj.hide_render=not obj.name.startswith(('Thigh.','Shin.','Foot.','Knee.','ShinGuard.','KneeBinding.'))
+    target=Vector((0,0,1.2))
+    render('legs-front',0,0,640,6.0)
+    render('legs-three-quarter',30,15,640,6.0)
