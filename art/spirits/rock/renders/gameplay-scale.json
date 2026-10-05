@@ -1,0 +1,20 @@
+[
+  {
+    "character": "tidecaller",
+    "fullHeight": 40.76031109712113,
+    "fullWidth": 32.28003068379498,
+    "centralWidth": 32.28003068379498
+  },
+  {
+    "character": "stonekeeper",
+    "fullHeight": 40.46560172384735,
+    "fullWidth": 46.40904274258252,
+    "centralWidth": 37.22481894953237
+  },
+  {
+    "character": "gunner",
+    "fullHeight": 50.772884851043756,
+    "fullWidth": 26.584777903998706,
+    "centralWidth": 26.235095725482388
+  }
+]

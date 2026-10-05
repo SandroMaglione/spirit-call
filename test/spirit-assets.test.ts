@@ -9,7 +9,7 @@ import { closeLoop, models } from "../src/presentation/models.ts"
 import type { ModelId } from "../src/presentation/models.ts"
 import { Puppet } from "../src/presentation/puppet.ts"
 
-const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit") => {
+const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit" | "rockSpirit") => {
   const bytes = readFileSync(path.join(import.meta.dirname, "..", models[id].url))
   return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
 }
@@ -68,5 +68,56 @@ describe("thunder spirit export", () => {
     expect(gltf.scene.getObjectByName("LightningCrest")).toBeDefined()
     expect(gltf.scene.getObjectByName("LightningWingL")).toBeDefined()
     expect(gltf.scene.getObjectByName("LightningWingR")).toBeDefined()
+  })
+})
+
+describe("rock spirit export", () => {
+  it("matches Water's full arena height and keeps its broad boulder readable", async () => {
+    const gltfs = await Promise.all([loadSpirit("rockSpirit"), loadSpirit("waterSpirit")])
+    const ids = ["rockSpirit", "waterSpirit"] as const
+    const bounds = gltfs.map((gltf, i) => {
+      const puppet = new Puppet({ id: ids[i]!, spec: models[ids[i]!], scene: gltf.scene, clips: new Map() }, 1, null)
+      const box = new Box3().setFromObject(puppet.object, true)
+      puppet.dispose()
+      return box
+    })
+    expect(bounds[0]!.max.y).toBeCloseTo(bounds[1]!.max.y, 3)
+    // The accepted boulder is deliberately wider; ornaments count here too.
+    expect(bounds[0]!.getSize(new Vector3()).x).toBeLessThan(bounds[1]!.getSize(new Vector3()).x * 1.5)
+    const gltf = gltfs[0]!
+    const body = gltf.scene.getObjectByName("RockSpirit")!
+    const boulder = new Box3().setFromObject(body.children.find(o => o.name === "RockSpirit_1")!, true).getSize(new Vector3())
+    expect(boulder.x / boulder.y).toBeGreaterThan(1.7)
+  })
+
+  it("keeps a sole planted while walking, floats only its ornaments, and returns combat clips to the spot", async () => {
+    const spec = models.rockSpirit
+    const gltf = await loadSpirit("rockSpirit")
+    const mixer = new AnimationMixer(gltf.scene)
+    const feet = ["FootL", "FootR"].map(name => gltf.scene.getObjectByName(name)!)
+    for (const name of ["Idle", "Run"] as const) {
+      mixer.stopAllAction()
+      mixer.clipAction(closeLoop(gltf.animations.find(c => c.name === name)!, spec.clips[name])).play()
+      const min: number[] = []
+      for (let key = 0; key < (name === "Idle" ? 60 : 16); key++) {
+        mixer.setTime(key / 30)
+        gltf.scene.updateMatrixWorld(true)
+        const ground = feet.map(foot => new Box3().setFromObject(foot, true).min.y)
+        expect(Math.min(...ground), `${name} supporting sole ${key}`).toBeLessThan(.001)
+        expect(Math.min(...ground)).toBeGreaterThan(-.001)
+        min.push(Math.max(...ground))
+      }
+      if (name === "Run") expect(Math.max(...min)).toBeGreaterThan(.009)
+    }
+    for (const clip of gltf.animations) {
+      const root = clip.tracks.find(track => track.name === "RockSpirit.position")
+      if (root === undefined) continue
+      for (const key of [0, root.times.length - 1]) {
+        expect(root.values[key * 3]).toBeCloseTo(0, 6)
+        expect(root.values[key * 3 + 2]).toBeCloseTo(0, 6)
+      }
+    }
+    expect(gltf.scene.getObjectByName("FaceInset")).toBeUndefined()
+    expect(gltf.scene.getObjectByName("RearRock")).toBeDefined()
   })
 })

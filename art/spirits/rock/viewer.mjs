@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { closeLoop } from '/src/presentation/models.ts';
 
 const $ = selector => document.querySelector(selector);
 try {
@@ -32,7 +33,22 @@ try {
     fetch('./export.json').then(r => { if (!r.ok) throw Error('Export metadata unavailable'); return r.json(); }),
     fetch('./sheet.json').then(r => r.json())
   ]);
+  gltf.animations = gltf.animations.map(c => closeLoop(c, info.clips[c.name]));
   scene.add(gltf.scene);
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  let action = null;
+  for (const clip of gltf.animations) {
+    const option = document.createElement('option'); option.value = clip.name; option.textContent = clip.name; $('#clip').append(option);
+  }
+  $('#clip').onchange = () => {
+    mixer.stopAllAction(); action = null;
+    const clip = gltf.animations.find(c => c.name === $('#clip').value);
+    if (clip) {
+      action = mixer.clipAction(clip).reset();
+      action.setLoop(info.clips[clip.name].loopSeconds === null ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+      action.clampWhenFinished = true; action.play();
+    }
+  };
   const meshes = [];
   gltf.scene.traverse(o => {
     if (o.isMesh) {
@@ -85,9 +101,10 @@ try {
   $('#small').onchange = () => { camera.zoom = 1; camera.updateProjectionMatrix(); resize(); };
   new ResizeObserver(resize).observe(view);
   choose('hero');
-  renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
-  $('#status').textContent = `${info.triangles.toLocaleString()} triangles · ${info.materials.length} materials · ${info.height_m.toFixed(3)} m · 0 clips`;
-  window.rockPreview = { scene, camera, renderer, controls, gltf, info, choose, detail, meshes };
+  let last = performance.now();
+  renderer.setAnimationLoop(now => { const dt = Math.min(.05, (now-last)/1000); last=now; if ($('#animate').checked) mixer.update(dt); controls.update(); renderer.render(scene, camera); });
+  $('#status').textContent = `${info.triangles.toLocaleString()} triangles · ${info.materials.length} materials · ${info.height_m.toFixed(3)} m · ${gltf.animations.length} clips`;
+  window.rockPreview = { scene, camera, renderer, controls, gltf, info, choose, detail, meshes, mixer };
 } catch (error) {
   $('#error').textContent = String(error);
   $('#status').textContent = 'Model could not load';

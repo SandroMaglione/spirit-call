@@ -3,7 +3,8 @@
     "swordsman",
     "gunner",
     "tidecaller",
-    "stormcaller"
+    "stormcaller",
+    "stonekeeper"
   ],
   "weapons": [
     "trainingBlade",
@@ -28,7 +29,9 @@
     "sparkTotem",
     "thunderclap",
     "flareJump",
-    "tidalWave"
+    "tidalWave",
+    "stoneGuard",
+    "stoneRise"
   ],
   "challenges": [
     "swarm",
@@ -86,7 +89,8 @@
     "nightOfPacks",
     "eliteHunt",
     "stormFront",
-    "strangeCompany"
+    "strangeCompany",
+    "stoneTrial"
   ],
   "chapters": [
     "one",
@@ -116,7 +120,9 @@
     "flare",
     "splash",
     "discharge",
-    "gale"
+    "gale",
+    "withStonekeeper",
+    "shatter"
   ],
   "classes": [
     "blade",

@@ -1,5 +1,5 @@
 {
-  "status": "static model review; designer-requested broader boulder and friendly round eyes",
+  "status": "animated game export",
   "triangles": 808,
   "materials": [
     "Amber eyes",
@@ -45,10 +45,52 @@
   "minimum_eye_recess_m": 0.04905456304550171,
   "main_body_closed": true,
   "height_basis": "ground origin to highest rest mesh vertex including floating cap",
-  "animations": 0,
+  "animations": 10,
   "skeletons": 0,
-  "bytes": 86712,
+  "bytes": 139760,
   "source_sha256": "6b682798c41dfb2eb89524d9cf2a27e5a617e2168be313e5716ee490f10f9bc3",
-  "glb_sha256": "55e4774032cf420709f85fea7ee8069bc16f1d0b22fea92e18aea69846111135",
-  "clips": {}
+  "glb_sha256": "f97b7d985f7870247fe8beca8f809832ed495950b4eda94f4c1656ef6c8faf86",
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2.0
+    },
+    "Run": {
+      "lastKeySeconds": 0.5,
+      "loopSeconds": 0.5333333333333333
+    },
+    "AttackA": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackB": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackC": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Power": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Dash": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Cast": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Ultimate": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": null
+    }
+  },
+  "animated_source_sha256": "1a582737d0d7f4a771959010d5cbe932c72b3f49c4cadacdc696e8711531cbe1"
 }

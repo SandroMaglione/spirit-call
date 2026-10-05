@@ -55,7 +55,7 @@ no other burst and leaves no state.
 | **Water** | Fast enemies | **Soaked**: slowed | **Splash**: it and the bodies around it stop for a moment |
 | **Thunder** | Spread-out groups, enemies at range | **Charged**: a blow on it arcs on to the nearest body of its side, with a share of the damage, charging it | **Discharge**: thunder strikes the bodies around it |
 | **Wind** | Groups to scatter or bunch up | **Swept**: light, pushed further and gliding; slammed into a wall, stunned | **Gale**: it is launched along the blow, the bodies around it thrown away from it, all stunned a moment |
-| **Rock** (later) | Tanky enemies | **Cracked**: its break bar fills faster | **Shatter**: a large share of its break bar at once |
+| **Rock** | Tanky enemies | **Cracked**: its break bar fills faster | **Shatter**: a large share of its break bar at once |
 
 Wind's push or pull is the kit's choice (a Gust throws out, a Cyclone
 draws in): Swept only makes a body light. Thunder's strikes jump between

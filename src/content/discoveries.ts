@@ -37,6 +37,14 @@ const reaction = (kind: ReactionRecord): DiscoveryCheck => ({ kind: "reaction", 
 
 /** Every discovery, by id, in the order the menu lists them. */
 export const discoveries = {
+  withStonekeeper: discovery({
+    name: "Stonekeeper", description: "Clear a quest or tier with the Stonekeeper on the team.",
+    check: clearWith("stonekeeper"), rewards: { crystals: 40 }
+  }),
+  shatter: discovery({
+    name: "Shatter", description: "Burst a cracked enemy with another element.",
+    check: reaction("cracked"), rewards: { crystals: 40 }
+  }),
   withSwordsman: discovery({
     name: "Swordsman",
     description: "Clear a quest or tier with the Swordsman on the team.",

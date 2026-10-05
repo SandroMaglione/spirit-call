@@ -34,6 +34,7 @@ import {
   Invulnerable,
   Knockback,
   Player,
+  Poise,
   Position,
   Reaction,
   StateBurst,
@@ -44,6 +45,7 @@ import {
 } from "../schema.ts"
 import type { ActiveState, ElementHit, Faction } from "../schema.ts"
 import { knockbackTaken } from "./motion.ts"
+import { poiseOf } from "./poise.ts"
 
 /** What an element does to a body: its state after, and the state it burst on the way, if any. */
 export interface Afflicted {
@@ -171,6 +173,7 @@ const Reachable = Game.Query({
   selection: {
     position: Game.Query.read(Position),
     hurtbox: Game.Query.read(Hurtbox),
+    health: Game.Query.read(Health),
     affinities: Game.Query.read(ElementAffinities),
     invulnerable: Game.Query.optional(Invulnerable),
     knockback: Game.Query.write(Knockback),
@@ -180,6 +183,8 @@ const Reachable = Game.Query({
   },
   with: [Health]
 })
+
+const Breakable = Game.Query({ selection: { health: Game.Query.read(Health), enemy: Game.Query.read(Enemy), poise: Game.Query.write(Poise) } })
 
 /**
  * Bursts: each state paid out at once around the body that held it, on the
@@ -206,7 +211,7 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
     reaction: Game.System.writeEvent(Reaction),
     zap: Game.System.writeEvent(Zap)
   }
-}, ({ queries, resources, events, commands }) => {
+}, ({ queries, resources, events, commands, lookup }) => {
   const pending = queries.bursts.each()
   if (pending.length === 0) return
   for (const { entity } of pending) commands.despawn(entity.id)
@@ -240,6 +245,17 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
     const away = (target: (typeof bodies)[number]) =>
       target.entity.id.value === burst.target ? burst.direction : normalizeOr(sub(target.data.position.get(), at), burst.direction)
     switch (state.id) {
+      case "cracked": {
+        for (const { body } of around) {
+          deal(body, (state.atk * rules.cracked.power) / 100, away(body))
+          if (!takes(body)) continue
+          const target = lookup.getHandle(Game.Entity.handle(body.entity.id, Health), Breakable)
+          if (!target.ok) continue
+          const bar = poiseOf(tuning, target.value.data.enemy.get().kind, target.value.data.health.get().max)
+          target.value.data.poise.update(poise => poise.broken > 0 ? poise : { ...poise, current: Math.min(bar, poise.current + bar * rules.cracked.breakFill), quiet: 0 })
+        }
+        break
+      }
       case "burning": {
         const left = burnDps(tuning, state.atk) * Math.max(0, state.remaining)
         for (const { body } of around) deal(body, body.entity.id.value === burst.target ? left : left * rules.burning.share, away(body))

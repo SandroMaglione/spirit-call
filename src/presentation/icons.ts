@@ -34,6 +34,8 @@ export const dashIcon = icon(`<path d="M3 8h7M2 12h9M3 16h7"/><path d="M13 5l7 7
 
 /** The special and ultimate buttons, by the skill in the slot. */
 export const skillIcons: { readonly [Id in SkillId]: string } = {
+  stoneGuard: icon(`<path d="m12 3 7 3v6c0 5-7 9-7 9s-7-4-7-9V6z"/><path d="m9 10 3-2 3 2-1 5h-4z"/>`),
+  stoneRise: icon(`<path d="m2 20 2-8 3-2 3 10M8 20l2-13 3-4 4 17M15 20l2-9 3 2 2 7M2 22h20"/>`),
   // Gust: wind curling back on itself.
   bladeWave: icon(`<path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 13h15a3 3 0 1 1-3 3"/><path d="M3 18h6"/>`),
   // Flare Jump: a flame, rising.
@@ -54,6 +56,7 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
 
 /** The state the one on the field is in, over her health bar. */
 export const stateIcons: { readonly [Id in StateId]: string } = {
+  cracked: icon(`<path d="m5 20-2-9 6-7 8 2 4 8-5 7zM12 5l-2 6 5 3-3 6"/>`),
   burning: icon(flame),
   soaked: icon(drop),
   // Charged: a small bolt.

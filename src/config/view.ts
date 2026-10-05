@@ -105,7 +105,7 @@ export const view = {
   /** Quiet facet rim and authored luminous eyes, gems and lava. */
   enemyRim: { color: 0xb3cad8, strength: 0.075, power: 3, emission: 1.05 },
   /** Each character's body color, so a switch is seen at once (and her switch button matches). */
-  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a } satisfies Record<CharacterId, number>,
+  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a, stonekeeper: 0xc8a575 } satisfies Record<CharacterId, number>,
   playerDashing: 0xd9fffb,
   shadow: 0x000000,
   /** Body height of actors relative to their radius. */
@@ -223,8 +223,8 @@ export const view = {
    * (embers rising, drops falling, sparks crackling, wisps curling) about
    * `motes` times a second.
    */
-  elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1, thunder: 0xb48cff },
-  states: { burning: 0xff7b2e, soaked: 0x4aa8ff, charged: 0xb48cff, swept: 0xc9fff1, tint: 0.5, motes: 14 },
+  elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1, thunder: 0xb48cff, rock: 0xe5ad58 },
+  states: { burning: 0xff7b2e, soaked: 0x4aa8ff, charged: 0xb48cff, swept: 0xc9fff1, cracked: 0xe5ad58, tint: 0.5, motes: 14 },
   /**
    * A champion (see `Tuning.champions`): its mark under its feet (a filled
    * ring pulsing `pulse` around `fill`, `points` points out to `outer`

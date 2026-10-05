@@ -87,6 +87,13 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
 const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect): void => {
   if (effect.element !== null && !has(elements, effect.element)) problems.push(`${where}: unknown element ${effect.element}`)
   switch (effect.kind) {
+    case "stoneGuard":
+      positive(problems, where, { seconds: effect.seconds, stones: effect.stones })
+      if (!(Number.isInteger(effect.stones) && effect.stones <= 3)) problems.push(`${where}: stones must be a whole number from 1 to 3`)
+      return
+    case "stoneRise":
+      positive(problems, where, { spacing: effect.spacing, radius: effect.radius, active: effect.active })
+      return
     case "cut":
       positive(problems, where, { length: effect.length, width: effect.width, active: effect.active })
       return

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111d27">
-  <title>Rock Spirit · Static model review</title>
+  <title>Rock Spirit · Model and animation review</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; color: #e9e2d6; background: #111d27; font: 15px/1.5 system-ui, sans-serif; }
@@ -48,6 +48,9 @@
     <h1>Rock Spirit</h1>
     <p>A broad, faceted boulder with friendly round eyes, grounded feet, floating stones, and a small rock tucked behind its underside.</p>
     <div id="status" role="status">Loading model…</div>
+    <h2>Animation</h2>
+    <label>Clip <select id="clip"><option value="">Rest pose</option></select></label>
+    <label><input id="animate" type="checkbox" checked> Play clip</label>
     <h2>View</h2>
     <div class="buttons">
       <button data-view="hero" aria-pressed="true">Hero</button>
@@ -73,8 +76,10 @@
     <h2>Reference &amp; source</h2>
     <p class="note"><a href="./reference/sheet.png" target="_blank" rel="noopener">Open the model sheet</a> · <a href="./renders/overlay-all.png" target="_blank" rel="noopener">Silhouette overlays</a></p>
     <a class="download" href="./rock-spirit.glb" download>Download GLB</a>
-    <a class="download" href="./rock-spirit.blend" download>Blender source</a>
-    <p class="note">Revised after model review: a wider body, an integrated eye recess, rounder eyes, and a rear underside rock. These changes deliberately depart from the original sheet. Static model only.</p>
+    <a class="download" href="./rock-spirit-animated.blend" download>Animated Blender source</a>
+    <p class="note">Accepted broad body, integrated recess, round eyes and short heel. Now animated for Stonekeeper's grounded walk and Disc attacks.</p>
+    <p><a href="/?play&amp;challenge=trainingGround&amp;team=stonekeeper,tidecaller,gunner&amp;character=stonekeeper&amp;aspect=riptide">Play Stonekeeper</a> · <a href="./renders/gameplay.mp4">Gameplay recording</a></p>
+    <p class="note"><a href="./compare.html">Compare with Water and Fire</a> · <a href="./renders/gameplay-phone.mp4">Touch review</a></p>
     <pre id="error" role="alert"></pre>
   </aside>
 </main>

@@ -159,7 +159,22 @@ export interface ThunderclapEffect extends EffectBase {
   readonly breakFill: number
 }
 
-export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect
+/** Three orbiting stones: each absorbs one direct enemy blow, until the guard expires. */
+export interface StoneGuardEffect extends EffectBase {
+  readonly kind: "stoneGuard"
+  readonly seconds: number
+  readonly stones: number
+}
+
+/** Three separate impacts rising ahead of the caster, with one hit per pillar. */
+export interface StoneRiseEffect extends EffectBase {
+  readonly kind: "stoneRise"
+  readonly spacing: number
+  readonly radius: number
+  readonly active: number
+}
+
+export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | StoneGuardEffect | StoneRiseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -194,6 +209,20 @@ const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<E
 
 /** Every skill, by id. */
 export const skills = {
+  stoneGuard: skill({
+    name: "Stone Guard",
+    cooldown: 14,
+    energy: 0,
+    invulnerability: 0,
+    effect: { kind: "stoneGuard", seconds: 8, stones: 3, power: 0, element: null, knockback: 0, hitStop: 0, heavy: false } as StoneGuardEffect
+  }),
+  stoneRise: skill({
+    name: "Earthrise",
+    cooldown: 10,
+    energy: 100,
+    invulnerability: .5,
+    effect: { kind: "stoneRise", spacing: 110, radius: 65, active: .12, power: 40, element: "rock", knockback: 500, hitStop: .08, heavy: true } as StoneRiseEffect
+  }),
   /**
    * The sword's special (id `bladeWave`, from when it was a cut): a gust
    * blasting out all around her, driving everything it catches far back:

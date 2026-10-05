@@ -10,7 +10,7 @@
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EnemyKind } from "../content/enemies.ts"
-import { Broke, Enemy, Game, Health, HitStop, Hit, Hurtbox, Poise, Position, Reaction, Stunned, Time, Tuning } from "../schema.ts"
+import { Broke, Enemy, Game, Health, HitStop, Hit, Hurtbox, Poise, Position, Reaction, Stunned, Time, Tuning, ElementState } from "../schema.ts"
 
 /** The size of an enemy's break bar at `maxHealth`; 0 when it never breaks. */
 export const poiseOf = (tuning: TuningValue, kind: EnemyKind, maxHealth: number, champion = false): number =>
@@ -26,7 +26,8 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
         health: Game.Query.read(Health),
         enemy: Game.Query.read(Enemy),
         poise: Game.Query.write(Poise),
-        stunned: Game.Query.write(Stunned)
+        stunned: Game.Query.write(Stunned),
+        state: Game.Query.read(ElementState)
       }
     })
   },
@@ -38,7 +39,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
   const dt = resources.time.get().dt
   const hits = events.hit.all()
   // Bursts and wall slams the team set off (an enemy's own on the player do not count), on the body they happened to.
-  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && (reaction.kind === "burst" || reaction.kind === "slam"))
+  const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && reaction.state !== "cracked" && (reaction.kind === "burst" || reaction.kind === "slam"))
   for (const { entity, data } of queries.enemies.each()) {
     const kind = data.enemy.get().kind
     const bar = poiseOf(tuning, kind, data.health.get().max, data.enemy.get().champion)
@@ -54,7 +55,8 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
     let gained = 0
     for (const hit of hits) {
       if (hit.entity !== entity.id.value || hit.killed) continue
-      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1)
+      const cracked = data.state.get().current?.id === "cracked" ? tuning.elements.cracked.breakFactor : 1
+      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1) * cracked
     }
     const at = data.position.get()
     const reach = data.hurtbox.get().radius

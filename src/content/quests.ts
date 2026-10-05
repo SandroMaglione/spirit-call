@@ -159,6 +159,16 @@ export const quests = {
     after: null,
     rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [aspect("scattergun")] }
   }),
+  stoneTrial: quest({
+    name: "A Sturdy Friend",
+    line: "secondary",
+    chapter: null,
+    challenge: "brute",
+    enemyLevel: 5,
+    level: 3,
+    after: "theBrute",
+    rewards: { experience: 100, currencies: { crystals: 60, gold: 1000 }, unlocks: [character("stonekeeper")] }
+  }),
   nightOfPacks: quest({
     name: "Night of Packs",
     line: "secondary",
