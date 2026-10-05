@@ -281,6 +281,8 @@ const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind, state: State
       if (state === "burning") fx.burst(body, { color, count: 10, speed: 160, size: 3.5, life: 0.4, gravity: -260 })
       else if (state === "soaked") fx.burst(body, { color, count: 12, speed: 200, size: 3.5, life: 0.4, gravity: 420 })
       else if (state === "charged") fx.burst(body, { color, count: 8, speed: 260, size: 2.5, life: 0.25, stretch: 3 })
+      // Grit chipped off, falling.
+      else if (state === "cracked") fx.burst(body, { color, count: 10, speed: 180, size: 3.5, life: 0.35, gravity: 600 })
       else fx.burst(body, { color, count: 8, speed: 220, size: 3, life: 0.3 })
       return
     case "burst": {
@@ -288,6 +290,8 @@ const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind, state: State
       fx.flash(body, 56, color, 0.2)
       fx.ring(at, reach * projection.zoom, color, 0.45)
       fx.burst(body, { color, count: 22, speed: 340, size: 4, life: 0.45, drag: 2, ...(state === "charged" ? { stretch: 3 } : {}) })
+      // A Shatter throws heavy chips that fall back.
+      if (state === "cracked") fx.burst(body, { color: view.stone.dark, count: 14, speed: 420, size: 5, life: 0.55, gravity: 900 })
       host.feedback.shake = Math.max(host.feedback.shake, view.impact.heavyShake)
       return
     }
@@ -306,7 +310,7 @@ const react = (host: RenderHostValue, at: Vec2, kind: ReactionKind, state: State
   }
 }
 
-/** Motes off bodies in a state (embers rising off burning ones, drops falling off soaked ones, sparks off charged ones, wisps off swept ones), and embers off fire pools. */
+/** Motes off bodies in a state (embers rising off burning ones, drops falling off soaked ones, sparks off charged ones, wisps off swept ones, grit off cracked ones), and embers off fire pools. */
 export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
   queries: {
     bodies: Game.Query({
@@ -326,6 +330,7 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
     if (state.id === "burning") services.host.fx.mote(from, (Math.random() - 0.5) * 30, -60 - Math.random() * 50, { color: view.states.burning, size: 3 + Math.random() * 2, life: 0.5, gravity: -80, drag: 1 })
     else if (state.id === "soaked") services.host.fx.mote(from, (Math.random() - 0.5) * 16, 10, { color: view.states.soaked, size: 2.5, life: 0.45, gravity: 520, drag: 0.5 })
     else if (state.id === "charged") services.host.fx.mote(from, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, { color: view.states.charged, size: 2, life: 0.15, drag: 4 })
+    else if (state.id === "cracked") services.host.fx.mote(from, (Math.random() - 0.5) * 30, -20, { color: view.states.cracked, size: 2.5, life: 0.4, gravity: 600, drag: 0.5 })
     else services.host.fx.mote(from, (Math.random() - 0.5) * 50, -30 - Math.random() * 30, { color: view.states.swept, size: 3, life: 0.4, gravity: -40, drag: 2, alpha: 0.6 })
   }
   for (const { data } of queries.pools.each()) {

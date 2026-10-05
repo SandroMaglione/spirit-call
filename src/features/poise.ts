@@ -3,14 +3,16 @@
  * effects. Every enemy that can break (`EnemySpec.poise` above 0) has a
  * bar under its health, filled by the blows it takes (heavy ones more) and
  * by bursts on it and wall slams, and drained once it has taken
- * none for a while, so chipping from afar never breaks anything. A full bar
+ * none for a while, so chipping from afar never breaks anything; a cracked
+ * one fills faster from everything, and a Shatter (a cracked one burst)
+ * fills a large share at once (see `elementRules.cracked`). A full bar
  * breaks it: stunned for a while, its attack cut off, taking more damage
  * (see `Tuning.breaking`). It fills again only once it has recovered. An
  * armored enemy's armor is down while it is broken (see `ArmorSpec`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EnemyKind } from "../content/enemies.ts"
-import { Broke, Enemy, Game, Health, HitStop, Hit, Hurtbox, Poise, Position, Reaction, Stunned, Time, Tuning, ElementState } from "../schema.ts"
+import { Broke, ElementState, Enemy, Game, Health, HitStop, Hit, Hurtbox, Poise, Position, Reaction, Stunned, Time, Tuning } from "../schema.ts"
 
 /** The size of an enemy's break bar at `maxHealth`; 0 when it never breaks. */
 export const poiseOf = (tuning: TuningValue, kind: EnemyKind, maxHealth: number, champion = false): number =>
@@ -27,7 +29,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
         enemy: Game.Query.read(Enemy),
         poise: Game.Query.write(Poise),
         stunned: Game.Query.write(Stunned),
-        state: Game.Query.read(ElementState)
+        state: Game.Query.optional(ElementState)
       }
     })
   },
@@ -62,8 +64,9 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
     const reach = data.hurtbox.get().radius
     for (const reaction of reactions) {
       if ((reaction.at.x - at.x) ** 2 + (reaction.at.y - at.y) ** 2 > reach * reach) continue
-      gained += bar * (reaction.kind === "slam" ? rules.slam : rules.burst)
+      gained += bar * (reaction.kind === "slam" ? rules.slam : reaction.state === "cracked" ? tuning.elements.bursts.cracked.break : rules.burst)
     }
+    if (data.state.present && data.state.get().current?.id === "cracked") gained *= 1 + tuning.elements.cracked.breakBonus
     const quiet = gained > 0 ? 0 : poise.quiet + dt
     const drained = quiet > rules.quietSeconds ? bar * rules.drain * dt : 0
     const current = Math.max(0, Math.min(bar, poise.current + gained - drained))

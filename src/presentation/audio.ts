@@ -21,8 +21,8 @@ const powerPitch = 0.85
 const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", blast: "wave", leap: "boom", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", thunderclap: null, stoneGuard: "block", stoneRise: "slam" }
 
 /** The sound of a state taking hold (a charge and a sweep are heard in their blow), and of each state bursting. */
-const applySounds: Record<StateId, SoundName | null> = { burning: "ignite", soaked: "splash", charged: null, swept: null, cracked: "hit" }
-const burstSounds: Record<StateId, SoundName> = { burning: "nova", soaked: "splash", charged: "zap", swept: "spin", cracked: "slam" }
+const applySounds: Record<StateId, SoundName | null> = { burning: "ignite", soaked: "splash", charged: null, swept: null, cracked: "crack" }
+const burstSounds: Record<StateId, SoundName> = { burning: "nova", soaked: "splash", charged: "zap", swept: "spin", cracked: "shatter" }
 
 /** The sound of what elements do (an arc is heard as its zap). */
 const reactionSound = (kind: ReactionKind, state: StateId | null): SoundName | null => {

@@ -62,5 +62,7 @@ export const stateIcons: { readonly [Id in StateId]: string } = {
   // Charged: a small bolt.
   charged: icon(`<path d="M13.5 3L6 13h5l-1.5 8L18 11h-5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Swept: three gusts.
-  swept: icon(`<path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/>`)
+  swept: icon(`<path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/>`),
+  // Cracked: a stone split by a crack.
+  cracked: icon(`<path d="M7 3h10l4 6-3 11H6L3 9z"/><path d="M12 3l-1.5 5 3 3-2 4 1 5"/>`)
 }

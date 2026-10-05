@@ -197,6 +197,9 @@ const Breakable = Game.Query({ selection: { health: Game.Query.read(Health), ene
  * - **Charged** (Discharge): thunder strikes the nearest few.
  * - **Swept** (Gale): the struck body is launched along the blow, the others
  *   thrown away from it, all stunned a moment.
+ * - **Cracked** (Shatter): a blow to the struck body, a share of it to the
+ *   bodies around; its break bar fills a large share at once (see
+ *   `BuildPoise`).
  *
  * What it deals carries no element (it bursts nothing, leaves no state) and
  * fills no energy. On the team it only deals damage: she is never stopped,
@@ -283,6 +286,11 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
           body.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
           stun(body, rules.swept.stun)
         }
+        break
+      }
+      case "cracked": {
+        const struck = (state.atk * rules.cracked.power) / 100
+        for (const { body } of around) deal(body, body.entity.id.value === burst.target ? struck : struck * rules.cracked.share, away(body))
         break
       }
     }

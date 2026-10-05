@@ -38,8 +38,8 @@ export type Objective =
    */
   | { readonly kind: "practice"; readonly most: number; readonly fewest: number; readonly respawn: number }
 
-/** The elements an elite enemy can carry (see `Tuning.elites`). */
-export type EliteElement = Exclude<ElementId, "wind">
+/** The elements an elite enemy can carry (see `Tuning.elites`): wind and rock leave nothing behind, so they make no elites. */
+export type EliteElement = Exclude<ElementId, "wind" | "rock">
 
 /**
  * One slot of a wave: an enemy kind (spawning its `group`), or an elite of

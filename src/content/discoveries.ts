@@ -104,6 +104,12 @@ export const discoveries = {
     description: "Burst a swept enemy with another element.",
     check: reaction("swept"),
     rewards: { crystals: 40 }
+  }),
+  shatter: discovery({
+    name: "Shatter",
+    description: "Burst a cracked enemy with another element.",
+    check: reaction("cracked"),
+    rewards: { crystals: 40 }
   })
 }
 

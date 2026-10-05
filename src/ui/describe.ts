@@ -87,7 +87,7 @@ const describeTrigger = (trigger: Trigger): string => {
 const elementWord = (element: ElementId | null): string => (element === null ? "" : `${elements[element].name.toLowerCase()} `)
 
 /** What each element leaves on the ground. */
-const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire pool", water: "a puddle", wind: "a gust", thunder: "a charge", rock: "a stone field" }
+const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire pool", water: "a puddle", wind: "a gust", thunder: "a charge", rock: "rubble" }
 
 /** A skill effect in a few words. */
 export const describeEffect = (effect: SkillEffect): string => {

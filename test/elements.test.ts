@@ -7,7 +7,7 @@ import { afflict, affinityDamage, burnDps, stateSpeed } from "../src/features/el
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { blow, Damage, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
+import { blow, Damage, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Poise, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -337,6 +337,45 @@ describe("bursts", () => {
     expect(Math.hypot(knockback.x, knockback.y)).toBe(0)
     // An enemy's burst is not the team's: nothing recorded.
     expect(run.runtime.inspect(Reactions)).toEqual([])
+  })
+})
+
+describe("cracked", () => {
+  const struck = { x: 200, y: 0 }
+  const near = { x: 280, y: 0 }
+  const far = { x: 200, y: 500 }
+  /** Dummies that take many blows, with a break bar of half their health. */
+  const breakable = () => tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } } })
+  const bar = 100_000 * 0.5
+  const Bars = Game.Inspector("Test/Bars", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position), poise: Game.Query.read(Poise) }, with: [Enemy] }) } }, ({ queries }) =>
+    queries.enemies.each().map(({ data }) => ({ x: data.position.get().x - center.x, y: data.position.get().y - center.y, filled: data.poise.get().current })))
+  const filled = (run: ReturnType<typeof range>, at: Vec2) => run.runtime.inspect(Bars).find((enemy) => Math.hypot(enemy.x - at.x, enemy.y - at.y) < 1)!.filled
+
+  it("fills the break bar faster: every blow counts half as much again", () => {
+    const run = range([struck, far], { x: 200, y: 0 }, { tuning: breakable() })
+    run.putIn(state("cracked"), struck)
+    run.strike(struck, null, 1000)
+    run.step(1)
+    run.strike(far, null, 1000)
+    run.step(1)
+    expect(filled(run, far)).toBeGreaterThan(0)
+    expect(filled(run, struck) / filled(run, far)).toBeCloseTo(1 + rules.cracked.breakBonus, 6)
+  })
+
+  it("Shatter: another element on a cracked body fills a large share of its break bar at once, and strikes it and those around", () => {
+    const run = range([struck, near, far], { x: 200, y: 0 }, { tuning: breakable() })
+    run.putIn(state("cracked", 4, 200), struck)
+    run.strike(struck, "water")
+    run.step(4)
+    const blow = (200 * rules.bursts.cracked.power) / 100
+    // The blow itself (1), and the shatter.
+    expect(100_000 - run.dummy(struck).health).toBeCloseTo(1 + blow, 6)
+    expect(100_000 - run.dummy(near).health).toBeCloseTo(blow * rules.bursts.cracked.share, 6)
+    expect(run.dummy(far).health).toBe(100_000)
+    expect(filled(run, struck)).toBeGreaterThanOrEqual(bar * rules.bursts.cracked.break)
+    expect(rules.bursts.cracked.break).toBeGreaterThan(tuning.breaking.burst)
+    expect(run.dummy(struck).state?.id).toBe("soaked")
+    expect(run.runtime.inspect(Reactions)).toEqual(["cracked"])
   })
 })
 

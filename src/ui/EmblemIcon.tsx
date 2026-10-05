@@ -9,7 +9,8 @@ const emblems = {
   wind: { shape: "M3 8 14 3 29 7 22 12 11 11 18 16 29 15 23 23 12 29 14 21 4 18 10 14Z", light: "#e8fff2", middle: "#78e6c7", dark: "#278a88" },
   fire: { shape: "M17 2 18 10 23 6 27 14 28 21 23 28 16 31 7 28 3 21 5 13 11 8 11 15 15 12Z", light: "#fff2b9", middle: "#ffad63", dark: "#c95a49" },
   water: { shape: "M16 2 27 17 29 23 24 29 16 31 8 29 3 23 5 17Z", light: "#e5ffff", middle: "#81d9ff", dark: "#416abf" },
-  thunder: { shape: "M18 1 4 18h10l-2 13L29 12H18Z", light: "#f7edff", middle: "#d5a4fa", dark: "#8062c2" }
+  thunder: { shape: "M18 1 4 18h10l-2 13L29 12H18Z", light: "#f7edff", middle: "#d5a4fa", dark: "#8062c2" },
+  rock: { shape: "M10 3h12l7 9-3 15-10 3-11-4L2 12Z", light: "#fff1cf", middle: "#e2b56b", dark: "#8a6a49" }
 } satisfies Record<EmblemKind, { readonly shape: string; readonly light: string; readonly middle: string; readonly dark: string }>
 
 /** Filled silhouettes and light-catching facets remain readable at wallet size. */
