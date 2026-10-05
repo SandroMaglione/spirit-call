@@ -18,7 +18,9 @@ Every quest has **three stars**, each a goal met in a cleared run:
 
 1. Clear it.
 2. A goal about the quest's idea (break the Brute, dodge the snipers).
-3. A hit budget: take at most so many hits.
+3. A hit budget: take at most so many hits. `pnpm lab` prints each
+   challenge's hits over a whole run beside its budget; a budget sits
+   between the quick bot's and the learning bot's.
 
 Stars are earned across runs (each one once, in any run that clears) and
 kept for good. Only a quest's first rank (its own enemy level) has stars.

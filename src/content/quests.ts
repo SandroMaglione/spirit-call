@@ -97,7 +97,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: null,
     introduces: brings("Fast packs that rush you: keep moving, strike back", "chaser"),
-    stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 16)],
+    stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 10)],
     rewards: { experience: 60, currencies: { crystals: 100, gold: 500 }, unlocks: [character("gunner")] }
   }),
   crossfire: quest({
@@ -110,7 +110,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theSwarm",
     introduces: brings("Shooters and snipers fighting from cover", "sniper"),
-    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 16)],
+    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
     rewards: { experience: 90, currencies: { crystals: 100, gold: 1000 }, unlocks: [aspect("marksman")] }
   }),
   theBrute: quest({
@@ -123,7 +123,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "crossfire",
     introduces: brings("The Brute: break it, then punish it", "brute"),
-    stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 18)],
+    stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 12)],
     rewards: { experience: 140, currencies: { crystals: 150, gold: 2000 }, unlocks: [character("tidecaller"), aspect("riptide"), aspect("duelist")] }
   }),
   outposts: quest({
@@ -136,7 +136,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theBrute",
     introduces: brings("Shooters spread out, swarms running between them", "shooter"),
-    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 18)],
+    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
     rewards: { experience: 180, currencies: { crystals: 150, gold: 3500 }, unlocks: [character("stormcaller"), aspect("arc")] }
   }),
   ashfall: quest({
@@ -162,7 +162,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "ashfall",
     introduces: brings("A champion guardian of the tide", "guardian"),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 20)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 8)],
     rewards: { experience: 260, currencies: { crystals: 150, gold: 15000 }, unlocks: [aspect("whirlpool")] }
   }),
   sandstorm: quest({
@@ -175,7 +175,7 @@ export const quests = {
     ranks: ranks([34, "theWarlord"]),
     after: "highTide",
     introduces: brings("Stranger foes among the obelisks", "warden"),
-    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 20)],
+    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 6)],
     rewards: { experience: 300, currencies: { crystals: 200, gold: 24000 }, unlocks: [aspect("lightningRod")] }
   }),
   theCloister: quest({
@@ -188,7 +188,7 @@ export const quests = {
     ranks: ranks([34, "theWarlord"]),
     after: "sandstorm",
     introduces: brings("Close quarters: no room to run", "galeCaster"),
-    stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 22)],
+    stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 10)],
     rewards: { experience: 340, currencies: { crystals: 200, gold: 36000 }, unlocks: [] }
   }),
   theWarlord: quest({
@@ -201,7 +201,7 @@ export const quests = {
     ranks: ranks([38, "theWarlord"]),
     after: "theCloister",
     introduces: brings("A champion stalker hunting you through every wave", "stalker"),
-    stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 22)],
+    stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 28)],
     rewards: { experience: 400, currencies: { crystals: 250, gold: 22000 }, unlocks: [] }
   }),
   holdTheLine: quest({
@@ -214,7 +214,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theSwarm",
     introduces: brings("Mixed waves, ending with an elite formation", null),
-    stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 16)],
+    stars: [cleared(), atLeast("breaks", 3), atMost("hitsTaken", 20)],
     rewards: { experience: 80, currencies: { crystals: 50, gold: 800 }, unlocks: [aspect("scattergun")] }
   }),
   /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes, and Bastion. */
@@ -228,7 +228,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theBrute",
     introduces: brings("The heaviest foes: break them before they fall", "juggernaut"),
-    stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 18)],
+    stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 6)],
     rewards: { experience: 160, currencies: { crystals: 80, gold: 1300 }, unlocks: [character("stonekeeper")] }
   }),
   nightOfPacks: quest({
@@ -241,7 +241,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "crossfire",
     introduces: brings("Packs at night, led by elites", "swarmer"),
-    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 16)],
+    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 8)],
     rewards: { experience: 110, currencies: { crystals: 60, gold: 1000 }, unlocks: [] }
   }),
   eliteHunt: quest({
@@ -254,7 +254,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "theBrute",
     introduces: brings("Elites leading every wave", null),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 18)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 20)],
     rewards: { experience: 150, currencies: { crystals: 80, gold: 1200 }, unlocks: [] }
   }),
   strangeCompany: quest({
@@ -267,7 +267,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "crossfire",
     introduces: brings("Foes that burst, ward, blink, and blow you around", "volatile"),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 18)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 10)],
     rewards: { experience: 120, currencies: { crystals: 60, gold: 1100 }, unlocks: [] }
   }),
   stormFront: quest({
@@ -280,7 +280,7 @@ export const quests = {
     ranks: ranks([22, "highTide"], [34, "theWarlord"]),
     after: "outposts",
     introduces: brings("Snipers and thunder elites at the harbor", "sniper"),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 18)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 6)],
     rewards: { experience: 180, currencies: { crystals: 80, gold: 1400 }, unlocks: [] }
   })
 }
