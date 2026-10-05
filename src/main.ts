@@ -94,16 +94,17 @@ const start = async (mount: HTMLElement) => {
     sounds.play(error ? "uiError" : "uiSuccess")
     if (!error) feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), 1200)
   }
-  const change = (action: () => Promise<unknown>, message: string) => {
+  const change = (action: () => Promise<unknown>, message: string | null) => {
     if (uiStore.busy.peek()) return
     uiStore.busy.value = true
-    void action().then((saved) => notify(saved === undefined ? "Could not save. Please try again." : message, saved === undefined))
+    void action().then((saved) => { if (saved === undefined) notify("Could not save. Please try again.", true); else if (message !== null) notify(message) })
       .catch(() => notify("Could not save. Please try again.", true))
       .finally(() => (uiStore.busy.value = false))
   }
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
-    saveTeam: (team, aspects) => change(() => shell.select(team, uiStore.account.peek().selection.play, aspects), "Team saved"),
+    // Kept as it is set up: nothing to tell the player unless it fails.
+    saveTeam: (team, aspects) => change(() => shell.select(team, uiStore.account.peek().selection.play, aspects), null),
     enter: (team, aspects, play) => {
       // Entering is remembered on the account; a character not owned or something not open is refused, and nothing starts.
       if (uiStore.busy.peek()) return

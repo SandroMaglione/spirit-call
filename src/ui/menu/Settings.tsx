@@ -1,16 +1,31 @@
+/** This device's settings: sound, and how the game is controlled. */
 import { useSignal } from "@preact/signals"
-import { Dialog } from "../Dialog.tsx"
-import { Icon } from "../Icon.tsx"
+import { Slider, Toggle } from "../kit/controls.tsx"
+import { Fact } from "../kit/panel.tsx"
+import { Screen, SideTabs, TopBar } from "../kit/shell.tsx"
 import type { UiActions, UiStore } from "../store.ts"
+import type { Nav } from "./screens.ts"
 
+/** Sound on or off, and how loud; also in the pause menu. */
 export const SoundSettings = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const sound = store.sound.value
-  return <section class="sound-settings"><h3>Sound</h3><button type="button" class="ghost" aria-pressed={!sound.muted} aria-label={sound.muted ? "Enable sound" : "Mute sound"} onClick={() => actions.setMuted(!sound.muted)}>{sound.muted ? "Off" : "On"}</button><label>Volume <output>{Math.round(sound.volume * 100)}%</output><input aria-label="Volume" type="range" min={0} max={100} step={5} value={Math.round(sound.volume * 100)} onInput={(event) => actions.setVolume(Number(event.currentTarget.value) / 100)} /></label></section>
+  return <div class="settings__rows">
+    <Fact tall label="Sound" value={<Toggle on={!sound.muted} label={sound.muted ? "Enable sound" : "Mute sound"} onChange={(on) => actions.setMuted(!on)}>{sound.muted ? "Off" : "On"}</Toggle>} />
+    <Fact tall label="Volume" value={<><Slider label="Volume" value={sound.volume} onChange={actions.setVolume} /><output>{Math.round(sound.volume * 100)}%</output></>} />
+  </div>
 }
 
-export const Settings = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
-  const help = useSignal(false)
-  return <div class="screen settings-screen"><SoundSettings store={store} actions={actions} /><button type="button" class="ghost" onClick={() => (help.value = true)}><Icon name="info" />Controls</button>
-    {help.value && <Dialog title="Controls" close={() => (help.value = false)}><p>{store.device.value === "touch" ? "Move with the left stick. Tap the right buttons to attack, dash, and use skills. Tap a party member to switch." : "WASD move · mouse attack · Space special · Shift ultimate · right click dash · 1 / 2 / 3 switch."}</p><p>Drag a menu spirit to rotate it. The game uses landscape. Menus follow your device's reduced-motion setting.</p></Dialog>}
-  </div>
+const touchControls = [["Move", "Left stick"], ["Attack", "Tap; hold to charge"], ["Dash, special, ultimate", "Their buttons"], ["Switch", "Tap a party member"]] as const
+const desktopControls = [["Move", "W A S D"], ["Attack", "Mouse; hold to charge"], ["Dash", "Right click"], ["Special · Ultimate", "Space · Shift"], ["Switch", "1 · 2 · 3"]] as const
+
+export const Settings = ({ store, actions, nav }: { readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav }) => {
+  const tab = useSignal<"sound" | "controls">("sound")
+  return <Screen name="settings">
+    <TopBar icon="settings" title="Settings" close={nav.back} />
+    <SideTabs label="Settings" current={tab.value} onChange={(id) => (tab.value = id)} tabs={[{ id: "sound", label: "Sound" }, { id: "controls", label: "Controls" }]} />
+    <div class="settings__content in-right" key={tab.value}>{tab.value === "sound" ? <SoundSettings store={store} actions={actions} /> : <div class="settings__rows">
+      {(store.device.value === "touch" ? touchControls : desktopControls).map(([what, how]) => <Fact tall key={what} label={what} value={how} />)}
+      <Fact tall label="In the menu" value="Drag a spirit to turn it" />
+    </div>}</div>
+  </Screen>
 }

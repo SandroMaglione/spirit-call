@@ -1,121 +1,103 @@
 /**
- * Pieces the menu's screens share: where they go (`Nav`), the top bar, the
- * wallet, element badges, the big call to action, the places a model or
- * a portrait shows, and an enemy's card. The UI only marks those places (`data-model`,
- * `data-portrait`); the presentation draws into them (see
- * `presentation/showcase.ts`), so the menu never touches the renderer.
+ * The game's own pieces, built from the kit (`../kit/`), for every screen
+ * to share: a character or an enemy as a card, what an enemy is weak to,
+ * amounts of rewards, the wallet, and the party as a strip of faces. A
+ * screen that needs one of these in a new way should grow it here, not
+ * draw its own.
  */
-import { Icon } from "../Icon.tsx"
-import type { ComponentChildren } from "preact"
-
 import type { CharacterId } from "../../content/characters.ts"
+import { characterLevel, owns } from "../../account/account.ts"
 import type { CurrencyId } from "../../content/currencies.ts"
 import { elements } from "../../content/elements.ts"
-import type { ElementId } from "../../content/elements.ts"
+import type { Affinities as Traits } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
-import { affinityList, attackElements } from "../describe.ts"
+import type { Rewards } from "../../content/quests.ts"
+import { affinityList, affinityNames, attackElements, describeUnlock } from "../describe.ts"
+import { elementOf } from "../draft.ts"
+import { Icon } from "../Icon.tsx"
+import { Face, Portrait } from "../kit/art.tsx"
+import { Card } from "../kit/Card.tsx"
+import { RoundButton } from "../kit/controls.tsx"
+import { Fact } from "../kit/panel.tsx"
+import { Coin } from "../kit/shell.tsx"
 import type { UiStore } from "../store.ts"
-
-/** The menu's screens; the character page opens on one of its tabs. */
-export type Screen =
-  | { readonly kind: "home" }
-  | { readonly kind: "quests"; readonly tab: QuestTab }
-  | { readonly kind: "team" }
-  | { readonly kind: "character"; readonly character: CharacterId; readonly tab: CharacterTab }
-  | { readonly kind: "discoveries" }
-  | { readonly kind: "extra"; readonly mode: "training" | "practice" }
-  | { readonly kind: "settings" }
-
-export type QuestTab = "main" | "secondary" | "hardcore"
-export type CharacterTab = "overview" | "aspect" | "kit"
-
-/** Moving between screens: `go` opens one over the current one, `back` returns to the one before. */
-export interface Nav {
-  readonly go: (screen: Screen) => void
-  readonly replace: (screen: Screen) => void
-  readonly back: () => void
-}
 
 export const ids = <Id extends string>(record: Record<Id, unknown>): Array<Id> => Object.keys(record) as Array<Id>
 
-/** A screen's top bar: back, its title, and whatever goes on the right. */
-export const TopBar = ({ nav, title, children }: { readonly nav: Nav; readonly title: string; readonly children?: ComponentChildren }) => (
-  <header class="topbar">
-    <button type="button" class="topbar__back" aria-label="Back" onClick={nav.back}>
-      <Icon name="back" />
-    </button>
-    <h1 class="topbar__title">{title}</h1>
-    <div class="topbar__end">{children}</div>
-  </header>
-)
-
-/** The currencies the account holds. */
+/** The currencies the account holds (all of them, or only the ones a screen spends). */
 export const Wallet = ({ store, currencies }: { readonly store: UiStore; readonly currencies?: ReadonlyArray<CurrencyId> }) => {
-  const tuning = store.tuning.value
-  const wallet = store.account.value.wallet
-  return (
-    <div class="wallet">
-      {(currencies ?? ids(tuning.currencies)).map((id: CurrencyId) => (
-        <span key={id} class={`wallet__item currency--${id}`} aria-label={`${tuning.currencies[id].name}: ${wallet[id] ?? 0}`} title={`${tuning.currencies[id].name}: for ${tuning.currencies[id].use}`}>
-          <Icon name={id} />
-          <span class="wallet__amount">{(wallet[id] ?? 0).toLocaleString("en-US")}</span>
-        </span>
-      ))}
-    </div>
-  )
+  const tuning = store.tuning.value, wallet = store.account.value.wallet
+  return <div class="wallet">{(currencies ?? ids(tuning.currencies)).map((id: CurrencyId) => <Coin key={id} icon={id} label={`${tuning.currencies[id].name}: ${wallet[id] ?? 0}`}>{(wallet[id] ?? 0).toLocaleString("en-US")}</Coin>)}</div>
 }
 
-/** Element names use the same faceted symbols as skills and enemy details. */
-export const ElementBadge = ({ element }: { readonly element: ElementId | null }) =>
-  element === null ? null : (
-    <span class="element" data-element={element} title={elements[element].name}>
-      <Icon name={element} />
-      <span>{elements[element].name}</span>
-    </span>
-  )
+/** A character as a card: her portrait on her element, her level at the foot (a lock when not owned). */
+export const CharacterCard = ({ store, character, mark, selected, fresh, foot, onClick }: {
+  readonly store: UiStore; readonly character: CharacterId; readonly mark?: "tick" | number | undefined; readonly selected?: boolean; readonly fresh?: boolean
+  /** Instead of her level. */
+  readonly foot?: string
+  readonly onClick?: (() => void) | undefined
+}) => {
+  const tuning = store.tuning.value, account = store.account.value
+  const owned = owns(account, { kind: "character", id: character }), element = elementOf(tuning, character)
+  return <Card art={<Portrait of={{ character }} />} foot={foot ?? (owned ? `Lv ${characterLevel(tuning, account, character).level}` : <Icon name="lock" />)} tint={element} corner={element} mark={mark} selected={selected ?? false} fresh={fresh ?? false} locked={!owned && foot === undefined} label={tuning.characters[character].name} onClick={onClick} />
+}
 
-/** The screen's main action: a gold button with a centered label. */
-export const Cta = ({ onClick, disabled, children }: { readonly onClick: () => void; readonly disabled?: boolean; readonly children: ComponentChildren }) => (
-  <button type="button" class="cta" disabled={disabled} onClick={onClick}>
-    <span class="button-label">{children}</span>
-  </button>
+/** An enemy as a card: its portrait, its name at the foot. */
+export const EnemyCard = ({ store, kind, mark, selected, size, onClick }: {
+  readonly store: UiStore; readonly kind: EnemyKind; readonly mark?: "tick" | undefined; readonly selected?: boolean; readonly size?: "small"; readonly onClick?: (() => void) | undefined
+}) => <Card art={<Portrait of={{ enemy: kind }} />} foot={store.tuning.value.enemies[kind].name} mark={mark} selected={selected ?? false} {...(size === undefined ? {} : { size })} label={store.tuning.value.enemies[kind].name} onClick={onClick} />
+
+/** An enemy's affinities as element icons, what it is weak to first; one it resists is struck out, one it is immune to crossed out. */
+export const Affinities = ({ traits }: { readonly traits: Traits }) => (
+  <span class="affinities">{affinityList(traits).map(({ element, affinity }) => <span key={element} data-affinity={affinity} aria-label={`${affinityNames[affinity]} ${elements[element].name}`}><Icon name={element} /></span>)}</span>
 )
 
-/** Where a character's model stands, playing her idle (drawn by the presentation). */
-export const Model = ({ character, turn, reveal, class: className = "" }: { readonly character: CharacterId; readonly turn?: number; readonly reveal?: boolean; readonly class?: string }) => (
-  <div class={`model ${className}`} data-model={character} data-turn={turn} data-reveal={reveal ? "true" : undefined} />
+/** The enemies of a fight, each over what it is weak to: tap one to read about it (`inspect`), again to put it back. */
+export const Enemies = ({ store, kinds, inspected, inspect }: { readonly store: UiStore; readonly kinds: ReadonlyArray<EnemyKind>; readonly inspected: EnemyKind | null; readonly inspect: (kind: EnemyKind | null) => void }) => (
+  <div class="enemies scroll-x">{kinds.map((kind) => <div key={kind} class="enemies__one">
+    <EnemyCard store={store} kind={kind} size="small" selected={kind === inspected} onClick={() => inspect(kind === inspected ? null : kind)} />
+    <Affinities traits={store.tuning.value.enemies[kind].elements} />
+  </div>)}</div>
 )
 
-/** What a portrait shows: a character, or an enemy kind. */
-export type PortraitOf = { readonly character: CharacterId } | { readonly enemy: EnemyKind }
+const affinityLabels = { weak: "Weak to", resists: "Resists", immune: "Immune to" } as const
 
-/** A small picture of a character or an enemy (drawn by the presentation). */
-export const Portrait = ({ of, class: className = "" }: { readonly of: PortraitOf; readonly class?: string }) => (
-  <span class={`portrait ${className}`} data-portrait={"character" in of ? of.character : `enemy:${of.enemy}`} />
-)
-
-const affinityMarks = { weak: "▲", resists: "▼", immune: "✕" } as const
-
-/** An enemy of a briefing (or the in-game menu): its portrait, name, affinities, and the elements it attacks with (outlined: what it would put on you). */
-export const Foe = ({ store, kind, inspect }: { readonly store: UiStore; readonly kind: EnemyKind; readonly inspect?: (kind: EnemyKind) => void }) => {
+/** What to know about an enemy: what it does, what each element does to it, and what its attacks carry. */
+export const EnemyFacts = ({ store, kind }: { readonly store: UiStore; readonly kind: EnemyKind }) => {
   const spec = store.tuning.value.enemies[kind]
-  const content = (
-    <>
-      <Portrait of={{ enemy: kind }} />
-      <b>{spec.name}</b>
-      <span class="foe__traits">
-        {affinityList(spec.elements).map(({ element, affinity }) => (
-          <i key={element} class={`trait trait--${affinity}`} data-element={element}>
-            {elements[element].name} {affinityMarks[affinity]}
-          </i>
-        ))}
-        {attackElements(spec.attacks).map((element) => (
-          <i key={`attacks-${element}`} class="trait trait--attacks" data-element={element} title={`Its attacks carry ${elements[element].name.toLowerCase()}`}>
-            {elements[element].name} attack
-          </i>
-        ))}
-      </span>
-    </>
-  )
-  return inspect === undefined ? <div class="foe" title={spec.description}>{content}</div> : <button type="button" class="foe" aria-label={`Inspect ${spec.name}`} onClick={() => inspect(kind)}>{content}<small class="inline-icon">Details <Icon name="next" /></small></button>
+  const traits = affinityList(spec.elements), attacks = attackElements(spec.attacks)
+  return <>
+    <p>{spec.description}</p>
+    <div>
+      {(["weak", "resists", "immune"] as const).map((affinity) => {
+        const those = traits.filter((trait) => trait.affinity === affinity)
+        return those.length === 0 ? null : <Fact key={affinity} label={affinityLabels[affinity]} value={those.map(({ element }) => <Icon key={element} name={element} />)} />
+      })}
+      {traits.length === 0 && <Fact label="Elements" value="No weakness" />}
+      <Fact label="Attacks with" value={attacks.length === 0 ? "No element" : attacks.map((element) => <Icon key={element} name={element} />)} />
+    </div>
+  </>
+}
+
+/** What something gives: experience, currencies, and what it unlocks (`preview` opens an unlocked character). */
+export const Amounts = ({ store, rewards, preview }: { readonly store: UiStore; readonly rewards: Rewards; readonly preview?: (character: CharacterId) => void }) => {
+  const tuning = store.tuning.value
+  return <div class="amounts">
+    {rewards.experience > 0 && <span aria-label={`${rewards.experience} account XP`}><Icon name="xp" />{rewards.experience}</span>}
+    {ids(tuning.currencies).filter((id) => (rewards.currencies[id] ?? 0) > 0).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${tuning.currencies[id].name}`}><Icon name={id} />{(rewards.currencies[id] ?? 0).toLocaleString("en-US")}</span>)}
+    {rewards.unlocks.map((unlock) => unlock.kind === "aspect"
+      ? <span key={unlock.id}><Icon name="aspect" />{describeUnlock(tuning, unlock)}</span>
+      : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} onClick={() => preview?.(unlock.id)}><Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} />{describeUnlock(tuning, unlock)}</button>)}
+  </div>
+}
+
+/** The party as a strip of faces, the leader lit: `pick` on a face (lead with her, or go set the party up), `edit` on the button after them. */
+export const PartyStrip = ({ store, team, leader, pick, edit, size = 38 }: {
+  readonly store: UiStore; readonly team: ReadonlyArray<CharacterId>; readonly leader: CharacterId; readonly pick: (character: CharacterId) => void; readonly edit: () => void; readonly size?: number
+}) => {
+  const tuning = store.tuning.value
+  return <div class="party-strip">
+    {team.map((member) => <button type="button" class="face-button" key={member} aria-label={tuning.characters[member].name} aria-pressed={member === leader} onClick={() => pick(member)}><Face of={{ character: member }} tint={elementOf(tuning, member)} selected={member === leader} size={member === leader ? size + 4 : size} /></button>)}
+    <RoundButton icon="swap" tone="dark" label="Change party" onClick={edit} />
+  </div>
 }
