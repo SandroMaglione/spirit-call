@@ -161,9 +161,10 @@ The game has two areas, and Extras for practice.
 - **Quests**: where you gather resources and improve your kit, preparing for
   what is harder. A **main quest** line, plus **secondary quests** that can
   be temporary and take various formats, while keeping the quest shape
-  (chapters, a clear end).
-- **Hardcore**: combat waves, tanky bosses that are hard to
-  beat in any case, and the more grinding challenges. These are the goals you
+  (chapters, a clear end). Each chapter ends with a **champion**: one of the
+  game's own enemies, much tougher, that stays through several waves (see
+  "Champions, not bosses" below).
+- **Hardcore**: combat waves, champions, and the more grinding challenges. These are the goals you
   are aiming to beat, where preparation and skill are tested fully. It is
   organized in **tiers** of mostly the same kind of content, each harder in
   every way (enemy levels, modifiers, and attack patterns), so lower tiers
@@ -175,8 +176,19 @@ The game has two areas, and Extras for practice.
 - **Extras**, for practice: a Training Ground (dummies that never fall,
   one that breaks, one that swings to dodge, fire to push them into) and
   Enemy Practice (the enemies picked, all on the field together and coming
-  back a few seconds after they fall, until the team falls). Played at the team's own level, they record nothing: no
+  back a few seconds after they fall, until the team falls; with elites, and
+  a champion, when asked). Played at the team's own level, they record nothing: no
   experience, gold, or discoveries, so they are never the place to farm.
+- **Champions, not bosses.** The game is fast and crowded, and its
+  elements push, pull, and hold bodies around: a slow, scripted boss with
+  its own model, phases, and entrances fits neither, and costs a model used
+  a few times. Instead, a challenge's hardest enemy is a **champion**: one
+  of the game's enemies made bigger, much tougher, stronger, and faster
+  (its telegraphs never shorter), carrying an element like an elite, with
+  its own mark. It has no phases or scripted moments: it fights as its kind
+  does. It stays across waves (the next wave comes while it stands), so it
+  takes several waves' worth of fighting to bring down, and the challenge
+  is cleared only once it has fallen too. Nothing about it is timed.
 - **Nothing is missable.** Temporary content rotates back later, and
   periodic resets only restock rewards: anything skipped can be had another
   time, so there is never pressure to log in.

@@ -13,7 +13,8 @@ import type { EnemyKind } from "../content/enemies.ts"
 import { Broke, Enemy, Game, Health, HitStop, Hit, Hurtbox, Poise, Position, Reaction, Stunned, Time, Tuning } from "../schema.ts"
 
 /** The size of an enemy's break bar at `maxHealth`; 0 when it never breaks. */
-export const poiseOf = (tuning: TuningValue, kind: EnemyKind, maxHealth: number): number => tuning.enemies[kind].poise * maxHealth
+export const poiseOf = (tuning: TuningValue, kind: EnemyKind, maxHealth: number, champion = false): number =>
+  tuning.enemies[kind].poise * maxHealth * (champion ? tuning.champions.poise : 1)
 
 /** Fills break bars from this step's blows and reactions, drains quiet ones, and breaks the full ones. */
 export const BuildPoise = Game.System("Shooter/BuildPoise", {
@@ -40,7 +41,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
   const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && (reaction.kind === "burst" || reaction.kind === "slam"))
   for (const { entity, data } of queries.enemies.each()) {
     const kind = data.enemy.get().kind
-    const bar = poiseOf(tuning, kind, data.health.get().max)
+    const bar = poiseOf(tuning, kind, data.health.get().max, data.enemy.get().champion)
     if (bar <= 0) continue
     const poise = data.poise.get()
     if (poise.broken > 0) {

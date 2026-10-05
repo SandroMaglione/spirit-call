@@ -263,7 +263,7 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
           const direction = away(body)
           deal(body, (state.atk * rules.swept.power) / 100, direction)
           if (!takes(body)) continue
-          const push = rules.swept.knockback * knockbackTaken(tuning, body.data.enemy.present ? body.data.enemy.get().kind : undefined)
+          const push = rules.swept.knockback * knockbackTaken(tuning, body.data.enemy.present ? body.data.enemy.get().kind : undefined, body.data.enemy.present && body.data.enemy.get().champion)
           body.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
           stun(body, rules.swept.stun)
         }

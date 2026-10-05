@@ -225,6 +225,14 @@ export const view = {
    */
   elements: { fire: 0xff7b2e, water: 0x4aa8ff, wind: 0xc9fff1, thunder: 0xb48cff },
   states: { burning: 0xff7b2e, soaked: 0x4aa8ff, charged: 0xb48cff, swept: 0xc9fff1, tint: 0.5, motes: 14 },
+  /**
+   * A champion (see `Tuning.champions`): its mark under its feet (a filled
+   * ring pulsing `pulse` around `fill`, `points` points out to `outer`
+   * world units past its body), the glow on its body (`glow`, pulsing
+   * `glowPulse` at `pulseHz`), and its health bar over its head (`bar`
+   * pixels wide, always shown).
+   */
+  champion: { fill: 0.18, pulse: 0.06, pulseHz: 1.2, points: 6, outer: 26, glow: 0.42, glowPulse: 0.12, bar: 74 },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6, ash: 0x3a3330 },
   /**

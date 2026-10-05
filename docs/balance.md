@@ -20,6 +20,16 @@ aspect deals within 25% of its class's plain aspect by the numbers
 (`validateContent`); what passives, bounces, and chains add is for the lab
 and play to judge.
 
+## Champions (October 2026)
+
+Each chapter's finale gained a champion (see `docs/enemies.md`): a thunder
+Brute in The Brute, a water Guardian in High Tide, and a fire Stalker in The
+Warlord. A champion Juggernaut was tried for The Warlord first: its armor on
+top of a champion's health kept matched teams from clearing in time, so it
+was swapped for the Stalker. Fire champions leave no trail: in the lab a
+long-lived fire trail did most of the damage the dodging bot took. The
+baseline was recorded again with them.
+
 ## Implemented tuning
 
 The audit below records the original problems. The playable update now uses:

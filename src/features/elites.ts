@@ -1,13 +1,13 @@
 /**
  * Elite enemies (see `Tuning.elites`): what their element adds to them. A
  * fire elite leaves fire on the ground behind it, a water one puddles
- * (both hurt or soak whoever walks in, enemies too, and both feed a wind
- * whirl); a thunder elite discharges around itself now and then, a ring
- * telegraphed where it stood. Their blows carry the element too (see
+ * (both hurt or soak whoever walks in, enemies too; a champion leaves no
+ * trail, see `Tuning.champions`); a thunder elite discharges around itself
+ * now and then, a ring telegraphed where it stood. Their blows carry the element too (see
  * `UpdateAttacks`). All of it runs at the enemies' pace, and waits while
  * the elite is stunned.
  */
-import { blow, Elite, Game, Hitbox, Position, RunScope, SlowMotion, Stunned, Time, Tuning, Velocity, CombatStats } from "../schema.ts"
+import { blow, Elite, Enemy, Game, Hitbox, Position, RunScope, SlowMotion, Stunned, Time, Tuning, Velocity, CombatStats } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeGround } from "./ground.ts"
 import { enemyPace } from "./time.ts"
@@ -20,7 +20,8 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
         position: Game.Query.read(Position),
         velocity: Game.Query.read(Velocity),
         stunned: Game.Query.read(Stunned),
-        stats: Game.Query.read(CombatStats)
+        stats: Game.Query.read(CombatStats),
+        enemy: Game.Query.read(Enemy)
       }
     })
   },
@@ -35,6 +36,8 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
     const at = data.position.get()
     const atk = data.stats.get().atk
     if (elite.element === "fire" || elite.element === "water") {
+      // A champion leaves no trail: it stays for waves, and would flood the floor.
+      if (data.enemy.get().champion) continue
       // A pool every so often while it moves.
       const velocity = data.velocity.get()
       const moving = Math.hypot(velocity.x, velocity.y) > 20

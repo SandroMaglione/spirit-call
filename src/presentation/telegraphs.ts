@@ -22,7 +22,7 @@ import { drawArea } from "./draw.ts"
 export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   queries: {
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
-    elites: Game.Query({ selection: { elite: Game.Query.read(Elite), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) } }),
+    elites: Game.Query({ selection: { elite: Game.Query.read(Elite), enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
     discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     attackers: Game.Query({
@@ -133,14 +133,27 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
 
   // Elites: a ring of their element under their feet, turning; a thunder elite's discharge fills its ring where it will strike.
+  // A champion's mark: a crest instead, a filled ring with points around it turning the other way, and a wider ring out.
   for (const { data } of queries.elites.each()) {
     const elite = data.elite.get()
     const color = view.elements[elite.element]
     const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
     const radius = data.body.get().radius + 10
     const turn = now * 2.2
-    g.strokeArc(at.x, at.y, radius, turn, turn + Math.PI * 0.8, 3, color, 0.85)
-    g.strokeArc(at.x, at.y, radius, turn + Math.PI, turn + Math.PI * 1.8, 3, color, 0.85)
+    if (data.enemy.get().champion) {
+      const mark = view.champion
+      g.fillCircle(at.x, at.y, radius + 4, color, mark.fill + mark.pulse * Math.sin(now * mark.pulseHz * Math.PI * 2))
+      g.strokeCircle(at.x, at.y, radius + 4, 3, color, 0.95)
+      g.strokeCircle(at.x, at.y, radius + mark.outer, 2, color, 0.5)
+      for (let point = 0; point < mark.points; point++) {
+        const angle = -turn * 0.6 + (point / mark.points) * Math.PI * 2
+        const inner = radius + 6, outer = radius + mark.outer - 2
+        g.line(at.x + Math.cos(angle) * inner, at.y + Math.sin(angle) * inner, at.x + Math.cos(angle) * outer, at.y + Math.sin(angle) * outer, 3, color, 0.9)
+      }
+    } else {
+      g.strokeArc(at.x, at.y, radius, turn, turn + Math.PI * 0.8, 3, color, 0.85)
+      g.strokeArc(at.x, at.y, radius, turn + Math.PI, turn + Math.PI * 1.8, 3, color, 0.85)
+    }
     if (elite.charging !== null) {
       const discharge = tuning.elites.discharge
       const progress = 1 - elite.charging.remaining / discharge.windup

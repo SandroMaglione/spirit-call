@@ -66,24 +66,28 @@ export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number):
 /**
  * An enemy of `kind` at `level` (see `EnemyLevel`); an elite one (see
  * `Tuning.elites`) when `elite` names its element: bigger, tougher, immune
- * to its element.
+ * to its element; a champion (see `Tuning.champions`) when `champion` too:
+ * bigger still, much tougher, stronger, and faster.
  */
-export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1, elite: EliteElement | null = null) => {
+export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1, elite: EliteElement | null = null, champion = false) => {
   const stats = tuning.enemies[kind]
   const base = enemyStats(tuning, kind, level)
-  const hp = elite === null ? base.hp : Math.round(base.hp * tuning.elites.health)
-  const { atk, def, speed } = base
-  const size = elite === null ? 1 : tuning.elites.scale
+  const lead = champion && elite !== null ? tuning.champions : null
+  const hp = elite === null ? base.hp : Math.round(base.hp * (lead?.health ?? tuning.elites.health))
+  const atk = lead === null ? base.atk : Math.round(base.atk * lead.atk)
+  const speed = lead === null ? base.speed : base.speed * lead.speed
+  const { def } = base
+  const size = elite === null ? 1 : lead?.scale ?? tuning.elites.scale
   const affinities = elite === null ? stats.elements : { ...stats.elements, [elite]: "immune" as const }
   const body = Game.Command.insert(
     makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius * size, hurtboxRadius: stats.hurtboxRadius * size, affinities }),
-    [Enemy, { kind }],
+    [Enemy, { kind, champion: lead !== null }],
     [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
     [EnemyMode, "orbit"],
     [Poise, { current: 0, broken: 0, quiet: 0 }],
-    [Renderable, elite === null ? { kind: "enemy", enemy: kind, radius: stats.radius } : { kind: "enemy", enemy: kind, radius: stats.radius * size, elite }]
+    [Renderable, elite === null ? { kind: "enemy", enemy: kind, radius: stats.radius } : { kind: "enemy", enemy: kind, radius: stats.radius * size, elite, ...(lead === null ? {} : { champion: true as const }) }]
   )
   // Staggered, so elites of a wave do not all discharge together.
   const draft = elite === null
@@ -97,8 +101,13 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   return stats.ward === null ? shielded : Game.Command.insert(shielded, [Ward, { ally: null, formed: 0, wait: 0 }])
 }
 
-/** Spawn warnings for one wave slot: the enemy's whole `group`, clustered around `at`; an elite slot's first one is the elite. */
-export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null) => {
+/**
+ * Spawn warnings for one wave slot: the enemy's whole `group`, clustered
+ * around `at`; an elite slot's first one is the elite; a champion comes
+ * alone.
+ */
+export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null, champion = false) => {
+  if (champion && elite !== null) return [makePendingSpawn(kind, at, delay, elite, undefined, true)]
   const count = tuning.enemies[kind].group
   const spread = count === 1 ? 0 : tuning.enemies[kind].radius * 3
   return Array.from({ length: count }, (_, index) => {
@@ -109,11 +118,11 @@ export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, 
 
 /**
  * A spawn warning that becomes an enemy of `kind` (an elite, when `elite`
- * names its element) at `at` after `delay`; holding Enemy Practice's spot
- * `slot`, when given.
+ * names its element; a champion, when `champion` too) at `at` after
+ * `delay`; holding Enemy Practice's spot `slot`, when given.
  */
-export const makePendingSpawn = (kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null, slot?: number) =>
-  Game.Command.spawn([PendingSpawn, { kind, at, remaining: delay, duration: delay, elite, ...(slot === undefined ? {} : { slot }) }])
+export const makePendingSpawn = (kind: EnemyKind, at: Vec2, delay: number, elite: EliteElement | null = null, slot?: number, champion = false) =>
+  Game.Command.spawn([PendingSpawn, { kind, at, remaining: delay, duration: delay, elite, ...(champion ? { champion: true } : {}), ...(slot === undefined ? {} : { slot }) }])
 
 /** The pending spawn that brings a killed respawning enemy back. */
 export const respawnOf = (kind: EnemyKind, respawns: { readonly at: Vec2; readonly delay: number }) =>
@@ -170,7 +179,7 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
     }
     commands.despawn(entity.id)
     // Alternate strafing directions so groups of shooters spread out.
-    const made = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level, pending.elite)
+    const made = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level, pending.elite, pending.champion === true)
     // Enemy Practice's: it holds its spot (see `KeepPracticeField`).
     const draft = pending.slot === undefined ? made : Game.Command.insert(made, [PracticeUnit, { slot: pending.slot }])
     commands.spawnIn(RunScope, pending.kind === "dummy"

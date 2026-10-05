@@ -23,7 +23,7 @@ import type { PartyTaps, TouchButton } from "../src/config/input.ts"
 import { keyBindings, touchButtons } from "../src/config/input.ts"
 import { engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import type { ChallengeId } from "../src/content/challenges.ts"
+import type { ChallengeId, EliteElement } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { createSimulation } from "../src/simulation.ts"
@@ -439,7 +439,8 @@ export interface BotRun {
   readonly challenge?: ChallengeId
   readonly enemyLevel?: number
   /** Spawns the enemies to face (otherwise the challenge's waves come). */
-  readonly enemies?: ReadonlyArray<{ readonly kind: EnemyKind; readonly offset: Vec2 }>
+  /** The enemies to fight instead of waves; `champion`: a champion of its kind carrying that element. */
+  readonly enemies?: ReadonlyArray<{ readonly kind: EnemyKind; readonly offset: Vec2; readonly champion?: EliteElement }>
   readonly seconds: number
   /** Stand still instead of dodging, to compare. */
   readonly still?: boolean
@@ -537,7 +538,9 @@ export const runBot = (run: BotRun): BotReport => {
     })
     const Spawn = Game.System("Bot/Spawn", {}, ({ commands }) => {
       const middle = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
-      for (const { kind, offset } of enemies) commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: middle.x + offset.x, y: middle.y + offset.y }, 1, run.enemyLevel ?? 1))
+      for (const { kind, offset, champion } of enemies) {
+        commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: middle.x + offset.x, y: middle.y + offset.y }, 1, run.enemyLevel ?? 1, champion ?? null, champion !== undefined))
+      }
     })
     sim.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
   }

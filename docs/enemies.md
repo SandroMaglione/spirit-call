@@ -144,6 +144,37 @@ Elites make the elements part of the fight on the enemies' side, ready to be
 turned against them. Endless waves make elites of a growing share of their
 slots.
 
+## Champions
+
+A wave entry can be a **champion** (see "Champions, not bosses" in
+`docs/vision.md`): an elite pushed further, the hardest enemy of a
+challenge. It is one of the game's enemies, with its moveset and model,
+and none of a boss's scripting: no phases, entrances, or timers.
+
+- **Bigger, much tougher, stronger, faster**: several times an elite's
+  health (it survives a few waves), more damage, quicker on its feet, and
+  shorter waits between attacks. Its **telegraphs never get shorter**, so
+  every attack stays as fair as its kind's (the fairness test holds
+  champions to it).
+- **Elemental, like an elite**: immune to its element, every blow carrying
+  it, and a thunder champion discharges around itself. It leaves no trail:
+  staying for waves, it would flood the floor. States and bursts land on it
+  as on any enemy; over its long life they add up.
+- **Harder to move**: pushed less than its kind (a Gale or a wall slam
+  still counts), and its break bar is a smaller share of its health than
+  its kind's, so it breaks a few times in a fight, each a window.
+- **Its own mark**: a crest under its feet and a stronger glow in its
+  element's color, and a larger health bar, so it reads in a crowd.
+- **It stays across waves.** It does not count toward clearing the wave it
+  came in: the next wave comes once the others are down, with it still
+  standing. The challenge is cleared only when the last wave is down and
+  every champion has fallen. Bringing it down early is a good plan; leaving
+  it means fighting every wave with it on the field.
+
+Each chapter of the main line ends with a champion. Melee and area kinds
+make good champions; pure ranged ones (a Sniper) would hide at the edge for
+waves, and are kept out. Enemy Practice can add a champion to the field.
+
 ## Arenas
 
 Each challenge is fought in an arena (`content/arena.ts`): its pillars (tall,

@@ -13,7 +13,7 @@
  */
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
-import { entryKind } from "./challenges.ts"
+import { entryChampion, entryKind } from "./challenges.ts"
 import { elements } from "./elements.ts"
 import { basicAttack } from "./aspects.ts"
 import type { AspectSpec } from "./aspects.ts"
@@ -345,7 +345,11 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     const { scripted, endless } = challenge.waves
     scripted.forEach((wave, index) => {
       if (wave.length === 0) problems.push(`${where}: wave ${index + 1} has no enemies`)
-      for (const entry of wave) if (!has(tuning.enemies, entryKind(entry))) problems.push(`${where}: wave ${index + 1} has unknown enemy ${entryKind(entry)}`)
+      for (const entry of wave) {
+        if (!has(tuning.enemies, entryKind(entry))) problems.push(`${where}: wave ${index + 1} has unknown enemy ${entryKind(entry)}`)
+        // A champion stays for waves: one that keeps its distance would hide at the edge all along.
+        else if (entryChampion(entry) && tuning.enemies[entryKind(entry)].behavior.kind === "kite") problems.push(`${where}: wave ${index + 1} has a champion ${entryKind(entry)}, which keeps its distance (champions are melee or area kinds)`)
+      }
     })
     if (challenge.objective.kind === "clearWaves") {
       if (endless !== null) problems.push(`${where}: clearing every wave can never happen with endless waves`)

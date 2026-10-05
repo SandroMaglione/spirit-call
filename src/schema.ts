@@ -387,7 +387,8 @@ export interface DiscValue {
 export const Disc = Descriptor.Component<DiscValue>()("Shooter/Disc")
 
 export type { EnemyKind }
-export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind }>()("Shooter/Enemy")
+/** An enemy of `kind`; `champion`: an elite pushed further, staying across waves (see `Tuning.champions`). */
+export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean }>()("Shooter/Enemy")
 
 /** Where an enemy is in its telegraphed attack cycle. */
 export const AttackPhase = Descriptor.State("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
@@ -496,6 +497,8 @@ export const PendingSpawn = Descriptor.Component<{
   readonly duration: number
   /** The element of an elite (see `Tuning.elites`), or `null`. */
   readonly elite: EliteElement | null
+  /** A champion (an elite pushed further, see `Tuning.champions`). */
+  readonly champion?: boolean
   /** Enemy Practice's spot it fills (see `PracticeField`), if any. */
   readonly slot?: number
 }>()("Shooter/PendingSpawn")
@@ -522,7 +525,7 @@ export type WallPlacement = "back" | "front" | "sorted" | "inner"
 
 export type RenderableValue =
   | { readonly kind: "player"; readonly character: CharacterId; readonly radius: number }
-  | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number; readonly elite?: EliteElement }
+  | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number; readonly elite?: EliteElement; readonly champion?: true }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number; readonly element: ElementId | null }
   /** A wall of the arena; `prop`, when it is one of the arena's props (its place among them: see `content/arena.ts`). */
   | { readonly kind: "wall"; readonly box: Box; readonly placement: WallPlacement; readonly arena: ArenaId; readonly prop?: number }
@@ -824,12 +827,14 @@ export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
 
 /**
  * Enemy Practice's picks (see the `practice` objective): the enemy kinds its
- * waves bring, and whether some come as elites. Set on entering; a run of
- * anything else ignores it.
+ * waves bring, whether some come as elites, and whether a champion of one
+ * of them joins the field. Set on entering; a run of anything else ignores
+ * it.
  */
 export interface PracticeValue {
   readonly kinds: ReadonlyArray<EnemyKind>
   readonly elites: boolean
+  readonly champion?: boolean
 }
 export const Practice = Descriptor.Resource<PracticeValue>()("Shooter/Practice")
 
@@ -840,7 +845,8 @@ export const Practice = Descriptor.Resource<PracticeValue>()("Shooter/Practice")
  * the picks take turns. Empty (no spots) until the run's first step.
  */
 export interface PracticeFieldValue {
-  readonly spots: ReadonlyArray<{ readonly kind: EnemyKind; readonly wait: number | null }>
+  /** `champion`: the spot of the champion the picks asked for (see `PracticeValue.champion`). */
+  readonly spots: ReadonlyArray<{ readonly kind: EnemyKind; readonly wait: number | null; readonly champion?: boolean }>
   readonly turn: number
 }
 export const PracticeField = Descriptor.Resource<PracticeFieldValue>()("Shooter/PracticeField")

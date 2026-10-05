@@ -156,7 +156,7 @@ The Stormcaller heals through her kit, and healing always costs something:
 
 ## Open questions
 
-1. **Tough enemies.** Whether elites and bosses take a few elemental blows
+1. **Tough enemies.** Whether elites and champions take a few elemental blows
    before a state holds (shown on the break bar's ring), rather than one.
 2. **Reach.** How far fire spreads between bodies, and how far a charge
    arcs.

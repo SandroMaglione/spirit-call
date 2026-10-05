@@ -6,7 +6,7 @@
  * "Copy JSON" copies the full current tuning, ready to paste back into
  * `config/tuning.ts` once the numbers feel right.
  */
-import { elite } from "../content/challenges.ts"
+import { champion, elite } from "../content/challenges.ts"
 import type { EliteElement } from "../content/challenges.ts"
 import { defaultTuning } from "../config/tuning.ts"
 import type { Tuning } from "../config/tuning.ts"
@@ -90,12 +90,17 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
 
   // One button per enemy type, plus clear; waves.enabled below toggles waves for a quiet sandbox.
   const spawnButtons = root.querySelector<HTMLElement>("[data-spawn]")!
-  // What the buttons spawn: plain enemies, or elites of an element (the toggle cycles).
-  const eliteChoices: ReadonlyArray<EliteElement | null> = [null, "fire", "water", "thunder"]
+  // What the buttons spawn: plain enemies, elites of an element, or champions of one (the toggle cycles).
+  const eliteChoices: ReadonlyArray<{ readonly element: EliteElement; readonly champion: boolean } | null> = [
+    null,
+    ...(["fire", "water", "thunder"] as const).map((element) => ({ element, champion: false })),
+    ...(["fire", "water", "thunder"] as const).map((element) => ({ element, champion: true }))
+  ]
   let eliteChoice = 0
   const eliteToggle = document.createElement("button")
   const showElite = () => {
-    eliteToggle.textContent = `elite: ${eliteChoices[eliteChoice] ?? "off"}`
+    const choice = eliteChoices[eliteChoice] ?? null
+    eliteToggle.textContent = choice === null ? "elite: off" : `${choice.champion ? "champion" : "elite"}: ${choice.element}`
   }
   showElite()
   eliteToggle.addEventListener("click", () => {
@@ -107,8 +112,8 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
     const button = document.createElement("button")
     button.textContent = kind
     button.addEventListener("click", () => {
-      const element = eliteChoices[eliteChoice] ?? null
-      queue.spawns.push(element === null ? kind : elite(kind, element))
+      const choice = eliteChoices[eliteChoice] ?? null
+      queue.spawns.push(choice === null ? kind : choice.champion ? champion(kind, choice.element) : elite(kind, choice.element))
     })
     spawnButtons.append(button)
   }
