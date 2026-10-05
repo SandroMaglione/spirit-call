@@ -9,7 +9,7 @@
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { clearPay, encounterOf, groupStars, materialPay, nextReset, playLock, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
-import type { Play } from "../../account/account.ts"
+import type { ChestRef, Play } from "../../account/account.ts"
 import type { StarGroup } from "../../content/quests.ts"
 import { describeGoal } from "../../content/stars.ts"
 import type { CharacterId } from "../../content/characters.ts"
@@ -18,7 +18,7 @@ import type { TrackId } from "../../content/hardcore.ts"
 import { challengeEnemies, describeLock, describeObjective, describePlay, describeTimeUntil } from "../describe.ts"
 import { Icon } from "../Icon.tsx"
 import { Pill } from "../kit/controls.tsx"
-import { Label, Panel, Row } from "../kit/panel.tsx"
+import { Bar, Label, Panel, Row } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { playsIn } from "../navigation.ts"
 import type { UiStore } from "../store.ts"
@@ -40,16 +40,37 @@ const RowEnd = ({ store, play }: { readonly store: UiStore; readonly play: Play 
 }
 
 /** A group's chests along its stars: each at the stars it needs, opened ones ticked. */
-const ChestTrack = ({ store, group }: { readonly store: UiStore; readonly group: StarGroup }) => {
+/** A group's chests along its stars: each at the stars it needs, opened ones ticked; tap one to see what it holds (`picked`: the one shown). */
+const ChestTrack = ({ store, group, picked, pick }: { readonly store: UiStore; readonly group: StarGroup; readonly picked: ChestRef | null; readonly pick: (chest: ChestRef) => void }) => {
   const tuning = store.tuning.value, account = store.account.value, chests = tuning.chests[group], open = account.chests[group] ?? 0
   const { earned, total } = groupStars(tuning, account, group)
   return <div class="chests" aria-label={`${earned} of ${total} stars; ${open} of ${chests.length} chests open`}>
     <span class="chests__bar"><span style={{ width: `${(Math.min(earned, total) / total) * 100}%` }} /></span>
-    {chests.map((chest, index) => <span key={index} class={`chests__one${index < open ? " is-open" : ""}`} style={{ left: `${(chest.stars / total) * 100}%` }}><Icon name={index < open ? "check" : "chest"} /><small>{chest.stars}</small></span>)}
+    {chests.map((chest, index) => <button type="button" key={index} class={`chests__one${index < open ? " is-open" : ""}`} style={{ left: `${(chest.stars / total) * 100}%` }}
+      aria-label={`Chest at ${chest.stars} stars`} aria-pressed={picked?.group === group && picked.index === index} onClick={() => pick({ group, index })}>
+      <Icon name={index < open ? "check" : "chest"} /><small>{chest.stars}</small>
+    </button>)}
   </div>
 }
 
-const QuestList = ({ store, tab, play }: { readonly store: UiStore; readonly tab: "main" | "secondary"; readonly play: Signal<Play> }) => {
+/** What a chest holds, how many stars it needs, and how far the group is from it. */
+const ChestBrief = ({ store, chest }: { readonly store: UiStore; readonly chest: ChestRef }) => {
+  const tuning = store.tuning.value, account = store.account.value, spec = tuning.chests[chest.group][chest.index]!
+  const { earned } = groupStars(tuning, account, chest.group)
+  const opened = (account.chests[chest.group] ?? 0) > chest.index
+  const group = chest.group === "secondary" ? "Side quests" : tuning.chapters[chest.group].name
+  return <Panel class="quests__brief in-right" title={`Chest · ${spec.stars} stars`} subtitle={group}
+    detail={opened ? <><Icon name="check" />Opened</> : <><Icon name="star" />{Math.min(earned, spec.stars)} / {spec.stars}</>}
+    note={opened ? undefined : `${spec.stars - Math.min(earned, spec.stars)} more ${spec.stars - earned === 1 ? "star" : "stars"} to open it.`} noteIcon="star">
+    <div class={`chest-brief${opened ? " is-open" : ""}`}>
+      <span class="chest-brief__icon"><Icon name="chest" /></span>
+      <div><Label>{opened ? "It gave" : "It holds"}</Label><Amounts store={store} rewards={{ experience: 0, currencies: spec.rewards, unlocks: [] }} /></div>
+    </div>
+    {!opened && <Bar value={Math.min(1, earned / spec.stars)} label="Stars toward this chest" />}
+  </Panel>
+}
+
+const QuestList = ({ store, tab, play, chest }: { readonly store: UiStore; readonly tab: "main" | "secondary"; readonly play: Signal<Play>; readonly chest: Signal<ChestRef | null> }) => {
   const tuning = store.tuning.value, account = store.account.value
   const plays = playsIn(tuning, tab)
   const groups: ReadonlyArray<{ readonly group: StarGroup; readonly name: string; readonly plays: ReadonlyArray<Play> }> = tab === "main"
@@ -59,8 +80,8 @@ const QuestList = ({ store, tab, play }: { readonly store: UiStore; readonly tab
     const stars = groupStars(tuning, account, group.group)
     return <>
       <Label key={group.name} end={<><Icon name="star" />{stars.earned} / {stars.total}</>}>{group.name}</Label>
-      {questsOf(tuning, group.group).length > 0 && <ChestTrack key={`${group.name}-chests`} store={store} group={group.group} />}
-      {group.plays.map((each) => <Row key={describePlay(tuning, each)} lead={plays.indexOf(each) + 1} selected={each.kind === "quest" && play.value.kind === "quest" ? each.quest === play.value.quest : samePlay(each, play.value)} locked={playLock(tuning, account, each) !== null} end={<RowEnd store={store} play={each} />} onClick={() => (play.value = each)}>{describePlay(tuning, each)}</Row>)}
+      {questsOf(tuning, group.group).length > 0 && <ChestTrack key={`${group.name}-chests`} store={store} group={group.group} picked={chest.value} pick={(picked) => (chest.value = picked)} />}
+      {group.plays.map((each) => <Row key={describePlay(tuning, each)} lead={plays.indexOf(each) + 1} selected={each.kind === "quest" && play.value.kind === "quest" ? each.quest === play.value.quest : samePlay(each, play.value)} locked={playLock(tuning, account, each) !== null} end={<RowEnd store={store} play={each} />} onClick={() => { play.value = each; chest.value = null }}>{describePlay(tuning, each)}</Row>)}
     </>
   })}</>
 }
@@ -158,14 +179,17 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
 export const Quests = ({ store, nav, tab, play, leader, enter }: {
   readonly store: UiStore; readonly nav: Nav; readonly tab: QuestTab; readonly play: Signal<Play>; readonly leader: CharacterId; readonly enter: () => void
 }) => {
+  const chest = useSignal<ChestRef | null>(null)
   const tuning = store.tuning.value, now = Date.now(), selected = play.value
   const key = selected.kind === "quest" ? `${selected.quest}-${rankOf(selected)}` : `${selected.track}-${selected.tier}`
+  // A chest picked in one tab is not shown in another.
+  const shownChest = tab !== "hardcore" && chest.value !== null && (chest.value.group === "secondary") === (tab === "secondary") ? chest.value : null
   return <Screen name="quests">
     <TopBar icon="quests" title="Challenges" close={nav.back}>
       <TopTabs label="Kinds of challenge" current={tab} onChange={(id) => nav.replace({ kind: "quests", tab: id })} tabs={[{ id: "main", label: "Main" }, { id: "secondary", label: "Side" }, { id: "hardcore", label: "Hardcore" }]} />
     </TopBar>
-    <div class="quests__list scroll in-left" key={tab}>{tab === "hardcore" ? <TrackList store={store} play={play} now={now} /> : <QuestList store={store} tab={tab} play={play} />}</div>
-    <Brief key={key} store={store} nav={nav} play={play} now={now} />
+    <div class="quests__list scroll in-left" key={tab}>{tab === "hardcore" ? <TrackList store={store} play={play} now={now} /> : <QuestList store={store} tab={tab} play={play} chest={chest} />}</div>
+    {shownChest !== null ? <ChestBrief key={`${shownChest.group}-${shownChest.index}`} store={store} chest={shownChest} /> : <Brief key={key} store={store} nav={nav} play={play} now={now} />}
     <Actions>
       <PartyStrip store={store} team={store.menuDraft.value.team} leader={leader} size={34} pick={() => nav.go({ kind: "team" })} edit={() => nav.go({ kind: "team" })} />
       <Pill icon="play" disabled={playLock(tuning, store.account.value, selected) !== null || store.busy.value} onClick={enter}>Enter</Pill>
