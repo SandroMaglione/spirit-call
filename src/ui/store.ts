@@ -14,7 +14,7 @@ import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { BuildValue, FlowState, PracticeValue, RunResultValue } from "../schema.ts"
-import type { Screen } from "./menu/parts.tsx"
+import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
 /** An Extra to play (nothing recorded): the Training Ground, or Enemy Practice with its picks. */

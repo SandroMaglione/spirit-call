@@ -3,7 +3,7 @@ import type { Account, Item, Play } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { TrackId } from "../content/hardcore.ts"
-import type { QuestTab } from "./menu/parts.tsx"
+import type { QuestTab } from "./menu/screens.ts"
 
 export const playsIn = (tuning: Tuning, tab: QuestTab): ReadonlyArray<Play> => tab === "hardcore"
   ? (Object.keys(tuning.tracks) as Array<TrackId>).flatMap((track) => tuning.tracks[track].tiers.map((_, index) => ({ kind: "tier" as const, track, tier: index + 1 })))

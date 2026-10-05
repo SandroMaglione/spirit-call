@@ -1,31 +1,75 @@
-import type { Signal } from "@preact/signals"
-import { characterLevel } from "../../account/account.ts"
+/**
+ * The home: everything is one tap away. The places to go down the left, the
+ * account and its currencies on top, the party at the bottom left (a tap on
+ * a face leads with her), and the next thing to play, with its enemies,
+ * over one Play.
+ */
+import { accountLevel, characterLevel, encounterOf, owns, train } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
-import { describePlay } from "../describe.ts"
+import type { CharacterId } from "../../content/characters.ts"
+import { challengeEnemies, describePlay } from "../describe.ts"
 import { elementOf } from "../draft.ts"
-import type { TeamDraft } from "../draft.ts"
+import { Icon } from "../Icon.tsx"
+import { Face, ModelStage } from "../kit/art.tsx"
+import { Pill, RoundButton } from "../kit/controls.tsx"
+import { Bar, Label } from "../kit/panel.tsx"
+import { Screen, SideTabs } from "../kit/shell.tsx"
 import type { UiStore } from "../store.ts"
-import { ModelStage } from "./ModelStage.tsx"
-import { Cta, ElementBadge, Portrait } from "./parts.tsx"
-import type { Nav } from "./parts.tsx"
+import { ids, PartyStrip, Wallet } from "./parts.tsx"
+import type { Nav, Screen as Place } from "./screens.ts"
 
-export const Home = ({ store, nav, draft, play, enter }: {
-  readonly store: UiStore; readonly nav: Nav; readonly draft: Signal<TeamDraft>; readonly play: Play; readonly enter: () => void
+/** Where `play` sits: its chapter, "Side quest", or its track. */
+export const playCaption = (store: UiStore, play: Play): string => {
+  const tuning = store.tuning.value
+  if (play.kind === "tier") return "Hardcore"
+  const chapter = tuning.quests[play.quest].chapter
+  return chapter === null ? "Side quest" : tuning.chapters[chapter as keyof typeof tuning.chapters].name
+}
+
+export const Home = ({ store, nav, leader, play, enter }: {
+  readonly store: UiStore; readonly nav: Nav; readonly leader: CharacterId; readonly play: Play; readonly enter: () => void
 }) => {
-  const tuning = store.tuning.value, account = store.account.value, team = draft.value.team
-  const leader = team.includes(store.menuCharacter.value) ? store.menuCharacter.value : team[0]!
-  return <div class="screen home">
-    <div class="home__tag"><ElementBadge element={elementOf(tuning, leader)} /><span class="identity-divider">/</span><span>{tuning.characters[leader].name}</span></div>
-    <div class="home__spirit"><div class="stage-orbit" aria-hidden="true" /><ModelStage character={leader} /></div>
-    <div class="lobby-shortcuts game-nav">
-      <button type="button" aria-label="Characters" onClick={() => nav.go({ kind: "character", character: leader, tab: "overview" })}>Characters</button>
-      <button type="button" aria-label="Party" onClick={() => nav.go({ kind: "team" })}>Party</button>
-      <button type="button" aria-label="Challenges" onClick={() => nav.go({ kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line })}>Challenges</button>
+  const tuning = store.tuning.value, account = store.account.value, team = store.menuDraft.value.team
+  const level = accountLevel(tuning, account), encounter = encounterOf(tuning, play)
+  const canTrain = ids(tuning.characters).some((id) => owns(account, { kind: "character", id }) && train(tuning, account, id).ok)
+  const places: { readonly [Id in string]: Place } = {
+    characters: { kind: "character", character: leader, tab: "overview" },
+    party: { kind: "team" },
+    challenges: { kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line },
+    practice: { kind: "extra", mode: "training" },
+    discoveries: { kind: "discoveries" }
+  }
+  return <Screen name="home">
+    <div class="home__stage"><ModelStage key={leader} character={leader} /></div>
+    <header class="topbar">
+      <span class="account" aria-label={`Account level ${level.level}`}>
+        <Face of={{ character: leader }} tint={elementOf(tuning, leader)} selected />
+        <span><b>Lv {level.level}</b><Bar value={level.needed === 0 ? 1 : level.into / level.needed} label="Account experience" /></span>
+      </span>
+      <div class="topbar__fill" />
+      <Wallet store={store} />
+      <RoundButton icon="settings" tone="dark" label="Settings" onClick={() => nav.go({ kind: "settings" })} />
+    </header>
+    <SideTabs label="Menu" onChange={(id) => nav.go(places[id]!)} tabs={[
+      { id: "characters", label: "Characters", badge: canTrain },
+      { id: "party", label: "Party" },
+      { id: "challenges", label: "Challenges" },
+      { id: "practice", label: "Practice" },
+      { id: "discoveries", label: "Discoveries" }
+    ]} />
+    {store.notices.value.length > 0 && <div class="home__notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<Pill size="small" tone="dark" onClick={() => (store.notices.value = [])}>Dismiss</Pill></div>}
+    <div class="home__party in-left">
+      <PartyStrip store={store} team={team} leader={leader} size={44} pick={(member) => (store.menuCharacter.value = member)} edit={() => nav.go({ kind: "team" })} />
+      <span class="home__leader"><b>{tuning.characters[leader].name}</b><small>Lv {characterLevel(tuning, account, leader).level}</small></span>
     </div>
-    <div class="home__identity"><h1>{tuning.characters[leader].name}</h1><span>Lv <b>{characterLevel(tuning, account, leader).level}</b></span></div>
-    {team.length > 1 && <div class="lobby-party">{team.map((member) => <button type="button" key={member} aria-label={`Lead with ${tuning.characters[member].name}`} aria-pressed={member === leader} onClick={() => (store.menuCharacter.value = member)}><Portrait of={{ character: member }} /></button>)}</div>}
-    <div class="lobby-play">
-      <Cta disabled={store.busy.value} onClick={enter}>{store.busy.value ? "…" : describePlay(tuning, play)}</Cta>
+    <div class="home__next in-right">
+      <Label>{playCaption(store, play)}</Label>
+      <h2>{describePlay(tuning, play)}</h2>
+      <button type="button" class="home__foes" aria-label="See the challenge" onClick={() => nav.go(places["challenges"]!)}>
+        {challengeEnemies(tuning.challenges[encounter.challenge]).slice(0, 4).map((kind) => <Face key={kind} of={{ enemy: kind }} size={26} />)}
+        <span>Lv {encounter.enemyLevel}</span><Icon name="next" />
+      </button>
+      <Pill icon="play" size="large" disabled={store.busy.value} onClick={enter}>Play</Pill>
     </div>
-  </div>
+  </Screen>
 }

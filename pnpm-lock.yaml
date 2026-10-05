@@ -11,6 +11,9 @@ importers:
       '@effect/platform-browser':
         specifier: 4.0.0-rc.118
         version: 4.0.0-rc.118(effect@4.0.0-rc.118)
+      '@fontsource/alegreya-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/barlow-condensed':
         specifier: 5.3.0
         version: 5.3.0
@@ -382,6 +385,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/alegreya-sans@5.3.0':
+    resolution: {integrity: sha512-Uf0RbuwzhSS3NQrBFcRzEUm7TxDQW3qdAbQ6JIOhsIW6V+YN2dqlR99lhfEE38R3GHgMCMJBzqSp7aJxhNXSOw==}
 
   '@fontsource/barlow-condensed@5.3.0':
     resolution: {integrity: sha512-RA7MmIx0v3eQ6Gcf74qLVLOwLB0GpPOzx+eU9iG/AmCnSJGcIWYeU8y6CEMGZ210MGwGg5CZhzLkkvyZdTTk1g==}
@@ -1431,6 +1437,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fontsource/alegreya-sans@5.3.0': {}
 
   '@fontsource/barlow-condensed@5.3.0': {}
 
