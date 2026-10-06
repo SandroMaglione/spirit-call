@@ -16,7 +16,8 @@ import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { BuildValue, FlowState, PracticeValue, RunResultValue } from "../schema.ts"
+import { emptyRunLog } from "../schema.ts"
+import type { BuildValue, FlowState, PracticeValue, RunLogValue, RunResultValue } from "../schema.ts"
 import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
@@ -62,6 +63,8 @@ export interface UiStore {
   readonly play: Signal<Play | null>
   /** How the last run ended; `null` while one is going on (see `RunResult`). */
   readonly result: Signal<RunResultValue | null>
+  /** The log of the run that ended (with `result`; empty while one goes on). */
+  readonly runLog: Signal<RunLogValue>
   /** What the last run earned the account, once recorded; `null` until then. */
   readonly earned: Signal<Earned | null>
   /** Messages for the player (what loading the profile had to fix), until dismissed. */
@@ -112,6 +115,7 @@ export const createUiStore = (initial: {
   player: initial.player,
   play: signal(null),
   result: signal(null),
+  runLog: signal(emptyRunLog),
   earned: signal(null),
   notices: signal(initial.notices),
   sound: signal(initial.sound),

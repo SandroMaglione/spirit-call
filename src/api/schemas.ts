@@ -18,8 +18,10 @@ import type { ReactionRecord as ReactionRecordValue } from "../content/elements.
 import { tracks } from "../content/hardcore.ts"
 import { materials } from "../content/materials.ts"
 import { chests, quests } from "../content/quests.ts"
+import { skills } from "../content/skills.ts"
+import { enemies } from "../content/enemies.ts"
 import { tallies } from "../content/stars.ts"
-import type { RunResultValue } from "../schema.ts"
+import type { RunLogValue, RunResultValue } from "../schema.ts"
 
 /** The ids of a content record, as literals. */
 const idsOf = <Id extends string>(record: { readonly [K in Id]: unknown }) => Schema.Literals(Object.keys(record) as [Id, ...Array<Id>])
@@ -34,6 +36,8 @@ export const ChallengeId = idsOf(challenges)
 export const ResourceId = idsOf({ ...currencies, ...materials })
 export const StarGroup = idsOf(chests)
 export const MaterialId = idsOf(materials)
+export const SkillId = idsOf(skills)
+export const EnemyKind = idsOf(enemies)
 
 /** A whole number at least zero (amounts, counts, times). */
 const Count = Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0))
@@ -106,6 +110,39 @@ export const RunResult = Schema.Struct({
   tally: Schema.Struct(Object.fromEntries(Object.keys(tallies).map((id) => [id, Count])) as { readonly [Id in keyof typeof tallies]: typeof Count })
 })
 
+/** What dealt blows to the team: an enemy's attack, or (both null) anything else. */
+const LogSource = { enemy: Schema.NullOr(EnemyKind), attack: Schema.NullOr(Schema.String) }
+
+export const RunLog = Schema.Struct({
+  waves: Schema.Array(Schema.Struct({ wave: Count, startedAt: Schema.Number, hitsTaken: Count, damageTaken: Schema.Number })),
+  hurts: Schema.Array(Schema.Struct({ ...LogSource, hits: Count, damage: Schema.Number })),
+  members: Schema.Array(Schema.Struct({ character: CharacterId, damageDealt: Schema.Number, damageTaken: Schema.Number, kills: Count })),
+  skills: Schema.Array(Schema.Struct({ character: CharacterId, skill: SkillId, uses: Count, hits: Count, damage: Schema.Number })),
+  knockouts: Schema.Array(Schema.Struct({ ...LogSource, character: CharacterId, at: Schema.Number, wave: Count })),
+  dashes: Count,
+  switches: Count
+})
+
+/** A run as the server keeps it: what was played and against what, who played it (her level and aspect then), how it went, and its log. */
+export const StoredRun = Schema.Struct({
+  id: Schema.String,
+  at: Schema.Number,
+  play: Schema.NullOr(Play),
+  challenge: ChallengeId,
+  enemyLevel: Count,
+  team: Schema.Array(Schema.Struct({ character: CharacterId, level: Count, aspect: Schema.NullOr(AspectId) })),
+  cleared: Schema.Boolean,
+  progress: Schema.Number,
+  wave: Count,
+  kills: Count,
+  seconds: Schema.Number,
+  tally: RunResult.fields.tally,
+  log: RunLog
+})
+
+/** A change to an account: which action, on what, and what it gained (positive) or spent (negative) of each resource. */
+export const AccountEvent = Schema.Struct({ id: Schema.String, at: Schema.Number, action: Schema.String, subject: Schema.NullOr(Schema.String), amounts: Amounts })
+
 const ChestRef = Schema.Struct({ group: StarGroup, index: Count })
 
 export const Earned = Schema.Struct({
@@ -130,3 +167,4 @@ same<Same<typeof RunResult.Type, RunResultValue>>()
 same<Same<typeof Earned.Type, EarnedValue>>()
 same<Same<typeof ChestRef.Type, ChestRefValue>>()
 same<Same<typeof ReactionRecord.Type, ReactionRecordValue>>()
+same<Same<typeof RunLog.Type, RunLogValue>>()

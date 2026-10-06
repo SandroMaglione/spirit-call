@@ -4,3 +4,4 @@ dist
 .alchemy
 .repos
 .data
+.env.runs

@@ -17,7 +17,7 @@ import * as HttpApiMiddleware from "effect/http-api/HttpApiMiddleware"
 import * as HttpApiSchema from "effect/http-api/HttpApiSchema"
 import * as HttpApiSecurity from "effect/http-api/HttpApiSecurity"
 
-import { Account, BannerId, CallResult, CharacterId, Earned, MaterialId, Play, RunResult, TeamAspects } from "./schemas.ts"
+import { Account, AccountEvent, BannerId, CallResult, CharacterId, Earned, MaterialId, Play, RunLog, RunResult, StoredRun, TeamAspects } from "./schemas.ts"
 
 // ── Players ───────────────────────────────────────────────────────────────
 
@@ -96,9 +96,13 @@ export class AccountApi extends HttpApiGroup.make("account")
     HttpApiEndpoint.put("focus", "/banners/:banner/focus", { params: { banner: BannerId }, payload: Schema.Struct({ character: CharacterId }), success: Account, error: Refused }),
     /** Records a run that ended, of a quest or tier (`null`: a run of nothing, a dev quick start): the account after it, and what it earned. */
     HttpApiEndpoint.post("recordRun", "/runs", {
-      payload: Schema.Struct({ play: Schema.NullOr(Play), result: RunResult }),
+      payload: Schema.Struct({ play: Schema.NullOr(Play), result: RunResult, log: RunLog }),
       success: Schema.Struct({ account: Account, earned: Earned })
-    })
+    }),
+    /** The player's runs since `since` (epoch milliseconds; all when absent), oldest first: what was played, by whom, and how it went, blow by blow. */
+    HttpApiEndpoint.get("runs", "/runs", { query: { since: Schema.optional(Schema.NumberFromString) }, success: Schema.Array(StoredRun) }),
+    /** The changes to the player's account since `since`, oldest first: what each gained and spent. */
+    HttpApiEndpoint.get("events", "/account/events", { query: { since: Schema.optional(Schema.NumberFromString) }, success: Schema.Array(AccountEvent) })
   )
   .middleware(Authorization)
   .prefix("/api")

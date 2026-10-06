@@ -15,20 +15,17 @@ import type { Account, CallResult, Checked, Earned, Play, TeamAspects } from "..
 import { call, setFocus } from "../account/calls.ts"
 import { fromRecord, toRecord } from "../account/convert.ts"
 import { Refused } from "../api/api.ts"
-import type { Tuning } from "../config/tuning.ts"
-import type { StarterSet } from "../content/account.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts } from "../content/currencies.ts"
 import { materials } from "../content/materials.ts"
 import type { MaterialId } from "../content/materials.ts"
 import type { QuestId } from "../content/quests.ts"
-import type { RunResultValue } from "../schema.ts"
+import type { RunLogValue, RunResultValue } from "../schema.ts"
+import { Content } from "./content.ts"
 import { fromRows, noRows, toRows } from "./rows.ts"
+import { Logs } from "./logs.ts"
 import { Store } from "./store.ts"
-
-/** What the accounts are made of: the content and its numbers, and what a new account owns. */
-export class Content extends Context.Service<Content, { readonly tuning: Tuning; readonly starter: StarterSet }>()("Shooter/Server/Content") {}
 
 /** What the dev tool adds: enough to level and ascend anything while testing. */
 const plenty: Amounts = { crystals: 10_000, gold: 100_000, ...Object.fromEntries(Object.keys(materials).map((id) => [id, 50])) }
@@ -45,7 +42,8 @@ export class Accounts extends Context.Service<
     readonly combine: (userId: string, material: MaterialId) => Effect.Effect<Account, Refused>
     readonly call: (userId: string, banner: BannerId, count: number) => Effect.Effect<{ readonly account: Account; readonly results: ReadonlyArray<CallResult> }, Refused>
     readonly focus: (userId: string, banner: BannerId, character: CharacterId) => Effect.Effect<Account, Refused>
-    readonly recordRun: (userId: string, play: Play | null, result: RunResultValue) => Effect.Effect<{ readonly account: Account; readonly earned: Earned }>
+    /** Records a run that ended, with its log (kept for measuring play, see `Logs`). */
+    readonly recordRun: (userId: string, play: Play | null, result: RunResultValue, log: RunLogValue) => Effect.Effect<{ readonly account: Account; readonly earned: Earned }>
     /** Owns every character and aspect, and adds plenty of each currency (a dev tool). */
     readonly unlockEverything: (userId: string) => Effect.Effect<Account>
     /** Clears chapter one and adds crystals for 30 calls (a dev tool, to try the Spirit Call). */
@@ -56,30 +54,40 @@ export class Accounts extends Context.Service<
     Accounts,
     Effect.gen(function*() {
       const store = yield* Store
+      const logs = yield* Logs
       const { tuning, starter } = yield* Content
 
-      /**
-       * Runs `action` on `userId`'s account at the server's time, saving the
-       * account it leaves; a refusal saves nothing. Repairs made while
-       * reading are saved with the change.
-       */
-      const act = <A>(userId: string, action: (account: Account, now: number) => Checked<A>, accountOf: (value: A) => Account) =>
+      /** `userId`'s account (repaired where it no longer fits the content), the rows it was read from, and the time. */
+      const read = (userId: string) =>
         Effect.gen(function*() {
           const now = yield* Clock.currentTimeMillis
           const rows = yield* store.load(userId)
           const record = fromRows(rows)
           if (record === undefined) return yield* Effect.die(new Error(`No account for player ${userId}`))
-          const { account } = fromRecord(tuning, starter, record, now)
-          const checked = action(account, now)
+          return { now, rows, account: fromRecord(tuning, starter, record, now).account }
+        })
+
+      /**
+       * Runs `rule` on `userId`'s account at the server's time, saving the
+       * account it leaves, and logs it as `action` on `subject` (with what it
+       * gained and spent); a refusal saves and logs nothing. Repairs made
+       * while reading are saved with the change.
+       */
+      const act = <A>(userId: string, action: string, subject: string | null, rule: (account: Account, now: number) => Checked<A>, accountOf: (value: A) => Account) =>
+        Effect.gen(function*() {
+          const { now, rows, account } = yield* read(userId)
+          const checked = rule(account, now)
           if (!checked.ok) return yield* new Refused({ kind: checked.refusal.kind })
-          yield* store.save(userId, rows, toRows(userId, toRecord(accountOf(checked.value))))
+          const after = accountOf(checked.value)
+          yield* store.save(userId, rows, toRows(userId, toRecord(after)))
+          yield* logs.recordEvent(userId, action, subject, account, after)
           return checked.value
         })
       const ok = <A>(value: A): Checked<A> => ({ ok: true, value })
       const same = (account: Account) => account
       /** An action that is always allowed. */
-      const always = (userId: string, change: (account: Account, now: number) => Account) =>
-        act(userId, (account, now) => ok(change(account, now)), same).pipe(Effect.catchTag("Refused", Effect.die))
+      const always = (userId: string, action: string, change: (account: Account, now: number) => Account) =>
+        act(userId, action, null, (account, now) => ok(change(account, now)), same).pipe(Effect.catchTag("Refused", Effect.die))
 
       const chapterOne = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].chapter === "one")
 
@@ -90,19 +98,30 @@ export class Accounts extends Context.Service<
           yield* store.save(userId, noRows, toRows(userId, toRecord(account)))
           return account
         }),
-        get: (userId) => always(userId, same),
-        select: (userId, team, play, aspects) => act(userId, (account) => select(tuning, account, team, play, aspects), same),
-        train: (userId, character) => act(userId, (account) => train(tuning, account, character), same),
-        ascend: (userId, character) => act(userId, (account) => ascend(tuning, account, character), same),
-        combine: (userId, material) => act(userId, (account) => combine(tuning, account, material), same),
-        call: (userId, banner, count) => act(userId, (account, now) => call(tuning, account, banner, count, now), (called) => called.account),
-        focus: (userId, banner, character) => act(userId, (account) => setFocus(tuning, account, banner, character), same),
-        recordRun: (userId, play, result) =>
-          act(userId, (account, now) => ok(recordRun(tuning, account, play, result, now)), (recorded) => recorded.account).pipe(Effect.catchTag("Refused", Effect.die)),
+        // Reading saves only repairs, and is not an action worth a log line.
+        get: (userId) =>
+          Effect.gen(function*() {
+            const { rows, account } = yield* read(userId)
+            yield* store.save(userId, rows, toRows(userId, toRecord(account)))
+            return account
+          }),
+        select: (userId, team, play, aspects) => act(userId, "select", play.kind === "quest" ? play.quest : play.track, (account) => select(tuning, account, team, play, aspects), same),
+        train: (userId, character) => act(userId, "train", character, (account) => train(tuning, account, character), same),
+        ascend: (userId, character) => act(userId, "ascend", character, (account) => ascend(tuning, account, character), same),
+        combine: (userId, material) => act(userId, "combine", material, (account) => combine(tuning, account, material), same),
+        call: (userId, banner, count) => act(userId, "call", banner, (account, now) => call(tuning, account, banner, count, now), (called) => called.account),
+        focus: (userId, banner, character) => act(userId, "focus", banner, (account) => setFocus(tuning, account, banner, character), same),
+        recordRun: (userId, play, result, log) =>
+          Effect.gen(function*() {
+            // The run is kept with the account as it was played (her team's levels and aspects then).
+            const { account: before } = yield* read(userId)
+            const run = yield* logs.recordRun(userId, before, play, result, log)
+            return yield* act(userId, "run", run, (account, now) => ok(recordRun(tuning, account, play, result, now)), (recorded) => recorded.account)
+          }).pipe(Effect.catchTag("Refused", Effect.die)),
         unlockEverything: (userId) =>
-          always(userId, (account, now) => earn(everything(tuning).reduce((next, item) => unlock(tuning, next, item, now), account), plenty)),
+          always(userId, "unlockEverything", (account, now) => earn(everything(tuning).reduce((next, item) => unlock(tuning, next, item, now), account), plenty)),
         openCalls: (userId) =>
-          always(userId, (account, now) => {
+          always(userId, "openCalls", (account, now) => {
             const cleared = Object.fromEntries(chapterOne.map((quest) => [quest, { ...noQuestProgress, ...account.quests[quest], firstClearedAt: account.quests[quest]?.firstClearedAt ?? now }]))
             const rewarded = withClearedRewards(tuning, { ...account, quests: { ...account.quests, ...cleared } }, now).account
             return earn(rewarded, { crystals: 30 * (tuning.calls.price.crystals ?? 0) })
