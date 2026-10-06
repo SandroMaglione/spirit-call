@@ -216,7 +216,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       damage: damageDealt(atk, spec.power),
       knockback: spec.knockback,
       element: element === null ? null : { id: element, atk },
-      source: { attacker: Game.Entity.handle(entity.id, Position) }
+      source: { attacker: Game.Entity.handle(entity.id, Position), label: { kind: "enemy", enemy: data.enemy.get().kind, attack: spec.id } }
     })
 
     // The aim follows the target until it locks.

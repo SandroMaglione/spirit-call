@@ -174,7 +174,7 @@ export const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
     energyAction: cast.energyAction,
     hitStop: effect.hitStop,
     heavy: effect.heavy,
-    source: { attacker: cast.caster },
+    source: { attacker: cast.caster, ...(cast.skill === null ? {} : { label: { kind: "skill", skill: cast.skill } }) },
     element: effect.element === null ? null : { id: effect.element, atk: cast.atk }
   })
 

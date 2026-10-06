@@ -31,6 +31,7 @@ import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
 import { CastEarthrise, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
+import { RecordRunLog } from "./features/run-log.ts"
 import { ClearRun, DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, RecordTally, ResetRun, TrackRun } from "./features/flow.ts"
 import { ApplyUiRequests } from "./features/menu.ts"
 import { CaptureKeys, CaptureParty, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
@@ -163,8 +164,9 @@ const runOutcome = Game.Schedule.when(
   // a warder's tether cut.
   ArmBursts,
   UpdateWards,
-  // The step's hits, perfect dodges, and breaks, counted for stars before a result is made.
+  // The step's hits, perfect dodges, and breaks, counted for stars before a result is made; and the run's log.
   RecordTally,
+  RecordRunLog,
   DetectGameOver,
   SwitchCharacter,
   CheckObjective,
