@@ -214,7 +214,12 @@ export interface MoveContext {
 export interface DamageSource {
   readonly attacker: Entity.Handle<typeof Root, typeof Position>
   readonly move?: MoveContext
+  /** What dealt it, for the run's log (see `RecordRunLog`): it outlives the attacker, whose shot may land after it fell. */
+  readonly label?: BlowLabel
 }
+
+/** An enemy's attack (its kind, and the attack's id in its moveset), or a skill. */
+export type BlowLabel = { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly attack: string } | { readonly kind: "skill"; readonly skill: SkillId }
 
 /**
  * What a blow carries from the hitbox or projectile that deals it to where it
@@ -971,6 +976,34 @@ export interface StatsValue {
 }
 export const Stats = Descriptor.Resource<StatsValue>()("Shooter/Stats")
 
+/** What dealt a blow to the team: an enemy's attack, or (both `null`) anything else: a burn, the ground, a burst. */
+export interface RunLogSource {
+  readonly enemy: EnemyKind | null
+  readonly attack: string | null
+}
+
+/**
+ * What a run did, for measuring play (see `RecordRunLog`, docs/server.md):
+ * sent with the run's result, and kept on the server. Seconds are the run's.
+ */
+export interface RunLogValue {
+  /** Each wave reached, from 1: when it began, and the blows and damage the team took during it. */
+  readonly waves: ReadonlyArray<{ readonly wave: number; readonly startedAt: number; readonly hitsTaken: number; readonly damageTaken: number }>
+  /** What hurt the team, and how often and how much (a burn's ticks count as damage, not as blows). */
+  readonly hurts: ReadonlyArray<RunLogSource & { readonly hits: number; readonly damage: number }>
+  /** Each member who played: the damage she dealt and took, and the enemies she felled. */
+  readonly members: ReadonlyArray<{ readonly character: CharacterId; readonly damageDealt: number; readonly damageTaken: number; readonly kills: number }>
+  /** Each skill used: how often, and the blows it landed and their damage. */
+  readonly skills: ReadonlyArray<{ readonly character: CharacterId; readonly skill: SkillId; readonly uses: number; readonly hits: number; readonly damage: number }>
+  /** Each member falling: who, when, in which wave, and what dealt the blow. */
+  readonly knockouts: ReadonlyArray<RunLogSource & { readonly character: CharacterId; readonly at: number; readonly wave: number }>
+  readonly dashes: number
+  /** Switches the player made (not the ones a fall brought). */
+  readonly switches: number
+}
+export const emptyRunLog: RunLogValue = { waves: [], hurts: [], members: [], skills: [], knockouts: [], dashes: 0, switches: 0 }
+export const RunLog = Descriptor.Resource<RunLogValue>()("Shooter/RunLog")
+
 // ── Services (host capabilities) ──────────────────────────────────────────
 
 export const KeyboardInput = Descriptor.Service<KeyboardSource>()("Shooter/KeyboardInput")
@@ -1069,6 +1102,7 @@ export const Game = Schema.bind(
       Viewport,
       Camera,
       Stats,
+      RunLog,
       EnergyLedger,
       Waves,
       Rng,

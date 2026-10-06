@@ -45,6 +45,16 @@ const signUp = async (handler: Handler, username = "stella", password = "correct
 }
 
 const run = { cleared: true, challenge: "swarm", progress: 1, wave: 6, kills: 40, time: 200, team: ["swordsman"], reactions: [], tally: noTally }
+const log = {
+  waves: [{ wave: 1, startedAt: 3, hitsTaken: 2, damageTaken: 14 }, { wave: 2, startedAt: 40, hitsTaken: 1, damageTaken: 9 }],
+  hurts: [{ enemy: "chaser", attack: "swipe", hits: 2, damage: 14 }, { enemy: null, attack: null, hits: 0, damage: 9 }],
+  members: [{ character: "swordsman", damageDealt: 900, damageTaken: 23, kills: 40 }],
+  skills: [{ character: "swordsman", skill: "bladeWave", uses: 4, hits: 11, damage: 300 }],
+  knockouts: [],
+  dashes: 12,
+  switches: 0
+}
+const played = (play: unknown = { kind: "quest", quest: "theSwarm" }, result: unknown = run) => ({ play, result, log })
 
 describe("players", () => {
   it("signs up with a free username, logged in at once with an HTTP-only session cookie", async () => {
@@ -109,7 +119,7 @@ describe("accounts", () => {
     const handler = server()
     const stella = await signUp(handler, "stella")
     const nova = await signUp(handler, "nova")
-    await stella.send("POST", "/api/runs", { play: { kind: "quest", quest: "theSwarm" }, result: run })
+    await stella.send("POST", "/api/runs", played())
     expect((await stella.send("GET", "/api/account")).body.quests.theSwarm).toBeDefined()
     expect((await nova.send("GET", "/api/account")).body.quests.theSwarm).toBeUndefined()
   })
@@ -117,7 +127,7 @@ describe("accounts", () => {
   it("records a run: pays it, gives a first clear's rewards, and keeps them", async () => {
     const handler = server()
     const player = await signUp(handler)
-    const recorded = await player.send("POST", "/api/runs", { play: { kind: "quest", quest: "theSwarm" }, result: run })
+    const recorded = await player.send("POST", "/api/runs", played())
     expect(recorded.status).toBe(200)
     expect(recorded.body.earned.rewards).toEqual(defaultTuning.quests.theSwarm.rewards)
     const account = (await player.send("GET", "/api/account")).body
@@ -132,7 +142,7 @@ describe("accounts", () => {
     const player = await signUp(handler)
     const refused = await player.send("PUT", "/api/account/selection", { team: ["swordsman", "gunner"], play: { kind: "quest", quest: "theSwarm" } })
     expect(refused).toMatchObject({ status: 409, body: { _tag: "Refused", kind: "notOwned" } })
-    await player.send("POST", "/api/runs", { play: { kind: "quest", quest: "theSwarm" }, result: run })
+    await player.send("POST", "/api/runs", played())
     await player.send("POST", "/api/dev/unlock-everything")
     const selected = await player.send("PUT", "/api/account/selection", { team: ["gunner", "swordsman"], play: { kind: "quest", quest: "crossfire" } })
     expect(selected.status).toBe(200)
@@ -143,7 +153,7 @@ describe("accounts", () => {
     const handler = server()
     const player = await signUp(handler)
     expect((await player.send("POST", "/api/characters/swordsman/training")).body).toMatchObject({ _tag: "Refused", kind: "notEnough" })
-    await player.send("POST", "/api/runs", { play: { kind: "quest", quest: "theSwarm" }, result: run })
+    await player.send("POST", "/api/runs", played())
     const before = (await player.send("GET", "/api/account")).body
     const trained = await player.send("POST", "/api/characters/swordsman/training")
     expect(trained.status).toBe(200)
@@ -155,7 +165,7 @@ describe("accounts", () => {
     const handler = server()
     const player = await signUp(handler)
     expect((await player.send("POST", "/api/characters/wizard/training")).status).toBe(400)
-    expect((await player.send("POST", "/api/runs", { play: null, result: { ...run, team: ["wizard"] } })).status).toBe(400)
+    expect((await player.send("POST", "/api/runs", played(null, { ...run, team: ["wizard"] }))).status).toBe(400)
   })
 
   it("makes calls and keeps them made", async () => {
@@ -177,6 +187,45 @@ describe("accounts", () => {
     const on = await signUp(server({ devTools: true, secureCookies: true }))
     const unlocked = await on.send("POST", "/api/dev/unlock-everything")
     expect(Object.keys(unlocked.body.owned.characters)).toEqual(expect.arrayContaining(Object.keys(defaultTuning.characters)))
+  })
+})
+
+describe("logs", () => {
+  it("keeps each run with its log, and the team as it was, for its player only", async () => {
+    const handler = server({ devTools: true, secureCookies: true })
+    const player = await signUp(handler)
+    await player.send("POST", "/api/characters/swordsman/training")
+    expect((await player.send("POST", "/api/runs", played())).status).toBe(200)
+    const runs = (await player.send("GET", "/api/runs")).body
+    expect(runs).toHaveLength(1)
+    expect(runs[0]).toMatchObject({
+      play: { kind: "quest", quest: "theSwarm" },
+      challenge: "swarm",
+      enemyLevel: defaultTuning.quests.theSwarm.enemyLevel,
+      team: [{ character: "swordsman", level: 1, aspect: null }],
+      cleared: true,
+      wave: 6,
+      seconds: 200,
+      log
+    })
+    expect((await player.send("GET", `/api/runs?since=${runs[0].at}`)).body).toEqual([])
+    const other = await signUp(handler, "nova")
+    expect((await other.send("GET", "/api/runs")).body).toEqual([])
+  })
+
+  it("keeps every change to the account with what it gained and spent, but nothing refused", async () => {
+    const handler = server({ devTools: true, secureCookies: true })
+    const player = await signUp(handler)
+    await player.send("POST", "/api/characters/swordsman/training")
+    await player.send("POST", "/api/runs", played())
+    await player.send("POST", "/api/characters/swordsman/training")
+    const events = (await player.send("GET", "/api/account/events")).body
+    expect(events.map((event: { action: string }) => event.action)).toEqual(["run", "train"])
+    const [ran, trained] = events
+    expect(ran.subject).toBe((await player.send("GET", "/api/runs")).body[0].id)
+    expect(ran.amounts.gold).toBeGreaterThan(0)
+    expect(trained).toMatchObject({ subject: "swordsman" })
+    expect(trained.amounts.gold).toBeLessThan(0)
   })
 })
 

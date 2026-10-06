@@ -15,6 +15,7 @@
     "debug": "node --import tsx scripts/debug.ts",
     "lab": "node --import tsx scripts/lab.ts",
     "calls": "node --import tsx scripts/calls.ts",
+    "runs": "node --import tsx scripts/runs.ts",
     "balance": "node --import tsx scripts/balance.ts",
     "shot": "node --import tsx scripts/screenshot.ts",
     "effect-source": "node scripts/effect-source.ts"

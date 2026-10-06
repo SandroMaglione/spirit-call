@@ -17,7 +17,9 @@ import type { Account } from "../account/account.ts"
 import { Api, Authorization, CurrentPlayer, DevToolsOff, sessionCookie, Unauthorized } from "../api/api.ts"
 import { defaultTuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
-import { Accounts, Content } from "./accounts.ts"
+import { Accounts } from "./accounts.ts"
+import { Content } from "./content.ts"
+import { Logs } from "./logs.ts"
 import { Players } from "./players.ts"
 import type { Session } from "./players.ts"
 import { Store } from "./store.ts"
@@ -102,6 +104,7 @@ const AccountLive = HttpApiBuilder.group(
   "account",
   Effect.fn(function*(handlers) {
     const accounts = yield* Accounts
+    const logs = yield* Logs
     /** Runs `action` for the player behind the session. */
     const forPlayer = <A, E>(action: (userId: string) => Effect.Effect<A, E>) =>
       Effect.gen(function*() {
@@ -116,7 +119,9 @@ const AccountLive = HttpApiBuilder.group(
       .handle("combine", ({ params }) => forPlayer((id) => accounts.combine(id, params.material)))
       .handle("call", ({ params, payload }) => forPlayer((id) => accounts.call(id, params.banner, payload.count)))
       .handle("focus", ({ params, payload }) => forPlayer((id) => accounts.focus(id, params.banner, payload.character)))
-      .handle("recordRun", ({ payload }) => forPlayer((id) => accounts.recordRun(id, payload.play, payload.result)))
+      .handle("recordRun", ({ payload }) => forPlayer((id) => accounts.recordRun(id, payload.play, payload.result, payload.log)))
+      .handle("runs", ({ query }) => forPlayer((id) => logs.runs(id, query.since ?? 0)))
+      .handle("events", ({ query }) => forPlayer((id) => logs.events(id, query.since ?? 0)))
   })
 )
 
@@ -137,7 +142,7 @@ const DevLive = HttpApiBuilder.group(
 )
 
 /** The services behind the handlers, over a database. */
-export const servicesLayer = Layer.mergeAll(Players.layer, Accounts.layer.pipe(Layer.provide(Store.layer))).pipe(
+export const servicesLayer = Layer.mergeAll(Players.layer, Logs.layer, Accounts.layer.pipe(Layer.provide([Store.layer, Logs.layer]))).pipe(
   Layer.provide(Layer.succeed(Content, { tuning: defaultTuning, starter: newAccount }))
 )
 

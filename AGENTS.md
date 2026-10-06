@@ -41,6 +41,11 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   writing Effect code: `LLMS.md` and `ai-docs/` there are its own guides
   (services, errors, Schema, `HttpApi`, SQL, testing), and `packages/` its
   source, which is the truth when a guide and the code disagree.
+- `pnpm runs`: a player's runs as the server kept them, with their logs
+  (what hurt, skills, falls, by wave), or `--events` for the account's
+  gains and spending; logs in as the player (`RUNS_URL`, `RUNS_USERNAME`,
+  `RUNS_PASSWORD`, or `.env.runs`). Tune against these (see
+  `docs/server.md`).
 - `pnpm calls`: the Spirit Call's pace (when characters come from calls
   along the quest line; see `docs/calls.md`). Run it after changing crystal
   rewards or call numbers.

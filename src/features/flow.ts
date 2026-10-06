@@ -5,7 +5,7 @@
  */
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
-import { Broke, Challenge, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PerfectDodged, PracticeField, Reaction, Rng, Run, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Broke, Challenge, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -112,6 +112,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     energyLedger: Game.System.writeResource(EnergyLedger),
     tuning: Game.System.readResource(Tuning),
     stats: Game.System.writeResource(Stats),
+    log: Game.System.writeResource(RunLog),
     waves: Game.System.writeResource(Waves),
     rng: Game.System.writeResource(Rng),
     run: Game.System.writeResource(Run),
@@ -126,6 +127,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
 }, ({ resources }) => {
   const tuning = resources.tuning.get()
   resources.stats.set({ kills: 0, shots: 0, reactions: [], tally: noTally })
+  resources.log.set(emptyRunLog)
   resources.energyLedger.set({})
   resources.waves.set(initialWaves(tuning))
   resources.rng.set({ state: tuning.waves.seed })

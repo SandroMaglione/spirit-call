@@ -23,7 +23,7 @@ import { Api, Password, Username } from "../api/api.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { MaterialId } from "../content/materials.ts"
-import type { RunResultValue } from "../schema.ts"
+import type { RunLogValue, RunResultValue } from "../schema.ts"
 
 export interface App {
   /** Who is playing. */
@@ -53,8 +53,8 @@ export interface App {
   readonly openCallsNow: () => Promise<Account | undefined>
   /** Owns every character and aspect, and adds plenty of each currency (a dev tool). */
   readonly unlockEverything: () => void
-  /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result; what it earned, or `undefined` if it could not be saved. */
-  readonly recordRun: (play: Play | null, result: RunResultValue) => Promise<Earned | undefined>
+  /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, and its log; what it earned, or `undefined` if it could not be saved. */
+  readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue) => Promise<Earned | undefined>
   /** Logs out (the page then starts over, at the login). */
   readonly logOut: () => Promise<void>
   /** Saves the sound settings (the sound board applies them itself). */
@@ -136,7 +136,7 @@ export const startApp = async (username: string): Promise<App> => {
     openCalls: () => void openCalls(),
     openCallsNow: () => openCalls(),
     unlockEverything: () => void run(api.dev.unlockEverything()),
-    recordRun: (play, result) => attempt(api.account.recordRun({ payload: { play, result } }), (recorded) => recorded.account).then((recorded) => recorded?.earned),
+    recordRun: (play, result, log) => attempt(api.account.recordRun({ payload: { play, result, log } }), (recorded) => recorded.account).then((recorded) => recorded?.earned),
     logOut: () => runtime.runPromise(api.session.logOut().pipe(Effect.ignore)),
     setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),
     setVolume: (volume) => saveSettings((current) => ({ ...current, volume }))

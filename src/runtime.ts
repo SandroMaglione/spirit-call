@@ -10,7 +10,7 @@ import { noGuard } from "./features/guard.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
-import { Flow, Game } from "./schema.ts"
+import { emptyRunLog, Flow, Game } from "./schema.ts"
 import type { BuildValue, ViewportValue } from "./schema.ts"
 
 /**
@@ -40,6 +40,7 @@ export const initialResources = (
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   Viewport: viewport,
   Stats: { kills: 0, shots: 0, reactions: [], tally: noTally },
+  RunLog: emptyRunLog,
   EnergyLedger: {},
   Waves: initialWaves(tuning),
   Rng: { state: tuning.waves.seed },

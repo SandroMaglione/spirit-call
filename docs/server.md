@@ -55,7 +55,9 @@ only as its SHA-256 hash. Logging out deletes it.
 | `POST /api/materials/{id}/combination` | Make a material from the grade below. |
 | `POST /api/banners/{id}/calls` | Make calls on a banner. |
 | `PUT /api/banners/{id}/focus` | Focus a character on a banner. |
-| `POST /api/runs` | Record a run that ended: the account after it, and what it earned. |
+| `POST /api/runs` | Record a run that ended, with its log: the account after it, and what it earned. |
+| `GET /api/runs?since=` | The player's runs, with their logs. |
+| `GET /api/account/events?since=` | The changes to the player's account. |
 | `POST /api/dev/unlock-everything`, `POST /api/dev/open-calls` | Dev tools: everywhere but prod. |
 
 Every endpoint but the first two needs the session. A rule that refuses
@@ -79,6 +81,33 @@ to by reference, so destroying a preview never touches it.
 - **Writes are plain statements in sequence.** A player's two devices
   changing the account at the same moment could interleave; that is
   accepted until it is seen to matter.
+
+## Measuring play
+
+Everything played is kept, to tune against real numbers rather than
+guesses (`src/server/logs.ts`, migration `0002_logs.sql`):
+
+- **Runs.** Each run that ends is kept with:
+  - what was played (a quest at a rank, a tier, or nothing for a `?play`
+    quick start, whose enemy level shows as 0) and the enemy level
+  - the team as it was (each member's level and aspect)
+  - how it went
+  - its log (`RunLog`, recorded by `features/run-log.ts`): each wave's
+    start and the damage taken in it; what hurt the team, by enemy and
+    attack; each member's damage dealt and taken; each skill's uses and
+    the blows it landed; each fall and what dealt it; dashes and switches.
+
+  A killing blow counts its whole damage.
+- **Account events.** Each change to an account is kept with what it
+  gained and spent of every resource: training, ascending, combining,
+  calls, focus, selection, a run's pay and rewards, and the dev tools.
+  A refused action leaves nothing.
+
+`pnpm runs` reads them as the player (see `scripts/runs.ts`):
+`RUNS_URL`, `RUNS_USERNAME`, and `RUNS_PASSWORD`, from the environment or
+`.env.runs` (gitignored). It prints a line per run, then what hurt the most
+and how the skills did; `--since`, `--quest`, `--events`, and `--json` for
+the full data.
 
 ## On a laptop
 

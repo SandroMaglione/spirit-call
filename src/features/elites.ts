@@ -65,7 +65,7 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
           damage: damageDealt(atk, discharge.power),
           knockback: discharge.knockback,
           element: { id: "thunder", atk },
-          source: { attacker: Game.Entity.handle(entity.id, Position) }
+          source: { attacker: Game.Entity.handle(entity.id, Position), label: { kind: "enemy", enemy: data.enemy.get().kind, attack: "discharge" } }
         }),
         remaining: 0.08,
         hit: []

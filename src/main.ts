@@ -94,7 +94,7 @@ const start = async (mount: HTMLElement) => {
     reported = result
     if (!recording) return
     uiStore.recording.value = "saving"
-    void shell.recordRun(playing, result).then((earned) => {
+    void shell.recordRun(playing, result, uiStore.runLog.peek()).then((earned) => {
       if (uiStore.result.peek() !== result) return
       uiStore.recording.value = earned === undefined ? "failed" : "saved"
       uiStore.earned.value = earned ?? null
