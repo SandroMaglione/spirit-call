@@ -25,14 +25,14 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const { accountId } = yield* yield* Cloudflare.CloudflareEnvironment
 
-    // Only what deploying the game needs: its Worker and the state store
-    // (a Worker whose keys live in the Secrets Store)
+    // Only what deploying the game needs: its Worker, the state store (a
+    // Worker whose keys live in the Secrets Store), and its database (D1)
     const token = yield* Cloudflare.ApiToken.AccountApiToken("CIToken", {
       accountId,
       policies: [
         {
           effect: "allow",
-          permissionGroups: ["Workers Scripts Write", "Secrets Store Write", "Account Settings Write", "Workers Tail Read"],
+          permissionGroups: ["Workers Scripts Write", "Secrets Store Write", "Account Settings Write", "Workers Tail Read", "D1 Write"],
           resources: { [`com.cloudflare.api.account.${accountId}`]: "*" }
         }
       ]
