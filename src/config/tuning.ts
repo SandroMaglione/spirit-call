@@ -258,6 +258,16 @@ export const defaultTuning = {
   /** A disc that bounces turns, off an enemy in a state, toward the nearest other one this close (see `DiscMove.bounces`). */
   discBounce: { range: 300 },
 
+  /**
+   * Getting out of corners (see `unstickDirection`): an enemy pressing
+   * against walls (within `reach` of one, or of a pool's keep-out margin)
+   * that covers less than `progress` of the way it wants to go over `after`
+   * seconds follows the wall, the way that leads best toward the player,
+   * for `seconds`, then steers as usual again. Stuck again within `memory`
+   * seconds, it goes on the same way (it follows a wall to its end).
+   */
+  unstick: { after: 0.5, seconds: 0.8, progress: 0.3, reach: 4, memory: 1.5 },
+
   /** How enemies find their way around walls to the player (see physics/paths.ts). */
   paths: {
     /** Size of the cells the way is found over. */

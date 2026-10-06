@@ -490,6 +490,16 @@ export interface BrainValue {
   readonly strafe: 1 | -1
   readonly strafeTimer: number
   readonly modeTimer: number
+  /** Where it stood when it began pressing against a wall: how far it got since tells whether it is stuck. */
+  readonly pressedAt: Vec2
+  /** How long it has been pressing against a wall, wanting to move (see `Tuning.unstick`). */
+  readonly stuck: number
+  /**
+   * Getting out of a corner: the way along the wall it follows, and for how
+   * much longer (below zero: how long ago it stopped, remembered for a while
+   * so it goes on the same way when stuck again); `null` otherwise.
+   */
+  readonly unstick: { readonly direction: Vec2; readonly remaining: number } | null
 }
 export const Brain = Descriptor.Component<BrainValue>()("Shooter/Brain")
 
