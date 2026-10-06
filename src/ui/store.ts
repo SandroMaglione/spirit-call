@@ -56,6 +56,8 @@ export interface UiStore {
   readonly challenge: Signal<ChallengeId>
   /** The player's account: what it owns, and the last selection with its aspects (the menu starts from it). */
   readonly account: Signal<Account>
+  /** Who is playing (her username). */
+  readonly player: string
   /** The quest or tier being played, or last played; `null` for a run of nothing (a dev quick start). */
   readonly play: Signal<Play | null>
   /** How the last run ended; `null` while one is going on (see `RunResult`). */
@@ -89,6 +91,7 @@ export const createUiStore = (initial: {
   readonly challenge: ChallengeId
   readonly flow: FlowState
   readonly account: Account
+  readonly player: string
   readonly notices: ReadonlyArray<string>
   readonly sound: Sound
 }): UiStore => ({
@@ -106,6 +109,7 @@ export const createUiStore = (initial: {
   team: signal(initial.team),
   challenge: signal(initial.challenge),
   account: signal(initial.account),
+  player: initial.player,
   play: signal(null),
   result: signal(null),
   earned: signal(null),
@@ -149,6 +153,8 @@ export interface UiActions {
   /** Close the in-game menu: back to the run. */
   readonly resume: () => void
   /** Sound on or off, and how loud (0..1); saved on this device. */
+  /** Logs out, back to the login. */
+  readonly logOut: () => void
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
 }

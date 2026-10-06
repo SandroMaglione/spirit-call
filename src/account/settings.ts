@@ -1,8 +1,7 @@
 /**
  * Device settings (sound and its volume now; controls and graphics later): they belong to
  * this device, not to the account. Loaded once, saved on every change;
- * loading never fails (see `persisted.ts`). A device without settings takes
- * the mute setting it had before (in the pre-account profile, or older).
+ * loading never fails (see `persisted.ts`).
  */
 import * as Context from "effect/Context"
 import * as Data from "effect/Data"
@@ -12,12 +11,9 @@ import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import * as Ref from "effect/Ref"
 
 import { read, write } from "./persisted.ts"
-import { LatestSettingsJson, LegacyProfileJson, migrateSettings, StoredSettingsJson } from "./stored.ts"
-import { legacyProfileKey } from "./store.ts"
+import { LatestSettingsJson, migrateSettings, StoredSettingsJson } from "./stored.ts"
 
 export const settingsKey = "shooter.settings"
-/** Where the sound board kept the mute setting before profiles. */
-export const legacyMutedKey = "shooter.muted"
 
 export interface Settings {
   readonly muted: boolean
@@ -37,14 +33,9 @@ export class SettingsStore extends Context.Service<SettingsStore, SettingsStoreS
 const load = (store: KeyValueStore.KeyValueStore) =>
   Effect.gen(function*() {
     const saved = yield* read(store, settingsKey, StoredSettingsJson)
-    if (saved._tag === "Read") {
-      const { muted, volume } = migrateSettings(saved.value)
-      return { muted, volume }
-    }
-    const legacy = yield* read(store, legacyProfileKey, LegacyProfileJson)
-    if (legacy._tag === "Read") return { muted: legacy.value.settings.muted, volume: 1 }
-    const muted = yield* store.get(legacyMutedKey).pipe(Effect.orElseSucceed(() => undefined))
-    return { muted: muted === "1", volume: 1 }
+    if (saved._tag !== "Read") return { muted: false, volume: 1 }
+    const { muted, volume } = migrateSettings(saved.value)
+    return { muted, volume }
   })
 
 /** The settings store over whatever `KeyValueStore` is provided. */

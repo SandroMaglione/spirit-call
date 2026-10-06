@@ -11,6 +11,9 @@ importers:
       '@effect/platform-browser':
         specifier: 4.0.1
         version: 4.0.1(effect@4.0.1)
+      '@effect/sql-d1':
+        specifier: 4.0.1
+        version: 4.0.1(effect@4.0.1)
       '@fontsource/alegreya-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -39,6 +42,9 @@ importers:
         specifier: 0.186.1
         version: 0.186.1
     devDependencies:
+      '@effect/sql-sqlite-node':
+        specifier: 4.0.1
+        version: 4.0.1(effect@4.0.1)
       '@typeonce/bevy-ts-devtools':
         specifier: link:../../bevy-ts/packages/devtools
         version: link:../../bevy-ts/packages/devtools
@@ -66,11 +72,24 @@ importers:
 
 packages:
 
+  '@cloudflare/workers-types@5.20261006.1':
+    resolution: {integrity: sha512-5OclwQK1d8f5LCPvOlyldC3ryKLUa4nLXegcgPZeUxAPudczQ9xujJDdpS2Tenp7JqbBLW3OgGciHJmuc7QShg==}
+
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
 
   '@effect/platform-browser@4.0.1':
     resolution: {integrity: sha512-RsnobWEnffdkRH/wZ3ARIAgMxtGLyfrD0R3iVS+dwQCdYrSbotlJHEoVHEgzcOn5RzMsHG6FHkfdgRMwvcM7kg==}
+    peerDependencies:
+      effect: ^4.0.1
+
+  '@effect/sql-d1@4.0.1':
+    resolution: {integrity: sha512-//VXATQFso9/y9JFDIfxxctMEwDlZq6RdlKA+q8nXE1N3q24FdBM9NF8BaBHT1G2NY+CB0U0PjqUASgsmcOvXw==}
+    peerDependencies:
+      effect: ^4.0.1
+
+  '@effect/sql-sqlite-node@4.0.1':
+    resolution: {integrity: sha512-VBlNvfFRxyyiu1viNygxA0ZVGZcpxBHA3+QLobaLQSXgAP0submgo98IzioWTHzdZUc9Xodi7ICci5ehhbD2fQ==}
     peerDependencies:
       effect: ^4.0.1
 
@@ -1276,9 +1295,20 @@ packages:
 
 snapshots:
 
+  '@cloudflare/workers-types@5.20261006.1': {}
+
   '@dimforge/rapier3d-compat@0.12.0': {}
 
   '@effect/platform-browser@4.0.1(effect@4.0.1)':
+    dependencies:
+      effect: 4.0.1
+
+  '@effect/sql-d1@4.0.1(effect@4.0.1)':
+    dependencies:
+      '@cloudflare/workers-types': 5.20261006.1
+      effect: 4.0.1
+
+  '@effect/sql-sqlite-node@4.0.1(effect@4.0.1)':
     dependencies:
       effect: 4.0.1
 

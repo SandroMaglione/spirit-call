@@ -1,4 +1,6 @@
-// The game on Cloudflare: the Vite build served as static assets by a Worker.
+// The game on Cloudflare: one Worker serving the Vite build as static assets
+// and the game's server under `/api/` (src/server/worker.ts), over the shared
+// database (deploy/stacks/database.ts).
 // `pnpm alchemy deploy` (from this folder) builds and deploys a stage; CI
 // deploys `prod` from main and a `pr-<n>` preview for every pull request
 // (.github/workflows/deploy.yml).
@@ -25,8 +27,19 @@ export default Alchemy.Stack(
     state: Cloudflare.state()
   },
   Effect.gen(function* () {
+    const stage = yield* Alchemy.Stage
+    // The one database every stage shares (deploy/stacks/database.ts)
+    const database = yield* Cloudflare.D1.Database.ref("Accounts", { stack: "top-down-team-shooter-database", stage: "shared" })
     const game = yield* Cloudflare.Website.Vite("Game", {
       rootDir,
+      // The server (src/server/worker.ts) answers `/api/`; the rest is the game's files
+      main: fileURLToPath(new URL("../src/server/worker.ts", import.meta.url)),
+      assets: { runWorkerFirst: ["/api/*"] },
+      env: {
+        DB: database,
+        // The dev tools (unlock everything, open the Spirit Call) answer everywhere but prod
+        DEV_TOOLS: stage === "prod" ? "off" : "on"
+      },
       memo: {
         // Locally the bevy-ts packages are linked from the sibling repository,
         // so their sources decide whether a rebuild is needed too (in CI they
