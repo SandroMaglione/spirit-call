@@ -874,6 +874,10 @@ export interface WavesValue {
   readonly queue: ReadonlyArray<WaveEntry>
   /** The wave's front: the direction (radians) from the player its ranged enemies come from (see `Tuning.waves.placement`). */
   readonly front: number
+  /** How many enemies this wave brings (its group members too; never its champions). */
+  readonly size: number
+  /** How many enemies of earlier waves (champions aside) still stood when this one started coming in. */
+  readonly carried: number
 }
 export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
 

@@ -301,8 +301,13 @@ export const defaultTuning = {
      * `flankFrom` radians off the front), so no single direction is safe.
      */
     placement: { ranged: { min: 560, max: 760 }, melee: { min: 380, max: 520 }, frontSpread: 0.6, flankFrom: 1.3 },
-    /** The next wave comes in once this few enemies of the current one are left (no break; kills, not time, bring it). */
-    reinforceAt: 2,
+    /**
+     * The next wave comes in once this share of the current one has fallen
+     * (rounded, and at least one enemy; no break: kills, not time, bring it).
+     * A share rather than a count, so a wave of two is fought before the
+     * next arrives, and a wave of ten still overlaps the next.
+     */
+    reinforceShare: 0.7,
     /** How long after that point it starts arriving. */
     reinforceDelay: 0.6,
     seed: 1337
