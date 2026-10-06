@@ -85,6 +85,7 @@ there, with a comment saying when to use it.
 | `Toggle`, `Slider` | `kit/controls.tsx` | On or off; an amount. |
 | `Badge` | `kit/controls.tsx` | Something to do there. |
 | `Card`, `Cards` | `kit/Card.tsx` | One of a set: art over a cream foot. `mark` for picked or a place in the party, `selected` for the one looked at, `locked`, `fresh` for just earned. |
+| `CardRow` | `kit/Card.tsx` | Cards on one line that can outgrow it (the results' rewards): centered while they fit, else scrolling sideways, snapping to a card, faded at an edge with more beyond. |
 | `Panel` | `kit/panel.tsx` | What is selected, explained: a coloured head (a `subtitle` for the one line that sets it apart), a body that scrolls, a cream `note` for the one thing not to miss (why it is locked). |
 | `Row` | `kit/panel.tsx` | One of a list to pick from; the selected one turns cream. |
 | `Fact` | `kit/panel.tsx` | A name and its value on a banded line: a stat, a cooldown, a setting (`tall`). |

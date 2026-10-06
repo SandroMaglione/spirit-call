@@ -579,6 +579,32 @@ export interface Earned {
   readonly chests: ReadonlyArray<ChestRef>
 }
 
+/** One resource a run earned, in all: `total`, of which `fromChests` came from the chests its stars opened. */
+export interface EarnedResource {
+  readonly id: ResourceId
+  readonly total: number
+  readonly fromChests: number
+}
+
+/**
+ * Everything `earned` added to the account, one entry per resource (the
+ * currencies, then the materials, in their content order): what the run
+ * paid, its materials, the account levels gained, a quest's rewards, the
+ * discoveries, and the chests, added together, so the same currency is
+ * one amount however many places it came from.
+ */
+export const earnedResources = (tuning: Tuning, earned: Earned): ReadonlyArray<EarnedResource> => {
+  const chests = earned.chests.map((chest) => tuning.chests[chest.group][chest.index]?.rewards ?? {})
+  const parts: ReadonlyArray<Amounts> = [earned.pay, earned.materials, earned.levelRewards, earned.rewards?.currencies ?? {}, ...earned.discoveries.map((id) => tuning.discoveries[id].rewards)]
+  const sum = (amounts: ReadonlyArray<Amounts>, id: ResourceId) => amounts.reduce((total, part) => total + (part[id] ?? 0), 0)
+  const resources = [...Object.keys(tuning.currencies), ...Object.keys(tuning.materials)] as Array<ResourceId>
+  return resources.flatMap((id) => {
+    const fromChests = sum(chests, id)
+    const total = sum(parts, id) + fromChests
+    return total > 0 ? [{ id, total, fromChests }] : []
+  })
+}
+
 /**
  * What a run against enemies of `enemyLevel` pays along `pay`: all of it
  * for a clear, and for a loss its progress times `loss` (see
