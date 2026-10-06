@@ -138,6 +138,9 @@
 .toggle::after { content: ""; position: absolute; inset: -7px 0; }
 .toggle[aria-pressed="true"] { background: rgba(236, 229, 216, .2); }
 .toggle[aria-pressed="true"]::before { background: var(--gold-hi); box-shadow: 0 0 8px var(--gold-hi); }
+/* A line of text to type (a username, a password): light on a dark well, gold when focused. */
+.text-input { display: block; width: 100%; height: 44px; padding: 0 14px; border: 0; border-radius: 6px; background: rgba(0, 0, 0, .28); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); font: 600 16px "Alegreya Sans", sans-serif; }
+.text-input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--gold); }
 .slider { -webkit-appearance: none; appearance: none; width: 200px; height: 44px; margin: 0; background: transparent; touch-action: none; cursor: pointer; }
 .slider::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--gold-hi) var(--fill, 50%), rgba(255, 255, 255, .2) 0); }
 .slider::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--gold-hi) var(--fill, 50%), rgba(255, 255, 255, .2) 0); }

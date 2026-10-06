@@ -9,13 +9,17 @@ ground effects, enemy traits; `docs/aspects.md`: classes, aspects, and how
 they are owned and equipped; `docs/enemies.md`: enemy movesets, behaviors,
 fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 `docs/spirits.md`: characters' spirits, from a character sheet to the game;
-`docs/quests.md`: quests, stars, ranks, materials, and ascension).
+`docs/quests.md`: quests, stars, ranks, materials, and ascension;
+`docs/server.md`: the server, the API, players, and the database).
 
 ## Commands
 
 - `pnpm dev --host --port 5199`: dev server, reachable from a phone on the
   same network (plain HTTP there is not a secure context: no
   `crypto.randomUUID`, clipboard, and similar).
+  It also answers `/api` with the game's server over a local SQLite file
+  (`.data/dev.sqlite`, see `docs/server.md`): sign up as many players as
+  needed, and delete the file to start over.
 - `pnpm check`: typecheck, lint, and tests. Run it before every commit.
 - Deploying (Cloudflare, with Alchemy): `deploy/` is its own package
   (`pnpm --dir deploy install`) holding `deploy/alchemy.run.ts`. From
@@ -25,9 +29,18 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   preview per pull request, building against the published bevy-ts release
   in package.json `bevyTsRelease` (`scripts/use-published-bevy-ts.ts` does
   the swap). Its Cloudflare secrets come from `deploy/stacks/github.ts`.
+  Every stage shares one database (`deploy/stacks/database.ts`), which
+  main's CI deploys (applying new migrations) before prod.
   Bumping `bevyTsRelease` is automatic: `.github/workflows/bevy-ts.yml`
   checks npm hourly, checks the game against a new release, commits the
   bump to main, and deploys prod.
+- `pnpm effect-source`: puts the source of the Effect release the game
+  uses in `.repos/effect` (a single-commit copy of github.com/Effect-TS/effect
+  at the installed version's tag, gitignored; rerun after upgrading Effect).
+  Read it to learn how Effect works and how it is meant to be used before
+  writing Effect code: `LLMS.md` and `ai-docs/` there are its own guides
+  (services, errors, Schema, `HttpApi`, SQL, testing), and `packages/` its
+  source, which is the truth when a guide and the code disagree.
 - `pnpm calls`: the Spirit Call's pace (when characters come from calls
   along the quest line; see `docs/calls.md`). Run it after changing crystal
   rewards or call numbers.
@@ -68,9 +81,14 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   (`src/ui/kit/`, and the game's own in `src/ui/menu/parts.tsx`), laid out
   for a phone in landscape and scaled as one piece: read `docs/menu-ui.md`
   before adding or changing one.
-- `src/account/` and `src/app/`: the player's account and device settings,
-  saved with Effect (Schema, versioned saves with migrations, a
-  `KeyValueStore`). `src/account/account.ts` holds the account's pure rules.
+- `src/account/`: the account's pure rules (`account.ts`, `calls.ts`), the
+  account as stored (`convert.ts`), and the device's own settings (Effect,
+  a `KeyValueStore`). The account itself lives on the server.
+- `src/api/` and `src/server/`: the game's HTTP API (Effect `HttpApi`,
+  shared by both sides) and the server (a Cloudflare Worker over D1; SQLite
+  locally): players, sessions, and the account in tables, every change one
+  of the account's rules (see `docs/server.md`). `src/app/app.ts` is the
+  game's side: the login, and the account through the API.
 
 `tools/lint/plugin.mjs` enforces these boundaries (which part may import
 which, Effect imported by module, no clocks or `Math.random` in the
@@ -80,9 +98,9 @@ simulation); `pnpm check` runs it.
 
 - Commit after each step (small, focused commits with a message explaining
   why); push only when asked.
-- Shipped content ids are permanent: saves refer to them.
+- Shipped content ids are permanent: accounts (the server's tables) refer to them.
   `test/content-ids.json` lists them; add new ids there, and never rename or
-  remove one without a save migration.
+  remove one without a database migration.
 - `validateContent` (`src/content/validate.ts`) holds the rules content must
   follow beyond its types; extend it when adding content with new rules.
 - Comments explain intent in plain language, matching the surrounding code.

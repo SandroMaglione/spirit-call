@@ -5,7 +5,7 @@
  * is unlocked by playing (quest rewards); quests open by account level and
  * the main line's order.
  * Changing this only affects accounts created afterwards; granting something
- * to existing accounts is a save migration (see `account/stored.ts`).
+ * to existing accounts is done as they load (see `fromRecord`).
  */
 import type { CharacterId } from "./characters.ts"
 import type { QuestId } from "./quests.ts"

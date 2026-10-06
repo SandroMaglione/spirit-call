@@ -1,6 +1,7 @@
 /**
- * Between the saved shapes (`stored.ts`, ids as strings) and the account the
- * game uses (`account.ts`, typed ids that name existing content).
+ * Between the account as stored (`AccountRecord`: ids as strings, as the
+ * server's tables hold them) and the account the game uses (`account.ts`,
+ * typed ids that name existing content).
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"
@@ -12,9 +13,53 @@ import type { DiscoveryId } from "../content/discoveries.ts"
 import type { AspectId } from "../content/aspects.ts"
 import type { BannerId } from "../content/calls.ts"
 import { teamSize } from "../content/characters.ts"
-import { characterLevel, createAccount, owns, select, unlock, validAspects, withClearedRewards, withEarnedChests } from "./account.ts"
+import { characterLevel, owns, select, unlock, validAspects, withClearedRewards, withEarnedChests } from "./account.ts"
 import type { Account, CallRecord, CallResult, CallState, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
-import type { LegacyProfileV1, StoredAccountLatest } from "./stored.ts"
+
+/** A quest's or a tier's runs, as stored. */
+interface StoredRunCount {
+  readonly attempts: number
+  readonly clears: number
+  readonly firstClearedAt: number | null
+}
+
+/** What a call brought, as stored. */
+export type StoredCallResult =
+  | { readonly kind: "character"; readonly id: string }
+  | { readonly kind: "aspect"; readonly id: string }
+  | { readonly kind: "supply"; readonly amounts: Readonly<Record<string, number>> }
+
+/** The account as stored: `Account`'s shape, with every content id a string that may name content that no longer exists. */
+export interface AccountRecord {
+  readonly id: string
+  readonly createdAt: number
+  readonly experience: number
+  readonly totals: { readonly runs: number; readonly clears: number; readonly kills: number; readonly secondsPlayed: number }
+  readonly wallet: Readonly<Record<string, number>>
+  readonly owned: {
+    readonly characters: Readonly<Record<string, OwnedCharacter>>
+    readonly aspects: Readonly<Record<string, OwnedAspect>>
+  }
+  readonly quests: Readonly<Record<string, StoredRunCount & { readonly stars: ReadonlyArray<number> }>>
+  readonly hardcore: Readonly<Record<string, Readonly<Record<string, StoredRunCount & { readonly rewardedPeriod: number | null; readonly bestWave?: number }>>>>
+  readonly discoveries: Readonly<Record<string, { readonly madeAt: number }>>
+  readonly chests: Readonly<Record<string, number>>
+  readonly calls: {
+    readonly seed: number
+    readonly sinceCharacter: number
+    readonly sinceAspect: number
+    readonly firstCharacter: boolean
+    readonly focus: Readonly<Record<string, string>>
+    readonly history: ReadonlyArray<{ readonly at: number; readonly banner: string; readonly result: StoredCallResult }>
+  }
+  readonly selection: {
+    readonly team: ReadonlyArray<string>
+    readonly aspects: Readonly<Record<string, string>>
+    readonly play:
+      | { readonly kind: "quest"; readonly quest: string; readonly rank?: number }
+      | { readonly kind: "tier"; readonly track: string; readonly tier: number }
+  }
+}
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
 
@@ -29,7 +74,7 @@ const keep = <Id extends string, V>(ids: Record<Id, unknown>, saved: Readonly<Re
 }
 
 /**
- * The account a (migrated) save describes. Content that no longer exists is
+ * The account a record describes. Content that no longer exists is
  * dropped; an aspect equipped in the team that is no longer valid (not
  * owned, not of her class, or on someone else in the team too) goes back to
  * her plain one; a team keeps the characters it still owns (or falls back to one it
@@ -38,10 +83,10 @@ const keep = <Id extends string, V>(ids: Record<Id, unknown>, saved: Readonly<Re
  * (see `withClearedRewards`). `dropped` says what was removed and `granted`
  * what was given, for a notice.
  */
-export const fromStored = (
+export const fromRecord = (
   tuning: Tuning,
   starter: StarterSet,
-  stored: StoredAccountLatest,
+  stored: AccountRecord,
   now: number
 ): { readonly account: Account; readonly dropped: ReadonlyArray<string>; readonly granted: ReadonlyArray<Item> } => {
   const dropped: Array<string> = []
@@ -104,9 +149,7 @@ export const fromStored = (
   const selected = play === undefined ? undefined : select(tuning, account, team, play)
   if (selected?.ok === true) account = selected.value
   else {
-    // A save from before quests has nothing selected: that is not something lost.
-    const nothing = stored.selection.play.kind === "quest" && stored.selection.play.quest === ""
-    if (!nothing) dropped.push("the last selection")
+    dropped.push("the last selection")
     account = { ...account, selection: { ...starterSelection, team } }
   }
   // The aspects saved for the team, as far as the rules allow (see `teamProblems`).
@@ -125,10 +168,10 @@ export const fromStored = (
  * that no longer exists is let go (the first one left is focused instead),
  * and the history keeps the calls that still name content.
  */
-const callsFrom = (tuning: Tuning, saved: StoredAccountLatest["calls"]): CallState => {
+const callsFrom = (tuning: Tuning, saved: AccountRecord["calls"]): CallState => {
   const focus: { [Id in BannerId]?: CharacterId } = {}
   for (const [banner, character] of Object.entries(saved.focus)) if (known(tuning.banners, banner) && known(tuning.characters, character)) focus[banner] = character
-  const resultFrom = (result: StoredAccountLatest["calls"]["history"][number]["result"]): CallResult | null => {
+  const resultFrom = (result: AccountRecord["calls"]["history"][number]["result"]): CallResult | null => {
     switch (result.kind) {
       case "character":
         return known(tuning.characters, result.id) ? { kind: "character", id: result.id } : null
@@ -147,14 +190,13 @@ const callsFrom = (tuning: Tuning, saved: StoredAccountLatest["calls"]): CallSta
 }
 
 /** A saved selection with typed ids, or `undefined` when it names no content. */
-const playFrom = (tuning: Tuning, saved: StoredAccountLatest["selection"]["play"]): Play | undefined => {
+const playFrom = (tuning: Tuning, saved: AccountRecord["selection"]["play"]): Play | undefined => {
   if (saved.kind === "quest") return known(tuning.quests, saved.quest) ? { kind: "quest", quest: saved.quest, ...(saved.rank === undefined || saved.rank === 1 ? {} : { rank: saved.rank }) } : undefined
   return known(tuning.tracks, saved.track) ? { kind: "tier", track: saved.track, tier: saved.tier } : undefined
 }
 
-/** The account as saved, in the latest version. */
-export const toStored = (account: Account): StoredAccountLatest => ({
-  version: 8,
+/** The account as stored. */
+export const toRecord = (account: Account): AccountRecord => ({
   id: account.id,
   createdAt: account.createdAt,
   experience: account.experience,
@@ -168,19 +210,3 @@ export const toStored = (account: Account): StoredAccountLatest => ({
   calls: account.calls,
   selection: account.selection
 })
-
-/**
- * The account for a device that saved a profile before accounts: a new
- * account (owning the starter set), keeping that profile's last character if
- * the new account owns her (her weapon and skills are gone: each character
- * has her own kit and class now). Challenges became quests, so its last
- * challenge is not kept.
- */
-export const accountFromLegacy = (tuning: Tuning, starter: StarterSet, legacy: LegacyProfileV1, id: string, now: number): Account => {
-  let account = createAccount(tuning, starter, id, now)
-  const { build } = legacy.selection
-  if (known(tuning.characters, build.character) && owns(account, { kind: "character", id: build.character })) {
-    account = { ...account, selection: { ...account.selection, team: [build.character] } }
-  }
-  return account
-}

@@ -6,9 +6,10 @@ import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
-import { startApp } from "./app/app.ts"
+import { currentPlayer, signIn, startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
+import { showLogin } from "./ui/Login.tsx"
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
@@ -47,8 +48,9 @@ const start = async (mount: HTMLElement) => {
   const stressLoad = parseStress(window.location.search)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
   const tuning = arenaFromQuery(stressLoad === undefined ? loadSavedTuning() : stressTuning(), window.location.search)
-  // The account loads first (created on the first visit): the menu starts from its last selection.
-  const shell = await startApp(tuning)
+  // The player logs in (or signs up) first; her account comes from the server, and the menu starts from its last selection.
+  const username = (await currentPlayer()) ?? (await showLogin(mount, signIn))
+  const shell = await startApp(username)
   let account = shell.account
   // `?openCalls` clears chapter one and adds crystals, once (a dev tool to try the Spirit Call on a phone,
   // where the tuning panel's keys are out of reach); the parameter is dropped so a reload does not repeat it.
@@ -75,7 +77,7 @@ const start = async (mount: HTMLElement) => {
   let recording = true
   const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, notices: shell.notes, sound: shell.settings })
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, player: shell.username, notices: shell.notes, sound: shell.settings })
   shell.onAccount((next) => {
     uiStore.account.value = next
   })
@@ -172,6 +174,10 @@ const start = async (mount: HTMLElement) => {
       sounds.setMuted(muted)
       shell.setMuted(muted)
       uiStore.sound.value = { ...uiStore.sound.value, muted }
+    },
+    logOut: () => {
+      // Starting over shows the login: nothing of this player stays in the page.
+      void shell.logOut().finally(() => window.location.reload())
     },
     setVolume: (volume) => {
       sounds.setVolume(volume)
