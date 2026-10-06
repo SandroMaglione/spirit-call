@@ -70,6 +70,12 @@ It is a personal project, not a commercial one.
 - **No commercial goals.** No monetization, no pressure mechanics, no large
   server infrastructure. It is an exploration for its own enjoyment; the code
   still stays clean and well built.
+- **The account lives on a light server.** A player logs in (a username and
+  a password) and her account comes from the server, the same on every
+  device; the server runs the account's rules and keeps what is played, so
+  play can be measured. Light means one Worker and one database
+  (Cloudflare), nothing distributed (see `server.md`). The arena itself runs
+  on the device, as before.
 
 ## Platform and controls
 
@@ -324,7 +330,7 @@ Agreed, waiting for their time:
 - **Weekly hardcore rulesets.** Each period, the hardcore tiers come with a
   ruleset (a set of enemies and a twist: burning floors, rock elites,
   Gunners leading every wave), so every week is a new preparation puzzle.
-  No server is needed: the period is computed on the device (as the reset
-  is), and its ruleset picked from a list in content by its number.
+  The period is computed from the time (as the reset is), and its ruleset
+  picked from a list in content by its number.
 - **Character trials**, with the gacha: a short quest built around each
   character's kit, teaching her, with sideways rewards at harder levels.
