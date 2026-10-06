@@ -4,9 +4,7 @@
 // (.github/workflows/deploy.yml).
 //
 // The deploy tooling is its own package so its dependencies stay out of the
-// game's. It pins Effect 4.0.0-rc.117: alchemy 2.0.0-beta.79 imports
-// `effect/unstable/*` modules that later Effect versions moved; move both to
-// the next alchemy release (which follows Effect's new layout).
+// game's; both are on the same Effect release.
 import { fileURLToPath } from "node:url"
 
 import * as Alchemy from "alchemy"
