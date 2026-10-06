@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@effect/platform-browser':
-        specifier: 4.0.0-rc.118
-        version: 4.0.0-rc.118(effect@4.0.0-rc.118)
+        specifier: 4.0.1
+        version: 4.0.1(effect@4.0.1)
       '@fontsource/alegreya-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -30,8 +30,8 @@ importers:
         specifier: link:../../bevy-ts/packages/pixi
         version: link:../../bevy-ts/packages/pixi
       effect:
-        specifier: 4.0.0-rc.118
-        version: 4.0.0-rc.118
+        specifier: 4.0.1
+        version: 4.0.1
       preact:
         specifier: 10.29.8
         version: 10.29.8
@@ -69,10 +69,10 @@ packages:
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
 
-  '@effect/platform-browser@4.0.0-rc.118':
-    resolution: {integrity: sha512-X0UnkYh76kFU8/qpqh5FNgqDEuZI1GWA/ZxvA9NOUBYN/e3mBJCzjWHa1XeRwtn7xSiKlZcY/vyReLFbbjcHlg==}
+  '@effect/platform-browser@4.0.1':
+    resolution: {integrity: sha512-RsnobWEnffdkRH/wZ3ARIAgMxtGLyfrD0R3iVS+dwQCdYrSbotlJHEoVHEgzcOn5RzMsHG6FHkfdgRMwvcM7kg==}
     peerDependencies:
-      effect: ^4.0.0-rc.118
+      effect: ^4.0.1
 
   '@esbuild/aix-ppc64@0.27.7':
     resolution: {integrity: sha512-EKX3Qwmhz1eMdEJokhALr0YiD0lhQNwDqkPYyPhiSwKrh7/4KRjQc04sZ8db+5DVVnZ1LmbNDI1uAMPEUBnQPg==}
@@ -932,8 +932,8 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  effect@4.0.0-rc.118:
-    resolution: {integrity: sha512-hxhpCd+swzrtu9lnyPpEFre2ODQzJ9qxgyL1oHIEY8NKnW4PxTbM1XzplMZXiAsLD62HO+KJc41Nqxr9T791ZQ==}
+  effect@4.0.1:
+    resolution: {integrity: sha512-b1VlQG9g8fwxE5QnIZuPoOP/0MsqHJSRKxUijjoM80E5q95FXrX5yWtY5XI8G+GJsBQAVSDbLS458z9a++uVvw==}
 
   es-module-lexer@1.7.0:
     resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
@@ -1278,9 +1278,9 @@ snapshots:
 
   '@dimforge/rapier3d-compat@0.12.0': {}
 
-  '@effect/platform-browser@4.0.0-rc.118(effect@4.0.0-rc.118)':
+  '@effect/platform-browser@4.0.1(effect@4.0.1)':
     dependencies:
-      effect: 4.0.0-rc.118
+      effect: 4.0.1
 
   '@esbuild/aix-ppc64@0.27.7':
     optional: true
@@ -1770,7 +1770,7 @@ snapshots:
 
   detect-libc@2.1.2: {}
 
-  effect@4.0.0-rc.118: {}
+  effect@4.0.1: {}
 
   es-module-lexer@1.7.0: {}
 

@@ -1,3 +1,0 @@
-# Alchemy beta.79 needs Effect rc.117 throughout (see alchemy.run.ts)
-overrides:
-  "@effect/platform-node-shared": 4.0.0-rc.117
