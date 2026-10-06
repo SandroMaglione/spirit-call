@@ -16,10 +16,12 @@
     "lab": "node --import tsx scripts/lab.ts",
     "calls": "node --import tsx scripts/calls.ts",
     "balance": "node --import tsx scripts/balance.ts",
-    "shot": "node --import tsx scripts/screenshot.ts"
+    "shot": "node --import tsx scripts/screenshot.ts",
+    "effect-source": "node scripts/effect-source.ts"
   },
   "dependencies": {
     "@effect/platform-browser": "4.0.1",
+    "@effect/sql-d1": "4.0.1",
     "@fontsource/alegreya-sans": "^5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@preact/signals": "2.11.2",
@@ -31,6 +33,7 @@
     "three": "0.186.1"
   },
   "devDependencies": {
+    "@effect/sql-sqlite-node": "4.0.1",
     "@typeonce/bevy-ts-devtools": "link:../../bevy-ts/packages/devtools",
     "@types/node": "25.5.0",
     "@types/three": "0.186.0",
