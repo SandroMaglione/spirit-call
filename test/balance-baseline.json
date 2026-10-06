@@ -534,9 +534,9 @@
       "profile": "escape-only",
       "seed": 42,
       "report": {
-        "hits": 1,
-        "damage": 4,
-        "dashes": 85,
+        "hits": 2,
+        "damage": 8,
+        "dashes": 82,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
@@ -546,7 +546,7 @@
         "ultimates": 0,
         "breaks": 0,
         "healing": 0,
-        "healthRemaining": 0.9444444444444444
+        "healthRemaining": 0.8888888888888887
       }
     },
     {
