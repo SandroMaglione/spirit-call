@@ -60,7 +60,7 @@ describe("challenges", () => {
   it("measures how far a run got by waves defeated", () => {
     const waves = defaultTuning.challenges.swarm
     const total = waves.waves.scripted.length
-    const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [], front: 0 })
+    const at = (number: number, phase: "break" | "spawning" | "fighting" | "complete") => objectiveProgress(waves, { number, phase, timer: 0, queue: [], front: 0, size: 0, carried: 0 })
     expect(at(0, "break")).toBe(0)
     expect(at(1, "fighting")).toBe(0)
     expect(at(1, "break")).toBeCloseTo(1 / total)
@@ -116,7 +116,7 @@ describe("lasting until the team falls", () => {
     const spec = { ...defaultTuning.challenges.swarm, objective: endure(3, 1), waves: plan }
     const run = { time: 60, endedAt: 60 }
     const stats = { kills: 0, shots: 0, reactions: [], tally: noTally }
-    const at = (number: number) => ({ number, phase: "fighting" as const, timer: 0, queue: [], front: 0 })
+    const at = (number: number) => ({ number, phase: "fighting" as const, timer: 0, queue: [], front: 0, size: 0, carried: 0 })
     expect(runResultOf(false, "swarm", spec, run, at(2), stats, []).cleared).toBe(false)
     expect(runResultOf(false, "swarm", spec, run, at(2), stats, []).progress).toBeCloseTo(1 / 3)
     expect(runResultOf(false, "swarm", spec, run, at(5), stats, []).cleared).toBe(true)

@@ -95,7 +95,11 @@ How an enemy moves when it is not attacking (`features/behaviors.ts`):
 
 Enemies find their **way around walls**: with no clear line to the player,
 they follow a flow field over the arena (`physics/paths.ts`) instead of
-pressing against the wall in between.
+pressing against the wall in between. Enemies that circle or keep their
+distance come around too while a wall hides the player, rather than holding
+their place around her through it. One still pressed against walls without
+getting anywhere (a concave corner, a walled pool's edge) follows the wall
+out for a moment, the side that leads toward the player (`unstick`).
 
 ## The crowd's rhythm
 
@@ -113,9 +117,11 @@ unreadable; hardcore modifiers may raise them, never the readability floor.
   the player (toward the side of the arena with the most room). Enemies that
   keep their distance come in far along it; the others come in closer, from
   the flanks and behind. Backing away from one side walks into the other.
-- **Reinforcements come as a wave thins out**: once only a few of its
-  enemies are left (`waves.reinforceAt`), the next wave starts arriving.
-  Kills bring it, never a timer, so there is no damage race.
+- **Reinforcements come as a wave thins out**: once most of it has fallen
+  (`waves.reinforceShare`, about 70%, and always at least one enemy), the
+  next wave starts arriving. A share rather than a count, so a wave of two is
+  fought before the next comes. Kills bring it, never a timer, so there is no
+  damage race.
 - Every spawn is warned on the floor before the enemy appears.
 - **A run lasts three to four minutes.** A quest's waves add up to that for
   the lab's quick player (sum its seconds to clear). Goals require defeating

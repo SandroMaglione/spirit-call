@@ -13,10 +13,11 @@ import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
-import { keepOut, readPlayer, skirmishTurn, steer } from "./behaviors.ts"
+import { keepOut, readPlayer, skirmishTurn, steer, unstickDirection } from "./behaviors.ts"
 import { waveLevelBonus } from "./challenges.ts"
 import { durationFactor, stateSpeed } from "./elements.ts"
 import { active } from "./ground.ts"
+import { enemyPace } from "./time.ts"
 import {
   Attacker,
   AttackPhase,
@@ -38,6 +39,7 @@ import {
   Respawns,
   RunScope,
   Shield,
+  SlowMotion,
   Elite,
   BasicAttack,
   Dash,
@@ -84,7 +86,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [Enemy, { kind, champion: lead !== null }],
     [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
-    [Brain, { strafe, strafeTimer: 0, modeTimer: 0 }],
+    [Brain, { strafe, strafeTimer: 0, modeTimer: 0, pressedAt: at, stuck: 0, unstick: null }],
     [EnemyMode, "orbit"],
     [Poise, { current: 0, broken: 0, quiet: 0 }],
     [Renderable, elite === null ? { kind: "enemy", enemy: kind, radius: stats.radius } : { kind: "enemy", enemy: kind, radius: stats.radius * size, elite, ...(lead === null ? {} : { champion: true as const }) }]
@@ -228,10 +230,12 @@ export const SteerEnemies = (() => {
       }),
       walls: Walls
     },
-    resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) }
+    resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) }
   }, ({ queries, resources }) => {
     const tuning = resources.tuning.get()
     const dt = resources.time.get().dt
+    // Enemies walk at their pace (slow motion), which tells how far one should have got in a step.
+    const pace = enemyPace(resources.slowMotion.get())
     const [player] = queries.player.each()
     const target = player?.data.position.get()
     // What the enemies make of her: open to a rush, or a threat to keep out of reach of (see `readPlayer`).
@@ -345,8 +349,10 @@ export const SteerEnemies = (() => {
         const toward = normalizeOr(sub(target, position), zero)
         // Straight at her when nothing is in between; around the walls (and the arena's hazards) otherwise.
         const way = hasLineOfSight(position, target, radius, avoided) ? toward : (paths.way(position) ?? toward)
+        // Seeing her over the arena's pools counts (shots fly over them); only walls hide her.
+        const sight = way === toward || hasLineOfSight(position, target, radius, boxes)
         const distance = length(sub(target, position))
-        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, distance, speed, dt })
+        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, sight, distance, speed, dt })
         // Under her threat, a skirmisher whose turn it is keeps just out of her reach, circling, until it runs out of patience.
         const wary = behavior.kind === "skirmish" && mode === "engage" && read !== undefined && read.threatens(position) && data.brain.get().modeTimer < tuning.reading.patience
         const side = { x: -toward.y * data.brain.get().strafe, y: toward.x * data.brain.get().strafe }
@@ -356,8 +362,42 @@ export const SteerEnemies = (() => {
         const affinities = data.affinities.get()
         const minded = pools.filter((pool) => durationFactor(tuning, affinities[pool.element]) > 0)
         const wanted = holding === null ? steering.desired : scale(holding, speed * tuning.crowd.orbitSpeed)
-        desired = minded.length === 0 ? wanted : keepOut(wanted, position, radius, speed, minded, tuning.crowd.hazardMargin)
-        data.brain.set(steering.brain)
+        // Pressed into a corner, getting nowhere: it follows the wall out for a while (see `Tuning.unstick`).
+        const rules = tuning.unstick
+        const brain = data.brain.get()
+        let { pressedAt, stuck, unstick } = brain
+        let goal = wanted
+        if (unstick !== null && unstick.remaining > 0) {
+          goal = scale(unstick.direction, speed)
+          unstick = { ...unstick, remaining: unstick.remaining - dt }
+        } else {
+          // Out of a corner a while ago: forgotten.
+          if (unstick !== null) unstick = unstick.remaining > -rules.memory ? { ...unstick, remaining: unstick.remaining - dt } : null
+          const wants = length(wanted)
+          const obstacles = wants > 1
+            ? [
+              ...boxes.map((box) => ({ box, reach: rules.reach })),
+              ...minded.flatMap((pool) => (pool.permanent && pool.half !== null
+                ? [{ box: { minX: pool.center.x - pool.half.x, minY: pool.center.y - pool.half.y, maxX: pool.center.x + pool.half.x, maxY: pool.center.y + pool.half.y }, reach: tuning.crowd.hazardMargin + rules.reach }]
+                : []))
+            ]
+            : []
+          const out = obstacles.length === 0 ? undefined : unstickDirection(position, radius, obstacles, way, brain.strafe, unstick?.direction)
+          if (out === undefined) {
+            pressedAt = position
+            stuck = 0
+          } else if ((stuck += dt) >= rules.after) {
+            // Pressed against walls for a while: stuck if it got barely anywhere of the way it wanted to go.
+            if (length(sub(position, pressedAt)) < wants * pace * rules.after * rules.progress) {
+              unstick = { direction: out, remaining: rules.seconds }
+              goal = scale(out, speed)
+            }
+            pressedAt = position
+            stuck = 0
+          }
+        }
+        desired = minded.length === 0 ? goal : keepOut(goal, position, radius, speed, minded, tuning.crowd.hazardMargin)
+        data.brain.set({ ...steering.brain, pressedAt, stuck, unstick })
       }
 
       // Separation from nearby bodies (other enemies and the player).

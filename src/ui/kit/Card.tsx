@@ -5,6 +5,7 @@
  * the one thing to know about it (a level, a name, an amount).
  */
 import type { ComponentChildren } from "preact"
+import { useEffect, useRef } from "preact/hooks"
 
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
@@ -42,3 +43,38 @@ export const Card = ({ art, foot, tint, corner, mark, selected = false, locked =
 
 /** Cards side by side, wrapping. */
 export const Cards = ({ children, class: className = "" }: { readonly children: ComponentChildren; readonly class?: string }) => <div class={`cards ${className}`}>{children}</div>
+
+/**
+ * Cards on one line, centered while they fit; when there are more than fit,
+ * the line scrolls sideways (snapping to a card, a mouse wheel scrolling it
+ * too), and fades out at an edge with more beyond it.
+ */
+export const CardRow = ({ children, class: className = "", label }: { readonly children: ComponentChildren; readonly class?: string; readonly label?: string }) => {
+  const row = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const element = row.current
+    if (element === null) return
+    // Which edges have more beyond them: those fade (see `.card-row` in kit.css).
+    const edges = () => {
+      const more = element.scrollWidth - element.clientWidth
+      element.dataset.before = String(more > 1 && element.scrollLeft > 1)
+      element.dataset.after = String(more > 1 && element.scrollLeft < more - 1)
+    }
+    const wheel = (event: WheelEvent) => {
+      if (element.scrollWidth <= element.clientWidth || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+      element.scrollLeft += event.deltaY
+      event.preventDefault()
+    }
+    edges()
+    const resized = new ResizeObserver(edges)
+    resized.observe(element)
+    element.addEventListener("scroll", edges, { passive: true })
+    element.addEventListener("wheel", wheel, { passive: false })
+    return () => {
+      resized.disconnect()
+      element.removeEventListener("scroll", edges)
+      element.removeEventListener("wheel", wheel)
+    }
+  }, [])
+  return <div ref={row} class={`card-row scroll-x ${className}`} aria-label={label}>{children}</div>
+}

@@ -10,7 +10,7 @@ import { hazardBoxes } from "../src/features/arena.ts"
 import { keepOut, readPlayer } from "../src/features/behaviors.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
-import { pickSpawnPoint } from "../src/features/waves.ts"
+import { pickSpawnPoint, reinforceAfter } from "../src/features/waves.ts"
 import { Random } from "../src/math/rng.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, plainAttack } from "./helpers.ts"
@@ -70,20 +70,58 @@ describe("where enemies come in", () => {
     }
   })
 
-  it("sends the next wave in once only a few of the current one are left", () => {
-    const run = start({ waves: true, challenge: "endless" })
-    const world = () => run.runtime.inspect(World)
-    for (let step = 0; step < steps(8) && world().waves.phase !== "fighting"; step++) run.step()
-    expect(world().waves.number).toBe(1)
-    run.step(steps(defaultTuning.waves.spawnWarning) + 5)
-    // All but the last two fall.
-    const KillAllButTwo = Game.System("Test/KillAllButTwo", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each().slice(defaultTuning.waves.reinforceAt)) commands.despawn(entity.id)
+  /** Despawns `count` enemies of the field, as if they had fallen. */
+  const defeat = (run: ReturnType<typeof start>, count: number) => {
+    const Defeat = Game.System("Test/Defeat", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
+      for (const { entity } of queries.enemies.each().slice(0, count)) commands.despawn(entity.id)
     })
-    run.runtime.tick(Game.Schedule(KillAllButTwo, Game.Schedule.applyDeferred()))
+    run.runtime.tick(Game.Schedule(Defeat, Game.Schedule.applyDeferred()))
+  }
+
+  /** Steps until wave 1 has come in and its spawn warnings have become enemies. */
+  const firstWave = (run: ReturnType<typeof start>) => {
+    for (let step = 0; step < steps(8) && run.runtime.inspect(World).waves.phase !== "fighting"; step++) run.step()
+    expect(run.runtime.inspect(World).waves.number).toBe(1)
+    run.step(steps(defaultTuning.waves.spawnWarning) + 5)
+  }
+
+  it("lets a wave of two be fought before the next comes: The Brute's first wave waits for kills", () => {
+    const run = start({ waves: true, challenge: "brute" })
+    firstWave(run)
+    expect(run.runtime.inspect(World).waves.size).toBe(2)
+    // Nobody falls: the wave stays alone, however long it takes.
+    run.step(steps(5))
+    expect(run.runtime.inspect(World).waves.number).toBe(1)
+    expect(run.runtime.inspect(World).enemies).toHaveLength(2)
+    // One falls: now the next comes in.
+    defeat(run, 1)
     run.step(steps(defaultTuning.waves.reinforceDelay) + 5)
-    expect(world().waves.number).toBe(2)
-    expect(world().enemies.length).toBeGreaterThan(0)
+    expect(run.runtime.inspect(World).waves.number).toBe(2)
+  })
+
+  it("sends the next wave in once most of a big one has fallen, before it is cleared", () => {
+    const run = start({ waves: true, challenge: "endless" })
+    firstWave(run)
+    const size = run.runtime.inspect(World).waves.size
+    const needed = reinforceAfter(defaultTuning, size)
+    expect(size).toBeGreaterThan(3)
+    expect(needed).toBeLessThan(size)
+    // One short of the share: still this wave.
+    defeat(run, needed - 1)
+    run.step(steps(defaultTuning.waves.reinforceDelay) + 5)
+    expect(run.runtime.inspect(World).waves.number).toBe(1)
+    // The share has fallen: the next comes in while the rest still stand.
+    defeat(run, 1)
+    run.step(steps(defaultTuning.waves.reinforceDelay) + 5)
+    expect(run.runtime.inspect(World).waves.number).toBe(2)
+    expect(run.runtime.inspect(World).enemies.length).toBeGreaterThan(0)
+  })
+
+  it("needs about 70% of a wave to fall, and always at least one enemy", () => {
+    expect(reinforceAfter(defaultTuning, 1)).toBe(1)
+    expect(reinforceAfter(defaultTuning, 2)).toBe(1)
+    expect(reinforceAfter(defaultTuning, 4)).toBe(3)
+    expect(reinforceAfter(defaultTuning, 10)).toBe(7)
   })
 })
 

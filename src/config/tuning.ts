@@ -258,6 +258,16 @@ export const defaultTuning = {
   /** A disc that bounces turns, off an enemy in a state, toward the nearest other one this close (see `DiscMove.bounces`). */
   discBounce: { range: 300 },
 
+  /**
+   * Getting out of corners (see `unstickDirection`): an enemy pressing
+   * against walls (within `reach` of one, or of a pool's keep-out margin)
+   * that covers less than `progress` of the way it wants to go over `after`
+   * seconds follows the wall, the way that leads best toward the player,
+   * for `seconds`, then steers as usual again. Stuck again within `memory`
+   * seconds, it goes on the same way (it follows a wall to its end).
+   */
+  unstick: { after: 0.5, seconds: 0.8, progress: 0.3, reach: 4, memory: 1.5 },
+
   /** How enemies find their way around walls to the player (see physics/paths.ts). */
   paths: {
     /** Size of the cells the way is found over. */
@@ -301,8 +311,13 @@ export const defaultTuning = {
      * `flankFrom` radians off the front), so no single direction is safe.
      */
     placement: { ranged: { min: 560, max: 760 }, melee: { min: 380, max: 520 }, frontSpread: 0.6, flankFrom: 1.3 },
-    /** The next wave comes in once this few enemies of the current one are left (no break; kills, not time, bring it). */
-    reinforceAt: 2,
+    /**
+     * The next wave comes in once this share of the current one has fallen
+     * (rounded, and at least one enemy; no break: kills, not time, bring it).
+     * A share rather than a count, so a wave of two is fought before the
+     * next arrives, and a wave of ten still overlaps the next.
+     */
+    reinforceShare: 0.7,
     /** How long after that point it starts arriving. */
     reinforceDelay: 0.6,
     seed: 1337

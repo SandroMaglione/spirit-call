@@ -3,9 +3,10 @@
  * one behind spawn warnings. Each wave has a front, a direction from the
  * player: the enemies that keep their distance come in far along it, the
  * others close from the flanks and behind (see `Tuning.waves.placement`),
- * so no direction is safe to back away into. Once only a few enemies of a
- * wave are left (`reinforceAt`), the next one comes in: kills, not time,
- * bring it. The waves are the challenge's plan (see `content/challenges.ts`):
+ * so no direction is safe to back away into. Once most of a wave has fallen
+ * (`reinforceShare` of it, and always at least one enemy), the next one comes
+ * in: kills, not time, bring it, and a small wave is not overrun by the next
+ * before it is fought. The waves are the challenge's plan (see `content/challenges.ts`):
  * its scripted waves, then (if the plan is endless) random mixes within a
  * growing budget, some of them elites, drawn from the seeded `Rng`, so a run
  * replays exactly. A plan that ends is `complete` once its last wave is
@@ -25,7 +26,7 @@ import type { EnemyKind, WavesValue } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
-export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, phase: "break", timer: tuning.waves.firstDelay, queue: [], front: 0 })
+export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, phase: "break", timer: tuning.waves.firstDelay, queue: [], front: 0, size: 0, carried: 0 })
 
 /** Whether `plan` has a wave `number` (from 1). */
 export const hasWave = (plan: WavePlan, number: number): boolean => plan.endless !== null || number <= plan.scripted.length
@@ -115,6 +116,14 @@ const pickFront = (tuning: TuningValue, player: Vec2 | undefined, random: Random
   return best
 }
 
+/**
+ * How many enemies must fall, once a wave of `size` has come in, before the
+ * next one does: `reinforceShare` of it, rounded, and at least one. Kills of
+ * enemies left from earlier waves count too (they are part of the crowd
+ * being thinned), so the field never piles up wave on wave.
+ */
+export const reinforceAfter = (tuning: TuningValue, size: number): number => Math.max(1, Math.round(size * tuning.waves.reinforceShare))
+
 export const DirectWaves = Game.System("Shooter/DirectWaves", {
   queries: {
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
@@ -138,9 +147,14 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   const dt = resources.time.get().dt
   const waves = resources.waves.get()
   const random = new Random(resources.rng.get().state)
-  let { number, phase, timer, front } = waves
+  let { number, phase, timer, front, size, carried } = waves
   let queue = [...waves.queue]
   const player = queries.player.each()[0]?.data.position.get()
+  // The enemies standing or about to (spawn warnings), champions aside: they stay across waves.
+  const enemies = queries.enemies.each()
+  const pending = queries.pending.each()
+  const champions = enemies.filter(({ data }) => data.enemy.get().champion).length + pending.filter(({ data }) => data.pending.get().champion === true).length
+  const left = enemies.length + pending.length - champions
 
   switch (phase) {
     case "break":
@@ -153,6 +167,8 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
         front = pickFront(tuning, player, random)
         phase = "spawning"
         timer = 0
+        size = 0
+        carried = left
       }
       break
     case "spawning": {
@@ -161,9 +177,9 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       while (timer <= 0 && queue.length > 0) {
         const entry = queue.shift()!
         const kind = entryKind(entry)
-        for (const spawn of makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry), entryChampion(entry))) {
-          commands.spawnIn(RunScope, spawn)
-        }
+        const spawns = makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry), entryChampion(entry))
+        for (const spawn of spawns) commands.spawnIn(RunScope, spawn)
+        if (!entryChampion(entry)) size += spawns.length
         timer += tuning.waves.spawnInterval
       }
       if (queue.length === 0) phase = "fighting"
@@ -171,16 +187,12 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
     }
     case "fighting": {
       // Champions stay across waves: the waves go on around them, and only the plan's end waits for them.
-      const enemies = queries.enemies.each()
-      const pending = queries.pending.each()
-      const champions = enemies.filter(({ data }) => data.enemy.get().champion).length + pending.filter(({ data }) => data.pending.get().champion === true).length
-      const left = enemies.length + pending.length - champions
       if (left === 0 && (hasWave(plan, number + 1) || champions === 0)) {
         // The last wave of a plan that ends completes it at once (with every champion down).
         phase = hasWave(plan, number + 1) ? "break" : "complete"
         timer = tuning.waves.breakDuration
-      } else if (left <= tuning.waves.reinforceAt && hasWave(plan, number + 1)) {
-        // Reinforcements: the next wave comes in while the last few still stand.
+      } else if (carried + size - left >= reinforceAfter(tuning, size) && hasWave(plan, number + 1)) {
+        // Reinforcements: the next wave comes in while the last of this one still stand.
         phase = "break"
         timer = tuning.waves.reinforceDelay
       }
@@ -190,6 +202,6 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       break
   }
 
-  resources.waves.set({ number, phase, timer, queue, front })
+  resources.waves.set({ number, phase, timer, queue, front, size, carried })
   resources.rng.set({ state: random.state })
 })

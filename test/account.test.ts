@@ -1,9 +1,9 @@
 import { experienceTo } from "../src/account/progression.ts"
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests, ascend, ascensionCost, combine, levelCap } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, earnedResources, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests, ascend, ascensionCost, combine, levelCap } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import type { ChestRef, Play } from "../src/account/account.ts"
+import type { ChestRef, Earned, Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
 import type { DiscoveryId } from "../src/content/discoveries.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
@@ -336,5 +336,28 @@ describe("account rules", () => {
     expect(questLock(defaultTuning, cleared, "crossfire")).toBeNull()
     expect(questLock(defaultTuning, cleared, "holdTheLine")).toBeNull()
     expect(questLock(defaultTuning, { ...cleared, experience: 0 }, "crossfire")).toBeNull()
+  })
+})
+
+describe("what a run earned, for the results", () => {
+  it("adds the same currency up into one amount from wherever it came, noting a chest's share", () => {
+    const earned: Earned = {
+      experience: 120,
+      level: { before: 3, after: 4 },
+      pay: { gold: 400 },
+      materials: { fireShard: 2 },
+      levelRewards: { crystals: 20 },
+      discoveries: ["withSwordsman"],
+      rewards: { experience: 50, currencies: { crystals: 100, gold: 300 }, unlocks: [] },
+      stars: [0, 1, 2],
+      chests: [{ group: "one", index: 0 }]
+    }
+    const chest = defaultTuning.chests.one[0]!.rewards
+    const discovery = defaultTuning.discoveries.withSwordsman.rewards
+    expect(earnedResources(defaultTuning, earned)).toEqual([
+      { id: "crystals", total: 20 + 100 + (discovery.crystals ?? 0) + (chest.crystals ?? 0), fromChests: chest.crystals ?? 0 },
+      { id: "gold", total: 400 + 300 + (discovery.gold ?? 0) + (chest.gold ?? 0), fromChests: chest.gold ?? 0 },
+      { id: "fireShard", total: 2, fromChests: 0 }
+    ])
   })
 })
