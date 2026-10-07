@@ -181,39 +181,50 @@ const carrierOf = (challenge: ChallengeSpec, novelty: Novelty): WaveEntry | unde
 }
 
 /** A main quest's one new thing, first in its brief: its picture (the enemy that shows it, or its floor's element) beside its line; tap the enemy to read about it. */
+/**
+ * A new thing's tag (beside a rank's name, for a twist): what kind of thing it is, in its
+ * colours — a champion in gold, an element (an elite's, a floor's) in its
+ * own, an ability in steel, a new enemy plain.
+ */
+const Tag = ({ mark, tint, icon, children }: { readonly mark: "champion" | "element" | "ability" | "enemy"; readonly tint?: string | undefined; readonly icon?: IconName | undefined; readonly children: string }) =>
+  <span class="novelty__tag" data-mark={mark} data-tint={tint}>{icon !== undefined && <Icon name={icon} />}<span>{children}</span></span>
+
 const NewThing = ({ store, challenge, novelty, text, inspect }: { readonly store: UiStore; readonly challenge: ChallengeId; readonly novelty: Novelty; readonly text: string; readonly inspect: (kind: EnemyKind) => void }) => {
   const carrier = carrierOf(store.tuning.value.challenges[challenge], novelty)
   const tint = novelty.kind === "hazard" ? novelty.element : carrier === undefined ? undefined : entryElite(carrier) ?? undefined
-  const badge: IconName | null = novelty.kind === "hazard" ? novelty.element : novelty.kind === "shield" ? "def" : null
-  // A champion's picture wears a gold ring and halo; an elite's glows in its element.
-  const mark = novelty.kind === "champion" ? "champion" : novelty.kind === "elites" ? "elite" : undefined
+  // The picture glows in the tag's colours: gold for a champion, an element's for elites and floors, steel for an ability.
+  const mark = novelty.kind === "champion" ? "champion" : novelty.kind === "elites" || novelty.kind === "hazard" ? "element" : novelty.kind === "shield" ? "ability" : undefined
+  const tags = novelty.kind === "champion" ? [<Tag key="champion" mark="champion">Champion</Tag>]
+    : novelty.kind === "elites" ? novelty.elements.map((element) => <Tag key={element} mark="element" tint={element} icon={element}>{`${elements[element].name} elite`}</Tag>)
+    : novelty.kind === "hazard" ? [<Tag key="floor" mark="element" tint={novelty.element} icon={novelty.element}>{`${elements[novelty.element].name} floor`}</Tag>]
+    : novelty.kind === "shield" ? [<Tag key="shield" mark="ability" icon="def">Shield</Tag>]
+    : [<Tag key="enemy" mark="enemy">Enemy</Tag>]
   return <div class="novelty">
     {carrier !== undefined
       ? <button type="button" class="novelty__art face-button" data-mark={mark} data-tint={tint ?? ""} aria-label={store.tuning.value.enemies[entryKind(carrier)].name} onClick={() => inspect(entryKind(carrier))}>
         <Face of={{ enemy: entryKind(carrier) }} tint={tint} size={34} />
       </button>
-      : <span class="novelty__art novelty__floor" data-tint={tint ?? ""}><Icon name={badge ?? "info"} /></span>}
+      : <span class="novelty__art novelty__floor" data-mark={mark} data-tint={tint ?? ""}><Icon name={novelty.kind === "hazard" ? novelty.element : "info"} /></span>}
     <div>
-      <Label><span class="novelty__new">New</span>
-        {novelty.kind === "champion" && <span class="novelty__tag" data-mark="champion"><span>Champion</span></span>}
-        {novelty.kind === "elites" && novelty.elements.map((element) => <span key={element} class="novelty__tag" data-tint={element}><Icon name={element} /><span>{elements[element].name}</span></span>)}
-        {badge !== null && carrier !== undefined && <> · <Icon name={badge} /></>}
-      </Label>
+      <Label>{tags}</Label>
       <p>{text}</p>
     </div>
   </div>
 }
 
-/** A higher rank's twist, first in its brief where a quest's new thing would be: what makes the replay harder. */
+/** A higher rank's twist, first in its brief where a quest's new thing would be: what makes the replay harder, tagged like a new thing. */
 const RankTwist = ({ rank, twist }: { readonly rank: number; readonly twist: TwistValue }) => {
   const lines = [
     ...(twist.elites === null ? [] : [`From the second wave, each wave is led by an elite of ${twist.elites}.`]),
     ...(twist.shields ? ["Each wave's leader carries a shield."] : [])
   ]
   return <div class="novelty">
-    <span class="novelty__art novelty__floor" data-mark={twist.elites === null ? undefined : "elite"} data-tint={twist.elites ?? ""}><Icon name={twist.elites ?? "def"} /></span>
+    <span class="novelty__art novelty__floor" data-mark={twist.elites !== null ? "element" : twist.shields ? "ability" : undefined} data-tint={twist.elites ?? ""}><Icon name={twist.elites ?? "def"} /></span>
     <div>
-      <Label>Rank {rankNames[rank - 1] ?? rank} · harder</Label>
+      <Label><span class="novelty__new">Rank {rankNames[rank - 1] ?? rank}</span>
+        {twist.elites !== null && <Tag mark="element" tint={twist.elites} icon={twist.elites}>Elite leaders</Tag>}
+        {twist.shields && <Tag mark="ability" icon="def">Shields</Tag>}
+      </Label>
       <p>{lines.length === 0 ? "Stronger enemies." : `Stronger enemies. ${lines.join(" ")}`}</p>
     </div>
   </div>

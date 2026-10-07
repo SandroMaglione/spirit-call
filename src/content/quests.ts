@@ -520,43 +520,53 @@ export const quests = {
  * (a clear's worth at `level`, its quests' enemy level), so a character the Spirit Call brought
  * early can take her first steps before her element's trial opens.
  */
-const chest = (stars: number, crystals: number, gold: number, level: number): ChestSpec => ({
+const chest = (stars: number, crystals: number, gold: number, level: number, materialShare = 1): ChestSpec => ({
   stars,
   level,
-  rewards: { crystals, gold, ...Object.fromEntries((Object.keys(elements) as Array<ElementId>).map((element) => [materialOf(element), worthAt(materialRules, level)])) }
+  rewards: { crystals, gold, ...Object.fromEntries((Object.keys(elements) as Array<ElementId>).map((element) => [materialOf(element), Math.max(1, Math.round(worthAt(materialRules, level) * materialShare))])) }
 })
 
-/** The chests each group's stars open, fewest stars first (see docs/quests.md). */
+/**
+ * The chests each group's stars open, fewest stars first (see
+ * docs/quests.md): one every 3 stars in a chapter (a chapter of four quests
+ * has four), its rewards spread over them; the side quests' every 6.
+ */
 export const chests: { readonly [Group in StarGroup]: ReadonlyArray<ChestSpec> } = {
   one: [
     chest(3, 60, 350, 3),
     chest(6, 60, 500, 3),
     chest(9, 100, 900, 3)
   ],
+  // Four chests share evenly what three held before: the same crystals, gold, and materials in all.
   two: [
-    chest(4, 60, 900, 8),
-    chest(8, 80, 1200, 8),
-    chest(12, 120, 1750, 8)
+    chest(3, 65, 950, 8, 0.75),
+    chest(6, 65, 950, 8, 0.75),
+    chest(9, 65, 950, 8, 0.75),
+    chest(12, 65, 1000, 8, 0.75)
   ],
   three: [
-    chest(4, 80, 1750, 13),
-    chest(8, 80, 2450, 13),
-    chest(12, 120, 3500, 13)
+    chest(3, 70, 1900, 13, 0.75),
+    chest(6, 70, 1900, 13, 0.75),
+    chest(9, 70, 1900, 13, 0.75),
+    chest(12, 70, 2000, 13, 0.75)
   ],
   four: [
-    chest(4, 100, 2800, 19),
-    chest(8, 100, 3500, 19),
-    chest(12, 160, 4900, 19)
+    chest(3, 90, 2800, 19, 0.75),
+    chest(6, 90, 2800, 19, 0.75),
+    chest(9, 90, 2800, 19, 0.75),
+    chest(12, 90, 2800, 19, 0.75)
   ],
   five: [
-    chest(4, 100, 4200, 25),
-    chest(8, 100, 5250, 25),
-    chest(12, 160, 7000, 25)
+    chest(3, 90, 4100, 25, 0.75),
+    chest(6, 90, 4100, 25, 0.75),
+    chest(9, 90, 4100, 25, 0.75),
+    chest(12, 90, 4150, 25, 0.75)
   ],
   six: [
-    chest(4, 100, 5600, 31),
-    chest(8, 100, 7000, 31),
-    chest(12, 160, 9100, 31)
+    chest(3, 90, 5400, 31, 0.75),
+    chest(6, 90, 5400, 31, 0.75),
+    chest(9, 90, 5400, 31, 0.75),
+    chest(12, 90, 5500, 31, 0.75)
   ],
   secondary: [
     chest(6, 60, 1050, 15),
