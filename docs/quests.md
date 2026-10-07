@@ -78,7 +78,8 @@ arena counts for any team, and `validateContent` accepts only those:
 A goal is a tally with a bound (`at least` or `at most`). A new kind of goal
 is a new tally: one system that counts it in the run, and an entry here.
 
-**Chests.** A chapter's stars open its chests (at 3, 6, and 9 stars), and
+**Chests.** A chapter's stars open its chests, one every 3 stars (3, 6, 9,
+and 12 in a chapter of four quests, its rewards spread evenly over them), and
 the secondary quests' stars open theirs. Chests give crystals, gold, and
 materials: the milestone rewards that pay for playing well.
 

@@ -43,13 +43,13 @@
 .material-icon i b { width: max(3px, .13em); height: max(3px, .13em); border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 0 1px rgba(14, 18, 30, .8); }
 .label .menu-icon { display: inline-block; vertical-align: -1px; margin-right: 3px; color: var(--gold-hi); }
 /* A group's chests along its star bar. */
-.chests { position: relative; height: 26px; margin: 2px 12px 4px 4px; }
+.chests { position: relative; height: 29px; margin: 2px 12px 4px 4px; }
 .chests__bar { position: absolute; left: 0; right: 0; top: 12px; height: 3px; border-radius: 2px; background: var(--band); overflow: hidden; }
 .chests__bar span { display: block; height: 100%; background: var(--gold-hi); }
 .chests__one { position: absolute; top: 0; translate: -50% 0; display: grid; justify-items: center; font-size: 15px; color: var(--gold); }
 .chests__one::after { content: ""; position: absolute; inset: -9px -10px; }
-.chests__one[aria-pressed="true"] .menu-icon { box-shadow: 0 0 0 2px var(--gold-hi), 0 0 10px var(--gold-hi); }
-.chests__one small { font-size: 9px; font-weight: 800; margin-top: -1px; }
+.chests__one[aria-pressed="true"] .menu-icon { box-shadow: 0 0 0 2px var(--gold-hi); }
+.chests__one small { font-size: 9px; font-weight: 800; margin-top: 2px; }
 .chests__one .menu-icon { background: rgba(22, 28, 44, .9); border-radius: 4px; box-shadow: 0 0 0 2px rgba(22, 28, 44, .9); }
 .chests__one.is-open { color: var(--up); }
 
@@ -155,27 +155,29 @@
 .quests__brief { position: absolute; left: calc(var(--left) + clamp(200px, 31cqw, 262px) + 18px); right: var(--right); top: 62px; bottom: 70px; z-index: 3; }
 .quests__enemies { display: grid; gap: 5px; }
 /* A main quest's one new thing: its picture beside its line, on a gold-edged band. */
-.novelty { display: flex; align-items: center; gap: 10px; margin: -6px 0 6px; padding: 4px 10px 4px 5px; border-radius: 10px; background: linear-gradient(90deg, rgba(255, 220, 140, .14), rgba(255, 220, 140, .03)); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .28); }
+.novelty { display: flex; align-items: center; gap: 12px; margin: -6px 0 6px; padding: 6px 10px 6px 9px; border-radius: 10px; background: linear-gradient(90deg, rgba(255, 220, 140, .14), rgba(255, 220, 140, .03)); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .28); }
 .novelty > div { min-width: 0; display: grid; gap: 2px; }
 .novelty .label { color: var(--gold-hi); display: flex; align-items: center; gap: 4px; }
 .novelty p { margin: 0; font-size: 12.5px; font-weight: 700; line-height: 1.2; color: var(--text); }
 .novelty__art { flex: none; position: relative; border-radius: 50%; }
-/* A champion: a gold double ring and a slow golden halo. */
+/* The picture glows in its tag's colours: gold for a champion, an element's for elites and floors, steel for an ability. */
 .novelty__art[data-mark="champion"] { box-shadow: 0 0 0 2px #f3d27a, 0 0 0 4px rgba(243, 210, 122, .35); animation: novelty-halo 2.4s ease-in-out infinite; --glow: rgba(255, 214, 120, .65); }
-/* Elites: a ring and a pulsing glow in their element's colour. */
-.novelty__art[data-mark="elite"] { box-shadow: 0 0 0 2px var(--b); animation: novelty-halo 1.8s ease-in-out infinite; --glow: var(--b); }
+.novelty__art[data-mark="element"] { box-shadow: 0 0 0 2px var(--b); animation: novelty-halo 1.8s ease-in-out infinite; --glow: var(--b); }
+.novelty__art[data-mark="ability"] { box-shadow: 0 0 0 2px #a9d4f5, 0 0 0 4px rgba(169, 212, 245, .3); animation: novelty-halo 2.1s ease-in-out infinite; --glow: rgba(176, 220, 255, .7); }
 @keyframes novelty-halo { 0%, 100% { filter: drop-shadow(0 0 2px var(--glow)); } 50% { filter: drop-shadow(0 0 9px var(--glow)); } }
 @media (prefers-reduced-motion: reduce) { .novelty__art[data-mark] { animation: none; filter: drop-shadow(0 0 5px var(--glow)); } }
-/* A tag beside "New": a champion's in gold, an elite element's in its colours. */
+/* A new thing's tag (beside a rank's name, for a twist): in the same colours as its picture's glow; a new enemy's plain. */
 .novelty__tag { margin-left: 6px; display: inline-flex; align-items: center; gap: 3px; height: 15px; padding: 0 6px; border-radius: 8px; font-size: 9.5px; line-height: 1; letter-spacing: .1em; color: #fff; background: linear-gradient(90deg, var(--a), var(--b)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
 /* Letter-spacing trails the last letter: pull it back, so the text sits centred in its pill. */
 .novelty__tag > span { margin-right: -.1em; }
+.novelty__tag:first-child { margin-left: 0; }
 .novelty__tag:has(.menu-icon) { padding-left: 4px; }
 .novelty__tag[data-mark="champion"] { color: #3a2a08; background: linear-gradient(90deg, #f3d27a, #ffefb8); }
-.novelty__tag .menu-icon { font-size: 11px; margin: 0; }
-/* "New" and its tags on one centred line. */
+.novelty__tag[data-mark="ability"] { color: #13263a; background: linear-gradient(90deg, #8fc3ea, #e3f2ff); }
+.novelty__tag[data-mark="enemy"] { color: var(--text); background: rgba(255, 255, 255, .12); }
+.novelty__tag .menu-icon { font-size: 11px; margin: 0; color: inherit; }
+/* The tags (and a rank's name) on one centred line, sharing one size and spacing, the trailing spacing pulled back alike. */
 .novelty .label > span:first-child { display: inline-flex; align-items: center; line-height: 1; }
-/* "New" and every tag share one size and spacing, the trailing spacing pulled back alike. */
 .novelty__new { line-height: 1; margin-right: -.1em; }
 .novelty__floor { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px var(--line); }
 /* A chest's brief: the chest beside what it holds. */
@@ -231,15 +233,15 @@
 .goal.is-earned .menu-icon path { fill: currentColor; }
 
 /* ---------- practice, discoveries, inventory ---------- */
-.inventory__cards { position: absolute; left: calc(var(--left) - 3px); top: 62px; bottom: 0; width: 370px; z-index: 3; padding: 3px 3px 28px; }
+.inventory__cards { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 376px; z-index: 3; padding: 6px 6px 28px; }
 .inventory__brief { position: absolute; left: calc(var(--left) + 386px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
 .inventory__cards .card__art .menu-icon, .inventory__cards .card__art > span { font-size: 34px; }
 .inventory__source { margin: 0; font-size: 13px; color: var(--dim); }
-.practice__picks { position: absolute; left: calc(var(--left) - 3px); top: 62px; bottom: 0; width: 394px; z-index: 3; display: grid; gap: 12px; align-content: start; padding: 3px 3px 28px; }
+.practice__picks { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 400px; z-index: 3; display: grid; gap: 12px; align-content: start; padding: 6px 6px 28px; }
 .practice__options { display: flex; align-items: center; gap: 8px; }
 .practice__options .pill { margin-left: auto; }
 .practice__brief { position: absolute; left: calc(var(--left) + 410px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
-.discoveries__cards { position: absolute; left: calc(var(--left) - 3px); top: 62px; bottom: 0; width: 370px; z-index: 3; padding: 3px 3px 28px; }
+.discoveries__cards { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 376px; z-index: 3; padding: 6px 6px 28px; }
 .discoveries__brief { position: absolute; left: calc(var(--left) + 386px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
 
 /* ---------- settings, pause ---------- */
