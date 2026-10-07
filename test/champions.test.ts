@@ -10,7 +10,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { champion, clearWaves, entryChampion } from "../src/content/challenges.ts"
 import type { ChallengeSpec } from "../src/content/challenges.ts"
 import { validateContent } from "../src/content/validate.ts"
-import { enemyStats } from "../src/features/enemies.ts"
+import { championPower, enemyStats, restOf } from "../src/features/enemies.ts"
 import { knockbackTaken } from "../src/features/motion.ts"
 import { poiseOf } from "../src/features/poise.ts"
 import { Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
@@ -90,8 +90,9 @@ describe("champions", () => {
     expect(rest).toEqual([])
     const base = enemyStats(defaultTuning, "chaser", 1)
     expect(one).toMatchObject({ kind: "chaser", champion: true, element: "fire" })
-    expect(one!.health.max).toBe(Math.round(base.hp * rules.health))
-    expect(one!.stats.atk).toBe(Math.round(base.atk * rules.atk))
+    const power = championPower(defaultTuning, 1)
+    expect(one!.health.max).toBe(Math.round(base.hp * power.health))
+    expect(one!.stats.atk).toBe(Math.round(base.atk * power.atk))
     expect(one!.stats.speed).toBeCloseTo(base.speed * rules.speed, 6)
     expect(one!.radius).toBeCloseTo(defaultTuning.enemies.chaser.radius * rules.scale, 6)
     expect(one!.affinities.fire).toBe("immune")
@@ -102,8 +103,18 @@ describe("champions", () => {
     expect(poiseOf(defaultTuning, "brute", 1000, true)).toBeCloseTo(poiseOf(defaultTuning, "brute", 1000) * rules.poise, 9)
   })
 
-  it("wait less between attacks, with their kind's telegraphs", () => {
-    // A brute champion next to the player: after its first attack, it waits its cooldown times the champions' share.
+  it("grow along the main line: a first taste in chapter one, the full numbers from the late chapters", () => {
+    const first = championPower(defaultTuning, rules.early.level), full = championPower(defaultTuning, rules.fullAt)
+    expect(first).toEqual({ health: rules.early.health, atk: rules.early.atk, cooldown: rules.early.cooldown })
+    expect(full).toEqual({ health: rules.health, atk: rules.atk, cooldown: rules.cooldown })
+    expect(championPower(defaultTuning, 40)).toEqual(full)
+    const middle = championPower(defaultTuning, (rules.early.level + rules.fullAt) / 2)
+    expect(middle.health).toBeGreaterThan(first.health)
+    expect(middle.health).toBeLessThan(full.health)
+  })
+
+  it("wait their cooldown times their share, with their kind's telegraphs", () => {
+    // A brute champion next to the player: after its first attack, it waits its cooldown times its share at the run's level.
     const run = start({ tuning: withChallenge({ objective: clearWaves(), waves: { scripted: [[champion("brute", "thunder")]], endless: null } }), waves: true, challenge: "swarm" })
     run.runtime.tick(Game.Schedule(Shield))
     let longest = 0
@@ -115,7 +126,9 @@ describe("champions", () => {
     }
     const slowest = Math.max(...defaultTuning.enemies.brute.attacks.map((attack) => attack.cooldown))
     expect(longest).toBeGreaterThan(0)
-    expect(longest).toBeLessThanOrEqual(slowest * rules.cooldown + 1e-9)
+    expect(longest).toBeLessThanOrEqual(slowest * restOf(defaultTuning, 1, true) + 1e-9)
+    // Later on, a champion waits less than its kind.
+    expect(restOf(defaultTuning, rules.fullAt, true)).toBeLessThan(restOf(defaultTuning, rules.fullAt, false))
   })
 
   it("stay across waves: the next wave comes while the champion stands, and the challenge clears only once it has fallen", () => {
@@ -151,5 +164,16 @@ describe("champions", () => {
     const champions = run.runtime.inspect(Field).enemies.filter((enemy) => enemy.champion)
     expect(champions.map((enemy) => enemy.kind)).toEqual(["chaser"])
     expect(champions[0]!.element).not.toBeNull()
+  })
+})
+
+describe("pacing", () => {
+  it("lets low levels breathe between attacks, easing to their kind's own wait", () => {
+    const pacing = defaultTuning.pacing
+    expect(restOf(defaultTuning, 1, false)).toBeCloseTo(pacing.restAtFirst, 9)
+    expect(restOf(defaultTuning, pacing.fullAt, false)).toBe(1)
+    expect(restOf(defaultTuning, 30, false)).toBe(1)
+    expect(restOf(defaultTuning, 5, false)).toBeLessThan(pacing.restAtFirst)
+    expect(restOf(defaultTuning, 5, false)).toBeGreaterThan(1)
   })
 })

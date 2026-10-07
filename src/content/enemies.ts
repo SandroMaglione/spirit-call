@@ -434,9 +434,9 @@ export const enemies = {
     behavior: chase(120),
     group: 1,
     attacks: [
-      slam("slam", { minRange: 120, triggerRange: 280, maxReach: 230, radius: 100, windup: 1.0, aimLock: 0.45, active: 0.12, recovery: 0.8, cooldown: 0.9, power: 28, knockback: 460, lead: 0.4 }),
+      slam("slam", { minRange: 120, triggerRange: 250, maxReach: 200, radius: 95, windup: 1.0, aimLock: 0.45, active: 0.12, recovery: 0.8, cooldown: 0.9, power: 28, knockback: 460, lead: 0.4 }),
       // Hugging it is no hiding place: a ring around itself.
-      slam("stomp", { triggerRange: 140, maxReach: 0, radius: 150, windup: 0.75, active: 0.12, recovery: 0.8, cooldown: 0.9, power: 22, knockback: 520 })
+      slam("stomp", { triggerRange: 125, maxReach: 0, radius: 130, windup: 0.75, active: 0.12, recovery: 0.8, cooldown: 0.9, power: 22, knockback: 520 })
     ],
     respawnDelay: 0
   }),
@@ -536,9 +536,9 @@ export const enemies = {
     behavior: skirmish({ stopDistance: 70, orbit: 260, retreatSeconds: 1.1, engageSeconds: 3.5, strafeSeconds: 2.2 }),
     group: 1,
     attacks: [
-      melee("swipe", { triggerRange: 95, reach: 105, arcDegrees: 110, windup: 0.55, aimLock: 0.35, active: 0.1, recovery: 0.55, cooldown: 0.6, power: 16, knockback: 360 }),
+      melee("swipe", { triggerRange: 95, reach: 105, arcDegrees: 110, windup: 0.65, aimLock: 0.35, active: 0.1, recovery: 0.55, cooldown: 0.85, power: 16, knockback: 360 }),
       // A long thrust at a player keeping just out of reach.
-      melee("thrust", { minRange: 85, triggerRange: 165, reach: 180, arcDegrees: 24, windup: 0.6, aimLock: 0.3, active: 0.1, recovery: 0.6, cooldown: 0.8, power: 18, knockback: 380, lead: 0.3 })
+      melee("thrust", { minRange: 85, triggerRange: 150, reach: 160, arcDegrees: 24, windup: 0.7, aimLock: 0.3, active: 0.1, recovery: 0.6, cooldown: 0.9, power: 18, knockback: 380, lead: 0.3 })
     ],
     respawnDelay: 0
   }),
@@ -676,8 +676,8 @@ export const enemies = {
     armor: { taken: 0.3 },
     group: 1,
     attacks: [
-      melee("sweep", { triggerRange: 110, reach: 130, arcDegrees: 170, windup: 0.65, aimLock: 0.35, active: 0.12, recovery: 0.7, cooldown: 1, power: 18, knockback: 460 }),
-      slam("quake", { triggerRange: 260, radius: 120, maxReach: 220, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.9, cooldown: 1.6, power: 24, knockback: 520, lead: 0.3 })
+      melee("sweep", { triggerRange: 100, reach: 115, arcDegrees: 170, windup: 0.65, aimLock: 0.35, active: 0.12, recovery: 0.7, cooldown: 1, power: 18, knockback: 460 }),
+      slam("quake", { triggerRange: 230, radius: 110, maxReach: 190, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.9, cooldown: 1.6, power: 24, knockback: 520, lead: 0.3 })
     ],
     respawnDelay: 0
   })

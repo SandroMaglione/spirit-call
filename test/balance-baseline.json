@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "e2124f0e906cd321619d0aa19b2f5f1074b987dd69f459e1e93f353be8c09bde",
+  "tuningHash": "a8079fd4bb039456a0398b8a56de3e76234c6a510a1286a462b26b5a3dd90a23",
   "stats": [
     {
       "level": 1,
@@ -485,9 +485,9 @@
       "profile": "escape-only",
       "seed": 1337,
       "report": {
-        "hits": 0,
-        "damage": 0,
-        "dashes": 99,
+        "hits": 1,
+        "damage": 12,
+        "dashes": 106,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
@@ -497,7 +497,7 @@
         "ultimates": 0,
         "breaks": 0,
         "healing": 0,
-        "healthRemaining": 1
+        "healthRemaining": 0.8444444444444444
       }
     },
     {
@@ -550,10 +550,10 @@
       "report": {
         "hits": 1,
         "damage": 12,
-        "dashes": 15,
+        "dashes": 13,
         "pressure": 0,
-        "clearedAt": 46.733333333333334,
-        "endedAt": 46.733333333333334,
+        "clearedAt": 47.86666666666667,
+        "endedAt": 47.86666666666667,
         "outcome": "cleared",
         "kills": 32,
         "specials": 0,
@@ -571,15 +571,15 @@
       "report": {
         "hits": 2,
         "damage": 23,
-        "dashes": 22,
+        "dashes": 18,
         "pressure": 0,
-        "clearedAt": 57.63333333333333,
-        "endedAt": 57.63333333333333,
+        "clearedAt": 56.199999999999996,
+        "endedAt": 56.199999999999996,
         "outcome": "cleared",
         "kills": 32,
         "specials": 8,
         "ultimates": 1,
-        "breaks": 32,
+        "breaks": 31,
         "healing": 0,
         "healthRemaining": 0.688888888888889
       }
@@ -592,15 +592,15 @@
       "report": {
         "hits": 2,
         "damage": 23,
-        "dashes": 22,
+        "dashes": 18,
         "pressure": 0,
-        "clearedAt": 57.63333333333333,
-        "endedAt": 57.63333333333333,
+        "clearedAt": 56.199999999999996,
+        "endedAt": 56.199999999999996,
         "outcome": "cleared",
         "kills": 32,
         "specials": 8,
         "ultimates": 1,
-        "breaks": 32,
+        "breaks": 31,
         "healing": 0,
         "healthRemaining": 0.688888888888889
       }
@@ -632,9 +632,9 @@
       "profile": "escape-only",
       "seed": 42,
       "report": {
-        "hits": 0,
-        "damage": 0,
-        "dashes": 97,
+        "hits": 2,
+        "damage": 23,
+        "dashes": 105,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
@@ -644,7 +644,7 @@
         "ultimates": 0,
         "breaks": 0,
         "healing": 0,
-        "healthRemaining": 1
+        "healthRemaining": 0.688888888888889
       }
     },
     {
@@ -695,19 +695,19 @@
       "profile": "swordsman-basic",
       "seed": 1337,
       "report": {
-        "hits": 2,
-        "damage": 31,
-        "dashes": 19,
+        "hits": 1,
+        "damage": 15,
+        "dashes": 11,
         "pressure": 0,
-        "clearedAt": 74.16666666666667,
-        "endedAt": 74.16666666666667,
+        "clearedAt": 63.65,
+        "endedAt": 63.65,
         "outcome": "cleared",
         "kills": 34,
         "specials": 0,
         "ultimates": 0,
-        "breaks": 38,
+        "breaks": 35,
         "healing": 0,
-        "healthRemaining": 0.5924444444444444
+        "healthRemaining": 0.7962222222222223
       }
     },
     {
@@ -718,15 +718,15 @@
       "report": {
         "hits": 1,
         "damage": 15,
-        "dashes": 12,
+        "dashes": 11,
         "pressure": 0,
-        "clearedAt": 63.666666666666664,
-        "endedAt": 63.666666666666664,
+        "clearedAt": 66.33333333333333,
+        "endedAt": 66.33333333333333,
         "outcome": "cleared",
         "kills": 34,
-        "specials": 9,
+        "specials": 10,
         "ultimates": 2,
-        "breaks": 30,
+        "breaks": 34,
         "healing": 0,
         "healthRemaining": 0.7962222222222223
       }
@@ -737,19 +737,19 @@
       "profile": "swordsman-matched",
       "seed": 1337,
       "report": {
-        "hits": 0,
-        "damage": 0,
-        "dashes": 8,
+        "hits": 1,
+        "damage": 15,
+        "dashes": 7,
         "pressure": 0,
-        "clearedAt": 54.333333333333336,
-        "endedAt": 54.333333333333336,
+        "clearedAt": 51.5,
+        "endedAt": 51.5,
         "outcome": "cleared",
         "kills": 34,
-        "specials": 8,
+        "specials": 7,
         "ultimates": 1,
-        "breaks": 35,
+        "breaks": 32,
         "healing": 0,
-        "healthRemaining": 1
+        "healthRemaining": 0.8514739229024944
       }
     },
     {
@@ -758,17 +758,17 @@
       "profile": "swordsman-learning",
       "seed": 1337,
       "report": {
-        "hits": 7,
-        "damage": 102,
-        "dashes": 1,
+        "hits": 12,
+        "damage": 111,
+        "dashes": 0,
         "pressure": 0,
         "clearedAt": null,
-        "endedAt": 49.56666666666666,
+        "endedAt": 34.63333333333333,
         "outcome": "defeated",
-        "kills": 26,
-        "specials": 7,
-        "ultimates": 1,
-        "breaks": 26,
+        "kills": 14,
+        "specials": 5,
+        "ultimates": 0,
+        "breaks": 15,
         "healing": 0,
         "healthRemaining": 0
       }
@@ -779,9 +779,9 @@
       "profile": "escape-only",
       "seed": 1337,
       "report": {
-        "hits": 1,
-        "damage": 15,
-        "dashes": 102,
+        "hits": 4,
+        "damage": 61,
+        "dashes": 122,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
@@ -791,7 +791,7 @@
         "ultimates": 0,
         "breaks": 0,
         "healing": 0,
-        "healthRemaining": 0.7962222222222223
+        "healthRemaining": 0.18488888888888896
       }
     },
     {
@@ -800,19 +800,19 @@
       "profile": "team-skills",
       "seed": 1337,
       "report": {
-        "hits": 3,
-        "damage": 44,
-        "dashes": 11,
+        "hits": 2,
+        "damage": 32,
+        "dashes": 18,
         "pressure": 0,
-        "clearedAt": 55.68333333333333,
-        "endedAt": 55.68333333333333,
+        "clearedAt": 59.666666666666664,
+        "endedAt": 59.666666666666664,
         "outcome": "cleared",
         "kills": 34,
-        "specials": 15,
+        "specials": 14,
         "ultimates": 3,
-        "breaks": 36,
-        "healing": 8,
-        "healthRemaining": 0.856123188405797
+        "breaks": 33,
+        "healing": 0,
+        "healthRemaining": 0.8744016563146997
       }
     },
     {
@@ -822,18 +822,18 @@
       "seed": 1337,
       "report": {
         "hits": 1,
-        "damage": 15,
-        "dashes": 10,
+        "damage": 16,
+        "dashes": 11,
         "pressure": 0,
-        "clearedAt": 49.9,
-        "endedAt": 49.9,
+        "clearedAt": 51.11666666666667,
+        "endedAt": 51.11666666666667,
         "outcome": "cleared",
         "kills": 34,
-        "specials": 14,
-        "ultimates": 3,
-        "breaks": 31,
-        "healing": 0,
-        "healthRemaining": 0.9704987834549879
+        "specials": 13,
+        "ultimates": 2,
+        "breaks": 32,
+        "healing": 12,
+        "healthRemaining": 0.9862396174175686
       }
     },
     {
@@ -842,19 +842,19 @@
       "profile": "swordsman-basic",
       "seed": 42,
       "report": {
-        "hits": 0,
-        "damage": 0,
-        "dashes": 22,
+        "hits": 3,
+        "damage": 46,
+        "dashes": 17,
         "pressure": 0,
-        "clearedAt": 65.35,
-        "endedAt": 65.35,
+        "clearedAt": 56.86666666666667,
+        "endedAt": 56.86666666666667,
         "outcome": "cleared",
         "kills": 34,
         "specials": 0,
         "ultimates": 0,
-        "breaks": 35,
+        "breaks": 33,
         "healing": 0,
-        "healthRemaining": 1
+        "healthRemaining": 0.3886666666666667
       }
     },
     {
@@ -863,19 +863,19 @@
       "profile": "swordsman-skills",
       "seed": 42,
       "report": {
-        "hits": 1,
-        "damage": 15,
-        "dashes": 14,
+        "hits": 2,
+        "damage": 31,
+        "dashes": 16,
         "pressure": 0,
-        "clearedAt": 64.51666666666667,
-        "endedAt": 64.51666666666667,
+        "clearedAt": 68.9,
+        "endedAt": 68.9,
         "outcome": "cleared",
         "kills": 34,
-        "specials": 9,
+        "specials": 10,
         "ultimates": 2,
-        "breaks": 34,
+        "breaks": 35,
         "healing": 0,
-        "healthRemaining": 0.7962222222222223
+        "healthRemaining": 0.5924444444444444
       }
     },
     {
@@ -885,18 +885,18 @@
       "seed": 42,
       "report": {
         "hits": 9,
-        "damage": 65,
-        "dashes": 11,
+        "damage": 57,
+        "dashes": 8,
         "pressure": 0,
-        "clearedAt": 53.5,
-        "endedAt": 53.5,
+        "clearedAt": 52.53333333333333,
+        "endedAt": 52.53333333333333,
         "outcome": "cleared",
         "kills": 34,
-        "specials": 7,
+        "specials": 8,
         "ultimates": 1,
-        "breaks": 34,
+        "breaks": 32,
         "healing": 0,
-        "healthRemaining": 0.33276643990929733
+        "healthRemaining": 0.42346938775510196
       }
     },
     {
@@ -905,19 +905,19 @@
       "profile": "swordsman-learning",
       "seed": 42,
       "report": {
-        "hits": 6,
-        "damage": 87,
-        "dashes": 3,
+        "hits": 2,
+        "damage": 29,
+        "dashes": 0,
         "pressure": 0,
-        "clearedAt": 50.43333333333333,
-        "endedAt": 50.43333333333333,
+        "clearedAt": 51.15,
+        "endedAt": 51.15,
         "outcome": "cleared",
         "kills": 34,
         "specials": 7,
         "ultimates": 1,
-        "breaks": 32,
+        "breaks": 33,
         "healing": 0,
-        "healthRemaining": 0.10884353741496591
+        "healthRemaining": 0.7029478458049886
       }
     },
     {
@@ -926,9 +926,9 @@
       "profile": "escape-only",
       "seed": 42,
       "report": {
-        "hits": 2,
-        "damage": 31,
-        "dashes": 117,
+        "hits": 3,
+        "damage": 46,
+        "dashes": 103,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
@@ -938,7 +938,7 @@
         "ultimates": 0,
         "breaks": 0,
         "healing": 0,
-        "healthRemaining": 0.5924444444444444
+        "healthRemaining": 0.3886666666666667
       }
     },
     {
@@ -947,19 +947,19 @@
       "profile": "team-skills",
       "seed": 42,
       "report": {
-        "hits": 2,
-        "damage": 31,
-        "dashes": 11,
+        "hits": 1,
+        "damage": 15,
+        "dashes": 12,
         "pressure": 0,
-        "clearedAt": 53.833333333333336,
-        "endedAt": 53.833333333333336,
+        "clearedAt": 52.55,
+        "endedAt": 52.55,
         "outcome": "cleared",
         "kills": 34,
-        "specials": 13,
-        "ultimates": 2,
-        "breaks": 37,
-        "healing": 6,
-        "healthRemaining": 0.883015873015873
+        "specials": 14,
+        "ultimates": 3,
+        "breaks": 33,
+        "healing": 0,
+        "healthRemaining": 0.9557936507936508
       }
     },
     {
@@ -968,19 +968,19 @@
       "profile": "team-matched",
       "seed": 42,
       "report": {
-        "hits": 2,
-        "damage": 31,
-        "dashes": 17,
+        "hits": 1,
+        "damage": 15,
+        "dashes": 11,
         "pressure": 0,
-        "clearedAt": 51.333333333333336,
-        "endedAt": 51.333333333333336,
+        "clearedAt": 50.166666666666664,
+        "endedAt": 50.166666666666664,
         "outcome": "cleared",
         "kills": 34,
         "specials": 14,
-        "ultimates": 3,
-        "breaks": 35,
-        "healing": 16,
-        "healthRemaining": 0.9704987834549879
+        "ultimates": 2,
+        "breaks": 36,
+        "healing": 2,
+        "healthRemaining": 0.9770681265206814
       }
     },
     {
@@ -989,17 +989,17 @@
       "profile": "swordsman-basic",
       "seed": 1337,
       "report": {
-        "hits": 13,
-        "damage": 75,
-        "dashes": 20,
+        "hits": 2,
+        "damage": 85,
+        "dashes": 34,
         "pressure": 0,
         "clearedAt": null,
-        "endedAt": 61.28333333333333,
+        "endedAt": 103.31666666666666,
         "outcome": "defeated",
-        "kills": 19,
+        "kills": 22,
         "specials": 0,
         "ultimates": 0,
-        "breaks": 12,
+        "breaks": 21,
         "healing": 0,
         "healthRemaining": 0
       }
@@ -1010,17 +1010,17 @@
       "profile": "swordsman-skills",
       "seed": 1337,
       "report": {
-        "hits": 2,
-        "damage": 77,
-        "dashes": 17,
+        "hits": 5,
+        "damage": 80,
+        "dashes": 13,
         "pressure": 0,
         "clearedAt": null,
-        "endedAt": 58.4,
+        "endedAt": 95.85,
         "outcome": "defeated",
-        "kills": 12,
-        "specials": 8,
-        "ultimates": 2,
-        "breaks": 14,
+        "kills": 18,
+        "specials": 14,
+        "ultimates": 3,
+        "breaks": 20,
         "healing": 0,
         "healthRemaining": 0
       }
@@ -1031,19 +1031,19 @@
       "profile": "swordsman-matched",
       "seed": 1337,
       "report": {
-        "hits": 7,
-        "damage": 124,
-        "dashes": 14,
+        "hits": 10,
+        "damage": 57,
+        "dashes": 11,
         "pressure": 0,
-        "clearedAt": 73,
-        "endedAt": 73,
+        "clearedAt": 75.26666666666667,
+        "endedAt": 75.26666666666667,
         "outcome": "cleared",
         "kills": 39,
-        "specials": 10,
+        "specials": 11,
         "ultimates": 2,
-        "breaks": 26,
+        "breaks": 25,
         "healing": 0,
-        "healthRemaining": 0.46502057613168707
+        "healthRemaining": 0.7530864197530868
       }
     },
     {
@@ -1052,19 +1052,19 @@
       "profile": "swordsman-learning",
       "seed": 1337,
       "report": {
-        "hits": 5,
-        "damage": 160,
-        "dashes": 11,
+        "hits": 18,
+        "damage": 232,
+        "dashes": 10,
         "pressure": 0,
-        "clearedAt": 73.95,
-        "endedAt": 73.95,
-        "outcome": "cleared",
-        "kills": 39,
+        "clearedAt": null,
+        "endedAt": 68,
+        "outcome": "defeated",
+        "kills": 31,
         "specials": 10,
-        "ultimates": 2,
-        "breaks": 26,
+        "ultimates": 1,
+        "breaks": 18,
         "healing": 0,
-        "healthRemaining": 0.3086419753086419
+        "healthRemaining": 0
       }
     },
     {
@@ -1075,7 +1075,7 @@
       "report": {
         "hits": 0,
         "damage": 0,
-        "dashes": 91,
+        "dashes": 104,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
@@ -1094,18 +1094,18 @@
       "profile": "team-skills",
       "seed": 1337,
       "report": {
-        "hits": 7,
-        "damage": 258,
-        "dashes": 51,
+        "hits": 13,
+        "damage": 226,
+        "dashes": 35,
         "pressure": 0,
         "clearedAt": null,
-        "endedAt": 138.05,
+        "endedAt": 104.7,
         "outcome": "defeated",
         "kills": 37,
-        "specials": 32,
-        "ultimates": 7,
-        "breaks": 33,
-        "healing": 3,
+        "specials": 21,
+        "ultimates": 4,
+        "breaks": 34,
+        "healing": 13,
         "healthRemaining": 0
       }
     },
@@ -1116,18 +1116,18 @@
       "seed": 1337,
       "report": {
         "hits": 5,
-        "damage": 76,
-        "dashes": 9,
+        "damage": 54,
+        "dashes": 13,
         "pressure": 0,
-        "clearedAt": 65.86666666666666,
-        "endedAt": 65.86666666666666,
+        "clearedAt": 97.23333333333333,
+        "endedAt": 97.23333333333333,
         "outcome": "cleared",
         "kills": 39,
-        "specials": 18,
-        "ultimates": 3,
-        "breaks": 24,
-        "healing": 0,
-        "healthRemaining": 0.8557887092458816
+        "specials": 27,
+        "ultimates": 4,
+        "breaks": 26,
+        "healing": 42,
+        "healthRemaining": 1
       }
     },
     {
@@ -1136,17 +1136,17 @@
       "profile": "swordsman-basic",
       "seed": 42,
       "report": {
-        "hits": 18,
-        "damage": 77,
-        "dashes": 16,
+        "hits": 5,
+        "damage": 80,
+        "dashes": 24,
         "pressure": 0,
         "clearedAt": null,
-        "endedAt": 69.35,
+        "endedAt": 85.68333333333334,
         "outcome": "defeated",
-        "kills": 20,
+        "kills": 15,
         "specials": 0,
         "ultimates": 0,
-        "breaks": 12,
+        "breaks": 14,
         "healing": 0,
         "healthRemaining": 0
       }
@@ -1157,17 +1157,17 @@
       "profile": "swordsman-skills",
       "seed": 42,
       "report": {
-        "hits": 12,
-        "damage": 128,
-        "dashes": 3,
+        "hits": 4,
+        "damage": 76,
+        "dashes": 10,
         "pressure": 0,
         "clearedAt": null,
-        "endedAt": 24.633333333333333,
+        "endedAt": 73.53333333333333,
         "outcome": "defeated",
-        "kills": 3,
-        "specials": 4,
-        "ultimates": 0,
-        "breaks": 4,
+        "kills": 18,
+        "specials": 10,
+        "ultimates": 2,
+        "breaks": 15,
         "healing": 0,
         "healthRemaining": 0
       }
@@ -1179,18 +1179,18 @@
       "seed": 42,
       "report": {
         "hits": 1,
-        "damage": 42,
-        "dashes": 11,
+        "damage": 27,
+        "dashes": 10,
         "pressure": 0,
-        "clearedAt": 74.5,
-        "endedAt": 74.5,
+        "clearedAt": 66,
+        "endedAt": 66,
         "outcome": "cleared",
         "kills": 39,
-        "specials": 10,
+        "specials": 9,
         "ultimates": 2,
-        "breaks": 27,
+        "breaks": 25,
         "healing": 0,
-        "healthRemaining": 0.8189300411522633
+        "healthRemaining": 0.8847736625514403
       }
     },
     {
@@ -1199,19 +1199,19 @@
       "profile": "swordsman-learning",
       "seed": 42,
       "report": {
-        "hits": 6,
-        "damage": 59,
-        "dashes": 5,
+        "hits": 9,
+        "damage": 80,
+        "dashes": 9,
         "pressure": 0,
-        "clearedAt": 71.28333333333333,
-        "endedAt": 71.28333333333333,
+        "clearedAt": 72.13333333333333,
+        "endedAt": 72.13333333333333,
         "outcome": "cleared",
         "kills": 39,
         "specials": 10,
         "ultimates": 2,
-        "breaks": 28,
+        "breaks": 26,
         "healing": 0,
-        "healthRemaining": 0.7448559670781894
+        "healthRemaining": 0.6543209876543211
       }
     },
     {
@@ -1221,8 +1221,8 @@
       "seed": 42,
       "report": {
         "hits": 1,
-        "damage": 36,
-        "dashes": 107,
+        "damage": 46,
+        "dashes": 99,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
@@ -1232,7 +1232,7 @@
         "ultimates": 0,
         "breaks": 0,
         "healing": 0,
-        "healthRemaining": 0.520888888888889
+        "healthRemaining": 0.38399999999999995
       }
     },
     {
@@ -1241,19 +1241,19 @@
       "profile": "team-skills",
       "seed": 42,
       "report": {
-        "hits": 7,
-        "damage": 282,
-        "dashes": 32,
+        "hits": 1,
+        "damage": 39,
+        "dashes": 40,
         "pressure": 0,
-        "clearedAt": null,
-        "endedAt": 151.91666666666666,
-        "outcome": "defeated",
-        "kills": 37,
-        "specials": 33,
-        "ultimates": 7,
-        "breaks": 37,
-        "healing": 64,
-        "healthRemaining": 0
+        "clearedAt": 111.46666666666667,
+        "endedAt": 111.46666666666667,
+        "outcome": "cleared",
+        "kills": 39,
+        "specials": 29,
+        "ultimates": 9,
+        "breaks": 34,
+        "healing": 39,
+        "healthRemaining": 1
       }
     },
     {
@@ -1262,19 +1262,19 @@
       "profile": "team-matched",
       "seed": 42,
       "report": {
-        "hits": 7,
-        "damage": 136,
-        "dashes": 14,
+        "hits": 1,
+        "damage": 11,
+        "dashes": 12,
         "pressure": 0,
-        "clearedAt": 77.33333333333333,
-        "endedAt": 77.33333333333333,
+        "clearedAt": 66.16666666666667,
+        "endedAt": 66.16666666666667,
         "outcome": "cleared",
         "kills": 39,
-        "specials": 21,
+        "specials": 18,
         "ultimates": 3,
         "breaks": 27,
-        "healing": 24,
-        "healthRemaining": 0.7384163069761136
+        "healing": 4,
+        "healthRemaining": 0.9888840930148471
       }
     }
   ]

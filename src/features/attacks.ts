@@ -164,8 +164,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   for (const { entity, data } of order.map((index) => attackers[index]!)) {
     const kind = data.enemy.get().kind
     const attacks = tuning.enemies[kind].attacks
-    // A champion waits less between attacks (its telegraphs are its kind's, see `Tuning.champions`).
-    const rest = data.enemy.get().champion ? tuning.champions.cooldown : 1
+    // Low levels wait longer between attacks, a champion less (its telegraphs are its kind's); see `restOf`.
+    const rest = data.enemy.get().rest ?? 1
     // A broken enemy's windup is cut off (it starts over once it recovers).
     if (data.poise.get().broken > 0 && data.phase.get() === "windup") {
       const cut = data.attacker.get()

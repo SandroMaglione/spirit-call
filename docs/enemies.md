@@ -111,6 +111,20 @@ out for a moment, the side that leads toward the player (`unstick`).
 These two numbers are what makes a big wave dangerous without making it
 unreadable; hardcore modifiers may raise them, never the readability floor.
 
+## Pacing at low levels
+
+Low levels breathe: an enemy of level 1 waits a quarter longer between its
+attacks than its kind does (`Tuning.pacing`), easing to its kind's own wait
+by level 10, the end of chapter 2. Only the waits change: windups, reach,
+health, and damage are its kind's at every level, so a new player has time
+to dodge and strike back without enemies going down any faster.
+
+The Guardian winds up longer than it used to and waits longer after a
+swipe, so a blow landed on it can be followed by a dodge; its thrust reaches
+less far. The heaviest enemies' areas (the Brute's slam and stomp, the
+Juggernaut's sweep and quake) were brought in a little, after playtests
+found them reaching too far.
+
 ## Waves
 
 - **Enemies come in by their job.** Each wave has a front, a direction from
@@ -173,7 +187,10 @@ and none of a boss's scripting: no phases, entrances, or timers.
 
 - **Bigger, much tougher, stronger, faster**: several times an elite's
   health (it survives a few waves), more damage, quicker on its feet, and
-  shorter waits between attacks. Its **telegraphs never get shorter**, so
+  shorter waits between attacks. It **grows along the main line**
+  (`Tuning.champions.early`, `championPower`): chapter one's is a first
+  taste (four times its kind's health, a little more damage, its kind's
+  waits), and champions reach their full numbers by about level 30. Its **telegraphs never get shorter**, so
   every attack stays as fair as its kind's (the fairness test holds
   champions to it).
 - **Elemental, like an elite**: immune to its element, every blow carrying

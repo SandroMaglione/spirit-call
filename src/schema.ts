@@ -428,8 +428,12 @@ export interface DiscValue {
 export const Disc = Descriptor.Component<DiscValue>()("Shooter/Disc")
 
 export type { EnemyKind }
-/** An enemy of `kind`; `champion`: an elite pushed further, staying across waves (see `Tuning.champions`). */
-export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean }>()("Shooter/Enemy")
+/**
+ * An enemy of `kind`; `champion`: an elite pushed further, staying across
+ * waves (see `Tuning.champions`); `rest`: how much longer than its kind it
+ * waits between attacks (low levels and champions, see `restOf`).
+ */
+export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean; readonly rest?: number }>()("Shooter/Enemy")
 
 /** Where an enemy is in its telegraphed attack cycle. */
 export const AttackPhase = Descriptor.State("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
