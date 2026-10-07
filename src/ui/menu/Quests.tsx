@@ -95,9 +95,28 @@ const rankNames = ["I", "II", "III", "IV", "V"]
 const questAt = (quest: QuestId, rank: number): Play => ({ kind: "quest", quest, ...(rank === 1 ? {} : { rank }) })
 
 /**
- * The main line's chapters (or the side quests) at the rank picked above
- * them: each with its stars and chests at that rank, its quests with theirs.
+ * The ranks above the quest list, fixed while the list scrolls: each a tab
+ * with its name (a lock until its first quest opens); switching keeps the
+ * quest picked.
  */
+const RankTabs = ({ store, tab, play, chest }: { readonly store: UiStore; readonly tab: "main" | "secondary"; readonly play: Signal<Play>; readonly chest: Signal<ChestRef | null> }) => {
+  const tuning = store.tuning.value, account = store.account.value
+  const quests = playsIn(tuning, tab).flatMap((each) => (each.kind === "quest" ? [each.quest] : []))
+  const rank = play.value.kind === "quest" ? rankOf(play.value) : 1
+  return <div class="quests__ranks top-tabs" role="tablist" aria-label="Rank">
+    {Array.from({ length: tuning.ranks.count }, (_, index) => {
+      const each = index + 1, locked = playLock(tuning, account, questAt(quests[0]!, each)) !== null
+      return <button type="button" role="tab" key={each} aria-selected={each === rank} class={locked ? "is-locked" : undefined} onClick={() => {
+        play.value = questAt(play.value.kind === "quest" ? play.value.quest : quests[0]!, each)
+        chest.value = null
+      }}>
+        <b>{rankNames[index]}</b>Rank {each}{locked && <Icon name="lock" />}
+      </button>
+    })}
+  </div>
+}
+
+/** The main line's chapters (or the side quests) at the rank picked above them: each with its stars and chests at that rank, its quests with theirs. */
 const QuestList = ({ store, tab, play, chest }: { readonly store: UiStore; readonly tab: "main" | "secondary"; readonly play: Signal<Play>; readonly chest: Signal<ChestRef | null> }) => {
   const tuning = store.tuning.value, account = store.account.value
   const rank = play.value.kind === "quest" ? rankOf(play.value) : 1
@@ -105,21 +124,7 @@ const QuestList = ({ store, tab, play, chest }: { readonly store: UiStore; reado
   const groups: ReadonlyArray<{ readonly group: StarGroup; readonly name: string; readonly quests: ReadonlyArray<QuestId> }> = tab === "main"
     ? ids(tuning.chapters).map((chapter) => ({ group: chapter, name: tuning.chapters[chapter].name, quests: quests.filter((quest) => tuning.quests[quest].chapter === chapter) }))
     : [{ group: "secondary", name: "Side quests", quests }]
-  /** Switching rank keeps the quest picked. */
-  const toRank = (next: number) => {
-    play.value = questAt(play.value.kind === "quest" ? play.value.quest : quests[0]!, next)
-    chest.value = null
-  }
   return <>
-    <div class="steps rank-switch" role="radiogroup" aria-label="Rank">
-      <Label>Rank</Label>
-      {Array.from({ length: tuning.ranks.count }, (_, index) => {
-        const each = index + 1, locked = playLock(tuning, account, questAt(quests[0]!, each)) !== null
-        return <button type="button" role="radio" key={each} class={`step${locked ? " is-locked" : ""}`} aria-checked={each === rank} aria-label={`Rank ${rankNames[index]}`} onClick={() => toRank(each)}>
-          <b>{rankNames[index]}</b>{locked && <span><Icon name="lock" /></span>}
-        </button>
-      })}
-    </div>
     {groups.filter((group) => group.quests.length > 0).map((group) => {
       const stars = groupStars(tuning, account, group.group, rank)
       return <>
@@ -224,7 +229,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const progress = selected.kind === "tier" ? tierProgress(account, selected.track, selected.tier) : undefined
   /** The steps of the same challenge: a quest's ranks, a track's tiers. */
   const steps: ReadonlyArray<{ readonly play: Play; readonly name: string }> = selected.kind === "quest"
-    ? Array.from({ length: tuning.ranks.count }, (_, index) => ({ play: questAt(selected.quest, index + 1), name: rankNames[index] ?? String(index + 1) }))
+    ? [] // A quest's ranks are the tabs above the list.
     : tuning.tracks[selected.track].tiers.map((_, index) => ({ play: { kind: "tier", track: selected.track, tier: index + 1 }, name: String(index + 1) }))
   const quest = selected.kind === "quest" ? tuning.quests[selected.quest] : null
   const rank = selected.kind === "quest" ? rankOf(selected) : 1
@@ -293,7 +298,8 @@ export const Quests = ({ store, nav, tab, play, leader, enter }: {
     <TopBar icon="quests" title="Challenges" close={nav.back}>
       <TopTabs label="Kinds of challenge" current={tab} onChange={(id) => nav.replace({ kind: "quests", tab: id })} tabs={[{ id: "main", label: "Main" }, { id: "secondary", label: "Side" }, { id: "trials", label: "Trials" }, { id: "hardcore", label: "Hardcore" }]} />
     </TopBar>
-    <div class="quests__list scroll in-left" key={tab}>{tab === "hardcore" || tab === "trials" ? <TrackList store={store} play={play} now={now} kind={tab === "trials" ? "trial" : "hardcore"} /> : <QuestList store={store} tab={tab} play={play} chest={chest} />}</div>
+    {(tab === "main" || tab === "secondary") && <RankTabs store={store} tab={tab} play={play} chest={chest} />}
+    <div class={`quests__list scroll in-left${tab === "main" || tab === "secondary" ? " has-ranks" : ""}`} key={tab}>{tab === "hardcore" || tab === "trials" ? <TrackList store={store} play={play} now={now} kind={tab === "trials" ? "trial" : "hardcore"} /> : <QuestList store={store} tab={tab} play={play} chest={chest} />}</div>
     {shownChest !== null ? <ChestBrief key={`${shownChest.group}-${shownChest.index}`} store={store} chest={shownChest} open={(quest) => { play.value = quest; chest.value = null }} /> : <Brief key={key} store={store} nav={nav} play={play} now={now} />}
     <Actions>
       <PartyStrip store={store} team={store.menuDraft.value.team} leader={leader} size={34} pick={() => nav.go({ kind: "team" })} edit={() => nav.go({ kind: "team" })} />
