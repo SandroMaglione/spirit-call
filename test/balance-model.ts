@@ -15,6 +15,13 @@ export interface BalanceCase {
   readonly run: BotRun
 }
 
+/** How the bot plays `character`: the movement planner is approximate, so each kit gets its own preferred range. */
+export const styleFor = (character: CharacterId) => {
+  const disc = character === "tidecaller" || character === "stonekeeper"
+  const comfort = character === "gunner" ? 250 : disc ? 180 : character === "stormcaller" ? 160 : 95
+  return { ...fighter, comfort, reach: character === "gunner" ? 420 : disc ? 300 : character === "stormcaller" ? 210 : 125 }
+}
+
 /** Whole quests, including the fixed enemy level, carried HP, cooldowns and energy. */
 export const balanceCases = (tuning: Tuning, quests: ReadonlyArray<QuestId>, seeds: ReadonlyArray<number>, seconds: number, full = false): Array<BalanceCase> => {
   const cases: Array<BalanceCase> = []
@@ -26,10 +33,7 @@ export const balanceCases = (tuning: Tuning, quests: ReadonlyArray<QuestId>, see
       const add = (profile: string, patch: Partial<BotRun>) => cases.push({ id: `${quest}/${profile}/${seed}`, quest, profile, seed,
         run: { tuning, challenge: spec.challenge, enemyLevel: spec.enemyLevel, seconds, seed, mortal: true, measurePressure: false, ...patch } })
       for (const character of characters) {
-        // The movement planner is approximate; each kit gets its own preferred range.
-        const disc = character === "tidecaller" || character === "stonekeeper"
-        const comfort = character === "gunner" ? 250 : disc ? 180 : character === "stormcaller" ? 160 : 95
-        const style = { ...fighter, comfort, reach: character === "gunner" ? 420 : disc ? 300 : character === "stormcaller" ? 210 : 125 }
+        const style = styleFor(character)
         add(`${character}-basic`, { team: [{ character }], style })
         add(`${character}-skills`, { team: [{ character }], style, abilities: true })
         add(`${character}-matched`, { team: [{ character, level }], style, abilities: true })

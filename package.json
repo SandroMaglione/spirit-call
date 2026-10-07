@@ -16,6 +16,7 @@
     "lab": "node --import tsx scripts/lab.ts",
     "calls": "node --import tsx scripts/calls.ts",
     "progression": "node --import tsx scripts/progression.ts",
+    "expected": "node --import tsx scripts/expected.ts",
     "runs": "node --import tsx scripts/runs.ts",
     "balance": "node --import tsx scripts/balance.ts",
     "shot": "node --import tsx scripts/screenshot.ts",
