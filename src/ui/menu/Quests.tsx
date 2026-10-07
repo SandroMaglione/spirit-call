@@ -148,7 +148,7 @@ const NewThing = ({ store, challenge, novelty, text, inspect }: { readonly store
   const badge: IconName | null = novelty.kind === "hazard" ? novelty.element : novelty.kind === "elites" ? novelty.elements[0] ?? null : novelty.kind === "shield" ? "def" : novelty.kind === "champion" ? "star" : null
   return <div class="novelty">
     {carrier !== undefined
-      ? <button type="button" class="novelty__art face-button" aria-label={store.tuning.value.enemies[entryKind(carrier)].name} onClick={() => inspect(entryKind(carrier))}><Face of={{ enemy: entryKind(carrier) }} tint={tint} size={46} /></button>
+      ? <button type="button" class="novelty__art face-button" aria-label={store.tuning.value.enemies[entryKind(carrier)].name} onClick={() => inspect(entryKind(carrier))}><Face of={{ enemy: entryKind(carrier) }} tint={tint} size={34} /></button>
       : <span class="novelty__art novelty__floor" data-tint={tint ?? ""}><Icon name={badge ?? "info"} /></span>}
     <div>
       <Label>New{novelty.kind === "elites" ? <> · {novelty.elements.map((element) => <Icon key={element} name={element} />)}</> : badge !== null && carrier !== undefined ? <> · <Icon name={badge} /></> : null}</Label>

@@ -51,7 +51,7 @@ export const Extra = ({ store, actions, nav, mode, leader }: {
             {elements.length > 0 && <Toggle on={picks.elites} onChange={(elites) => (store.practicePicks.value = { ...picks, elites, elements })}>Elites</Toggle>}
             {met.champions.size > 0 && <Toggle on={picks.champion === true} onChange={(champion) => (store.practicePicks.value = { ...picks, champion, elements })}>Champion</Toggle>}
             {met.shield && <Toggle on={picks.shields === true} onChange={(shields) => (store.practicePicks.value = { ...picks, shields })}>Shields</Toggle>}
-            <Pill size="small" tone="dark" onClick={() => (store.practicePicks.value = { ...picks, kinds: picks.kinds.length === pickable.length ? [] : pickable })}>{picks.kinds.length === pickable.length ? "Clear" : "Pick all"}</Pill>
+            {pickable.length > 0 && <Pill size="small" tone="dark" onClick={() => (store.practicePicks.value = { ...picks, kinds: chosen.kinds.length === pickable.length ? [] : pickable })}>{chosen.kinds.length === pickable.length ? "Clear" : "Pick all"}</Pill>}
           </div>
         </>}
     </div>

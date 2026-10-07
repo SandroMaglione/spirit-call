@@ -6,11 +6,46 @@ live-tunable; this is the reasoning they follow.
 
 ## A quest is a question
 
-A main quest brings in **one new thing**: an enemy, an arena hazard, or a
-rule. Its card names it in one line ("New: the Warden"), and the quests
+A main quest brings in **one new thing**: an enemy, a kind of floor (fire,
+water), elites of an element, a kind's champion, or an ability any enemy can
+carry (a shield). Its card shows it first, with its picture, and the quests
 after it mix what came before. The player knows what she will face before
 she enters: the enemies and their traits, and which of her characters suit
 them.
+
+Nothing shows a thing before the main line brings it: the quest's waves,
+the side quests, ranks, and hardcore tiers that open after it (each tier
+with its own waves), Until Fall's endless waves, and Enemy Practice's
+picks. `validateContent` checks it (`content/novelties.ts`): a main quest
+brings something no quest before it did, its waves show it, and nothing else
+new; anything that opens after a quest shows only what the main line has
+brought up to it, with enemies at most `aheadOfLine` (4) levels above it.
+
+## Chapters
+
+The main line is written for the team a new account has by then: chapter 1
+for the Swordsman alone (three quests, so the second character comes
+soon), then a character more at the end of chapters 1 and 3, and whoever
+the Spirit Call brings from the end of chapter 1. Each chapter ends with a
+champion, a different kind each time.
+
+| Chapter | Team | Enemy levels | Each quest's new thing | At its end |
+|---|---|---|---|---|
+| 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Gunner; the Spirit Call opens |
+| 2 · Embers | + Gunner | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | |
+| 3 · Gathering Storm | 2 + calls | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | the Tidecaller |
+| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | |
+| 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | |
+| 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | |
+
+A quest's material is an element the team owns by then (wind in chapter 1),
+so early clears pay for the characters the player has.
+
+**Side quests** bring nothing new: each opens after a chapter's last quest
+and mixes what the main line has brought, at most a few levels above it.
+**Hardcore tiers** open the same way: each tier after a main quest (and the
+tier before it), with its own waves, so a track's first tier is an early
+mix and its last the whole roster.
 
 ## Stars
 
@@ -49,11 +84,12 @@ materials: the milestone rewards that pay for playing well.
 
 After the main line moves on, a quest opens again at higher **ranks**:
 the same quest at a fixed, higher enemy level (never scaled to the player).
-Rank 2 opens after chapter 2, rank 3 after chapter 3. Ranks give no first
-clear rewards and no stars; they pay what any run pays at their level
-(gold, and materials of a higher grade). They are why an old quest stays
-worth playing, and why every element has a place to earn its highest
-grade.
+A rank opens with a later chapter's last quest, at about its level: rank 2
+two chapters on, rank 3 four chapters on (chapters 5 and 6 get theirs as
+the main line grows). Ranks give no first clear rewards and no stars; they
+pay what any run pays at their level (gold, and materials of a higher
+grade). They are why an old quest stays worth playing, and why every element
+has a place to earn its highest grade.
 
 ## Materials and ascension
 

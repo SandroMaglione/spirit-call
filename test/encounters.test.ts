@@ -85,8 +85,8 @@ describe("where enemies come in", () => {
     run.step(steps(defaultTuning.waves.spawnWarning) + 5)
   }
 
-  it("lets a wave of two be fought before the next comes: Crossfire's first wave waits for kills", () => {
-    const run = start({ waves: true, challenge: "crossfire" })
+  it("lets a wave of two be fought before the next comes: First Blood's first wave waits for kills", () => {
+    const run = start({ waves: true, challenge: "firstBlood" })
     firstWave(run)
     expect(run.runtime.inspect(World).waves.size).toBe(2)
     // Nobody falls: the wave stays alone, however long it takes.

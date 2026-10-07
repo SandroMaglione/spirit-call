@@ -130,33 +130,37 @@ const metBy = {
 export const challenges = {
   // Chapter 1: the Swordsman alone.
   /** Chasers only: learn to move, dodge, and strike back. */
-  firstBlood: waves("First Blood", "Clear six waves of chasers, a few more each time.", "courtyard", [
-    ["chaser"],
-    ["chaser", "chaser"],
+  firstBlood: waves("First Blood", "Clear eight waves of chasers, a few more each time.", "courtyard", [
     ["chaser", "chaser"],
     ["chaser", "chaser", "chaser"],
     ["chaser", "chaser", "chaser"],
-    ["chaser", "chaser", "chaser", "chaser"]
+    ["chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "chaser", "chaser"]
   ]),
   /** Shooters behind cover, with chasers to keep you busy: close the distance. */
-  crossfire: waves("Crossfire", "Clear seven waves of shooters fighting from cover, with chasers among them.", "sanctuary", [
-    ["shooter", "chaser"],
-    ["shooter", "shooter"],
-    ["chaser", "chaser", "shooter"],
-    ["shooter", "shooter", "chaser"],
-    ["chaser", "chaser", "chaser", "shooter"],
-    ["shooter", "shooter", "shooter", "chaser"],
-    ["shooter", "shooter", "chaser", "chaser", "chaser"]
-  ]),
-  /** The first champion: a burning chaser that stays across waves. */
-  packLeader: waves("The Pack Leader", "Seven waves; midway a burning champion chaser joins, and stays until it falls.", "monastery", [
-    ["chaser", "chaser"],
+  crossfire: waves("Crossfire", "Clear eight waves of shooters fighting from cover, with chasers among them.", "sanctuary", [
     ["shooter", "chaser", "chaser"],
     ["shooter", "shooter", "chaser"],
-    [champion("chaser", "fire"), "chaser"],
-    ["shooter", "chaser"],
-    ["shooter", "shooter", "chaser"],
-    ["chaser", "chaser", "shooter"]
+    ["chaser", "chaser", "chaser", "shooter"],
+    ["shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "shooter", "shooter"],
+    ["shooter", "shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "shooter", "shooter"],
+    ["shooter", "shooter", "shooter", "chaser", "chaser", "chaser"]
+  ]),
+  /** The first champion: a burning chaser that stays across waves. */
+  packLeader: waves("The Pack Leader", "Eight waves; midway a burning champion chaser joins, and stays until it falls.", "monastery", [
+    ["chaser", "chaser", "chaser"],
+    ["shooter", "chaser", "chaser", "chaser"],
+    ["shooter", "shooter", "chaser", "chaser"],
+    [champion("chaser", "fire"), "chaser", "chaser"],
+    ["shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "shooter", "shooter"],
+    ["shooter", "shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "shooter", "shooter"]
   ]),
 
   // Chapter 2: the Swordsman and the Gunner.

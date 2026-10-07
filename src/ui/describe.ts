@@ -162,8 +162,8 @@ export const affinityList = (traits: Affinities): ReadonlyArray<{ readonly eleme
     .sort((left, right) => order.indexOf(left.affinity) - order.indexOf(right.affinity))
 }
 
-/** The enemy kinds a challenge holds, in the order they first appear. */
-export const challengeEnemies = (challenge: ChallengeSpec): ReadonlyArray<EnemyKind> => [...new Set(challenge.waves.scripted.flat().map(entryKind))]
+/** The enemy kinds a challenge holds, in the order they first appear (its endless waves' kinds last). */
+export const challengeEnemies = (challenge: ChallengeSpec): ReadonlyArray<EnemyKind> => [...new Set([...challenge.waves.scripted.flat().map(entryKind), ...(challenge.waves.endless?.kinds ?? [])])]
 
 /** The name of something a reward unlocks. */
 export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {

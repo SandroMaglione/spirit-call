@@ -154,6 +154,16 @@ Elites make the elements part of the fight on the enemies' side, ready to be
 turned against them. Endless waves make elites of a growing share of their
 slots.
 
+## Shields
+
+A wave entry can carry a **shield** (`shielded` in `content/challenges.ts`):
+the first enemy of its group holds a frontal shield that turns toward the
+player (`Tuning.shields`) and stops shots, discs, and other projectiles
+hitting it from the front; blows up close, bursts, slams, and anything from
+behind land as usual. It belongs to no kind: any enemy can carry one, so it
+comes into the main line as its own new thing (chapter 4), and a Shooter
+behind a shield asks a different question than a bare one.
+
 ## Champions
 
 A wave entry can be a **champion** (see "Champions, not bosses" in
@@ -181,9 +191,30 @@ and none of a boss's scripting: no phases, entrances, or timers.
   every champion has fallen. Bringing it down early is a good plan; leaving
   it means fighting every wave with it on the field.
 
-Each chapter of the main line ends with a champion. Melee and area kinds
-make good champions; pure ranged ones (a Sniper) would hide at the edge for
-waves, and are kept out. Enemy Practice can add a champion to the field.
+Each chapter of the main line ends with a champion, a different kind each
+time (a Chaser, a Guardian, a Brute, a Swarmer, a Stalker, a Juggernaut):
+each kind's champion is that chapter's new thing. Melee and area kinds make
+good champions; ones that keep their distance (a Sniper, a Firebomber) would
+hide at the edge for waves, and are kept out. Enemy Practice can add a
+champion to the field once the player has met one.
+
+## What the player meets, and when
+
+The main line brings the roster in one thing at a time (see
+`docs/quests.md`, "Chapters"), and nothing else shows an enemy, an elite
+element, a shield, a champion, or a floor before it does: side quests,
+ranks, hardcore tiers (each with its own waves), Until Fall's endless waves
+(drawn from what the main line has brought by the tier's quest), and Enemy
+Practice's picks (what the player has met). `validateContent` checks the
+content against it (`content/novelties.ts`).
+
+Each element is resisted by a few enemies the main line has brought by the
+time its trial opens (see `docs/quests.md`), so no element is welcome
+everywhere: Wind by the Swarmer, the Guardian, the Brute (immune), the
+Juggernaut, and the Gale Caster (immune); Fire by the Brute, the Firebomber,
+the Stalker, and the Volatile (immune); Water by the Shooter and the
+Warden; Thunder by the Sniper; Rock by the Swarmer, the Stalker, and the
+Gale Caster. Elites and champions are immune to the element they carry.
 
 ## Arenas
 

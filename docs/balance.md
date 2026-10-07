@@ -20,6 +20,16 @@ aspect deals within 25% of its class's plain aspect by the numbers
 (`validateContent`); what passives, bounces, and chains add is for the lab
 and play to judge.
 
+## Six chapters (October 2026)
+
+The main line was rebuilt into six chapters, one new thing per quest (see
+`docs/quests.md`), so the audit's quests became First Blood (the
+Swordsman's first quest), The Pack Leader (chapter one's champion), and The
+Warlord. Chapter one is written for the Swordsman alone: chasers and
+shooters (weak to wind), and a chaser champion in place of the wind-immune
+Brute. The hit budgets were set from `pnpm lab`, between its quick and its
+learning player, and the baseline recorded again.
+
 ## Champions (October 2026)
 
 Each chapter's finale gained a champion (see `docs/enemies.md`): a thunder

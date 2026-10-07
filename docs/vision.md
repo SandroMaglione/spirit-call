@@ -172,8 +172,15 @@ The game has two areas, and Extras for practice.
   "Champions, not bosses" below). The rules are in `docs/quests.md`; in
   short:
   - **Each quest is a question.** A main quest brings in one new thing (an
-    enemy, a hazard, or a rule), named on its card, and later quests mix
-    what came before. You know what you will face before you enter.
+    enemy, a hazard, elites, a champion, or an ability like a shield), shown
+    first on its card, and later quests mix what came before. Nothing
+    anywhere else (side quests, ranks, hardcore, practice) shows a thing
+    before the main line brings it. You know what you will face before you
+    enter.
+  - **The main line is paced for the team you have**: chapter 1 is short
+    and for the first character alone, and each chapter after brings its
+    enemies to the team a new account has by then. The game grows by
+    chapters; the roster is spread across them, not shown at once.
   - **Three stars** per quest, for how well it was played: never for
     speed, and never for bringing a character, an element, or a class (any
     team can earn every star). A chapter's stars open its **chests**.
@@ -185,7 +192,8 @@ The game has two areas, and Extras for practice.
   are aiming to beat, where preparation and skill are tested fully. It is
   organized in **tiers** of mostly the same kind of content, each harder in
   every way (enemy levels, modifiers, and attack patterns), so lower tiers
-  are within reach of a low-level team. A tier's resources are given the
+  are within reach of a low-level team. Each tier opens along the main
+  line, a few levels above the quest that opens it. A tier's resources are given the
   first time it is cleared; a **periodic reset** makes them available again,
   possibly in a different format. One track, **Until Fall**, never ends:
   every wave is stronger than the last, a goal wave clears the tier, and
@@ -193,8 +201,8 @@ The game has two areas, and Extras for practice.
 - **Extras**, for practice: a Training Ground (dummies that never fall,
   one that breaks, one that swings to dodge, fire to push them into) and
   Enemy Practice (the enemies picked, all on the field together and coming
-  back a few seconds after they fall, until the team falls; with elites, and
-  a champion, when asked). Played at the team's own level, they record nothing: no
+  back a few seconds after they fall, until the team falls; with elites,
+  shields, and a champion, when asked, among what the player has met). Played at the team's own level, they record nothing: no
   experience, gold, or discoveries, so they are never the place to farm.
 - **Champions, not bosses.** The game is fast and crowded, and its
   elements push, pull, and hold bodies around: a slow, scripted boss with

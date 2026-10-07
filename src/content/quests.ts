@@ -122,7 +122,7 @@ export const quests = {
     ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: null,
     introduces: brings("Chasers: they run in and swipe twice. Dodge, then strike back", enemy("chaser")),
-    stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 8)],
+    stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 7)],
     rewards: pays(60, 100, 500)
   }),
   crossfire: quest({
@@ -135,7 +135,7 @@ export const quests = {
     ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: "firstBlood",
     introduces: brings("Shooters: they keep away and shoot ahead of you. Close the distance", enemy("shooter")),
-    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 10)],
+    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 5)],
     rewards: pays(90, 100, 1000, [aspect("duelist")])
   }),
   packLeader: quest({
@@ -148,7 +148,7 @@ export const quests = {
     ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
-    stars: [cleared(), atLeast("breaks", 2), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("breaks", 2), atMost("hitsTaken", 7)],
     rewards: pays(140, 150, 2000, [character("gunner"), aspect("marksman")])
   }),
 
@@ -163,7 +163,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "packLeader",
     introduces: brings("Swarmers: tiny, fast, in packs. Reach many at once", enemy("swarmer")),
-    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
     rewards: pays(160, 100, 2500)
   }),
   emberKiln: quest({
@@ -176,7 +176,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "theSwarm",
     introduces: brings("Fire in the floor: it burns whoever walks in, enemies too", hazard("fire")),
-    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
     rewards: pays(180, 100, 3000)
   }),
   ironGuard: quest({
@@ -189,7 +189,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "emberKiln",
     introduces: brings("Guardians: heavy, patient, and a thrust that reaches far", enemy("guardian")),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 5)],
     rewards: pays(200, 100, 3500)
   }),
   bulwark: quest({
@@ -202,7 +202,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "ironGuard",
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 7)],
     rewards: pays(220, 150, 5000)
   }),
 
@@ -230,7 +230,7 @@ export const quests = {
     ranks: ranks([28, "theWarlord"]),
     after: "ashfall",
     introduces: brings("Snipers: a fast thunder bullet from afar. Walls stop it", enemy("sniper")),
-    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 10)],
+    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 5)],
     rewards: pays(260, 150, 7000)
   }),
   theBrute: quest({
@@ -243,7 +243,7 @@ export const quests = {
     ranks: ranks([28, "theWarlord"]),
     after: "outposts",
     introduces: brings("Brutes: slow and heavy. Break them, then punish them", enemy("brute")),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 13)],
     rewards: pays(280, 150, 8000)
   }),
   bruteKing: quest({
@@ -256,7 +256,7 @@ export const quests = {
     ranks: ranks([28, "theWarlord"]),
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 16)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 8)],
     rewards: pays(300, 200, 12000, [character("tidecaller"), aspect("riptide")])
   }),
 
@@ -271,7 +271,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "bruteKing",
     introduces: brings("Water in the floor: it soaks and slows whoever wades in", hazard("water")),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 5)],
     rewards: pays(320, 150, 12000)
   }),
   bombardment: quest({
@@ -284,7 +284,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "highTide",
     introduces: brings("Firebombers: bombs over walls, flames where they burst", enemy("charger")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 12)],
     rewards: pays(340, 150, 13000)
   }),
   shieldWall: quest({
@@ -297,7 +297,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "bombardment",
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 6)],
     rewards: pays(360, 150, 14000)
   }),
   swarmMother: quest({
@@ -310,7 +310,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "shieldWall",
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
     rewards: pays(380, 200, 18000)
   }),
 
@@ -325,7 +325,7 @@ export const quests = {
     ranks: [],
     after: "swarmMother",
     introduces: brings("Stalkers: keep away, and they blink to you. Their mark shows where", enemy("stalker")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
     rewards: pays(400, 200, 18000)
   }),
   theCloister: quest({
@@ -338,7 +338,7 @@ export const quests = {
     ranks: [],
     after: "sandstorm",
     introduces: brings("Wardens: they ward an ally from afar. Cross the tether to break it", enemy("warden")),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 5)],
     rewards: pays(420, 200, 20000)
   }),
   thunderhead: quest({
@@ -351,7 +351,7 @@ export const quests = {
     ranks: [],
     after: "theCloister",
     introduces: brings("Thunder elites: they strike the soaked hardest", elites("thunder")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
     rewards: pays(440, 200, 22000)
   }),
   theWarlord: quest({
@@ -364,7 +364,7 @@ export const quests = {
     ranks: [],
     after: "thunderhead",
     introduces: brings("A champion stalker charged with thunder, hunting you through every wave", champion("stalker")),
-    stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 18)],
+    stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 12)],
     rewards: pays(460, 250, 26000)
   }),
 
@@ -379,7 +379,7 @@ export const quests = {
     ranks: [],
     after: "theWarlord",
     introduces: brings("Juggernauts: armored until broken. Break them, then strike", enemy("juggernaut")),
-    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 5)],
     rewards: pays(480, 200, 26000)
   }),
   powderKeg: quest({
@@ -392,7 +392,7 @@ export const quests = {
     ranks: [],
     after: "ironclad",
     introduces: brings("Volatiles: they burst where they fall, their own side too", enemy("volatile")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 15)],
     rewards: pays(500, 200, 28000)
   }),
   galeForce: quest({
@@ -405,7 +405,7 @@ export const quests = {
     ranks: [],
     after: "powderKeg",
     introduces: brings("Gale casters: a cone of wind that blows everyone around", enemy("galeCaster")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
     rewards: pays(520, 200, 30000)
   }),
   colossus: quest({
@@ -418,7 +418,7 @@ export const quests = {
     ranks: [],
     after: "galeForce",
     introduces: brings("A burning champion juggernaut, armored until broken", champion("juggernaut")),
-    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 16)],
+    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 6)],
     rewards: pays(560, 250, 36000)
   }),
 
@@ -433,7 +433,7 @@ export const quests = {
     ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: "packLeader",
     introduces: null,
-    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 10)],
+    stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
     rewards: pays(80, 50, 800)
   }),
   nightOfPacks: quest({
@@ -446,7 +446,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "bulwark",
     introduces: null,
-    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 5)],
     rewards: pays(120, 60, 2000)
   }),
   eliteHunt: quest({
@@ -459,7 +459,7 @@ export const quests = {
     ranks: ranks([28, "theWarlord"]),
     after: "bruteKing",
     introduces: null,
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 16)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 14)],
     rewards: pays(160, 80, 5000)
   }),
   floodgate: quest({
@@ -472,7 +472,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "swarmMother",
     introduces: null,
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
     rewards: pays(200, 80, 10000)
   }),
   stormFront: quest({
@@ -485,7 +485,7 @@ export const quests = {
     ranks: [],
     after: "theWarlord",
     introduces: null,
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 10)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
     rewards: pays(240, 80, 15000)
   }),
   /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes. */
@@ -499,7 +499,7 @@ export const quests = {
     ranks: [],
     after: "colossus",
     introduces: null,
-    stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 12)],
+    stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 5)],
     rewards: pays(280, 100, 20000)
   }),
   strangeCompany: quest({
@@ -512,7 +512,7 @@ export const quests = {
     ranks: [],
     after: "colossus",
     introduces: null,
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 14)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
     rewards: pays(300, 100, 22000)
   })
 }
