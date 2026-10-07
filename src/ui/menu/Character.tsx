@@ -14,7 +14,7 @@ import { elements } from "../../content/elements.ts"
 import { skillSlots } from "../../content/skills.ts"
 import { aspectFor, attackOf, statsAtLevel } from "../../features/build.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
-import { describeAmounts, describeInfuse, describePassive, describeSkill, statOrder } from "../describe.ts"
+import { describeAmounts, describeAspectElement, describePassive, describeSkill, statOrder } from "../describe.ts"
 import { aspectsFor, elementOf, equipInDraft } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
@@ -98,15 +98,16 @@ const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly
   const note = !has(picked.value) ? sourceNote(store, { kind: "aspect", id: picked.value! })
     : !owns(account, { kind: "character", id: character }) ? "Hers to equip once she joins you."
     : !inParty ? "Add her to the party to equip an aspect."
-    : picked.value === equipped ? "Equipped. An aspect changes how she fights, never how strong she is."
+    : picked.value === equipped ? "Equipped."
     : holder !== undefined ? `On ${tuning.characters[holder].name}: equipping moves it here.` : undefined
   return <>
     <Panel class="character__panel in-right" icon={<AbilityIcon kind={spec.class} />} title={shown?.name ?? classSpec.plain.name} detail={`${picked.value === null ? "Plain" : "Aspect"} · ${classSpec.name}`} note={note} noteIcon={has(picked.value) ? picked.value === equipped ? "check" : "info" : "lock"}>
       <Cards>{[null, ...aspectsFor(tuning, character)].map((option) => <Card key={option ?? "plain"} art={has(option) ? <AbilityIcon kind={spec.class} /> : <Icon name="lock" />} foot={option === null ? classSpec.plain.name : aspectOf(tuning.aspects, option).name} tint={spec.element} selected={option === picked.value} locked={!has(option)} mark={option === equipped && inParty ? "tick" : undefined} onClick={() => (picked.value = option)} />)}</Cards>
       <Chips items={attack.combo.map((move) => moveNames[move.shape])} />
       <p class="dim">{shown?.description ?? classSpec.plain.description}</p>
+      {shown !== null && <p>{describeAspectElement(shown, spec.element)}</p>}
       {shown !== null && shown.passives.map((passive, index) => <p key={index}>{describePassive(passive)}.</p>)}
-      {shown !== null && shown.infuse !== null && <p>{describeInfuse(shown.infuse, spec.element)}</p>}
+      {shown !== null && <p><b>Good against</b> · {shown.against}</p>}
     </Panel>
     <Actions><Pill icon="swap" disabled={!has(picked.value) || !inParty || picked.value === equipped} onClick={() => { draft.value = equipInDraft(draft.value, character, picked.value); save() }}>Equip</Pill></Actions>
   </>

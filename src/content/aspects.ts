@@ -18,8 +18,15 @@ import type { MoveFilter, Passive } from "./passives.ts"
 export interface AspectSpec extends Moves {
   /** Shown in menus. */
   readonly name: string
-  /** How it plays and what it is good against, in a sentence or two. */
+  /**
+   * How its moves play, in a sentence or two, in words that hold for every
+   * element: a pull or a push is the move's own, never an element's. Which
+   * move carries her element is said apart (from `infuse`), with her
+   * element named, so the same aspect reads right on every character.
+   */
   readonly description: string
+  /** What it is good against, in a few words. */
+  readonly against: string
   /** The class it belongs to: any character of it can equip it. */
   readonly class: ClassId
   /** Its passive: effects made of the shared vocabulary (see `content/passives.ts`), reading only facts that belong to no element. */
@@ -40,7 +47,8 @@ export const aspects = {
    */
   duelist: aspect({
     name: "Duelist",
-    description: "Three thrusts, each harder than the last; charged, a long lunge. A counter right after a perfect dodge deals double and carries her element. For elites and armor, weaker against a crowd.",
+    description: "Three thrusts, each harder than the last. Charged: a long lunge. A counter right after a perfect dodge deals double.",
+    against: "Elites and armor; weaker against a crowd.",
     class: "blade",
     combo: [
       thrust({ reach: 175, width: 52, power: 20, knockback: 380, recovery: 0.22, hitStop: 0.06, heavy: false, lunge: 28 }),
@@ -62,7 +70,8 @@ export const aspects = {
    */
   marksman: aspect({
     name: "Marksman",
-    description: "Slow shots that pierce, three rounds; charged, a rail shot through a whole line. The last round carries her element, and shots deal more to the wounded. From afar, against enemies at range.",
+    description: "Slow shots that pierce, three rounds. Charged: a rail shot through a whole line. Shots deal more to the wounded.",
+    against: "Enemies at range, from afar.",
     class: "gun",
     combo: [
       shot({ count: 1, spreadDegrees: 0, speed: 1500, radius: 7, range: 820, pierce: 1, power: 34, knockback: 360, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: -6 })
@@ -82,7 +91,8 @@ export const aspects = {
    */
   riptide: aspect({
     name: "Riptide",
-    description: "Discs bounce on between enemies in a state, and deal half again as much to them; the pair in a V carries her element. Feeds on states, hers or her team's.",
+    description: "Discs bounce on between enemies in a state, and deal half again as much to them.",
+    against: "Enemies already in a state, from her or her team.",
     class: "disc",
     combo: [
       disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, bounces: 2, power: 11, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
@@ -103,7 +113,8 @@ export const aspects = {
    */
   arc: aspect({
     name: "Arc",
-    description: "Bolts jump on to one more enemy nearby; the pair in a V carries her element. For spread-out groups.",
+    description: "Bolts jump on to one more enemy nearby.",
+    against: "Spread-out groups.",
     class: "staff",
     combo: [
       shot({ count: 1, spreadDegrees: 0, speed: 860, radius: 7, range: 560, pierce: 1, power: 12, knockback: 220, recovery: 0.16, hitStop: 0.03, heavy: false, lunge: 0 }),
@@ -125,7 +136,8 @@ export const aspects = {
    */
   gatheringEdge: aspect({
     name: "Gathering Edge",
-    description: "Two slashes, then a spin that draws enemies in, carrying her element; charged, a wide sweep that draws in. Blows deal more to enemies in a state. Keeps a pack together.",
+    description: "Two slashes, then a spin that pulls enemies in toward her. Charged: a wide sweep that pulls in too. Blows deal more to enemies in a state.",
+    against: "Packs: keeps them together for the next combo, or a teammate's skill.",
     class: "blade",
     combo: [
       arc({ reach: 120, arcDegrees: 140, power: 20, knockback: 420, recovery: 0.2, hitStop: 0.06, heavy: false, lunge: 16 }),
@@ -147,7 +159,8 @@ export const aspects = {
    */
   scattergun: aspect({
     name: "Scattergun",
-    description: "Short, wide spreads that knock back, four rounds; charged, a point-blank blast carrying her element. Each kill heals her a little. In the middle of the pack.",
+    description: "Short, wide spreads that knock back, four rounds. Charged: a point-blank blast. Each kill heals her a little.",
+    against: "Fighting in the middle of the pack.",
     class: "gun",
     combo: [
       shot({ count: 5, spreadDegrees: 30, speed: 900, radius: 5, range: 300, pierce: 0, power: 5, knockback: 520, recovery: 0.16, hitStop: 0.03, heavy: false, lunge: -6 }),
@@ -169,7 +182,8 @@ export const aspects = {
    */
   whirlpool: aspect({
     name: "Whirlpool",
-    description: "Every disc hovers a moment at the end of its throw; charged, a disc that hovers long and draws enemies in, carrying her element. The finisher pushes back what is around her. Holds ground.",
+    description: "Every disc hovers a moment at the end of its throw. Charged: a disc that hovers long and pulls enemies in. The finisher pushes back what is around her.",
+    against: "Holding ground.",
     class: "disc",
     combo: [
       disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 340, hover: 0.3, hoverTick: 0.15, power: 11, knockback: 160, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
@@ -191,7 +205,8 @@ export const aspects = {
    */
   lightningRod: aspect({
     name: "Lightning Rod",
-    description: "Her charged attack also plants a rod that zaps the nearest enemy around it for a few seconds, carrying her element; bolts deal more to enemies in a state. A place to fight from.",
+    description: "Her charged attack also plants a rod ahead of her that zaps the nearest enemy for a few seconds. Bolts deal more to enemies in a state.",
+    against: "A place to fight from.",
     class: "staff",
     combo: [
       shot({ count: 1, spreadDegrees: 0, speed: 860, radius: 7, range: 560, pierce: 1, power: 12, knockback: 220, recovery: 0.16, hitStop: 0.03, heavy: false, lunge: 0 }),
