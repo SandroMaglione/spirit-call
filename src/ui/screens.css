@@ -143,6 +143,13 @@
 .quests__list .label > span:last-child { flex: none; white-space: nowrap; }
 .quests__brief { position: absolute; left: calc(var(--left) + clamp(200px, 31cqw, 262px) + 18px); right: var(--right); top: 62px; bottom: 70px; z-index: 3; }
 .quests__enemies { display: grid; gap: 5px; }
+/* A main quest's one new thing: its picture beside its line, on a gold-edged band. */
+.novelty { display: flex; align-items: center; gap: 12px; margin: -2px 0 10px; padding: 8px 12px 8px 8px; border-radius: 10px; background: linear-gradient(90deg, rgba(255, 220, 140, .14), rgba(255, 220, 140, .03)); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .28); }
+.novelty > div { min-width: 0; display: grid; gap: 2px; }
+.novelty .label { color: var(--gold-hi); display: flex; align-items: center; gap: 4px; }
+.novelty p { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--text); }
+.novelty__art { flex: none; }
+.novelty__floor { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px var(--line); }
 /* A chest's brief: the chest beside what it holds. */
 .chest-brief { display: flex; align-items: center; gap: 16px; }
 .chest-brief__icon { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; color: var(--gold-hi); background: radial-gradient(circle at 40% 30%, rgba(255, 231, 173, .25), rgba(255, 231, 173, .05) 70%); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .35), 0 0 18px rgba(255, 220, 140, .25); flex: none; }

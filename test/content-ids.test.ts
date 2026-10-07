@@ -17,7 +17,9 @@ import { defaultTuning } from "../src/config/tuning.ts"
  * elements (Steam, Carried along, Shocked), when elements became one rule
  * (a save keeps only the discoveries that still exist); weapons, and the
  * attacks that were by weapon type, when characters got classes and aspects
- * (save version 6 drops weapons).
+ * (save version 6 drops weapons); the old Gauntlet's challenge (`endless`),
+ * when the main line was rebuilt into six chapters and every account was
+ * reset (migrations/0003): each hardcore tier now has its own challenge.
  */
 const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>> & {
   readonly retired?: Record<string, ReadonlyArray<string>>

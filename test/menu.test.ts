@@ -189,7 +189,7 @@ describe("menu helpers", () => {
 
   it("describes content from its data", () => {
     expect(describeObjective(defaultTuning.challenges.swarm.objective, 3)).toBe("Clear 3 waves")
-    expect(describeObjective(defaultTuning.challenges.endless.objective, 8)).toBe("Clear 8 waves")
+    expect(describeObjective(defaultTuning.challenges.gauntlet3.objective, 8)).toBe("Clear 8 waves")
     expect(describePassive(damageBonus(50, targetHealthBelow(0.3)))).toBe("+50% damage to enemies below 30% HP")
     expect(describePassive(on(kill(), heal(2)))).toBe("On kill: heal 2% of max HP")
     const shockwave = nova({ radius: 150, power: 30, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.03, heavy: false })

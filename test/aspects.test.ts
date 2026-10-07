@@ -233,7 +233,7 @@ describe("owning and equipping", () => {
   const owning = (...ids: ReadonlyArray<AspectId>) => ids.reduce((account, id) => unlock(defaultTuning, account, { kind: "aspect", id }, 2000), [
     "gunner", "tidecaller", "stormcaller"
   ].reduce((account, id) => unlock(defaultTuning, account, { kind: "character", id: id as "gunner" }, 2000), fresh()))
-  const play = { kind: "quest" as const, quest: "theSwarm" as const }
+  const play = { kind: "quest" as const, quest: "firstBlood" as const }
   const riptide = "riptide" as AspectId, duelist = "duelist" as AspectId
 
   it("an aspect is on one member at most, of her class, and owned", () => {

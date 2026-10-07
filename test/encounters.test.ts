@@ -85,8 +85,8 @@ describe("where enemies come in", () => {
     run.step(steps(defaultTuning.waves.spawnWarning) + 5)
   }
 
-  it("lets a wave of two be fought before the next comes: The Brute's first wave waits for kills", () => {
-    const run = start({ waves: true, challenge: "brute" })
+  it("lets a wave of two be fought before the next comes: Crossfire's first wave waits for kills", () => {
+    const run = start({ waves: true, challenge: "crossfire" })
     firstWave(run)
     expect(run.runtime.inspect(World).waves.size).toBe(2)
     // Nobody falls: the wave stays alone, however long it takes.
@@ -95,12 +95,12 @@ describe("where enemies come in", () => {
     expect(run.runtime.inspect(World).enemies).toHaveLength(2)
     // One falls: now the next comes in.
     defeat(run, 1)
-    run.step(steps(defaultTuning.waves.reinforceDelay) + 5)
+    run.step(steps(defaultTuning.waves.reinforceDelay) + 15)
     expect(run.runtime.inspect(World).waves.number).toBe(2)
   })
 
   it("sends the next wave in once most of a big one has fallen, before it is cleared", () => {
-    const run = start({ waves: true, challenge: "endless" })
+    const run = start({ waves: true, challenge: "gauntlet3" })
     firstWave(run)
     const size = run.runtime.inspect(World).waves.size
     const needed = reinforceAfter(defaultTuning, size)

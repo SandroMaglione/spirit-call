@@ -550,6 +550,8 @@ export const PendingSpawn = Descriptor.Component<{
   readonly elite: EliteElement | null
   /** A champion (an elite pushed further, see `Tuning.champions`). */
   readonly champion?: boolean
+  /** Carrying a frontal shield (see `Tuning.shields`). */
+  readonly shield?: boolean
   /** Enemy Practice's spot it fills (see `PracticeField`), if any. */
   readonly slot?: number
 }>()("Shooter/PendingSpawn")
@@ -905,7 +907,11 @@ export const Waves = Descriptor.Resource<WavesValue>()("Shooter/Waves")
 export interface PracticeValue {
   readonly kinds: ReadonlyArray<EnemyKind>
   readonly elites: boolean
+  /** The elements its elites (and champion) carry: those the player has met; all when left out. */
+  readonly elements?: ReadonlyArray<EliteElement>
   readonly champion?: boolean
+  /** Some of the enemies carry shields. */
+  readonly shields?: boolean
 }
 export const Practice = Descriptor.Resource<PracticeValue>()("Shooter/Practice")
 

@@ -14,6 +14,10 @@
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import { entryChampion, entryKind } from "./challenges.ts"
+import type { ChallengeId } from "./challenges.ts"
+import { beyond, challengeShows, holds, introducedBy, nothingSeen, withNovelty } from "./novelties.ts"
+import { aheadOfLine } from "./quests.ts"
+import type { QuestId } from "./quests.ts"
 import { elements } from "./elements.ts"
 import type { ElementId } from "./elements.ts"
 import { gradeAt, materialOf } from "./materials.ts"
@@ -293,6 +297,49 @@ const checkMoves = (problems: Array<string>, where: string, spec: ClassSpec, mov
   }
 }
 
+/**
+ * What opens after `opens` (a side quest, a rank, a tier) plays `challenge`
+ * at `enemyLevel`: it shows only what the main line has introduced by then,
+ * and sits at most `aheadOfLine` levels above the quest that opens it.
+ */
+const checkOpening = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, opens: QuestId): void => {
+  if (!has(tuning.challenges, challenge)) return
+  const early = beyond(challengeShows(tuning, challenge), introducedBy(tuning.quests, opens))
+  if (early.length > 0) problems.push(`${where}: shows ${early.join(", ")} before the main line introduces it (it opens after ${opens})`)
+  const most = tuning.quests[opens].enemyLevel + aheadOfLine
+  if (enemyLevel > most) problems.push(`${where}: enemies of level ${enemyLevel} are more than ${aheadOfLine} levels above ${opens} (${tuning.quests[opens].enemyLevel}), which opens it`)
+}
+
+/**
+ * Each main quest brings one new thing (see docs/quests.md): something the
+ * quests before it did not, which its challenge shows, and nothing else
+ * new. A side quest brings nothing, and opens after a main quest.
+ */
+const checkNovelties = (problems: Array<string>, tuning: Tuning): void => {
+  for (const [id, quest] of Object.entries(tuning.quests) as Array<[QuestId, Tuning["quests"][QuestId]]>) {
+    const where = `quest ${id}`
+    if (!has(tuning.challenges, quest.challenge)) continue
+    if (quest.after !== null && has(tuning.quests, quest.after) && tuning.quests[quest.after as QuestId].line !== "main") problems.push(`${where}: comes after ${quest.after}, which is not a main quest`)
+    if (quest.line === "secondary") {
+      if (quest.introduces !== null) problems.push(`${where}: a side quest brings nothing new (it mixes what the main line brought)`)
+      if (quest.after === null || !has(tuning.quests, quest.after)) problems.push(`${where}: a side quest opens after a main quest`)
+      else checkOpening(problems, where, tuning, quest.challenge, quest.enemyLevel, quest.after as QuestId)
+      continue
+    }
+    if (quest.introduces === null) {
+      problems.push(`${where}: a main quest brings one new thing`)
+      continue
+    }
+    const before = quest.after !== null && has(tuning.quests, quest.after) ? introducedBy(tuning.quests, quest.after as QuestId) : nothingSeen
+    const novelty = quest.introduces.novelty
+    const shows = challengeShows(tuning, quest.challenge)
+    if (holds(before, novelty)) problems.push(`${where}: brings ${quest.introduces.text}, which the main line already brought`)
+    if (!holds(shows, novelty)) problems.push(`${where}: brings ${quest.introduces.text}, but its challenge does not show it`)
+    const extra = beyond(shows, withNovelty(before, novelty))
+    if (extra.length > 0) problems.push(`${where}: shows ${extra.join(", ")} too, which the main line has not brought yet`)
+  }
+}
+
 /** Every rule the content in `tuning` breaks, as readable messages; empty when all is well. */
 export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
@@ -463,7 +510,8 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (quest.after !== null && !has(tuning.quests, quest.after)) problems.push(`${where}: comes after unknown quest ${quest.after}`)
     for (const item of quest.rewards.unlocks) if (!has(unlockKinds[item.kind], item.id)) problems.push(`${where}: rewards unknown ${item.kind} ${item.id}`)
     checkAmounts(problems, where, tuning, quest.rewards.currencies)
-    if (quest.introduces.enemy !== null && !has(tuning.enemies, quest.introduces.enemy)) problems.push(`${where}: introduces unknown enemy ${quest.introduces.enemy}`)
+    const novelty = quest.introduces?.novelty
+    if ((novelty?.kind === "enemy" || novelty?.kind === "champion") && !has(tuning.enemies, novelty.enemy)) problems.push(`${where}: introduces unknown enemy ${novelty.enemy}`)
     checkStars(problems, where, quest.stars)
     if (!has(elements, quest.element)) problems.push(`${where}: pays the material of unknown element ${quest.element}`)
     quest.ranks.forEach((rank, index) => {
@@ -473,6 +521,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
         problems.push(`${at}: enemyLevel must be a whole number above the rank below (${below}) and at most the characters' maximum level (is ${rank.enemyLevel})`)
       }
       if (!has(tuning.quests, rank.after)) problems.push(`${at}: opens after unknown quest ${rank.after}`)
+      else checkOpening(problems, at, tuning, quest.challenge, rank.enemyLevel, rank.after as QuestId)
     })
     // The main line's order must end: following `after` never comes back around.
     const seen = new Set<string>([id])
@@ -485,10 +534,10 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
   }
 
+  checkNovelties(problems, tuning)
+
   for (const [id, track] of Object.entries(tuning.tracks)) {
     const where = `hardcore track ${id}`
-    if (!has(tuning.challenges, track.challenge)) problems.push(`${where}: unknown challenge ${track.challenge}`)
-    if (!has(tuning.quests, track.after)) problems.push(`${where}: opens after unknown quest ${track.after}`)
     if (!has(elements, track.element)) problems.push(`${where}: pays the material of unknown element ${track.element}`)
     if (track.tiers.length === 0) problems.push(`${where}: needs at least one tier`)
     track.tiers.forEach((tier, index) => {
@@ -500,6 +549,9 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (before !== undefined && tier.enemyLevel <= before.enemyLevel) problems.push(`${at}: enemies must be a higher level than the tier before (${tier.enemyLevel} after ${before.enemyLevel})`)
       if (!(tier.rewards.experience >= 0)) problems.push(`${at}: experience must not be negative (is ${tier.rewards.experience})`)
       checkAmounts(problems, at, tuning, tier.rewards.currencies)
+      if (!has(tuning.challenges, tier.challenge)) problems.push(`${at}: unknown challenge ${tier.challenge}`)
+      else if (!has(tuning.quests, tier.opens)) problems.push(`${at}: opens after unknown quest ${tier.opens}`)
+      else checkOpening(problems, at, tuning, tier.challenge, tier.enemyLevel, tier.opens)
     })
   }
 

@@ -57,13 +57,23 @@ export class Accounts extends Context.Service<
       const logs = yield* Logs
       const { tuning, starter } = yield* Content
 
-      /** `userId`'s account (repaired where it no longer fits the content), the rows it was read from, and the time. */
+      /**
+       * `userId`'s account (repaired where it no longer fits the content), the
+       * rows it was read from, and the time. A player without one (accounts
+       * were reset, see migrations/0003) starts over with a new account.
+       */
       const read = (userId: string) =>
         Effect.gen(function*() {
           const now = yield* Clock.currentTimeMillis
-          const rows = yield* store.load(userId)
-          const record = fromRows(rows)
-          if (record === undefined) return yield* Effect.die(new Error(`No account for player ${userId}`))
+          let rows = yield* store.load(userId)
+          let record = fromRows(rows)
+          if (record === undefined) {
+            const fresh = toRows(userId, toRecord(createAccount(tuning, starter, userId, now)))
+            yield* store.save(userId, noRows, fresh)
+            rows = fresh
+            record = fromRows(rows)
+            if (record === undefined) return yield* Effect.die(new Error(`No account for player ${userId}`))
+          }
           return { now, rows, account: fromRecord(tuning, starter, record, now).account }
         })
 

@@ -9,7 +9,7 @@ import { Challenge, Flow, Game, Run, RunResult, Stats, Team, Time, Tuning, Waves
 import type { BuildValue, RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
 
 /** The challenge id the game starts with. */
-export const defaultChallenge = "endless" as const
+export const defaultChallenge = "gauntlet3" as const
 
 /** Whether `objective` is met, given the waves so far. */
 export const objectiveMet = (objective: Objective, waves: WavesValue): boolean => {

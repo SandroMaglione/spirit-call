@@ -75,7 +75,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           </div>
         </>}
       </>}
-      {canContinue && next?.kind === "quest" && <p class="results__next"><b>Next · {tuning.quests[next.quest].name}</b> {tuning.quests[next.quest].introduces.text}</p>}
+      {canContinue && next?.kind === "quest" && <p class="results__next"><b>Next · {tuning.quests[next.quest].name}</b> {tuning.quests[next.quest].introduces?.text}</p>}
       <footer class="results__actions">
         <RoundButton icon="home" tone="dark" label="Home" disabled={!enabled} onClick={() => open({ kind: "home" })} />
         {extra?.kind === "trial"

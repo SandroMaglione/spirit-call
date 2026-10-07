@@ -21,5 +21,5 @@ export interface StarterSet {
 export const newAccount: StarterSet = {
   characters: ["swordsman"],
   aspects: [],
-  selection: { character: "swordsman", quest: "theSwarm" }
+  selection: { character: "swordsman", quest: "firstBlood" }
 }

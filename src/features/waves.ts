@@ -15,8 +15,8 @@
  * champion has fallen too.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { elite, entryChampion, entryElite, entryKind } from "../content/challenges.ts"
-import type { EliteElement, WaveEntry, WavePlan } from "../content/challenges.ts"
+import { elite, entryChampion, entryElite, entryKind, entryShield } from "../content/challenges.ts"
+import type { WaveEntry, WavePlan } from "../content/challenges.ts"
 import { Random } from "../math/rng.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox } from "../physics/collide.ts"
@@ -31,8 +31,6 @@ export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, p
 /** Whether `plan` has a wave `number` (from 1). */
 export const hasWave = (plan: WavePlan, number: number): boolean => plan.endless !== null || number <= plan.scripted.length
 
-const eliteElements: ReadonlyArray<EliteElement> = ["fire", "water", "thunder"]
-
 /** The share of an endless wave's slots that are elites (see `Tuning.elites.endless`). */
 const eliteChance = (tuning: TuningValue, number: number): number => {
   const rules = tuning.elites.endless
@@ -43,15 +41,17 @@ const eliteChance = (tuning: TuningValue, number: number): number => {
 export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random): Array<WaveEntry> => {
   const scripted = plan.scripted[number - 1]
   if (scripted !== undefined || plan.endless === null) return [...(scripted ?? [])]
-  const kinds = (Object.keys(tuning.enemies) as Array<EnemyKind>).filter((kind) => tuning.enemies[kind].cost > 0)
+  // Only what the main line has introduced by then (see `EndlessWaves`).
+  const kinds = plan.endless.kinds.filter((kind) => tuning.enemies[kind].cost > 0)
+  const elites = plan.endless.elites
   let budget = plan.endless.baseBudget + plan.endless.budgetPerWave * (number - 1)
-  const chance = eliteChance(tuning, number)
+  const chance = elites.length === 0 ? 0 : eliteChance(tuning, number)
   const wave: Array<WaveEntry> = []
   for (;;) {
     const affordable = kinds.filter((kind) => tuning.enemies[kind].cost <= budget)
     if (affordable.length === 0) break
     const kind = random.pick(affordable)
-    wave.push(chance > 0 && random.next() < chance ? elite(kind, random.pick(eliteElements)) : kind)
+    wave.push(chance > 0 && random.next() < chance ? elite(kind, random.pick(elites)) : kind)
     budget -= tuning.enemies[kind].cost
   }
   return wave
@@ -177,7 +177,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       while (timer <= 0 && queue.length > 0) {
         const entry = queue.shift()!
         const kind = entryKind(entry)
-        const spawns = makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry), entryChampion(entry))
+        const spawns = makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry), entryChampion(entry), entryShield(entry))
         for (const spawn of spawns) commands.spawnIn(RunScope, spawn)
         if (!entryChampion(entry)) size += spawns.length
         timer += tuning.waves.spawnInterval

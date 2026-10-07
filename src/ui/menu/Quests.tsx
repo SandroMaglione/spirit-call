@@ -12,11 +12,16 @@ import { clearPay, encounterOf, groupStars, materialPay, nextReset, playLock, qu
 import type { ChestRef, Play } from "../../account/account.ts"
 import type { StarGroup } from "../../content/quests.ts"
 import { describeGoal } from "../../content/stars.ts"
+import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
+import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
+import type { Novelty } from "../../content/novelties.ts"
+import { Face } from "../kit/art.tsx"
 import type { CharacterId } from "../../content/characters.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import type { TrackId } from "../../content/hardcore.ts"
 import { challengeEnemies, describeLock, describeObjective, describePlay, describeTimeUntil } from "../describe.ts"
 import { Icon } from "../Icon.tsx"
+import type { IconName } from "../Icon.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Bar, Label, Panel, Row } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
@@ -114,16 +119,49 @@ const TrackList = ({ store, play, now }: { readonly store: UiStore; readonly pla
       const best = Math.max(0, ...spec.tiers.map((_, index) => tierProgress(account, track, index + 1)?.bestWave ?? 0))
       const done = spec.tiers.filter((_, index) => cleared(store, { kind: "tier", track, tier: index + 1 })).length
       return <Row key={track} tall selected={play.value.kind === "tier" && play.value.track === track} locked={lock !== null} onClick={() => (play.value = open(track))}
-        end={lock !== null ? <Icon name="lock" /> : tuning.challenges[spec.challenge].objective.kind === "endure" && best > 0 ? `Best wave ${best}` : `${done} / ${spec.tiers.length}`}>{spec.name}</Row>
+        end={lock !== null ? <Icon name="lock" /> : tuning.challenges[spec.tiers[0]!.challenge].objective.kind === "endure" && best > 0 ? `Best wave ${best}` : `${done} / ${spec.tiers.length}`}>{spec.name}</Row>
     })}
   </>
+}
+
+/** The first wave entry of `challenge` that shows `novelty` (the enemy that carries it), for its picture. */
+const carrierOf = (challenge: ChallengeSpec, novelty: Novelty): WaveEntry | undefined => {
+  const entries = challenge.waves.scripted.flat()
+  switch (novelty.kind) {
+    case "enemy":
+      return entries.find((entry) => entryKind(entry) === novelty.enemy)
+    case "champion":
+      return entries.find((entry) => entryChampion(entry) && entryKind(entry) === novelty.enemy)
+    case "elites":
+      return entries.find((entry) => !entryChampion(entry) && entryElite(entry) !== null)
+    case "shield":
+      return entries.find(entryShield)
+    case "hazard":
+      return undefined
+  }
+}
+
+/** A main quest's one new thing, first in its brief: its picture (the enemy that shows it, or its floor's element) beside its line; tap the enemy to read about it. */
+const NewThing = ({ store, challenge, novelty, text, inspect }: { readonly store: UiStore; readonly challenge: ChallengeId; readonly novelty: Novelty; readonly text: string; readonly inspect: (kind: EnemyKind) => void }) => {
+  const carrier = carrierOf(store.tuning.value.challenges[challenge], novelty)
+  const tint = novelty.kind === "hazard" ? novelty.element : carrier === undefined ? undefined : entryElite(carrier) ?? undefined
+  const badge: IconName | null = novelty.kind === "hazard" ? novelty.element : novelty.kind === "elites" ? novelty.elements[0] ?? null : novelty.kind === "shield" ? "def" : novelty.kind === "champion" ? "star" : null
+  return <div class="novelty">
+    {carrier !== undefined
+      ? <button type="button" class="novelty__art face-button" aria-label={store.tuning.value.enemies[entryKind(carrier)].name} onClick={() => inspect(entryKind(carrier))}><Face of={{ enemy: entryKind(carrier) }} tint={tint} size={46} /></button>
+      : <span class="novelty__art novelty__floor" data-tint={tint ?? ""}><Icon name={badge ?? "info"} /></span>}
+    <div>
+      <Label>New{novelty.kind === "elites" ? <> · {novelty.elements.map((element) => <Icon key={element} name={element} />)}</> : badge !== null && carrier !== undefined ? <> · <Icon name={badge} /></> : null}</Label>
+      <p>{text}</p>
+    </div>
+  </div>
 }
 
 /**
  * What `play` is, most wanted first: its ranks or tiers (each with its
  * enemies' level), its stars beside what it gives, then its enemies over
- * what they are weak to (tap one to read about it). What is new in a quest
- * is the head's second line.
+ * what they are weak to (tap one to read about it). What is new in a main
+ * quest comes first, with its picture.
  */
 const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly nav: Nav; readonly play: Signal<Play>; readonly now: number }) => {
   const inspected = useSignal<EnemyKind | null>(null)
@@ -146,9 +184,10 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
     : selected.kind === "tier" && tierRewardsAvailable(tuning, account, selected.track, selected.tier, now) ? { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards, experience: 0, unlocks: [] } : "restocking"
   return <Panel class="quests__brief in-right"
     title={selected.kind === "quest" ? tuning.quests[selected.quest].name : tuning.tracks[selected.track].name}
-    subtitle={quest !== null ? <>New · {quest.introduces.text}</> : undefined}
+    subtitle={quest !== null && quest.introduces === null ? "Side quest · what you have met, mixed" : undefined}
     detail={describeObjective(challenge.objective, challenge.waves.scripted.length)}
     note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
+    {quest?.introduces != null && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
     {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" ? "Rank" : "Tier"}>
       <Label>{selected.kind === "quest" ? "Rank" : "Tier"}</Label>
       {steps.map((step) => {
