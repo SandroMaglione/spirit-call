@@ -30,6 +30,10 @@ import type { RunResultValue } from "../src/schema.ts"
 export interface ProgressionOptions {
   readonly calls: boolean
   readonly runsPerWeek: number
+  /** How many levels below a quest's enemies the team goes in (a skilled player; negative waits above them), and in hardcore. 0 by default. */
+  readonly levelsAhead?: number
+  /** The share of runs lost (each paying its half-way progress), spread evenly over every kind of run. 0 by default. */
+  readonly lost?: number
   /** Told of every step the account takes, to follow it run by run (see tools/progress); it only reads. */
   readonly observe?: (step: ProgressionStep) => void
 }
@@ -98,8 +102,13 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
     return tally as Tally
   }
 
-  const clear = (target: Play, tally: Tally = noTally, wave = 8, counted = false) => {
-    const result = { cleared: true, progress: 1, team: team(), reactions: [], tally, challenge: encounterOf(tuning, target).challenge, wave, kills: 30, time: 200 } as RunResultValue
+  const ahead = options.levelsAhead ?? 0
+  // Losses owed before the next clear, so that a share `lost` of all runs are lost.
+  const lossesPerClear = Math.min(0.95, Math.max(0, options.lost ?? 0)) / (1 - Math.min(0.95, Math.max(0, options.lost ?? 0)))
+  let owed = 0
+
+  const clear = (target: Play, tally: Tally = noTally, wave = 8, counted = false, won = true) => {
+    const result = { cleared: won, progress: won ? 1 : 0.5, team: team(), reactions: [], tally, challenge: encounterOf(tuning, target).challenge, wave: won ? wave : wave / 2, kills: 30, time: 200 } as RunResultValue
     const recorded = recordRun(tuning, account, target, result, now)
     account = recorded.account
     options.observe?.({ kind: "run", play: target, earned: recorded.earned, account, runs: runs + (counted ? 1 : 0), counted })
@@ -111,16 +120,23 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
       if (tuning.tracks[track].kind !== "hardcore") continue
       tuning.tracks[track].tiers.forEach((tier, index) => {
         const target: Play = { kind: "tier", track, tier: index + 1 }
-        if (tier.enemyLevel <= average() + tierReach && playLock(tuning, account, target) === null) clear(target, noTally, 10)
+        if (tier.enemyLevel <= average() + tierReach + ahead && playLock(tuning, account, target) === null) clear(target, noTally, 10)
       })
     }
   }
 
-  const play = (target: Play, tally: Tally = noTally) => {
-    clear(target, tally, 8, true)
+  /** One run played: lost (paying its share) or cleared; a week's runs bring a hardcore week. */
+  const once = (target: Play, tally: Tally, won: boolean) => {
+    clear(target, tally, 8, true, won)
     runs += 1
     now += (7 * 24 * 60 * 60 * 1000) / options.runsPerWeek
     if (runs % options.runsPerWeek === 0) hardcoreWeek()
+  }
+
+  const play = (target: Play, tally: Tally = noTally) => {
+    owed += lossesPerClear
+    for (; owed >= 1; owed -= 1) once(target, noTally, false)
+    once(target, tally, true)
   }
 
   /** Trains the team evenly (the lowest first) with the gold held, ascending whoever stands at a step and can. */
@@ -164,7 +180,7 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
     spend()
     let farmed = 0, trial = 0
     const walls = new Set<CharacterId>()
-    while (average() < Math.min(enemyLevel, tuning.progression.character.curve.maxLevel) && farmed < 400) {
+    while (average() < Math.min(enemyLevel - ahead, tuning.progression.character.curve.maxLevel) && farmed < 400) {
       // Someone waiting at a step for her material (with the gold for it) farms her element's trial; otherwise the best quest cleared, for gold.
       const waiting = team().find((character) => {
         const step = ascensionStep(tuning, account, character)
