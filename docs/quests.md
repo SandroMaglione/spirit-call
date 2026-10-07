@@ -27,16 +27,18 @@ The main line is written for the team a new account has by then: chapter 1
 for the Swordsman alone (three quests, so the second character comes
 soon), then a character more at the end of chapters 1 and 3, and whoever
 the Spirit Call brings from the end of chapter 1. Each chapter ends with a
-champion, a different kind each time.
+champion, a different kind each time, and unlocks one thing at most: a
+character at the end of chapters 1 and 3, an aspect at the end of 2, 4,
+and 6.
 
 | Chapter | Team | Enemy levels | Each quest's new thing | At its end |
 |---|---|---|---|---|
 | 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Gunner; the Spirit Call opens |
-| 2 · Embers | + Gunner | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | |
+| 2 · Embers | + Gunner | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist) |
 | 3 · Gathering Storm | 2 + calls | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | the Tidecaller |
-| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | |
+| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Marksman) |
 | 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | |
-| 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | |
+| 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | an aspect (Riptide) |
 
 A quest's material is an element the team owns by then (wind in chapter 1),
 so early clears pay for the characters the player has.

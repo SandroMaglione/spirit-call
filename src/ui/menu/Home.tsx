@@ -37,7 +37,6 @@ export const Home = ({ store, nav, leader, play, enter }: {
   const now = Date.now(), canCall = callProblem(tuning, account, activeBanner(tuning, now).banner, now) === null && callsHeld(tuning, account) > 0
   const places: { readonly [Id in string]: Place } = {
     characters: { kind: "character", character: leader, tab: "overview" },
-    party: { kind: "team" },
     challenges: { kind: "quests", tab: play.kind === "tier" ? (tuning.tracks[play.track].kind === "trial" ? "trials" : "hardcore") : tuning.quests[play.quest].line },
     call: { kind: "call", tab: "banner" },
     inventory: { kind: "inventory" },
@@ -56,7 +55,6 @@ export const Home = ({ store, nav, leader, play, enter }: {
     </header>
     <SideTabs label="Menu" onChange={(id) => nav.go(places[id]!)} tabs={[
       { id: "characters", label: "Characters", badge: canTrain },
-      { id: "party", label: "Party" },
       { id: "challenges", label: "Challenges" },
       { id: "call", label: "Spirit Call", badge: canCall },
       { id: "inventory", label: "Inventory" },

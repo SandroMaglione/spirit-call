@@ -8,7 +8,8 @@
  *
  * The main line is written for the team a new account has by then (see
  * docs/quests.md, "Chapters"): chapter one for the Swordsman alone, then a
- * character more at the end of chapters one and three. Each main quest
+ * character more at the end of chapters one and three, and an aspect at the
+ * end of chapters two, four, and six: one unlock per chapter at most. Each main quest
  * brings one new thing (see `content/novelties.ts`); side quests mix what
  * the main line has brought by the quest they come after.
  *
@@ -138,7 +139,7 @@ export const quests = {
     after: "firstBlood",
     introduces: brings("Shooters: they keep away and shoot ahead of you. Close the distance", enemy("shooter")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 5)],
-    rewards: pays(90, 100, 350, [aspect("duelist")])
+    rewards: pays(90, 100, 350)
   }),
   packLeader: quest({
     name: "The Pack Leader",
@@ -151,7 +152,7 @@ export const quests = {
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
     stars: [cleared(), atLeast("breaks", 2), atMost("hitsTaken", 7)],
-    rewards: pays(140, 150, 700, [character("gunner"), aspect("marksman")])
+    rewards: pays(140, 150, 700, [character("gunner")])
   }),
 
   // Chapter 2: the Swordsman and the Gunner.
@@ -205,7 +206,7 @@ export const quests = {
     after: "ironGuard",
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 8)],
-    rewards: pays(220, 150, 1750)
+    rewards: pays(220, 150, 1750, [aspect("duelist")])
   }),
 
   // Chapter 3: two characters, and whoever the Spirit Call brings.
@@ -259,7 +260,7 @@ export const quests = {
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 8)],
-    rewards: pays(300, 200, 5000, [character("tidecaller"), aspect("riptide")])
+    rewards: pays(300, 200, 5000, [character("tidecaller")])
   }),
 
   // Chapter 4: three characters.
@@ -313,7 +314,7 @@ export const quests = {
     after: "shieldWall",
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 13)],
-    rewards: pays(380, 200, 6300)
+    rewards: pays(380, 200, 6300, [aspect("marksman")])
   }),
 
   // Chapter 5.
@@ -421,7 +422,7 @@ export const quests = {
     after: "galeForce",
     introduces: brings("A burning champion juggernaut, armored until broken", champion("juggernaut")),
     stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 10)],
-    rewards: pays(560, 250, 12600)
+    rewards: pays(560, 250, 12600, [aspect("riptide")])
   }),
 
   // Side quests: each opens after a chapter's last quest and mixes what the main line has brought by then.

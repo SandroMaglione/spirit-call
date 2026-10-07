@@ -47,10 +47,10 @@ export const CharacterCard = ({ store, character, mark, selected, fresh, foot, o
   return <Card art={<Portrait of={{ character }} />} foot={foot ?? (owned ? `Lv ${characterLevel(tuning, account, character).level}` : <Icon name="lock" />)} tint={element} corner={element} mark={mark} selected={selected ?? false} fresh={fresh ?? false} locked={!owned && foot === undefined} label={tuning.characters[character].name} onClick={onClick} />
 }
 
-/** An enemy as a card: its portrait, its name at the foot. */
-export const EnemyCard = ({ store, kind, mark, selected, size, onClick }: {
-  readonly store: UiStore; readonly kind: EnemyKind; readonly mark?: "tick" | undefined; readonly selected?: boolean; readonly size?: "small"; readonly onClick?: (() => void) | undefined
-}) => <Card art={<Portrait of={{ enemy: kind }} />} foot={store.tuning.value.enemies[kind].name} mark={mark} selected={selected ?? false} {...(size === undefined ? {} : { size })} label={store.tuning.value.enemies[kind].name} onClick={onClick} />
+/** An enemy as a card: its portrait, its name at the foot (a lock when not met yet). */
+export const EnemyCard = ({ store, kind, mark, selected, size, locked = false, onClick }: {
+  readonly store: UiStore; readonly kind: EnemyKind; readonly mark?: "tick" | undefined; readonly selected?: boolean; readonly size?: "small"; readonly locked?: boolean; readonly onClick?: (() => void) | undefined
+}) => <Card art={<Portrait of={{ enemy: kind }} />} foot={locked ? <Icon name="lock" /> : store.tuning.value.enemies[kind].name} mark={mark} selected={selected ?? false} locked={locked} {...(size === undefined ? {} : { size })} label={store.tuning.value.enemies[kind].name} onClick={onClick} />
 
 /** An enemy's affinities as element icons, what it is weak to first; one it resists is struck out, one it is immune to crossed out. */
 export const Affinities = ({ traits }: { readonly traits: Traits }) => (
