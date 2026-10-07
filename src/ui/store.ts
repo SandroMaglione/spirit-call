@@ -80,6 +80,8 @@ export interface UiStore {
   readonly callReveal: Signal<CallReveal | null>
   /** The menu's sky while the seal shows: plain stone, or an element's (a character arriving); `null` when the menu decides (see `menuElement`). */
   readonly sky: Signal<ElementId | "plain" | null>
+  /** A character stands in the seal's reveal: her rays turn in the backdrop, behind her model (the UI's layer is over the models). */
+  readonly rays: Signal<boolean>
 }
 
 export interface Sound {
@@ -122,7 +124,8 @@ export const createUiStore = (initial: {
   practicePicks: signal({ kinds: [], elites: false }),
   menuOpens: signal(null),
   callReveal: signal(null),
-  sky: signal(null)
+  sky: signal(null),
+  rays: signal(false)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")

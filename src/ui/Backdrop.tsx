@@ -34,5 +34,7 @@ export const Backdrop = ({ store }: { readonly store: UiStore }) => {
     <div class="backdrop__light" />
     <div class="backdrop__pool" />
     <div class="backdrop__motes">{motes.map((style, i) => <i key={i} style={style} />)}</div>
+    {/* A character arriving at the Spirit Call: her rays turn here, behind her model (the UI is drawn over the models). */}
+    {!over && store.rays.value && <div class="reveal__rays" />}
   </div>
 }
