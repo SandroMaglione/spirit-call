@@ -110,6 +110,23 @@ guesses (`src/server/logs.ts`, migration `0002_logs.sql`):
 and how the skills did; `--since`, `--quest`, `--events`, and `--json` for
 the full data.
 
+`pnpm db` reads them for every player at once, straight from the database,
+with a read-only key (see `scripts/db.ts`):
+
+- **The key** is a Cloudflare token allowed only to read D1, made by
+  `deploy/stacks/reader.ts` from a laptop with the admin profile and saved
+  to `.env.database` (gitignored, readable by its owner only). Writes are
+  refused by Cloudflare. Destroying the stack revokes it.
+- **What it shows:** `players` (who plays, how much, last seen),
+  `summary` (per quest and rank: tries, clear rate, hits, clear time, the
+  wave lost at), `runs`, `run <id>` (one run in full), `hurts` (what hurts
+  teams most, and what makes them fall), `events` (what accounts gained
+  and spent), and `sql` for any other read query. `--since 2d`,
+  `--player`, `--quest` narrow it down; test accounts (`check…`, `probe…`)
+  are left out unless `--tests`.
+- **Login secrets are never read:** no command selects password hashes or
+  sessions, and `sql` refuses queries naming them.
+
 ## On a laptop
 
 `pnpm dev` answers `/api` with the same server over a SQLite file

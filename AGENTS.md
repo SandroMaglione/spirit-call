@@ -46,6 +46,10 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   gains and spending; logs in as the player (`RUNS_URL`, `RUNS_USERNAME`,
   `RUNS_PASSWORD`, or `.env.runs`). Tune against these (see
   `docs/server.md`).
+- `pnpm db`: every player's runs and account changes, read from the
+  database with the read-only key in `.env.database` (made by
+  `deploy/stacks/reader.ts`): `players`, `summary`, `runs`, `run <id>`,
+  `hurts`, `events`, `sql` (see `docs/server.md`, "Measuring play").
 - `pnpm calls`: the Spirit Call's pace (when characters come from calls
   along the quest line; see `docs/calls.md`). Run it after changing crystal
   rewards or call numbers.
