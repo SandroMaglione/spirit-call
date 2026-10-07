@@ -365,8 +365,24 @@ export const defaultTuning = {
     speed: 1.2,
     cooldown: 0.6,
     knockback: 0.45,
-    poise: 0.35
+    poise: 0.35,
+    /**
+     * A champion grows with the main line: at enemy level `early.level`
+     * (chapter one's) it has `early`'s health, ATK, and wait between
+     * attacks, and the numbers above from level `fullAt` on, in a straight
+     * line between (see `championPower`).
+     */
+    early: { level: 5, health: 4, atk: 1.15, cooldown: 1 },
+    fullAt: 30
   },
+
+  /**
+   * Low levels breathe: an enemy of level 1 waits `restAtFirst` times as long
+   * between its attacks, easing to its kind's own wait by level `fullAt`
+   * (see `restOf`). Only the waits: windups, reach, health, and damage are
+   * its kind's at every level.
+   */
+  pacing: { restAtFirst: 1.25, fullAt: 10 },
 
   flow: {
     /** Time on the game-over screen before restart input is accepted. */

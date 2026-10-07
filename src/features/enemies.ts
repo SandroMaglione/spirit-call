@@ -65,6 +65,26 @@ export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number):
   return { hp: Math.round(spec.hp * scaled), atk: Math.round(spec.atk * scaled), def: Math.round(spec.def * scaled), speed: spec.speed }
 }
 
+/** Where `level` stands between `from` and `to`: 0 at or below `from`, 1 at or above `to`. */
+const along = (level: number, from: number, to: number): number => Math.min(1, Math.max(0, (level - from) / Math.max(1, to - from)))
+
+/**
+ * A champion's health, ATK, and wait between attacks (as multiples of its
+ * kind's) at enemy `level`: chapter one's champion is a first taste, and
+ * they grow to `Tuning.champions`' numbers along the main line.
+ */
+export const championPower = (tuning: TuningValue, level: number): { readonly health: number; readonly atk: number; readonly cooldown: number } => {
+  const rules = tuning.champions, early = rules.early, t = along(level, early.level, rules.fullAt)
+  return { health: early.health + (rules.health - early.health) * t, atk: early.atk + (rules.atk - early.atk) * t, cooldown: early.cooldown + (rules.cooldown - early.cooldown) * t }
+}
+
+/** How much longer than its kind an enemy of `level` waits between attacks (see `Tuning.pacing`), a champion's own wait included. */
+export const restOf = (tuning: TuningValue, level: number, champion: boolean): number => {
+  const pacing = tuning.pacing
+  const early = 1 + (pacing.restAtFirst - 1) * (1 - along(level, 1, pacing.fullAt))
+  return early * (champion ? championPower(tuning, level).cooldown : 1)
+}
+
 /**
  * An enemy of `kind` at `level` (see `EnemyLevel`); an elite one (see
  * `Tuning.elites`) when `elite` names its element: bigger, tougher, immune
@@ -76,15 +96,16 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const stats = tuning.enemies[kind]
   const base = enemyStats(tuning, kind, level)
   const lead = champion && elite !== null ? tuning.champions : null
-  const hp = elite === null ? base.hp : Math.round(base.hp * (lead?.health ?? tuning.elites.health))
-  const atk = lead === null ? base.atk : Math.round(base.atk * lead.atk)
+  const power = lead === null ? null : championPower(tuning, level)
+  const hp = elite === null ? base.hp : Math.round(base.hp * (power?.health ?? tuning.elites.health))
+  const atk = power === null ? base.atk : Math.round(base.atk * power.atk)
   const speed = lead === null ? base.speed : base.speed * lead.speed
   const { def } = base
   const size = elite === null ? 1 : lead?.scale ?? tuning.elites.scale
   const affinities = elite === null ? stats.elements : { ...stats.elements, [elite]: "immune" as const }
   const body = Game.Command.insert(
     makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius * size, hurtboxRadius: stats.hurtboxRadius * size, affinities }),
-    [Enemy, { kind, champion: lead !== null }],
+    [Enemy, { kind, champion: lead !== null, rest: restOf(tuning, level, lead !== null) }],
     [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0, pressedAt: at, stuck: 0, unstick: null }],
