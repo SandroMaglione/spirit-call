@@ -18,6 +18,7 @@
     "progression": "node --import tsx scripts/progression.ts",
     "expected": "node --import tsx scripts/expected.ts",
     "runs": "node --import tsx scripts/runs.ts",
+    "db": "node --import tsx scripts/db.ts",
     "balance": "node --import tsx scripts/balance.ts",
     "shot": "node --import tsx scripts/screenshot.ts",
     "effect-source": "node scripts/effect-source.ts"

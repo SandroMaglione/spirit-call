@@ -5,3 +5,4 @@ dist
 .repos
 .data
 .env.runs
+.env.database
