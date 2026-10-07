@@ -63,7 +63,7 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `/tools/progress/` on the dev server: the player-journey report (dev only,
   never built). It plays a new account through `test/progression-model.ts`
-  and charts levels, farming, gold, crystals, and essences over the weeks;
+  and charts levels, farming, gold, crystals, and essences over hours played;
   the numbers on its left are editable (a tuning patch, never content), with
   the shipped journey drawn behind.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,

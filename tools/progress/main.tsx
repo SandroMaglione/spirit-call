@@ -28,7 +28,7 @@ const rankColor = (rank: number) => `var(--rank${Math.min(rank, 3)})`
 
 const compact = (value: number): string =>
   Math.abs(value) >= 1e6 ? `${(value / 1e6).toFixed(value >= 1e7 ? 0 : 1)}M` : Math.abs(value) >= 1e4 ? `${Math.round(value / 1e3)}k` : Math.abs(value) >= 1e3 ? `${(value / 1e3).toFixed(1)}k` : `${Math.round(value * 100) / 100}`
-const weeks = (value: number) => `wk ${value.toFixed(value < 10 ? 1 : 0)}`
+const hours = (value: number) => `${value.toFixed(value < 10 ? 1 : 0)} h`
 
 /** The knob values and play options in the address, so a reload or a shared link keeps them. */
 const fromHash = (): { values: Values; play: PlayOptions } => {
@@ -68,6 +68,7 @@ const summary = (journey: Journey) => {
   return {
     runs: journey.runs,
     weeks: journey.weeks,
+    hours: journey.hours,
     farmed: journey.rows.reduce((total, row) => total + row.farmed, 0),
     gold: sum(last?.gold),
     crystals: sum(last?.crystals),
@@ -80,7 +81,7 @@ const Sidebar = (props: { readonly values: Values; readonly play: PlayOptions; r
   const groups = [...new Set(knobs.map((knob) => knob.group))]
   const [copied, setCopied] = useState(false)
   const patchText = JSON.stringify(props.patch, null, 2)
-  const changed = Object.keys(props.values).length > 0 || props.play.runsPerWeek !== defaultPlay.runsPerWeek || props.play.calls !== defaultPlay.calls
+  const changed = Object.keys(props.values).length > 0 || JSON.stringify(props.play) !== JSON.stringify(defaultPlay)
   return (
     <aside class="sidebar">
       <div class="sidebar-head">
@@ -89,7 +90,15 @@ const Sidebar = (props: { readonly values: Values; readonly play: PlayOptions; r
       </div>
       <section>
         <h4>Player</h4>
-        <label class={props.play.runsPerWeek !== defaultPlay.runsPerWeek ? "knob changed" : "knob"} title="How many runs the player plays a week: turns runs into weeks, and paces the weekly hardcore rewards.">
+        <label class={props.play.minutesPerRun !== defaultPlay.minutesPerRun ? "knob changed" : "knob"} title="How long a run takes with its menus: turns runs into hours played.">
+          <span class="knob-label">Minutes a run</span>
+          <input type="number" min="0.5" step="0.5" value={props.play.minutesPerRun} onInput={(event) => {
+            const value = Number((event.currentTarget as HTMLInputElement).value)
+            if (Number.isFinite(value) && value > 0) props.setPlay({ ...props.play, minutesPerRun: value })
+          }} />
+          <span class="knob-default">shipped {defaultPlay.minutesPerRun}</span>
+        </label>
+        <label class={props.play.runsPerWeek !== defaultPlay.runsPerWeek ? "knob changed" : "knob"} title="How many runs the player plays a week: paces the weekly hardcore rewards (more weeks, more of them).">
           <span class="knob-label">Runs a week</span>
           <input type="number" min="1" step="5" value={props.play.runsPerWeek} onInput={(event) => {
             const value = Number((event.currentTarget as HTMLInputElement).value)
@@ -158,12 +167,10 @@ const App = () => {
   const journey = useMemo(() => journeyOf(tuning, play), [tuning, play])
   const problems = useMemo(() => (Object.keys(values).length === 0 ? [] : validateContent(tuning)), [tuning, values])
   const now = summary(journey), before = summary(shipped)
-  const week = (run: number) => run / play.runsPerWeek
-  const shippedWeek = (run: number) => run / defaultPlay.runsPerWeek
   const price = tuning.calls.price.crystals ?? 1
 
   const rankDone: ReadonlyArray<Marker> = Array.from({ length: tuning.ranks.count }, (_, index) => journey.rows.findLast((row) => row.rank === index + 1))
-    .flatMap((row, index) => (row === undefined ? [] : [{ x: week(row.runs), label: `rank ${index + 1} done` }]))
+    .flatMap((row, index) => (row === undefined ? [] : [{ x: journey.hoursAt(row.runs), label: `rank ${index + 1} done` }]))
   const characters = journey.arrivals.map((arrival) => arrival.character)
   const levelLines: ReadonlyArray<Series> = [
     ...characters.map((character: CharacterId): Series => ({
@@ -171,13 +178,13 @@ const App = () => {
       label: tuning.characters[character].name,
       color: elementColor(tuning.characters[character].element),
       step: true,
-      points: journey.moments.flatMap((moment): Array<Point> => (moment.levels[character] === undefined ? [] : [[moment.week, moment.levels[character]]]))
+      points: journey.moments.flatMap((moment): Array<Point> => (moment.levels[character] === undefined ? [] : [[moment.hours, moment.levels[character]]]))
     })),
-    { id: "enemies", label: "Quest enemies", color: "var(--ink-2)", dashed: true, step: true, points: journey.rows.map((row): Point => [week(row.runs - 1), row.enemyLevel]) }
+    { id: "enemies", label: "Quest enemies", color: "var(--ink-2)", dashed: true, step: true, points: journey.rows.map((row): Point => [journey.hoursAt(row.runs - 1), row.enemyLevel]) }
   ]
   const totalOf = (by: Record<string, number>) => Object.values(by).reduce((sum, value) => sum + value, 0)
   const stackOf = (pick: (moment: Moment) => Record<string, number>): ReadonlyArray<Series> =>
-    sources.map((source, index) => ({ id: source, label: sourceNames[source], color: sourceColor(index), points: journey.moments.map((moment): Point => [moment.week, pick(moment)[source] ?? 0]) }))
+    sources.map((source, index) => ({ id: source, label: sourceNames[source], color: sourceColor(index), points: journey.moments.map((moment): Point => [moment.hours, pick(moment)[source] ?? 0]) }))
       .filter((series) => series.points.some(([, y]) => y > 0))
   const strength = (each: Tuning): ReadonlyArray<Point> =>
     Array.from({ length: each.progression.character.curve.maxLevel }, (_, index): Point => [index + 1, levelScale(each.progression.stats, index + 1)])
@@ -193,7 +200,7 @@ const App = () => {
         `${questLabel(tuning, row.quest, row.rank)} (enemy level ${row.enemyLevel})`,
         `${row.trial} of them in a trial, for essences`,
         `Team entering: ${row.team.map((member) => `${tuning.characters[member.character].name} ${member.level}`).join(", ")}`,
-        `Cleared at ${weeks(week(row.runs))}${row.walls.length > 0 ? ` · waited with no trial: ${row.walls.map((id) => tuning.characters[id].name).join(", ")}` : ""}`
+        `Cleared at ${hours(journey.hoursAt(row.runs))} played${row.walls.length > 0 ? ` · waited with no trial: ${row.walls.map((id) => tuning.characters[id].name).join(", ")}` : ""}`
       ]
     }
   })
@@ -219,7 +226,7 @@ const App = () => {
           )}
         </header>
         <div class="tiles">
-          <Tile label="Everything cleared" value={weeks(now.weeks)} sub={`${now.runs} runs at ${play.runsPerWeek} a week`} now={now.runs} shipped={before.runs} format={(value) => `${Math.round(value)} runs`} />
+          <Tile label="Everything cleared" value={hours(now.hours)} sub={`${now.runs} runs (plus hardcore) · ${now.weeks.toFixed(1)} weeks at ${play.runsPerWeek} runs`} now={now.hours} shipped={before.hours} format={hours} />
           <Tile label="Runs farming" value={`${now.farmed}`} sub={`${Math.round((now.farmed / Math.max(1, now.runs)) * 100)}% of all runs`} now={now.farmed} shipped={before.farmed} format={(value) => `${Math.round(value)}`} />
           <Tile label="Gold earned" value={compact(now.gold)} now={now.gold} shipped={before.gold} format={compact} />
           <Tile label="Crystals earned" value={compact(now.crystals)} sub={`${Math.floor(now.crystals / price)} calls`} now={now.crystals} shipped={before.crystals} format={compact} />
@@ -230,10 +237,10 @@ const App = () => {
             title="Character levels"
             note="Each character's level as she is trained, against the enemy level of the main quest she enters next."
             lines={levelLines}
-            ghosts={[{ id: "shipped", label: "Team average (shipped)", color: "var(--ghost)", step: true, points: shipped.moments.map((moment): Point => [shippedWeek(moment.run), teamAverage(moment)]) }]}
+            ghosts={[{ id: "shipped", label: "Team average (shipped)", color: "var(--ghost)", step: true, points: shipped.moments.map((moment): Point => [moment.hours, teamAverage(moment)]) }]}
             markers={rankDone}
-            xTitle={`Weeks, at ${play.runsPerWeek} runs a week`}
-            formatX={weeks}
+            xTitle={`Hours played, at ${play.minutesPerRun} minutes a run`}
+            formatX={hours}
             formatY={(value) => `${Math.round(value)}`}
           />
           <Bars
@@ -248,34 +255,34 @@ const App = () => {
             title="Gold earned, by source"
             note="Gold earned so far, stacked by where it came from, and what training and ascending spent."
             stack={stackOf((moment) => moment.gold)}
-            lines={[{ id: "spent", label: "Spent", color: "var(--ink-1)", dashed: true, points: journey.moments.map((moment): Point => [moment.week, moment.goldSpent]) }]}
-            ghosts={[{ id: "shipped", label: "Earned (shipped)", color: "var(--ghost)", points: shipped.moments.map((moment): Point => [shippedWeek(moment.run), totalOf(moment.gold)]) }]}
+            lines={[{ id: "spent", label: "Spent", color: "var(--ink-1)", dashed: true, points: journey.moments.map((moment): Point => [moment.hours, moment.goldSpent]) }]}
+            ghosts={[{ id: "shipped", label: "Earned (shipped)", color: "var(--ghost)", points: shipped.moments.map((moment): Point => [moment.hours, totalOf(moment.gold)]) }]}
             markers={rankDone}
-            xTitle={`Weeks, at ${play.runsPerWeek} runs a week`}
-            formatX={weeks}
+            xTitle={`Hours played, at ${play.minutesPerRun} minutes a run`}
+            formatX={hours}
             formatY={compact}
           />
           <Chart
             title="Crystals earned, by source"
             note={`Crystals earned so far (never spent here), stacked by source. A call costs ${price}.`}
             stack={stackOf((moment) => moment.crystals)}
-            ghosts={[{ id: "shipped", label: "Earned (shipped)", color: "var(--ghost)", points: shipped.moments.map((moment): Point => [shippedWeek(moment.run), totalOf(moment.crystals)]) }]}
+            ghosts={[{ id: "shipped", label: "Earned (shipped)", color: "var(--ghost)", points: shipped.moments.map((moment): Point => [moment.hours, totalOf(moment.crystals)]) }]}
             markers={rankDone}
-            xTitle={`Weeks, at ${play.runsPerWeek} runs a week`}
-            formatX={weeks}
+            xTitle={`Hours played, at ${play.minutesPerRun} minutes a run`}
+            formatX={hours}
             formatY={compact}
             extra={(x) => {
-              const moment = journey.moments.findLast((each) => each.week <= x + 1e-9)
+              const moment = journey.moments.findLast((each) => each.hours <= x + 1e-9)
               return moment === undefined ? null : `≈ ${Math.floor(totalOf(moment.crystals) / price)} calls`
             }}
           />
           <Chart
             title="Essences earned, by element"
             note={`Ascension materials earned so far. Steps cost ${tuning.materialRules.ascension.map((step) => `${compact(step.count)} at ${step.level}`).join(", ")}.`}
-            lines={elementOrder.map((element): Series => ({ id: element, label: elements[element].name, color: elementColor(element), points: journey.moments.map((moment): Point => [moment.week, moment.essences[element] ?? 0]) }))}
+            lines={elementOrder.map((element): Series => ({ id: element, label: elements[element].name, color: elementColor(element), points: journey.moments.map((moment): Point => [moment.hours, moment.essences[element] ?? 0]) }))}
             markers={rankDone}
-            xTitle={`Weeks, at ${play.runsPerWeek} runs a week`}
-            formatX={weeks}
+            xTitle={`Hours played, at ${play.minutesPerRun} minutes a run`}
+            formatX={hours}
             formatY={compact}
           />
           <Chart
@@ -296,7 +303,7 @@ const App = () => {
           <h3>Main quests, in the order played</h3>
           <table>
             <thead>
-              <tr><th>Quest</th><th>Chapter</th><th class="num">Enemies</th><th>Team entering</th><th class="num">Farmed (trial)</th><th class="num">Cleared at</th><th class="num">Gold held after</th><th>Flags</th></tr>
+              <tr><th>Quest</th><th>Chapter</th><th class="num">Enemies</th><th>Team entering</th><th class="num">Farmed (trial)</th><th class="num">Cleared at (played)</th><th class="num">Gold held after</th><th>Flags</th></tr>
             </thead>
             <tbody>
               {journey.rows.map((row) => {
@@ -309,7 +316,7 @@ const App = () => {
                     <td class="num">{row.enemyLevel}</td>
                     <td>{row.team.map((member) => `${tuning.characters[member.character].name} ${member.level}`).join(", ")}</td>
                     <td class="num">{row.farmed} ({row.trial}){old !== undefined && old.farmed !== row.farmed ? <span class="was"> was {old.farmed}</span> : null}</td>
-                    <td class="num">{weeks(week(row.runs))}{old !== undefined && old.runs !== row.runs ? <span class="was"> was {weeks(shippedWeek(old.runs))}</span> : null}</td>
+                    <td class="num">{hours(journey.hoursAt(row.runs))}{old !== undefined && old.runs !== row.runs ? <span class="was"> was {hours(shipped.hoursAt(old.runs))}</span> : null}</td>
                     <td class="num">{compact(row.gold)}</td>
                     <td>{[row.farmed >= farmFlag ? "FARM" : "", row.walls.length > 0 ? `WALL ${row.walls.map((id) => tuning.characters[id].name).join(" ")}` : ""].filter(Boolean).join(" ")}</td>
                   </tr>

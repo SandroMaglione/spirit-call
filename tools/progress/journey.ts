@@ -34,6 +34,9 @@ const none = (): BySource => ({ runPay: 0, firstClears: 0, chests: 0, weekly: 0,
 export interface Moment {
   readonly run: number
   readonly week: number
+  /** Every run played so far, the hardcore week's ones too, and the hours they took. */
+  readonly played: number
+  readonly hours: number
   readonly accountLevel: number
   readonly levels: { readonly [Id in CharacterId]?: number }
   readonly goldHeld: number
@@ -48,7 +51,7 @@ export interface Moment {
 /** A character joining the account. */
 export interface Arrival {
   readonly character: CharacterId
-  readonly week: number
+  readonly hours: number
 }
 
 export interface Journey {
@@ -56,6 +59,9 @@ export interface Journey {
   readonly rows: ReadonlyArray<ProgressionRow>
   readonly runs: number
   readonly weeks: number
+  /** Hours played in all, and by the end of run `run` (counted as `runs` counts). */
+  readonly hours: number
+  readonly hoursAt: (run: number) => number
   readonly arrivals: ReadonlyArray<Arrival>
 }
 
@@ -65,6 +71,7 @@ export const journeyOf = (tuning: Tuning, play: PlayOptions): Journey => {
   const gold = none(), crystals = none()
   const essences: { [Id in ElementId]?: number } = {}
   let goldSpent = 0
+  let played = 0
   let held: number | null = null
   const week = (run: number) => run / play.runsPerWeek
 
@@ -86,14 +93,17 @@ export const journeyOf = (tuning: Tuning, play: PlayOptions): Journey => {
   }
 
   const record = (account: Account, run: number) => {
+    const hours = (played * play.minutesPerRun) / 60
     const levels: { [Id in CharacterId]?: number } = {}
     for (const character of Object.keys(account.owned.characters) as Array<CharacterId>) {
       levels[character] = characterLevel(tuning, account, character).level
-      if (!arrivals.some((arrival) => arrival.character === character)) arrivals.push({ character, week: week(run) })
+      if (!arrivals.some((arrival) => arrival.character === character)) arrivals.push({ character, hours })
     }
     const moment: Moment = {
       run,
       week: week(run),
+      played,
+      hours,
       accountLevel: accountLevel(tuning, account).level,
       levels,
       goldHeld: account.wallet.gold ?? 0,
@@ -111,11 +121,15 @@ export const journeyOf = (tuning: Tuning, play: PlayOptions): Journey => {
   const { rows, runs } = simulateProgression(tuning, {
     ...play,
     observe: (step) => {
-      if (step.kind === "run") earnedFrom(step.play, step.earned)
+      if (step.kind === "run") {
+        played += 1
+        earnedFrom(step.play, step.earned)
+      }
       // Spending is the only way gold leaves the account in the model.
       else goldSpent += Math.max(0, (held ?? 0) - (step.account.wallet.gold ?? 0))
       record(step.account, step.runs)
     }
   })
-  return { moments, rows, runs, weeks: week(runs), arrivals }
+  const hoursAt = (run: number) => (run <= 0 ? 0 : (moments[Math.min(run, moments.length) - 1]?.hours ?? 0))
+  return { moments, rows, runs, weeks: week(runs), hours: moments.at(-1)?.hours ?? 0, hoursAt, arrivals }
 }

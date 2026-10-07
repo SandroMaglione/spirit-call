@@ -28,9 +28,11 @@ export interface Knob {
 export interface PlayOptions {
   readonly runsPerWeek: number
   readonly calls: boolean
+  /** A run's length with its menus, in minutes (docs/vision.md: runs of about four minutes). */
+  readonly minutesPerRun: number
 }
 
-export const defaultPlay: PlayOptions = { runsPerWeek: 40, calls: true }
+export const defaultPlay: PlayOptions = { runsPerWeek: 40, calls: true, minutesPerRun: 4 }
 
 const at = (path: ReadonlyArray<string>, value: unknown): Loose =>
   path.reduceRight<unknown>((inner, key) => ({ [key]: inner }), value) as Loose
