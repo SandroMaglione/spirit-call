@@ -4,12 +4,13 @@
  * character glows, and stands beside them; a card a resource, however many
  * places it came from, a chest in the corner when part of it came from
  * one), the account's progress, and
- * the next thing to do as the main button, with home, party, and retry
- * beside it.
+ * what comes next in the same list (main quests, side quests, a track):
+ * played at once as the main button, or opened in the menu beside it, with
+ * home, party, and retry.
  */
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
-import { accountLevel, earnedResources, playLock, questProgress, rankOf } from "../account/account.ts"
+import { accountLevel, earnedResources, questProgress, rankOf } from "../account/account.ts"
 import { AbilityIcon } from "./AbilityIcon.tsx"
 import { describePlay, describeUnlock, resourceName } from "./describe.ts"
 import { elementOf } from "./draft.ts"
@@ -21,7 +22,7 @@ import { Bar } from "./kit/panel.tsx"
 import { aspectOf } from "../content/aspects.ts"
 import { CharacterCard, MaterialIcon, Stars } from "./menu/parts.tsx"
 import type { Screen } from "./menu/screens.ts"
-import { nextMainQuest } from "./navigation.ts"
+import { nextAfter, tabOf } from "./navigation.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
 export const Results = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
@@ -35,8 +36,8 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const name = play === null ? tuning.challenges[result.challenge].name : describePlay(tuning, play)
   const enabled = ready.value && store.recording.value !== "saving"
   const open = (screen: Screen) => { store.menuOpens.value = screen; actions.menu() }
-  const level = accountLevel(tuning, account), next = nextMainQuest(tuning, account)
-  const canContinue = extra === null && result.cleared && next !== null && playLock(tuning, account, next) === null
+  const level = accountLevel(tuning, account), next = play === null ? null : nextAfter(tuning, account, play)
+  const canContinue = extra === null && result.cleared && next !== null
   const leveled = earned !== null && earned.level.after > earned.level.before
   const title = extra?.kind === "trial" ? `${tuning.characters[extra.character].name} · Trial` : extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   const time = `${Math.floor(result.time / 60)}:${String(Math.floor(result.time % 60)).padStart(2, "0")}`
@@ -75,17 +76,19 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           </div>
         </>}
       </>}
-      {canContinue && next?.kind === "quest" && <p class="results__next"><b>Next · {tuning.quests[next.quest].name}</b> {tuning.quests[next.quest].introduces?.text}</p>}
+      {canContinue && next !== null && <p class="results__next"><b>Next · {describePlay(tuning, next)}</b> {next.kind === "quest" && rankOf(next) === 1 ? tuning.quests[next.quest].introduces?.text : null}</p>}
       <footer class="results__actions">
         <RoundButton icon="home" tone="dark" label="Home" disabled={!enabled} onClick={() => open({ kind: "home" })} />
         {extra?.kind === "trial"
           ? <RoundButton icon="call" tone="dark" label="Back to the Spirit Call" disabled={!enabled} onClick={() => open({ kind: "call", tab: "banner" })} />
           : <RoundButton icon={extra?.kind === "practice" ? "practice" : "team"} tone="dark" label={extra?.kind === "practice" ? "Change enemies" : "Adjust party"} disabled={!enabled} onClick={() => open(extra?.kind === "practice" ? { kind: "extra", mode: "practice" } : { kind: "team" })} />}
         {canContinue && <RoundButton icon="retry" tone="dark" label="Retry" disabled={!enabled} onClick={actions.retry} />}
+        {canContinue && next !== null && <Pill icon="quests" tone="dark" disabled={!enabled} onClick={() => { store.menuPlay.value = next; open({ kind: "quests", tab: tabOf(tuning, next) }) }}>Next in menu</Pill>}
         <Pill icon={canContinue ? "next" : "retry"} disabled={!enabled} onClick={() => {
-          if (canContinue && next !== null) { store.menuPlay.value = next; open({ kind: "quests", tab: "main" }) }
+          // Straight into the next one, with the party just played.
+          if (canContinue && next !== null) { store.menuPlay.value = next; actions.enter(account.selection.team, account.selection.aspects, next) }
           else actions.retry()
-        }}>{canContinue ? "Next quest" : extra !== null ? "Again" : "Retry"}</Pill>
+        }}>{canContinue ? "Play next" : extra !== null ? "Again" : "Retry"}</Pill>
       </footer>
     </section>
   </div>
