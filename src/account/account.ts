@@ -14,6 +14,8 @@ import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts, ResourceId } from "../content/currencies.ts"
 import { entryChampion } from "../content/challenges.ts"
+import { metIn } from "../content/novelties.ts"
+import type { Seen } from "../content/novelties.ts"
 import type { ElementId } from "../content/elements.ts"
 import { gradeAt, materialOf } from "../content/materials.ts"
 import type { AscensionStep, MaterialId } from "../content/materials.ts"
@@ -298,13 +300,18 @@ export const questLock = (tuning: Tuning, account: Account, quest: QuestId): Loc
   return null
 }
 
+/** What `account` has met along the main line: everything the quests it cleared introduced (see `content/novelties.ts`). */
+export const metBy = (tuning: Tuning, account: Account): Seen =>
+  metIn(tuning.quests, (Object.keys(tuning.quests) as Array<QuestId>).filter((quest) => questCleared(account, quest)))
+
 /** `account`'s progress in `track`'s tier `tier`, if it attempted it. */
 export const tierProgress = (account: Account, track: TrackId, tier: number): TierProgress | undefined => account.hardcore[track]?.[tier]
 
 /**
  * What keeps `play` closed to `account`, or `null` when it can be started. A
  * higher rank opens once the quest and its rank's quest are cleared; a tier
- * once the one before it is. One that does not exist stays closed.
+ * once its quest and the tier before it are. One that does not exist stays
+ * closed.
  */
 export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | null => {
   if (play.kind === "quest") {
@@ -317,11 +324,12 @@ export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | n
     return null
   }
   const spec = tuning.tracks[play.track]
-  if (!questCleared(account, spec.after)) return { kind: "after", quest: spec.after }
   const exists = Number.isInteger(play.tier) && play.tier >= 1 && play.tier <= spec.tiers.length
-  if (!exists || (play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null)) {
-    return { kind: "tier", track: play.track, tier: Math.max(1, Math.min(play.tier, spec.tiers.length + 1) - 1) }
-  }
+  if (!exists) return { kind: "tier", track: play.track, tier: Math.max(1, Math.min(play.tier, spec.tiers.length + 1) - 1) }
+  // Each tier opens along the main line, and once the tier before it is cleared.
+  const opens = spec.tiers[play.tier - 1]!.opens
+  if (isQuest(tuning, opens) && !questCleared(account, opens)) return { kind: "after", quest: opens }
+  if (play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null) return { kind: "tier", track: play.track, tier: play.tier - 1 }
   return null
 }
 
@@ -331,8 +339,8 @@ export const encounterOf = (tuning: Tuning, play: Play): { readonly challenge: C
     const spec = tuning.quests[play.quest], rank = rankOf(play)
     return { challenge: spec.challenge, enemyLevel: rank === 1 ? spec.enemyLevel : (spec.ranks[rank - 2]?.enemyLevel ?? spec.enemyLevel) }
   }
-  const track = tuning.tracks[play.track]
-  return { challenge: track.challenge, enemyLevel: track.tiers[play.tier - 1]?.enemyLevel ?? 1 }
+  const tier = tuning.tracks[play.track].tiers[play.tier - 1] ?? tuning.tracks[play.track].tiers[0]!
+  return { challenge: tier.challenge, enemyLevel: tier.enemyLevel }
 }
 
 /** The reset period `now` falls in (see `Tuning.reset`): periods count up from the anchor. */

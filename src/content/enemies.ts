@@ -1,6 +1,7 @@
 /**
  * Enemies: what each kind is made of (health, body, movement, behavior,
- * moveset, an optional shield, ward, burst, or armor), how it takes each element (`elements`: weak,
+ * moveset, an optional ward, burst, or armor; any kind carries a shield when
+ * its wave says so, see `shields`), how it takes each element (`elements`: weak,
  * resists, or immune; see docs/elements.md), and its `cost` in a wave's
  * budget (0: never in random waves). Numbers are live-tunable: they are part
  * of the `Tuning` resource.
@@ -241,7 +242,6 @@ export interface EnemySpec {
   readonly behavior: Behavior
   /** Its moveset; empty for an enemy that never attacks (tuning or a test can empty any). */
   readonly attacks: ReadonlyArray<AttackSpec>
-  readonly shield: ShieldSpec | null
   /** Its tether to an ally, if it wards one. */
   readonly ward: WardSpec | null
   /** Its burst when it falls, if it bursts. */
@@ -270,7 +270,6 @@ const lob = (id: string, spec: AttackInput<LobAttack>): AttackSpec => ({ kind: "
 const blink = (id: string, spec: AttackInput<BlinkAttack>): AttackSpec => ({ kind: "blink", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const gust = (id: string, spec: AttackInput<GustAttack>): AttackSpec => ({ kind: "gust", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const affinities = (spec: Affinities): Affinities => spec
-const shield = (spec: ShieldSpec): ShieldSpec | null => spec
 const idle = (): Behavior => ({ kind: "idle" })
 const chase = (stopDistance: number): Behavior => ({ kind: "chase", stopDistance })
 const kite = (spec: { minDistance: number; maxDistance: number; strafeSeconds: number }): Behavior => ({ kind: "kite", ...spec })
@@ -287,6 +286,13 @@ const enemy = (spec: Omit<EnemySpec, "ward" | "burst" | "armor"> & Partial<Pick<
  * makes enemies harder (a hardcore tier) may go below it.
  */
 export const fairness = { minTelegraph: 0.3 }
+
+/**
+ * The frontal shield an enemy carries when its wave says so (see
+ * `shielded` in content/challenges.ts): any kind can carry one, so it is
+ * brought in as its own thing along the main line, not as one enemy's.
+ */
+export const shields: ShieldSpec = { arcDegrees: 130, turnRate: 150 }
 
 /** Every enemy kind. */
 export const enemies = {
@@ -310,7 +316,6 @@ export const enemies = {
     poise: 0,
     cost: 0,
     behavior: idle(),
-    shield: null,
     group: 1,
     attacks: [
       melee("swing", { triggerRange: 170, reach: 160, arcDegrees: 120, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.6, cooldown: 1.8, power: 0, knockback: 120 })
@@ -333,7 +338,6 @@ export const enemies = {
     poise: 0.4,
     cost: 0,
     behavior: idle(),
-    shield: null,
     group: 1,
     attacks: [],
     respawnDelay: 0
@@ -354,7 +358,6 @@ export const enemies = {
     cost: 0,
     behavior: idle(),
     attacks: [],
-    shield: null,
     group: 1,
     /** A destroyed dummy comes back (its spawn warning is shown meanwhile). */
     respawnDelay: 1.5
@@ -375,7 +378,6 @@ export const enemies = {
     poise: 0.5,
     cost: 1,
     behavior: skirmish({ stopDistance: 60, orbit: 230, retreatSeconds: 0.6, engageSeconds: 3, strafeSeconds: 1.8 }),
-    shield: null,
     group: 1,
     attacks: [
       melee("swipe", { triggerRange: 90, reach: 100, arcDegrees: 100, windup: 0.4, aimLock: 0.3, active: 0.1, recovery: 0.3, cooldown: 0.6, power: 18, knockback: 220, followUp: "slash" }),
@@ -388,7 +390,7 @@ export const enemies = {
   shooter: enemy({
     name: "Shooter",
     description: "Shoots ahead of you; sprays water up close.",
-    elements: affinities({ wind: "weak", thunder: "weak" }),
+    elements: affinities({ wind: "weak", thunder: "weak", water: "resists" }),
     hp: 42,
     atk: 100,
     def: 0,
@@ -400,7 +402,6 @@ export const enemies = {
     poise: 0.5,
     cost: 2,
     behavior: kite({ minDistance: 250, maxDistance: 420, strafeSeconds: 1.6 }),
-    shield: null,
     group: 1,
     attacks: [
       volley("volley", {
@@ -419,7 +420,7 @@ export const enemies = {
   brute: enemy({
     name: "Brute",
     description: "Slams where you are headed; stomps up close.",
-    elements: affinities({ wind: "immune", water: "weak", thunder: "resists", rock: "weak" }),
+    elements: affinities({ wind: "immune", water: "weak", fire: "resists", rock: "weak" }),
     hp: 260,
     atk: 100,
     def: 0,
@@ -431,7 +432,6 @@ export const enemies = {
     poise: 0.35,
     cost: 4,
     behavior: chase(120),
-    shield: null,
     group: 1,
     attacks: [
       slam("slam", { minRange: 120, triggerRange: 280, maxReach: 230, radius: 100, windup: 1.0, aimLock: 0.45, active: 0.12, recovery: 0.8, cooldown: 0.9, power: 28, knockback: 460, lead: 0.4 }),
@@ -444,7 +444,7 @@ export const enemies = {
   swarmer: enemy({
     name: "Swarmer",
     description: "Tiny, fast; comes in packs.",
-    elements: affinities({ fire: "weak", thunder: "weak", rock: "resists" }),
+    elements: affinities({ fire: "weak", thunder: "weak", wind: "resists", rock: "resists" }),
     hp: 26,
     atk: 100,
     def: 0,
@@ -456,7 +456,6 @@ export const enemies = {
     poise: 0,
     cost: 1,
     behavior: skirmish({ stopDistance: 34, orbit: 190, retreatSeconds: 0.6, engageSeconds: 2.5, strafeSeconds: 1.2 }),
-    shield: null,
     group: 4,
     attacks: [
       melee("swipe", { triggerRange: 55, reach: 60, arcDegrees: 80, windup: 0.3, active: 0.08, recovery: 0.35, cooldown: 0.5, power: 5, knockback: 140 })
@@ -471,7 +470,7 @@ export const enemies = {
   charger: enemy({
     name: "Firebomber",
     description: "Lobs fire bombs that leave flames.",
-    elements: affinities({ water: "weak" }),
+    elements: affinities({ water: "weak", fire: "resists" }),
     hp: 115,
     atk: 100,
     def: 0,
@@ -483,7 +482,6 @@ export const enemies = {
     poise: 0.45,
     cost: 3,
     behavior: kite({ minDistance: 220, maxDistance: 400, strafeSeconds: 2.2 }),
-    shield: null,
     group: 1,
     attacks: [
       lob("bomb", {
@@ -499,7 +497,7 @@ export const enemies = {
   sniper: enemy({
     name: "Sniper",
     description: "Fires a fast thunder bullet from afar.",
-    elements: affinities({ wind: "weak", thunder: "weak" }),
+    elements: affinities({ wind: "weak", thunder: "resists" }),
     hp: 46,
     atk: 100,
     def: 0,
@@ -511,7 +509,6 @@ export const enemies = {
     poise: 0.5,
     cost: 3,
     behavior: kite({ minDistance: 430, maxDistance: 680, strafeSeconds: 2.5 }),
-    shield: null,
     group: 1,
     attacks: [
       volley("shot", {
@@ -521,10 +518,10 @@ export const enemies = {
     ],
     respawnDelay: 0
   }),
-  /** A frontal shield blocks all projectiles; flank it or use the grenade and ultimate. A long thrust punishes keeping just out of its reach. */
+  /** Heavy and patient: holds its ground with a wide swipe, and a long thrust punishes keeping just out of its reach. */
   guardian: enemy({
     name: "Guardian",
-    description: "Its shield blocks shots from the front; it thrusts far.",
+    description: "Holds its ground; its thrust reaches far.",
     elements: affinities({ fire: "weak", wind: "resists", rock: "weak" }),
     hp: 150,
     atk: 100,
@@ -537,11 +534,10 @@ export const enemies = {
     poise: 0.4,
     cost: 3,
     behavior: skirmish({ stopDistance: 70, orbit: 260, retreatSeconds: 1.1, engageSeconds: 3.5, strafeSeconds: 2.2 }),
-    shield: shield({ arcDegrees: 130, turnRate: 150 }),
     group: 1,
     attacks: [
       melee("swipe", { triggerRange: 95, reach: 105, arcDegrees: 110, windup: 0.55, aimLock: 0.35, active: 0.1, recovery: 0.55, cooldown: 0.6, power: 16, knockback: 360 }),
-      // A long thrust from behind the shield at a player keeping just out of reach.
+      // A long thrust at a player keeping just out of reach.
       melee("thrust", { minRange: 85, triggerRange: 165, reach: 180, arcDegrees: 24, windup: 0.6, aimLock: 0.3, active: 0.1, recovery: 0.6, cooldown: 0.8, power: 18, knockback: 380, lead: 0.3 })
     ],
     respawnDelay: 0
@@ -566,7 +562,6 @@ export const enemies = {
     poise: 0.5,
     cost: 3,
     behavior: kite({ minDistance: 330, maxDistance: 520, strafeSeconds: 2.6 }),
-    shield: null,
     ward: { range: 420, taken: 0.25, link: 0.6, cooldown: 3 },
     group: 1,
     attacks: [
@@ -597,7 +592,6 @@ export const enemies = {
     poise: 0.4,
     cost: 3,
     behavior: chase(70),
-    shield: null,
     group: 1,
     attacks: [
       blink("blink", { minRange: 240, triggerRange: 650, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.8, cooldown: 3, radius: 85, maxReach: 650, power: 18, knockback: 380 }),
@@ -625,7 +619,6 @@ export const enemies = {
     poise: 0,
     cost: 1,
     behavior: chase(40),
-    shield: null,
     burst: { radius: 120, fuse: 0.75, power: 30, knockback: 520, element: "fire" },
     group: 2,
     attacks: [
@@ -641,7 +634,7 @@ export const enemies = {
   galeCaster: enemy({
     name: "Gale Caster",
     description: "Blows a cone of wind that pushes everyone in it, its own side too.",
-    elements: affinities({ fire: "weak", wind: "immune" }),
+    elements: affinities({ fire: "weak", wind: "immune", rock: "resists" }),
     hp: 70,
     atk: 90,
     def: 0,
@@ -654,7 +647,6 @@ export const enemies = {
     cost: 2,
     // It keeps where its gust reaches.
     behavior: kite({ minDistance: 200, maxDistance: 300, strafeSeconds: 2.4 }),
-    shield: null,
     group: 1,
     attacks: [
       gust("gust", { triggerRange: 320, reach: 320, arcDegrees: 60, windup: 0.8, aimLock: 0.35, active: 0.12, recovery: 0.6, cooldown: 3.2, power: 4, knockback: 900 })
@@ -681,7 +673,6 @@ export const enemies = {
     poise: 0.3,
     cost: 5,
     behavior: chase(90),
-    shield: null,
     armor: { taken: 0.3 },
     group: 1,
     attacks: [

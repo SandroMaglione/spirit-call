@@ -16,8 +16,8 @@ describe("menu navigation", () => {
     }
   })
   it("moves the next objective past cleared quests and resolves real unlock sources", () => {
-    expect(nextMainQuest(tuning, account)).toEqual({ kind: "quest", quest: "theSwarm" })
-    const cleared = recordRun(tuning, account, { kind: "quest", quest: "theSwarm" }, {
+    expect(nextMainQuest(tuning, account)).toEqual({ kind: "quest", quest: "firstBlood" })
+    const cleared = recordRun(tuning, account, { kind: "quest", quest: "firstBlood" }, {
       cleared: true, progress: 1, team: ["swordsman"], reactions: [], tally: noTally, challenge: "swarm", wave: 3, kills: 9, time: 60
     }, 1).account
     expect(nextMainQuest(tuning, cleared)).toEqual({ kind: "quest", quest: "crossfire" })

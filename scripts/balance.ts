@@ -23,7 +23,7 @@ const tuning = values.tuning === undefined ? defaultTuning : tuningWith(JSON.par
 const problems = validateContent(tuning)
 if (problems.length > 0) throw new Error(problems.join("\n"))
 const quests = values.quest === undefined
-  ? values.full ? Object.keys(tuning.quests) as Array<QuestId> : ["theSwarm", "theWarlord", "holdTheLine"] as Array<QuestId>
+  ? values.full ? Object.keys(tuning.quests) as Array<QuestId> : ["firstBlood", "packLeader", "theWarlord"] as Array<QuestId>
   : values.quest.split(",") as Array<QuestId>
 if (quests.some((quest) => !(quest in tuning.quests))) throw new Error(`Unknown quest. Choose from ${Object.keys(tuning.quests).join(", ")}`)
 const rows: Array<BalanceRow> = []

@@ -1,3 +1,7 @@
+import { mkdtempSync, readFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
+import { DatabaseSync } from "node:sqlite"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { fromRecord, toRecord } from "../src/account/convert.ts"
@@ -54,7 +58,7 @@ const log = {
   dashes: 12,
   switches: 0
 }
-const played = (play: unknown = { kind: "quest", quest: "theSwarm" }, result: unknown = run) => ({ play, result, log })
+const played = (play: unknown = { kind: "quest", quest: "firstBlood" }, result: unknown = run) => ({ play, result, log })
 
 describe("players", () => {
   it("signs up with a free username, logged in at once with an HTTP-only session cookie", async () => {
@@ -104,12 +108,29 @@ describe("players", () => {
 })
 
 describe("accounts", () => {
+  it("starts a player over with a new account once accounts are reset, keeping the login", async () => {
+    const file = path.join(mkdtempSync(path.join(tmpdir(), "accounts-")), "reset.sqlite")
+    const handler = localHandler(file, { devTools: false, secureCookies: true })
+    opened.push(handler)
+    const player = await signUp(handler)
+    expect((await player.send("POST", "/api/runs", played())).status).toBe(200)
+    expect((await player.send("GET", "/api/account")).body.quests.firstBlood).toBeDefined()
+    // The one-time reset (migrations/0003), run on the database as a deploy would.
+    const database = new DatabaseSync(file)
+    database.exec(readFileSync(new URL("../src/server/migrations/0003_reset_accounts.sql", import.meta.url), "utf8"))
+    database.close()
+    const after = await player.send("GET", "/api/account")
+    expect(after.status).toBe(200)
+    expect(after.body.quests).toEqual({})
+    expect(after.body.selection).toEqual({ team: ["swordsman"], aspects: {}, play: { kind: "quest", quest: "firstBlood" } })
+  })
+
   it("gives a new player the starter set, the same account on every device", async () => {
     const handler = server()
     const phone = await signUp(handler)
     const account = (await phone.send("GET", "/api/account")).body
     expect(Object.keys(account.owned.characters)).toEqual(newAccount.characters)
-    expect(account.selection).toEqual({ team: ["swordsman"], aspects: {}, play: { kind: "quest", quest: "theSwarm" } })
+    expect(account.selection).toEqual({ team: ["swordsman"], aspects: {}, play: { kind: "quest", quest: "firstBlood" } })
     const laptop = browser(handler)
     await laptop.send("POST", "/api/sessions", { username: "stella", password: "correct horse" })
     expect((await laptop.send("GET", "/api/account")).body).toEqual(account)
@@ -120,8 +141,8 @@ describe("accounts", () => {
     const stella = await signUp(handler, "stella")
     const nova = await signUp(handler, "nova")
     await stella.send("POST", "/api/runs", played())
-    expect((await stella.send("GET", "/api/account")).body.quests.theSwarm).toBeDefined()
-    expect((await nova.send("GET", "/api/account")).body.quests.theSwarm).toBeUndefined()
+    expect((await stella.send("GET", "/api/account")).body.quests.firstBlood).toBeDefined()
+    expect((await nova.send("GET", "/api/account")).body.quests.firstBlood).toBeUndefined()
   })
 
   it("records a run: pays it, gives a first clear's rewards, and keeps them", async () => {
@@ -129,10 +150,10 @@ describe("accounts", () => {
     const player = await signUp(handler)
     const recorded = await player.send("POST", "/api/runs", played())
     expect(recorded.status).toBe(200)
-    expect(recorded.body.earned.rewards).toEqual(defaultTuning.quests.theSwarm.rewards)
+    expect(recorded.body.earned.rewards).toEqual(defaultTuning.quests.firstBlood.rewards)
     const account = (await player.send("GET", "/api/account")).body
     expect(account).toEqual(recorded.body.account)
-    expect(account.quests.theSwarm).toMatchObject({ attempts: 1, clears: 1 })
+    expect(account.quests.firstBlood).toMatchObject({ attempts: 1, clears: 1 })
     expect(account.totals).toMatchObject({ runs: 1, clears: 1, kills: 40 })
     expect(account.wallet.gold).toBeGreaterThan(0)
   })
@@ -140,7 +161,7 @@ describe("accounts", () => {
   it("selects a team of owned characters, and refuses one it does not own, changing nothing", async () => {
     const handler = server({ devTools: true, secureCookies: true })
     const player = await signUp(handler)
-    const refused = await player.send("PUT", "/api/account/selection", { team: ["swordsman", "gunner"], play: { kind: "quest", quest: "theSwarm" } })
+    const refused = await player.send("PUT", "/api/account/selection", { team: ["swordsman", "gunner"], play: { kind: "quest", quest: "firstBlood" } })
     expect(refused).toMatchObject({ status: 409, body: { _tag: "Refused", kind: "notOwned" } })
     await player.send("POST", "/api/runs", played())
     await player.send("POST", "/api/dev/unlock-everything")
@@ -199,9 +220,9 @@ describe("logs", () => {
     const runs = (await player.send("GET", "/api/runs")).body
     expect(runs).toHaveLength(1)
     expect(runs[0]).toMatchObject({
-      play: { kind: "quest", quest: "theSwarm" },
+      play: { kind: "quest", quest: "firstBlood" },
       challenge: "swarm",
-      enemyLevel: defaultTuning.quests.theSwarm.enemyLevel,
+      enemyLevel: defaultTuning.quests.firstBlood.enemyLevel,
       team: [{ character: "swordsman", level: 1, aspect: null }],
       cleared: true,
       wave: 6,
@@ -237,7 +258,7 @@ describe("account rows", () => {
     totals: { runs: 3, clears: 2, kills: 90, secondsPlayed: 410.5 },
     wallet: { gold: 300, crystals: 20, fireShard: 2 },
     owned: { characters: { swordsman: { unlockedAt: 5, experience: 40, ascension: 0 }, gunner: { unlockedAt: 6, experience: 0, ascension: 0 } }, aspects: { marksman: { unlockedAt: 7, copies: 2 } } },
-    quests: { theSwarm: { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] } },
+    quests: { firstBlood: { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] } },
     hardcore: { gauntlet: { "1": { attempts: 2, clears: 1, firstClearedAt: 5, rewardedPeriod: 3, bestWave: 7 } } },
     discoveries: { flare: { madeAt: 5 } },
     chests: { one: 1 },

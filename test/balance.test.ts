@@ -14,9 +14,9 @@ describe("balance measurements", () => {
   })
   it("funds one matched main-line build before each quest without relying on pulls", () => {
     const economy = economyAudit(defaultTuning)
-    expect(economy).toHaveLength(9)
+    expect(economy).toHaveLength(Object.values(defaultTuning.quests).filter((quest) => quest.line === "main").length)
     expect(economy.every((row) => row.extraClearsAtPreviousQuest === 0)).toBe(true)
-    expect(economyAudit(tuningWith({ quests: { theCloister: { rewards: { currencies: { gold: 0 } } } } })).at(-1)!.extraClearsAtPreviousQuest).toBeGreaterThan(0)
+    expect(economyAudit(tuningWith({ quests: { firstBlood: { rewards: { currencies: { gold: 0 } } } } })).find((row) => row.quest === "crossfire")!.extraClearsAtPreviousQuest).toBeGreaterThan(0)
   })
   it("uses the quest's enemy level and real HP, and stops on defeat", () => {
     const run = runBot({ tuning: defaultTuning, seconds: 20, mortal: true, still: true, enemyLevel: 40,
@@ -41,8 +41,9 @@ describe("balance measurements", () => {
     expect(scenario).toBeDefined()
     expect(runBot(scenario!.run)).toEqual(runBot(scenario!.run))
     const late = balanceCases(defaultTuning, ["theWarlord"], [7], 5)
-    expect(late.every((row) => row.run.enemyLevel === 32 && row.run.mortal)).toBe(true)
-    expect(late.find((row) => row.profile === "swordsman-matched")!.run.team![0]!.level).toBe(32)
+    const level = defaultTuning.quests.theWarlord.enemyLevel
+    expect(late.every((row) => row.run.enemyLevel === level && row.run.mortal)).toBe(true)
+    expect(late.find((row) => row.profile === "swordsman-matched")!.run.team![0]!.level).toBe(level)
   })
 
   it("flags easier and harder outcomes, excessive cadence changes, and missing cases", () => {

@@ -16,13 +16,13 @@ describe("content", () => {
       classes: { ...defaultTuning.classes, gun: { ...defaultTuning.classes.gun, plain: { ...defaultTuning.classes.gun.plain, combo: [] } } },
       characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman, class: "lance" as never } },
       skills: { ...defaultTuning.skills, flareJump: { ...defaultTuning.skills.flareJump, cooldown: 0 } },
-      challenges: { ...defaultTuning.challenges, endless: { ...defaultTuning.challenges.endless, objective: clearWaves(), waves: { ...defaultTuning.challenges.endless.waves, endless: { baseBudget: 6, budgetPerWave: 2 } } } }
+      challenges: { ...defaultTuning.challenges, gauntlet3: { ...defaultTuning.challenges.gauntlet3, objective: clearWaves(), waves: { ...defaultTuning.challenges.gauntlet3.waves, endless: { baseBudget: 6, budgetPerWave: 2, kinds: ["chaser"], elites: [] } } } }
     }
     expect(validateContent(broken)).toEqual([
       "class gun plain aspect: the combo needs at least one move",
       "skill flareJump: needs a cooldown or an energy cost, or it can be spammed",
       "character swordsman: unknown class lance",
-      "challenge endless: clearing every wave can never happen with endless waves"
+      "challenge gauntlet3: clearing every wave can never happen with endless waves"
     ])
   })
   it("reports kits that are not each character's own, and ultimates that are no escape", () => {
@@ -99,30 +99,43 @@ describe("content", () => {
       ...defaultTuning,
       quests: {
         ...quests,
-        theSwarm: { ...quests.theSwarm, after: "theBrute" },
-        holdTheLine: { ...quests.holdTheLine, chapter: "one", after: null, stars: [{ kind: "tally", tally: "breaks", least: 2 }, { kind: "cleared" }, { kind: "tally", tally: "hitsTaken", most: -1 }] }
+        firstBlood: { ...quests.firstBlood, after: "theBrute" },
+        holdTheLine: { ...quests.holdTheLine, chapter: "one", stars: [{ kind: "tally", tally: "breaks", least: 2 }, { kind: "cleared" }, { kind: "tally", tally: "hitsTaken", most: -1 }] }
       }
     }
-    expect(validateContent(broken)).toEqual([
-      "quest theSwarm: its order loops back through theSwarm",
+    const problems = validateContent(broken)
+    expect(problems).toEqual(expect.arrayContaining([
+      "quest firstBlood: its order loops back through firstBlood",
       "quest crossfire: its order loops back through crossfire",
-      "quest theBrute: its order loops back through theBrute",
-      "quest outposts: its order loops back through theBrute",
-      "quest ashfall: its order loops back through theBrute",
-      "quest highTide: its order loops back through theBrute",
-      "quest sandstorm: its order loops back through theBrute",
-      "quest theCloister: its order loops back through theBrute",
-      "quest theWarlord: its order loops back through theBrute",
       "quest holdTheLine: a secondary quest belongs to no chapter",
       "quest holdTheLine: its first star must be the clear",
       "quest holdTheLine: star 2 repeats the clear",
       "quest holdTheLine: star 3: bounds must be whole numbers, not negative",
-      "quest stoneTrial: its order loops back through theBrute",
-      "quest nightOfPacks: its order loops back through crossfire",
-      "quest eliteHunt: its order loops back through theBrute",
-      "quest strangeCompany: its order loops back through crossfire",
-      "quest stormFront: its order loops back through theBrute",
-      "the new account: selects quest theSwarm, which a new account cannot start"
-    ])
+      "the new account: selects quest firstBlood, which a new account cannot start"
+    ]))
+  })
+
+  it("reports quests that bring nothing new, and anything that shows what the main line has not brought yet", () => {
+    const quests = defaultTuning.quests, untilFall = defaultTuning.tracks.untilFall
+    const broken: Tuning = {
+      ...defaultTuning,
+      quests: {
+        ...quests,
+        // Chasers again, while its waves bring shooters.
+        crossfire: { ...quests.crossfire, introduces: quests.firstBlood.introduces },
+        // A side quest opening after chapter one, with chapter three's waves.
+        holdTheLine: { ...quests.holdTheLine, challenge: "bruteKing" },
+        nightOfPacks: { ...quests.nightOfPacks, introduces: quests.theSwarm.introduces }
+      },
+      tracks: { ...defaultTuning.tracks, untilFall: { ...untilFall, tiers: [{ ...untilFall.tiers[0]!, enemyLevel: 12 }, ...untilFall.tiers.slice(1)] } }
+    }
+    // Rubbing out the shooter's introduction makes everything showing shooters early too: the key lines are these.
+    expect(validateContent(broken)).toEqual(expect.arrayContaining([
+      "quest crossfire: brings Chasers: they run in and swipe twice. Dodge, then strike back, which the main line already brought",
+      "quest crossfire: shows the shooter too, which the main line has not brought yet",
+      "quest holdTheLine: shows the swarmer, the guardian, the shooter, the brute, the sniper, fire floors, water elites, fire elites, the champion brute before the main line introduces it (it opens after packLeader)",
+      "quest nightOfPacks: a side quest brings nothing new (it mixes what the main line brought)",
+      "hardcore track untilFall tier 1: enemies of level 12 are more than 4 levels above packLeader (5), which opens it"
+    ]))
   })
 })

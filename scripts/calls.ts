@@ -19,7 +19,7 @@
  * many characters calls brought by then, over the accounts (median, and the
  * unlucky and lucky tenths). The target is about one every two chapters.
  */
-import { createAccount, recordRun } from "../src/account/account.ts"
+import { createAccount, playLock, recordRun } from "../src/account/account.ts"
 import type { Account, Play } from "../src/account/account.ts"
 import { activeBanner, call, callsHeld, callsOpen } from "../src/account/calls.ts"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
@@ -89,12 +89,10 @@ const play = (account: Account, quest: QuestId, now: number): Account => {
 const hardcoreWeek = (account: Account, level: number, now: number): Account => {
   let next = account
   for (const track of Object.keys(tuning.tracks) as Array<TrackId>) {
-    const spec = tuning.tracks[track]
-    if ((next.quests[spec.after as QuestId]?.firstClearedAt ?? null) === null) continue
-    spec.tiers.forEach((tier, index) => {
-      if (tier.enemyLevel > level + tierReach) return
+    tuning.tracks[track].tiers.forEach((tier, index) => {
       const tierPlay: Play = { kind: "tier", track, tier: index + 1 }
-      next = recordRun(tuning, next, tierPlay, resultFor(next, spec.challenge, true, { hitsTaken: 0, perfectDodges: 0, breaks: 0 }), now).account
+      if (tier.enemyLevel > level + tierReach || playLock(tuning, next, tierPlay) !== null) return
+      next = recordRun(tuning, next, tierPlay, resultFor(next, tier.challenge, true, { hitsTaken: 0, perfectDodges: 0, breaks: 0 }), now).account
     })
   }
   return next

@@ -133,9 +133,11 @@ describe("champions", () => {
   })
 
   it("ship in each chapter's finale, never as a kind that keeps its distance", () => {
-    const finales = ["brute", "highTide", "warlord"] as const
-    for (const id of finales) {
-      expect(defaultTuning.challenges[id].waves.scripted.flat().filter(entryChampion)).toHaveLength(1)
+    // Every chapter ends with a champion's quest, and each brings a kind's champion in.
+    const finales = Object.keys(defaultTuning.chapters).map((chapter) => Object.values(defaultTuning.quests).findLast((quest) => quest.chapter === chapter)!)
+    for (const quest of finales) {
+      expect(defaultTuning.challenges[quest.challenge].waves.scripted.flat().filter(entryChampion)).toHaveLength(1)
+      expect(quest.introduces?.novelty.kind).toBe("champion")
     }
     expect(validateContent(defaultTuning)).toEqual([])
     const sniper = withChallenge({ objective: clearWaves(), waves: { scripted: [[champion("sniper", "thunder")]], endless: null } })

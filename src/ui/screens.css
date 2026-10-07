@@ -143,6 +143,13 @@
 .quests__list .label > span:last-child { flex: none; white-space: nowrap; }
 .quests__brief { position: absolute; left: calc(var(--left) + clamp(200px, 31cqw, 262px) + 18px); right: var(--right); top: 62px; bottom: 70px; z-index: 3; }
 .quests__enemies { display: grid; gap: 5px; }
+/* A main quest's one new thing: its picture beside its line, on a gold-edged band. */
+.novelty { display: flex; align-items: center; gap: 10px; margin: -6px 0 6px; padding: 4px 10px 4px 5px; border-radius: 10px; background: linear-gradient(90deg, rgba(255, 220, 140, .14), rgba(255, 220, 140, .03)); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .28); }
+.novelty > div { min-width: 0; display: grid; gap: 2px; }
+.novelty .label { color: var(--gold-hi); display: flex; align-items: center; gap: 4px; }
+.novelty p { margin: 0; font-size: 12.5px; font-weight: 700; line-height: 1.2; color: var(--text); }
+.novelty__art { flex: none; }
+.novelty__floor { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px var(--line); }
 /* A chest's brief: the chest beside what it holds. */
 .chest-brief { display: flex; align-items: center; gap: 16px; }
 .chest-brief__icon { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; color: var(--gold-hi); background: radial-gradient(circle at 40% 30%, rgba(255, 231, 173, .25), rgba(255, 231, 173, .05) 70%); box-shadow: inset 0 0 0 1px rgba(255, 231, 173, .35), 0 0 18px rgba(255, 220, 140, .25); flex: none; }
@@ -157,12 +164,13 @@
 .claimed { display: flex; align-items: center; gap: 5px; min-height: 26px; }
 .claimed .menu-icon { color: var(--up); }
 /* A quest's ranks or a track's tiers: each a chip with its enemies' level; the one picked is cream. */
-.steps { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.steps { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; padding: 7px 0; margin-top: -7px; }
 .steps .label { margin-right: 4px; }
 .step { height: 28px; padding: 0 10px; border-radius: 15px; display: flex; align-items: center; gap: 6px; background: var(--band); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; color: var(--dim); position: relative; }
 .step::after { content: ""; position: absolute; inset: -7px -2px; }
 .step b { width: 22px; height: 18px; margin-left: -4px; border-radius: 9px; display: grid; place-items: center; font-size: 11px; font-weight: 800; line-height: 1; letter-spacing: .5px; background: rgba(255, 255, 255, .1); color: var(--text); }
-.step span { display: flex; align-items: center; gap: 3px; line-height: 1; }
+.step { flex: none; }
+.step span { display: flex; align-items: center; gap: 3px; line-height: 1; white-space: nowrap; }
 .step .menu-icon { font-size: 12px; }
 .step.is-locked { opacity: .55; }
 .step[aria-checked="true"] { background: var(--cream); color: #6a7184; box-shadow: none; opacity: 1; }

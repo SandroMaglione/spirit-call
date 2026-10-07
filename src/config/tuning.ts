@@ -21,7 +21,7 @@ import { classes } from "../content/classes.ts"
 import { currencies } from "../content/currencies.ts"
 import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
-import { enemies, fairness } from "../content/enemies.ts"
+import { enemies, fairness, shields } from "../content/enemies.ts"
 import { reset, tracks } from "../content/hardcore.ts"
 import { materialRules, materials } from "../content/materials.ts"
 import { progression } from "../content/progression.ts"
@@ -218,6 +218,9 @@ export const defaultTuning = {
 
   /** The least warning any enemy attack gives (see content/enemies.ts). */
   fairness,
+
+  /** The frontal shield an enemy carries when its wave says so (see content/enemies.ts). */
+  shields,
 
   /** How enemies steer around each other. */
   crowd: {

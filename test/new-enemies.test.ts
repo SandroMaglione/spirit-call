@@ -44,11 +44,11 @@ const cursorAt = (offset: Vec2) => {
   return { x: 640 + screen.x, y: 360 + screen.y }
 }
 
-/** Training mode with just one enemy of `kind` at `offset` from the player. */
-const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}) => {
+/** Training mode with just one enemy of `kind` at `offset` from the player (carrying a shield, when `shield`). */
+const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}, shield = false) => {
   const run = start(options)
   const Spawn = Game.System("Test/SpawnOne", {}, ({ commands }) => {
-    commands.spawnIn(RunScope, makeEnemy(options.tuning ?? defaultTuning, kind, { x: center.x + offset.x, y: center.y + offset.y }))
+    commands.spawnIn(RunScope, makeEnemy(options.tuning ?? defaultTuning, kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, null, false, shield))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
   return { ...run, world: () => run.runtime.inspect(World) }
@@ -128,11 +128,11 @@ describe("sniper", () => {
   })
 })
 
-describe("guardian", () => {
+describe("a shielded enemy", () => {
   const hp = defaultTuning.enemies.guardian.hp
   // A guardian that stands still (and does not attack), so only its shield is under test.
   const still = tuningWith({ enemies: { guardian: { speed: 0, acceleration: 0, attacks: [] } } })
-  const spec = defaultTuning.enemies.guardian.shield!
+  const spec = defaultTuning.shields
   const turnSteps = steps(180 / spec.turnRate) + 5
 
   it("turns its shield toward the player and blocks shots from the front", () => {
@@ -140,7 +140,7 @@ describe("guardian", () => {
       tuning: still,
       build: gunner,
       pointer: [{ frame: turnSteps, move: cursorAt({ x: 260, y: 0 }), press: ["primary"] }, { frame: turnSteps + 20, release: ["primary"] }]
-    })
+    }, true)
     run.step(turnSteps)
     const facing = run.world().enemies[0]!.facing!
     expect(facing.x).toBeLessThan(-0.99) // facing the player, to its west
@@ -154,7 +154,7 @@ describe("guardian", () => {
       tuning: still,
       build: gunner,
       pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }), press: ["primary"] }, { frame: 1, release: ["primary"] }]
-    })
+    }, true)
     run.step(10)
     expect(run.world().enemies[0]!.health).toBe(hp - gunShot.power)
   })
@@ -165,11 +165,23 @@ describe("guardian", () => {
       build: gunner,
       pointer: [{ frame: 0, move: cursorAt({ x: 250, y: 0 }) }],
       keys: [{ frame: turnSteps, press: ["special"], release: ["special"] }]
-    })
+    }, true)
     run.step(turnSteps + steps(grenadeSkill.effect.flightTime + grenadeSkill.effect.fuse) + 4)
     expect(run.world().enemies[0]!.facing!.x).toBeLessThan(-0.99)
     // The guardian is weak to the grenade's fire.
     expect(run.world().enemies[0]!.health).toBe(hp - grenadeSkill.effect.power * defaultTuning.elements.affinity.weak.damage)
+  })
+
+  it("is a wave's choice, not the kind's: a guardian without one takes shots from the front", () => {
+    const run = duel("guardian", { x: 260, y: 0 }, {
+      tuning: still,
+      build: gunner,
+      pointer: [{ frame: turnSteps, move: cursorAt({ x: 260, y: 0 }), press: ["primary"] }, { frame: turnSteps + 20, release: ["primary"] }]
+    })
+    run.step(turnSteps)
+    expect(run.world().enemies[0]!.facing).toBeUndefined()
+    run.step(60)
+    expect(run.world().enemies[0]!.health).toBeLessThan(hp)
   })
 })
 

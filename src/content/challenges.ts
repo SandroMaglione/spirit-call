@@ -4,6 +4,10 @@
  * (optionally) endless random waves. Numbers are live-tunable: they are part
  * of the `Tuning` resource; the wave timing is in `Tuning.waves`.
  *
+ * A challenge shows only what the main line has introduced by the time it
+ * opens (see `content/novelties.ts`): the quests' waves below are written
+ * along the main line's order, each bringing its one new thing.
+ *
  * A new kind of objective is a new case here and in `objectiveMet`
  * (see `features/challenges.ts`).
  */
@@ -42,12 +46,14 @@ export type Objective =
 export type EliteElement = Exclude<ElementId, "wind" | "rock">
 
 /**
- * One slot of a wave: an enemy kind (spawning its `group`), or an elite of
- * it: the group's first one is bigger and tougher, and carries an element
- * (see `Tuning.elites`); or a champion of it, an elite pushed further that
- * stays across waves (see `Tuning.champions`), alone.
+ * One slot of a wave: an enemy kind (spawning its `group`), or one with
+ * extras: an elite (`elite`: the group's first one is bigger and tougher,
+ * and carries an element, see `Tuning.elites`), a champion (`champion`: an
+ * elite pushed further that stays across waves, see `Tuning.champions`,
+ * alone), and a frontal shield (`shield`: the group's first one carries it,
+ * see `Tuning.shields`).
  */
-export type WaveEntry = EnemyKind | { readonly kind: EnemyKind; readonly elite: EliteElement; readonly champion?: true }
+export type WaveEntry = EnemyKind | { readonly kind: EnemyKind; readonly elite?: EliteElement; readonly champion?: true; readonly shield?: true }
 
 /** One wave: its entries spawned in order. */
 export type Wave = ReadonlyArray<WaveEntry>
@@ -56,22 +62,31 @@ export type Wave = ReadonlyArray<WaveEntry>
 export const elite = (kind: EnemyKind, element: EliteElement): WaveEntry => ({ kind, elite: element })
 /** A champion `kind` carrying `element`, for a wave: it comes alone (not its group), and stays until it falls. */
 export const champion = (kind: EnemyKind, element: EliteElement): WaveEntry => ({ kind, elite: element, champion: true })
+/** `entry` carrying a frontal shield. */
+export const shielded = (entry: WaveEntry): WaveEntry => (typeof entry === "string" ? { kind: entry, shield: true } : { ...entry, shield: true })
 /** Whether a wave entry is a champion. */
-export const entryChampion = (entry: WaveEntry): boolean => typeof entry !== "string" && entry.champion === true
+export const entryChampion = (entry: WaveEntry): boolean => typeof entry !== "string" && entry.champion === true && entry.elite !== undefined
 /** The enemy kind of a wave entry. */
 export const entryKind = (entry: WaveEntry): EnemyKind => (typeof entry === "string" ? entry : entry.kind)
 /** The element of an elite wave entry, or `null`. */
-export const entryElite = (entry: WaveEntry): EliteElement | null => (typeof entry === "string" ? null : entry.elite)
+export const entryElite = (entry: WaveEntry): EliteElement | null => (typeof entry === "string" ? null : entry.elite ?? null)
+/** Whether a wave entry carries a shield. */
+export const entryShield = (entry: WaveEntry): boolean => typeof entry !== "string" && entry.shield === true
+
+/** Endless waves: random mixes of `kinds` within a budget (enemy `cost`) growing per wave, some of them elites of `elites`. */
+export interface EndlessWaves {
+  readonly baseBudget: number
+  readonly budgetPerWave: number
+  readonly kinds: ReadonlyArray<EnemyKind>
+  /** The elements its elites carry (see `Tuning.elites.endless`); none makes no elites. */
+  readonly elites: ReadonlyArray<EliteElement>
+}
 
 export interface WavePlan {
   /** These waves first, exactly. */
   readonly scripted: ReadonlyArray<Wave>
-  /**
-   * Afterwards: random mixes within a budget (enemy `cost`) growing per
-   * wave, some of them elites (see `Tuning.elites.endless`); `null` ends
-   * after the scripted ones.
-   */
-  readonly endless: { readonly baseBudget: number; readonly budgetPerWave: number } | null
+  /** Afterwards, endless random waves; `null` ends after the scripted ones. */
+  readonly endless: EndlessWaves | null
 }
 
 export interface ChallengeSpec {
@@ -87,260 +102,478 @@ export interface ChallengeSpec {
 export const clearWaves = (): Objective => ({ kind: "clearWaves" })
 export const endure = (goal: number, levelPerWave: number): Objective => ({ kind: "endure", goal, levelPerWave })
 const challenge = (spec: ChallengeSpec): ChallengeSpec => spec
+/** A challenge of `waves` to clear in `arena`. */
+const waves = (name: string, description: string, arena: ArenaId, scripted: ReadonlyArray<Wave>): ChallengeSpec =>
+  challenge({ name, description, objective: clearWaves(), arena, waves: { scripted, endless: null } })
+
+/** Until Fall's opening waves, then endless ones drawn from `kinds` (and elites of `elites`), at a tier's point of the main line. */
+const untilFall = (arena: ArenaId, kinds: ReadonlyArray<EnemyKind>, elites: ReadonlyArray<EliteElement>, scripted: ReadonlyArray<Wave>): ChallengeSpec =>
+  challenge({
+    name: "Until Fall",
+    description: "Last as long as the team can: every wave stronger than the last.",
+    objective: endure(10, 1),
+    arena,
+    waves: { scripted, endless: { baseBudget: 6, budgetPerWave: 2, kinds, elites } }
+  })
+
+/** What the main line has introduced by each chapter's end: the enemies endless waves draw from. */
+const metBy = {
+  one: ["chaser", "shooter"],
+  two: ["chaser", "shooter", "swarmer", "guardian"],
+  three: ["chaser", "shooter", "swarmer", "guardian", "sniper", "brute"],
+  four: ["chaser", "shooter", "swarmer", "guardian", "sniper", "brute", "charger"],
+  five: ["chaser", "shooter", "swarmer", "guardian", "sniper", "brute", "charger", "stalker", "warden"],
+  six: ["chaser", "shooter", "swarmer", "guardian", "sniper", "brute", "charger", "stalker", "warden", "juggernaut", "volatile", "galeCaster"]
+} satisfies Record<string, ReadonlyArray<EnemyKind>>
 
 /** Every challenge, by id. */
 export const challenges = {
-  /** Many fast melee enemies: crowd control. */
-  swarm: challenge({
-    name: "The Swarm",
-    description: "Clear eight waves of fast melee enemies, the last led by burning elites.",
-    objective: clearWaves(),
-    arena: "kilnworks",
-    waves: {
-      scripted: [
-        ["chaser", "chaser", "chaser", "swarmer"],
-        ["swarmer", "swarmer", "swarmer", "chaser", "chaser"],
-        ["chaser", "chaser", "chaser", "swarmer", "swarmer"],
-        ["swarmer", "swarmer", "charger", "chaser", "chaser"],
-        [elite("chaser", "fire"), "swarmer", "chaser", "chaser", "chaser"],
-        ["swarmer", "swarmer", "swarmer", "charger", "chaser", "chaser"],
-        ["charger", "charger", "chaser", "chaser", "swarmer", "swarmer"],
-        [elite("swarmer", "fire"), "swarmer", "swarmer", elite("charger", "fire"), "chaser", "chaser"]
-      ],
-      endless: null
-    }
-  }),
-  /** Ranged enemies behind cover: close the distance or outshoot them. */
-  crossfire: challenge({
-    name: "Crossfire",
-    description: "Clear eight waves of shooters and snipers fighting from cover.",
-    objective: clearWaves(),
-    arena: "sanctuary",
-    waves: {
-      scripted: [
-        ["shooter", "shooter", "chaser"],
-        ["shooter", "chaser", "chaser", "swarmer"],
-        ["sniper", "shooter", "shooter"],
-        ["sniper", "chaser", "chaser", "shooter"],
-        ["guardian", "shooter", "shooter", "swarmer"],
-        ["sniper", "sniper", "chaser", "chaser"],
-        [elite("shooter", "water"), "sniper", "guardian", "chaser"],
-        [elite("sniper", "thunder"), "sniper", "shooter", "shooter", "guardian", "chaser"]
-      ],
-      endless: null
-    }
-  }),
-  /** Warm-up waves, then a thunder champion brute that stays through the waves after it, until it falls. */
-  brute: challenge({
-    name: "The Brute",
-    description: "Nine waves; midway a champion brute charged with thunder joins, and stays until it falls.",
-    objective: clearWaves(),
-    arena: "courtyard",
-    waves: {
-      scripted: [
-        ["chaser", "charger"],
-        ["guardian", "chaser", "swarmer"],
-        ["chaser", "chaser", "charger", "swarmer"],
-        ["brute", "chaser"],
-        ["guardian", "guardian", "shooter", "swarmer"],
-        [champion("brute", "thunder"), "charger", "chaser", "chaser"],
-        [elite("guardian", "fire"), "shooter", "sniper", "swarmer"],
-        ["brute", "chaser", "chaser", "swarmer"],
-        [elite("guardian", "thunder"), "guardian", "charger", "chaser"]
-      ],
-      endless: null
-    }
-  }),
-  /** Mixed waves with a final elite formation; also used by the Gauntlet tiers. */
-  endless: challenge({
-    name: "The Gauntlet",
-    description: "Clear eight mixed waves, ending with an elite formation.",
-    objective: clearWaves(),
-    arena: "kilnworks",
-    waves: {
-      scripted: [
-        ["chaser", "chaser", "swarmer"],
-        ["charger", "shooter", "chaser"],
-        ["guardian", "sniper", "chaser", "chaser"],
-        [elite("brute", "fire"), "charger", "swarmer", "shooter"],
-        ["guardian", elite("sniper", "thunder"), "swarmer", elite("chaser", "water"), "chaser", "brute"],
-        ["warden", "stalker", "shooter", "chaser", "swarmer"],
-        ["juggernaut", "volatile", "volatile", elite("shooter", "water"), "chaser"],
-        [elite("brute", "fire"), elite("guardian", "thunder"), "warden", "stalker", "swarmer"]
-      ],
-      endless: null
-    }
-  }),
-  /** Ranged enemies spread across the arena with swarms between them: reach many at once. */
-  outposts: challenge({
-    name: "Outposts",
-    description: "Clear nine waves of shooters and snipers spread out, with swarms between them.",
-    objective: clearWaves(),
-    arena: "cistern",
-    waves: {
-      scripted: [
-        ["shooter", "shooter", "swarmer", "swarmer"],
-        ["sniper", "shooter", "swarmer"],
-        ["chaser", "chaser", "shooter", "swarmer"],
-        ["sniper", "sniper", "swarmer", "swarmer"],
-        [elite("shooter", "water"), "shooter", "chaser", "chaser"],
-        ["guardian", "sniper", "shooter", "swarmer", "swarmer"],
-        ["charger", "sniper", "sniper", "chaser"],
-        [elite("sniper", "thunder"), "shooter", "shooter", "swarmer", "swarmer"],
-        ["sniper", "sniper", "shooter", "shooter", "swarmer", "swarmer", "chaser", elite("guardian", "water")]
-      ],
-      endless: null
-    }
-  }),
-  /** Fire everywhere: firebombers and burning elites in a fortress with fire trenches. */
-  ashfall: challenge({
-    name: "Ashfall",
-    description: "Nine waves of fire in the citadel: firebombers, burning elites, and a burning brute.",
-    objective: clearWaves(),
-    arena: "citadel",
-    waves: {
-      scripted: [
-        ["charger", "chaser", "swarmer"],
-        ["charger", "charger", "chaser"],
-        [elite("chaser", "fire"), "swarmer", "swarmer"],
-        ["charger", "guardian", "chaser", "chaser"],
-        ["brute", "charger", "swarmer"],
-        [elite("swarmer", "fire"), elite("chaser", "fire"), "charger", "charger"],
-        ["guardian", "guardian", "charger", "shooter"],
-        [elite("charger", "fire"), "brute", "chaser", "chaser", "swarmer"],
-        [elite("brute", "fire"), "charger", "charger", "guardian", "swarmer"]
-      ],
-      endless: null
-    }
-  }),
-  /** Water everywhere: soaking sprays and puddles in a harbor; thunder hits the soaked hard. */
-  highTide: challenge({
-    name: "High Tide",
-    description: "Nine waves at the harbor: soaking elites, snipers that strike the soaked, and a champion guardian of the tide.",
-    objective: clearWaves(),
-    arena: "harbor",
-    waves: {
-      scripted: [
-        ["shooter", "chaser", "chaser"],
-        ["shooter", "shooter", "swarmer"],
-        [elite("chaser", "water"), "shooter", "swarmer"],
-        [champion("guardian", "water"), "sniper", "shooter", "chaser"],
-        ["guardian", elite("shooter", "water"), "swarmer", "swarmer"],
-        ["sniper", "sniper", "chaser", "chaser", "shooter"],
-        [elite("guardian", "water"), "shooter", "shooter", "swarmer"],
-        ["brute", "sniper", "shooter", "chaser", "chaser"],
-        [elite("sniper", "thunder"), elite("shooter", "water"), "shooter", "guardian", "chaser", "chaser"]
-      ],
-      endless: null
-    }
-  }),
-  /** Fight through the obelisks to an armored final formation. */
-  sandstorm: challenge({
-    name: "Sandstorm",
-    description: "Clear nine waves among the obelisks, ending with armored foes and their support.",
-    objective: clearWaves(),
-    arena: "necropolis",
-    waves: {
-      scripted: [
-        ["chaser", "chaser", "swarmer"],
-        ["shooter", "charger", "swarmer"],
-        ["guardian", "sniper", "chaser", "chaser"],
-        ["brute", "swarmer", "swarmer", "shooter"],
-        ["stalker", "stalker", "shooter", "chaser"],
-        [elite("guardian", "water"), "sniper", "chaser", "swarmer"],
-        ["juggernaut", "galeCaster", "chaser", "chaser"],
-        ["warden", "brute", "volatile", "volatile", "shooter"],
-        [elite("brute", "thunder"), "juggernaut", "warden", "stalker", "swarmer"]
-      ],
-      endless: null
-    }
-  }),
-  /** Close quarters: guardians and skirmishers around a cloister of low walls. */
-  cloister: challenge({
-    name: "The Cloister",
-    description: "Ten waves in the monastery: guardians, packs, and charged elites at close quarters.",
-    objective: clearWaves(),
-    arena: "monastery",
-    waves: {
-      scripted: [
-        ["chaser", "chaser", "chaser"],
-        ["guardian", "chaser", "swarmer"],
-        ["swarmer", "swarmer", "chaser", "chaser"],
-        ["guardian", "guardian", "shooter"],
-        [elite("chaser", "thunder"), "chaser", "swarmer", "swarmer"],
-        ["guardian", "sniper", "chaser", "chaser"],
-        ["brute", "guardian", "swarmer"],
-        [elite("guardian", "thunder"), "guardian", "chaser", "chaser", "shooter"],
-        ["swarmer", "swarmer", "swarmer", "charger", "charger", "chaser"],
-        [elite("brute", "water"), elite("guardian", "fire"), "guardian", "chaser", "chaser"]
-      ],
-      endless: null
-    }
-  }),
-  /** The last stand of the citadel: brutes and elites of every element. */
-  warlord: challenge({
-    name: "The Warlord",
-    description: "Ten waves in the citadel, hunted by a burning champion stalker, ending with two elite brutes and their guard.",
-    objective: clearWaves(),
-    arena: "citadel",
-    waves: {
-      scripted: [
-        ["guardian", "chaser", "chaser"],
-        ["brute", "swarmer", "swarmer"],
-        ["charger", "sniper", "chaser", "chaser"],
-        [elite("guardian", "fire"), "shooter", "shooter", "swarmer"],
-        [champion("stalker", "fire"), "brute", "chaser"],
-        [elite("sniper", "thunder"), "sniper", "guardian", "swarmer", "swarmer"],
-        [elite("charger", "fire"), "charger", "brute", "chaser"],
-        [elite("chaser", "water"), elite("chaser", "thunder"), "guardian", "guardian", "shooter"],
-        ["brute", "brute", "sniper", "sniper", "swarmer"],
-        [elite("brute", "fire"), elite("brute", "thunder"), "guardian", "charger", "chaser", "chaser"]
-      ],
-      endless: null
-    }
-  }),
+  // Chapter 1: the Swordsman alone.
+  /** Chasers only: learn to move, dodge, and strike back. */
+  firstBlood: waves("First Blood", "Clear eight waves of chasers, a few more each time.", "courtyard", [
+    ["chaser", "chaser"],
+    ["chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "chaser", "chaser"]
+  ]),
+  /** Shooters behind cover, with chasers to keep you busy: close the distance. */
+  crossfire: waves("Crossfire", "Clear eight waves of shooters fighting from cover, with chasers among them.", "sanctuary", [
+    ["shooter", "chaser", "chaser"],
+    ["shooter", "shooter", "chaser"],
+    ["chaser", "chaser", "chaser", "shooter"],
+    ["shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "shooter", "shooter"],
+    ["shooter", "shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "shooter", "shooter"],
+    ["shooter", "shooter", "shooter", "chaser", "chaser", "chaser"]
+  ]),
+  /** The first champion: a burning chaser that stays across waves. */
+  packLeader: waves("The Pack Leader", "Eight waves; midway a burning champion chaser joins, and stays until it falls.", "monastery", [
+    ["chaser", "chaser", "chaser"],
+    ["shooter", "chaser", "chaser", "chaser"],
+    ["shooter", "shooter", "chaser", "chaser"],
+    [champion("chaser", "fire"), "chaser", "chaser"],
+    ["shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "shooter", "shooter"],
+    ["shooter", "shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "chaser", "shooter", "shooter"]
+  ]),
+
+  // Chapter 2: the Swordsman and the Gunner.
+  /** Packs of swarmers: reach many at once. */
+  swarm: waves("The Swarm", "Clear eight waves of swarmer packs, with chasers and shooters.", "courtyard", [
+    ["swarmer"],
+    ["chaser", "swarmer"],
+    ["swarmer", "shooter"],
+    ["swarmer", "swarmer"],
+    ["chaser", "chaser", "swarmer"],
+    ["swarmer", "swarmer", "shooter"],
+    ["swarmer", "swarmer", "chaser", "chaser"],
+    ["swarmer", "swarmer", "swarmer", "shooter"]
+  ]),
+  /** Fire trenches in the floor: keep out, and knock enemies in. */
+  emberKiln: waves("Ember Kiln", "Eight waves in the kilnworks, between trenches of fire.", "kilnworks", [
+    ["chaser", "chaser", "swarmer"],
+    ["shooter", "shooter", "chaser"],
+    ["swarmer", "swarmer"],
+    ["chaser", "chaser", "chaser", "shooter"],
+    ["swarmer", "shooter", "shooter"],
+    ["swarmer", "swarmer", "chaser", "chaser"],
+    ["shooter", "shooter", "swarmer", "chaser", "chaser"],
+    ["swarmer", "swarmer", "shooter", "shooter", "chaser"]
+  ]),
+  /** Guardians: heavy, patient, and a long thrust for whoever keeps just out of reach. */
+  ironGuard: waves("Iron Guard", "Eight waves led by guardians that hold their ground and thrust far.", "sanctuary", [
+    ["guardian", "chaser"],
+    ["guardian", "shooter", "chaser"],
+    ["swarmer", "guardian"],
+    ["guardian", "guardian", "chaser"],
+    ["shooter", "shooter", "guardian", "swarmer"],
+    ["guardian", "chaser", "chaser", "swarmer"],
+    ["guardian", "guardian", "shooter", "shooter"],
+    ["guardian", "guardian", "swarmer", "chaser", "chaser"]
+  ]),
+  /** A burning champion guardian among the citadel's fire. */
+  bulwark: waves("The Bulwark", "Eight waves in the citadel; midway a burning champion guardian joins, and stays until it falls.", "citadel", [
+    ["chaser", "chaser", "swarmer"],
+    ["guardian", "shooter", "chaser"],
+    ["swarmer", "swarmer", "shooter"],
+    [champion("guardian", "fire"), "chaser"],
+    ["shooter", "shooter", "swarmer"],
+    ["guardian", "chaser", "chaser"],
+    ["swarmer", "shooter", "guardian"],
+    ["guardian", "swarmer", "chaser", "chaser", "shooter"]
+  ]),
+
+  // Chapter 3: two characters, and whoever the Spirit Call brings.
+  /** Elites: bigger, tougher, and carrying fire or water. */
+  ashfall: waves("Ashfall", "Eight waves in the citadel, led by elites of fire and water.", "citadel", [
+    ["chaser", "chaser", "swarmer"],
+    [elite("chaser", "fire"), "shooter"],
+    ["guardian", "swarmer", "chaser"],
+    [elite("shooter", "water"), "chaser", "chaser"],
+    ["swarmer", "swarmer", "guardian"],
+    [elite("swarmer", "fire"), "shooter", "shooter"],
+    [elite("guardian", "water"), "chaser", "chaser", "swarmer"],
+    [elite("chaser", "fire"), elite("shooter", "water"), "guardian", "swarmer"]
+  ]),
+  /** Snipers from afar: walls stop their shots. */
+  outposts: waves("Outposts", "Eight waves of snipers keeping far away, with shooters and packs between them.", "monastery", [
+    ["sniper", "chaser", "chaser"],
+    ["shooter", "shooter", "swarmer"],
+    ["sniper", "guardian", "chaser"],
+    ["sniper", "shooter", "swarmer"],
+    [elite("shooter", "water"), "sniper", "chaser"],
+    ["sniper", "sniper", "guardian", "swarmer"],
+    [elite("chaser", "fire"), "sniper", "shooter", "swarmer"],
+    [elite("sniper", "water"), "sniper", "shooter", "guardian", "chaser"]
+  ]),
+  /** Brutes: slow, heavy, best broken before they fall. */
+  brute: waves("The Brute", "Eight waves with brutes among them: break them, then punish them.", "courtyard", [
+    ["chaser", "chaser", "swarmer"],
+    ["brute", "chaser"],
+    ["guardian", "shooter", "swarmer"],
+    ["brute", "sniper", "chaser"],
+    [elite("chaser", "fire"), "swarmer", "shooter"],
+    ["brute", "guardian", "swarmer"],
+    [elite("guardian", "water"), "sniper", "chaser", "chaser"],
+    [elite("brute", "fire"), "brute", "shooter", "swarmer"]
+  ]),
+  /** A burning champion brute in the kilnworks. */
+  bruteKing: waves("The Brute King", "Eight waves in the kilnworks; midway a burning champion brute joins, and stays until it falls.", "kilnworks", [
+    ["chaser", "chaser", "swarmer"],
+    ["guardian", "shooter", "chaser"],
+    ["brute", "swarmer"],
+    [champion("brute", "fire"), "chaser"],
+    ["sniper", "shooter", "swarmer"],
+    [elite("guardian", "water"), "chaser"],
+    ["brute", "swarmer", "shooter"],
+    [elite("chaser", "fire"), "sniper", "guardian", "swarmer"]
+  ]),
+
+  // Chapter 4: three characters.
+  /** Water in the floor: it soaks and slows whoever wades in. */
+  highTide: waves("High Tide", "Eight waves at the harbor, among pools that soak and slow.", "harbor", [
+    ["shooter", "chaser", "chaser"],
+    ["swarmer", "swarmer", "sniper"],
+    [elite("shooter", "water"), "guardian"],
+    ["brute", "chaser", "chaser"],
+    ["sniper", "sniper", "swarmer"],
+    [elite("chaser", "water"), "shooter", "shooter", "guardian"],
+    ["brute", elite("swarmer", "water"), "sniper"],
+    [elite("guardian", "water"), elite("shooter", "fire"), "brute", "chaser", "chaser"]
+  ]),
+  /** Firebombers: bombs over walls, flames where they burst. */
+  bombardment: waves("Bombardment", "Eight waves in the citadel under firebombers' bombs.", "citadel", [
+    ["charger", "chaser", "chaser"],
+    ["charger", "swarmer"],
+    ["guardian", "charger", "shooter"],
+    [elite("chaser", "fire"), "charger", "swarmer"],
+    ["charger", "charger", "chaser", "chaser"],
+    ["brute", "charger", "sniper"],
+    [elite("charger", "fire"), "guardian", "swarmer", "swarmer"],
+    [elite("brute", "water"), "charger", "charger", "chaser"]
+  ]),
+  /** Shields: any enemy can carry one; shots and discs stop against it. */
+  shieldWall: waves("Shield Wall", "Eight waves in the cistern, enemies carrying shields that stop shots from the front.", "cistern", [
+    [shielded("shooter"), "chaser", "chaser"],
+    [shielded("guardian"), "swarmer"],
+    [shielded("sniper"), "shooter", "chaser"],
+    ["charger", shielded("chaser"), shielded("chaser")],
+    [shielded("brute"), "swarmer", "shooter"],
+    [elite("shooter", "water"), shielded("guardian"), "charger"],
+    [shielded("sniper"), shielded("shooter"), "brute", "chaser"],
+    [shielded(elite("guardian", "fire")), "charger", shielded("shooter"), "swarmer"]
+  ]),
+  /** A champion swarmer of the tide: small, fast, and hard to pin down. */
+  swarmMother: waves("The Swarm Mother", "Eight waves at the harbor; midway a champion swarmer of the tide joins, and stays until it falls.", "harbor", [
+    ["chaser", "chaser", "shooter"],
+    ["charger", "swarmer"],
+    [shielded("shooter"), "sniper", "chaser"],
+    [champion("swarmer", "water"), shielded("guardian")],
+    ["brute", "swarmer"],
+    [elite("charger", "fire"), "shooter", "shooter"],
+    [shielded("guardian"), "sniper", "chaser", "chaser"],
+    [elite("brute", "water"), "charger", shielded("shooter"), "swarmer"]
+  ]),
+
+  // Chapter 5.
+  /** Stalkers: keeping your distance is no refuge. */
+  sandstorm: waves("Sandstorm", "Eight waves among the obelisks, stalkers blinking to whoever keeps away.", "necropolis", [
+    ["stalker", "chaser"],
+    ["shooter", "shooter", "swarmer"],
+    ["stalker", "guardian", "chaser"],
+    ["charger", "sniper", "swarmer"],
+    ["stalker", "stalker", "shooter"],
+    [elite("brute", "fire"), "stalker", "chaser"],
+    [shielded("guardian"), "stalker", "charger", "swarmer"],
+    [elite("stalker", "water"), "stalker", "sniper", shielded("shooter"), "chaser"]
+  ]),
+  /** Wardens: an ally of theirs takes little damage until the tether is cut. */
+  cloister: waves("The Cloister", "Eight waves in the monastery, wardens shielding their allies from afar.", "monastery", [
+    ["warden", "chaser", "chaser"],
+    ["guardian", "shooter", "swarmer"],
+    ["warden", "brute", "chaser"],
+    ["stalker", "charger", "swarmer"],
+    ["warden", shielded("guardian"), "shooter"],
+    [elite("chaser", "fire"), "warden", "stalker", "swarmer"],
+    ["warden", "warden", "brute", "sniper"],
+    [elite("guardian", "water"), "warden", "stalker", "charger", "chaser"]
+  ]),
+  /** Thunder elites: they strike the soaked hardest. */
+  thunderhead: waves("Thunderhead", "Eight waves at the harbor, led by elites charged with thunder.", "harbor", [
+    [elite("chaser", "thunder"), "shooter"],
+    ["sniper", "warden", "swarmer"],
+    [elite("shooter", "thunder"), "guardian", "chaser"],
+    ["stalker", "charger", "swarmer"],
+    [elite("sniper", "thunder"), "sniper", "chaser", "chaser"],
+    ["brute", "warden", shielded("shooter")],
+    [elite("guardian", "thunder"), "stalker", "charger"],
+    [elite("brute", "thunder"), elite("sniper", "thunder"), "warden", "shooter", "swarmer"]
+  ]),
+  /** A champion stalker charged with thunder, hunting you through the citadel. */
+  warlord: waves("The Warlord", "Nine waves in the citadel; midway a champion stalker charged with thunder joins, and hunts you until it falls.", "citadel", [
+    ["guardian", "chaser", "chaser"],
+    ["brute", "swarmer"],
+    ["charger", "sniper", "chaser"],
+    [champion("stalker", "thunder"), "chaser"],
+    ["warden", "shooter", "swarmer"],
+    [elite("guardian", "fire"), "sniper", "chaser"],
+    [shielded("brute"), "charger", "swarmer"],
+    [elite("chaser", "water"), elite("shooter", "thunder"), "warden", "guardian"],
+    [elite("brute", "fire"), "stalker", "sniper", "swarmer"]
+  ]),
+
+  // Chapter 6.
+  /** Juggernauts: armored until broken. */
+  ironclad: waves("Ironclad", "Eight waves with juggernauts: blows barely scratch them until they are broken.", "courtyard", [
+    ["juggernaut", "chaser"],
+    ["stalker", "shooter", "swarmer"],
+    ["juggernaut", "warden", "chaser"],
+    ["brute", "charger", "swarmer"],
+    ["juggernaut", shielded("shooter"), "sniper"],
+    [elite("guardian", "thunder"), "juggernaut", "chaser", "chaser"],
+    ["juggernaut", "juggernaut", "warden"],
+    [elite("juggernaut", "fire"), "stalker", "charger", "swarmer"]
+  ]),
+  /** Volatiles: they burst in fire where they fall, hurting their own side too. */
+  powderKeg: waves("Powder Keg", "Eight waves in the kilnworks, volatiles bursting where they fall.", "kilnworks", [
+    ["volatile", "chaser", "chaser"],
+    ["volatile", "guardian", "shooter"],
+    ["stalker", "volatile", "swarmer"],
+    ["volatile", "volatile", "brute"],
+    ["juggernaut", "charger", "volatile"],
+    [elite("chaser", "thunder"), "volatile", "volatile", "warden"],
+    [shielded("guardian"), "volatile", "volatile", "sniper"],
+    [elite("brute", "fire"), "volatile", "volatile", "stalker", "swarmer"]
+  ]),
+  /** Gale casters: a cone of wind that blows everyone, their own side too. */
+  galeForce: waves("Gale Force", "Eight waves among the obelisks, gale casters blowing everyone around.", "necropolis", [
+    ["galeCaster", "chaser", "chaser"],
+    ["galeCaster", "swarmer"],
+    ["galeCaster", "guardian", "shooter"],
+    ["volatile", "volatile", "galeCaster"],
+    ["juggernaut", "galeCaster", "chaser"],
+    ["stalker", "galeCaster", "charger"],
+    [elite("galeCaster", "water"), "warden", "volatile", "volatile"],
+    ["galeCaster", "galeCaster", elite("brute", "thunder"), "swarmer"]
+  ]),
+  /** A burning champion juggernaut. */
+  colossus: waves("The Colossus", "Eight waves; midway a burning champion juggernaut joins, armored until broken, and stays until it falls.", "courtyard", [
+    ["chaser", "chaser", "volatile"],
+    ["galeCaster", "shooter", "swarmer"],
+    ["warden", "brute", "chaser"],
+    [champion("juggernaut", "fire"), "chaser"],
+    ["stalker", "volatile", "volatile"],
+    [elite("sniper", "thunder"), "galeCaster", "swarmer"],
+    [shielded("guardian"), "charger", "warden"],
+    [elite("brute", "water"), "stalker", "volatile", "volatile", "galeCaster"]
+  ]),
+
+  // Side quests.
+  /** Chasers and shooters, wave on wave. */
+  holdTheLine: waves("Hold the Line", "Seven waves of chasers and shooters, coming harder each time.", "courtyard", [
+    ["chaser", "chaser"],
+    ["shooter", "chaser"],
+    ["chaser", "chaser", "chaser"],
+    ["shooter", "shooter", "chaser"],
+    ["chaser", "chaser", "shooter"],
+    ["shooter", "shooter", "chaser", "chaser"],
+    ["chaser", "chaser", "chaser", "shooter", "shooter"]
+  ]),
+  /** Packs at night in the monastery. */
+  swarmNight: waves("Night of Packs", "Eight waves of packs in the monastery, a guardian at their head.", "monastery", [
+    ["swarmer"],
+    ["swarmer", "chaser"],
+    ["swarmer", "swarmer"],
+    ["chaser", "chaser", "swarmer"],
+    ["swarmer", "swarmer", "shooter"],
+    ["guardian", "swarmer", "swarmer"],
+    ["swarmer", "swarmer", "swarmer", "chaser"],
+    ["guardian", "swarmer", "swarmer", "chaser", "chaser"]
+  ]),
   /** Every wave led by elites: read their elements and turn them against them. */
-  eliteHunt: challenge({
-    name: "Elite Hunt",
-    description: "Eight waves, every one led by elites of fire, water, or thunder.",
-    objective: clearWaves(),
-    arena: "courtyard",
-    waves: {
-      scripted: [
-        [elite("chaser", "fire"), "chaser"],
-        [elite("shooter", "water"), "swarmer"],
-        [elite("guardian", "thunder"), "chaser"],
-        [elite("charger", "fire"), elite("chaser", "water")],
-        [elite("sniper", "thunder"), elite("swarmer", "fire"), "shooter"],
-        [elite("brute", "water"), "chaser", "chaser"],
-        [elite("guardian", "fire"), elite("shooter", "thunder"), "swarmer"],
-        [elite("brute", "thunder"), elite("charger", "fire"), elite("chaser", "water")]
-      ],
-      endless: null
-    }
-  }),
-  /** The newer threats, one at a time, then together: a Volatile's burst, a Warden's ward, a Stalker's blink, a Gale Caster's gust, a Juggernaut's armor. */
-  strangeCompany: challenge({
-    name: "Strange Company",
-    description: "Ten waves of stranger foes: they burst, ward, blink, blow you around, or shrug blows off until broken.",
-    objective: clearWaves(),
-    arena: "courtyard",
-    waves: {
-      scripted: [
-        ["volatile", "chaser", "chaser"],
-        ["warden", "chaser", "chaser", "shooter"],
-        ["stalker", "shooter", "shooter"],
-        ["galeCaster", "chaser", "chaser", "swarmer"],
-        ["volatile", "volatile", "swarmer", "brute"],
-        ["juggernaut", "chaser", "shooter"],
-        ["warden", "brute", "guardian", "galeCaster"],
-        ["stalker", "stalker", "sniper", "chaser"],
-        ["warden", "juggernaut", "volatile", "volatile"],
-        ["warden", "stalker", "galeCaster", "juggernaut", "volatile"]
-      ],
-      endless: null
-    }
-  }),
+  eliteHunt: waves("Elite Hunt", "Eight waves, every one led by elites of fire or water.", "courtyard", [
+    [elite("chaser", "fire"), "chaser"],
+    [elite("shooter", "water"), "swarmer"],
+    [elite("guardian", "fire"), "chaser"],
+    [elite("swarmer", "water"), elite("chaser", "fire")],
+    [elite("sniper", "water"), elite("swarmer", "fire"), "shooter"],
+    [elite("brute", "water"), "chaser", "chaser"],
+    [elite("guardian", "fire"), elite("shooter", "water"), "swarmer"],
+    [elite("brute", "fire"), elite("guardian", "water"), elite("chaser", "fire")]
+  ]),
+  /** Firebombers and shields in the flooded cistern. */
+  floodgate: waves("Floodgate", "Eight waves in the cistern: firebombers, shields, and brutes wading in.", "cistern", [
+    ["charger", "shooter", "chaser"],
+    [shielded("guardian"), "swarmer"],
+    [elite("shooter", "water"), "charger"],
+    ["brute", "sniper", "swarmer"],
+    [shielded("sniper"), "charger", "chaser", "chaser"],
+    [elite("charger", "fire"), shielded("shooter"), "swarmer"],
+    ["brute", "charger", shielded("guardian")],
+    [elite("brute", "water"), elite("charger", "fire"), "sniper", "swarmer"]
+  ]),
+  /** Snipers and thunder over the water: the soaked are struck hardest. */
+  stormFront: waves("Storm Front", "Eight waves of snipers and thunder elites at the harbor.", "harbor", [
+    ["sniper", "chaser", "chaser"],
+    ["sniper", "shooter", "swarmer"],
+    [elite("sniper", "thunder"), "chaser", "chaser"],
+    ["sniper", "sniper", "guardian"],
+    [elite("shooter", "water"), "sniper", "warden"],
+    [elite("chaser", "thunder"), "sniper", "sniper", "shooter"],
+    [shielded("guardian"), "stalker", elite("sniper", "thunder")],
+    [elite("sniper", "thunder"), elite("sniper", "thunder"), elite("shooter", "water"), "chaser", "chaser"]
+  ]),
+  /** The heaviest foes, wave on wave: brutes, guardians, and juggernauts that are best broken before they fall. */
+  heavyGround: waves("Heavy Ground", "Eight waves of the heaviest foes in the citadel: brutes, guardians, and juggernauts, best broken before they fall.", "citadel", [
+    ["brute", "chaser", "chaser"],
+    ["guardian", "shooter", "swarmer"],
+    ["juggernaut", "chaser", "chaser"],
+    ["brute", "guardian", "swarmer", "swarmer"],
+    [elite("guardian", "water"), "brute", "shooter"],
+    ["juggernaut", "guardian", "chaser", "chaser"],
+    [elite("brute", "fire"), "juggernaut", "swarmer", "swarmer"],
+    [elite("juggernaut", "thunder"), elite("guardian", "fire"), "brute", "chaser"]
+  ]),
+  /** The stranger threats, one at a time, then together. */
+  strangeCompany: waves("Strange Company", "Ten waves of stranger foes: they burst, ward, blink, blow you around, or shrug blows off until broken.", "courtyard", [
+    ["volatile", "chaser", "chaser"],
+    ["warden", "chaser", "chaser", "shooter"],
+    ["stalker", "shooter", "shooter"],
+    ["galeCaster", "chaser", "chaser", "swarmer"],
+    ["volatile", "volatile", "swarmer", "brute"],
+    ["juggernaut", "chaser", "shooter"],
+    ["warden", "brute", "guardian", "galeCaster"],
+    ["stalker", "stalker", "sniper", "chaser"],
+    ["warden", "juggernaut", "volatile", "volatile"],
+    ["warden", "stalker", "galeCaster", "juggernaut", "volatile"]
+  ]),
+
+  // Hardcore: each tier its own waves, showing what the main line has introduced by the time it opens.
+  /** Until Fall's tiers: no end, every wave stronger than the last. */
+  untilFall: untilFall("courtyard", metBy.one, [], [["chaser", "chaser"], ["shooter", "chaser"], ["chaser", "chaser", "shooter"]]),
+  untilFall2: untilFall("courtyard", metBy.two, [], [["chaser", "chaser", "swarmer"], ["shooter", "guardian"], ["swarmer", "swarmer", "chaser"]]),
+  untilFall3: untilFall("kilnworks", metBy.three, ["fire", "water"], [["chaser", "chaser", "swarmer"], ["shooter", "sniper", "chaser"], ["guardian", "brute", "swarmer"]]),
+  untilFall4: untilFall("necropolis", metBy.four, ["fire", "water"], [["chaser", "chaser", "swarmer"], ["shooter", "charger", "chaser"], ["guardian", "sniper", "swarmer", "chaser"]]),
+  untilFall5: untilFall("necropolis", metBy.five, ["fire", "water", "thunder"], [["chaser", "chaser", "swarmer"], ["shooter", "charger", "stalker"], ["guardian", "sniper", "warden", "chaser"]]),
+  untilFall6: untilFall("necropolis", metBy.six, ["fire", "water", "thunder"], [["chaser", "chaser", "volatile"], ["shooter", "galeCaster", "stalker"], ["guardian", "juggernaut", "warden", "chaser"]]),
+  /** The Gauntlet's tiers: mixed formations with elite leaders. */
+  gauntlet: waves("The Gauntlet", "Clear eight mixed waves in the kilnworks, ending with a burning champion guardian.", "kilnworks", [
+    ["chaser", "chaser", "swarmer"],
+    ["guardian", "shooter", "chaser"],
+    ["swarmer", "swarmer", "shooter", "shooter"],
+    ["guardian", "guardian", "chaser", "chaser"],
+    ["swarmer", "swarmer", "swarmer", "shooter"],
+    ["guardian", "shooter", "shooter", "chaser", "chaser"],
+    ["guardian", "guardian", "swarmer", "swarmer", "shooter"],
+    [champion("guardian", "fire"), "swarmer", "shooter", "chaser", "chaser"]
+  ]),
+  gauntlet2: waves("The Gauntlet", "Clear eight mixed waves in the kilnworks, ending with an elite formation.", "kilnworks", [
+    ["chaser", "chaser", "swarmer"],
+    ["charger", "shooter", "chaser"],
+    ["guardian", "sniper", "chaser", "chaser"],
+    [elite("brute", "fire"), "charger", "swarmer", "shooter"],
+    [shielded("guardian"), elite("sniper", "water"), "swarmer", "chaser"],
+    ["brute", "charger", "sniper", "swarmer"],
+    [elite("charger", "fire"), shielded("shooter"), "guardian", "chaser"],
+    [elite("brute", "fire"), shielded(elite("guardian", "water")), "charger", "swarmer"]
+  ]),
+  gauntlet3: waves("The Gauntlet", "Clear eight mixed waves in the kilnworks, ending with an elite formation.", "kilnworks", [
+    ["chaser", "chaser", "swarmer"],
+    ["charger", "shooter", "chaser"],
+    ["guardian", "sniper", "chaser", "chaser"],
+    [elite("brute", "fire"), "charger", "swarmer", "shooter"],
+    ["guardian", elite("sniper", "thunder"), "swarmer", elite("chaser", "water"), "chaser", "brute"],
+    ["warden", "stalker", "shooter", "chaser", "swarmer"],
+    ["juggernaut", "volatile", "volatile", elite("shooter", "water"), "chaser"],
+    [elite("brute", "fire"), elite("guardian", "thunder"), "warden", "stalker", "swarmer"]
+  ]),
+  /** Brute Siege's tiers: a champion brute and its guard. */
+  siege: waves("Brute Siege", "Nine waves; midway a champion brute joins, and stays until it falls.", "courtyard", [
+    ["chaser", "brute"],
+    ["guardian", "chaser", "swarmer"],
+    ["chaser", "chaser", "sniper", "swarmer"],
+    ["brute", "chaser"],
+    ["guardian", "guardian", "shooter", "swarmer"],
+    [champion("brute", "water"), "sniper", "chaser", "chaser"],
+    [elite("guardian", "fire"), "shooter", "sniper", "swarmer"],
+    ["brute", "chaser", "chaser", "swarmer"],
+    [elite("guardian", "water"), "guardian", "brute", "chaser"]
+  ]),
+  siege2: waves("Brute Siege", "Nine waves; midway a champion brute charged with thunder joins, and stays until it falls.", "courtyard", [
+    ["chaser", "charger"],
+    ["guardian", "chaser", "swarmer"],
+    ["stalker", "charger", "swarmer"],
+    ["brute", "warden"],
+    [shielded("guardian"), "guardian", "shooter", "swarmer"],
+    [champion("brute", "thunder"), "charger", "chaser", "chaser"],
+    [elite("guardian", "fire"), "shooter", "sniper", "warden"],
+    ["brute", "stalker", "chaser", "swarmer"],
+    [elite("guardian", "thunder"), shielded("guardian"), "charger", "chaser"]
+  ]),
+  siege3: waves("Brute Siege", "Nine waves; midway a shielded champion brute charged with thunder joins, and stays until it falls.", "courtyard", [
+    ["chaser", "charger", "volatile"],
+    ["guardian", "galeCaster", "swarmer"],
+    ["stalker", "charger", "swarmer"],
+    ["brute", "warden", "juggernaut"],
+    [shielded("guardian"), "guardian", "shooter", "volatile"],
+    [shielded(champion("brute", "thunder")), "charger", "chaser", "chaser"],
+    [elite("juggernaut", "fire"), "shooter", "sniper", "warden"],
+    ["brute", "stalker", "galeCaster", "swarmer"],
+    [elite("guardian", "thunder"), shielded("guardian"), "juggernaut", "chaser"]
+  ]),
+  /** The Keep's tiers: the citadel's last stand. */
+  keep: waves("The Keep", "Ten waves in the citadel, hunted by a burning champion stalker, ending with two elite brutes and their guard.", "citadel", [
+    ["guardian", "chaser", "chaser"],
+    ["brute", "swarmer", "swarmer"],
+    ["charger", "sniper", "chaser", "chaser"],
+    [elite("guardian", "fire"), "shooter", "shooter", "swarmer"],
+    [champion("stalker", "fire"), "brute", "chaser"],
+    [elite("sniper", "thunder"), "sniper", "warden", "swarmer", "swarmer"],
+    [elite("charger", "fire"), "charger", shielded("brute"), "chaser"],
+    [elite("chaser", "water"), elite("chaser", "thunder"), "guardian", "guardian", "shooter"],
+    ["brute", "brute", "sniper", "sniper", "swarmer"],
+    [elite("brute", "fire"), elite("brute", "thunder"), "guardian", "charger", "chaser", "chaser"]
+  ]),
+  keep2: waves("The Keep", "Ten waves in the citadel, hunted by a burning champion stalker, ending with two elite juggernauts and their guard.", "citadel", [
+    ["guardian", "chaser", "volatile"],
+    ["brute", "swarmer", "galeCaster"],
+    ["charger", "sniper", "chaser", "chaser"],
+    [elite("guardian", "fire"), "shooter", "warden", "swarmer"],
+    [champion("stalker", "fire"), "juggernaut", "chaser"],
+    [elite("sniper", "thunder"), "sniper", "warden", "volatile", "volatile"],
+    [elite("charger", "fire"), "charger", shielded("brute"), "galeCaster"],
+    [elite("chaser", "water"), elite("chaser", "thunder"), shielded("guardian"), "guardian", "shooter"],
+    ["juggernaut", "brute", "sniper", "sniper", "swarmer"],
+    [elite("juggernaut", "fire"), elite("juggernaut", "thunder"), "guardian", "charger", "chaser", "chaser"]
+  ]),
+
+  // Extras.
   /** The Training Ground (an Extra): dummies to practice on, a fire pool near each side, nothing to fear. */
   trainingGround: challenge({
     name: "Training Ground",
@@ -367,81 +600,6 @@ export const challenges = {
     objective: { kind: "practice", most: 8, fewest: 5, respawn: 3 },
     arena: "courtyard",
     waves: { scripted: [], endless: null }
-  }),
-  /** Packs at night: swarms in a cloister, ending with their elite leaders. */
-  swarmNight: challenge({
-    name: "Night of Packs",
-    description: "Clear eight waves of packs in the monastery, ending with their elite leaders.",
-    objective: clearWaves(),
-    arena: "monastery",
-    waves: {
-      scripted: [
-        ["swarmer", "swarmer"],
-        ["swarmer", "chaser", "chaser"],
-        ["swarmer", "swarmer", "swarmer"],
-        ["chaser", "chaser", "swarmer", "swarmer"],
-        [elite("chaser", "water"), "swarmer", "swarmer", "shooter"],
-        ["charger", "stalker", "swarmer", "swarmer"],
-        [elite("swarmer", "fire"), "chaser", "chaser", "guardian"],
-        [elite("chaser", "thunder"), elite("swarmer", "water"), "charger", "swarmer", "swarmer"]
-      ],
-      endless: null
-    }
-  }),
-  /** Snipers and thunder over the water: the soaked are struck hardest. */
-  stormFront: challenge({
-    name: "Storm Front",
-    description: "Eight waves of snipers and thunder elites at the harbor.",
-    objective: clearWaves(),
-    arena: "harbor",
-    waves: {
-      scripted: [
-        ["sniper", "chaser", "chaser"],
-        ["sniper", "shooter", "swarmer"],
-        [elite("sniper", "thunder"), "chaser", "chaser"],
-        ["sniper", "sniper", "guardian"],
-        [elite("shooter", "water"), "sniper", "swarmer", "swarmer"],
-        [elite("chaser", "thunder"), "sniper", "sniper", "shooter"],
-        ["guardian", "guardian", elite("sniper", "thunder"), "swarmer"],
-        [elite("sniper", "thunder"), elite("sniper", "thunder"), elite("shooter", "water"), "chaser", "chaser"]
-      ],
-      endless: null
-    }
-  }),
-  /** The heaviest foes, wave on wave: brutes, guardians, and juggernauts that are best broken before they fall. */
-  heavyGround: challenge({
-    name: "Heavy Ground",
-    description: "Eight waves of the heaviest foes in the citadel: brutes, guardians, and juggernauts, best broken before they fall.",
-    objective: clearWaves(),
-    arena: "citadel",
-    waves: {
-      scripted: [
-        ["brute", "chaser", "chaser"],
-        ["guardian", "shooter", "swarmer"],
-        ["juggernaut", "chaser", "chaser"],
-        ["brute", "guardian", "swarmer", "swarmer"],
-        [elite("guardian", "water"), "brute", "shooter"],
-        ["juggernaut", "guardian", "chaser", "chaser"],
-        [elite("brute", "fire"), "juggernaut", "swarmer", "swarmer"],
-        [elite("juggernaut", "thunder"), elite("guardian", "fire"), "brute", "chaser"]
-      ],
-      endless: null
-    }
-  }),
-  /** No end: ever-growing waves of ever-stronger enemies, until the team falls. */
-  untilFall: challenge({
-    name: "Until Fall",
-    description: "Last as long as the team can: every wave stronger than the last.",
-    objective: endure(10, 1),
-    arena: "necropolis",
-    waves: {
-      scripted: [
-        ["chaser", "chaser", "swarmer"],
-        ["shooter", "chaser", "charger"],
-        ["guardian", "sniper", "swarmer", "chaser"]
-      ],
-      endless: { baseBudget: 6, budgetPerWave: 2 }
-    }
   })
 }
 

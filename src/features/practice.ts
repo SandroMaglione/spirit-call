@@ -6,7 +6,8 @@
  * they take turns. An enemy holds its spot (`PracticeUnit`); when it falls
  * the spot fills again a few seconds later, behind a spawn warning, with
  * the same kind or, taking turns, the next pick. Some come as elites when
- * the picks say so, and a champion of the first pick that fights up close
+ * the picks say so (carrying the elements met so far), some carry shields
+ * when asked, and a champion of the first pick that fights up close
  * holds a spot of its own when asked (see `Tuning.champions`). It goes on
  * until the team falls.
  */
@@ -21,6 +22,8 @@ import { pickSpawnPoint } from "./waves.ts"
 
 /** The share of practice spawns that come as elites, when the picks ask for elites. */
 const eliteShare = 0.25
+/** The share of practice spawns that carry a shield, when the picks ask for shields. */
+const shieldShare = 0.3
 /** A champion's spot fills again after this many times the objective's wait. */
 const championRespawn = 3
 const eliteElements: ReadonlyArray<EliteElement> = ["fire", "water", "thunder"]
@@ -86,7 +89,7 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
   const random = new Random(resources.rng.get().state)
   const player = queries.player.each()[0]?.data.position.get()
   const boxes = wallBoxes(queries.walls.each())
-  const elites = resources.practice.get().elites
+  const { elites, elements = eliteElements, shields = false } = resources.practice.get()
   spots = spots.map((spot, slot) => {
     if (spot.wait === null) {
       if (held.has(slot)) return spot
@@ -99,9 +102,10 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
     if (wait > 0) return { ...spot, wait }
     const front = random.next() * Math.PI * 2
     const champion = spot.champion === true
-    const elite = champion || (elites && random.next() < eliteShare) ? random.pick(eliteElements) : null
+    const elite = champion || (elites && elements.length > 0 && random.next() < eliteShare) ? random.pick(elements.length > 0 ? elements : eliteElements) : null
     const at = pickSpawnPoint(tuning, spot.kind, player, boxes, random, front)
-    commands.spawnIn(RunScope, makePendingSpawn(spot.kind, at, tuning.waves.spawnWarning, elite, slot, champion))
+    const shield = shields && random.next() < shieldShare
+    commands.spawnIn(RunScope, makePendingSpawn(spot.kind, at, tuning.waves.spawnWarning, elite, slot, champion, shield))
     return { ...spot, wait: null }
   })
   resources.field.set({ spots, turn })

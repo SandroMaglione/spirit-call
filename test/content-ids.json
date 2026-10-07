@@ -51,7 +51,36 @@
     "strangeCompany",
     "trainingGround",
     "practice",
-    "heavyGround"
+    "heavyGround",
+    "firstBlood",
+    "packLeader",
+    "emberKiln",
+    "ironGuard",
+    "bulwark",
+    "bruteKing",
+    "bombardment",
+    "shieldWall",
+    "swarmMother",
+    "thunderhead",
+    "ironclad",
+    "powderKeg",
+    "galeForce",
+    "colossus",
+    "holdTheLine",
+    "floodgate",
+    "untilFall2",
+    "untilFall3",
+    "untilFall4",
+    "untilFall5",
+    "untilFall6",
+    "gauntlet",
+    "gauntlet2",
+    "gauntlet3",
+    "siege",
+    "siege2",
+    "siege3",
+    "keep",
+    "keep2"
   ],
   "attacks": [
     "sword",
@@ -91,12 +120,30 @@
     "eliteHunt",
     "stormFront",
     "strangeCompany",
-    "stoneTrial"
+    "stoneTrial",
+    "firstBlood",
+    "packLeader",
+    "emberKiln",
+    "ironGuard",
+    "bulwark",
+    "bruteKing",
+    "bombardment",
+    "shieldWall",
+    "swarmMother",
+    "thunderhead",
+    "ironclad",
+    "powderKeg",
+    "galeForce",
+    "colossus",
+    "floodgate"
   ],
   "chapters": [
     "one",
     "two",
-    "three"
+    "three",
+    "four",
+    "five",
+    "six"
   ],
   "currencies": [
     "crystals",
@@ -189,6 +236,9 @@
       "gun",
       "disc",
       "staff"
+    ],
+    "challenges": [
+      "endless"
     ]
   }
 }

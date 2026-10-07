@@ -75,7 +75,7 @@ describe("challenges", () => {
     expect(run.flow()).toBe("Playing")
   })
 
-  it.each(["endless", "sandstorm", "swarmNight"] as const)("%s requires fighting: waiting neither clears it nor earns progress", (id) => {
+  it.each(["gauntlet3", "sandstorm", "swarmNight"] as const)("%s requires fighting: waiting neither clears it nor earns progress", (id) => {
     const spec = defaultTuning.challenges[id]
     expect(spec.objective.kind).toBe("clearWaves")
     expect(spec.waves.endless).toBeNull()
@@ -102,7 +102,7 @@ describe("challenges", () => {
 })
 
 describe("lasting until the team falls", () => {
-  const plan = { scripted: [["chaser"]] as Array<Array<"chaser">>, endless: { baseBudget: 2, budgetPerWave: 1 } }
+  const plan = { scripted: [["chaser"]] as Array<Array<"chaser">>, endless: { baseBudget: 2, budgetPerWave: 1, kinds: ["chaser" as const], elites: [] } }
   const endless = withChallenge({ objective: endure(3, 1), waves: plan })
 
   it("never ends on its own, however many waves go by", () => {
