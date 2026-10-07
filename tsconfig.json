@@ -1,6 +1,6 @@
 {
   "$schema": "http://json.schemastore.org/tsconfig",
-  "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "scripts/**/*.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "scripts/**/*.ts", "tools/progress/**/*.ts", "tools/progress/**/*.tsx", "vite.config.ts"],
   "compilerOptions": {
     "noEmit": true,
     "target": "ES2022",

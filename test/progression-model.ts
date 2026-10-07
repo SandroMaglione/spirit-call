@@ -17,7 +17,7 @@
  * levels above the team.
  */
 import { ascend, ascensionStep, characterLevel, createAccount, encounterOf, playLock, questCleared, questLevel, questLock, recordRun, train } from "../src/account/account.ts"
-import type { Account, Play } from "../src/account/account.ts"
+import type { Account, Earned, Play } from "../src/account/account.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 import type { CharacterId } from "../src/content/characters.ts"
@@ -30,7 +30,18 @@ import type { RunResultValue } from "../src/schema.ts"
 export interface ProgressionOptions {
   readonly calls: boolean
   readonly runsPerWeek: number
+  /** How many levels below a quest's enemies the team goes in (a skilled player; negative waits above them), and in hardcore. 0 by default. */
+  readonly levelsAhead?: number
+  /** The share of runs lost (each paying its half-way progress), spread evenly over every kind of run. 0 by default. */
+  readonly lost?: number
+  /** Told of every step the account takes, to follow it run by run (see tools/progress); it only reads. */
+  readonly observe?: (step: ProgressionStep) => void
 }
+
+/** A step of the account: a run recorded (`counted` when it is one of the runs played, not a hardcore week's), or gold and materials spent. */
+export type ProgressionStep =
+  | { readonly kind: "run"; readonly play: Play; readonly earned: Earned; readonly account: Account; readonly runs: number; readonly counted: boolean }
+  | { readonly kind: "spent"; readonly account: Account; readonly runs: number }
 
 /** A member of the team, at her level. */
 export interface Member {
@@ -91,9 +102,16 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
     return tally as Tally
   }
 
-  const clear = (target: Play, tally: Tally = noTally, wave = 8) => {
-    const result = { cleared: true, progress: 1, team: team(), reactions: [], tally, challenge: encounterOf(tuning, target).challenge, wave, kills: 30, time: 200 } as RunResultValue
-    account = recordRun(tuning, account, target, result, now).account
+  const ahead = options.levelsAhead ?? 0
+  // Losses owed before the next clear, so that a share `lost` of all runs are lost.
+  const lossesPerClear = Math.min(0.95, Math.max(0, options.lost ?? 0)) / (1 - Math.min(0.95, Math.max(0, options.lost ?? 0)))
+  let owed = 0
+
+  const clear = (target: Play, tally: Tally = noTally, wave = 8, counted = false, won = true) => {
+    const result = { cleared: won, progress: won ? 1 : 0.5, team: team(), reactions: [], tally, challenge: encounterOf(tuning, target).challenge, wave: won ? wave : wave / 2, kills: 30, time: 200 } as RunResultValue
+    const recorded = recordRun(tuning, account, target, result, now)
+    account = recorded.account
+    options.observe?.({ kind: "run", play: target, earned: recorded.earned, account, runs: runs + (counted ? 1 : 0), counted })
   }
 
   /** A week of hardcore: every open tier whose enemies are at most a few levels above the team. */
@@ -102,20 +120,28 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
       if (tuning.tracks[track].kind !== "hardcore") continue
       tuning.tracks[track].tiers.forEach((tier, index) => {
         const target: Play = { kind: "tier", track, tier: index + 1 }
-        if (tier.enemyLevel <= average() + tierReach && playLock(tuning, account, target) === null) clear(target, noTally, 10)
+        if (tier.enemyLevel <= average() + tierReach + ahead && playLock(tuning, account, target) === null) clear(target, noTally, 10)
       })
     }
   }
 
-  const play = (target: Play, tally: Tally = noTally) => {
-    clear(target, tally)
+  /** One run played: lost (paying its share) or cleared; a week's runs bring a hardcore week. */
+  const once = (target: Play, tally: Tally, won: boolean) => {
+    clear(target, tally, 8, true, won)
     runs += 1
     now += (7 * 24 * 60 * 60 * 1000) / options.runsPerWeek
     if (runs % options.runsPerWeek === 0) hardcoreWeek()
   }
 
+  const play = (target: Play, tally: Tally = noTally) => {
+    owed += lossesPerClear
+    for (; owed >= 1; owed -= 1) once(target, noTally, false)
+    once(target, tally, true)
+  }
+
   /** Trains the team evenly (the lowest first) with the gold held, ascending whoever stands at a step and can. */
   const spend = () => {
+    const before = account
     for (;;) {
       let moved = false
       for (const character of [...team()].sort((a, b) => level(a) - level(b))) {
@@ -127,8 +153,9 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
           break
         }
       }
-      if (!moved) return
+      if (!moved) break
     }
+    if (account !== before) options.observe?.({ kind: "spent", account, runs })
   }
 
   /** The highest open rank of `element`'s trial, if one is open. */
@@ -153,7 +180,7 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
     spend()
     let farmed = 0, trial = 0
     const walls = new Set<CharacterId>()
-    while (average() < Math.min(enemyLevel, tuning.progression.character.curve.maxLevel) && farmed < 400) {
+    while (average() < Math.min(enemyLevel - ahead, tuning.progression.character.curve.maxLevel) && farmed < 400) {
       // Someone waiting at a step for her material (with the gold for it) farms her element's trial; otherwise the best quest cleared, for gold.
       const waiting = team().find((character) => {
         const step = ascensionStep(tuning, account, character)

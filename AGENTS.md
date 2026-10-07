@@ -61,6 +61,9 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   (from `pnpm progression`): cleared or not, and hits beside the hit budget.
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
+- `/tools/progress/` on the dev server: a dev-only design aid projecting a
+  new account's journey from the game's numbers, editable live (see
+  `tools/progress/README.md`). It never edits content or ships.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
   `?character=`, `?aspect=`, `?challenge=` for a quick start, and `?arena=` to
   fight every challenge in one arena, and `?openCalls` to clear chapter one
