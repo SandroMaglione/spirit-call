@@ -14,6 +14,7 @@ import type { QuestId, StarGroup } from "../../content/quests.ts"
 import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
 import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
+import { elements } from "../../content/elements.ts"
 import type { Novelty } from "../../content/novelties.ts"
 import type { TwistValue } from "../../schema.ts"
 import { Face } from "../kit/art.tsx"
@@ -183,13 +184,21 @@ const carrierOf = (challenge: ChallengeSpec, novelty: Novelty): WaveEntry | unde
 const NewThing = ({ store, challenge, novelty, text, inspect }: { readonly store: UiStore; readonly challenge: ChallengeId; readonly novelty: Novelty; readonly text: string; readonly inspect: (kind: EnemyKind) => void }) => {
   const carrier = carrierOf(store.tuning.value.challenges[challenge], novelty)
   const tint = novelty.kind === "hazard" ? novelty.element : carrier === undefined ? undefined : entryElite(carrier) ?? undefined
-  const badge: IconName | null = novelty.kind === "hazard" ? novelty.element : novelty.kind === "elites" ? novelty.elements[0] ?? null : novelty.kind === "shield" ? "def" : novelty.kind === "champion" ? "star" : null
+  const badge: IconName | null = novelty.kind === "hazard" ? novelty.element : novelty.kind === "shield" ? "def" : null
+  // A champion's picture wears a gold ring and halo; an elite's glows in its element.
+  const mark = novelty.kind === "champion" ? "champion" : novelty.kind === "elites" ? "elite" : undefined
   return <div class="novelty">
     {carrier !== undefined
-      ? <button type="button" class="novelty__art face-button" aria-label={store.tuning.value.enemies[entryKind(carrier)].name} onClick={() => inspect(entryKind(carrier))}><Face of={{ enemy: entryKind(carrier) }} tint={tint} size={34} /></button>
+      ? <button type="button" class="novelty__art face-button" data-mark={mark} data-tint={tint ?? ""} aria-label={store.tuning.value.enemies[entryKind(carrier)].name} onClick={() => inspect(entryKind(carrier))}>
+        <Face of={{ enemy: entryKind(carrier) }} tint={tint} size={34} />
+      </button>
       : <span class="novelty__art novelty__floor" data-tint={tint ?? ""}><Icon name={badge ?? "info"} /></span>}
     <div>
-      <Label>New{novelty.kind === "elites" ? <> · {novelty.elements.map((element) => <Icon key={element} name={element} />)}</> : badge !== null && carrier !== undefined ? <> · <Icon name={badge} /></> : null}</Label>
+      <Label><span class="novelty__new">New</span>
+        {novelty.kind === "champion" && <span class="novelty__tag" data-mark="champion"><span>Champion</span></span>}
+        {novelty.kind === "elites" && novelty.elements.map((element) => <span key={element} class="novelty__tag" data-tint={element}><Icon name={element} /><span>{elements[element].name}</span></span>)}
+        {badge !== null && carrier !== undefined && <> · <Icon name={badge} /></>}
+      </Label>
       <p>{text}</p>
     </div>
   </div>
@@ -202,7 +211,7 @@ const RankTwist = ({ rank, twist }: { readonly rank: number; readonly twist: Twi
     ...(twist.shields ? ["Each wave's leader carries a shield."] : [])
   ]
   return <div class="novelty">
-    <span class="novelty__art novelty__floor" data-tint={twist.elites ?? ""}><Icon name={twist.elites ?? "star"} /></span>
+    <span class="novelty__art novelty__floor" data-mark={twist.elites === null ? undefined : "elite"} data-tint={twist.elites ?? ""}><Icon name={twist.elites ?? "def"} /></span>
     <div>
       <Label>Rank {rankNames[rank - 1] ?? rank} · harder</Label>
       <p>{lines.length === 0 ? "Stronger enemies." : `Stronger enemies. ${lines.join(" ")}`}</p>
@@ -244,7 +253,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   return <Panel class="quests__brief in-right"
     title={selected.kind === "quest" ? tuning.quests[selected.quest].name : tuning.tracks[selected.track].name}
     subtitle={quest !== null && quest.introduces === null ? "Side quest · what you have met, mixed" : undefined}
-    detail={describeObjective(challenge.objective, challenge.waves.scripted.length)}
+    detail={steps.length > 1 ? describeObjective(challenge.objective, challenge.waves.scripted.length) : `${describeObjective(challenge.objective, challenge.waves.scripted.length)} · Lv ${encounter.enemyLevel}`}
     note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
     {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
     {quest !== null && rank > 1 && <RankTwist rank={rank} twist={encounter.twist} />}
@@ -257,7 +266,6 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         </button>
       })}
     </div>}
-    {steps.length <= 1 && <div class="steps"><Label>Enemies</Label><span class="step is-only" aria-checked="true"><span>Lv {encounter.enemyLevel}</span></span></div>}
     <div class="quests__goals">
       {quest !== null && <div>
         <Label>Stars</Label>
