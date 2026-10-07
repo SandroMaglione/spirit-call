@@ -26,17 +26,23 @@ export const Extra = ({ store, actions, nav, mode, leader }: {
   const level = teamLevel(tuning, store.account.value, team), picks = store.practicePicks.value
   const challenge = tuning.challenges[mode === "training" ? "trainingGround" : "practice"]
   const dummies = challenge.objective.kind === "training" ? [...new Set(challenge.objective.dummies.map((dummy) => dummy.kind))] : []
-  // What comes in waves can be picked, once met along the main line; the dummies cannot.
+  // What comes in waves can be picked, once met along the main line (the rest show locked); the dummies cannot.
   const met = metBy(tuning, store.account.value)
-  const pickable = ids(tuning.enemies).filter((kind) => tuning.enemies[kind].cost > 0 && met.enemies.has(kind))
+  /** The main quest that brings `kind` in, for a locked card. */
+  const bringer = (kind: EnemyKind) => Object.values(tuning.quests).find((quest) => quest.introduces?.novelty.kind === "enemy" && quest.introduces.novelty.enemy === kind)
+  // In the order the main line brings them in.
+  const order = (kind: EnemyKind) => { const at = Object.values(tuning.quests).indexOf(bringer(kind)!); return at === -1 ? Infinity : at }
+  const fighters = ids(tuning.enemies).filter((kind) => tuning.enemies[kind].cost > 0).sort((a, b) => order(a) - order(b))
+  const pickable = fighters.filter((kind) => met.enemies.has(kind))
   const elements = [...met.elites]
   const toggle = (kind: EnemyKind) => {
     inspected.value = kind
+    if (!pickable.includes(kind)) return
     store.practicePicks.value = { ...picks, kinds: picks.kinds.includes(kind) ? picks.kinds.filter((other) => other !== kind) : [...picks.kinds, kind] }
   }
   // Only what has been met: picks kept from before are dropped until met, elites carry the elements met.
   const chosen = { ...picks, kinds: picks.kinds.filter((kind) => pickable.includes(kind)), elites: picks.elites && elements.length > 0, elements, champion: picks.champion === true && met.champions.size > 0, shields: picks.shields === true && met.shield }
-  const shown = inspected.value !== null && (mode === "training" ? dummies : pickable).includes(inspected.value) ? inspected.value : null
+  const shown = inspected.value !== null && (mode === "training" ? dummies : fighters).includes(inspected.value) ? inspected.value : null
   const toParty = () => nav.go({ kind: "team" })
   return <Screen name="practice">
     <TopBar icon="practice" title="Practice" close={nav.back}>
@@ -46,7 +52,7 @@ export const Extra = ({ store, actions, nav, mode, leader }: {
       {mode === "training"
         ? <Cards>{dummies.map((kind) => <EnemyCard key={kind} store={store} kind={kind} selected={kind === shown} onClick={() => (inspected.value = kind === shown ? null : kind)} />)}</Cards>
         : <>
-          <Cards>{pickable.map((kind) => <EnemyCard key={kind} store={store} kind={kind} selected={kind === shown} mark={picks.kinds.includes(kind) ? "tick" : undefined} onClick={() => toggle(kind)} />)}</Cards>
+          <Cards>{fighters.map((kind) => <EnemyCard key={kind} store={store} kind={kind} selected={kind === shown} locked={!pickable.includes(kind)} mark={chosen.kinds.includes(kind) ? "tick" : undefined} onClick={() => toggle(kind)} />)}</Cards>
           <div class="practice__options">
             {elements.length > 0 && <Toggle on={picks.elites} onChange={(elites) => (store.practicePicks.value = { ...picks, elites, elements })}>Elites</Toggle>}
             {met.champions.size > 0 && <Toggle on={picks.champion === true} onChange={(champion) => (store.practicePicks.value = { ...picks, champion, elements })}>Champion</Toggle>}
@@ -56,7 +62,9 @@ export const Extra = ({ store, actions, nav, mode, leader }: {
         </>}
     </div>
     <Panel class="practice__brief in-right" title={shown === null ? challenge.name : tuning.enemies[shown].name} detail={mode === "training" ? `Dummies Lv ${level}` : `${chosen.kinds.length} picked · Lv ${level}`} note="Practice records nothing: no experience, gold, or discoveries.">
-      {shown === null ? <><p>{challenge.description}</p>{mode === "practice" && <p class="dim">{pickable.length === 0 ? "Enemies join this list as the main quests bring them in." : "Tap the enemies to face."}</p>}</> : <EnemyFacts store={store} kind={shown} />}
+      {shown === null ? <><p>{challenge.description}</p>{mode === "practice" && <p class="dim">{pickable.length === 0 ? "Enemies open here as the main quests bring them in." : "Tap the enemies to face."}</p>}</>
+        : mode === "practice" && !pickable.includes(shown) ? <p class="dim">Not met yet: {bringer(shown) === undefined ? "a later quest brings it in." : `${bringer(shown)!.name} brings it in.`}</p>
+        : <EnemyFacts store={store} kind={shown} />}
     </Panel>
     <Actions>
       <PartyStrip store={store} team={team} leader={leader} size={34} pick={toParty} edit={toParty} />
