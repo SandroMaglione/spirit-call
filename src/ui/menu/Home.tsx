@@ -54,8 +54,8 @@ export const Home = ({ store, nav, leader, play, enter }: {
       <RoundButton icon="settings" tone="dark" label="Settings" onClick={() => nav.go({ kind: "settings" })} />
     </header>
     <SideTabs label="Menu" onChange={(id) => nav.go(places[id]!)} tabs={[
-      { id: "characters", label: "Characters", badge: canTrain },
       { id: "challenges", label: "Challenges" },
+      { id: "characters", label: "Characters", badge: canTrain },
       { id: "call", label: "Spirit Call", badge: canCall },
       { id: "inventory", label: "Inventory" },
     ]} />

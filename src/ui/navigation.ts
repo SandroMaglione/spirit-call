@@ -17,19 +17,38 @@ export const selectionIn = (tuning: Tuning, account: Account, tab: QuestTab, cur
 }
 
 /**
- * The main quest to play next: the first one not cleared yet; once the main
+ * The quest of `line` to play next: the first one not cleared yet; once the
  * line is done, the lowest-level quest open and not cleared at a higher rank
  * (the ranks' replays), if any.
  */
-export const nextMainQuest = (tuning: Tuning, account: Account): Play | null => {
-  const main = playsIn(tuning, "main").flatMap((play) => (play.kind === "quest" ? [play.quest] : []))
-  const first = main.find((quest) => !questCleared(account, quest))
+export const nextQuestIn = (tuning: Tuning, account: Account, line: "main" | "secondary"): Play | null => {
+  const quests = playsIn(tuning, line).flatMap((play) => (play.kind === "quest" ? [play.quest] : []))
+  const first = quests.find((quest) => !questCleared(account, quest))
   if (first !== undefined) return { kind: "quest", quest: first }
-  const ranked = Array.from({ length: tuning.ranks.count - 1 }, (_, index) => index + 2).flatMap((rank) => main.map((quest) => ({ quest, rank })))
+  const ranked = Array.from({ length: tuning.ranks.count - 1 }, (_, index) => index + 2).flatMap((rank) => quests.map((quest) => ({ quest, rank })))
     .filter(({ quest, rank }) => !questCleared(account, quest, rank) && questLock(tuning, account, quest, rank) === null)
     .sort((a, b) => questLevel(tuning, a.quest, a.rank) - questLevel(tuning, b.quest, b.rank))
   return ranked[0] === undefined ? null : { kind: "quest", quest: ranked[0].quest, rank: ranked[0].rank }
 }
+
+export const nextMainQuest = (tuning: Tuning, account: Account): Play | null => nextQuestIn(tuning, account, "main")
+
+/**
+ * What to play after `played`, in the same list it came from: a quest's
+ * line (main or side), or a track's next tier. When that list has nothing
+ * open left to do, the main line's next quest; `null` when there is none.
+ */
+export const nextAfter = (tuning: Tuning, account: Account, played: Play): Play | null => {
+  const open = (play: Play | null): Play | null => (play !== null && playLock(tuning, account, play) === null ? play : null)
+  const inList = played.kind === "tier"
+    ? played.tier < tuning.tracks[played.track].tiers.length ? open({ kind: "tier", track: played.track, tier: played.tier + 1 }) : null
+    : open(nextQuestIn(tuning, account, tuning.quests[played.quest].line))
+  return inList ?? open(nextMainQuest(tuning, account))
+}
+
+/** The tab of the challenges that lists `play`. */
+export const tabOf = (tuning: Tuning, play: Play): QuestTab =>
+  play.kind === "quest" ? tuning.quests[play.quest].line : tuning.tracks[play.track].kind === "trial" ? "trials" : "hardcore"
 
 /** Unlocks are described from shipped rewards, never from invented acquisition rules. */
 export const sourceOf = (tuning: Tuning, item: Item): QuestId | null =>

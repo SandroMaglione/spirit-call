@@ -69,7 +69,7 @@ export const aspectId = (id: string): AspectId => id as AspectId
 
 /** A made-up aspect of `cls`: its plain aspect's moves, with `extra` over them. */
 export const testAspect = (tuning: Tuning, cls: ClassId, extra: Partial<AspectSpec> = {}): AspectSpec =>
-  ({ ...tuning.classes[cls].plain, name: "Test", description: "A test aspect.", class: cls, passives: [], infuse: null, ...extra })
+  ({ ...tuning.classes[cls].plain, name: "Test", description: "A test aspect.", against: "Tests.", class: cls, passives: [], infuse: null, ...extra })
 
 export const gunShot = defaultTuning.classes.gun.plain.combo[0] as ShotMove
 

@@ -158,7 +158,7 @@ export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
 /**
  * A guard being raised (see `GuardEffect`), on the member raising it: she is
  * rooted for `remaining` more seconds, then the team holds its plates, from
- * her `atk`. Lost if she leaves the field or dashes first.
+ * her `atk`. She cannot dash meanwhile; lost if she leaves the field first.
  */
 export const Raising = Descriptor.Component<{ readonly remaining: number; readonly effect: GuardEffect; readonly atk: number; readonly charges: boolean }>()("Shooter/Raising")
 

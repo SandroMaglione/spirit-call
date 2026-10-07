@@ -58,6 +58,18 @@ export const describeMove = (move: MoveFilter): string => {
 export const describeInfuse = (move: MoveFilter, element: ElementId): string =>
   `${capitalized(describeMove(move))} carries her element (${elements[element].name}): it leaves ${elements[element].state}, or bursts another state.`
 
+/**
+ * Where an aspect's element comes from, for a character of `element` (or,
+ * with `null`, for whoever wears it): the one move that carries it (or what
+ * its passive sets off), and that the rest is the same for every element.
+ */
+export const describeAspectElement = (aspect: { readonly infuse: MoveFilter | null; readonly passives: ReadonlyArray<Passive> }, element: ElementId | null): string => {
+  const sameForAll = "The rest, pulls and pushes too, is the same for every element."
+  if (aspect.infuse !== null) return `${element === null ? `${capitalized(describeMove(aspect.infuse))} carries the element of whoever wears it.` : describeInfuse(aspect.infuse, element)} ${sameForAll}`
+  const own = aspect.passives.some((passive) => passive.kind === "on" && passive.effect.kind === "cast" && passive.effect.own)
+  return own ? `Only what its passive sets off carries ${element === null ? "the wearer's element" : `her element (${elements[element].name})`}. ${sameForAll}` : "None of its moves carries her element."
+}
+
 const capitalized = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
 
 const describeCondition = (condition: HitCondition): string => {
@@ -106,7 +118,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "vortex":
       return `a ${elementWord(effect.element)}whirl${effect.maxRange > 0 ? "" : " at your feet"} that pulls enemies in for ${effect.seconds}s${effect.power > 0 ? ` (${effect.power}% ATK every ${effect.tick}s)` : ", hurting nobody"}`
     case "totem":
-      return `a ${elementWord(effect.element)}totem at your feet for ${effect.seconds}s that zaps enemies around it (${effect.power}% ATK, jumping ${effect.jumps} times), or heals you ${effect.heal}% of max HP while you stand in its reach hurt`
+      return `a ${elementWord(effect.element)}totem ${effect.offset > 0 ? "ahead of you" : "at your feet"} for ${effect.seconds}s that zaps enemies around it (${effect.power}% ATK${effect.jumps > 0 ? `, jumping ${effect.jumps} times` : ""})${effect.heal > 0 ? `, or heals you ${effect.heal}% of max HP while you stand in its reach hurt` : ""}`
     case "thunderclap":
       return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
     case "barrage":
@@ -123,7 +135,7 @@ const describeTriggered = (effect: TriggeredEffect): string => {
     case "heal":
       return `heal ${effect.percent}% of max HP`
     case "cast":
-      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? " of her element" : ""}`
+      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? ", carrying her element" : ""}`
   }
 }
 

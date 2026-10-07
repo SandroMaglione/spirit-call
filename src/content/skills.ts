@@ -346,8 +346,9 @@ export const skills = {
   }),
   /**
    * Bastion's ultimate (id `stoneGuard`, from her first kit's special): a ring of stone bursts out around her, throwing
-   * back and cracking what crowds her, and she plants her feet (untouchable)
-   * while stone gathers; then the team wears stone plates. Each takes a blow
+   * back and cracking what crowds her (untouchable only as it bursts), and
+   * she plants her feet while stone gathers, open to blows: the risk of
+   * her ultimate; then the team wears stone plates. Each takes a blow
    * whole and shatters outward, cracking and throwing back what is around
    * and filling the attacker's break bar.
    */
@@ -355,7 +356,7 @@ export const skills = {
     name: "Stoneguard",
     cooldown: 10,
     energy: 100,
-    invulnerability: 0.9,
+    invulnerability: 0.2,
     effect: guard({
       raise: 0.9,
       plates: 4,

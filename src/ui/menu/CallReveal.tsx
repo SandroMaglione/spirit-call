@@ -109,7 +109,8 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
   // The sky is plain stone around the seal; a character arriving brings hers.
   const sky = current?.kind === "character" ? elementOf(tuning, current.id) : phase.value === "burst" && element !== undefined ? element : "plain"
   useEffect(() => { store.sky.value = sky }, [sky])
-  useEffect(() => () => { store.sky.value = null }, [])
+  useEffect(() => { store.rays.value = current?.kind === "character" }, [current?.kind])
+  useEffect(() => () => { store.sky.value = null; store.rays.value = false }, [])
 
   if (phase.value === "seal" || phase.value === "burst") {
     const p = progress.value
@@ -147,7 +148,6 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
     if (current.kind === "character") {
       const spec = tuning.characters[current.id], own = elementOf(tuning, current.id)
       return <div class="reveal reveal--character" data-element={own} key={`c-${index.value}`}>
-        <div class="reveal__rays" aria-hidden="true" />
         <div class="reveal__stage"><Model character={current.id} reveal /></div>
         <section class="reveal__about">
           {counter}
@@ -172,6 +172,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
           <Label>New aspect · {tuning.classes[aspect.class].name}</Label>
           <h1>{aspect.name}</h1>
           <p>{aspect.description}</p>
+          <p class="dim">Good against · {aspect.against}</p>
           <Pill icon="next" onClick={next}>Next</Pill>
         </section>
       </div>

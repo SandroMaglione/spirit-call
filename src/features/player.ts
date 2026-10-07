@@ -14,7 +14,8 @@ import { attackOf } from "./build.ts"
  * while an attack or a skill holds her facing the way it went (see
  * `Facing`). While a move recovers she runs slower, or stands for a heavy
  * one (see `BasicAttackValue.slowed`), and stands while raising a guard
- * (see `Raising`). A dash moves the player a fixed distance
+ * (see `Raising`): no dash then, and a dash press is dropped, not kept for
+ * later. A dash moves the player a fixed distance
  * over a fixed time in a committed direction: the movement input, or the
  * way she faces when standing still. Its displacement is exact regardless
  * of the step length, because the last dash step only covers the time left.
@@ -68,7 +69,10 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       charges += 1
       cooldown = charges < tuning.dash.charges ? cooldown + tuning.dash.cooldown : 0
     }
-    let buffered = controls.dashPressed ? tuning.dash.inputBuffer : Math.max(0, dash.buffered - dt)
+    // Raising a guard, she stands: a dash under way stops, and a press is dropped.
+    const rooted = data.raising.present
+    if (rooted) remaining = 0
+    let buffered = rooted ? 0 : controls.dashPressed ? tuning.dash.inputBuffer : Math.max(0, dash.buffered - dt)
     let since = dash.since + dt
     let perfect = dash.perfect
     let from = dash.from
