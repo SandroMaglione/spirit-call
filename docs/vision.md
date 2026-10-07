@@ -254,13 +254,15 @@ Decided so far (the rest is in the open questions):
   materials** for the steps between a character's level phases.
 - **Ascension.** A character's levels come in phases (1–10, 10–20, 20–30,
   30–40); gold buys the levels within a phase, and crossing into the next
-  costs gold and **her element's material**. Each element has one material
-  in three grades, one per step. Materials come from clearing quests (each
-  quest gives its element's, at the grade its enemy level sets), more from
-  champions and hardcore, a lump from first clears and chests; a loss gives
-  none (only its share of gold). Amounts are fixed (never random), and a
-  lower grade combines into a higher one with gold, so no single quest is
-  ever a wall. They gate levels; they never give stats of their own.
+  costs gold and **her element's material**. Each element has one
+  material, its amounts on a curve like gold's (a clear against stronger
+  enemies is worth more). Quests pay it once, on their first clear, and
+  hardcore tiers with their weekly rewards; the place to farm it is its
+  element's **trial**, which pays on every clear, at the ranks the main
+  line has opened, so pre-farming for a character to come is possible but
+  only up to where the player is. Replaying old content with a strong team
+  pays almost nothing. Amounts are fixed (never random). They gate levels;
+  they never give stats of their own.
 - **Gold comes from every run.** A clear pays by its enemies' level, so
   the best place to earn is at the edge of what you can beat: rising
   difficulty is the reason to replay, and a skilled player taking a

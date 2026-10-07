@@ -42,13 +42,22 @@ export interface TierSpec {
 
 export interface TrackSpec {
   readonly name: string
+  /**
+   * A hardcore track (rewards once per period, each tier after the one
+   * before) or an element's trial (its material on every clear, each rank
+   * opening with the main line alone; see content/materials.ts).
+   */
+  readonly kind: "hardcore" | "trial"
   /** The element whose material a clear pays (see `content/materials.ts`). */
   readonly element: ElementId
   /** Tier 1 first; a tier is known by its number (its place here), which never changes once shipped. */
   readonly tiers: ReadonlyArray<TierSpec>
 }
 
-const track = (spec: TrackSpec): TrackSpec => spec
+const track = (spec: Omit<TrackSpec, "kind">): TrackSpec => ({ kind: "hardcore", ...spec })
+/** An element's trial, its ranks opening along the main line. */
+const trial = (name: string, element: ElementId, ranks: ReadonlyArray<readonly [number, ChallengeId, QuestId]>): TrackSpec =>
+  ({ name, kind: "trial", element, tiers: ranks.map(([enemyLevel, challenge, opens]) => ({ enemyLevel, challenge, opens, rewards: { experience: 0, currencies: {} } })) })
 const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, experience: number, currencies: Amounts): TierSpec => ({ enemyLevel, challenge, opens, rewards: { experience, currencies } })
 
 /** Every hardcore track, by id: each tier opens along the main line. */
@@ -86,6 +95,19 @@ export const tracks = {
       tier(36, "siege3", "colossus", 320, { crystals: 40, gold: 11000 })
     ]
   }),
+  /**
+   * The element trials: one per element, opening along the main line (wind
+   * after chapter 2, fire after 3, water after 4, thunder after 5, rock
+   * after 6), each built from what its element struggles against: enemies
+   * that resist it and elites that carry it. They pay their element's
+   * material on every clear, at their rank's enemy level: the top rank open
+   * is where materials come from, and lower ranks pay little.
+   */
+  windTrial: trial("Wind Trial", "wind", [[11, "windTrial", "bulwark"], [17, "windTrial2", "bruteKing"], [23, "windTrial3", "swarmMother"], [29, "windTrial4", "theWarlord"], [35, "windTrial5", "colossus"]]),
+  fireTrial: trial("Fire Trial", "fire", [[17, "fireTrial", "bruteKing"], [23, "fireTrial2", "swarmMother"], [29, "fireTrial3", "theWarlord"], [35, "fireTrial4", "colossus"]]),
+  waterTrial: trial("Water Trial", "water", [[23, "waterTrial", "swarmMother"], [29, "waterTrial2", "theWarlord"], [35, "waterTrial3", "colossus"]]),
+  thunderTrial: trial("Thunder Trial", "thunder", [[29, "thunderTrial", "theWarlord"], [35, "thunderTrial2", "colossus"]]),
+  rockTrial: trial("Rock Trial", "rock", [[35, "rockTrial", "colossus"]]),
   /** The citadel's last stand, hunted by a champion stalker. */
   keep: track({
     name: "The Keep",

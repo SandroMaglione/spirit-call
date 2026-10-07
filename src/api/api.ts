@@ -17,7 +17,7 @@ import * as HttpApiMiddleware from "effect/http-api/HttpApiMiddleware"
 import * as HttpApiSchema from "effect/http-api/HttpApiSchema"
 import * as HttpApiSecurity from "effect/http-api/HttpApiSecurity"
 
-import { Account, AccountEvent, BannerId, CallResult, CharacterId, Earned, MaterialId, Play, RunLog, RunResult, StoredRun, TeamAspects } from "./schemas.ts"
+import { Account, AccountEvent, BannerId, CallResult, CharacterId, Earned, Play, RunLog, RunResult, StoredRun, TeamAspects } from "./schemas.ts"
 
 // ── Players ───────────────────────────────────────────────────────────────
 
@@ -84,7 +84,6 @@ export class AccountApi extends HttpApiGroup.make("account")
     /** Takes a character past the ascension step she stands at. */
     HttpApiEndpoint.post("ascend", "/characters/:character/ascension", { params: { character: CharacterId }, success: Account, error: Refused }),
     /** Makes one material from the grade below it. */
-    HttpApiEndpoint.post("combine", "/materials/:material/combination", { params: { material: MaterialId }, success: Account, error: Refused }),
     /** Makes `count` calls on a banner. */
     HttpApiEndpoint.post("call", "/banners/:banner/calls", {
       params: { banner: BannerId },

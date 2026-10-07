@@ -116,7 +116,6 @@ const AccountLive = HttpApiBuilder.group(
       .handle("select", ({ payload }) => forPlayer((id) => accounts.select(id, payload.team, payload.play, payload.aspects)))
       .handle("train", ({ params }) => forPlayer((id) => accounts.train(id, params.character)))
       .handle("ascend", ({ params }) => forPlayer((id) => accounts.ascend(id, params.character)))
-      .handle("combine", ({ params }) => forPlayer((id) => accounts.combine(id, params.material)))
       .handle("call", ({ params, payload }) => forPlayer((id) => accounts.call(id, params.banner, payload.count)))
       .handle("focus", ({ params, payload }) => forPlayer((id) => accounts.focus(id, params.banner, payload.character)))
       .handle("recordRun", ({ payload }) => forPlayer((id) => accounts.recordRun(id, payload.play, payload.result, payload.log)))

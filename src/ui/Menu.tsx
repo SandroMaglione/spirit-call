@@ -9,6 +9,7 @@ import { menuElement } from "./Backdrop.tsx"
 import { Call } from "./menu/Call.tsx"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
+import { Inventory } from "./menu/Inventory.tsx"
 import { Extra } from "./menu/Extra.tsx"
 import { Home } from "./menu/Home.tsx"
 import { Quests } from "./menu/Quests.tsx"
@@ -65,6 +66,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       case "team": return <Team store={store} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value)} />
       case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} save={save} />
       case "discoveries": return <Discoveries store={store} nav={nav} />
+      case "inventory": return <Inventory store={store} nav={nav} />
       case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} leader={leader} />
       case "settings": return <Settings store={store} actions={actions} nav={nav} />
       case "call": return <Call store={store} actions={actions} nav={nav} tab={screen.tab} />

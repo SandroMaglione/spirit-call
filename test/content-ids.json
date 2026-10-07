@@ -80,7 +80,22 @@
     "siege2",
     "siege3",
     "keep",
-    "keep2"
+    "keep2",
+    "windTrial",
+    "windTrial2",
+    "windTrial3",
+    "windTrial4",
+    "windTrial5",
+    "fireTrial",
+    "fireTrial2",
+    "fireTrial3",
+    "fireTrial4",
+    "waterTrial",
+    "waterTrial2",
+    "waterTrial3",
+    "thunderTrial",
+    "thunderTrial2",
+    "rockTrial"
   ],
   "attacks": [
     "sword",
@@ -153,7 +168,12 @@
     "gauntlet",
     "siege",
     "untilFall",
-    "keep"
+    "keep",
+    "windTrial",
+    "fireTrial",
+    "waterTrial",
+    "thunderTrial",
+    "rockTrial"
   ],
   "discoveries": [
     "withSwordsman",
@@ -203,7 +223,12 @@
     "thunderHeart",
     "rockShard",
     "rockCore",
-    "rockHeart"
+    "rockHeart",
+    "fireEssence",
+    "waterEssence",
+    "windEssence",
+    "thunderEssence",
+    "rockEssence"
   ],
   "banners": [
     "stormAndStone"
@@ -239,6 +264,23 @@
     ],
     "challenges": [
       "endless"
+    ],
+    "materials": [
+      "fireShard",
+      "fireCore",
+      "fireHeart",
+      "waterShard",
+      "waterCore",
+      "waterHeart",
+      "windShard",
+      "windCore",
+      "windHeart",
+      "thunderShard",
+      "thunderCore",
+      "thunderHeart",
+      "rockShard",
+      "rockCore",
+      "rockHeart"
     ]
   }
 }

@@ -49,6 +49,9 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 - `pnpm calls`: the Spirit Call's pace (when characters come from calls
   along the quest line; see `docs/calls.md`). Run it after changing crystal
   rewards or call numbers.
+- `pnpm progression`: a new account played through the main line on the
+  account's rules (levels, farming, materials, trials; see
+  `docs/quests.md`). Run it after changing rewards, costs, or quests.
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,

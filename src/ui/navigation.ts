@@ -5,8 +5,9 @@ import type { QuestId } from "../content/quests.ts"
 import type { TrackId } from "../content/hardcore.ts"
 import type { QuestTab } from "./menu/screens.ts"
 
-export const playsIn = (tuning: Tuning, tab: QuestTab): ReadonlyArray<Play> => tab === "hardcore"
-  ? (Object.keys(tuning.tracks) as Array<TrackId>).flatMap((track) => tuning.tracks[track].tiers.map((_, index) => ({ kind: "tier" as const, track, tier: index + 1 })))
+export const playsIn = (tuning: Tuning, tab: QuestTab): ReadonlyArray<Play> => tab === "hardcore" || tab === "trials"
+  ? (Object.keys(tuning.tracks) as Array<TrackId>).filter((track) => tuning.tracks[track].kind === (tab === "trials" ? "trial" : "hardcore"))
+    .flatMap((track) => tuning.tracks[track].tiers.map((_, index) => ({ kind: "tier" as const, track, tier: index + 1 })))
   : (Object.keys(tuning.quests) as Array<QuestId>).filter((quest) => tuning.quests[quest].line === tab).map((quest) => ({ kind: "quest" as const, quest }))
 
 /** Switching category keeps a matching selection, otherwise previews its first open entry. */

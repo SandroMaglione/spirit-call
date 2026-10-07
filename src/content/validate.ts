@@ -20,7 +20,7 @@ import { aheadOfLine } from "./quests.ts"
 import type { QuestId } from "./quests.ts"
 import { elements } from "./elements.ts"
 import type { ElementId } from "./elements.ts"
-import { gradeAt, materialOf } from "./materials.ts"
+import { materialOf } from "./materials.ts"
 import { tallies } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
 import { basicAttack } from "./aspects.ts"
@@ -555,27 +555,33 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     })
   }
 
-  // Every element has its three materials, each with somewhere to come from (a quest, a rank, or a tier at its grade).
+  // Every element has its material, and a trial that pays it on every clear (see content/materials.ts).
   const rules = tuning.materialRules
-  const levels: Array<{ readonly element: string; readonly level: number }> = [
-    ...Object.values(tuning.quests).flatMap((quest) => [quest.enemyLevel, ...quest.ranks.map((rank) => rank.enemyLevel)].map((level) => ({ element: quest.element, level }))),
-    ...Object.values(tuning.tracks).flatMap((track) => track.tiers.map((tier) => ({ element: track.element, level: tier.enemyLevel })))
-  ]
   for (const element of Object.keys(elements) as Array<ElementId>) {
-    for (const grade of [1, 2, 3] as const) {
-      const id = materialOf(element, grade)
-      const spec = has(tuning.materials, id) ? tuning.materials[id] : undefined
-      if (spec === undefined || spec.element !== element || spec.grade !== grade) problems.push(`materials: ${element} needs its grade ${grade} material, ${id}`)
-      if (!levels.some((source) => source.element === element && gradeAt(rules, source.level) === grade)) problems.push(`materials: nothing pays ${id}`)
-    }
+    const id = materialOf(element)
+    const spec = has(tuning.materials, id) ? tuning.materials[id] : undefined
+    if (spec === undefined || spec.element !== element) problems.push(`materials: ${element} needs its material, ${id}`)
+    if (!Object.values(tuning.tracks).some((track) => track.kind === "trial" && track.element === element)) problems.push(`materials: ${element} has no trial to earn ${id} in`)
   }
-  if (!(rules.grades.length === 3 && rules.grades[0] === 1 && rules.grades[0] < rules.grades[1]! && rules.grades[1]! < rules.grades[2]!)) problems.push("materials: grades must start at level 1 and rise (three of them)")
-  if (rules.combine.gold.length !== 2) problems.push("materials: combining needs a gold cost for grade 2 and for grade 3")
-  positive(problems, "materials", { perClear: rules.perClear, combine: rules.combine.count })
+  positive(problems, "materials", { atFirst: rules.worth.atFirst, doublesEvery: rules.worth.doublesEvery, firstClear: rules.firstClear, weekly: rules.weekly })
+  for (const [id, track] of Object.entries(tuning.tracks)) {
+    if (track.kind !== "trial") continue
+    // A trial's ranks are fought for their material: what resists its element is in every one.
+    track.tiers.forEach((tier, index) => {
+      if (!has(tuning.challenges, tier.challenge)) return
+      const shows = challengeShows(tuning, tier.challenge)
+      const resisting = [...shows.enemies].filter((kind) => {
+        const affinity = tuning.enemies[kind].elements[track.element]
+        return affinity === "resists" || affinity === "immune"
+      })
+      if (resisting.length === 0 && !shows.elites.has(track.element as never)) problems.push(`trial ${id} rank ${index + 1}: nothing in it resists ${track.element}`)
+    })
+  }
   rules.ascension.forEach((step, index) => {
     const before = rules.ascension[index - 1]
     if (!(Number.isInteger(step.level) && step.level > (before?.level ?? 1) && step.level < tuning.progression.character.curve.maxLevel)) problems.push(`ascension step ${index + 1}: level must rise and stay below the maximum (is ${step.level})`)
     if (!(step.count >= 1 && step.gold >= 0)) problems.push(`ascension step ${index + 1}: needs at least one material, and no negative gold`)
+    if (before !== undefined && step.count <= before.count) problems.push(`ascension step ${index + 1}: must cost more material than the step before`)
   })
 
   // Chests open in order, each needing more stars than the last, and no more than its group has.

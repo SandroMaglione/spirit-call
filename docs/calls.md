@@ -41,7 +41,7 @@ One call costs `price` (200 crystals). It brings one of three things:
 | --- | --- | --- |
 | Gold | **The focused character** | 3%; from the 20th call since the last character, 10% more each call; certain at the 30th |
 | Purple | **An aspect not owned yet** (one no quest gives) | 12% of the calls that bring no character; certain by the 10th call since the last aspect or character |
-| White | **A supply**: gold, and the focused character's element's lowest material | the rest |
+| White | **A supply**: gold, and some of the focused character's element's material | the rest |
 
 - **The first character** the Call brings comes within 10 calls (instead of
   30): the beginner's guarantee, so the first visit pays off.

@@ -5,7 +5,6 @@
  * updates after every change. The UI never changes this state itself; it
  * calls its actions (see `UiActions`).
  */
-import type { MaterialId } from "../content/materials.ts"
 import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
@@ -141,7 +140,6 @@ export interface UiActions {
   /** Take an owned character past the ascension step she stands at (saved at once). */
   readonly ascend: (character: CharacterId) => void
   /** Make one material from the grade below it (saved at once). */
-  readonly combine: (material: MaterialId) => void
   /** Make `count` calls on `banner` (saved at once); what they brought shows through `callReveal`. */
   readonly call: (banner: BannerId, count: number) => void
   /** Focus `character` on `banner`: the character a call there brings. */

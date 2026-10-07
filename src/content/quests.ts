@@ -123,7 +123,7 @@ export const quests = {
     after: null,
     introduces: brings("Chasers: they run in and swipe twice. Dodge, then strike back", enemy("chaser")),
     stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 7)],
-    rewards: pays(60, 100, 500)
+    rewards: pays(60, 100, 300)
   }),
   crossfire: quest({
     name: "Crossfire",
@@ -136,7 +136,7 @@ export const quests = {
     after: "firstBlood",
     introduces: brings("Shooters: they keep away and shoot ahead of you. Close the distance", enemy("shooter")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 5)],
-    rewards: pays(90, 100, 1000, [aspect("duelist")])
+    rewards: pays(90, 100, 350, [aspect("duelist")])
   }),
   packLeader: quest({
     name: "The Pack Leader",
@@ -149,7 +149,7 @@ export const quests = {
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
     stars: [cleared(), atLeast("breaks", 2), atMost("hitsTaken", 7)],
-    rewards: pays(140, 150, 2000, [character("gunner"), aspect("marksman")])
+    rewards: pays(140, 150, 700, [character("gunner"), aspect("marksman")])
   }),
 
   // Chapter 2: the Swordsman and the Gunner.
@@ -164,7 +164,7 @@ export const quests = {
     after: "packLeader",
     introduces: brings("Swarmers: tiny, fast, in packs. Reach many at once", enemy("swarmer")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
-    rewards: pays(160, 100, 2500)
+    rewards: pays(160, 100, 900)
   }),
   emberKiln: quest({
     name: "Ember Kiln",
@@ -177,7 +177,7 @@ export const quests = {
     after: "theSwarm",
     introduces: brings("Fire in the floor: it burns whoever walks in, enemies too", hazard("fire")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
-    rewards: pays(180, 100, 3000)
+    rewards: pays(180, 100, 1050)
   }),
   ironGuard: quest({
     name: "Iron Guard",
@@ -190,7 +190,7 @@ export const quests = {
     after: "emberKiln",
     introduces: brings("Guardians: heavy, patient, and a thrust that reaches far", enemy("guardian")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 5)],
-    rewards: pays(200, 100, 3500)
+    rewards: pays(200, 100, 1200)
   }),
   bulwark: quest({
     name: "The Bulwark",
@@ -203,7 +203,7 @@ export const quests = {
     after: "ironGuard",
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 7)],
-    rewards: pays(220, 150, 5000)
+    rewards: pays(220, 150, 1750)
   }),
 
   // Chapter 3: two characters, and whoever the Spirit Call brings.
@@ -218,7 +218,7 @@ export const quests = {
     after: "bulwark",
     introduces: brings("Elites: bigger, tougher, and carrying fire or water", elites("fire", "water")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 14)],
-    rewards: pays(240, 150, 6000)
+    rewards: pays(240, 150, 3000)
   }),
   outposts: quest({
     name: "Outposts",
@@ -231,7 +231,7 @@ export const quests = {
     after: "ashfall",
     introduces: brings("Snipers: a fast thunder bullet from afar. Walls stop it", enemy("sniper")),
     stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 5)],
-    rewards: pays(260, 150, 7000)
+    rewards: pays(260, 150, 3500)
   }),
   theBrute: quest({
     name: "The Brute",
@@ -244,7 +244,7 @@ export const quests = {
     after: "outposts",
     introduces: brings("Brutes: slow and heavy. Break them, then punish them", enemy("brute")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 13)],
-    rewards: pays(280, 150, 8000)
+    rewards: pays(280, 150, 4000)
   }),
   bruteKing: quest({
     name: "The Brute King",
@@ -257,7 +257,7 @@ export const quests = {
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 8)],
-    rewards: pays(300, 200, 12000, [character("tidecaller"), aspect("riptide")])
+    rewards: pays(300, 200, 5000, [character("tidecaller"), aspect("riptide")])
   }),
 
   // Chapter 4: three characters.
@@ -272,7 +272,7 @@ export const quests = {
     after: "bruteKing",
     introduces: brings("Water in the floor: it soaks and slows whoever wades in", hazard("water")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 5)],
-    rewards: pays(320, 150, 12000)
+    rewards: pays(320, 150, 4200)
   }),
   bombardment: quest({
     name: "Bombardment",
@@ -285,7 +285,7 @@ export const quests = {
     after: "highTide",
     introduces: brings("Firebombers: bombs over walls, flames where they burst", enemy("charger")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 12)],
-    rewards: pays(340, 150, 13000)
+    rewards: pays(340, 150, 4550)
   }),
   shieldWall: quest({
     name: "Shield Wall",
@@ -298,7 +298,7 @@ export const quests = {
     after: "bombardment",
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 6)],
-    rewards: pays(360, 150, 14000)
+    rewards: pays(360, 150, 4900)
   }),
   swarmMother: quest({
     name: "The Swarm Mother",
@@ -311,7 +311,7 @@ export const quests = {
     after: "shieldWall",
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
-    rewards: pays(380, 200, 18000)
+    rewards: pays(380, 200, 6300)
   }),
 
   // Chapter 5.
@@ -326,7 +326,7 @@ export const quests = {
     after: "swarmMother",
     introduces: brings("Stalkers: keep away, and they blink to you. Their mark shows where", enemy("stalker")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
-    rewards: pays(400, 200, 18000)
+    rewards: pays(400, 200, 6300)
   }),
   theCloister: quest({
     name: "The Cloister",
@@ -339,7 +339,7 @@ export const quests = {
     after: "sandstorm",
     introduces: brings("Wardens: they ward an ally from afar. Cross the tether to break it", enemy("warden")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 5)],
-    rewards: pays(420, 200, 20000)
+    rewards: pays(420, 200, 7000)
   }),
   thunderhead: quest({
     name: "Thunderhead",
@@ -352,7 +352,7 @@ export const quests = {
     after: "theCloister",
     introduces: brings("Thunder elites: they strike the soaked hardest", elites("thunder")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
-    rewards: pays(440, 200, 22000)
+    rewards: pays(440, 200, 7700)
   }),
   theWarlord: quest({
     name: "The Warlord",
@@ -365,7 +365,7 @@ export const quests = {
     after: "thunderhead",
     introduces: brings("A champion stalker charged with thunder, hunting you through every wave", champion("stalker")),
     stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 12)],
-    rewards: pays(460, 250, 26000)
+    rewards: pays(460, 250, 9100)
   }),
 
   // Chapter 6.
@@ -380,7 +380,7 @@ export const quests = {
     after: "theWarlord",
     introduces: brings("Juggernauts: armored until broken. Break them, then strike", enemy("juggernaut")),
     stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 5)],
-    rewards: pays(480, 200, 26000)
+    rewards: pays(480, 200, 9100)
   }),
   powderKeg: quest({
     name: "Powder Keg",
@@ -393,7 +393,7 @@ export const quests = {
     after: "ironclad",
     introduces: brings("Volatiles: they burst where they fall, their own side too", enemy("volatile")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 15)],
-    rewards: pays(500, 200, 28000)
+    rewards: pays(500, 200, 9800)
   }),
   galeForce: quest({
     name: "Gale Force",
@@ -406,7 +406,7 @@ export const quests = {
     after: "powderKeg",
     introduces: brings("Gale casters: a cone of wind that blows everyone around", enemy("galeCaster")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
-    rewards: pays(520, 200, 30000)
+    rewards: pays(520, 200, 10500)
   }),
   colossus: quest({
     name: "The Colossus",
@@ -419,7 +419,7 @@ export const quests = {
     after: "galeForce",
     introduces: brings("A burning champion juggernaut, armored until broken", champion("juggernaut")),
     stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 6)],
-    rewards: pays(560, 250, 36000)
+    rewards: pays(560, 250, 12600)
   }),
 
   // Side quests: each opens after a chapter's last quest and mixes what the main line has brought by then.
@@ -434,7 +434,7 @@ export const quests = {
     after: "packLeader",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
-    rewards: pays(80, 50, 800)
+    rewards: pays(80, 50, 300)
   }),
   nightOfPacks: quest({
     name: "Night of Packs",
@@ -447,7 +447,7 @@ export const quests = {
     after: "bulwark",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 5)],
-    rewards: pays(120, 60, 2000)
+    rewards: pays(120, 60, 700)
   }),
   eliteHunt: quest({
     name: "Elite Hunt",
@@ -460,7 +460,7 @@ export const quests = {
     after: "bruteKing",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 14)],
-    rewards: pays(160, 80, 5000)
+    rewards: pays(160, 80, 1750)
   }),
   floodgate: quest({
     name: "Floodgate",
@@ -473,7 +473,7 @@ export const quests = {
     after: "swarmMother",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
-    rewards: pays(200, 80, 10000)
+    rewards: pays(200, 80, 3500)
   }),
   stormFront: quest({
     name: "Storm Front",
@@ -486,7 +486,7 @@ export const quests = {
     after: "theWarlord",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
-    rewards: pays(240, 80, 15000)
+    rewards: pays(240, 80, 5250)
   }),
   /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes. */
   stoneTrial: quest({
@@ -500,7 +500,7 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 5)],
-    rewards: pays(280, 100, 20000)
+    rewards: pays(280, 100, 7000)
   }),
   strangeCompany: quest({
     name: "Strange Company",
@@ -513,46 +513,46 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
-    rewards: pays(300, 100, 22000)
+    rewards: pays(300, 100, 7700)
   })
 }
 
 /** The chests each group's stars open, fewest stars first (see docs/quests.md). */
 export const chests: { readonly [Group in StarGroup]: ReadonlyArray<ChestSpec> } = {
   one: [
-    { stars: 3, rewards: { crystals: 60, gold: 1000 } },
-    { stars: 6, rewards: { crystals: 60, gold: 1500 } },
-    { stars: 9, rewards: { crystals: 100, gold: 2500 } }
+    { stars: 3, rewards: { crystals: 60, gold: 350 } },
+    { stars: 6, rewards: { crystals: 60, gold: 500 } },
+    { stars: 9, rewards: { crystals: 100, gold: 900 } }
   ],
   two: [
-    { stars: 4, rewards: { crystals: 60, gold: 2500 } },
-    { stars: 8, rewards: { crystals: 80, gold: 3500 } },
-    { stars: 12, rewards: { crystals: 120, gold: 5000 } }
+    { stars: 4, rewards: { crystals: 60, gold: 900 } },
+    { stars: 8, rewards: { crystals: 80, gold: 1200 } },
+    { stars: 12, rewards: { crystals: 120, gold: 1750 } }
   ],
   three: [
-    { stars: 4, rewards: { crystals: 80, gold: 5000 } },
-    { stars: 8, rewards: { crystals: 80, gold: 7000 } },
-    { stars: 12, rewards: { crystals: 120, gold: 10000 } }
+    { stars: 4, rewards: { crystals: 80, gold: 1750 } },
+    { stars: 8, rewards: { crystals: 80, gold: 2450 } },
+    { stars: 12, rewards: { crystals: 120, gold: 3500 } }
   ],
   four: [
-    { stars: 4, rewards: { crystals: 100, gold: 8000 } },
-    { stars: 8, rewards: { crystals: 100, gold: 10000 } },
-    { stars: 12, rewards: { crystals: 160, gold: 14000 } }
+    { stars: 4, rewards: { crystals: 100, gold: 2800 } },
+    { stars: 8, rewards: { crystals: 100, gold: 3500 } },
+    { stars: 12, rewards: { crystals: 160, gold: 4900 } }
   ],
   five: [
-    { stars: 4, rewards: { crystals: 100, gold: 12000 } },
-    { stars: 8, rewards: { crystals: 100, gold: 15000 } },
-    { stars: 12, rewards: { crystals: 160, gold: 20000 } }
+    { stars: 4, rewards: { crystals: 100, gold: 4200 } },
+    { stars: 8, rewards: { crystals: 100, gold: 5250 } },
+    { stars: 12, rewards: { crystals: 160, gold: 7000 } }
   ],
   six: [
-    { stars: 4, rewards: { crystals: 100, gold: 16000 } },
-    { stars: 8, rewards: { crystals: 100, gold: 20000 } },
-    { stars: 12, rewards: { crystals: 160, gold: 26000 } }
+    { stars: 4, rewards: { crystals: 100, gold: 5600 } },
+    { stars: 8, rewards: { crystals: 100, gold: 7000 } },
+    { stars: 12, rewards: { crystals: 160, gold: 9100 } }
   ],
   secondary: [
-    { stars: 6, rewards: { crystals: 60, gold: 3000 } },
-    { stars: 12, rewards: { crystals: 80, gold: 8000 } },
-    { stars: 18, rewards: { crystals: 120, gold: 16000 } }
+    { stars: 6, rewards: { crystals: 60, gold: 1050 } },
+    { stars: 12, rewards: { crystals: 80, gold: 2800 } },
+    { stars: 18, rewards: { crystals: 120, gold: 5600 } }
   ]
 }
 

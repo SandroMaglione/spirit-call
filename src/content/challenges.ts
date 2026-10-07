@@ -116,6 +116,27 @@ const untilFall = (arena: ArenaId, kinds: ReadonlyArray<EnemyKind>, elites: Read
     waves: { scripted, endless: { baseBudget: 6, budgetPerWave: 2, kinds, elites } }
   })
 
+/**
+ * An element's trial: eight waves of what resists it (`resist`, the
+ * backbone of every wave) among `others`, the last waves led by elites
+ * carrying the element (immune to it), when it makes elites.
+ */
+const trial = (name: string, arena: ArenaId, resist: ReadonlyArray<EnemyKind>, others: ReadonlyArray<EnemyKind>, element: EliteElement | null): ChallengeSpec => {
+  const r = (index: number): EnemyKind => resist[index % resist.length]!
+  const o = (index: number): EnemyKind => others[index % others.length]!
+  const led = (kind: EnemyKind): WaveEntry => (element === null ? kind : elite(kind, element))
+  return waves(name, `Eight waves of what ${name.split(" ")[0]!.toLowerCase()} struggles against: its element's material on every clear.`, arena, [
+    [r(0), o(0), o(1)],
+    [r(1), r(0), o(2)],
+    [r(2), r(1), o(0), o(1)],
+    [led(r(0)), r(1), o(2)],
+    [r(1), r(2), r(0), o(0)],
+    [r(0), r(1), o(1), o(2)],
+    [led(r(1)), r(2), r(0), o(0)],
+    [led(r(0)), led(r(1)), r(2), o(1), o(2)]
+  ])
+}
+
 /** What the main line has introduced by each chapter's end: the enemies endless waves draw from. */
 const metBy = {
   one: ["chaser", "shooter"],
@@ -572,6 +593,23 @@ export const challenges = {
     ["juggernaut", "brute", "sniper", "sniper", "swarmer"],
     [elite("juggernaut", "fire"), elite("juggernaut", "thunder"), "guardian", "charger", "chaser", "chaser"]
   ]),
+
+  // The element trials: what each element struggles against, rank by rank as the main line brings it.
+  windTrial: trial("Wind Trial", "monastery", ["guardian", "swarmer"], ["chaser", "shooter"], null),
+  windTrial2: trial("Wind Trial", "monastery", ["guardian", "brute", "swarmer"], ["chaser", "shooter", "sniper"], null),
+  windTrial3: trial("Wind Trial", "monastery", ["brute", "guardian", "swarmer"], ["charger", "sniper", "shooter"], null),
+  windTrial4: trial("Wind Trial", "monastery", ["brute", "guardian", "swarmer"], ["stalker", "warden", "charger"], null),
+  windTrial5: trial("Wind Trial", "monastery", ["juggernaut", "galeCaster", "brute", "guardian"], ["stalker", "volatile", "warden"], null),
+  fireTrial: trial("Fire Trial", "kilnworks", ["brute"], ["chaser", "guardian", "shooter"], "fire"),
+  fireTrial2: trial("Fire Trial", "kilnworks", ["brute", "charger"], ["guardian", "chaser", "sniper"], "fire"),
+  fireTrial3: trial("Fire Trial", "kilnworks", ["brute", "charger", "stalker"], ["warden", "guardian", "chaser"], "fire"),
+  fireTrial4: trial("Fire Trial", "kilnworks", ["volatile", "brute", "charger", "stalker"], ["juggernaut", "galeCaster", "guardian"], "fire"),
+  waterTrial: trial("Water Trial", "harbor", ["shooter"], ["charger", "guardian", "swarmer"], "water"),
+  waterTrial2: trial("Water Trial", "harbor", ["shooter", "warden"], ["stalker", "brute", "chaser"], "water"),
+  waterTrial3: trial("Water Trial", "harbor", ["shooter", "warden"], ["juggernaut", "volatile", "galeCaster"], "water"),
+  thunderTrial: trial("Thunder Trial", "necropolis", ["sniper"], ["warden", "guardian", "chaser"], "thunder"),
+  thunderTrial2: trial("Thunder Trial", "necropolis", ["sniper"], ["juggernaut", "stalker", "galeCaster"], "thunder"),
+  rockTrial: trial("Rock Trial", "citadel", ["swarmer", "stalker", "galeCaster"], ["juggernaut", "brute", "chaser"], null),
 
   // Extras.
   /** The Training Ground (an Extra): dummies to practice on, a fire pool near each side, nothing to fear. */

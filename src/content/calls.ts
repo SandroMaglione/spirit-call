@@ -52,7 +52,7 @@ export interface CallRules {
   readonly character: CharacterOdds
   /** An aspect not owned yet: at `rate` on a call that brings no character, and certain by the `guarantee`th call since the last aspect or character. */
   readonly aspect: { readonly rate: number; readonly guarantee: number }
-  /** What a call that brings neither gives: gold, and `material` of the focused character's element at its lowest grade. */
+  /** What a call that brings neither gives: gold, and `material` of the focused character's element. */
   readonly supply: { readonly gold: number; readonly material: number }
   /** Banners run `days` each, from `anchor` (epoch milliseconds), in the order of `banners`, round and round. */
   readonly rotation: { readonly anchor: number; readonly days: number }
@@ -65,7 +65,7 @@ export const callRules: CallRules = {
   opensAfter: "packLeader",
   character: { rate: 0.03, softFrom: 20, softStep: 0.1, guarantee: 30, firstGuarantee: 10 },
   aspect: { rate: 0.12, guarantee: 10 },
-  supply: { gold: 1200, material: 2 },
+  supply: { gold: 1200, material: 30 },
   rotation: { anchor: Date.UTC(2026, 0, 5), days: 14 },
   history: 60
 }
