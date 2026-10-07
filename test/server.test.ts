@@ -1,3 +1,7 @@
+import { mkdtempSync, readFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
+import { DatabaseSync } from "node:sqlite"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { fromRecord, toRecord } from "../src/account/convert.ts"
@@ -104,6 +108,23 @@ describe("players", () => {
 })
 
 describe("accounts", () => {
+  it("starts a player over with a new account once accounts are reset, keeping the login", async () => {
+    const file = path.join(mkdtempSync(path.join(tmpdir(), "accounts-")), "reset.sqlite")
+    const handler = localHandler(file, { devTools: false, secureCookies: true })
+    opened.push(handler)
+    const player = await signUp(handler)
+    expect((await player.send("POST", "/api/runs", played())).status).toBe(200)
+    expect((await player.send("GET", "/api/account")).body.quests.firstBlood).toBeDefined()
+    // The one-time reset (migrations/0003), run on the database as a deploy would.
+    const database = new DatabaseSync(file)
+    database.exec(readFileSync(new URL("../src/server/migrations/0003_reset_accounts.sql", import.meta.url), "utf8"))
+    database.close()
+    const after = await player.send("GET", "/api/account")
+    expect(after.status).toBe(200)
+    expect(after.body.quests).toEqual({})
+    expect(after.body.selection).toEqual({ team: ["swordsman"], aspects: {}, play: { kind: "quest", quest: "firstBlood" } })
+  })
+
   it("gives a new player the starter set, the same account on every device", async () => {
     const handler = server()
     const phone = await signUp(handler)
