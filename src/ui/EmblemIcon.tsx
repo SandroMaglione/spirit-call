@@ -16,11 +16,36 @@ const emblems = {
 /** Filled silhouettes and light-catching facets remain readable at wallet size. */
 export const EmblemIcon = ({ kind }: { readonly kind: EmblemKind }) => {
   const id = useId(), spec = emblems[kind]
-  // The Spirit Call's seal stays plain: one gradient and a star, no facets.
+  // The Spirit Call uses the materials' facets, with a bevel and a warm star.
   if (kind === "call") return <svg class="menu-icon emblem-icon emblem-icon--call" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-    <defs><linearGradient id={`${id}-surface`} x1="0" y1="0" x2="1" y2="1"><stop stop-color={spec.light} /><stop offset=".5" stop-color={spec.middle} /><stop offset="1" stop-color={spec.dark} /></linearGradient></defs>
-    <path d={spec.shape} fill={`url(#${id}-surface)`} stroke={spec.light} stroke-width=".8" stroke-linejoin="round" />
-    <path d="m16 7 2.2 6.8L25 16l-6.8 2.2L16 25l-2.2-6.8L7 16l6.8-2.2Z" fill="#ffe7ad" />
+    <defs>
+      <linearGradient id={`${id}-surface`} x1="0" y1="0" x2="1" y2="1"><stop stop-color={spec.light} /><stop offset=".45" stop-color={spec.middle} /><stop offset="1" stop-color={spec.dark} /></linearGradient>
+      <linearGradient id={`${id}-star`} x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#fff8de" /><stop offset=".5" stop-color="#ffe7ad" /><stop offset="1" stop-color="#c99b52" /></linearGradient>
+      <clipPath id={`${id}-inner`}><path d="M11.8 5h8.4L25 9.8v12.4L20.2 27h-8.4L7 22.2V9.8Z" /></clipPath>
+    </defs>
+    <path d={spec.shape} fill={`url(#${id}-surface)`} stroke={spec.light} stroke-width=".7" stroke-linejoin="round" />
+    <path d="M11 2h10l-.8 3h-8.4Z" fill="#efe4ff" />
+    <path d="M21 2l7 7-3 .8L20.2 5Z" fill="#c9b1fb" />
+    <path d="M28 9v14l-3-.8V9.8Z" fill="#7256b4" />
+    <path d="M28 23l-7 7-.8-3 4.8-4.8Z" fill="#3b2a86" />
+    <path d="M21 30H11l.8-3h8.4Z" fill="#493580" />
+    <path d="M11 30l-7-7 3-.8 4.8 4.8Z" fill="#7660b5" />
+    <path d="M4 23V9l3 .8v12.4Z" fill="#b7a0ee" />
+    <path d="M4 9l7-7 .8 3L7 9.8Z" fill="#f3ebff" />
+    <g clip-path={`url(#${id}-inner)`}>
+      <path d="M16 2 12 14 2 9Z" fill="#efe4ff" fill-opacity=".65" />
+      <path d="m16 2 16 7-12 7Z" fill="#b695f4" />
+      <path d="m12 14 4 18L2 23Z" fill="#3b2a86" fill-opacity=".55" />
+      <path d="m20 16 12 7-16 9Z" fill="#3b2a86" />
+      <path d="m12 14 8 2-4 16Z" fill="#efe4ff" fill-opacity=".22" />
+      <path d="M2 9 12 14 20 16 32 9M12 14 16 32" fill="none" stroke="#efe4ff" stroke-opacity=".25" stroke-width=".5" />
+    </g>
+    <path d="M11.8 5h8.4L25 9.8v12.4L20.2 27h-8.4L7 22.2V9.8Z" fill="none" stroke="#efe4ff" stroke-opacity=".55" stroke-width=".45" stroke-linejoin="round" />
+    <path d="m16 8 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z" fill={`url(#${id}-star)`} stroke="#674680" stroke-width=".35" stroke-linejoin="round" />
+    <path d="M16 8v8l-2-2ZM8 16h8l-2-2Z" fill="#fff8de" />
+    <path d="M16 16v8l2-6ZM16 16h8l-6 2Z" fill="#c79b58" />
+    <path d="M7.3 9.8 11.8 5h6.5" fill="none" stroke="#fff7ff" stroke-width=".55" stroke-linecap="round" />
+    <path d="m24 4 1.2 3.8L29 9l-3.8 1.2L24 14l-1.2-3.8L19 9l3.8-1.2Z" fill="#fffef2" />
   </svg>
   return <svg class={`menu-icon emblem-icon emblem-icon--${kind}`} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
     <defs>
