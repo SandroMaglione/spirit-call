@@ -3,7 +3,7 @@
  * fully (see docs/vision.md, "Structure"). Each track is one kind of
  * content (mixed waves, champions) in tiers, each harder than the last;
  * lower tiers are within reach of a low-level team. Each tier opens along
- * the main line (once its quest is cleared, and the tier before it), plays
+ * the main line (once its quest is cleared at a rank, and the tier before it), plays
  * its own waves showing only what the main line has introduced by then,
  * and sits at most a few enemy levels above that quest.
  *
@@ -35,8 +35,9 @@ export interface TierSpec {
   readonly enemyLevel: number
   /** What it plays: each tier its own waves, showing only what the main line has introduced by `opens`. */
   readonly challenge: ChallengeId
-  /** The main quest to clear before it opens (and the tier before it, cleared). */
+  /** The main quest to clear before it opens (and, for a hardcore tier, the tier before it), at rank `opensRank` (see `rankRules`). */
   readonly opens: QuestId
+  readonly opensRank: number
   readonly rewards: TierRewards
 }
 
@@ -56,9 +57,12 @@ export interface TrackSpec {
 
 const track = (spec: Omit<TrackSpec, "kind">): TrackSpec => ({ kind: "hardcore", ...spec })
 /** An element's trial, its ranks opening along the main line. */
-const trial = (name: string, element: ElementId, ranks: ReadonlyArray<readonly [number, ChallengeId, QuestId]>): TrackSpec =>
-  ({ name, kind: "trial", element, tiers: ranks.map(([enemyLevel, challenge, opens]) => ({ enemyLevel, challenge, opens, rewards: { experience: 0, currencies: {} } })) })
-const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, experience: number, currencies: Amounts): TierSpec => ({ enemyLevel, challenge, opens, rewards: { experience, currencies } })
+const trial = (name: string, element: ElementId, ranks: ReadonlyArray<readonly [number, ChallengeId, QuestId, number?]>): TrackSpec =>
+  ({ name, kind: "trial", element, tiers: ranks.map(([enemyLevel, challenge, opens, opensRank]) => ({ enemyLevel, challenge, opens, opensRank: opensRank ?? 1, rewards: { experience: 0, currencies: {} } })) })
+/** A trial's ranks above level 35, opening with the ranks' replays of the late chapters (all of the roster known by then). */
+const late = (challenge: ChallengeId): ReadonlyArray<readonly [number, ChallengeId, QuestId, number]> =>
+  [[41, challenge, "theWarlord", 2], [47, challenge, "colossus", 2], [53, challenge, "theWarlord", 3], [59, challenge, "colossus", 3]]
+const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, experience: number, currencies: Amounts, opensRank = 1): TierSpec => ({ enemyLevel, challenge, opens, opensRank, rewards: { experience, currencies } })
 
 /** Every hardcore track, by id: each tier opens along the main line. */
 export const tracks = {
@@ -72,7 +76,11 @@ export const tracks = {
       tier(16, "untilFall3", "bruteKing", 180, { crystals: 30, gold: 4000 }),
       tier(22, "untilFall4", "swarmMother", 220, { crystals: 35, gold: 6000 }),
       tier(28, "untilFall5", "theWarlord", 260, { crystals: 40, gold: 8000 }),
-      tier(34, "untilFall6", "colossus", 300, { crystals: 50, gold: 10000 })
+      tier(34, "untilFall6", "colossus", 300, { crystals: 50, gold: 10000 }),
+      tier(40, "untilFall6", "theWarlord", 340, { crystals: 50, gold: 12000 }, 2),
+      tier(46, "untilFall6", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
+      tier(52, "untilFall6", "theWarlord", 420, { crystals: 60, gold: 16000 }, 3),
+      tier(58, "untilFall6", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
     ]
   }),
   /** Clearing mixed formations with elite leaders. */
@@ -82,7 +90,9 @@ export const tracks = {
     tiers: [
       tier(10, "gauntlet", "bulwark", 140, { crystals: 20, gold: 2400 }),
       tier(22, "gauntlet2", "swarmMother", 220, { crystals: 30, gold: 6000 }),
-      tier(34, "gauntlet3", "colossus", 300, { crystals: 40, gold: 10000 })
+      tier(34, "gauntlet3", "colossus", 300, { crystals: 40, gold: 10000 }),
+      tier(46, "gauntlet3", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
+      tier(58, "gauntlet3", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
     ]
   }),
   /** The brute and its guards, tougher every tier. */
@@ -92,7 +102,9 @@ export const tracks = {
     tiers: [
       tier(16, "siege", "bruteKing", 180, { crystals: 20, gold: 4000 }),
       tier(28, "siege2", "theWarlord", 260, { crystals: 30, gold: 8000 }),
-      tier(36, "siege3", "colossus", 320, { crystals: 40, gold: 11000 })
+      tier(36, "siege3", "colossus", 320, { crystals: 40, gold: 11000 }),
+      tier(46, "siege3", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
+      tier(58, "siege3", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
     ]
   }),
   /**
@@ -103,18 +115,20 @@ export const tracks = {
    * material on every clear, at their rank's enemy level: the top rank open
    * is where materials come from, and lower ranks pay little.
    */
-  windTrial: trial("Wind Trial", "wind", [[11, "windTrial", "bulwark"], [17, "windTrial2", "bruteKing"], [23, "windTrial3", "swarmMother"], [29, "windTrial4", "theWarlord"], [35, "windTrial5", "colossus"]]),
-  fireTrial: trial("Fire Trial", "fire", [[17, "fireTrial", "bruteKing"], [23, "fireTrial2", "swarmMother"], [29, "fireTrial3", "theWarlord"], [35, "fireTrial4", "colossus"]]),
-  waterTrial: trial("Water Trial", "water", [[23, "waterTrial", "swarmMother"], [29, "waterTrial2", "theWarlord"], [35, "waterTrial3", "colossus"]]),
-  thunderTrial: trial("Thunder Trial", "thunder", [[29, "thunderTrial", "theWarlord"], [35, "thunderTrial2", "colossus"]]),
-  rockTrial: trial("Rock Trial", "rock", [[35, "rockTrial", "colossus"]]),
+  windTrial: trial("Wind Trial", "wind", [[11, "windTrial", "bulwark"], [17, "windTrial2", "bruteKing"], [23, "windTrial3", "swarmMother"], [29, "windTrial4", "theWarlord"], [35, "windTrial5", "colossus"], ...late("windTrial5")]),
+  fireTrial: trial("Fire Trial", "fire", [[17, "fireTrial", "bruteKing"], [23, "fireTrial2", "swarmMother"], [29, "fireTrial3", "theWarlord"], [35, "fireTrial4", "colossus"], ...late("fireTrial4")]),
+  waterTrial: trial("Water Trial", "water", [[23, "waterTrial", "swarmMother"], [29, "waterTrial2", "theWarlord"], [35, "waterTrial3", "colossus"], ...late("waterTrial3")]),
+  thunderTrial: trial("Thunder Trial", "thunder", [[29, "thunderTrial", "theWarlord"], [35, "thunderTrial2", "colossus"], ...late("thunderTrial2")]),
+  rockTrial: trial("Rock Trial", "rock", [[35, "rockTrial", "colossus"], ...late("rockTrial")]),
   /** The citadel's last stand, hunted by a champion stalker. */
   keep: track({
     name: "The Keep",
     element: "fire",
     tiers: [
       tier(30, "keep", "theWarlord", 280, { crystals: 30, gold: 9000 }),
-      tier(36, "keep2", "colossus", 340, { crystals: 40, gold: 12000 })
+      tier(36, "keep2", "colossus", 340, { crystals: 40, gold: 12000 }),
+      tier(46, "keep2", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
+      tier(58, "keep2", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
     ]
   })
 }

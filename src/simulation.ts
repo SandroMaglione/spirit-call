@@ -22,7 +22,7 @@ import type { Tuning } from "./config/tuning.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import { FrameContext, Game, KeyboardInput, PartyInput, PointerInput, TouchInput } from "./schema.ts"
-import type { BuildValue, ViewportValue } from "./schema.ts"
+import type { BuildValue, TwistValue, ViewportValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
 export interface SimulationOptions {
@@ -41,6 +41,8 @@ export interface SimulationOptions {
   readonly challenge?: ChallengeId
   /** The enemies' level. Defaults to 1. */
   readonly enemyLevel?: number
+  /** A rank's twist on the waves (see `Twist`); none by default. */
+  readonly twist?: TwistValue
   /** Where the game starts: the menu, or (the default) playing. */
   readonly flow?: "Menu" | "Playing"
   /** Defaults to 1280×720. */
@@ -63,7 +65,7 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(FrameContext, { viewport }),
       Game.Runtime.service(UiRequests, requests)
     ),
-    resources: initialResources(tuning, viewport, options.team ?? (options.build === undefined ? undefined : [options.build]), options.challenge, options.enemyLevel),
+    resources: initialResources(tuning, viewport, options.team ?? (options.build === undefined ? undefined : [options.build]), options.challenge, options.enemyLevel, options.twist),
     machines: initialMachines(options.flow),
     debug: true
   })

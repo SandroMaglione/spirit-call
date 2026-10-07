@@ -30,20 +30,22 @@ export interface RunPay {
 
 /**
  * How stats grow with level, the same for everything that has a level
- * (characters and enemies): at level 1 a stat is its base, and at the
- * maximum level `band` times it, along a curve of `shape` (1 is a straight
- * line; above 1 grows slowly at first and faster near the top). Keeping the
- * band narrow is what lets a skilled low-level team clear hard content (see
+ * (characters and enemies): at level 1 a stat is its base, and at level
+ * `at` `band` times it, along a curve of `shape` (1 is a straight line;
+ * above 1 grows slowly at first and faster later), going on the same way
+ * past `at` (the levels the ranks' replays reach). Keeping the band narrow
+ * is what lets a skilled low-level team clear hard content (see
  * docs/vision.md, "What makes skill is enough work").
  */
 export interface StatCurve {
   readonly band: number
+  readonly at: number
   readonly shape: number
 }
 
 export const progression = {
   /** How every level turns into stats: HP, ATK, and DEF grow with it; speed does not. */
-  stats: { band: 4, shape: 1 } satisfies StatCurve,
+  stats: { band: 4, at: 40, shape: 1 } satisfies StatCurve,
   /**
    * What a lost run pays, as a share of a clear: its progress toward the
    * objective (waves defeated) times this, so trying is
@@ -69,6 +71,6 @@ export const progression = {
    * would.
    */
   character: {
-    curve: { maxLevel: 40, base: 60, growth: 40, square: 5 } satisfies LevelCurve
+    curve: { maxLevel: 60, base: 60, growth: 40, square: 5 } satisfies LevelCurve
   }
 }

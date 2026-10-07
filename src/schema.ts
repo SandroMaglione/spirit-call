@@ -11,6 +11,8 @@ import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackMove } from "./content/attacks.ts"
 import type { ArenaId } from "./content/arena.ts"
 import type { ChallengeId, EliteElement, WaveEntry } from "./content/challenges.ts"
+import { noTwist } from "./content/ranks.ts"
+import type { RankTwist } from "./content/ranks.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
 import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
@@ -802,6 +804,13 @@ export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
  */
 export const EnemyLevel = Descriptor.Resource<number>()("Shooter/EnemyLevel")
 
+/** A rank's twist on the run's waves (see `RankTwist` in content/ranks.ts). */
+export type TwistValue = RankTwist
+
+export { noTwist }
+
+export const Twist = Descriptor.Resource<TwistValue>()("Shooter/Twist")
+
 /**
  * Triggered passive effects waiting to be carried out (see
  * `features/passives.ts`). A queue rather than events, so an effect set off
@@ -1102,6 +1111,7 @@ export const Game = Schema.bind(
       Guard,
       Challenge,
       EnemyLevel,
+      Twist,
       TriggeredEffects,
       Time,
       Keys,

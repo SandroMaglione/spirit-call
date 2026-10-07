@@ -10,8 +10,8 @@ import { noGuard } from "./features/guard.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
-import { emptyRunLog, Flow, Game } from "./schema.ts"
-import type { BuildValue, ViewportValue } from "./schema.ts"
+import { emptyRunLog, Flow, Game, noTwist } from "./schema.ts"
+import type { BuildValue, TwistValue, ViewportValue } from "./schema.ts"
 
 /**
  * Initial resources, shared by the browser runtime and headless
@@ -23,7 +23,8 @@ export const initialResources = (
   viewport: ViewportValue,
   team: ReadonlyArray<BuildValue> = defaultTeam,
   challenge: ChallengeId = defaultChallenge,
-  enemyLevel = 1
+  enemyLevel = 1,
+  twist: TwistValue = noTwist
 ) => ({
   Tuning: tuning,
   Team: team,
@@ -31,6 +32,7 @@ export const initialResources = (
   Guard: noGuard,
   Challenge: challenge,
   EnemyLevel: enemyLevel,
+  Twist: twist,
   TriggeredEffects: [],
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),

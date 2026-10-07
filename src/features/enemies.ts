@@ -61,7 +61,7 @@ import type { EliteElement } from "../content/challenges.ts"
 /** `kind`'s HP, ATK, and DEF at `level`, along the characters' stat curve (see `levelScale`); speed as it is. */
 export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number): { readonly hp: number; readonly atk: number; readonly def: number; readonly speed: number } => {
   const spec = tuning.enemies[kind]
-  const scaled = levelScale(tuning.progression.stats, level, tuning.progression.character.curve.maxLevel)
+  const scaled = levelScale(tuning.progression.stats, level)
   return { hp: Math.round(spec.hp * scaled), atk: Math.round(spec.atk * scaled), def: Math.round(spec.def * scaled), speed: spec.speed }
 }
 

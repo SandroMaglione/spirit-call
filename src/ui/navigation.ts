@@ -1,4 +1,4 @@
-import { playLock, samePlay } from "../account/account.ts"
+import { playLock, questCleared, questLevel, questLock, samePlay } from "../account/account.ts"
 import type { Account, Item, Play } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { QuestId } from "../content/quests.ts"
@@ -16,8 +16,20 @@ export const selectionIn = (tuning: Tuning, account: Account, tab: QuestTab, cur
   return plays.find((candidate) => samePlay(candidate, current)) ?? plays.find((candidate) => playLock(tuning, account, candidate) === null) ?? plays[0] ?? current
 }
 
-export const nextMainQuest = (tuning: Tuning, account: Account): Play | null =>
-  playsIn(tuning, "main").find((play) => play.kind === "quest" && account.quests[play.quest]?.firstClearedAt == null) ?? null
+/**
+ * The main quest to play next: the first one not cleared yet; once the main
+ * line is done, the lowest-level quest open and not cleared at a higher rank
+ * (the ranks' replays), if any.
+ */
+export const nextMainQuest = (tuning: Tuning, account: Account): Play | null => {
+  const main = playsIn(tuning, "main").flatMap((play) => (play.kind === "quest" ? [play.quest] : []))
+  const first = main.find((quest) => !questCleared(account, quest))
+  if (first !== undefined) return { kind: "quest", quest: first }
+  const ranked = Array.from({ length: tuning.ranks.count - 1 }, (_, index) => index + 2).flatMap((rank) => main.map((quest) => ({ quest, rank })))
+    .filter(({ quest, rank }) => !questCleared(account, quest, rank) && questLock(tuning, account, quest, rank) === null)
+    .sort((a, b) => questLevel(tuning, a.quest, a.rank) - questLevel(tuning, b.quest, b.rank))
+  return ranked[0] === undefined ? null : { kind: "quest", quest: ranked[0].quest, rank: ranked[0].rank }
+}
 
 /** Unlocks are described from shipped rewards, never from invented acquisition rules. */
 export const sourceOf = (tuning: Tuning, item: Item): QuestId | null =>

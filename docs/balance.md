@@ -20,6 +20,20 @@ aspect deals within 25% of its class's plain aspect by the numbers
 (`validateContent`); what passives, bounces, and chains add is for the lab
 and play to judge.
 
+## Ranks and the long game (October 2026)
+
+Every quest got three ranks (rank II at +12 levels with elite leaders,
+rank III at +24 with shields too), each with its own first clears, stars,
+and chests; characters go to level 60, with ascension steps at 40 and 50,
+and materials dropped to a third of their scale (a clear at level 1 is
+worth 2). `pnpm progression` plays them all: rank I is done after about 90
+runs (about 41 calls of crystals), rank II after about 210 (60 calls), rank
+III after about 330 (77 calls). Tried and set aside: rank first clears at
+4 runs of gold (the ranks went by with no farming), a steeper level curve
+(chapter one turned into a grind). The last two ascension steps cost three
+times the curve's six clears, so the trials are farmed in the ranks'
+replays (about 90 runs of them), and farming sits at the end of the game.
+
 ## The expected team (October 2026)
 
 `pnpm progression` plays a new account through the main line on the

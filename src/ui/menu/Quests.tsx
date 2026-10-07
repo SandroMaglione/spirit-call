@@ -8,18 +8,19 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { clearPay, encounterOf, groupStars, materialPay, nextReset, playLock, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
+import { chestRewards, chestsOpened, clearPay, encounterOf, groupStars, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
-import type { StarGroup } from "../../content/quests.ts"
+import type { QuestId, StarGroup } from "../../content/quests.ts"
 import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
 import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
 import type { Novelty } from "../../content/novelties.ts"
+import type { TwistValue } from "../../schema.ts"
 import { Face } from "../kit/art.tsx"
 import type { CharacterId } from "../../content/characters.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import type { TrackId } from "../../content/hardcore.ts"
-import { challengeEnemies, describeLock, describeObjective, describePlay, describeTimeUntil } from "../describe.ts"
+import { challengeEnemies, describeLock, describeObjective, describeTimeUntil } from "../describe.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
 import { Pill } from "../kit/controls.tsx"
@@ -32,27 +33,26 @@ import type { Nav, QuestTab } from "./screens.ts"
 
 const cleared = (store: UiStore, play: Play): boolean => {
   const account = store.account.value
-  return play.kind === "quest" ? account.quests[play.quest]?.firstClearedAt != null : tierProgress(account, play.track, play.tier)?.firstClearedAt != null
+  return play.kind === "quest" ? questCleared(account, play.quest, rankOf(play)) : tierProgress(account, play.track, play.tier)?.firstClearedAt != null
 }
 
 /** What a row says at its right: a quest's stars once cleared (a tier's tick), why it is locked, or its enemies' level. */
 const RowEnd = ({ store, play }: { readonly store: UiStore; readonly play: Play }) => {
   const tuning = store.tuning.value, lock = playLock(tuning, store.account.value, play)
-  if (play.kind === "quest" && cleared(store, play)) return <Stars earned={store.account.value.quests[play.quest]?.stars ?? []} />
+  if (play.kind === "quest" && cleared(store, play)) return <Stars earned={questProgress(store.account.value, play.quest, rankOf(play))?.stars ?? []} />
   if (cleared(store, play)) return <span class="done"><Icon name="check" /></span>
   if (lock !== null) return <Icon name="lock" />
   return <>Lv {encounterOf(tuning, play).enemyLevel}</>
 }
 
-/** A group's chests along its stars: each at the stars it needs, opened ones ticked. */
-/** A group's chests along its stars: each at the stars it needs, opened ones ticked; tap one to see what it holds (`picked`: the one shown). */
-const ChestTrack = ({ store, group, picked, pick }: { readonly store: UiStore; readonly group: StarGroup; readonly picked: ChestRef | null; readonly pick: (chest: ChestRef) => void }) => {
-  const tuning = store.tuning.value, account = store.account.value, chests = tuning.chests[group], open = account.chests[group] ?? 0
-  const { earned, total } = groupStars(tuning, account, group)
+/** A group's chests along its stars at `rank`: each at the stars it needs, opened ones ticked; tap one to see what it holds (`picked`: the one shown). */
+const ChestTrack = ({ store, group, rank, picked, pick }: { readonly store: UiStore; readonly group: StarGroup; readonly rank: number; readonly picked: ChestRef | null; readonly pick: (chest: ChestRef) => void }) => {
+  const tuning = store.tuning.value, account = store.account.value, chests = tuning.chests[group], open = chestsOpened(account, group, rank)
+  const { earned, total } = groupStars(tuning, account, group, rank)
   return <div class="chests" aria-label={`${earned} of ${total} stars; ${open} of ${chests.length} chests open`}>
     <span class="chests__bar"><span style={{ width: `${(Math.min(earned, total) / total) * 100}%` }} /></span>
     {chests.map((chest, index) => <button type="button" key={index} class={`chests__one${index < open ? " is-open" : ""}`} style={{ left: `${(chest.stars / total) * 100}%` }}
-      aria-label={`Chest at ${chest.stars} stars`} aria-pressed={picked?.group === group && picked.index === index} onClick={() => pick({ group, index })}>
+      aria-label={`Chest at ${chest.stars} stars`} aria-pressed={picked?.group === group && picked.index === index && picked.rank === rank} onClick={() => pick({ group, index, rank })}>
       <Icon name={index < open ? "check" : "chest"} /><small>{chest.stars}</small>
     </button>)}
   </div>
@@ -61,9 +61,9 @@ const ChestTrack = ({ store, group, picked, pick }: { readonly store: UiStore; r
 /** What a chest holds, how many stars it needs, how far the group is from it, and under a rule the group's quests with their stars (tap one to see its brief). */
 const ChestBrief = ({ store, chest, open }: { readonly store: UiStore; readonly chest: ChestRef; readonly open: (play: Play) => void }) => {
   const tuning = store.tuning.value, account = store.account.value, spec = tuning.chests[chest.group][chest.index]!
-  const { earned } = groupStars(tuning, account, chest.group)
-  const opened = (account.chests[chest.group] ?? 0) > chest.index
-  const group = chest.group === "secondary" ? "Side quests" : tuning.chapters[chest.group].name
+  const { earned } = groupStars(tuning, account, chest.group, chest.rank)
+  const opened = chestsOpened(account, chest.group, chest.rank) > chest.index
+  const group = `${chest.group === "secondary" ? "Side quests" : tuning.chapters[chest.group].name}${chest.rank > 1 ? ` · Rank ${rankNames[chest.rank - 1]}` : ""}`
   return <Panel class="quests__brief in-right" title={`Chest · ${spec.stars} stars`} subtitle={group}
     detail={opened ? <><Icon name="check" />Opened</> : <><Icon name="star" />{Math.min(earned, spec.stars)} / {spec.stars}</>}
     note={opened ? undefined : `${spec.stars - Math.min(earned, spec.stars)} more ${spec.stars - earned === 1 ? "star" : "stars"} to open it.`} noteIcon="star">
@@ -71,37 +71,67 @@ const ChestBrief = ({ store, chest, open }: { readonly store: UiStore; readonly 
       <span class="chest-brief__icon"><Icon name="chest" /></span>
       <div>
         <Label>{opened ? "It gave" : "It holds"}</Label>
-        <Amounts store={store} rewards={{ experience: 0, currencies: spec.rewards, unlocks: [] }} />
+        <Amounts store={store} rewards={{ experience: 0, currencies: chestRewards(tuning, chest), unlocks: [] }} />
         {!opened && <Bar value={Math.min(1, earned / spec.stars)} label="Stars toward this chest" />}
       </div>
     </div>
     <div class="brief-section">
       <Label>Stars in {chest.group === "secondary" ? "side quests" : "this chapter"}</Label>
       <div class="chest-quests">{questsOf(tuning, chest.group).map((quest) => {
-        const play: Play = { kind: "quest", quest }, locked = playLock(tuning, account, play) !== null
+        const play: Play = { kind: "quest", quest, ...(chest.rank === 1 ? {} : { rank: chest.rank }) }, locked = playLock(tuning, account, play) !== null
         return <button type="button" key={quest} class={`chest-quest${locked ? " is-locked" : ""}`} onClick={() => open(play)}>
           <span>{tuning.quests[quest].name}</span>
-          {locked ? <Icon name="lock" /> : <Stars earned={account.quests[quest]?.stars ?? []} total={tuning.quests[quest].stars.length} />}
+          {locked ? <Icon name="lock" /> : <Stars earned={questProgress(account, quest, chest.rank)?.stars ?? []} total={tuning.quests[quest].stars.length} />}
         </button>
       })}</div>
     </div>
   </Panel>
 }
 
+/** The rank names, as on the steps. */
+const rankNames = ["I", "II", "III", "IV", "V"]
+
+/** `quest` at `rank` (rank 1 as the quest itself). */
+const questAt = (quest: QuestId, rank: number): Play => ({ kind: "quest", quest, ...(rank === 1 ? {} : { rank }) })
+
+/**
+ * The main line's chapters (or the side quests) at the rank picked above
+ * them: each with its stars and chests at that rank, its quests with theirs.
+ */
 const QuestList = ({ store, tab, play, chest }: { readonly store: UiStore; readonly tab: "main" | "secondary"; readonly play: Signal<Play>; readonly chest: Signal<ChestRef | null> }) => {
   const tuning = store.tuning.value, account = store.account.value
-  const plays = playsIn(tuning, tab)
-  const groups: ReadonlyArray<{ readonly group: StarGroup; readonly name: string; readonly plays: ReadonlyArray<Play> }> = tab === "main"
-    ? ids(tuning.chapters).map((chapter) => ({ group: chapter, name: tuning.chapters[chapter].name, plays: plays.filter((each) => each.kind === "quest" && tuning.quests[each.quest].chapter === chapter) }))
-    : [{ group: "secondary", name: "Side quests", plays }]
-  return <>{groups.filter((group) => group.plays.length > 0).map((group) => {
-    const stars = groupStars(tuning, account, group.group)
-    return <>
-      <Label key={group.name} end={<><Icon name="star" />{stars.earned} / {stars.total}</>}>{group.name}</Label>
-      {questsOf(tuning, group.group).length > 0 && <ChestTrack key={`${group.name}-chests`} store={store} group={group.group} picked={chest.value} pick={(picked) => (chest.value = picked)} />}
-      {group.plays.map((each) => <Row key={describePlay(tuning, each)} lead={plays.indexOf(each) + 1} selected={each.kind === "quest" && play.value.kind === "quest" ? each.quest === play.value.quest : samePlay(each, play.value)} locked={playLock(tuning, account, each) !== null} end={<RowEnd store={store} play={each} />} onClick={() => { play.value = each; chest.value = null }}>{describePlay(tuning, each)}</Row>)}
-    </>
-  })}</>
+  const rank = play.value.kind === "quest" ? rankOf(play.value) : 1
+  const quests = playsIn(tuning, tab).flatMap((each) => (each.kind === "quest" ? [each.quest] : []))
+  const groups: ReadonlyArray<{ readonly group: StarGroup; readonly name: string; readonly quests: ReadonlyArray<QuestId> }> = tab === "main"
+    ? ids(tuning.chapters).map((chapter) => ({ group: chapter, name: tuning.chapters[chapter].name, quests: quests.filter((quest) => tuning.quests[quest].chapter === chapter) }))
+    : [{ group: "secondary", name: "Side quests", quests }]
+  /** Switching rank keeps the quest picked. */
+  const toRank = (next: number) => {
+    play.value = questAt(play.value.kind === "quest" ? play.value.quest : quests[0]!, next)
+    chest.value = null
+  }
+  return <>
+    <div class="steps rank-switch" role="radiogroup" aria-label="Rank">
+      <Label>Rank</Label>
+      {Array.from({ length: tuning.ranks.count }, (_, index) => {
+        const each = index + 1, locked = playLock(tuning, account, questAt(quests[0]!, each)) !== null
+        return <button type="button" role="radio" key={each} class={`step${locked ? " is-locked" : ""}`} aria-checked={each === rank} aria-label={`Rank ${rankNames[index]}`} onClick={() => toRank(each)}>
+          <b>{rankNames[index]}</b>{locked && <span><Icon name="lock" /></span>}
+        </button>
+      })}
+    </div>
+    {groups.filter((group) => group.quests.length > 0).map((group) => {
+      const stars = groupStars(tuning, account, group.group, rank)
+      return <>
+        <Label key={group.name} end={<><Icon name="star" />{stars.earned} / {stars.total}</>}>{group.name}</Label>
+        {questsOf(tuning, group.group).length > 0 && <ChestTrack key={`${group.name}-chests-${rank}`} store={store} group={group.group} rank={rank} picked={chest.value} pick={(picked) => (chest.value = picked)} />}
+        {group.quests.map((quest) => {
+          const each = questAt(quest, rank)
+          return <Row key={`${quest}-${rank}`} lead={quests.indexOf(quest) + 1} selected={play.value.kind === "quest" && play.value.quest === quest} locked={playLock(tuning, account, each) !== null} end={<RowEnd store={store} play={each} />} onClick={() => { play.value = each; chest.value = null }}>{tuning.quests[quest].name}</Row>
+        })}
+      </>
+    })}
+  </>
 }
 
 /** The hardcore tracks, or the element trials (`kind`), each opening on the tier or rank to play next. */
@@ -160,6 +190,21 @@ const NewThing = ({ store, challenge, novelty, text, inspect }: { readonly store
   </div>
 }
 
+/** A higher rank's twist, first in its brief where a quest's new thing would be: what makes the replay harder. */
+const RankTwist = ({ rank, twist }: { readonly rank: number; readonly twist: TwistValue }) => {
+  const lines = [
+    ...(twist.elites === null ? [] : [`From the second wave, each wave is led by an elite of ${twist.elites}.`]),
+    ...(twist.shields ? ["Each wave's leader carries a shield."] : [])
+  ]
+  return <div class="novelty">
+    <span class="novelty__art novelty__floor" data-tint={twist.elites ?? ""}><Icon name={twist.elites ?? "star"} /></span>
+    <div>
+      <Label>Rank {rankNames[rank - 1] ?? rank} · harder</Label>
+      <p>{lines.length === 0 ? "Stronger enemies." : `Stronger enemies. ${lines.join(" ")}`}</p>
+    </div>
+  </div>
+}
+
 /**
  * What `play` is, most wanted first: its ranks or tiers (each with its
  * enemies' level), its stars beside what it gives, then its enemies over
@@ -179,13 +224,14 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const progress = selected.kind === "tier" ? tierProgress(account, selected.track, selected.tier) : undefined
   /** The steps of the same challenge: a quest's ranks, a track's tiers. */
   const steps: ReadonlyArray<{ readonly play: Play; readonly name: string }> = selected.kind === "quest"
-    ? [{ play: { kind: "quest", quest: selected.quest }, name: "I" }, ...tuning.quests[selected.quest].ranks.map((_, index): { readonly play: Play; readonly name: string } => ({ play: { kind: "quest", quest: selected.quest, rank: index + 2 }, name: ["II", "III", "IV"][index] ?? String(index + 2) }))]
+    ? Array.from({ length: tuning.ranks.count }, (_, index) => ({ play: questAt(selected.quest, index + 1), name: rankNames[index] ?? String(index + 1) }))
     : tuning.tracks[selected.track].tiers.map((_, index) => ({ play: { kind: "tier", track: selected.track, tier: index + 1 }, name: String(index + 1) }))
   const quest = selected.kind === "quest" ? tuning.quests[selected.quest] : null
   const rank = selected.kind === "quest" ? rankOf(selected) : 1
-  const earnedStars = selected.kind === "quest" ? account.quests[selected.quest]?.stars ?? [] : []
-  const once = quest !== null
-    ? rank > 1 ? null : done ? "claimed" : { ...quest.rewards, experience: 0, currencies: { ...quest.rewards.currencies, ...materialPay(tuning, element, encounter.enemyLevel, tuning.materialRules.firstClear) } }
+  const earnedStars = selected.kind === "quest" ? questProgress(account, selected.quest, rank)?.stars ?? [] : []
+  const firstClear = selected.kind === "quest" ? questRewards(tuning, selected.quest, rank) : null
+  const once = firstClear !== null
+    ? done ? "claimed" : { ...firstClear, experience: 0, currencies: { ...firstClear.currencies, ...materialPay(tuning, element, encounter.enemyLevel, rank === 1 ? tuning.materialRules.firstClear : tuning.materialRules.rankFirstClear) } }
     : trial ? null
     : selected.kind === "tier" && tierRewardsAvailable(tuning, account, selected.track, selected.tier, now)
       ? { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards, experience: 0, unlocks: [], currencies: { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards.currencies, ...materialPay(tuning, element, encounter.enemyLevel, tuning.materialRules.weekly) } }
@@ -195,7 +241,8 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
     subtitle={quest !== null && quest.introduces === null ? "Side quest · what you have met, mixed" : undefined}
     detail={describeObjective(challenge.objective, challenge.waves.scripted.length)}
     note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
-    {quest?.introduces != null && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
+    {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
+    {quest !== null && rank > 1 && <RankTwist rank={rank} twist={encounter.twist} />}
     {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : "Tier"}>
       <Label>{selected.kind === "quest" || trial ? "Rank" : "Tier"}</Label>
       {steps.map((step) => {
@@ -209,9 +256,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
     <div class="quests__goals">
       {quest !== null && <div>
         <Label>Stars</Label>
-        {rank === 1
-          ? quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)
-          : <span class="dim">Earned at rank I.</span>}
+        {quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)}
       </div>}
       {challenge.objective.kind === "endure" && <div>
         <Label>Each wave</Label>
@@ -221,7 +266,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
       <div class={`quests__rewards${quest === null && challenge.objective.kind !== "endure" ? " quests__side-by-side" : ""}`}>
         {!trial && <div>
           <Label>{selected.kind === "quest" ? "First clear" : "Once per period"}</Label>
-          {once === null ? <span class="dim">Only at rank I</span> : once === "claimed" ? <span class="dim claimed"><Icon name="check" />Claimed</span> : once === "restocking" ? <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span> : <Amounts store={store} rewards={once} preview={preview} compact />}
+          {once === null ? <span class="dim">None</span> : once === "claimed" ? <span class="dim claimed"><Icon name="check" />Claimed</span> : once === "restocking" ? <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span> : <Amounts store={store} rewards={once} preview={preview} compact />}
         </div>}
         <div>
           <Label>Every clear</Label>

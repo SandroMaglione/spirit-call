@@ -169,9 +169,9 @@ describe("enemy stats", () => {
 describe("enemy levels", () => {
   it("scale HP, ATK, and DEF along the characters' stat curve, not speed", () => {
     const chaser = defaultTuning.enemies.chaser
-    const top = defaultTuning.progression.character.curve.maxLevel
+    const { band, at } = defaultTuning.progression.stats
     expect(enemyStats(defaultTuning, "chaser", 1)).toEqual({ hp: chaser.hp, atk: chaser.atk, def: chaser.def, speed: chaser.speed })
-    expect(enemyStats(defaultTuning, "chaser", top)).toEqual({ hp: chaser.hp * 4, atk: chaser.atk * 4, def: chaser.def * 4, speed: chaser.speed })
+    expect(enemyStats(defaultTuning, "chaser", at)).toEqual({ hp: chaser.hp * band, atk: chaser.atk * band, def: chaser.def * band, speed: chaser.speed })
   })
 
   it("spawn every enemy of a run at the level the arena was entered with", () => {

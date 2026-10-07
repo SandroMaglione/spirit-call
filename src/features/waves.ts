@@ -15,14 +15,14 @@
  * champion has fallen too.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { elite, entryChampion, entryElite, entryKind, entryShield } from "../content/challenges.ts"
+import { elite, entryChampion, entryElite, entryKind, entryShield, shielded } from "../content/challenges.ts"
 import type { WaveEntry, WavePlan } from "../content/challenges.ts"
 import { Random } from "../math/rng.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { Challenge, Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Waves } from "../schema.ts"
-import type { EnemyKind, WavesValue } from "../schema.ts"
+import { Challenge, Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Twist, Waves } from "../schema.ts"
+import type { EnemyKind, TwistValue, WavesValue } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
@@ -55,6 +55,20 @@ export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number,
     budget -= tuning.enemies[kind].cost
   }
   return wave
+}
+
+/**
+ * Wave `number`'s entries under a rank's `twist` (see `Twist`): its first
+ * enemy that is no champion leads it, an elite of the twist's element (from
+ * the second wave) and carrying a shield, as the twist says.
+ */
+export const withTwist = (entries: ReadonlyArray<WaveEntry>, twist: TwistValue, number: number): Array<WaveEntry> => {
+  const leader = entries.findIndex((entry) => !entryChampion(entry))
+  if (leader === -1 || (twist.elites === null && !twist.shields)) return [...entries]
+  let led = entries[leader]!
+  if (twist.elites !== null && number >= 2 && entryElite(led) === null) led = typeof led === "string" ? elite(led, twist.elites) : { ...led, elite: twist.elites }
+  if (twist.shields) led = shielded(led)
+  return entries.map((each, index) => (index === leader ? led : each))
 }
 
 /** Whether `kind` keeps its distance (it comes in along the wave's front). */
@@ -136,7 +150,8 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
     rng: Game.System.writeResource(Rng),
     tuning: Game.System.readResource(Tuning),
     challenge: Game.System.readResource(Challenge),
-    time: Game.System.readResource(Time)
+    time: Game.System.readResource(Time),
+    twist: Game.System.readResource(Twist)
   }
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
@@ -163,7 +178,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
         phase = "complete"
       } else if (timer <= 0) {
         number += 1
-        queue = composeWave(tuning, plan, number, random)
+        queue = withTwist(composeWave(tuning, plan, number, random), resources.twist.get(), number)
         front = pickFront(tuning, player, random)
         phase = "spawning"
         timer = 0

@@ -33,19 +33,19 @@ export interface ResolvedBuild {
 }
 
 /**
- * How much stronger level `level` is than level 1, for something whose
- * levels go up to `maxLevel`: 1 at level 1, `curve.band` at the maximum (see
+ * How much stronger level `level` is than level 1: 1 at level 1, `curve.band`
+ * at level `curve.at`, and on along the same curve past it (see
  * `StatCurve`). The one stat curve every level follows.
  */
-export const levelScale = (curve: StatCurve, level: number, maxLevel: number): number => {
-  if (maxLevel <= 1) return 1
-  const reached = Math.min(1, Math.max(0, (level - 1) / (maxLevel - 1)))
+export const levelScale = (curve: StatCurve, level: number): number => {
+  if (curve.at <= 1) return 1
+  const reached = Math.max(0, (level - 1) / (curve.at - 1))
   return 1 + (curve.band - 1) * reached ** curve.shape
 }
 
 /** `base` at character level `level`: HP, ATK, and DEF scaled (to whole numbers), speed as it is. */
 export const statsAtLevel = (tuning: TuningValue, base: Stats, level: number): Stats => {
-  const scale = levelScale(tuning.progression.stats, level, tuning.progression.character.curve.maxLevel)
+  const scale = levelScale(tuning.progression.stats, level)
   return { hp: Math.round(base.hp * scale), atk: Math.round(base.atk * scale), def: Math.round(base.def * scale), speed: base.speed }
 }
 
