@@ -48,7 +48,7 @@ export const Inventory = ({ store, nav }: { readonly store: UiStore; readonly na
     return { character, count: next?.count ?? null, now: ascensionStep(tuning, account, character) !== null }
   })
   return <Screen name="inventory">
-    <TopBar icon="account" title="Inventory" close={nav.back} />
+    <TopBar icon="chest" title="Inventory" close={nav.back} />
     <div class="inventory__cards scroll in-left"><Cards>{all.map((each) => {
       const material = isMaterial(store, each)
       return <Card key={each} tint={material ? tuning.materials[each].element : undefined} label={material ? tuning.materials[each].name : tuning.currencies[each as keyof typeof tuning.currencies].name}
