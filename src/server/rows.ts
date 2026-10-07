@@ -38,14 +38,14 @@ export const tables = {
   characters: { row: Schema.Struct({ user_id: Text, character: Text, unlocked_at: Int, experience: Int, ascension: Int }), key: ["character"] },
   aspects: { row: Schema.Struct({ user_id: Text, aspect: Text, unlocked_at: Int, copies: Int }), key: ["aspect"] },
   team_members: { row: Schema.Struct({ user_id: Text, slot: Int, character: Text, aspect: Schema.NullOr(Text) }), key: ["slot"] },
-  quests: { row: Schema.Struct({ user_id: Text, quest: Text, attempts: Int, clears: Int, first_cleared_at: OptionalInt }), key: ["quest"] },
-  quest_stars: { row: Schema.Struct({ user_id: Text, quest: Text, star: Int }), key: ["quest", "star"] },
+  quests: { row: Schema.Struct({ user_id: Text, quest: Text, rank: Int, attempts: Int, clears: Int, first_cleared_at: OptionalInt }), key: ["quest", "rank"] },
+  quest_stars: { row: Schema.Struct({ user_id: Text, quest: Text, rank: Int, star: Int }), key: ["quest", "rank", "star"] },
   tiers: {
     row: Schema.Struct({ user_id: Text, track: Text, tier: Int, attempts: Int, clears: Int, first_cleared_at: OptionalInt, rewarded_period: OptionalInt, best_wave: OptionalInt }),
     key: ["track", "tier"]
   },
   discoveries: { row: Schema.Struct({ user_id: Text, discovery: Text, made_at: Int }), key: ["discovery"] },
-  chests: { row: Schema.Struct({ user_id: Text, star_group: Text, opened: Int }), key: ["star_group"] },
+  chests: { row: Schema.Struct({ user_id: Text, star_group: Text, rank: Int, opened: Int }), key: ["star_group", "rank"] },
   call_focus: { row: Schema.Struct({ user_id: Text, banner: Text, character: Text }), key: ["banner"] },
   calls: { row: Schema.Struct({ user_id: Text, place: Int, at: Int, banner: Text, kind: Schema.Literals(["character", "aspect", "supply"]), item: Schema.NullOr(Text) }), key: ["place"] },
   call_amounts: { row: Schema.Struct({ user_id: Text, place: Int, resource: Text, amount: Int }), key: ["place", "resource"] }
@@ -88,8 +88,8 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
     characters: Object.entries(account.owned.characters).map(([character, owned]) => ({ user_id, character, unlocked_at: owned.unlockedAt, experience: owned.experience, ascension: owned.ascension })),
     aspects: Object.entries(account.owned.aspects).map(([aspect, owned]) => ({ user_id, aspect, unlocked_at: owned.unlockedAt, copies: owned.copies })),
     team_members: account.selection.team.map((character, slot) => ({ user_id, slot, character, aspect: account.selection.aspects[character] ?? null })),
-    quests: Object.entries(account.quests).map(([quest, progress]) => ({ user_id, quest, attempts: progress.attempts, clears: progress.clears, first_cleared_at: progress.firstClearedAt })),
-    quest_stars: Object.entries(account.quests).flatMap(([quest, progress]) => progress.stars.map((star) => ({ user_id, quest, star }))),
+    quests: Object.entries(account.quests).flatMap(([quest, ranks]) => Object.entries(ranks).map(([rank, progress]) => ({ user_id, quest, rank: Number(rank), attempts: progress.attempts, clears: progress.clears, first_cleared_at: progress.firstClearedAt }))),
+    quest_stars: Object.entries(account.quests).flatMap(([quest, ranks]) => Object.entries(ranks).flatMap(([rank, progress]) => progress.stars.map((star) => ({ user_id, quest, rank: Number(rank), star })))),
     tiers: Object.entries(account.hardcore).flatMap(([track, tiers]) =>
       Object.entries(tiers).map(([tier, progress]) => ({
         user_id,
@@ -103,7 +103,7 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
       }))
     ),
     discoveries: Object.entries(account.discoveries).map(([discovery, made]) => ({ user_id, discovery, made_at: made.madeAt })),
-    chests: Object.entries(account.chests).map(([star_group, opened]) => ({ user_id, star_group, opened })),
+    chests: Object.entries(account.chests).flatMap(([star_group, ranks]) => Object.entries(ranks).map(([rank, opened]) => ({ user_id, star_group, rank: Number(rank), opened }))),
     call_focus: Object.entries(account.calls.focus).map(([banner, character]) => ({ user_id, banner, character })),
     calls: account.calls.history.map((call, place) => ({ user_id, place, at: call.at, banner: call.banner, kind: call.result.kind, item: call.result.kind === "supply" ? null : call.result.id })),
     call_amounts: account.calls.history.flatMap((call, place) =>
@@ -129,6 +129,14 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
       return result === undefined ? [] : [{ at: call.at, banner: call.banner, result }]
     })
   const team = [...rows.team_members].sort((a, b) => a.slot - b.slot)
+  // Quests and chests by rank.
+  const quests: Record<string, Record<string, AccountRecord["quests"][string][string]>> = {}
+  for (const quest of rows.quests) {
+    const stars = rows.quest_stars.filter((star) => star.quest === quest.quest && star.rank === quest.rank).map((star) => star.star).sort((a, b) => a - b)
+    quests[quest.quest] = { ...quests[quest.quest], [quest.rank]: { attempts: quest.attempts, clears: quest.clears, firstClearedAt: quest.first_cleared_at, stars } }
+  }
+  const chests: Record<string, Record<string, number>> = {}
+  for (const chest of rows.chests) chests[chest.star_group] = { ...chests[chest.star_group], [chest.rank]: chest.opened }
   const hardcore: Record<string, Record<string, AccountRecord["hardcore"][string][string]>> = {}
   for (const tier of rows.tiers) {
     hardcore[tier.track] = {
@@ -152,20 +160,10 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
       characters: Object.fromEntries(rows.characters.map((owned) => [owned.character, { unlockedAt: owned.unlocked_at, experience: owned.experience, ascension: owned.ascension }])),
       aspects: Object.fromEntries(rows.aspects.map((owned) => [owned.aspect, { unlockedAt: owned.unlocked_at, copies: owned.copies }]))
     },
-    quests: Object.fromEntries(
-      rows.quests.map((quest) => [
-        quest.quest,
-        {
-          attempts: quest.attempts,
-          clears: quest.clears,
-          firstClearedAt: quest.first_cleared_at,
-          stars: rows.quest_stars.filter((star) => star.quest === quest.quest).map((star) => star.star).sort((a, b) => a - b)
-        }
-      ])
-    ),
+    quests,
     hardcore,
     discoveries: Object.fromEntries(rows.discoveries.map((discovery) => [discovery.discovery, { madeAt: discovery.made_at }])),
-    chests: Object.fromEntries(rows.chests.map((chest) => [chest.star_group, chest.opened])),
+    chests,
     calls: {
       seed: row.call_seed,
       sinceCharacter: row.calls_since_character,

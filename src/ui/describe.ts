@@ -194,13 +194,13 @@ export const describeRewards = (tuning: Tuning, rewards: Rewards): string =>
 
 /** What `play` is called: a quest's name (and its rank above the first), or a track's name and tier. */
 export const describePlay = (tuning: Tuning, play: Play): string =>
-  play.kind === "quest" ? `${tuning.quests[play.quest].name}${(play.rank ?? 1) > 1 ? ` · Rank ${play.rank}` : ""}` : `${tuning.tracks[play.track].name} · Tier ${play.tier}`
+  play.kind === "quest" ? `${tuning.quests[play.quest].name}${(play.rank ?? 1) > 1 ? ` · Rank ${["I", "II", "III", "IV", "V"][play.rank! - 1] ?? play.rank}` : ""}` : `${tuning.tracks[play.track].name} · ${tuning.tracks[play.track].kind === "trial" ? "Rank" : "Tier"} ${play.tier}`
 
 /** Why something is locked, in a few words. */
 export const describeLock = (tuning: Tuning, lock: Lock): string => {
   switch (lock.kind) {
     case "after":
-      return `Clear ${tuning.quests[lock.quest].name} first`
+      return `Clear ${tuning.quests[lock.quest].name}${(lock.rank ?? 1) > 1 ? ` at rank ${["I", "II", "III", "IV", "V"][lock.rank! - 1] ?? lock.rank}` : ""} first`
     case "tier":
       return `Clear Tier ${lock.tier} first`
   }

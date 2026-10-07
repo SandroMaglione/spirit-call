@@ -184,9 +184,10 @@ The game has two areas, and Extras for practice.
   - **Three stars** per quest, for how well it was played: never for
     speed, and never for bringing a character, an element, or a class (any
     team can earn every star). A chapter's stars open its **chests**.
-  - **Ranks.** A quest is replayed at higher ranks (fixed, higher enemy
-    levels) once the main line is further on, so an old quest stays worth
-    playing and gives better materials.
+  - **Ranks.** The main line and the side quests are replayed at higher
+    ranks once the main line is further on: higher enemy levels and a
+    twist on the waves, with their own first clears, stars, and chests, so
+    the game is played again, harder, for rewards again.
   - The main line opens in order; nothing else gates it.
 - **Hardcore**: combat waves, champions, and the more grinding challenges. These are the goals you
   are aiming to beat, where preparation and skill are tested fully. It is
@@ -244,8 +245,10 @@ Decided so far (the rest is in the open questions):
   them (as in Genshin): nobody falls behind for sitting on the bench, and a
   new character catches up the same way. Playing earns the resources, and
   account experience.
-- **The stat band is to be set later**: roughly 4x between level 1 and the
-  maximum sounds right, to confirm once there is content to measure it on.
+- **The stat band**: 4x between level 1 and level 40, going on the same
+  way to the cap of 60 (about 5.5x), the levels the ranks' replays reach.
+  The cap is not sacred: it rises only if content needs it; later chapters
+  can grow harder through twists rather than levels.
 - **Growth stays simple:** character levels, and nothing else gives stats.
   Aspects change how she plays and have no levels. A closed set of
   accessories may come later, only if the collecting side gets dull.

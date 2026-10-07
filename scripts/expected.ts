@@ -31,8 +31,8 @@ const tuning = defaultTuning
 const seeds = values.seeds.split(",").map(Number)
 const seconds = Number(values.seconds)
 const { rows } = simulateProgression(tuning)
-const entering = (quest: QuestId) => rows.find((row) => row.quest === quest)?.team
-const leaving = (quest: QuestId) => rows.find((row) => row.quest === quest)?.after
+const entering = (quest: QuestId, rank: number) => rows.find((row) => row.quest === quest && row.rank === rank)?.team
+const leaving = (quest: QuestId, rank: number) => rows.find((row) => row.quest === quest && row.rank === rank)?.after
 
 interface Case {
   readonly kind: "main" | "side" | "ranks" | "hardcore" | "trials"
@@ -49,21 +49,25 @@ const budgetOf = (quest: QuestId): number | null => {
 
 const cases: Array<Case> = []
 for (const [id, spec] of Object.entries(tuning.quests) as Array<[QuestId, (typeof tuning.quests)[QuestId]]>) {
-  if (spec.line === "main") cases.push({ kind: "main", name: spec.name, play: { kind: "quest", quest: id }, team: entering(id), budget: budgetOf(id) })
-  else cases.push({ kind: "side", name: spec.name, play: { kind: "quest", quest: id }, team: spec.after === null ? undefined : leaving(spec.after as QuestId), budget: budgetOf(id) })
-  spec.ranks.forEach((rank, index) => cases.push({ kind: "ranks", name: `${spec.name} rank ${index + 2}`, play: { kind: "quest", quest: id, rank: index + 2 }, team: leaving(rank.after as QuestId), budget: null }))
+  for (let rank = 1; rank <= tuning.ranks.count; rank++) {
+    const play: Play = { kind: "quest", quest: id, ...(rank === 1 ? {} : { rank }) }
+    const name = rank === 1 ? spec.name : `${spec.name} rank ${rank}`
+    const kind = rank > 1 ? "ranks" : spec.line === "main" ? "main" : "side"
+    const team = spec.line === "main" ? entering(id, rank) : spec.after === null ? undefined : leaving(spec.after as QuestId, rank)
+    cases.push({ kind, name, play, team, budget: budgetOf(id) })
+  }
 }
 for (const [id, track] of Object.entries(tuning.tracks) as Array<[TrackId, (typeof tuning.tracks)[TrackId]]>) {
-  track.tiers.forEach((tier, index) => cases.push({ kind: track.kind === "trial" ? "trials" : "hardcore", name: `${track.name} ${index + 1}`, play: { kind: "tier", track: id, tier: index + 1 }, team: leaving(tier.opens), budget: null }))
+  track.tiers.forEach((tier, index) => cases.push({ kind: track.kind === "trial" ? "trials" : "hardcore", name: `${track.name} ${index + 1}`, play: { kind: "tier", track: id, tier: index + 1 }, team: leaving(tier.opens, tier.opensRank), budget: null }))
 }
 
 console.log(`Each fought by the team that has it open, at its levels; ${seeds.length} seeds, at most ${seconds}s. C cleared, D defeated, T timed out.\n`)
 const table: Array<Record<string, string | number>> = []
 for (const each of cases.filter((candidate) => values.only === undefined || candidate.kind === values.only)) {
   if (each.team === undefined) continue
-  const { challenge, enemyLevel } = encounterOf(tuning, each.play)
+  const { challenge, enemyLevel, twist } = encounterOf(tuning, each.play)
   const reports = seeds.map((seed) => runBot({
-    tuning, challenge, enemyLevel, seconds, seed, mortal: true, measurePressure: false, abilities: true, ...(each.team!.length > 1 ? { rotateEvery: 3 } : {}),
+    tuning, challenge, enemyLevel, twist, seconds, seed, mortal: true, measurePressure: false, abilities: true, ...(each.team!.length > 1 ? { rotateEvery: 3 } : {}),
     team: each.team!.map((member) => ({ character: member.character, level: member.level })), style: styleFor(each.team![0]!.character)
   }))
   const hits = reports.map((report) => report.hits)

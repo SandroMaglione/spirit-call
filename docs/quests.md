@@ -84,13 +84,34 @@ materials: the milestone rewards that pay for playing well.
 
 ## Ranks
 
-After the main line moves on, a quest opens again at higher **ranks**:
-the same quest at a fixed, higher enemy level (never scaled to the player).
-A rank opens with a later chapter's last quest, at about its level: rank 2
-two chapters on, rank 3 four chapters on (chapters 5 and 6 get theirs as
-the main line grows). Ranks give no first clear rewards, no stars, and no
-materials; they pay the gold any run pays at their level. They are a
-stronger version of a quest the player liked, at the edge of where she is.
+Every quest is played again at higher **ranks** (`rankRules` in
+`content/quests.ts`): the main line and the side quests replayed, harder,
+each rank a pass with its **own first clears, stars, and chests**. The
+quest list has a rank switcher above the chapters.
+
+| | Rank I | Rank II | Rank III |
+|---|---|---|---|
+| Enemy levels | the quest's own (1–34) | +12 (13–46) | +24 (25–58) |
+| Twist | none | elite leaders | elite leaders and shields |
+| First clear | as written | 40% of the crystals, gold worth 2 runs at its level, a clear's worth of material | same |
+| Chests | as written | 40% of the crystals, gold at its level, no material | same |
+
+- **When a rank opens.** A chapter's rank r opens once the main line is
+  `(r − 1) × 2` chapters further on (rank II of chapter 1 with the end of
+  chapter 3), and each quest after the one before it at that rank. Where
+  the main line has no such chapter yet, the replay goes on in its own
+  order once the main line is done. Side quests open after their main
+  quest at the same rank.
+- **Twists** are written once and apply to every quest of a rank: from
+  the second wave, each wave's first enemy leads it as an elite of the
+  quest's element (wind and rock, which make no elites, stand in as water
+  and fire); at rank III each leader also carries a shield. They only use
+  what the main line has brought by the time the rank opens:
+  `validateContent` follows the gates.
+- **Stars** are the same goals at every rank: harder at the higher level
+  with the twist.
+- Ranks are where the late levels come from: characters go to level 60,
+  and enemy stats follow the same curve past 40 (see `StatCurve`).
 
 ## Materials and ascension
 
@@ -104,13 +125,15 @@ stronger version of a quest the player liked, at the edge of where she is.
   - its element's **trial**, on every clear (see below);
   - a Spirit Call supply, for the focused character's element.
 
-  Replaying a quest, or a rank, pays gold only: an old quest beaten again
-  by a strong team pays no materials.
-- **Ascension.** A character's levels come in phases of ten. Gold buys
-  levels within a phase; crossing to the next costs gold and her element's
-  material: about six clears of the trial rank of its time (110 at level
-  10, 360 at 20, 1,150 at 30). Ascending gives no stats: it opens the next
-  ten levels.
+  A higher rank's first clear pays one clear's worth. Replaying a quest
+  pays gold only: an old quest beaten again by a strong team pays no
+  materials.
+- **Ascension.** A character's levels come in phases of ten, up to 60.
+  Gold buys levels within a phase; crossing to the next costs gold and her
+  element's material: about six clears of the trial rank of its time for
+  the first steps (36 at level 10, 120 at 20, 384 at 30), more for the
+  last two, which the ranks' replays reach (3,000 at 40, 10,000 at 50).
+  Ascending gives no stats: it opens the next ten levels.
 
 ## Trials
 
@@ -122,8 +145,8 @@ A trial is as long as a quest; playing well and fast is how to farm more.
 - **They open with the main line**: wind after chapter 2, fire after 3,
   water after 4, thunder after 5, rock after 6. A character can be farmed
   for only once her element's chapter is behind the player.
-- **Ranks** at fixed enemy levels (11, 17, 23, 29, 35), each opening with a
-  chapter's last quest and showing only what the main line has brought by
+- **Ranks** at fixed enemy levels (11, 17, 23, 29, 35, then 41 to 59 with
+  the main line's own ranks), each opening with a chapter's last quest and showing only what the main line has brought by
   then. Every rank pays, on the same curve: the top rank open takes about
   six clears for a step, the one below about twice as many, the first rank
   of a late step dozens. So farming means the edge of what the player can

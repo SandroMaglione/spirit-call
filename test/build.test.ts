@@ -39,21 +39,21 @@ describe("builds", () => {
     expect(resolveBuild(tuning, { character: "swordsman", aspect: aspectId("test") }).attack).toEqual({ class: "blade", aspect: null })
   })
 
-  it("follow one stat curve: level 1 is the base, the maximum level `band` times it", () => {
-    const curve = { band: 4, shape: 1 }
-    expect(levelScale(curve, 1, 40)).toBe(1)
-    expect(levelScale(curve, 40, 40)).toBe(4)
-    expect(levelScale(curve, 99, 40)).toBe(4)
-    expect(levelScale(curve, 20.5, 40)).toBeCloseTo(2.5)
-    expect(levelScale({ band: 4, shape: 2 }, 20.5, 40)).toBeCloseTo(1.75)
+  it("follow one stat curve: level 1 is the base, level `at` `band` times it, and on the same way past it", () => {
+    const curve = { band: 4, at: 40, shape: 1 }
+    expect(levelScale(curve, 1)).toBe(1)
+    expect(levelScale(curve, 40)).toBe(4)
+    expect(levelScale(curve, 20.5)).toBeCloseTo(2.5)
+    expect(levelScale(curve, 59.5)).toBeCloseTo(5.5)
+    expect(levelScale({ band: 4, at: 40, shape: 2 }, 20.5)).toBeCloseTo(1.75)
   })
 
   it("scale the character's HP, ATK, and DEF with her level: it gives all her stats", () => {
     const base = defaultTuning.characters.swordsman.stats
-    const maxLevel = defaultTuning.progression.character.curve.maxLevel
-    const top = statsAtLevel(defaultTuning, base, maxLevel)
-    expect(top).toEqual({ hp: base.hp * 4, atk: base.atk * 4, def: base.def * 4, speed: base.speed })
-    expect(resolveBuild(defaultTuning, { character: "swordsman", level: maxLevel }).stats).toEqual(top)
+    const { band, at } = defaultTuning.progression.stats
+    const top = statsAtLevel(defaultTuning, base, at)
+    expect(top).toEqual({ hp: base.hp * band, atk: base.atk * band, def: base.def * band, speed: base.speed })
+    expect(resolveBuild(defaultTuning, { character: "swordsman", level: at }).stats).toEqual(top)
   })
 
   it("a team comes from the URL: its characters by id (each once, three at most), the first one's build and everyone's levels", () => {

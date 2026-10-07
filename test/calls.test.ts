@@ -13,7 +13,7 @@ const banner = activeBanner(tuning, now).banner
 /** An account that cleared chapter one (calls open), holding crystals for `calls` calls. */
 const opened = (id = "account-1", calls = 200): Account => {
   const fresh = createAccount(tuning, newAccount, id, 1000)
-  const cleared = { ...fresh, quests: { [rules.opensAfter]: { attempts: 1, clears: 1, firstClearedAt: 1500, stars: [0] } } }
+  const cleared = { ...fresh, quests: { [rules.opensAfter]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1500, stars: [0] } } } }
   return earn(cleared, callCost(tuning, calls))
 }
 /** `count` calls, one at a time, on the banner running now (stops early once nothing is left on it). */

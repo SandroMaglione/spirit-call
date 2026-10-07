@@ -75,7 +75,9 @@ to by reference, so destroying a preview never touches it.
   the account is read (`fromRecord`), and what depended on it is repaired.
   Adding content needs no migration.
 - **Migrations only add** (tables, nullable columns) and never change once
-  merged. Main's CI applies new ones before deploying prod. Previews and
+  merged. Before the game opened, two reset every account instead
+  (`0003`, `0004`, which also keyed quest progress, stars, and chests by
+  rank). Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
 - **Writes are plain statements in sequence.** A player's two devices
   changing the account at the same moment could interleave; that is

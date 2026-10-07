@@ -78,13 +78,13 @@ export const Account = Schema.Struct({
     characters: Schema.Record(CharacterId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, experience: Schema.Number, ascension: Count }))),
     aspects: Schema.Record(AspectId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, copies: Count })))
   }),
-  quests: Schema.Record(QuestId, Schema.optionalKey(Schema.Struct({ ...RunCount, stars: Schema.Array(Count) }))),
+  quests: Schema.Record(QuestId, Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, stars: Schema.Array(Count) })))),
   hardcore: Schema.Record(
     TrackId,
     Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, rewardedPeriod: Schema.NullOr(Schema.Number), bestWave: Schema.optionalKey(Count) })))
   ),
   discoveries: Schema.Record(DiscoveryId, Schema.optionalKey(Schema.Struct({ madeAt: Schema.Number }))),
-  chests: Schema.Record(StarGroup, Schema.optionalKey(Count)),
+  chests: Schema.Record(StarGroup, Schema.optionalKey(Schema.Record(Schema.Int, Count))),
   calls: Schema.Struct({
     seed: Schema.Number,
     sinceCharacter: Count,
@@ -143,7 +143,7 @@ export const StoredRun = Schema.Struct({
 /** A change to an account: which action, on what, and what it gained (positive) or spent (negative) of each resource. */
 export const AccountEvent = Schema.Struct({ id: Schema.String, at: Schema.Number, action: Schema.String, subject: Schema.NullOr(Schema.String), amounts: Amounts })
 
-const ChestRef = Schema.Struct({ group: StarGroup, index: Count })
+const ChestRef = Schema.Struct({ group: StarGroup, index: Count, rank: Count })
 
 export const Earned = Schema.Struct({
   experience: Schema.Number,

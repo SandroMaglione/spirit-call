@@ -10,7 +10,7 @@ import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 
-import { ascend, createAccount, earn, everything, noQuestProgress, recordRun, select, train, unlock, withClearedRewards } from "../account/account.ts"
+import { ascend, createAccount, earn, everything, noQuestProgress, questProgress, recordRun, select, train, unlock, withClearedRewards } from "../account/account.ts"
 import type { Account, CallResult, Checked, Earned, Play, TeamAspects } from "../account/account.ts"
 import { call, setFocus } from "../account/calls.ts"
 import { fromRecord, toRecord } from "../account/convert.ts"
@@ -129,7 +129,10 @@ export class Accounts extends Context.Service<
           always(userId, "unlockEverything", (account, now) => earn(everything(tuning).reduce((next, item) => unlock(tuning, next, item, now), account), plenty)),
         openCalls: (userId) =>
           always(userId, "openCalls", (account, now) => {
-            const cleared = Object.fromEntries(chapterOne.map((quest) => [quest, { ...noQuestProgress, ...account.quests[quest], firstClearedAt: account.quests[quest]?.firstClearedAt ?? now }]))
+            const cleared = Object.fromEntries(chapterOne.map((quest) => {
+              const progress = questProgress(account, quest) ?? noQuestProgress
+              return [quest, { ...account.quests[quest], 1: { ...progress, firstClearedAt: progress.firstClearedAt ?? now } }]
+            }))
             const rewarded = withClearedRewards(tuning, { ...account, quests: { ...account.quests, ...cleared } }, now).account
             return earn(rewarded, { crystals: 30 * (tuning.calls.price.crystals ?? 0) })
           })

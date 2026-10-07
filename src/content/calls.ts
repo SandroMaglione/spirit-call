@@ -65,7 +65,7 @@ export const callRules: CallRules = {
   opensAfter: "packLeader",
   character: { rate: 0.03, softFrom: 20, softStep: 0.1, guarantee: 30, firstGuarantee: 10 },
   aspect: { rate: 0.12, guarantee: 10 },
-  supply: { gold: 1200, material: 30 },
+  supply: { gold: 1200, material: 10 },
   rotation: { anchor: Date.UTC(2026, 0, 5), days: 14 },
   history: 60
 }

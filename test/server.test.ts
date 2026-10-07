@@ -153,7 +153,7 @@ describe("accounts", () => {
     expect(recorded.body.earned.rewards).toEqual(defaultTuning.quests.firstBlood.rewards)
     const account = (await player.send("GET", "/api/account")).body
     expect(account).toEqual(recorded.body.account)
-    expect(account.quests.firstBlood).toMatchObject({ attempts: 1, clears: 1 })
+    expect(account.quests.firstBlood?.["1"]).toMatchObject({ attempts: 1, clears: 1 })
     expect(account.totals).toMatchObject({ runs: 1, clears: 1, kills: 40 })
     expect(account.wallet.gold).toBeGreaterThan(0)
   })
@@ -256,12 +256,12 @@ describe("account rows", () => {
     createdAt: 5,
     experience: 120,
     totals: { runs: 3, clears: 2, kills: 90, secondsPlayed: 410.5 },
-    wallet: { gold: 300, crystals: 20, fireShard: 2 },
+    wallet: { gold: 300, crystals: 20, fireEssence: 2 },
     owned: { characters: { swordsman: { unlockedAt: 5, experience: 40, ascension: 0 }, gunner: { unlockedAt: 6, experience: 0, ascension: 0 } }, aspects: { marksman: { unlockedAt: 7, copies: 2 } } },
-    quests: { firstBlood: { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] } },
+    quests: { firstBlood: { "1": { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] }, "2": { attempts: 1, clears: 1, firstClearedAt: 12, stars: [1] } } },
     hardcore: { gauntlet: { "1": { attempts: 2, clears: 1, firstClearedAt: 5, rewardedPeriod: 3, bestWave: 7 } } },
     discoveries: { flare: { madeAt: 5 } },
-    chests: { one: 1 },
+    chests: { one: { "1": 1, "2": 0 } },
     calls: { seed: 42, sinceCharacter: 3, sinceAspect: 1, firstCharacter: false, focus: {}, history: [{ at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "supply", amounts: { gold: 50 } } }] },
     selection: { team: ["gunner", "swordsman"], aspects: { gunner: "marksman" }, play: { kind: "tier", track: "gauntlet", tier: 1 } }
   }, 10).account), 10).account

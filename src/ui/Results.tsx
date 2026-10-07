@@ -9,7 +9,7 @@
  */
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
-import { accountLevel, earnedResources, playLock, rankOf } from "../account/account.ts"
+import { accountLevel, earnedResources, playLock, questProgress, rankOf } from "../account/account.ts"
 import { AbilityIcon } from "./AbilityIcon.tsx"
 import { describePlay, describeUnlock, resourceName } from "./describe.ts"
 import { elementOf } from "./draft.ts"
@@ -40,12 +40,12 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const leveled = earned !== null && earned.level.after > earned.level.before
   const title = extra?.kind === "trial" ? `${tuning.characters[extra.character].name} · Trial` : extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   const time = `${Math.floor(result.time / 60)}:${String(Math.floor(result.time % 60)).padStart(2, "0")}`
-  const starred = play?.kind === "quest" && rankOf(play) === 1 && extra === null ? play : null
+  const starred = play?.kind === "quest" && extra === null ? play : null
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}`} onClick={() => (revealed.value = true)}>
     {newcomer?.kind === "character" && <div class="results__newcomer" data-element={elementOf(tuning, newcomer.id)}><Model character={newcomer.id} reveal={!revealed.value} /></div>}
     <section class="results__content">
       <h1>{title}</h1>
-      {starred !== null && earned !== null && <div class="results__stars"><Stars earned={account.quests[starred.quest]?.stars ?? []} fresh={earned.stars} /></div>}
+      {starred !== null && earned !== null && <div class="results__stars"><Stars earned={questProgress(account, starred.quest, rankOf(starred))?.stars ?? []} fresh={earned.stars} /></div>}
       <p class="dim"><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
       <div class="results__rule" />
       {extra !== null ? <p class="dim">{extra.kind === "trial" ? "A trial records nothing." : "Practice records nothing."}</p> : <>

@@ -69,7 +69,7 @@ import {
   Wall,
   Waves
 } from "../src/schema.ts"
-import type { BuildValue } from "../src/schema.ts"
+import type { BuildValue, TwistValue } from "../src/schema.ts"
 
 /**
  * Something that will hurt: an area from `from` to `to` seconds from now,
@@ -438,6 +438,8 @@ export interface BotRun {
   readonly tuning: Tuning
   readonly challenge?: ChallengeId
   readonly enemyLevel?: number
+  /** A rank's twist on the waves (see `Twist`). */
+  readonly twist?: TwistValue
   /** Spawns the enemies to face (otherwise the challenge's waves come). */
   /** The enemies to fight instead of waves; `champion`: a champion of its kind carrying that element. */
   readonly enemies?: ReadonlyArray<{ readonly kind: EnemyKind; readonly offset: Vec2; readonly champion?: EliteElement }>
@@ -504,7 +506,8 @@ export const runBot = (run: BotRun): BotReport => {
     team,
     party,
     ...(run.challenge === undefined ? {} : { challenge: run.challenge }),
-    ...(run.enemyLevel === undefined ? {} : { enemyLevel: run.enemyLevel })
+    ...(run.enemyLevel === undefined ? {} : { enemyLevel: run.enemyLevel }),
+    ...(run.twist === undefined ? {} : { twist: run.twist })
   })
   sim.runtime.tick(sim.setup)
   members = sim.runtime.inspect(Members)

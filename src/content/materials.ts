@@ -47,8 +47,9 @@ export interface AscensionStep {
 export interface MaterialRules {
   /** What one clear at enemy level 1 is worth, and every how many levels that doubles. */
   readonly worth: { readonly atFirst: number; readonly doublesEvery: number }
-  /** A quest's (or a rank's) first clear pays this many clears' worth at its level, once. */
+  /** A quest's first clear pays this many clears' worth at its level, once; a higher rank's, `rankFirstClear`. */
   readonly firstClear: number
+  readonly rankFirstClear: number
   /** A hardcore tier's reward pays this many clears' worth at its level, once per period. */
   readonly weekly: number
   /** A character's steps, lowest first: at each, her levels stop until she ascends. */
@@ -56,14 +57,17 @@ export interface MaterialRules {
 }
 
 export const materialRules: MaterialRules = {
-  worth: { atFirst: 6, doublesEvery: 6 },
+  worth: { atFirst: 2, doublesEvery: 6 },
   firstClear: 3,
-  weekly: 2,
-  // About six clears of the trial rank opening around each step's level.
+  rankFirstClear: 1,
+  weekly: 1,
+  // About six clears of the trial rank opening around each of the first steps' level; the last two (the ranks' replays) take longer.
   ascension: [
-    { level: 10, gold: 1500, count: 110 },
-    { level: 20, gold: 5000, count: 360 },
-    { level: 30, gold: 11000, count: 1150 }
+    { level: 10, gold: 1500, count: 36 },
+    { level: 20, gold: 5000, count: 120 },
+    { level: 30, gold: 11000, count: 384 },
+    { level: 40, gold: 60000, count: 3000 },
+    { level: 50, gold: 96000, count: 10000 }
   ]
 }
 

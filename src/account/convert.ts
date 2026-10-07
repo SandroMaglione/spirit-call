@@ -40,10 +40,12 @@ export interface AccountRecord {
     readonly characters: Readonly<Record<string, OwnedCharacter>>
     readonly aspects: Readonly<Record<string, OwnedAspect>>
   }
-  readonly quests: Readonly<Record<string, StoredRunCount & { readonly stars: ReadonlyArray<number> }>>
+  /** Each quest's progress, by rank (as a string key). */
+  readonly quests: Readonly<Record<string, Readonly<Record<string, StoredRunCount & { readonly stars: ReadonlyArray<number> }>>>>
   readonly hardcore: Readonly<Record<string, Readonly<Record<string, StoredRunCount & { readonly rewardedPeriod: number | null; readonly bestWave?: number }>>>>
   readonly discoveries: Readonly<Record<string, { readonly madeAt: number }>>
-  readonly chests: Readonly<Record<string, number>>
+  /** The chests opened in each group, by rank. */
+  readonly chests: Readonly<Record<string, Readonly<Record<string, number>>>>
   readonly calls: {
     readonly seed: number
     readonly sinceCharacter: number
@@ -94,10 +96,20 @@ export const fromRecord = (
     characters: keep<CharacterId, OwnedCharacter>(tuning.characters, stored.owned.characters, "character", dropped),
     aspects: keep<AspectId, OwnedAspect>(tuning.aspects, stored.owned.aspects, "aspect", dropped)
   }
-  // Stars kept are those the quest still has.
-  const quests: { [Id in QuestId]?: QuestProgress } = {}
-  for (const [id, progress] of Object.entries(keep<QuestId, QuestProgress>(tuning.quests, stored.quests, "quest", dropped)) as Array<[QuestId, QuestProgress]>) {
-    quests[id] = { ...progress, stars: [...new Set(progress.stars)].filter((star) => Number.isInteger(star) && star >= 0 && star < tuning.quests[id].stars.length).sort((a, b) => a - b) }
+  // Ranks kept are those that exist, and stars those the quest still has.
+  const rankKept = (rank: string): boolean => Number.isInteger(Number(rank)) && Number(rank) >= 1 && Number(rank) <= tuning.ranks.count
+  const quests: { [Id in QuestId]?: { readonly [rank: number]: QuestProgress } } = {}
+  for (const [id, ranks] of Object.entries(keep<QuestId, Readonly<Record<string, QuestProgress>>>(tuning.quests, stored.quests, "quest", dropped)) as Array<[QuestId, Readonly<Record<string, QuestProgress>>]>) {
+    const kept: { [rank: number]: QuestProgress } = {}
+    for (const [rank, progress] of Object.entries(ranks)) {
+      if (!rankKept(rank)) dropped.push(`${tuning.quests[id].name} rank ${rank}`)
+      else kept[Number(rank)] = { ...progress, stars: [...new Set(progress.stars)].filter((star) => Number.isInteger(star) && star >= 0 && star < tuning.quests[id].stars.length).sort((a, b) => a - b) }
+    }
+    quests[id] = kept
+  }
+  const chests: { [Group in StarGroup]?: { readonly [rank: number]: number } } = {}
+  for (const [group, ranks] of Object.entries(keep<StarGroup, Readonly<Record<string, number>>>(tuning.chests, stored.chests, "chest group", dropped)) as Array<[StarGroup, Readonly<Record<string, number>>]>) {
+    chests[group] = Object.fromEntries(Object.entries(ranks).filter(([rank]) => rankKept(rank)).map(([rank, opened]) => [Number(rank), opened]))
   }
   const hardcore: { [Id in TrackId]?: { readonly [tier: number]: TierProgress } } = {}
   for (const [track, tiers] of Object.entries(keep<TrackId, Readonly<Record<string, TierProgress>>>(tuning.tracks, stored.hardcore, "hardcore track", dropped)) as Array<[TrackId, Readonly<Record<string, TierProgress>>]>) {
@@ -120,7 +132,7 @@ export const fromRecord = (
     quests,
     hardcore,
     discoveries: keep<DiscoveryId, { readonly madeAt: number }>(tuning.discoveries, stored.discoveries, "discovery", dropped),
-    chests: keep<StarGroup, number>(tuning.chests, stored.chests, "chest group", dropped),
+    chests,
     calls: callsFrom(tuning, stored.calls),
     selection: starterSelection
   }

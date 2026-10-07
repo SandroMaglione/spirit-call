@@ -17,6 +17,8 @@ import { entryChampion, entryKind } from "./challenges.ts"
 import type { ChallengeId } from "./challenges.ts"
 import { beyond, challengeShows, holds, introducedBy, nothingSeen, withNovelty } from "./novelties.ts"
 import { aheadOfLine } from "./quests.ts"
+import { noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
+import type { QuestAt, RankTwist } from "./ranks.ts"
 import type { QuestId } from "./quests.ts"
 import { elements } from "./elements.ts"
 import type { ElementId } from "./elements.ts"
@@ -302,12 +304,32 @@ const checkMoves = (problems: Array<string>, where: string, spec: ClassSpec, mov
  * at `enemyLevel`: it shows only what the main line has introduced by then,
  * and sits at most `aheadOfLine` levels above the quest that opens it.
  */
-const checkOpening = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, opens: QuestId): void => {
-  if (!has(tuning.challenges, challenge)) return
-  const early = beyond(challengeShows(tuning, challenge), introducedBy(tuning.quests, opens))
-  if (early.length > 0) problems.push(`${where}: shows ${early.join(", ")} before the main line introduces it (it opens after ${opens})`)
-  const most = tuning.quests[opens].enemyLevel + aheadOfLine
-  if (enemyLevel > most) problems.push(`${where}: enemies of level ${enemyLevel} are more than ${aheadOfLine} levels above ${opens} (${tuning.quests[opens].enemyLevel}), which opens it`)
+const checkOpening = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, opens: QuestId, opensRank = 1, twist: RankTwist = noTwist): void =>
+  checkGated(problems, where, tuning, challenge, enemyLevel, [{ quest: opens, rank: opensRank }], twist)
+
+/** `checkOpening` for something opening once all of `gates` are cleared: what they introduced together, and the highest of their levels. */
+const checkGated = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, gates: ReadonlyArray<QuestAt>, twist: RankTwist = noTwist): void => {
+  if (!has(tuning.challenges, challenge) || gates.length === 0) return
+  const shown = challengeShows(tuning, challenge)
+  const shows = { ...shown, elites: new Set([...shown.elites, ...(twist.elites === null ? [] : [twist.elites])]), shield: shown.shield || twist.shields }
+  // Everything that must be cleared before, followed through the gates of the gates.
+  const cleared = new Set<string>()
+  const follow = (gate: QuestAt): void => {
+    const key = `${gate.quest}@${gate.rank}`
+    if (cleared.has(key) || !has(tuning.quests, gate.quest)) return
+    cleared.add(key)
+    for (const before of rankGates(tuning, gate.quest, gate.rank)) follow(before)
+  }
+  for (const gate of gates) follow(gate)
+  const known = [...cleared].map((key) => introducedBy(tuning.quests, key.split("@")[0] as QuestId)).reduce((all, seen) => ({
+    enemies: new Set([...all.enemies, ...seen.enemies]), hazards: new Set([...all.hazards, ...seen.hazards]), elites: new Set([...all.elites, ...seen.elites]),
+    champions: new Set([...all.champions, ...seen.champions]), shield: all.shield || seen.shield
+  }))
+  const named = gates.map((gate) => (gate.rank === 1 ? gate.quest : `${gate.quest} at rank ${gate.rank}`)).join(" and ")
+  const early = beyond(shows, known)
+  if (early.length > 0) problems.push(`${where}: shows ${early.join(", ")} before the main line introduces it (it opens after ${named})`)
+  const highest = Math.max(...gates.map((gate) => rankLevel(tuning, gate.quest, gate.rank)))
+  if (enemyLevel > highest + aheadOfLine) problems.push(`${where}: enemies of level ${enemyLevel} are more than ${aheadOfLine} levels above ${named} (${highest}), which opens it`)
 }
 
 /**
@@ -514,15 +536,12 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if ((novelty?.kind === "enemy" || novelty?.kind === "champion") && !has(tuning.enemies, novelty.enemy)) problems.push(`${where}: introduces unknown enemy ${novelty.enemy}`)
     checkStars(problems, where, quest.stars)
     if (!has(elements, quest.element)) problems.push(`${where}: pays the material of unknown element ${quest.element}`)
-    quest.ranks.forEach((rank, index) => {
-      const at = `${where} rank ${index + 2}`
-      const below = index === 0 ? quest.enemyLevel : quest.ranks[index - 1]!.enemyLevel
-      if (!(Number.isInteger(rank.enemyLevel) && rank.enemyLevel > below && rank.enemyLevel <= tuning.progression.character.curve.maxLevel)) {
-        problems.push(`${at}: enemyLevel must be a whole number above the rank below (${below}) and at most the characters' maximum level (is ${rank.enemyLevel})`)
-      }
-      if (!has(tuning.quests, rank.after)) problems.push(`${at}: opens after unknown quest ${rank.after}`)
-      else checkOpening(problems, at, tuning, quest.challenge, rank.enemyLevel, rank.after as QuestId)
-    })
+    // Each higher rank opens along the main line and its own replay, showing what was brought by then, twists included.
+    for (let rank = 2; rank <= tuning.ranks.count; rank++) {
+      const level = rankLevel(tuning, id as QuestId, rank)
+      if (level > tuning.progression.character.curve.maxLevel) problems.push(`${where} rank ${rank}: enemies of level ${level} are above the characters' maximum level`)
+      checkGated(problems, `${where} rank ${rank}`, tuning, quest.challenge, level, rankGates(tuning, id as QuestId, rank), rankTwist(tuning, id as QuestId, rank))
+    }
     // The main line's order must end: following `after` never comes back around.
     const seen = new Set<string>([id])
     for (let before = quest.after; before !== null && has(tuning.quests, before); before = tuning.quests[before as keyof typeof tuning.quests].after) {
@@ -535,6 +554,11 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   }
 
   checkNovelties(problems, tuning)
+  const rankRules = tuning.ranks
+  if (!(Number.isInteger(rankRules.count) && rankRules.count >= 1)) problems.push(`ranks: count must be a whole number of at least 1 (is ${rankRules.count})`)
+  if (!(Number.isInteger(rankRules.offset) && rankRules.offset > 0 && Number.isInteger(rankRules.chaptersAhead) && rankRules.chaptersAhead >= 1)) problems.push("ranks: offset and chaptersAhead must be positive whole numbers")
+  if (rankRules.twists.length < rankRules.count - 1) problems.push(`ranks: every rank above the first needs a twist (${rankRules.twists.length} for ${rankRules.count - 1})`)
+  if (!(rankRules.crystals >= 0 && rankRules.goldRuns >= 0)) problems.push("ranks: rewards must not be negative")
 
   for (const [id, track] of Object.entries(tuning.tracks)) {
     const where = `hardcore track ${id}`
@@ -551,7 +575,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       checkAmounts(problems, at, tuning, tier.rewards.currencies)
       if (!has(tuning.challenges, tier.challenge)) problems.push(`${at}: unknown challenge ${tier.challenge}`)
       else if (!has(tuning.quests, tier.opens)) problems.push(`${at}: opens after unknown quest ${tier.opens}`)
-      else checkOpening(problems, at, tuning, tier.challenge, tier.enemyLevel, tier.opens)
+      else checkOpening(problems, at, tuning, tier.challenge, tier.enemyLevel, tier.opens, tier.opensRank)
     })
   }
 

@@ -4,10 +4,10 @@
  * `scripts/progression.ts`, which reports it, and `scripts/expected.ts`,
  * which fights each quest with the team it gives.
  *
- * The account plays the main quests in order with its first three
- * characters (the Spirit Call's first character joining in chapter 3,
- * unless `calls` is off), each quest's first clear earning its first two
- * stars, and the side quests as they open. Before each quest it trains its
+ * The account plays every quest at every rank as it opens, the lowest
+ * enemies first, with its first three characters (the Spirit Call's first
+ * character joining in chapter 3, unless `calls` is off), each first clear
+ * earning its first two stars. Before each quest it trains its
  * team evenly with all the gold it holds, and ascends whoever stands at a
  * step when it holds the material. A quest is entered once the team's
  * average level reaches its enemies'; until then the account farms: the
@@ -16,7 +16,7 @@
  * `runsPerWeek` runs, a week of hardcore clears the open tiers at most a few
  * levels above the team.
  */
-import { ascend, ascensionStep, characterLevel, createAccount, encounterOf, playLock, recordRun, train } from "../src/account/account.ts"
+import { ascend, ascensionStep, characterLevel, createAccount, encounterOf, playLock, questCleared, questLevel, questLock, recordRun, train } from "../src/account/account.ts"
 import type { Account, Play } from "../src/account/account.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -41,6 +41,9 @@ export interface Member {
 /** The account before a main quest: its team, how much it farmed to be ready, and what it held after clearing it. */
 export interface ProgressionRow {
   readonly quest: QuestId
+  readonly rank: number
+  /** The runs played once it is cleared. */
+  readonly runs: number
   readonly enemyLevel: number
   /** The team that enters the quest. */
   readonly team: ReadonlyArray<Member>
@@ -52,6 +55,8 @@ export interface ProgressionRow {
   /** The team once the quest and the side quests it opens are cleared (and the gold spent). */
   readonly after: ReadonlyArray<Member>
   readonly gold: number
+  /** Crystals earned so far (the model never spends them). */
+  readonly crystals: number
   readonly materials: Readonly<Record<string, number>>
 }
 
@@ -76,7 +81,7 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
   const level = (character: CharacterId) => characterLevel(tuning, account, character).level
   const members = (): ReadonlyArray<Member> => team().map((character) => ({ character, level: level(character) }))
   const average = () => team().reduce((sum, character) => sum + level(character), 0) / team().length
-  const cleared = (quest: QuestId) => (account.quests[quest]?.firstClearedAt ?? null) !== null
+  const cleared = (quest: QuestId, rank = 1) => questCleared(account, quest, rank)
 
   /** A tally meeting the first two stars of `quest` (the clear and its idea), not the hit budget. */
   const tallyFor = (quest: QuestId): Tally => {
@@ -134,15 +139,21 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
   }
 
   const rows: Array<ProgressionRow> = []
-  for (const quest of main) {
-    const spec = tuning.quests[quest]
+  // Every quest at every rank, played as it opens: the lowest enemies first (the main line before a side quest or a rank at the same level).
+  const all = [...main, ...side].flatMap((quest) => Array.from({ length: tuning.ranks.count }, (_, index) => ({ quest, rank: index + 1 })))
+  const order = (pick: { readonly quest: QuestId; readonly rank: number }) => questLevel(tuning, pick.quest, pick.rank) * 100 + pick.rank * 10 + (tuning.quests[pick.quest].line === "main" ? 0 : 1)
+  let best: Play | null = null, bestLevel = 0
+  for (;;) {
+    const next = all.filter(({ quest, rank }) => !cleared(quest, rank) && questLock(tuning, account, quest, rank) === null).sort((a, b) => order(a) - order(b))[0]
+    if (next === undefined) break
+    const spec = tuning.quests[next.quest], enemyLevel = questLevel(tuning, next.quest, next.rank)
     if (called !== null && spec.chapter === "three" && account.owned.characters[called] === undefined) {
       account = { ...account, owned: { ...account.owned, characters: { ...account.owned.characters, [called]: { unlockedAt: now, experience: 0, ascension: 0 } } } }
     }
     spend()
     let farmed = 0, trial = 0
     const walls = new Set<CharacterId>()
-    while (average() < spec.enemyLevel && farmed < 400) {
+    while (average() < Math.min(enemyLevel, tuning.progression.character.curve.maxLevel) && farmed < 400) {
       // Someone waiting at a step for her material (with the gold for it) farms her element's trial; otherwise the best quest cleared, for gold.
       const waiting = team().find((character) => {
         const step = ascensionStep(tuning, account, character)
@@ -150,21 +161,24 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
       })
       const rank = waiting === undefined ? null : trialRank(tuning.characters[waiting].element)
       if (waiting !== undefined && rank === null) walls.add(waiting)
-      const best = main.findLast(cleared)
       if (rank !== null) {
         play(rank)
         trial += 1
-      } else if (best !== undefined) play({ kind: "quest", quest: best })
+      } else if (best !== null) play(best)
       else break
       farmed += 1
       spend()
     }
     const entering = members()
-    play({ kind: "quest", quest }, tallyFor(quest))
-    for (const other of side) if (!cleared(other) && playLock(tuning, account, { kind: "quest", quest: other }) === null) play({ kind: "quest", quest: other }, tallyFor(other))
+    const target: Play = { kind: "quest", quest: next.quest, ...(next.rank === 1 ? {} : { rank: next.rank }) }
+    play(target, tallyFor(next.quest))
+    if (enemyLevel >= bestLevel) {
+      best = target
+      bestLevel = enemyLevel
+    }
     spend()
     const materials = Object.fromEntries(Object.entries(account.wallet).filter(([id, amount]) => Object.hasOwn(tuning.materials, id) && (amount ?? 0) > 0)) as Record<string, number>
-    rows.push({ quest, enemyLevel: spec.enemyLevel, team: entering, farmed, trial, walls: [...walls], after: members(), gold: account.wallet.gold ?? 0, materials })
+    if (spec.line === "main") rows.push({ quest: next.quest, rank: next.rank, enemyLevel, team: entering, farmed, trial, walls: [...walls], after: members(), gold: account.wallet.gold ?? 0, crystals: account.wallet.crystals ?? 0, materials, runs })
   }
   return { rows, runs }
 }

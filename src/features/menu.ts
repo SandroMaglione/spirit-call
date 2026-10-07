@@ -10,8 +10,8 @@
 import { Descriptor } from "@typeonce/bevy-ts"
 
 import type { ChallengeId } from "../content/challenges.ts"
-import { Challenge, EnemyLevel, Flow, Game, Paused, Practice, RunResult, Team, Tuning } from "../schema.ts"
-import type { BuildValue, PracticeValue } from "../schema.ts"
+import { Challenge, EnemyLevel, Flow, Game, noTwist, Paused, Practice, RunResult, Team, Tuning, Twist } from "../schema.ts"
+import type { BuildValue, PracticeValue, TwistValue } from "../schema.ts"
 import { withValidAspects } from "./build.ts"
 
 export type UiRequest =
@@ -21,6 +21,8 @@ export type UiRequest =
     readonly team: ReadonlyArray<BuildValue>
     readonly challenge: ChallengeId
     readonly enemyLevel: number
+    /** A rank's twist on the waves (see `Twist`); none when absent. */
+    readonly twist?: TwistValue
     /** Enemy Practice's picks (see `Practice`); none for anything else. */
     readonly practice?: PracticeValue
   }
@@ -47,6 +49,7 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
     team: Game.System.writeResource(Team),
     challenge: Game.System.writeResource(Challenge),
     enemyLevel: Game.System.writeResource(EnemyLevel),
+    twist: Game.System.writeResource(Twist),
     paused: Game.System.writeResource(Paused),
     result: Game.System.readResource(RunResult),
     practice: Game.System.writeResource(Practice),
@@ -69,6 +72,7 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
         resources.team.set(withValidAspects(resources.tuning.get(), request.team))
         resources.challenge.set(request.challenge)
         resources.enemyLevel.set(request.enemyLevel)
+        resources.twist.set(request.twist ?? noTwist)
         resources.practice.set(request.practice ?? { kinds: [], elites: false })
         // Entering `Playing` restarts the run with the new team (see `restart`).
         nextMachines.flow.set("Playing")

@@ -21,6 +21,7 @@ import type { AscensionStep } from "../content/materials.ts"
 import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
 import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
+import { noTwist, rankGates, rankLevel, rankTwist } from "../content/ranks.ts"
 import type { ResetSpec, TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, StarGroup, Unlock } from "../content/quests.ts"
 import { meets } from "../content/stars.ts"
@@ -28,7 +29,7 @@ import type { AspectId } from "../content/aspects.ts"
 import type { BannerId } from "../content/calls.ts"
 import { aspectProblems, withValidAspects } from "../features/build.ts"
 import type { AspectProblem } from "../features/build.ts"
-import type { BuildValue, RunResultValue } from "../schema.ts"
+import type { BuildValue, RunResultValue, TwistValue } from "../schema.ts"
 import { levelOf } from "./progression.ts"
 import type { LevelProgress } from "./progression.ts"
 
@@ -157,14 +158,14 @@ export interface Account {
   /** Currency held. */
   readonly wallet: Amounts
   readonly owned: Owned
-  /** Each quest attempted so far. */
-  readonly quests: { readonly [Id in QuestId]?: QuestProgress }
+  /** Each quest attempted so far, by rank (see `rankRules`). */
+  readonly quests: { readonly [Id in QuestId]?: { readonly [rank: number]: QuestProgress } }
   /** Each hardcore tier attempted so far, by track and tier number. */
   readonly hardcore: { readonly [Id in TrackId]?: { readonly [tier: number]: TierProgress } }
   /** The discoveries made, and when (epoch milliseconds); each pays its rewards once. */
   readonly discoveries: { readonly [Id in DiscoveryId]?: { readonly madeAt: number } }
-  /** How many of each group's chests are open (they open in order, see `Tuning.chests`). */
-  readonly chests: { readonly [Group in StarGroup]?: number }
+  /** How many of each group's chests are open at each rank (they open in order, see `Tuning.chests`). */
+  readonly chests: { readonly [Group in StarGroup]?: { readonly [rank: number]: number } }
   /** The Spirit Call: guarantees, focus, and history. */
   readonly calls: CallState
   /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects equipped in it, and what for. */
@@ -212,8 +213,8 @@ export const unlock = (_tuning: Tuning, account: Account, item: Item, now: numbe
 export const withClearedRewards = (tuning: Tuning, account: Account, now: number): { readonly account: Account; readonly granted: ReadonlyArray<Item> } => {
   let next = account
   const granted: Array<Item> = []
-  for (const [id, progress] of Object.entries(account.quests) as Array<[QuestId, QuestProgress | undefined]>) {
-    if ((progress?.firstClearedAt ?? null) === null) continue
+  for (const id of Object.keys(account.quests) as Array<QuestId>) {
+    if (!questCleared(account, id)) continue
     for (const item of tuning.quests[id].rewards.unlocks) {
       if (owns(next, item)) continue
       next = unlock(tuning, next, item, now)
@@ -282,21 +283,42 @@ export const earn = (account: Account, amounts: Amounts): Account => {
   return { ...account, wallet }
 }
 
-/** Why something cannot be played yet: the quest to clear first, or the tier before it to clear first. */
+/** Why something cannot be played yet: the quest to clear first (at a rank), or the tier before it to clear first. */
 export type Lock =
-  | { readonly kind: "after"; readonly quest: QuestId }
+  | { readonly kind: "after"; readonly quest: QuestId; readonly rank?: number }
   | { readonly kind: "tier"; readonly track: TrackId; readonly tier: number }
 
-/** Whether `account` has cleared `quest`. */
-export const questCleared = (account: Account, quest: QuestId): boolean => (account.quests[quest]?.firstClearedAt ?? null) !== null
+/** `account`'s progress in `quest` at `rank`, if it attempted it. */
+export const questProgress = (account: Account, quest: QuestId, rank = 1): QuestProgress | undefined => account.quests[quest]?.[rank]
+
+/** Whether `account` has cleared `quest` at `rank`. */
+export const questCleared = (account: Account, quest: QuestId, rank = 1): boolean => (questProgress(account, quest, rank)?.firstClearedAt ?? null) !== null
 
 const isQuest = (tuning: Tuning, id: string | null): id is QuestId => id !== null && Object.hasOwn(tuning.quests, id)
 
-/** What keeps `quest` closed to `account`, or `null` when it can be started. */
-export const questLock = (tuning: Tuning, account: Account, quest: QuestId): Lock | null => {
-  const spec = tuning.quests[quest]
-  if (isQuest(tuning, spec.after) && !questCleared(account, spec.after)) return { kind: "after", quest: spec.after }
-  return null
+/** The enemy level of `quest` at `rank` (see `rankLevel`). */
+export const questLevel = (tuning: Tuning, quest: QuestId, rank = 1): number => rankLevel(tuning, quest, rank)
+
+/** What keeps `quest` at `rank` closed to `account`, or `null` when it can be started. */
+export const questLock = (tuning: Tuning, account: Account, quest: QuestId, rank = 1): Lock | null => {
+  if (!(Number.isInteger(rank) && rank >= 1 && rank <= tuning.ranks.count)) return { kind: "after", quest, rank: Math.max(1, rank - 1) }
+  const gate = rankGates(tuning, quest, rank).find((each) => !questCleared(account, each.quest, each.rank))
+  return gate === undefined ? null : { kind: "after", quest: gate.quest, ...(gate.rank === 1 ? {} : { rank: gate.rank }) }
+}
+
+/** The twist on `quest`'s waves at `rank` (see `rankTwist`). */
+export const twistOf = (tuning: Tuning, quest: QuestId, rank: number): TwistValue => rankTwist(tuning, quest, rank)
+
+/**
+ * What `quest`'s first clear at `rank` gives: rank 1's rewards as written;
+ * a higher rank's, its experience, `Tuning.ranks.crystals` of its crystals,
+ * and gold worth `goldRuns` runs at its level (no unlocks).
+ */
+export const questRewards = (tuning: Tuning, quest: QuestId, rank: number): Rewards => {
+  const rewards = tuning.quests[quest].rewards
+  if (rank === 1) return rewards
+  const rules = tuning.ranks
+  return { experience: rewards.experience, unlocks: [], currencies: { crystals: Math.round((rewards.currencies.crystals ?? 0) * rules.crystals), gold: rules.goldRuns * clearPay(tuning.progression.gold, questLevel(tuning, quest, rank)) } }
 }
 
 /** What `account` has met along the main line: everything the quests it cleared introduced (see `content/novelties.ts`). */
@@ -313,34 +335,26 @@ export const tierProgress = (account: Account, track: TrackId, tier: number): Ti
  * closed.
  */
 export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | null => {
-  if (play.kind === "quest") {
-    const rank = rankOf(play)
-    if (rank === 1) return questLock(tuning, account, play.quest)
-    const spec = tuning.quests[play.quest].ranks[rank - 2]
-    if (spec === undefined || !Number.isInteger(rank)) return { kind: "after", quest: play.quest }
-    if (!questCleared(account, play.quest)) return { kind: "after", quest: play.quest }
-    if (isQuest(tuning, spec.after) && !questCleared(account, spec.after)) return { kind: "after", quest: spec.after }
-    return null
-  }
+  if (play.kind === "quest") return questLock(tuning, account, play.quest, rankOf(play))
   const spec = tuning.tracks[play.track]
   const exists = Number.isInteger(play.tier) && play.tier >= 1 && play.tier <= spec.tiers.length
   if (!exists) return { kind: "tier", track: play.track, tier: Math.max(1, Math.min(play.tier, spec.tiers.length + 1) - 1) }
   // Each tier opens along the main line, and once the tier before it is cleared.
-  const opens = spec.tiers[play.tier - 1]!.opens
-  if (isQuest(tuning, opens) && !questCleared(account, opens)) return { kind: "after", quest: opens }
+  const { opens, opensRank } = spec.tiers[play.tier - 1]!
+  if (isQuest(tuning, opens) && !questCleared(account, opens, opensRank)) return { kind: "after", quest: opens, ...(opensRank === 1 ? {} : { rank: opensRank }) }
   // A hardcore tier also waits for the tier before it; a trial's ranks open with the main line alone.
   if (spec.kind === "hardcore" && play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null) return { kind: "tier", track: play.track, tier: play.tier - 1 }
   return null
 }
 
-/** What the arena is entered with for `play`: its challenge and its enemies' level. */
-export const encounterOf = (tuning: Tuning, play: Play): { readonly challenge: ChallengeId; readonly enemyLevel: number } => {
+/** What the arena is entered with for `play`: its challenge, its enemies' level, and its rank's twist on the waves. */
+export const encounterOf = (tuning: Tuning, play: Play): { readonly challenge: ChallengeId; readonly enemyLevel: number; readonly twist: TwistValue } => {
   if (play.kind === "quest") {
-    const spec = tuning.quests[play.quest], rank = rankOf(play)
-    return { challenge: spec.challenge, enemyLevel: rank === 1 ? spec.enemyLevel : (spec.ranks[rank - 2]?.enemyLevel ?? spec.enemyLevel) }
+    const rank = rankOf(play)
+    return { challenge: tuning.quests[play.quest].challenge, enemyLevel: questLevel(tuning, play.quest, rank), twist: twistOf(tuning, play.quest, rank) }
   }
   const tier = tuning.tracks[play.track].tiers[play.tier - 1] ?? tuning.tracks[play.track].tiers[0]!
-  return { challenge: tier.challenge, enemyLevel: tier.enemyLevel }
+  return { challenge: tier.challenge, enemyLevel: tier.enemyLevel, twist: noTwist }
 }
 
 /** The reset period `now` falls in (see `Tuning.reset`): periods count up from the anchor. */
@@ -362,39 +376,60 @@ export const questsOf = (tuning: Tuning, group: StarGroup): ReadonlyArray<QuestI
     return group === "secondary" ? spec.line === "secondary" : spec.chapter === group
   })
 
-/** The stars `account` earned in `group`'s quests, and how many there are. */
-export const groupStars = (tuning: Tuning, account: Account, group: StarGroup): { readonly earned: number; readonly total: number } => {
+/** The stars `account` earned in `group`'s quests at `rank`, and how many there are. */
+export const groupStars = (tuning: Tuning, account: Account, group: StarGroup, rank = 1): { readonly earned: number; readonly total: number } => {
   const quests = questsOf(tuning, group)
   return {
-    earned: quests.reduce((sum, id) => sum + (account.quests[id]?.stars.length ?? 0), 0),
+    earned: quests.reduce((sum, id) => sum + (questProgress(account, id, rank)?.stars.length ?? 0), 0),
     total: quests.reduce((sum, id) => sum + tuning.quests[id].stars.length, 0)
   }
 }
 
-/** A chest, by its group and its place in it. */
+/** A chest, by its group, its place in it, and the rank whose stars open it. */
 export interface ChestRef {
   readonly group: StarGroup
   readonly index: number
+  readonly rank: number
+}
+
+/** How many of `group`'s chests `account` opened at `rank`. */
+export const chestsOpened = (account: Account, group: StarGroup, rank = 1): number => account.chests[group]?.[rank] ?? 0
+
+/**
+ * What a chest holds at `rank`: rank 1's rewards as written; at a higher
+ * rank, `Tuning.ranks.crystals` of its crystals, and its gold at its quests'
+ * level there.
+ */
+export const chestRewards = (tuning: Tuning, chest: ChestRef): Amounts => {
+  const spec = tuning.chests[chest.group][chest.index]!
+  if (chest.rank === 1) return spec.rewards
+  const level = spec.level + tuning.ranks.offset * (chest.rank - 1)
+  const gold = Math.round((spec.rewards.gold ?? 0) * clearPay(tuning.progression.gold, level) / clearPay(tuning.progression.gold, spec.level))
+  // Materials come from the trials by then: a higher rank's chests hold none.
+  return { crystals: Math.round((spec.rewards.crystals ?? 0) * tuning.ranks.crystals), gold }
 }
 
 /**
- * `account` with every chest its stars reach opened (in order, each once),
- * its rewards added, and the chests opened. Run after stars are earned, and
- * when the account loads (chests added to content later are not missed).
+ * `account` with every chest its stars reach opened (in order, each once,
+ * at each rank), their rewards added. Run after stars are earned, and when
+ * the account loads (chests added to content later are not missed).
  */
 export const withEarnedChests = (tuning: Tuning, account: Account): { readonly account: Account; readonly opened: ReadonlyArray<ChestRef> } => {
   let next = account
   const opened: Array<ChestRef> = []
   for (const group of Object.keys(tuning.chests) as Array<StarGroup>) {
-    const { earned } = groupStars(tuning, next, group)
-    const chests = tuning.chests[group]
-    let open = next.chests[group] ?? 0
-    while (open < chests.length && chests[open]!.stars <= earned) {
-      next = earn(next, chests[open]!.rewards)
-      opened.push({ group, index: open })
-      open += 1
+    for (let rank = 1; rank <= tuning.ranks.count; rank++) {
+      const { earned } = groupStars(tuning, next, group, rank)
+      const chests = tuning.chests[group]
+      let open = chestsOpened(next, group, rank)
+      while (open < chests.length && chests[open]!.stars <= earned) {
+        const chest = { group, index: open, rank }
+        next = earn(next, chestRewards(tuning, chest))
+        opened.push(chest)
+        open += 1
+      }
+      if (open !== chestsOpened(next, group, rank)) next = { ...next, chests: { ...next.chests, [group]: { ...next.chests[group], [rank]: open } } }
     }
-    if (open !== (next.chests[group] ?? 0)) next = { ...next, chests: { ...next.chests, [group]: open } }
   }
   return { account: next, opened }
 }
@@ -678,19 +713,17 @@ export const recordRun = (
   let stars: ReadonlyArray<number> = []
   let materials: Amounts = {}
   if (play?.kind === "quest") {
-    const quest = play.quest
-    const progress = account.quests[quest] ?? noQuestProgress
-    // A higher rank has no first clear and no stars: it pays what its level pays (see docs/quests.md).
-    const first = rankOf(play) === 1
-    const firstClear = first && result.cleared && progress.firstClearedAt === null
-    // Only the first clear pays materials (see content/materials.ts): replaying an old quest earns none.
-    if (firstClear) materials = materialPay(tuning, tuning.quests[quest].element, enemyLevel, tuning.materialRules.firstClear)
+    const quest = play.quest, rank = rankOf(play)
+    const progress = questProgress(account, quest, rank) ?? noQuestProgress
+    // Every rank has its own first clear and stars (see docs/quests.md, "Ranks").
+    const firstClear = result.cleared && progress.firstClearedAt === null
+    // Only a first clear pays materials (see content/materials.ts): replaying a quest earns none.
+    if (firstClear) materials = materialPay(tuning, tuning.quests[quest].element, enemyLevel, rank === 1 ? tuning.materialRules.firstClear : tuning.materialRules.rankFirstClear)
     // Each star once, in any run that clears.
-    stars = !first ? [] : tuning.quests[quest].stars.flatMap((goal, index) => !progress.stars.includes(index) && meets(goal, result.cleared, result.tally) ? [index] : [])
-    const counts = counted(progress, result, now)
-    const updated: QuestProgress = { ...counts, firstClearedAt: first ? counts.firstClearedAt : progress.firstClearedAt, stars: [...progress.stars, ...stars].sort((a, b) => a - b) }
-    next = { ...next, quests: { ...next.quests, [quest]: updated } }
-    if (firstClear) rewards = tuning.quests[quest].rewards
+    stars = tuning.quests[quest].stars.flatMap((goal, index) => !progress.stars.includes(index) && meets(goal, result.cleared, result.tally) ? [index] : [])
+    const updated: QuestProgress = { ...counted(progress, result, now), stars: [...progress.stars, ...stars].sort((a, b) => a - b) }
+    next = { ...next, quests: { ...next.quests, [quest]: { ...next.quests[quest], [rank]: updated } } }
+    if (firstClear) rewards = questRewards(tuning, quest, rank)
   }
   if (play?.kind === "tier") {
     const spec = tuning.tracks[play.track].tiers[play.tier - 1]

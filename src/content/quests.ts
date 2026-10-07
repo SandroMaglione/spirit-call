@@ -51,8 +51,6 @@ export interface QuestSpec {
   readonly enemyLevel: number
   /** The element whose material a clear pays (see `content/materials.ts`). */
   readonly element: ElementId
-  /** Its higher ranks (rank 2 first): the same quest at a higher enemy level, open once it and `after` are cleared. */
-  readonly ranks: ReadonlyArray<RankSpec>
   /** A quest to clear first (the main line's order; an id of `quests`), or `null`. */
   readonly after: string | null
   /** A main quest's one new thing, and its line on the quest card; `null` for a side quest, which only mixes what came before. */
@@ -62,28 +60,55 @@ export interface QuestSpec {
   readonly rewards: Rewards
 }
 
-/** A higher rank of a quest: its enemies' level, and the main quest that opens it (an id of `quests`). */
-export interface RankSpec {
-  readonly enemyLevel: number
-  readonly after: string
-}
-
 export interface ChapterSpec {
   readonly name: string
 }
 
-/** A chest a group of quests opens once its stars reach `stars`, giving `rewards`. */
+/**
+ * A chest a group of quests opens once its stars reach `stars`, giving
+ * `rewards` at rank 1; `level` is its quests' enemy level, for what it holds
+ * at the higher ranks (see `rankRules`).
+ */
 export interface ChestSpec {
   readonly stars: number
+  readonly level: number
   readonly rewards: Amounts
 }
+
+/**
+ * What can make a rank harder besides its level, each from what the main
+ * line has brought by the time the rank opens: `eliteLeaders`, each wave's
+ * first enemy (from the second wave) an elite of the quest's element (or the
+ * nearest that makes elites); `shieldLeaders`, each wave's first enemy
+ * carrying a shield.
+ */
+export type Twist = "eliteLeaders" | "shieldLeaders"
+
+/**
+ * Ranks: the main line and the side quests played again, each rank a
+ * harder pass with its own first clears, stars, and chests (see
+ * docs/quests.md, "Ranks").
+ */
+export interface RankRules {
+  /** How many ranks every quest has; rank 1 is the quest as written. */
+  readonly count: number
+  /** Enemy levels each rank adds over the one below. */
+  readonly offset: number
+  /** A chapter's rank r opens once the main line is `(r − 1) × chaptersAhead` chapters further on (and the quest before it, at rank r, is cleared). */
+  readonly chaptersAhead: number
+  /** The twists of each rank, rank 2 first; a rank has its own and those of the ranks below. */
+  readonly twists: ReadonlyArray<Twist>
+  /** A higher rank's first clear and chests pay `crystals` times rank 1's crystals, and gold worth `goldRuns` runs at its level. */
+  readonly crystals: number
+  readonly goldRuns: number
+}
+
+export const rankRules: RankRules = { count: 3, offset: 12, chaptersAhead: 2, twists: ["eliteLeaders", "shieldLeaders"], crystals: 0.4, goldRuns: 2 }
 
 /** Whose stars open a set of chests: a chapter's quests (by chapter id), or the secondary quests. */
 export type StarGroup = keyof typeof chapters | "secondary"
 
 const quest = (spec: QuestSpec): QuestSpec => spec
-/** Ranks: each at an enemy level, opening once a later main quest is cleared. */
-const ranks = (...levels: ReadonlyArray<readonly [number, string]>): ReadonlyArray<RankSpec> => levels.map(([enemyLevel, after]) => ({ enemyLevel, after }))
 /** What a main quest brings, in a line for its card. */
 const brings = (text: string, novelty: Novelty): QuestSpec["introduces"] => ({ text, novelty })
 const enemy = (kind: EnemyKind): Novelty => ({ kind: "enemy", enemy: kind })
@@ -122,7 +147,6 @@ export const quests = {
     challenge: "firstBlood",
     enemyLevel: 1,
     element: "wind",
-    ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: null,
     introduces: brings("Chasers: they run in and swipe twice. Dodge, then strike back", enemy("chaser")),
     stars: [cleared(), atLeast("perfectDodges", 3), atMost("hitsTaken", 7)],
@@ -135,7 +159,6 @@ export const quests = {
     challenge: "crossfire",
     enemyLevel: 3,
     element: "wind",
-    ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: "firstBlood",
     introduces: brings("Shooters: they keep away and shoot ahead of you. Close the distance", enemy("shooter")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 5)],
@@ -148,7 +171,6 @@ export const quests = {
     challenge: "packLeader",
     enemyLevel: 5,
     element: "wind",
-    ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
     stars: [cleared(), atLeast("breaks", 2), atMost("hitsTaken", 7)],
@@ -163,7 +185,6 @@ export const quests = {
     challenge: "swarm",
     enemyLevel: 6,
     element: "fire",
-    ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "packLeader",
     introduces: brings("Swarmers: tiny, fast, in packs. Reach many at once", enemy("swarmer")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
@@ -176,7 +197,6 @@ export const quests = {
     challenge: "emberKiln",
     enemyLevel: 7,
     element: "fire",
-    ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "theSwarm",
     introduces: brings("Fire in the floor: it burns whoever walks in, enemies too", hazard("fire")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
@@ -189,7 +209,6 @@ export const quests = {
     challenge: "ironGuard",
     enemyLevel: 9,
     element: "wind",
-    ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "emberKiln",
     introduces: brings("Guardians: heavy, patient, and a thrust that reaches far", enemy("guardian")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 13)],
@@ -202,7 +221,6 @@ export const quests = {
     challenge: "bulwark",
     enemyLevel: 10,
     element: "fire",
-    ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "ironGuard",
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 8)],
@@ -217,7 +235,6 @@ export const quests = {
     challenge: "ashfall",
     enemyLevel: 11,
     element: "fire",
-    ranks: ranks([28, "theWarlord"]),
     after: "bulwark",
     introduces: brings("Elites: bigger, tougher, and carrying fire or water", elites("fire", "water")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 14)],
@@ -230,7 +247,6 @@ export const quests = {
     challenge: "outposts",
     enemyLevel: 13,
     element: "thunder",
-    ranks: ranks([28, "theWarlord"]),
     after: "ashfall",
     introduces: brings("Snipers: a fast thunder bullet from afar. Walls stop it", enemy("sniper")),
     stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 6)],
@@ -243,7 +259,6 @@ export const quests = {
     challenge: "brute",
     enemyLevel: 15,
     element: "rock",
-    ranks: ranks([28, "theWarlord"]),
     after: "outposts",
     introduces: brings("Brutes: slow and heavy. Break them, then punish them", enemy("brute")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 13)],
@@ -256,7 +271,6 @@ export const quests = {
     challenge: "bruteKing",
     enemyLevel: 16,
     element: "water",
-    ranks: ranks([28, "theWarlord"]),
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 8)],
@@ -271,7 +285,6 @@ export const quests = {
     challenge: "highTide",
     enemyLevel: 17,
     element: "water",
-    ranks: ranks([34, "colossus"]),
     after: "bruteKing",
     introduces: brings("Water in the floor: it soaks and slows whoever wades in", hazard("water")),
     stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 12)],
@@ -284,7 +297,6 @@ export const quests = {
     challenge: "bombardment",
     enemyLevel: 19,
     element: "fire",
-    ranks: ranks([34, "colossus"]),
     after: "highTide",
     introduces: brings("Firebombers: bombs over walls, flames where they burst", enemy("charger")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 12)],
@@ -297,7 +309,6 @@ export const quests = {
     challenge: "shieldWall",
     enemyLevel: 21,
     element: "water",
-    ranks: ranks([34, "colossus"]),
     after: "bombardment",
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 12)],
@@ -310,7 +321,6 @@ export const quests = {
     challenge: "swarmMother",
     enemyLevel: 22,
     element: "wind",
-    ranks: ranks([34, "colossus"]),
     after: "shieldWall",
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 13)],
@@ -325,7 +335,6 @@ export const quests = {
     challenge: "sandstorm",
     enemyLevel: 23,
     element: "rock",
-    ranks: [],
     after: "swarmMother",
     introduces: brings("Stalkers: keep away, and they blink to you. Their mark shows where", enemy("stalker")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 9)],
@@ -338,7 +347,6 @@ export const quests = {
     challenge: "cloister",
     enemyLevel: 25,
     element: "thunder",
-    ranks: [],
     after: "sandstorm",
     introduces: brings("Wardens: they ward an ally from afar. Cross the tether to break it", enemy("warden")),
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 5)],
@@ -351,7 +359,6 @@ export const quests = {
     challenge: "thunderhead",
     enemyLevel: 27,
     element: "thunder",
-    ranks: [],
     after: "theCloister",
     introduces: brings("Thunder elites: they strike the soaked hardest", elites("thunder")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 12)],
@@ -364,7 +371,6 @@ export const quests = {
     challenge: "warlord",
     enemyLevel: 28,
     element: "fire",
-    ranks: [],
     after: "thunderhead",
     introduces: brings("A champion stalker charged with thunder, hunting you through every wave", champion("stalker")),
     stars: [cleared(), atLeast("perfectDodges", 10), atMost("hitsTaken", 12)],
@@ -379,7 +385,6 @@ export const quests = {
     challenge: "ironclad",
     enemyLevel: 29,
     element: "rock",
-    ranks: [],
     after: "theWarlord",
     introduces: brings("Juggernauts: armored until broken. Break them, then strike", enemy("juggernaut")),
     stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 23)],
@@ -392,7 +397,6 @@ export const quests = {
     challenge: "powderKeg",
     enemyLevel: 31,
     element: "thunder",
-    ranks: [],
     after: "ironclad",
     introduces: brings("Volatiles: they burst where they fall, their own side too", enemy("volatile")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 15)],
@@ -405,7 +409,6 @@ export const quests = {
     challenge: "galeForce",
     enemyLevel: 32,
     element: "wind",
-    ranks: [],
     after: "powderKeg",
     introduces: brings("Gale casters: a cone of wind that blows everyone around", enemy("galeCaster")),
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 8)],
@@ -418,7 +421,6 @@ export const quests = {
     challenge: "colossus",
     enemyLevel: 34,
     element: "rock",
-    ranks: [],
     after: "galeForce",
     introduces: brings("A burning champion juggernaut, armored until broken", champion("juggernaut")),
     stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 10)],
@@ -433,7 +435,6 @@ export const quests = {
     challenge: "holdTheLine",
     enemyLevel: 4,
     element: "water",
-    ranks: ranks([16, "bruteKing"], [28, "theWarlord"]),
     after: "packLeader",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
@@ -446,7 +447,6 @@ export const quests = {
     challenge: "swarmNight",
     enemyLevel: 9,
     element: "rock",
-    ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "bulwark",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 6)],
@@ -459,7 +459,6 @@ export const quests = {
     challenge: "eliteHunt",
     enemyLevel: 15,
     element: "thunder",
-    ranks: ranks([28, "theWarlord"]),
     after: "bruteKing",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 14)],
@@ -472,7 +471,6 @@ export const quests = {
     challenge: "floodgate",
     enemyLevel: 22,
     element: "water",
-    ranks: ranks([34, "colossus"]),
     after: "swarmMother",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 15)],
@@ -485,7 +483,6 @@ export const quests = {
     challenge: "stormFront",
     enemyLevel: 26,
     element: "thunder",
-    ranks: [],
     after: "theWarlord",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
@@ -499,7 +496,6 @@ export const quests = {
     challenge: "heavyGround",
     enemyLevel: 32,
     element: "rock",
-    ranks: [],
     after: "colossus",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 7)],
@@ -512,7 +508,6 @@ export const quests = {
     challenge: "strangeCompany",
     enemyLevel: 33,
     element: "wind",
-    ranks: [],
     after: "colossus",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
@@ -522,11 +517,12 @@ export const quests = {
 
 /**
  * A chest at `stars`: crystals, gold, and some of every element's material
- * (a clear's worth at `level`), so a character the Spirit Call brought
+ * (a clear's worth at `level`, its quests' enemy level), so a character the Spirit Call brought
  * early can take her first steps before her element's trial opens.
  */
 const chest = (stars: number, crystals: number, gold: number, level: number): ChestSpec => ({
   stars,
+  level,
   rewards: { crystals, gold, ...Object.fromEntries((Object.keys(elements) as Array<ElementId>).map((element) => [materialOf(element), worthAt(materialRules, level)])) }
 })
 
