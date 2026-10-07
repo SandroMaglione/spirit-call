@@ -1,15 +1,16 @@
 /**
  * What players do, kept for measuring play (see docs/server.md): each run
  * with its log (`runs` and its tables), and each change to an account with
- * what it gained and spent (`events`). Written as things happen; read back
- * by the player's own `GET /api/runs` and `GET /api/account/events`.
+ * what it gained and spent (`events`). Written as things happen, in the
+ * same batch as the account's change (see `batch.ts`); read back by the
+ * player's own `GET /api/runs` and `GET /api/account/events`.
  */
-import * as Clock from "effect/Clock"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Schema from "effect/Schema"
 import * as SqlClient from "effect/sql/SqlClient"
+import type * as Statement from "effect/sql/Statement"
 
 import { characterLevel, encounterOf } from "../account/account.ts"
 import type { Account, Play } from "../account/account.ts"
@@ -43,10 +44,10 @@ const walletChange = (before: Account, after: Account): Partial<Record<ResourceI
 export class Logs extends Context.Service<
   Logs,
   {
-    /** Keeps a run that ended, played from `account` (her team's levels and aspects as they were): its id. */
-    readonly recordRun: (userId: string, account: Account, play: Play | null, result: RunResultValue, log: RunLogValue) => Effect.Effect<string>
-    /** Keeps a change to an account: `action` on `subject`, from `before` to `after`. */
-    readonly recordEvent: (userId: string, action: string, subject: string | null, before: Account, after: Account) => Effect.Effect<void>
+    /** What keeps a run that ended at `at`, played from `account` (her team's levels and aspects as they were): its id, and the statements to send. */
+    readonly runWrites: (userId: string, at: number, account: Account, play: Play | null, result: RunResultValue, log: RunLogValue) => { readonly id: string; readonly statements: ReadonlyArray<Statement.Statement<object>> }
+    /** What keeps a change to an account at `at`: `action` on `subject`, from `before` to `after`. */
+    readonly eventWrites: (userId: string, at: number, action: string, subject: string | null, before: Account, after: Account) => ReadonlyArray<Statement.Statement<object>>
     readonly runs: (userId: string, since: number) => Effect.Effect<ReadonlyArray<typeof StoredRun.Type>>
     readonly events: (userId: string, since: number) => Effect.Effect<ReadonlyArray<typeof AccountEvent.Type>>
   }
@@ -57,11 +58,10 @@ export class Logs extends Context.Service<
       const sql = yield* SqlClient.SqlClient
       const { tuning } = yield* Content
 
-      const recordRun = Effect.fn("Logs.recordRun")(function*(userId: string, account: Account, play: Play | null, result: RunResultValue, log: RunLogValue) {
+      const runWrites = (userId: string, at: number, account: Account, play: Play | null, result: RunResultValue, log: RunLogValue) => {
         const id = crypto.randomUUID()
-        const at = yield* Clock.currentTimeMillis
         const done = (character: string) => log.members.find((member) => member.character === character)
-        yield* sql`INSERT INTO runs ${sql.insert({
+        const statements: Array<Statement.Statement<object>> = [sql`INSERT INTO runs ${sql.insert({
           id,
           user_id: userId,
           at,
@@ -82,7 +82,7 @@ export class Logs extends Context.Service<
           breaks: result.tally.breaks,
           dashes: log.dashes,
           switches: log.switches
-        })}`
+        })}`]
         const members = result.team.map((character, slot) => ({
           run_id: id,
           slot,
@@ -97,20 +97,22 @@ export class Logs extends Context.Service<
         const hurts = log.hurts.map((hurt, place) => ({ run_id: id, place, enemy: hurt.enemy, attack: hurt.attack, hits: hurt.hits, damage: hurt.damage }))
         const skills = log.skills.map((used) => ({ run_id: id, character: used.character, skill: used.skill, uses: used.uses, hits: used.hits, damage: used.damage }))
         const knockouts = log.knockouts.map((fall, place) => ({ run_id: id, place, character: fall.character, at: fall.at, wave: fall.wave, enemy: fall.enemy, attack: fall.attack }))
-        if (members.length > 0) yield* sql`INSERT INTO run_members ${sql.insert(members)}`
-        if (waves.length > 0) yield* sql`INSERT INTO run_waves ${sql.insert(waves)}`
-        if (hurts.length > 0) yield* sql`INSERT INTO run_hurts ${sql.insert(hurts)}`
-        if (skills.length > 0) yield* sql`INSERT INTO run_skills ${sql.insert(skills)}`
-        if (knockouts.length > 0) yield* sql`INSERT INTO run_knockouts ${sql.insert(knockouts)}`
-        return id
-      }, Effect.orDie)
+        if (members.length > 0) statements.push(sql`INSERT INTO run_members ${sql.insert(members)}`)
+        if (waves.length > 0) statements.push(sql`INSERT INTO run_waves ${sql.insert(waves)}`)
+        if (hurts.length > 0) statements.push(sql`INSERT INTO run_hurts ${sql.insert(hurts)}`)
+        if (skills.length > 0) statements.push(sql`INSERT INTO run_skills ${sql.insert(skills)}`)
+        if (knockouts.length > 0) statements.push(sql`INSERT INTO run_knockouts ${sql.insert(knockouts)}`)
+        return { id, statements }
+      }
 
-      const recordEvent = Effect.fn("Logs.recordEvent")(function*(userId: string, action: string, subject: string | null, before: Account, after: Account) {
+      const eventWrites = (userId: string, at: number, action: string, subject: string | null, before: Account, after: Account) => {
         const id = crypto.randomUUID()
-        yield* sql`INSERT INTO events ${sql.insert({ id, user_id: userId, at: yield* Clock.currentTimeMillis, action, subject })}`
         const amounts = Object.entries(walletChange(before, after)).map(([resource, change]) => ({ event_id: id, resource, change: change ?? 0 }))
-        if (amounts.length > 0) yield* sql`INSERT INTO event_amounts ${sql.insert(amounts)}`
-      }, Effect.orDie)
+        return [
+          sql`INSERT INTO events ${sql.insert({ id, user_id: userId, at, action, subject })}`,
+          ...(amounts.length > 0 ? [sql`INSERT INTO event_amounts ${sql.insert(amounts)}`] : [])
+        ]
+      }
 
       /** The rows of `table` whose `column` is one of `ids`, decoded with `row` (none when there are no ids). */
       const selectIn = <A>(table: string, column: string, ids: ReadonlyArray<string>, row: Schema.Codec<A>) =>
@@ -124,11 +126,13 @@ export class Logs extends Context.Service<
       const runs = Effect.fn("Logs.runs")(function*(userId: string, since: number) {
         const rows = yield* sql`SELECT * FROM runs WHERE user_id = ${userId} AND at > ${since} ORDER BY at`.pipe(Effect.flatMap((rows) => Schema.decodeUnknownEffect(Schema.Array(RunRow))(rows)))
         const ids = rows.map((run) => run.id)
-        const members = yield* byRun("run_members", MemberRow, ids)
-        const waves = yield* byRun("run_waves", WaveRow, ids)
-        const hurts = yield* byRun("run_hurts", HurtRow, ids)
-        const skills = yield* byRun("run_skills", SkillRow, ids)
-        const knockouts = yield* byRun("run_knockouts", KnockoutRow, ids)
+        const { members, waves, hurts, skills, knockouts } = yield* Effect.all({
+          members: byRun("run_members", MemberRow, ids),
+          waves: byRun("run_waves", WaveRow, ids),
+          hurts: byRun("run_hurts", HurtRow, ids),
+          skills: byRun("run_skills", SkillRow, ids),
+          knockouts: byRun("run_knockouts", KnockoutRow, ids)
+        }, { concurrency: "unbounded" })
         const stored = rows.map((run) => {
           const team = [...members(run.id)].sort((a, b) => a.slot - b.slot)
           const played = team.map((member) => ({ character: member.character, damageDealt: member.damage_dealt, damageTaken: member.damage_taken, kills: member.kills }))
@@ -172,7 +176,7 @@ export class Logs extends Context.Service<
         })
       }, Effect.orDie)
 
-      return Logs.of({ recordRun, recordEvent, runs, events })
+      return Logs.of({ runWrites, eventWrites, runs, events })
     })
   )
 }

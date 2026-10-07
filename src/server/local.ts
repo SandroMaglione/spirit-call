@@ -6,10 +6,11 @@
 import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient"
 import * as Layer from "effect/Layer"
 
+import { Batch } from "./batch.ts"
 import { makeWebHandler } from "./http.ts"
 import type { ServerConfig } from "./http.ts"
 import { migrated } from "./migrate.ts"
 
 /** The server over the SQLite database at `filename` (`:memory:` for one that lasts as long as the handler). */
 export const localHandler = (filename: string, config: ServerConfig["Service"]) =>
-  makeWebHandler(migrated.pipe(Layer.provideMerge(SqliteClient.layer({ filename })), Layer.orDie), config)
+  makeWebHandler(Layer.mergeAll(migrated, Batch.transaction).pipe(Layer.provideMerge(SqliteClient.layer({ filename })), Layer.orDie), config)

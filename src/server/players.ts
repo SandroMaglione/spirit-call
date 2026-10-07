@@ -2,11 +2,15 @@
  * Players and their sessions. A password is kept only as a salted PBKDF2
  * hash; a session is a random token the player's cookie holds, kept only as
  * its SHA-256 hash, so neither table can be used to log in if it leaks.
- * WebCrypto does both, in Workers and in Node alike.
+ * WebCrypto does both, in Workers and in Node alike. A session found is
+ * remembered for a minute, so the requests of a player playing do not each
+ * look it up again.
  */
+import * as Cache from "effect/Cache"
 import * as Clock from "effect/Clock"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
+import * as Exit from "effect/Exit"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Schema from "effect/Schema"
@@ -17,6 +21,8 @@ import { UsernameTaken, WrongCredentials } from "../api/api.ts"
 
 /** How long a session lasts without logging in again. */
 const sessionDays = 90
+/** How long a session found is remembered (a session closed elsewhere answers here for at most this long). */
+const sessionMemory = "1 minute"
 /** PBKDF2 rounds (Workers allow at most 100,000). */
 const rounds = 100_000
 
@@ -114,13 +120,20 @@ export class Players extends Context.Service<
         return yield* openSession({ id: user.value.id, username: user.value.username })
       }, Effect.catchTag(["SchemaError", "SqlError"], Effect.die))
 
+      // Only sessions found are remembered: a token not (or no longer) valid is looked up every time.
+      const sessions = yield* Cache.makeWith(
+        (hash: string) => Effect.flatMap(Clock.currentTimeMillis, (now) => findSession({ hash, now })).pipe(Effect.orDie),
+        { capacity: 1000, timeToLive: (exit) => (Exit.isSuccess(exit) && Option.isSome(exit.value) ? sessionMemory : 0) }
+      )
+
       const fromToken = Effect.fn("Players.fromToken")(function*(token: string) {
         const hash = yield* tokenHash(token)
-        const found = yield* findSession({ hash, now: yield* Clock.currentTimeMillis })
+        const found = yield* Cache.get(sessions, hash)
         return Option.map(found, (player) => ({ ...player, tokenHash: hash }))
-      }, Effect.orDie)
+      })
 
       const logOut = Effect.fn("Players.logOut")(function*(hash: string) {
+        yield* Cache.invalidate(sessions, hash)
         yield* sql`DELETE FROM sessions WHERE token_hash = ${hash}`
       }, Effect.orDie)
 

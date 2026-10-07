@@ -6,6 +6,7 @@
 import * as D1Client from "@effect/sql-d1/D1Client"
 import * as Layer from "effect/Layer"
 
+import { Batch } from "./batch.ts"
 import { makeWebHandler } from "./http.ts"
 
 interface Env {
@@ -21,7 +22,7 @@ let server: ReturnType<typeof makeWebHandler> | undefined
 export default {
   fetch(request: Request, env: Env): Promise<Response> {
     if (!new URL(request.url).pathname.startsWith("/api/")) return env.ASSETS.fetch(request)
-    server ??= makeWebHandler(Layer.orDie(D1Client.layer({ db: env.DB })), { devTools: env.DEV_TOOLS === "on", secureCookies: true })
+    server ??= makeWebHandler(Batch.d1.pipe(Layer.provideMerge(D1Client.layer({ db: env.DB })), Layer.orDie), { devTools: env.DEV_TOOLS === "on", secureCookies: true })
     return server.handler(request)
   }
 }
