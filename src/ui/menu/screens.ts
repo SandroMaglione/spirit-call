@@ -8,11 +8,12 @@ export type Screen =
   | { readonly kind: "team" }
   | { readonly kind: "character"; readonly character: CharacterId; readonly tab: CharacterTab }
   | { readonly kind: "discoveries" }
+  | { readonly kind: "inventory" }
   | { readonly kind: "extra"; readonly mode: "training" | "practice" }
   | { readonly kind: "settings" }
   | { readonly kind: "call"; readonly tab: CallTab }
 
-export type QuestTab = "main" | "secondary" | "hardcore"
+export type QuestTab = "main" | "secondary" | "trials" | "hardcore"
 export type CharacterTab = "overview" | "aspect" | "kit"
 /** The Spirit Call's views: the banner running, its odds, and the last calls. */
 export type CallTab = "banner" | "details" | "history"

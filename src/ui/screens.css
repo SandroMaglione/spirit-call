@@ -201,7 +201,11 @@
 .goal.is-earned .menu-icon { color: var(--gold-hi); }
 .goal.is-earned .menu-icon path { fill: currentColor; }
 
-/* ---------- practice, discoveries ---------- */
+/* ---------- practice, discoveries, inventory ---------- */
+.inventory__cards { position: absolute; left: calc(var(--left) - 3px); top: 62px; bottom: 0; width: 370px; z-index: 3; padding: 3px 3px 28px; }
+.inventory__brief { position: absolute; left: calc(var(--left) + 386px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
+.inventory__cards .card__art .menu-icon, .inventory__cards .card__art > span { font-size: 34px; }
+.inventory__source { margin: 0; font-size: 13px; color: var(--dim); }
 .practice__picks { position: absolute; left: calc(var(--left) - 3px); top: 62px; bottom: 0; width: 394px; z-index: 3; display: grid; gap: 12px; align-content: start; padding: 3px 3px 28px; }
 .practice__options { display: flex; align-items: center; gap: 8px; }
 .practice__options .pill { margin-left: auto; }

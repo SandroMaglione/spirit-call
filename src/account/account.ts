@@ -13,12 +13,11 @@ import type { StarterSet } from "../content/account.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts, ResourceId } from "../content/currencies.ts"
-import { entryChampion } from "../content/challenges.ts"
 import { metIn } from "../content/novelties.ts"
 import type { Seen } from "../content/novelties.ts"
 import type { ElementId } from "../content/elements.ts"
-import { gradeAt, materialOf } from "../content/materials.ts"
-import type { AscensionStep, MaterialId } from "../content/materials.ts"
+import { materialOf, worthAt } from "../content/materials.ts"
+import type { AscensionStep } from "../content/materials.ts"
 import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
 import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
@@ -329,7 +328,8 @@ export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | n
   // Each tier opens along the main line, and once the tier before it is cleared.
   const opens = spec.tiers[play.tier - 1]!.opens
   if (isQuest(tuning, opens) && !questCleared(account, opens)) return { kind: "after", quest: opens }
-  if (play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null) return { kind: "tier", track: play.track, tier: play.tier - 1 }
+  // A hardcore tier also waits for the tier before it; a trial's ranks open with the main line alone.
+  if (spec.kind === "hardcore" && play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null) return { kind: "tier", track: play.track, tier: play.tier - 1 }
   return null
 }
 
@@ -444,7 +444,6 @@ export type Refusal =
   /** Not at a step: she has levels to train first, or none left. */
   | { readonly kind: "notAtStep"; readonly item: Item }
   /** A material that is made by nothing (the lowest grade). */
-  | { readonly kind: "notCombinable"; readonly material: MaterialId }
   /** Calls open once `quest` is cleared (see `Tuning.calls.opensAfter`). */
   | { readonly kind: "callsLocked"; readonly quest: QuestId }
   /** The banner is not running now (see `activeBanner`). */
@@ -481,11 +480,11 @@ export const ascensionStep = (tuning: Tuning, account: Account, character: Chara
 export const levelCap = (tuning: Tuning, account: Account, character: CharacterId): number =>
   tuning.materialRules.ascension[account.owned.characters[character]?.ascension ?? 0]?.level ?? tuning.progression.character.curve.maxLevel
 
-/** What taking the step she stands at costs `character`: gold, and her element's material of its grade; `null` when she stands at none. */
+/** What taking the step she stands at costs `character`: gold, and her element's material; `null` when she stands at none. */
 export const ascensionCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
   const step = ascensionStep(tuning, account, character)
   if (step === null) return null
-  return { gold: step.gold, [materialOf(tuning.characters[character].element, step.grade)]: step.count }
+  return { gold: step.gold, [materialOf(tuning.characters[character].element)]: step.count }
 }
 
 /** `account` with `character` past the step she stands at (her next levels open), if it owns her, she stands at one, and it holds the cost. */
@@ -498,22 +497,6 @@ export const ascend = (tuning: Tuning, account: Account, character: CharacterId)
   const paid = spend(account, cost)
   if (!paid.ok) return paid
   return { ok: true, value: { ...paid.value, owned: { ...paid.value.owned, characters: { ...paid.value.owned.characters, [character]: { ...owned, ascension: owned.ascension + 1 } } } } }
-}
-
-/** What making one `material` costs: `combine.count` of the grade below of its element, and gold; `null` for the lowest grade. */
-export const combineCost = (tuning: Tuning, material: MaterialId): Amounts | null => {
-  const spec = tuning.materials[material]
-  if (spec.grade === 1) return null
-  const { count, gold } = tuning.materialRules.combine
-  return { [materialOf(spec.element, spec.grade === 3 ? 2 : 1)]: count, gold: gold[spec.grade - 2] ?? 0 }
-}
-
-/** `account` with one `material` made from the grade below it (see `combineCost`), if it holds the cost. */
-export const combine = (tuning: Tuning, account: Account, material: MaterialId): Checked<Account> => {
-  const cost = combineCost(tuning, material)
-  if (cost === null) return refuse({ kind: "notCombinable", material })
-  const paid = spend(account, cost)
-  return paid.ok ? { ok: true, value: earn(paid.value, { [material]: 1 }) } : paid
 }
 
 /** The gold that takes `character` to its next level from where it is, or `null` at the maximum level or at an ascension step. */
@@ -627,16 +610,12 @@ export const runPay = (pay: RunPay, loss: number, enemyLevel: number, result: Ru
 export const clearPay = (pay: RunPay, enemyLevel: number): number => pay.base + pay.perLevel * enemyLevel
 
 /**
- * What a clear of `challenge` against enemies of `enemyLevel` pays of
- * `element`'s material (see `content/materials.ts`): its grade from the
- * level, more when a champion fights in it, and more on a first clear. A
- * loss pays none.
+ * `clears` clears' worth of `element`'s material against enemies of
+ * `enemyLevel` (see `worthAt`): a trial pays one on every clear, a quest's
+ * first clear and a hardcore tier's weekly reward a few, once.
  */
-export const materialPay = (tuning: Tuning, element: ElementId, challenge: ChallengeId, enemyLevel: number, firstClear: boolean): Amounts => {
-  const rules = tuning.materialRules
-  const champion = tuning.challenges[challenge].waves.scripted.some((wave) => wave.some(entryChampion))
-  return { [materialOf(element, gradeAt(rules, enemyLevel))]: rules.perClear + (champion ? rules.champion : 0) + (firstClear ? rules.firstClear : 0) }
-}
+export const materialPay = (tuning: Tuning, element: ElementId, enemyLevel: number, clears: number): Amounts =>
+  ({ [materialOf(element)]: Math.round(worthAt(tuning.materialRules, enemyLevel) * clears) })
 
 /** `amounts` times `times`. */
 const times = (amounts: Amounts, count: number): Amounts =>
@@ -704,7 +683,8 @@ export const recordRun = (
     // A higher rank has no first clear and no stars: it pays what its level pays (see docs/quests.md).
     const first = rankOf(play) === 1
     const firstClear = first && result.cleared && progress.firstClearedAt === null
-    if (result.cleared) materials = materialPay(tuning, tuning.quests[quest].element, encounter!.challenge, enemyLevel, firstClear)
+    // Only the first clear pays materials (see content/materials.ts): replaying an old quest earns none.
+    if (firstClear) materials = materialPay(tuning, tuning.quests[quest].element, enemyLevel, tuning.materialRules.firstClear)
     // Each star once, in any run that clears.
     stars = !first ? [] : tuning.quests[quest].stars.flatMap((goal, index) => !progress.stars.includes(index) && meets(goal, result.cleared, result.tally) ? [index] : [])
     const counts = counted(progress, result, now)
@@ -723,7 +703,10 @@ export const recordRun = (
       bestWave: Math.max(progress.bestWave ?? 0, result.wave)
     }
     next = { ...next, hardcore: { ...next.hardcore, [play.track]: { ...next.hardcore[play.track], [play.tier]: updated } } }
-    if (result.cleared) materials = materialPay(tuning, tuning.tracks[play.track].element, encounter!.challenge, enemyLevel, false)
+    // A trial pays its element on every clear; a hardcore tier, with its rewards once per period.
+    const track = tuning.tracks[play.track]
+    if (result.cleared && track.kind === "trial") materials = materialPay(tuning, track.element, enemyLevel, 1)
+    if (rewarded && track.kind === "hardcore") materials = materialPay(tuning, track.element, enemyLevel, tuning.materialRules.weekly)
     if (rewarded) rewards = { ...spec.rewards, unlocks: [] }
   }
   next = earn(earn(next, pay), materials)

@@ -1,86 +1,75 @@
 /**
- * Ascension materials: one per element, in three grades (see
- * docs/quests.md). A character crosses from one phase of her levels to the
- * next with her element's material of that step's grade; quests and
- * hardcore tracks pay their element's on every clear, at the grade their
- * enemy level sets. They are held in the wallet next to the currencies, and
- * gate levels without giving anything of their own.
+ * Ascension materials: one per element (see docs/quests.md, "Materials").
+ * A character crosses from one phase of her levels to the next with gold
+ * and her element's material. They are held in the wallet next to the
+ * currencies, and gate levels without giving anything of their own.
+ *
+ * Amounts follow one curve, as gold does: what a clear at enemy level n is
+ * worth (`worth`) doubles every `doublesEvery` levels, and each ascension
+ * step costs about `clearsPerStep` clears of the content of its time. So
+ * the edge of what a player can beat is where materials come from, and
+ * older content pays too little to be worth farming.
+ *
+ * Where they come from: a quest's (and each rank's) first clear, once; a
+ * chapter's chests; a hardcore tier's weekly reward; and the element's
+ * trial, on every clear (see `content/hardcore.ts`, trials). Nothing else
+ * pays them, so replaying an old quest with a strong team earns none.
  *
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
 import type { ElementId } from "./elements.ts"
 
-/** A material's grade: 1 (Shard), 2 (Core), 3 (Heart). */
-export type Grade = 1 | 2 | 3
-
 export interface MaterialSpec {
   readonly name: string
   readonly element: ElementId
-  readonly grade: Grade
 }
 
-const material = (name: string, element: ElementId, grade: Grade): MaterialSpec => ({ name, element, grade })
+const material = (name: string, element: ElementId): MaterialSpec => ({ name, element })
 
-/** Every material, by id: each element's three grades. */
+/** Every material, by id: one per element. */
 export const materials = {
-  fireShard: material("Fire Shard", "fire", 1),
-  fireCore: material("Fire Core", "fire", 2),
-  fireHeart: material("Fire Heart", "fire", 3),
-  waterShard: material("Water Shard", "water", 1),
-  waterCore: material("Water Core", "water", 2),
-  waterHeart: material("Water Heart", "water", 3),
-  windShard: material("Wind Shard", "wind", 1),
-  windCore: material("Wind Core", "wind", 2),
-  windHeart: material("Wind Heart", "wind", 3),
-  thunderShard: material("Thunder Shard", "thunder", 1),
-  thunderCore: material("Thunder Core", "thunder", 2),
-  thunderHeart: material("Thunder Heart", "thunder", 3),
-  rockShard: material("Rock Shard", "rock", 1),
-  rockCore: material("Rock Core", "rock", 2),
-  rockHeart: material("Rock Heart", "rock", 3)
+  fireEssence: material("Fire Essence", "fire"),
+  waterEssence: material("Water Essence", "water"),
+  windEssence: material("Wind Essence", "wind"),
+  thunderEssence: material("Thunder Essence", "thunder"),
+  rockEssence: material("Rock Essence", "rock")
 }
 
 export type MaterialId = keyof typeof materials
 
-/** One step between a character's phases: at `level`, gold and `count` of her element's material of `grade`. */
+/** One step between a character's phases: at `level`, gold and `count` of her element's material. */
 export interface AscensionStep {
   readonly level: number
   readonly gold: number
-  readonly grade: Grade
   readonly count: number
 }
 
 export interface MaterialRules {
-  /** The lowest enemy level paying each grade (1, 2, 3): grade 1 below the second, and so on. */
-  readonly grades: ReadonlyArray<number>
-  readonly perClear: number
-  readonly champion: number
+  /** What one clear at enemy level 1 is worth, and every how many levels that doubles. */
+  readonly worth: { readonly atFirst: number; readonly doublesEvery: number }
+  /** A quest's (or a rank's) first clear pays this many clears' worth at its level, once. */
   readonly firstClear: number
-  readonly combine: { readonly count: number; readonly gold: ReadonlyArray<number> }
+  /** A hardcore tier's reward pays this many clears' worth at its level, once per period. */
+  readonly weekly: number
+  /** A character's steps, lowest first: at each, her levels stop until she ascends. */
   readonly ascension: ReadonlyArray<AscensionStep>
 }
 
 export const materialRules: MaterialRules = {
-  grades: [1, 15, 30],
-  /** What a clear pays of its element's material, and on top when its challenge has a champion. */
-  perClear: 2,
-  champion: 1,
-  /** What a quest's first clear pays on top. */
+  worth: { atFirst: 6, doublesEvery: 6 },
   firstClear: 3,
-  /** Combining: `count` of a grade and `gold[grade - 2]` make one of the grade above (2, then 3). */
-  combine: { count: 3, gold: [300, 1000] },
-  /** A character's steps, lowest first: at each, her levels stop until she ascends. */
+  weekly: 2,
+  // About six clears of the trial rank opening around each step's level.
   ascension: [
-    { level: 10, gold: 1500, grade: 1, count: 6 },
-    { level: 20, gold: 5000, grade: 2, count: 9 },
-    { level: 30, gold: 11000, grade: 3, count: 12 }
+    { level: 10, gold: 1500, count: 110 },
+    { level: 20, gold: 5000, count: 360 },
+    { level: 30, gold: 11000, count: 1150 }
   ]
 }
 
-/** The grade enemies of `enemyLevel` pay. */
-export const gradeAt = (rules: MaterialRules, enemyLevel: number): Grade =>
-  enemyLevel >= (rules.grades[2] ?? Infinity) ? 3 : enemyLevel >= (rules.grades[1] ?? Infinity) ? 2 : 1
+/** What one clear at `enemyLevel` is worth (see `MaterialRules.worth`). */
+export const worthAt = (rules: MaterialRules, enemyLevel: number): number =>
+  Math.round(rules.worth.atFirst * 2 ** ((enemyLevel - 1) / rules.worth.doublesEvery))
 
-/** `element`'s material of `grade`. */
-export const materialOf = (element: ElementId, grade: Grade): MaterialId =>
-  `${element}${grade === 1 ? "Shard" : grade === 2 ? "Core" : "Heart"}` as MaterialId
+/** `element`'s material. */
+export const materialOf = (element: ElementId): MaterialId => `${element}Essence` as MaterialId

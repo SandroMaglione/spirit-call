@@ -96,8 +96,7 @@ there, with a comment saying when to use it.
 The game's pieces (`menu/parts.tsx`): `Wallet`, `CharacterCard`,
 `EnemyCard`, `Affinities`, `Enemies` (a fight's enemies over their
 weaknesses, tap to inspect), `EnemyFacts`, `Amounts` (rewards, materials
-included), `MaterialIcon` (an element's emblem, open like a currency, its grade
-as one to three gold dots beneath), `Stars` (a quest's three, lit when earned, popping in when
+included), `MaterialIcon` (an element's emblem, open like a currency), `Stars` (a quest's three, lit when earned, popping in when
 earned just now), `UnlockBadge` (a character or an aspect a reward makes
 yours: her face, or the aspect's class on a dark disc, in a turning gold ring
 that pulses; rewards show unlocks on a line of their own, named), and

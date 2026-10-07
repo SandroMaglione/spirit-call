@@ -79,7 +79,7 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
       <Fact label="Rising from call" value={`${tuning.calls.character.softFrom}, +${percent(tuning.calls.character.softStep)} each`} />
       <Fact label="Certain by call" value={`${tuning.calls.character.guarantee} (your first: ${tuning.calls.character.firstGuarantee})`} />
       <Fact label="Aspect" value={`${percent(tuning.calls.aspect.rate)}, certain by call ${tuning.calls.aspect.guarantee}`} />
-      <Fact label="Otherwise, a supply" value={<><Icon name="gold" />{tuning.calls.supply.gold.toLocaleString("en-US")}<span class="call__gap" /><MaterialIcon store={store} material={materialOf(elementOf(tuning, focus), 1)} />{tuning.calls.supply.material}</>} />
+      <Fact label="Otherwise, a supply" value={<><Icon name="gold" />{tuning.calls.supply.gold.toLocaleString("en-US")}<span class="call__gap" /><MaterialIcon store={store} material={materialOf(elementOf(tuning, focus))} />{tuning.calls.supply.material}</>} />
       <p class="dim call__explain">A character that comes is always the one you focus. Nothing you own comes again while something is left to get. The counts carry over from banner to banner.</p>
     </Panel>
     <Panel class="call__left in-right" title="Left to get" detail={`${leftOn(tuning, account, banner).length + aspectsLeft(tuning, account).length}`}>

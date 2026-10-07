@@ -143,7 +143,7 @@ export const call = (tuning: Tuning, account: Account, banner: BannerId, count: 
       } else {
         // The supply helps the focused character grow: her element's material.
         const element = tuning.characters[focus ?? tuning.banners[banner].characters[0]!].element
-        result = { kind: "supply", amounts: { gold: odds.supply.gold, ...(odds.supply.material > 0 ? { [materialOf(element, 1)]: odds.supply.material } : {}) } }
+        result = { kind: "supply", amounts: { gold: odds.supply.gold, ...(odds.supply.material > 0 ? { [materialOf(element)]: odds.supply.material } : {}) } }
         sinceAspect += 1
       }
     }

@@ -22,7 +22,7 @@ import type { Nav, Screen as Place } from "./screens.ts"
 /** Where `play` sits: its chapter, "Side quest", or its track. */
 export const playCaption = (store: UiStore, play: Play): string => {
   const tuning = store.tuning.value
-  if (play.kind === "tier") return "Hardcore"
+  if (play.kind === "tier") return tuning.tracks[play.track].kind === "trial" ? "Trial" : "Hardcore"
   const chapter = tuning.quests[play.quest].chapter
   return chapter === null ? "Side quest" : tuning.chapters[chapter as keyof typeof tuning.chapters].name
 }
@@ -38,8 +38,9 @@ export const Home = ({ store, nav, leader, play, enter }: {
   const places: { readonly [Id in string]: Place } = {
     characters: { kind: "character", character: leader, tab: "overview" },
     party: { kind: "team" },
-    challenges: { kind: "quests", tab: play.kind === "tier" ? "hardcore" : tuning.quests[play.quest].line },
+    challenges: { kind: "quests", tab: play.kind === "tier" ? (tuning.tracks[play.track].kind === "trial" ? "trials" : "hardcore") : tuning.quests[play.quest].line },
     call: { kind: "call", tab: "banner" },
+    inventory: { kind: "inventory" },
     practice: { kind: "extra", mode: "training" }
   }
   return <Screen name="home">
@@ -58,6 +59,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
       { id: "party", label: "Party" },
       { id: "challenges", label: "Challenges" },
       { id: "call", label: "Spirit Call", badge: canCall },
+      { id: "inventory", label: "Inventory" },
     ]} />
     {store.notices.value.length > 0 && <div class="home__notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<Pill size="small" tone="dark" onClick={() => (store.notices.value = [])}>Dismiss</Pill></div>}
     <div class="home__party in-left">

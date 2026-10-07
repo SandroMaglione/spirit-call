@@ -52,7 +52,6 @@ only as its SHA-256 hash. Logging out deletes it.
 | `PUT /api/account/selection` | The team, its aspects, and what to play. |
 | `POST /api/characters/{id}/training` | Level a character with gold. |
 | `POST /api/characters/{id}/ascension` | Ascend a character. |
-| `POST /api/materials/{id}/combination` | Make a material from the grade below. |
 | `POST /api/banners/{id}/calls` | Make calls on a banner. |
 | `PUT /api/banners/{id}/focus` | Focus a character on a banner. |
 | `POST /api/runs` | Record a run that ended, with its log: the account after it, and what it earned. |
@@ -99,7 +98,7 @@ guesses (`src/server/logs.ts`, migration `0002_logs.sql`):
 
   A killing blow counts its whole damage.
 - **Account events.** Each change to an account is kept with what it
-  gained and spent of every resource: training, ascending, combining,
+  gained and spent of every resource: training, ascending,
   calls, focus, selection, a run's pay and rewards, and the dev tools.
   A refused action leaves nothing.
 

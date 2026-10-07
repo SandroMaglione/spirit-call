@@ -22,7 +22,6 @@ import type { Settings } from "../account/settings.ts"
 import { Api, Password, Username } from "../api/api.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { MaterialId } from "../content/materials.ts"
 import type { RunLogValue, RunResultValue } from "../schema.ts"
 
 export interface App {
@@ -40,7 +39,6 @@ export interface App {
   /** Takes a character past the ascension step she stands at (refused without the gold or the material). */
   readonly ascend: (character: CharacterId) => Promise<Account | undefined>
   /** Makes one material from the grade below it (refused without enough). */
-  readonly combine: (material: MaterialId) => Promise<Account | undefined>
   /** Makes `count` calls on `banner`: what each brought, or `undefined` when refused (not open, not running, nothing left, short of crystals) or not saved. */
   readonly call: (banner: BannerId, count: number) => Promise<ReadonlyArray<CallResult> | undefined>
   /** Focuses `character` on `banner`. */
@@ -129,7 +127,6 @@ export const startApp = async (username: string): Promise<App> => {
     },
     train: (character) => run(api.account.train({ params: { character } })),
     ascend: (character) => run(api.account.ascend({ params: { character } })),
-    combine: (material) => run(api.account.combine({ params: { material } })),
     call: (banner, count) => attempt(api.account.call({ params: { banner }, payload: { count } }), (called) => called.account).then((called) => called?.results),
     focus: (banner, character) => run(api.account.focus({ params: { banner }, payload: { character } })),
     select: (team, play, aspects) => run(api.account.select({ payload: { team, play, ...(aspects === undefined ? {} : { aspects }) } })),

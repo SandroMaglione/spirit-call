@@ -104,7 +104,8 @@ const QuestList = ({ store, tab, play, chest }: { readonly store: UiStore; reado
   })}</>
 }
 
-const TrackList = ({ store, play, now }: { readonly store: UiStore; readonly play: Signal<Play>; readonly now: number }) => {
+/** The hardcore tracks, or the element trials (`kind`), each opening on the tier or rank to play next. */
+const TrackList = ({ store, play, now, kind }: { readonly store: UiStore; readonly play: Signal<Play>; readonly now: number; readonly kind: "hardcore" | "trial" }) => {
   const tuning = store.tuning.value, account = store.account.value
   /** A track opens on the tier to do next: the first open one not cleared yet, else its last open one. */
   const open = (track: TrackId): Play => {
@@ -113,8 +114,10 @@ const TrackList = ({ store, play, now }: { readonly store: UiStore; readonly pla
     return playable.find((each) => !cleared(store, each)) ?? playable[playable.length - 1] ?? tiers[0]!
   }
   return <>
-    <Label end={`Restocks in ${describeTimeUntil(nextReset(tuning.reset, now), now)}`}>Tracks</Label>
-    {ids(tuning.tracks).map((track) => {
+    {kind === "hardcore"
+      ? <Label end={`Restocks in ${describeTimeUntil(nextReset(tuning.reset, now), now)}`}>Tracks</Label>
+      : <Label end="Every clear pays">Element trials</Label>}
+    {ids(tuning.tracks).filter((track) => tuning.tracks[track].kind === kind).map((track) => {
       const spec = tuning.tracks[track], first: Play = { kind: "tier", track, tier: 1 }, lock = playLock(tuning, account, first)
       const best = Math.max(0, ...spec.tiers.map((_, index) => tierProgress(account, track, index + 1)?.bestWave ?? 0))
       const done = spec.tiers.filter((_, index) => cleared(store, { kind: "tier", track, tier: index + 1 })).length
@@ -169,7 +172,9 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const lock = playLock(tuning, account, selected), encounter = encounterOf(tuning, selected), challenge = tuning.challenges[encounter.challenge]
   const done = cleared(store, selected)
   const element = selected.kind === "quest" ? tuning.quests[selected.quest].element : tuning.tracks[selected.track].element
-  const everyClear = { currencies: { gold: clearPay(tuning.progression.gold, encounter.enemyLevel), ...materialPay(tuning, element, encounter.challenge, encounter.enemyLevel, false) }, experience: 0, unlocks: [] }
+  const trial = selected.kind === "tier" && tuning.tracks[selected.track].kind === "trial"
+  // Only a trial pays its material on every clear; a quest pays it on its first clear, a hardcore tier with its weekly rewards.
+  const everyClear = { currencies: { gold: clearPay(tuning.progression.gold, encounter.enemyLevel), ...(trial ? materialPay(tuning, element, encounter.enemyLevel, 1) : {}) }, experience: 0, unlocks: [] }
   const preview = (character: CharacterId) => nav.go({ kind: "character", character, tab: "kit" })
   const progress = selected.kind === "tier" ? tierProgress(account, selected.track, selected.tier) : undefined
   /** The steps of the same challenge: a quest's ranks, a track's tiers. */
@@ -180,19 +185,22 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const rank = selected.kind === "quest" ? rankOf(selected) : 1
   const earnedStars = selected.kind === "quest" ? account.quests[selected.quest]?.stars ?? [] : []
   const once = quest !== null
-    ? rank > 1 ? null : done ? "claimed" : { ...quest.rewards, experience: 0, currencies: { ...quest.rewards.currencies, ...materialPay(tuning, element, encounter.challenge, encounter.enemyLevel, true) } }
-    : selected.kind === "tier" && tierRewardsAvailable(tuning, account, selected.track, selected.tier, now) ? { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards, experience: 0, unlocks: [] } : "restocking"
+    ? rank > 1 ? null : done ? "claimed" : { ...quest.rewards, experience: 0, currencies: { ...quest.rewards.currencies, ...materialPay(tuning, element, encounter.enemyLevel, tuning.materialRules.firstClear) } }
+    : trial ? null
+    : selected.kind === "tier" && tierRewardsAvailable(tuning, account, selected.track, selected.tier, now)
+      ? { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards, experience: 0, unlocks: [], currencies: { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards.currencies, ...materialPay(tuning, element, encounter.enemyLevel, tuning.materialRules.weekly) } }
+      : "restocking"
   return <Panel class="quests__brief in-right"
     title={selected.kind === "quest" ? tuning.quests[selected.quest].name : tuning.tracks[selected.track].name}
     subtitle={quest !== null && quest.introduces === null ? "Side quest · what you have met, mixed" : undefined}
     detail={describeObjective(challenge.objective, challenge.waves.scripted.length)}
     note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
     {quest?.introduces != null && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
-    {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" ? "Rank" : "Tier"}>
-      <Label>{selected.kind === "quest" ? "Rank" : "Tier"}</Label>
+    {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : "Tier"}>
+      <Label>{selected.kind === "quest" || trial ? "Rank" : "Tier"}</Label>
       {steps.map((step) => {
         const locked = playLock(tuning, account, step.play) !== null, on = samePlay(step.play, selected)
-        return <button type="button" role="radio" key={step.name} class={`step${locked ? " is-locked" : ""}`} aria-checked={on} aria-label={`${selected.kind === "quest" ? "Rank" : "Tier"} ${step.name}, enemies level ${encounterOf(tuning, step.play).enemyLevel}`} onClick={() => (play.value = step.play)}>
+        return <button type="button" role="radio" key={step.name} class={`step${locked ? " is-locked" : ""}`} aria-checked={on} aria-label={`${selected.kind === "quest" || trial ? "Rank" : "Tier"} ${step.name}, enemies level ${encounterOf(tuning, step.play).enemyLevel}`} onClick={() => (play.value = step.play)}>
           <b>{step.name}</b><span>{locked ? <Icon name="lock" /> : null}Lv {encounterOf(tuning, step.play).enemyLevel}</span>
         </button>
       })}
@@ -211,10 +219,10 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         {progress?.bestWave !== undefined && <div class="goal is-earned">Best wave {progress.bestWave}</div>}
       </div>}
       <div class={`quests__rewards${quest === null && challenge.objective.kind !== "endure" ? " quests__side-by-side" : ""}`}>
-        <div>
+        {!trial && <div>
           <Label>{selected.kind === "quest" ? "First clear" : "Once per period"}</Label>
           {once === null ? <span class="dim">Only at rank I</span> : once === "claimed" ? <span class="dim claimed"><Icon name="check" />Claimed</span> : once === "restocking" ? <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span> : <Amounts store={store} rewards={once} preview={preview} compact />}
-        </div>
+        </div>}
         <div>
           <Label>Every clear</Label>
           <Amounts store={store} rewards={everyClear} />
@@ -235,12 +243,12 @@ export const Quests = ({ store, nav, tab, play, leader, enter }: {
   const tuning = store.tuning.value, now = Date.now(), selected = play.value
   const key = selected.kind === "quest" ? `${selected.quest}-${rankOf(selected)}` : `${selected.track}-${selected.tier}`
   // A chest picked in one tab is not shown in another.
-  const shownChest = tab !== "hardcore" && chest.value !== null && (chest.value.group === "secondary") === (tab === "secondary") ? chest.value : null
+  const shownChest = (tab === "main" || tab === "secondary") && chest.value !== null && (chest.value.group === "secondary") === (tab === "secondary") ? chest.value : null
   return <Screen name="quests">
     <TopBar icon="quests" title="Challenges" close={nav.back}>
-      <TopTabs label="Kinds of challenge" current={tab} onChange={(id) => nav.replace({ kind: "quests", tab: id })} tabs={[{ id: "main", label: "Main" }, { id: "secondary", label: "Side" }, { id: "hardcore", label: "Hardcore" }]} />
+      <TopTabs label="Kinds of challenge" current={tab} onChange={(id) => nav.replace({ kind: "quests", tab: id })} tabs={[{ id: "main", label: "Main" }, { id: "secondary", label: "Side" }, { id: "trials", label: "Trials" }, { id: "hardcore", label: "Hardcore" }]} />
     </TopBar>
-    <div class="quests__list scroll in-left" key={tab}>{tab === "hardcore" ? <TrackList store={store} play={play} now={now} /> : <QuestList store={store} tab={tab} play={play} chest={chest} />}</div>
+    <div class="quests__list scroll in-left" key={tab}>{tab === "hardcore" || tab === "trials" ? <TrackList store={store} play={play} now={now} kind={tab === "trials" ? "trial" : "hardcore"} /> : <QuestList store={store} tab={tab} play={play} chest={chest} />}</div>
     {shownChest !== null ? <ChestBrief key={`${shownChest.group}-${shownChest.index}`} store={store} chest={shownChest} open={(quest) => { play.value = quest; chest.value = null }} /> : <Brief key={key} store={store} nav={nav} play={play} now={now} />}
     <Actions>
       <PartyStrip store={store} team={store.menuDraft.value.team} leader={leader} size={34} pick={() => nav.go({ kind: "team" })} edit={() => nav.go({ kind: "team" })} />

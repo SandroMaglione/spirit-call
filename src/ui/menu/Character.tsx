@@ -5,7 +5,7 @@
  */
 import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
-import { ascend, ascensionCost, ascensionStep, characterLevel, combine, combineCost, levelCap, owns, train, trainingCost } from "../../account/account.ts"
+import { ascend, ascensionCost, ascensionStep, characterLevel, levelCap, owns, train, trainingCost } from "../../account/account.ts"
 import { materialOf } from "../../content/materials.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import type { AspectId } from "../../content/aspects.ts"
@@ -64,21 +64,22 @@ const Attributes = ({ store, actions, character }: { readonly store: UiStore; re
 
 /**
  * Her ascension, at a step: its gold and her element's material (held over
- * needed), and the Ascend button; when the material is short and some can
- * be made from the grade below, a button to make one.
+ * needed), and the Ascend button; when the material is short, where to earn
+ * it (her element's trial).
  */
 const Ascension = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {
   const tuning = store.tuning.value, account = store.account.value
   const step = ascensionStep(tuning, account, character), cost = ascensionCost(tuning, account, character)
   if (step === null || cost === null) return null
-  const material = materialOf(tuning.characters[character].element, step.grade), held = account.wallet[material] ?? 0
-  const makeable = held < step.count && combineCost(tuning, material) !== null && combine(tuning, account, material).ok
+  const element = tuning.characters[character].element
+  const material = materialOf(element), held = account.wallet[material] ?? 0
+  const trial = Object.values(tuning.tracks).find((track) => track.kind === "trial" && track.element === element)
   return <>
     <span class="cost" aria-label={describeAmounts(tuning, cost)}>
       <Icon name="gold" />{step.gold.toLocaleString("en-US")}
       <MaterialIcon store={store} material={material} /><span class={held < step.count ? "cost__short" : undefined}>{held}</span>/{step.count}
     </span>
-    {makeable && <Pill tone="dark" icon="plus" disabled={store.busy.value} onClick={() => actions.combine(material)}>Make {tuning.materials[material].name}</Pill>}
+    {held < step.count && trial !== undefined && <span class="dim">Earned in the {trial.name}</span>}
     <Pill icon="next" disabled={!ascend(tuning, account, character).ok || store.busy.value} onClick={() => actions.ascend(character)}>Ascend</Pill>
   </>
 }

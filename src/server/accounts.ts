@@ -10,7 +10,7 @@ import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 
-import { ascend, combine, createAccount, earn, everything, noQuestProgress, recordRun, select, train, unlock, withClearedRewards } from "../account/account.ts"
+import { ascend, createAccount, earn, everything, noQuestProgress, recordRun, select, train, unlock, withClearedRewards } from "../account/account.ts"
 import type { Account, CallResult, Checked, Earned, Play, TeamAspects } from "../account/account.ts"
 import { call, setFocus } from "../account/calls.ts"
 import { fromRecord, toRecord } from "../account/convert.ts"
@@ -19,7 +19,6 @@ import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { Amounts } from "../content/currencies.ts"
 import { materials } from "../content/materials.ts"
-import type { MaterialId } from "../content/materials.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { RunLogValue, RunResultValue } from "../schema.ts"
 import { Content } from "./content.ts"
@@ -28,7 +27,7 @@ import { Logs } from "./logs.ts"
 import { Store } from "./store.ts"
 
 /** What the dev tool adds: enough to level and ascend anything while testing. */
-const plenty: Amounts = { crystals: 10_000, gold: 100_000, ...Object.fromEntries(Object.keys(materials).map((id) => [id, 50])) }
+const plenty: Amounts = { crystals: 10_000, gold: 100_000, ...Object.fromEntries(Object.keys(materials).map((id) => [id, 5000])) }
 
 export class Accounts extends Context.Service<
   Accounts,
@@ -39,7 +38,6 @@ export class Accounts extends Context.Service<
     readonly select: (userId: string, team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Effect.Effect<Account, Refused>
     readonly train: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
     readonly ascend: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
-    readonly combine: (userId: string, material: MaterialId) => Effect.Effect<Account, Refused>
     readonly call: (userId: string, banner: BannerId, count: number) => Effect.Effect<{ readonly account: Account; readonly results: ReadonlyArray<CallResult> }, Refused>
     readonly focus: (userId: string, banner: BannerId, character: CharacterId) => Effect.Effect<Account, Refused>
     /** Records a run that ended, with its log (kept for measuring play, see `Logs`). */
@@ -118,7 +116,6 @@ export class Accounts extends Context.Service<
         select: (userId, team, play, aspects) => act(userId, "select", play.kind === "quest" ? play.quest : play.track, (account) => select(tuning, account, team, play, aspects), same),
         train: (userId, character) => act(userId, "train", character, (account) => train(tuning, account, character), same),
         ascend: (userId, character) => act(userId, "ascend", character, (account) => ascend(tuning, account, character), same),
-        combine: (userId, material) => act(userId, "combine", material, (account) => combine(tuning, account, material), same),
         call: (userId, banner, count) => act(userId, "call", banner, (account, now) => call(tuning, account, banner, count, now), (called) => called.account),
         focus: (userId, banner, character) => act(userId, "focus", banner, (account) => setFocus(tuning, account, banner, character), same),
         recordRun: (userId, play, result, log) =>

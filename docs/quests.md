@@ -86,26 +86,47 @@ After the main line moves on, a quest opens again at higher **ranks**:
 the same quest at a fixed, higher enemy level (never scaled to the player).
 A rank opens with a later chapter's last quest, at about its level: rank 2
 two chapters on, rank 3 four chapters on (chapters 5 and 6 get theirs as
-the main line grows). Ranks give no first clear rewards and no stars; they
-pay what any run pays at their level (gold, and materials of a higher
-grade). They are why an old quest stays worth playing, and why every element
-has a place to earn its highest grade.
+the main line grows). Ranks give no first clear rewards, no stars, and no
+materials; they pay the gold any run pays at their level. They are a
+stronger version of a quest the player liked, at the edge of where she is.
 
 ## Materials and ascension
 
-- **One material per element, in three grades** (Shard, Core, Heart).
-- **Every clear pays its element's material**, at the grade its enemy level
-  sets (grade 1 below level 15, grade 2 below 30, grade 3 from 30), more
-  when the challenge has a champion. A loss pays none (only its share of
-  gold). Each quest and hardcore track has an element; the first clear of a
-  quest pays a lump of it too.
+- **One material per element** (Fire Essence, Water Essence, ...), its
+  amounts on one curve: what a clear at enemy level n is worth
+  (`worthAt`) doubles every six levels.
+- **Where it comes from**, and nowhere else:
+  - a quest's **first clear**, once: a few clears' worth of its element
+    at its level (a quest's element is one the team owns by then);
+  - a **hardcore tier's** weekly reward: a couple of clears' worth;
+  - its element's **trial**, on every clear (see below);
+  - a Spirit Call supply, for the focused character's element.
+
+  Replaying a quest, or a rank, pays gold only: an old quest beaten again
+  by a strong team pays no materials.
 - **Ascension.** A character's levels come in phases of ten. Gold buys
   levels within a phase; crossing to the next costs gold and her element's
-  material of that step's grade (10→ grade 1, 20→ grade 2, 30→ grade 3).
-  Ascending gives no stats: it opens the next ten levels.
-- **Combining.** Three of a grade and some gold make one of the next grade,
-  so no single quest is ever a wall.
-- **Farming low quests** is allowed and harmless: a low quest pays low
-  grades, which only serve the first steps (or combine up at a loss). It is
-  how a newly pulled character catches up, never how one reaches the top.
-- Amounts are fixed, never random: the quest card says what a clear gives.
+  material: about six clears of the trial rank of its time (110 at level
+  10, 360 at 20, 1,150 at 30). Ascending gives no stats: it opens the next
+  ten levels.
+
+## Trials
+
+One trial per element, the place to farm its material. Each is built from
+what its element struggles against: enemies that resist it (the content
+check makes sure some do), and elites carrying it, which are immune to it.
+A trial is as long as a quest; playing well and fast is how to farm more.
+
+- **They open with the main line**: wind after chapter 2, fire after 3,
+  water after 4, thunder after 5, rock after 6. A character can be farmed
+  for only once her element's chapter is behind the player.
+- **Ranks** at fixed enemy levels (11, 17, 23, 29, 35), each opening with a
+  chapter's last quest and showing only what the main line has brought by
+  then. Every rank pays, on the same curve: the top rank open takes about
+  six clears for a step, the one below about twice as many, the first rank
+  of a late step dozens. So farming means the edge of what the player can
+  beat, with no cap and no timer.
+- `pnpm progression` plays a new account through the main line on the
+  account's own rules: where the team stands at each quest, how much it had
+  to farm (for gold, or in a trial for a step's material), and how many
+  clears of each trial rank a step takes.
