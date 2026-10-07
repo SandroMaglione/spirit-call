@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --pretty false",
-    "lint": "oxlint src test tools/lint/plugin.mjs",
+    "lint": "oxlint src test tools/lint/plugin.mjs tools/progress",
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "debug": "node --import tsx scripts/debug.ts",
