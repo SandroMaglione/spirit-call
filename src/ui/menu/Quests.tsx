@@ -255,8 +255,9 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const rank = selected.kind === "quest" ? rankOf(selected) : 1
   const earnedStars = selected.kind === "quest" ? questProgress(account, selected.quest, rank)?.stars ?? [] : []
   const firstClear = selected.kind === "quest" ? questRewards(tuning, selected.quest, rank) : null
+  // A quest's first clear stays listed once claimed (ticked and dimmed), so what it gave is still there to read.
   const once = firstClear !== null
-    ? done ? "claimed" : { ...firstClear, experience: 0, currencies: { ...firstClear.currencies, ...materialPay(tuning, element, encounter.enemyLevel, rank === 1 ? tuning.materialRules.firstClear : tuning.materialRules.rankFirstClear) } }
+    ? { ...firstClear, experience: 0, currencies: { ...firstClear.currencies, ...materialPay(tuning, element, encounter.enemyLevel, rank === 1 ? tuning.materialRules.firstClear : tuning.materialRules.rankFirstClear) } }
     : trial ? null
     : selected.kind === "tier" && tierRewardsAvailable(tuning, account, selected.track, selected.tier, now)
       ? { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards, experience: 0, unlocks: [], currencies: { ...tuning.tracks[selected.track].tiers[selected.tier - 1]!.rewards.currencies, ...materialPay(tuning, element, encounter.enemyLevel, tuning.materialRules.weekly) } }
@@ -289,8 +290,8 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
       </div>}
       <div class={`quests__rewards${quest === null && challenge.objective.kind !== "endure" ? " quests__side-by-side" : ""}`}>
         {!trial && <div>
-          <Label>{selected.kind === "quest" ? "First clear" : "Once per period"}</Label>
-          {once === null ? <span class="dim">None</span> : once === "claimed" ? <span class="dim claimed"><Icon name="check" />Claimed</span> : once === "restocking" ? <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span> : <Amounts store={store} rewards={once} preview={preview} compact />}
+          <Label end={firstClear !== null && done ? <span class="claimed"><Icon name="check" />Claimed</span> : undefined}>{selected.kind === "quest" ? "First clear" : "Once per period"}</Label>
+          {once === null ? <span class="dim">None</span> : once === "restocking" ? <span class="dim">Restocks in {describeTimeUntil(nextReset(tuning.reset, now), now)}</span> : <div class={firstClear !== null && done ? "is-claimed" : undefined}><Amounts store={store} rewards={once} preview={preview} compact /></div>}
         </div>}
         <div>
           <Label>Every clear</Label>

@@ -191,8 +191,10 @@
 .quests__goals > div { gap: 2px; }
 .quests__brief .panel__body { padding-top: 14px; padding-bottom: 10px; }
 .quests__goals > .quests__side-by-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
-.claimed { display: flex; align-items: center; gap: 5px; min-height: 26px; }
+.claimed { display: inline-flex; align-items: center; gap: 4px; }
 .claimed .menu-icon { color: var(--up); }
+/* A first clear already claimed: still listed, dimmed. */
+.is-claimed { opacity: 0.55; }
 /* A quest's ranks or a track's tiers: each a chip with its enemies' level; the one picked is cream. */
 /* Scrolls sideways when the chips do not fit; tall enough for each chip and its touch area, so nothing is clipped. */
 .steps { display: flex; align-items: center; gap: 6px; flex: none; min-height: 44px; margin: -6px 0 8px; padding: 8px 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
