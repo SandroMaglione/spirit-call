@@ -148,6 +148,7 @@ line.grid { stroke: var(--grid); stroke-width: 1; }
 .marker { stroke: var(--axis); stroke-width: 1; stroke-dasharray: 2 3; }
 .marker-label { font-size: 10px; fill: var(--muted); }
 .band { stroke: var(--surface); stroke-width: 1; }
+.range { opacity: 0.16; stroke: none; }
 .ghost { fill: none; stroke: var(--ghost); stroke-width: 1.5; stroke-dasharray: 4 3; }
 .ghost-cap { stroke: var(--ink-2); stroke-width: 1.5; }
 .end-label { font-size: 11px; fill: var(--ink-2); }

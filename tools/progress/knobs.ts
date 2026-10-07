@@ -24,15 +24,34 @@ export interface Knob {
   readonly patch: (value: number, current: Tuning) => Loose
 }
 
-/** A play option rather than a number of the game. */
-export interface PlayOptions {
+/** How a player plays: how many levels under a quest's enemies she goes in (negative: waits above them), and the share of runs she loses. */
+export interface Skill {
+  readonly levelsAhead: number
+  readonly lost: number
+}
+
+/** Play options rather than numbers of the game: the main line's player, and the two edges of the range around it. */
+export interface PlayOptions extends Skill {
   readonly runsPerWeek: number
   readonly calls: boolean
   /** A run's length with its menus, in minutes (docs/vision.md: runs of about four minutes). */
   readonly minutesPerRun: number
+  readonly skilled: Skill
+  readonly struggling: Skill
 }
 
-export const defaultPlay: PlayOptions = { runsPerWeek: 40, calls: true, minutesPerRun: 4 }
+export const defaultPlay: PlayOptions = {
+  runsPerWeek: 40,
+  calls: true,
+  minutesPerRun: 4,
+  levelsAhead: 0,
+  lost: 0,
+  skilled: { levelsAhead: 4, lost: 0.05 },
+  struggling: { levelsAhead: -2, lost: 0.25 }
+}
+
+/** `play` as the player `skill` describes. */
+export const playing = (play: PlayOptions, skill: Skill): PlayOptions => ({ ...play, ...skill })
 
 const at = (path: ReadonlyArray<string>, value: unknown): Loose =>
   path.reduceRight<unknown>((inner, key) => ({ [key]: inner }), value) as Loose

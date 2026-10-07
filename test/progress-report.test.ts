@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { journeyOf } from "../tools/progress/journey.ts"
-import { defaultPlay, knobs, tuningFor } from "../tools/progress/knobs.ts"
+import { defaultPlay, knobs, playing, tuningFor } from "../tools/progress/knobs.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 
 /** The progress report (tools/progress) follows the progression model run by run. */
@@ -24,5 +24,14 @@ describe("progress report", () => {
     const { patch, tuning } = tuningFor({ "progression.gold.base": 300 })
     expect(patch).toEqual({ progression: { gold: { base: 300 } } })
     expect(journeyOf(tuning, defaultPlay).runs).toBeLessThan(journeyOf(defaultTuning, defaultPlay).runs)
+  })
+
+  it("spans a range: a skilled player is through sooner, a struggling one later", () => {
+    const line = journeyOf(defaultTuning, defaultPlay)
+    expect(journeyOf(defaultTuning, playing(defaultPlay, defaultPlay.skilled)).hours).toBeLessThan(line.hours)
+    expect(journeyOf(defaultTuning, playing(defaultPlay, defaultPlay.struggling)).hours).toBeGreaterThan(line.hours)
+    // Losing alone costs runs: about a share `lost` of them.
+    const losing = journeyOf(defaultTuning, playing(defaultPlay, { levelsAhead: 0, lost: 0.2 }))
+    expect(losing.runs).toBeGreaterThan(line.runs)
   })
 })

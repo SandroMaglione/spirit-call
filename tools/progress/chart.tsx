@@ -56,6 +56,10 @@ const path = (points: ReadonlyArray<Point>, sx: (x: number) => number, sy: (y: n
     return `${index === 0 ? "M" : corner + "L"}${sx(x).toFixed(1)},${sy(y).toFixed(1)}`
   }).join("")
 
+/** `points` with a corner before each rise, as a step line draws them. */
+const stepped = (points: ReadonlyArray<Point>): ReadonlyArray<Point> =>
+  points.flatMap((point, index): Array<Point> => (index === 0 ? [point] : [[point[0], points[index - 1]![1]], point]))
+
 /** Spreads labels wanted at `ys` at least `gap` apart, in order. */
 const spread = (ys: ReadonlyArray<number>, gap = 13): ReadonlyArray<number> => {
   const order = ys.map((y, index) => ({ y, index })).sort((a, b) => a.y - b.y)
@@ -88,6 +92,8 @@ export interface ChartProps {
   readonly lines?: ReadonlyArray<Series>
   /** The shipped numbers, for comparison. */
   readonly ghosts?: ReadonlyArray<Series>
+  /** A shaded range between two rising step lines (drawn as lines too). */
+  readonly band?: { readonly from: ReadonlyArray<Point>; readonly to: ReadonlyArray<Point>; readonly color: string }
   readonly markers?: ReadonlyArray<Marker>
   readonly xTitle: string
   readonly formatX: (x: number) => string
@@ -102,14 +108,14 @@ export const Chart = (props: ChartProps) => {
   // The stacked tops: each band sits on the ones below it.
   const tops: Array<ReadonlyArray<Point>> = []
   stack.forEach((series, index) => tops.push(series.points.map(([x, y], at) => [x, y + (index === 0 ? 0 : tops[index - 1]![at]![1])] as Point)))
-  const all = [...tops, ...lines.map((each) => each.points), ...ghosts.map((each) => each.points)]
+  const all = [...tops, ...lines.map((each) => each.points), ...ghosts.map((each) => each.points), ...(props.band === undefined ? [] : [props.band.from, props.band.to])]
   const xMax = Math.max(1e-9, ...all.flatMap((points) => points.map(([x]) => x)))
   const yTicks = ticks(Math.max(...all.flatMap((points) => points.map(([, y]) => y)), 0))
   const xTicks = ticks(xMax, 6).filter((tick) => tick <= xMax * 1.0001)
   const yMax = yTicks.at(-1)!
   const sx = (x: number) => margin.left + (x / xMax) * plotWidth
   const sy = (y: number) => margin.top + plotHeight - (y / yMax) * plotHeight
-  const xs = (stack[0] ?? lines[0] ?? ghosts[0])?.points.map(([x]) => x) ?? []
+  const xs = [...new Set([...stack, ...lines, ...ghosts].flatMap((series) => series.points.map(([x]) => x)))]
 
   const [hover, setHover] = useState<{ readonly x: number; readonly left: number } | null>(null)
   const frame = useRef<HTMLDivElement>(null)
@@ -168,6 +174,9 @@ export const Chart = (props: ChartProps) => {
             const area = `${path(top, sx, sy)}L${bottom.toReversed().map(([x, y]) => `${sx(x).toFixed(1)},${sy(y).toFixed(1)}`).join("L")}Z`
             return <path d={area} fill={series.color} class="band" />
           })}
+          {props.band === undefined ? null : (
+            <path class="range" fill={props.band.color} d={`${path(props.band.from, sx, sy, true)}L${stepped(props.band.to).toReversed().map(([x, y]) => `${sx(x).toFixed(1)},${sy(y).toFixed(1)}`).join("L")}Z`} />
+          )}
           {ghosts.map((series) => <path d={path(series.points, sx, sy, series.step)} class="ghost" />)}
           {lines.map((series) => <path d={path(series.points, sx, sy, series.step)} fill="none" stroke={series.color} stroke-width="2" stroke-dasharray={series.dashed === true ? "5 4" : undefined} stroke-linejoin="round" />)}
           <line class="baseline" x1={margin.left} x2={margin.left + plotWidth} y1={sy(0)} y2={sy(0)} />

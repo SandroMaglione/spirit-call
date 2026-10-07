@@ -16,8 +16,8 @@ import { Bars, Chart } from "./chart.tsx"
 import type { Bar, Marker, Point, Series } from "./chart.tsx"
 import { journeyOf, sourceNames, sources } from "./journey.ts"
 import type { Journey, Moment } from "./journey.ts"
-import { defaultPlay, knobs, tuningFor } from "./knobs.ts"
-import type { PlayOptions, Values } from "./knobs.ts"
+import { defaultPlay, knobs, playing, tuningFor } from "./knobs.ts"
+import type { PlayOptions, Skill, Values } from "./knobs.ts"
 import "./progress.css"
 
 const farmFlag = 12
@@ -77,6 +77,27 @@ const summary = (journey: Journey) => {
   }
 }
 
+const PlayNumber = (props: { readonly label: string; readonly help: string; readonly value: number; readonly shipped: number; readonly step: number; readonly min: number; readonly max?: number; readonly set: (value: number) => void }) => (
+  <label class={props.value !== props.shipped ? "knob changed" : "knob"} title={props.help}>
+    <span class="knob-label">{props.label}</span>
+    <input type="number" min={props.min} max={props.max} step={props.step} value={props.value} onInput={(event) => {
+      const input = event.currentTarget as HTMLInputElement, value = Number(input.value)
+      if (input.value !== "" && Number.isFinite(value) && value >= props.min && (props.max === undefined || value <= props.max)) props.set(value)
+    }} />
+    <span class="knob-default">shipped {props.shipped}</span>
+  </label>
+)
+
+/** How a player plays: levels under the enemies she goes in at, and the runs she loses. */
+const SkillNumbers = (props: { readonly skill: Skill; readonly shipped: Skill; readonly set: (skill: Skill) => void }) => (
+  <>
+    <PlayNumber label="Levels under the enemies" help="How many levels below a quest's enemies the team goes in (and in hardcore); negative waits until it is above them." value={props.skill.levelsAhead} shipped={props.shipped.levelsAhead} step={1} min={-20}
+      set={(levelsAhead) => props.set({ levelsAhead, lost: props.skill.lost })} />
+    <PlayNumber label="Runs lost (%)" help="The share of runs lost, each paying half its gold for getting half-way." value={Math.round(props.skill.lost * 100)} shipped={Math.round(props.shipped.lost * 100)} step={5} min={0} max={90}
+      set={(lost) => props.set({ levelsAhead: props.skill.levelsAhead, lost: lost / 100 })} />
+  </>
+)
+
 const Sidebar = (props: { readonly values: Values; readonly play: PlayOptions; readonly setValues: (values: Values) => void; readonly setPlay: (play: PlayOptions) => void; readonly patch: object }) => {
   const groups = [...new Set(knobs.map((knob) => knob.group))]
   const [copied, setCopied] = useState(false)
@@ -90,26 +111,23 @@ const Sidebar = (props: { readonly values: Values; readonly play: PlayOptions; r
       </div>
       <section>
         <h4>Player</h4>
-        <label class={props.play.minutesPerRun !== defaultPlay.minutesPerRun ? "knob changed" : "knob"} title="How long a run takes with its menus: turns runs into hours played.">
-          <span class="knob-label">Minutes a run</span>
-          <input type="number" min="0.5" step="0.5" value={props.play.minutesPerRun} onInput={(event) => {
-            const value = Number((event.currentTarget as HTMLInputElement).value)
-            if (Number.isFinite(value) && value > 0) props.setPlay({ ...props.play, minutesPerRun: value })
-          }} />
-          <span class="knob-default">shipped {defaultPlay.minutesPerRun}</span>
-        </label>
-        <label class={props.play.runsPerWeek !== defaultPlay.runsPerWeek ? "knob changed" : "knob"} title="How many runs the player plays a week: paces the weekly hardcore rewards (more weeks, more of them).">
-          <span class="knob-label">Runs a week</span>
-          <input type="number" min="1" step="5" value={props.play.runsPerWeek} onInput={(event) => {
-            const value = Number((event.currentTarget as HTMLInputElement).value)
-            if (Number.isFinite(value) && value >= 1) props.setPlay({ ...props.play, runsPerWeek: value })
-          }} />
-          <span class="knob-default">shipped {defaultPlay.runsPerWeek}</span>
-        </label>
+        <PlayNumber label="Minutes a run" help="How long a run takes with its menus: turns runs into hours played." value={props.play.minutesPerRun} shipped={defaultPlay.minutesPerRun} step={0.5} min={0.5}
+          set={(value) => props.setPlay({ ...props.play, minutesPerRun: value })} />
+        <PlayNumber label="Runs a week" help="How many runs the player plays a week: paces the weekly hardcore rewards (more weeks, more of them)." value={props.play.runsPerWeek} shipped={defaultPlay.runsPerWeek} step={5} min={1}
+          set={(value) => props.setPlay({ ...props.play, runsPerWeek: value })} />
+        <SkillNumbers skill={props.play} shipped={defaultPlay} set={(skill) => props.setPlay({ ...props.play, ...skill })} />
         <label class={props.play.calls !== defaultPlay.calls ? "knob changed" : "knob"} title="Whether the Spirit Call brings a fourth character in chapter 3.">
           <span class="knob-label">A called character in chapter 3</span>
           <input type="checkbox" checked={props.play.calls} onChange={(event) => props.setPlay({ ...props.play, calls: (event.currentTarget as HTMLInputElement).checked })} />
         </label>
+      </section>
+      <section>
+        <h4>Range: skilled player</h4>
+        <SkillNumbers skill={props.play.skilled} shipped={defaultPlay.skilled} set={(skilled) => props.setPlay({ ...props.play, skilled })} />
+      </section>
+      <section>
+        <h4>Range: struggling player</h4>
+        <SkillNumbers skill={props.play.struggling} shipped={defaultPlay.struggling} set={(struggling) => props.setPlay({ ...props.play, struggling })} />
       </section>
       {groups.map((group) => (
         <section>
@@ -165,6 +183,12 @@ const App = () => {
   const shipped = useMemo(() => journeyOf(defaultTuning, defaultPlay), [])
   const { patch, tuning } = useMemo(() => tuningFor(values), [values])
   const journey = useMemo(() => journeyOf(tuning, play), [tuning, play])
+  const skilled = useMemo(() => journeyOf(tuning, playing(play, play.skilled)), [tuning, play])
+  const struggling = useMemo(() => journeyOf(tuning, playing(play, play.struggling)), [tuning, play])
+  const range = (of: Journey) => new Map(of.rows.map((row) => [`${row.quest}@${row.rank}`, of.hoursAt(row.runs)]))
+  const skilledAt = range(skilled), strugglingAt = range(struggling)
+  /** Main quests cleared (every rank) by hours played. */
+  const progress = (of: Journey): ReadonlyArray<Point> => [[0, 0], ...of.rows.map((row, index): Point => [of.hoursAt(row.runs), index + 1])]
   const problems = useMemo(() => (Object.keys(values).length === 0 ? [] : validateContent(tuning)), [tuning, values])
   const now = summary(journey), before = summary(shipped)
   const price = tuning.calls.price.crystals ?? 1
@@ -226,13 +250,32 @@ const App = () => {
           )}
         </header>
         <div class="tiles">
-          <Tile label="Everything cleared" value={hours(now.hours)} sub={`${now.runs} runs (plus hardcore) · ${now.weeks.toFixed(1)} weeks at ${play.runsPerWeek} runs`} now={now.hours} shipped={before.hours} format={hours} />
+          <Tile label="Everything cleared" value={hours(now.hours)} sub={`skilled ${hours(skilled.hours)} – struggling ${hours(struggling.hours)} · ${now.runs} runs, ${now.weeks.toFixed(1)} weeks`} now={now.hours} shipped={before.hours} format={hours} />
           <Tile label="Runs farming" value={`${now.farmed}`} sub={`${Math.round((now.farmed / Math.max(1, now.runs)) * 100)}% of all runs`} now={now.farmed} shipped={before.farmed} format={(value) => `${Math.round(value)}`} />
           <Tile label="Gold earned" value={compact(now.gold)} now={now.gold} shipped={before.gold} format={compact} />
           <Tile label="Crystals earned" value={compact(now.crystals)} sub={`${Math.floor(now.crystals / price)} calls`} now={now.crystals} shipped={before.crystals} format={compact} />
           <Tile label="Quests with heavy farming" value={`${now.heavy}`} sub={`${farmFlag}+ runs before them · ${now.walls} with a wall`} now={now.heavy} shipped={before.heavy} format={(value) => `${Math.round(value)}`} />
         </div>
         <div class="charts">
+          <Chart
+            title="Main quests cleared"
+            note={`Main quests cleared, every rank counted, by hours played: the line's player, and the range from a skilled one (${play.skilled.levelsAhead} levels under the enemies, ${Math.round(play.skilled.lost * 100)}% lost) to a struggling one (${play.struggling.levelsAhead} levels under, ${Math.round(play.struggling.lost * 100)}% lost).`}
+            lines={[
+              { id: "skilled", label: "Skilled", color: "var(--s1)", dashed: true, step: true, points: progress(skilled) },
+              { id: "line", label: "The line", color: "var(--ink-1)", step: true, points: progress(journey) },
+              { id: "struggling", label: "Struggling", color: "var(--s2)", dashed: true, step: true, points: progress(struggling) }
+            ]}
+            band={{ from: progress(skilled), to: progress(struggling), color: "var(--s1)" }}
+            ghosts={[{ id: "shipped", label: "The line (shipped)", color: "var(--ghost)", step: true, points: progress(shipped) }]}
+            markers={rankDone}
+            xTitle={`Hours played, at ${play.minutesPerRun} minutes a run`}
+            formatX={hours}
+            formatY={(value) => `${Math.round(value)}`}
+            extra={(x) => {
+              const row = journey.rows.findLast((each) => journey.hoursAt(each.runs) <= x + 1e-9)
+              return row === undefined ? null : `The line's last: ${questLabel(tuning, row.quest, row.rank)}`
+            }}
+          />
           <Chart
             title="Character levels"
             note="Each character's level as she is trained, against the enemy level of the main quest she enters next."
@@ -303,7 +346,7 @@ const App = () => {
           <h3>Main quests, in the order played</h3>
           <table>
             <thead>
-              <tr><th>Quest</th><th>Chapter</th><th class="num">Enemies</th><th>Team entering</th><th class="num">Farmed (trial)</th><th class="num">Cleared at (played)</th><th class="num">Gold held after</th><th>Flags</th></tr>
+              <tr><th>Quest</th><th>Chapter</th><th class="num">Enemies</th><th>Team entering</th><th class="num">Farmed (trial)</th><th class="num">Cleared at (played)</th><th class="num">Skilled – struggling</th><th class="num">Gold held after</th><th>Flags</th></tr>
             </thead>
             <tbody>
               {journey.rows.map((row) => {
@@ -317,6 +360,7 @@ const App = () => {
                     <td>{row.team.map((member) => `${tuning.characters[member.character].name} ${member.level}`).join(", ")}</td>
                     <td class="num">{row.farmed} ({row.trial}){old !== undefined && old.farmed !== row.farmed ? <span class="was"> was {old.farmed}</span> : null}</td>
                     <td class="num">{hours(journey.hoursAt(row.runs))}{old !== undefined && old.runs !== row.runs ? <span class="was"> was {hours(shipped.hoursAt(old.runs))}</span> : null}</td>
+                    <td class="num">{hours(skilledAt.get(`${row.quest}@${row.rank}`) ?? 0)} – {hours(strugglingAt.get(`${row.quest}@${row.rank}`) ?? 0)}</td>
                     <td class="num">{compact(row.gold)}</td>
                     <td>{[row.farmed >= farmFlag ? "FARM" : "", row.walls.length > 0 ? `WALL ${row.walls.map((id) => tuning.characters[id].name).join(" ")}` : ""].filter(Boolean).join(" ")}</td>
                   </tr>
