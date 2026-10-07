@@ -88,10 +88,19 @@ describe("raising a guard", () => {
     expect(away!.health).toBe(100_000)
   })
 
-  it("leaves her untouchable while it rises", () => {
+  it("leaves her untouchable only as the ring bursts: while the stone gathers, blows reach her, and it still rises", () => {
     const run = field([], { keys: [raise(1)] })
     run.step(3)
-    expect(run.world().player.invulnerable).toBeGreaterThan(effect.raise - 0.2)
+    expect(run.world().player.invulnerable).toBeGreaterThan(0)
+    expect(defaultTuning.skills.stoneGuard.invulnerability).toBeLessThan(effect.raise / 2)
+    run.step(steps(defaultTuning.skills.stoneGuard.invulnerability))
+    expect(run.world().player.invulnerable).toBe(0)
+    const before = run.world().player.health
+    run.strike(null, 10)
+    run.step(1)
+    expect(run.world().player.health).toBeLessThan(before)
+    run.step(steps(effect.raise))
+    expect(run.world().plates).toBe(effect.plates)
   })
 
   it("roots her while the stone gathers, then the team holds its plates", () => {
@@ -110,10 +119,13 @@ describe("raising a guard", () => {
     expect(run.world().player.position.x - raised).toBeGreaterThan(20)
   })
 
-  it("is lost to a dash", () => {
+  it("holds her still: a dash pressed while it rises does not happen, now or after, and the plates come", () => {
     const run = field([], { keys: [raise(1), ...doubleTap("down", 6)] })
+    run.step(3)
+    const before = run.world().player.position
     run.step(steps(effect.raise) + 10)
-    expect(run.world().plates).toBe(0)
+    expect(run.world().plates).toBe(effect.plates)
+    expect(Math.hypot(run.world().player.position.x - before.x, run.world().player.position.y - before.y)).toBeLessThan(2)
   })
 
   it("is lost when she leaves the field", () => {

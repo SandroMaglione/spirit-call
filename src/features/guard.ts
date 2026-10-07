@@ -1,14 +1,14 @@
 /**
  * Guards (see `GuardEffect` and docs/elements.md, "Guarding"): a ring of
  * stone bursts out as it is cast, then a guard is raised over a moment, its
- * caster rooted (`Raising`, lost if she leaves
- * the field or dashes), then the team holds stone plates (`Guard`), worn by
+ * caster rooted (`Raising`: she cannot dash, and she can be hit; lost if she
+ * leaves the field), then the team holds stone plates (`Guard`), worn by
  * whoever is on the field. `ApplyDamage` spends a plate on an enemy blow on
  * her (burns and bursts pass through), which takes nothing of it and
  * shatters (a `PlateShatter`, carried out by `ShatterPlates`): its blow lands
  * around her, and the attacker's break bar fills.
  */
-import { blow, Cast, Dash, Enemy, Explosion, Game, Guard, Guarded, Health, Hitbox, Member, Player, Poise, PlateShatter, Position, Raising, RunScope, Time, Tuning } from "../schema.ts"
+import { blow, Cast, Enemy, Explosion, Game, Guard, Guarded, Health, Hitbox, Member, Player, Poise, PlateShatter, Position, Raising, RunScope, Time, Tuning } from "../schema.ts"
 import type { Faction, GuardValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { poiseOf } from "./poise.ts"
@@ -43,13 +43,13 @@ export const CastGuards = Game.System("Shooter/CastGuards", {
 
 /**
  * Raising guards: rooted while the stone gathers (see `ControlPlayer` and
- * `UseBasicAttack`); once raised, the team holds the guard's plates. A
- * member who left the field or dashed loses it.
+ * `UseBasicAttack`; she cannot dash meanwhile); once raised, the team holds
+ * the guard's plates. A member who left the field loses it.
  */
 export const RaiseGuards = Game.System("Shooter/RaiseGuards", {
   queries: {
     raising: Game.Query({
-      selection: { raising: Game.Query.write(Raising), player: Game.Query.optional(Player), dash: Game.Query.optional(Dash), position: Game.Query.optional(Position) },
+      selection: { raising: Game.Query.write(Raising), player: Game.Query.optional(Player), position: Game.Query.optional(Position) },
       with: [Member]
     })
   },
@@ -59,7 +59,7 @@ export const RaiseGuards = Game.System("Shooter/RaiseGuards", {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.raising.each()) {
     const raising = data.raising.get()
-    const lost = !data.player.present || !data.position.present || (data.dash.present && data.dash.get().remaining > 0)
+    const lost = !data.player.present || !data.position.present
     const remaining = raising.remaining - dt
     if (lost || remaining <= 1e-9) commands.remove(entity.id, Raising)
     if (lost) continue

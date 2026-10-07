@@ -108,8 +108,9 @@ something:
 
 - **Her Stoneguard** (her ultimate) takes a moment to raise. As she casts
   it a ring of stone bursts out around her, cracking and throwing back
-  what crowds her, and she stands rooted and untouchable while the stone
-  gathers (switched out or dashing before it is done, it is lost). It
+  what crowds her (untouchable only as it bursts), and she stands rooted
+  while the stone gathers: she cannot dash, and blows reach her, which is
+  the risk of her ultimate (switched out before it is done, it is lost). It
   gives the team **stone plates**, a few at most, shown as slabs of stone
   around the character on the field. They belong to the team, not to her:
   they stay through switches and waves until spent, and casting again
