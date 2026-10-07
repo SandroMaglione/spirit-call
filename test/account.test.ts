@@ -1,7 +1,7 @@
 import { experienceTo } from "../src/account/progression.ts"
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, earnedResources, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, earnedResources, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { rankGates } from "../src/content/ranks.ts"
 import type { ChestRef, Earned, Play } from "../src/account/account.ts"
@@ -63,19 +63,23 @@ describe("account rules", () => {
     expect(first.earned.pay).toEqual({})
   })
 
+  it("rounds gold as a person would count it", () => {
+    expect([roundGold(31), roundGold(357), roundGold(1357), roundGold(13_571)]).toEqual([30, 360, 1350, 13_600])
+  })
+
   it("pays gold for every run by its enemies' level, and a loss its share of the progress made", () => {
     const { gold, loss } = defaultTuning.progression
     const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: noTally, challenge: "swarm" as const, wave: 3, kills: 40, time: 60 }
     const clear = (level: number) => gold.base + gold.perLevel * level
     expect(runPay(gold, loss, 5, run)).toBe(clear(5))
     expect(runPay(gold, loss, 20, run)).toBe(clear(20))
-    expect(runPay(gold, loss, 5, { ...run, cleared: false, progress: 2 / 3 })).toBe(Math.round(clear(5) * loss * 2 / 3))
+    expect(runPay(gold, loss, 5, { ...run, cleared: false, progress: 2 / 3 })).toBe(roundGold(clear(5) * loss * 2 / 3))
     expect(runPay(gold, loss, 5, { ...run, cleared: false, progress: 0 })).toBe(0)
     // Kills and speed do not count.
     expect(runPay(gold, loss, 5, { ...run, kills: 0, time: 600 })).toBe(clear(5))
     const level = defaultTuning.quests.firstBlood.enemyLevel
     const lost = recordRun(defaultTuning, fresh(), quest("firstBlood"), { ...run, cleared: false, progress: 0.5 }, 2000)
-    expect(lost.earned.pay).toEqual({ gold: Math.round(clear(level) * loss * 0.5) })
+    expect(lost.earned.pay).toEqual({ gold: roundGold(clear(level) * loss * 0.5) })
     expect(lost.account.wallet.gold).toBe(lost.earned.pay.gold)
     const again = recordRun(defaultTuning, lost.account, quest("firstBlood"), run, 3000)
     const won = recordRun(defaultTuning, again.account, quest("firstBlood"), run, 4000)

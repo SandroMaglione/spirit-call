@@ -137,6 +137,14 @@
 
 /* ---------- challenges ---------- */
 .quests__list { --list: clamp(200px, 31cqw, 262px); position: absolute; left: var(--left); top: 62px; bottom: 0; width: var(--list); z-index: 3; display: grid; gap: 5px; align-content: start; padding-bottom: 28px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }
+/* The ranks, fixed above the quest list (which scrolls under them), styled like the top tabs. */
+.quests__ranks { position: absolute; left: var(--left); top: 62px; width: clamp(200px, 31cqw, 262px); z-index: 4; justify-content: space-between; }
+.quests__ranks button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 6px; font-size: 13px; }
+.quests__ranks button b { min-width: 20px; height: 18px; padding: 0 4px; border-radius: 9px; display: grid; place-items: center; font-size: 10.5px; font-weight: 800; background: rgba(255, 255, 255, .12); }
+.quests__ranks button[aria-selected="true"] b { background: var(--ink); color: var(--cream); }
+.quests__ranks button .menu-icon { font-size: 11px; }
+.quests__ranks button.is-locked { opacity: .55; }
+.quests__list.has-ranks { top: 114px; }
 .quests__list .label { margin-top: 18px; }
 .quests__list .label:first-child { margin-top: 0; }
 .quests__list .label > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

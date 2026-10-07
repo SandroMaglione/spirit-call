@@ -404,7 +404,7 @@ export const chestRewards = (tuning: Tuning, chest: ChestRef): Amounts => {
   const spec = tuning.chests[chest.group][chest.index]!
   if (chest.rank === 1) return spec.rewards
   const level = spec.level + tuning.ranks.offset * (chest.rank - 1)
-  const gold = Math.round((spec.rewards.gold ?? 0) * clearPay(tuning.progression.gold, level) / clearPay(tuning.progression.gold, spec.level))
+  const gold = roundGold((spec.rewards.gold ?? 0) * clearPay(tuning.progression.gold, level) / clearPay(tuning.progression.gold, spec.level))
   // Materials come from the trials by then: a higher rank's chests hold none.
   return { crystals: Math.round((spec.rewards.crystals ?? 0) * tuning.ranks.crystals), gold }
 }
@@ -637,8 +637,15 @@ export const earnedResources = (tuning: Tuning, earned: Earned): ReadonlyArray<E
  * `progression.loss`). Kills and speed do not count.
  */
 export const runPay = (pay: RunPay, loss: number, enemyLevel: number, result: RunResultValue): number => {
-  const share = result.cleared ? 1 : loss * Math.min(1, Math.max(0, result.progress))
-  return Math.round(clearPay(pay, enemyLevel) * share)
+  // A clear pays the curve's own round amounts; a loss its share, rounded as a person would count it.
+  if (result.cleared) return clearPay(pay, enemyLevel)
+  return roundGold(clearPay(pay, enemyLevel) * loss * Math.min(1, Math.max(0, result.progress)))
+}
+
+/** Gold as a person would count it: to 5 below 100, to 10 below 1,000, to 50 below 10,000, to 100 above. */
+export const roundGold = (amount: number): number => {
+  const step = amount < 100 ? 5 : amount < 1000 ? 10 : amount < 10000 ? 50 : 100
+  return Math.round(amount / step) * step
 }
 
 /** What a clear against enemies of `enemyLevel` pays along `pay`. */
