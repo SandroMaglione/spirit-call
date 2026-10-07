@@ -374,10 +374,13 @@ describe("what a run earned, for the results", () => {
     }
     const chest = defaultTuning.chests.one[0]!.rewards
     const discovery = defaultTuning.discoveries.withSwordsman.rewards
-    expect(earnedResources(defaultTuning, earned)).toEqual([
+    const resources = earnedResources(defaultTuning, earned)
+    expect(resources.slice(0, 3)).toEqual([
       { id: "crystals", total: 20 + 100 + (discovery.crystals ?? 0) + (chest.crystals ?? 0), fromChests: chest.crystals ?? 0 },
       { id: "gold", total: 400 + 300 + (discovery.gold ?? 0) + (chest.gold ?? 0), fromChests: chest.gold ?? 0 },
-      { id: "fireEssence", total: 2, fromChests: 0 }
+      { id: "fireEssence", total: 2 + (chest.fireEssence ?? 0), fromChests: chest.fireEssence ?? 0 }
     ])
+    // A chest also holds a little of every other element's material.
+    expect(resources.slice(3)).toEqual((["waterEssence", "windEssence", "thunderEssence", "rockEssence"] as const).map((id) => ({ id, total: chest[id] ?? 0, fromChests: chest[id] ?? 0 })))
   })
 })

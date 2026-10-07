@@ -18,7 +18,9 @@ import type { ChallengeId, EliteElement } from "./challenges.ts"
 import type { CharacterId } from "./characters.ts"
 import type { Amounts } from "./currencies.ts"
 import type { AspectId } from "./aspects.ts"
+import { elements } from "./elements.ts"
 import type { ElementId } from "./elements.ts"
+import { materialOf, materialRules, worthAt } from "./materials.ts"
 import type { EnemyKind } from "./enemies.ts"
 import type { HazardElement, Novelty } from "./novelties.ts"
 import { atLeast, atMost, cleared } from "./stars.ts"
@@ -189,7 +191,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "emberKiln",
     introduces: brings("Guardians: heavy, patient, and a thrust that reaches far", enemy("guardian")),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 13)],
     rewards: pays(200, 100, 1200)
   }),
   bulwark: quest({
@@ -202,7 +204,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "ironGuard",
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 7)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 8)],
     rewards: pays(220, 150, 1750)
   }),
 
@@ -230,7 +232,7 @@ export const quests = {
     ranks: ranks([28, "theWarlord"]),
     after: "ashfall",
     introduces: brings("Snipers: a fast thunder bullet from afar. Walls stop it", enemy("sniper")),
-    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 6)],
     rewards: pays(260, 150, 3500)
   }),
   theBrute: quest({
@@ -271,7 +273,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "bruteKing",
     introduces: brings("Water in the floor: it soaks and slows whoever wades in", hazard("water")),
-    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("breaks", 4), atMost("hitsTaken", 12)],
     rewards: pays(320, 150, 4200)
   }),
   bombardment: quest({
@@ -297,7 +299,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "bombardment",
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 6)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 12)],
     rewards: pays(360, 150, 4900)
   }),
   swarmMother: quest({
@@ -310,7 +312,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "shieldWall",
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 13)],
     rewards: pays(380, 200, 6300)
   }),
 
@@ -325,7 +327,7 @@ export const quests = {
     ranks: [],
     after: "swarmMother",
     introduces: brings("Stalkers: keep away, and they blink to you. Their mark shows where", enemy("stalker")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 9)],
     rewards: pays(400, 200, 6300)
   }),
   theCloister: quest({
@@ -351,7 +353,7 @@ export const quests = {
     ranks: [],
     after: "theCloister",
     introduces: brings("Thunder elites: they strike the soaked hardest", elites("thunder")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 12)],
     rewards: pays(440, 200, 7700)
   }),
   theWarlord: quest({
@@ -379,7 +381,7 @@ export const quests = {
     ranks: [],
     after: "theWarlord",
     introduces: brings("Juggernauts: armored until broken. Break them, then strike", enemy("juggernaut")),
-    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 23)],
     rewards: pays(480, 200, 9100)
   }),
   powderKeg: quest({
@@ -405,7 +407,7 @@ export const quests = {
     ranks: [],
     after: "powderKeg",
     introduces: brings("Gale casters: a cone of wind that blows everyone around", enemy("galeCaster")),
-    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 8)],
     rewards: pays(520, 200, 10500)
   }),
   colossus: quest({
@@ -418,7 +420,7 @@ export const quests = {
     ranks: [],
     after: "galeForce",
     introduces: brings("A burning champion juggernaut, armored until broken", champion("juggernaut")),
-    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 6)],
+    stars: [cleared(), atLeast("breaks", 6), atMost("hitsTaken", 10)],
     rewards: pays(560, 250, 12600)
   }),
 
@@ -446,7 +448,7 @@ export const quests = {
     ranks: ranks([22, "swarmMother"], [34, "colossus"]),
     after: "bulwark",
     introduces: null,
-    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 6)],
     rewards: pays(120, 60, 700)
   }),
   eliteHunt: quest({
@@ -472,7 +474,7 @@ export const quests = {
     ranks: ranks([34, "colossus"]),
     after: "swarmMother",
     introduces: null,
-    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
+    stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 15)],
     rewards: pays(200, 80, 3500)
   }),
   stormFront: quest({
@@ -499,7 +501,7 @@ export const quests = {
     ranks: [],
     after: "colossus",
     introduces: null,
-    stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 5)],
+    stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 7)],
     rewards: pays(280, 100, 7000)
   }),
   strangeCompany: quest({
@@ -517,42 +519,52 @@ export const quests = {
   })
 }
 
+/**
+ * A chest at `stars`: crystals, gold, and some of every element's material
+ * (a clear's worth at `level`), so a character the Spirit Call brought
+ * early can take her first steps before her element's trial opens.
+ */
+const chest = (stars: number, crystals: number, gold: number, level: number): ChestSpec => ({
+  stars,
+  rewards: { crystals, gold, ...Object.fromEntries((Object.keys(elements) as Array<ElementId>).map((element) => [materialOf(element), worthAt(materialRules, level)])) }
+})
+
 /** The chests each group's stars open, fewest stars first (see docs/quests.md). */
 export const chests: { readonly [Group in StarGroup]: ReadonlyArray<ChestSpec> } = {
   one: [
-    { stars: 3, rewards: { crystals: 60, gold: 350 } },
-    { stars: 6, rewards: { crystals: 60, gold: 500 } },
-    { stars: 9, rewards: { crystals: 100, gold: 900 } }
+    chest(3, 60, 350, 3),
+    chest(6, 60, 500, 3),
+    chest(9, 100, 900, 3)
   ],
   two: [
-    { stars: 4, rewards: { crystals: 60, gold: 900 } },
-    { stars: 8, rewards: { crystals: 80, gold: 1200 } },
-    { stars: 12, rewards: { crystals: 120, gold: 1750 } }
+    chest(4, 60, 900, 8),
+    chest(8, 80, 1200, 8),
+    chest(12, 120, 1750, 8)
   ],
   three: [
-    { stars: 4, rewards: { crystals: 80, gold: 1750 } },
-    { stars: 8, rewards: { crystals: 80, gold: 2450 } },
-    { stars: 12, rewards: { crystals: 120, gold: 3500 } }
+    chest(4, 80, 1750, 13),
+    chest(8, 80, 2450, 13),
+    chest(12, 120, 3500, 13)
   ],
   four: [
-    { stars: 4, rewards: { crystals: 100, gold: 2800 } },
-    { stars: 8, rewards: { crystals: 100, gold: 3500 } },
-    { stars: 12, rewards: { crystals: 160, gold: 4900 } }
+    chest(4, 100, 2800, 19),
+    chest(8, 100, 3500, 19),
+    chest(12, 160, 4900, 19)
   ],
   five: [
-    { stars: 4, rewards: { crystals: 100, gold: 4200 } },
-    { stars: 8, rewards: { crystals: 100, gold: 5250 } },
-    { stars: 12, rewards: { crystals: 160, gold: 7000 } }
+    chest(4, 100, 4200, 25),
+    chest(8, 100, 5250, 25),
+    chest(12, 160, 7000, 25)
   ],
   six: [
-    { stars: 4, rewards: { crystals: 100, gold: 5600 } },
-    { stars: 8, rewards: { crystals: 100, gold: 7000 } },
-    { stars: 12, rewards: { crystals: 160, gold: 9100 } }
+    chest(4, 100, 5600, 31),
+    chest(8, 100, 7000, 31),
+    chest(12, 160, 9100, 31)
   ],
   secondary: [
-    { stars: 6, rewards: { crystals: 60, gold: 1050 } },
-    { stars: 12, rewards: { crystals: 80, gold: 2800 } },
-    { stars: 18, rewards: { crystals: 120, gold: 5600 } }
+    chest(6, 60, 1050, 15),
+    chest(12, 80, 2800, 15),
+    chest(18, 120, 5600, 15)
   ]
 }
 

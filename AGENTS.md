@@ -52,6 +52,9 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 - `pnpm progression`: a new account played through the main line on the
   account's rules (levels, farming, materials, trials; see
   `docs/quests.md`). Run it after changing rewards, costs, or quests.
+- `pnpm expected`: every quest, side quest, rank, hardcore tier, and trial
+  rank fought by the bot with the team a new account has when it opens
+  (from `pnpm progression`): cleared or not, and hits beside the hit budget.
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,

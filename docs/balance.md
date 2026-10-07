@@ -20,6 +20,22 @@ aspect deals within 25% of its class's plain aspect by the numbers
 (`validateContent`); what passives, bounces, and chains add is for the lab
 and play to judge.
 
+## The expected team (October 2026)
+
+`pnpm progression` plays a new account through the main line on the
+account's own rules (`test/progression-model.ts`), and `pnpm expected`
+fights everything with the team it has when each opens, at its levels: a
+main quest with the team entering it, a side quest, rank, tier, or trial
+rank with the team leaving the quest that opens it. The bot plays its first
+member's way and switches every few seconds. With the first numbers every
+main quest cleared on both seeds; the hit budgets of quests the expected
+team took more hits in than the lab's level-1 probe were raised to about
+its average. `test/new-account.test.ts` holds the account to the
+progression: no member waiting at a step with no trial open for her element,
+no endless farming before a quest, and none in chapter one. Chests pay a
+clear's worth of every element's material, so a character the Spirit Call
+brings early can take her first step before her element's trial opens.
+
 ## Six chapters (October 2026)
 
 The main line was rebuilt into six chapters, one new thing per quest (see
