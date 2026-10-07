@@ -15,6 +15,7 @@ import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
 import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
 import type { Novelty } from "../../content/novelties.ts"
+import type { TwistValue } from "../../schema.ts"
 import { Face } from "../kit/art.tsx"
 import type { CharacterId } from "../../content/characters.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
@@ -189,6 +190,21 @@ const NewThing = ({ store, challenge, novelty, text, inspect }: { readonly store
   </div>
 }
 
+/** A higher rank's twist, first in its brief where a quest's new thing would be: what makes the replay harder. */
+const RankTwist = ({ rank, twist }: { readonly rank: number; readonly twist: TwistValue }) => {
+  const lines = [
+    ...(twist.elites === null ? [] : [`From the second wave, each wave is led by an elite of ${twist.elites}.`]),
+    ...(twist.shields ? ["Each wave's leader carries a shield."] : [])
+  ]
+  return <div class="novelty">
+    <span class="novelty__art novelty__floor" data-tint={twist.elites ?? ""}><Icon name={twist.elites ?? "star"} /></span>
+    <div>
+      <Label>Rank {rankNames[rank - 1] ?? rank} · harder</Label>
+      <p>{lines.length === 0 ? "Stronger enemies." : `Stronger enemies. ${lines.join(" ")}`}</p>
+    </div>
+  </div>
+}
+
 /**
  * What `play` is, most wanted first: its ranks or tiers (each with its
  * enemies' level), its stars beside what it gives, then its enemies over
@@ -225,7 +241,8 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
     subtitle={quest !== null && quest.introduces === null ? "Side quest · what you have met, mixed" : undefined}
     detail={describeObjective(challenge.objective, challenge.waves.scripted.length)}
     note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
-    {quest?.introduces != null && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
+    {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
+    {quest !== null && rank > 1 && <RankTwist rank={rank} twist={encounter.twist} />}
     {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : "Tier"}>
       <Label>{selected.kind === "quest" || trial ? "Rank" : "Tier"}</Label>
       {steps.map((step) => {
