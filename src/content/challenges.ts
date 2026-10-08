@@ -172,16 +172,20 @@ export const challenges = {
     ["chaser", "chaser", "chaser", "chaser", "shooter", "shooter"],
     ["shooter", "shooter", "shooter", "chaser", "chaser", "chaser"]
   ]),
-  /** The first champion: a burning chaser that stays across waves. */
-  packLeader: waves("The Pack Leader", "Eight waves; midway a burning champion chaser joins, and stays until it falls.", "monastery", [
+  /**
+   * The first champion: a burning chaser fighting in phases (see
+   * content/champions.ts). Once it is out, the waves around it are light: it
+   * is the fight.
+   */
+  packLeader: waves("The Pack Leader", "Eight waves; midway the Pack Leader joins, a burning champion chaser that fights in phases, and stays until it falls.", "monastery", [
     ["chaser", "chaser", "chaser"],
     ["shooter", "chaser", "chaser", "chaser"],
     ["shooter", "shooter", "chaser", "chaser"],
-    [champion("chaser", "fire"), "chaser", "chaser"],
-    ["shooter", "shooter", "chaser", "chaser"],
-    ["chaser", "chaser", "chaser", "shooter", "shooter"],
-    ["shooter", "shooter", "shooter", "chaser", "chaser"],
-    ["chaser", "chaser", "chaser", "chaser", "shooter", "shooter"]
+    [champion("chaser", "fire"), "chaser"],
+    ["shooter", "chaser"],
+    ["chaser", "chaser"],
+    ["shooter", "shooter"],
+    ["chaser", "shooter"]
   ]),
 
   // Chapter 2: the Swordsman and the Gunner.
@@ -218,16 +222,16 @@ export const challenges = {
     ["guardian", "guardian", "shooter", "shooter"],
     ["guardian", "guardian", "swarmer", "chaser", "chaser"]
   ]),
-  /** A burning champion guardian among the citadel's fire. */
-  bulwark: waves("The Bulwark", "Eight waves in the citadel; midway a burning champion guardian joins, and stays until it falls.", "citadel", [
+  /** The Bulwark among the citadel's fire: a burning champion guardian fighting in phases; the waves around it light. */
+  bulwark: waves("The Bulwark", "Eight waves in the citadel; midway the Bulwark joins, a burning champion guardian that fights in phases, and stays until it falls.", "citadel", [
     ["chaser", "chaser", "swarmer"],
     ["guardian", "shooter", "chaser"],
     ["swarmer", "swarmer", "shooter"],
     [champion("guardian", "fire"), "chaser"],
-    ["shooter", "shooter", "swarmer"],
-    ["guardian", "chaser", "chaser"],
-    ["swarmer", "shooter", "guardian"],
-    ["guardian", "swarmer", "chaser", "chaser", "shooter"]
+    ["shooter", "swarmer"],
+    ["chaser", "chaser"],
+    ["guardian"],
+    ["swarmer", "shooter"]
   ]),
 
   // Chapter 3: two characters, and whoever the Spirit Call brings.
@@ -264,16 +268,20 @@ export const challenges = {
     [elite("guardian", "water"), "sniper", "chaser", "chaser"],
     [elite("brute", "fire"), "brute", "shooter", "swarmer"]
   ]),
-  /** A burning champion brute in the kilnworks. */
-  bruteKing: waves("The Brute King", "Eight waves in the kilnworks; midway a burning champion brute joins, and stays until it falls.", "kilnworks", [
+  /**
+   * The Brute King in the kilnworks: a burning champion brute fighting with
+   * its own moveset, in phases (see content/champions.ts). Once it is out,
+   * the waves around it are light: it is the fight.
+   */
+  bruteKing: waves("The Brute King", "Eight waves in the kilnworks; midway the Brute King joins, a burning champion brute that fights in phases, and stays until it falls.", "kilnworks", [
     ["chaser", "chaser", "swarmer"],
     ["guardian", "shooter", "chaser"],
     ["brute", "swarmer"],
     [champion("brute", "fire"), "chaser"],
-    ["sniper", "shooter", "swarmer"],
-    [elite("guardian", "water"), "chaser"],
-    ["brute", "swarmer", "shooter"],
-    [elite("chaser", "fire"), "sniper", "guardian", "swarmer"]
+    ["shooter", "chaser"],
+    ["swarmer"],
+    ["guardian"],
+    ["sniper", "chaser"]
   ]),
 
   // Chapter 4: three characters.
@@ -310,16 +318,16 @@ export const challenges = {
     [shielded("sniper"), shielded("shooter"), "brute", "chaser"],
     [shielded(elite("guardian", "fire")), "charger", shielded("shooter"), "swarmer"]
   ]),
-  /** A champion swarmer of the tide: small, fast, and hard to pin down. */
-  swarmMother: waves("The Swarm Mother", "Eight waves at the harbor; midway a champion swarmer of the tide joins, and stays until it falls.", "harbor", [
+  /** The Swarm Mother: a champion swarmer of the tide fighting in phases, small, fast, and hard to pin down; the waves around her light. */
+  swarmMother: waves("The Swarm Mother", "Eight waves at the harbor; midway the Swarm Mother joins, a champion swarmer of the tide that fights in phases, and stays until she falls.", "harbor", [
     ["chaser", "chaser", "shooter"],
     ["charger", "swarmer"],
     [shielded("shooter"), "sniper", "chaser"],
     [champion("swarmer", "water"), shielded("guardian")],
-    ["brute", "swarmer"],
-    [elite("charger", "fire"), "shooter", "shooter"],
-    [shielded("guardian"), "sniper", "chaser", "chaser"],
-    [elite("brute", "water"), "charger", shielded("shooter"), "swarmer"]
+    ["charger", "chaser"],
+    [elite("shooter", "fire")],
+    [shielded("guardian")],
+    [elite("brute", "water")]
   ]),
 
   // Chapter 5.
@@ -357,16 +365,16 @@ export const challenges = {
     [elite("brute", "thunder"), elite("sniper", "thunder"), "warden", "shooter", "swarmer"]
   ]),
   /** A champion stalker charged with thunder, hunting you through the citadel. */
-  warlord: waves("The Warlord", "Nine waves in the citadel; midway a champion stalker charged with thunder joins, and hunts you until it falls.", "citadel", [
+  warlord: waves("The Warlord", "Nine waves in the citadel; midway the Warlord joins, a champion stalker charged with thunder that fights in phases, and hunts you until it falls.", "citadel", [
     ["guardian", "chaser", "chaser"],
     ["brute", "swarmer"],
     ["charger", "sniper", "chaser"],
     [champion("stalker", "thunder"), "chaser"],
-    ["warden", "shooter", "swarmer"],
-    [elite("guardian", "fire"), "sniper", "chaser"],
-    [shielded("brute"), "charger", "swarmer"],
-    [elite("chaser", "water"), elite("shooter", "thunder"), "warden", "guardian"],
-    [elite("brute", "fire"), "stalker", "sniper", "swarmer"]
+    ["warden", "shooter"],
+    [elite("guardian", "fire")],
+    ["charger", "swarmer"],
+    [elite("shooter", "thunder"), "chaser"],
+    ["stalker", "sniper"]
   ]),
 
   // Chapter 6.
@@ -403,16 +411,16 @@ export const challenges = {
     [elite("galeCaster", "water"), "warden", "volatile", "volatile"],
     ["galeCaster", "galeCaster", elite("brute", "thunder"), "swarmer"]
   ]),
-  /** A burning champion juggernaut. */
-  colossus: waves("The Colossus", "Eight waves; midway a burning champion juggernaut joins, armored until broken, and stays until it falls.", "courtyard", [
+  /** The Colossus: a burning champion juggernaut, armored until broken, fighting in phases; the waves around it light. */
+  colossus: waves("The Colossus", "Eight waves; midway the Colossus joins, a burning champion juggernaut armored until broken that fights in phases, and stays until it falls.", "courtyard", [
     ["chaser", "chaser", "volatile"],
     ["galeCaster", "shooter", "swarmer"],
     ["warden", "brute", "chaser"],
     [champion("juggernaut", "fire"), "chaser"],
-    ["stalker", "volatile", "volatile"],
-    [elite("sniper", "thunder"), "galeCaster", "swarmer"],
-    [shielded("guardian"), "charger", "warden"],
-    [elite("brute", "water"), "stalker", "volatile", "volatile", "galeCaster"]
+    ["stalker", "volatile"],
+    [elite("sniper", "thunder")],
+    ["galeCaster", "chaser"],
+    [shielded("guardian"), "volatile"]
   ]),
 
   // Side quests.

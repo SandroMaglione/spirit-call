@@ -4,8 +4,9 @@
  * the first one's build with `?character=gunner&aspect=marksman` and
  * `&relics=echo:3,repel` (each in its slot, at a tier from 1 to 3; 1 when
  * missing), everyone's levels with `?level=20`, and
- * `?challenge=swarm&enemyLevel=15`, and `?arena=cistern` to fight every
- * challenge in one arena. Unknown ids and levels that are not whole numbers
+ * `?challenge=swarm&enemyLevel=15`, `?arena=cistern` to fight every
+ * challenge in one arena, and `?wave=4` to start every challenge at its
+ * fourth wave (to try a champion without the waves before it). Unknown ids and levels that are not whole numbers
  * from 1 are ignored, so a typo keeps the default.
  */
 import type { Tuning } from "../config/tuning.ts"
@@ -27,6 +28,17 @@ export const arenaFromQuery = (tuning: Tuning, search: string): Tuning => {
   const arena = new URLSearchParams(search).get("arena")
   if (!known<ArenaId>(tuning.arenas, arena)) return tuning
   const challenges = Object.fromEntries(Object.entries(tuning.challenges).map(([id, challenge]) => [id, { ...challenge, arena }]))
+  return { ...tuning, challenges: challenges as Tuning["challenges"] }
+}
+
+/** `tuning` with every challenge's scripted waves from the URL's `wave` on (a whole number from 2), or as it is. */
+export const waveFromQuery = (tuning: Tuning, search: string): Tuning => {
+  const wave = Number(new URLSearchParams(search).get("wave") ?? Number.NaN)
+  if (!Number.isInteger(wave) || wave < 2) return tuning
+  const challenges = Object.fromEntries(Object.entries(tuning.challenges).map(([id, challenge]) => {
+    const scripted = challenge.waves.scripted
+    return [id, scripted.length < wave ? challenge : { ...challenge, waves: { ...challenge.waves, scripted: scripted.slice(wave - 1) } }]
+  }))
   return { ...tuning, challenges: challenges as Tuning["challenges"] }
 }
 

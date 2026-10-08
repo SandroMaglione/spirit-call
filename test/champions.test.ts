@@ -12,6 +12,7 @@ import type { ChallengeSpec } from "../src/content/challenges.ts"
 import { validateContent } from "../src/content/validate.ts"
 import { championPower, enemyStats, restOf } from "../src/features/enemies.ts"
 import { knockbackTaken } from "../src/features/motion.ts"
+import { movesetOf } from "../src/features/moveset.ts"
 import { poiseOf } from "../src/features/poise.ts"
 import { Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
 import { start } from "./helpers.ts"
@@ -91,7 +92,8 @@ describe("champions", () => {
     const base = enemyStats(defaultTuning, "chaser", 1)
     expect(one).toMatchObject({ kind: "chaser", champion: true, element: "fire" })
     const power = championPower(defaultTuning, 1)
-    expect(one!.health.max).toBe(Math.round(base.hp * power.health))
+    // A champion with its own moveset has its own share of a champion's health on top (see content/champions.ts).
+    expect(one!.health.max).toBe(Math.round(base.hp * power.health * (rules.movesets.chaser?.health ?? 1)))
     expect(one!.stats.atk).toBe(Math.round(base.atk * power.atk))
     expect(one!.stats.speed).toBeCloseTo(base.speed * rules.speed, 6)
     expect(one!.radius).toBeCloseTo(defaultTuning.enemies.chaser.radius * rules.scale, 6)
@@ -124,7 +126,7 @@ describe("champions", () => {
       const brute = run.runtime.inspect(Field).enemies.find((enemy) => enemy.champion)
       if (brute !== undefined) longest = Math.max(longest, brute.cooldown)
     }
-    const slowest = Math.max(...defaultTuning.enemies.brute.attacks.map((attack) => attack.cooldown))
+    const slowest = Math.max(...movesetOf(defaultTuning, { kind: "brute", champion: true }).map((attack) => attack.cooldown))
     expect(longest).toBeGreaterThan(0)
     expect(longest).toBeLessThanOrEqual(slowest * restOf(defaultTuning, 1, true) + 1e-9)
     // Later on, a champion waits less than its kind.

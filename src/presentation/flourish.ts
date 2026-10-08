@@ -11,12 +11,15 @@
  *   where she lands.
  * - A volley's shells: smoke trailing behind them, and a column of fire
  *   where each one blasts.
+ * - A champion's roar as a phase begins (see `Roused`): a flash of its
+ *   element, rings, and a long shake; and its shockwaves throwing up dust
+ *   along their rings as they run out.
  */
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Airborne, Cast, Explosion, Facing, Game, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Sounds, Tuning, UltimateCalled, UltimateMoment } from "../schema.ts"
+import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment } from "../schema.ts"
 import { airborneLift, diving } from "./actors.ts"
 
 const css = (color: number): string => `#${color.toString(16).padStart(6, "0")}`
@@ -152,5 +155,44 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
     const at = screenAt(explosion.at)
     fx.burst(at, { color: view.elements.fire, count: 14, speed: 200, size: 4, life: 0.55, gravity: -900, drag: 1, stretch: 5 })
     fx.burst(at, { color: view.ultimate, count: 6, speed: 160, size: 3, life: 0.4, gravity: -700, drag: 1, stretch: 4 })
+  }
+})
+
+export const ShowChampions = Game.System("Shooter/ShowChampions", {
+  queries: {
+    hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } })
+  },
+  events: { roused: Game.System.readEvent(Roused) },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
+}, ({ queries, events, services }) => {
+  const host = services.host
+  const fx = host.fx
+  const spec = view.champion.roar
+  // It roars: a flash of its element, rings out across the floor, sparks, and a long shake.
+  for (const roused of events.roused.all()) {
+    const color = roused.element === null ? view.telegraphLocked : view.elements[roused.element]
+    const at = screenAt(roused.at)
+    const body = screenAt(roused.at, bodyLift() * 1.6)
+    host.fx.flash(body, spec.flash, view.hitFlash, 0.2)
+    host.fx.flash(body, spec.flash * 1.5, color, 0.45)
+    for (let ring = 0; ring < 3; ring++) fx.ring(at, (180 + ring * 110) * projection.zoom, color, 0.45 + ring * 0.15)
+    fx.burst(body, { color, count: 40, speed: 620, size: 4.5, life: 0.6, stretch: 5, drag: 2 })
+    host.feedback.shake = Math.max(host.feedback.shake, spec.shake)
+    host.feedback.punch = Math.max(host.feedback.punch, 1.4)
+    services.sounds.play("ultimateRelease")
+  }
+  // A shockwave on its way out: dust thrown up along its ring.
+  const seconds = services.clock.frameSeconds
+  for (const { data } of queries.hitboxes.each()) {
+    const hitbox = data.hitbox.get()
+    if (hitbox.grows === undefined || hitbox.area.kind !== "ring" || hitbox.area.radius <= 0) continue
+    const area = hitbox.area
+    const count = Math.floor(area.radius * spec.dust * seconds + Math.random())
+    for (let index = 0; index < count; index++) {
+      const angle = Math.random() * Math.PI * 2
+      const out = { x: Math.cos(angle), y: Math.sin(angle) }
+      const from = screenAt({ x: area.center.x + out.x * area.radius, y: area.center.y + out.y * area.radius })
+      fx.dust(from, normalizeOr(toScreen(projection, out), { x: 0, y: -1 }), view.champion.roar.dustColor)
+    }
   }
 })

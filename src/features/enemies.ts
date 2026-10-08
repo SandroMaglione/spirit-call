@@ -11,7 +11,7 @@ import { SpatialGrid } from "../physics/grid.ts"
 import { FlowField } from "../physics/paths.ts"
 import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
-import { currentAttack, hasLineOfSight } from "./moveset.ts"
+import { behaviorOf, currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { keepOut, readPlayer, skirmishTurn, steer, unstickDirection } from "./behaviors.ts"
 import { waveLevelBonus } from "./challenges.ts"
@@ -35,6 +35,7 @@ import {
   PendingSpawn,
   Player,
   Position,
+  Rampage,
   Renderable,
   Respawns,
   RunScope,
@@ -97,7 +98,9 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const base = enemyStats(tuning, kind, level)
   const lead = champion && elite !== null ? tuning.champions : null
   const power = lead === null ? null : championPower(tuning, level)
-  const hp = elite === null ? base.hp : Math.round(base.hp * (power?.health ?? tuning.elites.health))
+  // A champion with its own moveset fights through its phases: its own share of a champion's health.
+  const own = lead === null ? 1 : tuning.champions.movesets[kind]?.health ?? 1
+  const hp = elite === null ? base.hp : Math.round(base.hp * (power === null ? tuning.elites.health : power.health * own))
   const atk = power === null ? base.atk : Math.round(base.atk * power.atk)
   const speed = lead === null ? base.speed : base.speed * lead.speed
   const { def } = base
@@ -117,10 +120,12 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const draft = elite === null
     ? body
     : Game.Command.insert(body, [Elite, { element: elite, trail: tuning.elites.trailEvery, discharge: tuning.elites.discharge.every * (0.5 + (at.x % 97) / 194), charging: null }])
+  // A champion with its own moveset fights in phases (see content/champions.ts).
+  const fighting = lead !== null && tuning.champions.movesets[kind] !== undefined ? Game.Command.insert(draft, [Rampage, { phase: 0, opened: 0, pressure: 0 }]) : draft
   const form = tuning.shields
   const shielded = !shield
-    ? draft
-    : Game.Command.insert(draft, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (form.arcDegrees * Math.PI) / 360, turnRate: (form.turnRate * Math.PI) / 180 }])
+    ? fighting
+    : Game.Command.insert(fighting, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (form.arcDegrees * Math.PI) / 360, turnRate: (form.turnRate * Math.PI) / 180 }])
   // A warder reaches for an ally as soon as it is out.
   return stats.ward === null ? shielded : Game.Command.insert(shielded, [Ward, { ally: null, formed: 0, wait: 0 }])
 }
@@ -301,7 +306,7 @@ export const SteerEnemies = (() => {
         readonly brain: (typeof enemies)[number]["data"]["brain"]
       }> = []
       for (const { data } of enemies) {
-        if (tuning.enemies[data.enemy.get().kind].behavior.kind !== "skirmish") continue
+        if (behaviorOf(tuning, data.enemy.get()).kind !== "skirmish") continue
         const mode = data.mode.get()
         if (mode === "engage") engaged += 1
         // Open, she gets the circling ones at once.
@@ -323,7 +328,8 @@ export const SteerEnemies = (() => {
       // Speed is a stat, so what changes stats (levels) changes it; soaked enemies are slowed, charges included.
       const slowed = stateSpeed(tuning, data.state.get())
       // Closing in on her while she is open, a melee enemy rushes.
-      const closing = spec.behavior.kind === "chase" || (spec.behavior.kind === "skirmish" && data.mode.get() === "engage")
+      const behavior = behaviorOf(tuning, data.enemy.get())
+      const closing = behavior.kind === "chase" || (behavior.kind === "skirmish" && data.mode.get() === "engage")
       const speed = data.stats.get().speed * slowed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
       const position = data.position.get()
       const radius = data.body.get().radius
@@ -337,14 +343,13 @@ export const SteerEnemies = (() => {
       }
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
-      const attack = currentAttack(tuning, kind, attacker)
+      const attack = currentAttack(tuning, data.enemy.get(), attacker)
       if (attack?.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
         data.velocity.set(scale(attacker.area.direction, attack.speed * slowed))
         continue
       }
 
       // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
-      const behavior = spec.behavior
       let mode = data.mode.get()
       if (behavior.kind === "skirmish") {
         const before = mode

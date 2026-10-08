@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultTuning } from "../src/config/tuning.ts"
+import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { entryChampion, entryElite, entryKind } from "../src/content/challenges.ts"
+import type { ChampionMoveset } from "../src/content/champions.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { runBot } from "./bot.ts"
 import { inArena } from "./helpers.ts"
@@ -30,14 +31,27 @@ describe("fairness", () => {
     }, 30_000)
   }
 
-  // Champions wait less between attacks, with their kind's telegraphs: still every hit avoidable.
+  // Champions wait less between attacks, with their kind's telegraphs: still every hit avoidable. Their own attacks:
+  // they call no one here (what they call is each a kind of its own, with its own test above).
+  const unsupported = tuningWith({ ...tuning, champions: { alone: 0 } })
   const champions = [...new Set(Object.values(defaultTuning.challenges).flatMap((challenge) => challenge.waves.scripted.flat().filter(entryChampion)))]
   for (const entry of champions) {
     const kind = entryKind(entry)
     it(`every attack of a ${kind} champion can be dodged`, () => {
       const enemies = [{ kind, offset: { x: 380, y: 0 }, champion: entryElite(entry)! }]
-      expect(runBot({ tuning, enemies, seconds: 25 }).hits).toBe(0)
-      expect(runBot({ tuning, enemies, seconds: 25, still: true }).hits).toBeGreaterThan(0)
+      expect(runBot({ tuning: unsupported, enemies, seconds: 25 }).hits).toBe(0)
+      expect(runBot({ tuning: unsupported, enemies, seconds: 25, still: true }).hits).toBeGreaterThan(0)
     }, 30_000)
+  }
+
+  // A champion with its own moveset, in each of its later phases: its roar, then what the phase brings.
+  for (const [kind, moveset] of Object.entries(defaultTuning.champions.movesets) as Array<[EnemyKind, ChampionMoveset]>) {
+    moveset.phases.forEach((phase, index) => {
+      it(`every attack of a ${kind} champion in its phase ${index + 2} can be dodged`, () => {
+        const enemies = [{ kind, offset: { x: 380, y: 0 }, champion: "fire" as const, health: phase.below - 0.01 }]
+        expect(runBot({ tuning: unsupported, enemies, seconds: 25 }).hits).toBe(0)
+        expect(runBot({ tuning: unsupported, enemies, seconds: 25, still: true }).hits).toBeGreaterThan(0)
+      }, 30_000)
+    })
   }
 })

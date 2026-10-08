@@ -207,7 +207,8 @@ export const view = {
     standing: 0.06
   },
   /** A perfect dodge's flash, ring, and streaks. */
-  perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7 },
+  /** A perfect dodge's flash, ring, and shake; a chain's later steps `chainGrowth` bigger each, and their count over her. */
+  perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7, chainGrowth: 0.3 },
   breaking: { bar: 0xffc857, full: 0xfff4d6, glow: 0xffc857, pulseHz: 5, ring: 90, flash: 70, shake: 9 },
   healthBack: 0x0d1117,
   healthFill: 0xff5d6c,
@@ -255,7 +256,13 @@ export const view = {
    * `glowPulse` at `pulseHz`), and its health bar over its head (`bar`
    * pixels wide, always shown).
    */
-  champion: { fill: 0.18, pulse: 0.06, pulseHz: 1.2, points: 6, outer: 26, glow: 0.42, glowPulse: 0.12, bar: 74 },
+  champion: {
+    fill: 0.18, pulse: 0.06, pulseHz: 1.2, points: 6, outer: 26, glow: 0.42, glowPulse: 0.12, bar: 74,
+    /** Where its health bar marks the phases still to come, and those it is past. */
+    phaseMark: { color: 0xffffff, ahead: 0.95, past: 0.3 },
+    /** Its roar: the flash's size and the shake; its shockwaves' dust (puffs per world unit of ring a second) and color. */
+    roar: { flash: 90, shake: 16, dust: 0.25, dustColor: 0xd8d2c4 }
+  },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6, ash: 0x3a3330 },
   /**

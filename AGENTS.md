@@ -67,7 +67,8 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
   `tools/progress/README.md`). It never edits content or ships.
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
   `?character=`, `?aspect=`, `?challenge=` for a quick start, and `?arena=` to
-  fight every challenge in one arena, and `?openCalls` to clear chapter one
+  fight every challenge in one arena, `?wave=4` to start every challenge at a
+  wave, and `?openCalls` to clear chapter one
   and add crystals once, to try the Spirit Call, and `?charged` to keep the
   team's energy full, to try ultimates); backquote (or the key left of 1 or of Z)
   opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all", "Open the Call").

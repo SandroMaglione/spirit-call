@@ -13,6 +13,7 @@
  */
 import { SpawnArena } from "./features/arena.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
+import { CallSupport, LeavePools, PressChampions, ReleaseShockwaves } from "./features/patterns.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { MoveDiscs } from "./features/discs.ts"
@@ -119,6 +120,10 @@ const gameplay = Game.Schedule.when(
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
   SteerEnemies,
   UpdateAttacks,
+  // What attacks let go beyond a hitbox (see `AttackReleased`).
+  ReleaseShockwaves,
+  CallSupport,
+  LeavePools,
   UpdateElites,
   UpdateBursts,
   IntegrateBodies,
@@ -162,6 +167,7 @@ const runOutcome = Game.Schedule.when(
   // blows and reactions of the step fill break bars.
   PerfectDodge,
   BuildPoise,
+  PressChampions,
   // What the step's blows and deaths set off (a kill's hit-stop must not drop them): a fallen enemy's burst,
   // a warder's tether cut.
   ArmBursts,

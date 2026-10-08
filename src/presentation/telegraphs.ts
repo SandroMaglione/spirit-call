@@ -15,9 +15,12 @@ import { drawArea } from "./draw.ts"
 /**
  * Everything dangerous, drawn on the floor: pools of elements (under
  * everything else, flickering for fire and rippling for water, fading as
- * they run out), attack windups (the exact area that will be hit, filling up
- * until it lands), active hitboxes, aim lines of shooters (brighter once the
- * aim locks), and spawn warnings.
+ * they run out), attack windups (the exact area that will be hit, dim while
+ * it tracks, bright once its aim locks), active hitboxes, and spawn
+ * warnings. An enemy's warnings show where, never when: nothing fills up
+ * counting down to the hit, so its timing is read from its body (and the
+ * aim locking, at least the fairness floor before it lands). Shots show no
+ * line: the shot itself is the warning, flying.
  */
 export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   queries: {
@@ -66,31 +69,22 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
   for (const { data } of queries.attackers.each()) {
     const attacker = data.attacker.get()
-    const spec = currentAttack(tuning, data.enemy.get().kind, attacker)
+    const spec = currentAttack(tuning, data.enemy.get(), attacker)
     if (spec === undefined || attacker.area === null || data.phase.get() !== "windup") continue
-    const progress = Math.min(1, attacker.elapsed / spec.windup)
     const area = attacker.area
-    if (area.kind === "line" && spec.kind === "volley") {
-      const locked = aimLocked(spec, "windup", attacker.elapsed)
-      const base = Math.atan2(area.direction.y, area.direction.x)
-      for (let shot = 0; shot < spec.count; shot++) {
-        const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
-        const end = { x: area.origin.x + Math.cos(base + offset) * area.length, y: area.origin.y + Math.sin(base + offset) * area.length }
-        const color = spec.element !== null ? view.elements[spec.element] : locked ? view.telegraphLocked : view.telegraph
-        g.line(area.origin.x, area.origin.y, end.x, end.y, locked ? 4 : 2, color, locked ? 0.75 : 0.35)
-      }
-      continue
-    }
+    // A shot shows no line: the shot itself is the warning.
+    if (area.kind === "line") continue
     // Attacks track until their aim locks: dim while tracking, bright once locked (the cue to move).
     // An element's attack is drawn in its element's color, so what it would put on you shows before it lands.
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
-    // A gust shows as wind: what it does is push.
-    const color = spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
-    drawArea(g, area, progress, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
-    // A blink: where it stands fades out, a ring closing in on it, as its mark fills where it will land.
+    // A gust shows as wind: what it does is push. A call for help, as the spawn warnings of what it calls.
+    const color = spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
+    // Where, never when: no fill counting down to the hit (its timing is read from its body).
+    drawArea(g, area, 0, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
+    // A blink: a ring around where it stands, as its mark shows where it will land.
     if (spec.kind === "blink") {
       const at = data.position.get()
-      g.strokeCircle(at.x, at.y, (data.body.get().radius + 14) * (1 - progress * 0.7), 3, color, 0.8 * (1 - progress))
+      g.strokeCircle(at.x, at.y, data.body.get().radius + 14, 3, color, 0.8)
     }
   }
 
@@ -130,7 +124,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   for (const { data } of queries.bursts.each()) {
     const burst = data.burst.get()
     const color = burst.element === null ? view.telegraphLocked : view.elements[burst.element.id]
-    drawArea(g, { kind: "circle", center: burst.at, radius: burst.radius }, 1 - burst.remaining / burst.fuse, { color, fill: 0.14, outline: 0.9 })
+    drawArea(g, { kind: "circle", center: burst.at, radius: burst.radius }, 0, { color, fill: 0.14, outline: 0.9 })
   }
 
   // Elites: a ring of their element under their feet, turning; a thunder elite's discharge fills its ring where it will strike.
@@ -157,8 +151,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     }
     if (elite.charging !== null) {
       const discharge = tuning.elites.discharge
-      const progress = 1 - elite.charging.remaining / discharge.windup
-      drawArea(g, { kind: "circle", center: elite.charging.at, radius: discharge.radius }, progress, { color, fill: 0.12, outline: 0.8 })
+      drawArea(g, { kind: "circle", center: elite.charging.at, radius: discharge.radius }, 0, { color, fill: 0.12, outline: 0.8 })
     }
   }
 
@@ -191,7 +184,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const flight = Math.min(1, elapsed / spec.flightTime)
     const fuse = spec.fuse > 0 ? Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse)) : flight >= 1 ? 1 : 0
     g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, flight < 1 ? 0.35 : 0.9)
-    if (fuse > 0) g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.25)
+    // A bomb's fuse shows burning only for the team's own (an enemy's is read from it landing, never counted down).
+    if (fuse > 0 && lobbed.faction === "player") g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.25)
     const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
     g.fillCircle(ground.x, ground.y, 7, view.shadow, 0.35)
     const screen = toScreen(projection, ground)

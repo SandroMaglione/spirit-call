@@ -133,7 +133,7 @@ describe("content", () => {
     expect(validateContent(broken)).toEqual(expect.arrayContaining([
       "quest crossfire: brings Chasers: they run in and swipe twice. Dodge, then strike back, which the main line already brought",
       "quest crossfire: shows the shooter too, which the main line has not brought yet",
-      "quest holdTheLine: shows the swarmer, the guardian, the shooter, the brute, the sniper, fire floors, water elites, fire elites, the champion brute before the main line introduces it (it opens after packLeader)",
+      "quest holdTheLine: shows the swarmer, the guardian, the shooter, the brute, the sniper, fire floors, the champion brute before the main line introduces it (it opens after packLeader)",
       "quest nightOfPacks: a side quest brings nothing new (it mixes what the main line brought)",
       "hardcore track untilFall tier 1: enemies of level 12 are more than 4 levels above packLeader (5), which opens it"
     ]))

@@ -211,7 +211,7 @@ describe("relics in play", () => {
 
   describe("on a perfect dodge", () => {
     // A dummy that winds up a wide swipe all around it (see test/spark.test.ts).
-    const swipe = { kind: "melee" as const, id: "swipe", minRange: 0, triggerRange: 400, windup: 1, aimLock: 0.5, active: 0.1, recovery: 0.5, cooldown: 5, power: 10, knockback: 0, weight: 1, followUp: null, element: null, lead: 0, reach: 130, arcDegrees: 360 }
+    const swipe = { kind: "melee" as const, id: "swipe", minRange: 0, triggerRange: 400, windup: 1, aimLock: 0.5, active: 0.1, recovery: 0.5, cooldown: 5, power: 10, knockback: 0, weight: 1, followUp: null, element: null, lead: 0, read: null, phase: 0, opens: false, reach: 130, arcDegrees: 360 }
     const swiping = tuningWith({ enemies: { dummy: { attacks: [swipe], respawnDelay: 100 } } })
     /** The step the swipe lands on her, when she stands still (the dummy 80 to her right). */
     const landsAt = (() => {

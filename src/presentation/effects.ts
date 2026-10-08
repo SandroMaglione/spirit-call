@@ -236,14 +236,18 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     const at = toScreen(projection, perfect.at)
     const heart = { x: at.x, y: at.y - 18 * projection.zoom }
     const spec = view.perfectDodge
-    fx.flash(heart, spec.flash, spec.color, 0.3)
-    fx.flash(heart, spec.flash * 0.45, view.hitFlash, 0.18)
-    fx.ring(at, spec.ring * projection.zoom, spec.color, 0.5)
-    fx.ring(at, spec.ring * 0.55 * projection.zoom, view.hitFlash, 0.3)
-    fx.burst(heart, { color: spec.color, count: 40, speed: 640, size: 3.5, life: 0.55, stretch: 5, drag: 3 })
+    // A chain's later steps go off bigger, its count over her.
+    const grow = 1 + spec.chainGrowth * (perfect.chain - 1)
+    fx.flash(heart, spec.flash * grow, spec.color, 0.3)
+    fx.flash(heart, spec.flash * 0.45 * grow, view.hitFlash, 0.18)
+    fx.ring(at, spec.ring * grow * projection.zoom, spec.color, 0.5)
+    fx.ring(at, spec.ring * 0.55 * grow * projection.zoom, view.hitFlash, 0.3)
+    if (perfect.chain > 1) fx.ring(at, spec.ring * 1.4 * grow * projection.zoom, spec.color, 0.65)
+    fx.burst(heart, { color: spec.color, count: Math.round(40 * grow), speed: 640, size: 3.5, life: 0.55, stretch: 5, drag: 3 })
     fx.burst(heart, { color: view.hitFlash, count: 14, speed: 300, size: 4, life: 0.4 })
-    services.host.feedback.punch = Math.max(services.host.feedback.punch, 1)
-    services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake)
+    if (perfect.chain > 1) fx.number({ x: heart.x, y: heart.y - 30 * projection.zoom }, perfect.chain, spec.color, { size: 1.6, life: 0.7 })
+    services.host.feedback.punch = Math.max(services.host.feedback.punch, grow)
+    services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake * grow)
   }
   for (const explosion of events.explosion.all()) {
     const at = toScreen(projection, explosion.at)

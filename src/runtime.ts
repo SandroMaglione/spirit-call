@@ -53,6 +53,7 @@ export const initialResources = (
   UltimateMoment: noUltimateMoment,
   Arrival: { remaining: 0 },
   SlowMotion: { remaining: 0, scale: 1, dodge: false },
+  DodgeChain: { count: 0, remaining: 0 },
   Paused: { paused: false },
   Practice: { kinds: [], elites: false },
   PracticeField: { spots: [], turn: 0 },

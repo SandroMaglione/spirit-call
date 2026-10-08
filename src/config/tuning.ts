@@ -18,6 +18,7 @@ import { relicRules, relics } from "../content/relics.ts"
 import { cosmetics } from "../content/cosmetics.ts"
 import { banners, callRules } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
+import { championMovesets } from "../content/champions.ts"
 import { characters } from "../content/characters.ts"
 import { classes } from "../content/classes.ts"
 import { currencies } from "../content/currencies.ts"
@@ -225,8 +226,19 @@ export const defaultTuning = {
    * magazine refills (`reload`), and she stays untouchable
    * `invulnerability` seconds longer.
    * Any reward can be turned off (0, false).
+   *
+   * Perfect dodges one after another make a chain (see `DodgeChain`): one
+   * within `chain.window` seconds of the last is the chain's next, up to
+   * `chain.slow.length`; its slow lasts `chain.slow[n]` times `slowSeconds`
+   * and its energy is `chain.energy[n]` times `energy` (the first, 1). A
+   * single one is a small reward; reading a whole string is a big one.
+   * It fills no break bar (`breakFill` 0): against one slow attacker it
+   * broke it every few dodges, the whole fight in slow motion.
    */
-  perfectDodge: { window: 0.15, slowScale: 0.25, slowSeconds: 0.7, breakFill: 0.25, dashRefund: 1, energy: 10, reload: true, invulnerability: 0.25 },
+  perfectDodge: {
+    window: 0.15, slowScale: 0.25, slowSeconds: 0.25, breakFill: 0, dashRefund: 1, energy: 10, reload: true, invulnerability: 0.25,
+    chain: { window: 2.5, slow: [1, 1.8, 2.8] as ReadonlyArray<number>, energy: [1, 1.5, 2] as ReadonlyArray<number> }
+  },
 
   /**
    * Breaking enemies (see `features/poise.ts`). A blow fills an enemy's bar
@@ -382,6 +394,11 @@ export const defaultTuning = {
    * champion discharges as an elite does. It stays across waves:
    * it does not count toward clearing the wave it came in, and the
    * challenge clears only once it has fallen too (see `DirectWaves`).
+   * A kind with its own champion moveset (`movesets`, see
+   * content/champions.ts) fights with it, in phases; broken, it stays down
+   * `broken` times as long as anything else (a boss shakes a break off
+   * sooner), and it is `alone` (see `Read`) with fewer than that many
+   * others on the field: then it calls for help.
    */
   champions: {
     scale: 1.5,
@@ -391,6 +408,11 @@ export const defaultTuning = {
     cooldown: 0.6,
     knockback: 0.45,
     poise: 0.35,
+    broken: 0.8,
+    alone: 2,
+    /** Pressed (the read `pressed`): struck `hits` times lately, the count draining `drain` a second. */
+    pressed: { hits: 6, drain: 2.5 },
+    movesets: championMovesets,
     /**
      * A champion grows with the main line: at enemy level `early.level`
      * (chapter one's) it has `early`'s health, ATK, and wait between

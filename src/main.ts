@@ -5,7 +5,7 @@ import { keyBindings, touchLayout } from "./config/input.ts"
 import { engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
-import { arenaFromQuery, challengeFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
+import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
 import { currentPlayer, signIn, startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
@@ -55,7 +55,7 @@ const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(window.location.search)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
-  const tuning = arenaFromQuery(stressLoad === undefined ? loadSavedTuning() : stressTuning(), window.location.search)
+  const tuning = waveFromQuery(arenaFromQuery(stressLoad === undefined ? loadSavedTuning() : stressTuning(), window.location.search), window.location.search)
   // The player logs in (or signs up) first; her account comes from the server, and the menu starts from its last selection.
   const username = (await currentPlayer()) ?? (await showLogin(mount, signIn))
   const shell = await startApp(username)

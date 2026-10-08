@@ -5,6 +5,31 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Champions fought as bosses (2026-10-08)
+
+The baseline was recorded again (from CI's report) once every chapter's
+champion fought with its own moveset (PR #74). Only the audit's champion
+quests moved: the Pack Leader and the Warlord now bring light waves once
+their champion is out (fewer kills, around 21–25 instead of 34–39) and hit
+harder (the Swordsman alone takes more damage; the learning one now falls
+to the Pack Leader on seed 42). The Warlord's team rows swing both ways
+with how long its blink strings last. The champion fights themselves were
+measured with the bots one on one (the Pack Leader about 25–30 s, the late
+ones 1–2 min; see the PR).
+
+## Perfect dodges and champions (2026-10-08)
+
+The baseline was recorded again (from CI's report) after perfect dodges
+shrank for every enemy (PR #74): a 0.25 s slow instead of 0.7 s, no break
+fill instead of 25%, growing along a chain of three. Bots that dodge well
+lean less on slow motion and breaks: the Warlord got harder for a Swordsman
+alone (1337: damage 17 to 51 matched, 99 to 213 learning; fewer breaks),
+while First Blood came out a little easier for most rows (the learning
+Swordsman clears seed 42 again). The changes go both ways run by run, as
+small timing shifts do; none is a new wall. Champions with their own
+moveset (only the Brute King so far) are not in the audit's challenges;
+the King was measured with the bots separately (see the PR).
+
 ## Combat feel (2026-10-08)
 
 The baseline was recorded again after the step 3 playtest changes (PR
@@ -94,7 +119,7 @@ The audit below records the original problems. The playable update now uses:
 | Bench energy | 30% per living member |
 | Totem / Thunderclap healing | 2% per tick / 8% per member |
 | Kill healing (now Scattergun's passive) | 2% max HP per kill |
-| Perfect-dodge slow / break fill / energy | 0.7 seconds / 25% / 10 |
+| Perfect-dodge slow / break fill / energy | 0.25 seconds / none / 10, growing along a chain of three (slow 1×, 1.8×, 2.8×; energy 1×, 1.5×, 2×) |
 | Wall-slam / reaction break fill | 25% / 20% |
 | Chaser swipe / follow-up | 18% / 14% ATK |
 

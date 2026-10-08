@@ -81,6 +81,8 @@ import type { BuildValue, TwistValue } from "../src/schema.ts"
 type Threat =
   | { readonly kind: "area"; readonly area: Area; readonly from: number; readonly to: number; readonly seen: number; readonly soft?: boolean }
   | { readonly kind: "shot"; readonly at: Vec2; readonly velocity: Vec2; readonly radius: number; readonly from: number; readonly range: number; readonly seen: number; readonly soft?: undefined }
+  /** A shockwave's ring, setting out from `center` at `from` and running out at `speed` as far as `reach`. */
+  | { readonly kind: "wave"; readonly center: Vec2; readonly speed: number; readonly width: number; readonly reach: number; readonly from: number; readonly seen: number; readonly soft?: undefined }
 
 export interface Battlefield {
   readonly player: {
@@ -133,7 +135,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
   for (const { data } of queries.enemies.each()) {
     const attacker = data.attacker.get()
     const phase = data.phase.get()
-    const spec = currentAttack(tuning, data.enemy.get().kind, attacker)
+    const spec = currentAttack(tuning, data.enemy.get(), attacker)
     const area = attacker.area
     if (spec === undefined || area === null || (phase !== "windup" && phase !== "active")) continue
     const lands = phase === "windup" ? Math.max(0, spec.windup - attacker.elapsed) : 0
@@ -157,6 +159,13 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       if (phase !== "windup") continue
       const bursts = lands + spec.flightTime + spec.fuse
       threats.push({ kind: "area", area, from: bursts, to: bursts + blast, seen })
+      continue
+    }
+    // A call for help hurts no one: what it calls is fought when it comes.
+    if (spec.kind === "call") continue
+    if (spec.kind === "wave") {
+      // A ring not yet sent out (one out is a hitbox, below).
+      if (phase === "windup") threats.push({ kind: "wave", center: data.position.get(), speed: spec.speed, width: spec.width, reach: spec.reach, from: lands, seen })
       continue
     }
     if (phase === "active" && spec.kind !== "charge") continue
@@ -198,7 +207,11 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
-    if (hitbox.faction === "enemy") threats.push({ kind: "area", area: hitbox.area, from: 0, to: hitbox.remaining, seen: Infinity })
+    if (hitbox.faction !== "enemy") continue
+    if (hitbox.grows !== undefined && hitbox.area.kind === "ring") {
+      const area = hitbox.area
+      threats.push({ kind: "wave", center: area.center, speed: hitbox.grows, width: area.width, reach: area.radius + hitbox.grows * hitbox.remaining, from: -area.radius / hitbox.grows, seen: Infinity })
+    } else threats.push({ kind: "area", area: hitbox.area, from: 0, to: hitbox.remaining, seen: Infinity })
   }
   return {
     player: player === undefined ? undefined : {
@@ -251,6 +264,13 @@ export const learner: Style = { ...fighter, reaction: 0.4, every: 6 }
 const touches = (threat: Threat, at: Vec2, r: number, t: number): boolean => {
   if (threat.kind === "area") return t >= threat.from && t <= threat.to && areaTouchesCircle(threat.area, at, r)
   if (t < threat.from) return false
+  if (threat.kind === "wave") {
+    // The band it swept over the last stretch.
+    const radius = (t - threat.from) * threat.speed
+    if (radius - threat.speed * sample > threat.reach) return false
+    const distance = Math.hypot(at.x - threat.center.x, at.y - threat.center.y)
+    return distance >= radius - threat.speed * sample - threat.width / 2 - r && distance <= Math.min(radius, threat.reach) + threat.width / 2 + r
+  }
   const speed = Math.hypot(threat.velocity.x, threat.velocity.y)
   const flown = Math.min((t - threat.from) * speed, threat.range)
   const before = Math.max(0, flown - speed * sample)
@@ -442,7 +462,7 @@ export interface BotRun {
   readonly twist?: TwistValue
   /** Spawns the enemies to face (otherwise the challenge's waves come). */
   /** The enemies to fight instead of waves; `champion`: a champion of its kind carrying that element. */
-  readonly enemies?: ReadonlyArray<{ readonly kind: EnemyKind; readonly offset: Vec2; readonly champion?: EliteElement }>
+  readonly enemies?: ReadonlyArray<{ readonly kind: EnemyKind; readonly offset: Vec2; readonly champion?: EliteElement; readonly health?: number }>
   readonly seconds: number
   /** Stand still instead of dodging, to compare. */
   readonly still?: boolean
@@ -546,7 +566,14 @@ export const runBot = (run: BotRun): BotReport => {
         commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: middle.x + offset.x, y: middle.y + offset.y }, 1, run.enemyLevel ?? 1, champion ?? null, champion !== undefined))
       }
     })
-    sim.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+    // Those starting wounded (`health`, a share of their max): a champion in a later phase.
+    const Wound = Game.System("Bot/Wound", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.write(Health) } }) } }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) {
+        const share = enemies.find((entry) => entry.kind === data.enemy.get().kind)?.health
+        if (share !== undefined) data.health.update((health) => ({ ...health, current: health.max * share }))
+      }
+    })
+    sim.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred(), Wound))
   }
   let last: Vec2 = { x: 0, y: 0 }
   let health = sim.runtime.inspect(Vitals) ?? 0

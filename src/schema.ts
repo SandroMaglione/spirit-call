@@ -16,7 +16,7 @@ import type { RankTwist } from "./content/ranks.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
 import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
-import type { EnemyKind } from "./content/enemies.ts"
+import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
@@ -481,6 +481,14 @@ export interface AttackerValue {
 export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker")
 
 /**
+ * A champion with its own moveset (see content/champions.ts): the phase its
+ * health has brought it to, the last phase whose opening attack it has made
+ * (one behind `phase` until it makes it), and how hard it is pressed: the
+ * blows it took lately (see `PressChampions`).
+ */
+export const Rampage = Descriptor.Component<{ readonly phase: number; readonly opened: number; readonly pressure: number }>()("Shooter/Rampage")
+
+/**
  * A warder's tether (see `WardSpec`): the ally it wards and how long the
  * tether has been forming (it wards once that reaches the spec's `link`), or
  * no ally and the wait before it reaches for one.
@@ -558,6 +566,8 @@ export interface HitboxValue {
    * it along instead of leaving it behind.
    */
   readonly follows?: Vec2
+  /** How fast a shockwave's ring runs out (its `area` a ring, see `WaveAttack`). */
+  readonly grows?: number
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
@@ -702,7 +712,11 @@ export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fac
 export const Dodged = Descriptor.Event<{ readonly target: number; readonly at: Vec2; readonly attacker: Entity.Handle<typeof Root, typeof Position> | null }>()("Shooter/Dodged")
 
 /** The player dodged perfectly (see `features/dodge.ts`), for effects. */
-export const PerfectDodged = Descriptor.Event<{ readonly at: Vec2 }>()("Shooter/PerfectDodged")
+/** A perfect dodge at `at`, the `chain`th one after another (see `DodgeChain`; 1 for a first). */
+export const PerfectDodged = Descriptor.Event<{ readonly at: Vec2; readonly chain: number }>()("Shooter/PerfectDodged")
+
+/** Perfect dodges one after another (see `Tuning.perfectDodge.chain`): how many so far, and the seconds left for the next to join them. */
+export const DodgeChain = Descriptor.Resource<{ readonly count: number; readonly remaining: number }>()("Shooter/DodgeChain")
 
 /**
  * Slow motion: the enemies run at `scale` for `remaining` more seconds, the
@@ -713,6 +727,17 @@ export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; read
 
 /** An enemy broke (see `Poise`), for effects. */
 export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind }>()("Shooter/Broke")
+/**
+ * An enemy's attack let go, as its windup ends (see `UpdateAttacks`): by
+ * `attacker` (an entity id) standing at `at`, over `area`, with `blow`. An
+ * attack whose release is more than a hitbox (a shockwave's ring, a call
+ * for help) is let go by its own system reading this (see
+ * features/patterns.ts): a new kind of attack is its content and a system.
+ */
+export const AttackReleased = Descriptor.Event<{ readonly attacker: number; readonly at: Vec2; readonly attack: AttackSpec; readonly area: Area; readonly blow: Blow }>()("Shooter/AttackReleased")
+
+/** A champion entered its `phase` (see `Rampage`): it roars. */
+export const Roused = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind; readonly phase: number; readonly element: ElementId | null }>()("Shooter/Roused")
 
 /** An area went off (a lobbed skill's blast, a nova, a rock erupting, a ring of stone bursting out), for effects. */
 export const Explosion = Descriptor.Event<{
@@ -1149,6 +1174,7 @@ export const Game = Schema.bind(
       Disc,
       Enemy,
       Attacker,
+      Rampage,
       AttackPhase,
       Shield,
       Ward,
@@ -1193,11 +1219,12 @@ export const Game = Schema.bind(
       RunResult,
       HitStop,
       SlowMotion,
+      DodgeChain,
       Paused,
       Practice,
       PracticeField
     },
-    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
+    events: { Damage, Hit, Death, Broke, Roused, AttackReleased, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
   }),
   Root
 )

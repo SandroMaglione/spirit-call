@@ -19,6 +19,11 @@ elements they attack with, are in `docs/elements.md`.
   at least `fairness.minTelegraph` (0.3 s) before it lands: the fairness
   floor, checked by `validateContent`. Nothing that makes enemies harder
   (a hardcore tier, a modifier) may go below it.
+- **Where, never when.** A warning shows where a blow lands, dim while it
+  tracks and bright once its aim locks, but nothing fills up counting down
+  to the hit (no filling area, burst ring, or bomb fuse): the timing is
+  read from the enemy's body. Shots show no aim line: the shot, flying, is
+  the warning (playtest, October 2026).
 - **Pressure comes from enemies working together**, not from unreadable
   attacks: more of them engaging at once, attacks covering each other's
   escape routes, elements that combine. The crowd's rhythm keeps it
@@ -77,7 +82,7 @@ elements they attack with, are in `docs/elements.md`.
     player is the danger (a pool, a wall, the others); baited, it blows them.
   - **The Juggernaut is armored until broken**: it takes a share of the
     damage and cannot be pushed until its break bar fills (by the blows as
-    dealt: heavy blows, reactions, and perfect dodges break it soonest);
+    dealt: heavy blows and reactions break it soonest);
     broken, its armor is down for the whole stun. A weaker team takes
     longer; nothing runs out.
 
@@ -180,10 +185,12 @@ behind a shield asks a different question than a bare one.
 
 ## Champions
 
-A wave entry can be a **champion** (see "Champions, not bosses" in
+A wave entry can be a **champion** (see "Champions" in
 `docs/vision.md`): an elite pushed further, the hardest enemy of a
-challenge. It is one of the game's enemies, with its moveset and model,
-and none of a boss's scripting: no phases, entrances, or timers.
+challenge. It is one of the game's enemies, with its kind's model, and no
+entrance, cutscene, or timer. A champion whose kind has its **own
+moveset** (`content/champions.ts`) fights like a boss: see "Champions'
+own movesets" below; the others fight with their kind's moveset.
 
 - **Bigger, much tougher, stronger, faster**: several times an elite's
   health (it survives a few waves), more damage, quicker on its feet, and
@@ -201,7 +208,10 @@ and none of a boss's scripting: no phases, entrances, or timers.
   still counts), and its break bar is a smaller share of its health than
   its kind's, so it breaks a few times in a fight, each a window.
 - **Its own mark**: a crest under its feet and a stronger glow in its
-  element's color, and a larger health bar, so it reads in a crowd.
+  element's color, and a larger health bar (marked where its phases
+  begin), so it reads in a crowd. One with its own moveset **shakes a
+  break off sooner** than anything else (`Tuning.champions.broken`): a
+  boss's windows are short.
 - **It stays across waves.** It does not count toward clearing the wave it
   came in: the next wave comes once the others are down, with it still
   standing. The challenge is cleared only when the last wave is down and
@@ -214,6 +224,76 @@ each kind's champion is that chapter's new thing. Melee and area kinds make
 good champions; ones that keep their distance (a Sniper, a Firebomber) would
 hide at the edge for waves, and are kept out. Enemy Practice can add a
 champion to the field once the player has met one.
+
+### Champions' own movesets
+
+The fight is the champion, not the crowd around it: a champion with its
+own moveset has the attacks of a boss, made of the same pieces as any
+enemy's (telegraphs, combos, aiming ahead of a runner), so every hit stays
+avoidable and the fairness test checks every phase.
+
+- **It reads the player.** An attack can answer what she is doing
+  (`read`): running away (`away`), standing still (`still`), out of sight
+  behind a wall (`covered`), or open (`open`, see `readPlayer`). While she
+  does it, the attacks answering it are picked first; otherwise those
+  answering nothing in particular. Backing away from the Brute King draws
+  a charge down a lane; hiding behind a wall, a burning rock heaved over it.
+- **It fights in phases by its health.** Its moveset lists where each phase
+  begins (`phases`: 60%, then 25%), and each attack the first phase it is
+  made in. As a phase begins it roars (`Roused`): its phase's opening
+  attack (`opens`, a shockwave pushing the team back) comes as soon as it is
+  free, then the phase's attacks join the others, with shorter rests.
+- **It fights in strings.** A blow in a string is followed at once by one
+  of its follow-ups (`followUp` can list a few: those answering what the
+  player is doing are picked first), with short gaps between them; only
+  the string's last blow recovers slowly: the real opening. Strings are
+  aimed anew at each blow (two slams, charges one after another), some
+  blows are held up long while they track her (a dodge made as it is
+  raised is spent before it falls), and some look alike with different
+  timings (the King's quick smash and slam).
+- **It answers being pressed.** Struck again and again lately (the read
+  `pressed`, `Tuning.champions.pressed`: a count of the blows it took,
+  draining), its answer comes as soon as it is free, its rest cut short:
+  the King's quick shove all around, then a slam where she lands. Staying
+  on it and swinging has a cost; pick the moment.
+- **Shockwaves** (`wave`): a ring running out along the floor from where it
+  stands, as far as its reach, hitting what it passes. Out of its reach,
+  or dash through the ring as it passes.
+- **The floor in its later phases**: its slams leave the ground burning
+  (`SlamAttack.leaves`) for a few seconds, so the safe ground around it
+  shrinks and its charges matter more.
+- **It calls for help.** Worn down to too little support (the read `alone`:
+  fewer others on the field than `Tuning.champions.alone`), it calls its
+  support in around it (a `call` attack: a ring in the spawn warnings'
+  color, then their warnings), the first of them elites of its element.
+  The bots found plain support barely mattered (more targets, quickly
+  down); elites of its element, with their trails, made the fight bite.
+- **Never waits for the crowd**: a champion attacks whenever its own rest
+  allows, past the crowd's windups (see `crowd.windups`); the waves around
+  it are light.
+
+**Shared patterns.** What champions share is written once
+(`content/patterns.ts`: the roars opening the phases, the call for help)
+and taken into each moveset with its own numbers. An attack whose release
+is more than a hitbox of its area is let go by its own system reading
+`AttackReleased` (`features/patterns.ts`: the shockwave's ring, the call):
+a new kind of attack is its content and one system, usable in any
+moveset.
+
+Every chapter's finale has one, each its own fight (`content/champions.ts`),
+built from its kind's blows and model:
+
+| Champion | Chapter | Its question |
+|---|---|---|
+| The Pack Leader (Chaser, fire) | 1 | Flurries of swipes; a pounce at a runner; one later phase, a first taste |
+| The Bulwark (Guardian, fire) | 2 | Swipes into thrusts, thrusts three running; a shield charge; a shockwave off its shield |
+| The Brute King (Brute, fire) | 3 | Slams and their quick look-alike; charges, burning rocks over walls; shockwaves; burning ground |
+| The Swarm Mother (Swarmer, water) | 4 | Darts and bites; water spat at a player standing still; tides; her brood |
+| The Warlord (Stalker, thunder) | 5 | Slash strings; blinks again and again, behind walls too; a warden called to ward it |
+| The Colossus (Juggernaut, fire) | 6 | Armored sweeps into quakes; tramples; shockwaves in pairs; volatiles called to burst |
+
+Skirmishers' champions press in rather than circling for their turn (a
+moveset's own `behavior`).
 
 ## What the player meets, and when
 
@@ -285,10 +365,19 @@ Reading an attack is rewarded over running from it. A dash started at
 most `perfectDodge.window` seconds before a blow lands where she stood (or
 on her, through the dash's invulnerability) is **perfect**; an earlier one
 is a plain dodge. It rewards once per dash: the **enemies slow down** for a
-moment while the team keeps its pace (their moves, windups, shots, and
-bombs), the attacker's break bar fills, a dash charge comes back, a little
-energy, a full magazine, and a moment more of invulnerability. Every
-reward is a number, and any can be turned off.
+brief moment while the team keeps its pace (their moves, windups, shots,
+and bombs), a dash charge comes back, a little energy, a full magazine,
+and a moment more of invulnerability. Every reward is a number, and any
+can be turned off.
+
+Perfect dodges **one after another make a chain** (`DodgeChain`, up to
+three): each within `perfectDodge.chain.window` of the last grows the slow
+and the energy, and shows its count over her. A single one is a small
+reward; reading a whole string of attacks is a big one. A perfect dodge
+fills **no break bar**: against one slow attacker (a champion), a quarter
+of its bar a dodge broke it every few dodges, and the long slow made the
+fight a loop of dodge, strike in slow motion, dodge (playtest, October
+2026).
 
 ## Reading the player
 
