@@ -9,6 +9,8 @@ import type { Signal } from "@preact/signals"
 import { characterLevel, owns, playLock } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
+import { relicOf, relicSlots } from "../../content/relics.ts"
+import { RelicIcon } from "../RelicIcon.tsx"
 import { teamSize } from "../../content/characters.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
@@ -28,7 +30,7 @@ export const Team = ({ store, nav, draft, play, enter }: {
   readonly store: UiStore; readonly nav: Nav; readonly draft: Signal<TeamDraft>; readonly play: Play; readonly enter: () => void
 }) => {
   const picking = useSignal(false)
-  const tuning = store.tuning.value, account = store.account.value, { team, focus, aspects } = draft.value
+  const tuning = store.tuning.value, account = store.account.value, { team, focus, aspects, relics } = draft.value
   const aspectName = (member: CharacterId) => {
     const aspect = aspects[member]
     return aspect === undefined ? tuning.classes[tuning.characters[member].class].plain.name : aspectOf(tuning.aspects, aspect).name
@@ -45,7 +47,14 @@ export const Team = ({ store, nav, draft, play, enter }: {
         </button>
         {member === undefined ? <span class="lineup__name dim">Empty</span> : <>
           <button type="button" class="lineup__name" aria-label={`Details for ${tuning.characters[member].name}`} onClick={() => nav.go({ kind: "character", character: member, tab: "overview" })}><Icon name={elementOf(tuning, member)} />{tuning.characters[member].name}<small>Lv {characterLevel(tuning, account, member).level}</small></button>
-          <button type="button" class="lineup__aspect" aria-label={`Aspect of ${tuning.characters[member].name}: ${aspectName(member)}`} onClick={() => nav.go({ kind: "character", character: member, tab: "aspect" })}><AbilityIcon kind={tuning.characters[member].class} />{aspectName(member)}</button>
+          <button type="button" class="lineup__aspect" aria-label={`Loadout of ${tuning.characters[member].name}: ${aspectName(member)}`} onClick={() => nav.go({ kind: "loadout", character: member, tab: "aspect" })}>
+            <AbilityIcon kind={tuning.characters[member].class} />{aspectName(member)}
+            {/* Her relics, slot by slot: a charm each (dim when empty). */}
+            <span class="lineup__relics">{relicSlots.filter((slot) => slot !== "survival").map((slot) => {
+              const id = relics[member]?.[slot]
+              return <span key={slot} class="lineup__relic" data-empty={id === undefined ? "" : undefined} title={id === undefined ? `${slot}: empty` : relicOf(tuning.relics, id).name}><RelicIcon slot={slot} element={slot === "element" ? elementOf(tuning, member) : null} /></span>
+            })}</span>
+          </button>
         </>}
       </section>
     })}</div>

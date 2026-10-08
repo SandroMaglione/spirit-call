@@ -76,7 +76,7 @@
 
 /* ---------- character ---------- */
 .character__stage { position: absolute; inset: 34px 262px 10px 150px; }
-.character__stage[data-tab="aspect"] { right: calc(var(--right) + 334px); }
+.character__stage[data-tab="loadout"] { right: calc(var(--right) + 334px); }
 .character__stage[data-tab="kit"] { right: calc(var(--right) + 456px); left: 130px; }
 /* Room around the faces, so the picked one's glow is never cut square by the scrolling row. */
 .roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); }
@@ -109,8 +109,59 @@
   .character__panel--skill { right: calc(var(--right) + 68px); }
   .character__stage[data-tab="kit"] { right: calc(var(--right) + 334px); }
   .character__panel:not(.character__panel--skill) { width: 310px; }
-  .character__stage[data-tab="aspect"] { right: calc(var(--right) + 314px); }
+  .character__stage[data-tab="loadout"] { right: calc(var(--right) + 314px); }
 }
+
+/* ---------- loadout: her aspect, relics, and looks ---------- */
+.loadout__stage { position: absolute; top: 40px; bottom: 8px; left: calc(var(--left) + 296px); right: calc(var(--right) + 306px); }
+.loadout .topbar__fill { min-width: 0; }
+.loadout__top { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.loadout__top .roster { gap: 6px; padding: 10px; margin: -6px; }
+.loadout__cards { position: absolute; left: calc(var(--left) - 6px); top: 56px; bottom: 0; width: 300px; z-index: 3; padding: 6px 6px 30px; display: grid; gap: 8px; align-content: start; }
+.loadout__panel { position: absolute; right: var(--right); top: 60px; width: 300px; max-height: calc(100% - 130px); z-index: 3; }
+.loadout__slots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.loadout__slot { display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 10px; border-radius: 21px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); text-align: left; text-shadow: none; }
+.loadout__slot > .relic-icon, .loadout__slot > .look-icon { font-size: 24px; }
+.loadout__slot span { display: grid; min-width: 0; line-height: 1.1; }
+.loadout__slot b { font-size: 13px; font-weight: 800; }
+.loadout__slot small { font-size: 11px; color: var(--dim); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.loadout__slot[aria-selected="true"] { background: var(--cream); color: var(--ink); box-shadow: 0 0 10px var(--gold-hi); }
+.loadout__slot[aria-selected="true"] small { color: color-mix(in srgb, var(--ink) 70%, transparent); }
+.loadout__empty { padding: 8px 4px; font-size: 13px; }
+.loadout__cards .card__art > .relic-icon, .loadout__cards .card__art > .look-icon, .shop__cards .card__art > .relic-icon, .shop__cards .card__art > .look-icon { font-size: 40px; }
+.loadout__tiers { display: grid; gap: 6px; }
+.loadout__tier { display: grid; grid-template-columns: 28px 1fr; gap: 6px; align-items: start; margin: 0; font-size: 12.5px; line-height: 1.3; }
+.loadout__tier b { height: 22px; border-radius: 11px; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px var(--line); }
+.loadout__tier[data-state="now"] b { background: #7cc4ff; color: #0f1a2a; box-shadow: 0 0 8px #7cc4ff; }
+.loadout__tier[data-state="had"] b { background: rgba(124, 196, 255, .35); }
+.loadout__tier[data-state="ahead"] span { color: var(--dim); }
+/* The loadout in short on her page: a row each, a tap opens its tab. */
+.loadout-row { display: flex; align-items: center; gap: 10px; min-height: 30px; padding: 1px 4px; border-radius: 6px; text-align: left; }
+.loadout-row > .menu-icon:last-child { margin-left: auto; font-size: 14px; color: var(--dim); }
+.loadout-row > .relic-icon, .loadout-row > .look-icon, .loadout-row > .menu-icon:first-child { font-size: 22px; }
+.loadout-row span { display: grid; line-height: 1.15; }
+.loadout-row small { font-size: 11px; color: var(--dim); font-weight: 700; }
+.loadout-row b { font-size: 13px; font-weight: 800; }
+.character__panel .panel__body:has(.loadout-row) { gap: 2px; }
+/* A relic on a card: its charm, its tier in a badge (the name stays whole at the foot). */
+.relic-art { position: relative; display: grid; place-items: center; }
+.relic-art__tier { position: absolute; right: -14px; bottom: -6px; min-width: 22px; height: 18px; padding: 0 4px; border-radius: 9px; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #0f1a2a; background: #7cc4ff; box-shadow: 0 0 6px #7cc4ff; }
+.loadout__cards .card__foot, .shop__cards .card__foot { font-size: 12px; }
+.loadout-row:hover { background: rgba(255, 255, 255, .05); }
+/* A 16:9 phone: narrower columns, the model keeps the middle. */
+@container (max-width: 800px) {
+  .loadout__cards { width: 268px; }
+  .loadout__panel { width: 268px; }
+  .loadout__stage { left: calc(var(--left) + 262px); right: calc(var(--right) + 272px); }
+  .loadout__top .roster { display: none; }
+}
+
+/* ---------- shop ---------- */
+.shop__cards { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 376px; z-index: 3; padding: 6px 6px 28px; }
+.shop__brief { position: absolute; left: calc(var(--left) + 386px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
+.shop__price { display: inline-flex; align-items: center; gap: 3px; }
+.shop__price .menu-icon { font-size: 14px; }
+.shop__empty { padding: 10px 4px; font-size: 13px; }
 
 /* ---------- party ---------- */
 .lineup__places { position: absolute; inset: 52px var(--right) 88px var(--left); display: grid; grid-template-columns: repeat(3, 1fr); z-index: 2; }
@@ -130,6 +181,9 @@
 .lineup__aspect { z-index: 1; height: 24px; padding: 0 10px; border-radius: 12px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; position: relative; text-shadow: none; }
 .lineup__aspect::after { content: ""; position: absolute; inset: -4px -8px -10px; }
 .lineup__aspect .menu-icon { font-size: 13px; }
+.lineup__relics { display: inline-flex; gap: 2px; margin-left: 4px; }
+.lineup__relic { font-size: 14px; display: block; }
+.lineup__relic[data-empty] { opacity: .3; filter: grayscale(1); }
 /* The roster opens at the left, over the places. */
 .lineup__picker { position: absolute; left: var(--left); top: 60px; bottom: 62px; width: 294px; z-index: 4; }
 .lineup__picker .cards { padding: 3px; }

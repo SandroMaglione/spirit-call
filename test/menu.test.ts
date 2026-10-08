@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
-import { answers, aspectsFor, elementOf, equipInDraft, placeInTeam, removeFromTeam, startingWith } from "../src/ui/draft.ts"
+import { answers, aspectsFor, elementOf, equipInDraft, equipRelicInDraft, relicsFor, placeInTeam, removeFromTeam, startingWith } from "../src/ui/draft.ts"
 import { start, aspectId } from "./helpers.ts"
 import { cast, damageBonus, doing, finisher, heal, kill, on, targetHealthBelow } from "../src/content/passives.ts"
 import { nova } from "../src/content/skills.ts"
@@ -143,20 +143,20 @@ describe("menu helpers", () => {
 
   it("sets up a team like Genshin: a slot, then a character for it", () => {
     // A newcomer in the empty slot joins at the end.
-    expect(placeInTeam({ team: ["swordsman"], focus: 1, aspects: {} }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1, aspects: {} })
+    expect(placeInTeam({ team: ["swordsman"], focus: 1, aspects: {}, relics: {} }, "gunner")).toEqual({ team: ["swordsman", "gunner"], focus: 1, aspects: {}, relics: {} })
     // In a filled slot she takes its place; one already in the team swaps places.
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {} }, "tidecaller")).toEqual({ team: ["tidecaller", "gunner"], focus: 0, aspects: {} })
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {} }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0, aspects: {} })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {}, relics: {} }, "tidecaller")).toEqual({ team: ["tidecaller", "gunner"], focus: 0, aspects: {}, relics: {} })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {}, relics: {} }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0, aspects: {}, relics: {} })
     // Picking one already in the team for the empty slot just goes to her.
-    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2, aspects: {} }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0, aspects: {} })
+    expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2, aspects: {}, relics: {} }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0, aspects: {}, relics: {} })
     // Removing moves the others up, and never empties the team.
-    expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2, aspects: {} }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1, aspects: {} })
-    expect(removeFromTeam({ team: ["swordsman"], focus: 0, aspects: {} }, 0)).toEqual({ team: ["swordsman"], focus: 0, aspects: {} })
+    expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2, aspects: {}, relics: {} }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1, aspects: {}, relics: {} })
+    expect(removeFromTeam({ team: ["swordsman"], focus: 0, aspects: {}, relics: {} }, 0)).toEqual({ team: ["swordsman"], focus: 0, aspects: {}, relics: {} })
   })
 
   it("equips an aspect in the team on one member only: one on another moves to her, and leaving the team takes it off", () => {
     const duelist = aspectId("duelist"), arc = aspectId("arc")
-    const draft = { team: ["swordsman", "stormcaller"] as const, focus: 0, aspects: {} }
+    const draft = { team: ["swordsman", "stormcaller"] as const, focus: 0, aspects: {}, relics: {} }
     const equipped = equipInDraft(draft, "swordsman", duelist)
     expect(equipped.aspects).toEqual({ swordsman: duelist })
     // Equipped again on someone else (a test: two of one class), it moves.
@@ -167,6 +167,24 @@ describe("menu helpers", () => {
   })
 
 
+
+  it("equips a relic in the team on one member and one slot only, and leaving the team takes it off", () => {
+    const draft = { team: ["gunner", "tidecaller"] as const, focus: 0, aspects: {}, relics: {} }
+    const echo = equipRelicInDraft(draft, "gunner", "strike", "echo")
+    expect(echo.relics).toEqual({ gunner: { strike: "echo" } })
+    // Equipped on someone else, it moves; taken off, the slot is empty.
+    expect(equipRelicInDraft(echo, "tidecaller", "strike", "echo").relics).toEqual({ tidecaller: { strike: "echo" } })
+    expect(equipRelicInDraft(echo, "gunner", "strike", null).relics).toEqual({})
+    const both = equipRelicInDraft(echo, "tidecaller", "element", "undertow")
+    expect(removeFromTeam(both, 0).relics).toEqual({ tidecaller: { element: "undertow" } })
+  })
+
+  it("offers a slot only its relics, and the Element slot only her element's", () => {
+    expect(relicsFor(defaultTuning, "gunner", "element")).toEqual(["emberHeart"])
+    expect(relicsFor(defaultTuning, "tidecaller", "element")).toEqual(["undertow"])
+    expect(relicsFor(defaultTuning, "gunner", "dash").every((id) => defaultTuning.relics[id].slot === "dash")).toBe(true)
+    expect(relicsFor(defaultTuning, "gunner", "survival")).toEqual([])
+  })
 
   it("offers a character only aspects of her class", () => {
     for (const character of ["swordsman", "gunner", "tidecaller", "stormcaller"] as const) {

@@ -9,7 +9,9 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, CallResult, Earned, Play, TeamAspects } from "../account/account.ts"
+import type { Account, CallResult, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
+import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
+import type { RelicId } from "../content/relics.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
@@ -117,7 +119,7 @@ export const createUiStore = (initial: {
   saves: signal({ pending: 0, failed: false }),
   menuPlay: signal(initial.account.selection.play),
   menuCharacter: signal(initial.account.selection.team[0]!),
-  menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects }),
+  menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects, relics: initial.account.selection.relics }),
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
   paused: signal(false),
@@ -145,17 +147,22 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
-  /** Save `team` and the aspects equipped in it (refused when they break the rules, see `teamProblems`). */
-  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects) => void
-  /** Enter the arena with `team` (in order, with `aspects` equipped) to play `play`. */
-  readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play) => void
-  /** Enter an Extra with `team` and `aspects`: nothing it does is recorded on the account. */
-  readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra) => void
+  /** Save `team` and the aspects and relics equipped in it (refused when they break the rules, see `teamProblems`, `teamRelicProblems`). */
+  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics) => void
+  /** Enter the arena with `team` (in order, with `aspects` and `relics` equipped; the saved relics when not given) to play `play`. */
+  readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play, relics?: TeamRelics) => void
+  /** Enter an Extra with `team`, `aspects`, and `relics` (the saved ones when not given): nothing it does is recorded on the account. */
+  readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra, relics?: TeamRelics) => void
+  /** Buy `relic` one tier up with dust (saved at once). */
+  readonly buyRelic: (relic: RelicId) => void
+  /** Buy a look the shop sells with dust (saved at once). */
+  readonly buyCosmetic: (cosmetic: CosmeticId) => void
+  /** Put a look of `kind` on `character` (`null`: her own look; saved at once). */
+  readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => void
   /** Take an owned character to its next level with gold (saved at once). */
   readonly train: (character: CharacterId) => void
   /** Take an owned character past the ascension step she stands at (saved at once). */
   readonly ascend: (character: CharacterId) => void
-  /** Make one material from the grade below it (saved at once). */
   /** Make `count` calls on `banner`: the seal shows at once (`callReveal`), what they brought once the server answers. */
   readonly call: (banner: BannerId, count: number) => void
   /** Focus `character` on `banner`: the character a call there brings. */
