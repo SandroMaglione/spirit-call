@@ -55,39 +55,58 @@ mix and its last the whole roster.
 
 ## Stars
 
-Every quest has **three stars**, each a goal met in a cleared run:
+Every quest has **three stars**, each a goal **on top of the clear**: a
+clear alone earns none, so a run can win with no star. They go from easy to
+hard:
 
-1. Clear it.
-2. A goal about the quest's idea (break the Brute, dodge the snipers).
-3. A hit budget: take at most so many hits. `pnpm lab` prints each
-   challenge's hits over a whole run beside its budget; a budget sits
-   between the quick bot's and the learning bot's.
+1. **A decent run**: a loose hit budget, "nobody falls", or ending with some
+   health left.
+2. **The quest's idea**: break enemies (Guardians, the Brute), dodge
+   perfectly (snipers, firebombers), chain perfect dodges, or use ultimates
+   (swarms).
+3. **A clean run**: a tight hit budget, or ending with most of the health.
 
 Stars are earned across runs (each one once, in any run that clears) and
 kept for good. Only a quest's first rank (its own enemy level) has stars.
+The results screen shows each goal with what the run counted toward it.
+
+**The numbers come from measured runs** (the bot, in `test/bot.ts`, on two
+seeds, with the team a new account has, from `pnpm progression`): the
+skilled bot earns all three, and the learning bot usually earns the first
+and often the second. A player takes more hits than the skilled bot, so a
+clean run's budget (2–4 hits) is hard for a person. `pnpm lab` prints each
+challenge's hits beside its hit budgets.
 
 **Any team can earn every star.** A goal never names a character, an
-element, or a class, never asks for speed or a time, and never depends on
-how many characters the team has (a solo character cannot fall without
-losing, so "nobody falls" would be free for her: the hit budget asks the
-same of everyone). Goals are built from a short list of **tallies** the
-arena counts for any team, and `validateContent` accepts only those:
+element, or a class, never asks for speed or a time, and counts the team as
+a whole: health is a share of the whole team's (fallen members count none).
+"Nobody falls" is free for a solo team (her fall loses the run), so it is
+not used in chapter 1, where the Swordsman is alone. Goals are built from a
+short list of **tallies** the arena counts for any team, and
+`validateContent` accepts only those, with bounds no clear meets on its own
+and all three met together by one run:
 
 | Tally | Counts |
 |---|---|
 | `hitsTaken` | Blows that landed on the team (burns not counted) |
+| `falls` | Members of the team who fell |
+| `healthLeft` | The team's health at the end, in whole percent of all of it |
 | `perfectDodges` | Perfect dodges |
+| `longestChain` | The longest chain of perfect dodges (at most 3) |
 | `breaks` | Enemies broken |
+| `ultimates` | Ultimates used |
 
 A goal is a tally with a bound (`at least` or `at most`). A new kind of goal
 is a new tally: one system that counts it in the run, and an entry here.
 
-**Chests.** A chapter's stars open its chests, one every 3 stars (3, 6, 9,
-and 12 in a chapter of four quests, its rewards spread evenly over them), and
-the secondary quests' stars open theirs. Chests give crystals, gold, and
-materials: the milestone rewards that pay for playing well. The secondary
-quests' chests also hold **dust** (see `relics.md`), with a little less
-gold: dust comes from off the main line.
+**Chests.** Stars open chests, **one every 3 stars** in every group: a
+chapter's (3, 6, 9, and 12 in a chapter of four quests, its rewards spread
+evenly over them), and the side quests' (3 to 21). Chests give crystals,
+gold, and materials: the milestone rewards that pay for playing well. The
+side quests' chests also hold **dust** (see `relics.md`), with a little
+less gold: dust comes from off the main line. The side quests' chests came
+every 6 stars before; they hold the same in all, and an account that had
+opened some counts two for each (migration 0006).
 
 ## Ranks
 

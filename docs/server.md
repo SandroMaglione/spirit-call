@@ -167,7 +167,7 @@ wallet full enough to try anything (crystals for about 500 calls, gold and
 every material to take every character to the top). `new --chapter1`
 (or `chapter1 <name>` on one already made) clears chapter 1 first, so the
 Spirit Call is open: each quest is selected and a cleared run recorded
-through the API, earning only the clear's star, so the server pays what a
+through the API, earning no star, so the server pays what a
 player would get. `refill <name>` fills one again, `list` shows them (see
 `scripts/testers.ts`).
 

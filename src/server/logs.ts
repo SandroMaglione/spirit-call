@@ -25,7 +25,7 @@ const Nullable = Schema.NullOr
 
 const RunRow = Schema.Struct({
   id: Text, at: Int, play_kind: Nullable(Schema.Literals(["quest", "tier"])), quest: Nullable(Text), rank: Nullable(Int), track: Nullable(Text), tier: Nullable(Int),
-  challenge: Text, enemy_level: Int, cleared: Int, progress: Int, wave: Int, kills: Int, seconds: Int, hits_taken: Int, perfect_dodges: Int, breaks: Int, dashes: Int, switches: Int
+  challenge: Text, enemy_level: Int, cleared: Int, progress: Int, wave: Int, kills: Int, seconds: Int, hits_taken: Int, perfect_dodges: Int, breaks: Int, falls: Int, health_left: Int, longest_chain: Int, ultimates: Int, dashes: Int, switches: Int
 })
 const MemberRow = Schema.Struct({ run_id: Text, slot: Int, character: Text, level: Int, aspect: Nullable(Text), relics: Nullable(Text), damage_dealt: Int, damage_taken: Int, kills: Int })
 
@@ -91,6 +91,10 @@ export class Logs extends Context.Service<
           hits_taken: result.tally.hitsTaken,
           perfect_dodges: result.tally.perfectDodges,
           breaks: result.tally.breaks,
+          falls: result.tally.falls,
+          health_left: result.tally.healthLeft,
+          longest_chain: result.tally.longestChain,
+          ultimates: result.tally.ultimates,
           dashes: log.dashes,
           switches: log.switches
         })}`]
@@ -160,7 +164,7 @@ export class Logs extends Context.Service<
             wave: run.wave,
             kills: run.kills,
             seconds: run.seconds,
-            tally: { hitsTaken: run.hits_taken, perfectDodges: run.perfect_dodges, breaks: run.breaks },
+            tally: { hitsTaken: run.hits_taken, perfectDodges: run.perfect_dodges, breaks: run.breaks, falls: run.falls, healthLeft: run.health_left, longestChain: run.longest_chain, ultimates: run.ultimates },
             log: {
               waves: [...waves(run.id)].sort((a, b) => a.wave - b.wave).map((wave) => ({ wave: wave.wave, startedAt: wave.started_at, hitsTaken: wave.hits_taken, damageTaken: wave.damage_taken })),
               hurts: [...hurts(run.id)].sort((a, b) => a.place - b.place).map((hurt) => ({ enemy: hurt.enemy, attack: hurt.attack, hits: hurt.hits, damage: hurt.damage })),

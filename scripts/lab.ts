@@ -44,7 +44,7 @@ for (const id of ids) {
     )
   })
   const budgets = Object.values(defaultTuning.quests).filter((quest) => quest.challenge === id).flatMap((quest) =>
-    quest.stars.flatMap((goal) => (goal.kind === "tally" && goal.tally === "hitsTaken" && goal.most !== undefined ? [`${quest.name} ${goal.most}`] : []))
+    quest.stars.flatMap((goal) => (goal.tally === "hitsTaken" && goal.most !== undefined ? [`${quest.name} ${goal.most}`] : []))
   )
   if (challenge.waves.scripted.length > 0) console.log(`  whole run: quick ${quickHits} hits, learning ${slowHits} hits${budgets.length > 0 ? ` | hit budget: ${budgets.join(", ")}` : ""}`)
   console.log("")

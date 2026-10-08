@@ -100,7 +100,7 @@ describe("content", () => {
       quests: {
         ...quests,
         firstBlood: { ...quests.firstBlood, after: "theBrute" },
-        holdTheLine: { ...quests.holdTheLine, chapter: "one", stars: [{ kind: "tally", tally: "breaks", least: 2 }, { kind: "cleared" }, { kind: "tally", tally: "hitsTaken", most: -1 }] }
+        holdTheLine: { ...quests.holdTheLine, chapter: "one", stars: [{ tally: "breaks", least: 0 }, { tally: "hitsTaken", least: 9, most: 4 }, { tally: "hitsTaken", most: -1 }] }
       }
     }
     const problems = validateContent(broken)
@@ -108,8 +108,8 @@ describe("content", () => {
       "quest firstBlood: its order loops back through firstBlood",
       "quest crossfire: its order loops back through crossfire",
       "quest holdTheLine: a secondary quest belongs to no chapter",
-      "quest holdTheLine: its first star must be the clear",
-      "quest holdTheLine: star 2 repeats the clear",
+      "quest holdTheLine: star 1 is met by any clear (stars are goals on top of it)",
+      "quest holdTheLine: star 2 can never be met",
       "quest holdTheLine: star 3: bounds must be whole numbers, not negative",
       "the new account: selects quest firstBlood, which a new account cannot start"
     ]))

@@ -25,6 +25,7 @@ import { engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ChallengeId, EliteElement } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
+import type { Tally } from "../src/content/stars.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { createSimulation } from "../src/simulation.ts"
 import { projection } from "../src/config/view.ts"
@@ -52,6 +53,7 @@ import {
   Health,
   Heal,
   Hit,
+  Stats,
   Elite,
   Ground,
   Hitbox,
@@ -456,6 +458,8 @@ const Members = Game.Inspector("Bot/Members", {
   queries: { members: Game.Query({ selection: { member: Game.Query.read(Member), health: Game.Query.read(Health), player: Game.Query.optional(Player) } }) }
 }, ({ queries }) => queries.members.each().map(({ data }) => ({ ...data.member.get(), health: data.health.get(), active: data.player.present })))
 
+const Tallied = Game.Inspector("Bot/Tally", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().tally)
+
 export interface BotRun {
   readonly tuning: Tuning
   readonly challenge?: ChallengeId
@@ -502,6 +506,8 @@ export interface BotReport {
   readonly ultimates: number
   readonly breaks: number
   readonly healthRemaining: number
+  /** What the run counted for stars (see `content/stars.ts`). */
+  readonly tally: Tally
 }
 
 /** Plays `run` with the bot (who never falls: her health is out of reach) and reports what it cost. */
@@ -587,7 +593,8 @@ export const runBot = (run: BotRun): BotReport => {
     hits: run.mortal === true ? dealtHits : hits, damage: Math.round(run.mortal === true ? taken : damage), dashes,
     pressure: pressed / Math.max(1, Math.round(elapsed / engine.stepSeconds)), clearedAt: outcome === "cleared" ? elapsed : null,
     endedAt: elapsed, outcome, kills, specials, ultimates, breaks, healing: Math.round(healing),
-    healthRemaining: members.reduce((sum, member) => sum + member.health.current, 0) / members.reduce((sum, member) => sum + member.health.max, 0)
+    healthRemaining: members.reduce((sum, member) => sum + member.health.current, 0) / members.reduce((sum, member) => sum + member.health.max, 0),
+    tally: sim.runtime.inspect(Tallied)
   })
   const total = Math.ceil(run.seconds / engine.stepSeconds)
   const style = run.style ?? dodger

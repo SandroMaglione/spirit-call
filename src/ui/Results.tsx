@@ -28,6 +28,7 @@ import { aspectOf } from "../content/aspects.ts"
 import { cosmeticOf } from "../content/cosmetics.ts"
 import type { MaterialId } from "../content/materials.ts"
 import { relicOf } from "../content/relics.ts"
+import { describeCount, describeGoal, meets } from "../content/stars.ts"
 import { LookIcon, RelicIcon } from "./RelicIcon.tsx"
 import { CharacterCard, MaterialIcon, Stars } from "./menu/parts.tsx"
 import type { Screen } from "./menu/screens.ts"
@@ -76,6 +77,10 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
     <section class="results__content" style={{ "--s0": `${times.star(0)}s`, "--s1": `${times.star(1)}s`, "--s2": `${times.star(2)}s`, "--loot": `${times.loot}s` }}>
       <h1 class="results__title">{title}</h1>
       {starred !== null && earned !== null && <div class="results__stars"><Stars earned={questProgress(account, starred.quest, rankOf(starred))?.stars ?? []} fresh={earned.stars} /></div>}
+      {/* Each star is a goal on top of the clear: which this run met, and what it counted. */}
+      {starred !== null && earned !== null && result.cleared && <div class="results__goals results__step" style={at(times.line)}>
+        {tuning.quests[starred.quest].stars.map((goal, index) => <div key={index} class={`goal${meets(goal, result.cleared, result.tally) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}<span class="results__count">{describeCount(goal, result.tally)}</span></div>)}
+      </div>}
       <p class="dim results__step" style={at(times.line)}><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
       <div class="results__rule results__step" style={at(times.line)} />
       {extra !== null ? <p class="dim results__step" style={at(times.line)}>{extra.kind === "trial" ? "A trial records nothing." : "Practice records nothing."}</p> : <>
