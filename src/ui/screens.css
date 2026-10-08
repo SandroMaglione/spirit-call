@@ -256,6 +256,21 @@
 .pause .side-tabs { position: static; margin-top: 12px; justify-items: start; }
 .pause__sound { position: absolute; left: 330px; right: var(--right); max-width: 400px; top: 96px; }
 
+/* ---------- entering the arena (see Entrance.tsx) ---------- */
+.entrance { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; pointer-events: none; background: radial-gradient(ellipse at center, rgba(14, 17, 28, .82), #070910 75%); animation: entrance-out .35s ease-in .55s forwards; }
+.entrance__card { display: grid; justify-items: center; gap: 10px; animation: entrance-card .9s ease-out both; }
+.entrance__card b { font-size: 30px; font-weight: 800; font-style: italic; letter-spacing: .04em; text-transform: uppercase; color: var(--gold-hi); text-shadow: 0 0 18px rgba(255, 220, 140, .4); }
+.entrance__faces { display: flex; gap: 10px; }
+.entrance__faces > span { animation: from-left .35s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+@keyframes entrance-out { to { opacity: 0; } }
+@keyframes entrance-card { from { opacity: 0; transform: scale(.92); } 25% { opacity: 1; transform: none; } 70% { transform: scale(1.02); } }
+
+/* ---------- saves not done (see SaveNotice.tsx) ---------- */
+/* "Saving" shows only when it takes long (a few seconds of tries); "Not saved" at once. */
+.save-mark { position: absolute; left: 50%; top: var(--top); translate: -50% 0; z-index: 30; display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--dim); background: var(--panel); pointer-events: none; animation: fade .3s 3s backwards; }
+.ui:has(.save-mark.is-failed) .results__content { padding-top: 30px; }
+.save-mark.is-failed { color: var(--ink); background: #ffc9b8; box-shadow: 0 0 0 2px #ff8a6b, 0 2px 10px #0008; pointer-events: auto; animation: fade .2s; }
+
 /* ---------- results ---------- */
 .results { display: grid; place-items: center; }
 .results__content { width: min(540px, 92%); display: grid; justify-items: center; gap: 8px; text-align: center; text-shadow: 0 1px 3px #0008; }
@@ -267,9 +282,26 @@
 .results__stars { font-size: 26px; margin: -2px 0; }
 .results__rule { width: min(420px, 100%); height: 1px; margin: 3px 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
 .results__loot { width: 100%; }
-.results__loot .card { animation: from-below .45s ease-out backwards; }
-.results__loot .card:nth-child(2) { animation-delay: .1s; } .results__loot .card:nth-child(3) { animation-delay: .2s; } .results__loot .card:nth-child(4) { animation-delay: .3s; } .results__loot .card:nth-child(5) { animation-delay: .4s; }
-.results__loot .card:nth-child(6) { animation-delay: .5s; } .results__loot .card:nth-child(7) { animation-delay: .6s; } .results__loot .card:nth-child(n + 8) { animation-delay: .7s; }
+.results__loot .card { animation: from-below .45s ease-out backwards; animation-delay: var(--loot); }
+.results__loot .card:nth-child(2) { animation-delay: calc(var(--loot) + .1s); } .results__loot .card:nth-child(3) { animation-delay: calc(var(--loot) + .2s); } .results__loot .card:nth-child(4) { animation-delay: calc(var(--loot) + .3s); }
+.results__loot .card:nth-child(5) { animation-delay: calc(var(--loot) + .4s); } .results__loot .card:nth-child(6) { animation-delay: calc(var(--loot) + .5s); } .results__loot .card:nth-child(n + 7) { animation-delay: calc(var(--loot) + .6s); }
+/* The results come in a piece at a time (see Results.tsx): each piece at its --d; a tap shows them all at once. */
+.results__step { animation: from-below .4s ease-out backwards; animation-delay: var(--d); }
+.results__title { animation: title-fall .8s ease-out backwards; }
+.results.is-cleared .results__title { position: relative; animation: title-in .6s cubic-bezier(.2, 1.3, .4, 1) backwards; }
+.results.is-cleared .results__title::after { content: ""; position: absolute; inset: -20px -60px; background: radial-gradient(closest-side, rgba(255, 220, 140, .35), transparent); z-index: -1; animation: title-glow 1.4s ease-out .1s backwards; }
+@keyframes title-in { from { opacity: 0; transform: scale(1.7); letter-spacing: .4em; filter: blur(6px); } 60% { opacity: 1; } }
+@keyframes title-glow { from { opacity: 0; transform: scaleX(.3); } 30% { opacity: 1; } }
+@keyframes title-fall { from { opacity: 0; transform: translateY(-18px); filter: grayscale(1); } }
+.results__stars .star { animation: star-land .4s cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.results__stars .star:nth-child(1) { animation-delay: var(--s0); } .results__stars .star:nth-child(2) { animation-delay: var(--s1); } .results__stars .star:nth-child(3) { animation-delay: var(--s2); }
+.results__stars .star.is-fresh { position: relative; animation-name: star-land-fresh; animation-duration: .55s; }
+.results__stars .star.is-fresh::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--gold-hi); opacity: 0; animation: star-ring .6s ease-out backwards; animation-delay: inherit; }
+@keyframes star-land { from { opacity: 0; transform: scale(.4); } }
+@keyframes star-land-fresh { from { opacity: 0; transform: scale(2.6) rotate(-60deg); } 70% { transform: scale(.9); } }
+@keyframes star-ring { from { opacity: 1; transform: scale(.3); } to { opacity: 0; transform: scale(1.5); } }
+.results__account .bar b { animation-delay: calc(var(--d) + .25s); }
+.results.is-skipped :is(.results__step, .results__title, .results__stars .star, .results__loot .card, .results__account .bar b), .results.is-skipped .results__title::after, .results.is-skipped .star::after { animation-delay: 0s; animation-duration: .2s; }
 .results__next { max-width: min(460px, 100%); font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .results__next b { color: var(--gold-hi); margin-right: 8px; }
 .results__new { font-size: 13px; font-weight: 700; color: var(--gold-hi); }
@@ -340,6 +372,26 @@
 .reveal { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; --white: #eef3ff; --purple: #b98bff; --gold: #ffd56b; --light: var(--white); }
 .reveal[data-light="purple"] { --light: var(--purple); }
 .reveal[data-light="gold"] { --light: var(--gold); }
+/* The light turns from one colour to the next (registered, so it can ease). */
+@property --light { syntax: "<color>"; inherits: true; initial-value: #eef3ff; }
+.reveal { transition: --light .35s ease-out; }
+.reveal__dim { position: absolute; inset: 0; background: #05060c; opacity: 0; transition: opacity .45s ease-out; pointer-events: none; }
+/* Cracked, waiting for the answer: the seal strains and the light throbs behind it. */
+.reveal[data-waiting] .reveal__seal { animation: seal-strain .09s linear infinite alternate; }
+.reveal[data-waiting] .reveal__light { animation: light-throb .8s ease-in-out infinite alternate; }
+/* Broken: the light swells and rises to what came; gold dims the room and pulses. */
+.reveal[data-phase="rise"] .reveal__seal { animation: seal-strain .07s linear infinite alternate; }
+.reveal[data-phase="rise"] .reveal__light { opacity: 1; scale: 1.2; transition: scale .5s ease-out; }
+.reveal[data-phase="rise"][data-light="purple"] .reveal__light { animation: light-pulse .6s ease-out; }
+.reveal[data-phase="rise"][data-light="gold"] .reveal__dim { opacity: .6; }
+.reveal[data-phase="rise"][data-light="gold"] .reveal__light { animation: light-pulse .75s ease-out; }
+@keyframes seal-strain { from { translate: -1.5px 0; } to { translate: 1.5px 1px; } }
+@keyframes light-throb { from { opacity: .7; scale: 1.02; } to { opacity: 1; scale: 1.12; } }
+@keyframes light-pulse { 0% { scale: 1.1; } 35% { scale: 1.9; opacity: 1; } 100% { scale: 1.25; } }
+/* A call not made: the seal falls apart, grey, its light gone. */
+.reveal[data-phase="crumble"] .reveal__seal { animation: seal-crumble .9s ease-in forwards; }
+.reveal[data-phase="crumble"] .reveal__light, .reveal[data-phase="crumble"] .reveal__cracks { opacity: 0; transition: opacity .3s; }
+@keyframes seal-crumble { 15% { transform: translateX(-4px) rotate(-2deg); } 30% { transform: translateX(4px) rotate(2deg); } to { transform: translateY(70px) scale(.8) rotate(-10deg); opacity: 0; filter: grayscale(1) blur(1px); } }
 .reveal__light { position: absolute; left: 50%; top: 50%; width: 520px; height: 520px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--light) 70%, transparent), color-mix(in srgb, var(--light) 18%, transparent) 55%, transparent); opacity: calc(var(--p) * .9); scale: calc(.55 + var(--p) * .55); pointer-events: none; }
 .reveal__seal { position: relative; width: 236px; height: 236px; border-radius: 50%; touch-action: none !important; animation: seal-in .6s cubic-bezier(.2, .9, .3, 1.2) both; filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .6)); transform: scale(calc(1 + var(--p) * .04)) rotate(calc(var(--p) * 4deg)); }
 .ui .reveal__seal:active { transform: scale(calc(1 + var(--p) * .04)) rotate(calc(var(--p) * 4deg)); filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .6)); }

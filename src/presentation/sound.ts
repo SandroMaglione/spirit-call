@@ -30,8 +30,14 @@ export type SoundName =
   | "uiSuccess"
   | "uiError"
   | "uiReward"
+  | "victory"
+  | "defeat"
+  | "star"
   | "sealCrack"
   | "sealBurst"
+  | "sealRise"
+  | "sealGold"
+  | "sealCrumble"
   | "revealAspect"
   | "revealCharacter"
   | "slash"
@@ -217,6 +223,38 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     tone(v, "sine", 55, 40, 0.6, 0.22)
     tone(v, "sine", 440, 880, 0.8, 0.08, 0.05, 0.05)
     tone(v, "sine", 660, 1320, 0.9, 0.06, 0.1, 0.05)
+  }],
+  // The light behind the seal turning purple: a shimmer swelling up. Turning gold: the room drops (a deep thud), then a bell rings out.
+  sealRise: [{ reverb: 0.55, interval: 0.3 }, (v) => {
+    noise(v, "bandpass", 900, 4200, 0.55, 0.12, 2, 0, 0.3)
+    tone(v, "sine", 330, 660, 0.55, 0.07, 0, 0.3)
+    tone(v, "sine", 495, 990, 0.55, 0.05, 0.04, 0.3)
+  }],
+  sealGold: [{ reverb: 0.7, heavy: true, interval: 0.5 }, (v) => {
+    tone(v, "sine", 70, 38, 0.7, 0.3, 0, 0.005)
+    noise(v, "lowpass", 400, 120, 0.4, 0.2, 0.7, 0, 0.005)
+    metal(v, 784, 1.6, 0.07, 0.32)
+    for (const [index, pitch] of [392, 494, 587, 784].entries()) tone(v, "sine", pitch, pitch, 1.4, 0.05, 0.32 + index * 0.05, 0.01)
+  }],
+  // A call that could not be made: the seal crumbling back to stone.
+  sealCrumble: [{ reverb: 0.3, heavy: true, interval: 0.3 }, (v) => {
+    crunch(v, 1400, 300, 0.35, 0.3)
+    crunch(v, 900, 200, 0.3, 0.2, 0.12)
+    tone(v, "triangle", 120, 60, 0.45, 0.12)
+  }],
+  // The results: a bright chord rising for a victory, two low falling notes for a defeat, a ping for each star.
+  victory: [{ reverb: 0.55, interval: 0.5 }, (v) => {
+    for (const [index, pitch] of [392, 523, 659, 784].entries()) tone(v, "triangle", pitch, pitch, 0.9, 0.07, index * 0.06, 0.01)
+    noise(v, "highpass", 4000, 7000, 0.4, 0.05, 0.7, 0.18, 0.05)
+  }],
+  defeat: [{ reverb: 0.5, interval: 0.5 }, (v) => {
+    tone(v, "triangle", 330, 311, 0.5, 0.08, 0, 0.02)
+    tone(v, "triangle", 262, 233, 0.9, 0.08, 0.28, 0.02)
+  }],
+  star: [{ reverb: 0.45, interval: 0.1 }, (v) => {
+    tone(v, "sine", 1047, 1047, 0.45, 0.09, 0, 0.004)
+    tone(v, "sine", 1568, 1568, 0.3, 0.04, 0.02, 0.004)
+    noise(v, "highpass", 6000, 8000, 0.12, 0.05, 0.7, 0, 0.002)
   }],
   // What came out: a rising third for an aspect, a full major arpeggio ringing out for a character.
   revealAspect: [{ reverb: 0.5, interval: 0.3 }, (v) => {
