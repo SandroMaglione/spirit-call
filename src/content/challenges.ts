@@ -264,16 +264,20 @@ export const challenges = {
     [elite("guardian", "water"), "sniper", "chaser", "chaser"],
     [elite("brute", "fire"), "brute", "shooter", "swarmer"]
   ]),
-  /** A burning champion brute in the kilnworks. */
-  bruteKing: waves("The Brute King", "Eight waves in the kilnworks; midway a burning champion brute joins, and stays until it falls.", "kilnworks", [
+  /**
+   * The Brute King in the kilnworks: a burning champion brute fighting with
+   * its own moveset, in phases (see content/champions.ts). Once it is out,
+   * the waves around it are light: it is the fight.
+   */
+  bruteKing: waves("The Brute King", "Eight waves in the kilnworks; midway the Brute King joins, a burning champion brute that fights in phases, and stays until it falls.", "kilnworks", [
     ["chaser", "chaser", "swarmer"],
     ["guardian", "shooter", "chaser"],
     ["brute", "swarmer"],
     [champion("brute", "fire"), "chaser"],
-    ["sniper", "shooter", "swarmer"],
-    [elite("guardian", "water"), "chaser"],
-    ["brute", "swarmer", "shooter"],
-    [elite("chaser", "fire"), "sniper", "guardian", "swarmer"]
+    ["shooter", "chaser"],
+    ["swarmer"],
+    ["guardian"],
+    ["sniper", "chaser"]
   ]),
 
   // Chapter 4: three characters.

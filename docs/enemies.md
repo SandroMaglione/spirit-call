@@ -180,10 +180,12 @@ behind a shield asks a different question than a bare one.
 
 ## Champions
 
-A wave entry can be a **champion** (see "Champions, not bosses" in
+A wave entry can be a **champion** (see "Champions" in
 `docs/vision.md`): an elite pushed further, the hardest enemy of a
-challenge. It is one of the game's enemies, with its moveset and model,
-and none of a boss's scripting: no phases, entrances, or timers.
+challenge. It is one of the game's enemies, with its kind's model, and no
+entrance, cutscene, or timer. A champion whose kind has its **own
+moveset** (`content/champions.ts`) fights like a boss: see "Champions'
+own movesets" below; the others fight with their kind's moveset.
 
 - **Bigger, much tougher, stronger, faster**: several times an elite's
   health (it survives a few waves), more damage, quicker on its feet, and
@@ -201,7 +203,10 @@ and none of a boss's scripting: no phases, entrances, or timers.
   still counts), and its break bar is a smaller share of its health than
   its kind's, so it breaks a few times in a fight, each a window.
 - **Its own mark**: a crest under its feet and a stronger glow in its
-  element's color, and a larger health bar, so it reads in a crowd.
+  element's color, a larger health bar, and its name and health across
+  the top of the screen (marked where its phases begin), so it reads in a
+  crowd. Broken, it **stays down longer** than anything else
+  (`Tuning.champions.broken`): the opening its fight builds to.
 - **It stays across waves.** It does not count toward clearing the wave it
   came in: the next wave comes once the others are down, with it still
   standing. The challenge is cleared only when the last wave is down and
@@ -214,6 +219,37 @@ each kind's champion is that chapter's new thing. Melee and area kinds make
 good champions; ones that keep their distance (a Sniper, a Firebomber) would
 hide at the edge for waves, and are kept out. Enemy Practice can add a
 champion to the field once the player has met one.
+
+### Champions' own movesets
+
+The fight is the champion, not the crowd around it: a champion with its
+own moveset has the attacks of a boss, made of the same pieces as any
+enemy's (telegraphs, combos, aiming ahead of a runner), so every hit stays
+avoidable and the fairness test checks every phase.
+
+- **It reads the player.** An attack can answer what she is doing
+  (`read`): running away (`away`), standing still (`still`), out of sight
+  behind a wall (`covered`), or open (`open`, see `readPlayer`). While she
+  does it, the attacks answering it are picked first; otherwise those
+  answering nothing in particular. Backing away from the Brute King draws
+  a charge down a lane; hiding behind a wall, a burning rock heaved over it.
+- **It fights in phases by its health.** Its moveset lists where each phase
+  begins (`phases`: 60%, then 25%), and each attack the first phase it is
+  made in. As a phase begins it roars (`Roused`): its phase's opening
+  attack (`opens`, a shockwave pushing the team back) comes as soon as it is
+  free, then the phase's attacks join the others, with shorter rests.
+- **Patterns that ask for a dodge, not distance alone**: combos aimed anew
+  at each blow (two slams, charges one after another), a blow held up long
+  while it tracks her (a dodge made as it is raised is spent before it
+  falls), and **shockwaves** (`wave`): a ring running out along the floor
+  from where it stands, as far as its reach, hitting what it passes. Out of
+  its reach, or dash through the ring as it passes.
+- **Never waits for the crowd**: a champion attacks whenever its own rest
+  allows, past the crowd's windups (see `crowd.windups`); the waves around
+  it are light.
+
+The Brute King is the first (chapter three's finale); the other chapters'
+champions follow once its fight is right.
 
 ## What the player meets, and when
 
