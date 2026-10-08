@@ -10,7 +10,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { attackOf } from "../features/build.ts"
-import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, Velocity, Ward, BasicAttack } from "../schema.ts"
+import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, UltimateCalled, UltimateMoment, Velocity, Ward, BasicAttack } from "../schema.ts"
 import { enemyPose } from "./enemy-pose.ts"
 import { enemyLooks } from "./looks.ts"
 import type { ActorNode } from "./host-types.ts"
@@ -43,10 +43,12 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
       with: [Enemy]
     })
   },
-  resources: { hitStop: Game.System.readResource(HitStop), tuning: Game.System.readResource(Tuning) },
+  resources: { hitStop: Game.System.readResource(HitStop), tuning: Game.System.readResource(Tuning), moment: Game.System.readResource(UltimateMoment) },
   services: { nodes: Game.System.service(RenderNodes), clock: Game.System.service(RenderClock) }
 }, ({ queries, resources, services }) => {
   const seconds = resources.hitStop.get().remaining > 0 ? 0 : services.clock.frameSeconds
+  // Through an ultimate's moment the world stands still, but she moves: she is calling it up.
+  const herSeconds = resources.moment.get().cast !== null ? services.clock.frameSeconds : seconds
   const animate = (node: ActorNode, facing: Vec2, holding: boolean, dt = seconds) => {
     node.facing = facing
     node.body.face(facing)
@@ -54,7 +56,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
   }
   for (const { entity, data } of queries.player.each()) {
     const node = services.nodes.get(entity.id)
-    if (node?.kind === "player") animate(node, data.facing.get().direction, data.dash.get().remaining > 0)
+    if (node?.kind === "player") animate(node, data.facing.get().direction, data.dash.get().remaining > 0, herSeconds)
   }
   for (const { entity, data } of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)
@@ -90,7 +92,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
  * at their clip's length, and an enemy's windup over the windup.
  */
 export const PlayMoments = Game.System("Shooter/PlayMoments", {
-  events: { action: Game.System.readEvent(Action), cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit) },
+  events: { action: Game.System.readEvent(Action), cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), called: Game.System.readEvent(UltimateCalled) },
   queries: {
     player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack) }, with: [Player] }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) } })
@@ -113,6 +115,12 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     } else if (action.kind === "dash" && moments.dash !== undefined) {
       hers.body.play(moments.dash, tuning.dash.duration, null)
     }
+  }
+  // An ultimate's clip plays as she calls it up (its moment, see `UltimateMoment`).
+  for (const called of events.called.all()) {
+    if (player === undefined || hers?.kind !== "player") break
+    const clip = hers.body.moments?.skills?.[called.skill]
+    if (clip !== undefined) hers.body.play(clip, null, null)
   }
   for (const cast of events.cast.all()) {
     // An ultimate's clip plays as its moment begins (see `UltimateCalled`); a landing is part of a skill already playing.

@@ -178,6 +178,10 @@ export interface HudRefs {
   readonly vignette: HTMLElement
   /** The slow-motion glow (a perfect dodge). */
   readonly focus: HTMLElement
+  /** An ultimate's moment (see `ShowUltimateMoments`): the dim around her, and the band with her face, the ultimate's name, and hers. */
+  readonly moment: { readonly root: HTMLElement; readonly band: HTMLElement; readonly face: HTMLElement; readonly skill: HTMLElement; readonly name: HTMLElement }
+  /** A fall: the color drains from the screen for a moment (see `PlayFalls`). */
+  readonly fall: HTMLElement
 }
 
 /** Render-side feedback state that decays in real time. */
@@ -194,6 +198,8 @@ export interface FeedbackState {
   kick: { x: number; y: number }
   /** Zoom punch, 0..1, decaying (heavy blows). */
   punch: number
+  /** How far an ultimate's moment has pushed the camera in, 0..1 (see `ShowUltimateMoments`). */
+  moment: number
   /** Seconds left of the protection of a character who came in after a fall (shown around her feet). */
   protection: number
   /** Seconds since the one on the field came onto it (she pops up), and seconds left of her eyes held wide (a perfect dodge, coming in after a fall). */
@@ -244,6 +250,8 @@ export interface Fallen {
   readonly pivot: Group
   readonly body: ActorBody
   readonly facing: Vec2
+  /** Her element's color: the light she comes apart into. */
+  readonly color: number
   age: number
 }
 

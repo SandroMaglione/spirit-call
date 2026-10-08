@@ -17,6 +17,7 @@ import { withValidAspects } from "./features/build.ts"
 import { buildOf, encounterOf, teamLevel, teamOf, validAspects } from "./account/account.ts"
 import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
+import { chargedFromQuery, KeepCharged } from "./dev/charged.ts"
 import { createBrowserHost } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createShowcase } from "./presentation/showcase.ts"
@@ -286,8 +287,10 @@ const start = async (mount: HTMLElement) => {
   const showcase = createShowcase(mount, browser.models)
   createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything, openCalls: shell.openCalls })
 
-  // One fixed step: dev commands (tuning edits, spawns), the simulation, and the (usually empty) stress top-up.
-  const step = Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
+  // One fixed step: dev commands (tuning edits, spawns), the simulation, the (usually empty) stress top-up, and `?charged`'s full energy.
+  const step = chargedFromQuery(window.location.search)
+    ? Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, KeepCharged, Game.Schedule.applyDeferred())
+    : Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
   // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
   const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, browser.host, browser.nodes)
   // Dev handle for inspecting the running game from the console.
