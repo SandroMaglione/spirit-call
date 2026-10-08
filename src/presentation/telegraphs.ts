@@ -183,9 +183,9 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const spec = lobbed.effect
     const elapsed = lobbed.elapsed + services.clock.alpha * engine.stepSeconds
     const color = spec.element === null ? view.playerArea : view.elements[spec.element]
-    // A volley's shell waiting its turn: only where it will land, faintly.
+    // A volley's shell waiting its turn: where it will land, marked from the start.
     if (elapsed < 0) {
-      g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, 0.2)
+      g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, 0.45)
       continue
     }
     const flight = Math.min(1, elapsed / spec.flightTime)

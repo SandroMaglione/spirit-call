@@ -95,6 +95,14 @@
       .hud__vignette { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 160px 40px rgba(255, 40, 40, 0.9); }
       /* Slow motion after a perfect dodge: the edges glow cold and the world dims around her. */
       .hud__focus { position: absolute; inset: 0; opacity: 0; pointer-events: none; box-shadow: inset 0 0 240px 80px rgba(120, 255, 240, 0.6); background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 28, 44, 0.45) 100%); }
+      /* An ultimate's moment: the world dims around her, the edges glow in her element's color, and its lines turn in toward her, faster as it builds (`--build`, 0..1). */
+      .hud__moment { position: absolute; inset: 0; opacity: 0; pointer-events: none; --el: #ffd166; --build: 0; background: radial-gradient(ellipse at 50% 52%, transparent 14%, rgba(4, 6, 16, 0.78) 68%); box-shadow: inset 0 0 calc(60px + var(--build) * 90px) calc(4px + var(--build) * 18px) color-mix(in srgb, var(--el) 50%, transparent); }
+      .hud__moment::before { content: ""; position: absolute; left: 50%; top: 52%; width: 180vmax; height: 180vmax; translate: -50% -50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--el) 60%, transparent) 0 1.2deg, transparent 1.2deg 9deg); -webkit-mask: radial-gradient(closest-side, transparent calc(30% - var(--build) * 12%), #000 60%, transparent 92%); mask: radial-gradient(closest-side, transparent calc(30% - var(--build) * 12%), #000 60%, transparent 92%); opacity: calc(0.35 + var(--build) * 0.4); animation: moment-lines 1.2s linear infinite; }
+      @keyframes moment-lines { to { rotate: 40deg; } }
+      /* A fall: for a moment the world darkens at its edges, glowing in her element's color as her light goes out (`--el`). */
+      .hud__fall { position: absolute; inset: 0; opacity: 0; pointer-events: none; --el: #ffffff; background: radial-gradient(ellipse at 50% 52%, transparent 30%, rgba(8, 6, 18, 0.62) 100%); box-shadow: inset 0 0 220px 50px color-mix(in srgb, var(--el) 45%, transparent); }
+      .hud__fall.is-on { animation: fall-dim 1s ease-in-out forwards; }
+      @keyframes fall-dim { 0% { opacity: 0; } 20% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
       .hud__banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font: 800 italic 48px "Barlow Condensed", sans-serif; letter-spacing: 0.08em; color: #fff; opacity: 0; text-shadow: 0 2px 12px #000; white-space: nowrap; }
       .hud__banner.is-showing { animation: banner 1.8s ease-out forwards; }
       @keyframes banner { 0% { opacity: 0; transform: translate(-50%, 10px); } 15% { opacity: 1; transform: translate(-50%, 0); } 70% { opacity: 1; } 100% { opacity: 0; } }
@@ -135,7 +143,9 @@
       .team__member.is-field .team__info { background: linear-gradient(90deg, rgba(10, 12, 28, 0), color-mix(in srgb, var(--el) 40%, rgba(10, 12, 28, 0.45)) 35%); }
       .team__member.is-field .team__face { transform: translateX(-4px) scale(1.06); }
       .team.is-touch .team__face kbd { display: none; }
-      .team__member.is-fallen { opacity: 0.35; filter: grayscale(1); }
+      .team__member.is-fallen { opacity: 0.35; filter: grayscale(1); animation: member-falls 0.9s ease-out; }
+      /* Her row as she falls: a red flash and a jolt before it goes gray. */
+      @keyframes member-falls { 0% { opacity: 1; filter: grayscale(0) brightness(1.6) drop-shadow(0 0 8px #ff4a3a); transform: translateX(-6px); } 12% { transform: translateX(5px); } 24% { transform: translateX(-3px); } 40% { opacity: 1; filter: grayscale(0.4); transform: none; } }
       .hud__hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #9aa2c8; white-space: nowrap; }
       .tuning { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 320px; display: flex; flex-direction: column; background: rgba(13, 17, 23, 0.94); border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: 12px "IBM Plex Mono", ui-monospace, monospace; z-index: 10; }
       .tuning[hidden] { display: none; }

@@ -64,7 +64,8 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   target.center.x = center.x
   target.center.y = center.y
   // Phones zoom out (see view.camera); the camera stays centered on the player. Heavy blows punch in.
-  target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + view.impact.zoomPunch * feedback.punch)
+  // An ultimate's moment pushes in on her (see `ShowUltimateMoments`).
+  target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + view.impact.zoomPunch * feedback.punch) * (1 + view.ultimateMoment.zoom * feedback.moment)
   services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
   // A perfect dodge's slow motion glows at full strength, fading out over its last part (a fall's beat does not).
   const motion = resources.slowMotion.get()

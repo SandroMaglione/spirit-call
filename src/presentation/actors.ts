@@ -9,10 +9,10 @@ import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
-import { screenHeight, toScreen } from "../math/iso.ts"
+import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import { attackOf } from "../features/build.ts"
-import { Action, Aim, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -21,6 +21,28 @@ import { mixColor } from "./draw.ts"
 import { characterLooks } from "./looks.ts"
 
 const leanAxis = new Vector3()
+
+/**
+ * How high a body in the air is (world units): a plunge goes straight up,
+ * easing out, then dives, falling faster and faster (it moves ahead as it
+ * does, see `Airborne.dive`); a leap arcs (see `view.airborne`).
+ */
+export const airborneLift = (airborne: { readonly remaining: number; readonly seconds: number; readonly kind: "plunge" | "leap"; readonly dive: { readonly seconds: number } | null }): number => {
+  const t = airborne.seconds > 0 ? Math.min(1, Math.max(0, 1 - airborne.remaining / airborne.seconds)) : 1
+  if (airborne.kind === "leap") return worldHeight(projection, view.airborne.leap.height) * Math.sin(Math.PI * t)
+  const top = worldHeight(projection, view.airborne.plunge.height)
+  const dive = airborne.dive?.seconds ?? 0
+  if (airborne.remaining > dive) {
+    const rising = Math.min(1, 1 - (airborne.remaining - dive) / Math.max(1e-6, airborne.seconds - dive))
+    return top * (1 - (1 - rising) ** 2)
+  }
+  const left = dive > 0 ? Math.max(0, airborne.remaining / dive) : 0
+  return top * (1 - (1 - left) ** 2)
+}
+
+/** Whether a body in the air is diving (see `airborneLift`). */
+export const diving = (airborne: { readonly remaining: number; readonly dive: { readonly seconds: number } | null }): boolean =>
+  airborne.dive !== null && airborne.remaining <= airborne.dive.seconds
 
 /** `color` tinted toward the color of `state`, if any. */
 export const stateTint = (color: number, state: ActiveState | null): number =>
@@ -43,7 +65,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         body: Game.Query.read(Body),
         state: Game.Query.read(ElementState),
         member: Game.Query.read(Member),
-        velocity: Game.Query.read(Velocity)
+        velocity: Game.Query.read(Velocity),
+        airborne: Game.Query.optional(Airborne)
       },
       with: [Player]
     })
@@ -58,8 +81,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
   // A character comes in: she pops up, once the one who fell is down, wide-eyed (she did not choose the moment); a perfect dodge widens her eyes too.
   for (const action of events.action.all()) {
     if (action.kind !== "switch") continue
-    services.host.feedback.entrance = action.fell ? -view.spirit.fall.seconds : 0
-    if (action.fell) services.host.feedback.wideEyes = view.spirit.wideSeconds + view.spirit.fall.seconds
+    services.host.feedback.entrance = action.fell ? -tuning.team.fallBeat.seconds : 0
+    if (action.fell) services.host.feedback.wideEyes = view.spirit.wideSeconds + tuning.team.fallBeat.seconds
   }
   if (events.perfect.all().length > 0) services.host.feedback.wideEyes = view.spirit.wideSeconds
   for (const { entity, data } of queries.player.each()) {
@@ -190,10 +213,13 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       // Less the more she faces the camera: there her eyes say it, and leaning would tip them out of sight.
       const onScreen = normalizeOr(toScreen(projection, aim), { x: 0, y: -1 })
       const still = Math.max(0, 1 - Math.hypot(velocity.x, velocity.y) / (pace * 0.5)) * (0.5 - 0.5 * onScreen.y)
-      const tilt = { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
+      // Diving, she tips head first toward where she lands.
+      const dive = data.airborne.present && diving(data.airborne.get()) ? data.airborne.get().dive!.velocity : null
+      const ahead = dive === null ? null : normalizeOr(dive, aim)
+      const tilt = ahead !== null ? { x: ahead.x * view.airborne.plunge.lean, y: ahead.y * view.airborne.plunge.lean } : { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
       const look = characterLooks[data.member.get().character]
       const grounded = look.kind === "model" && look.grounded === true
-      const lean = grounded ? 0 : Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
+      const lean = grounded ? 0 : ahead !== null ? view.airborne.plunge.lean : Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
       if (lean > 1e-4) {
         // Tipped over her feet, her top toward the lean: about the floor axis across it.
         leanAxis.set(tilt.y, 0, -tilt.x).normalize()
@@ -206,6 +232,11 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const size = pop < 0 ? 0 : pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))
       const stretch = pop < 0 || pop >= 1 ? 1 : 1 + 0.25 * Math.sin(pop * Math.PI)
       node.pivot.scale.set(size * (1 + squash * 0.5), size * stretch * (1 - squash), size * (1 + squash * 0.5))
+      // In the air: lifted off her shadow, which shrinks under her.
+      const lift = data.airborne.present ? airborneLift(data.airborne.get()) : 0
+      node.pivot.position.y = lift
+      const shadow = radius * (1 - (1 - view.airborne.shadow) * Math.min(1, lift / worldHeight(projection, view.airborne.plunge.height)))
+      node.shadow.object.scale.set(shadow, 1, shadow)
     }
   }
 })

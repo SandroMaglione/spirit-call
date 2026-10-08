@@ -128,6 +128,23 @@ export const view = {
   /** Faint ring at a nova's radius while it is ready. */
   ultimateReadyAlpha: 0.22,
   ultimateShake: 12,
+  /**
+   * An ultimate's moment (see `UltimateMoment`): the camera pushes in by
+   * `zoom` (eased in over the moment, let go in `release` seconds after),
+   * the screen dims around her and glows at its edges in her element's
+   * color, its lines turn in toward her and its light gathers into her
+   * (`gather` motes a second), pulsing faster as it builds; as it goes
+   * off, a flash `flash` wide, rings, and a shake of `shake`.
+   */
+  ultimateMoment: { zoom: 0.3, release: 0.3, gather: 110, flash: 45, shake: 16 },
+  /**
+   * A body in the air (see `Airborne`), in screen pixels at zoom 1: a
+   * plunge goes straight up `height`, then dives ahead like a bird, tipped
+   * head first by `lean` (radians), wind trailing behind her; a leap arcs
+   * `height` high, shedding its element's sparks. The shadow shrinks to
+   * `shadow` at the top.
+   */
+  airborne: { plunge: { height: 80, lean: 0.75 }, leap: { height: 36 }, shadow: 0.55 },
   grenade: 0xd9fffb,
   /** Peak height of a grenade's arc, in screen pixels. */
   grenadeArc: 70,
@@ -164,9 +181,11 @@ export const view = {
    * `wideSeconds` after a perfect dodge or coming in after a fall, and shut
    * to `shut` of their height when she falls.
    *
-   * `fall`: falling, she is left behind for `seconds`, tipping back by
-   * `lean` and sinking to `flat` of her height, fading over the last
-   * `fade` of it; the next one pops up once she is down.
+   * `fall`: falling, she is left behind for the fall's beat
+   * (`Tuning.team.fallBeat`), tipping back by `lean` and sinking to `flat`
+   * of her height, coming apart into her element's light (`motes` a
+   * second) and fading over the last `fade` of it; the next one pops up
+   * once she is down.
    *
    * `sway`: her body leans with her changes of pace, sprung (`stiffness`,
    * `damping`): a change of speed kicks the lean by `kick` (radians a
@@ -183,7 +202,7 @@ export const view = {
    */
   spirit: {
     ready: 1.9, pulse: 0.35, pulseHz: 1.6, low: 0.25, lowHealth: 0.35, pop: 0.55, popSeconds: 0.22, wide: 1.35, wideSeconds: 0.6, shut: 0.12,
-    fall: { seconds: 0.38, lean: 0.9, flat: 0.3, fade: 0.45 },
+    fall: { lean: 0.9, flat: 0.3, fade: 0.6, motes: 55 },
     sway: { stiffness: 190, damping: 15, kick: 0.017, most: 0.34, squash: 0.5, dust: 0.75, aim: 0.13 },
     standing: 0.06
   },

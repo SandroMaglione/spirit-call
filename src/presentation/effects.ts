@@ -72,7 +72,14 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       root.position.set(action.at.x, 0, action.at.y)
       body.face(action.facing)
       services.host.actors.add(root)
-      services.host.fallen.push({ root, pivot, body, facing: action.facing, age: 0 })
+      services.host.fallen.push({ root, pivot, body, facing: action.facing, color: view.elements[tuning.characters[action.character].element], age: 0 })
+      // The world darkens for the beat, its edges glowing in her color as her light goes out, and the camera leans in on her.
+      const drain = services.host.hud.fall
+      drain.style.setProperty("--el", `#${view.elements[tuning.characters[action.character].element].toString(16).padStart(6, "0")}`)
+      drain.classList.remove("is-on")
+      void drain.offsetWidth
+      drain.classList.add("is-on")
+      feedback.punch = Math.max(feedback.punch, 0.8)
     }
     // A character comes in: a flash and a ring in her color.
     if (action.kind === "switch" && !action.fell) {
@@ -82,7 +89,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       fx.ring(at, 56 * projection.zoom, color, 0.35)
     }
     // After a fall the next one comes in once the fallen one is down (see `PlayFalls`).
-    if (action.kind === "switch" && action.fell) feedback.stepIn = { at: action.at, character: action.character, wait: view.spirit.fall.seconds }
+    if (action.kind === "switch" && action.fell) feedback.stepIn = { at: action.at, character: action.character, wait: tuning.team.fallBeat.seconds }
   }
   // She comes in for good: a column of light, rings, a flash, her name; protected a while (see `DrawPlayer`).
   if (feedback.stepIn !== null) {
@@ -506,14 +513,17 @@ const fxDust = (host: RenderHostValue, at: Vec2, push: Vec2, speed: number): voi
 
 /**
  * Characters who just fell: each one's body tips back and sinks, her eyes
- * shut and her light going out, then fades and is gone (`view.spirit.fall`).
- * The next one pops up once she is down (see `DrawPlayer`).
+ * shut and her light going out, coming apart into her element's light,
+ * then fades and is gone, over the fall's beat (`Tuning.team.fallBeat`;
+ * see `view.spirit.fall`). The next one pops up once she is down (see
+ * `DrawPlayer`).
  */
 export const PlayFalls = Game.System("Shooter/PlayFalls", {
+  resources: { tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
-}, ({ services }) => {
+}, ({ resources, services }) => {
   const fallen = services.host.fallen
-  const spec = view.spirit.fall
+  const spec = { ...view.spirit.fall, seconds: resources.tuning.get().team.fallBeat.seconds }
   const seconds = services.clock.frameSeconds
   for (let index = fallen.length - 1; index >= 0; index--) {
     const one = fallen[index]!
@@ -535,6 +545,13 @@ export const PlayFalls = Game.System("Shooter/PlayFalls", {
     one.body.express?.(1, view.spirit.shut)
     one.body.aura?.(1 - down)
     one.body.paint(0xffffff, view.hitFlash, Math.max(0, 0.8 - t * 3), Math.min(1, (1 - t) / spec.fade))
+    // Coming apart: her light rises off her body, more as she fades.
+    const body = toScreen(projection, { x: one.root.position.x, y: one.root.position.z })
+    const count = Math.floor(spec.motes * seconds * (0.5 + t) + Math.random())
+    for (let mote = 0; mote < count; mote++) {
+      const from = { x: body.x + (Math.random() - 0.5) * 30, y: body.y - Math.random() * view.impact.height * projection.zoom * 1.6 }
+      services.host.fx.mote(from, (Math.random() - 0.5) * 40, -50 - Math.random() * 70, { color: Math.random() < 0.3 ? view.hitFlash : one.color, size: 2 + Math.random() * 3, life: 0.6 + Math.random() * 0.4, gravity: -60, drag: 1.5 })
+    }
   }
 })
 

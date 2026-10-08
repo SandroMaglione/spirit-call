@@ -39,7 +39,7 @@ import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
-import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastVortices, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
+import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastPlunges, CastVortices, LandAirborne, ReleaseUltimates, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { UseBasicAttack } from "./features/basic-attack.ts"
 import { DirectWaves } from "./features/waves.ts"
@@ -94,14 +94,16 @@ const gameplay = Game.Schedule.when(
   TrackRun,
   TickCombatTimers,
   TickBench,
-  // A guard raised (or lost) before she moves: rooted while it rises.
+  // A guard raised (or lost), and a body landing, before she moves: rooted meanwhile; what lands is cast this step.
   RaiseGuards,
+  LandAirborne,
   ControlPlayer,
   // Casts (from skills, and from passives queued last step) are carried out
   // right after they are made, in the same step.
   UseSkills,
   ApplyTriggeredEffects,
   CastCuts,
+  CastPlunges,
   CastBlasts,
   CastLeaps,
   CastLobs,
@@ -177,6 +179,8 @@ const runOutcome = Game.Schedule.when(
 export const fixedUpdate = Game.Schedule(
   AdvanceTime,
   TickHitStop,
+  // An ultimate whose moment ended goes off, for this step's casting systems (see `UltimateMoment`).
+  Game.Schedule.when(whileRunIsLive, ReleaseUltimates),
   CaptureViewport,
   input,
   RememberPositions,

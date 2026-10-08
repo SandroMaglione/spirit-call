@@ -57,8 +57,10 @@ no other burst and leaves no state.
 | **Wind** | Groups to scatter or bunch up | **Swept**: light, pushed further and gliding; slammed into a wall, stunned | **Gale**: it is launched along the blow, the bodies around it thrown away from it, all stunned a moment |
 | **Rock** | Tanky enemies | **Cracked**: its break bar fills faster | **Shatter**: a large share of its break bar at once, and a blow to it and the bodies around it |
 
-Wind's push or pull is the kit's choice (a Gust throws out, a Cyclone
-draws in): Swept only makes a body light. Thunder's strikes jump between
+Wind's push or pull is the kit's choice (a Gust drives back, a Cyclone
+draws in): Swept only makes a body light, so it glides further than the
+push alone would take it (Gust's sweep pushes little for that reason: the
+glide carries enemies back about 120 units, still within reach). Thunder's strikes jump between
 bodies as far as a skill says, on top of Charged.
 
 Every character applies her own element: each one can build on her own

@@ -7,8 +7,11 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import { ElementState, Enemy, Energy, Game, Ground, Health, Player, Poise, Position, Stunned } from "../src/schema.ts"
-import { center, cursorAt, gunner, placeDummies, start, tidecaller } from "./helpers.ts"
+import { projection } from "../src/config/view.ts"
+import { screenDirectionToWorld } from "../src/math/iso.ts"
+import { normalizeOr } from "../src/math/vec.ts"
+import { Airborne, ElementState, Enemy, Energy, Game, Ground, Health, Player, Poise, Position, Stunned } from "../src/schema.ts"
+import { center, cursorAt, gunner, placeDummies, start, steps, tidecaller } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Kits", {
@@ -38,8 +41,9 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
   const tuning = options.tuning ?? sturdy
   const run = start({ tuning, kits: "shipped", ...options, pointer: [{ frame: 0, move: cursorAt(aim) }, ...(options.pointer ?? [])] })
   run.runtime.tick(placeDummies(offsets, tuning))
-  return { ...run, world: () => run.runtime.inspect(World) }
+  return { ...run, world: () => run.runtime.inspect(World), airborne: () => run.runtime.inspect(InAir) }
 }
+const InAir = Game.Inspector("Test/InAir", { queries: { player: Game.Query({ selection: { airborne: Game.Query.optional(Airborne) }, with: [Player] }) } }, ({ queries }) => queries.player.each()[0]!.data.airborne.present)
 const press = (slot: "special" | "ultimate", frame: number) => ({ frame, press: [slot], release: [slot] })
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
   for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
@@ -48,15 +52,30 @@ const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Quer
 describe("the Gunner's Flare Jump", () => {
   const spec = defaultTuning.skills.flareJump.effect
 
-  it("bursts around her, leaps her away from her aim, and leaves fire where she stood", () => {
+  /** Where walking right on the screen faces her, on the floor. */
+  const right = normalizeOr(screenDirectionToWorld(projection, { x: 1, y: 0 }), { x: 1, y: 0 })
+  const faceRightThen = (slot: "special") => [{ frame: 0, press: ["right" as const] }, { frame: 3, release: ["right" as const] }, press(slot, 8)]
+
+  it("bursts around her, leaps her back from where she faces (wherever the cursor is), and leaves fire where she stood", () => {
     expect(spec.kind).toBe("leap")
-    const run = arena([{ x: 80, y: 0 }, { x: -70, y: 40 }], { x: 300, y: 0 }, { build: gunner, keys: [press("special", 1)] })
+    // The cursor points behind her: the leap still goes back from where she faces.
+    const run = arena([{ x: 80, y: 0 }, { x: -70, y: 40 }], { x: -right.x * 300, y: -right.y * 300 }, { build: gunner, keys: faceRightThen("special") })
+    run.step(8)
+    const from = run.world().player
     run.step(40)
     const world = run.world()
     for (const enemy of world.enemies) expect(enemy.health).toBeLessThan(2000)
-    // Away from her aim (world east): west of where she stood, by about the leap.
-    expect(center.x - world.player.x).toBeGreaterThan((spec.kind === "leap" ? spec.distance : 0) * 0.8)
-    expect(world.pools.some((pool) => pool.element === "fire" && Math.hypot(pool.center.x - center.x, pool.center.y - center.y) < 1)).toBe(true)
+    const moved = { x: world.player.x - from.x, y: world.player.y - from.y }
+    expect(-(moved.x * right.x + moved.y * right.y)).toBeGreaterThan((spec.kind === "leap" ? spec.distance : 0) * 0.8)
+    expect(world.pools.some((pool) => pool.element === "fire" && Math.hypot(pool.center.x - from.x, pool.center.y - from.y) < 1)).toBe(true)
+  })
+
+  it("is in the air as she leaps: no attack, no dash, no steering, until she lands", () => {
+    const run = arena([], { x: 300, y: 0 }, { build: gunner, keys: [...faceRightThen("special"), { frame: 10, press: ["up"] }] })
+    run.step(12)
+    expect(run.airborne()).toBe(true)
+    run.step(steps(spec.kind === "leap" ? spec.air : 0) + 2)
+    expect(run.airborne()).toBe(false)
   })
 })
 

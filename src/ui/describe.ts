@@ -108,7 +108,9 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "cut":
       return `a ${elementWord(effect.element)}wave ahead of you (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
     case "leap":
-      return `a ${elementWord(effect.element)}burst around you (${effect.power}% ATK) as you leap away from your aim${effect.leaves === null ? "" : `, leaving ${poolNames[effect.leaves.element]}`}`
+      return `a ${elementWord(effect.element)}burst around you (${effect.power}% ATK) as you leap back from where you face${effect.leaves === null ? "" : `, leaving ${poolNames[effect.leaves.element]} that burns you too`}`
+    case "plunge":
+      return `a hop straight up and a dive ahead, landing with a ${elementWord(effect.element)}blast all around you that drives enemies back (${effect.power}% ATK)`
     case "blast":
       return `a ${elementWord(effect.element)}blast ${effect.arcDegrees >= 360 ? "all around you" : "wide in front of you"} that drives enemies far back (${effect.power}% ATK)`
     case "lob":

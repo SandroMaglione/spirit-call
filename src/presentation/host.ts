@@ -33,6 +33,8 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   root.innerHTML = `
     <div class="hud__vignette" data-vignette></div>
     <div class="hud__focus" data-focus></div>
+    <div class="hud__moment" data-moment></div>
+    <div class="hud__fall" data-fall></div>
     <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div><div class="hud__meter" data-meter hidden><b data-damage></b><span data-hits></span></div></div>
     <div class="hud__vitals">
       <span class="hud__state" data-state hidden></span>
@@ -104,7 +106,9 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       },
       banner: root.querySelector<HTMLElement>("[data-banner]")!,
       vignette: root.querySelector<HTMLElement>("[data-vignette]")!,
-      focus: root.querySelector<HTMLElement>("[data-focus]")!
+      focus: root.querySelector<HTMLElement>("[data-focus]")!,
+      moment: root.querySelector<HTMLElement>("[data-moment]")!,
+      fall: root.querySelector<HTMLElement>("[data-fall]")!
     }
   }
 }
@@ -257,7 +261,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     showArena,
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
     fallen: [],
-    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, protection: 0, entrance: Infinity, wideEyes: 0, stepIn: null, sway: { x: 0, y: 0, vx: 0, vy: 0, last: null }, recoil: new Map(), stateClock: { id: null, full: 0 }, meter: { recent: [] } },
+    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, moment: 0, protection: 0, entrance: Infinity, wideEyes: 0, stepIn: null, sway: { x: 0, y: 0, vx: 0, vy: 0, last: null }, recoil: new Map(), stateClock: { id: null, full: 0 }, meter: { recent: [] } },
     toCanvas: (world, height) => {
       const center = toScreen(projection, cameraView.center)
       const at = toScreenAt(projection, world, height)

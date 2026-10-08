@@ -163,6 +163,23 @@ export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
 export const Raising = Descriptor.Component<{ readonly remaining: number; readonly effect: GuardEffect; readonly atk: number; readonly charges: boolean }>()("Shooter/Raising")
 
 /**
+ * In the air, from a skill that takes her off the ground (see
+ * `PlungeEffect` and `LeapEffect`): for `remaining` more seconds of
+ * `seconds` she cannot run, dash, attack, use a skill, or switch out (a
+ * push already under way still carries her); `kind` is the skill's (how
+ * she moves through the air is drawn by it). As she lands, `landing` goes
+ * off where she is (if she is still on the field: falling loses it).
+ */
+export const Airborne = Descriptor.Component<{
+  readonly remaining: number
+  readonly seconds: number
+  readonly kind: "plunge" | "leap"
+  /** For her last `seconds` in the air she flies at `velocity` (a dive); `null` when she does not move on her own. */
+  readonly dive: { readonly seconds: number; readonly velocity: Vec2 } | null
+  readonly landing: ReadonlyArray<CastValue>
+}>()("Shooter/Airborne")
+
+/**
  * A rock of an Earthrise (see `EarthriseEffect`) about to erupt: its crack
  * follows `target` (while it stands) for `remaining` more seconds (below 0:
  * not cracking yet), then the rock erupts where the crack is (`at`), its
@@ -739,8 +756,33 @@ export interface CastValue {
   readonly direction: Vec2
   /** Whether its damage fills energy. */
   readonly charges: boolean
+  /** Set off at the end of its ultimate's moment (its clip played as the moment began). */
+  readonly called?: boolean
+  /** What a skill already used does as she lands (see `Airborne`): not a use of its own. */
+  readonly landing?: boolean
 }
 export const Cast = Descriptor.Event<CastValue>()("Shooter/Cast")
+
+/**
+ * An ultimate's moment, as in Genshin: as she calls it up the world stands
+ * still (a hit-stop, see `HitStop`; enemies, shots, and the team alike) for
+ * `remaining` more seconds of `seconds`, then `cast` goes off where she
+ * stood. `character` is whose it is (for drawing); no moment when `cast`
+ * is `null`.
+ */
+export const UltimateMoment = Descriptor.Resource<{ readonly remaining: number; readonly seconds: number; readonly cast: CastValue | null; readonly character: CharacterId | null }>()("Shooter/UltimateMoment")
+export const noUltimateMoment = { remaining: 0, seconds: 0, cast: null, character: null } as const
+
+/** An ultimate's moment began (see `UltimateMoment`): who calls it, where, and which. */
+export const UltimateCalled = Descriptor.Event<{ readonly at: Vec2; readonly character: CharacterId; readonly skill: SkillId }>()("Shooter/UltimateCalled")
+
+/**
+ * The character coming in after a fall stands held for `remaining` more
+ * seconds (no running, dashing, attacking, or skills) while the one who
+ * fell goes down, the enemies slowed to a crawl meanwhile (see
+ * `SwitchCharacter`).
+ */
+export const Arrival = Descriptor.Resource<{ readonly remaining: number }>()("Shooter/Arrival")
 
 /** A projectile stopped against a wall or a shield, or ran out of range. */
 /**
@@ -1078,6 +1120,7 @@ export const Game = Schema.bind(
       Vortex,
       Totem,
       Raising,
+      Airborne,
       PlateShatter,
       Rock,
       Health,
@@ -1108,6 +1151,8 @@ export const Game = Schema.bind(
       Tuning,
       Team,
       TeamSwitch,
+      UltimateMoment,
+      Arrival,
       Guard,
       Challenge,
       EnemyLevel,
@@ -1134,7 +1179,7 @@ export const Game = Schema.bind(
       Practice,
       PracticeField
     },
-    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, Heal, Guarded, Reaction, Zap }
+    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
   }),
   Root
 )

@@ -67,8 +67,12 @@ export const defaultTuning = {
     benchEnergyShare: 0.3,
     /** Invulnerability for the character who comes in when the last one falls: she did not choose the moment. */
     fallProtection: 2.5,
-    /** As she comes in after a fall, the enemies slow to `scale` for `seconds` (a beat to take in the fight). */
-    fallBeat: { seconds: 0.6, scale: 0.35 }
+    /**
+     * After a fall, a beat to take it in: for `seconds` the one who fell goes
+     * down, the enemies slowed to `scale`, and the one coming in stands held
+     * (see `Arrival`); her protection counts from when she steps in.
+     */
+    fallBeat: { seconds: 1, scale: 0.1 }
   },
 
   /** Every character, by id; the `Team` resource picks the ones in the arena. */
@@ -163,14 +167,23 @@ export const defaultTuning = {
   /** States, bursts, thunder's strikes, and affinities (see content/elements.ts). */
   elements: elementRules,
 
-  /** Energy, spent by skills that cost it (the Nova). */
+  /** Energy, spent by skills that cost it (the ultimates). */
   energy: {
     max: 100,
     /** Energy per landed action; additional targets share a capped bonus. */
     attack: 3,
-    special: 10,
-    targetCap: 1.5
+    special: 15,
+    targetCap: 1.5,
+    /**
+     * Energy the team gains when it breaks an enemy (see `Tuning.breaking`):
+     * the one on the field all of it, the bench its share. None for now:
+     * early quests break enemies so often that it doubled the ultimates.
+     */
+    break: 0
   },
+
+  /** An ultimate's moment (see `UltimateMoment`): the world stands still this long as she calls it up, then it goes off. */
+  ultimate: { moment: 0.75 },
 
   knockback: {
     /** Exponential decay rate of knockback velocity; total push = speed / decay. */
@@ -203,7 +216,7 @@ export const defaultTuning = {
    * `invulnerability` seconds longer.
    * Any reward can be turned off (0, false).
    */
-  perfectDodge: { window: 0.15, slowScale: 0.25, slowSeconds: 0.7, breakFill: 0.25, dashRefund: 1, energy: 4, reload: true, invulnerability: 0.25 },
+  perfectDodge: { window: 0.15, slowScale: 0.25, slowSeconds: 0.7, breakFill: 0.25, dashRefund: 1, energy: 10, reload: true, invulnerability: 0.25 },
 
   /**
    * Breaking enemies (see `features/poise.ts`). A blow fills an enemy's bar

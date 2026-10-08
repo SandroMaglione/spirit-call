@@ -297,8 +297,8 @@ const resolveTouch = (
 }
 
 /**
- * A skill button into the slot's input. A skill around the player goes off
- * on touch. An aimed one goes on release: a drag aims it (a direction for a
+ * A skill button into the slot's input. A skill around the player, or
+ * where she faces, goes off on touch. An aimed one goes on release: a drag aims it (a direction for a
  * cut, which reaches its full length; a point for a lob, as far as the drag
  * is long); a tap uses it where the player faces (a lob lands at
  * `tapThrowRange` of its range).
@@ -306,7 +306,8 @@ const resolveTouch = (
 const touchSkill = (touch: TouchSnapshot, slot: SkillSlot, effect: SkillEffect, origin: Vec2, ahead: Vec2, tuning: TuningValue): SkillControl => {
   const button = touch.buttons[slot]
   const aim = skillAim(effect)
-  if (aim.kind === "self") return { pressed: button.pressed, at: origin, aiming: null }
+  // Around her, or where she faces: on touch, nothing to aim.
+  if (aim.kind === "self" || aim.kind === "facing") return { pressed: button.pressed, at: origin, aiming: null }
   const toward = (drag: Vec2 | null): Vec2 => {
     const direction = drag === null ? ahead : worldDirection(drag, ahead)
     const distance = aim.kind === "direction" ? aim.reach : drag === null ? aim.range * tuning.touch.tapThrowRange : aim.range * length(drag)

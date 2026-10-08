@@ -154,9 +154,11 @@ The rules are in `docs/elements.md`; in short:
   An aspect's passive works only while its character is on the field.
 - **Falling.** When the character on the field falls, the next one in order
   comes in, with a moment of protection (she did not choose the moment). The
-  fall is seen (she goes down before the next one appears), but the switch
-  itself is immediate. The
-  run is lost when the whole team has fallen. Reviving is for later.
+  fall is a beat of its own (about a second): the world nearly stops (the
+  enemies crawl) and darkens at its edges, she comes apart into her
+  element's light, and the next one stands held until she steps in; her protection
+  counts from then. The run is lost when the whole team has fallen.
+  Reviving is for later.
 - **One team is saved**, set up in the menu (its order is the 1, 2, 3 and
   who starts); several saved teams may come later.
 

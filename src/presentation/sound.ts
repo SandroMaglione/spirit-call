@@ -33,6 +33,8 @@ export type SoundName =
   | "victory"
   | "defeat"
   | "star"
+  | "ultimateCall"
+  | "ultimateRelease"
   | "sealCrack"
   | "sealBurst"
   | "sealRise"
@@ -223,6 +225,18 @@ const voices: Record<SoundName, readonly [Mix, (voice: Voice) => void]> = {
     tone(v, "sine", 55, 40, 0.6, 0.22)
     tone(v, "sine", 440, 880, 0.8, 0.08, 0.05, 0.05)
     tone(v, "sine", 660, 1320, 0.9, 0.06, 0.1, 0.05)
+  }],
+  // An ultimate's moment: power drawn in (a rising, swelling hum with a whoosh pulled in), then let go (a deep blast with a bright crack on top).
+  ultimateCall: [{ reverb: 0.6, interval: 0.6 }, (v) => {
+    tone(v, "sawtooth", 110, 330, 0.72, 0.05, 0, 0.5)
+    tone(v, "sine", 220, 660, 0.72, 0.07, 0, 0.5)
+    noise(v, "bandpass", 300, 3800, 0.72, 0.14, 1.5, 0, 0.6)
+  }],
+  ultimateRelease: [{ reverb: 0.7, heavy: true, interval: 0.4 }, (v) => {
+    tone(v, "sine", 80, 32, 0.8, 0.34, 0, 0.004)
+    crunch(v, 3000, 400, 0.3, 0.3)
+    noise(v, "lowpass", 2400, 200, 0.7, 0.24, 0.7, 0, 0.004)
+    metal(v, 523, 1.1, 0.05, 0.02)
   }],
   // The light behind the seal turning purple: a shimmer swelling up. Turning gold: the room drops (a deep thud), then a bell rings out.
   sealRise: [{ reverb: 0.55, interval: 0.3 }, (v) => {

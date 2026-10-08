@@ -4,6 +4,9 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { damageDealt } from "../src/features/build.ts"
 import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
+import { projection } from "../src/config/view.ts"
+import { screenDirectionToWorld } from "../src/math/iso.ts"
+import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
 import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack } from "./helpers.ts"
@@ -47,24 +50,63 @@ const FillEnergy = Game.System("Test/FillEnergy", {
 const hp = defaultTuning.enemies.dummy.hp
 const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
-describe("Gust (Space)", () => {
-  const gust = defaultTuning.skills.bladeWave.effect
-  const press = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
+/** Gust as shipped: a hop and a dive. */
+const plungeOf = (tuning: typeof defaultTuning) => {
+  const gust = tuning.skills.bladeWave.effect
+  if (gust.kind !== "plunge") throw new Error("Gust is a plunge")
+  return gust
+}
+/** How long Gust keeps her in the air. */
+const riseOf = (tuning: typeof defaultTuning): number => plungeOf(tuning).rise + plungeOf(tuning).dive
 
-  it("blasts all around her, driving what it catches far away, and leaves what is out of its reach", () => {
-    expect(gust.kind).toBe("blast")
-    const reach = gust.kind === "blast" ? gust.radius : 0
-    const run = range([{ x: 120, y: 30 }, { x: -110, y: -60 }, { x: reach + 120, y: 0 }], { x: 300, y: 0 }, { keys: [press(1)] })
+/** Where walking right on the screen faces her, on the floor. */
+const screenRight = normalizeOr(screenDirectionToWorld(projection, { x: 1, y: 0 }), { x: 1, y: 0 })
+const along = (distance: number, side = 0): Vec2 => ({ x: screenRight.x * distance - screenRight.y * side, y: screenRight.y * distance + screenRight.x * side })
+/** A step to the right (to face it), then Gust. */
+const faceRightThenGust = [{ frame: 0, press: ["right" as const] }, { frame: 3, release: ["right" as const] }, { frame: 8, press: ["special" as const], release: ["special" as const] }]
+
+describe("Gust (Space)", () => {
+  const gust = plungeOf(defaultTuning)
+
+  it("hops straight up, untouchable and still, then dives ahead where she faces, striking nothing on the way", () => {
+    const run = range([along(gust.distance + gust.radius + 60)], { x: 0, y: 300 }, { keys: faceRightThenGust })
+    run.step(10)
+    const from = run.player().position
+    run.step(steps(gust.rise) - 3)
+    expect(run.player().position).toEqual(from)
+    expect(run.player().invulnerable).toBeGreaterThan(0)
+    run.step(steps(gust.dive) + 6)
+    const moved = { x: run.player().position.x - from.x, y: run.player().position.y - from.y }
+    const ahead = moved.x * screenRight.x + moved.y * screenRight.y
+    expect(ahead).toBeGreaterThan(gust.distance * 0.85)
+    expect(ahead).toBeLessThan(gust.distance * 1.15)
+    run.step(20)
+    // Out of the landing's reach: untouched.
+    expect(run.world().enemies[0]!.health).toBe(hp)
+  })
+
+  it("lands with a gust all around her, driving what is near back within reach", () => {
+    const run = range([along(gust.distance + 120), along(gust.distance - 150), along(gust.distance, 120)], { x: 0, y: 300 }, { keys: faceRightThenGust })
+    run.step(10)
+    // Right before she lands: nothing struck yet.
+    run.step(steps(riseOf(defaultTuning)) - 2)
     const before = run.world().enemies.map((enemy) => enemy.position)
+    expect(run.world().enemies.every((enemy) => enemy.health === hp)).toBe(true)
     run.step(40)
-    const [front, behind, far] = run.world().enemies
-    expect(front!.health).toBeLessThan(hp)
-    expect(behind!.health).toBeLessThan(hp)
-    expect(far!.health).toBe(hp)
-    // Driven well away from her, each its own way.
-    expect(front!.position.x - before[0]!.x).toBeGreaterThan(150)
-    expect(before[1]!.x - behind!.position.x).toBeGreaterThan(100)
-    expect(far!.position).toEqual(before[2])
+    const after = run.world().enemies
+    for (const enemy of after) expect(enemy.health).toBeLessThan(hp)
+    const pushed = Math.hypot(after[0]!.position.x - before[0]!.x, after[0]!.position.y - before[0]!.y)
+    expect(pushed).toBeGreaterThan(30)
+    expect(pushed).toBeLessThan(140)
+  })
+
+  it("dives where she faces, never toward the cursor", () => {
+    const run = range([], { x: -screenRight.x * 300, y: -screenRight.y * 300 }, { keys: faceRightThenGust })
+    run.step(10)
+    const from = run.player().position
+    run.step(steps(riseOf(defaultTuning)) + 10)
+    const moved = { x: run.player().position.x - from.x, y: run.player().position.y - from.y }
+    expect(moved.x * screenRight.x + moved.y * screenRight.y).toBeGreaterThan(gust.distance * 0.85)
   })
 })
 
@@ -181,7 +223,7 @@ describe("ultimates (Shift)", () => {
     const dummies = [{ x: 100, y: 0 }, { x: -100, y: 0 }, { x: 0, y: 100 }, { x: 0, y: -100 }]
     for (const level of [1, 40]) {
       const run = range(dummies, { x: 200, y: 0 }, { tuning: sturdy, build: { character: "swordsman", level }, keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
-      run.step(20)
+      run.step(steps(riseOf(defaultTuning)) + 20)
       expect(run.world().energy).toBe(defaultTuning.energy.special * defaultTuning.energy.targetCap)
     }
   })
@@ -266,6 +308,34 @@ describe("ultimates (Shift)", () => {
       expect(run.world().grenades).toEqual([])
       expect(run.world().pools).toHaveLength(spec.shells)
       expect(run.world().enemies[0]!.health).toBeLessThanOrEqual(1000 - spec.power)
+    })
+  })
+
+  describe("an ultimate's moment", () => {
+    const tide = defaultTuning.skills.tide.effect
+    const moment = defaultTuning.ultimate.moment
+
+    it("stands the world still as she calls it up, then goes off where she called it", () => {
+      expect(moment).toBeGreaterThan(0)
+      // She also holds a direction: nothing moves while the world stands still.
+      const run = range([{ x: tide.radius - 20, y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, moments: true, keys: [ultimate(1), { frame: 2, press: ["right"] }] })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(3)
+      const from = run.player().position
+      expect(run.world().energy).toBe(0)
+      run.step(steps(moment) - 4)
+      expect(run.world().enemies[0]!.health).toBe(1000)
+      expect(run.player().position).toEqual(from)
+      run.step(6)
+      expect(run.world().enemies[0]!.health).toBe(1000 - tide.power)
+      expect(run.world().enemies[0]!.state).toBe("soaked")
+    })
+
+    it("leaves her untouchable as it goes off", () => {
+      const run = range([], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, moments: true, keys: [ultimate(1)] })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(steps(moment) + 2)
+      expect(run.player().invulnerable).toBeGreaterThan(0)
     })
   })
 
