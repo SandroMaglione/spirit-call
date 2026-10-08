@@ -176,7 +176,8 @@ describe("switching", () => {
 describe("the bench", () => {
   it("runs skill cooldowns down", () => {
     // Gust keeps her in the air for a moment (no switching meanwhile): she switches out once she lands.
-    const landed = steps(0.5)
+    const gust = tuning.skills.bladeWave.effect
+    const landed = steps((gust.kind === "plunge" ? gust.rise + gust.dive : 0) + 0.2)
     const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["special"], release: ["special"] }, { frame: landed, press: ["team2"], release: ["team2"] }] })
     team.step(landed + 2)
     const benched = team.world().members[0]!.special
