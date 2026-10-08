@@ -19,6 +19,11 @@ elements they attack with, are in `docs/elements.md`.
   at least `fairness.minTelegraph` (0.3 s) before it lands: the fairness
   floor, checked by `validateContent`. Nothing that makes enemies harder
   (a hardcore tier, a modifier) may go below it.
+- **Where, never when.** A warning shows where a blow lands, dim while it
+  tracks and bright once its aim locks, but nothing fills up counting down
+  to the hit (no filling area, burst ring, or bomb fuse): the timing is
+  read from the enemy's body. Shots show no aim line: the shot, flying, is
+  the warning (playtest, October 2026).
 - **Pressure comes from enemies working together**, not from unreadable
   attacks: more of them engaging at once, attacks covering each other's
   escape routes, elements that combine. The crowd's rhythm keeps it
@@ -246,10 +251,6 @@ avoidable and the fairness test checks every phase.
   blows are held up long while they track her (a dodge made as it is
   raised is spent before it falls), and some look alike with different
   timings (the King's quick smash and slam).
-- **Where, not when.** Its warnings show where each blow lands, brighten as
-  its aim locks (never less than the fairness floor before it lands), but
-  never fill up counting down to the hit: its timing is read from its
-  body.
 - **It answers being pressed.** Struck again and again lately (the read
   `pressed`, `Tuning.champions.pressed`: a count of the blows it took,
   draining), its answer comes as soon as it is free, its rest cut short:
