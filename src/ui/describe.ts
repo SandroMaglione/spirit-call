@@ -18,6 +18,7 @@ import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from
 import type { Rewards, Unlock } from "../content/quests.ts"
 import type { SkillEffect, SkillSpec } from "../content/skills.ts"
 import { aspectOf } from "../content/aspects.ts"
+import type { MoveEffect } from "../content/aspects.ts"
 
 export const statNames: { readonly [Stat in keyof Stats]: string } = { hp: "HP", atk: "ATK", def: "DEF", speed: "SPD" }
 
@@ -61,14 +62,18 @@ export const describeInfuse = (move: MoveFilter, element: ElementId): string =>
 /**
  * Where an aspect's element comes from, for a character of `element` (or,
  * with `null`, for whoever wears it): the one move that carries it (or what
- * its passive sets off), and that the rest is the same for every element.
+ * a move sets off), and that the rest is the same for every element.
  */
-export const describeAspectElement = (aspect: { readonly infuse: MoveFilter | null; readonly passives: ReadonlyArray<Passive> }, element: ElementId | null): string => {
+export const describeAspectElement = (aspect: { readonly infuse: MoveFilter | null; readonly effects: ReadonlyArray<MoveEffect> }, element: ElementId | null): string => {
   const sameForAll = "The rest, pulls and pushes too, is the same for every element."
   if (aspect.infuse !== null) return `${element === null ? `${capitalized(describeMove(aspect.infuse))} carries the element of whoever wears it.` : describeInfuse(aspect.infuse, element)} ${sameForAll}`
-  const own = aspect.passives.some((passive) => passive.kind === "on" && passive.effect.kind === "cast" && passive.effect.own)
-  return own ? `Only what its passive sets off carries ${element === null ? "the wearer's element" : `her element (${elements[element].name})`}. ${sameForAll}` : "None of its moves carries her element."
+  const own = aspect.effects.find((effect) => effect.own)
+  return own !== undefined ? `Only what ${describeMove(own.move)} sets off carries ${element === null ? "the wearer's element" : `her element (${elements[element].name})`}. ${sameForAll}` : "None of its moves carries her element."
 }
+
+/** What a move of an aspect also sets off, in a sentence. */
+export const describeMoveEffect = (effect: MoveEffect): string =>
+  `${capitalized(describeMove(effect.move))} also sets off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? ", carrying her element" : ""}.`
 
 const capitalized = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
 
@@ -80,8 +85,10 @@ const describeCondition = (condition: HitCondition): string => {
       return ` with ${describeMove(condition.move)}`
     case "targetHealthBelow":
       return ` to enemies below ${Math.round(condition.fraction * 100)}% HP`
+    case "targetUnhurt":
+      return " to unhurt enemies"
     case "targetInState":
-      return " to enemies in a state (any one)"
+      return condition.state === null ? " to enemies in a state (any one)" : ` to ${condition.state} enemies`
     case "targetHeld":
       return " to stunned or broken enemies"
   }
@@ -90,9 +97,15 @@ const describeCondition = (condition: HitCondition): string => {
 const describeTrigger = (trigger: Trigger): string => {
   switch (trigger.kind) {
     case "kill":
-      return "On kill"
+      return trigger.state === null ? "On kill" : trigger.state === "any" ? "On killing an enemy in a state" : `On killing a ${trigger.state} enemy`
     case "move":
       return `On ${describeMove(trigger.move)}`
+    case "dash":
+      return "On dash"
+    case "perfectDodge":
+      return "On perfect dodge"
+    case "break":
+      return "On a break"
   }
 }
 
@@ -137,7 +150,11 @@ const describeTriggered = (effect: TriggeredEffect): string => {
     case "heal":
       return `heal ${effect.percent}% of max HP`
     case "cast":
-      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? ", carrying her element" : ""}`
+      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.at === "there" ? " there" : ""}${effect.own ? ", carrying her element" : ""}`
+    case "leave":
+      return `leave ${poolNames[effect.ground.element]} for ${effect.ground.seconds}s`
+    case "dashCharge":
+      return "a dash back"
   }
 }
 
@@ -146,7 +163,7 @@ export const describePassive = (passive: Passive): string => {
     case "damageBonus":
       return `+${passive.percent}% damage${describeCondition(passive.when)}`
     case "on":
-      return `${describeTrigger(passive.trigger)}: ${describeTriggered(passive.effect)}`
+      return `${describeTrigger(passive.trigger)}: ${describeTriggered(passive.effect)}${passive.every > 0 ? ` (at most every ${passive.every}s)` : ""}`
   }
 }
 

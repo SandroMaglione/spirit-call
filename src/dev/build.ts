@@ -1,8 +1,9 @@
 /**
  * Picks the team and the challenge from the page URL, over the account's
  * last ones, to try them without the menu: `?team=swordsman,tidecaller`,
- * the first one's build with `?character=gunner&aspect=marksman`,
- * everyone's levels with `?level=20`, and
+ * the first one's build with `?character=gunner&aspect=marksman` and
+ * `&relics=echo:3,repel` (each in its slot, at a tier from 1 to 3; 1 when
+ * missing), everyone's levels with `?level=20`, and
  * `?challenge=swarm&enemyLevel=15`, `?arena=cistern` to fight every
  * challenge in one arena, and `?wave=4` to start every challenge at its
  * fourth wave (to try a champion without the waves before it). Unknown ids and levels that are not whole numbers
@@ -14,6 +15,8 @@ import type { ChallengeId } from "../content/challenges.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { AspectId } from "../content/aspects.ts"
+import { relicOf, relicTiers } from "../content/relics.ts"
+import type { EquippedRelic, RelicId, RelicSlot, RelicTier } from "../content/relics.ts"
 import { defaultBuild, defaultTeam } from "../features/build.ts"
 import { defaultChallenge } from "../features/challenges.ts"
 import type { BuildValue, EnemyKind, PracticeValue } from "../schema.ts"
@@ -70,7 +73,19 @@ const withLevels = (query: URLSearchParams, build: BuildValue): BuildValue => {
   return { ...build, ...(level === undefined ? {} : { level }) }
 }
 
-const buildKeys = ["character", "aspect"] as const
+const buildKeys = ["character", "aspect", "relics"] as const
+
+/** The URL's relics (`echo:3,repel`), each in its slot (the last one named for a slot wins). */
+const relicsFromQuery = (tuning: Tuning, value: string | null): { readonly [Slot in RelicSlot]?: EquippedRelic } => {
+  const relics: { [Slot in RelicSlot]?: EquippedRelic } = {}
+  for (const entry of (value ?? "").split(",")) {
+    const [id = "", tier] = entry.split(":")
+    if (!known<RelicId>(tuning.relics, id)) continue
+    const level = Number(tier ?? 1)
+    relics[relicOf(tuning.relics, id).slot] = { id, tier: relicTiers.includes(level as RelicTier) ? (level as RelicTier) : 1 }
+  }
+  return relics
+}
 
 /** The URL's build (missing parts are the defaults), or `fallback` when it names no part of one. */
 export const buildFromQuery = (tuning: Tuning, search: string, fallback: BuildValue = defaultBuild): BuildValue => {
@@ -78,10 +93,11 @@ export const buildFromQuery = (tuning: Tuning, search: string, fallback: BuildVa
   if (!buildKeys.some((key) => query.has(key))) return withLevels(query, fallback)
   const character = query.get("character")
   const aspect = query.get("aspect")
-  // An aspect of another class is ignored when the build resolves (see `aspectFor`).
+  // An aspect of another class is ignored when the build resolves (see `aspectFor`); a relic that does not fit her, as the team enters (see `withValidRelics`).
   return withLevels(query, {
     character: known<CharacterId>(tuning.characters, character) ? character : defaultBuild.character,
-    ...(known<AspectId>(tuning.aspects, aspect) ? { aspect } : {})
+    ...(known<AspectId>(tuning.aspects, aspect) ? { aspect } : {}),
+    ...(query.has("relics") ? { relics: relicsFromQuery(tuning, query.get("relics")) } : {})
   })
 }
 

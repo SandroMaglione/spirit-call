@@ -208,6 +208,19 @@
     "whirlpool",
     "lightningRod"
   ],
+  "relics": [
+    "opportunist",
+    "echo",
+    "counterpoint",
+    "repel",
+    "momentum",
+    "afterimage",
+    "emberHeart",
+    "undertow",
+    "tailwind",
+    "staticCharge",
+    "bedrock"
+  ],
   "materials": [
     "fireShard",
     "fireCore",

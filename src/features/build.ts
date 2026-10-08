@@ -1,22 +1,26 @@
 /**
  * Builds and the damage formula.
  *
- * A build (a character, at her level, with the aspect equipped on her)
- * resolves into the final stats, kit (her own skills), basic attack (her
- * class's, shaped by the aspect), and passives she enters the arena with.
- * Her level gives all her stats; an aspect gives none.
+ * A build (a character, at her level, with the aspect and relics equipped
+ * on her) resolves into the final stats, kit (her own skills), basic attack
+ * (her class's, shaped by the aspect), and passives she enters the arena
+ * with (what her aspect's moves also set off, and her relics'). Her level
+ * gives all her stats; an aspect or a relic gives none.
  *
  * Damage comes from stats: an attack deals its `power` as a percentage of the
  * attacker's ATK, and the target's DEF reduces it (see `Tuning.combat`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { aspectOf, basicAttack } from "../content/aspects.ts"
-import type { AspectId } from "../content/aspects.ts"
+import type { AspectId, AspectSpec } from "../content/aspects.ts"
 import type { BasicAttackSpec } from "../content/attacks.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { StatCurve } from "../content/progression.ts"
+import { doing, on } from "../content/passives.ts"
 import type { Passive } from "../content/passives.ts"
+import { relicOf, relicSlots } from "../content/relics.ts"
+import type { EquippedRelic, RelicId, RelicSlot } from "../content/relics.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
 import type { AttackRef, BuildValue } from "../schema.ts"
 
@@ -61,10 +65,21 @@ export const aspectFor = (tuning: TuningValue, character: CharacterId, id: Aspec
   return aspectOf(tuning.aspects, id).class === tuning.characters[character].class ? id : null
 }
 
+/** What an aspect's moves also set off, as passives (each time the move is done). */
+export const aspectPassives = (aspect: AspectSpec): ReadonlyArray<Passive> =>
+  aspect.effects.map(({ move, effect, own }) => on(doing(move), { kind: "cast", effect, own, at: "self" }))
+
+/** The passives of `relics` (each at its tier), slot by slot. */
+export const relicPassives = (tuning: TuningValue, relics: BuildValue["relics"]): ReadonlyArray<Passive> =>
+  relicSlots.flatMap((slot) => {
+    const equipped = relics?.[slot]
+    return equipped === undefined || !Object.hasOwn(tuning.relics, equipped.id) ? [] : relicOf(tuning.relics, equipped.id).tiers[equipped.tier].passives
+  })
+
 /**
  * Final stats and kit of `build`: the character's stats at its level, her
- * own skills, and her basic attack (her class with the aspect equipped, if
- * it is of her class) with its passives.
+ * own skills, her basic attack (her class with the aspect equipped, if it
+ * is of her class), and her passives (her aspect's, then her relics').
  */
 export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBuild => {
   const character = tuning.characters[build.character]
@@ -77,7 +92,7 @@ export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBu
     element: character.element,
     attack: { class: character.class, aspect },
     skills: character.skills,
-    passives: aspect === null ? [] : aspectOf(tuning.aspects, aspect).passives
+    passives: [...(aspect === null ? [] : aspectPassives(aspectOf(tuning.aspects, aspect))), ...relicPassives(tuning, build.relics)]
   }
 }
 
@@ -119,6 +134,59 @@ export const withValidAspects = <Build extends { readonly character: CharacterId
     }
     const { aspect: _dropped, ...plain } = build
     return plain as Build
+  })
+}
+
+/** Whether `relic` may sit in `slot` of `character`: it is a relic of that slot, and an Element relic is of her element. */
+export const relicFits = (tuning: TuningValue, character: CharacterId, slot: RelicSlot, relic: RelicId): boolean => {
+  if (!Object.hasOwn(tuning.relics, relic)) return false
+  const spec = relicOf(tuning.relics, relic)
+  return spec.slot === slot && (spec.element === null || spec.element === tuning.characters[character].element)
+}
+
+/** What breaks the relic rules in a team (see docs/relics.md): a relic in a slot it does not fit, or one on two members. */
+export type RelicProblem =
+  | { readonly kind: "misfit"; readonly character: CharacterId; readonly slot: RelicSlot; readonly relic: RelicId }
+  | { readonly kind: "twice"; readonly relic: RelicId; readonly characters: ReadonlyArray<CharacterId> }
+
+type RelicHolder = { readonly character: CharacterId; readonly relics?: { readonly [Slot in RelicSlot]?: { readonly id: RelicId } } | undefined }
+
+/** What breaks the relic rules in `team` (each member with her relics). */
+export const relicProblems = (tuning: TuningValue, team: ReadonlyArray<RelicHolder>): Array<RelicProblem> => {
+  const problems: Array<RelicProblem> = []
+  const holders = new Map<RelicId, Array<CharacterId>>()
+  for (const { character, relics } of team) {
+    for (const slot of relicSlots) {
+      const relic = relics?.[slot]?.id
+      if (relic === undefined) continue
+      if (!relicFits(tuning, character, slot, relic)) {
+        problems.push({ kind: "misfit", character, slot, relic })
+        continue
+      }
+      holders.set(relic, [...(holders.get(relic) ?? []), character])
+    }
+  }
+  for (const [relic, characters] of holders) if (characters.length > 1) problems.push({ kind: "twice", relic, characters })
+  return problems
+}
+
+/**
+ * `team` keeping only the relics the rules allow: each in a slot it fits,
+ * on one member (the first to hold it keeps it). What enters the arena goes
+ * through it, quick-start links included.
+ */
+export const withValidRelics = <Build extends { readonly character: CharacterId; readonly relics?: { readonly [Slot in RelicSlot]?: EquippedRelic } | undefined }>(tuning: TuningValue, team: ReadonlyArray<Build>): ReadonlyArray<Build> => {
+  const taken = new Set<RelicId>()
+  return team.map((build) => {
+    if (build.relics === undefined) return build
+    const kept: { [Slot in RelicSlot]?: EquippedRelic } = {}
+    for (const slot of relicSlots) {
+      const relic = build.relics[slot]
+      if (relic === undefined || !relicFits(tuning, build.character, slot, relic.id) || taken.has(relic.id)) continue
+      taken.add(relic.id)
+      kept[slot] = relic
+    }
+    return { ...build, relics: kept }
   })
 }
 

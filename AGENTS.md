@@ -6,7 +6,8 @@ design direction (pillars, non-goals, open questions). Design decisions are
 checked against it; open questions are asked, not guessed. Detailed rules
 for one area live next to it (`docs/elements.md`: elements, states, bursts,
 ground effects, enemy traits; `docs/aspects.md`: classes, aspects, and how
-they are owned and equipped; `docs/enemies.md`: enemy movesets, behaviors,
+they are owned and equipped; `docs/relics.md`: relics, their slots and
+tiers; `docs/enemies.md`: enemy movesets, behaviors,
 fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 `docs/spirits.md`: characters' spirits, from a character sheet to the game;
 `docs/quests.md`: quests, stars, ranks, materials, and ascension;
@@ -75,7 +76,7 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 ## How the code is organized
 
 - `src/content/`: the game's content as data (characters, classes, aspects
-  and their passives, skills, enemies, challenges, quests, hardcore tracks,
+  and what their moves set off, relics, skills, enemies, challenges, quests, hardcore tracks,
   discoveries, currencies, progression numbers, the starter set, the Spirit
   Call's banners and odds). Adding
   content is mostly adding entries; new kinds (a new effect, condition, or

@@ -14,6 +14,7 @@
  */
 import { arenas } from "../content/arena.ts"
 import { aspects } from "../content/aspects.ts"
+import { relics } from "../content/relics.ts"
 import { banners, callRules } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
 import { championMovesets } from "../content/champions.ts"
@@ -112,6 +113,9 @@ export const defaultTuning = {
 
   /** Every aspect, by id: a way of using a class (see content/aspects.ts). */
   aspects,
+
+  /** Every relic, by id: a small addition to how a character plays, in one of her slots (see content/relics.ts). */
+  relics,
 
   /**
    * Damage: an attack deals its `power` as a percentage of the attacker's
