@@ -148,7 +148,14 @@ is left, and keep text off it.
   `in-below`; the shell's pieces do it themselves).
 - A press scales the button down and brightens it; a tap makes the menu
   sound (wired once, in `main.ts`, for every button in the UI).
-- A level-up pulses the screen; the results' cards arrive one after another.
+- A level-up pulses the screen. The results come in a piece at a time
+  (about 2.3 s for a cleared quest, a tap shows it all): the title (a
+  victory bright, a defeat falling), each star (a new one lands with a
+  ping), the run, the cards one after another, the account's bar, then the
+  buttons.
+- Entering the arena, the screen is dark for a moment: what is played and
+  the team's faces come in, and it fades onto the run (0.9 s; the run
+  starts underneath, nothing waits).
 - `prefers-reduced-motion` turns all of it off.
 
 ## Behaviour worth knowing
