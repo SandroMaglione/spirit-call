@@ -244,6 +244,22 @@ describe("falling", () => {
     expect(team.field()).toBeUndefined()
   })
 
+  it("holds the one coming in while the one who fell goes down, the enemies crawling; her protection counts from when she steps in", () => {
+    // She holds a direction from the start: she stands still all the same until the beat is over.
+    const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["right"] }] })
+    team.runtime.tick(putIn(0, fire(400)))
+    let guard = 0
+    while (team.world().members[0]!.health > 0 && guard++ < 600) team.step()
+    team.step()
+    const beat = tuning.team.fallBeat.seconds
+    const from = team.field()!.position!
+    team.step(steps(beat) - 3)
+    expect(team.field()!.position).toEqual(from)
+    expect(team.field()!.invulnerable).toBeGreaterThan(tuning.team.fallProtection)
+    team.step(10)
+    expect(team.field()!.position).not.toEqual(from)
+  })
+
   it("goes around the order to find who is left", () => {
     const members = [{ slot: 0, alive: true }, { slot: 1, alive: false }, { slot: 2, alive: false }]
     expect(nextAlive(members, 2)?.slot).toBe(0)

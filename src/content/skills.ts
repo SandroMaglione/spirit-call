@@ -49,15 +49,34 @@ export interface BlastEffect extends EffectBase {
 }
 
 /**
- * A burst around the caster as she leaps away from her aim: a blast of
- * `radius` (out for `active`), then she is thrown `distance` back, leaving
- * her element's pool where she stood.
+ * A hop straight up and a sweep down: she rises for `rise` seconds (in the
+ * air, see `Airborne`), then, as she comes down, sweeps across the front
+ * where she faces: a cone of `radius`, `arcDegrees` wide, out for
+ * `active`, driving what it hits away from her.
+ * As she lands, a small puff all around her (`landing`: its power and push,
+ * within its radius) keeps off what stands behind her.
+ */
+export interface PlungeEffect extends EffectBase {
+  readonly kind: "plunge"
+  readonly rise: number
+  readonly radius: number
+  readonly arcDegrees: number
+  readonly active: number
+  readonly landing: { readonly radius: number; readonly power: number; readonly knockback: number }
+}
+
+/**
+ * A burst around the caster as she leaps back, away from where she faces: a
+ * blast of `radius` (out for `active`), then she is thrown `distance` back
+ * (in the air for `air` seconds, see `Airborne`), leaving her element's
+ * pool where she stood.
  */
 export interface LeapEffect extends EffectBase {
   readonly kind: "leap"
   readonly radius: number
   readonly active: number
   readonly distance: number
+  readonly air: number
   readonly leaves: GroundSpec | null
 }
 
@@ -201,7 +220,7 @@ export interface EarthriseEffect extends EffectBase {
   readonly breakFill: number
 }
 
-export type SkillEffect = CutEffect | BlastEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+export type SkillEffect = CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -225,6 +244,7 @@ export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in Ski
 /** Effect builders, also used by passives that set off a skill effect. */
 export const cut = (spec: Omit<CutEffect, "kind">): CutEffect => ({ kind: "cut", ...spec })
 export const blast = (spec: Omit<BlastEffect, "kind">): BlastEffect => ({ kind: "blast", ...spec })
+export const plunge = (spec: Omit<PlungeEffect, "kind">): PlungeEffect => ({ kind: "plunge", ...spec })
 export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "leap", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
 export const nova = (spec: Omit<NovaEffect, "kind">): NovaEffect => ({ kind: "nova", ...spec })
@@ -239,29 +259,32 @@ const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<E
 /** Every skill, by id. */
 export const skills = {
   /**
-   * The sword's special (id `bladeWave`, from when it was a cut): a gust
-   * blasting out all around her, driving everything it catches far back:
-   * into walls (stunned), into each other (sharing their states), out of her
-   * way.
+   * The sword's special (id `bladeWave`, from when it was a cut): she hops
+   * straight up and sweeps down across the front where she faces, a gust
+   * that drives what it catches back (into walls, stunned; into each other,
+   * sharing their states) while keeping it within reach of the next combo;
+   * landing, a puff all around her keeps off what stands behind her.
+   * Untouchable while in the air.
    */
   bladeWave: skill({
     name: "Gust",
     cooldown: 6,
     energy: 0,
-    invulnerability: 0,
-    effect: blast({ radius: 200, arcDegrees: 360, active: 0.12, power: 20, element: "wind", knockback: 1400, hitStop: 0.06, heavy: false })
+    invulnerability: 0.3,
+    effect: plunge({ rise: 0.3, radius: 200, arcDegrees: 200, active: 0.12, power: 20, element: "wind", knockback: 120, hitStop: 0.08, heavy: false, landing: { radius: 90, power: 5, knockback: 300 } })
   }),
   /**
    * The Gunner's special: a burst of fire at her feet, throwing back and
-   * setting alight what crowds her, as she leaps away from where she aims,
-   * leaving fire where she stood (enemies keep out of it).
+   * setting alight what crowds her, as she leaps back, away from where she
+   * faces, leaving fire where she stood (enemies keep out of it; it burns
+   * her too, if she walks back into it).
    */
   flareJump: skill({
     name: "Flare Jump",
     cooldown: 7,
     energy: 0,
     invulnerability: 0.35,
-    effect: leap({ radius: 150, active: 0.1, distance: 230, power: 22, element: "fire", knockback: 900, hitStop: 0.05, heavy: false, leaves: { element: "fire", radius: 70, seconds: 2.5 } })
+    effect: leap({ radius: 150, active: 0.1, distance: 230, air: 0.32, power: 22, element: "fire", knockback: 900, hitStop: 0.05, heavy: false, leaves: { element: "fire", radius: 70, seconds: 2.5 } })
   }),
   /**
    * The Tidecaller's special: a wave rolling out ahead of her, soaking and

@@ -195,6 +195,6 @@ describe("menu helpers", () => {
     const shockwave = nova({ radius: 150, power: 30, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.03, heavy: false })
     expect(describePassive(on(doing(finisher()), cast(shockwave)))).toMatch(/^On the combo finisher: set off a shockwave/)
     expect(describeSkill(defaultTuning.skills.tide)).toBe("A water shockwave around you (50% ATK) · 10s cooldown, 100 energy, untouchable as it goes off")
-    expect(describeSkill(defaultTuning.skills.flareJump)).toBe("A fire burst around you (22% ATK) as you leap away from your aim, leaving a fire pool · 7s cooldown, untouchable as it goes off")
+    expect(describeSkill(defaultTuning.skills.flareJump)).toBe("A fire burst around you (22% ATK) as you leap back from where you face, leaving a fire pool that burns you too · 7s cooldown, untouchable as it goes off")
   })
 })

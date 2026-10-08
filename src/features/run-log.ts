@@ -72,7 +72,7 @@ export const RecordRunLog = Game.System("Shooter/RecordRunLog", {
 
   for (const cast of casts) {
     const character = characters.get(cast.caster.value)
-    if (cast.faction === "player" && cast.skill !== null && character !== undefined) log = skill(log, character, cast.skill, (entry) => ({ ...entry, uses: entry.uses + 1 }))
+    if (cast.faction === "player" && cast.skill !== null && cast.landing !== true && character !== undefined) log = skill(log, character, cast.skill, (entry) => ({ ...entry, uses: entry.uses + 1 }))
   }
 
   for (const action of actions) {

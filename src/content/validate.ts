@@ -144,6 +144,9 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
     case "blast":
       positive(problems, where, { radius: effect.radius, arcDegrees: effect.arcDegrees, active: effect.active })
       return
+    case "plunge":
+      positive(problems, where, { rise: effect.rise, radius: effect.radius, arcDegrees: effect.arcDegrees, active: effect.active, landing: effect.landing.radius })
+      return
     case "lob":
       positive(problems, where, { maxRange: effect.maxRange, radius: effect.radius })
       if (effect.leaves !== null) {

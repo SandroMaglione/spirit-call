@@ -3,7 +3,7 @@
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import { Action, Aim, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { stateSpeed } from "./elements.ts"
 import { charging } from "./basic-attack.ts"
 import { attackOf } from "./build.ts"
@@ -14,8 +14,9 @@ import { attackOf } from "./build.ts"
  * while an attack or a skill holds her facing the way it went (see
  * `Facing`). While a move recovers she runs slower, or stands for a heavy
  * one (see `BasicAttackValue.slowed`), and stands while raising a guard
- * (see `Raising`): no dash then, and a dash press is dropped, not kept for
- * later. A dash moves the player a fixed distance
+ * (see `Raising`), in the air (see `Airborne`), or held coming in after a
+ * fall (see `Arrival`): no dash then, and a dash press is dropped, not kept
+ * for later. A dash moves the player a fixed distance
  * over a fixed time in a committed direction: the movement input, or the
  * way she faces when standing still. Its displacement is exact regardless
  * of the step length, because the last dash step only covers the time left.
@@ -33,7 +34,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         basicAttack: Game.Query.read(BasicAttack),
         stats: Game.Query.read(CombatStats),
         state: Game.Query.read(ElementState),
-        raising: Game.Query.optional(Raising)
+        raising: Game.Query.optional(Raising),
+        airborne: Game.Query.optional(Airborne)
       },
       with: [Player]
     })
@@ -41,7 +43,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
   resources: {
     controls: Game.System.readResource(Controls),
     tuning: Game.System.readResource(Tuning),
-    time: Game.System.readResource(Time)
+    time: Game.System.readResource(Time),
+    arrival: Game.System.readResource(Arrival)
   },
   events: { action: Game.System.writeEvent(Action) }
 }, ({ queries, resources, events }) => {
@@ -69,8 +72,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       charges += 1
       cooldown = charges < tuning.dash.charges ? cooldown + tuning.dash.cooldown : 0
     }
-    // Raising a guard, she stands: a dash under way stops, and a press is dropped.
-    const rooted = data.raising.present
+    // Raising a guard, in the air, or held coming in after a fall, she stands: a dash under way stops, and a press is dropped.
+    const rooted = data.raising.present || data.airborne.present || resources.arrival.get().remaining > 0
     if (rooted) remaining = 0
     let buffered = rooted ? 0 : controls.dashPressed ? tuning.dash.inputBuffer : Math.max(0, dash.buffered - dt)
     let since = dash.since + dt
@@ -103,10 +106,11 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       const attack = data.basicAttack.get()
       const spec = attackOf(tuning, attack.attack)
       const charge = spec.power !== null && charging(spec, attack) ? spec.power.moveSpeedMultiplier : 1
-      const speed = data.raising.present ? 0 : runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
+      const speed = rooted ? 0 : runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
-      data.velocity.set(moveToward(carried, target, rate * dt))
+      // In the air she goes straight up and down: what she was running with stops at once (a leap's push still carries her).
+      data.velocity.set(data.airborne.present ? { x: 0, y: 0 } : moveToward(carried, target, rate * dt))
     }
 
     data.dash.set({ remaining, charges, cooldown, buffered, direction, since, perfect, from })

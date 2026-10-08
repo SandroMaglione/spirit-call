@@ -13,15 +13,27 @@
  *
  * Landed attacks and specials fill energy from a shared action budget
  * (`ApplyDamage`). Ultimates, burns, pools, and passive effects do not.
+ *
+ * An ultimate has its moment first (see `UltimateMoment`): the world stands
+ * still as she calls it up, then it goes off (`ReleaseUltimates`). A skill
+ * that takes her off the ground (a plunge, a leap) keeps her in the air for
+ * a moment (`Airborne`), acting on landing (`LandAirborne`).
  */
-import { bySlot, lob } from "../content/skills.ts"
+import { blast, bySlot, lob } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import { clampLength, normalizeOr, rotate, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
   Aim,
+  Airborne,
+  Arrival,
   Facing,
+  HitStop,
+  Member,
+  UltimateCalled,
+  UltimateMoment,
+  noUltimateMoment,
   blow,
   Cast,
   CombatStats,
@@ -59,11 +71,14 @@ export const initialSkills = (build: { readonly skills: { readonly [Slot in Skil
 
 /**
  * How a skill is aimed: along a direction (reaching `reach`), at a point
- * within `range`, or not at all (it goes off around the caster).
+ * within `range`, where she faces (as she stands: nothing to aim, so it
+ * reads the same with a stick as with a mouse), or not at all (it goes off
+ * around the caster).
  */
 export type SkillAim =
   | { readonly kind: "direction"; readonly reach: number }
   | { readonly kind: "point"; readonly range: number }
+  | { readonly kind: "facing" }
   | { readonly kind: "self" }
 
 export const skillAim = (effect: SkillEffect): SkillAim => {
@@ -72,9 +87,10 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
       return { kind: "direction", reach: effect.length }
     case "blast":
       return { kind: "direction", reach: effect.radius }
+    case "plunge":
     case "leap":
-      // She leaps away from where she aims.
-      return { kind: "direction", reach: effect.distance }
+      // She sweeps where she faces, or leaps back from it: never toward a cursor or an assisted target.
+      return { kind: "facing" }
     case "vortex":
       // A whirl with no range is set down at her feet.
       return effect.maxRange > 0 ? { kind: "point", range: effect.maxRange } : { kind: "self" }
@@ -113,7 +129,10 @@ export const skillRecharge = (spec: SkillSpec, cooldown: number, energy: number)
 
 /**
  * Uses the skill of each slot pressed this step, once it is off cooldown and
- * the player has the energy for it.
+ * the player has the energy for it: not in the air, nor while coming in
+ * after a fall. A skill aimed where she faces goes that way; others toward
+ * the input's point. An ultimate has its moment first (see
+ * `UltimateMoment`): the world stands still, and it goes off after.
  */
 export const UseSkills = Game.System("Shooter/UseSkills", {
   queries: {
@@ -121,47 +140,122 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
       selection: {
         position: Game.Query.read(Position),
         aim: Game.Query.read(Aim),
+        facing: Game.Query.read(Facing),
+        member: Game.Query.read(Member),
         skills: Game.Query.write(Skills),
         energy: Game.Query.write(Energy),
         stats: Game.Query.read(CombatStats),
-        invulnerable: Game.Query.write(Invulnerable)
+        invulnerable: Game.Query.write(Invulnerable),
+        airborne: Game.Query.optional(Airborne)
       },
       with: [Player]
     })
   },
-  resources: { controls: Game.System.readResource(Controls), tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { cast: Game.System.writeEvent(Cast) }
+  resources: {
+    controls: Game.System.readResource(Controls),
+    tuning: Game.System.readResource(Tuning),
+    time: Game.System.readResource(Time),
+    arrival: Game.System.readResource(Arrival),
+    moment: Game.System.writeResource(UltimateMoment),
+    hitStop: Game.System.writeResource(HitStop)
+  },
+  events: { cast: Game.System.writeEvent(Cast), called: Game.System.writeEvent(UltimateCalled) }
 }, ({ queries, resources, events }) => {
   const controls = resources.controls.get()
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
+  const held = resources.arrival.get().remaining > 0
   for (const { entity, data } of queries.player.each()) {
     const from = data.position.get()
     const slots = data.skills.get()
+    const grounded = !data.airborne.present && !held
     let energy = data.energy.get().current
     data.skills.set(bySlot((slot) => {
       const { skill } = slots[slot]
       const spec: SkillSpec = tuning.skills[skill]
       const cooldown = Math.max(0, slots[slot].cooldown - dt)
       const input = controls.skills[slot]
-      if (!input.pressed || cooldown > 0 || energy < spec.energy) return { skill, cooldown }
+      if (!input.pressed || !grounded || cooldown > 0 || energy < spec.energy) return { skill, cooldown }
       energy -= spec.energy
       if (spec.invulnerability > 0) data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, spec.invulnerability) }))
-      events.cast.emit({
+      const facing = skillAim(spec.effect).kind === "facing"
+      const direction = facing ? data.facing.get().direction : normalizeOr(sub(input.at, from), data.aim.get())
+      const cast: CastValue = {
         caster: Game.Entity.handle(entity.id, Position),
         faction: "player",
         atk: data.stats.get().atk,
         skill,
         effect: spec.effect,
         from,
-        at: input.at,
-        direction: normalizeOr(sub(input.at, from), data.aim.get()),
+        at: facing ? { x: from.x + direction.x, y: from.y + direction.y } : input.at,
+        direction,
         charges: spec.energy === 0,
         energyAction: spec.energy === 0 ? { key: `${entity.id.value}/${resources.time.get().step}/special`, base: tuning.energy.special } : undefined
-      })
+      }
+      const moment = tuning.ultimate.moment
+      if (slot === "ultimate" && moment > 0) {
+        // Its moment: the world stands still (a hit-stop) while she calls it up; it goes off after (`ReleaseUltimates`).
+        const character = data.member.get().character
+        resources.moment.set({ remaining: moment, seconds: moment, cast: { ...cast, called: true }, character })
+        resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, moment) }))
+        events.called.emit({ at: from, character, skill })
+      } else events.cast.emit(cast)
       return { skill, cooldown: spec.cooldown }
     }))
     data.energy.set({ current: energy })
+  }
+})
+
+/**
+ * An ultimate's moment running out: once the world moves again (the
+ * moment's hit-stop over), the ultimate goes off where she called it. Runs
+ * every step of a run not paused, hit-stop or not, right after the
+ * hit-stop's own count (see `TickHitStop`), so the cast is carried out by
+ * this step's casting systems.
+ */
+export const ReleaseUltimates = Game.System("Shooter/ReleaseUltimates", {
+  resources: {
+    moment: Game.System.writeResource(UltimateMoment),
+    hitStop: Game.System.readResource(HitStop),
+    time: Game.System.readResource(Time)
+  },
+  events: { cast: Game.System.writeEvent(Cast) }
+}, ({ resources, events }) => {
+  const moment = resources.moment.get()
+  if (moment.cast === null) return
+  const remaining = Math.max(0, moment.remaining - resources.time.get().dt)
+  if (remaining > 1e-9 || resources.hitStop.get().remaining > 1e-9) {
+    resources.moment.set({ ...moment, remaining })
+    return
+  }
+  events.cast.emit(moment.cast)
+  resources.moment.set(noUltimateMoment)
+})
+
+/**
+ * In the air: once a body lands, what it carried goes off where it is (see
+ * `Airborne`); one that left the field (switched out, fallen) loses it.
+ * Runs first among the run's systems, so what lands is cast this step.
+ */
+export const LandAirborne = Game.System("Shooter/LandAirborne", {
+  queries: {
+    airborne: Game.Query({ selection: { airborne: Game.Query.write(Airborne), player: Game.Query.optional(Player), position: Game.Query.optional(Position) }, with: [Member] })
+  },
+  resources: { time: Game.System.readResource(Time) },
+  events: { cast: Game.System.writeEvent(Cast) }
+}, ({ queries, resources, events, commands }) => {
+  const dt = resources.time.get().dt
+  for (const { entity, data } of queries.airborne.each()) {
+    const airborne = data.airborne.get()
+    const remaining = airborne.remaining - dt
+    if (remaining > 1e-9 && data.player.present) {
+      data.airborne.set({ ...airborne, remaining })
+      continue
+    }
+    commands.remove(entity.id, Airborne)
+    if (!data.player.present || !data.position.present) continue
+    const at = data.position.get()
+    for (const cast of airborne.landing) events.cast.emit({ ...cast, from: at, at: { x: at.x + cast.direction.x, y: at.y + cast.direction.y }, landing: true })
   }
 })
 
@@ -238,11 +332,34 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
 })
 
 /**
+ * Plunges: she goes up, straight (in the air for the rise, see
+ * `Airborne`), carrying her sweep where she faces and the puff around her,
+ * which go off as she lands (see `LandAirborne`); she turns that way.
+ */
+export const CastPlunges = Game.System("Shooter/CastPlunges", {
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ events, lookup, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "plunge") continue
+    const { power, element, knockback, hitStop, heavy, radius, arcDegrees, active, landing } = effect
+    const sweep = blast({ radius, arcDegrees, active, power, element, knockback, hitStop, heavy })
+    const puff = blast({ radius: landing.radius, arcDegrees: 360, active: 0.08, power: landing.power, element, knockback: landing.knockback, hitStop: 0, heavy: false })
+    const caster = lookup.getHandle(cast.caster, Facers)
+    if (!caster.ok) continue
+    caster.value.data.facing.set({ direction: cast.direction, hold: effect.rise + active + 0.2 })
+    commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.rise, seconds: effect.rise, kind: "plunge", landing: [{ ...cast, effect: sweep }, { ...cast, effect: puff }] }])
+  }
+})
+
+/**
  * Leaps: a burst around the caster (driving what it hits away), the pool
- * left where she stood, and the caster thrown back away from her aim (a
- * push that carries her `distance`, see `Tuning.knockback`).
+ * left where she stood, and the caster thrown back, away from where she
+ * faces (a push that carries her `distance`, see `Tuning.knockback`), in
+ * the air meanwhile.
  */
 const Leapers = Game.Query({ selection: { position: Game.Query.read(Position), knockback: Game.Query.write(Knockback) } })
+const TeamMembers = Game.Query({ selection: { position: Game.Query.read(Position), member: Game.Query.read(Member) } })
 
 export const CastLeaps = Game.System("Shooter/CastLeaps", {
   resources: { tuning: Game.System.readResource(Tuning) },
@@ -266,6 +383,10 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
     if (caster.ok) {
       const away = scale(cast.direction, -effect.distance * decay)
       caster.value.data.knockback.update((push) => ({ x: push.x + away.x, y: push.y + away.y }))
+      if (effect.air > 0 && lookup.getHandle(cast.caster, TeamMembers).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", landing: [] }])
+      // She keeps facing the way she was as she flies back.
+      const facer = lookup.getHandle(cast.caster, Facers)
+      if (facer.ok) facer.value.data.facing.set({ direction: cast.direction, hold: effect.air + 0.1 })
     }
   }
 })

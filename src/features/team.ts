@@ -21,6 +21,8 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import {
   Action,
   Aim,
+  Airborne,
+  Arrival,
   Facing,
   Controls,
   Dash,
@@ -108,14 +110,16 @@ export const SpawnTeam = Game.System("Shooter/SpawnTeam", {
   })
 })
 
-/** The bench: its skill cooldowns run down, and so does the wait before the next switch. */
+/** The bench: its skill cooldowns run down, and so do the wait before the next switch and the hold on one coming in after a fall (see `Arrival`). */
 export const TickBench = Game.System("Shooter/TickBench", {
   queries: { bench: Game.Query({ selection: { skills: Game.Query.write(Skills) }, with: [Member], without: [Player] }) },
-  resources: { time: Game.System.readResource(Time), teamSwitch: Game.System.writeResource(TeamSwitch) }
+  resources: { time: Game.System.readResource(Time), teamSwitch: Game.System.writeResource(TeamSwitch), arrival: Game.System.writeResource(Arrival) }
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
   const wait = resources.teamSwitch.get().cooldown
   if (wait > 0) resources.teamSwitch.set({ cooldown: Math.max(0, wait - dt) })
+  const held = resources.arrival.get().remaining
+  if (held > 0) resources.arrival.set({ remaining: Math.max(0, held - dt) })
   for (const { data } of queries.bench.each()) {
     const slots = data.skills.get()
     if (Object.values(slots).every((slot) => slot.cooldown <= 0)) continue
@@ -157,7 +161,8 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
         facing: Game.Query.read(Facing),
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
-        basicAttack: Game.Query.read(BasicAttack)
+        basicAttack: Game.Query.read(BasicAttack),
+        airborne: Game.Query.optional(Airborne)
       },
       with: [Player]
     }),
@@ -168,7 +173,8 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
     tuning: Game.System.readResource(Tuning),
     teamSwitch: Game.System.writeResource(TeamSwitch),
     hitStop: Game.System.readResource(HitStop),
-    slowMotion: Game.System.writeResource(SlowMotion)
+    slowMotion: Game.System.writeResource(SlowMotion),
+    arrival: Game.System.writeResource(Arrival)
   },
   events: { action: Game.System.writeEvent(Action) }
 }, ({ queries, resources, events, commands }) => {
@@ -189,13 +195,15 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   else {
     const wanted = resources.controls.get().switchTo
     const frozen = resources.hitStop.get().remaining > 1e-9
-    if (wanted === null || wanted === slot || frozen || dash.remaining > 0 || resources.teamSwitch.get().cooldown > 0) return
+    if (wanted === null || wanted === slot || frozen || dash.remaining > 0 || field.data.airborne.present || resources.teamSwitch.get().cooldown > 0) return
     incoming = members.find((member) => member.slot === wanted && member.alive)
     if (incoming === undefined) return
   }
 
   const at = field.data.position.get()
-  const invulnerable = Math.max(field.data.invulnerable.get().remaining, fell ? tuning.team.fallProtection : 0)
+  // After a fall she is held while the one who fell goes down (see `Arrival`); her protection counts from when she steps in.
+  const beat = fell ? tuning.team.fallBeat.seconds : 0
+  const invulnerable = Math.max(field.data.invulnerable.get().remaining, fell ? beat + tuning.team.fallProtection : 0)
   const carried: Carried = {
     motion: { previous: field.data.previous.get(), velocity: field.data.velocity.get(), invulnerable },
     aim: field.data.aim.get(),
@@ -210,9 +218,10 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   commands.insert(field.entity.id, [BasicAttack, initialBasicAttack({ attack: field.data.basicAttack.get().attack })])
   commands.insert(incoming.entity, ...fieldParts(tuning, incoming, at, carried))
   resources.teamSwitch.set({ cooldown: tuning.team.switchCooldown })
-  // After a fall, a beat: the enemies slow for a moment as she comes in.
-  if (fell && tuning.team.fallBeat.seconds > 0) {
-    resources.slowMotion.update((slow) => (slow.remaining > tuning.team.fallBeat.seconds ? slow : { remaining: tuning.team.fallBeat.seconds, scale: tuning.team.fallBeat.scale, dodge: false }))
+  // After a fall, a beat: the enemies slow to a crawl while the one who fell goes down, and the one coming in stands held.
+  if (fell && beat > 0) {
+    resources.slowMotion.update((slow) => (slow.remaining > beat ? slow : { remaining: beat, scale: tuning.team.fallBeat.scale, dodge: false }))
+    resources.arrival.set({ remaining: beat })
   }
   events.action.emit({ kind: "switch", at, character: incoming.character, fell })
 })

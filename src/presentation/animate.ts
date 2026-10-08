@@ -115,7 +115,8 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     }
   }
   for (const cast of events.cast.all()) {
-    if (cast.skill === null) continue
+    // An ultimate's clip plays as its moment begins (see `UltimateCalled`); a landing is part of a skill already playing.
+    if (cast.skill === null || cast.called === true || cast.landing === true) continue
     const node = services.nodes.get(cast.caster)
     if (node?.kind !== "player" && node?.kind !== "enemy") continue
     const clip = node.body.moments?.skills?.[cast.skill]

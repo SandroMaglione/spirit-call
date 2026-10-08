@@ -121,7 +121,8 @@ const drawSkillAim = (g: Shapes, effect: SkillEffect, at: Vec2, aiming: Vec2): v
       drawArea(g, { kind: "lane", origin: at, direction, length: effect.length, halfWidth: effect.width / 2 }, 0, { color: view.reticle, fill: 0.08, outline: 0.6 })
       return
     }
-    case "blast": {
+    case "blast":
+    case "plunge": {
       const direction = normalizeOr({ x: aiming.x - at.x, y: aiming.y - at.y }, { x: 1, y: 0 })
       drawArea(g, { kind: "cone", origin: at, direction, radius: effect.radius, halfAngle: (effect.arcDegrees * Math.PI) / 360 }, 0, { color: view.reticle, fill: 0.08, outline: 0.6 })
       return

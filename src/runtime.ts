@@ -10,7 +10,7 @@ import { noGuard } from "./features/guard.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
-import { emptyRunLog, Flow, Game, noTwist } from "./schema.ts"
+import { emptyRunLog, Flow, Game, noTwist, noUltimateMoment } from "./schema.ts"
 import type { BuildValue, TwistValue, ViewportValue } from "./schema.ts"
 
 /**
@@ -49,6 +49,8 @@ export const initialResources = (
   Run: { time: 0, endedAt: null },
   RunResult: null,
   HitStop: { remaining: 0 },
+  UltimateMoment: noUltimateMoment,
+  Arrival: { remaining: 0 },
   SlowMotion: { remaining: 0, scale: 1, dodge: false },
   Paused: { paused: false },
   Practice: { kinds: [], elites: false },
