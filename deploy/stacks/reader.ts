@@ -40,8 +40,8 @@ export default Alchemy.Stack(
 
     // Written on every deploy, so a lost file comes back by deploying again.
     yield* Exec("SaveReaderKey", {
-      command: `node ${fileURLToPath(new URL("save-reader-key.mjs", import.meta.url))}`,
-      env: { ENV_FILE: envFile, ACCOUNT_ID: accountId, READ_TOKEN: token.value },
+      command: `node ${fileURLToPath(new URL("save-key.mjs", import.meta.url))}`,
+      env: { ENV_FILE: envFile, ACCOUNT_ID: accountId, KEY_NAME: "D1_READ_TOKEN", KEY: token.value },
       memo: false
     })
   })
