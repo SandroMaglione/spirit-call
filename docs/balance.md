@@ -338,6 +338,11 @@ generate and review a replacement baseline with:
 pnpm balance --output test/balance-baseline.json
 ```
 
+Long escape-only runs can end differently on a laptop (linked bevy-ts)
+than in CI (the published release). When the local baseline fails in CI on
+those rows only, record the report CI uploads instead (`gh run download
+<run>` gives `balance-report.json`, for the same tuning hash).
+
 Profiles include basic attacks, skills used whenever available, levels
 matched to the enemy, a slower learner,
 escape-only play, and low-level and matched three-character rotations. Full sweeps
