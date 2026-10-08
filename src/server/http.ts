@@ -114,7 +114,10 @@ const AccountLive = HttpApiBuilder.group(
       })
     return handlers
       .handle("get", () => forPlayer(accounts.get))
-      .handle("select", ({ payload }) => forPlayer((id) => accounts.select(id, payload.team, payload.play, payload.aspects)))
+      .handle("select", ({ payload }) => forPlayer((id) => accounts.select(id, payload.team, payload.play, payload.aspects, payload.relics)))
+      .handle("wear", ({ params, payload }) => forPlayer((id) => accounts.wear(id, params.character, params.kind, payload.cosmetic)))
+      .handle("buyRelic", ({ params }) => forPlayer((id) => accounts.buyRelic(id, params.relic)))
+      .handle("buyCosmetic", ({ params }) => forPlayer((id) => accounts.buyCosmetic(id, params.cosmetic)))
       .handle("train", ({ params }) => forPlayer((id) => accounts.train(id, params.character)))
       .handle("ascend", ({ params }) => forPlayer((id) => accounts.ascend(id, params.character)))
       .handle("call", ({ params, payload }) => forPlayer((id) => accounts.call(id, params.banner, payload.count)))

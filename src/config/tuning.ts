@@ -14,7 +14,8 @@
  */
 import { arenas } from "../content/arena.ts"
 import { aspects } from "../content/aspects.ts"
-import { relics } from "../content/relics.ts"
+import { relicRules, relics } from "../content/relics.ts"
+import { cosmetics } from "../content/cosmetics.ts"
 import { banners, callRules } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
@@ -115,6 +116,11 @@ export const defaultTuning = {
 
   /** Every relic, by id: a small addition to how a character plays, in one of her slots (see content/relics.ts). */
   relics,
+  /** When relics open, and what the shop asks for a relic's next tier (see content/relics.ts). */
+  relicRules,
+
+  /** Every look, by id: how a spirit shows, never how she fights (see content/cosmetics.ts). */
+  cosmetics,
 
   /**
    * Damage: an attack deals its `power` as a percentage of the attacker's

@@ -265,3 +265,24 @@ export interface EquippedRelic {
  * every blow.
  */
 export const relicBudget = { damageBonus: 30, power: 12, every: 0.5 } as const
+
+/**
+ * How relics are had (see docs/relics.md): they open with the Spirit Call
+ * (`opensAfter`, a quest id); the Survival slot later (`survivalOpensAfter`,
+ * `null` until it has relics). The shop sells a relic the account owns one
+ * tier up, for `prices[tier]` dust (the tier it reaches); a relic coming
+ * again at its last tier turns into `dustPerDuplicate` dust.
+ */
+export interface RelicRules {
+  readonly opensAfter: string
+  readonly survivalOpensAfter: string | null
+  readonly prices: { readonly [Tier in Exclude<RelicTier, 1>]: number }
+  readonly dustPerDuplicate: number
+}
+
+export const relicRules: RelicRules = {
+  opensAfter: "packLeader",
+  survivalOpensAfter: null,
+  prices: { 2: 150, 3: 300 },
+  dustPerDuplicate: 50
+}

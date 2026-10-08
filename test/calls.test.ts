@@ -105,9 +105,12 @@ describe("the Spirit Call", () => {
     expect(called.ok && called.value.results.every((result) => result.kind !== "aspect")).toBe(true)
   })
 
-  it("is refused on a banner with no one left, so crystals are never spent for nothing", () => {
+  it("goes on for relics on a banner with no one left; refused before relics open, so crystals are never spent for nothing", () => {
     const owning = tuning.banners[banner].characters.reduce((next, id) => unlock(tuning, next, { kind: "character", id }, 2000), opened())
-    expect(call(tuning, owning, banner, 1, now)).toEqual({ ok: false, refusal: { kind: "bannerComplete", banner } })
+    const called = call(tuning, owning, banner, 1, now)
+    expect(called.ok && called.value.results[0]!.kind).not.toBe("character")
+    const closed = tuningWith({ relicRules: { ...tuning.relicRules, opensAfter: "bulwark" } })
+    expect(call(closed, owning, banner, 1, now)).toEqual({ ok: false, refusal: { kind: "bannerComplete", banner } })
   })
 
   it("draws from the account's own seed: the same account calls the same, and the seed moves on", () => {
@@ -123,7 +126,7 @@ describe("the Spirit Call", () => {
     expect(characterChance(tuning, { sinceCharacter: odds.guarantee - 1, firstCharacter: true })).toBe(1)
     expect(characterChance(tuning, { sinceCharacter: odds.firstGuarantee - 1, firstCharacter: false })).toBe(1)
     const account = opened()
-    expect(guarantees(tuning, account)).toEqual({ character: odds.firstGuarantee, aspect: rules.aspect.guarantee })
+    expect(guarantees(tuning, account)).toEqual({ character: odds.firstGuarantee, aspect: rules.aspect.guarantee, relic: rules.relic.guarantee })
   })
 
   it("keeps the last calls, newest first, up to its history", () => {

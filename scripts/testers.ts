@@ -40,7 +40,8 @@ const [command, argument] = positionals
 const fill: Record<ResourceId, number> = {
   ...Object.fromEntries(Object.keys(materials).map((id) => [id, 99_999])) as Record<ResourceId, number>,
   crystals: 99_999,
-  gold: 9_999_999
+  gold: 9_999_999,
+  dust: 99_999
 }
 const prefix = "sandro"
 const pattern = `${prefix}[0-9]*`

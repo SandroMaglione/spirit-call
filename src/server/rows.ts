@@ -23,6 +23,7 @@ export const AccountRow = Schema.Struct({
   call_seed: Int,
   calls_since_character: Int,
   calls_since_aspect: Int,
+  calls_since_relic: Int,
   first_character_called: Int,
   play_kind: Schema.Literals(["quest", "tier"]),
   play_quest: Schema.NullOr(Text),
@@ -37,7 +38,11 @@ export const tables = {
   balances: { row: Schema.Struct({ user_id: Text, resource: Text, amount: Int }), key: ["resource"] },
   characters: { row: Schema.Struct({ user_id: Text, character: Text, unlocked_at: Int, experience: Int, ascension: Int }), key: ["character"] },
   aspects: { row: Schema.Struct({ user_id: Text, aspect: Text, unlocked_at: Int, copies: Int }), key: ["aspect"] },
+  relics: { row: Schema.Struct({ user_id: Text, relic: Text, unlocked_at: Int, tier: Int }), key: ["relic"] },
+  cosmetics: { row: Schema.Struct({ user_id: Text, cosmetic: Text, unlocked_at: Int }), key: ["cosmetic"] },
   team_members: { row: Schema.Struct({ user_id: Text, slot: Int, character: Text, aspect: Schema.NullOr(Text) }), key: ["slot"] },
+  team_relics: { row: Schema.Struct({ user_id: Text, character: Text, slot: Text, relic: Text }), key: ["character", "slot"] },
+  worn_cosmetics: { row: Schema.Struct({ user_id: Text, character: Text, kind: Text, cosmetic: Text }), key: ["character", "kind"] },
   quests: { row: Schema.Struct({ user_id: Text, quest: Text, rank: Int, attempts: Int, clears: Int, first_cleared_at: OptionalInt }), key: ["quest", "rank"] },
   quest_stars: { row: Schema.Struct({ user_id: Text, quest: Text, rank: Int, star: Int }), key: ["quest", "rank", "star"] },
   tiers: {
@@ -47,7 +52,10 @@ export const tables = {
   discoveries: { row: Schema.Struct({ user_id: Text, discovery: Text, made_at: Int }), key: ["discovery"] },
   chests: { row: Schema.Struct({ user_id: Text, star_group: Text, rank: Int, opened: Int }), key: ["star_group", "rank"] },
   call_focus: { row: Schema.Struct({ user_id: Text, banner: Text, character: Text }), key: ["banner"] },
-  calls: { row: Schema.Struct({ user_id: Text, place: Int, at: Int, banner: Text, kind: Schema.Literals(["character", "aspect", "supply"]), item: Schema.NullOr(Text) }), key: ["place"] },
+  calls: {
+    row: Schema.Struct({ user_id: Text, place: Int, at: Int, banner: Text, kind: Schema.Literals(["character", "aspect", "cosmetic", "relic", "supply"]), item: Schema.NullOr(Text), tier: OptionalInt }),
+    key: ["place"]
+  },
   call_amounts: { row: Schema.Struct({ user_id: Text, place: Int, resource: Text, amount: Int }), key: ["place", "resource"] }
 } as const
 
@@ -76,6 +84,7 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
         call_seed: account.calls.seed,
         calls_since_character: account.calls.sinceCharacter,
         calls_since_aspect: account.calls.sinceAspect,
+        calls_since_relic: account.calls.sinceRelic,
         first_character_called: account.calls.firstCharacter ? 1 : 0,
         play_kind: play.kind,
         play_quest: play.kind === "quest" ? play.quest : null,
@@ -87,7 +96,11 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
     balances: Object.entries(account.wallet).map(([resource, amount]) => ({ user_id, resource, amount })),
     characters: Object.entries(account.owned.characters).map(([character, owned]) => ({ user_id, character, unlocked_at: owned.unlockedAt, experience: owned.experience, ascension: owned.ascension })),
     aspects: Object.entries(account.owned.aspects).map(([aspect, owned]) => ({ user_id, aspect, unlocked_at: owned.unlockedAt, copies: owned.copies })),
+    relics: Object.entries(account.owned.relics).map(([relic, owned]) => ({ user_id, relic, unlocked_at: owned.unlockedAt, tier: owned.tier })),
+    cosmetics: Object.entries(account.owned.cosmetics).map(([cosmetic, owned]) => ({ user_id, cosmetic, unlocked_at: owned.unlockedAt })),
     team_members: account.selection.team.map((character, slot) => ({ user_id, slot, character, aspect: account.selection.aspects[character] ?? null })),
+    team_relics: Object.entries(account.selection.relics).flatMap(([character, slots]) => Object.entries(slots).map(([slot, relic]) => ({ user_id, character, slot, relic }))),
+    worn_cosmetics: Object.entries(account.worn).flatMap(([character, kinds]) => Object.entries(kinds).map(([kind, cosmetic]) => ({ user_id, character, kind, cosmetic }))),
     quests: Object.entries(account.quests).flatMap(([quest, ranks]) => Object.entries(ranks).map(([rank, progress]) => ({ user_id, quest, rank: Number(rank), attempts: progress.attempts, clears: progress.clears, first_cleared_at: progress.firstClearedAt }))),
     quest_stars: Object.entries(account.quests).flatMap(([quest, ranks]) => Object.entries(ranks).flatMap(([rank, progress]) => progress.stars.map((star) => ({ user_id, quest, rank: Number(rank), star })))),
     tiers: Object.entries(account.hardcore).flatMap(([track, tiers]) =>
@@ -105,9 +118,19 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
     discoveries: Object.entries(account.discoveries).map(([discovery, made]) => ({ user_id, discovery, made_at: made.madeAt })),
     chests: Object.entries(account.chests).flatMap(([star_group, ranks]) => Object.entries(ranks).map(([rank, opened]) => ({ user_id, star_group, rank: Number(rank), opened }))),
     call_focus: Object.entries(account.calls.focus).map(([banner, character]) => ({ user_id, banner, character })),
-    calls: account.calls.history.map((call, place) => ({ user_id, place, at: call.at, banner: call.banner, kind: call.result.kind, item: call.result.kind === "supply" ? null : call.result.id })),
+    calls: account.calls.history.map((call, place) => ({
+      user_id,
+      place,
+      at: call.at,
+      banner: call.banner,
+      kind: call.result.kind,
+      item: call.result.kind === "supply" ? null : call.result.id,
+      tier: call.result.kind === "relic" ? call.result.tier : null
+    })),
     call_amounts: account.calls.history.flatMap((call, place) =>
-      call.result.kind === "supply" ? Object.entries(call.result.amounts).map(([resource, amount]) => ({ user_id, place, resource, amount })) : []
+      call.result.kind === "supply"
+        ? Object.entries(call.result.amounts).map(([resource, amount]) => ({ user_id, place, resource, amount }))
+        : call.result.kind === "relic" && call.result.dust > 0 ? [{ user_id, place, resource: "dust", amount: call.result.dust }] : []
     )
   }
 }
@@ -120,7 +143,9 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
   for (const amount of rows.call_amounts) byPlace.set(amount.place, { ...byPlace.get(amount.place), [amount.resource]: amount.amount })
   const resultOf = (call: RowOf<"calls">): StoredCallResult | undefined => {
     if (call.kind === "supply") return { kind: "supply", amounts: byPlace.get(call.place) ?? {} }
-    return call.item === null ? undefined : { kind: call.kind, id: call.item }
+    if (call.item === null) return undefined
+    if (call.kind === "relic") return { kind: "relic", id: call.item, tier: call.tier ?? 1, dust: byPlace.get(call.place)?.["dust"] ?? 0 }
+    return { kind: call.kind, id: call.item }
   }
   const history = [...rows.calls]
     .sort((a, b) => a.place - b.place)
@@ -158,7 +183,9 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
     wallet: Object.fromEntries(rows.balances.map((balance) => [balance.resource, balance.amount])),
     owned: {
       characters: Object.fromEntries(rows.characters.map((owned) => [owned.character, { unlockedAt: owned.unlocked_at, experience: owned.experience, ascension: owned.ascension }])),
-      aspects: Object.fromEntries(rows.aspects.map((owned) => [owned.aspect, { unlockedAt: owned.unlocked_at, copies: owned.copies }]))
+      aspects: Object.fromEntries(rows.aspects.map((owned) => [owned.aspect, { unlockedAt: owned.unlocked_at, copies: owned.copies }])),
+      relics: Object.fromEntries(rows.relics.map((owned) => [owned.relic, { unlockedAt: owned.unlocked_at, tier: owned.tier }])),
+      cosmetics: Object.fromEntries(rows.cosmetics.map((owned) => [owned.cosmetic, { unlockedAt: owned.unlocked_at }]))
     },
     quests,
     hardcore,
@@ -168,6 +195,7 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
       seed: row.call_seed,
       sinceCharacter: row.calls_since_character,
       sinceAspect: row.calls_since_aspect,
+      sinceRelic: row.calls_since_relic,
       firstCharacter: row.first_character_called === 1,
       focus: Object.fromEntries(rows.call_focus.map((focus) => [focus.banner, focus.character])),
       history
@@ -175,10 +203,19 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
     selection: {
       team: team.map((member) => member.character),
       aspects: Object.fromEntries(team.flatMap((member) => (member.aspect === null ? [] : [[member.character, member.aspect]]))),
+      relics: grouped(rows.team_relics.map((row) => [row.character, row.slot, row.relic])),
       play:
         row.play_kind === "quest"
           ? { kind: "quest", quest: row.play_quest ?? "", ...(row.play_rank === null ? {} : { rank: row.play_rank }) }
           : { kind: "tier", track: row.play_track ?? "", tier: row.play_tier ?? 1 }
-    }
+    },
+    worn: grouped(rows.worn_cosmetics.map((row) => [row.character, row.kind, row.cosmetic]))
   }
+}
+
+/** `[outer, inner, value]` triples as a record of records. */
+const grouped = (triples: ReadonlyArray<readonly [string, string, string]>): Record<string, Record<string, string>> => {
+  const out: Record<string, Record<string, string>> = {}
+  for (const [outer, inner, value] of triples) out[outer] = { ...out[outer], [inner]: value }
+  return out
 }

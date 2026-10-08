@@ -25,7 +25,7 @@ describe("account rules", () => {
     const account = fresh()
     expect(Object.keys(account.owned.characters)).toEqual(newAccount.characters)
     expect(Object.keys(account.owned.aspects)).toEqual(newAccount.aspects)
-    expect(account.selection).toEqual({ team: [newAccount.selection.character], aspects: {}, play: quest(newAccount.selection.quest) })
+    expect(account.selection).toEqual({ team: [newAccount.selection.character], aspects: {}, relics: {}, play: quest(newAccount.selection.quest) })
     expect(buildOf(defaultTuning, account, "swordsman")).toEqual({ character: "swordsman", level: 1 })
     expect(owns(account, { kind: "character", id: "gunner" })).toBe(false)
   })
@@ -138,7 +138,7 @@ describe("account rules", () => {
     expect(select(defaultTuning, fresh(), ["swordsman"], quest("crossfire"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("crossfire"), lock: { kind: "after", quest: "firstBlood" } } })
     expect(select(defaultTuning, fresh(), ["swordsman"], quest("holdTheLine"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("holdTheLine"), lock: { kind: "after", quest: "packLeader" } } })
     const selected = select(defaultTuning, fresh(), ["swordsman"], quest("firstBlood"))
-    expect(selected.ok && selected.value.selection).toEqual({ team: ["swordsman"], aspects: {}, play: quest("firstBlood") })
+    expect(selected.ok && selected.value.selection).toEqual({ team: ["swordsman"], aspects: {}, relics: {}, play: quest("firstBlood") })
   })
 
   it("selects a team of one to three, each once, in order", () => {
@@ -351,8 +351,9 @@ describe("account rules", () => {
     const leveled = { ...fresh(), experience: 1e6 }
     const first = recordRun(defaultTuning, leveled, tier("gauntlet", 1), run, monday + 1000)
     expect(first.earned.rewards).toEqual({ ...rewards, unlocks: [] })
-    // On top of what the run pays (and its discoveries).
-    expect(first.account.wallet).toEqual({ crystals: rewards.currencies.crystals! + discoveryCrystals(first.earned.discoveries), gold: rewards.currencies.gold! + first.earned.pay.gold!, ...first.earned.materials })
+    // On top of what the run pays (and its discoveries): dust among it, off the main line.
+    expect(rewards.currencies.dust).toBeGreaterThan(0)
+    expect(first.account.wallet).toEqual({ crystals: rewards.currencies.crystals! + discoveryCrystals(first.earned.discoveries), gold: rewards.currencies.gold! + first.earned.pay.gold!, dust: rewards.currencies.dust, ...first.earned.materials })
     // Its material comes with the weekly rewards, a couple of clears' worth.
     expect(first.earned.materials).toEqual(materialPay(defaultTuning, defaultTuning.tracks.gauntlet.element, defaultTuning.tracks.gauntlet.tiers[0]!.enemyLevel, defaultTuning.materialRules.weekly))
     expect(first.account.hardcore.gauntlet?.[1]).toEqual({ attempts: 1, clears: 1, firstClearedAt: monday + 1000, rewardedPeriod: 10, bestWave: 3 })

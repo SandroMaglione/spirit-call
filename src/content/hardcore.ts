@@ -7,11 +7,12 @@
  * its own waves showing only what the main line has introduced by then,
  * and sits at most a few enemy levels above that quest.
  *
- * A tier's rewards (experience and currency, never unlocks; gold worth
- * about six runs at its level) are given on top of what the run pays, the
+ * A tier's rewards (experience and currency, dust among it; gold worth
+ * about five runs at its level) are given on top of what the run pays, the
  * first time it is cleared in each period; the periodic reset makes them
  * available again, so nothing is missable and there is no pressure to play
- * every period.
+ * every period. A few tiers also give a look the first time (`cosmetics`),
+ * a mark of a hard goal reached; a trial's ranks give dust once a period.
  *
  * Tiers only raise enemy levels for now; modifiers and new attack patterns
  * per tier come with gameplay work. A track can also be endless (its
@@ -20,14 +21,17 @@
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
 import type { ChallengeId } from "./challenges.ts"
+import type { CosmeticId } from "./cosmetics.ts"
 import type { Amounts } from "./currencies.ts"
 import type { ElementId } from "./elements.ts"
 import type { QuestId } from "./quests.ts"
 
-/** What a tier gives when cleared, once per period. */
+/** What a tier gives when cleared, once per period (and, the first time, its looks). */
 export interface TierRewards {
   readonly experience: number
   readonly currencies: Amounts
+  /** Looks given the first time its rewards are (see `content/cosmetics.ts`). */
+  readonly cosmetics?: ReadonlyArray<CosmeticId>
 }
 
 export interface TierSpec {
@@ -58,11 +62,22 @@ export interface TrackSpec {
 const track = (spec: Omit<TrackSpec, "kind">): TrackSpec => ({ kind: "hardcore", ...spec })
 /** An element's trial, its ranks opening along the main line. */
 const trial = (name: string, element: ElementId, ranks: ReadonlyArray<readonly [number, ChallengeId, QuestId, number?]>): TrackSpec =>
-  ({ name, kind: "trial", element, tiers: ranks.map(([enemyLevel, challenge, opens, opensRank]) => ({ enemyLevel, challenge, opens, opensRank: opensRank ?? 1, rewards: { experience: 0, currencies: {} } })) })
+  ({ name, kind: "trial", element, tiers: ranks.map(([enemyLevel, challenge, opens, opensRank]) => ({ enemyLevel, challenge, opens, opensRank: opensRank ?? 1, rewards: { experience: 0, currencies: { dust: trialDust(enemyLevel) } } })) })
+/** The dust a trial's rank gives once a period: a little more at higher levels. */
+const trialDust = (enemyLevel: number): number => 10 * Math.round((20 + enemyLevel / 2) / 10)
+/** The dust a hardcore tier gives once a period, by its enemies' level. */
+const tierDust = (enemyLevel: number): number => 10 * Math.round((30 + enemyLevel) / 10)
 /** A trial's ranks above level 35, opening with the ranks' replays of the late chapters (all of the roster known by then). */
 const late = (challenge: ChallengeId): ReadonlyArray<readonly [number, ChallengeId, QuestId, number]> =>
   [[41, challenge, "theWarlord", 2], [47, challenge, "colossus", 2], [53, challenge, "theWarlord", 3], [59, challenge, "colossus", 3]]
-const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, experience: number, currencies: Amounts, opensRank = 1): TierSpec => ({ enemyLevel, challenge, opens, opensRank, rewards: { experience, currencies } })
+/** A hardcore tier: its gold at four fifths of what is written (dust takes the rest, see `tierDust`), and its looks the first time. */
+const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, experience: number, currencies: Amounts, opensRank = 1, cosmetics?: ReadonlyArray<CosmeticId>): TierSpec => ({
+  enemyLevel,
+  challenge,
+  opens,
+  opensRank,
+  rewards: { experience, currencies: { ...currencies, gold: Math.round((currencies.gold ?? 0) * 0.8 / 100) * 100, dust: tierDust(enemyLevel) }, ...(cosmetics === undefined ? {} : { cosmetics }) }
+})
 
 /** Every hardcore track, by id: each tier opens along the main line. */
 export const tracks = {
@@ -73,7 +88,7 @@ export const tracks = {
     tiers: [
       tier(3, "untilFall", "packLeader", 100, { crystals: 20, gold: 1200 }),
       tier(10, "untilFall2", "bulwark", 140, { crystals: 25, gold: 2400 }),
-      tier(16, "untilFall3", "bruteKing", 180, { crystals: 30, gold: 4000 }),
+      tier(16, "untilFall3", "bruteKing", 180, { crystals: 30, gold: 4000 }, 1, ["lastLight"]),
       tier(22, "untilFall4", "swarmMother", 220, { crystals: 35, gold: 6000 }),
       tier(28, "untilFall5", "theWarlord", 260, { crystals: 40, gold: 8000 }),
       tier(34, "untilFall6", "colossus", 300, { crystals: 50, gold: 10000 }),
@@ -101,7 +116,7 @@ export const tracks = {
     element: "rock",
     tiers: [
       tier(16, "siege", "bruteKing", 180, { crystals: 20, gold: 4000 }),
-      tier(28, "siege2", "theWarlord", 260, { crystals: 30, gold: 8000 }),
+      tier(28, "siege2", "theWarlord", 260, { crystals: 30, gold: 8000 }, 1, ["stoneDust"]),
       tier(36, "siege3", "colossus", 320, { crystals: 40, gold: 11000 }),
       tier(46, "siege3", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
       tier(58, "siege3", "colossus", 460, { crystals: 60, gold: 18000 }, 3)

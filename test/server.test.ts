@@ -126,7 +126,7 @@ describe("accounts", () => {
     const after = await player.send("GET", "/api/account")
     expect(after.status).toBe(200)
     expect(after.body.quests).toEqual({})
-    expect(after.body.selection).toEqual({ team: ["swordsman"], aspects: {}, play: { kind: "quest", quest: "firstBlood" } })
+    expect(after.body.selection).toEqual({ team: ["swordsman"], aspects: {}, relics: {}, play: { kind: "quest", quest: "firstBlood" } })
   })
 
   it("gives a new player the starter set, the same account on every device", async () => {
@@ -134,7 +134,7 @@ describe("accounts", () => {
     const phone = await signUp(handler)
     const account = (await phone.send("GET", "/api/account")).body
     expect(Object.keys(account.owned.characters)).toEqual(newAccount.characters)
-    expect(account.selection).toEqual({ team: ["swordsman"], aspects: {}, play: { kind: "quest", quest: "firstBlood" } })
+    expect(account.selection).toEqual({ team: ["swordsman"], aspects: {}, relics: {}, play: { kind: "quest", quest: "firstBlood" } })
     const laptop = browser(handler)
     await laptop.send("POST", "/api/sessions", { username: "stella", password: "correct horse" })
     expect((await laptop.send("GET", "/api/account")).body).toEqual(account)
@@ -201,7 +201,7 @@ describe("accounts", () => {
     await player.send("POST", "/api/dev/unlock-everything")
     const selected = await player.send("PUT", "/api/account/selection", { team: ["gunner", "swordsman"], play: { kind: "quest", quest: "crossfire" } })
     expect(selected.status).toBe(200)
-    expect((await player.send("GET", "/api/account")).body.selection).toEqual({ team: ["gunner", "swordsman"], aspects: {}, play: { kind: "quest", quest: "crossfire" } })
+    expect((await player.send("GET", "/api/account")).body.selection).toEqual({ team: ["gunner", "swordsman"], aspects: {}, relics: {}, play: { kind: "quest", quest: "crossfire" } })
   })
 
   it("trains with gold, and refuses without enough", async () => {
@@ -284,6 +284,36 @@ describe("logs", () => {
   })
 })
 
+describe("relics and looks on the server", () => {
+  it("buys a relic's next tier and a look with dust, wears the look, and equips relics in the team", async () => {
+    const handler = server({ devTools: true, secureCookies: true })
+    const player = await signUp(handler)
+    // Nothing to buy yet: relics open with the Spirit Call.
+    expect(await player.send("POST", "/api/shop/looks/starfall")).toMatchObject({ status: 409, body: { kind: "relicsLocked" } })
+    await player.send("POST", "/api/dev/unlock-everything")
+    const account = (await player.send("GET", "/api/account")).body
+    expect(account.owned.relics.echo).toMatchObject({ tier: 3 })
+    await player.send("POST", "/api/dev/open-calls")
+    expect(await player.send("POST", "/api/shop/relics/echo")).toMatchObject({ status: 409, body: { kind: "maxTier" } })
+    const bought = await player.send("POST", "/api/shop/looks/starfall")
+    expect(bought).toMatchObject({ status: 409, body: { kind: "notForSale" } })
+    const worn = await player.send("PUT", "/api/characters/gunner/looks/tint", { cosmetic: "blueFlame" })
+    expect(worn.status).toBe(200)
+    expect(worn.body.worn).toEqual({ gunner: { tint: "blueFlame" } })
+    expect(await player.send("PUT", "/api/characters/swordsman/looks/tint", { cosmetic: "blueFlame" })).toMatchObject({ status: 409, body: { kind: "badLook" } })
+    const selected = await player.send("PUT", "/api/account/selection", { team: ["gunner", "swordsman"], play: { kind: "quest", quest: "firstBlood" }, relics: { gunner: { strike: "echo", element: "emberHeart" }, swordsman: { dash: "repel" } } })
+    expect(selected.status).toBe(200)
+    expect((await player.send("GET", "/api/account")).body.selection.relics).toEqual({ gunner: { strike: "echo", element: "emberHeart" }, swordsman: { dash: "repel" } })
+    const twice = await player.send("PUT", "/api/account/selection", { team: ["gunner", "swordsman"], play: { kind: "quest", quest: "firstBlood" }, relics: { gunner: { strike: "echo" }, swordsman: { strike: "echo" } } })
+    expect(twice).toMatchObject({ status: 409, body: { kind: "badRelics" } })
+    // A run keeps who played it with what relics, at their tier.
+    await player.send("POST", "/api/runs", played({ kind: "quest", quest: "firstBlood" }, { ...run, team: ["gunner", "swordsman"] }))
+    const [kept] = (await player.send("GET", "/api/runs")).body
+    expect(kept.team[0].relics).toEqual([{ slot: "strike", id: "echo", tier: 3 }, { slot: "element", id: "emberHeart", tier: 3 }])
+    expect(kept.team[1].relics).toEqual([{ slot: "dash", id: "repel", tier: 3 }])
+  })
+})
+
 describe("account rows", () => {
   const account = fromRecord(defaultTuning, newAccount, toRecord(fromRecord(defaultTuning, newAccount, {
     id: "player",
@@ -291,17 +321,51 @@ describe("account rows", () => {
     experience: 120,
     totals: { runs: 3, clears: 2, kills: 90, secondsPlayed: 410.5 },
     wallet: { gold: 300, crystals: 20, fireEssence: 2 },
-    owned: { characters: { swordsman: { unlockedAt: 5, experience: 40, ascension: 0 }, gunner: { unlockedAt: 6, experience: 0, ascension: 0 } }, aspects: { marksman: { unlockedAt: 7, copies: 2 } } },
-    quests: { firstBlood: { "1": { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] }, "2": { attempts: 1, clears: 1, firstClearedAt: 12, stars: [1] } } },
+    owned: {
+      characters: { swordsman: { unlockedAt: 5, experience: 40, ascension: 0 }, gunner: { unlockedAt: 6, experience: 0, ascension: 0 } },
+      aspects: { marksman: { unlockedAt: 7, copies: 2 } },
+      relics: { echo: { unlockedAt: 7, tier: 2 }, emberHeart: { unlockedAt: 8, tier: 1 } },
+      cosmetics: { starfall: { unlockedAt: 8 }, blueFlame: { unlockedAt: 9 } }
+    },
+    quests: {
+      firstBlood: { "1": { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] }, "2": { attempts: 1, clears: 1, firstClearedAt: 12, stars: [1] } },
+      packLeader: { "1": { attempts: 1, clears: 1, firstClearedAt: 10, stars: [0] } }
+    },
     hardcore: { gauntlet: { "1": { attempts: 2, clears: 1, firstClearedAt: 5, rewardedPeriod: 3, bestWave: 7 } } },
     discoveries: { flare: { madeAt: 5 } },
     chests: { one: { "1": 1, "2": 0 } },
-    calls: { seed: 42, sinceCharacter: 3, sinceAspect: 1, firstCharacter: false, focus: {}, history: [{ at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "supply", amounts: { gold: 50 } } }] },
-    selection: { team: ["gunner", "swordsman"], aspects: { gunner: "marksman" }, play: { kind: "tier", track: "gauntlet", tier: 1 } }
+    calls: {
+      seed: 42,
+      sinceCharacter: 3,
+      sinceAspect: 1,
+      sinceRelic: 2,
+      firstCharacter: false,
+      focus: {},
+      history: [
+        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "supply", amounts: { gold: 50 } } },
+        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "relic", id: "echo", tier: 2, dust: 0 } },
+        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "relic", id: "repel", tier: 3, dust: 50 } },
+        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "cosmetic", id: "blueFlame" } }
+      ]
+    },
+    selection: { team: ["gunner", "swordsman"], aspects: { gunner: "marksman" }, relics: { gunner: { strike: "echo", element: "emberHeart" } }, play: { kind: "tier", track: "gauntlet", tier: 1 } },
+    worn: { gunner: { trail: "starfall", tint: "blueFlame" } }
   }, 10).account), 10).account
 
   it("turns an account into rows and back, unchanged", () => {
     expect(fromRecord(defaultTuning, newAccount, fromRows(toRows("player", toRecord(account)))!, 10).account).toEqual(account)
+  })
+
+  it("keeps relics at their tier, the team's relics, the looks worn, and the Call's relics and looks", () => {
+    expect(account.owned.relics).toEqual({ echo: { unlockedAt: 7, tier: 2 }, emberHeart: { unlockedAt: 8, tier: 1 } })
+    expect(account.selection.relics).toEqual({ gunner: { strike: "echo", element: "emberHeart" } })
+    expect(account.worn).toEqual({ gunner: { trail: "starfall", tint: "blueFlame" } })
+    expect(account.calls.history.map((record) => record.result)).toEqual([
+      { kind: "supply", amounts: { gold: 50 } },
+      { kind: "relic", id: "echo", tier: 2, dust: 0 },
+      { kind: "relic", id: "repel", tier: 3, dust: 50 },
+      { kind: "cosmetic", id: "blueFlame" }
+    ])
   })
 
   it("drops rows naming content that no longer exists, and repairs what depended on it", () => {

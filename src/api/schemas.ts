@@ -9,6 +9,8 @@ import * as Schema from "effect/Schema"
 
 import type { Account as AccountValue, CallResult as CallResultValue, ChestRef as ChestRefValue, Earned as EarnedValue, Play as PlayValue } from "../account/account.ts"
 import { aspects } from "../content/aspects.ts"
+import { cosmeticKinds, cosmetics } from "../content/cosmetics.ts"
+import { relicSlots, relics } from "../content/relics.ts"
 import { banners } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
@@ -28,6 +30,11 @@ const idsOf = <Id extends string>(record: { readonly [K in Id]: unknown }) => Sc
 
 export const CharacterId = idsOf(characters)
 export const AspectId = idsOf(aspects)
+export const RelicId = idsOf(relics)
+export const CosmeticId = idsOf(cosmetics)
+export const RelicSlot = Schema.Literals(relicSlots)
+export const RelicTier = Schema.Literals([1, 2, 3])
+export const CosmeticKind = Schema.Literals(cosmeticKinds)
 export const QuestId = idsOf(quests)
 export const TrackId = idsOf(tracks)
 export const DiscoveryId = idsOf(discoveries)
@@ -46,7 +53,9 @@ export const Amounts = Schema.Record(ResourceId, Schema.optionalKey(Schema.Numbe
 
 export const Item = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("character"), id: CharacterId }),
-  Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId })
+  Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId }),
+  Schema.Struct({ kind: Schema.Literal("relic"), id: RelicId }),
+  Schema.Struct({ kind: Schema.Literal("cosmetic"), id: CosmeticId })
 ])
 
 export const Play = Schema.Union([
@@ -56,9 +65,15 @@ export const Play = Schema.Union([
 
 export const TeamAspects = Schema.Record(CharacterId, Schema.optionalKey(AspectId))
 
+export const TeamRelics = Schema.Record(CharacterId, Schema.optionalKey(Schema.Record(RelicSlot, Schema.optionalKey(RelicId))))
+
+export const Worn = Schema.Record(CharacterId, Schema.optionalKey(Schema.Record(CosmeticKind, Schema.optionalKey(CosmeticId))))
+
 export const CallResult = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("character"), id: CharacterId }),
   Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId }),
+  Schema.Struct({ kind: Schema.Literal("cosmetic"), id: CosmeticId }),
+  Schema.Struct({ kind: Schema.Literal("relic"), id: RelicId, tier: RelicTier, dust: Count }),
   Schema.Struct({ kind: Schema.Literal("supply"), amounts: Amounts })
 ])
 
@@ -76,7 +91,9 @@ export const Account = Schema.Struct({
   wallet: Amounts,
   owned: Schema.Struct({
     characters: Schema.Record(CharacterId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, experience: Schema.Number, ascension: Count }))),
-    aspects: Schema.Record(AspectId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, copies: Count })))
+    aspects: Schema.Record(AspectId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, copies: Count }))),
+    relics: Schema.Record(RelicId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, tier: RelicTier }))),
+    cosmetics: Schema.Record(CosmeticId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number })))
   }),
   quests: Schema.Record(QuestId, Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, stars: Schema.Array(Count) })))),
   hardcore: Schema.Record(
@@ -89,11 +106,13 @@ export const Account = Schema.Struct({
     seed: Schema.Number,
     sinceCharacter: Count,
     sinceAspect: Count,
+    sinceRelic: Count,
     firstCharacter: Schema.Boolean,
     focus: Schema.Record(BannerId, Schema.optionalKey(CharacterId)),
     history: Schema.Array(Schema.Struct({ at: Schema.Number, banner: BannerId, result: CallResult }))
   }),
-  selection: Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, play: Play })
+  selection: Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics, play: Play }),
+  worn: Worn
 })
 
 const ReactionRecord = Schema.Literals(["burning", "soaked", "charged", "swept", "cracked", "slam"])
@@ -123,14 +142,17 @@ export const RunLog = Schema.Struct({
   switches: Count
 })
 
-/** A run as the server keeps it: what was played and against what, who played it (her level and aspect then), how it went, and its log. */
+/** A relic a member played with: its slot, and the tier it was at. */
+export const PlayedRelic = Schema.Struct({ slot: RelicSlot, id: RelicId, tier: RelicTier })
+
+/** A run as the server keeps it: what was played and against what, who played it (her level, aspect, and relics then), how it went, and its log. */
 export const StoredRun = Schema.Struct({
   id: Schema.String,
   at: Schema.Number,
   play: Schema.NullOr(Play),
   challenge: ChallengeId,
   enemyLevel: Count,
-  team: Schema.Array(Schema.Struct({ character: CharacterId, level: Count, aspect: Schema.NullOr(AspectId) })),
+  team: Schema.Array(Schema.Struct({ character: CharacterId, level: Count, aspect: Schema.NullOr(AspectId), relics: Schema.Array(PlayedRelic) })),
   cleared: Schema.Boolean,
   progress: Schema.Number,
   wave: Count,
