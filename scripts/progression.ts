@@ -3,7 +3,7 @@
  * `test/progression-model.ts`): how far the rewards carry a player along
  * the main line, and where she has to farm.
  *
- *   pnpm progression                 the main line, one called character in chapter 3
+ *   pnpm progression                 the main line, one called character in chapter 5
  *   pnpm progression --no-calls      without the Spirit Call
  *   pnpm progression --runs-per-week 40
  *
@@ -26,7 +26,7 @@ const runsPerWeek = Number(values["runs-per-week"])
 const farmFlag = Number(values["farm-flag"])
 const { rows, runs } = simulateProgression(tuning, { calls: !values["no-calls"], runsPerWeek })
 
-console.log(`A new account along the main line${values["no-calls"] ? " (no calls)" : " (the Spirit Call bringing a character in chapter 3)"}, ${runsPerWeek} runs a week.\n`)
+console.log(`A new account along the main line${values["no-calls"] ? " (no calls)" : " (the Spirit Call bringing a character in chapter 5)"}, ${runsPerWeek} runs a week.\n`)
 console.table(rows.map((row) => ({
   quest: row.rank === 1 ? row.quest : `${row.quest} @${row.rank}`,
   enemies: row.enemyLevel,

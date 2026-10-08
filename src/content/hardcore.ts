@@ -86,16 +86,16 @@ export const tracks = {
     name: "Until Fall",
     element: "wind",
     tiers: [
-      tier(3, "untilFall", "packLeader", 100, { crystals: 20, gold: 1200 }),
-      tier(10, "untilFall2", "bulwark", 140, { crystals: 25, gold: 2400 }),
-      tier(16, "untilFall3", "bruteKing", 180, { crystals: 30, gold: 4000 }, 1, ["lastLight"]),
-      tier(22, "untilFall4", "swarmMother", 220, { crystals: 35, gold: 6000 }),
-      tier(28, "untilFall5", "theWarlord", 260, { crystals: 40, gold: 8000 }),
-      tier(34, "untilFall6", "colossus", 300, { crystals: 50, gold: 10000 }),
-      tier(40, "untilFall6", "theWarlord", 340, { crystals: 50, gold: 12000 }, 2),
-      tier(46, "untilFall6", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
-      tier(52, "untilFall6", "theWarlord", 420, { crystals: 60, gold: 16000 }, 3),
-      tier(58, "untilFall6", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
+      tier(3, "untilFall", "packLeader", 100, { crystals: 15, gold: 1200 }),
+      tier(10, "untilFall2", "bulwark", 140, { crystals: 20, gold: 2400 }),
+      tier(16, "untilFall3", "bruteKing", 180, { crystals: 20, gold: 4000 }, 1, ["lastLight"]),
+      tier(22, "untilFall4", "swarmMother", 220, { crystals: 25, gold: 6000 }),
+      tier(28, "untilFall5", "theWarlord", 260, { crystals: 30, gold: 8000 }),
+      tier(34, "untilFall6", "colossus", 300, { crystals: 40, gold: 10000 }),
+      tier(40, "untilFall6", "theWarlord", 340, { crystals: 40, gold: 12000 }, 2),
+      tier(46, "untilFall6", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
+      tier(52, "untilFall6", "theWarlord", 420, { crystals: 45, gold: 16000 }, 3),
+      tier(58, "untilFall6", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
     ]
   }),
   /** Clearing mixed formations with elite leaders. */
@@ -103,11 +103,11 @@ export const tracks = {
     name: "Gauntlet",
     element: "fire",
     tiers: [
-      tier(10, "gauntlet", "bulwark", 140, { crystals: 20, gold: 2400 }),
-      tier(22, "gauntlet2", "swarmMother", 220, { crystals: 30, gold: 6000 }),
-      tier(34, "gauntlet3", "colossus", 300, { crystals: 40, gold: 10000 }),
-      tier(46, "gauntlet3", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
-      tier(58, "gauntlet3", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
+      tier(10, "gauntlet", "bulwark", 140, { crystals: 15, gold: 2400 }),
+      tier(22, "gauntlet2", "swarmMother", 220, { crystals: 20, gold: 6000 }),
+      tier(34, "gauntlet3", "colossus", 300, { crystals: 30, gold: 10000 }),
+      tier(46, "gauntlet3", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
+      tier(58, "gauntlet3", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
     ]
   }),
   /** The brute and its guards, tougher every tier. */
@@ -115,11 +115,11 @@ export const tracks = {
     name: "Brute Siege",
     element: "rock",
     tiers: [
-      tier(16, "siege", "bruteKing", 180, { crystals: 20, gold: 4000 }),
-      tier(28, "siege2", "theWarlord", 260, { crystals: 30, gold: 8000 }, 1, ["stoneDust"]),
-      tier(36, "siege3", "colossus", 320, { crystals: 40, gold: 11000 }),
-      tier(46, "siege3", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
-      tier(58, "siege3", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
+      tier(16, "siege", "bruteKing", 180, { crystals: 15, gold: 4000 }),
+      tier(28, "siege2", "theWarlord", 260, { crystals: 20, gold: 8000 }, 1, ["stoneDust"]),
+      tier(36, "siege3", "colossus", 320, { crystals: 30, gold: 11000 }),
+      tier(46, "siege3", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
+      tier(58, "siege3", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
     ]
   }),
   /**
@@ -140,10 +140,10 @@ export const tracks = {
     name: "The Keep",
     element: "fire",
     tiers: [
-      tier(30, "keep", "theWarlord", 280, { crystals: 30, gold: 9000 }),
-      tier(36, "keep2", "colossus", 340, { crystals: 40, gold: 12000 }),
-      tier(46, "keep2", "colossus", 380, { crystals: 50, gold: 14000 }, 2),
-      tier(58, "keep2", "colossus", 460, { crystals: 60, gold: 18000 }, 3)
+      tier(30, "keep", "theWarlord", 280, { crystals: 20, gold: 9000 }),
+      tier(36, "keep2", "colossus", 340, { crystals: 30, gold: 12000 }),
+      tier(46, "keep2", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
+      tier(58, "keep2", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
     ]
   })
 }

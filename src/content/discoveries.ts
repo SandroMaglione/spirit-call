@@ -41,73 +41,73 @@ export const discoveries = {
     name: "Swordsman",
     description: "Clear a quest or tier with the Swordsman on the team.",
     check: clearWith("swordsman"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   withGunner: discovery({
     name: "Gunner",
     description: "Clear a quest or tier with the Gunner on the team.",
     check: clearWith("gunner"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   withTidecaller: discovery({
     name: "Tidecaller",
     description: "Clear a quest or tier with the Tidecaller on the team.",
     check: clearWith("tidecaller"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   withStormcaller: discovery({
     name: "Stormcaller",
     description: "Clear a quest or tier with the Stormcaller on the team.",
     check: clearWith("stormcaller"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   withStonekeeper: discovery({
     name: "Bastion",
     description: "Clear a quest or tier with Bastion on the team.",
     check: clearWith("stonekeeper"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   fullTeam: discovery({
     name: "Full team",
     description: "Clear a quest or tier with three characters.",
     check: { kind: "fullTeam" },
-    rewards: { crystals: 60 }
+    rewards: { crystals: 45 }
   }),
   wallSlam: discovery({
     name: "Wall slam",
     description: "Slam a swept enemy into a wall.",
     check: reaction("slam"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   flare: discovery({
     name: "Flare",
     description: "Burst a burning enemy with another element.",
     check: reaction("burning"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   splash: discovery({
     name: "Splash",
     description: "Burst a soaked enemy with another element.",
     check: reaction("soaked"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   discharge: discovery({
     name: "Discharge",
     description: "Burst a charged enemy with another element.",
     check: reaction("charged"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   gale: discovery({
     name: "Gale",
     description: "Burst a swept enemy with another element.",
     check: reaction("swept"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   }),
   shatter: discovery({
     name: "Shatter",
     description: "Burst a cracked enemy with another element.",
     check: reaction("cracked"),
-    rewards: { crystals: 40 }
+    rewards: { crystals: 30 }
   })
 }
 
