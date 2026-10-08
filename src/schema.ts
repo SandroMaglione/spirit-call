@@ -20,6 +20,7 @@ import type { EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
+import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
 import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
@@ -645,6 +646,8 @@ export const Hit = Descriptor.Event<{
   readonly periodic: boolean
   /** The element of the blow, if any (for the color of its number). */
   readonly element: ElementId | null
+  /** The state the body was in when the blow landed (for relics that read what they killed). */
+  readonly state: StateId | null
 }>()("Shooter/Hit")
 
 /**
@@ -816,6 +819,8 @@ export interface BuildValue {
   readonly level?: number
   /** An aspect of her class in place of its plain one. */
   readonly aspect?: AspectId
+  /** Her relics, one per slot (see `content/relics.ts`), at the tier the account owns each at. */
+  readonly relics?: { readonly [Slot in RelicSlot]?: EquippedRelic }
 }
 /** Who enters the arena: one to three characters (see `teamSize`), in team order; the first starts on the field. */
 export const Team = Descriptor.Resource<ReadonlyArray<BuildValue>>()("Shooter/Team")
@@ -858,8 +863,20 @@ export const Twist = Descriptor.Resource<TwistValue>()("Shooter/Twist")
  * `features/passives.ts`). A queue rather than events, so an effect set off
  * by a kill survives the hit-stop that kill starts.
  */
-export type TriggeredEffectsValue = ReadonlyArray<{ readonly holder: Entity.Handle<typeof Root, typeof Position>; readonly effect: TriggeredEffect }>
+export type TriggeredEffectsValue = ReadonlyArray<{
+  readonly holder: Entity.Handle<typeof Root, typeof Position>
+  readonly effect: TriggeredEffect
+  /** Where its trigger happened (see `Place`). */
+  readonly there: Vec2
+}>
 export const TriggeredEffects = Descriptor.Resource<TriggeredEffectsValue>()("Shooter/TriggeredEffects")
+
+/**
+ * When each passive that goes off at most every so often (see `Passive`) may
+ * go off again, by holder entity and the passive's place among her passives
+ * (`"<entity>/<index>"`), in run seconds.
+ */
+export const PassiveCooldowns = Descriptor.Resource<{ readonly [key: string]: number }>()("Shooter/PassiveCooldowns")
 
 export interface TimeValue {
   /** Fixed step length. */
@@ -1158,6 +1175,7 @@ export const Game = Schema.bind(
       EnemyLevel,
       Twist,
       TriggeredEffects,
+      PassiveCooldowns,
       Time,
       Keys,
       PointerState,

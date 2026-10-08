@@ -21,7 +21,10 @@ settled here is in the open questions at the end: ask, do not guess.
   strategy is matching the team's elements to the enemies you will face.
 - **An element belongs to a character**: her special and ultimate apply
   it, and her aspect may give one moment of her basic attack to it (see
-  `docs/aspects.md`). Aspects never name an element.
+  `docs/aspects.md`). Aspects never name an element. Her **Element relic**
+  (see `docs/relics.md`) is the one relic that does: each element's own
+  trick (fire spreading from what falls, puddles where she dashes, gusts,
+  discharges, stone from breaks), worn only by characters of it.
 - **Each state changes something different about a fight** (damage over
   time, speed, spreading, position, the break bar, ...). Two elements whose
   states do the same thing are one element: this is what keeps a long list

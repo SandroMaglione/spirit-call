@@ -9,6 +9,9 @@ import type { Tuning } from "../src/config/tuning.ts"
 import type { BasicAttackSpec, ShotMove } from "../src/content/attacks.ts"
 import type { AspectId, AspectSpec } from "../src/content/aspects.ts"
 import type { ClassId } from "../src/content/classes.ts"
+import type { ElementId } from "../src/content/elements.ts"
+import type { Passive } from "../src/content/passives.ts"
+import type { RelicId, RelicSlot, RelicSpec } from "../src/content/relics.ts"
 import { cut, lob, vortex } from "../src/content/skills.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
@@ -69,7 +72,20 @@ export const aspectId = (id: string): AspectId => id as AspectId
 
 /** A made-up aspect of `cls`: its plain aspect's moves, with `extra` over them. */
 export const testAspect = (tuning: Tuning, cls: ClassId, extra: Partial<AspectSpec> = {}): AspectSpec =>
-  ({ ...tuning.classes[cls].plain, name: "Test", description: "A test aspect.", against: "Tests.", class: cls, passives: [], infuse: null, ...extra })
+  ({ ...tuning.classes[cls].plain, name: "Test", description: "A test aspect.", against: "Tests.", class: cls, effects: [], infuse: null, ...extra })
+
+/** `tuning` with one more relic, `id`: tests of relics use made-up ones, so they hold whatever ships. */
+export const withRelic = (tuning: Tuning, id: string, spec: RelicSpec): Tuning =>
+  ({ ...tuning, relics: { ...tuning.relics, [id]: spec } }) as unknown as Tuning
+
+/** `id` as a relic's id (one added by `withRelic`). */
+export const relicId = (id: string): RelicId => id as RelicId
+
+/** A made-up relic of `slot` (`element`: an Element relic's) doing `passives` at every tier. */
+export const testRelic = (passives: ReadonlyArray<Passive>, slot: RelicSlot = "strike", element: ElementId | null = null): RelicSpec => {
+  const tier = { adds: "Test.", passives }
+  return { name: "Test", slot, element, about: "Tests.", tiers: { 1: tier, 2: tier, 3: tier } }
+}
 
 export const gunShot = defaultTuning.classes.gun.plain.combo[0] as ShotMove
 

@@ -1,18 +1,23 @@
 /**
- * Passives: special effects of aspects (see `content/aspects.ts`), made of small
- * composable parts so new ones are data:
+ * Passives: what relics do in a fight (see `content/relics.ts`), made of
+ * small composable parts so new ones are data:
  *
  * - a damage bonus while a condition holds (`damageBonus`), or
- * - an effect set off by a trigger (`on`).
+ * - an effect set off by a trigger (`on`), at most once every so often.
  *
- * Conditions and triggers read only facts that belong to no element (see
- * docs/aspects.md): moves of the wielder's basic attack (`MoveFilter`), the
- * target being in a state (any one), stunned, broken, or wounded, and kills.
- * Effects heal the wielder or set off any skill effect through the skill
- * systems (see `Cast`), with her element when it says so (`castOwn`), never
- * a named one. A new kind of condition, trigger, or effect is a new case
- * here and where it is evaluated (see `features/passives.ts`).
+ * Conditions and triggers read facts of the fight: moves of the wielder's
+ * basic attack (`MoveFilter`), the target being in a state (any one, or a
+ * named one), stunned, broken, wounded, or unhurt, kills, dashes, perfect
+ * dodges, and breaks. Effects heal the wielder, give her a dash back, set
+ * off any skill effect through the skill systems (see `Cast`), with her
+ * element when it says so (`castOwn`), or leave a pool on the ground. A
+ * relic of the Strike or Dash slot names no element (only hers, through
+ * `castOwn`); an Element relic names its own (see `validateContent`).
+ * Aspects use one part of it: what their moves also set off (see
+ * `AspectSpec.effects`). A new kind of condition, trigger, or effect is a
+ * new case here and where it is evaluated (see `features/passives.ts`).
  */
+import type { GroundSpec, StateId } from "./elements.ts"
 import type { SkillEffect } from "./skills.ts"
 
 /**
@@ -35,34 +40,54 @@ export type HitCondition =
   | { readonly kind: "move"; readonly move: MoveFilter }
   /** The target's health is below this fraction of its maximum. */
   | { readonly kind: "targetHealthBelow"; readonly fraction: number }
-  /** The target is in a state (any one, whoever set it). */
-  | { readonly kind: "targetInState" }
+  /** The target has not been hurt yet (its health is full). */
+  | { readonly kind: "targetUnhurt" }
+  /** The target is in a state (`state`; `null`: any one, whoever set it). */
+  | { readonly kind: "targetInState"; readonly state: StateId | null }
   /** The target is stunned (by a slam, a burst, a skill) or broken. */
   | { readonly kind: "targetHeld" }
 
 /** What sets off a triggered effect. */
 export type Trigger =
-  /** The wielder kills an enemy. */
-  | { readonly kind: "kill" }
+  /** The wielder kills an enemy (that was in `state`; `null`: any kill, `"any"`: in any state). */
+  | { readonly kind: "kill"; readonly state: StateId | "any" | null }
   /** The wielder does this move (whether or not it lands). */
   | { readonly kind: "move"; readonly move: MoveFilter }
+  /** The wielder dashes (on the field). */
+  | { readonly kind: "dash" }
+  /** The wielder dodges perfectly (see `features/dodge.ts`). */
+  | { readonly kind: "perfectDodge" }
+  /** An enemy breaks while the wielder is on the field (see `features/poise.ts`). */
+  | { readonly kind: "break" }
+
+/**
+ * Where an effect goes off: from the wielder along her aim (`self`), or where
+ * its trigger happened (`there`: the enemy killed or broken, the spot she
+ * dashed or dodged from; her own place for a move).
+ */
+export type Place = "self" | "there"
 
 /** What a trigger does. */
 export type TriggeredEffect =
   /** Heals the wielder by this percentage of their maximum health. */
   | { readonly kind: "heal"; readonly percent: number }
   /**
-   * Sets off a skill effect from the wielder, as if cast (without generating
-   * energy); `own`: carrying her element (the effect's own is ignored).
+   * Sets off a skill effect, as if cast (without generating energy);
+   * `own`: carrying her element (the effect's own is ignored).
    */
-  | { readonly kind: "cast"; readonly effect: SkillEffect; readonly own: boolean }
+  | { readonly kind: "cast"; readonly effect: SkillEffect; readonly own: boolean; readonly at: Place }
+  /** Leaves a pool of `ground`'s element (see `GroundSpec`), burning from her ATK. */
+  | { readonly kind: "leave"; readonly ground: GroundSpec; readonly at: Place }
+  /** Gives the wielder one dash charge back. */
+  | { readonly kind: "dashCharge" }
 
 export type Passive =
   /** Blows that meet `when` deal `percent` more damage (bonuses add up). */
   | { readonly kind: "damageBonus"; readonly percent: number; readonly when: HitCondition }
-  | { readonly kind: "on"; readonly trigger: Trigger; readonly effect: TriggeredEffect }
+  /** `effect` when `trigger` happens, at most once every `every` seconds (0: every time). */
+  | { readonly kind: "on"; readonly trigger: Trigger; readonly effect: TriggeredEffect; readonly every: number }
 
-// Building blocks, so passives read as sentences: `on(kill(), heal(5))`.
+// Building blocks, so passives read as sentences: `on(kill(), dashBack(), 4)`.
 
 export const combo = (move: number): MoveFilter => ({ kind: "combo", move })
 export const finisher = (): MoveFilter => ({ kind: "finisher" })
@@ -74,16 +99,22 @@ export const lastRound = (): MoveFilter => ({ kind: "lastRound" })
 export const always = (): HitCondition => ({ kind: "always" })
 export const withMove = (move: MoveFilter): HitCondition => ({ kind: "move", move })
 export const targetHealthBelow = (fraction: number): HitCondition => ({ kind: "targetHealthBelow", fraction })
-export const targetInState = (): HitCondition => ({ kind: "targetInState" })
+export const targetUnhurt = (): HitCondition => ({ kind: "targetUnhurt" })
+export const targetInState = (state: StateId | null = null): HitCondition => ({ kind: "targetInState", state })
 export const targetHeld = (): HitCondition => ({ kind: "targetHeld" })
 
-export const kill = (): Trigger => ({ kind: "kill" })
+export const kill = (state: StateId | "any" | null = null): Trigger => ({ kind: "kill", state })
 export const doing = (move: MoveFilter): Trigger => ({ kind: "move", move })
+export const dashing = (): Trigger => ({ kind: "dash" })
+export const perfectDodge = (): Trigger => ({ kind: "perfectDodge" })
+export const breaking = (): Trigger => ({ kind: "break" })
 
 export const heal = (percent: number): TriggeredEffect => ({ kind: "heal", percent })
-export const cast = (effect: SkillEffect): TriggeredEffect => ({ kind: "cast", effect, own: false })
-/** `effect` set off with her element: what an aspect's passive uses for its elemental moment. */
-export const castOwn = (effect: SkillEffect): TriggeredEffect => ({ kind: "cast", effect, own: true })
+export const cast = (effect: SkillEffect, at: Place = "self"): TriggeredEffect => ({ kind: "cast", effect, own: false, at })
+/** `effect` set off with her element. */
+export const castOwn = (effect: SkillEffect, at: Place = "self"): TriggeredEffect => ({ kind: "cast", effect, own: true, at })
+export const leave = (ground: GroundSpec, at: Place = "there"): TriggeredEffect => ({ kind: "leave", ground, at })
+export const dashBack = (): TriggeredEffect => ({ kind: "dashCharge" })
 
 export const damageBonus = (percent: number, when: HitCondition): Passive => ({ kind: "damageBonus", percent, when })
-export const on = (trigger: Trigger, effect: TriggeredEffect): Passive => ({ kind: "on", trigger, effect })
+export const on = (trigger: Trigger, effect: TriggeredEffect, every = 0): Passive => ({ kind: "on", trigger, effect, every })

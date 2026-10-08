@@ -13,7 +13,7 @@ import { nova } from "../src/content/skills.ts"
 import { damageDealt, resolveBuild } from "../src/features/build.ts"
 import { Enemy, Game, Health, Player } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { aspectId, placeDummies, plainAttack, start, testAspect, withAspect } from "./helpers.ts"
+import { placeDummies, plainAttack, relicId, start, testRelic, withRelic } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
 const sword = plainAttack(defaultTuning, "blade")
@@ -60,13 +60,11 @@ const sturdy = (tuning: Tuning): Tuning => {
   return { ...sturdier, aspects: tuning.aspects, classes: { ...tuning.classes, blade: { ...blade, plain: { ...blade.plain, combo: blade.plain.combo.map((move) => ({ ...move, lunge: 0 })) } } } }
 }
 
-/** `tuning` with a made-up aspect of `cls` holding `passives`, and the build that equips it on `character`. */
-const equipped = (tuning: Tuning, character: CharacterId, passives: ReadonlyArray<Passive>) => {
-  const cls = defaultTuning.characters[character].class
-  return { tuning: withAspect(tuning, "test", testAspect(tuning, cls, { passives })), build: { character, aspect: aspectId("test") } satisfies BuildValue }
-}
+/** `tuning` with a made-up Strike relic holding `passives`, and the build that equips it on `character`. */
+const equipped = (tuning: Tuning, character: CharacterId, passives: ReadonlyArray<Passive>) =>
+  ({ tuning: withRelic(tuning, "test", testRelic(passives)), build: { character, relics: { strike: { id: relicId("test"), tier: 1 } } } satisfies BuildValue })
 
-describe("aspect passives", () => {
+describe("relic passives", () => {
   it("a damage bonus by combo move: each move deals more than the last, the finisher most", () => {
     const { tuning, build } = equipped(sturdy(defaultTuning), "swordsman", [damageBonus(10, withMove(combo(2))), damageBonus(20, withMove(combo(3))), damageBonus(40, withMove(finisher()))])
     const atk = resolveBuild(tuning, build).stats.atk

@@ -10,10 +10,10 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 import { basicAttack } from "../src/content/aspects.ts"
 import type { AspectId } from "../src/content/aspects.ts"
-import { castOwn, counter, damageBonus, doing, finisher, on, withMove } from "../src/content/passives.ts"
+import { counter, finisher } from "../src/content/passives.ts"
 import { nova } from "../src/content/skills.ts"
 import { sustainedDamage, validateContent } from "../src/content/validate.ts"
-import { aspectProblems, damageDealt, resolveBuild, withValidAspects } from "../src/features/build.ts"
+import { aspectPassives, aspectProblems, damageDealt, resolveBuild, withValidAspects } from "../src/features/build.ts"
 import { moveMatches } from "../src/features/passives.ts"
 import { Dash, ElementState, Enemy, Game, Health, Player, Position, Totem } from "../src/schema.ts"
 import type { BuildValue, MoveContext } from "../src/schema.ts"
@@ -60,11 +60,11 @@ describe("the shipped aspects", () => {
 
   it("are refused when stronger than the plain aspect, naming an element, or with two elemental moments", () => {
     const strong = testAspect(defaultTuning, "blade", { combo: defaultTuning.classes.blade.plain.combo.map((move) => ({ ...move, power: move.power * 2 })) })
-    const named = testAspect(defaultTuning, "blade", { passives: [on(doing(finisher()), { kind: "cast", own: false, effect: nova({ radius: 100, power: 10, element: "fire", knockback: 0, active: 0.1, clearsProjectiles: false, hitStop: 0, heavy: false }) })] })
-    const twice = testAspect(defaultTuning, "blade", { infuse: counter(), passives: [on(doing(finisher()), castOwn(nova({ radius: 100, power: 10, element: null, knockback: 0, active: 0.1, clearsProjectiles: false, hitStop: 0, heavy: false })))] })
+    const named = testAspect(defaultTuning, "blade", { effects: [{ move: finisher(), own: false, effect: nova({ radius: 100, power: 10, element: "fire", knockback: 0, active: 0.1, clearsProjectiles: false, hitStop: 0, heavy: false }) }] })
+    const twice = testAspect(defaultTuning, "blade", { infuse: counter(), effects: [{ move: finisher(), own: true, effect: nova({ radius: 100, power: 10, element: null, knockback: 0, active: 0.1, clearsProjectiles: false, hitStop: 0, heavy: false }) }] })
     const problems = validateContent(withAspect(withAspect(withAspect(defaultTuning, "strong", strong), "named", named), "twice", twice))
     expect(problems.some((problem) => problem.startsWith("aspect strong: deals"))).toBe(true)
-    expect(problems).toContain("aspect named passive 1: names an element (an aspect gives one moment to her element instead)")
+    expect(problems).toContain("aspect named effect 1: names an element (an aspect gives one moment to her element instead)")
     expect(problems).toContain("aspect twice: gives her element 2 moments (one at most)")
   })
 })
@@ -73,16 +73,17 @@ describe("Riptide (Disc)", () => {
   const riptide = { character: "tidecaller" as const, aspect: "riptide" as AspectId }
   const throwOne = { pointer: [{ frame: 2, press: ["primary" as const] }, { frame: 3, release: ["primary" as const] }] }
 
-  it("hits an enemy in a state (any one, whoever set it) half again as hard", () => {
-    const dry = arena(riptide, [{ x: 150, y: 0 }], { x: 300, y: 0 }, throwOne)
-    dry.step(20)
-    const wet = arena(riptide, [{ x: 150, y: 0 }], { x: 300, y: 0 }, throwOne)
-    wet.runtime.tick(Game.Schedule(Soak))
-    wet.step(20)
-    const dryLoss = 2000 - dry.world().enemies[0]!.health
-    const wetLoss = 2000 - wet.world().enemies[0]!.health
-    expect(dryLoss).toBeGreaterThan(0)
-    expect(wetLoss).toBeCloseTo(dryLoss * 1.5, 6)
+  it("hits an enemy in a state as hard as a dry one: a bonus for it is a relic's (Opportunist, 15% more)", () => {
+    const loss = (build: BuildValue, soaked: boolean) => {
+      const run = arena(build, [{ x: 150, y: 0 }], { x: 300, y: 0 }, throwOne)
+      if (soaked) run.runtime.tick(Game.Schedule(Soak))
+      run.step(20)
+      return 2000 - run.world().enemies[0]!.health
+    }
+    const dry = loss(riptide, false)
+    expect(dry).toBeGreaterThan(0)
+    expect(loss(riptide, true)).toBeCloseTo(dry, 6)
+    expect(loss({ ...riptide, relics: { strike: { id: "opportunist", tier: 1 } } }, true)).toBeCloseTo(dry * 1.15, 6)
   })
 
   it("bounces a disc off an enemy in a state to the next one nearby", () => {
@@ -135,12 +136,12 @@ describe("Duelist (Blade)", () => {
     expect(moveMatches(counter(), context({ dash: true }))).toBe(false)
   })
 
-  it("counters for double damage, carrying her element (the Swordsman's sweeps); a plain dash strike does neither", () => {
+  it("counters carrying her element (the Swordsman's sweeps), harder with Counterpoint; a plain dash strike does neither", () => {
     const strike = defaultTuning.aspects.duelist.dash
     const atk = resolveBuild(sturdy, duelist).stats.atk
     /** The dash strike pressed out of a dash going on (just after its start) that did, or did not, dodge a blow perfectly. */
-    const dashStrike = (perfect: boolean) => {
-      const run = arena(duelist, [{ x: 120, y: 0 }], { x: 300, y: 0 }, { pointer: [{ frame: 1, press: ["primary"] }, { frame: 2, release: ["primary"] }] })
+    const dashStrike = (perfect: boolean, build: BuildValue = duelist) => {
+      const run = arena(build, [{ x: 120, y: 0 }], { x: 300, y: 0 }, { pointer: [{ frame: 1, press: ["primary"] }, { frame: 2, release: ["primary"] }] })
       const Dashing = Game.System("Test/Dashing", { queries: { player: Game.Query({ selection: { dash: Game.Query.write(Dash) }, with: [Player] }) } }, ({ queries }) => {
         for (const { data } of queries.player.each()) data.dash.update((dash) => ({ ...dash, since: 0.02, perfect }))
       })
@@ -149,8 +150,10 @@ describe("Duelist (Blade)", () => {
       return run.world().enemies[0]!
     }
     const countered = dashStrike(true)
-    expect(2000 - countered.health).toBeCloseTo(damageDealt(atk, strike.power) * 2, 6)
+    expect(2000 - countered.health).toBeCloseTo(damageDealt(atk, strike.power), 6)
     expect(countered.state).toBe("swept")
+    const harder = dashStrike(true, { ...duelist, relics: { strike: { id: "counterpoint", tier: 1 } } })
+    expect(2000 - harder.health).toBeCloseTo(damageDealt(atk, strike.power) * 1.3, 6)
     const plain = dashStrike(false)
     expect(2000 - plain.health).toBeCloseTo(damageDealt(atk, strike.power), 6)
     expect(plain.state).toBeNull()
@@ -263,8 +266,10 @@ describe("owning and equipping", () => {
     ])
   })
 
-  it("an aspect's passive is hers: a damage bonus on a counter only", () => {
-    const passives = defaultTuning.aspects.duelist.passives
-    expect(passives).toEqual([damageBonus(100, withMove(counter()))])
+  it("an aspect is a pattern: nothing it equips is a bonus (bonuses are relics')", () => {
+    for (const aspect of Object.values(defaultTuning.aspects)) {
+      expect(resolveBuild(defaultTuning, { character: "swordsman" }).stats).toEqual(defaultTuning.characters.swordsman.stats)
+      expect(aspectPassives(aspect).every((passive) => passive.kind === "on" && passive.trigger.kind === "move")).toBe(true)
+    }
   })
 })

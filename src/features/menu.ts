@@ -12,7 +12,7 @@ import { Descriptor } from "@typeonce/bevy-ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import { Challenge, EnemyLevel, Flow, Game, noTwist, Paused, Practice, RunResult, Team, Tuning, Twist } from "../schema.ts"
 import type { BuildValue, PracticeValue, TwistValue } from "../schema.ts"
-import { withValidAspects } from "./build.ts"
+import { withValidAspects, withValidRelics } from "./build.ts"
 
 export type UiRequest =
   /** Enter the arena with this team (in order) to face this challenge. */
@@ -68,8 +68,8 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
     switch (request.kind) {
       case "start":
         if (flow !== "Menu" && !onResults) break
-        // One aspect on one member at most, each of her class (see `withValidAspects`).
-        resources.team.set(withValidAspects(resources.tuning.get(), request.team))
+        // One aspect and one of each relic on one member at most, each fitting her (see `withValidAspects`, `withValidRelics`).
+        resources.team.set(withValidRelics(resources.tuning.get(), withValidAspects(resources.tuning.get(), request.team)))
         resources.challenge.set(request.challenge)
         resources.enemyLevel.set(request.enemyLevel)
         resources.twist.set(request.twist ?? noTwist)

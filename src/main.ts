@@ -13,7 +13,7 @@ import { showLogin } from "./ui/Login.tsx"
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
-import { withValidAspects } from "./features/build.ts"
+import { withValidAspects, withValidRelics } from "./features/build.ts"
 import { buildOf, encounterOf, teamLevel, teamOf, validAspects } from "./account/account.ts"
 import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
@@ -72,8 +72,8 @@ const start = async (mount: HTMLElement) => {
   const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
-  // A quick start may name aspects the account does not own (a dev tool), but never one twice, or of another class.
-  const team = withValidAspects(tuning, quickStart ? teamFromQuery(tuning, window.location.search, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam)
+  // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
+  const team = withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, window.location.search, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
   const selected = encounterOf(tuning, account.selection.play)
   const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
   const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, selected.enemyLevel) : selected.enemyLevel
