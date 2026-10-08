@@ -7,7 +7,7 @@
  * energy). Colors follow the element of
  * the character on the field (`data-element`).
  */
-import { actionButtons, partyLayout, stickRest, touchLayout } from "../config/input.ts"
+import { actionButtons, drawnShare, partyLayout, stickRest, touchLayout } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
@@ -93,7 +93,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     const zone = layout.buttons[name]
     const refs = pad.buttons[name]
     const state = live.buttons[name]
-    place(refs.root, zone.center.x, zone.center.y, zone.radius)
+    place(refs.root, zone.center.x, zone.center.y, zone.radius * (drawnShare[name] ?? 1))
     refs.root.classList.toggle("is-held", state.held)
     refs.root.classList.toggle("is-ready", fill[name] <= 0)
     refs.cooldown.style.setProperty("--cd", String(Math.max(0, Math.min(1, fill[name]))))

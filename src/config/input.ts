@@ -120,8 +120,16 @@ const attackButton = (size: Touch.Size, safe: SafeArea) => {
   return { center: { x: controlsEdge(size, safe) - px(173), y: size.height - px(92) }, radius: px(38) }
 }
 
-/** The dash, right of and below the attack button: the right-hand control nearest the edge. */
-const dashOffset = { x: 69, y: 34, radius: 28 }
+/**
+ * The dash, right of and below the attack button: the right-hand control
+ * nearest the edge, and the one pressed most, so it is large and takes a
+ * touch `reach` times beyond the circle drawn (clear of the attack
+ * button's, so a press is never in doubt).
+ */
+const dashOffset = { x: 78, y: 30, radius: 34, reach: 1.3 }
+
+/** How much of each button's touch area is drawn: the dash takes touches beyond its circle (see `dashOffset`). */
+export const drawnShare: { readonly [Button in TouchButton]?: number } = { dash: 1 / dashOffset.reach }
 
 /**
  * Where the stick rests (a hint of it while no thumb is on it): as far in
@@ -131,7 +139,7 @@ export const stickRest = (size: Touch.Size, safe: SafeArea = noSafeArea): { read
   const scale = controlScale(size)
   const layout = touchLayout(size, safe)
   const dash = layout.buttons.dash
-  const margin = controlsEdge(size, safe) - (dash.center.x + dash.radius)
+  const margin = controlsEdge(size, safe) - (dash.center.x + dash.radius * (drawnShare.dash ?? 1))
   const left = Math.max(0, safe.left + 8 * scale - rightMargin * scale)
   return { x: left + margin + layout.stick.radius, y: layout.stick.region.top + layout.stick.region.height - layout.stick.radius * 2 }
 }
@@ -145,7 +153,7 @@ export const touchLayout = (size: Touch.Size, safe: SafeArea = noSafeArea): Touc
     stick: { region: { left: 0, top: size.height * 0.25, width: size.width / 2, height: size.height * 0.75 }, radius: px(55), deadZone: 0.12 },
     buttons: {
       attack: { center: attack, radius },
-      dash: { center: { x: attack.x + px(dashOffset.x), y: attack.y + px(dashOffset.y) }, radius: px(dashOffset.radius) },
+      dash: { center: { x: attack.x + px(dashOffset.x), y: attack.y + px(dashOffset.y) }, radius: px(dashOffset.radius * dashOffset.reach) },
       special: { center: { x: attack.x - px(67), y: attack.y + px(34) }, radius: px(26), aimRadius: px(90) },
       ultimate: { center: { x: attack.x - px(131), y: attack.y + px(52) }, radius: px(21), aimRadius: px(90) }
     }

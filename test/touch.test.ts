@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { skillSlots } from "../src/content/skills.ts"
-import { actionButtons, partyLayout, stickRest, touchButtons, touchLayout } from "../src/config/input.ts"
+import { actionButtons, drawnShare, partyLayout, stickRest, touchButtons, touchLayout } from "../src/config/input.ts"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
@@ -177,8 +177,16 @@ describe("touch controls", () => {
       const layout = touchLayout(screen)
       const rest = stickRest(screen)
       const dash = layout.buttons.dash
-      expect(rest.x - layout.stick.radius).toBeCloseTo(screen.width - (dash.center.x + dash.radius), 6)
+      expect(rest.x - layout.stick.radius).toBeCloseTo(screen.width - (dash.center.x + dash.radius * (drawnShare.dash ?? 1)), 6)
     }
+  })
+
+  it("draws the dash large, the second largest button, and takes a touch a good way beyond its circle", () => {
+    const layout = touchLayout({ width: 844, height: 390 })
+    const drawn = layout.buttons.dash.radius * (drawnShare.dash ?? 1)
+    expect(drawn).toBeLessThan(layout.buttons.attack.radius)
+    expect(drawn).toBeGreaterThan(layout.buttons.special.radius)
+    expect(layout.buttons.dash.radius).toBeGreaterThan(drawn * 1.2)
   })
 
   it("lets both skill buttons be dragged to aim, since either slot may hold an aimed skill (the Cyclone and the Barrage are ultimates)", () => {
