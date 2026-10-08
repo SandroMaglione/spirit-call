@@ -79,9 +79,37 @@ to by reference, so destroying a preview never touches it.
   (`0003`, `0004`, which also keyed quest progress, stars, and chests by
   rank). Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
-- **Writes are plain statements in sequence.** A player's two devices
-  changing the account at the same moment could interleave; that is
-  accepted until it is seen to matter.
+- **Two round trips an action.** An action reads the whole account in one
+  batch and writes everything it changed (its rows, its log lines) in
+  another: a D1 `batch`, one round trip, all or none (`server/batch.ts`;
+  on a laptop's SQLite, one transaction). A session found is remembered
+  for a minute. A run's save went from about 2.5 s to two round trips.
+  A player's two devices changing the account at the same moment could
+  still interleave; that is accepted until it is seen to matter.
+
+## The game's side
+
+The game never waits on the server to show what the account's rules can
+work out (`app/saves.ts`):
+
+- **In order.** Every change goes to the server one at a time, in the
+  order it was made, so each runs on the account the one before left (a
+  quest a run cleared is open when the next run's selection arrives).
+- **Shown at once.** A run's rewards and a selection are worked out on the
+  page by the same rules the server runs (`account/account.ts`, over the
+  same content), and shown at once; the run starts, the results come in.
+  The server's answer then replaces them (it wins where they differ).
+- **Never lost unnoticed.** A change that fails is tried again a few times;
+  a run or a selection that still fails waits, and everything after it
+  waits behind it: a dialog says so, a mark stays at the top until it is
+  saved (a tap tries again), and nothing new starts meanwhile. The page
+  asks before closing while anything is on its way.
+- **Never made twice.** Before trying again, the account is read back: a
+  run counted, or a call made (its seed moved), was saved and only its
+  answer lost.
+- **What only the server knows** (a call's results, a level, a focus) is
+  waited for. A call shows its seal at once, cracking while the answer is
+  on its way (see docs/calls.md).
 
 ## Measuring play
 

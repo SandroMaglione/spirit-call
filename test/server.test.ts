@@ -2,9 +2,13 @@ import { mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { DatabaseSync } from "node:sqlite"
-import { afterEach, describe, expect, it } from "vitest"
+import * as Schema from "effect/Schema"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { recordRun } from "../src/account/account.ts"
+import type { Play } from "../src/account/account.ts"
 import { fromRecord, toRecord } from "../src/account/convert.ts"
+import { Account, Earned } from "../src/api/schemas.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 import { noTally } from "../src/content/stars.ts"
@@ -156,6 +160,36 @@ describe("accounts", () => {
     expect(account.quests.firstBlood?.["1"]).toMatchObject({ attempts: 1, clears: 1 })
     expect(account.totals).toMatchObject({ runs: 1, clears: 1, kills: 40 })
     expect(account.wallet.gold).toBeGreaterThan(0)
+  })
+
+  it("answers a run with exactly what the game works out by the same rules before it answers", async () => {
+    // The game shows a run's rewards at once (see app/saves.ts): they must be the server's, to the last coin.
+    const start = Date.now()
+    vi.useFakeTimers({ toFake: ["Date"] })
+    try {
+      const player = await signUp(server())
+      const first = Schema.decodeUnknownSync(Account)((await player.send("GET", "/api/account")).body)
+      const lost = { ...run, cleared: false, progress: 0.4, wave: 3, kills: 12, tally: { ...noTally, hitsTaken: 9 } }
+      const runs: ReadonlyArray<readonly [Play, typeof run]> = [
+        [{ kind: "quest", quest: "firstBlood" }, run],
+        [{ kind: "quest", quest: "firstBlood" }, { ...run, tally: { ...noTally, perfectDodges: 4 } }],
+        [{ kind: "quest", quest: "theSwarm" }, lost],
+        [{ kind: "quest", quest: "theSwarm" }, { ...run, challenge: "swarm" }]
+      ]
+      // One after another, each on the account the one before left.
+      await runs.reduce(async (previous, [play, result], index) => {
+        const account = await previous
+        const now = start + (index + 1) * 60_000
+        vi.setSystemTime(now)
+        const local = recordRun(defaultTuning, account, play, result as never, now)
+        const answer = (await player.send("POST", "/api/runs", played(play, result))).body
+        expect(Schema.encodeSync(Earned)(local.earned)).toEqual(answer.earned)
+        expect(Schema.encodeSync(Account)(local.account)).toEqual(answer.account)
+        return Schema.decodeUnknownSync(Account)(answer.account)
+      }, Promise.resolve(first))
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("selects a team of owned characters, and refuses one it does not own, changing nothing", async () => {

@@ -26,19 +26,32 @@ export type Extra =
   | { readonly kind: "practice"; readonly picks: PracticeValue }
   | { readonly kind: "trial"; readonly character: CharacterId }
 
-/** Calls just made, to reveal: on which banner, and what each brought, in the order they came. */
+/** Calls just made, to reveal: on which banner, how many, and what each brought, in the order they came (`null` until the server answers; `failed` when it could not). */
 export interface CallReveal {
   readonly banner: BannerId
-  readonly results: ReadonlyArray<CallResult>
+  readonly count: number
+  readonly results: ReadonlyArray<CallResult> | null
+  readonly failed: boolean
 }
 
-/** Moments of a call that sound (and, on a phone, buzz): the seal cracking, bursting, and what comes out of it. */
-export type CallCue = "crack" | "burst" | "aspect" | "character"
+/** The account's changes on their way to the server: how many must not be lost (a run, a selection), and whether one could not be saved and waits for the player to try again (nothing new starts meanwhile). */
+export interface Saves {
+  readonly pending: number
+  readonly failed: boolean
+}
+
+/**
+ * Moments that sound (and, on a phone, buzz): a call's seal cracking, its
+ * light rising to purple or gold, bursting (or crumbling, a call not made),
+ * and what comes out of it; a run's results coming in (victory or defeat,
+ * each star, the rewards).
+ */
+export type Cue = "crack" | "rise" | "gold" | "burst" | "crumble" | "aspect" | "character" | "victory" | "defeat" | "star" | "reward"
 
 export interface UiStore {
   readonly busy: Signal<boolean>
-  readonly feedback: Signal<{ readonly message: string; readonly error: boolean } | null>
-  readonly recording: Signal<"idle" | "saving" | "saved" | "failed">
+  readonly feedback: Signal<{ readonly message: string; readonly error: boolean; readonly title?: string } | null>
+  readonly saves: Signal<Saves>
   readonly menuPlay: Signal<Play>
   /** The spirit on the lobby stage; selecting one never reorders party slots. */
   readonly menuCharacter: Signal<CharacterId>
@@ -101,7 +114,7 @@ export const createUiStore = (initial: {
 }): UiStore => ({
   busy: signal(false),
   feedback: signal(null),
-  recording: signal("idle"),
+  saves: signal({ pending: 0, failed: false }),
   menuPlay: signal(initial.account.selection.play),
   menuCharacter: signal(initial.account.selection.team[0]!),
   menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects }),
@@ -143,12 +156,14 @@ export interface UiActions {
   /** Take an owned character past the ascension step she stands at (saved at once). */
   readonly ascend: (character: CharacterId) => void
   /** Make one material from the grade below it (saved at once). */
-  /** Make `count` calls on `banner` (saved at once); what they brought shows through `callReveal`. */
+  /** Make `count` calls on `banner`: the seal shows at once (`callReveal`), what they brought once the server answers. */
   readonly call: (banner: BannerId, count: number) => void
   /** Focus `character` on `banner`: the character a call there brings. */
   readonly focus: (banner: BannerId, character: CharacterId) => void
-  /** Sound (and buzz, on a phone) a moment of a call. */
-  readonly cue: (cue: CallCue) => void
+  /** Sound (and buzz, on a phone) a moment of a call or of the results. */
+  readonly cue: (cue: Cue) => void
+  /** Try again to save the change that could not be saved (see `Saves`). */
+  readonly retrySaves: () => void
   /** From the results or the in-game menu: the same challenge again, from the start. */
   readonly retry: () => void
   /** From the results or the in-game menu: back to the menu. */

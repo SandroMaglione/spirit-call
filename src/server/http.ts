@@ -18,6 +18,7 @@ import { Api, Authorization, CurrentPlayer, DevToolsOff, sessionCookie, Unauthor
 import { defaultTuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
 import { Accounts } from "./accounts.ts"
+import type { Batch } from "./batch.ts"
 import { Content } from "./content.ts"
 import { Logs } from "./logs.ts"
 import { Players } from "./players.ts"
@@ -152,6 +153,6 @@ export const apiLayer = HttpApiBuilder.layer(Api).pipe(
   Layer.provide(servicesLayer)
 )
 
-/** The server as a web handler over the database `sql` gives. */
-export const makeWebHandler = (sql: Layer.Layer<SqlClient.SqlClient>, config: ServerConfig["Service"]) =>
+/** The server as a web handler over the database `sql` gives (and its way of sending statements together). */
+export const makeWebHandler = (sql: Layer.Layer<SqlClient.SqlClient | Batch>, config: ServerConfig["Service"]) =>
   HttpRouter.toWebHandler(apiLayer.pipe(Layer.provide([sql, Layer.succeed(ServerConfig, config)]), Layer.provide(HttpServer.layerServices)), { disableLogger: true })

@@ -11,11 +11,13 @@
 import { render } from "preact"
 
 import { Backdrop } from "./Backdrop.tsx"
+import { Entrance } from "./Entrance.tsx"
 import { Confirm } from "./kit/Confirm.tsx"
 import { fitToScreen } from "./kit/scale.ts"
 import { Menu } from "./Menu.tsx"
 import { Pause } from "./Pause.tsx"
 import { Results } from "./Results.tsx"
+import { SaveNotice } from "./SaveNotice.tsx"
 import type { UiActions, UiStore } from "./store.ts"
 import "./kit/kit.css"
 import "./screens.css"
@@ -28,14 +30,16 @@ const Screen = ({ store, actions }: { readonly store: UiStore; readonly actions:
     case "Cleared":
       return <Results store={store} actions={actions} />
     case "Playing":
-      return store.paused.value ? <Pause store={store} actions={actions} /> : null
+      // The entrance stays put while the in-game menu comes and goes (it plays once a run).
+      return <>{store.paused.value ? <Pause store={store} actions={actions} /> : null}<Entrance store={store} /></>
   }
 }
 
 const App = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => <>
   <div class="ui-screen" data-flow={store.flow.value}><Screen store={store} actions={actions} /></div>
+  <SaveNotice store={store} actions={actions} />
   {store.feedback.value !== null && (store.feedback.value.error
-    ? <Confirm title="Could not save" close={() => (store.feedback.value = null)}><p role="alert">{store.feedback.value.message}</p></Confirm>
+    ? <Confirm title={store.feedback.value.title ?? "Could not save"} close={() => (store.feedback.value = null)}><p role="alert">{store.feedback.value.message}</p></Confirm>
     : <div class="pulse" aria-hidden="true" />)}
 </>
 

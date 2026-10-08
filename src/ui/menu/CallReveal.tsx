@@ -1,11 +1,15 @@
 /**
  * The seal (see docs/calls.md, "On screen"): what calls brought, revealed.
- * A stone seal, held (or swiped up) until it cracks; the light coming
- * through tells the best result, honestly (white, purple, gold), and a
- * gold light turns her element's colour as it bursts. Then each character
- * and aspect in turn, the best last (a character as her model arriving,
- * with what she does and a trial), and all of it in a row at the end. A
- * single call that brings a supply shows it alone.
+ * It shows as the call is made, while the server works out what it
+ * brought. A stone seal, held (or swiped up) until it cracks: the light
+ * coming through starts white; once cracked (and the answer is in: the
+ * seal holds, nearly broken, until it is), it rises to tell the best
+ * result, honestly: purple, then gold (the room dims, a pulse, a sting),
+ * and a gold light turns her element's colour as it bursts. Then each
+ * character and aspect in turn, the best last (a character as her model
+ * arriving, with what she does and a trial), and all of it in a row at the
+ * end. A single call that brings a supply shows it alone. A call that
+ * could not be made crumbles back to stone.
  */
 import { useSignal } from "@preact/signals"
 import { useEffect, useRef } from "preact/hooks"
@@ -29,6 +33,14 @@ const healRate = 0.7
 const swipe = 60
 /** How long the burst lasts before the first result, in milliseconds: a gold one turns her colour first. */
 const burstMs = { white: 750, purple: 950, gold: 1500 } as const
+/** How far the seal cracks before the server's answer is in: it holds there, nearly broken. */
+const waitingCrack = 0.9
+/** The least time from the seal showing to its light rising, in milliseconds (the build-up, however fast the answer). */
+const buildUpMs = 1500
+/** The light rising once the seal broke, in milliseconds: the white holds, then turns purple, then gold (the room dimmed), before the burst. */
+const riseMs = { white: 250, purple: 600, gold: 750 } as const
+/** How long a call that could not be made takes to crumble, in milliseconds. */
+const crumbleMs = 900
 
 type Light = keyof typeof burstMs
 
@@ -56,42 +68,77 @@ const triangle = (turn: number) => [0, 1, 2].map((corner) => {
 
 export const CallReveal = ({ store, actions, reveal, done }: { readonly store: UiStore; readonly actions: UiActions; readonly reveal: Reveal; readonly done: () => void }) => {
   const tuning = store.tuning.value
+  const results = reveal.results ?? []
   // The best last; a ten-call reveals its characters and aspects one by one, its supplies in the row at the end.
-  const ordered = reveal.results.map((result, index) => ({ result, index })).sort((a, b) => rank[lightOf(a.result)] - rank[lightOf(b.result)] || a.index - b.index).map((each) => each.result)
+  const ordered = results.map((result, index) => ({ result, index })).sort((a, b) => rank[lightOf(a.result)] - rank[lightOf(b.result)] || a.index - b.index).map((each) => each.result)
   const shown = ordered.length === 1 ? ordered : ordered.filter((result) => result.kind !== "supply")
-  const light = lightOf(ordered[ordered.length - 1]!)
-  const best = ordered[ordered.length - 1]!
-  const phase = useSignal<"seal" | "burst" | "show" | "summary">("seal")
+  const best = ordered[ordered.length - 1]
+  const light: Light = best === undefined ? "white" : lightOf(best)
+  const phase = useSignal<"seal" | "rise" | "burst" | "show" | "summary" | "crumble">("seal")
+  /** The light showing through the seal: white until it rises. */
+  const glow = useSignal<Light>("white")
+  /** Whether the player broke the seal (held it through, swiped, or skipped): it opens once the answer is in. */
+  const broken = useSignal(false)
   const index = useSignal(0)
   const progress = useSignal(0)
-  const holding = useRef(false), start = useRef<number | null>(null), cracked = useRef(0)
+  const holding = useRef(false), start = useRef<number | null>(null), cracked = useRef(0), opened = useRef(performance.now())
 
   const breakSeal = () => {
     if (phase.peek() !== "seal") return
-    progress.value = 1
-    phase.value = "burst"
-    actions.cue("burst")
-    setTimeout(() => (phase.value = shown.length === 0 ? "summary" : "show"), burstMs[light])
+    broken.value = true
   }
-  // Holding fills the seal's cracks; letting go heals them.
+  // Holding fills the seal's cracks; letting go heals them. Before the answer, it cracks no further than nearly broken.
   useEffect(() => {
     if (phase.value !== "seal") return
     let frame = 0, last = performance.now()
     const step = (time: number) => {
       const seconds = Math.min(0.1, (time - last) / 1000)
       last = time
-      const next = Math.max(0, Math.min(1, progress.peek() + (holding.current ? seconds / holdSeconds : -seconds * healRate)))
+      const most = store.callReveal.peek()?.results === null ? waitingCrack : 1
+      const pushing = holding.current || broken.peek()
+      const next = Math.max(0, Math.min(most, progress.peek() + (pushing ? seconds / holdSeconds : -seconds * healRate)))
       progress.value = next
       // A crack sounds at each quarter it passes.
       const quarter = Math.floor(next * 4)
       if (quarter > cracked.current && quarter < 4) actions.cue("crack")
       cracked.current = Math.max(cracked.current, quarter)
-      if (next >= 1) { breakSeal(); return }
-      frame = requestAnimationFrame(step)
+      if (next >= most && holding.current) broken.value = true
+      if (next < 1) frame = requestAnimationFrame(step)
     }
     frame = requestAnimationFrame(step)
     return () => cancelAnimationFrame(frame)
   }, [phase.value])
+  // Broken, with the answer in and the build-up done: the light rises to what came, then the seal bursts (once; its timers go with the screen).
+  const rising = useRef<Array<ReturnType<typeof setTimeout>> | null>(null)
+  useEffect(() => () => rising.current?.forEach(clearTimeout), [])
+  const ready = !reveal.failed && reveal.results !== null && broken.value && progress.value >= 1
+  useEffect(() => {
+    if (!ready || rising.current !== null) return
+    const wait = Math.max(0, opened.current + buildUpMs - performance.now())
+    const steps: Array<[number, () => void]> = [[wait, () => (phase.value = "rise")]]
+    let elapsed = wait + riseMs.white
+    if (rank[light] >= rank.purple) {
+      steps.push([elapsed, () => { glow.value = "purple"; actions.cue("rise") }])
+      elapsed += riseMs.purple
+    }
+    if (light === "gold") {
+      steps.push([elapsed, () => { glow.value = "gold"; actions.cue("gold") }])
+      elapsed += riseMs.gold
+    }
+    steps.push([elapsed, () => {
+      phase.value = "burst"
+      actions.cue("burst")
+    }], [elapsed + burstMs[light], () => (phase.value = shown.length === 0 ? "summary" : "show")])
+    rising.current = steps.map(([ms, run]) => setTimeout(run, ms))
+  }, [ready])
+  // A call not made: the seal crumbles, and the screen goes back to the banner.
+  useEffect(() => {
+    if (!reveal.failed) return
+    phase.value = "crumble"
+    actions.cue("crumble")
+    const timer = setTimeout(done, crumbleMs)
+    return () => clearTimeout(timer)
+  }, [reveal.failed])
   // What comes out sounds as it shows.
   useEffect(() => {
     if (phase.value !== "show") return
@@ -104,7 +151,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
     if (index.value + 1 < shown.length) index.value += 1
     else phase.value = "summary"
   }
-  const element = best.kind === "character" ? elementOf(tuning, best.id) : undefined
+  const element = best?.kind === "character" ? elementOf(tuning, best.id) : undefined
   const current = phase.value === "show" ? shown[index.value] : undefined
   // The sky is plain stone around the seal; a character arriving brings hers.
   const sky = current?.kind === "character" ? elementOf(tuning, current.id) : phase.value === "burst" && element !== undefined ? element : "plain"
@@ -112,9 +159,11 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
   useEffect(() => { store.rays.value = current?.kind === "character" }, [current?.kind])
   useEffect(() => () => { store.sky.value = null; store.rays.value = false }, [])
 
-  if (phase.value === "seal" || phase.value === "burst") {
+  if (phase.value === "seal" || phase.value === "rise" || phase.value === "burst" || phase.value === "crumble") {
     const p = progress.value
-    return <div class="reveal" data-phase={phase.value} data-light={light} data-element={element} style={{ "--p": p }}>
+    const waiting = phase.value === "seal" && broken.value && p < 1
+    return <div class="reveal" data-phase={phase.value} data-light={phase.value === "burst" ? light : glow.value} data-element={element} data-waiting={waiting ? "" : undefined} style={{ "--p": p }}>
+      <div class="reveal__dim" aria-hidden="true" />
       <div class="reveal__light" aria-hidden="true" />
       <button type="button" class="reveal__seal" aria-label="Break the seal (hold, or swipe up)"
         onPointerDown={(event) => { holding.current = true; start.current = event.clientY; if (event.isTrusted) event.currentTarget.setPointerCapture(event.pointerId) }}
@@ -138,8 +187,8 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
       </button>
       <div class="reveal__flash" aria-hidden="true" />
       <div class="reveal__flash reveal__flash--element" aria-hidden="true" />
-      <p class="reveal__hint">{phase.value === "seal" ? (store.device.value === "touch" ? "Hold the seal, or swipe up" : "Hold the seal to break it") : ""}</p>
-      {phase.value === "seal" && <span class="reveal__skip"><RoundButton icon="next" tone="dark" label="Break it now" onClick={breakSeal} /></span>}
+      <p class="reveal__hint">{phase.value === "seal" && !broken.value ? (store.device.value === "touch" ? "Hold the seal, or swipe up" : "Hold the seal to break it") : ""}</p>
+      {phase.value === "seal" && !broken.value && <span class="reveal__skip"><RoundButton icon="next" tone="dark" label="Break it now" onClick={breakSeal} /></span>}
     </div>
   }
 

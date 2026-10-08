@@ -39,9 +39,15 @@ import {
 import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
-/** What each moment of a call sounds like, and how long it buzzes (milliseconds; a list is buzz, pause, buzz). */
-const callSounds = { crack: "sealCrack", burst: "sealBurst", aspect: "revealAspect", character: "revealCharacter" } as const
-const callBuzz: Record<keyof typeof callSounds, number | Array<number>> = { crack: 12, burst: 40, aspect: [20, 40, 20], character: [30, 50, 30, 50, 60] }
+/** What each moment of a call or of the results sounds like, and how long it buzzes (milliseconds; a list is buzz, pause, buzz; none for 0). */
+const cueSounds = {
+  crack: "sealCrack", rise: "sealRise", gold: "sealGold", burst: "sealBurst", crumble: "sealCrumble", aspect: "revealAspect", character: "revealCharacter",
+  victory: "victory", defeat: "defeat", star: "star", reward: "uiReward"
+} as const
+const cueBuzz: Record<keyof typeof cueSounds, number | Array<number>> = {
+  crack: 12, rise: 20, gold: [60, 80, 25], burst: 40, crumble: [30, 30, 30], aspect: [20, 40, 20], character: [30, 50, 30, 50, 60],
+  victory: 0, defeat: 0, star: 10, reward: 0
+}
 
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
@@ -81,30 +87,35 @@ const start = async (mount: HTMLElement) => {
   shell.onAccount((next) => {
     uiStore.account.value = next
   })
-  // Every run that ends is reported to the account once, as its result appears (the arena records it, see `RunResult`).
+  shell.onSaves((state) => {
+    uiStore.saves.value = state
+  })
+  // A change on its way (a run's rewards) is lost if the page goes: the browser asks first.
+  window.addEventListener("beforeunload", (event) => {
+    if (shell.saves().pending > 0) event.preventDefault()
+  })
+  // Every run that ends is reported to the account once, as its result appears (the arena records it, see `RunResult`):
+  // what it earned shows at once, worked out by the account's rules; the server's answer replaces it if it differs.
   let reported: RunResultValue | null = null
   effect(() => {
     const result = uiStore.result.value
     if (result === null) {
       uiStore.earned.value = null
-      uiStore.recording.value = "idle"
       return
     }
     if (result === reported) return
     reported = result
     if (!recording) return
-    uiStore.recording.value = "saving"
-    void shell.recordRun(playing, result, uiStore.runLog.peek()).then((earned) => {
-      if (uiStore.result.peek() !== result) return
-      uiStore.recording.value = earned === undefined ? "failed" : "saved"
-      uiStore.earned.value = earned ?? null
-      if (earned !== undefined) sounds.play("uiReward")
+    const recorded = shell.recordRun(playing, result, uiStore.runLog.peek())
+    uiStore.earned.value = recorded.earned
+    void recorded.saved.then((earned) => {
+      if (uiStore.result.peek() === result && JSON.stringify(earned) !== JSON.stringify(uiStore.earned.peek())) uiStore.earned.value = earned
     })
   })
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined
-  const notify = (message: string, error = false) => {
+  const notify = (message: string, error = false, title?: string) => {
     clearTimeout(feedbackTimer)
-    uiStore.feedback.value = { message, error }
+    uiStore.feedback.value = { message, error, ...(title === undefined ? {} : { title }) }
     sounds.play(error ? "uiError" : "uiSuccess")
     if (!error) feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), 1200)
   }
@@ -115,22 +126,35 @@ const start = async (mount: HTMLElement) => {
       .catch(() => notify("Could not save. Please try again.", true))
       .finally(() => (uiStore.busy.value = false))
   }
+  const notSaved = "Your last run is not saved yet: try saving it again first (the mark at the top)."
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
     // Kept as it is set up: nothing to tell the player unless it fails.
-    saveTeam: (team, aspects) => change(() => shell.select(team, uiStore.account.peek().selection.play, aspects), null),
+    saveTeam: (team, aspects) => {
+      const selected = shell.select(team, uiStore.account.peek().selection.play, aspects)
+      if (!selected.ok) notify("Your party could not be saved.", true)
+      else void selected.saved.then((saved) => { if (saved === "refused") notify("Your party could not be saved.", true) })
+    },
     enter: (team, aspects, play) => {
-      // Entering is remembered on the account; a character not owned or something not open is refused, and nothing starts.
-      if (uiStore.busy.peek()) return
-      uiStore.busy.value = true
-      void shell.select(team, play, aspects).then((selected) => {
-        if (selected === undefined) { notify("This challenge is locked or your selection could not be saved.", true); return }
-        playing = play
-        recording = true
-        uiStore.play.value = play
-        uiStore.extra.value = null
-        uiRequests.pending.push({ kind: "start", team: teamOf(tuning, selected, team), ...encounterOf(tuning, play) })
-      }).finally(() => (uiStore.busy.value = false))
+      // Nothing new starts while a run waits to be saved: it would be played on an account the server does not have.
+      if (shell.saves().failed) { notify(notSaved, true, "Not saved yet"); return }
+      // The account's rules allow it here, so the run starts at once; the server, sent the selection, nearly always agrees.
+      const selected = shell.select(team, play, aspects)
+      if (!selected.ok) { notify("This challenge is locked or your party cannot enter it.", true, "Cannot enter"); return }
+      playing = play
+      recording = true
+      uiStore.play.value = play
+      uiStore.extra.value = null
+      uiRequests.pending.push({ kind: "start", team: teamOf(tuning, selected.account, team), ...encounterOf(tuning, play) })
+      void selected.saved.then((saved) => {
+        if (saved !== "refused") return
+        // The server refused what this page allowed (the account changed elsewhere): the run stops, unrecorded.
+        if (playing === play && uiStore.result.peek() === null) {
+          recording = false
+          uiRequests.pending.push({ kind: "pause" }, { kind: "menu" })
+        }
+        notify("The server refused this challenge: it is locked, or your party changed.", true, "Run stopped")
+      })
     },
     enterExtra: (team, aspects, extra) => {
       const account = uiStore.account.value
@@ -150,22 +174,31 @@ const start = async (mount: HTMLElement) => {
       })
     },
     call: (banner, count) => {
-      if (uiStore.busy.peek()) return
-      uiStore.busy.value = true
+      if (uiStore.callReveal.peek() !== null) return
+      if (shell.saves().failed) { notify(notSaved, true, "Not saved yet"); return }
+      // The seal shows at once; what comes out of it is the server's answer, on its way meanwhile.
+      uiStore.callReveal.value = { banner, count, results: null, failed: false }
       void shell.call(banner, count).then((results) => {
-        if (results === undefined) notify("The call could not be made. Please try again.", true)
-        else uiStore.callReveal.value = { banner, results }
-      }).finally(() => (uiStore.busy.value = false))
+        const reveal = uiStore.callReveal.peek()
+        if (reveal === null) return
+        uiStore.callReveal.value = results === undefined ? { ...reveal, failed: true } : { ...reveal, results }
+        // Said once the seal has crumbled (see `CallReveal`).
+        if (results === undefined) setTimeout(() => notify("The server could not be reached. No crystals were spent.", true, "Call not made"), 900)
+      })
     },
     focus: (banner, character) => change(() => shell.focus(banner, character), null),
     cue: (cue) => {
-      sounds.play(callSounds[cue])
+      sounds.play(cueSounds[cue])
       // A short buzz where the phone allows it (not on iOS Safari): longer for what matters more.
-      navigator.vibrate?.(callBuzz[cue])
+      if (cueBuzz[cue] !== 0) navigator.vibrate?.(cueBuzz[cue])
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
-    retry: () => uiRequests.pending.push({ kind: "retry" }),
+    retrySaves: () => shell.retrySaves(),
+    retry: () => {
+      if (shell.saves().failed && recording) { notify(notSaved, true, "Not saved yet"); return }
+      uiRequests.pending.push({ kind: "retry" })
+    },
     menu: () => uiRequests.pending.push({ kind: "menu" }),
     pause: () => uiRequests.pending.push({ kind: "pause" }),
     resume: () => uiRequests.pending.push({ kind: "resume" }),

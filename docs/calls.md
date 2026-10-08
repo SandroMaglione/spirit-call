@@ -75,16 +75,22 @@ chapter three).
   special and ultimate), with **Try** (the Training Ground with her, before
   calling); the calls held, the guarantees, Call ×1 and Call ×10. Tabs:
   the banner, the details (every rate, what is left to get), the history.
-- **The seal**: a call shows a stone seal. Hold it (or swipe up) and it
-  cracks; the light coming through tells the best result, honestly: white,
-  purple, or gold (a gold light then turns her element's colour). It
+- **The seal**: a call shows a stone seal at once, while the server works
+  out what it brought. Hold it (or swipe up, or skip) and it cracks, the
+  light coming through it white; until the answer is in, it holds nearly
+  broken, straining. Once broken (and at least a moment and a half after
+  it showed), the light rises to tell the best result, honestly: it stays
+  white, or turns purple, then gold (the room dims, a pulse, a sting), and
+  a gold light turns her element's colour as it bursts. A call the server
+  could not make crumbles back to stone, and no crystals are spent. It
   bursts, and each result shows in turn, the best last: a character
   arrives as her model, with what she does, **Try** and **Party**; an
   aspect as its card; a supply as its amounts. A ten-call ends on all of
   them in a row. Skip goes to the next character or aspect (each is new,
   so it is shown), then to the row.
 - Sounds and a short vibration (where the phone allows it) mark the crack,
-  the burst, and a character.
+  the light rising (purple, gold), the burst (or the crumble), and a
+  character.
 
 ## Open
 
