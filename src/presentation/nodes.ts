@@ -17,7 +17,7 @@ import { mixColor } from "./draw.ts"
 import { floorLayers } from "./layers.ts"
 import type { ProjectileNode, RenderAssets, RenderNode, TotemNode, WallNode } from "./host-types.ts"
 import { hazardNode } from "./hazards.ts"
-import { arenaLooks, characterLooks, enemyLooks } from "./looks.ts"
+import { arenaLooks, characterLook, enemyLooks } from "./looks.ts"
 import type { BodyLook, WallLook } from "./looks.ts"
 import { models } from "./models.ts"
 import type { ModelId, ModelSpec } from "./models.ts"
@@ -262,7 +262,8 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
   switch (renderable.kind) {
     case "player":
       // Her own mesh even as a capsule: she turns see-through while protected.
-      return { kind: "player", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, characterLooks[renderable.character], renderable.radius, false) }
+      // As she wears it now: her looks (a tint, a trail) are the account's, set from the menu.
+      return { kind: "player", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, characterLook(renderable.character), renderable.radius, false) }
     case "enemy":
       return { kind: "enemy", facing: { x: 0, y: 1 }, attackPhase: null, ...actorParts(assets, enemyLooks[renderable.enemy], renderable.radius, true) }
     case "projectile":
