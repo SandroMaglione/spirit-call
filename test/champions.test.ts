@@ -92,7 +92,8 @@ describe("champions", () => {
     const base = enemyStats(defaultTuning, "chaser", 1)
     expect(one).toMatchObject({ kind: "chaser", champion: true, element: "fire" })
     const power = championPower(defaultTuning, 1)
-    expect(one!.health.max).toBe(Math.round(base.hp * power.health))
+    // A champion with its own moveset has its own share of a champion's health on top (see content/champions.ts).
+    expect(one!.health.max).toBe(Math.round(base.hp * power.health * (rules.movesets.chaser?.health ?? 1)))
     expect(one!.stats.atk).toBe(Math.round(base.atk * power.atk))
     expect(one!.stats.speed).toBeCloseTo(base.speed * rules.speed, 6)
     expect(one!.radius).toBeCloseTo(defaultTuning.enemies.chaser.radius * rules.scale, 6)

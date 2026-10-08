@@ -11,7 +11,7 @@ import { SpatialGrid } from "../physics/grid.ts"
 import { FlowField } from "../physics/paths.ts"
 import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
-import { currentAttack, hasLineOfSight } from "./moveset.ts"
+import { behaviorOf, currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { keepOut, readPlayer, skirmishTurn, steer, unstickDirection } from "./behaviors.ts"
 import { waveLevelBonus } from "./challenges.ts"
@@ -306,7 +306,7 @@ export const SteerEnemies = (() => {
         readonly brain: (typeof enemies)[number]["data"]["brain"]
       }> = []
       for (const { data } of enemies) {
-        if (tuning.enemies[data.enemy.get().kind].behavior.kind !== "skirmish") continue
+        if (behaviorOf(tuning, data.enemy.get()).kind !== "skirmish") continue
         const mode = data.mode.get()
         if (mode === "engage") engaged += 1
         // Open, she gets the circling ones at once.
@@ -328,7 +328,8 @@ export const SteerEnemies = (() => {
       // Speed is a stat, so what changes stats (levels) changes it; soaked enemies are slowed, charges included.
       const slowed = stateSpeed(tuning, data.state.get())
       // Closing in on her while she is open, a melee enemy rushes.
-      const closing = spec.behavior.kind === "chase" || (spec.behavior.kind === "skirmish" && data.mode.get() === "engage")
+      const behavior = behaviorOf(tuning, data.enemy.get())
+      const closing = behavior.kind === "chase" || (behavior.kind === "skirmish" && data.mode.get() === "engage")
       const speed = data.stats.get().speed * slowed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
       const position = data.position.get()
       const radius = data.body.get().radius
@@ -349,7 +350,6 @@ export const SteerEnemies = (() => {
       }
 
       // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
-      const behavior = spec.behavior
       let mode = data.mode.get()
       if (behavior.kind === "skirmish") {
         const before = mode

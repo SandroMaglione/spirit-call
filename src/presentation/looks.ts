@@ -210,9 +210,16 @@ const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips
 
 const bruteStomp: EnemyAttackClips = { windup: "WindupStomp", active: "ActiveStomp", recovery: "RecoveryStomp" }
 
+/** The same clips for each of `ids` (a champion's moves sharing one of its kind's blows). */
+const clipsFor = (ids: ReadonlyArray<string>, clips: EnemyAttackClips): Readonly<Record<string, EnemyAttackClips>> => Object.fromEntries(ids.map((id) => [id, clips]))
+
+/** A charge: its kind's windup, running down the lane, its kind's recovery. */
+const running = (windup = "Windup", recovery = "Recovery"): EnemyAttackClips => ({ windup, active: "Run", recovery })
+
 export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   dummy: enemyModel("dummy", "enemyDummy", 1),
-  chaser: enemyModel("chaser", "enemyChaser", 48),
+  // Champions' charges (see content/champions.ts) run down their lane between their kind's windup and recovery.
+  chaser: enemyModel("chaser", "enemyChaser", 48, clipsFor(["pounce", "pounceEnd"], running())),
   shooter: enemyModel("shooter", "enemyShooter", 62, {
     spray: { windup: "WindupSpray", active: "ActiveSpray", recovery: "RecoverySpray" }
   }),
@@ -222,14 +229,15 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
     ...Object.fromEntries(["stomp", "stompEnd", "shove", "trample", "quake", "quakeEnd", "tremor", "tremorAgain", "roar1", "roar2", "roar2Again", "callForHelp", "callForMore"].map((id) => [id, bruteStomp])),
     ...Object.fromEntries(["rush", "rampage", "rampageAgain"].map((id) => [id, { windup: "WindupStomp", active: "Run", recovery: "RecoveryStomp" }]))
   }),
-  swarmer: enemyModel("swarmer", "enemySwarmer", 55),
+  swarmer: enemyModel("swarmer", "enemySwarmer", 55, clipsFor(["dart", "dartEnd", "dartAgain"], running())),
   charger: enemyModel("charger", "enemyCharger", 52, { swipe: { windup: "WindupSwipe", active: "ActiveSwipe", recovery: "RecoverySwipe" } }),
   sniper: enemyModel("sniper", "enemySniper", 66),
-  guardian: enemyModel("guardian", "enemyGuardian", 54, { thrust: { windup: "WindupThrust", active: "ActiveThrust", recovery: "RecoveryThrust" } }),
-  warden: { ...enemyModel("warden", "enemyWarden", 70), wardClip: "Buff" },
-  stalker: enemyModel("stalker", "enemyStalker", 64, {
-    blink: { windup: "WindupBlink", active: "ActiveBlink", recovery: "RecoveryBlink" }
+  guardian: enemyModel("guardian", "enemyGuardian", 54, {
+    ...clipsFor(["thrust", "thrustEnd", "pierce", "pierceAgain"], { windup: "WindupThrust", active: "ActiveThrust", recovery: "RecoveryThrust" }),
+    ...clipsFor(["lance"], running("WindupThrust", "RecoveryThrust"))
   }),
+  warden: { ...enemyModel("warden", "enemyWarden", 70), wardClip: "Buff" },
+  stalker: enemyModel("stalker", "enemyStalker", 64, clipsFor(["blink", "hunt", "blinkEnd", "blinkAgain", "blinkThird"], { windup: "WindupBlink", active: "ActiveBlink", recovery: "RecoveryBlink" })),
   volatile: enemyModel("volatile", "enemyVolatile", 56),
   galeCaster: {
     ...enemyModel("galeCaster", "enemyGaleCaster", 140), transitionSeconds: .18,
@@ -237,7 +245,8 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   },
   juggernaut: {
     ...enemyModel("juggernaut", "enemyJuggernaut", 90, {
-      quake: { windup: "WindupQuake", active: "ActiveQuake", recovery: "RecoveryQuake" }
+      ...clipsFor(["quake", "quakeAgain", "shockEnd", "shockPair", "shockPairAgain", "shrug", "roar1", "roar2", "roar2Again"], { windup: "WindupQuake", active: "ActiveQuake", recovery: "RecoveryQuake" }),
+      ...clipsFor(["trample", "trampleAgain"], running())
     }), transitionSeconds: .14
   },
   sparringDummy: enemyModel("sparringDummy", "enemySparringDummy", 1),

@@ -329,7 +329,7 @@ export const slam = (id: string, spec: Omit<AttackInput<SlamAttack>, "leaves"> &
   ({ kind: "slam", id, ...attackDefaults, aimLock: spec.windup, leaves: null, ...spec })
 export const charge = (id: string, spec: AttackInput<ChargeAttack>): AttackSpec => ({ kind: "charge", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 export const lob = (id: string, spec: AttackInput<LobAttack>): AttackSpec => ({ kind: "lob", id, ...attackDefaults, aimLock: spec.windup, ...spec })
-const blink = (id: string, spec: AttackInput<BlinkAttack>): AttackSpec => ({ kind: "blink", id, ...attackDefaults, aimLock: spec.windup, ...spec })
+export const blink = (id: string, spec: AttackInput<BlinkAttack>): AttackSpec => ({ kind: "blink", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const gust = (id: string, spec: AttackInput<GustAttack>): AttackSpec => ({ kind: "gust", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 /** A call for help: it hurts no one, and is over as it is made. */
 export const call = (id: string, spec: Omit<AttackInput<CallAttack>, "active" | "power" | "knockback">): AttackSpec =>

@@ -280,8 +280,20 @@ is more than a hitbox of its area is let go by its own system reading
 a new kind of attack is its content and one system, usable in any
 moveset.
 
-The Brute King is the first (chapter three's finale); the other chapters'
-champions follow once its fight is right.
+Every chapter's finale has one, each its own fight (`content/champions.ts`),
+built from its kind's blows and model:
+
+| Champion | Chapter | Its question |
+|---|---|---|
+| The Pack Leader (Chaser, fire) | 1 | Flurries of swipes; a pounce at a runner; one later phase, a first taste |
+| The Bulwark (Guardian, fire) | 2 | Swipes into thrusts, thrusts three running; a shield charge; a shockwave off its shield |
+| The Brute King (Brute, fire) | 3 | Slams and their quick look-alike; charges, burning rocks over walls; shockwaves; burning ground |
+| The Swarm Mother (Swarmer, water) | 4 | Darts and bites; water spat at a player standing still; tides; her brood |
+| The Warlord (Stalker, thunder) | 5 | Slash strings; blinks again and again, behind walls too; a warden called to ward it |
+| The Colossus (Juggernaut, fire) | 6 | Armored sweeps into quakes; tramples; shockwaves in pairs; volatiles called to burst |
+
+Skirmishers' champions press in rather than circling for their turn (a
+moveset's own `behavior`).
 
 ## What the player meets, and when
 

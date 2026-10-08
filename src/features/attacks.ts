@@ -84,7 +84,7 @@ import { lob } from "../content/skills.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { readPlayer } from "./behaviors.ts"
-import { aimPoint, answering, canStart, movesetOf, pickAttack, readFrom } from "./moveset.ts"
+import { aimPoint, answering, behaviorOf, canStart, movesetOf, pickAttack, readFrom } from "./moveset.ts"
 import type { Moving } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { enemyPace, paceOf } from "./time.ts"
@@ -225,7 +225,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const cycle = data.phase
     let { attack, area, hit } = current
     let elapsed = current.elapsed + dt
-    const rate = tuning.enemies[kind].behavior.kind === "kite" ? 1 : cooldownRate
+    const behavior = behaviorOf(tuning, data.enemy.get())
+    const rate = behavior.kind === "kite" ? 1 : cooldownRate
     let cooldown = Math.max(0, current.cooldown - dt * rate)
 
     /** Starts the windup of `index` at the target (ahead of her, by its lead). */
@@ -240,7 +241,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     }
 
     // A skirmisher attacks only while holding an engagement slot (see `Behavior`).
-    const engaged = tuning.enemies[kind].behavior.kind !== "skirmish" || data.mode.get() === "engage"
+    const engaged = behavior.kind !== "skirmish" || data.mode.get() === "engage"
     if (cycle.get() === "ready") {
       elapsed = 0
       // A phase begun: its opening attack, at once.

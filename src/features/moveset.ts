@@ -5,7 +5,7 @@
  * that its attacks answer (see `Read`).
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import type { AttackSpec, Read } from "../content/enemies.ts"
+import type { AttackSpec, Behavior, Read } from "../content/enemies.ts"
 import type { Random } from "../math/rng.ts"
 import { sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -20,6 +20,10 @@ export const hasLineOfSight = (from: Vec2, to: Vec2, radius: number, boxes: Read
 /** Radius used for the line-of-sight check before starting an attack, or undefined when none is needed. */
 const sightRadius = (spec: AttackSpec): number | undefined =>
   spec.kind === "volley" ? spec.projectileRadius : spec.kind === "beam" || spec.kind === "charge" ? spec.width / 2 : undefined
+
+/** How `enemy` moves: its champion moveset's way when it has one, its kind's otherwise. */
+export const behaviorOf = (tuning: TuningValue, enemy: Fighter): Behavior =>
+  (enemy.champion ? tuning.champions.movesets[enemy.kind]?.behavior : undefined) ?? tuning.enemies[enemy.kind].behavior
 
 /** An enemy, as far as its moveset goes: its kind, and whether it is a champion. */
 export interface Fighter {

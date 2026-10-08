@@ -81,7 +81,7 @@ describe("champion movesets", () => {
   it("fight with their own moveset; a champion of a kind without one, and its kind, with the kind's", () => {
     expect(movesetOf(defaultTuning, { kind: "brute", champion: true })).toBe(king.attacks)
     expect(movesetOf(defaultTuning, { kind: "brute", champion: false })).toBe(defaultTuning.enemies.brute.attacks)
-    expect(movesetOf(defaultTuning, { kind: "guardian", champion: true })).toBe(defaultTuning.enemies.guardian.attacks)
+    expect(movesetOf(defaultTuning, { kind: "volatile", champion: true })).toBe(defaultTuning.enemies.volatile.attacks)
   })
 
   it("read the player: running away, standing still, out of sight behind a wall, open", () => {
