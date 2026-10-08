@@ -37,6 +37,12 @@ from the playtest's runs):
 | 10 levels under, skilled | cleared everything | lost most from chapter 2 on; cleared ones 2–5 min |
 | Matched, learning | lost First Blood on one seed | clears chapter 1; the Brute King beats it |
 
+The baseline was recorded again from CI's report. In the audit's rows, a
+lone level-1 Swordsman against the level-28 Warlord now falls in seconds
+(the gap and toughness at their extreme; before, she lasted 100 s), while
+matched rows clear with a little more taken; First Blood's learning
+Swordsman clears both seeds again.
+
 ## Champions fought as bosses (2026-10-08)
 
 The baseline was recorded again (from CI's report) once every chapter's
