@@ -203,10 +203,10 @@ own movesets" below; the others fight with their kind's moveset.
   still counts), and its break bar is a smaller share of its health than
   its kind's, so it breaks a few times in a fight, each a window.
 - **Its own mark**: a crest under its feet and a stronger glow in its
-  element's color, a larger health bar, and its name and health across
-  the top of the screen (marked where its phases begin), so it reads in a
-  crowd. Broken, it **stays down longer** than anything else
-  (`Tuning.champions.broken`): the opening its fight builds to.
+  element's color, and a larger health bar (marked where its phases
+  begin), so it reads in a crowd. One with its own moveset **shakes a
+  break off sooner** than anything else (`Tuning.champions.broken`): a
+  boss's windows are short.
 - **It stays across waves.** It does not count toward clearing the wave it
   came in: the next wave comes once the others are down, with it still
   standing. The challenge is cleared only when the last wave is down and
@@ -244,9 +244,23 @@ avoidable and the fairness test checks every phase.
   falls), and **shockwaves** (`wave`): a ring running out along the floor
   from where it stands, as far as its reach, hitting what it passes. Out of
   its reach, or dash through the ring as it passes.
+- **It calls for help.** Worn down to too little support (the read `alone`:
+  fewer others on the field than `Tuning.champions.alone`), it calls its
+  support in around it (a `call` attack: a ring in the spawn warnings'
+  color, then their warnings), the first of them elites of its element.
+  The bots found plain support barely mattered (more targets, quickly
+  down); elites of its element, with their trails, made the fight bite.
 - **Never waits for the crowd**: a champion attacks whenever its own rest
   allows, past the crowd's windups (see `crowd.windups`); the waves around
   it are light.
+
+**Shared patterns.** What champions share is written once
+(`content/patterns.ts`: the roars opening the phases, the call for help)
+and taken into each moveset with its own numbers. An attack whose release
+is more than a hitbox of its area is let go by its own system reading
+`AttackReleased` (`features/patterns.ts`: the shockwave's ring, the call):
+a new kind of attack is its content and one system, usable in any
+moveset.
 
 The Brute King is the first (chapter three's finale); the other chapters'
 champions follow once its fight is right.

@@ -15,15 +15,15 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import { answering, movesetOf, readFrom } from "../src/features/moveset.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
-import { Attacker, AttackPhase, Enemy, Game, Health, Hitbox, Player, Poise, Position, Rampage, Roused, RunScope, Stunned } from "../src/schema.ts"
-import { ClearEnemies, start, steps } from "./helpers.ts"
+import { Attacker, AttackPhase, Enemy, Game, Health, Hitbox, PendingSpawn, Player, Poise, Position, Rampage, Roused, RunScope, Stunned } from "../src/schema.ts"
+import { center, ClearEnemies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const king = championMovesets.brute!
 const index = (id: string) => king.attacks.findIndex((attack) => attack.id === id)
 
-/** The player never falls: what is measured is what the champion does. */
-const sturdy: Tuning = tuningWith({ characters: { swordsman: { stats: { hp: 1_000_000 } } } })
+/** The player never falls: what is measured is what the champion does (never short of support, so it calls no one). */
+const sturdy: Tuning = tuningWith({ characters: { swordsman: { stats: { hp: 1_000_000 } } }, champions: { alone: 0 } })
 
 const Field = Game.Inspector("Test/ChampionPatterns", {
   queries: {
@@ -87,14 +87,14 @@ describe("champion movesets", () => {
   it("read the player: running away, standing still, out of sight behind a wall, open", () => {
     const origin = { x: 0, y: 0 }
     const wall = [{ minX: 90, maxX: 110, minY: -100, maxY: 100 }]
-    expect(readFrom(origin, { at: { x: 200, y: 0 }, velocity: { x: 200, y: 0 } }, 250, [], false)).toEqual({ away: true, still: false, covered: false, open: false })
+    expect(readFrom(origin, { at: { x: 200, y: 0 }, velocity: { x: 200, y: 0 } }, 250, [], false)).toEqual({ away: true, still: false, covered: false, open: false, alone: false })
     expect(readFrom(origin, { at: { x: 200, y: 0 }, velocity: { x: -200, y: 0 } }, 250, [], false).away).toBe(false)
-    expect(readFrom(origin, { at: { x: 200, y: 0 }, velocity: { x: 0, y: 0 } }, 250, wall, true)).toEqual({ away: false, still: true, covered: true, open: true })
+    expect(readFrom(origin, { at: { x: 200, y: 0 }, velocity: { x: 0, y: 0 } }, 250, wall, true, true)).toEqual({ away: false, still: true, covered: true, open: true, alone: true })
   })
 
   it("pick the attacks answering what she does first, and those answering nothing otherwise", () => {
     const usable = [index("slam"), index("rush"), index("heave")]
-    const none = { away: false, still: false, covered: false, open: false }
+    const none = { away: false, still: false, covered: false, open: false, alone: false }
     expect(answering(king.attacks, usable, none)).toEqual([index("slam")])
     expect(answering(king.attacks, usable, { ...none, away: true })).toEqual([index("rush")])
     expect(answering(king.attacks, usable, { ...none, away: true, covered: true })).toEqual([index("rush"), index("heave")])
@@ -123,20 +123,20 @@ describe("champion movesets", () => {
 
     const second = duel({ x: 200, y: 0 }, { health: 0.5 }).watch(12)
     expect(second.roused).toEqual([1])
-    expect(second.started[0]).toBe("roar")
-    expect(second.started.filter((id) => id === "roar")).toHaveLength(1)
+    expect(second.started[0]).toBe("roar1")
+    expect(second.started.filter((id) => id === "roar1")).toHaveLength(1)
     expect(second.started.some((id) => king.attacks[index(id)]!.phase === 1)).toBe(true)
     expect(second.started.some((id) => king.attacks[index(id)]!.phase === 2)).toBe(false)
 
     const last = duel({ x: 200, y: 0 }, { health: 0.2 }).watch(12)
     expect(last.roused).toEqual([2])
-    expect(last.started.slice(0, 2)).toEqual(["fury", "furyAgain"])
+    expect(last.started.slice(0, 2)).toEqual(["roar2", "roar2Again"])
   })
 
   it("send a shockwave out along the floor: it hits as its ring passes, and only as far as its reach", () => {
     const quake = king.attacks[index("quake")]! as Extract<AttackSpec, { kind: "wave" }>
     // Only the quake, from the start.
-    const tuning = tuningWith({ ...sturdy, champions: { movesets: { brute: { name: "Quake", health: 1, phases: [], attacks: [{ ...quake, phase: 0 }] } } } })
+    const tuning = tuningWith({ ...sturdy, champions: { movesets: { brute: { health: 1, phases: [], attacks: [{ ...quake, phase: 0 }] } } } })
     const near = duel({ x: 150, y: 0 }, { tuning })
     let ring: { radius: number } | undefined
     let hurtAt = -1
@@ -154,7 +154,7 @@ describe("champion movesets", () => {
     const short = tuningWith({
       characters: { swordsman: { stats: { hp: 1_000_000, speed: 0 } } },
       enemies: { brute: { speed: 0 } },
-      champions: { movesets: { brute: { name: "Quake", health: 1, phases: [], attacks: [{ ...quake, phase: 0, triggerRange: 500, reach: 200, active: 200 / quake.speed }] } } }
+      champions: { movesets: { brute: { health: 1, phases: [], attacks: [{ ...quake, phase: 0, triggerRange: 500, reach: 200, active: 200 / quake.speed }] } } }
     })
     const far = duel({ x: 300, y: 0 }, { tuning: short })
     const seen = far.watch(3)
@@ -167,15 +167,36 @@ describe("champion movesets", () => {
     expect(areaTouchesCircle(band, { x: 160, y: 0 }, 10)).toBe(false)
   })
 
-  it("stay down longer than anything else when broken (a champion with its own moveset)", () => {
+  it("shake a break off sooner than anything else (a champion with its own moveset)", () => {
     const run = duel({ x: 200, y: 0 })
     const Break = Game.System("Test/Break", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.write(Poise) }, with: [Enemy] }) } }, ({ queries }) => {
       for (const { data } of queries.enemies.each()) data.poise.update((poise) => ({ ...poise, current: 1e9 }))
     })
     run.runtime.tick(Game.Schedule(Break))
     run.step(2)
-    expect(run.field().champion!.stunned).toBeGreaterThan(defaultTuning.breaking.seconds)
-    expect(run.field().champion!.stunned).toBeLessThanOrEqual(defaultTuning.breaking.seconds * defaultTuning.champions.broken)
+    expect(run.field().champion!.stunned).toBeLessThan(defaultTuning.breaking.seconds)
+    expect(run.field().champion!.stunned).toBeGreaterThan(defaultTuning.breaking.seconds * defaultTuning.champions.broken - 0.1)
+  })
+
+  it("call for help when the fight has worn their support down, and not while it stands", () => {
+    const supported = tuningWith({ ...sturdy, champions: { alone: 2 } })
+    const Count = Game.Inspector("Test/Count", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }), pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }) } }, ({ queries }) => ({
+      enemies: queries.enemies.each().map(({ data }) => data.enemy.get()),
+      pending: queries.pending.each().map(({ data }) => data.pending.get().kind)
+    }))
+    // Alone: its first move is the call, and its support comes in around it.
+    const alone = duel({ x: 200, y: 0 }, { tuning: supported })
+    expect(alone.watch(0.5).started[0]).toBe("callForHelp")
+    alone.step(steps(1.2))
+    const called = alone.runtime.inspect(Count)
+    expect([...called.pending, ...called.enemies.filter((enemy) => !enemy.champion).map((enemy) => enemy.kind)].sort()).toEqual(["chaser", "shooter"])
+    // With its support standing, it never calls.
+    const backed = duel({ x: 200, y: 0 }, { tuning: supported })
+    const Back = Game.System("Test/Back", {}, ({ commands }) => {
+      for (const offset of [{ x: 400, y: 300 }, { x: 400, y: -300 }]) commands.spawnIn(RunScope, makeEnemy(supported, "sniper", { x: center.x + offset.x, y: center.y + offset.y }, 1, 20))
+    })
+    backed.runtime.tick(Game.Schedule(Back, Game.Schedule.applyDeferred()))
+    expect(backed.watch(6).started).not.toContain("callForHelp")
   })
 
   it("keep to the content rules: shockwaves run their reach, phases open once, and go down", () => {
@@ -183,10 +204,9 @@ describe("champion movesets", () => {
       champions: {
         movesets: {
           brute: {
-            name: "Broken",
             health: 1,
             phases: [{ below: 0.3, rest: 1 }, { below: 0.5, rest: 1 }],
-            attacks: [...king.attacks, { ...wave("odd", { triggerRange: 200, reach: 200, speed: 400, width: 40, windup: 0.8, recovery: 0.5, cooldown: 1, power: 10, knockback: 100 }), active: 2 }, { ...king.attacks[index("roar")]!, id: "roar2" }]
+            attacks: [...king.attacks, { ...wave("odd", { triggerRange: 200, reach: 200, speed: 400, width: 40, windup: 0.8, recovery: 0.5, cooldown: 1, power: 10, knockback: 100 }), active: 2 }, { ...king.attacks[index("roar1")]!, id: "roarAgain" }]
           }
         }
       }

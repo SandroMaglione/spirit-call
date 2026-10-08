@@ -13,6 +13,7 @@
  */
 import { SpawnArena } from "./features/arena.ts"
 import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
+import { CallSupport, ReleaseShockwaves } from "./features/patterns.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
 import { MoveDiscs } from "./features/discs.ts"
@@ -119,6 +120,9 @@ const gameplay = Game.Schedule.when(
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
   SteerEnemies,
   UpdateAttacks,
+  // What attacks let go beyond a hitbox (see `AttackReleased`).
+  ReleaseShockwaves,
+  CallSupport,
   UpdateElites,
   UpdateBursts,
   IntegrateBodies,

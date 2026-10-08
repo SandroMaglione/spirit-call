@@ -16,7 +16,7 @@ import type { RankTwist } from "./content/ranks.ts"
 import type { CharacterId, Stats as CharacterStats } from "./content/characters.ts"
 import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
-import type { EnemyKind } from "./content/enemies.ts"
+import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
 import type { GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
@@ -719,6 +719,15 @@ export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; read
 
 /** An enemy broke (see `Poise`), for effects. */
 export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind }>()("Shooter/Broke")
+/**
+ * An enemy's attack let go, as its windup ends (see `UpdateAttacks`): by
+ * `attacker` (an entity id) standing at `at`, over `area`, with `blow`. An
+ * attack whose release is more than a hitbox (a shockwave's ring, a call
+ * for help) is let go by its own system reading this (see
+ * features/patterns.ts): a new kind of attack is its content and a system.
+ */
+export const AttackReleased = Descriptor.Event<{ readonly attacker: number; readonly at: Vec2; readonly attack: AttackSpec; readonly area: Area; readonly blow: Blow }>()("Shooter/AttackReleased")
+
 /** A champion entered its `phase` (see `Rampage`): it roars. */
 export const Roused = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind; readonly phase: number; readonly element: ElementId | null }>()("Shooter/Roused")
 
@@ -1191,7 +1200,7 @@ export const Game = Schema.bind(
       Practice,
       PracticeField
     },
-    events: { Damage, Hit, Death, Broke, Roused, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
+    events: { Damage, Hit, Death, Broke, Roused, AttackReleased, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
   }),
   Root
 )

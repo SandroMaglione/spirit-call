@@ -25,12 +25,14 @@ import type { Affinities, ElementId, GroundSpec } from "./elements.ts"
 // the phase begins.
 
 /**
- * What the player is doing, for an attack that answers it: running away
- * from the attacker (`away`), standing still (`still`), out of its sight
- * behind a wall (`covered`), or open (`open`: a long move recovering,
- * reloading, or out of dashes; see `readPlayer`).
+ * What the fight is like, for an attack that answers it: the player running
+ * away from the attacker (`away`), standing still (`still`), out of its
+ * sight behind a wall (`covered`), or open (`open`: a long move recovering,
+ * reloading, or out of dashes; see `readPlayer`); or the attacker with too
+ * little support around it (`alone`: fewer others on the field than
+ * `Tuning.champions.alone`, spawn warnings included).
  */
-export type Read = "away" | "still" | "covered" | "open"
+export type Read = "away" | "still" | "covered" | "open" | "alone"
 
 interface AttackTiming {
   /** Its name in the enemy's moveset (unique there): what `followUp` refers to. */
@@ -173,7 +175,22 @@ export interface WaveAttack extends AttackTiming {
   readonly width: number
 }
 
-export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack | LobAttack | BlinkAttack | GustAttack | WaveAttack
+/**
+ * A call for help: as its windup ends, `calls` (each its kind's group)
+ * come in around the attacker, `radius` away, after their spawn warnings.
+ * It hurts no one (`power` 0, `active` 0); its telegraph shows the ring
+ * where they will come. Made with the read `alone`, it answers a fight
+ * that has worn its support down.
+ */
+export interface CallAttack extends AttackTiming {
+  readonly kind: "call"
+  readonly calls: ReadonlyArray<EnemyKind>
+  readonly radius: number
+  /** How many of `calls` (the first ones) come as elites of the caller's element, when it carries one. */
+  readonly elites: number
+}
+
+export type AttackSpec = MeleeAttack | VolleyAttack | SlamAttack | ChargeAttack | BeamAttack | LobAttack | BlinkAttack | GustAttack | WaveAttack | CallAttack
 
 /** A frontal shield that blocks projectiles hitting within `arcDegrees / 2` of where it faces. */
 export interface ShieldSpec {
@@ -303,6 +320,9 @@ export const charge = (id: string, spec: AttackInput<ChargeAttack>): AttackSpec 
 export const lob = (id: string, spec: AttackInput<LobAttack>): AttackSpec => ({ kind: "lob", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const blink = (id: string, spec: AttackInput<BlinkAttack>): AttackSpec => ({ kind: "blink", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const gust = (id: string, spec: AttackInput<GustAttack>): AttackSpec => ({ kind: "gust", id, ...attackDefaults, aimLock: spec.windup, ...spec })
+/** A call for help: it hurts no one, and is over as it is made. */
+export const call = (id: string, spec: Omit<AttackInput<CallAttack>, "active" | "power" | "knockback">): AttackSpec =>
+  ({ kind: "call", id, ...attackDefaults, aimLock: spec.windup, active: 0, power: 0, knockback: 0, ...spec })
 /** A shockwave; its `active` is its run out to its reach. */
 export const wave = (id: string, spec: Omit<AttackInput<WaveAttack>, "active">): AttackSpec =>
   ({ kind: "wave", id, ...attackDefaults, aimLock: spec.windup, active: spec.reach / spec.speed, ...spec })

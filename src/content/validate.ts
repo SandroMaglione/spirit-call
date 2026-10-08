@@ -30,6 +30,7 @@ import type { AspectSpec } from "./aspects.ts"
 import { isMelee } from "./attacks.ts"
 import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
+import { enemies } from "./enemies.ts"
 import type { AttackSpec, EnemyKind } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
@@ -113,6 +114,14 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
     }
     if (attack.followUp !== null && !ids.includes(attack.followUp)) problems.push(`${at}: unknown follow-up ${attack.followUp}`)
     if (attack.kind === "gust") positive(problems, at, { reach: attack.reach, arcDegrees: attack.arcDegrees })
+    if (attack.kind === "call") {
+      positive(problems, at, { radius: attack.radius })
+      if (attack.calls.length === 0) problems.push(`${at}: calls no one`)
+      if (!(Number.isInteger(attack.elites) && attack.elites >= 0 && attack.elites <= attack.calls.length)) problems.push(`${at}: elites must be a whole number up to its calls (is ${attack.elites})`)
+      for (const kind of attack.calls) if (!has(enemies, kind)) problems.push(`${at}: calls unknown enemy ${kind}`)
+      // A call answers too little support: made otherwise, it would fill the field.
+      if (attack.read !== "alone") problems.push(`${at}: a call for help must read alone`)
+    }
     if (attack.kind === "wave") {
       positive(problems, at, { reach: attack.reach, speed: attack.speed, width: attack.width })
       if (Math.abs(attack.active - attack.reach / attack.speed) > 1e-6) problems.push(`${at}: its active time must be its run out to its reach (${attack.reach / attack.speed}s)`)
@@ -517,7 +526,8 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     })
     if (moveset.attacks.every((attack) => attack.phase > 0 || attack.weight === 0)) problems.push(`${where}: has nothing to pick in its first phase`)
   }
-  if (!(tuning.champions.broken >= 1)) problems.push(`champions: broken must be at least 1 (is ${tuning.champions.broken})`)
+  if (!(tuning.champions.broken > 0)) problems.push(`champions: broken must be positive (is ${tuning.champions.broken})`)
+  if (!(Number.isInteger(tuning.champions.alone) && tuning.champions.alone >= 0)) problems.push(`champions: alone must be a whole number from 0 (is ${tuning.champions.alone})`)
 
   const cheapest = Math.min(...Object.values(tuning.enemies).map((enemy) => enemy.cost).filter((cost) => cost > 0))
   for (const [id, challenge] of Object.entries(tuning.challenges)) {

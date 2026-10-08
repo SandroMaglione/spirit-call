@@ -84,8 +84,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     // Attacks track until their aim locks: dim while tracking, bright once locked (the cue to move).
     // An element's attack is drawn in its element's color, so what it would put on you shows before it lands.
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
-    // A gust shows as wind: what it does is push.
-    const color = spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
+    // A gust shows as wind: what it does is push. A call for help, as the spawn warnings of what it calls.
+    const color = spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
     drawArea(g, area, progress, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
     // A blink: where it stands fades out, a ring closing in on it, as its mark fills where it will land.
     if (spec.kind === "blink") {

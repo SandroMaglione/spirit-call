@@ -217,8 +217,8 @@ The game has two areas, and Extras for practice.
   and **phases by its health**, each opening with a roar and bringing new
   patterns. It keeps its kind's model (no model used a few times), and has
   no entrance or cutscene: the game stays fast. It stays across waves (the
-  waves around it are light), and the challenge is cleared only once it
-  has fallen too. Nothing about it is timed, and every hit stays
+  waves around it are light, and worn down to too little support it calls
+  its own), and the challenge is cleared only once it has fallen too. Nothing about it is timed, and every hit stays
   avoidable. (Until October 2026 champions had no phases and fought as
   their kind did; the playtest found a focused fight more fun.)
 - **Nothing is missable.** Temporary content rotates back later, and

@@ -161,6 +161,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       threats.push({ kind: "area", area, from: bursts, to: bursts + blast, seen })
       continue
     }
+    // A call for help hurts no one: what it calls is fought when it comes.
+    if (spec.kind === "call") continue
     if (spec.kind === "wave") {
       // A ring not yet sent out (one out is a hitbox, below).
       if (phase === "windup") threats.push({ kind: "wave", center: data.position.get(), speed: spec.speed, width: spec.width, reach: spec.reach, from: lands, seen })

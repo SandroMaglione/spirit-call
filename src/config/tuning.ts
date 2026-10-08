@@ -375,7 +375,9 @@ export const defaultTuning = {
    * challenge clears only once it has fallen too (see `DirectWaves`).
    * A kind with its own champion moveset (`movesets`, see
    * content/champions.ts) fights with it, in phases; broken, it stays down
-   * `broken` times as long as anything else: the opening its fight builds to.
+   * `broken` times as long as anything else (a boss shakes a break off
+   * sooner), and it is `alone` (see `Read`) with fewer than that many
+   * others on the field: then it calls for help.
    */
   champions: {
     scale: 1.5,
@@ -385,7 +387,8 @@ export const defaultTuning = {
     cooldown: 0.6,
     knockback: 0.45,
     poise: 0.35,
-    broken: 1.6,
+    broken: 0.8,
+    alone: 2,
     movesets: championMovesets,
     /**
      * A champion grows with the main line: at enemy level `early.level`

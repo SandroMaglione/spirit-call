@@ -78,7 +78,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
       continue
     }
     // Broken: stunned (its attack cut off, see `UpdateAttacks`), with a heavy pause.
-    // A champion with its own moveset stays down longer: the opening its fight builds to.
+    // A champion with its own moveset shakes a break off sooner: a boss's windows are short.
     const seconds = rules.seconds * (data.enemy.get().champion && tuning.champions.movesets[kind] !== undefined ? tuning.champions.broken : 1)
     data.poise.set({ current: bar, broken: seconds, quiet: 0 })
     data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))

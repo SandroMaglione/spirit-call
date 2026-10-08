@@ -216,10 +216,10 @@ export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   shooter: enemyModel("shooter", "enemyShooter", 62, {
     spray: { windup: "WindupSpray", active: "ActiveSpray", recovery: "RecoverySpray" }
   }),
-  // Its champion's own attacks (see content/champions.ts) borrow its two blows: shockwaves and roars are stomps,
+  // Its champion's own attacks (see content/champions.ts) borrow its two blows: shockwaves, roars, and calls are stomps,
   // and a charge crouches, runs, and stands winded.
   brute: enemyModel("brute", "enemyBrute", 60, {
-    ...Object.fromEntries(["stomp", "trample", "quake", "tremor", "tremorAgain", "roar", "fury", "furyAgain"].map((id) => [id, bruteStomp])),
+    ...Object.fromEntries(["stomp", "trample", "quake", "tremor", "tremorAgain", "roar1", "roar2", "roar2Again", "callForHelp", "callForMore"].map((id) => [id, bruteStomp])),
     ...Object.fromEntries(["rush", "rampage", "rampageAgain"].map((id) => [id, { windup: "WindupStomp", active: "Run", recovery: "RecoveryStomp" }]))
   }),
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),

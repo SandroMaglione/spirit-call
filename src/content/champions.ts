@@ -5,7 +5,9 @@
  * does it: a charge at a player backing away, a bomb over the wall she
  * hides behind), and fights in phases by its health: each phase begins with
  * its opening attack (a roar, its shockwave pushing the team back) and
- * brings new attacks and shorter rests. Every attack keeps the fairness
+ * brings new attacks and shorter rests. Worn down to too little support,
+ * it calls for help. The patterns champions share (the roars, the call for
+ * help) come from content/patterns.ts. Every attack keeps the fairness
  * floor (see `fairness`), and the model is its kind's: what changes is how
  * it fights, never what it looks like.
  *
@@ -13,6 +15,7 @@
  */
 import { charge, lob, slam, wave } from "./enemies.ts"
 import type { AttackSpec, EnemyKind } from "./enemies.ts"
+import { callForHelp, roars } from "./patterns.ts"
 
 /** A phase after the first: it begins once the champion's health is at or under `below` (a share of its max). */
 export interface ChampionPhase {
@@ -22,8 +25,6 @@ export interface ChampionPhase {
 }
 
 export interface ChampionMoveset {
-  /** Its name over its health bar. */
-  readonly name: string
   /** Its health, as a multiple of a champion's (see `championPower`): the fight is long enough to go through its phases. */
   readonly health: number
   /** Its phases after the first, from the highest health down. */
@@ -34,14 +35,14 @@ export interface ChampionMoveset {
 export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
   /**
    * The Brute King. First: its slam where you are headed and its stomp up
-   * close, a charge down a lane at a player backing away, and a burning rock
-   * heaved over the wall she hides behind. At 60% it roars (a shockwave),
+   * close, a charge down a lane at a player backing away, a burning rock
+   * heaved over the wall she hides behind, and a call for help when the
+   * fight has worn its support down. At 60% it roars (a shockwave),
    * then slams twice in a row, sends a shockwave out along the floor at a
    * player close by, and holds a slam up longer before it falls. At 25% it
    * roars twice, charges again and again, and its shockwaves come in pairs.
    */
   brute: {
-    name: "The Brute King",
     health: 1.8,
     phases: [{ below: 0.6, rest: 0.85 }, { below: 0.25, rest: 0.7 }],
     attacks: [
@@ -58,8 +59,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
         flightTime: 0.75, fuse: 0.3, power: 24, knockback: 400, element: "fire", lead: 0.3, leaves: { element: "fire", radius: 70, seconds: 2.5 }
       }),
 
-      // Its second phase, at 60%: a roar, and the floor shakes.
-      wave("roar", { phase: 1, opens: true, weight: 0, triggerRange: 2000, reach: 420, speed: 600, width: 54, windup: 1, recovery: 0.8, cooldown: 0.6, power: 12, knockback: 700 }),
+      // Its second phase, at 60%.
       slam("crush", { phase: 1, minRange: 130, triggerRange: 280, maxReach: 220, radius: 105, windup: 0.95, aimLock: 0.45, active: 0.12, recovery: 0.25, cooldown: 1.1, power: 28, knockback: 300, lead: 0.4, followUp: "crushAgain" }),
       // The second slam aims anew, further ahead of a runner.
       slam("crushAgain", { phase: 1, weight: 0, triggerRange: 340, maxReach: 260, radius: 110, windup: 0.7, aimLock: 0.35, active: 0.12, recovery: 1, cooldown: 1.1, power: 30, knockback: 480, lead: 0.6 }),
@@ -68,9 +68,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
       // Held up long, tracking her: a dodge made when it is raised is spent before it falls.
       slam("hammer", { phase: 1, weight: 0.7, minRange: 100, triggerRange: 260, maxReach: 200, radius: 100, windup: 1.6, aimLock: 0.4, active: 0.12, recovery: 0.9, cooldown: 1.1, power: 34, knockback: 500 }),
 
-      // Its last phase, at 25%: two roars, one after the other.
-      wave("fury", { phase: 2, opens: true, weight: 0, triggerRange: 2000, reach: 460, speed: 640, width: 54, windup: 1, recovery: 0.2, cooldown: 0.6, power: 12, knockback: 700, followUp: "furyAgain" }),
-      wave("furyAgain", { phase: 2, weight: 0, triggerRange: 2000, reach: 460, speed: 760, width: 54, windup: 0.6, recovery: 0.9, cooldown: 0.6, power: 12, knockback: 700 }),
+      // Its last phase, at 25%.
       // Charges again and again, each aimed anew, then stomps where it stops.
       charge("rampage", {
         phase: 2, weight: 2, read: "away", minRange: 200, triggerRange: 560, windup: 0.8, aimLock: 0.4, active: 0.45, speed: 680, width: 84, recovery: 0.2, cooldown: 1.2,
@@ -83,7 +81,12 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
       slam("trample", { phase: 2, weight: 0, triggerRange: 2000, maxReach: 0, radius: 150, windup: 0.6, active: 0.12, recovery: 1.2, cooldown: 1.2, power: 22, knockback: 520 }),
       // Its shockwaves come in pairs.
       wave("tremor", { phase: 2, weight: 1.5, triggerRange: 320, reach: 340, speed: 520, width: 46, windup: 0.8, recovery: 0.15, cooldown: 1.4, power: 20, knockback: 480, followUp: "tremorAgain" }),
-      wave("tremorAgain", { phase: 2, weight: 0, triggerRange: 2000, reach: 340, speed: 640, width: 46, windup: 0.45, aimLock: 0.45, recovery: 1, cooldown: 1.4, power: 20, knockback: 480 })
+      wave("tremorAgain", { phase: 2, weight: 0, triggerRange: 2000, reach: 340, speed: 640, width: 46, windup: 0.45, aimLock: 0.45, recovery: 1, cooldown: 1.4, power: 20, knockback: 480 }),
+
+      // Shared: a roar opening each phase (two at 25%), and a call for help when its support is down.
+      ...roars({ phases: 2, reach: 420, doubleFrom: 2 }),
+      // Its support: a burning chaser and a shooter; at 25%, a burning chaser and a burning guardian with a shooter.
+      ...callForHelp({ calls: ["chaser", "shooter"], elites: 1, more: { calls: ["chaser", "guardian", "shooter"], elites: 2, from: 2 } })
     ]
   }
 }

@@ -23,6 +23,11 @@
  * its cone, its own side too (pushed and driven by the wind, no damage). A
  * shockwave's ring runs out along the floor from where it stood.
  *
+ * Every attack let go is announced (`AttackReleased`): one whose release is
+ * more than a hitbox of its area (a shockwave, a call for help) is let go
+ * by its own system reading it (see features/patterns.ts), so a new kind
+ * of attack is its content and a system, not another branch here.
+ *
  * Attacks answering what the player is doing (`read`) are picked first
  * while she does it (see `answering`). A champion with its own moveset (see
  * content/champions.ts) fights in phases by its health: as one begins it
@@ -41,6 +46,7 @@ import type { Box } from "../physics/shapes.ts"
 import {
   Aim,
   Attacker,
+  AttackReleased,
   AttackPhase,
   blow,
   CombatStats,
@@ -60,6 +66,7 @@ import {
   Poise,
   Position,
   PrevPosition,
+  PendingSpawn,
   Rampage,
   Rng,
   Roused,
@@ -98,6 +105,8 @@ export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: Rea
       return { kind: "cone", origin, direction, radius: spec.reach, halfAngle: toRadians(spec.arcDegrees) / 2 }
     case "wave":
       return { kind: "circle", center: origin, radius: spec.reach }
+    case "call":
+      return { kind: "circle", center: origin, radius: spec.radius }
     case "slam":
     case "lob":
     case "blink": {
@@ -145,10 +154,11 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       with: [Health]
     }),
     rampages: Game.Query({ selection: { rampage: Game.Query.write(Rampage), enemy: Game.Query.read(Enemy), health: Game.Query.read(Health) } }),
+    pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }),
     walls: Walls
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused) }
+  events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused), released: Game.System.writeEvent(AttackReleased) }
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   // Enemy attacks run at the enemies' pace (slower in slow motion).
@@ -185,6 +195,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   const away = (at: Vec2) => (target === undefined ? 0 : (at.x - target.x) ** 2 + (at.y - target.y) ** 2)
   const order = attackers.map((_, index) => index).sort((left, right) => away(attackers[left]!.data.position.get()) - away(attackers[right]!.data.position.get()))
   let windingUp = attackers.filter(({ data }) => data.phase.get() === "windup").length
+  // How many stand on the field (spawn warnings included), for an attacker short of support (`alone`).
+  const standing = attackers.length + queries.pending.each().length
 
   for (const { entity, data } of order.map((index) => attackers[index]!)) {
     const kind = data.enemy.get().kind
@@ -233,7 +245,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         if (opener >= 0) begin(opener, moving)
       } else if (cooldown <= 0 && engaged && (rampage !== undefined || windingUp < tuning.crowd.windups) && moving !== undefined) {
         const usable = attacks.flatMap((spec, index) => (spec.weight > 0 && !spec.opens && spec.phase <= phase && canStart(spec, position, moving.at, boxes) ? [index] : []))
-        const reading = readFrom(position, moving, player?.data.stats.get().speed ?? 1, boxes, open)
+        const reading = readFrom(position, moving, player?.data.stats.get().speed ?? 1, boxes, open, standing - 1 < tuning.champions.alone)
         const chosen = pickAttack(attacks, answering(attacks, usable, reading), random)
         if (chosen !== undefined) begin(chosen, moving)
       }
@@ -281,6 +293,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       windingUp -= 1
       // A blink: it appears in the middle of its mark (walls push it out as it moves on), with nothing to blend from.
       const struckFrom = spec.kind === "blink" && area.kind === "circle" ? area.center : position
+      events.released.emit({ attacker: entity.id.value, at: struckFrom, attack: spec, area, blow: struck })
       if (struckFrom !== position) {
         data.position.set(struckFrom)
         data.previous.set(struckFrom)
@@ -320,11 +333,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       } else if (spec.kind === "charge") {
         // The charge itself is the attack: contact damage while active (below).
         hit = []
-      } else if (spec.kind === "wave") {
-        // A ring running out along the floor from where it stood, as far as its reach.
-        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-          area: { kind: "ring", center: struckFrom, radius: 0, width: spec.width }, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], grows: spec.speed
-        }]))
+      } else if (spec.kind === "wave" || spec.kind === "call") {
+        // Let go by their own systems (see `AttackReleased`).
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], follows: struckFrom
