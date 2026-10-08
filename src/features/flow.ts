@@ -5,7 +5,7 @@
  */
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
-import { Arrival, Broke, Challenge, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Arrival, Broke, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -119,6 +119,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     result: Game.System.writeResource(RunResult),
     hitStop: Game.System.writeResource(HitStop),
     slowMotion: Game.System.writeResource(SlowMotion),
+    dodgeChain: Game.System.writeResource(DodgeChain),
     ultimateMoment: Game.System.writeResource(UltimateMoment),
     arrival: Game.System.writeResource(Arrival),
     teamSwitch: Game.System.writeResource(TeamSwitch),
@@ -137,6 +138,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.result.set(null)
   resources.hitStop.set({ remaining: 0 })
   resources.slowMotion.set({ remaining: 0, scale: 1, dodge: false })
+  resources.dodgeChain.set({ count: 0, remaining: 0 })
   resources.ultimateMoment.set(noUltimateMoment)
   resources.arrival.set({ remaining: 0 })
   resources.teamSwitch.set({ cooldown: 0 })

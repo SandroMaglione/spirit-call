@@ -42,9 +42,10 @@ export type Reading = Readonly<Record<Read, boolean>>
  * What the player at `target` is doing, seen from `origin`: running away
  * from it (at least half her speed outward), standing still (under a fifth
  * of it), out of its sight (a wall in between), and open; and whether the
- * attacker is `alone` (too little support around it).
+ * attacker is `alone` (too little support around it) or `pressed` (struck
+ * again and again lately).
  */
-export const readFrom = (origin: Vec2, target: Moving, speed: number, boxes: ReadonlyArray<Box>, open: boolean, alone = false): Reading => {
+export const readFrom = (origin: Vec2, target: Moving, speed: number, boxes: ReadonlyArray<Box>, open: boolean, alone = false, pressed = false): Reading => {
   const dx = target.at.x - origin.x, dy = target.at.y - origin.y
   const distance = Math.hypot(dx, dy)
   const outward = distance < 1e-6 ? 0 : (target.velocity.x * dx + target.velocity.y * dy) / distance
@@ -53,7 +54,8 @@ export const readFrom = (origin: Vec2, target: Moving, speed: number, boxes: Rea
     still: Math.hypot(target.velocity.x, target.velocity.y) < speed * 0.2,
     covered: !hasLineOfSight(origin, target.at, 8, boxes),
     open,
-    alone
+    alone,
+    pressed
   }
 }
 

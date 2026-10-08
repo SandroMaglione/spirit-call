@@ -30,7 +30,7 @@ import type { AspectSpec } from "./aspects.ts"
 import { isMelee } from "./attacks.ts"
 import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
-import { enemies } from "./enemies.ts"
+import { enemies, followUpsOf } from "./enemies.ts"
 import type { AttackSpec, EnemyKind } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
@@ -104,7 +104,7 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
     if (ids.filter((id) => id === attack.id).length > 1) problems.push(`${at}: named more than once in the moveset`)
     positive(problems, at, { triggerRange: attack.triggerRange })
     if (!(attack.weight >= 0)) problems.push(`${at}: weight must not be negative (is ${attack.weight})`)
-    if (attack.weight === 0 && !attack.opens && !attacks.some((other) => other.followUp === attack.id)) problems.push(`${at}: has no weight and follows nothing, so it is never made`)
+    if (attack.weight === 0 && !attack.opens && !attacks.some((other) => followUpsOf(other).includes(attack.id))) problems.push(`${at}: has no weight and follows nothing, so it is never made`)
     if (attack.element !== null && !has(elements, attack.element)) problems.push(`${at}: unknown element ${attack.element}`)
     if (!(attack.lead >= 0 && attack.lead <= 1)) problems.push(`${at}: lead must be from 0 to 1 (is ${attack.lead})`)
     if (!(attack.aimLock >= minTelegraph)) problems.push(`${at}: warns ${attack.aimLock}s before it hits, under the fairness floor of ${minTelegraph}s`)
@@ -112,7 +112,8 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
     if (!(attack.minRange >= 0 && attack.minRange < attack.triggerRange)) {
       problems.push(`${at}: minRange must be from 0 to below triggerRange (is ${attack.minRange})`)
     }
-    if (attack.followUp !== null && !ids.includes(attack.followUp)) problems.push(`${at}: unknown follow-up ${attack.followUp}`)
+    for (const next of followUpsOf(attack)) if (!ids.includes(next)) problems.push(`${at}: unknown follow-up ${next}`)
+    if (attack.kind === "slam" && attack.leaves !== null && !has(elements, attack.leaves.element)) problems.push(`${at}: leaves an unknown element ${attack.leaves.element}`)
     if (attack.kind === "gust") positive(problems, at, { reach: attack.reach, arcDegrees: attack.arcDegrees })
     if (attack.kind === "call") {
       positive(problems, at, { radius: attack.radius })
@@ -139,18 +140,19 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
       if (attack.leaves !== null && !has(elements, attack.leaves.element)) problems.push(`${at}: leaves an unknown element ${attack.leaves.element}`)
     }
   }
-  // A combo ends: following the follow-ups never comes back to an attack already made.
+  // A combo ends: following the follow-ups, whichever way a string branches, never comes back to an attack already made.
   for (const attack of attacks) {
-    const seen = new Set([attack.id])
-    let next = attack.followUp
-    while (next !== null) {
-      if (seen.has(next)) {
-        problems.push(`${where} attack ${attack.id}: its follow-ups loop back through ${next}`)
-        break
+    const loops = (id: string, path: ReadonlyArray<string>): string | undefined => {
+      if (path.includes(id)) return id
+      const spec = attacks.find((candidate) => candidate.id === id)
+      for (const next of spec === undefined ? [] : followUpsOf(spec)) {
+        const found = loops(next, [...path, id])
+        if (found !== undefined) return found
       }
-      seen.add(next)
-      next = attacks.find((candidate) => candidate.id === next)?.followUp ?? null
+      return undefined
     }
+    const back = followUpsOf(attack).map((next) => loops(next, [attack.id])).find((found) => found !== undefined)
+    if (back !== undefined) problems.push(`${where} attack ${attack.id}: its follow-ups loop back through ${back}`)
   }
 }
 
@@ -525,6 +527,13 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (!(phase.rest > 0)) problems.push(`${where}: phase ${index + 1} rest must be positive (is ${phase.rest})`)
     })
     if (moveset.attacks.every((attack) => attack.phase > 0 || attack.weight === 0)) problems.push(`${where}: has nothing to pick in its first phase`)
+  }
+  // A perfect-dodge chain: a step for each, the slow and the energy growing (or holding) along it.
+  const chain = tuning.perfectDodge.chain
+  if (chain.slow.length === 0 || chain.slow.length !== chain.energy.length) problems.push(`perfectDodge chain: slow and energy need one entry per step (${chain.slow.length} and ${chain.energy.length})`)
+  if (!(chain.window >= 0)) problems.push(`perfectDodge chain: window must not be negative (is ${chain.window})`)
+  for (const [name, steps] of [["slow", chain.slow], ["energy", chain.energy]] as const) {
+    if (steps.some((step, index) => !(step > 0) || (index > 0 && step < steps[index - 1]!))) problems.push(`perfectDodge chain: ${name} must be positive and never shrink along the chain`)
   }
   if (!(tuning.champions.broken > 0)) problems.push(`champions: broken must be positive (is ${tuning.champions.broken})`)
   if (!(Number.isInteger(tuning.champions.alone) && tuning.champions.alone >= 0)) problems.push(`champions: alone must be a whole number from 0 (is ${tuning.champions.alone})`)

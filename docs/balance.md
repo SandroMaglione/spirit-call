@@ -94,7 +94,7 @@ The audit below records the original problems. The playable update now uses:
 | Bench energy | 30% per living member |
 | Totem / Thunderclap healing | 2% per tick / 8% per member |
 | Kill healing (now Scattergun's passive) | 2% max HP per kill |
-| Perfect-dodge slow / break fill / energy | 0.7 seconds / 25% / 10 |
+| Perfect-dodge slow / break fill / energy | 0.25 seconds / none / 10, growing along a chain of three (slow 1×, 1.8×, 2.8×; energy 1×, 1.5×, 2×) |
 | Wall-slam / reaction break fill | 25% / 20% |
 | Chaser swipe / follow-up | 18% / 14% ATK |
 

@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
-import { Attacker, AttackPhase, Dash, ElementState, Enemy, Energy, Game, Health, Player, Poise, SlowMotion, Stats, Stunned, Vortex, BasicAttack } from "../src/schema.ts"
+import { Attacker, AttackPhase, Dash, DodgeChain, ElementState, Enemy, Energy, Game, Health, Player, Poise, SlowMotion, Stats, Stunned, Vortex, BasicAttack } from "../src/schema.ts"
 import { cursorAt, doubleTap, gunner, placeDummies, start, steps, plainAttack } from "./helpers.ts"
 
 const Charge = Game.Inspector("Test/Charge", { queries: { player: Game.Query({ selection: { energy: Game.Query.read(Energy) }, with: [Player] }) } }, ({ queries }) => queries.player.each()[0]!.data.energy.get().current)
@@ -193,15 +193,37 @@ describe("a perfect dodge", () => {
   }
   const hp = defaultTuning.characters.swordsman.stats.hp
 
-  it("rewards a dash at the last moment: slow motion, the dash back, and the attacker's break bar", () => {
+  it("rewards a dash at the last moment: a brief slow motion and the dash back, but nothing toward a break", () => {
     const run = dodging(1)
     run.step(landsAt + 3)
     const state = run.runtime.inspect(Dodger)
     expect(state.dash.perfect).toBe(true)
     expect(state.dash.cooldown).toBe(0)
     expect(state.slow.remaining).toBeGreaterThan(0)
+    expect(state.slow.remaining).toBeLessThanOrEqual(defaultTuning.perfectDodge.slowSeconds)
     expect(state.health).toBe(hp)
-    expect(run.runtime.inspect(Fight).enemies[0]!.poise.current).toBeGreaterThan(0)
+    expect(run.runtime.inspect(Fight).enemies[0]!.poise.current).toBe(0)
+  })
+
+  it("grows its reward along a chain of them, one after another, up to the chain's last step", () => {
+    const Chain = Game.Inspector("Test/Chain", { resources: { chain: Game.System.readResource(DodgeChain), slow: Game.System.readResource(SlowMotion) } }, ({ resources }) => ({ chain: resources.chain.get(), slow: resources.slow.get() }))
+    const rules = defaultTuning.perfectDodge
+    /** A perfect dodge with `count` already in the chain (and its window still open): the chain after it, and its slow. */
+    const after = (count: number) => {
+      const run = dodging(1)
+      const Seed = Game.System("Test/SeedChain", { resources: { chain: Game.System.writeResource(DodgeChain) } }, ({ resources }) => resources.chain.set({ count, remaining: count > 0 ? 100 : 0 }))
+      run.runtime.tick(Game.Schedule(Seed))
+      for (let step = 0; step < landsAt + 3 && run.runtime.inspect(Chain).slow.remaining <= 0; step++) run.step()
+      return run.runtime.inspect(Chain)
+    }
+    const first = after(0), second = after(1), last = after(rules.chain.slow.length)
+    expect(first.chain.count).toBe(1)
+    expect(second.chain.count).toBe(2)
+    expect(second.slow.remaining).toBeGreaterThan(first.slow.remaining)
+    // Past its last step it holds there.
+    expect(last.chain.count).toBe(rules.chain.slow.length)
+    expect(last.slow.remaining).toBeCloseTo(rules.slowSeconds * rules.chain.slow.at(-1)!, 1)
+    expect(first.chain.remaining).toBeCloseTo(rules.chain.window, 1)
   })
 
   it("tallies a perfect dodge for stars, and a blow that lands as a hit taken", () => {

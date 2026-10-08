@@ -77,7 +77,7 @@ elements they attack with, are in `docs/elements.md`.
     player is the danger (a pool, a wall, the others); baited, it blows them.
   - **The Juggernaut is armored until broken**: it takes a share of the
     damage and cannot be pushed until its break bar fills (by the blows as
-    dealt: heavy blows, reactions, and perfect dodges break it soonest);
+    dealt: heavy blows and reactions break it soonest);
     broken, its armor is down for the whole stun. A weaker team takes
     longer; nothing runs out.
 
@@ -238,12 +238,29 @@ avoidable and the fairness test checks every phase.
   made in. As a phase begins it roars (`Roused`): its phase's opening
   attack (`opens`, a shockwave pushing the team back) comes as soon as it is
   free, then the phase's attacks join the others, with shorter rests.
-- **Patterns that ask for a dodge, not distance alone**: combos aimed anew
-  at each blow (two slams, charges one after another), a blow held up long
-  while it tracks her (a dodge made as it is raised is spent before it
-  falls), and **shockwaves** (`wave`): a ring running out along the floor
-  from where it stands, as far as its reach, hitting what it passes. Out of
-  its reach, or dash through the ring as it passes.
+- **It fights in strings.** A blow in a string is followed at once by one
+  of its follow-ups (`followUp` can list a few: those answering what the
+  player is doing are picked first), with short gaps between them; only
+  the string's last blow recovers slowly: the real opening. Strings are
+  aimed anew at each blow (two slams, charges one after another), some
+  blows are held up long while they track her (a dodge made as it is
+  raised is spent before it falls), and some look alike with different
+  timings (the King's quick smash and slam).
+- **Where, not when.** Its warnings show where each blow lands, brighten as
+  its aim locks (never less than the fairness floor before it lands), but
+  never fill up counting down to the hit: its timing is read from its
+  body.
+- **It answers being pressed.** Struck again and again lately (the read
+  `pressed`, `Tuning.champions.pressed`: a count of the blows it took,
+  draining), its answer comes as soon as it is free, its rest cut short:
+  the King's quick shove all around, then a slam where she lands. Staying
+  on it and swinging has a cost; pick the moment.
+- **Shockwaves** (`wave`): a ring running out along the floor from where it
+  stands, as far as its reach, hitting what it passes. Out of its reach,
+  or dash through the ring as it passes.
+- **The floor in its later phases**: its slams leave the ground burning
+  (`SlamAttack.leaves`) for a few seconds, so the safe ground around it
+  shrinks and its charges matter more.
 - **It calls for help.** Worn down to too little support (the read `alone`:
   fewer others on the field than `Tuning.champions.alone`), it calls its
   support in around it (a `call` attack: a ring in the spawn warnings'
@@ -335,10 +352,19 @@ Reading an attack is rewarded over running from it. A dash started at
 most `perfectDodge.window` seconds before a blow lands where she stood (or
 on her, through the dash's invulnerability) is **perfect**; an earlier one
 is a plain dodge. It rewards once per dash: the **enemies slow down** for a
-moment while the team keeps its pace (their moves, windups, shots, and
-bombs), the attacker's break bar fills, a dash charge comes back, a little
-energy, a full magazine, and a moment more of invulnerability. Every
-reward is a number, and any can be turned off.
+brief moment while the team keeps its pace (their moves, windups, shots,
+and bombs), a dash charge comes back, a little energy, a full magazine,
+and a moment more of invulnerability. Every reward is a number, and any
+can be turned off.
+
+Perfect dodges **one after another make a chain** (`DodgeChain`, up to
+three): each within `perfectDodge.chain.window` of the last grows the slow
+and the energy, and shows its count over her. A single one is a small
+reward; reading a whole string of attacks is a big one. A perfect dodge
+fills **no break bar**: against one slow attacker (a champion), a quarter
+of its bar a dodge broke it every few dodges, and the long slow made the
+fight a loop of dodge, strike in slow motion, dodge (playtest, October
+2026).
 
 ## Reading the player
 

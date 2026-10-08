@@ -30,9 +30,12 @@ import type { Affinities, ElementId, GroundSpec } from "./elements.ts"
  * sight behind a wall (`covered`), or open (`open`: a long move recovering,
  * reloading, or out of dashes; see `readPlayer`); or the attacker with too
  * little support around it (`alone`: fewer others on the field than
- * `Tuning.champions.alone`, spawn warnings included).
+ * `Tuning.champions.alone`, spawn warnings included), or pressed (`pressed`:
+ * a champion struck again and again lately, see `Tuning.champions.pressed`).
+ * An attack answering `pressed` starts as soon as the attacker is free, its
+ * rest cut short: the answer to being hit without pause.
  */
-export type Read = "away" | "still" | "covered" | "open" | "alone"
+export type Read = "away" | "still" | "covered" | "open" | "alone" | "pressed"
 
 interface AttackTiming {
   /** Its name in the enemy's moveset (unique there): what `followUp` refers to. */
@@ -60,8 +63,13 @@ interface AttackTiming {
   readonly knockback: number
   /** How often it is picked among the attacks that can start, relative to the others' weights; 0: only ever as a follow-up. */
   readonly weight: number
-  /** The attack (an `id` of the same moveset) that follows this one at once when it can start: a combo. `null` for none. */
-  readonly followUp: string | null
+  /**
+   * The attack (an `id` of the same moveset) that follows this one at once
+   * when it can start: a combo; or a few to pick from (those answering what
+   * the player is doing first, see `Read`): a string that branches. `null`
+   * for none.
+   */
+  readonly followUp: string | ReadonlyArray<string> | null
   /** The element its blows carry, putting its state on whoever they hit (the player included; see docs/elements.md); `null` for none. */
   readonly element: ElementId | null
   /**
@@ -100,6 +108,8 @@ export interface SlamAttack extends AttackTiming {
   readonly kind: "slam"
   readonly radius: number
   readonly maxReach: number
+  /** The pool it leaves where it lands (a champion's burning ground), if any. */
+  readonly leaves: GroundSpec | null
 }
 
 /**
@@ -315,7 +325,8 @@ const attackDefaults = { minRange: 0, weight: 1, followUp: null, element: null, 
 
 export const melee = (id: string, spec: AttackInput<MeleeAttack>): AttackSpec => ({ kind: "melee", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 export const volley = (id: string, spec: AttackInput<VolleyAttack>): AttackSpec => ({ kind: "volley", id, ...attackDefaults, aimLock: spec.windup, ...spec })
-export const slam = (id: string, spec: AttackInput<SlamAttack>): AttackSpec => ({ kind: "slam", id, ...attackDefaults, aimLock: spec.windup, ...spec })
+export const slam = (id: string, spec: Omit<AttackInput<SlamAttack>, "leaves"> & Partial<Pick<SlamAttack, "leaves">>): AttackSpec =>
+  ({ kind: "slam", id, ...attackDefaults, aimLock: spec.windup, leaves: null, ...spec })
 export const charge = (id: string, spec: AttackInput<ChargeAttack>): AttackSpec => ({ kind: "charge", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 export const lob = (id: string, spec: AttackInput<LobAttack>): AttackSpec => ({ kind: "lob", id, ...attackDefaults, aimLock: spec.windup, ...spec })
 const blink = (id: string, spec: AttackInput<BlinkAttack>): AttackSpec => ({ kind: "blink", id, ...attackDefaults, aimLock: spec.windup, ...spec })
@@ -335,6 +346,10 @@ const skirmish = (spec: { stopDistance: number; orbit: number; retreatSeconds: n
 /** An enemy; it wards no one, does not burst, and wears no armor unless it says so. */
 const enemy = (spec: Omit<EnemySpec, "ward" | "burst" | "armor"> & Partial<Pick<EnemySpec, "ward" | "burst" | "armor">>): EnemySpec =>
   ({ ward: null, burst: null, armor: null, ...spec })
+
+/** The attacks `spec` may be followed by (see `followUp`), by id. */
+export const followUpsOf = (spec: AttackSpec): ReadonlyArray<string> =>
+  spec.followUp === null ? [] : typeof spec.followUp === "string" ? [spec.followUp] : spec.followUp
 
 /**
  * The fairness floor: every attack gives at least `minTelegraph` seconds

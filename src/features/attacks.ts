@@ -35,6 +35,7 @@
  * free, past the crowd's windups; then the phase's attacks join the others,
  * with shorter rests. Such a champion never waits for the crowd's windups.
  */
+import { followUpsOf } from "../content/enemies.ts"
 import type { AttackSpec } from "../content/enemies.ts"
 import { Random } from "../math/rng.ts"
 import { clampLength, normalizeOr, sub } from "../math/vec.ts"
@@ -179,7 +180,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   const random = new Random(resources.rng.get().state)
 
   // Champions' phases, by their health (see `ChampionMoveset`): the one each is in, and the last it opened.
-  const rampages = new Map<number, { readonly phase: number; readonly was: number; opened: number }>()
+  const rampages = new Map<number, { readonly phase: number; readonly was: number; opened: number; pressure: number }>()
   for (const { entity, data } of queries.rampages.each()) {
     const phases = tuning.champions.movesets[data.enemy.get().kind]?.phases ?? []
     const health = data.health.get()
@@ -187,7 +188,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const was = data.rampage.get().phase
     // Phases only go on: healing back over a line does not take one back.
     const phase = Math.max(was, phases.filter((next) => share <= next.below).length)
-    rampages.set(entity.id.value, { phase, was, opened: data.rampage.get().opened })
+    rampages.set(entity.id.value, { phase, was, opened: data.rampage.get().opened, pressure: data.rampage.get().pressure })
   }
 
   // The nearest enemies attack first: they take the free windups (see `Tuning.crowd.windups`).
@@ -203,6 +204,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const attacks = movesetOf(tuning, data.enemy.get())
     const rampage = rampages.get(entity.id.value)
     const phase = rampage?.phase ?? 0
+    // Struck again and again lately (see `PressChampions`): its answer to it comes first.
+    const pressed = rampage !== undefined && rampage.pressure >= tuning.champions.pressed.hits
     const phaseRest = phase === 0 ? 1 : tuning.champions.movesets[kind]?.phases[phase - 1]?.rest ?? 1
     // It roars as a phase begins.
     if (rampage !== undefined && rampage.phase > rampage.was) events.roused.emit({ at: data.position.get(), enemy: kind, phase, element: data.elite.present ? data.elite.get().element : null })
@@ -229,6 +232,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const begin = (index: number, at: Moving) => {
       const spec = attacks[index]!
       attack = index
+      // Its answer to being pressed spends the pressure.
+      if (spec.read === "pressed" && rampage !== undefined) rampage.pressure = 0
       cycle.transition("ready", "windup")
       area = aimArea(spec, position, aimPoint(spec, position, at, spec.windup), boxes)
       windingUp += 1
@@ -243,11 +248,16 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       if (rampage !== undefined && moving !== undefined && rampage.opened < phase) {
         rampage.opened = phase
         if (opener >= 0) begin(opener, moving)
-      } else if (cooldown <= 0 && engaged && (rampage !== undefined || windingUp < tuning.crowd.windups) && moving !== undefined) {
+      } else if ((cooldown <= 0 || pressed) && engaged && (rampage !== undefined || windingUp < tuning.crowd.windups) && moving !== undefined) {
         const usable = attacks.flatMap((spec, index) => (spec.weight > 0 && !spec.opens && spec.phase <= phase && canStart(spec, position, moving.at, boxes) ? [index] : []))
-        const reading = readFrom(position, moving, player?.data.stats.get().speed ?? 1, boxes, open, standing - 1 < tuning.champions.alone)
-        const chosen = pickAttack(attacks, answering(attacks, usable, reading), random)
-        if (chosen !== undefined) begin(chosen, moving)
+        const reading = readFrom(position, moving, player?.data.stats.get().speed ?? 1, boxes, open, standing - 1 < tuning.champions.alone, pressed)
+        // Pressed, its answer comes as soon as it is free, its rest cut short; otherwise it rests first.
+        const answers = answering(attacks, usable, reading)
+        const counter = pressed && answers.some((index) => attacks[index]!.read === "pressed")
+        if (cooldown <= 0 || counter) {
+          const chosen = pickAttack(attacks, counter ? answers.filter((index) => attacks[index]!.read === "pressed") : answers, random)
+          if (chosen !== undefined) begin(chosen, moving)
+        }
       }
     }
 
@@ -365,11 +375,20 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       elapsed = 0
       area = null
       cooldown = spec.cooldown * rest
-      // A combo: the follow-up starts at once when it can, with no cooldown in between.
-      const next = spec.followUp === null ? -1 : attacks.findIndex((candidate) => candidate.id === spec.followUp)
-      if (next >= 0 && moving !== undefined && canStart(attacks[next]!, position, moving.at, boxes)) {
-        cooldown = 0
-        begin(next, moving)
+      // A combo: the follow-up starts at once when it can, with no cooldown in between. A string that branches takes
+      // the follow-ups answering what the player is doing first (see `answering`), at random among them.
+      if (moving !== undefined) {
+        const nexts = followUpsOf(spec).flatMap((id) => {
+          const index = attacks.findIndex((candidate) => candidate.id === id)
+          return index >= 0 && attacks[index]!.phase <= phase && canStart(attacks[index]!, position, moving.at, boxes) ? [index] : []
+        })
+        const reading = nexts.length <= 1 ? undefined : readFrom(position, moving, player?.data.stats.get().speed ?? 1, boxes, open, standing - 1 < tuning.champions.alone, pressed)
+        const choices = reading === undefined ? nexts : answering(attacks, nexts, reading).length > 0 ? answering(attacks, nexts, reading) : nexts
+        const next = choices.length <= 1 ? choices[0] : choices[Math.floor(random.next() * choices.length)]
+        if (next !== undefined) {
+          cooldown = 0
+          begin(next, moving)
+        }
       }
     }
 
@@ -378,7 +397,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   resources.rng.set({ state: random.state })
   for (const { entity, data } of queries.rampages.each()) {
     const rampage = rampages.get(entity.id.value)
-    if (rampage !== undefined) data.rampage.set({ phase: rampage.phase, opened: rampage.opened })
+    if (rampage !== undefined) data.rampage.set({ phase: rampage.phase, opened: rampage.opened, pressure: rampage.pressure })
   }
 })
 

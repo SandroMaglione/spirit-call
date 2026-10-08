@@ -481,10 +481,11 @@ export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker"
 
 /**
  * A champion with its own moveset (see content/champions.ts): the phase its
- * health has brought it to, and the last phase whose opening attack it has
- * made (one behind `phase` until it makes it).
+ * health has brought it to, the last phase whose opening attack it has made
+ * (one behind `phase` until it makes it), and how hard it is pressed: the
+ * blows it took lately (see `PressChampions`).
  */
-export const Rampage = Descriptor.Component<{ readonly phase: number; readonly opened: number }>()("Shooter/Rampage")
+export const Rampage = Descriptor.Component<{ readonly phase: number; readonly opened: number; readonly pressure: number }>()("Shooter/Rampage")
 
 /**
  * A warder's tether (see `WardSpec`): the ally it wards and how long the
@@ -708,7 +709,11 @@ export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fac
 export const Dodged = Descriptor.Event<{ readonly target: number; readonly at: Vec2; readonly attacker: Entity.Handle<typeof Root, typeof Position> | null }>()("Shooter/Dodged")
 
 /** The player dodged perfectly (see `features/dodge.ts`), for effects. */
-export const PerfectDodged = Descriptor.Event<{ readonly at: Vec2 }>()("Shooter/PerfectDodged")
+/** A perfect dodge at `at`, the `chain`th one after another (see `DodgeChain`; 1 for a first). */
+export const PerfectDodged = Descriptor.Event<{ readonly at: Vec2; readonly chain: number }>()("Shooter/PerfectDodged")
+
+/** Perfect dodges one after another (see `Tuning.perfectDodge.chain`): how many so far, and the seconds left for the next to join them. */
+export const DodgeChain = Descriptor.Resource<{ readonly count: number; readonly remaining: number }>()("Shooter/DodgeChain")
 
 /**
  * Slow motion: the enemies run at `scale` for `remaining` more seconds, the
@@ -1196,6 +1201,7 @@ export const Game = Schema.bind(
       RunResult,
       HitStop,
       SlowMotion,
+      DodgeChain,
       Paused,
       Practice,
       PracticeField

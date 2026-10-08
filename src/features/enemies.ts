@@ -121,7 +121,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     ? body
     : Game.Command.insert(body, [Elite, { element: elite, trail: tuning.elites.trailEvery, discharge: tuning.elites.discharge.every * (0.5 + (at.x % 97) / 194), charging: null }])
   // A champion with its own moveset fights in phases (see content/champions.ts).
-  const fighting = lead !== null && tuning.champions.movesets[kind] !== undefined ? Game.Command.insert(draft, [Rampage, { phase: 0, opened: 0 }]) : draft
+  const fighting = lead !== null && tuning.champions.movesets[kind] !== undefined ? Game.Command.insert(draft, [Rampage, { phase: 0, opened: 0, pressure: 0 }]) : draft
   const form = tuning.shields
   const shielded = !shield
     ? fighting

@@ -216,8 +216,19 @@ export const defaultTuning = {
    * magazine refills (`reload`), and she stays untouchable
    * `invulnerability` seconds longer.
    * Any reward can be turned off (0, false).
+   *
+   * Perfect dodges one after another make a chain (see `DodgeChain`): one
+   * within `chain.window` seconds of the last is the chain's next, up to
+   * `chain.slow.length`; its slow lasts `chain.slow[n]` times `slowSeconds`
+   * and its energy is `chain.energy[n]` times `energy` (the first, 1). A
+   * single one is a small reward; reading a whole string is a big one.
+   * It fills no break bar (`breakFill` 0): against one slow attacker it
+   * broke it every few dodges, the whole fight in slow motion.
    */
-  perfectDodge: { window: 0.15, slowScale: 0.25, slowSeconds: 0.7, breakFill: 0.25, dashRefund: 1, energy: 10, reload: true, invulnerability: 0.25 },
+  perfectDodge: {
+    window: 0.15, slowScale: 0.25, slowSeconds: 0.25, breakFill: 0, dashRefund: 1, energy: 10, reload: true, invulnerability: 0.25,
+    chain: { window: 2.5, slow: [1, 1.8, 2.8] as ReadonlyArray<number>, energy: [1, 1.5, 2] as ReadonlyArray<number> }
+  },
 
   /**
    * Breaking enemies (see `features/poise.ts`). A blow fills an enemy's bar
@@ -389,6 +400,8 @@ export const defaultTuning = {
     poise: 0.35,
     broken: 0.8,
     alone: 2,
+    /** Pressed (the read `pressed`): struck `hits` times lately, the count draining `drain` a second. */
+    pressed: { hits: 6, drain: 2.5 },
     movesets: championMovesets,
     /**
      * A champion grows with the main line: at enemy level `early.level`

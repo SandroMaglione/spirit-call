@@ -207,7 +207,8 @@ export const view = {
     standing: 0.06
   },
   /** A perfect dodge's flash, ring, and streaks. */
-  perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7 },
+  /** A perfect dodge's flash, ring, and shake; a chain's later steps `chainGrowth` bigger each, and their count over her. */
+  perfectDodge: { color: 0xc8fff9, flash: 140, ring: 180, shake: 7, chainGrowth: 0.3 },
   breaking: { bar: 0xffc857, full: 0xfff4d6, glow: 0xffc857, pulseHz: 5, ring: 90, flash: 70, shake: 9 },
   healthBack: 0x0d1117,
   healthFill: 0xff5d6c,

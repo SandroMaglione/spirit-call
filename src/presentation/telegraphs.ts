@@ -68,7 +68,10 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const attacker = data.attacker.get()
     const spec = currentAttack(tuning, data.enemy.get(), attacker)
     if (spec === undefined || attacker.area === null || data.phase.get() !== "windup") continue
-    const progress = Math.min(1, attacker.elapsed / spec.windup)
+    // A champion fighting as a boss shows where, never when: no fill counting down to the hit, so its timing is read
+    // from its body (the area still brightens as its aim locks, at least the fairness floor before it lands).
+    const boss = data.enemy.get().champion && tuning.champions.movesets[data.enemy.get().kind] !== undefined
+    const progress = boss ? 0 : Math.min(1, attacker.elapsed / spec.windup)
     const area = attacker.area
     if (area.kind === "line" && spec.kind === "volley") {
       const locked = aimLocked(spec, "windup", attacker.elapsed)
