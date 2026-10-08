@@ -1,9 +1,11 @@
 /**
  * The Spirit Call: the gacha (see docs/calls.md). Crystals buy calls; a
- * call brings a character (the one focused on the banner), an aspect, or a
- * supply bundle. Banners are pools of characters that run for a while, in
- * turn, and come back later. Nothing owned comes twice while something is
- * left to get, and every count toward a guarantee shows.
+ * call brings a character (the one focused on the banner), an aspect, a
+ * look, a relic, or a supply bundle, rarest first. Banners are pools of
+ * characters that run for a while, in turn, and come back later. No
+ * character, aspect, or look owned comes twice while one is left to get;
+ * a relic coming again raises its tier (then turns into dust); and every
+ * count toward a guarantee shows.
  *
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
@@ -52,6 +54,15 @@ export interface CallRules {
   readonly character: CharacterOdds
   /** An aspect not owned yet: at `rate` on a call that brings no character, and certain by the `guarantee`th call since the last aspect or character. */
   readonly aspect: { readonly rate: number; readonly guarantee: number }
+  /** A look only the Call gives, not owned yet: at `rate` on a call that brings neither a character nor an aspect. */
+  readonly look: { readonly rate: number }
+  /**
+   * A relic (any one; owned already, a tier up): at `rate` on a call that
+   * brings nothing rarer, and certain by the `guarantee`th call since the
+   * last relic or anything rarer. The shares of an aspect or a look with
+   * none left to get go to relics.
+   */
+  readonly relic: { readonly rate: number; readonly guarantee: number }
   /** What a call that brings neither gives: gold, and `material` of the focused character's element. */
   readonly supply: { readonly gold: number; readonly material: number }
   /** Banners run `days` each, from `anchor` (epoch milliseconds), in the order of `banners`, round and round. */
@@ -64,7 +75,9 @@ export const callRules: CallRules = {
   price: { crystals: 200 },
   opensAfter: "packLeader",
   character: { rate: 0.03, softFrom: 20, softStep: 0.1, guarantee: 30, firstGuarantee: 10 },
-  aspect: { rate: 0.12, guarantee: 10 },
+  aspect: { rate: 0.06, guarantee: 15 },
+  look: { rate: 0.1 },
+  relic: { rate: 0.4, guarantee: 4 },
   supply: { gold: 1200, material: 10 },
   rotation: { anchor: Date.UTC(2026, 0, 5), days: 14 },
   history: 60

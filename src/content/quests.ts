@@ -19,6 +19,8 @@ import type { ChallengeId, EliteElement } from "./challenges.ts"
 import type { CharacterId } from "./characters.ts"
 import type { Amounts } from "./currencies.ts"
 import type { AspectId } from "./aspects.ts"
+import type { CosmeticId } from "./cosmetics.ts"
+import type { RelicId } from "./relics.ts"
 import { elements } from "./elements.ts"
 import type { ElementId } from "./elements.ts"
 import { materialOf, materialRules, worthAt } from "./materials.ts"
@@ -27,10 +29,12 @@ import type { HazardElement, Novelty } from "./novelties.ts"
 import { atLeast, atMost, cleared } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
 
-/** Something a reward can give to own. */
+/** Something a reward can give to own: a character, an aspect, a relic (owned already: a tier up), or a look. */
 export type Unlock =
   | { readonly kind: "character"; readonly id: CharacterId }
   | { readonly kind: "aspect"; readonly id: AspectId }
+  | { readonly kind: "relic"; readonly id: RelicId }
+  | { readonly kind: "cosmetic"; readonly id: CosmeticId }
 
 /** What a quest gives the first time it is cleared, on top of what the run pays: gold worth several runs at its level. */
 export interface Rewards {
@@ -101,9 +105,13 @@ export interface RankRules {
   /** A higher rank's first clear and chests pay `crystals` times rank 1's crystals, and gold worth `goldRuns` runs at its level. */
   readonly crystals: number
   readonly goldRuns: number
+  /** A higher rank's first clear pays `dust`, each of its chests `chestDust` (and `chestGold` of their gold): ranks are off the main line. */
+  readonly dust: number
+  readonly chestDust: number
+  readonly chestGold: number
 }
 
-export const rankRules: RankRules = { count: 3, offset: 12, chaptersAhead: 2, twists: ["eliteLeaders", "shieldLeaders"], crystals: 0.4, goldRuns: 2 }
+export const rankRules: RankRules = { count: 3, offset: 12, chaptersAhead: 2, twists: ["eliteLeaders", "shieldLeaders"], crystals: 0.4, goldRuns: 2, dust: 30, chestDust: 40, chestGold: 0.9 }
 
 /** Whose stars open a set of chests: a chapter's quests (by chapter id), or the secondary quests. */
 export type StarGroup = keyof typeof chapters | "secondary"
@@ -118,7 +126,10 @@ const champion = (kind: EnemyKind): Novelty => ({ kind: "champion", enemy: kind 
 const shields: Novelty = { kind: "shield" }
 const character = (id: CharacterId): Unlock => ({ kind: "character", id })
 const aspect = (id: AspectId): Unlock => ({ kind: "aspect", id })
+const relic = (id: RelicId): Unlock => ({ kind: "relic", id })
 const pays = (experience: number, crystals: number, gold: number, unlocks: ReadonlyArray<Unlock> = []): Rewards => ({ experience, currencies: { crystals, gold }, unlocks })
+/** A side quest's first clear: dust on top, a little less gold than a main quest's (dust is off the main line's, see docs/relics.md). */
+const sidePays = (experience: number, crystals: number, gold: number, dust: number, unlocks: ReadonlyArray<Unlock> = []): Rewards => ({ experience, currencies: { crystals, gold, dust }, unlocks })
 
 /**
  * How far above the main quest that opens it a side quest, a rank, or a
@@ -188,7 +199,8 @@ export const quests = {
     after: "packLeader",
     introduces: brings("Swarmers: tiny, fast, in packs. Reach many at once", enemy("swarmer")),
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
-    rewards: pays(160, 100, 900)
+    // The first relic, as relics open: Echo, a ring out of every combo.
+    rewards: pays(160, 100, 900, [relic("echo")])
   }),
   emberKiln: quest({
     name: "Ember Kiln",
@@ -438,7 +450,7 @@ export const quests = {
     after: "packLeader",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 5), atMost("hitsTaken", 6)],
-    rewards: pays(80, 50, 300)
+    rewards: sidePays(80, 50, 250, 30, [relic("momentum")])
   }),
   nightOfPacks: quest({
     name: "Night of Packs",
@@ -450,7 +462,7 @@ export const quests = {
     after: "bulwark",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 6), atMost("hitsTaken", 6)],
-    rewards: pays(120, 60, 700)
+    rewards: sidePays(120, 60, 560, 40)
   }),
   eliteHunt: quest({
     name: "Elite Hunt",
@@ -462,7 +474,7 @@ export const quests = {
     after: "bruteKing",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 14)],
-    rewards: pays(160, 80, 1750)
+    rewards: sidePays(160, 80, 1400, 50)
   }),
   floodgate: quest({
     name: "Floodgate",
@@ -474,7 +486,7 @@ export const quests = {
     after: "swarmMother",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 15)],
-    rewards: pays(200, 80, 3500)
+    rewards: sidePays(200, 80, 2800, 60)
   }),
   stormFront: quest({
     name: "Storm Front",
@@ -486,7 +498,7 @@ export const quests = {
     after: "theWarlord",
     introduces: null,
     stars: [cleared(), atLeast("perfectDodges", 8), atMost("hitsTaken", 5)],
-    rewards: pays(240, 80, 5250)
+    rewards: sidePays(240, 80, 4200, 70)
   }),
   /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes. */
   stoneTrial: quest({
@@ -499,7 +511,7 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 8), atMost("hitsTaken", 7)],
-    rewards: pays(280, 100, 7000)
+    rewards: sidePays(280, 100, 5600, 80)
   }),
   strangeCompany: quest({
     name: "Strange Company",
@@ -511,19 +523,19 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [cleared(), atLeast("breaks", 5), atMost("hitsTaken", 11)],
-    rewards: pays(300, 100, 7700)
+    rewards: sidePays(300, 100, 6150, 80)
   })
 }
 
 /**
- * A chest at `stars`: crystals, gold, and some of every element's material
+ * A chest at `stars`: crystals, gold (and dust, off the main line), and some of every element's material
  * (a clear's worth at `level`, its quests' enemy level), so a character the Spirit Call brought
  * early can take her first steps before her element's trial opens.
  */
-const chest = (stars: number, crystals: number, gold: number, level: number, materialShare = 1): ChestSpec => ({
+const chest = (stars: number, crystals: number, gold: number, level: number, materialShare = 1, dust = 0): ChestSpec => ({
   stars,
   level,
-  rewards: { crystals, gold, ...Object.fromEntries((Object.keys(elements) as Array<ElementId>).map((element) => [materialOf(element), Math.max(1, Math.round(worthAt(materialRules, level) * materialShare))])) }
+  rewards: { crystals, gold, ...(dust > 0 ? { dust } : {}), ...Object.fromEntries((Object.keys(elements) as Array<ElementId>).map((element) => [materialOf(element), Math.max(1, Math.round(worthAt(materialRules, level) * materialShare))])) }
 })
 
 /**
@@ -568,10 +580,11 @@ export const chests: { readonly [Group in StarGroup]: ReadonlyArray<ChestSpec> }
     chest(9, 90, 5400, 31, 0.75),
     chest(12, 90, 5500, 31, 0.75)
   ],
+  // The side quests' chests hold dust too, and a little less gold (dust is off the main line's).
   secondary: [
-    chest(6, 60, 1050, 15),
-    chest(12, 80, 2800, 15),
-    chest(18, 120, 5600, 15)
+    chest(6, 60, 850, 15, 1, 60),
+    chest(12, 80, 2250, 15, 1, 90),
+    chest(18, 120, 4500, 15, 1, 120)
   ]
 }
 

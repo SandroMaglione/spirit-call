@@ -18,9 +18,12 @@
  * Reported: crystals earned by the end of each chapter (as calls), and how
  * many characters calls brought by then, over the accounts (median, and the
  * unlucky and lucky tenths). The target is about one every two chapters.
+ * Then what else the calls brought by then, on average: aspects, looks,
+ * relics (each copy, a tier up or turned into dust), the relic tiers owned,
+ * and the dust (from calls, and in all).
  */
 import { createAccount, playLock, recordRun } from "../src/account/account.ts"
-import type { Account, Play } from "../src/account/account.ts"
+import type { Account, CallResult, Play } from "../src/account/account.ts"
 import { activeBanner, call, callsHeld, callsOpen } from "../src/account/calls.ts"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -98,15 +101,26 @@ const hardcoreWeek = (account: Account, level: number, now: number): Account => 
   return next
 }
 
-/** Calls with all it holds; how many characters came. */
-const spendAll = (account: Account, now: number): { readonly account: Account; readonly characters: number } => {
-  if (!callsOpen(tuning, account)) return { account, characters: 0 }
+/** Calls with all it holds; how many characters came, and everything that came. */
+const spendAll = (account: Account, now: number): { readonly account: Account; readonly characters: number; readonly results: ReadonlyArray<CallResult> } => {
+  if (!callsOpen(tuning, account)) return { account, characters: 0, results: [] }
   const count = callsHeld(tuning, account)
-  if (count === 0) return { account, characters: 0 }
+  if (count === 0) return { account, characters: 0, results: [] }
   const called = call(tuning, account, activeBanner(tuning, now).banner, count, now)
-  if (!called.ok) return { account, characters: 0 }
-  return { account: called.value.account, characters: called.value.results.filter((result) => result.kind === "character").length }
+  if (!called.ok) return { account, characters: 0, results: [] }
+  return { account: called.value.account, characters: called.value.results.filter((result) => result.kind === "character").length, results: called.value.results }
 }
+
+/** What else calls brought, and where the account stands, summed over the accounts at the end of each chapter. */
+interface Brought {
+  aspects: number
+  looks: number
+  relics: number
+  tiers: number
+  callDust: number
+  dust: number
+}
+const nothing = (): Brought => ({ aspects: 0, looks: 0, relics: 0, tiers: 0, callDust: 0, dust: 0 })
 
 const chapters = Object.keys(tuning.chapters) as Array<ChapterId>
 const main = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].line === "main")
@@ -115,10 +129,22 @@ const side = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tunin
 /** For each chapter, over the accounts: crystals earned by its end, and characters called by then. */
 const crystalsBy: Array<Array<number>> = chapters.map(() => [])
 const calledBy: Array<Array<number>> = chapters.map(() => [])
+const broughtBy: Array<Brought> = chapters.map(nothing)
 for (let index = 0; index < accounts; index++) {
   // Each account its own id, so its own draws; the rotation is held still (one banner).
   let account: Account = createAccount(tuning, newAccount, `sim-${index}`, anchor)
   let earned = 0, called = 0, now = anchor + 1
+  const brought = nothing()
+  const tally = (results: ReadonlyArray<CallResult>) => {
+    for (const result of results) {
+      if (result.kind === "aspect") brought.aspects += 1
+      if (result.kind === "cosmetic") brought.looks += 1
+      if (result.kind === "relic") {
+        brought.relics += 1
+        brought.callDust += result.dust
+      }
+    }
+  }
   const credit = (before: Account, after: Account) => (earned += Math.max(0, (after.wallet.crystals ?? 0) - (before.wallet.crystals ?? 0)))
   chapters.forEach((chapter, at) => {
     const quests = main.filter((id) => tuning.quests[id].chapter === chapter)
@@ -130,6 +156,7 @@ for (let index = 0; index < accounts; index++) {
         const spent = spendAll(account, now)
         account = spent.account
         called += spent.characters
+        tally(spent.results)
       }
     }
     for (let weekIndex = 0; weekIndex < weeksPerChapter; weekIndex++) {
@@ -140,9 +167,17 @@ for (let index = 0; index < accounts; index++) {
       const spent = spendAll(account, now)
       account = spent.account
       called += spent.characters
+      tally(spent.results)
     }
     crystalsBy[at]!.push(earned)
     calledBy[at]!.push(called)
+    const sum = broughtBy[at]!
+    sum.aspects += brought.aspects
+    sum.looks += brought.looks
+    sum.relics += brought.relics
+    sum.callDust += brought.callDust
+    sum.tiers += Object.values(account.owned.relics).reduce((total, relic) => total + (relic?.tier ?? 0), 0)
+    sum.dust += account.wallet.dust ?? 0
   })
 }
 
@@ -160,3 +195,11 @@ chapters.forEach((chapter, at) => {
   console.log(`${tuning.chapters[chapter].name.padEnd(30)} ${String(crystals).padStart(6)} (${String(Math.floor(crystals / price)).padStart(3)})        ${String(median).padStart(6)}  ${String(quantile(calledBy[at]!, 0.1)).padStart(11)}  ${String(quantile(calledBy[at]!, 0.9)).padStart(9)}   ${(mean / (at + 1)).toFixed(2).padStart(7)}`)
 })
 console.log("\nTarget: about one character every two chapters (0.5 per chapter), the first within chapter two.")
+const relicCount = Object.keys(tuning.relics).length
+console.log(`\nWhat else calls brought by the end of each chapter, on average (relic tiers owned: of ${relicCount * 3}, from calls and quests; dust held, unspent):`)
+console.log("By the end of                  aspects  looks  relics  relic tiers  dust from calls  dust held")
+chapters.forEach((chapter, at) => {
+  const mean = (value: number) => (value / accounts).toFixed(1)
+  const sum = broughtBy[at]!
+  console.log(`${tuning.chapters[chapter].name.padEnd(30)} ${mean(sum.aspects).padStart(7)} ${mean(sum.looks).padStart(6)} ${mean(sum.relics).padStart(7)} ${mean(sum.tiers).padStart(12)} ${mean(sum.callDust).padStart(16)} ${mean(sum.dust).padStart(10)}`)
+})

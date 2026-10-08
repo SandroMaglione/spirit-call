@@ -21,13 +21,15 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient"
 import * as HttpApiClient from "effect/http-api/HttpApiClient"
 
 import { recordRun, select } from "../account/account.ts"
-import type { Account, CallResult, Earned, Play, Refusal, TeamAspects } from "../account/account.ts"
+import type { Account, CallResult, Earned, Play, Refusal, TeamAspects, TeamRelics } from "../account/account.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { Api, Password, Username } from "../api/api.ts"
 import { defaultTuning } from "../config/tuning.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
+import type { RelicId } from "../content/relics.ts"
 import type { RunLogValue, RunResultValue } from "../schema.ts"
 import { makeSaves } from "./saves.ts"
 import type { SavesState } from "./saves.ts"
@@ -59,18 +61,23 @@ export interface App {
   readonly train: (character: CharacterId) => Promise<Account | undefined>
   /** Takes a character past the ascension step she stands at (refused without the gold or the material). */
   readonly ascend: (character: CharacterId) => Promise<Account | undefined>
-  /** Makes one material from the grade below it (refused without enough). */
   /** Makes `count` calls on `banner`: what each brought, or `undefined` when refused (not open, not running, nothing left, short of crystals) or not saved. */
   readonly call: (banner: BannerId, count: number) => Promise<ReadonlyArray<CallResult> | undefined>
   /** Focuses `character` on `banner`. */
   readonly focus: (banner: BannerId, character: CharacterId) => Promise<Account | undefined>
-  /** Selects the team to enter the arena with (and the aspects equipped in it) and what for: refused at once (not owned, aspects breaking the rules, or not open), or the account after it, saved on its way. */
-  readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects) => Selected
+  /** Selects the team to enter the arena with (and the aspects and relics equipped in it) and what for: refused at once (not owned, aspects or relics breaking the rules, or not open), or the account after it, saved on its way. */
+  readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects, relics?: TeamRelics) => Selected
+  /** Puts a look of `kind` on `character` (`null`: her own look). */
+  readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => Promise<Account | undefined>
+  /** Buys `relic` one tier up with dust (refused when not owned, at its last tier, or short of dust). */
+  readonly buyRelic: (relic: RelicId) => Promise<Account | undefined>
+  /** Buys a look the shop sells with dust (refused when owned already, not sold, or short of dust). */
+  readonly buyCosmetic: (cosmetic: CosmeticId) => Promise<Account | undefined>
   /** Clears chapter one (calls open, its rewards owned) and adds crystals for 30 calls (a dev tool, to try the Spirit Call). */
   readonly openCalls: () => void
   /** `openCalls`, done when saved. */
   readonly openCallsNow: () => Promise<Account | undefined>
-  /** Owns every character and aspect, and adds plenty of each currency (a dev tool). */
+  /** Owns every character, aspect, relic (at its last tier), and look, and adds plenty of each currency (a dev tool). */
   readonly unlockEverything: () => void
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, and its log: what it earned, at once, and what the server says it earned once saved. */
   readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue) => { readonly earned: Earned; readonly saved: Promise<Earned> }
@@ -162,14 +169,14 @@ export const startApp = async (username: string): Promise<App> => {
         now.calls.seed === before.calls.seed ? undefined : { account: now, results: now.calls.history.slice(0, count).toReversed().map((record) => record.result) }
       ).then((called) => called?.results),
     focus: (banner, character) => run(api.account.focus({ params: { banner }, payload: { character } })),
-    select: (team, play, aspects) => {
-      const checked = select(tuning, saves.account(), team, play, aspects)
+    select: (team, play, aspects, relics) => {
+      const checked = select(tuning, saves.account(), team, play, aspects, relics)
       if (!checked.ok) return checked
       const saved = saves.submit({
-        send: api.account.select({ payload: { team, play, ...(aspects === undefined ? {} : { aspects }) } }),
+        send: api.account.select({ payload: { team, play, ...(aspects === undefined ? {} : { aspects }), ...(relics === undefined ? {} : { relics }) } }),
         accountOf: (account) => account,
         apply: (account) => {
-          const again = select(tuning, account, team, play, aspects)
+          const again = select(tuning, account, team, play, aspects, relics)
           return again.ok ? again.value : account
         },
         keep: true,
@@ -178,6 +185,9 @@ export const startApp = async (username: string): Promise<App> => {
       }).then((outcome) => ("saved" in outcome ? "saved" as const : "refused" in outcome ? "refused" as const : "failed" as const))
       return { ok: true, account: checked.value, saved }
     },
+    wear: (character, kind, cosmetic) => run(api.account.wear({ params: { character, kind }, payload: { cosmetic } })),
+    buyRelic: (relic) => run(api.account.buyRelic({ params: { relic } })),
+    buyCosmetic: (cosmetic) => run(api.account.buyCosmetic({ params: { cosmetic } })),
     openCalls: () => void openCalls(),
     openCallsNow: () => openCalls(),
     unlockEverything: () => void run(api.dev.unlockEverything()),

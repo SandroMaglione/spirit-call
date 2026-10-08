@@ -32,6 +32,7 @@ const current: Record<string, ReadonlyArray<string>> = {
   classes: Object.keys(defaultTuning.classes),
   aspects: Object.keys(defaultTuning.aspects),
   relics: Object.keys(defaultTuning.relics),
+  cosmetics: Object.keys(defaultTuning.cosmetics),
   skills: Object.keys(defaultTuning.skills),
   challenges: Object.keys(defaultTuning.challenges),
   enemies: Object.keys(defaultTuning.enemies),

@@ -162,7 +162,8 @@
   ],
   "currencies": [
     "crystals",
-    "gold"
+    "gold",
+    "dust"
   ],
   "tracks": [
     "gauntlet",
@@ -220,6 +221,24 @@
     "tailwind",
     "staticCharge",
     "bedrock"
+  ],
+  "cosmetics": [
+    "autumnWind",
+    "moonwind",
+    "ashen",
+    "blueFlame",
+    "abyss",
+    "coral",
+    "paleSky",
+    "crimsonStorm",
+    "obsidian",
+    "jade",
+    "starfall",
+    "petals",
+    "aurora",
+    "nightshade",
+    "lastLight",
+    "stoneDust"
   ],
   "materials": [
     "fireShard",

@@ -13,8 +13,12 @@ import type { DiscoveryId } from "../content/discoveries.ts"
 import type { AspectId } from "../content/aspects.ts"
 import type { BannerId } from "../content/calls.ts"
 import { teamSize } from "../content/characters.ts"
-import { characterLevel, owns, select, unlock, validAspects, withClearedRewards, withEarnedChests } from "./account.ts"
-import type { Account, CallRecord, CallResult, CallState, Item, Owned, OwnedAspect, OwnedCharacter, Play, QuestProgress, TierProgress } from "./account.ts"
+import { cosmeticKinds } from "../content/cosmetics.ts"
+import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
+import { relicSlots, relicTiers } from "../content/relics.ts"
+import type { RelicId, RelicSlot, RelicTier } from "../content/relics.ts"
+import { characterLevel, fits, owns, select, unlock, validAspects, validRelics, withClearedRewards, withEarnedChests } from "./account.ts"
+import type { Account, CallRecord, CallResult, CallState, Item, Owned, OwnedAspect, OwnedCharacter, OwnedRelic, Play, QuestProgress, TeamRelics, TierProgress, Unlocked, Worn } from "./account.ts"
 
 /** A quest's or a tier's runs, as stored. */
 interface StoredRunCount {
@@ -27,6 +31,8 @@ interface StoredRunCount {
 export type StoredCallResult =
   | { readonly kind: "character"; readonly id: string }
   | { readonly kind: "aspect"; readonly id: string }
+  | { readonly kind: "cosmetic"; readonly id: string }
+  | { readonly kind: "relic"; readonly id: string; readonly tier: number; readonly dust: number }
   | { readonly kind: "supply"; readonly amounts: Readonly<Record<string, number>> }
 
 /** The account as stored: `Account`'s shape, with every content id a string that may name content that no longer exists. */
@@ -39,6 +45,8 @@ export interface AccountRecord {
   readonly owned: {
     readonly characters: Readonly<Record<string, OwnedCharacter>>
     readonly aspects: Readonly<Record<string, OwnedAspect>>
+    readonly relics: Readonly<Record<string, { readonly unlockedAt: number; readonly tier: number }>>
+    readonly cosmetics: Readonly<Record<string, Unlocked>>
   }
   /** Each quest's progress, by rank (as a string key). */
   readonly quests: Readonly<Record<string, Readonly<Record<string, StoredRunCount & { readonly stars: ReadonlyArray<number> }>>>>
@@ -50,6 +58,7 @@ export interface AccountRecord {
     readonly seed: number
     readonly sinceCharacter: number
     readonly sinceAspect: number
+    readonly sinceRelic: number
     readonly firstCharacter: boolean
     readonly focus: Readonly<Record<string, string>>
     readonly history: ReadonlyArray<{ readonly at: number; readonly banner: string; readonly result: StoredCallResult }>
@@ -57,10 +66,14 @@ export interface AccountRecord {
   readonly selection: {
     readonly team: ReadonlyArray<string>
     readonly aspects: Readonly<Record<string, string>>
+    /** Each member's relics, by slot. */
+    readonly relics: Readonly<Record<string, Readonly<Record<string, string>>>>
     readonly play:
       | { readonly kind: "quest"; readonly quest: string; readonly rank?: number }
       | { readonly kind: "tier"; readonly track: string; readonly tier: number }
   }
+  /** Each character's looks, by kind. */
+  readonly worn: Readonly<Record<string, Readonly<Record<string, string>>>>
 }
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -92,9 +105,16 @@ export const fromRecord = (
   now: number
 ): { readonly account: Account; readonly dropped: ReadonlyArray<string>; readonly granted: ReadonlyArray<Item> } => {
   const dropped: Array<string> = []
+  const relics: { [Id in RelicId]?: OwnedRelic } = {}
+  for (const [id, relic] of Object.entries(keep<RelicId, { readonly unlockedAt: number; readonly tier: number }>(tuning.relics, stored.owned.relics, "relic", dropped)) as Array<[RelicId, { readonly unlockedAt: number; readonly tier: number }]>) {
+    // A tier out of range is held to the nearest one.
+    relics[id] = { unlockedAt: relic.unlockedAt, tier: tierFrom(relic.tier) }
+  }
   const owned: Owned = {
     characters: keep<CharacterId, OwnedCharacter>(tuning.characters, stored.owned.characters, "character", dropped),
-    aspects: keep<AspectId, OwnedAspect>(tuning.aspects, stored.owned.aspects, "aspect", dropped)
+    aspects: keep<AspectId, OwnedAspect>(tuning.aspects, stored.owned.aspects, "aspect", dropped),
+    relics,
+    cosmetics: keep<CosmeticId, Unlocked>(tuning.cosmetics, stored.owned.cosmetics, "look", dropped)
   }
   // Ranks kept are those that exist, and stars those the quest still has.
   const rankKept = (rank: string): boolean => Number.isInteger(Number(rank)) && Number(rank) >= 1 && Number(rank) <= tuning.ranks.count
@@ -121,7 +141,7 @@ export const fromRecord = (
     }
     hardcore[track] = kept
   }
-  const starterSelection: Account["selection"] = { team: [starter.selection.character], aspects: {}, play: { kind: "quest", quest: starter.selection.quest } }
+  const starterSelection: Account["selection"] = { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } }
   let account: Account = {
     id: stored.id,
     createdAt: stored.createdAt,
@@ -134,7 +154,8 @@ export const fromRecord = (
     discoveries: keep<DiscoveryId, { readonly madeAt: number }>(tuning.discoveries, stored.discoveries, "discovery", dropped),
     chests,
     calls: callsFrom(tuning, stored.calls),
-    selection: starterSelection
+    selection: starterSelection,
+    worn: {}
   }
 
   // A character never stands below a step her level is already past (levels trained before ascension, or steps moved since).
@@ -172,6 +193,29 @@ export const fromRecord = (
   const aspects = validAspects(tuning, account, account.selection.team, saved)
   if (Object.keys(aspects).length < Object.keys(stored.selection.aspects).length) dropped.push("an aspect equipped")
   account = { ...account, selection: { ...account.selection, aspects } }
+  // The relics saved for the team, as far as the rules allow (see `teamRelicProblems`).
+  const savedRelics: { [Id in CharacterId]?: { [Slot in RelicSlot]?: RelicId } } = {}
+  let savedCount = 0
+  for (const [character, slots] of Object.entries(stored.selection.relics)) {
+    for (const [slot, relic] of Object.entries(slots)) {
+      savedCount += 1
+      if (known(tuning.characters, character) && (relicSlots as ReadonlyArray<string>).includes(slot) && known(tuning.relics, relic)) savedRelics[character] = { ...savedRelics[character], [slot as RelicSlot]: relic }
+    }
+  }
+  const teamRelics: TeamRelics = validRelics(tuning, account, account.selection.team, savedRelics)
+  if (Object.values(teamRelics).reduce((sum, slots) => sum + Object.keys(slots ?? {}).length, 0) < savedCount) dropped.push("a relic equipped")
+  account = { ...account, selection: { ...account.selection, relics: teamRelics } }
+  // The looks worn: each owned, of its kind, and for her.
+  const worn: { [Id in CharacterId]?: { [Kind in CosmeticKind]?: CosmeticId } } = {}
+  for (const [character, kinds] of Object.entries(stored.worn)) {
+    if (!known(tuning.characters, character)) continue
+    for (const [kind, cosmetic] of Object.entries(kinds)) {
+      const wearable = (cosmeticKinds as ReadonlyArray<string>).includes(kind) && known(tuning.cosmetics, cosmetic) && owns(account, { kind: "cosmetic", id: cosmetic }) && fits(tuning, character, kind as CosmeticKind, cosmetic)
+      if (wearable) worn[character] = { ...worn[character], [kind as CosmeticKind]: cosmetic }
+      else dropped.push("a look worn")
+    }
+  }
+  account = { ...account, worn: worn satisfies Worn }
   return { account, dropped, granted: rewarded.granted }
 }
 
@@ -189,6 +233,10 @@ const callsFrom = (tuning: Tuning, saved: AccountRecord["calls"]): CallState => 
         return known(tuning.characters, result.id) ? { kind: "character", id: result.id } : null
       case "aspect":
         return known(tuning.aspects, result.id) ? { kind: "aspect", id: result.id } : null
+      case "cosmetic":
+        return known(tuning.cosmetics, result.id) ? { kind: "cosmetic", id: result.id } : null
+      case "relic":
+        return known(tuning.relics, result.id) ? { kind: "relic", id: result.id, tier: tierFrom(result.tier), dust: Math.max(0, result.dust) } : null
       case "supply":
         return { kind: "supply", amounts: Object.fromEntries(Object.entries(result.amounts).filter(([id]) => known({ ...tuning.currencies, ...tuning.materials }, id))) }
     }
@@ -198,8 +246,11 @@ const callsFrom = (tuning: Tuning, saved: AccountRecord["calls"]): CallState => 
     const result = resultFrom(record.result)
     if (result !== null && known(tuning.banners, record.banner)) history.push({ at: record.at, banner: record.banner, result })
   }
-  return { seed: saved.seed >>> 0, sinceCharacter: saved.sinceCharacter, sinceAspect: saved.sinceAspect, firstCharacter: saved.firstCharacter, focus, history }
+  return { seed: saved.seed >>> 0, sinceCharacter: saved.sinceCharacter, sinceAspect: saved.sinceAspect, sinceRelic: saved.sinceRelic, firstCharacter: saved.firstCharacter, focus, history }
 }
+
+/** A stored tier held to the tiers there are (1 to 3). */
+const tierFrom = (tier: number): RelicTier => relicTiers.find((each) => each === Math.round(tier)) ?? (tier > 3 ? 3 : 1)
 
 /** A saved selection with typed ids, or `undefined` when it names no content. */
 const playFrom = (tuning: Tuning, saved: AccountRecord["selection"]["play"]): Play | undefined => {
@@ -220,5 +271,6 @@ export const toRecord = (account: Account): AccountRecord => ({
   discoveries: account.discoveries,
   chests: account.chests,
   calls: account.calls,
-  selection: account.selection
+  selection: account.selection,
+  worn: account.worn
 })

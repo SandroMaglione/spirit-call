@@ -29,7 +29,9 @@ soon), then a character more at the end of chapters 1 and 3, and whoever
 the Spirit Call brings from the end of chapter 1. Each chapter ends with a
 champion, a different kind each time, and unlocks one thing at most: a
 character at the end of chapters 1 and 3, an aspect at the end of 2, 4,
-and 6.
+and 6. Relics are smaller: the first comes with chapter 2's first quest
+(Echo, as relics open with the Call), and one with the first side quest
+(Momentum).
 
 | Chapter | Team | Enemy levels | Each quest's new thing | At its end |
 |---|---|---|---|---|
@@ -45,6 +47,8 @@ so early clears pay for the characters the player has.
 
 **Side quests** bring nothing new: each opens after a chapter's last quest
 and mixes what the main line has brought, at most a few levels above it.
+Their first clears pay dust on top (and a little less gold than a main
+quest's); a main quest's first clear pays none.
 **Hardcore tiers** open the same way: each tier after a main quest (and the
 tier before it), with its own waves, so a track's first tier is an early
 mix and its last the whole roster.
@@ -81,7 +85,9 @@ is a new tally: one system that counts it in the run, and an entry here.
 **Chests.** A chapter's stars open its chests, one every 3 stars (3, 6, 9,
 and 12 in a chapter of four quests, its rewards spread evenly over them), and
 the secondary quests' stars open theirs. Chests give crystals, gold, and
-materials: the milestone rewards that pay for playing well.
+materials: the milestone rewards that pay for playing well. The secondary
+quests' chests also hold **dust** (see `relics.md`), with a little less
+gold: dust comes from off the main line.
 
 ## Ranks
 
@@ -94,8 +100,8 @@ quest list has a rank switcher above the chapters.
 |---|---|---|---|
 | Enemy levels | the quest's own (1–34) | +12 (13–46) | +24 (25–58) |
 | Twist | none | elite leaders | elite leaders and shields |
-| First clear | as written | 40% of the crystals, gold worth 2 runs at its level, a clear's worth of material | same |
-| Chests | as written | 40% of the crystals, gold at its level, no material | same |
+| First clear | as written | 40% of the crystals, gold worth 2 runs at its level, a clear's worth of material, 30 dust | same |
+| Chests | as written | 40% of the crystals, 90% of the gold at its level, no material, 40 dust | same |
 
 - **When a rank opens.** A chapter's rank r opens once the main line is
   `(r − 1) × 2` chapters further on (rank II of chapter 1 with the end of

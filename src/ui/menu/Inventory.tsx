@@ -23,6 +23,7 @@ const sources = (store: UiStore, id: ResourceId): ReadonlyArray<string> => {
   const tuning = store.tuning.value
   if (id === "crystals") return ["First clears of quests, and their stars' chests", "Account levels and discoveries", "Hardcore tiers, once per week"]
   if (id === "gold") return ["Every run: more against stronger enemies", "First clears, chests, and hardcore tiers"]
+  if (id === "dust") return ["Side quests, ranks, and their chests: first clears", "Hardcore tiers and trials, once per week", "A relic called again past tier III", "Spent in the shop: a relic's next tier, and looks"]
   if (!isMaterial(store, id)) return []
   const element = tuning.materials[id].element
   const trial = Object.values(tuning.tracks).find((track) => track.kind === "trial" && track.element === element)
@@ -52,10 +53,10 @@ export const Inventory = ({ store, nav }: { readonly store: UiStore; readonly na
     <div class="inventory__cards scroll in-left"><Cards>{all.map((each) => {
       const material = isMaterial(store, each)
       return <Card key={each} tint={material ? tuning.materials[each].element : undefined} label={material ? tuning.materials[each].name : tuning.currencies[each as keyof typeof tuning.currencies].name}
-        selected={each === id} onClick={() => (selected.value = each)} art={<Icon name={material ? tuning.materials[each].element : (each as "gold" | "crystals")} />}
+        selected={each === id} onClick={() => (selected.value = each)} art={<Icon name={material ? tuning.materials[each].element : (each as "gold" | "crystals" | "dust")} />}
         foot={(account.wallet[each] ?? 0).toLocaleString("en-US")} />
     })}</Cards></div>
-    <Panel class="inventory__brief in-right" element={element} icon={<Icon name={element ?? (id as "gold" | "crystals")} />} title={name} detail={held.toLocaleString("en-US")}>
+    <Panel class="inventory__brief in-right" element={element} icon={<Icon name={element ?? (id as "gold" | "crystals" | "dust")} />} title={name} detail={held.toLocaleString("en-US")}>
       <div>
         <Fact label="For" value={isMaterial(store, id) ? `Ascending ${element} characters past levels ${tuning.materialRules.ascension.map((step) => step.level).join(", ")}` : tuning.currencies[id as keyof typeof tuning.currencies].use === "pulls" ? "Spirit Calls" : "Training characters, and ascending them"} />
       </div>

@@ -17,7 +17,7 @@ import * as HttpApiMiddleware from "effect/http-api/HttpApiMiddleware"
 import * as HttpApiSchema from "effect/http-api/HttpApiSchema"
 import * as HttpApiSecurity from "effect/http-api/HttpApiSecurity"
 
-import { Account, AccountEvent, BannerId, CallResult, CharacterId, Earned, Play, RunLog, RunResult, StoredRun, TeamAspects } from "./schemas.ts"
+import { Account, AccountEvent, BannerId, CallResult, CharacterId, CosmeticId, CosmeticKind, Earned, Play, RelicId, RunLog, RunResult, StoredRun, TeamAspects, TeamRelics } from "./schemas.ts"
 
 // ── Players ───────────────────────────────────────────────────────────────
 
@@ -73,9 +73,9 @@ export class Refused extends Schema.TaggedError<Refused>()("Refused", { kind: Sc
 export class AccountApi extends HttpApiGroup.make("account")
   .add(
     HttpApiEndpoint.get("get", "/account", { success: Account }),
-    /** Selects the team (and the aspects equipped in it, as they were when not given) and what to play. */
+    /** Selects the team (and the aspects and relics equipped in it, as they were when not given) and what to play. */
     HttpApiEndpoint.put("select", "/account/selection", {
-      payload: Schema.Struct({ team: Schema.Array(CharacterId), play: Play, aspects: Schema.optionalKey(TeamAspects) }),
+      payload: Schema.Struct({ team: Schema.Array(CharacterId), play: Play, aspects: Schema.optionalKey(TeamAspects), relics: Schema.optionalKey(TeamRelics) }),
       success: Account,
       error: Refused
     }),
@@ -83,7 +83,12 @@ export class AccountApi extends HttpApiGroup.make("account")
     HttpApiEndpoint.post("train", "/characters/:character/training", { params: { character: CharacterId }, success: Account, error: Refused }),
     /** Takes a character past the ascension step she stands at. */
     HttpApiEndpoint.post("ascend", "/characters/:character/ascension", { params: { character: CharacterId }, success: Account, error: Refused }),
-    /** Makes one material from the grade below it. */
+    /** Puts on a look of a kind (`null`: her own look). */
+    HttpApiEndpoint.put("wear", "/characters/:character/looks/:kind", { params: { character: CharacterId, kind: CosmeticKind }, payload: Schema.Struct({ cosmetic: Schema.NullOr(CosmeticId) }), success: Account, error: Refused }),
+    /** Buys a relic owned one tier up, with dust. */
+    HttpApiEndpoint.post("buyRelic", "/shop/relics/:relic", { params: { relic: RelicId }, success: Account, error: Refused }),
+    /** Buys a look the shop sells, with dust. */
+    HttpApiEndpoint.post("buyCosmetic", "/shop/looks/:cosmetic", { params: { cosmetic: CosmeticId }, success: Account, error: Refused }),
     /** Makes `count` calls on a banner. */
     HttpApiEndpoint.post("call", "/banners/:banner/calls", {
       params: { banner: BannerId },

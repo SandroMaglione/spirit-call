@@ -12,7 +12,7 @@ import * as Schema from "effect/Schema"
 import * as SqlClient from "effect/sql/SqlClient"
 import type * as Statement from "effect/sql/Statement"
 
-import { characterLevel, encounterOf } from "../account/account.ts"
+import { buildOf, characterLevel, encounterOf } from "../account/account.ts"
 import type { Account, Play } from "../account/account.ts"
 import { AccountEvent, StoredRun } from "../api/schemas.ts"
 import type { ResourceId } from "../content/currencies.ts"
@@ -27,7 +27,18 @@ const RunRow = Schema.Struct({
   id: Text, at: Int, play_kind: Nullable(Schema.Literals(["quest", "tier"])), quest: Nullable(Text), rank: Nullable(Int), track: Nullable(Text), tier: Nullable(Int),
   challenge: Text, enemy_level: Int, cleared: Int, progress: Int, wave: Int, kills: Int, seconds: Int, hits_taken: Int, perfect_dodges: Int, breaks: Int, dashes: Int, switches: Int
 })
-const MemberRow = Schema.Struct({ run_id: Text, slot: Int, character: Text, level: Int, aspect: Nullable(Text), damage_dealt: Int, damage_taken: Int, kills: Int })
+const MemberRow = Schema.Struct({ run_id: Text, slot: Int, character: Text, level: Int, aspect: Nullable(Text), relics: Nullable(Text), damage_dealt: Int, damage_taken: Int, kills: Int })
+
+/** A member's relics as kept with a run: `slot:relic:tier`, comma-separated (`null`: none). */
+const relicsText = (relics: ReadonlyArray<{ readonly slot: string; readonly id: string; readonly tier: number }>): string | null =>
+  relics.length === 0 ? null : relics.map((relic) => `${relic.slot}:${relic.id}:${relic.tier}`).join(",")
+
+/** The relics kept with a run, read back (checked against the content when the run is decoded). */
+const relicsFrom = (text: string | null): ReadonlyArray<{ readonly slot: string; readonly id: string; readonly tier: number }> =>
+  text === null || text === "" ? [] : text.split(",").map((entry) => {
+    const [slot = "", id = "", tier = "1"] = entry.split(":")
+    return { slot, id, tier: Number(tier) }
+  })
 const WaveRow = Schema.Struct({ run_id: Text, wave: Int, started_at: Int, hits_taken: Int, damage_taken: Int })
 const HurtRow = Schema.Struct({ run_id: Text, place: Int, enemy: Nullable(Text), attack: Nullable(Text), hits: Int, damage: Int })
 const SkillRow = Schema.Struct({ run_id: Text, character: Text, skill: Text, uses: Int, hits: Int, damage: Int })
@@ -44,7 +55,7 @@ const walletChange = (before: Account, after: Account): Partial<Record<ResourceI
 export class Logs extends Context.Service<
   Logs,
   {
-    /** What keeps a run that ended at `at`, played from `account` (her team's levels and aspects as they were): its id, and the statements to send. */
+    /** What keeps a run that ended at `at`, played from `account` (her team's levels, aspects, and relics as they were): its id, and the statements to send. */
     readonly runWrites: (userId: string, at: number, account: Account, play: Play | null, result: RunResultValue, log: RunLogValue) => { readonly id: string; readonly statements: ReadonlyArray<Statement.Statement<object>> }
     /** What keeps a change to an account at `at`: `action` on `subject`, from `before` to `after`. */
     readonly eventWrites: (userId: string, at: number, action: string, subject: string | null, before: Account, after: Account) => ReadonlyArray<Statement.Statement<object>>
@@ -89,6 +100,7 @@ export class Logs extends Context.Service<
           character,
           level: characterLevel(tuning, account, character).level,
           aspect: account.selection.aspects[character] ?? null,
+          relics: relicsText(Object.entries(buildOf(tuning, account, character).relics ?? {}).flatMap(([slot, relic]) => (relic === undefined ? [] : [{ slot, id: relic.id, tier: relic.tier }]))),
           damage_dealt: done(character)?.damageDealt ?? 0,
           damage_taken: done(character)?.damageTaken ?? 0,
           kills: done(character)?.kills ?? 0
@@ -141,7 +153,7 @@ export class Logs extends Context.Service<
             at: run.at,
             play: run.play_kind === "quest" ? { kind: "quest", quest: run.quest, ...(run.rank === null || run.rank === 1 ? {} : { rank: run.rank }) } : run.play_kind === "tier" ? { kind: "tier", track: run.track, tier: run.tier } : null,
             enemyLevel: run.enemy_level,
-            team: team.map((member) => ({ character: member.character, level: member.level, aspect: member.aspect })),
+            team: team.map((member) => ({ character: member.character, level: member.level, aspect: member.aspect, relics: relicsFrom(member.relics) })),
             challenge: run.challenge,
             cleared: run.cleared === 1,
             progress: run.progress,

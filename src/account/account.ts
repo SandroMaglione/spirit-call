@@ -27,8 +27,12 @@ import type { QuestId, Rewards, StarGroup, Unlock } from "../content/quests.ts"
 import { meets } from "../content/stars.ts"
 import type { AspectId } from "../content/aspects.ts"
 import type { BannerId } from "../content/calls.ts"
-import { aspectProblems, withValidAspects } from "../features/build.ts"
-import type { AspectProblem } from "../features/build.ts"
+import { cosmeticOf } from "../content/cosmetics.ts"
+import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
+import { relicSlots } from "../content/relics.ts"
+import type { EquippedRelic, RelicId, RelicSlot, RelicTier } from "../content/relics.ts"
+import { aspectProblems, relicProblems, withValidAspects } from "../features/build.ts"
+import type { AspectProblem, RelicProblem } from "../features/build.ts"
 import type { BuildValue, RunResultValue, TwistValue } from "../schema.ts"
 import { levelOf } from "./progression.ts"
 import type { LevelProgress } from "./progression.ts"
@@ -54,13 +58,26 @@ export interface OwnedAspect extends Unlocked {
   readonly copies: number
 }
 
+/** A relic owned, at a tier (see docs/relics.md): it comes again a tier up, and past the last turns into dust. */
+export interface OwnedRelic extends Unlocked {
+  readonly tier: RelicTier
+}
+
 export interface Owned {
   readonly characters: { readonly [Id in CharacterId]?: OwnedCharacter }
   readonly aspects: { readonly [Id in AspectId]?: OwnedAspect }
+  readonly relics: { readonly [Id in RelicId]?: OwnedRelic }
+  readonly cosmetics: { readonly [Id in CosmeticId]?: Unlocked }
 }
 
 /** The aspect equipped on each character in the team (none: her class's plain one), one character each at most (see `teamProblems`). */
 export type TeamAspects = { readonly [Id in CharacterId]?: AspectId }
+
+/** The relics equipped on each character in the team, slot by slot, each on one character at most (see `teamProblems`). */
+export type TeamRelics = { readonly [Id in CharacterId]?: { readonly [Slot in RelicSlot]?: RelicId } }
+
+/** The looks each character wears, one of each kind (none: her own look); worn in every team. */
+export type Worn = { readonly [Id in CharacterId]?: { readonly [Kind in CosmeticKind]?: CosmeticId } }
 
 /** Lifetime totals over every run. */
 export interface Totals {
@@ -109,10 +126,16 @@ export const rankOf = (play: Extract<Play, { kind: "quest" }>): number => play.r
 export const samePlay = (a: Play, b: Play): boolean =>
   a.kind === "quest" ? b.kind === "quest" && a.quest === b.quest && rankOf(a) === rankOf(b) : b.kind === "tier" && a.track === b.track && a.tier === b.tier
 
-/** What one call brought: a character, an aspect (each new to the account), or a supply bundle. */
+/**
+ * What one call brought: a character, an aspect, a look (each new to the
+ * account), a relic (at the tier it reached; `dust`: what it turned into,
+ * already at its last tier), or a supply bundle.
+ */
 export type CallResult =
   | { readonly kind: "character"; readonly id: CharacterId }
   | { readonly kind: "aspect"; readonly id: AspectId }
+  | { readonly kind: "cosmetic"; readonly id: CosmeticId }
+  | { readonly kind: "relic"; readonly id: RelicId; readonly tier: RelicTier; readonly dust: number }
   | { readonly kind: "supply"; readonly amounts: Amounts }
 
 /** A call in the history: when, on which banner, and what it brought. */
@@ -125,14 +148,15 @@ export interface CallRecord {
 /**
  * The account's Spirit Call (see `account/calls.ts`): where its random
  * draws stand (saved, so reloading never draws again), the calls since the
- * last character and since the last aspect (or character), whether its first
- * character came yet, the character focused on each banner, and the last
- * calls, newest first.
+ * last character, since the last aspect (or character), and since the last
+ * relic (or anything rarer), whether its first character came yet, the
+ * character focused on each banner, and the last calls, newest first.
  */
 export interface CallState {
   readonly seed: number
   readonly sinceCharacter: number
   readonly sinceAspect: number
+  readonly sinceRelic: number
   readonly firstCharacter: boolean
   readonly focus: { readonly [Id in BannerId]?: CharacterId }
   readonly history: ReadonlyArray<CallRecord>
@@ -146,7 +170,7 @@ export const seedOf = (text: string): number => {
 }
 
 /** No calls made yet, drawing from `seed`. */
-export const noCalls = (seed: number): CallState => ({ seed, sinceCharacter: 0, sinceAspect: 0, firstCharacter: false, focus: {}, history: [] })
+export const noCalls = (seed: number): CallState => ({ seed, sinceCharacter: 0, sinceAspect: 0, sinceRelic: 0, firstCharacter: false, focus: {}, history: [] })
 
 export interface Account {
   readonly id: string
@@ -168,8 +192,10 @@ export interface Account {
   readonly chests: { readonly [Group in StarGroup]?: { readonly [rank: number]: number } }
   /** The Spirit Call: guarantees, focus, and history. */
   readonly calls: CallState
-  /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects equipped in it, and what for. */
-  readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly play: Play }
+  /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects and relics equipped in it, and what for. */
+  readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly relics: TeamRelics; readonly play: Play }
+  /** The looks each character wears. */
+  readonly worn: Worn
 }
 
 /** Something that can be owned. */
@@ -181,16 +207,24 @@ export const owns = (account: Account, item: Item): boolean => {
       return account.owned.characters[item.id] !== undefined
     case "aspect":
       return account.owned.aspects[item.id] !== undefined
+    case "relic":
+      return account.owned.relics[item.id] !== undefined
+    case "cosmetic":
+      return account.owned.cosmetics[item.id] !== undefined
   }
 }
+
+/** The tier `account` owns `relic` at, or `null` when it owns none. */
+export const relicTier = (account: Account, relic: RelicId): RelicTier | null => account.owned.relics[relic]?.tier ?? null
 
 /**
  * `account` with `item` owned. A character comes with her kit, and fights
  * with her class's plain aspect until another is equipped. An aspect owned
- * again counts a copy (it adds no power); a character owned again is
- * unchanged.
+ * again counts a copy (it adds no power); a character or a look owned
+ * again is unchanged; a relic owned again goes a tier up, and past its
+ * last turns into dust (`Tuning.relicRules.dustPerDuplicate`).
  */
-export const unlock = (_tuning: Tuning, account: Account, item: Item, now: number): Account => {
+export const unlock = (tuning: Tuning, account: Account, item: Item, now: number): Account => {
   const owned = account.owned
   switch (item.kind) {
     case "character": {
@@ -201,6 +235,16 @@ export const unlock = (_tuning: Tuning, account: Account, item: Item, now: numbe
       const current = owned.aspects[item.id] as OwnedAspect | undefined
       const aspect: OwnedAspect = current === undefined ? { unlockedAt: now, copies: 1 } : { ...current, copies: current.copies + 1 }
       return { ...account, owned: { ...owned, aspects: { ...owned.aspects, [item.id]: aspect } } }
+    }
+    case "relic": {
+      const current = owned.relics[item.id]
+      if (current?.tier === 3) return earn(account, { dust: tuning.relicRules.dustPerDuplicate })
+      const relic: OwnedRelic = current === undefined ? { unlockedAt: now, tier: 1 } : { ...current, tier: current.tier === 1 ? 2 : 3 }
+      return { ...account, owned: { ...owned, relics: { ...owned.relics, [item.id]: relic } } }
+    }
+    case "cosmetic": {
+      if (owns(account, item)) return account
+      return { ...account, owned: { ...owned, cosmetics: { ...owned.cosmetics, [item.id]: { unlockedAt: now } } } }
     }
   }
 }
@@ -224,10 +268,12 @@ export const withClearedRewards = (tuning: Tuning, account: Account, now: number
   return { account: next, granted }
 }
 
-/** Every item in the content, for unlocking everything (a dev tool). */
+/** Every item in the content, for unlocking everything (a dev tool): every relic three times, to its last tier. */
 export const everything = (tuning: Tuning): ReadonlyArray<Item> => [
   ...(Object.keys(tuning.characters) as Array<CharacterId>).map((id) => ({ kind: "character" as const, id })),
-  ...(Object.keys(tuning.aspects) as Array<AspectId>).map((id) => ({ kind: "aspect" as const, id }))
+  ...(Object.keys(tuning.aspects) as Array<AspectId>).map((id) => ({ kind: "aspect" as const, id })),
+  ...(Object.keys(tuning.relics) as Array<RelicId>).flatMap((id) => [1, 2, 3].map(() => ({ kind: "relic" as const, id }))),
+  ...(Object.keys(tuning.cosmetics) as Array<CosmeticId>).map((id) => ({ kind: "cosmetic" as const, id }))
 ]
 
 /** A new account owning `starter` and nothing else. */
@@ -238,13 +284,14 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     experience: 0,
     totals: noTotals,
     wallet: {},
-    owned: { characters: {}, aspects: {} },
+    owned: { characters: {}, aspects: {}, relics: {}, cosmetics: {} },
     quests: {},
     hardcore: {},
     discoveries: {},
     chests: {},
     calls: noCalls(seedOf(id)),
-    selection: { team: [starter.selection.character], aspects: {}, play: { kind: "quest", quest: starter.selection.quest } }
+    selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
+    worn: {}
   }
   const items: Array<Item> = [
     ...starter.aspects.map((id) => ({ kind: "aspect" as const, id })),
@@ -312,13 +359,18 @@ export const twistOf = (tuning: Tuning, quest: QuestId, rank: number): TwistValu
 /**
  * What `quest`'s first clear at `rank` gives: rank 1's rewards as written;
  * a higher rank's, its experience, `Tuning.ranks.crystals` of its crystals,
- * and gold worth `goldRuns` runs at its level (no unlocks).
+ * gold worth `goldRuns` runs at its level, and `Tuning.ranks.dust` (no
+ * unlocks).
  */
 export const questRewards = (tuning: Tuning, quest: QuestId, rank: number): Rewards => {
   const rewards = tuning.quests[quest].rewards
   if (rank === 1) return rewards
   const rules = tuning.ranks
-  return { experience: rewards.experience, unlocks: [], currencies: { crystals: Math.round((rewards.currencies.crystals ?? 0) * rules.crystals), gold: rules.goldRuns * clearPay(tuning.progression.gold, questLevel(tuning, quest, rank)) } }
+  return {
+    experience: rewards.experience,
+    unlocks: [],
+    currencies: { crystals: Math.round((rewards.currencies.crystals ?? 0) * rules.crystals), gold: rules.goldRuns * clearPay(tuning.progression.gold, questLevel(tuning, quest, rank)), dust: rules.dust }
+  }
 }
 
 /** What `account` has met along the main line: everything the quests it cleared introduced (see `content/novelties.ts`). */
@@ -397,16 +449,16 @@ export const chestsOpened = (account: Account, group: StarGroup, rank = 1): numb
 
 /**
  * What a chest holds at `rank`: rank 1's rewards as written; at a higher
- * rank, `Tuning.ranks.crystals` of its crystals, and its gold at its quests'
- * level there.
+ * rank, `Tuning.ranks.crystals` of its crystals, `chestGold` of its gold at
+ * its quests' level there, and `chestDust` (ranks are off the main line).
  */
 export const chestRewards = (tuning: Tuning, chest: ChestRef): Amounts => {
   const spec = tuning.chests[chest.group][chest.index]!
   if (chest.rank === 1) return spec.rewards
   const level = spec.level + tuning.ranks.offset * (chest.rank - 1)
-  const gold = roundGold((spec.rewards.gold ?? 0) * clearPay(tuning.progression.gold, level) / clearPay(tuning.progression.gold, spec.level))
+  const gold = roundGold((spec.rewards.gold ?? 0) * tuning.ranks.chestGold * clearPay(tuning.progression.gold, level) / clearPay(tuning.progression.gold, spec.level))
   // Materials come from the trials by then: a higher rank's chests hold none.
-  return { crystals: Math.round((spec.rewards.crystals ?? 0) * tuning.ranks.crystals), gold }
+  return { crystals: Math.round((spec.rewards.crystals ?? 0) * tuning.ranks.crystals), gold, dust: (spec.rewards.dust ?? 0) + tuning.ranks.chestDust }
 }
 
 /**
@@ -441,6 +493,54 @@ export const withEarnedChests = (tuning: Tuning, account: Account): { readonly a
 export type TeamProblem = AspectProblem | { readonly kind: "notOwned"; readonly character: CharacterId; readonly aspect: AspectId }
 
 /**
+ * What breaks the rules of a team's relics (see docs/relics.md): a relic not
+ * owned, in a slot not open yet, in a slot it does not fit, or on two
+ * members.
+ */
+export type TeamRelicProblem =
+  | RelicProblem
+  | { readonly kind: "relicNotOwned"; readonly character: CharacterId; readonly relic: RelicId }
+  | { readonly kind: "slotLocked"; readonly character: CharacterId; readonly slot: RelicSlot }
+
+/** Whether relics are open to `account`: once the quest that opens them is cleared (with the Spirit Call). */
+export const relicsOpen = (tuning: Tuning, account: Account): boolean => questCleared(account, tuning.relicRules.opensAfter as QuestId)
+
+/** Whether `slot` is open to `account`: Strike, Dash, and Element with relics; Survival once its quest is cleared (never while it has none). */
+export const slotOpen = (tuning: Tuning, account: Account, slot: RelicSlot): boolean => {
+  if (!relicsOpen(tuning, account)) return false
+  if (slot !== "survival") return true
+  const quest = tuning.relicRules.survivalOpensAfter
+  return quest !== null && questCleared(account, quest as QuestId)
+}
+
+/** The one check of a team's relics: each owned, in an open slot it fits, and on one member at most. */
+export const teamRelicProblems = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, relics: TeamRelics): Array<TeamRelicProblem> => [
+  ...team.flatMap((character) => relicSlots.flatMap((slot): Array<TeamRelicProblem> => {
+    const relic = relics[character]?.[slot]
+    if (relic === undefined) return []
+    if (!slotOpen(tuning, account, slot)) return [{ kind: "slotLocked", character, slot }]
+    return owns(account, { kind: "relic", id: relic }) ? [] : [{ kind: "relicNotOwned", character, relic }]
+  })),
+  ...relicProblems(tuning, team.map((character) => ({ character, relics: Object.fromEntries(Object.entries(relics[character] ?? {}).map(([slot, id]) => [slot, { id }])) })))
+]
+
+/** `relics` on `team` as far as the rules allow (see `teamRelicProblems`): the rest are taken off, the first holder of one keeping it. */
+export const validRelics = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, relics: TeamRelics): TeamRelics => {
+  const taken = new Set<RelicId>()
+  const kept: { [Id in CharacterId]?: { [Slot in RelicSlot]?: RelicId } } = {}
+  for (const character of team) {
+    for (const slot of relicSlots) {
+      const relic = relics[character]?.[slot]
+      if (relic === undefined || taken.has(relic) || !slotOpen(tuning, account, slot) || !owns(account, { kind: "relic", id: relic })) continue
+      if (teamRelicProblems(tuning, account, [character], { [character]: { [slot]: relic } }).length > 0) continue
+      taken.add(relic)
+      kept[character] = { ...kept[character], [slot]: relic }
+    }
+  }
+  return kept
+}
+
+/**
  * The one check of a team's aspects: each owned, of her class, and on one
  * member at most. Equipping (`select`), a save loaded (`validAspects`), and
  * entering the arena (`withValidAspects`) all hold to it.
@@ -471,6 +571,16 @@ export type Refusal =
   | { readonly kind: "badTeam"; readonly team: ReadonlyArray<CharacterId> }
   /** Aspects that break the rules (see `teamProblems`). */
   | { readonly kind: "badAspects"; readonly problems: ReadonlyArray<TeamProblem> }
+  /** Relics that break the rules (see `teamRelicProblems`). */
+  | { readonly kind: "badRelics"; readonly problems: ReadonlyArray<TeamRelicProblem> }
+  /** Relics (and their shop) open once `quest` is cleared (see `Tuning.relicRules.opensAfter`). */
+  | { readonly kind: "relicsLocked"; readonly quest: QuestId }
+  /** A relic already at its last tier. */
+  | { readonly kind: "maxTier"; readonly item: Item }
+  /** Not something the shop sells (a look from the Call or a reward), or already owned. */
+  | { readonly kind: "notForSale"; readonly item: Item }
+  /** A look that is not of that kind, or not for her. */
+  | { readonly kind: "badLook"; readonly character: CharacterId; readonly cosmetic: CosmeticId }
   | { readonly kind: "locked"; readonly play: Play; readonly lock: Lock }
   | { readonly kind: "notEnough"; readonly currency: ResourceId; readonly needed: number; readonly held: number }
   | { readonly kind: "maxLevel"; readonly item: Item }
@@ -478,12 +588,11 @@ export type Refusal =
   | { readonly kind: "needsAscension"; readonly item: Item }
   /** Not at a step: she has levels to train first, or none left. */
   | { readonly kind: "notAtStep"; readonly item: Item }
-  /** A material that is made by nothing (the lowest grade). */
   /** Calls open once `quest` is cleared (see `Tuning.calls.opensAfter`). */
   | { readonly kind: "callsLocked"; readonly quest: QuestId }
   /** The banner is not running now (see `activeBanner`). */
   | { readonly kind: "bannerClosed"; readonly banner: BannerId }
-  /** Every character on the banner is owned: a call there could bring none. */
+  /** Every character on the banner is owned, and relics are not open: a call there could bring nothing new. */
   | { readonly kind: "bannerComplete"; readonly banner: BannerId }
   /** A focus that is not on the banner, or already owned. */
   | { readonly kind: "badFocus"; readonly banner: BannerId; readonly character: CharacterId }
@@ -559,22 +668,87 @@ export const validTeam = (team: ReadonlyArray<CharacterId>): boolean =>
   team.length >= 1 && team.length <= teamSize && new Set(team).size === team.length
 
 /**
- * `account` with `team`, the aspects equipped in it (by default, as they
- * were), and `play` selected, if it is a team the account owns, its aspects
- * keep the rules (see `teamProblems`), and `play` is open. Aspects are kept
- * for the team's members only.
+ * `account` with `team`, the aspects and relics equipped in it (by
+ * default, as they were), and `play` selected, if it is a team the account
+ * owns, its aspects and relics keep the rules (see `teamProblems`,
+ * `teamRelicProblems`), and `play` is open. Aspects and relics are kept for
+ * the team's members only.
  */
-export const select = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, play: Play, aspects: TeamAspects = account.selection.aspects): Checked<Account> => {
+export const select = (
+  tuning: Tuning,
+  account: Account,
+  team: ReadonlyArray<CharacterId>,
+  play: Play,
+  aspects: TeamAspects = account.selection.aspects,
+  relics: TeamRelics = account.selection.relics
+): Checked<Account> => {
   if (!validTeam(team)) return refuse({ kind: "badTeam", team })
   const missing = team.find((character) => !owns(account, { kind: "character", id: character }))
   if (missing !== undefined) return refuse({ kind: "notOwned", item: { kind: "character", id: missing } })
   const problems = teamProblems(tuning, account, team, aspects)
   if (problems.length > 0) return refuse({ kind: "badAspects", problems })
+  const relicTrouble = teamRelicProblems(tuning, account, team, relics)
+  if (relicTrouble.length > 0) return refuse({ kind: "badRelics", problems: relicTrouble })
   const lock = playLock(tuning, account, play)
   if (lock !== null) return refuse({ kind: "locked", play, lock })
   const kept: { [Id in CharacterId]?: AspectId } = {}
   for (const character of team) if (aspects[character] !== undefined) kept[character] = aspects[character]
-  return { ok: true, value: { ...account, selection: { team, aspects: kept, play } } }
+  const keptRelics: { [Id in CharacterId]?: { readonly [Slot in RelicSlot]?: RelicId } } = {}
+  for (const character of team) if (relics[character] !== undefined && Object.keys(relics[character]).length > 0) keptRelics[character] = relics[character]
+  return { ok: true, value: { ...account, selection: { team, aspects: kept, relics: keptRelics, play } } }
+}
+
+/** What the shop asks for `relic`'s next tier (dust), or `null` when it is not owned or at its last tier. */
+export const relicPrice = (tuning: Tuning, account: Account, relic: RelicId): Amounts | null => {
+  const tier = relicTier(account, relic)
+  if (tier === null || tier === 3) return null
+  return { dust: tuning.relicRules.prices[tier === 1 ? 2 : 3] }
+}
+
+/** `account` with `relic` a tier up, bought with dust, if relics are open, it owns the relic, it is below its last tier, and the dust is there. */
+export const buyRelic = (tuning: Tuning, account: Account, relic: RelicId, now: number): Checked<Account> => {
+  const item: Item = { kind: "relic", id: relic }
+  if (!relicsOpen(tuning, account)) return refuse({ kind: "relicsLocked", quest: tuning.relicRules.opensAfter as QuestId })
+  if (!owns(account, item)) return refuse({ kind: "notOwned", item })
+  const price = relicPrice(tuning, account, relic)
+  if (price === null) return refuse({ kind: "maxTier", item })
+  const paid = spend(account, price)
+  return paid.ok ? { ok: true, value: unlock(tuning, paid.value, item, now) } : paid
+}
+
+/** What the shop asks for `cosmetic` (dust), or `null` when the shop does not sell it. */
+export const cosmeticPrice = (tuning: Tuning, cosmetic: CosmeticId): Amounts | null => {
+  const source = cosmeticOf(tuning.cosmetics, cosmetic).source
+  return source.kind === "shop" ? { dust: source.dust } : null
+}
+
+/** `account` owning `cosmetic`, bought with dust, if relics (and the shop) are open, the shop sells it, it is not owned yet, and the dust is there. */
+export const buyCosmetic = (tuning: Tuning, account: Account, cosmetic: CosmeticId, now: number): Checked<Account> => {
+  const item: Item = { kind: "cosmetic", id: cosmetic }
+  if (!relicsOpen(tuning, account)) return refuse({ kind: "relicsLocked", quest: tuning.relicRules.opensAfter as QuestId })
+  const price = cosmeticPrice(tuning, cosmetic)
+  if (price === null || owns(account, item)) return refuse({ kind: "notForSale", item })
+  const paid = spend(account, price)
+  return paid.ok ? { ok: true, value: unlock(tuning, paid.value, item, now) } : paid
+}
+
+/** `account` with `character` wearing `cosmetic` as her look of `kind` (`null`: her own look), if it owns both, and the look is of that kind and for her. */
+export const wear = (tuning: Tuning, account: Account, character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null): Checked<Account> => {
+  if (!owns(account, { kind: "character", id: character })) return refuse({ kind: "notOwned", item: { kind: "character", id: character } })
+  const current = account.worn[character] ?? {}
+  if (cosmetic === null) {
+    const { [kind]: _off, ...rest } = current
+    return { ok: true, value: { ...account, worn: { ...account.worn, [character]: rest } } }
+  }
+  if (!owns(account, { kind: "cosmetic", id: cosmetic })) return refuse({ kind: "notOwned", item: { kind: "cosmetic", id: cosmetic } })
+  if (!fits(tuning, character, kind, cosmetic)) return refuse({ kind: "badLook", character, cosmetic })
+  return { ok: true, value: { ...account, worn: { ...account.worn, [character]: { ...current, [kind]: cosmetic } } } }
+}
+
+/** Whether `cosmetic` is a look of `kind` that `character` can wear (a tint hers alone). */
+export const fits = (tuning: Tuning, character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId): boolean => {
+  const spec = cosmeticOf(tuning.cosmetics, cosmetic)
+  return spec.kind === kind && (spec.character === null || spec.character === character)
 }
 
 /** Levels before and after something. */
@@ -747,7 +921,8 @@ export const recordRun = (
     const track = tuning.tracks[play.track]
     if (result.cleared && track.kind === "trial") materials = materialPay(tuning, track.element, enemyLevel, 1)
     if (rewarded && track.kind === "hardcore") materials = materialPay(tuning, track.element, enemyLevel, tuning.materialRules.weekly)
-    if (rewarded) rewards = { ...spec.rewards, unlocks: [] }
+    // A tier's looks come with its rewards, the first time (never twice).
+    if (rewarded) rewards = { experience: spec.rewards.experience, currencies: spec.rewards.currencies, unlocks: (spec.rewards.cosmetics ?? []).filter((id) => !owns(account, { kind: "cosmetic", id })).map((id) => ({ kind: "cosmetic" as const, id })) }
   }
   next = earn(earn(next, pay), materials)
   const chests = withEarnedChests(tuning, next)
@@ -771,16 +946,27 @@ export const recordRun = (
   return { account: next, earned: { experience, level, pay, materials, levelRewards, discoveries: made, rewards, stars, chests: chests.opened } }
 }
 
-/** The build `character` enters the arena with: at her level, with the aspect equipped on her in the team (her class's plain one when none). */
-export const buildOf = (tuning: Tuning, account: Account, character: CharacterId, aspects: TeamAspects = account.selection.aspects): BuildValue => {
+/**
+ * The build `character` enters the arena with: at her level, with the
+ * aspect equipped on her in the team (her class's plain one when none), and
+ * her relics at the tiers the account owns them at.
+ */
+export const buildOf = (tuning: Tuning, account: Account, character: CharacterId, aspects: TeamAspects = account.selection.aspects, relics: TeamRelics = account.selection.relics): BuildValue => {
   const aspect = aspects[character]
+  const equipped: { [Slot in RelicSlot]?: EquippedRelic } = {}
+  for (const slot of relicSlots) {
+    const id = relics[character]?.[slot]
+    const tier = id === undefined ? null : relicTier(account, id)
+    if (id !== undefined && tier !== null) equipped[slot] = { id, tier }
+  }
   return {
     character,
     level: characterLevel(tuning, account, character).level,
-    ...(aspect === undefined ? {} : { aspect })
+    ...(aspect === undefined ? {} : { aspect }),
+    ...(Object.keys(equipped).length === 0 ? {} : { relics: equipped })
   }
 }
 
-/** The builds `team` enters the arena with, in order, with `aspects` equipped (see `buildOf`). */
-export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects = account.selection.aspects): ReadonlyArray<BuildValue> =>
-  team.map((character) => buildOf(tuning, account, character, aspects))
+/** The builds `team` enters the arena with, in order, with `aspects` and `relics` equipped (see `buildOf`). */
+export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects = account.selection.aspects, relics: TeamRelics = account.selection.relics): ReadonlyArray<BuildValue> =>
+  team.map((character) => buildOf(tuning, account, character, aspects, relics))

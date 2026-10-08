@@ -369,7 +369,9 @@
 .kit-lines__orb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35); }
 
 /* ---------- the seal ---------- */
-.reveal { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; --white: #eef3ff; --purple: #b98bff; --gold: #ffd56b; --light: var(--white); }
+.reveal { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; --white: #eef3ff; --blue: #7cc4ff; --rose: #ff8fc8; --purple: #b98bff; --gold: #ffd56b; --light: var(--white); }
+.reveal[data-light="blue"] { --light: var(--blue); }
+.reveal[data-light="rose"] { --light: var(--rose); }
 .reveal[data-light="purple"] { --light: var(--purple); }
 .reveal[data-light="gold"] { --light: var(--gold); }
 /* The light turns from one colour to the next (registered, so it can ease). */
@@ -382,6 +384,8 @@
 /* Broken: the light swells and rises to what came; gold dims the room and pulses. */
 .reveal[data-phase="rise"] .reveal__seal { animation: seal-strain .07s linear infinite alternate; }
 .reveal[data-phase="rise"] .reveal__light { opacity: 1; scale: 1.2; transition: scale .5s ease-out; }
+.reveal[data-phase="rise"][data-light="blue"] .reveal__light { animation: light-pulse .5s ease-out; }
+.reveal[data-phase="rise"][data-light="rose"] .reveal__light { animation: light-pulse .55s ease-out; }
 .reveal[data-phase="rise"][data-light="purple"] .reveal__light { animation: light-pulse .6s ease-out; }
 .reveal[data-phase="rise"][data-light="gold"] .reveal__dim { opacity: .6; }
 .reveal[data-phase="rise"][data-light="gold"] .reveal__light { animation: light-pulse .75s ease-out; }
@@ -416,7 +420,11 @@
 /* What came out: rays behind it, then the prize. */
 .reveal__rays { position: absolute; left: 34%; top: 52%; width: 760px; height: 760px; translate: -50% -50%; pointer-events: none; opacity: .5; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--glow) 45%, transparent) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(closest-side, #000, transparent); mask: radial-gradient(closest-side, #000, transparent); animation: rays 24s linear infinite, rays-in .8s ease-out both; }
 .reveal--aspect { --glow: #b98bff; }
-.reveal--aspect .reveal__rays { left: 50%; }
+.reveal--aspect .reveal__rays, .reveal--look .reveal__rays { left: 50%; }
+.reveal--look { --glow: #ff8fc8; }
+.reveal--look .reveal__orb { color: #ffe1f1; background: radial-gradient(circle at 35% 30%, #8e4a76, #301827 70%); box-shadow: 0 0 0 3px #ff8fc8, 0 0 30px #ff8fc8; }
+.reveal--relic .reveal__orb { color: #d9efff; background: radial-gradient(circle at 35% 30%, #3f6a95, #151f30 70%); box-shadow: 0 0 0 3px #7cc4ff, 0 0 24px #7cc4ff; }
+.reveal--relic .reveal__prize p:not(.dim) { color: var(--text, #fff); }
 @keyframes rays { to { rotate: 1turn; } }
 @keyframes rays-in { from { opacity: 0; scale: .5; } }
 .reveal__stage { position: absolute; left: var(--left); right: 44%; top: 10px; bottom: 10px; }
@@ -446,6 +454,8 @@
 .reveal__item .card { width: 54px; }
 .reveal__item { display: grid; justify-items: center; gap: 4px; width: 56px; animation: prize-in .4s cubic-bezier(.2, .9, .3, 1.25) both; }
 .reveal__item small { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.1; color: var(--dim); }
+.reveal__item[data-light="blue"] .card { box-shadow: 0 0 0 2px #7cc4ff, 0 0 10px #7cc4ff; }
+.reveal__item[data-light="rose"] .card { box-shadow: 0 0 0 2px #ff8fc8, 0 0 12px #ff8fc8; }
 .reveal__item[data-light="purple"] .card { box-shadow: 0 0 0 2px #b98bff, 0 0 14px #b98bff; }
 .reveal__item[data-light="gold"] .card { box-shadow: 0 0 0 2px #ffd56b, 0 0 18px #ffd56b; }
 .reveal__item[data-light="gold"] small { color: var(--gold-hi); }

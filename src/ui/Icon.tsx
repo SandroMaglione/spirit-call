@@ -33,13 +33,16 @@ const paths = {
   def: "M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z",
   speed: "m5 6 6 6-6 6 M13 6l6 6-6 6",
   star: "m12 3 2.7 5.7 6.2.8-4.5 4.3 1.1 6.2L12 17l-5.5 3 1.1-6.2-4.5-4.3 6.2-.8z",
-  chest: "M3 11h18v9H3z M3 11l2-5h14l2 5 M10 11v4h4v-4"
+  chest: "M3 11h18v9H3z M3 11l2-5h14l2 5 M10 11v4h4v-4",
+  relic: "M12 2 20 7v10l-8 5-8-5V7z M12 7l4 2.5v5L12 17l-4-2.5v-5z",
+  shop: "M3 9h18l-1.5-5h-15z M5 9v11h14V9 M9 20v-6h6v6",
+  look: "M7 21c-2 0-3-1.5-3-3 0-3 3-3 3-6 1.5 0 3 1.5 3 3.5S9 21 7 21z M11 12l8-8 2 2-8 8"
 } as const
 
 export type IconName = keyof typeof paths | CurrencyId | EmblemKind
 
 export const Icon = ({ name }: { readonly name: IconName }) => {
-  if (name === "gold" || name === "crystals") return <CurrencyIcon currency={name} />
+  if (name === "gold" || name === "crystals" || name === "dust") return <CurrencyIcon currency={name} />
   if (name === "xp" || name === "call" || name === "wind" || name === "water" || name === "fire" || name === "thunder" || name === "rock") return <EmblemIcon kind={name} />
   return <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={name === "more" ? 4 : 1.8} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>
 }

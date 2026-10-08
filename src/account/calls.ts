@@ -5,12 +5,16 @@
  * - One banner runs at a time, in turn (`activeBanner`); each comes back.
  * - The player focuses one character of the banner not owned yet: a
  *   character that comes is always her (no coin flip).
- * - Each call brings a character, an aspect not owned yet, or a supply
- *   bundle. Nothing owned comes twice: the character odds hold while the
- *   banner has someone left, the aspect odds while an aspect is left.
+ * - Each call brings a character, an aspect not owned yet, a look only the
+ *   Call gives (not owned yet), a relic, or a supply bundle, rarest first.
+ *   No character, aspect, or look comes twice: the character odds hold
+ *   while the banner has someone left, the aspect and look odds while one
+ *   is left (their shares go to relics after). A relic owned already comes
+ *   a tier up, and past its last turns into dust.
  * - Guarantees count every call (across banners): a character by
  *   `guarantee` calls since the last (`firstGuarantee` for the first), her
- *   odds rising from `softFrom`; an aspect or better by `aspect.guarantee`.
+ *   odds rising from `softFrom`; an aspect or better by `aspect.guarantee`;
+ *   a relic or better by `relic.guarantee`.
  * - The draws come from a seed saved on the account, so a result is fixed
  *   when it is made: reloading never draws again.
  */
@@ -18,10 +22,12 @@ import type { Tuning } from "../config/tuning.ts"
 import type { AspectId } from "../content/aspects.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
+import type { CosmeticId } from "../content/cosmetics.ts"
 import type { Amounts } from "../content/currencies.ts"
+import type { RelicId } from "../content/relics.ts"
 import { materialOf } from "../content/materials.ts"
 import type { QuestId } from "../content/quests.ts"
-import { earn, owns, questCleared, spend, unlock } from "./account.ts"
+import { earn, owns, questCleared, relicTier, relicsOpen, spend, unlock } from "./account.ts"
 import type { Account, CallRecord, CallResult, CallState, Checked, Refusal } from "./account.ts"
 
 const day = 24 * 60 * 60 * 1000
@@ -58,6 +64,10 @@ export const aspectsLeft = (tuning: Tuning, account: Account): ReadonlyArray<Asp
   return (Object.keys(tuning.aspects) as Array<AspectId>).filter((id) => !fromQuests.has(id) && !owns(account, { kind: "aspect", id }))
 }
 
+/** The looks a call can bring: the Call's own, not owned yet. */
+export const cosmeticsLeft = (tuning: Tuning, account: Account): ReadonlyArray<CosmeticId> =>
+  (Object.keys(tuning.cosmetics) as Array<CosmeticId>).filter((id) => tuning.cosmetics[id].source.kind === "call" && !owns(account, { kind: "cosmetic", id }))
+
 /** The character odds of the next call, given the calls since the last one and whether the first came yet. */
 export const characterChance = (tuning: Tuning, calls: Pick<CallState, "sinceCharacter" | "firstCharacter">): number => {
   const odds = tuning.calls.character, nth = calls.sinceCharacter + 1
@@ -65,13 +75,27 @@ export const characterChance = (tuning: Tuning, calls: Pick<CallState, "sinceCha
   return Math.min(1, odds.rate + Math.max(0, nth - odds.softFrom + 1) * odds.softStep)
 }
 
-/** How many calls at most until a character comes, and until an aspect (or a character) does: the counts the screen shows. */
-export const guarantees = (tuning: Tuning, account: Account): { readonly character: number; readonly aspect: number } => {
+/** How many calls at most until a character comes, until an aspect (or a character) does, and until a relic (or anything rarer) does: the counts the screen shows. */
+export const guarantees = (tuning: Tuning, account: Account): { readonly character: number; readonly aspect: number; readonly relic: number } => {
   const calls = account.calls, odds = tuning.calls
   return {
     character: (calls.firstCharacter ? odds.character.guarantee : odds.character.firstGuarantee) - calls.sinceCharacter,
-    aspect: odds.aspect.guarantee - calls.sinceAspect
+    aspect: odds.aspect.guarantee - calls.sinceAspect,
+    relic: odds.relic.guarantee - calls.sinceRelic
   }
+}
+
+/**
+ * The share of each kind of result on a call that brings no character, as
+ * the pools stand: an aspect's or a look's goes to relics when none is left
+ * (and relics' to supplies before relics open).
+ */
+export const shares = (tuning: Tuning, account: Account): { readonly aspect: number; readonly cosmetic: number; readonly relic: number; readonly supply: number } => {
+  const odds = tuning.calls
+  const aspect = aspectsLeft(tuning, account).length > 0 ? odds.aspect.rate : 0
+  const cosmetic = cosmeticsLeft(tuning, account).length > 0 ? odds.look.rate : 0
+  const relic = relicsOpen(tuning, account) ? odds.relic.rate + (odds.aspect.rate - aspect) + (odds.look.rate - cosmetic) : 0
+  return { aspect, cosmetic, relic, supply: Math.max(0, 1 - aspect - cosmetic - relic) }
 }
 
 /** What `count` calls cost. */
@@ -91,11 +115,12 @@ const draw = (seed: number): { readonly value: number; readonly seed: number } =
   return { value: ((t ^ (t >>> 14)) >>> 0) / 4294967296, seed: next }
 }
 
-/** Why `account` cannot call on `banner` at `now`, or `null` when it can (the price aside). */
+/** Why `account` cannot call on `banner` at `now`, or `null` when it can (the price aside): a banner with no character left is still called for its relics. */
 export const callProblem = (tuning: Tuning, account: Account, banner: BannerId, now: number): Refusal | null => {
   if (!callsOpen(tuning, account)) return { kind: "callsLocked", quest: tuning.calls.opensAfter as QuestId }
   if (activeBanner(tuning, now).banner !== banner) return { kind: "bannerClosed", banner }
-  if (leftOn(tuning, account, banner).length === 0) return { kind: "bannerComplete", banner }
+  // With no character left on the banner a call still brings something while relics are open (a relic, or its dust); before, it could bring nothing new.
+  if (leftOn(tuning, account, banner).length === 0 && !relicsOpen(tuning, account)) return { kind: "bannerComplete", banner }
   return null
 }
 
@@ -118,33 +143,54 @@ export const call = (tuning: Tuning, account: Account, banner: BannerId, count: 
   if (!paid.ok) return paid
   const odds = tuning.calls
   let next = paid.value
-  let { seed, sinceCharacter, sinceAspect, firstCharacter } = next.calls
+  let { seed, sinceCharacter, sinceAspect, sinceRelic, firstCharacter } = next.calls
   const results: Array<CallResult> = []
+  /** A number in [0, 1) from the account's generator. */
+  const roll = (): number => {
+    const drawn = draw(seed)
+    seed = drawn.seed
+    return drawn.value
+  }
   for (let index = 0; index < count; index++) {
     const focus = focusOn(tuning, next, banner)
-    const roll = draw(seed)
-    seed = roll.seed
     let result: CallResult
-    if (focus !== null && roll.value < characterChance(tuning, { sinceCharacter, firstCharacter })) {
+    if (focus !== null && roll() < characterChance(tuning, { sinceCharacter, firstCharacter })) {
       result = { kind: "character", id: focus }
       sinceCharacter = 0
       sinceAspect = 0
+      sinceRelic = 0
       firstCharacter = true
     } else {
       sinceCharacter += 1
+      // One roll for the rest, rarest first: an aspect, a look, a relic, else a supply.
+      const share = shares(tuning, next)
+      const value = roll()
       const aspects = aspectsLeft(tuning, next)
-      const aspectRoll = draw(seed)
-      seed = aspectRoll.seed
-      if (aspects.length > 0 && (sinceAspect + 1 >= odds.aspect.guarantee || aspectRoll.value < odds.aspect.rate)) {
-        const pick = draw(seed)
-        seed = pick.seed
-        result = { kind: "aspect", id: aspects[Math.floor(pick.value * aspects.length)]! }
+      const looks = cosmeticsLeft(tuning, next)
+      if (aspects.length > 0 && (sinceAspect + 1 >= odds.aspect.guarantee || value < share.aspect)) {
+        result = { kind: "aspect", id: aspects[Math.floor(roll() * aspects.length)]! }
         sinceAspect = 0
+        sinceRelic = 0
+      } else if (looks.length > 0 && value < share.aspect + share.cosmetic) {
+        result = { kind: "cosmetic", id: looks[Math.floor(roll() * looks.length)]! }
+        sinceAspect += 1
+        sinceRelic = 0
+      } else if (share.relic > 0 && (sinceRelic + 1 >= odds.relic.guarantee || value < share.aspect + share.cosmetic + share.relic)) {
+        // Any relic, owned or not: owned, it comes a tier up, or turns into dust past its last.
+        const relics = Object.keys(tuning.relics) as Array<RelicId>
+        const id = relics[Math.floor(roll() * relics.length)]!
+        const tier = relicTier(next, id)
+        result = tier === 3
+          ? { kind: "relic", id, tier: 3, dust: tuning.relicRules.dustPerDuplicate }
+          : { kind: "relic", id, tier: tier === null ? 1 : tier === 1 ? 2 : 3, dust: 0 }
+        sinceAspect += 1
+        sinceRelic = 0
       } else {
         // The supply helps the focused character grow: her element's material.
         const element = tuning.characters[focus ?? tuning.banners[banner].characters[0]!].element
         result = { kind: "supply", amounts: { gold: odds.supply.gold, ...(odds.supply.material > 0 ? { [materialOf(element)]: odds.supply.material } : {}) } }
         sinceAspect += 1
+        sinceRelic += 1
       }
     }
     next = result.kind === "supply" ? earn(next, result.amounts) : unlock(tuning, next, result, now)
@@ -152,5 +198,5 @@ export const call = (tuning: Tuning, account: Account, banner: BannerId, count: 
   }
   const records: Array<CallRecord> = results.map((result) => ({ at: now, banner, result })).toReversed()
   const history = [...records, ...next.calls.history].slice(0, odds.history)
-  return { ok: true, value: { account: { ...next, calls: { ...next.calls, seed, sinceCharacter, sinceAspect, firstCharacter, history } }, results } }
+  return { ok: true, value: { account: { ...next, calls: { ...next.calls, seed, sinceCharacter, sinceAspect, sinceRelic, firstCharacter, history } }, results } }
 }

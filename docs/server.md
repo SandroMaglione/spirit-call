@@ -49,7 +49,10 @@ only as its SHA-256 hash. Logging out deletes it.
 | `GET /api/sessions/current` | Who is logged in. |
 | `DELETE /api/sessions/current` | Log out. |
 | `GET /api/account` | The account. |
-| `PUT /api/account/selection` | The team, its aspects, and what to play. |
+| `PUT /api/account/selection` | The team, its aspects and relics, and what to play. |
+| `PUT /api/characters/{id}/looks/{kind}` | Wear a look (a tint or a trail), or none. |
+| `POST /api/shop/relics/{id}` | Buy a relic owned one tier up, with dust. |
+| `POST /api/shop/looks/{id}` | Buy a look the shop sells, with dust. |
 | `POST /api/characters/{id}/training` | Level a character with gold. |
 | `POST /api/characters/{id}/ascension` | Ascend a character. |
 | `POST /api/banners/{id}/calls` | Make calls on a banner. |
@@ -75,9 +78,10 @@ to by reference, so destroying a preview never touches it.
   the account is read (`fromRecord`), and what depended on it is repaired.
   Adding content needs no migration.
 - **Migrations only add** (tables, nullable columns) and never change once
-  merged. Before the game opened, two reset every account instead
+  merged. Before the game opened, three reset every account instead
   (`0003`, `0004`, which also keyed quest progress, stars, and chests by
-  rank). Main's CI applies new ones before deploying prod. Previews and
+  rank; `0005`, which brought relics, looks, and dust, and rebuilt the
+  calls' table for their results). Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
 - **Two round trips an action.** An action reads the whole account in one
   batch and writes everything it changed (its rows, its log lines) in

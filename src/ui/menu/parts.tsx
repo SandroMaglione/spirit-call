@@ -16,6 +16,9 @@ import type { Affinities as Traits } from "../../content/elements.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import type { Rewards, Unlock } from "../../content/quests.ts"
 import { aspectOf } from "../../content/aspects.ts"
+import { cosmeticOf } from "../../content/cosmetics.ts"
+import { relicOf } from "../../content/relics.ts"
+import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
 import { AbilityIcon } from "../AbilityIcon.tsx"
 import { affinityList, affinityNames, attackElements, describeAmounts, describeSkill, describeUnlock, resourceName } from "../describe.ts"
 import { elementOf } from "../draft.ts"
@@ -118,7 +121,11 @@ export const UnlockBadge = ({ store, unlock }: { readonly store: UiStore; readon
     <span class="unlock-badge__ring" aria-hidden="true" />
     {unlock.kind === "character"
       ? <Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} size={28} />
-      : <span class="unlock-badge__aspect"><AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} /></span>}
+      : <span class="unlock-badge__aspect">{unlock.kind === "aspect"
+        ? <AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} />
+        : unlock.kind === "relic"
+          ? <RelicIcon slot={relicOf(tuning.relics, unlock.id).slot} element={relicOf(tuning.relics, unlock.id).element} />
+          : <LookIcon kind={cosmeticOf(tuning.cosmetics, unlock.id).kind} />}</span>}
     <span class="unlock-badge__glint" aria-hidden="true" />
   </span>
 }
@@ -130,8 +137,8 @@ export const Amounts = ({ store, rewards, preview, compact = false }: { readonly
     {rewards.experience > 0 && <span aria-label={`${rewards.experience} account XP`}><Icon name="xp" />{rewards.experience}</span>}
     {ids(tuning.currencies).filter((id) => (rewards.currencies[id] ?? 0) > 0).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${tuning.currencies[id].name}`}><Icon name={id} />{(rewards.currencies[id] ?? 0).toLocaleString("en-US")}</span>)}
     {materialsIn(store, rewards.currencies).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${resourceName(tuning, id)}`}><MaterialIcon store={store} material={id} />{rewards.currencies[id]}</span>)}
-    {rewards.unlocks.length > 0 && <span class="amounts__unlocks">{rewards.unlocks.map((unlock) => unlock.kind === "aspect"
-      ? <span key={unlock.id} class="amounts__unlock" aria-label={`Aspect: ${describeUnlock(tuning, unlock)}`} title={describeUnlock(tuning, unlock)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</span>
+    {rewards.unlocks.length > 0 && <span class="amounts__unlocks">{rewards.unlocks.map((unlock) => unlock.kind !== "character"
+      ? <span key={unlock.id} class="amounts__unlock" aria-label={describeUnlock(tuning, unlock)} title={describeUnlock(tuning, unlock)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</span>
       : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} title={describeUnlock(tuning, unlock)} onClick={() => preview?.(unlock.id)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</button>)}</span>}
   </div>
 }
@@ -155,6 +162,10 @@ export const describeResult = (store: UiStore, result: CallResult): string => {
       return tuning.characters[result.id].name
     case "aspect":
       return `${aspectOf(tuning.aspects, result.id).name} (${tuning.classes[aspectOf(tuning.aspects, result.id).class].name} aspect)`
+    case "cosmetic":
+      return `${cosmeticOf(tuning.cosmetics, result.id).name} (look)`
+    case "relic":
+      return result.dust > 0 ? `${relicOf(tuning.relics, result.id).name} (${result.dust} dust)` : `${relicOf(tuning.relics, result.id).name} (relic, tier ${["I", "II", "III"][result.tier - 1]})`
     case "supply":
       return describeAmounts(tuning, result.amounts)
   }

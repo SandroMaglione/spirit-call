@@ -33,6 +33,7 @@ import type { ClassSpec, Moves } from "./classes.ts"
 import type { AttackSpec } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import { relicBudget, relicSlots, relicTiers } from "./relics.ts"
+import type { CosmeticId, CosmeticSpec } from "./cosmetics.ts"
 import type { RelicSpec } from "./relics.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
@@ -73,17 +74,42 @@ const checkCalls = (problems: Array<string>, tuning: Tuning): void => {
   if (Object.keys(tuning.banners).length === 0) problems.push("the Spirit Call: needs a banner")
   if (!has(tuning.quests, rules.opensAfter)) problems.push(`the Spirit Call: opens after unknown quest ${rules.opensAfter}`)
   checkAmounts(problems, "the Spirit Call's price", tuning, rules.price)
-  const { character, aspect } = rules
-  for (const [name, share] of [["character rate", character.rate], ["character softStep", character.softStep], ["aspect rate", aspect.rate]] as const) {
+  const { character, aspect, look, relic } = rules
+  for (const [name, share] of [["character rate", character.rate], ["character softStep", character.softStep], ["aspect rate", aspect.rate], ["look rate", look.rate], ["relic rate", relic.rate]] as const) {
     if (!(share >= 0 && share <= 1)) problems.push(`the Spirit Call: ${name} must be a share from 0 to 1 (is ${share})`)
   }
-  for (const [name, count] of [["character softFrom", character.softFrom], ["character guarantee", character.guarantee], ["character firstGuarantee", character.firstGuarantee], ["aspect guarantee", aspect.guarantee], ["history", rules.history]] as const) {
+  if (aspect.rate + look.rate + relic.rate > 1) problems.push("the Spirit Call: the aspect, look, and relic rates add up to more than every call")
+  if (!(aspect.rate < relic.rate && look.rate < relic.rate)) problems.push("the Spirit Call: relics come more often than aspects and looks")
+  for (const [name, count] of [["character softFrom", character.softFrom], ["character guarantee", character.guarantee], ["character firstGuarantee", character.firstGuarantee], ["aspect guarantee", aspect.guarantee], ["relic guarantee", relic.guarantee], ["history", rules.history]] as const) {
     if (!(Number.isInteger(count) && count >= 1)) problems.push(`the Spirit Call: ${name} must be a whole number of calls, at least 1 (is ${count})`)
   }
   if (character.firstGuarantee > character.guarantee) problems.push("the Spirit Call: the first character's guarantee must come no later than the others'")
   positive(problems, "the Spirit Call's supply", { gold: rules.supply.gold })
   if (!(Number.isInteger(rules.supply.material) && rules.supply.material >= 0)) problems.push(`the Spirit Call's supply: material must be a whole number (is ${rules.supply.material})`)
   positive(problems, "the Spirit Call's rotation", { days: rules.rotation.days })
+}
+
+/**
+ * Relics' rules and the looks (see docs/relics.md): relics open with a
+ * quest, the shop's prices are dust, a tint is one character's and a trail
+ * anyone's, a look from the shop has a price, and a reward look is given by
+ * some hardcore tier (and only those are).
+ */
+const checkLooks = (problems: Array<string>, tuning: Tuning): void => {
+  const rules = tuning.relicRules
+  if (!has(tuning.quests, rules.opensAfter)) problems.push(`relics: open after unknown quest ${rules.opensAfter}`)
+  if (rules.survivalOpensAfter !== null && !has(tuning.quests, rules.survivalOpensAfter)) problems.push(`relics: the Survival slot opens after unknown quest ${rules.survivalOpensAfter}`)
+  if (rules.survivalOpensAfter !== null && !Object.values(tuning.relics).some((relic) => (relic as RelicSpec).slot === "survival")) problems.push("relics: the Survival slot opens with no relic for it")
+  positive(problems, "relics' prices", { tier2: rules.prices[2], tier3: rules.prices[3], dustPerDuplicate: rules.dustPerDuplicate })
+  const rewarded = new Set(Object.values(tuning.tracks).flatMap((track) => track.tiers.flatMap((tier) => tier.rewards.cosmetics ?? [])))
+  for (const id of rewarded) if (!has(tuning.cosmetics, id)) problems.push(`hardcore: rewards unknown look ${id}`)
+  for (const [id, spec] of Object.entries(tuning.cosmetics) as Array<[string, CosmeticSpec]>) {
+    const where = `look ${id}`
+    if ((spec.kind === "tint") !== (spec.character !== null)) problems.push(`${where}: a tint is one character's, a trail anyone's`)
+    if (spec.character !== null && !has(tuning.characters, spec.character)) problems.push(`${where}: for unknown character ${spec.character}`)
+    if (spec.source.kind === "shop" && !(Number.isInteger(spec.source.dust) && spec.source.dust > 0)) problems.push(`${where}: a shop look needs a price in dust`)
+    if ((spec.source.kind === "reward") !== rewarded.has(id as CosmeticId)) problems.push(`${where}: ${spec.source.kind === "reward" ? "a reward look no hardcore tier gives" : "given by a hardcore tier, so its source is a reward"}`)
+  }
 }
 
 const checkMove = (problems: Array<string>, where: string, move: AttackMove): void => {
@@ -594,7 +620,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }
 
-  const unlockKinds = { character: tuning.characters, aspect: tuning.aspects }
+  const unlockKinds = { character: tuning.characters, aspect: tuning.aspects, relic: tuning.relics, cosmetic: tuning.cosmetics }
   for (const [id, quest] of Object.entries(tuning.quests)) {
     const where = `quest ${id}`
     if (!has(tuning.challenges, quest.challenge)) problems.push(`${where}: unknown challenge ${quest.challenge}`)
@@ -726,5 +752,6 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   else if (first.after !== null) problems.push(`${where}: selects quest ${starter.selection.quest}, which a new account cannot start`)
 
   checkCalls(problems, tuning)
+  checkLooks(problems, tuning)
   return problems
 }
