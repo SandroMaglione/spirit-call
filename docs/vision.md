@@ -101,11 +101,16 @@ It is a personal project, not a commercial one.
 - **Her basic attack is her class's, shaped by an aspect** (the rules are in
   `docs/aspects.md`). A class (Blade, Gun, Disc, Staff) is a way of fighting
   with its own range and rhythm, shared by every character of it. An aspect
-  is one way of using that class (its combo, charged attack, dash strike,
-  and one passive), owned by the account and equipped on one character of
-  its class per team: it changes how she plays, never how strong she is.
+  is one way of using that class (its combo, charged attack, and dash
+  strike), owned by the account and equipped on one character of its class
+  per team: it changes how she plays, never how strong she is.
   Characters appear as spirits that hold nothing, so an aspect is how she
   fights, not an item in her hands.
+- **Relics add to how she plays** (the rules are in `docs/relics.md`): one
+  per slot (Strike, Dash, Element, and later Survival), each a reaction to
+  something she does (a kill, a dash, a perfect dodge, a break) rather than
+  a stat, in three tiers that each add something to see. An aspect is the
+  pattern; a relic, a twist on it. Each relic is on one member per team.
 
 ## Elements
 
@@ -151,7 +156,7 @@ The rules are in `docs/elements.md`; in short:
 - **Each character keeps her own** health, skill cooldowns, ultimate
   energy, and state (see `docs/elements.md`). Cooldowns run on the bench;
   benched characters gain a share of the energy the one on the field earns.
-  An aspect's passive works only while its character is on the field.
+  A relic works only while its character is on the field.
 - **Falling.** When the character on the field falls, the next one in order
   comes in, with a moment of protection (she did not choose the moment). The
   fall is a beat of its own (about a second): the world nearly stops (the
@@ -252,8 +257,9 @@ Decided so far (the rest is in the open questions):
   The cap is not sacred: it rises only if content needs it; later chapters
   can grow harder through twists rather than levels.
 - **Growth stays simple:** character levels, and nothing else gives stats.
-  Aspects change how she plays and have no levels. A closed set of
-  accessories may come later, only if the collecting side gets dull.
+  Aspects change how she plays and have no levels. Relics (a closed set,
+  slot by slot) add small reactions, not stats; their tiers add behavior,
+  with a little power at most, held to one budget.
 - **Two currencies and the materials,** each from one clear place:
   crystals for pulls, gold for leveling characters, and **ascension
   materials** for the steps between a character's level phases.
