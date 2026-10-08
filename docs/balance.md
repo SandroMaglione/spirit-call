@@ -5,6 +5,19 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Perfect dodges and champions (2026-10-08)
+
+The baseline was recorded again (from CI's report) after perfect dodges
+shrank for every enemy (PR #74): a 0.25 s slow instead of 0.7 s, no break
+fill instead of 25%, growing along a chain of three. Bots that dodge well
+lean less on slow motion and breaks: the Warlord got harder for a Swordsman
+alone (1337: damage 17 to 51 matched, 99 to 213 learning; fewer breaks),
+while First Blood came out a little easier for most rows (the learning
+Swordsman clears seed 42 again). The changes go both ways run by run, as
+small timing shifts do; none is a new wall. Champions with their own
+moveset (only the Brute King so far) are not in the audit's challenges;
+the King was measured with the bots separately (see the PR).
+
 ## Combat feel (2026-10-08)
 
 The baseline was recorded again after the step 3 playtest changes (PR
