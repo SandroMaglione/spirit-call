@@ -85,7 +85,7 @@ export const progression = {
     curve: { maxLevel: 30, base: 100, growth: 50, square: 0 } satisfies LevelCurve,
     run: { base: 40, perLevel: 5 } satisfies RunPay,
     /** Crystals for each account level gained. */
-    levelUp: { crystals: 50 }
+    levelUp: { crystals: 40 }
   },
   /**
    * Each character's own level: from gold spent on her (training), not from

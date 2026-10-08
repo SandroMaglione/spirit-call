@@ -6,7 +6,7 @@
  *
  * The account plays every quest at every rank as it opens, the lowest
  * enemies first, with its first three characters (the Spirit Call's first
- * character joining in chapter 3, unless `calls` is off), each first clear
+ * character joining in chapter 5, unless `calls` is off), each first clear
  * earning its first two stars. Before each quest it trains its
  * team evenly with all the gold it holds, and ascends whoever stands at a
  * step when it holds the material. A quest is entered once the team's
@@ -170,7 +170,7 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
     const next = all.filter(({ quest, rank }) => !cleared(quest, rank) && questLock(tuning, account, quest, rank) === null).sort((a, b) => order(a) - order(b))[0]
     if (next === undefined) break
     const spec = tuning.quests[next.quest], enemyLevel = questLevel(tuning, next.quest, next.rank)
-    if (called !== null && spec.chapter === "three" && account.owned.characters[called] === undefined) {
+    if (called !== null && spec.chapter === "five" && account.owned.characters[called] === undefined) {
       account = { ...account, owned: { ...account.owned, characters: { ...account.owned.characters, [called]: { unlockedAt: now, experience: 0, ascension: 0 } } } }
     }
     spend()

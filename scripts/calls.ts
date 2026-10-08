@@ -76,12 +76,13 @@ const resultFor = (account: Account, challenge: RunResultValue["challenge"], cle
   } as RunResultValue
 }
 
-const play = (account: Account, quest: QuestId, now: number): Account => {
+const play = (account: Account, quest: QuestId, rank: number, now: number): Account => {
   let next = account
   const challenge = tuning.quests[quest].challenge
+  const target: Play = rank === 1 ? { kind: "quest", quest } : { kind: "quest", quest, rank }
   for (let run = 1; run <= runsPerQuest; run++) {
     const last = run === runsPerQuest
-    next = recordRun(tuning, next, { kind: "quest", quest }, resultFor(next, challenge, last, last ? tallyFor(quest) : worstClear), now).account
+    next = recordRun(tuning, next, target, resultFor(next, challenge, last, last ? tallyFor(quest) : worstClear), now).account
   }
   return next
 }
@@ -122,11 +123,37 @@ const nothing = (): Brought => ({ aspects: 0, looks: 0, relics: 0, tiers: 0, cal
 const chapters = Object.keys(tuning.chapters) as Array<ChapterId>
 const main = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].line === "main")
 const side = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].line === "secondary")
+/** The main line in order, each main quest followed by the side quests it opens. */
+const inOrder = (quests: ReadonlyArray<QuestId>): ReadonlyArray<QuestId> => quests.flatMap((quest) => [quest, ...side.filter((other) => tuning.quests[other].after === quest)])
+const topLevel = Math.max(...main.map((id) => tuning.quests[id].enemyLevel))
 
-/** For each chapter, over the accounts: crystals earned by its end, and characters called by then. */
-const crystalsBy: Array<Array<number>> = chapters.map(() => [])
-const calledBy: Array<Array<number>> = chapters.map(() => [])
-const broughtBy: Array<Brought> = chapters.map(nothing)
+/**
+ * What an account plays, stage by stage: each chapter of the main line (and
+ * the side quests it opens) at rank 1, then each higher rank replayed, every
+ * quest as it opens; and weeks of hardcore after each.
+ */
+interface Stage {
+  readonly name: string
+  readonly quests: ReadonlyArray<QuestId>
+  readonly rank: number
+  /** The enemy level the account's hardcore reaches by then. */
+  readonly level: number
+  readonly weeks: number
+}
+const stages: ReadonlyArray<Stage> = [
+  ...chapters.map((chapter): Stage => {
+    const quests = main.filter((id) => tuning.quests[id].chapter === chapter)
+    return { name: tuning.chapters[chapter].name, quests: inOrder(quests), rank: 1, level: tuning.quests[quests[quests.length - 1]!].enemyLevel, weeks: weeksPerChapter }
+  }),
+  ...Array.from({ length: tuning.ranks.count - 1 }, (_, index): Stage => ({
+    name: `Rank ${["II", "III", "IV", "V"][index] ?? index + 2} replay`, quests: inOrder(main), rank: index + 2, level: topLevel + tuning.ranks.offset * (index + 1), weeks: weeksPerChapter * 2
+  }))
+]
+
+/** For each stage, over the accounts: crystals earned by its end, and characters called by then. */
+const crystalsBy: Array<Array<number>> = stages.map(() => [])
+const calledBy: Array<Array<number>> = stages.map(() => [])
+const broughtBy: Array<Brought> = stages.map(nothing)
 for (let index = 0; index < accounts; index++) {
   // Each account its own id, so its own draws; the rotation is held still (one banner).
   let account: Account = createAccount(tuning, newAccount, `sim-${index}`, anchor)
@@ -143,28 +170,34 @@ for (let index = 0; index < accounts; index++) {
     }
   }
   const credit = (before: Account, after: Account) => (earned += Math.max(0, (after.wallet.crystals ?? 0) - (before.wallet.crystals ?? 0)))
-  chapters.forEach((chapter, at) => {
-    const quests = main.filter((id) => tuning.quests[id].chapter === chapter)
-    for (const quest of quests) {
-      for (const id of [quest, ...side.filter((other) => tuning.quests[other].after === quest)]) {
+  const spend = () => {
+    const spent = spendAll(account, now)
+    account = spent.account
+    called += spent.characters
+    tally(spent.results)
+  }
+  stages.forEach((stage, at) => {
+    // A replay goes round until nothing more opens (a rank's quests open along the ranks below).
+    const done = new Set<QuestId>()
+    for (let opened = true; opened;) {
+      opened = false
+      for (const id of stage.quests) {
+        if (done.has(id) || (stage.rank > 1 && playLock(tuning, account, { kind: "quest", quest: id, rank: stage.rank }) !== null)) continue
+        done.add(id)
+        opened = true
         const before = account
-        account = play(account, id, now)
+        account = play(account, id, stage.rank, now)
         credit(before, account)
-        const spent = spendAll(account, now)
-        account = spent.account
-        called += spent.characters
-        tally(spent.results)
+        spend()
       }
+      if (stage.rank === 1) break
     }
-    for (let weekIndex = 0; weekIndex < weeksPerChapter; weekIndex++) {
+    for (let weekIndex = 0; weekIndex < stage.weeks; weekIndex++) {
       now += week
       const before = account
-      account = hardcoreWeek(account, tuning.quests[quests[quests.length - 1]!].enemyLevel, now)
+      account = hardcoreWeek(account, stage.level, now)
       credit(before, account)
-      const spent = spendAll(account, now)
-      account = spent.account
-      called += spent.characters
-      tally(spent.results)
+      spend()
     }
     crystalsBy[at]!.push(earned)
     calledBy[at]!.push(called)
@@ -185,18 +218,18 @@ const quantile = (values: ReadonlyArray<number>, q: number): number => {
 const price = tuning.calls.price.crystals ?? 1
 console.log(`${accounts} accounts, ${runsPerQuest} runs per quest, ${weeksPerChapter} week(s) of hardcore per chapter, ${price} crystals a call.\n`)
 console.log("By the end of        crystals (calls)    characters called: median  unlucky 10%  lucky 10%   per chapter")
-chapters.forEach((chapter, at) => {
+stages.forEach((stage, at) => {
   const crystals = quantile(crystalsBy[at]!, 0.5)
   const median = quantile(calledBy[at]!, 0.5)
   const mean = calledBy[at]!.reduce((sum, value) => sum + value, 0) / accounts
-  console.log(`${tuning.chapters[chapter].name.padEnd(30)} ${String(crystals).padStart(6)} (${String(Math.floor(crystals / price)).padStart(3)})        ${String(median).padStart(6)}  ${String(quantile(calledBy[at]!, 0.1)).padStart(11)}  ${String(quantile(calledBy[at]!, 0.9)).padStart(9)}   ${(mean / (at + 1)).toFixed(2).padStart(7)}`)
+  console.log(`${stage.name.padEnd(30)} ${String(crystals).padStart(6)} (${String(Math.floor(crystals / price)).padStart(3)})        ${String(median).padStart(6)}  ${String(quantile(calledBy[at]!, 0.1)).padStart(11)}  ${String(quantile(calledBy[at]!, 0.9)).padStart(9)}   ${(at < chapters.length ? (mean / (at + 1)).toFixed(2) : "").padStart(7)}`)
 })
-console.log("\nTarget: about one character every two chapters (0.5 per chapter), the first within chapter two.")
+console.log("\nTarget: the first character in chapter 5, the next more slowly, in the rank replays.")
 const relicCount = Object.keys(tuning.relics).length
 console.log(`\nWhat else calls brought by the end of each chapter, on average (relic tiers owned: of ${relicCount * 3}, from calls and quests; dust held, unspent):`)
 console.log("By the end of                  aspects  looks  relics  relic tiers  dust from calls  dust held")
-chapters.forEach((chapter, at) => {
+stages.forEach((stage, at) => {
   const mean = (value: number) => (value / accounts).toFixed(1)
   const sum = broughtBy[at]!
-  console.log(`${tuning.chapters[chapter].name.padEnd(30)} ${mean(sum.aspects).padStart(7)} ${mean(sum.looks).padStart(6)} ${mean(sum.relics).padStart(7)} ${mean(sum.tiers).padStart(12)} ${mean(sum.callDust).padStart(16)} ${mean(sum.dust).padStart(10)}`)
+  console.log(`${stage.name.padEnd(30)} ${mean(sum.aspects).padStart(7)} ${mean(sum.looks).padStart(6)} ${mean(sum.relics).padStart(7)} ${mean(sum.tiers).padStart(12)} ${mean(sum.callDust).padStart(16)} ${mean(sum.dust).padStart(10)}`)
 })

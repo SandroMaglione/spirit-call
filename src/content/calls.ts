@@ -74,11 +74,11 @@ export interface CallRules {
 export const callRules: CallRules = {
   price: { crystals: 200 },
   opensAfter: "packLeader",
-  character: { rate: 0.03, softFrom: 20, softStep: 0.1, guarantee: 30, firstGuarantee: 10 },
+  character: { rate: 0.01, softFrom: 32, softStep: 0.08, guarantee: 45, firstGuarantee: 25 },
   aspect: { rate: 0.06, guarantee: 15 },
   look: { rate: 0.1 },
   relic: { rate: 0.4, guarantee: 4 },
-  supply: { gold: 1200, material: 10 },
+  supply: { gold: 400, material: 6 },
   rotation: { anchor: Date.UTC(2026, 0, 5), days: 14 },
   history: 60
 }

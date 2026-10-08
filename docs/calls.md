@@ -47,18 +47,18 @@ rarest first (one roll after the character's, in that order):
 
 | Light | Result | Odds |
 | --- | --- | --- |
-| Gold | **The focused character** | 3%; from the 20th call since the last character, 10% more each call; certain at the 30th |
+| Gold | **The focused character** | 1%; from the 32nd call since the last character, 8% more each call; certain at the 45th |
 | Purple | **An aspect not owned yet** (one no quest gives) | 6% of the calls that bring no character; certain by the 15th call since the last aspect or character |
 | Rose | **A look not owned yet**, of those only the Call gives | 10% |
 | Blue | **A relic** (any one): new at tier I, owned one tier up, at tier III turned into 50 dust | 40%; certain by the 4th call since the last relic or anything rarer |
-| White | **A supply**: gold, and some of the focused character's element's material | the rest |
+| White | **A supply**: 400 gold, and 6 of the focused character's element's material | the rest |
 
 The shares are of a call that brings no character. An aspect's or a
 look's share with none of them left to get goes to relics (the Details tab
 shows the shares as they stand).
 
-- **The first character** the Call brings comes within 10 calls (instead of
-  30): the beginner's guarantee, so the first visit pays off.
+- **The first character** the Call brings comes within 25 calls (instead of
+  45): the beginner's guarantee, landing in chapter 5.
 - **No character, aspect, or look comes twice**: the character odds hold
   while the banner has someone left, the aspect and look odds while one is
   left. A relic comes again on purpose: its next tier, then dust (see
@@ -72,18 +72,25 @@ shows the shares as they stand).
 
 ## Pace
 
-About one new character from calls every two chapters (an open number,
-measured by `pnpm calls`: it plays the quest line at a fixed number of runs
-per quest and calls with everything earned, many times over, and reports
-when characters come). Crystals come from milestones only (see vision.md,
-"Progression"); the price is the knob, then what quests and chests pay.
-At 200 crystals a call, with 3 runs a quest and a week of hardcore a
-chapter, the first character comes in chapter two, and about one every
-two chapters after it (0.5 a chapter; the unlucky tenth one fewer by
-chapter three). `pnpm calls` also reports what else calls bring by each
-chapter's end: aspects, looks, relic copies and the tiers owned, and dust.
-By chapter six, about 18 relic copies (of 33 tiers) and 4 of the 7 looks:
-the pace of these is open too.
+Characters are the Call's rare prize, as in Genshin: **the first in
+chapter 5**, and each one after more slowly, in the ranks' replays (an open
+number, measured by `pnpm calls`: it plays the quest line at a fixed number
+of runs per quest, then the rank II and III replays, and calls with
+everything earned, many times over, and reports when characters come).
+Crystals come from milestones only (see vision.md, "Progression"): first
+clears, chests, account levels, discoveries, and hardcore tiers. The price
+stays 200; the knobs are what those pay and the guarantees.
+
+After the playtest of 2026-10-07 (a first character on the 10th call, in
+chapter 3; 3,000 crystals in 14 runs), every crystal source was cut by a
+quarter and the guarantees lengthened. With 3 runs a quest and a week of
+hardcore a chapter, an account holds about 27 calls by the end of chapter
+5, so the beginner's guarantee (25) brings everyone's first character
+there (a lucky tenth in chapters 3–4). The second comes by the end of the
+rank III replay (a lucky tenth in chapter 6). `pnpm calls` also reports
+what else calls bring by then: aspects, looks, relic copies and the tiers
+owned, and dust. By chapter six, about 14 relic copies (of 33 tiers) and 3
+of the 7 looks.
 
 ## On screen
 
