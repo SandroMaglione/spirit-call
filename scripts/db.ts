@@ -12,8 +12,8 @@
  *   pnpm db sql "SELECT ..."              any read query
  *
  * `--since` takes a duration (2d, 12h, 30m) or a date (2026-10-07).
- * Players whose name starts with "check" or "probe" (test accounts) are
- * left out unless `--tests` is given. Login secrets (password hashes,
+ * Test accounts (names starting with "check" or "probe", and `sandroN`
+ * from `pnpm testers`) are left out unless `--tests` is given. Login secrets (password hashes,
  * session tokens) are never read: `sql` refuses queries that name them.
  */
 import { existsSync, readFileSync } from "node:fs"
@@ -82,7 +82,7 @@ const since = (): number => {
 }
 
 /** Leaves test accounts out unless `--tests`. */
-const players = values.tests ? "1 = 1" : "u.username NOT LIKE 'check%' AND u.username NOT LIKE 'probe%'"
+const players = values.tests ? "1 = 1" : "u.username NOT LIKE 'check%' AND u.username NOT LIKE 'probe%' AND u.username NOT GLOB 'sandro[0-9]*'"
 const playerFilter = values.player === undefined ? "1 = 1" : "u.username = ? COLLATE NOCASE"
 const playerParams = values.player === undefined ? [] : [values.player]
 const questFilter = values.quest === undefined ? "1 = 1" : "r.quest = ?"

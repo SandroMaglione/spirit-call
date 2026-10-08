@@ -150,10 +150,27 @@ with a read-only key (see `scripts/db.ts`):
   wave lost at), `runs`, `run <id>` (one run in full), `hurts` (what hurts
   teams most, and what makes them fall), `events` (what accounts gained
   and spent), and `sql` for any other read query. `--since 2d`,
-  `--player`, `--quest` narrow it down; test accounts (`check…`, `probe…`)
-  are left out unless `--tests`.
+  `--player`, `--quest` narrow it down; test accounts (`check…`, `probe…`,
+  `sandroN`) are left out unless `--tests`.
 - **Login secrets are never read:** no command selects password hashes or
   sessions, and `sql` refuses queries naming them.
+
+## Test accounts
+
+`pnpm testers new` makes the next test account on prod (`sandro1`,
+`sandro2`, ...): a new player's account, signed up through the API, with a
+wallet full enough to try anything (crystals for about 500 calls, gold and
+every material to take every character to the top). `refill <name>` fills
+one again, `list` shows them (see `scripts/testers.ts`).
+
+- **The wallet is written straight to the database** with a key that can
+  write D1, made by `deploy/stacks/writer.ts` from a laptop with the admin
+  profile and saved next to the read-only key in `.env.database`, with the
+  game's address (`TESTERS_URL`) and the accounts' password
+  (`TESTERS_PASSWORD`). Each fill is logged as a `testerFill` event.
+  Destroying the stack revokes the key.
+- **Only `sandroN` accounts are touched**, and they stay out of `pnpm db`'s
+  numbers.
 
 ## On a laptop
 
