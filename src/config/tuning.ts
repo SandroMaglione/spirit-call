@@ -183,7 +183,7 @@ export const defaultTuning = {
   },
 
   /** An ultimate's moment (see `UltimateMoment`): the world stands still this long as she calls it up, then it goes off. */
-  ultimate: { moment: 1 },
+  ultimate: { moment: 0.75 },
 
   knockback: {
     /** Exponential decay rate of knockback velocity; total push = speed / decay. */

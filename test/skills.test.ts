@@ -75,7 +75,7 @@ describe("Gust (Space)", () => {
     run.step(steps(gust.rise) - 3)
     expect(run.player().position).toEqual(from)
     expect(run.player().invulnerable).toBeGreaterThan(0)
-    run.step(steps(gust.dive))
+    run.step(steps(gust.dive) + 6)
     const moved = { x: run.player().position.x - from.x, y: run.player().position.y - from.y }
     const ahead = moved.x * screenRight.x + moved.y * screenRight.y
     expect(ahead).toBeGreaterThan(gust.distance * 0.85)

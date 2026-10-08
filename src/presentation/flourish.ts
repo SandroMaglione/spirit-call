@@ -110,7 +110,7 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
       // Diving: wind streaming off her, back along where she came from.
       const body = screenAt(at, lift * projection.zoom + bodyLift() * 0.5)
       const back = normalizeOr(toScreen(projection, { x: -(airborne.dive?.velocity.x ?? 0), y: -(airborne.dive?.velocity.y ?? 0) }), { x: 0, y: -1 })
-      const count = Math.floor(240 * seconds + Math.random())
+      const count = Math.floor(520 * seconds + Math.random())
       for (let index = 0; index < count; index++) {
         const from = { x: body.x + (Math.random() - 0.5) * 14, y: body.y + (Math.random() - 0.5) * 14 }
         fx.mote(from, back.x * 260 + (Math.random() - 0.5) * 40, back.y * 260 - 60 * Math.random(), { color: Math.random() < 0.3 ? view.hitFlash : view.elements.wind, size: 2.5 + Math.random() * 2.5, life: 0.22, stretch: 6, drag: 4 })
@@ -134,8 +134,8 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
     fx.flash(at, 34, view.hitFlash, 0.12)
     fx.burst(at, { color, count: 34, speed: 560, size: 3.5, life: 0.4, stretch: 6, drag: 4 })
     for (let index = 0; index < 12; index++) fx.dust(at, { x: Math.cos(index * 0.52), y: Math.sin(index * 0.52) }, 0xd8d2c4)
-    host.feedback.shake = Math.max(host.feedback.shake, 7)
-    host.feedback.punch = Math.max(host.feedback.punch, 0.6)
+    host.feedback.shake = Math.max(host.feedback.shake, 9)
+    host.feedback.punch = Math.max(host.feedback.punch, 0.8)
   }
   // A volley's shells trail smoke on their way up and over.
   for (const { data } of queries.lobbed.each()) {

@@ -268,8 +268,8 @@ export const skills = {
     name: "Gust",
     cooldown: 6,
     energy: 0,
-    invulnerability: 0.48,
-    effect: plunge({ rise: 0.28, dive: 0.2, distance: 110, radius: 200, active: 0.12, power: 20, element: "wind", knockback: 120, hitStop: 0.08, heavy: false })
+    invulnerability: 0.38,
+    effect: plunge({ rise: 0.28, dive: 0.1, distance: 160, radius: 200, active: 0.12, power: 20, element: "wind", knockback: 120, hitStop: 0.08, heavy: false })
   }),
   /**
    * The Gunner's special: a burst of fire at her feet, throwing back and
