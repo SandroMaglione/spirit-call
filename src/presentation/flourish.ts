@@ -2,11 +2,11 @@
  * The big moments of a fight, drawn over what the simulation does:
  *
  * - An ultimate's moment (see `UltimateMoment`): the camera pushes in, the
- *   world dims around her, her element's light gathers into her, and a band
- *   with her face and the ultimate's name sweeps across; then it goes off
- *   with a flash, rings, a deep blast, and a shake.
- * - Gust's hop: a diagonal swipe of wind trailing down across her front as
- *   she drops, and a burst of wind and dust where she lands.
+ *   world dims around her, the edges glow in her element's color, its lines
+ *   turn in and its light gathers into her, building; then it goes off with
+ *   a flash, rings, a deep blast, and a shake.
+ * - Gust's hop: wind streaming off her as she dives, and rings, streaks,
+ *   and dust where she lands.
  * - Flare Jump's leap: flames trailing off her as she flies back, sparks
  *   where she lands.
  * - A volley's shells: smoke trailing behind them, and a column of fire
@@ -17,7 +17,7 @@ import { toScreen } from "../math/iso.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Airborne, Cast, Explosion, Facing, Game, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Sounds, Tuning, UltimateCalled, UltimateMoment } from "../schema.ts"
-import { airborneLift } from "./actors.ts"
+import { airborneLift, diving } from "./actors.ts"
 
 const css = (color: number): string => `#${color.toString(16).padStart(6, "0")}`
 
@@ -43,23 +43,17 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
   const tuning = resources.tuning.get()
   const seconds = services.clock.frameSeconds
   for (const called of events.called.all()) {
-    const element = tuning.characters[called.character].element
-    refs.root.style.setProperty("--el", css(view.elements[element]))
-    refs.face.dataset["portrait"] = called.character
-    refs.skill.textContent = tuning.skills[called.skill].name
-    refs.name.textContent = tuning.characters[called.character].name
-    // Restarts the band's sweep.
-    refs.band.classList.remove("is-on")
-    void refs.band.offsetWidth
-    refs.band.classList.add("is-on")
+    refs.style.setProperty("--el", css(view.elements[tuning.characters[called.character].element]))
     services.sounds.play("ultimateCall")
   }
   const moment = resources.moment.get()
   const [player] = queries.player.each()
   if (moment.cast !== null && moment.seconds > 0) {
     // Pushed in quickly, then held until it goes off.
-    const t = Math.min(1, (1 - moment.remaining / moment.seconds) * 1.8)
+    const build = 1 - moment.remaining / moment.seconds
+    const t = Math.min(1, build * 1.6)
     feedback.moment = Math.max(feedback.moment, 1 - (1 - t) ** 3)
+    refs.style.setProperty("--build", build.toFixed(3))
     // Her element's light drawn in toward her from all around.
     if (player !== undefined && moment.character !== null) {
       const color = view.elements[tuning.characters[moment.character].element]
@@ -74,7 +68,7 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
       }
     }
   } else feedback.moment = Math.max(0, feedback.moment - seconds / spec.release)
-  refs.root.style.opacity = feedback.moment.toFixed(3)
+  refs.style.opacity = feedback.moment.toFixed(3)
   // It goes off: a flash on her, rings out across the floor, streaks, a deep blast, and a shake.
   for (const cast of events.cast.all()) {
     if (cast.called !== true) continue
@@ -112,20 +106,14 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
     const airborne = player.data.airborne.get()
     const at = player.data.position.get()
     const lift = airborneLift(airborne)
-    const t = airborne.seconds > 0 ? 1 - airborne.remaining / airborne.seconds : 1
-    if (airborne.kind === "plunge" && t >= view.airborne.plunge.rise) {
-      // Dropping: wind swiping down across her front, from high behind her to the floor ahead.
-      const facing = player.data.facing.get().direction
-      const color = view.elements.wind
-      const ahead = { x: at.x + facing.x * view.airborne.plunge.swipe, y: at.y + facing.y * view.airborne.plunge.swipe }
-      const top = screenAt({ x: at.x - facing.x * 30, y: at.y - facing.y * 30 }, (lift + 50) * projection.zoom)
-      const bottom = screenAt(ahead)
-      const down = normalizeOr({ x: bottom.x - top.x, y: bottom.y - top.y }, { x: 0, y: 1 })
-      const count = Math.floor(260 * seconds + Math.random())
+    if (airborne.kind === "plunge" && diving(airborne)) {
+      // Diving: wind streaming off her, back along where she came from.
+      const body = screenAt(at, lift * projection.zoom + bodyLift() * 0.5)
+      const back = normalizeOr(toScreen(projection, { x: -(airborne.dive?.velocity.x ?? 0), y: -(airborne.dive?.velocity.y ?? 0) }), { x: 0, y: -1 })
+      const count = Math.floor(240 * seconds + Math.random())
       for (let index = 0; index < count; index++) {
-        const k = Math.random()
-        const from = { x: top.x + (bottom.x - top.x) * k + (Math.random() - 0.5) * 16, y: top.y + (bottom.y - top.y) * k + (Math.random() - 0.5) * 16 }
-        fx.mote(from, down.x * 420, down.y * 420, { color: Math.random() < 0.3 ? view.hitFlash : color, size: 2.5 + Math.random() * 2.5, life: 0.18 + Math.random() * 0.1, stretch: 7, drag: 3 })
+        const from = { x: body.x + (Math.random() - 0.5) * 14, y: body.y + (Math.random() - 0.5) * 14 }
+        fx.mote(from, back.x * 260 + (Math.random() - 0.5) * 40, back.y * 260 - 60 * Math.random(), { color: Math.random() < 0.3 ? view.hitFlash : view.elements.wind, size: 2.5 + Math.random() * 2.5, life: 0.22, stretch: 6, drag: 4 })
       }
     } else if (airborne.kind === "leap") {
       // Flames trailing off her as she flies.
@@ -136,23 +124,17 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
       }
     }
   }
-  // What lands: Gust's sweep and puff, as gusts of wind and dust.
+  // What lands: Gust's blast, as rings of wind, streaks thrown out all around, and dust.
   for (const cast of events.cast.all()) {
     if (cast.landing !== true || cast.effect.kind !== "blast") continue
     const at = screenAt(cast.from)
     const color = cast.effect.element === null ? view.playerArea : view.elements[cast.effect.element]
-    if (cast.effect.arcDegrees >= 360) {
-      fx.ring(at, cast.effect.radius * projection.zoom, color, 0.35)
-      for (let index = 0; index < 10; index++) fx.dust(at, { x: Math.cos(index), y: Math.sin(index) }, 0xd8d2c4)
-      host.feedback.shake = Math.max(host.feedback.shake, 6)
-      continue
-    }
-    // The sweep: streaks fanning out across her front, a crescent of light along its edge.
-    const direction = normalizeOr(toScreen(projection, cast.direction), { x: 1, y: 0 })
-    const half = (cast.effect.arcDegrees * Math.PI) / 360
-    fx.sparks(at, direction, { color, count: 36, speed: 620, spread: half, size: 3.5, life: 0.35, stretch: 6, gravity: 0, drag: 4 })
-    fx.sparks(at, direction, { color: view.hitFlash, count: 12, speed: 520, spread: half * 0.8, size: 3, life: 0.25, stretch: 6, gravity: 0, drag: 4 })
-    fx.ring(at, cast.effect.radius * 0.8 * projection.zoom, color, 0.3)
+    fx.ring(at, cast.effect.radius * projection.zoom, color, 0.4)
+    fx.ring(at, cast.effect.radius * 0.55 * projection.zoom, view.hitFlash, 0.3)
+    fx.flash(at, 34, view.hitFlash, 0.12)
+    fx.burst(at, { color, count: 34, speed: 560, size: 3.5, life: 0.4, stretch: 6, drag: 4 })
+    for (let index = 0; index < 12; index++) fx.dust(at, { x: Math.cos(index * 0.52), y: Math.sin(index * 0.52) }, 0xd8d2c4)
+    host.feedback.shake = Math.max(host.feedback.shake, 7)
     host.feedback.punch = Math.max(host.feedback.punch, 0.6)
   }
   // A volley's shells trail smoke on their way up and over.

@@ -155,8 +155,8 @@ The rules are in `docs/elements.md`; in short:
 - **Falling.** When the character on the field falls, the next one in order
   comes in, with a moment of protection (she did not choose the moment). The
   fall is a beat of its own (about a second): the world nearly stops (the
-  enemies crawl), the color drains, she comes apart into her element's
-  light, and the next one stands held until she steps in; her protection
+  enemies crawl) and darkens at its edges, she comes apart into her
+  element's light, and the next one stands held until she steps in; her protection
   counts from then. The run is lost when the whole team has fallen.
   Reviving is for later.
 - **One team is saved**, set up in the menu (its order is the 1, 2, 3 and

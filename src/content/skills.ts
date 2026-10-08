@@ -49,20 +49,19 @@ export interface BlastEffect extends EffectBase {
 }
 
 /**
- * A hop straight up and a sweep down: she rises for `rise` seconds (in the
- * air, see `Airborne`), then, as she comes down, sweeps across the front
- * where she faces: a cone of `radius`, `arcDegrees` wide, out for
- * `active`, driving what it hits away from her.
- * As she lands, a small puff all around her (`landing`: its power and push,
- * within its radius) keeps off what stands behind her.
+ * A hop straight up and a dive: she rises for `rise` seconds, then dives
+ * down ahead of her over `dive` seconds, landing `distance` along where she
+ * faces (in the air all the while, see `Airborne`: it strikes nothing on
+ * the way). As she lands, a blast of `radius` all around her (out for
+ * `active`) drives what it hits away from her.
  */
 export interface PlungeEffect extends EffectBase {
   readonly kind: "plunge"
   readonly rise: number
+  readonly dive: number
+  readonly distance: number
   readonly radius: number
-  readonly arcDegrees: number
   readonly active: number
-  readonly landing: { readonly radius: number; readonly power: number; readonly knockback: number }
 }
 
 /**
@@ -260,18 +259,17 @@ const skill = <Effect extends SkillEffect>(spec: SkillSpec<Effect>): SkillSpec<E
 export const skills = {
   /**
    * The sword's special (id `bladeWave`, from when it was a cut): she hops
-   * straight up and sweeps down across the front where she faces, a gust
-   * that drives what it catches back (into walls, stunned; into each other,
-   * sharing their states) while keeping it within reach of the next combo;
-   * landing, a puff all around her keeps off what stands behind her.
-   * Untouchable while in the air.
+   * straight up and dives down ahead of her, like a bird, landing with a
+   * gust all around her that drives what it catches back (into walls,
+   * stunned; into each other, sharing their states) while keeping it within
+   * reach of the next combo. Untouchable while in the air.
    */
   bladeWave: skill({
     name: "Gust",
     cooldown: 6,
     energy: 0,
-    invulnerability: 0.3,
-    effect: plunge({ rise: 0.3, radius: 200, arcDegrees: 200, active: 0.12, power: 20, element: "wind", knockback: 120, hitStop: 0.08, heavy: false, landing: { radius: 90, power: 5, knockback: 300 } })
+    invulnerability: 0.48,
+    effect: plunge({ rise: 0.28, dive: 0.2, distance: 110, radius: 200, active: 0.12, power: 20, element: "wind", knockback: 120, hitStop: 0.08, heavy: false })
   }),
   /**
    * The Gunner's special: a burst of fire at her feet, throwing back and

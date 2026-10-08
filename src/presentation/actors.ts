@@ -24,15 +24,25 @@ const leanAxis = new Vector3()
 
 /**
  * How high a body in the air is (world units): a plunge goes straight up,
- * easing out, then drops straight down; a leap arcs (see `view.airborne`).
+ * easing out, then dives, falling faster and faster (it moves ahead as it
+ * does, see `Airborne.dive`); a leap arcs (see `view.airborne`).
  */
-export const airborneLift = (airborne: { readonly remaining: number; readonly seconds: number; readonly kind: "plunge" | "leap" }): number => {
+export const airborneLift = (airborne: { readonly remaining: number; readonly seconds: number; readonly kind: "plunge" | "leap"; readonly dive: { readonly seconds: number } | null }): number => {
   const t = airborne.seconds > 0 ? Math.min(1, Math.max(0, 1 - airborne.remaining / airborne.seconds)) : 1
   if (airborne.kind === "leap") return worldHeight(projection, view.airborne.leap.height) * Math.sin(Math.PI * t)
-  const { height, rise } = view.airborne.plunge
-  const up = t < rise ? 1 - (1 - t / rise) ** 2 : 1 - ((t - rise) / (1 - rise)) ** 2
-  return worldHeight(projection, height) * up
+  const top = worldHeight(projection, view.airborne.plunge.height)
+  const dive = airborne.dive?.seconds ?? 0
+  if (airborne.remaining > dive) {
+    const rising = Math.min(1, 1 - (airborne.remaining - dive) / Math.max(1e-6, airborne.seconds - dive))
+    return top * (1 - (1 - rising) ** 2)
+  }
+  const left = dive > 0 ? Math.max(0, airborne.remaining / dive) : 0
+  return top * (1 - (1 - left) ** 2)
 }
+
+/** Whether a body in the air is diving (see `airborneLift`). */
+export const diving = (airborne: { readonly remaining: number; readonly dive: { readonly seconds: number } | null }): boolean =>
+  airborne.dive !== null && airborne.remaining <= airborne.dive.seconds
 
 /** `color` tinted toward the color of `state`, if any. */
 export const stateTint = (color: number, state: ActiveState | null): number =>
@@ -203,10 +213,13 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       // Less the more she faces the camera: there her eyes say it, and leaning would tip them out of sight.
       const onScreen = normalizeOr(toScreen(projection, aim), { x: 0, y: -1 })
       const still = Math.max(0, 1 - Math.hypot(velocity.x, velocity.y) / (pace * 0.5)) * (0.5 - 0.5 * onScreen.y)
-      const tilt = { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
+      // Diving, she tips head first toward where she lands.
+      const dive = data.airborne.present && diving(data.airborne.get()) ? data.airborne.get().dive!.velocity : null
+      const ahead = dive === null ? null : normalizeOr(dive, aim)
+      const tilt = ahead !== null ? { x: ahead.x * view.airborne.plunge.lean, y: ahead.y * view.airborne.plunge.lean } : { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
       const look = characterLooks[data.member.get().character]
       const grounded = look.kind === "model" && look.grounded === true
-      const lean = grounded ? 0 : Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
+      const lean = grounded ? 0 : ahead !== null ? view.airborne.plunge.lean : Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
       if (lean > 1e-4) {
         // Tipped over her feet, her top toward the lean: about the floor axis across it.
         leanAxis.set(tilt.y, 0, -tilt.x).normalize()

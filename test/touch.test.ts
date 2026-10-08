@@ -157,6 +157,12 @@ describe("touch controls", () => {
           expect(Math.hypot(zone.center.x - other.center.x, zone.center.y - other.center.y), `${label}: ${zone.name}, ${other.name}`).toBeGreaterThan(zone.radius + other.radius)
         }
       }
+      // Clear of her health bar (bottom center, 140 px wide, 26 px up, her state's icon over it: see .hud__vitals).
+      const bar = { left: screen.width / 2 - 70, right: screen.width / 2 + 70, top: screen.height - 26 - 8 - 20 }
+      for (const zone of zones) {
+        const nearest = { x: Math.max(bar.left, Math.min(bar.right, zone.center.x)), y: Math.max(bar.top, zone.center.y) }
+        expect(Math.hypot(zone.center.x - nearest.x, zone.center.y - nearest.y), `${label}: ${zone.name} clear of the health bar`).toBeGreaterThan(zone.radius)
+      }
       // The rows, in slot order down one column, all above the buttons: nothing under a row (her name, health, and ultimate's icon run left of the portrait).
       for (const [slot, row] of rows.entries()) {
         expect(row.center.x).toBeCloseTo(rows[0]!.center.x, 6)

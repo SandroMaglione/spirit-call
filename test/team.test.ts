@@ -175,8 +175,10 @@ describe("switching", () => {
 
 describe("the bench", () => {
   it("runs skill cooldowns down", () => {
-    const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["special"], release: ["special"] }, { frame: 2, press: ["team2"], release: ["team2"] }] })
-    team.step(3)
+    // Gust keeps her in the air for a moment (no switching meanwhile): she switches out once she lands.
+    const landed = steps(0.5)
+    const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["special"], release: ["special"] }, { frame: landed, press: ["team2"], release: ["team2"] }] })
+    team.step(landed + 2)
     const benched = team.world().members[0]!.special
     expect(benched).toBeGreaterThan(0)
     team.step(60)

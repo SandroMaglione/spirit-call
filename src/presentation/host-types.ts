@@ -178,9 +178,9 @@ export interface HudRefs {
   readonly vignette: HTMLElement
   /** The slow-motion glow (a perfect dodge). */
   readonly focus: HTMLElement
-  /** An ultimate's moment (see `ShowUltimateMoments`): the dim around her, and the band with her face, the ultimate's name, and hers. */
-  readonly moment: { readonly root: HTMLElement; readonly band: HTMLElement; readonly face: HTMLElement; readonly skill: HTMLElement; readonly name: HTMLElement }
-  /** A fall: the color drains from the screen for a moment (see `PlayFalls`). */
+  /** An ultimate's moment (see `ShowUltimateMoments`): the dim around her, her element's glow at the edges, and its lines turning in. */
+  readonly moment: HTMLElement
+  /** A fall: the screen darkens at its edges for a moment, glowing in her color (see `SpawnFx`). */
   readonly fall: HTMLElement
 }
 

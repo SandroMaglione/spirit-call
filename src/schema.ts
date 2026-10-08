@@ -170,7 +170,14 @@ export const Raising = Descriptor.Component<{ readonly remaining: number; readon
  * she moves through the air is drawn by it). As she lands, `landing` goes
  * off where she is (if she is still on the field: falling loses it).
  */
-export const Airborne = Descriptor.Component<{ readonly remaining: number; readonly seconds: number; readonly kind: "plunge" | "leap"; readonly landing: ReadonlyArray<CastValue> }>()("Shooter/Airborne")
+export const Airborne = Descriptor.Component<{
+  readonly remaining: number
+  readonly seconds: number
+  readonly kind: "plunge" | "leap"
+  /** For her last `seconds` in the air she flies at `velocity` (a dive); `null` when she does not move on her own. */
+  readonly dive: { readonly seconds: number; readonly velocity: Vec2 } | null
+  readonly landing: ReadonlyArray<CastValue>
+}>()("Shooter/Airborne")
 
 /**
  * A rock of an Earthrise (see `EarthriseEffect`) about to erupt: its crack

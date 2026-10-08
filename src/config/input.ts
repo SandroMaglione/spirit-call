@@ -155,7 +155,8 @@ export const touchLayout = (size: Touch.Size, safe: SafeArea = noSafeArea): Touc
       attack: { center: attack, radius },
       dash: { center: { x: attack.x + px(dashOffset.x), y: attack.y + px(dashOffset.y) }, radius: px(dashOffset.radius * dashOffset.reach) },
       special: { center: { x: attack.x - px(67), y: attack.y + px(34) }, radius: px(26), aimRadius: px(90) },
-      ultimate: { center: { x: attack.x - px(131), y: attack.y + px(52) }, radius: px(21), aimRadius: px(90) }
+      // As Genshin's burst: up and left of the special, off the bottom row (where, on a narrow screen, it would reach the health bar).
+      ultimate: { center: { x: attack.x - px(108), y: attack.y - px(16) }, radius: px(25), aimRadius: px(90) }
     }
   }
 }

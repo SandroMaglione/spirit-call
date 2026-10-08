@@ -73,8 +73,9 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       body.face(action.facing)
       services.host.actors.add(root)
       services.host.fallen.push({ root, pivot, body, facing: action.facing, color: view.elements[tuning.characters[action.character].element], age: 0 })
-      // The world's color drains for the beat, and the camera leans in on her.
+      // The world darkens for the beat, its edges glowing in her color as her light goes out, and the camera leans in on her.
       const drain = services.host.hud.fall
+      drain.style.setProperty("--el", `#${view.elements[tuning.characters[action.character].element].toString(16).padStart(6, "0")}`)
       drain.classList.remove("is-on")
       void drain.offsetWidth
       drain.classList.add("is-on")

@@ -252,6 +252,8 @@ export const LandAirborne = Game.System("Shooter/LandAirborne", {
       data.airborne.set({ ...airborne, remaining })
       continue
     }
+    // Landed: no more flying this step (see `ControlPlayer`).
+    data.airborne.set({ ...airborne, remaining: 0 })
     commands.remove(entity.id, Airborne)
     if (!data.player.present || !data.position.present) continue
     const at = data.position.get()
@@ -332,9 +334,9 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
 })
 
 /**
- * Plunges: she goes up, straight (in the air for the rise, see
- * `Airborne`), carrying her sweep where she faces and the puff around her,
- * which go off as she lands (see `LandAirborne`); she turns that way.
+ * Plunges: she goes up, straight, then dives ahead where she faces (in
+ * the air all the while, see `Airborne`), carrying the blast that goes off
+ * as she lands (see `LandAirborne`); she keeps facing that way.
  */
 export const CastPlunges = Game.System("Shooter/CastPlunges", {
   events: { cast: Game.System.readEvent(Cast) }
@@ -342,13 +344,19 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "plunge") continue
-    const { power, element, knockback, hitStop, heavy, radius, arcDegrees, active, landing } = effect
-    const sweep = blast({ radius, arcDegrees, active, power, element, knockback, hitStop, heavy })
-    const puff = blast({ radius: landing.radius, arcDegrees: 360, active: 0.08, power: landing.power, element, knockback: landing.knockback, hitStop: 0, heavy: false })
+    const { power, element, knockback, hitStop, heavy, radius, active, rise, dive, distance } = effect
+    const landing = blast({ radius, arcDegrees: 360, active, power, element, knockback, hitStop, heavy })
     const caster = lookup.getHandle(cast.caster, Facers)
     if (!caster.ok) continue
-    caster.value.data.facing.set({ direction: cast.direction, hold: effect.rise + active + 0.2 })
-    commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.rise, seconds: effect.rise, kind: "plunge", landing: [{ ...cast, effect: sweep }, { ...cast, effect: puff }] }])
+    const seconds = rise + dive
+    caster.value.data.facing.set({ direction: cast.direction, hold: seconds + active + 0.2 })
+    commands.insert(caster.value.entity.id, [Airborne, {
+      remaining: seconds,
+      seconds,
+      kind: "plunge",
+      dive: dive > 0 ? { seconds: dive, velocity: scale(cast.direction, distance / dive) } : null,
+      landing: [{ ...cast, effect: landing }]
+    }])
   }
 })
 
@@ -383,7 +391,7 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
     if (caster.ok) {
       const away = scale(cast.direction, -effect.distance * decay)
       caster.value.data.knockback.update((push) => ({ x: push.x + away.x, y: push.y + away.y }))
-      if (effect.air > 0 && lookup.getHandle(cast.caster, TeamMembers).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", landing: [] }])
+      if (effect.air > 0 && lookup.getHandle(cast.caster, TeamMembers).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, landing: [] }])
       // She keeps facing the way she was as she flies back.
       const facer = lookup.getHandle(cast.caster, Facers)
       if (facer.ok) facer.value.data.facing.set({ direction: cast.direction, hold: effect.air + 0.1 })

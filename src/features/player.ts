@@ -109,8 +109,10 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       const speed = rooted ? 0 : runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
-      // In the air she goes straight up and down: what she was running with stops at once (a leap's push still carries her).
-      data.velocity.set(data.airborne.present ? { x: 0, y: 0 } : moveToward(carried, target, rate * dt))
+      // In the air, what she was running with stops at once (a leap's push still carries her); diving, she flies ahead.
+      const air = data.airborne.present ? data.airborne.get() : null
+      const diving = air !== null && air.dive !== null && air.remaining > 0 && air.remaining <= air.dive.seconds + 1e-9
+      data.velocity.set(air === null ? moveToward(carried, target, rate * dt) : diving ? air.dive!.velocity : { x: 0, y: 0 })
     }
 
     data.dash.set({ remaining, charges, cooldown, buffered, direction, since, perfect, from })

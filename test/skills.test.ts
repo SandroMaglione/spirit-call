@@ -50,11 +50,14 @@ const FillEnergy = Game.System("Test/FillEnergy", {
 const hp = defaultTuning.enemies.dummy.hp
 const throwGrenade = (frame: number) => ({ frame, press: ["special" as const], release: ["special" as const] })
 
-/** How long Gust keeps her in the air before it sweeps. */
-const riseOf = (tuning: typeof defaultTuning): number => {
+/** Gust as shipped: a hop and a dive. */
+const plungeOf = (tuning: typeof defaultTuning) => {
   const gust = tuning.skills.bladeWave.effect
-  return gust.kind === "plunge" ? gust.rise : 0
+  if (gust.kind !== "plunge") throw new Error("Gust is a plunge")
+  return gust
 }
+/** How long Gust keeps her in the air. */
+const riseOf = (tuning: typeof defaultTuning): number => plungeOf(tuning).rise + plungeOf(tuning).dive
 
 /** Where walking right on the screen faces her, on the floor. */
 const screenRight = normalizeOr(screenDirectionToWorld(projection, { x: 1, y: 0 }), { x: 1, y: 0 })
@@ -63,47 +66,47 @@ const along = (distance: number, side = 0): Vec2 => ({ x: screenRight.x * distan
 const faceRightThenGust = [{ frame: 0, press: ["right" as const] }, { frame: 3, release: ["right" as const] }, { frame: 8, press: ["special" as const], release: ["special" as const] }]
 
 describe("Gust (Space)", () => {
-  const gust = defaultTuning.skills.bladeWave.effect
+  const gust = plungeOf(defaultTuning)
 
-  it("hops straight up, untouchable and standing still, then sweeps down across her front, driving it back within reach", () => {
-    expect(gust.kind).toBe("plunge")
-    const run = range([along(120), along(120, 90), along(-160)], { x: 0, y: 300 }, { keys: faceRightThenGust })
+  it("hops straight up, untouchable and still, then dives ahead where she faces, striking nothing on the way", () => {
+    const run = range([along(gust.distance + gust.radius + 60)], { x: 0, y: 300 }, { keys: faceRightThenGust })
     run.step(10)
-    const before = run.world().enemies.map((enemy) => enemy.position)
     const from = run.player().position
-    // In the air: nothing struck yet, untouchable, and she does not move.
-    run.step(steps(riseOf(defaultTuning)) - 3)
-    expect(run.world().enemies.every((enemy) => enemy.health === hp)).toBe(true)
-    expect(run.player().invulnerable).toBeGreaterThan(0)
+    run.step(steps(gust.rise) - 3)
     expect(run.player().position).toEqual(from)
+    expect(run.player().invulnerable).toBeGreaterThan(0)
+    run.step(steps(gust.dive))
+    const moved = { x: run.player().position.x - from.x, y: run.player().position.y - from.y }
+    const ahead = moved.x * screenRight.x + moved.y * screenRight.y
+    expect(ahead).toBeGreaterThan(gust.distance * 0.85)
+    expect(ahead).toBeLessThan(gust.distance * 1.15)
+    run.step(20)
+    // Out of the landing's reach: untouched.
+    expect(run.world().enemies[0]!.health).toBe(hp)
+  })
+
+  it("lands with a gust all around her, driving what is near back within reach", () => {
+    const run = range([along(gust.distance + 120), along(gust.distance - 150), along(gust.distance, 120)], { x: 0, y: 300 }, { keys: faceRightThenGust })
+    run.step(10)
+    // Right before she lands: nothing struck yet.
+    run.step(steps(riseOf(defaultTuning)) - 2)
+    const before = run.world().enemies.map((enemy) => enemy.position)
+    expect(run.world().enemies.every((enemy) => enemy.health === hp)).toBe(true)
     run.step(40)
-    const [front, side, behind] = run.world().enemies
-    expect(front!.health).toBeLessThan(hp)
-    expect(side!.health).toBeLessThan(hp)
-    // Driven back, but kept within reach of the next combo.
-    const pushed = Math.hypot(front!.position.x - before[0]!.x, front!.position.y - before[0]!.y)
+    const after = run.world().enemies
+    for (const enemy of after) expect(enemy.health).toBeLessThan(hp)
+    const pushed = Math.hypot(after[0]!.position.x - before[0]!.x, after[0]!.position.y - before[0]!.y)
     expect(pushed).toBeGreaterThan(30)
     expect(pushed).toBeLessThan(140)
-    // Behind her, out of the landing puff: untouched.
-    expect(behind!.health).toBe(hp)
-    expect(behind!.position).toEqual(before[2])
   })
 
-  it("keeps off what stands right behind her with a puff as she lands", () => {
-    const run = range([along(-60)], { x: 0, y: 300 }, { keys: faceRightThenGust })
-    run.step(10 + steps(riseOf(defaultTuning)) + 20)
-    const [behind] = run.world().enemies
-    expect(behind!.health).toBeLessThan(hp)
-    expect(Math.hypot(behind!.position.x - center.x, behind!.position.y - center.y)).toBeGreaterThan(60)
-  })
-
-  it("sweeps where she faces, never toward the cursor", () => {
-    // The cursor points the other way: the sweep still goes where she faces.
-    const run = range([along(120), along(-120)], { x: -screenRight.x * 300, y: -screenRight.y * 300 }, { keys: faceRightThenGust })
-    run.step(10 + steps(riseOf(defaultTuning)) + 20)
-    const [front, back] = run.world().enemies
-    expect(front!.health).toBeLessThan(hp)
-    expect(back!.health).toBe(hp)
+  it("dives where she faces, never toward the cursor", () => {
+    const run = range([], { x: -screenRight.x * 300, y: -screenRight.y * 300 }, { keys: faceRightThenGust })
+    run.step(10)
+    const from = run.player().position
+    run.step(steps(riseOf(defaultTuning)) + 10)
+    const moved = { x: run.player().position.x - from.x, y: run.player().position.y - from.y }
+    expect(moved.x * screenRight.x + moved.y * screenRight.y).toBeGreaterThan(gust.distance * 0.85)
   })
 })
 

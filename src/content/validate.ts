@@ -145,7 +145,8 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       positive(problems, where, { radius: effect.radius, arcDegrees: effect.arcDegrees, active: effect.active })
       return
     case "plunge":
-      positive(problems, where, { rise: effect.rise, radius: effect.radius, arcDegrees: effect.arcDegrees, active: effect.active, landing: effect.landing.radius })
+      positive(problems, where, { rise: effect.rise, radius: effect.radius, active: effect.active })
+      if (!(effect.dive >= 0 && effect.distance >= 0)) problems.push(`${where}: dive and distance must not be negative`)
       return
     case "lob":
       positive(problems, where, { maxRange: effect.maxRange, radius: effect.radius })

@@ -131,20 +131,20 @@ export const view = {
   /**
    * An ultimate's moment (see `UltimateMoment`): the camera pushes in by
    * `zoom` (eased in over the moment, let go in `release` seconds after),
-   * the screen dims around her, her element's light gathers into her
-   * (`gather` motes a second), and a band with her face and the
-   * ultimate's name sweeps across; as it goes off, a flash `flash` wide,
-   * rings, and a shake of `shake`.
+   * the screen dims around her and glows at its edges in her element's
+   * color, its lines turn in toward her and its light gathers into her
+   * (`gather` motes a second), pulsing faster as it builds; as it goes
+   * off, a flash `flash` wide, rings, and a shake of `shake`.
    */
-  ultimateMoment: { zoom: 0.22, release: 0.25, gather: 70, flash: 80, shake: 16 },
+  ultimateMoment: { zoom: 0.3, release: 0.3, gather: 110, flash: 45, shake: 16 },
   /**
    * A body in the air (see `Airborne`), in screen pixels at zoom 1: a
-   * plunge goes straight up `height` (easing out over `rise` of its time)
-   * and drops straight down, a diagonal swipe of wind trailing down
-   * across her front (`swipe` long) as she lands; a leap arcs `height` high,
-   * shedding its element's sparks. The shadow shrinks to `shadow` at the top.
+   * plunge goes straight up `height`, then dives ahead like a bird, tipped
+   * head first by `lean` (radians), wind trailing behind her; a leap arcs
+   * `height` high, shedding its element's sparks. The shadow shrinks to
+   * `shadow` at the top.
    */
-  airborne: { plunge: { height: 74, rise: 0.62, swipe: 150 }, leap: { height: 36 }, shadow: 0.55 },
+  airborne: { plunge: { height: 80, lean: 0.75 }, leap: { height: 36 }, shadow: 0.55 },
   grenade: 0xd9fffb,
   /** Peak height of a grenade's arc, in screen pixels. */
   grenadeArc: 70,
