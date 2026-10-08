@@ -14,7 +14,8 @@ import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
 import { withValidAspects, withValidRelics } from "./features/build.ts"
-import { buildOf, encounterOf, teamLevel, teamOf, validAspects } from "./account/account.ts"
+import { buildOf, encounterOf, teamLevel, teamOf, validAspects, validRelics } from "./account/account.ts"
+import { wearLooks } from "./presentation/looks.ts"
 import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { chargedFromQuery, KeepCharged } from "./dev/charged.ts"
@@ -85,8 +86,11 @@ const start = async (mount: HTMLElement) => {
   const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
   const uiStore = createUiStore({ tuning, team, challenge, flow, account, player: shell.username, notices: shell.notes, sound: shell.settings })
+  // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
+  wearLooks(account.worn)
   shell.onAccount((next) => {
     uiStore.account.value = next
+    wearLooks(next.worn)
   })
   shell.onSaves((state) => {
     uiStore.saves.value = state
@@ -131,16 +135,16 @@ const start = async (mount: HTMLElement) => {
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
     // Kept as it is set up: nothing to tell the player unless it fails.
-    saveTeam: (team, aspects) => {
-      const selected = shell.select(team, uiStore.account.peek().selection.play, aspects)
+    saveTeam: (team, aspects, relics) => {
+      const selected = shell.select(team, uiStore.account.peek().selection.play, aspects, relics)
       if (!selected.ok) notify("Your party could not be saved.", true)
       else void selected.saved.then((saved) => { if (saved === "refused") notify("Your party could not be saved.", true) })
     },
-    enter: (team, aspects, play) => {
+    enter: (team, aspects, play, relics) => {
       // Nothing new starts while a run waits to be saved: it would be played on an account the server does not have.
       if (shell.saves().failed) { notify(notSaved, true, "Not saved yet"); return }
       // The account's rules allow it here, so the run starts at once; the server, sent the selection, nearly always agrees.
-      const selected = shell.select(team, play, aspects)
+      const selected = shell.select(team, play, aspects, relics)
       if (!selected.ok) { notify("This challenge is locked or your party cannot enter it.", true, "Cannot enter"); return }
       playing = play
       recording = true
@@ -157,7 +161,7 @@ const start = async (mount: HTMLElement) => {
         notify("The server refused this challenge: it is locked, or your party changed.", true, "Run stopped")
       })
     },
-    enterExtra: (team, aspects, extra) => {
+    enterExtra: (team, aspects, extra, relics = uiStore.account.peek().selection.relics) => {
       const account = uiStore.account.value
       playing = null
       recording = false
@@ -167,8 +171,8 @@ const start = async (mount: HTMLElement) => {
       const level = teamLevel(tuning, account, team)
       uiRequests.pending.push({
         kind: "start",
-        // Not saved: the draft's aspects, as far as the rules allow.
-        team: extra.kind === "trial" ? [{ character: extra.character, level }] : teamOf(tuning, account, team, validAspects(tuning, account, team, aspects)),
+        // Not saved: the draft's aspects and relics, as far as the rules allow.
+        team: extra.kind === "trial" ? [{ character: extra.character, level }] : teamOf(tuning, account, team, validAspects(tuning, account, team, aspects), validRelics(tuning, account, team, relics)),
         challenge: extra.kind === "practice" ? "practice" : "trainingGround",
         enemyLevel: level,
         ...(extra.kind === "practice" ? { practice: extra.picks } : {})
@@ -188,6 +192,9 @@ const start = async (mount: HTMLElement) => {
       })
     },
     focus: (banner, character) => change(() => shell.focus(banner, character), null),
+    buyRelic: (relic) => change(() => shell.buyRelic(relic), `${tuning.relics[relic].name} reached its next tier`),
+    buyCosmetic: (cosmetic) => change(() => shell.buyCosmetic(cosmetic), `${tuning.cosmetics[cosmetic].name} is yours`),
+    wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])
       // A short buzz where the phone allows it (not on iOS Safari): longer for what matters more.

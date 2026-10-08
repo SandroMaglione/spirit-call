@@ -136,7 +136,7 @@ export const makeBody = (assets: RenderAssets, look: BodyLook, radius: number, b
       return capsuleBody(assets, look.color, bodyRadius, height, batched)
     case "model": {
       if (look.batched) return instancedBody(assets, look, bodyRadius, height)
-      const puppet = new Puppet(assets.model(look.model), height, look.moments ?? null, look.eyes)
+      const puppet = new Puppet(assets.model(look.model), height, look.moments ?? null, look.eyes, look.tint)
       return puppetBody(puppet, bodyRadius, height)
     }
   }

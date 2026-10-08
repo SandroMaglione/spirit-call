@@ -109,8 +109,12 @@ team. Each look comes from one place:
 - **a hard goal**: a few hardcore tiers give one with their first
   rewards (Until Fall's third tier, Brute Siege's second).
 
-What a look looks like (its colors) is `presentation/looks.ts`, keyed by
-its id.
+What a look looks like is `presentation/looks.ts` (`cosmeticLooks`), keyed
+by its id: a tint turns every color of the spirit round the color wheel
+(her vertex colors, her glow from within, her halo, and her drops, on a
+copy of her own), a trail is a set of drop colors and kind. The account's
+looks are handed to the presentation as they change (`wearLooks`), so the
+arena and the menu's models draw her as she wears them.
 
 ## The relics
 

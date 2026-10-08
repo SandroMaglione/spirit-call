@@ -13,9 +13,10 @@ import { Box3, Color, DirectionalLight, HemisphereLight, PerspectiveCamera, RGBA
 import type { Object3D } from "three"
 
 import type { CharacterId } from "../content/characters.ts"
+import type { CosmeticId } from "../content/cosmetics.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import { view } from "../config/view.ts"
-import { characterLooks, enemyLooks, enemyPortraits } from "./looks.ts"
+import { characterLooks, enemyLooks, enemyPortraits, wornLook, wornTint } from "./looks.ts"
 import type { BodyLook } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import { Puppet } from "./puppet.ts"
@@ -50,7 +51,7 @@ const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, tur
   const source = models.get(look.model)
   if (source === undefined) return null
   // A height of one: the camera frames it by its bounds.
-  const puppet = new Puppet(source, 1, look.moments ?? null)
+  const puppet = new Puppet(source, 1, look.moments ?? null, [], look.tint)
   puppet.face({ x: Math.sin(turn), y: Math.cos(turn) })
   // Posed once, so its bounds are its idle's.
   puppet.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, 0, false)
@@ -174,10 +175,13 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
   const liveFor = (place: HTMLElement): Shown | null => {
     const character = place.dataset["model"] as CharacterId | undefined
     if (character === undefined || !(character in characterLooks)) return null
-    const key = character
+    // As she wears it, or with a tint tried on (`data-tint`; `none`: her own colors).
+    const tryOn = place.dataset["tint"] as CosmeticId | "none" | undefined
+    const tint = tryOn === undefined ? wornTint(character) : tryOn === "none" ? undefined : tryOn
+    const key = `${character}/${tint ?? ""}`
     const known = live.get(key)
     if (known !== undefined) return known
-    const puppet = puppetOf(models, characterLooks[character])
+    const puppet = puppetOf(models, wornLook(characterLooks[character], tint === undefined ? {} : { tint }))
     if (puppet === null) return null
     const shown = add(key, puppet, cssColor(place, "--el"))
     live.set(key, shown)

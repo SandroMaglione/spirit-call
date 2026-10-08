@@ -69,8 +69,8 @@ export const Extra = ({ store, actions, nav, mode, leader }: {
     <Actions>
       <PartyStrip store={store} team={team} leader={leader} size={34} pick={toParty} edit={toParty} />
       {mode === "training"
-        ? <Pill icon="play" onClick={() => actions.enterExtra(team, aspects, { kind: "training" })}>Train</Pill>
-        : <Pill icon="play" disabled={chosen.kinds.length === 0} onClick={() => actions.enterExtra(team, aspects, { kind: "practice", picks: chosen })}>Start</Pill>}
+        ? <Pill icon="play" onClick={() => actions.enterExtra(team, aspects, { kind: "training" }, store.menuDraft.value.relics)}>Train</Pill>
+        : <Pill icon="play" disabled={chosen.kinds.length === 0} onClick={() => actions.enterExtra(team, aspects, { kind: "practice", picks: chosen }, store.menuDraft.value.relics)}>Start</Pill>}
     </Actions>
   </Screen>
 }

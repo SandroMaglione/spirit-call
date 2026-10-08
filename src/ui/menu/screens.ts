@@ -12,9 +12,15 @@ export type Screen =
   | { readonly kind: "extra"; readonly mode: "training" | "practice" }
   | { readonly kind: "settings" }
   | { readonly kind: "call"; readonly tab: CallTab }
+  | { readonly kind: "loadout"; readonly character: CharacterId; readonly tab: LoadoutTab }
+  | { readonly kind: "shop"; readonly tab: ShopTab }
 
 export type QuestTab = "main" | "secondary" | "trials" | "hardcore"
-export type CharacterTab = "overview" | "aspect" | "kit"
+export type CharacterTab = "overview" | "loadout" | "kit"
+/** What a character fights and shows with, on its own screen: her aspect, her relics, and her looks. */
+export type LoadoutTab = "aspect" | "relics" | "looks"
+/** The shop's shelves: relics one tier up, and looks. */
+export type ShopTab = "relics" | "looks"
 /** The Spirit Call's views: the banner running, its odds, and the last calls. */
 export type CallTab = "banner" | "details" | "history"
 

@@ -6,7 +6,7 @@
  * moments over them (see `animation.ts`).
  */
 import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshStandardMaterial, PropertyBinding, SkinnedMesh, Sprite } from "three"
-import type { AnimationAction, Material, Object3D, Quaternion, Skeleton, SpriteMaterial, Vector3 } from "three"
+import type { AnimationAction, BufferGeometry, Material, Object3D, Quaternion, Skeleton, SpriteMaterial, Vector3 } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
 
 import type { Vec2 } from "../math/vec.ts"
@@ -14,6 +14,8 @@ import { advanceLocomotion, freshLocomotion, oneShotPose, shotBlend } from "./an
 import type { Locomotion, OneShot } from "./animation.ts"
 import { keepRim } from "./glow.ts"
 import type { Moments, Shot } from "./looks.ts"
+import { tintedHex, tintedRgb } from "./tint.ts"
+import type { Tint } from "./tint.ts"
 import type { ModelSource } from "./models.ts"
 
 /** A copy's materials that are its own, with their colors before any tint, and their own glow (glowing eyes) before any flash. */
@@ -66,6 +68,13 @@ export const disposeCopy = (object: Object3D, materials: OwnMaterials): void => 
   for (const skeleton of skeletons) skeleton.dispose()
 }
 
+/** `color` turned by `tint` in place, brighter than white too (a glow): turned at its own brightness, then brought back to it. */
+const tintColor = (color: Color, tint: Tint): void => {
+  const bright = Math.max(1, color.r, color.g, color.b)
+  const [r, g, b] = tintedRgb(color.r / bright, color.g / bright, color.b / bright, tint)
+  color.setRGB(r * bright, g * bright, b * bright)
+}
+
 const tinted = new Color()
 const flash = new Color()
 
@@ -111,14 +120,46 @@ export class Puppet {
   /** Its eyes (and what blinks with them), and how they are held this frame: times their width and height. */
   private readonly eyes: Array<Object3D> = []
   private readonly look = { wide: 1, tall: 1 }
+  /** Geometry copied for a tint (its vertex colors turned), freed with it. */
+  private readonly geometries: Array<BufferGeometry> = []
 
-  constructor(source: ModelSource, height: number, moments: Moments | null, eyes: ReadonlyArray<string> = []) {
+  constructor(source: ModelSource, height: number, moments: Moments | null, eyes: ReadonlyArray<string> = [], tint?: Tint) {
     this.source = source
     const copy = copyModel(source, true)
     this.object = copy.object
     if (source.spec.height === null) throw new Error(`Model ${source.id} has no height: it cannot be a body`)
     this.object.scale.setScalar(height / source.spec.height)
     this.materials = [...copy.materials]
+    // A look worn: every color turned once (paintMaterials starts from these each frame), and its
+    // vertex colors (a spirit's flat colors) on a copy of its geometry of its own.
+    if (tint !== undefined) {
+      for (const { material, base, glow } of this.materials) {
+        tintColor(base, tint)
+        tintColor(glow, tint)
+        material.color.copy(base)
+        // Its glow from within (a flame's red edges and yellow heart) turns too.
+        const rim = material.userData["rim"] as { readonly color: number; readonly core?: { readonly color: number } } | undefined
+        if (rim !== undefined) {
+          material.userData["rim"] = { ...rim, color: tintedHex(rim.color, tint), ...(rim.core === undefined ? {} : { core: { ...rim.core, color: tintedHex(rim.core.color, tint) } }) }
+          keepRim(material)
+        }
+      }
+      if (copy.halo !== null) tintColor(copy.halo.material.color, tint)
+      this.object.traverse((part) => {
+        if (!(part instanceof Mesh)) return
+        const colors = part.geometry.getAttribute("color")
+        if (colors === undefined) return
+        const geometry: BufferGeometry = part.geometry.clone()
+        const own = geometry.getAttribute("color")
+        for (let index = 0; index < own.count; index++) {
+          const [r, g, b] = tintedRgb(own.getX(index), own.getY(index), own.getZ(index), tint)
+          own.setXYZ(index, r, g, b)
+        }
+        own.needsUpdate = true
+        part.geometry = geometry
+        this.geometries.push(geometry)
+      })
+    }
     this.halo = copy.halo
     this.moments = moments
     this.mixer = new AnimationMixer(this.object)
@@ -288,6 +329,7 @@ export class Puppet {
     this.mixer.stopAllAction()
     this.mixer.uncacheRoot(this.object)
     this.halo?.material.dispose()
+    for (const geometry of this.geometries) geometry.dispose()
     disposeCopy(this.object, this.materials)
   }
 

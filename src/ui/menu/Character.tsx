@@ -1,25 +1,27 @@
 /**
- * A character: her attributes and leveling, the aspect she fights with, and
- * her moves. The roster in the top bar steps between characters; one not
+ * A character: her attributes and leveling, what she fights and shows with
+ * (her loadout, in short: its own screen holds the choices), and her moves. The roster in the top bar steps between characters; one not
  * owned yet shows the same pages, to look forward to.
  */
 import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
-import { ascend, ascensionCost, ascensionStep, characterLevel, levelCap, owns, train, trainingCost } from "../../account/account.ts"
+import { ascend, ascensionCost, ascensionStep, characterLevel, levelCap, owns, relicTier, slotOpen, train, trainingCost } from "../../account/account.ts"
+import { cosmeticKinds, cosmeticOf } from "../../content/cosmetics.ts"
+import { relicOf, relicSlots } from "../../content/relics.ts"
+import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
+import { slotNames } from "./Loadout.tsx"
 import { materialOf } from "../../content/materials.ts"
 import { aspectOf } from "../../content/aspects.ts"
-import type { AspectId } from "../../content/aspects.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import { elements } from "../../content/elements.ts"
 import { skillSlots } from "../../content/skills.ts"
 import { aspectFor, attackOf, statsAtLevel } from "../../features/build.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
-import { describeAmounts, describeAspectElement, describeMoveEffect, describeSkill, statOrder } from "../describe.ts"
-import { aspectsFor, elementOf, equipInDraft } from "../draft.ts"
+import { describeAmounts, describeSkill, statOrder } from "../describe.ts"
+import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
 import { Face, ModelStage } from "../kit/art.tsx"
-import { Card, Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Bar, Chips, Fact, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, SideTabs, TopBar } from "../kit/shell.tsx"
@@ -84,32 +86,29 @@ const Ascension = ({ store, actions, character }: { readonly store: UiStore; rea
   </>
 }
 
-/** Her class's aspects as cards: the plain one, then the others, owned or not. Equipping is for a party member (an aspect is on one member of a party). */
-const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly character: CharacterId; readonly save: () => void }) => {
-  const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft
-  const spec = tuning.characters[character], classSpec = tuning.classes[spec.class]
-  const equipped = draft.value.aspects[character] ?? null
-  const picked = useSignal<AspectId | null>(equipped)
-  const has = (id: AspectId | null) => id === null || owns(account, { kind: "aspect", id })
-  const shown = picked.value === null ? null : aspectOf(tuning.aspects, picked.value)
-  const attack = attackOf(tuning, { class: spec.class, aspect: aspectFor(tuning, character, picked.value) })
-  const inParty = draft.value.team.includes(character)
-  const holder = picked.value === null ? undefined : draft.value.team.find((other) => other !== character && draft.value.aspects[other] === picked.value)
-  const note = !has(picked.value) ? sourceNote(store, { kind: "aspect", id: picked.value! })
-    : !owns(account, { kind: "character", id: character }) ? "Hers to equip once she joins you."
-    : !inParty ? "Add her to the party to equip an aspect."
-    : picked.value === equipped ? "Equipped."
-    : holder !== undefined ? `On ${tuning.characters[holder].name}: equipping moves it here.` : undefined
+/**
+ * What she fights and shows with, in short: her aspect, her relics slot by
+ * slot, and her looks, each a row that opens her loadout on its tab.
+ */
+const LoadoutSummary = ({ store, nav, character }: { readonly store: UiStore; readonly nav: Nav; readonly character: CharacterId }) => {
+  const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft.value
+  const spec = tuning.characters[character], aspect = draft.aspects[character]
+  const relics = draft.relics[character] ?? {}, worn = account.worn[character] ?? {}
+  const open = (tab: "aspect" | "relics" | "looks") => nav.go({ kind: "loadout", character, tab })
   return <>
-    <Panel class="character__panel in-right" icon={<AbilityIcon kind={spec.class} />} title={shown?.name ?? classSpec.plain.name} detail={`${picked.value === null ? "Plain" : "Aspect"} · ${classSpec.name}`} note={note} noteIcon={has(picked.value) ? picked.value === equipped ? "check" : "info" : "lock"}>
-      <Cards>{[null, ...aspectsFor(tuning, character)].map((option) => <Card key={option ?? "plain"} art={has(option) ? <AbilityIcon kind={spec.class} /> : <Icon name="lock" />} foot={option === null ? classSpec.plain.name : aspectOf(tuning.aspects, option).name} tint={spec.element} selected={option === picked.value} locked={!has(option)} mark={option === equipped && inParty ? "tick" : undefined} onClick={() => (picked.value = option)} />)}</Cards>
-      <Chips items={attack.combo.map((move) => moveNames[move.shape])} />
-      <p class="dim">{shown?.description ?? classSpec.plain.description}</p>
-      {shown !== null && <p>{describeAspectElement(shown, spec.element)}</p>}
-      {shown !== null && shown.effects.map((effect, index) => <p key={index}>{describeMoveEffect(effect)}</p>)}
-      {shown !== null && <p><b>Good against</b> · {shown.against}</p>}
+    <Panel class="character__panel in-right" icon={<Icon name="relic" />} title="Loadout" detail={draft.team.includes(character) ? "In the party" : "Not in the party"}>
+      <button type="button" class="loadout-row" onClick={() => open("aspect")}><AbilityIcon kind={spec.class} /><span><small>Aspect</small><b>{aspect === undefined ? tuning.classes[spec.class].plain.name : aspectOf(tuning.aspects, aspect).name}</b></span><Icon name="next" /></button>
+      {relicSlots.map((slot) => {
+        const id = relics[slot]
+        return <button key={slot} type="button" class="loadout-row" onClick={() => open("relics")}>
+          <RelicIcon slot={slot} element={slot === "element" ? spec.element : null} />
+          <span><small>{slotNames[slot]}</small><b>{!slotOpen(tuning, account, slot) ? "Locked" : id === undefined ? "Empty" : `${relicOf(tuning.relics, id).name} ${["I", "II", "III"][(relicTier(account, id) ?? 1) - 1]}`}</b></span>
+          <Icon name="next" />
+        </button>
+      })}
+      {cosmeticKinds.map((kind) => <button key={kind} type="button" class="loadout-row" onClick={() => open("looks")}><LookIcon kind={kind} /><span><small>{kind === "tint" ? "Tint" : "Trail"}</small><b>{worn[kind] === undefined ? "Her own" : cosmeticOf(tuning.cosmetics, worn[kind]!).name}</b></span><Icon name="next" /></button>)}
     </Panel>
-    <Actions><Pill icon="swap" disabled={!has(picked.value) || !inParty || picked.value === equipped} onClick={() => { draft.value = equipInDraft(draft.value, character, picked.value); save() }}>Equip</Pill></Actions>
+    <Actions><Pill icon="next" onClick={() => open("aspect")}>Open loadout</Pill></Actions>
   </>
 }
 
@@ -164,8 +163,8 @@ const Skills = ({ store, character }: { readonly store: UiStore; readonly charac
   </>
 }
 
-export const Character = ({ store, actions, nav, character, tab, save }: {
-  readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly character: CharacterId; readonly tab: CharacterTab; readonly save: () => void
+export const Character = ({ store, actions, nav, character, tab }: {
+  readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly character: CharacterId; readonly tab: CharacterTab
 }) => {
   const tuning = store.tuning.value, account = store.account.value
   const roster = ids(tuning.characters), element = elementOf(tuning, character)
@@ -177,9 +176,9 @@ export const Character = ({ store, actions, nav, character, tab, save }: {
     </TopBar>
     <SideTabs label="Character details" current={tab} onChange={(id) => nav.replace({ kind: "character", character, tab: id })} tabs={[
       { id: "overview", label: "Attributes", badge: owned && (train(tuning, account, character).ok || ascend(tuning, account, character).ok) },
-      { id: "aspect", label: "Aspect" },
+      { id: "loadout", label: "Loadout" },
       { id: "kit", label: "Skills" }
     ]} />
-    {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "aspect" ? <Aspects key={character} store={store} character={character} save={save} /> : <Skills key={character} store={store} character={character} />}
+    {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "loadout" ? <LoadoutSummary key={character} store={store} nav={nav} character={character} /> : <Skills key={character} store={store} character={character} />}
   </Screen>
 }

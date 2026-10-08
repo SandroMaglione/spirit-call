@@ -161,11 +161,23 @@ is left, and keep text off it.
 ## Behaviour worth knowing
 
 - **The party is kept as it is set up.** There is no confirm: the menu
-  saves it when a screen is left (and when an aspect is equipped), if it
-  follows the rules; entering a run saves it too. Only a failure is shown.
-- **Aspects are equipped on the character's Aspect tab**, for a member of
-  the party (an aspect is on one member of a party; see `aspects.md`). The
-  party screen links to it.
+  saves it when a screen is left (and when an aspect or a relic is
+  equipped), if it follows the rules; entering a run saves it too. Only a
+  failure is shown.
+- **The loadout has a screen of its own** (`menu/Loadout.tsx`), since there
+  will be many aspects, relics, and looks, each with its own explanation:
+  tabs Aspect, Relics, Looks; the cards on the left (relics under her slot
+  buttons, looks under Tint and Trail), her model in the middle, the one
+  picked explained on the right with what can be done (Equip, Take off,
+  buy a relic's next tier or a look, Wear). Aspects and relics are equipped
+  for a member of the party, each on one member at most (equipping moves
+  it; see `aspects.md`, `relics.md`); looks are hers in every party, and a
+  tint picked shows on her model before it is worn. Her page's Loadout tab
+  sums it up (a row each, opening its tab), and each party place's aspect
+  button, with her relics' charms, opens it.
+- **The shop** (`menu/Shop.tsx`, from the home) sells, for dust, a relic
+  owned one tier up and its own looks; the Call's and the hard goals'
+  looks show where they come from.
 - **The party's roster opens beside a place** when it is tapped (a panel of
   cards that scrolls, since the roster will grow), over the left of the
   screen; a tap on a card puts her there and closes it.

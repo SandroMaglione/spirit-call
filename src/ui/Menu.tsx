@@ -4,12 +4,14 @@
  * built from the kit (`kit/`) and the game's pieces (`menu/parts.tsx`).
  */
 import { useEffect } from "preact/hooks"
-import { owns, playLock, teamProblems } from "../account/account.ts"
+import { owns, playLock, teamProblems, teamRelicProblems } from "../account/account.ts"
 import { menuElement } from "./Backdrop.tsx"
 import { Call } from "./menu/Call.tsx"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
 import { Inventory } from "./menu/Inventory.tsx"
+import { Loadout } from "./menu/Loadout.tsx"
+import { Shop } from "./menu/Shop.tsx"
 import { Extra } from "./menu/Extra.tsx"
 import { Home } from "./menu/Home.tsx"
 import { Quests } from "./menu/Quests.tsx"
@@ -38,12 +40,13 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
   }
   /** The party is kept as it is set up: saved when it changed and follows the rules, with nothing to confirm. */
   const save = () => {
-    const tuning = store.tuning.peek(), account = store.account.peek(), { team, aspects } = draft.peek()
-    const changed = JSON.stringify(team) !== JSON.stringify(account.selection.team) || JSON.stringify(aspects) !== JSON.stringify(account.selection.aspects)
-    if (changed && team.every((id) => owns(account, { kind: "character", id })) && teamProblems(tuning, account, team, aspects).length === 0) actions.saveTeam(team, aspects)
+    const tuning = store.tuning.peek(), account = store.account.peek(), { team, aspects, relics } = draft.peek()
+    const changed = JSON.stringify(team) !== JSON.stringify(account.selection.team) || JSON.stringify(aspects) !== JSON.stringify(account.selection.aspects) || JSON.stringify(relics) !== JSON.stringify(account.selection.relics)
+    const allowed = teamProblems(tuning, account, team, aspects).length === 0 && teamRelicProblems(tuning, account, team, relics).length === 0
+    if (changed && team.every((id) => owns(account, { kind: "character", id })) && allowed) actions.saveTeam(team, aspects, relics)
   }
   const enter = () => {
-    if (playLock(store.tuning.value, store.account.value, play.value) === null) actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, play.value)
+    if (playLock(store.tuning.value, store.account.value, play.value) === null) actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, play.value, draft.value.relics)
   }
   useEffect(() => {
     const requested = store.menuOpens.peek()
@@ -60,11 +63,13 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     switch (screen.kind) {
       case "home": {
         const playable = playLock(store.tuning.value, store.account.value, play.value) === null ? play.value : store.account.value.selection.play
-        return <Home store={store} nav={nav} leader={leader} play={playable} enter={() => actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, playable)} />
+        return <Home store={store} nav={nav} leader={leader} play={playable} enter={() => actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, playable, draft.value.relics)} />
       }
       case "quests": return <Quests store={store} nav={nav} tab={screen.tab} play={play} leader={leader} enter={enter} />
-      case "team": return <Team store={store} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value)} />
-      case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} save={save} />
+      case "team": return <Team store={store} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value, draft.value.relics)} />
+      case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
+      case "loadout": return <Loadout store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} save={save} />
+      case "shop": return <Shop store={store} actions={actions} nav={nav} tab={screen.tab} />
       case "discoveries": return <Discoveries store={store} nav={nav} />
       case "inventory": return <Inventory store={store} nav={nav} />
       case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} leader={leader} />
