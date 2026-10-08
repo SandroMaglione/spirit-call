@@ -14,7 +14,7 @@ import { elements } from "../../content/elements.ts"
 import { skillSlots } from "../../content/skills.ts"
 import { aspectFor, attackOf, statsAtLevel } from "../../features/build.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
-import { describeAmounts, describeAspectElement, describePassive, describeSkill, statOrder } from "../describe.ts"
+import { describeAmounts, describeAspectElement, describeMoveEffect, describeSkill, statOrder } from "../describe.ts"
 import { aspectsFor, elementOf, equipInDraft } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
@@ -106,7 +106,7 @@ const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly
       <Chips items={attack.combo.map((move) => moveNames[move.shape])} />
       <p class="dim">{shown?.description ?? classSpec.plain.description}</p>
       {shown !== null && <p>{describeAspectElement(shown, spec.element)}</p>}
-      {shown !== null && shown.passives.map((passive, index) => <p key={index}>{describePassive(passive)}.</p>)}
+      {shown !== null && shown.effects.map((effect, index) => <p key={index}>{describeMoveEffect(effect)}</p>)}
       {shown !== null && <p><b>Good against</b> · {shown.against}</p>}
     </Panel>
     <Actions><Pill icon="swap" disabled={!has(picked.value) || !inParty || picked.value === equipped} onClick={() => { draft.value = equipInDraft(draft.value, character, picked.value); save() }}>Equip</Pill></Actions>

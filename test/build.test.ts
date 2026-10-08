@@ -5,9 +5,10 @@ import type { CharacterId } from "../src/content/characters.ts"
 import type { BuildValue } from "../src/schema.ts"
 import { buildFromQuery, challengeFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "../src/dev/build.ts"
 import { defaultChallenge } from "../src/features/challenges.ts"
-import { always, damageBonus } from "../src/content/passives.ts"
+import { always, damageBonus, doing, finisher, on } from "../src/content/passives.ts"
+import { nova } from "../src/content/skills.ts"
 import { damageDealt, damageTaken, defaultBuild, levelScale, resolveBuild, statsAtLevel } from "../src/features/build.ts"
-import { aspectId, testAspect, withAspect } from "./helpers.ts"
+import { aspectId, relicId, testAspect, withAspect, withRelic } from "./helpers.ts"
 
 describe("builds", () => {
   it("practice links select combat enemies once and ignore unknown ids and dummies", () => {
@@ -25,12 +26,20 @@ describe("builds", () => {
     expect(build.skills).toEqual({ special: "flareJump", ultimate: "barrage" })
   })
 
-  it("take an aspect of her class, with its passives, and nothing to her stats", () => {
-    const passives = [damageBonus(10, always())]
-    const tuning = withAspect(defaultTuning, "test", testAspect(defaultTuning, "blade", { passives }))
+  it("take an aspect of her class, what its moves set off, and nothing to her stats", () => {
+    const effect = { move: finisher(), own: false, effect: nova({ radius: 100, power: 5, element: null, knockback: 0, active: 0.1, clearsProjectiles: false, hitStop: 0, heavy: false }) }
+    const tuning = withAspect(defaultTuning, "test", testAspect(defaultTuning, "blade", { effects: [effect] }))
     const build = resolveBuild(tuning, { character: "swordsman", aspect: aspectId("test") })
     expect(build.attack).toEqual({ class: "blade", aspect: "test" })
-    expect(build.passives).toBe(passives)
+    expect(build.passives).toEqual([on(doing(finisher()), { kind: "cast", effect: effect.effect, own: false, at: "self" })])
+    expect(build.stats).toEqual(defaultTuning.characters.swordsman.stats)
+  })
+
+  it("take her relics' passives at the tier each is equipped at, after her aspect's", () => {
+    const tier = (percent: number) => ({ adds: "Test.", passives: [damageBonus(percent, always())] })
+    const tuning = withRelic(defaultTuning, "test", { name: "Test", slot: "strike", element: null, about: "Tests.", tiers: { 1: tier(5), 2: tier(10), 3: tier(15) } })
+    const build = resolveBuild(tuning, { character: "swordsman", relics: { strike: { id: relicId("test"), tier: 2 } } })
+    expect(build.passives).toEqual([damageBonus(10, always())])
     expect(build.stats).toEqual(defaultTuning.characters.swordsman.stats)
   })
 

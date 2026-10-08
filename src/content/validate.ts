@@ -21,7 +21,7 @@ import { noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
 import type { QuestAt, RankTwist } from "./ranks.ts"
 import type { QuestId } from "./quests.ts"
 import { elements } from "./elements.ts"
-import type { ElementId } from "./elements.ts"
+import type { ElementId, StateId } from "./elements.ts"
 import { materialOf } from "./materials.ts"
 import { tallies } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
@@ -32,6 +32,8 @@ import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
 import type { AttackSpec } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
+import { relicBudget, relicSlots, relicTiers } from "./relics.ts"
+import type { RelicSpec } from "./relics.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
 
@@ -171,7 +173,9 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
       return
     case "thunderclap":
-      positive(problems, where, { radius: effect.radius, strikes: effect.strikes, heal: effect.heal })
+      positive(problems, where, { radius: effect.radius, strikes: effect.strikes })
+      // A clap may heal nobody (a relic's discharge: relics outside the Survival slot never heal).
+      if (!(effect.heal >= 0)) problems.push(`${where}: heal must not be negative (is ${effect.heal})`)
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
       return
     case "earthrise":
@@ -213,7 +217,66 @@ const checkPassive = (problems: Array<string>, where: string, passive: Passive):
     case "on":
       if (passive.trigger.kind === "move") checkFilter(problems, where, passive.trigger.move)
       if (passive.effect.kind === "cast") checkEffect(problems, where, passive.effect.effect)
+      if (passive.effect.kind === "leave") {
+        positive(problems, `${where} pool`, { radius: passive.effect.ground.radius, seconds: passive.effect.ground.seconds })
+        if (!has(elements, passive.effect.ground.element)) problems.push(`${where}: leaves unknown element ${passive.effect.ground.element}`)
+      }
+      if (passive.effect.kind === "heal") positive(problems, where, { percent: passive.effect.percent })
       return
+  }
+}
+
+/** The elements a passive names (its pools, what it sets off, the states it reads), with the states it reads. */
+const namedIn = (passive: Passive): { readonly elements: ReadonlyArray<ElementId>; readonly states: ReadonlyArray<StateId> } => {
+  if (passive.kind === "damageBonus") return { elements: [], states: passive.when.kind === "targetInState" && passive.when.state !== null ? [passive.when.state] : [] }
+  const states = passive.trigger.kind === "kill" && passive.trigger.state !== null && passive.trigger.state !== "any" ? [passive.trigger.state] : []
+  const effect = passive.effect
+  if (effect.kind === "leave") return { elements: [effect.ground.element], states }
+  if (effect.kind !== "cast" || effect.own) return { elements: [], states }
+  const named = [effect.effect.element, "leaves" in effect.effect ? effect.effect.leaves?.element ?? null : null].filter((element) => element !== null)
+  return { elements: named, states }
+}
+
+/** The power (percent of ATK) of what a passive sets off; 0 for anything else. */
+const powerOf = (passive: Passive): number => (passive.kind === "on" && passive.effect.kind === "cast" ? passive.effect.effect.power : 0)
+
+/**
+ * A relic (see docs/relics.md): an Element relic names its element (and only
+ * it), any other names none (hers only, through `castOwn`); healing is the
+ * Survival slot's; every tier keeps to `relicBudget` and has something to
+ * say; a later tier keeps at least as much as the one before.
+ */
+const checkRelic = (problems: Array<string>, where: string, relic: RelicSpec): void => {
+  if (!(relicSlots as ReadonlyArray<string>).includes(relic.slot)) problems.push(`${where}: unknown slot ${relic.slot}`)
+  if ((relic.slot === "element") !== (relic.element !== null)) problems.push(`${where}: an Element relic names its element, and no other relic does`)
+  if (relic.element !== null && !has(elements, relic.element)) problems.push(`${where}: unknown element ${relic.element}`)
+  let before = 0
+  for (const tier of relicTiers) {
+    const spec = relic.tiers[tier]
+    const at = `${where} tier ${tier}`
+    if (spec.adds.trim() === "") problems.push(`${at}: needs a line saying what it adds`)
+    if (spec.passives.length === 0) problems.push(`${at}: does nothing`)
+    if (spec.passives.length < before) problems.push(`${at}: drops what the tier before did (a later tier keeps it, and adds)`)
+    before = spec.passives.length
+    const bonus = spec.passives.reduce((sum, passive) => sum + (passive.kind === "damageBonus" ? passive.percent : 0), 0)
+    if (bonus > relicBudget.damageBonus) problems.push(`${at}: damage bonuses add up to ${bonus}% (at most ${relicBudget.damageBonus}%: a relic changes what happens, barely how much)`)
+    spec.passives.forEach((passive, index) => {
+      const part = `${at} passive ${index + 1}`
+      checkPassive(problems, part, passive)
+      if (powerOf(passive) > relicBudget.power) problems.push(`${part}: sets off ${powerOf(passive)}% ATK (at most ${relicBudget.power}%)`)
+      if (passive.kind === "on") {
+        const often = passive.trigger.kind === "kill" || passive.trigger.kind === "move" || passive.trigger.kind === "dash"
+        if (!(passive.every >= 0)) problems.push(`${part}: every must not be negative (is ${passive.every})`)
+        else if (often && passive.every < relicBudget.every) problems.push(`${part}: goes off on something frequent, so at most every ${relicBudget.every}s (is ${passive.every}s)`)
+        if (passive.effect.kind === "heal" && relic.slot !== "survival") problems.push(`${part}: heals (healing is the Survival slot's)`)
+      }
+      const named = namedIn(passive)
+      if (relic.element === null) {
+        if (named.elements.length > 0 || named.states.length > 0) problems.push(`${part}: names an element (only an Element relic does; others carry hers, with castOwn)`)
+      } else if (named.elements.some((element) => element !== relic.element) || named.states.some((state) => state !== elements[relic.element!].state)) {
+        problems.push(`${part}: names another element than its own (${relic.element})`)
+      }
+    })
   }
 }
 
@@ -413,14 +476,15 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     }
     const spec = tuning.classes[aspect.class]
     checkMoves(problems, where, spec, aspect)
-    aspect.passives.forEach((passive, index) => {
-      checkPassive(problems, `${where} passive ${index + 1}`, passive)
-      // An aspect never names an element: what it sets off carries none, or hers (`castOwn`).
-      if (passive.kind === "on" && passive.effect.kind === "cast" && (passive.effect.effect.element !== null || ("leaves" in passive.effect.effect && passive.effect.effect.leaves !== null))) {
-        problems.push(`${where} passive ${index + 1}: names an element (an aspect gives one moment to her element instead)`)
+    aspect.effects.forEach((effect, index) => {
+      checkFilter(problems, `${where} effect ${index + 1}`, effect.move)
+      checkEffect(problems, `${where} effect ${index + 1}`, effect.effect)
+      // An aspect never names an element: what it sets off carries none, or hers (`own`).
+      if (effect.effect.element !== null || ("leaves" in effect.effect && effect.effect.leaves !== null)) {
+        problems.push(`${where} effect ${index + 1}: names an element (an aspect gives one moment to her element instead)`)
       }
     })
-    const moments = (aspect.infuse === null ? 0 : 1) + aspect.passives.filter((passive) => passive.kind === "on" && passive.effect.kind === "cast" && passive.effect.own).length
+    const moments = (aspect.infuse === null ? 0 : 1) + aspect.effects.filter((effect) => effect.own).length
     if (moments > 1) problems.push(`${where}: gives her element ${moments} moments (one at most)`)
     if (aspect.infuse !== null) checkFilter(problems, `${where} elemental moment`, aspect.infuse)
     const plain = sustainedDamage(basicAttack(spec, null))
@@ -430,6 +494,9 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       problems.push(`${where}: deals ${own.toFixed(0)} a second against ${plain.toFixed(0)} for the plain aspect (aspects are different, never stronger or weaker: within ${aspectBudget * 100}%)`)
     }
   }
+
+  // Relics: each in its slot, within the budget at every tier, a later tier keeping what the one before did.
+  for (const [id, relic] of Object.entries(tuning.relics) as Array<[string, RelicSpec]>) checkRelic(problems, `relic ${id}`, relic)
 
   for (const [id, skill] of Object.entries(tuning.skills)) {
     checkEffect(problems, `skill ${id}`, skill.effect)

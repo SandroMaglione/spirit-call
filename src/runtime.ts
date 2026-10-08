@@ -34,6 +34,7 @@ export const initialResources = (
   EnemyLevel: enemyLevel,
   Twist: twist,
   TriggeredEffects: [],
+  PassiveCooldowns: {},
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),

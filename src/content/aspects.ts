@@ -1,9 +1,11 @@
 /**
  * Aspects: the ways of using a class (see docs/aspects.md). An aspect sets a
- * character's combo, charged attack, dash strike, and one passive, and may
- * give one moment to her element (`infuse`): it never names an element, so
- * the same aspect works for every character of its class, with her element
- * in that moment. Every class also has its plain aspect (see
+ * character's combo, charged attack, and dash strike (with what its moves
+ * also set off, part of the pattern), and may give one moment to her
+ * element (`infuse`): it never names an element, so the same aspect works
+ * for every character of its class, with her element in that moment. It
+ * changes how she fights, never how strong she is: bonuses are relics' (see
+ * `content/relics.ts`). Every class also has its plain aspect (see
  * `content/classes.ts`), which no one collects. The account owns aspects,
  * and a team equips each on one character at most. Numbers are
  * live-tunable: they are part of the `Tuning` resource.
@@ -11,9 +13,17 @@
 import { arc, disc, shot, spin, thrust } from "./attacks.ts"
 import type { BasicAttackSpec } from "./attacks.ts"
 import type { ClassId, ClassSpec, Moves } from "./classes.ts"
-import { cast, castOwn, combo, counter, damageBonus, doing, finisher, heal, kill, lastRound, on, power, targetHealthBelow, targetInState, withMove } from "./passives.ts"
+import { combo, counter, finisher, lastRound, power } from "./passives.ts"
 import { nova, totem } from "./skills.ts"
-import type { MoveFilter, Passive } from "./passives.ts"
+import type { SkillEffect } from "./skills.ts"
+import type { MoveFilter } from "./passives.ts"
+
+/** Something a move of an aspect also sets off, as part of its pattern (Whirlpool's finisher pushing back): from her, along her aim; `own`: carrying her element (its elemental moment). */
+export interface MoveEffect {
+  readonly move: MoveFilter
+  readonly effect: SkillEffect
+  readonly own: boolean
+}
 
 export interface AspectSpec extends Moves {
   /** Shown in menus. */
@@ -29,8 +39,8 @@ export interface AspectSpec extends Moves {
   readonly against: string
   /** The class it belongs to: any character of it can equip it. */
   readonly class: ClassId
-  /** Its passive: effects made of the shared vocabulary (see `content/passives.ts`), reading only facts that belong to no element. */
-  readonly passives: ReadonlyArray<Passive>
+  /** What its moves also set off: part of the pattern, never a bonus (see `MoveEffect`). */
+  readonly effects: ReadonlyArray<MoveEffect>
   /** Its one elemental moment: the move whose blows carry her element; `null`: none. */
   readonly infuse: MoveFilter | null
 }
@@ -42,12 +52,12 @@ export const aspects = {
   /**
    * Duelist (Blade): three thrusts, each harder than the last; charged, a
    * long lunge. Its counter (the dash strike out of a dash that perfectly
-   * dodged a blow) is a heavy blow that deals double, and carries her
-   * element. For elites and armored enemies; weaker against a crowd.
+   * dodged a blow) is a heavy lunge that carries her element. For elites and
+   * armored enemies; weaker against a crowd.
    */
   duelist: aspect({
     name: "Duelist",
-    description: "Three thrusts, each harder than the last. Charged: a long lunge. A counter right after a perfect dodge deals double.",
+    description: "Three thrusts, each harder than the last. Charged: a long lunge. A counter right after a perfect dodge is a heavy lunge.",
     against: "Elites and armor; weaker against a crowd.",
     class: "blade",
     combo: [
@@ -60,17 +70,17 @@ export const aspects = {
     dash: thrust({ reach: 185, width: 64, power: 28, knockback: 620, recovery: 0.3, hitStop: 0.1, heavy: true, lunge: 90 }),
     magazine: null,
     chain: null,
-    passives: [damageBonus(100, withMove(counter()))],
+    effects: [],
     infuse: counter()
   }),
   /**
    * Marksman (Gun): slow shots that pierce, three rounds; charged, a rail
-   * shot through every enemy in a line. Its last round carries her element;
-   * its shots deal more to the wounded. From afar, against enemies at range.
+   * shot through every enemy in a line. Its last round carries her element.
+   * From afar, against enemies at range.
    */
   marksman: aspect({
     name: "Marksman",
-    description: "Slow shots that pierce, three rounds. Charged: a rail shot through a whole line. Shots deal more to the wounded.",
+    description: "Slow shots that pierce, three rounds. Charged: a rail shot through a whole line.",
     against: "Enemies at range, from afar.",
     class: "gun",
     combo: [
@@ -81,17 +91,17 @@ export const aspects = {
     dash: shot({ count: 1, spreadDegrees: 0, speed: 1500, radius: 7, range: 700, pierce: 2, power: 26, knockback: 300, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: -10 }),
     magazine: { rounds: 3, reload: 1.1 },
     chain: null,
-    passives: [damageBonus(50, targetHealthBelow(0.3))],
+    effects: [],
     infuse: lastRound()
   }),
   /**
    * Riptide (Disc): the Ring's throws, bouncing on between enemies in a
-   * state and dealing them half again as much; the pair in a V carries her
-   * element. Feeds on states, hers or her team's.
+   * state; the pair in a V carries her element. Feeds on states, hers or her
+   * team's.
    */
   riptide: aspect({
     name: "Riptide",
-    description: "Discs bounce on between enemies in a state, and deal half again as much to them.",
+    description: "Discs bounce on between enemies in a state.",
     against: "Enemies already in a state, from her or her team.",
     class: "disc",
     combo: [
@@ -103,7 +113,7 @@ export const aspects = {
     dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, bounces: 2, power: 14, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
     magazine: null,
     chain: null,
-    passives: [damageBonus(50, targetInState())],
+    effects: [],
     infuse: combo(3)
   }),
   /**
@@ -125,18 +135,18 @@ export const aspects = {
     dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 18, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
     magazine: null,
     chain: { range: 150, share: 0.6 },
-    passives: [],
+    effects: [],
     infuse: combo(3)
   }),
   /**
    * Gathering Edge (Blade): two slashes, then a spin that draws enemies in
    * instead of throwing them out, carrying her element; charged, a wide
-   * sweep that draws in. Her blows deal more to enemies in a state. Keeps a
-   * pack together for the next combo, and for a teammate's skill.
+   * sweep that draws in. Keeps a pack together for the next combo, and for a
+   * teammate's skill.
    */
   gatheringEdge: aspect({
     name: "Gathering Edge",
-    description: "Two slashes, then a spin that pulls enemies in toward her. Charged: a wide sweep that pulls in too. Blows deal more to enemies in a state.",
+    description: "Two slashes, then a spin that pulls enemies in toward her. Charged: a wide sweep that pulls in too.",
     against: "Packs: keeps them together for the next combo, or a teammate's skill.",
     class: "blade",
     combo: [
@@ -149,17 +159,17 @@ export const aspects = {
     dash: arc({ reach: 130, arcDegrees: 160, power: 22, knockback: 450, recovery: 0.28, hitStop: 0.07, heavy: false, lunge: 60 }),
     magazine: null,
     chain: null,
-    passives: [damageBonus(20, targetInState())],
+    effects: [],
     infuse: finisher()
   }),
   /**
    * Scattergun (Gun): short, wide spreads that knock back, four rounds;
-   * charged, a point-blank blast carrying her element. Each kill heals her a
-   * little. In the middle of the pack.
+   * charged, a point-blank blast carrying her element. In the middle of the
+   * pack.
    */
   scattergun: aspect({
     name: "Scattergun",
-    description: "Short, wide spreads that knock back, four rounds. Charged: a point-blank blast. Each kill heals her a little.",
+    description: "Short, wide spreads that knock back, four rounds. Charged: a point-blank blast.",
     against: "Fighting in the middle of the pack.",
     class: "gun",
     combo: [
@@ -172,7 +182,7 @@ export const aspects = {
     dash: shot({ count: 5, spreadDegrees: 40, speed: 900, radius: 5, range: 280, pierce: 0, power: 6, knockback: 420, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: -10 }),
     magazine: { rounds: 4, reload: 1.2 },
     chain: null,
-    passives: [on(kill(), heal(2))],
+    effects: [],
     infuse: power()
   }),
   /**
@@ -194,18 +204,17 @@ export const aspects = {
     dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0.3, hoverTick: 0.15, power: 14, knockback: 220, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
     magazine: null,
     chain: null,
-    passives: [on(doing(finisher()), cast(nova({ radius: 130, power: 8, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.02, heavy: false })))],
+    effects: [{ move: finisher(), own: false, effect: nova({ radius: 130, power: 8, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.02, heavy: false }) }],
     infuse: power()
   }),
   /**
    * Lightning Rod (Staff): the Spark's bolts; her charged attack also plants
    * a rod ahead of her that zaps the nearest enemy around it for a few
-   * seconds, carrying her element; her bolts deal more to enemies in a
-   * state. A place to fight from.
+   * seconds, carrying her element. A place to fight from.
    */
   lightningRod: aspect({
     name: "Lightning Rod",
-    description: "Her charged attack also plants a rod ahead of her that zaps the nearest enemy for a few seconds. Bolts deal more to enemies in a state.",
+    description: "Her charged attack also plants a rod ahead of her that zaps the nearest enemy for a few seconds.",
     against: "A place to fight from.",
     class: "staff",
     combo: [
@@ -217,10 +226,7 @@ export const aspects = {
     dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 18, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
     magazine: null,
     chain: null,
-    passives: [
-      on(doing(power()), castOwn(totem({ offset: 70, seconds: 3, tick: 0.5, radius: 150, heal: 0, jumps: 0, repel: 0, power: 10, element: null, knockback: 40, hitStop: 0, heavy: false }))),
-      damageBonus(25, targetInState())
-    ],
+    effects: [{ move: power(), own: true, effect: totem({ offset: 70, seconds: 3, tick: 0.5, radius: 150, heal: 0, jumps: 0, repel: 0, power: 10, element: null, knockback: 40, hitStop: 0, heavy: false }) }],
     infuse: null
   })
 } satisfies { readonly [id: string]: AspectSpec }

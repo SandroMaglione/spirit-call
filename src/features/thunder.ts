@@ -271,7 +271,8 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
         data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
       }
     }
-    for (const { data } of queries.members.each()) {
+    // A clap that heals nobody (a relic's discharge) shows no healing either.
+    for (const { data } of effect.heal > 0 ? queries.members.each() : []) {
       const health = data.health.get()
       if (health.current <= 0 || health.current >= health.max) continue
       const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)

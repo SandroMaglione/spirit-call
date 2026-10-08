@@ -316,7 +316,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
     const state = data.state.get().current
     const held = (data.stunned.present && data.stunned.get().remaining > 0) || (data.poise.present && data.poise.get().broken > 0)
-    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, { ...health, inState: state !== null, held }) : 0
+    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, { ...health, state: state?.id ?? null, held }) : 0
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
     const factor = blow.element === null ? 1 : affinityDamage(tuning, affinity)
@@ -371,7 +371,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       killed,
       heavy: blow.heavy,
       periodic: blow.periodic,
-      element: blow.element?.id ?? null
+      element: blow.element?.id ?? null,
+      state: state?.id ?? null
     })
     // The state it held bursts, even on the blow that ends it; the new state holds on a body that survives.
     const side = data.hurtbox.get().faction
