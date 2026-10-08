@@ -68,6 +68,14 @@
       .hud__quest-progress { font: 700 10px/1 system-ui, sans-serif; opacity: 0.85; }
       .hud__quest-progress:empty { display: none; }
       /* The Extras' damage readout, one line: the damage a second, and the hits a second. */
+      /* A champion on the field: its name and a wide health bar under the header, edged in its element, marked where its phases begin. */
+      .hud__boss { display: grid; justify-items: center; gap: 3px; margin-top: 4px; }
+      .hud__boss[hidden] { display: none; }
+      .hud__boss-name { font: 800 italic 13px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--boss, #ffcf5a); }
+      .hud__boss-bar { position: relative; width: min(46vw, 360px); height: 7px; border-radius: 2px; background: rgba(0, 0, 0, 0.55); box-shadow: 0 0 0 1.5px var(--boss, #ffcf5a), 0 0 10px color-mix(in srgb, var(--boss, #ffcf5a) 45%, transparent); transform: skewX(-12deg); overflow: hidden; }
+      .hud__boss-bar i { position: absolute; inset: 0 auto 0 0; width: 100%; background: linear-gradient(#ff7a6b, #e0453a); transition: width 0.12s linear; }
+      .hud__boss-bar b { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: #fff; opacity: 0.95; }
+      .hud__boss-bar b.is-past { opacity: 0.3; }
       .hud__meter { display: flex; gap: 10px; align-items: baseline; font: 800 italic 14px/1 "Barlow Condensed", sans-serif; }
       .hud__meter b { color: #ffe08a; }
       .hud__meter span { color: #eef1ff; }

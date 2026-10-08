@@ -16,7 +16,7 @@ import { SyncDamageMeter, SyncHud, SyncTeam, SyncTouchPad } from "./hud.ts"
 import { ApplyCamera, FadeOccluders, InterpolateActors, OrientBolts, SyncArena, SyncNodes } from "./scene.ts"
 import { DrawOffscreenEnemies } from "./offscreen.ts"
 import { DrawTelegraphs } from "./telegraphs.ts"
-import { ShowAirborne, ShowUltimateMoments } from "./flourish.ts"
+import { ShowAirborne, ShowChampions, ShowUltimateMoments } from "./flourish.ts"
 import { ShowHazards } from "./hazards.ts"
 
 export const frame = Game.Schedule(
@@ -37,6 +37,7 @@ export const frame = Game.Schedule(
   PlayFalls,
   ShowUltimateMoments,
   ShowAirborne,
+  ShowChampions,
   ReactToHits,
   ShedStateMotes,
   ShedArenaEmbers,

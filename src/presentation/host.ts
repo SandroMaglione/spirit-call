@@ -35,7 +35,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
     <div class="hud__focus" data-focus></div>
     <div class="hud__moment" data-moment></div>
     <div class="hud__fall" data-fall></div>
-    <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div><div class="hud__meter" data-meter hidden><b data-damage></b><span data-hits></span></div></div>
+    <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div><div class="hud__meter" data-meter hidden><b data-damage></b><span data-hits></span></div><div class="hud__boss" data-boss hidden><div class="hud__boss-name" data-boss-name></div><div class="hud__boss-bar"><i data-boss-fill></i><span data-boss-marks></span></div></div></div>
     <div class="hud__vitals">
       <span class="hud__state" data-state hidden></span>
       <div class="hud__health"><div class="hud__health-fill" data-health></div><span class="hud__health-text" data-health-text></span></div>
@@ -108,7 +108,13 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       vignette: root.querySelector<HTMLElement>("[data-vignette]")!,
       focus: root.querySelector<HTMLElement>("[data-focus]")!,
       moment: root.querySelector<HTMLElement>("[data-moment]")!,
-      fall: root.querySelector<HTMLElement>("[data-fall]")!
+      fall: root.querySelector<HTMLElement>("[data-fall]")!,
+      boss: {
+        root: root.querySelector<HTMLElement>("[data-boss]")!,
+        name: root.querySelector<HTMLElement>("[data-boss-name]")!,
+        fill: root.querySelector<HTMLElement>("[data-boss-fill]")!,
+        marks: root.querySelector<HTMLElement>("[data-boss-marks]")!
+      }
     }
   }
 }
