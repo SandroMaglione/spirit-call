@@ -116,16 +116,17 @@ describe("breaking", () => {
     expect(run.runtime.inspect(Fight).enemies[0]!.poise.current).toBeLessThan(0.5 * 200)
   })
 
-  it("fills the team's energy when it breaks one, on top of what the blows gave", () => {
-    const run = start({ tuning: breakable, pointer: [{ frame: 0, move: cursorAt({ x: 60, y: 0 }) }, ...clicks(1, 30, 14)] })
-    run.runtime.tick(placeDummies([{ x: 60, y: 0 }], breakable))
+  it("fills the team's energy when it breaks one, on top of what the blows gave (when breaks give any)", () => {
+    const charging = tuningWith({ enemies: { dummy: { poise: 0.5, hp: 200 } }, energy: { break: 15 } })
+    const run = start({ tuning: charging, pointer: [{ frame: 0, move: cursorAt({ x: 60, y: 0 }) }, ...clicks(1, 30, 14)] })
+    run.runtime.tick(placeDummies([{ x: 60, y: 0 }], charging))
     let before = 0
     for (let step = 0; step < steps(6); step++) {
       before = run.runtime.inspect(Charge)
       run.step()
       if (run.runtime.inspect(Fight).enemies[0]!.poise.broken > 0) break
     }
-    expect(run.runtime.inspect(Charge) - before).toBeGreaterThanOrEqual(defaultTuning.energy.break)
+    expect(run.runtime.inspect(Charge) - before).toBeGreaterThanOrEqual(15)
   })
 
   it("never breaks from chip damage that lets the bar drain", () => {

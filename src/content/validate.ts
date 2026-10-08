@@ -370,7 +370,10 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const problems: Array<string> = []
 
   const { progression } = tuning
-  positive(problems, "energy", tuning.energy)
+  const { break: onBreak, ...energy } = tuning.energy
+  positive(problems, "energy", energy)
+  // Breaks may give none.
+  if (!(onBreak >= 0)) problems.push(`energy: break must not be negative (is ${onBreak})`)
   if (!(tuning.energy.targetCap >= 1 && tuning.energy.targetCap <= 2)) problems.push("energy: targetCap must be between 1 and 2")
   if (!(tuning.team.benchEnergyShare >= 0 && tuning.team.benchEnergyShare <= 1)) problems.push("team: benchEnergyShare must be between 0 and 1")
   checkCurve(problems, "account levels", progression.account.curve)

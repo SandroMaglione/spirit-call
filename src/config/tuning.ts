@@ -174,8 +174,12 @@ export const defaultTuning = {
     attack: 3,
     special: 15,
     targetCap: 1.5,
-    /** Energy the team gains when it breaks an enemy (see `Tuning.breaking`): the one on the field all of it, the bench its share. */
-    break: 15
+    /**
+     * Energy the team gains when it breaks an enemy (see `Tuning.breaking`):
+     * the one on the field all of it, the bench its share. None for now:
+     * early quests break enemies so often that it doubled the ultimates.
+     */
+    break: 0
   },
 
   /** An ultimate's moment (see `UltimateMoment`): the world stands still this long as she calls it up, then it goes off. */

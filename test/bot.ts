@@ -522,7 +522,8 @@ export const runBot = (run: BotRun): BotReport => {
     events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal) }
   }, ({ events }) => {
     for (const cast of events.cast.all()) {
-      if (cast.faction !== "player" || cast.skill === null) continue
+      // A landing is part of a skill already used (see `Airborne`).
+      if (cast.faction !== "player" || cast.skill === null || cast.landing === true) continue
       if (tuning.skills[cast.skill].energy > 0) ultimates += 1
       else specials += 1
     }

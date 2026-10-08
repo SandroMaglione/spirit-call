@@ -83,13 +83,18 @@ The audit below records the original problems. The playable update now uses:
 | Bench energy | 30% per living member |
 | Totem / Thunderclap healing | 2% per tick / 8% per member |
 | Kill healing (now Scattergun's passive) | 2% max HP per kill |
-| Perfect-dodge slow / break fill / energy | 0.7 seconds / 25% / 4 |
+| Perfect-dodge slow / break fill / energy | 0.7 seconds / 25% / 10 |
 | Wall-slam / reaction break fill | 25% / 20% |
 | Chaser swipe / follow-up | 18% / 14% ATK |
 
 Energy now has a shared budget per action. A basic attack earns 3 times
 its recovery in seconds on its first target, including a magazine weapon's
-share of reload time. A special earns 10. Additional unique targets receive
+share of reload time. A special earns 15 (10 until the 2026-10-07 playtest
+found about one ultimate a run; with 15, and a perfect dodge's 10, a
+skilled bot playing the early quests calls one every 39 seconds instead of
+84). Breaks could give the team energy too (`energy.break`), but early
+quests break so many enemies that it doubled the rate: it is 0 for now.
+Additional unique targets receive
 half the previous award, capped at 150% of the first-target award. The same
 key travels through projectiles, repeated ticks and thunder chains; repeated
 contact with one target adds nothing. Levels and damage do not change the
