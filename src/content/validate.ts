@@ -30,7 +30,7 @@ import type { AspectSpec } from "./aspects.ts"
 import { isMelee } from "./attacks.ts"
 import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
-import type { AttackSpec } from "./enemies.ts"
+import type { AttackSpec, EnemyKind } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
@@ -93,14 +93,17 @@ const checkMove = (problems: Array<string>, where: string, move: AttackMove): vo
 }
 
 /** A moveset's attacks: each named once, with a range that can be met, warning at least `minTelegraph` before hitting, and combos that end. */
-const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyArray<AttackSpec>, minTelegraph: number): void => {
+const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyArray<AttackSpec>, minTelegraph: number, phases = 0): void => {
   const ids = attacks.map((attack) => attack.id)
+  for (let phase = 1; phase <= phases; phase++) {
+    if (attacks.filter((attack) => attack.opens && attack.phase === phase).length > 1) problems.push(`${where}: phase ${phase} has more than one opening attack`)
+  }
   for (const attack of attacks) {
     const at = `${where} attack ${attack.id}`
     if (ids.filter((id) => id === attack.id).length > 1) problems.push(`${at}: named more than once in the moveset`)
     positive(problems, at, { triggerRange: attack.triggerRange })
     if (!(attack.weight >= 0)) problems.push(`${at}: weight must not be negative (is ${attack.weight})`)
-    if (attack.weight === 0 && !attacks.some((other) => other.followUp === attack.id)) problems.push(`${at}: has no weight and follows nothing, so it is never made`)
+    if (attack.weight === 0 && !attack.opens && !attacks.some((other) => other.followUp === attack.id)) problems.push(`${at}: has no weight and follows nothing, so it is never made`)
     if (attack.element !== null && !has(elements, attack.element)) problems.push(`${at}: unknown element ${attack.element}`)
     if (!(attack.lead >= 0 && attack.lead <= 1)) problems.push(`${at}: lead must be from 0 to 1 (is ${attack.lead})`)
     if (!(attack.aimLock >= minTelegraph)) problems.push(`${at}: warns ${attack.aimLock}s before it hits, under the fairness floor of ${minTelegraph}s`)
@@ -110,6 +113,13 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
     }
     if (attack.followUp !== null && !ids.includes(attack.followUp)) problems.push(`${at}: unknown follow-up ${attack.followUp}`)
     if (attack.kind === "gust") positive(problems, at, { reach: attack.reach, arcDegrees: attack.arcDegrees })
+    if (attack.kind === "wave") {
+      positive(problems, at, { reach: attack.reach, speed: attack.speed, width: attack.width })
+      if (Math.abs(attack.active - attack.reach / attack.speed) > 1e-6) problems.push(`${at}: its active time must be its run out to its reach (${attack.reach / attack.speed}s)`)
+    }
+    if (!(Number.isInteger(attack.phase) && attack.phase >= 0 && attack.phase <= phases)) problems.push(`${at}: phase must be a whole number from 0 to ${phases} (is ${attack.phase})`)
+    if (attack.opens && attack.phase === 0) problems.push(`${at}: opens the first phase, which begins with no roar`)
+    if (attack.opens && attack.weight !== 0) problems.push(`${at}: opens its phase, so it is never picked: its weight must be 0`)
     if (attack.kind === "blink") {
       positive(problems, at, { radius: attack.radius })
       if (!(attack.maxReach >= 0)) problems.push(`${at}: maxReach must not be negative (is ${attack.maxReach})`)
@@ -491,6 +501,23 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (!(enemy.burst.fuse >= tuning.fairness.minTelegraph)) problems.push(`enemy ${id} burst: its fuse of ${enemy.burst.fuse}s is under the fairness floor of ${tuning.fairness.minTelegraph}s`)
     }
   }
+
+  // Champions' own movesets: the same rules as any enemy's, their phases going down, each opening with at most one attack.
+  for (const [id, moveset] of Object.entries(tuning.champions.movesets)) {
+    if (moveset === undefined) continue
+    const where = `champion ${id}`
+    if (!has(tuning.enemies, id)) problems.push(`${where}: unknown enemy`)
+    else if (tuning.enemies[id as EnemyKind].behavior.kind === "kite") problems.push(`${where}: keeps its distance (champions are melee or area kinds)`)
+    checkMoveset(problems, where, moveset.attacks, tuning.fairness.minTelegraph, moveset.phases.length)
+    if (!(moveset.health > 0)) problems.push(`${where}: health must be positive (is ${moveset.health})`)
+    moveset.phases.forEach((phase, index) => {
+      const above = index === 0 ? 1 : moveset.phases[index - 1]!.below
+      if (!(phase.below > 0 && phase.below < above)) problems.push(`${where}: phase ${index + 1} must begin under the one before it, above 0 (begins at ${phase.below})`)
+      if (!(phase.rest > 0)) problems.push(`${where}: phase ${index + 1} rest must be positive (is ${phase.rest})`)
+    })
+    if (moveset.attacks.every((attack) => attack.phase > 0 || attack.weight === 0)) problems.push(`${where}: has nothing to pick in its first phase`)
+  }
+  if (!(tuning.champions.broken >= 1)) problems.push(`champions: broken must be at least 1 (is ${tuning.champions.broken})`)
 
   const cheapest = Math.min(...Object.values(tuning.enemies).map((enemy) => enemy.cost).filter((cost) => cost > 0))
   for (const [id, challenge] of Object.entries(tuning.challenges)) {

@@ -17,7 +17,7 @@ describe("run log", () => {
     expect(fromEnemies.length).toBeGreaterThan(0)
     for (const hurt of fromEnemies) {
       // Each names an attack of that enemy's moveset (or an elite's discharge).
-      expect([...defaultTuning.enemies[hurt.enemy!].attacks.map((attack) => attack.id), "discharge"]).toContain(hurt.attack)
+      expect([...defaultTuning.enemies[hurt.enemy!].attacks, ...(defaultTuning.champions.movesets[hurt.enemy!]?.attacks ?? [])].map((attack) => attack.id).concat("discharge")).toContain(hurt.attack)
     }
     const taken = log.hurts.reduce((sum, hurt) => sum + hurt.damage, 0)
     expect(taken).toBeGreaterThan(0)

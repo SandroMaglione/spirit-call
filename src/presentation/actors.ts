@@ -269,7 +269,7 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     if (node?.kind !== "enemy") continue
     const kind = data.enemy.get().kind
     const attacker = data.attacker.get()
-    const spec = currentAttack(tuning, kind, attacker)
+    const spec = currentAttack(tuning, data.enemy.get(), attacker)
     // Anticipation: the body brightens through the windup.
     const windup = spec !== undefined && data.phase.get() === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
     const stunned = data.stunned.get().remaining > 0
@@ -310,6 +310,13 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     if (champion && data.elite.present) overlay.fillRect(x - 2, y - 2, width + 4, breaking ? 12 : 8, view.elements[data.elite.get().element], 0.9)
     overlay.fillRect(x - 1, y - 1, width + 2, breaking ? 10 : 6, view.healthBack, 0.85)
     overlay.fillRect(x, y, width * (health.current / health.max), 4, view.healthFill, 1)
+    // A champion fighting in phases: a mark where each begins, bright ahead of it, dim once past.
+    if (champion) {
+      const mark = view.champion.phaseMark
+      for (const phase of tuning.champions.movesets[kind]?.phases ?? []) {
+        overlay.fillRect(x + width * phase.below - 1, y - 2, 2, 8, mark.color, health.current / health.max > phase.below ? mark.ahead : mark.past)
+      }
+    }
     // Its break bar under it: filling up, then full and flashing while it is broken.
     if (breaking) {
       const full = poise.broken > 0

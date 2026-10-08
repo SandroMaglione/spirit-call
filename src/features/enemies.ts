@@ -35,6 +35,7 @@ import {
   PendingSpawn,
   Player,
   Position,
+  Rampage,
   Renderable,
   Respawns,
   RunScope,
@@ -97,7 +98,9 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const base = enemyStats(tuning, kind, level)
   const lead = champion && elite !== null ? tuning.champions : null
   const power = lead === null ? null : championPower(tuning, level)
-  const hp = elite === null ? base.hp : Math.round(base.hp * (power?.health ?? tuning.elites.health))
+  // A champion with its own moveset fights through its phases: its own share of a champion's health.
+  const own = lead === null ? 1 : tuning.champions.movesets[kind]?.health ?? 1
+  const hp = elite === null ? base.hp : Math.round(base.hp * (power === null ? tuning.elites.health : power.health * own))
   const atk = power === null ? base.atk : Math.round(base.atk * power.atk)
   const speed = lead === null ? base.speed : base.speed * lead.speed
   const { def } = base
@@ -117,10 +120,12 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const draft = elite === null
     ? body
     : Game.Command.insert(body, [Elite, { element: elite, trail: tuning.elites.trailEvery, discharge: tuning.elites.discharge.every * (0.5 + (at.x % 97) / 194), charging: null }])
+  // A champion with its own moveset fights in phases (see content/champions.ts).
+  const fighting = lead !== null && tuning.champions.movesets[kind] !== undefined ? Game.Command.insert(draft, [Rampage, { phase: 0, opened: 0 }]) : draft
   const form = tuning.shields
   const shielded = !shield
-    ? draft
-    : Game.Command.insert(draft, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (form.arcDegrees * Math.PI) / 360, turnRate: (form.turnRate * Math.PI) / 180 }])
+    ? fighting
+    : Game.Command.insert(fighting, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (form.arcDegrees * Math.PI) / 360, turnRate: (form.turnRate * Math.PI) / 180 }])
   // A warder reaches for an ally as soon as it is out.
   return stats.ward === null ? shielded : Game.Command.insert(shielded, [Ward, { ally: null, formed: 0, wait: 0 }])
 }
@@ -337,7 +342,7 @@ export const SteerEnemies = (() => {
       }
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
-      const attack = currentAttack(tuning, kind, attacker)
+      const attack = currentAttack(tuning, data.enemy.get(), attacker)
       if (attack?.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
         data.velocity.set(scale(attacker.area.direction, attack.speed * slowed))
         continue

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { ArenaId } from "../src/content/arena.ts"
+import { championMovesets } from "../src/content/champions.ts"
 import { propBoxes } from "../src/features/arena.ts"
 import { arenaLooks, characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
 import { enemies } from "../src/content/enemies.ts"
@@ -98,7 +99,9 @@ describe("looks and models", () => {
         expect(clips[look.wardClip], `${kind}: ward clip`).toBeDefined()
       }
       for (const [attack, phases] of Object.entries(look.attackClips ?? {})) {
-        expect(enemies[kind].attacks.some((spec) => spec.id === attack), `${kind}/${attack}`).toBe(true)
+        // A move of the kind, or of its champion (see content/champions.ts).
+        const moves = [...enemies[kind].attacks, ...(championMovesets[kind]?.attacks ?? [])]
+        expect(moves.some((spec) => spec.id === attack), `${kind}/${attack}`).toBe(true)
         const clips: Readonly<Record<string, ClipTiming>> = models[look.model].clips
         for (const clip of Object.values(phases)) expect(clips[clip], `${kind}/${attack}/${clip}`).toBeDefined()
       }

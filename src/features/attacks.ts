@@ -20,7 +20,15 @@
  * above, which the type checker enforces. A stunned enemy's attack is put
  * on hold where it is. A blink moves the attacker: it appears in the middle
  * of its mark as the windup ends, then strikes the mark. A gust blows along
- * its cone, its own side too (pushed and driven by the wind, no damage).
+ * its cone, its own side too (pushed and driven by the wind, no damage). A
+ * shockwave's ring runs out along the floor from where it stood.
+ *
+ * Attacks answering what the player is doing (`read`) are picked first
+ * while she does it (see `answering`). A champion with its own moveset (see
+ * content/champions.ts) fights in phases by its health: as one begins it
+ * roars (`Roused`) and makes the phase's opening attack as soon as it is
+ * free, past the crowd's windups; then the phase's attacks join the others,
+ * with shorter rests. Such a champion never waits for the crowd's windups.
  */
 import type { AttackSpec } from "../content/enemies.ts"
 import { Random } from "../math/rng.ts"
@@ -52,7 +60,9 @@ import {
   Poise,
   Position,
   PrevPosition,
+  Rampage,
   Rng,
+  Roused,
   RunScope,
   SlowMotion,
   Stunned,
@@ -66,7 +76,7 @@ import { lob } from "../content/skills.ts"
 import { damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
 import { readPlayer } from "./behaviors.ts"
-import { aimPoint, canStart, pickAttack } from "./moveset.ts"
+import { aimPoint, answering, canStart, movesetOf, pickAttack, readFrom } from "./moveset.ts"
 import type { Moving } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { enemyPace, paceOf } from "./time.ts"
@@ -86,6 +96,8 @@ export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: Rea
     case "melee":
     case "gust":
       return { kind: "cone", origin, direction, radius: spec.reach, halfAngle: toRadians(spec.arcDegrees) / 2 }
+    case "wave":
+      return { kind: "circle", center: origin, radius: spec.reach }
     case "slam":
     case "lob":
     case "blink": {
@@ -132,10 +144,11 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) },
       with: [Health]
     }),
+    rampages: Game.Query({ selection: { rampage: Game.Query.write(Rampage), enemy: Game.Query.read(Enemy), health: Game.Query.read(Health) } }),
     walls: Walls
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { damage: Game.System.writeEvent(Damage) }
+  events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused) }
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   // Enemy attacks run at the enemies' pace (slower in slow motion).
@@ -155,6 +168,18 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   const cooldownRate = open ? tuning.reading.cooldownRate : 1
   const random = new Random(resources.rng.get().state)
 
+  // Champions' phases, by their health (see `ChampionMoveset`): the one each is in, and the last it opened.
+  const rampages = new Map<number, { readonly phase: number; readonly was: number; opened: number }>()
+  for (const { entity, data } of queries.rampages.each()) {
+    const phases = tuning.champions.movesets[data.enemy.get().kind]?.phases ?? []
+    const health = data.health.get()
+    const share = health.max <= 0 ? 0 : health.current / health.max
+    const was = data.rampage.get().phase
+    // Phases only go on: healing back over a line does not take one back.
+    const phase = Math.max(was, phases.filter((next) => share <= next.below).length)
+    rampages.set(entity.id.value, { phase, was, opened: data.rampage.get().opened })
+  }
+
   // The nearest enemies attack first: they take the free windups (see `Tuning.crowd.windups`).
   const attackers = queries.attackers.each()
   const away = (at: Vec2) => (target === undefined ? 0 : (at.x - target.x) ** 2 + (at.y - target.y) ** 2)
@@ -163,9 +188,14 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
 
   for (const { entity, data } of order.map((index) => attackers[index]!)) {
     const kind = data.enemy.get().kind
-    const attacks = tuning.enemies[kind].attacks
-    // Low levels wait longer between attacks, a champion less (its telegraphs are its kind's); see `restOf`.
-    const rest = data.enemy.get().rest ?? 1
+    const attacks = movesetOf(tuning, data.enemy.get())
+    const rampage = rampages.get(entity.id.value)
+    const phase = rampage?.phase ?? 0
+    const phaseRest = phase === 0 ? 1 : tuning.champions.movesets[kind]?.phases[phase - 1]?.rest ?? 1
+    // It roars as a phase begins.
+    if (rampage !== undefined && rampage.phase > rampage.was) events.roused.emit({ at: data.position.get(), enemy: kind, phase, element: data.elite.present ? data.elite.get().element : null })
+    // Low levels wait longer between attacks, a champion less (its telegraphs are its kind's), and less again in its later phases; see `restOf`.
+    const rest = (data.enemy.get().rest ?? 1) * phaseRest
     // A broken enemy's windup is cut off (it starts over once it recovers).
     if (data.poise.get().broken > 0 && data.phase.get() === "windup") {
       const cut = data.attacker.get()
@@ -177,7 +207,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (attacks.length === 0 || data.stunned.get().remaining > 0) continue
     const position = data.position.get()
     const current = data.attacker.get()
-    const phase = data.phase
+    const cycle = data.phase
     let { attack, area, hit } = current
     let elapsed = current.elapsed + dt
     const rate = tuning.enemies[kind].behavior.kind === "kite" ? 1 : cooldownRate
@@ -187,24 +217,30 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const begin = (index: number, at: Moving) => {
       const spec = attacks[index]!
       attack = index
-      phase.transition("ready", "windup")
+      cycle.transition("ready", "windup")
       area = aimArea(spec, position, aimPoint(spec, position, at, spec.windup), boxes)
       windingUp += 1
     }
 
     // A skirmisher attacks only while holding an engagement slot (see `Behavior`).
     const engaged = tuning.enemies[kind].behavior.kind !== "skirmish" || data.mode.get() === "engage"
-    if (phase.get() === "ready") {
+    if (cycle.get() === "ready") {
       elapsed = 0
-      if (cooldown <= 0 && engaged && windingUp < tuning.crowd.windups && moving !== undefined) {
-        const usable = attacks.flatMap((spec, index) => (spec.weight > 0 && canStart(spec, position, moving.at, boxes) ? [index] : []))
-        const chosen = pickAttack(attacks, usable, random)
+      // A phase begun: its opening attack, at once.
+      const opener = rampage === undefined || rampage.opened >= phase ? -1 : attacks.findIndex((spec) => spec.opens && spec.phase === phase)
+      if (rampage !== undefined && moving !== undefined && rampage.opened < phase) {
+        rampage.opened = phase
+        if (opener >= 0) begin(opener, moving)
+      } else if (cooldown <= 0 && engaged && (rampage !== undefined || windingUp < tuning.crowd.windups) && moving !== undefined) {
+        const usable = attacks.flatMap((spec, index) => (spec.weight > 0 && !spec.opens && spec.phase <= phase && canStart(spec, position, moving.at, boxes) ? [index] : []))
+        const reading = readFrom(position, moving, player?.data.stats.get().speed ?? 1, boxes, open)
+        const chosen = pickAttack(attacks, answering(attacks, usable, reading), random)
         if (chosen !== undefined) begin(chosen, moving)
       }
     }
 
     const spec = attack === null ? undefined : attacks[attack]
-    if (spec === undefined || phase.get() === "ready") {
+    if (spec === undefined || cycle.get() === "ready") {
       data.attacker.set({ attack, elapsed, cooldown, area, hit })
       continue
     }
@@ -220,13 +256,13 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     })
 
     // The aim follows the target until it locks.
-    if (phase.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
+    if (cycle.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
       area = aimArea(spec, position, aimPoint(spec, position, moving, Math.max(0, spec.windup - elapsed)), boxes)
     }
     // A blow can push the attacker during the windup (a gust, a knockback): what it committed to goes with it, so
     // nothing lands where it no longer stands. A swing or a lane starts from where it stands (a beam stops at the
     // first wall from there); a slam's circle comes back within its reach.
-    if (phase.get() === "windup" && area !== null) {
+    if (cycle.get() === "windup" && area !== null) {
       if (area.kind === "cone" || area.kind === "lane") {
         area = spec.kind === "beam" && area.kind === "lane"
           ? aimArea(spec, position, { x: position.x + area.direction.x, y: position.y + area.direction.y }, boxes)
@@ -234,12 +270,14 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       } else if (spec.kind === "slam" && area.kind === "circle") {
         const offset = clampLength(sub(area.center, position), spec.maxReach)
         area = { ...area, center: { x: position.x + offset.x, y: position.y + offset.y } }
+      } else if (spec.kind === "wave" && area.kind === "circle") {
+        area = { ...area, center: position }
       }
     }
 
-    if (phase.get() === "windup" && elapsed >= spec.windup && area !== null) {
+    if (cycle.get() === "windup" && elapsed >= spec.windup && area !== null) {
       elapsed -= spec.windup
-      phase.transition("windup", "active")
+      cycle.transition("windup", "active")
       windingUp -= 1
       // A blink: it appears in the middle of its mark (walls push it out as it moves on), with nothing to blend from.
       const struckFrom = spec.kind === "blink" && area.kind === "circle" ? area.center : position
@@ -282,6 +320,11 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       } else if (spec.kind === "charge") {
         // The charge itself is the attack: contact damage while active (below).
         hit = []
+      } else if (spec.kind === "wave") {
+        // A ring running out along the floor from where it stood, as far as its reach.
+        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+          area: { kind: "ring", center: struckFrom, radius: 0, width: spec.width }, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], grows: spec.speed
+        }]))
       } else {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], follows: struckFrom
@@ -290,7 +333,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     }
 
     // A charging attacker damages what it runs into, once per target per charge.
-    if (phase.get() === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
+    if (cycle.get() === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
       for (const other of queries.targets.each()) {
         const hurtbox = other.data.hurtbox.get()
         if (hurtbox.faction === faction || hit.includes(other.entity.id.value)) continue
@@ -303,12 +346,12 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         events.damage.emit({ target: Game.Entity.handle(other.entity.id, Health), faction, direction: pushDirection({ ...area, origin: position, length: 1 }, at), blow: struck })
       }
     }
-    if (phase.get() === "active" && elapsed >= spec.active) {
+    if (cycle.get() === "active" && elapsed >= spec.active) {
       elapsed -= spec.active
-      phase.transition("active", "recovery")
+      cycle.transition("active", "recovery")
     }
-    if (phase.get() === "recovery" && elapsed >= spec.recovery) {
-      phase.transition("recovery", "ready")
+    if (cycle.get() === "recovery" && elapsed >= spec.recovery) {
+      cycle.transition("recovery", "ready")
       elapsed = 0
       area = null
       cooldown = spec.cooldown * rest
@@ -323,6 +366,10 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     data.attacker.set({ attack, elapsed, cooldown, area, hit })
   }
   resources.rng.set({ state: random.state })
+  for (const { entity, data } of queries.rampages.each()) {
+    const rampage = rampages.get(entity.id.value)
+    if (rampage !== undefined) data.rampage.set({ phase: rampage.phase, opened: rampage.opened })
+  }
 })
 
 /** Whoever holds a blow that moves with them (see `HitboxValue.follows`). */
@@ -357,6 +404,10 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
       const at = holder.value.data.position.get()
       const offset = { x: at.x - hitbox.follows.x, y: at.y - hitbox.follows.y }
       if (offset.x !== 0 || offset.y !== 0) hitbox = { ...hitbox, area: shiftArea(hitbox.area, offset), follows: at }
+    }
+    // A shockwave's ring runs on out.
+    if (hitbox.grows !== undefined && hitbox.area.kind === "ring") {
+      hitbox = { ...hitbox, area: { ...hitbox.area, radius: hitbox.area.radius + hitbox.grows * dt * paceOf(slow, hitbox.faction) } }
     }
     const hit = [...hitbox.hit]
     for (const target of targets) {

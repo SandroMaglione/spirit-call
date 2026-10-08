@@ -480,6 +480,13 @@ export interface AttackerValue {
 export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker")
 
 /**
+ * A champion with its own moveset (see content/champions.ts): the phase its
+ * health has brought it to, and the last phase whose opening attack it has
+ * made (one behind `phase` until it makes it).
+ */
+export const Rampage = Descriptor.Component<{ readonly phase: number; readonly opened: number }>()("Shooter/Rampage")
+
+/**
  * A warder's tether (see `WardSpec`): the ally it wards and how long the
  * tether has been forming (it wards once that reaches the spec's `link`), or
  * no ally and the wait before it reaches for one.
@@ -557,6 +564,8 @@ export interface HitboxValue {
    * it along instead of leaving it behind.
    */
   readonly follows?: Vec2
+  /** How fast a shockwave's ring runs out (its `area` a ring, see `WaveAttack`). */
+  readonly grows?: number
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
@@ -710,6 +719,8 @@ export const SlowMotion = Descriptor.Resource<{ readonly remaining: number; read
 
 /** An enemy broke (see `Poise`), for effects. */
 export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind }>()("Shooter/Broke")
+/** A champion entered its `phase` (see `Rampage`): it roars. */
+export const Roused = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind; readonly phase: number; readonly element: ElementId | null }>()("Shooter/Roused")
 
 /** An area went off (a lobbed skill's blast, a nova, a rock erupting, a ring of stone bursting out), for effects. */
 export const Explosion = Descriptor.Event<{
@@ -1132,6 +1143,7 @@ export const Game = Schema.bind(
       Disc,
       Enemy,
       Attacker,
+      Rampage,
       AttackPhase,
       Shield,
       Ward,
@@ -1179,7 +1191,7 @@ export const Game = Schema.bind(
       Practice,
       PracticeField
     },
-    events: { Damage, Hit, Death, Broke, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
+    events: { Damage, Hit, Death, Broke, Roused, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
   }),
   Root
 )

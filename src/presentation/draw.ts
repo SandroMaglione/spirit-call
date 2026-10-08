@@ -33,6 +33,12 @@ export const drawArea = (g: Shapes, area: Area, progress: number, style: { reado
     }
     case "line":
       return
+    case "ring":
+      // A shockwave's band, with a bright edge on each side.
+      g.strokeCircle(area.center.x, area.center.y, area.radius, area.width, style.color, style.fill)
+      g.strokeCircle(area.center.x, area.center.y, area.radius + area.width / 2, 3, style.color, style.outline)
+      g.strokeCircle(area.center.x, area.center.y, Math.max(0, area.radius - area.width / 2), 3, style.color, style.outline)
+      return
     case "lane": {
       const side = { x: -area.direction.y * area.halfWidth, y: area.direction.x * area.halfWidth }
       const strip = (length: number) => {

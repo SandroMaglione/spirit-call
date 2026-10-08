@@ -12,6 +12,7 @@ import type { ChallengeSpec } from "../src/content/challenges.ts"
 import { validateContent } from "../src/content/validate.ts"
 import { championPower, enemyStats, restOf } from "../src/features/enemies.ts"
 import { knockbackTaken } from "../src/features/motion.ts"
+import { movesetOf } from "../src/features/moveset.ts"
 import { poiseOf } from "../src/features/poise.ts"
 import { Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
 import { start } from "./helpers.ts"
@@ -124,7 +125,7 @@ describe("champions", () => {
       const brute = run.runtime.inspect(Field).enemies.find((enemy) => enemy.champion)
       if (brute !== undefined) longest = Math.max(longest, brute.cooldown)
     }
-    const slowest = Math.max(...defaultTuning.enemies.brute.attacks.map((attack) => attack.cooldown))
+    const slowest = Math.max(...movesetOf(defaultTuning, { kind: "brute", champion: true }).map((attack) => attack.cooldown))
     expect(longest).toBeGreaterThan(0)
     expect(longest).toBeLessThanOrEqual(slowest * restOf(defaultTuning, 1, true) + 1e-9)
     // Later on, a champion waits less than its kind.

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import { entryChampion, entryElite, entryKind } from "../src/content/challenges.ts"
+import type { ChampionMoveset } from "../src/content/champions.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { runBot } from "./bot.ts"
 import { inArena } from "./helpers.ts"
@@ -39,5 +40,16 @@ describe("fairness", () => {
       expect(runBot({ tuning, enemies, seconds: 25 }).hits).toBe(0)
       expect(runBot({ tuning, enemies, seconds: 25, still: true }).hits).toBeGreaterThan(0)
     }, 30_000)
+  }
+
+  // A champion with its own moveset, in each of its later phases: its roar, then what the phase brings.
+  for (const [kind, moveset] of Object.entries(defaultTuning.champions.movesets) as Array<[EnemyKind, ChampionMoveset]>) {
+    moveset.phases.forEach((phase, index) => {
+      it(`every attack of a ${kind} champion in its phase ${index + 2} can be dodged`, () => {
+        const enemies = [{ kind, offset: { x: 380, y: 0 }, champion: "fire" as const, health: phase.below - 0.01 }]
+        expect(runBot({ tuning, enemies, seconds: 25 }).hits).toBe(0)
+        expect(runBot({ tuning, enemies, seconds: 25, still: true }).hits).toBeGreaterThan(0)
+      }, 30_000)
+    })
   }
 })

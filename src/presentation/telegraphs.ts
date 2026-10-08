@@ -66,7 +66,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
   for (const { data } of queries.attackers.each()) {
     const attacker = data.attacker.get()
-    const spec = currentAttack(tuning, data.enemy.get().kind, attacker)
+    const spec = currentAttack(tuning, data.enemy.get(), attacker)
     if (spec === undefined || attacker.area === null || data.phase.get() !== "windup") continue
     const progress = Math.min(1, attacker.elapsed / spec.windup)
     const area = attacker.area

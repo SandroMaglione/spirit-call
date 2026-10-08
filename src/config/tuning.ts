@@ -16,6 +16,7 @@ import { arenas } from "../content/arena.ts"
 import { aspects } from "../content/aspects.ts"
 import { banners, callRules } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
+import { championMovesets } from "../content/champions.ts"
 import { characters } from "../content/characters.ts"
 import { classes } from "../content/classes.ts"
 import { currencies } from "../content/currencies.ts"
@@ -372,6 +373,9 @@ export const defaultTuning = {
    * champion discharges as an elite does. It stays across waves:
    * it does not count toward clearing the wave it came in, and the
    * challenge clears only once it has fallen too (see `DirectWaves`).
+   * A kind with its own champion moveset (`movesets`, see
+   * content/champions.ts) fights with it, in phases; broken, it stays down
+   * `broken` times as long as anything else: the opening its fight builds to.
    */
   champions: {
     scale: 1.5,
@@ -381,6 +385,8 @@ export const defaultTuning = {
     cooldown: 0.6,
     knockback: 0.45,
     poise: 0.35,
+    broken: 1.6,
+    movesets: championMovesets,
     /**
      * A champion grows with the main line: at enemy level `early.level`
      * (chapter one's) it has `early`'s health, ATK, and wait between

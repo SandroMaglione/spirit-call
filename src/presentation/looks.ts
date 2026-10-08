@@ -208,14 +208,19 @@ const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips
   moments: { idle: "Idle", run: { clip: kind === "dummy" || kind === "sparringDummy" || kind === "heavyDummy" ? "Idle" : "Run", distance: stride }, hurt: "Hurt" }
 })
 
+const bruteStomp: EnemyAttackClips = { windup: "WindupStomp", active: "ActiveStomp", recovery: "RecoveryStomp" }
+
 export const enemyLooks: Readonly<Record<EnemyKind, BodyLook>> = {
   dummy: enemyModel("dummy", "enemyDummy", 1),
   chaser: enemyModel("chaser", "enemyChaser", 48),
   shooter: enemyModel("shooter", "enemyShooter", 62, {
     spray: { windup: "WindupSpray", active: "ActiveSpray", recovery: "RecoverySpray" }
   }),
+  // Its champion's own attacks (see content/champions.ts) borrow its two blows: shockwaves and roars are stomps,
+  // and a charge crouches, runs, and stands winded.
   brute: enemyModel("brute", "enemyBrute", 60, {
-    stomp: { windup: "WindupStomp", active: "ActiveStomp", recovery: "RecoveryStomp" }
+    ...Object.fromEntries(["stomp", "trample", "quake", "tremor", "tremorAgain", "roar", "fury", "furyAgain"].map((id) => [id, bruteStomp])),
+    ...Object.fromEntries(["rush", "rampage", "rampageAgain"].map((id) => [id, { windup: "WindupStomp", active: "Run", recovery: "RecoveryStomp" }]))
   }),
   swarmer: enemyModel("swarmer", "enemySwarmer", 55),
   charger: enemyModel("charger", "enemyCharger", 52, { swipe: { windup: "WindupSwipe", active: "ActiveSwipe", recovery: "RecoverySwipe" } }),

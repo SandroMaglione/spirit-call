@@ -24,6 +24,8 @@ const areaDirection = (area: Area, from: Vec2): Vec2 | null => {
     case "line":
     case "lane":
       return area.direction
+    case "ring":
+      return null
   }
 }
 
@@ -71,7 +73,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     animate(node, facing, held, held ? 0 : seconds)
     if (shield !== null) node.body.shield?.(Math.atan2(shield.x, shield.y) - Math.atan2(facing.x, facing.y))
     const kind = data.enemy.get().kind
-    const spec = currentAttack(resources.tuning.get(), kind, data.attacker.get())
+    const spec = currentAttack(resources.tuning.get(), data.enemy.get(), data.attacker.get())
     const look = enemyLooks[kind]
     const clips = look.kind === "model" && spec !== undefined ? look.attackClips?.[spec.id] : undefined
     const pose = enemyPose(spec, data.phase.get(), data.attacker.get().elapsed, clips)
@@ -144,7 +146,7 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     const phase = data.phase.get()
     const started = phase === "windup" && node.attackPhase !== "windup"
     node.attackPhase = phase
-    const spec = currentAttack(tuning, data.enemy.get().kind, data.attacker.get())
+    const spec = currentAttack(tuning, data.enemy.get(), data.attacker.get())
     const clip = node.body.moments?.windup
     if (started && spec !== undefined && clip !== undefined) node.body.play(clip, spec.windup, null)
   }

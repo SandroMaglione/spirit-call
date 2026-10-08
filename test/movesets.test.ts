@@ -15,7 +15,7 @@ const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id ==
 /** A lunge: a short charge, only from a distance. */
 const lunge: AttackSpec = {
   kind: "charge", id: "lunge", minRange: 150, triggerRange: 260, windup: 0.5, aimLock: 0.5, active: 0.2, recovery: 0.5, cooldown: 0.5,
-  power: 10, knockback: 200, weight: 1, followUp: null, element: null, lead: 0, speed: 900, width: 40
+  power: 10, knockback: 200, weight: 1, followUp: null, element: null, lead: 0, read: null, phase: 0, opens: false, speed: 900, width: 40
 }
 
 /** A chaser that walks straight at the player with `attacks`. */
