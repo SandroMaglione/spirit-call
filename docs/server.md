@@ -160,8 +160,12 @@ with a read-only key (see `scripts/db.ts`):
 `pnpm testers new` makes the next test account on prod (`sandro1`,
 `sandro2`, ...): a new player's account, signed up through the API, with a
 wallet full enough to try anything (crystals for about 500 calls, gold and
-every material to take every character to the top). `refill <name>` fills
-one again, `list` shows them (see `scripts/testers.ts`).
+every material to take every character to the top). `new --chapter1`
+(or `chapter1 <name>` on one already made) clears chapter 1 first, so the
+Spirit Call is open: each quest is selected and a cleared run recorded
+through the API, earning only the clear's star, so the server pays what a
+player would get. `refill <name>` fills one again, `list` shows them (see
+`scripts/testers.ts`).
 
 - **The wallet is written straight to the database** with a key that can
   write D1, made by `deploy/stacks/writer.ts` from a laptop with the admin

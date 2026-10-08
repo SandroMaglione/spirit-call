@@ -4,22 +4,37 @@
  * to take every character to the top), to try anything without playing up
  * to it. Named `sandro1`, `sandro2`, ..., all with one password.
  *
- *   pnpm testers new              signs up the next `sandroN` and fills its wallet
- *   pnpm testers refill <name>    fills a test account's wallet again
- *   pnpm testers list             the test accounts and what they hold
+ *   pnpm testers new [--chapter1]  signs up the next `sandroN` and fills its wallet
+ *   pnpm testers chapter1 <name>   clears chapter 1 (the Spirit Call opens) and fills the wallet again
+ *   pnpm testers refill <name>     fills a test account's wallet again
+ *   pnpm testers list              the test accounts and what they hold
  *
  * Signing up goes through the game's own API (`TESTERS_URL`, with
- * `TESTERS_PASSWORD`), so the login is made as any player's is; the wallet
+ * `TESTERS_PASSWORD`), so the login is made as any player's is. Clearing
+ * chapter 1 does too: each of its quests is selected and a run that cleared
+ * it is recorded (meeting only the clear's star), so the server's own rules
+ * pay what a player would get. The wallet
  * is then written straight to the database with the write key
  * (`D1_WRITE_TOKEN`, see deploy/stacks/writer.ts), logged as a `testerFill`
  * event. All of them come from the environment or `.env.database`. Only
  * names of this form are touched; `pnpm db` leaves them out unless `--tests`.
  */
 import { existsSync, readFileSync } from "node:fs"
+import { parseArgs } from "node:util"
+
+import { encounterOf } from "../src/account/account.ts"
+import { defaultTuning } from "../src/config/tuning.ts"
 
 import { currencies } from "../src/content/currencies.ts"
 import type { ResourceId } from "../src/content/currencies.ts"
 import { materials } from "../src/content/materials.ts"
+import type { QuestId } from "../src/content/quests.ts"
+import type { Tally } from "../src/content/stars.ts"
+import { emptyRunLog } from "../src/schema.ts"
+import type { RunResultValue } from "../src/schema.ts"
+
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { chapter1: { type: "boolean", default: false } } })
+const [command, argument] = positionals
 
 /** What a test account holds: everything maxed for all five characters takes about 2.9M gold and 13.5k of each material. */
 const fill: Record<ResourceId, number> = {
@@ -69,15 +84,40 @@ const query = async <Row = Record<string, unknown>>(sql: string, params: Readonl
   return response.result[0]?.results ?? []
 }
 
-/** Calls the game's API as `username`, logging in first; the answer's JSON. */
-const asPlayer = async (username: string, signUp: boolean): Promise<unknown> => {
+/** Logs in as `username` (signing up first when `signUp`): a call to the game's API as her, answering its JSON. */
+const asPlayer = async (username: string, signUp: boolean) => {
   const login = await fetch(`${url}/api/${signUp ? "users" : "sessions"}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username, password }) })
   if (!login.ok) throw new Error(`${signUp ? "Signing up" : "Logging in"} ${username}: ${login.status} ${await login.text()}`)
   const cookie = (login.headers.get("set-cookie") ?? "").split(";")[0] ?? ""
-  // Reading the account makes it, as a new player's, if it is not there yet.
-  const read = await fetch(`${url}/api/account`, { headers: { cookie } })
-  if (!read.ok) throw new Error(`Reading ${username}'s account: ${read.status} ${await read.text()}`)
-  return read.json()
+  return async (method: string, path: string, body?: unknown): Promise<unknown> => {
+    const response = await fetch(`${url}/api${path}`, { method, headers: { cookie, "content-type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) })
+    if (!response.ok) throw new Error(`${method} ${path} as ${username}: ${response.status} ${await response.text()}`)
+    return response.json()
+  }
+}
+
+/** Chapter 1's quests, in the order they open. */
+const chapterOne = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((id) => defaultTuning.quests[id].chapter === "one")
+
+/** A tally that meets none of `quest`'s tally goals, so a clear earns only the clear's star. */
+const onlyTheClear = (quest: QuestId): Tally => {
+  const tally: Record<keyof Tally, number> = { hitsTaken: 0, perfectDodges: 0, breaks: 0 }
+  for (const goal of defaultTuning.quests[quest].stars) {
+    if (goal.kind === "tally") tally[goal.tally] = goal.most !== undefined ? goal.most + 1 : Math.max(0, (goal.least ?? 0) - 1)
+  }
+  return tally
+}
+
+/** Clears every chapter 1 quest at rank I for `username`, as runs the server records. */
+const clearChapterOne = async (username: string) => {
+  const call = await asPlayer(username, false)
+  for (const quest of chapterOne) {
+    const play = { kind: "quest" as const, quest, rank: 1 }
+    const team = ["swordsman"] as const
+    await call("PUT", "/account/selection", { team, play })
+    const result: RunResultValue = { cleared: true, challenge: encounterOf(defaultTuning, play).challenge, progress: 1, wave: 1, kills: 0, time: 180, team, reactions: [], tally: onlyTheClear(quest) }
+    await call("POST", "/runs", { play, result, log: emptyRunLog })
+  }
 }
 
 const isTester = (username: string) => new RegExp(`^${prefix}[0-9]+$`).test(username)
@@ -100,21 +140,32 @@ const refill = async (username: string) => {
 }
 
 /** The wallet as the game's API answers it, to check the fill took. */
-const walletOf = async (username: string) => ((await asPlayer(username, false)) as { wallet: Record<string, number> }).wallet
+const walletOf = async (username: string) => ((await (await asPlayer(username, false))("GET", "/account")) as { wallet: Record<string, number> }).wallet
 
 const commands: Record<string, () => Promise<void>> = {
   new: async () => {
     const taken = await query<{ username: string }>("SELECT username FROM users WHERE username GLOB ?", [pattern])
     const next = Math.max(0, ...taken.map((row) => row.username).filter(isTester).map((name) => Number(name.slice(prefix.length)))) + 1
     const username = `${prefix}${next}`
-    await asPlayer(username, true)
+    // Reading the account makes it, as a new player's.
+    await (await asPlayer(username, true))("GET", "/account")
+    if (values.chapter1) await clearChapterOne(username)
     await refill(username)
-    console.log(`Made ${username} (password from TESTERS_PASSWORD) at ${url}`)
+    console.log(`Made ${username}${values.chapter1 ? " with chapter 1 cleared" : ""} (password from TESTERS_PASSWORD) at ${url}`)
+    console.table(await walletOf(username))
+  },
+
+  chapter1: async () => {
+    const username = argument
+    if (username === undefined || !isTester(username)) throw new Error(`pnpm testers chapter1 <${prefix}N>`)
+    await clearChapterOne(username)
+    await refill(username)
+    console.log(`Cleared chapter 1 for ${username}`)
     console.table(await walletOf(username))
   },
 
   refill: async () => {
-    const username = process.argv[3]
+    const username = argument
     if (username === undefined) throw new Error("pnpm testers refill <name>")
     await refill(username)
     console.log(`Filled ${username}`)
@@ -129,7 +180,7 @@ const commands: Record<string, () => Promise<void>> = {
   }
 }
 
-const run = commands[process.argv[2] ?? ""]
+const run = commands[command ?? ""]
 if (run === undefined) {
   console.error(`pnpm testers ${Object.keys(commands).join(" | ")} (see scripts/testers.ts)`)
   process.exit(1)
