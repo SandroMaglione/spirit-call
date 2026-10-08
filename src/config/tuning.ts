@@ -358,6 +358,13 @@ export const defaultTuning = {
      * next arrives, and a wave of ten still overlaps the next.
      */
     reinforceShare: 0.7,
+    /**
+     * At most this many enemies on the field at once (spawn warnings
+     * included): the rest of a wave comes in as room opens. Pressure comes
+     * from harder enemies, not a flood of them (and the screen stays clear,
+     * on a phone too).
+     */
+    most: 12,
     /** How long after that point it starts arriving. */
     reinforceDelay: 0.6,
     seed: 1337
@@ -425,11 +432,12 @@ export const defaultTuning = {
 
   /**
    * Low levels breathe: an enemy of level 1 waits `restAtFirst` times as long
-   * between its attacks, easing to its kind's own wait by level `fullAt`
-   * (see `restOf`). Only the waits: windups, reach, health, and damage are
-   * its kind's at every level.
+   * between its attacks, and winds each up `windupAtFirst` times as long,
+   * easing to its kind's own by level `fullAt` (see `restOf`, `windupOf`):
+   * the first quests are a place to learn to read and dodge. Reach, health,
+   * and damage are its kind's at every level.
    */
-  pacing: { restAtFirst: 1.25, fullAt: 10 },
+  pacing: { restAtFirst: 1.6, windupAtFirst: 1.35, fullAt: 10 },
 
   flow: {
     /** Time on the game-over screen before restart input is accepted. */

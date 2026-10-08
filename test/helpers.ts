@@ -203,12 +203,25 @@ export interface StartOptions {
   readonly arena?: ArenaId
   /** The specials as shipped; by default the Gunner and the Tidecaller lob the Grenade and the Splash (see `withLobbedSpecials`). */
   readonly kits?: "shipped" | "lobbed"
+  /** Enemies as tough as shipped (see `progression.enemies`); by default their kind's own health and ATK, so a mechanic's test counts its kind's numbers. */
+  readonly toughness?: boolean
   /** Ultimates with their moment (the world standing still before they go off, see `UltimateMoment`); by default they go off at once, so tests of what they do need not wait it out. */
   readonly moments?: boolean
 }
 
 /** `tuning` whose ultimates go off at once, with no moment first. */
 export const withoutMoments = (tuning: Tuning): Tuning => ({ ...tuning, ultimate: { ...tuning.ultimate, moment: 0 } })
+
+/**
+ * `tuning` whose enemies have their kind's own health, ATK, and windups (no
+ * `progression.enemies` toughness, no slower windups at the first levels),
+ * so a mechanic's test counts its kind's numbers.
+ */
+export const plainEnemies = (tuning: Tuning): Tuning => ({
+  ...tuning,
+  progression: { ...tuning.progression, enemies: { ...tuning.progression.enemies, health: 1, healthAtFirst: 1, atk: 1, atkAtFirst: 1 } },
+  pacing: { ...tuning.pacing, windupAtFirst: 1 }
+})
 
 /** A headless run after setup. Timeline frame `n` is read by fixed step `n + 1`. */
 export const start = (options: StartOptions = {}) => {
@@ -217,7 +230,7 @@ export const start = (options: StartOptions = {}) => {
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
     party: scriptedPartyTaps(options.party ?? []),
-    tuning: inArena(withWaves((options.moments === true ? (tuning: Tuning) => tuning : withoutMoments)(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning)), options.waves ?? false), options.arena ?? "courtyard"),
+    tuning: inArena(withWaves((options.toughness === true ? (tuning: Tuning) => tuning : plainEnemies)((options.moments === true ? (tuning: Tuning) => tuning : withoutMoments)(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning))), options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
     ...(options.team === undefined ? {} : { team: options.team }),
     ...(options.challenge === undefined ? {} : { challenge: options.challenge }),
@@ -257,7 +270,7 @@ export const cursorAt = (offset: Vec2): Vec2 => {
 /** A schedule that replaces every enemy with training dummies (of `tuning`) at offsets from the player's spawn. */
 export const placeDummies = (offsets: ReadonlyArray<Vec2>, tuning: Tuning = defaultTuning) => {
   const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
-    for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
+    for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(plainEnemies(tuning), "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
   })
   return Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())
 }

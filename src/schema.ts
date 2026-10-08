@@ -52,7 +52,8 @@ export const Player = Descriptor.Tag("Shooter/Player")
  * state, energy, skills, and basic attack for the whole run, on the field or
  * on the bench.
  */
-export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly aspect: AspectId | null }>()("Shooter/Member")
+/** A team member: her slot, who she is, the aspect on her, and her level (see `levelGap`). */
+export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly aspect: AspectId | null; readonly level: number }>()("Shooter/Member")
 /** Unit direction the entity aims at: where its attacks and skills go (the cursor, or the touch aim). */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
 
@@ -451,9 +452,10 @@ export type { EnemyKind }
 /**
  * An enemy of `kind`; `champion`: an elite pushed further, staying across
  * waves (see `Tuning.champions`); `rest`: how much longer than its kind it
- * waits between attacks (low levels and champions, see `restOf`).
+ * waits between attacks (low levels and champions, see `restOf`);
+ * `windup`: how much longer its windups last (low levels, see `windupOf`).
  */
-export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean; readonly rest?: number }>()("Shooter/Enemy")
+export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean; readonly rest?: number; readonly windup?: number }>()("Shooter/Enemy")
 
 /** Where an enemy is in its telegraphed attack cycle. */
 export const AttackPhase = Descriptor.State("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {

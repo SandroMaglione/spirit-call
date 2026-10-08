@@ -43,9 +43,34 @@ export interface StatCurve {
   readonly shape: number
 }
 
+/**
+ * The level gap (see `levelGap`): on top of what levels do to stats, a
+ * character below the run's enemy level deals `under.dealt` less and takes
+ * `under.taken` more for each level she is under, down to `under.floor`
+ * and up to `under.cap` of it; above it, `over` likewise, the other way, and
+ * only a little (no power creep: a stronger account clears faster, never
+ * trivially). Levels matter: well under, every enemy takes twice as long to
+ * fall and hits half as hard again, while still fair (every hit avoidable,
+ * nothing timed), so a skilled player can still clear it.
+ */
+export interface LevelGap {
+  readonly under: { readonly dealt: number; readonly floor: number; readonly taken: number; readonly cap: number }
+  readonly over: { readonly dealt: number; readonly cap: number; readonly taken: number; readonly floor: number }
+}
+
 export const progression = {
   /** How every level turns into stats: HP, ATK, and DEF grow with it; speed does not. */
   stats: { band: 4, at: 40, shape: 1 } satisfies StatCurve,
+  gap: { under: { dealt: 0.045, floor: 0.4, taken: 0.04, cap: 1.6 }, over: { dealt: 0.01, cap: 1.1, taken: 0.01, floor: 0.9 } } satisfies LevelGap,
+  /**
+   * Every enemy's health and ATK, as multiples of its kind's (champions'
+   * on top of their own, see content/champions.ts): fewer enemies, each a
+   * longer, harder fight, rather than more of them. Both grow along the
+   * first chapters, from `healthAtFirst` and `atkAtFirst` at level 1 (its
+   * blows gentler than its kind's: the first quests are a place to learn)
+   * to `health` and `atk` from level `fullAt` on.
+   */
+  enemies: { health: 2.5, healthAtFirst: 1.8, atk: 1.3, atkAtFirst: 0.8, fullAt: 10 },
   /**
    * What a lost run pays, as a share of a clear: its progress toward the
    * objective (waves defeated) times this, so trying is

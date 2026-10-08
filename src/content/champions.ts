@@ -46,7 +46,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
    * its pounces twice.
    */
   chaser: {
-    health: 4,
+    health: 2.7,
     behavior: { kind: "chase", stopDistance: 70 },
     phases: [{ below: 0.5, rest: 0.85 }],
     attacks: [
@@ -76,7 +76,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
    * and sends a shockwave off its shield.
    */
   guardian: {
-    health: 2.6,
+    health: 1.1,
     behavior: { kind: "chase", stopDistance: 80 },
     phases: [{ below: 0.5, rest: 0.85 }],
     attacks: [
@@ -115,7 +115,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
    * again, its shockwaves come in pairs, and it calls more help.
    */
   brute: {
-    health: 1.8,
+    health: 1,
     phases: [{ below: 0.6, rest: 0.85 }, { below: 0.25, rest: 0.7 }],
     attacks: [
       // Its strings. A blow in the middle of one recovers quickly; the last, slowly: the opening.
@@ -187,7 +187,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
    * tides come in pairs, and her brood is bigger.
    */
   swarmer: {
-    health: 8,
+    health: 4.4,
     behavior: { kind: "chase", stopDistance: 40 },
     phases: [{ below: 0.6, rest: 0.85 }, { below: 0.25, rest: 0.7 }],
     attacks: [
@@ -231,7 +231,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
    * its blinks come in threes.
    */
   stalker: {
-    health: 2,
+    health: 1.1,
     phases: [{ below: 0.6, rest: 0.85 }, { below: 0.25, rest: 0.7 }],
     attacks: [
       melee("slash", { triggerRange: 90, reach: 100, arcDegrees: 100, windup: 0.5, aimLock: 0.3, active: 0.1, recovery: 0.25, cooldown: 1, power: 16, knockback: 300, followUp: ["slashAgain", "cleaveEnd"] }),
@@ -264,7 +264,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
    * caster too.
    */
   juggernaut: {
-    health: 1,
+    health: 0.6,
     phases: [{ below: 0.6, rest: 0.85 }, { below: 0.25, rest: 0.7 }],
     attacks: [
       melee("sweep", { triggerRange: 105, reach: 115, arcDegrees: 170, windup: 0.65, aimLock: 0.35, active: 0.12, recovery: 0.3, cooldown: 1, power: 18, knockback: 420, followUp: ["quake", "sweepEnd"] }),

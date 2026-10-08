@@ -26,6 +26,8 @@ import type { AttackRef, BuildValue } from "../schema.ts"
 
 export interface ResolvedBuild {
   readonly character: CharacterId
+  /** Her level (see `levelGap`). */
+  readonly level: number
   readonly stats: Stats
   readonly radius: number
   readonly hurtboxRadius: number
@@ -45,6 +47,19 @@ export const levelScale = (curve: StatCurve, level: number): number => {
   if (curve.at <= 1) return 1
   const reached = Math.max(0, (level - 1) / (curve.at - 1))
   return 1 + (curve.band - 1) * reached ** curve.shape
+}
+
+/**
+ * What the level gap does to a blow between a team member of `level` and
+ * enemies of `enemyLevel` (see `LevelGap`): the share of its damage a blow
+ * she deals lands with (`dealt`), and the share of an enemy's she takes
+ * (`taken`).
+ */
+export const levelGap = (tuning: TuningValue, level: number, enemyLevel: number): { readonly dealt: number; readonly taken: number } => {
+  const rules = tuning.progression.gap
+  const gap = enemyLevel - level
+  if (gap >= 0) return { dealt: Math.max(rules.under.floor, 1 - rules.under.dealt * gap), taken: Math.min(rules.under.cap, 1 + rules.under.taken * gap) }
+  return { dealt: Math.min(rules.over.cap, 1 + rules.over.dealt * -gap), taken: Math.max(rules.over.floor, 1 - rules.over.taken * -gap) }
 }
 
 /** `base` at character level `level`: HP, ATK, and DEF scaled (to whole numbers), speed as it is. */
@@ -86,6 +101,7 @@ export const resolveBuild = (tuning: TuningValue, build: BuildValue): ResolvedBu
   const aspect = aspectFor(tuning, build.character, build.aspect)
   return {
     character: build.character,
+    level: build.level ?? 1,
     stats: statsAtLevel(tuning, character.stats, build.level ?? 1),
     radius: character.radius,
     hurtboxRadius: character.hurtboxRadius,

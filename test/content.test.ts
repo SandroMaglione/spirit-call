@@ -16,7 +16,7 @@ describe("content", () => {
       classes: { ...defaultTuning.classes, gun: { ...defaultTuning.classes.gun, plain: { ...defaultTuning.classes.gun.plain, combo: [] } } },
       characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman, class: "lance" as never } },
       skills: { ...defaultTuning.skills, flareJump: { ...defaultTuning.skills.flareJump, cooldown: 0 } },
-      challenges: { ...defaultTuning.challenges, gauntlet3: { ...defaultTuning.challenges.gauntlet3, objective: clearWaves(), waves: { ...defaultTuning.challenges.gauntlet3.waves, endless: { baseBudget: 6, budgetPerWave: 2, kinds: ["chaser"], elites: [] } } } }
+      challenges: { ...defaultTuning.challenges, gauntlet3: { ...defaultTuning.challenges.gauntlet3, objective: clearWaves(), waves: { ...defaultTuning.challenges.gauntlet3.waves, endless: { baseBudget: 6, budgetPerWave: 2, maxBudget: 16, championEvery: null, kinds: ["chaser"], elites: [] } } } }
     }
     expect(validateContent(broken)).toEqual([
       "class gun plain aspect: the combo needs at least one move",

@@ -8,7 +8,7 @@ import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, grenadeSkill, gunShot, gunner, playerLoss, start, swordsman } from "./helpers.ts"
+import { ClearEnemies, grenadeSkill, gunShot, gunner, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -48,7 +48,7 @@ const cursorAt = (offset: Vec2) => {
 const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}, shield = false) => {
   const run = start(options)
   const Spawn = Game.System("Test/SpawnOne", {}, ({ commands }) => {
-    commands.spawnIn(RunScope, makeEnemy(options.tuning ?? defaultTuning, kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, null, false, shield))
+    commands.spawnIn(RunScope, makeEnemy(plainEnemies(options.tuning ?? defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, null, false, shield))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
   return { ...run, world: () => run.runtime.inspect(World) }

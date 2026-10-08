@@ -260,6 +260,20 @@ Decided so far (the rest is in the open questions):
   way to the cap of 60 (about 5.5x), the levels the ranks' replays reach.
   The cap is not sacred: it rises only if content needs it; later chapters
   can grow harder through twists rather than levels.
+- **Levels matter: the level gap.** On top of the stat band, a team below
+  the enemies' level deals less and takes more for each level it is under
+  (`progression.gap`, within bounds): ten levels under, every enemy takes
+  about twice as long to fall and hits half as hard again. Under-levelled
+  is a real struggle, never a wall: nothing is timed and every hit stays
+  avoidable, so a skilled player still clears it, long and tense. Over the
+  enemies' level gives only a little (no power creep, no trivial clears).
+  (October 2026: a playtest cleared chapter three's finale with levels 1
+  to 4 against 16.)
+- **Fewer, tougher enemies.** Enemies have more health and hit harder than
+  their kinds' numbers (`progression.enemies`), and only a few stand on
+  the field at once (`waves.most`): pressure comes from harder enemies and
+  champions, not floods. The first quests stay a place to learn: their
+  enemies hit softer than their kinds, and their windups and waits run longer.
 - **Growth stays simple:** character levels, and nothing else gives stats.
   Aspects change how she plays and have no levels. Relics (a closed set,
   slot by slot) add small reactions, not stats; their tiers add behavior,

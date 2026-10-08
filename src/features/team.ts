@@ -59,7 +59,7 @@ import { initialBasicAttack } from "./basic-attack.ts"
 export const makeMember = (build: ResolvedBuild, slot: number) =>
   Game.Command.spawn(
     ...fighterParts({ stats: build.stats, affinities: {} }),
-    [Member, { slot, character: build.character, aspect: build.attack.aspect }],
+    [Member, { slot, character: build.character, aspect: build.attack.aspect, level: build.level }],
     [Passives, build.passives],
     [BasicAttack, initialBasicAttack(build)],
     [Skills, initialSkills(build)],

@@ -8,7 +8,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, BasicAttack } from "../src/schema.ts"
-import { start, windCut, withWindCut, plainAttack } from "./helpers.ts"
+import { start, windCut, withWindCut, plainAttack, plainEnemies } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const sword = plainAttack(defaultTuning, "blade")
@@ -152,7 +152,7 @@ describe("sword slash", () => {
       queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
     }, ({ queries, commands }) => {
       for (const { entity } of queries.dummies.each()) commands.despawn(entity.id)
-      commands.spawnIn(RunScope, makeEnemy(defaultTuning, "chaser", { x: center.x + 70, y: center.y }))
+      commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), "chaser", { x: center.x + 70, y: center.y }))
     })
     run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
     run.step(18)

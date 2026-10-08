@@ -73,10 +73,20 @@ export const entryElite = (entry: WaveEntry): EliteElement | null => (typeof ent
 /** Whether a wave entry carries a shield. */
 export const entryShield = (entry: WaveEntry): boolean => typeof entry !== "string" && entry.shield === true
 
-/** Endless waves: random mixes of `kinds` within a budget (enemy `cost`) growing per wave, some of them elites of `elites`. */
+/**
+ * Endless waves: random mixes of `kinds` within a budget (enemy `cost`)
+ * growing per wave up to `maxBudget`, some of them elites of `elites`. Past
+ * that, waves grow stronger, not bigger (enemy levels, elites), and every
+ * `championEvery` waves a champion of `kinds` (one with its own moveset,
+ * see content/champions.ts) leads the wave, carrying one of `elites`,
+ * unless one still stands: harder enemies, not more of them.
+ */
 export interface EndlessWaves {
   readonly baseBudget: number
   readonly budgetPerWave: number
+  readonly maxBudget: number
+  /** Every this many waves a champion leads the wave; `null`: none. */
+  readonly championEvery: number | null
   readonly kinds: ReadonlyArray<EnemyKind>
   /** The elements its elites carry (see `Tuning.elites.endless`); none makes no elites. */
   readonly elites: ReadonlyArray<EliteElement>
@@ -113,7 +123,7 @@ const untilFall = (arena: ArenaId, kinds: ReadonlyArray<EnemyKind>, elites: Read
     description: "Last as long as the team can: every wave stronger than the last.",
     objective: endure(10, 1),
     arena,
-    waves: { scripted, endless: { baseBudget: 6, budgetPerWave: 2, kinds, elites } }
+    waves: { scripted, endless: { baseBudget: 6, budgetPerWave: 2, maxBudget: 16, championEvery: elites.length === 0 ? null : 5, kinds, elites } }
   })
 
 /**
@@ -153,13 +163,13 @@ export const challenges = {
   /** Chasers only: learn to move, dodge, and strike back. */
   firstBlood: waves("First Blood", "Clear eight waves of chasers, a few more each time.", "courtyard", [
     ["chaser", "chaser"],
+    ["chaser", "chaser"],
+    ["chaser", "chaser"],
+    ["chaser", "chaser", "chaser"],
     ["chaser", "chaser", "chaser"],
     ["chaser", "chaser", "chaser"],
     ["chaser", "chaser", "chaser", "chaser"],
-    ["chaser", "chaser", "chaser", "chaser"],
-    ["chaser", "chaser", "chaser", "chaser", "chaser"],
-    ["chaser", "chaser", "chaser", "chaser", "chaser"],
-    ["chaser", "chaser", "chaser", "chaser", "chaser", "chaser"]
+    ["chaser", "chaser", "chaser", "chaser"]
   ]),
   /** Shooters behind cover, with chasers to keep you busy: close the distance. */
   crossfire: waves("Crossfire", "Clear eight waves of shooters fighting from cover, with chasers among them.", "sanctuary", [

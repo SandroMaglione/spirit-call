@@ -13,7 +13,7 @@ import { makeGround } from "../src/features/ground.ts"
 import { pickSpawnPoint, reinforceAfter } from "../src/features/waves.ts"
 import { Random } from "../src/math/rng.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
-import { center, ClearEnemies, cursorAt, start, plainAttack } from "./helpers.ts"
+import { center, ClearEnemies, cursorAt, start, plainAttack, plainEnemies } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const middleOf = (box: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number }) => ({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 })
@@ -38,7 +38,7 @@ const World = Game.Inspector("Test/Encounters", {
 /** Spawns `kind` (an elite of `elite`) at `offset` from the player, alone. */
 const alone = (run: ReturnType<typeof start>, kind: Parameters<typeof makeEnemy>[1], offset: { x: number; y: number }, elite: Parameters<typeof makeEnemy>[5] = null) => {
   const Spawn = Game.System("Test/SpawnElite", {}, ({ commands }) => {
-    commands.spawnIn(RunScope, makeEnemy(defaultTuning, kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, elite))
+    commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, elite))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
 }
