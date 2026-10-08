@@ -177,7 +177,10 @@ is left, and keep text off it.
   button, with her relics' charms, opens it.
 - **The shop** (`menu/Shop.tsx`, from the home) sells, for dust, a relic
   owned one tier up and its own looks; the Call's and the hard goals'
-  looks show where they come from.
+  looks show where they come from. Its third tab is the **inventory**
+  (`menu/Inventory.tsx`: what the wallet holds, what each is for and where
+  it comes from), open before the shop is, so the home lists no inventory
+  of its own.
 - **The party's roster opens beside a place** when it is tapped (a panel of
   cards that scrolls, since the roster will grow), over the left of the
   screen; a tap on a card puts her there and closes it.

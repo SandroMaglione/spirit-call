@@ -1,8 +1,9 @@
 /**
  * The shop (see docs/relics.md): dust for a relic owned one tier up, and
- * for the looks it sells. Two shelves: relics (every relic owned below its
- * last tier, the price of its next one), and looks (the shop's own; the
- * Call's and the hard goals' are shown with where they come from). The one
+ * for the looks it sells. Three shelves: relics (every relic owned below its
+ * last tier, the price of its next one), looks (the shop's own; the Call's
+ * and the hard goals' are shown with where they come from), and the
+ * inventory (everything the wallet holds; open before the shop is). The one
  * picked is explained on the right, with Buy.
  */
 import { useSignal } from "@preact/signals"
@@ -20,6 +21,7 @@ import { Panel } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
+import { InventoryShelf } from "./Inventory.tsx"
 import { slotNames } from "./Loadout.tsx"
 import { ids, Wallet } from "./parts.tsx"
 import type { Nav, ShopTab } from "./screens.ts"
@@ -85,10 +87,10 @@ export const Shop = ({ store, actions, nav, tab }: { readonly store: UiStore; re
   const tuning = store.tuning.value, account = store.account.value
   const open = relicsOpen(tuning, account)
   return <Screen name="shop">
-    <TopBar icon="shop" title="Shop" close={nav.back} end={<Wallet store={store} currencies={["dust"]} />}>
-      <TopTabs label="Shop" current={tab} onChange={(id) => nav.replace({ kind: "shop", tab: id })} tabs={[{ id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }]} />
+    <TopBar icon="shop" title="Shop" close={nav.back} end={tab === "inventory" ? undefined : <Wallet store={store} currencies={["dust"]} />}>
+      <TopTabs label="Shop" current={tab} onChange={(id) => nav.replace({ kind: "shop", tab: id })} tabs={[{ id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }, { id: "inventory", label: "Inventory" }]} />
     </TopBar>
-    {!open
+    {tab === "inventory" ? <InventoryShelf store={store} /> : !open
       ? <Panel class="shop__brief in-right" icon={<Icon name="lock" />} title="Not open yet"><p class="dim">The shop opens with relics, after {tuning.quests[tuning.relicRules.opensAfter as QuestId].name}: dust from side quests, ranks, hardcore tiers, and trials buys a relic's next tier and looks here.</p></Panel>
       : tab === "relics" ? <RelicShelf store={store} actions={actions} /> : <LookShelf store={store} actions={actions} />}
   </Screen>

@@ -41,8 +41,8 @@ export const Home = ({ store, nav, leader, play, enter }: {
     characters: { kind: "character", character: leader, tab: "overview" },
     challenges: { kind: "quests", tab: play.kind === "tier" ? (tuning.tracks[play.track].kind === "trial" ? "trials" : "hardcore") : tuning.quests[play.quest].line },
     call: { kind: "call", tab: "banner" },
-    shop: { kind: "shop", tab: "relics" },
-    inventory: { kind: "inventory" },
+    // Before relics open, the shop shows what the wallet holds.
+    shop: { kind: "shop", tab: relicsOpen(tuning, account) ? "relics" : "inventory" },
     practice: { kind: "extra", mode: "training" }
   }
   return <Screen name="home">
@@ -61,7 +61,6 @@ export const Home = ({ store, nav, leader, play, enter }: {
       { id: "characters", label: "Characters", badge: canTrain },
       { id: "call", label: "Spirit Call", badge: canCall },
       { id: "shop", label: "Shop", badge: canBuy },
-      { id: "inventory", label: "Inventory" },
     ]} />
     {store.notices.value.length > 0 && <div class="home__notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<Pill size="small" tone="dark" onClick={() => (store.notices.value = [])}>Dismiss</Pill></div>}
     <div class="home__party in-left">
