@@ -5,6 +5,18 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Champions fought as bosses (2026-10-08)
+
+The baseline was recorded again (from CI's report) once every chapter's
+champion fought with its own moveset (PR #74). Only the audit's champion
+quests moved: the Pack Leader and the Warlord now bring light waves once
+their champion is out (fewer kills, around 21–25 instead of 34–39) and hit
+harder (the Swordsman alone takes more damage; the learning one now falls
+to the Pack Leader on seed 42). The Warlord's team rows swing both ways
+with how long its blink strings last. The champion fights themselves were
+measured with the bots one on one (the Pack Leader about 25–30 s, the late
+ones 1–2 min; see the PR).
+
 ## Perfect dodges and champions (2026-10-08)
 
 The baseline was recorded again (from CI's report) after perfect dodges
