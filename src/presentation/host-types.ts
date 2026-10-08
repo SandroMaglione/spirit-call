@@ -182,8 +182,6 @@ export interface HudRefs {
   readonly moment: HTMLElement
   /** A fall: the screen darkens at its edges for a moment, glowing in her color (see `SpawnFx`). */
   readonly fall: HTMLElement
-  /** A champion on the field (under the header, see `ShowChampions`): its name, and its health with a mark where each of its phases begins. */
-  readonly boss: { readonly root: HTMLElement; readonly name: HTMLElement; readonly fill: HTMLElement; readonly marks: HTMLElement }
 }
 
 /** Render-side feedback state that decays in real time. */

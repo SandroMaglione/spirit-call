@@ -19,7 +19,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Airborne, Cast, Elite, Enemy, Explosion, Facing, Game, Health, Hitbox, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment } from "../schema.ts"
+import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment } from "../schema.ts"
 import { airborneLift, diving } from "./actors.ts"
 
 const css = (color: number): string => `#${color.toString(16).padStart(6, "0")}`
@@ -160,38 +160,14 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
 
 export const ShowChampions = Game.System("Shooter/ShowChampions", {
   queries: {
-    hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } }),
-    champions: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), elite: Game.Query.optional(Elite) } })
+    hitboxes: Game.Query({ selection: { hitbox: Game.Query.read(Hitbox) } })
   },
-  resources: { tuning: Game.System.readResource(Tuning) },
   events: { roused: Game.System.readEvent(Roused) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
-}, ({ queries, resources, events, services }) => {
+}, ({ queries, events, services }) => {
   const host = services.host
   const fx = host.fx
   const spec = view.champion.roar
-  // The champion on the field, under the header: its name, its health, and where its phases begin.
-  const tuning = resources.tuning.get()
-  const boss = host.hud.boss
-  const champion = queries.champions.each().find(({ data }) => data.enemy.get().champion && data.health.get().current > 0)
-  boss.root.hidden = champion === undefined
-  if (champion !== undefined) {
-    const kind = champion.data.enemy.get().kind
-    const moveset = tuning.champions.movesets[kind]
-    const health = champion.data.health.get()
-    const share = health.max <= 0 ? 0 : health.current / health.max
-    const name = moveset?.name ?? `Champion ${tuning.enemies[kind].name}`
-    if (boss.name.textContent !== name) boss.name.textContent = name
-    boss.root.style.setProperty("--boss", champion.data.elite.present ? css(view.elements[champion.data.elite.get().element]) : "#ffcf5a")
-    boss.fill.style.width = `${(share * 100).toFixed(1)}%`
-    const phases = moveset?.phases ?? []
-    if (boss.marks.childElementCount !== phases.length) boss.marks.replaceChildren(...phases.map(() => document.createElement("b")))
-    phases.forEach((phase, index) => {
-      const mark = boss.marks.children[index] as HTMLElement
-      mark.style.left = `${phase.below * 100}%`
-      mark.classList.toggle("is-past", share <= phase.below)
-    })
-  }
   // It roars: a flash of its element, rings out across the floor, sparks, and a long shake.
   for (const roused of events.roused.all()) {
     const color = roused.element === null ? view.telegraphLocked : view.elements[roused.element]
