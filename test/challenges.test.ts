@@ -102,7 +102,7 @@ describe("challenges", () => {
 })
 
 describe("lasting until the team falls", () => {
-  const plan = { scripted: [["chaser"]] as Array<Array<"chaser">>, endless: { baseBudget: 2, budgetPerWave: 1, kinds: ["chaser" as const], elites: [] } }
+  const plan = { scripted: [["chaser"]] as Array<Array<"chaser">>, endless: { baseBudget: 2, budgetPerWave: 1, maxBudget: 100, championEvery: null, kinds: ["chaser" as const], elites: [] } }
   const endless = withChallenge({ objective: endure(3, 1), waves: plan })
 
   it("never ends on its own, however many waves go by", () => {

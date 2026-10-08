@@ -5,6 +5,44 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The difficulty pass (2026-10-08)
+
+The playtest cleared everything at levels far under the quests' and in 1–2
+minutes a run. Changed (PR "difficulty pass"):
+
+- **The level gap** (`progression.gap`, `levelGap`): under the enemies'
+  level, 4.5% less dealt and 4% more taken a level (at most 60% less and
+  60% more); over it, 1% a level either way, at most 10%.
+- **Toughness** (`progression.enemies`): enemies that fight in waves grow
+  from 1.8x their kind's health and 0.8x its ATK at level 1 (the first
+  quests forgive more) to 2.5x and 1.3x from level 10. First Blood brings
+  23 chasers instead of 32. Champions' own health multiples were
+  lowered so their fights keep their length.
+- **The first levels breathe** (`pacing`): at level 1 enemies wait 1.6x as
+  long between attacks and wind up 1.35x as long, easing to their kinds'
+  own by level 10.
+- **At most 12 on the field** (`waves.most`, spawn warnings included).
+  Until Fall's waves stop growing at a budget of 16 and bring a champion
+  every 5 waves instead.
+- **The Disc** dealt too much for its safety (two hits a throw, through a
+  line, from range, on the sturdiest character): its powers are about a
+  quarter lower (11 to 8, 10 to 7, 9 to 7, 14 to 11; its aspects alike).
+
+Bots on the main line (one seed; a player takes about 1.75x a bot's time,
+from the playtest's runs):
+
+| | before | after |
+|---|---|---|
+| Matched, skilled | 42–67 s (Colossus 109) | early 40–60 s, mid 80–120 s, late 100–160 s |
+| 10 levels under, skilled | cleared everything | lost most from chapter 2 on; cleared ones 2–5 min |
+| Matched, learning | lost First Blood on one seed | clears chapter 1; the Brute King beats it |
+
+The baseline was recorded again from CI's report. In the audit's rows, a
+lone level-1 Swordsman against the level-28 Warlord now falls in seconds
+(the gap and toughness at their extreme; before, she lasted 100 s), while
+matched rows clear with a little more taken; First Blood's learning
+Swordsman clears both seeds again.
+
 ## Champions fought as bosses (2026-10-08)
 
 The baseline was recorded again (from CI's report) once every chapter's

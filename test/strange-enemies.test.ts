@@ -5,7 +5,7 @@ import { makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, blow, Burst, Damage, Enemy, Game, Health, Player, Position, PrevPosition, RunScope, Ward } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, start } from "./helpers.ts"
+import { ClearEnemies, plainEnemies, start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
@@ -37,7 +37,7 @@ const World = Game.Inspector("Test/StrangeEnemies", {
 const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offset: Vec2 }>) => {
   const run = start()
   const Spawn = Game.System("Test/SpawnSome", {}, ({ commands }) => {
-    for (const { kind, offset } of enemies) commands.spawnIn(RunScope, makeEnemy(defaultTuning, kind, { x: center.x + offset.x, y: center.y + offset.y }))
+    for (const { kind, offset } of enemies) commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
   const world = () => run.runtime.inspect(World)

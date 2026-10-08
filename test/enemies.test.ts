@@ -9,7 +9,7 @@ import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { doubleTap, playerLoss, start, swordsman } from "./helpers.ts"
+import { doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 import { noTally } from "../src/content/stars.ts"
 
@@ -47,7 +47,7 @@ const World = Game.Inspector("Test/Enemies", {
 
 /** Training mode without dummies, plus one enemy of `kind` at `offset` from the player. */
 const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}) => {
-  const base = options.tuning ?? defaultTuning
+  const base = plainEnemies(options.tuning ?? defaultTuning)
   const tuning: Tuning = { ...base, enemies: { ...base.enemies } }
   const run = start({ ...options, tuning })
   const Clear = Game.System("Test/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
@@ -170,8 +170,18 @@ describe("enemy levels", () => {
   it("scale HP, ATK, and DEF along the characters' stat curve, not speed", () => {
     const chaser = defaultTuning.enemies.chaser
     const { band, at } = defaultTuning.progression.stats
-    expect(enemyStats(defaultTuning, "chaser", 1)).toEqual({ hp: chaser.hp, atk: chaser.atk, def: chaser.def, speed: chaser.speed })
-    expect(enemyStats(defaultTuning, "chaser", at)).toEqual({ hp: chaser.hp * band, atk: chaser.atk * band, def: chaser.def * band, speed: chaser.speed })
+    const plain = plainEnemies(defaultTuning)
+    expect(enemyStats(plain, "chaser", 1)).toEqual({ hp: chaser.hp, atk: chaser.atk, def: chaser.def, speed: chaser.speed })
+    expect(enemyStats(plain, "chaser", at)).toEqual({ hp: chaser.hp * band, atk: chaser.atk * band, def: chaser.def * band, speed: chaser.speed })
+    // On top, every enemy that fights in waves is as tough as `progression.enemies` says; a training dummy is not.
+    const tough = defaultTuning.progression.enemies
+    // Growing along the first chapters (its blows gentler than its kind's at first), all of it from `fullAt`.
+    expect(enemyStats(defaultTuning, "chaser", 1)).toMatchObject({ hp: Math.round(chaser.hp * tough.healthAtFirst), atk: Math.round(chaser.atk * tough.atkAtFirst) })
+    const full = enemyStats(plain, "chaser", tough.fullAt)
+    const tougher = enemyStats(defaultTuning, "chaser", tough.fullAt)
+    expect(Math.abs(tougher.hp - full.hp * tough.health)).toBeLessThanOrEqual(1)
+    expect(Math.abs(tougher.atk - full.atk * tough.atk)).toBeLessThanOrEqual(1)
+    expect(enemyStats(defaultTuning, "dummy", 1).hp).toBe(defaultTuning.enemies.dummy.hp)
   })
 
   it("spawn every enemy of a run at the level the arena was entered with", () => {
@@ -183,7 +193,7 @@ describe("enemy levels", () => {
     run.step(240)
     const spawned = run.runtime.inspect(Enemies)
     expect(spawned.length).toBeGreaterThan(0)
-    for (const enemy of spawned) expect(enemy.stats).toEqual(enemyStats(defaultTuning, enemy.kind, 12))
+    for (const enemy of spawned) expect(enemy.stats).toEqual(enemyStats(plainEnemies(defaultTuning), enemy.kind, 12))
   })
 })
 

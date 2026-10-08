@@ -59,15 +59,24 @@ import {
 import type { EnemyKind } from "../schema.ts"
 import type { EliteElement } from "../content/challenges.ts"
 
+/** Where `level` stands between `from` and `to`: 0 at or below `from`, 1 at or above `to`. */
+const along = (level: number, from: number, to: number): number => Math.min(1, Math.max(0, (level - from) / Math.max(1, to - from)))
+
 /** `kind`'s HP, ATK, and DEF at `level`, along the characters' stat curve (see `levelScale`); speed as it is. */
 export const enemyStats = (tuning: TuningValue, kind: EnemyKind, level: number): { readonly hp: number; readonly atk: number; readonly def: number; readonly speed: number } => {
   const spec = tuning.enemies[kind]
   const scaled = levelScale(tuning.progression.stats, level)
-  return { hp: Math.round(spec.hp * scaled), atk: Math.round(spec.atk * scaled), def: Math.round(spec.def * scaled), speed: spec.speed }
+  // Toughness is for what fights in waves (the Training Ground's dummies take blows as their kind's numbers say),
+  // growing along the first chapters.
+  const rules = tuning.progression.enemies
+  const fights = spec.cost > 0
+  const share = along(level, 1, rules.fullAt)
+  const tough = fights
+    ? { health: rules.healthAtFirst + (rules.health - rules.healthAtFirst) * share, atk: rules.atkAtFirst + (rules.atk - rules.atkAtFirst) * share }
+    : { health: 1, atk: 1 }
+  return { hp: Math.round(spec.hp * scaled * tough.health), atk: Math.round(spec.atk * scaled * tough.atk), def: Math.round(spec.def * scaled), speed: spec.speed }
 }
 
-/** Where `level` stands between `from` and `to`: 0 at or below `from`, 1 at or above `to`. */
-const along = (level: number, from: number, to: number): number => Math.min(1, Math.max(0, (level - from) / Math.max(1, to - from)))
 
 /**
  * A champion's health, ATK, and wait between attacks (as multiples of its
@@ -78,6 +87,10 @@ export const championPower = (tuning: TuningValue, level: number): { readonly he
   const rules = tuning.champions, early = rules.early, t = along(level, early.level, rules.fullAt)
   return { health: early.health + (rules.health - early.health) * t, atk: early.atk + (rules.atk - early.atk) * t, cooldown: early.cooldown + (rules.cooldown - early.cooldown) * t }
 }
+
+/** How much longer than its kind an enemy of `level` winds its attacks up (see `Tuning.pacing`): longer at the first levels. */
+export const windupOf = (tuning: TuningValue, level: number): number =>
+  1 + (tuning.pacing.windupAtFirst - 1) * (1 - along(level, 1, tuning.pacing.fullAt))
 
 /** How much longer than its kind an enemy of `level` waits between attacks (see `Tuning.pacing`), a champion's own wait included. */
 export const restOf = (tuning: TuningValue, level: number, champion: boolean): number => {
@@ -108,7 +121,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const affinities = elite === null ? stats.elements : { ...stats.elements, [elite]: "immune" as const }
   const body = Game.Command.insert(
     makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius * size, hurtboxRadius: stats.hurtboxRadius * size, affinities }),
-    [Enemy, { kind, champion: lead !== null, rest: restOf(tuning, level, lead !== null) }],
+    [Enemy, { kind, champion: lead !== null, rest: restOf(tuning, level, lead !== null), windup: windupOf(tuning, level) }],
     [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [AttackPhase, "ready"],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0, pressedAt: at, stuck: 0, unstick: null }],

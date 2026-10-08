@@ -138,7 +138,9 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     const spec = currentAttack(tuning, data.enemy.get(), attacker)
     const area = attacker.area
     if (spec === undefined || area === null || (phase !== "windup" && phase !== "active")) continue
-    const lands = phase === "windup" ? Math.max(0, spec.windup - attacker.elapsed) : 0
+    // A windup can run slower than its spec at the first levels (see `windupOf`): its time left, in seconds.
+    const slower = data.enemy.get().windup ?? 1
+    const lands = phase === "windup" ? Math.max(0, spec.windup - attacker.elapsed) * slower : 0
     const seen = phase === "windup" ? attacker.elapsed : Infinity
     const ends = lands + (phase === "windup" ? spec.active : Math.max(0, spec.active - attacker.elapsed))
     if (spec.kind === "volley" && area.kind === "line") {

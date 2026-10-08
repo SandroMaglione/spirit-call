@@ -132,16 +132,16 @@ export const classes = {
       name: "Ring",
       description: "Two throws that cut there and back, then a pair in a V. Charged: a disc that hovers where it is aimed.",
       combo: [
-        disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, power: 11, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
-        disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, power: 11, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
-        disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 380, hover: 0, hoverTick: 0, power: 10, knockback: 420, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
+        disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, power: 8, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
+        disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, power: 8, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
+        disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 380, hover: 0, hoverTick: 0, power: 7, knockback: 420, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
       ],
       charged: {
         chargeTime: 0.6,
-        move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 9, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 })
+        move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 7, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 })
       },
       /** A fast, heavy disc thrown out of the dash. */
-      dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, power: 14, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
+      dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, power: 11, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
       magazine: null,
       chain: null
     }

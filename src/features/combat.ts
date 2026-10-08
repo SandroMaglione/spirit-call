@@ -36,6 +36,7 @@ import {
   Impact,
   Invulnerable,
   Knockback,
+  EnemyLevel,
   Member,
   PlateShatter,
   Player,
@@ -60,7 +61,7 @@ import {
 } from "../schema.ts"
 import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
-import { damageTaken } from "./build.ts"
+import { damageTaken, levelGap } from "./build.ts"
 import { affinityDamage, afflict } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { plateTakes } from "./guard.ts"
@@ -228,14 +229,18 @@ const Damageable = Game.Query({
     respawns: Game.Query.optional(Respawns),
     poise: Game.Query.optional(Poise),
     stunned: Game.Query.optional(Stunned),
-    immortal: Game.Query.optional(Immortal)
+    immortal: Game.Query.optional(Immortal),
+    member: Game.Query.optional(Member)
   }
 })
 
 
 /** A team member on the bench: no body, so only a fire she carries off reaches her (see `TickStates`). */
+/** A team member dealing a blow: her level, for the level gap. */
+const Leveled = Game.Query({ selection: { position: Game.Query.read(Position), member: Game.Query.read(Member) } })
+
 const Benched = Game.Query({
-  selection: { health: Game.Query.write(Health), stats: Game.Query.read(CombatStats), state: Game.Query.write(ElementState) },
+  selection: { health: Game.Query.write(Health), stats: Game.Query.read(CombatStats), state: Game.Query.write(ElementState), member: Game.Query.read(Member) },
   with: [Member],
   without: [Player]
 })
@@ -259,7 +264,7 @@ const Benched = Game.Query({
  */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: {
-    energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player) }, with: [Member] }),
+    energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player), member: Game.Query.read(Member) } }),
     wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy) } })
   },
   events: {
@@ -275,10 +280,19 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     time: Game.System.readResource(Time),
     hitStop: Game.System.writeResource(HitStop),
     challenge: Game.System.readResource(Challenge),
-    guard: Game.System.writeResource(Guard)
+    guard: Game.System.writeResource(Guard),
+    enemyLevel: Game.System.readResource(EnemyLevel)
   }
 }, ({ queries, events, resources, lookup, commands }) => {
   const tuning = resources.tuning.get()
+  // The level gap (see `levelGap`): a blow the team deals lands by its dealer's level (the one on the field when it is
+  // no member's, a totem's or a pool's), an enemy's by the level of the member it lands on.
+  const enemyLevel = resources.enemyLevel.get()
+  const fielded = queries.energies.each().find(({ data }) => data.player.present)?.data.member.get().level ?? enemyLevel
+  const dealerLevel = (blow: Blow): number => {
+    const dealer = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, Leveled)
+    return dealer?.ok === true ? dealer.value.data.member.get().level : fielded
+  }
   // In the Training Ground the team cannot fall (only the fire hurts, and never to the end).
   const training = tuning.waves.enabled && tuning.challenges[resources.challenge.get()].objective.kind === "training"
   // Enemies a warder's tether holds take only a share (see `features/wards.ts`).
@@ -293,7 +307,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const found = lookup.getHandle(damage.target, Damageable)
     if (!found.ok) {
       const benched = lookup.getHandle(damage.target, Benched)
-      if (benched.ok && damage.blow.periodic) burnOnBench(tuning, benched.value.data, damage.blow)
+      if (benched.ok && damage.blow.periodic) burnOnBench(tuning, benched.value.data, damage.blow, levelGap(tuning, benched.value.data.member.get().level, enemyLevel).taken)
       continue
     }
     if (dead.has(found.value.entity.id.value)) continue
@@ -327,7 +341,10 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const armored = enemy !== undefined && tuning.enemies[enemy].armor !== null && !(data.poise.present && data.poise.get().broken > 0)
     const armor = armored ? tuning.enemies[enemy].armor!.taken : 1
     const broken = armor * (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1)
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
+    const gap = damage.faction === "enemy"
+      ? (data.member.present ? levelGap(tuning, data.member.get().level, enemyLevel).taken : 1)
+      : enemy !== undefined ? levelGap(tuning, dealerLevel(blow), enemyLevel).dealt : 1
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken * gap * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
     const current = data.immortal.present
       ? health.current
@@ -424,11 +441,12 @@ const burnOnBench = (
     readonly stats: ReadCell<{ readonly def: number }>
     readonly state: WriteCell<{ readonly current: ActiveState | null }>
   },
-  struck: Blow
+  struck: Blow,
+  gap: number
 ): void => {
   const health = data.health.get()
   if (health.current <= 0) return
-  const current = Math.max(0, health.current - damageTaken(tuning, struck.damage, data.stats.get().def))
+  const current = Math.max(0, health.current - damageTaken(tuning, struck.damage * gap, data.stats.get().def))
   data.health.set({ current, max: health.max })
   if (current <= 0) data.state.set({ current: null })
 }

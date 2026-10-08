@@ -15,7 +15,7 @@ import { knockbackTaken } from "../src/features/motion.ts"
 import { movesetOf } from "../src/features/moveset.ts"
 import { poiseOf } from "../src/features/poise.ts"
 import { Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { plainEnemies, start } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const rules = defaultTuning.champions
@@ -89,7 +89,7 @@ describe("champions", () => {
     const [one, ...rest] = run.runtime.inspect(Field).enemies
     // Chasers come in groups; a champion comes alone.
     expect(rest).toEqual([])
-    const base = enemyStats(defaultTuning, "chaser", 1)
+    const base = enemyStats(plainEnemies(defaultTuning), "chaser", 1)
     expect(one).toMatchObject({ kind: "chaser", champion: true, element: "fire" })
     const power = championPower(defaultTuning, 1)
     // A champion with its own moveset has its own share of a champion's health on top (see content/champions.ts).

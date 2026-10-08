@@ -224,7 +224,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const current = data.attacker.get()
     const cycle = data.phase
     let { attack, area, hit } = current
-    let elapsed = current.elapsed + dt
+    // A windup runs slower at the first levels (see `windupOf`): its telegraph and its body take longer, alike.
+    let elapsed = current.elapsed + (cycle.get() === "windup" ? dt / (data.enemy.get().windup ?? 1) : dt)
     const behavior = behaviorOf(tuning, data.enemy.get())
     const rate = behavior.kind === "kite" ? 1 : cooldownRate
     let cooldown = Math.max(0, current.cooldown - dt * rate)

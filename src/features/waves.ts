@@ -15,7 +15,7 @@
  * champion has fallen too.
  */
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { elite, entryChampion, entryElite, entryKind, entryShield, shielded } from "../content/challenges.ts"
+import { champion, elite, entryChampion, entryElite, entryKind, entryShield, shielded } from "../content/challenges.ts"
 import type { WaveEntry, WavePlan } from "../content/challenges.ts"
 import { Random } from "../math/rng.ts"
 import type { Vec2 } from "../math/vec.ts"
@@ -38,15 +38,22 @@ const eliteChance = (tuning: TuningValue, number: number): number => {
 }
 
 /** The entries of wave `number` (from 1) of `plan`; call only when it `hasWave`. */
-export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random): Array<WaveEntry> => {
+export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random, championStanding = false): Array<WaveEntry> => {
   const scripted = plan.scripted[number - 1]
   if (scripted !== undefined || plan.endless === null) return [...(scripted ?? [])]
   // Only what the main line has introduced by then (see `EndlessWaves`).
   const kinds = plan.endless.kinds.filter((kind) => tuning.enemies[kind].cost > 0)
   const elites = plan.endless.elites
-  let budget = plan.endless.baseBudget + plan.endless.budgetPerWave * (number - 1)
+  let budget = Math.min(plan.endless.maxBudget, plan.endless.baseBudget + plan.endless.budgetPerWave * (number - 1))
   const chance = elites.length === 0 ? 0 : eliteChance(tuning, number)
   const wave: Array<WaveEntry> = []
+  // A champion leads every few waves (one that fights as a boss, of what the main line has brought), unless one stands.
+  const every = plan.endless.championEvery
+  const leaders = kinds.filter((kind) => tuning.champions.movesets[kind] !== undefined && tuning.enemies[kind].behavior.kind !== "kite")
+  if (every !== null && number % every === 0 && !championStanding && leaders.length > 0 && elites.length > 0) {
+    wave.push(champion(random.pick(leaders), random.pick(elites)))
+    budget = Math.floor(budget / 2)
+  }
   for (;;) {
     const affordable = kinds.filter((kind) => tuning.enemies[kind].cost <= budget)
     if (affordable.length === 0) break
@@ -178,7 +185,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
         phase = "complete"
       } else if (timer <= 0) {
         number += 1
-        queue = withTwist(composeWave(tuning, plan, number, random), resources.twist.get(), number)
+        queue = withTwist(composeWave(tuning, plan, number, random, champions > 0), resources.twist.get(), number)
         front = pickFront(tuning, player, random)
         phase = "spawning"
         timer = 0
@@ -189,9 +196,15 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
     case "spawning": {
       timer -= dt
       const boxes = wallBoxes(queries.walls.each())
+      // At most `waves.most` on the field (spawn warnings included): the rest of the wave waits for room.
+      let standing = enemies.length + pending.length
       while (timer <= 0 && queue.length > 0) {
-        const entry = queue.shift()!
+        const entry = queue[0]!
         const kind = entryKind(entry)
+        const comes = entryChampion(entry) ? 1 : tuning.enemies[kind].group
+        if (standing > 0 && standing + comes > tuning.waves.most) break
+        queue.shift()
+        standing += comes
         const spawns = makeGroupSpawns(tuning, kind, pickSpawnPoint(tuning, kind, player, boxes, random, front), tuning.waves.spawnWarning, entryElite(entry), entryChampion(entry), entryShield(entry))
         for (const spawn of spawns) commands.spawnIn(RunScope, spawn)
         if (!entryChampion(entry)) size += spawns.length
