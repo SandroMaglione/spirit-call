@@ -105,12 +105,12 @@ export const aspects = {
     against: "Enemies already in a state, from her or her team.",
     class: "disc",
     combo: [
-      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, bounces: 2, power: 11, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
-      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, bounces: 2, power: 11, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
-      disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 380, hover: 0, hoverTick: 0, bounces: 2, power: 10, knockback: 420, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
+      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, bounces: 2, power: 8, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
+      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, bounces: 2, power: 8, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
+      disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 380, hover: 0, hoverTick: 0, bounces: 2, power: 7, knockback: 420, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
     ],
-    charged: { chargeTime: 0.6, move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 9, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 }) },
-    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, bounces: 2, power: 14, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
+    charged: { chargeTime: 0.6, move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 7, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 }) },
+    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, bounces: 2, power: 11, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
     magazine: null,
     chain: null,
     effects: [],
@@ -196,12 +196,12 @@ export const aspects = {
     against: "Holding ground.",
     class: "disc",
     combo: [
-      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 340, hover: 0.3, hoverTick: 0.15, power: 11, knockback: 160, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
-      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 340, hover: 0.3, hoverTick: 0.15, power: 11, knockback: 160, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
-      disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 360, hover: 0.3, hoverTick: 0.15, power: 10, knockback: 220, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
+      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 340, hover: 0.3, hoverTick: 0.15, power: 8, knockback: 160, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
+      disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 340, hover: 0.3, hoverTick: 0.15, power: 8, knockback: 160, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
+      disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 360, hover: 0.3, hoverTick: 0.15, power: 7, knockback: 220, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
     ],
-    charged: { chargeTime: 0.6, move: disc({ count: 1, spreadDegrees: 0, speed: 1050, radius: 26, range: 320, hover: 2, hoverTick: 0.25, power: 8, knockback: -140, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 }) },
-    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0.3, hoverTick: 0.15, power: 14, knockback: 220, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
+    charged: { chargeTime: 0.6, move: disc({ count: 1, spreadDegrees: 0, speed: 1050, radius: 26, range: 320, hover: 2, hoverTick: 0.25, power: 6, knockback: -140, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 }) },
+    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0.3, hoverTick: 0.15, power: 11, knockback: 220, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
     magazine: null,
     chain: null,
     effects: [{ move: finisher(), own: false, effect: nova({ radius: 130, power: 8, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.02, heavy: false }) }],
