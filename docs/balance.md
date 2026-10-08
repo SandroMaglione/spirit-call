@@ -5,6 +5,18 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Stars as goals (2026-10-09)
+
+Stars became three goals on top of the clear (see `docs/quests.md`), from
+a decent run to a clean one, with new tallies (falls, health left, the
+longest dodge chain, ultimates). Their numbers come from the skilled and the
+learning bot on every quest, on two seeds, with the expected team: the
+skilled bot earns all three everywhere, and the learning bot mostly the first
+one or two. Next to people the bots dodge perfectly about three times as
+often and take fewer hits (the prod runs of 2026-10-07: 3–5 hits, 2–10
+perfect dodges a run), so goals on dodges stay near what people did. The
+side quests' chests now come every 3 stars, holding the same in all.
+
 ## The difficulty pass (2026-10-08)
 
 The playtest cleared everything at levels far under the quests' and in 1–2

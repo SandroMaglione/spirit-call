@@ -188,9 +188,10 @@ The game has two areas, and Extras for practice.
     and for the first character alone, and each chapter after brings its
     enemies to the team a new account has by then. The game grows by
     chapters; the roster is spread across them, not shown at once.
-  - **Three stars** per quest, for how well it was played: never for
-    speed, and never for bringing a character, an element, or a class (any
-    team can earn every star). A chapter's stars open its **chests**.
+  - **Three stars** per quest, each a goal on top of the clear (a clear
+    alone earns none), from a decent run to a clean one: never for speed,
+    and never for bringing a character, an element, or a class (any team
+    can earn every star). Every 3 stars open a **chest**.
   - **Ranks.** The main line and the side quests are replayed at higher
     ranks once the main line is further on: higher enemy levels and a
     twist on the waves, with their own first clears, stars, and chests, so

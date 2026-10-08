@@ -5,7 +5,7 @@
  */
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
-import { Arrival, Broke, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -32,20 +32,40 @@ export const RecordReactions = Game.System("Shooter/RecordReactions", {
 
 /**
  * Counts the step's tallies for stars (see `content/stars.ts`): blows that
- * landed on the team (not a burn's ticks), perfect dodges, and enemies
- * broken. Runs after the step's breaks, before its result is made.
+ * landed on the team (not a burn's ticks), members falling, perfect dodges
+ * and the longest chain of them, enemies broken, ultimates used, and the
+ * team's health left. Runs after the step's breaks, before its result is
+ * made.
  */
 export const RecordTally = Game.System("Shooter/RecordTally", {
-  events: { hit: Game.System.readEvent(Hit), perfect: Game.System.readEvent(PerfectDodged), broke: Game.System.readEvent(Broke) },
-  resources: { stats: Game.System.writeResource(Stats) }
-}, ({ events, resources }) => {
-  const hitsTaken = events.hit.all().filter((hit) => hit.faction === "player" && !hit.periodic && hit.amount > 0).length
-  const perfectDodges = events.perfect.all().length
+  queries: { members: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Member] }) },
+  events: { hit: Game.System.readEvent(Hit), perfect: Game.System.readEvent(PerfectDodged), broke: Game.System.readEvent(Broke), cast: Game.System.readEvent(Cast) },
+  resources: { stats: Game.System.writeResource(Stats), tuning: Game.System.readResource(Tuning) }
+}, ({ queries, events, resources }) => {
+  const tuning = resources.tuning.get()
+  const struck = events.hit.all().filter((hit) => hit.faction === "player")
+  const hitsTaken = struck.filter((hit) => !hit.periodic && hit.amount > 0).length
+  const falls = new Set(struck.filter((hit) => hit.killed).map((hit) => hit.entity)).size
+  const perfect = events.perfect.all()
   const breaks = events.broke.all().length
-  if (hitsTaken + perfectDodges + breaks === 0) return
+  // An ultimate is a skill that costs energy (a landing is part of one already used, see `Airborne`).
+  const ultimates = events.cast.all().filter((cast) => cast.faction === "player" && cast.skill !== null && cast.landing !== true && tuning.skills[cast.skill].energy > 0).length
+  const health = queries.members.each().reduce((sum, { data }) => ({ current: sum.current + Math.max(0, data.health.get().current), max: sum.max + data.health.get().max }), { current: 0, max: 0 })
+  const healthLeft = health.max > 0 ? Math.floor((health.current / health.max) * 100) : 0
+  const before = resources.stats.get().tally
+  const longestChain = Math.max(before.longestChain, ...perfect.map((dodge) => dodge.chain))
+  if (hitsTaken + falls + perfect.length + breaks + ultimates === 0 && healthLeft === before.healthLeft && longestChain === before.longestChain) return
   resources.stats.update((stats) => ({
     ...stats,
-    tally: { hitsTaken: stats.tally.hitsTaken + hitsTaken, perfectDodges: stats.tally.perfectDodges + perfectDodges, breaks: stats.tally.breaks + breaks }
+    tally: {
+      hitsTaken: before.hitsTaken + hitsTaken,
+      perfectDodges: before.perfectDodges + perfect.length,
+      breaks: before.breaks + breaks,
+      falls: before.falls + falls,
+      healthLeft,
+      longestChain,
+      ultimates: before.ultimates + ultimates
+    }
   }))
 })
 

@@ -10,7 +10,7 @@ import type { DiscoveryId } from "../src/content/discoveries.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
 import type { QuestId } from "../src/content/quests.ts"
 import { aspectId, testAspect, withAspect } from "./helpers.ts"
-import { noTally } from "../src/content/stars.ts"
+import { noTally, worstClear } from "../src/content/stars.ts"
 
 const fresh = () => createAccount(defaultTuning, newAccount, "account-1", 1000)
 const quest = (id: QuestId): Play => ({ kind: "quest", quest: id })
@@ -183,15 +183,17 @@ describe("account rules", () => {
   })
 
   it("earns each star once, across runs that clear, and opens a chapter's chests as its stars reach them", () => {
-    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: { hitsTaken: 30, perfectDodges: 4, breaks: 0 }, challenge: "swarm" as const, wave: 8, kills: 40, time: 170 }
+    const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: { ...noTally, hitsTaken: 30, perfectDodges: 4, healthLeft: 30 }, challenge: "swarm" as const, wave: 8, kills: 40, time: 170 }
     const lost = recordRun(defaultTuning, fresh(), quest("firstBlood"), { ...run, cleared: false, progress: 0.5 }, 1000)
     expect(lost.earned.stars).toEqual([])
-    // Cleared, dodging enough but hit too often: the clear and the dodges.
+    // A clear alone earns no star: each is a goal on top of it.
+    expect(recordRun(defaultTuning, lost.account, quest("firstBlood"), { ...run, tally: worstClear }, 1500).earned.stars).toEqual([])
+    // Cleared, ending with enough health and dodging enough, but hit too often: the first two.
     const first = recordRun(defaultTuning, lost.account, quest("firstBlood"), run, 2000)
     expect(first.earned.stars).toEqual([0, 1])
     expect(first.earned.chests).toEqual([])
-    // Clean this time: the hit budget alone is new, and three stars open chapter one's first chest.
-    const clean = recordRun(defaultTuning, first.account, quest("firstBlood"), { ...run, tally: { hitsTaken: 2, perfectDodges: 0, breaks: 0 } }, 3000)
+    // Clean this time: the clean run's alone is new, and three stars open chapter one's first chest.
+    const clean = recordRun(defaultTuning, first.account, quest("firstBlood"), { ...run, tally: { ...noTally, hitsTaken: 2, healthLeft: 10 } }, 3000)
     expect(clean.earned.stars).toEqual([2])
     expect(clean.account.quests.firstBlood?.[1]?.stars).toEqual([0, 1, 2])
     expect(clean.earned.chests).toEqual([{ group: "one", index: 0, rank: 1 }])
@@ -228,7 +230,7 @@ describe("account rules", () => {
     // Harder: more levels, and its leaders elites of the quest's element (wind's stand-in, water).
     expect(encounterOf(defaultTuning, rank2)).toEqual({ challenge: "firstBlood", enemyLevel: questLevel(defaultTuning, "firstBlood", 2), twist: { elites: "water", shields: false } })
     expect(questLevel(defaultTuning, "firstBlood", 2)).toBe(defaultTuning.quests.firstBlood.enemyLevel + defaultTuning.ranks.offset)
-    const played = recordRun(defaultTuning, opened, rank2, clear({ hitsTaken: 0, perfectDodges: 9, breaks: 0 }), 3000)
+    const played = recordRun(defaultTuning, opened, rank2, clear({ ...noTally, perfectDodges: 9 }), 3000)
     expect(played.earned.rewards).toEqual(questRewards(defaultTuning, "firstBlood", 2))
     expect(played.earned.rewards!.currencies.crystals).toBe(Math.round(defaultTuning.quests.firstBlood.rewards.currencies.crystals! * defaultTuning.ranks.crystals))
     expect(played.earned.stars).toEqual([0, 1, 2])

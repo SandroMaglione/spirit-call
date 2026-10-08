@@ -206,7 +206,7 @@ describe("a perfect dodge", () => {
   })
 
   it("grows its reward along a chain of them, one after another, up to the chain's last step", () => {
-    const Chain = Game.Inspector("Test/Chain", { resources: { chain: Game.System.readResource(DodgeChain), slow: Game.System.readResource(SlowMotion) } }, ({ resources }) => ({ chain: resources.chain.get(), slow: resources.slow.get() }))
+    const Chain = Game.Inspector("Test/Chain", { resources: { chain: Game.System.readResource(DodgeChain), slow: Game.System.readResource(SlowMotion), stats: Game.System.readResource(Stats) } }, ({ resources }) => ({ chain: resources.chain.get(), slow: resources.slow.get(), longest: resources.stats.get().tally.longestChain }))
     const rules = defaultTuning.perfectDodge
     /** A perfect dodge with `count` already in the chain (and its window still open): the chain after it, and its slow. */
     const after = (count: number) => {
@@ -224,16 +224,19 @@ describe("a perfect dodge", () => {
     expect(last.chain.count).toBe(rules.chain.slow.length)
     expect(last.slow.remaining).toBeCloseTo(rules.slowSeconds * rules.chain.slow.at(-1)!, 1)
     expect(first.chain.remaining).toBeCloseTo(rules.chain.window, 1)
+    // The run keeps its longest chain, for stars.
+    expect(second.longest).toBe(2)
   })
 
   it("tallies a perfect dodge for stars, and a blow that lands as a hit taken", () => {
     const Tally = Game.Inspector("Test/Tally", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().tally)
     const dodged = dodging(1)
     dodged.step(landsAt + 3)
-    expect(dodged.runtime.inspect(Tally)).toMatchObject({ perfectDodges: 1, hitsTaken: 0 })
+    expect(dodged.runtime.inspect(Tally)).toMatchObject({ perfectDodges: 1, longestChain: 1, hitsTaken: 0, healthLeft: 100 })
     const struck = dodging(null)
     struck.step(landsAt + 3)
-    expect(struck.runtime.inspect(Tally)).toMatchObject({ perfectDodges: 0, hitsTaken: 1 })
+    expect(struck.runtime.inspect(Tally)).toMatchObject({ perfectDodges: 0, longestChain: 0, hitsTaken: 1 })
+    expect(struck.runtime.inspect(Tally).healthLeft).toBeLessThan(100)
   })
 
   it("counts the blow landing where she dashed from, though the dash already carried her out of it", () => {

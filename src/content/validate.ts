@@ -16,14 +16,14 @@ import { newAccount } from "./account.ts"
 import { entryChampion, entryKind } from "./challenges.ts"
 import type { ChallengeId } from "./challenges.ts"
 import { beyond, challengeShows, holds, introducedBy, nothingSeen, withNovelty } from "./novelties.ts"
-import { aheadOfLine } from "./quests.ts"
+import { aheadOfLine, starsPerChest } from "./quests.ts"
 import { noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
 import type { QuestAt, RankTwist } from "./ranks.ts"
 import type { QuestId } from "./quests.ts"
 import { elements } from "./elements.ts"
 import type { ElementId, StateId } from "./elements.ts"
 import { materialOf } from "./materials.ts"
-import { tallies } from "./stars.ts"
+import { meets, tallies, tallyMeeting, worstClear } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
 import { basicAttack } from "./aspects.ts"
 import type { AspectSpec } from "./aspects.ts"
@@ -328,24 +328,34 @@ const checkRelic = (problems: Array<string>, where: string, relic: RelicSpec): v
 }
 
 /**
- * A quest's stars (see docs/quests.md): the first is the clear, and each
- * other a tally the arena counts for any team (never a character, element,
- * class, or time: `TallyId` holds only those) with a sensible bound.
+ * A quest's stars (see docs/quests.md): three goals on top of the clear,
+ * each a tally the arena counts for any team (never a character, element,
+ * class, or time: `TallyId` holds only those) with a sensible bound, all
+ * three met together by a run good enough, and none met by any clear.
  */
-const checkStars = (problems: Array<string>, where: string, stars: ReadonlyArray<StarGoal>): void => {
+const checkStars = (problems: Array<string>, where: string, stars: ReadonlyArray<StarGoal>, chainSteps: number): void => {
   if (stars.length !== 3) problems.push(`${where}: needs exactly three stars (has ${stars.length})`)
-  if (stars[0]?.kind !== "cleared") problems.push(`${where}: its first star must be the clear`)
   stars.forEach((goal, index) => {
-    if (goal.kind === "cleared") {
-      if (index > 0) problems.push(`${where}: star ${index + 1} repeats the clear`)
+    if (!Object.hasOwn(tallies, goal.tally)) {
+      problems.push(`${where}: star ${index + 1} counts unknown tally ${goal.tally}`)
       return
     }
-    if (!Object.hasOwn(tallies, goal.tally)) problems.push(`${where}: star ${index + 1} counts unknown tally ${goal.tally}`)
     const bounds = [goal.least, goal.most].filter((bound) => bound !== undefined)
     if (bounds.length === 0) problems.push(`${where}: star ${index + 1} needs a bound`)
     if (bounds.some((bound) => !(Number.isInteger(bound) && bound >= 0))) problems.push(`${where}: star ${index + 1}: bounds must be whole numbers, not negative`)
     if (goal.least !== undefined && goal.most !== undefined && goal.least > goal.most) problems.push(`${where}: star ${index + 1} can never be met`)
+    if (goal.tally === "healthLeft" && bounds.some((bound) => bound > 100)) problems.push(`${where}: star ${index + 1}: health left is a share, at most 100`)
+    if (goal.tally === "longestChain" && (goal.least ?? 0) > chainSteps) problems.push(`${where}: star ${index + 1}: a chain is at most ${chainSteps} dodges`)
+    // A clear alone earns no star: a goal the worst clear meets is no goal.
+    if (meets(goal, true, worstClear)) problems.push(`${where}: star ${index + 1} is met by any clear (stars are goals on top of it)`)
   })
+  if (!meetsAll(stars)) problems.push(`${where}: its stars can never all be met in one run`)
+}
+
+/** Whether one run can meet every one of `goals`. */
+const meetsAll = (goals: ReadonlyArray<StarGoal>): boolean => {
+  const tally = tallyMeeting(goals)
+  return goals.every((goal) => meets(goal, true, tally))
 }
 
 /** A level curve that rises and ends. */
@@ -680,7 +690,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     checkAmounts(problems, where, tuning, quest.rewards.currencies)
     const novelty = quest.introduces?.novelty
     if ((novelty?.kind === "enemy" || novelty?.kind === "champion") && !has(tuning.enemies, novelty.enemy)) problems.push(`${where}: introduces unknown enemy ${novelty.enemy}`)
-    checkStars(problems, where, quest.stars)
+    checkStars(problems, where, quest.stars, tuning.perfectDodge.chain.slow.length)
     if (!has(elements, quest.element)) problems.push(`${where}: pays the material of unknown element ${quest.element}`)
     // Each higher rank opens along the main line and its own replay, showing what was brought by then, twists included.
     for (let rank = 2; rank <= tuning.ranks.count; rank++) {
@@ -754,7 +764,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (before !== undefined && step.count <= before.count) problems.push(`ascension step ${index + 1}: must cost more material than the step before`)
   })
 
-  // Chests open in order, each needing more stars than the last, and no more than its group has.
+  // Chests open in order, one every `starsPerChest` stars (see docs/quests.md), and no more than its group has.
   for (const [group, list] of Object.entries(tuning.chests)) {
     const where = `chests of ${group}`
     if (group !== "secondary" && !has(tuning.chapters, group)) problems.push(`${where}: unknown chapter`)
@@ -766,8 +776,10 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (!(Number.isInteger(chest.stars) && chest.stars >= 1)) problems.push(`${where} ${index + 1}: stars must be a whole number of at least 1`)
       if (before !== undefined && chest.stars <= before.stars) problems.push(`${where} ${index + 1}: needs more stars than the chest before`)
       if (chest.stars > total) problems.push(`${where} ${index + 1}: needs ${chest.stars} stars, but its quests have ${total}`)
+      if (chest.stars !== starsPerChest * (index + 1)) problems.push(`${where} ${index + 1}: chests come every ${starsPerChest} stars (needs ${starsPerChest * (index + 1)}, has ${chest.stars})`)
       checkAmounts(problems, `${where} ${index + 1}`, tuning, chest.rewards)
     })
+    if (list.length !== Math.floor(total / starsPerChest)) problems.push(`${where}: needs one every ${starsPerChest} of its ${total} stars (has ${list.length})`)
   }
 
   // Discoveries pay crystals only (gold comes from runs), and every character can be discovered.

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { nextAlive } from "../src/features/team.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, TeamSwitch, BasicAttack } from "../src/schema.ts"
+import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, Stats, TeamSwitch, BasicAttack } from "../src/schema.ts"
 import type { ActiveState, BuildValue } from "../src/schema.ts"
 import { cursorAt, doubleTap, placeDummies, start, steps, plainAttack } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -75,6 +75,8 @@ const putIn = (slot: number, state: ActiveState) => {
 
 /** A fire that burns `dps` for `seconds`. */
 const fire = (dps: number, seconds = 30): ActiveState => ({ id: "burning", remaining: seconds, atk: (dps * 100) / defaultTuning.elements.burning.power, nextTick: 0.01, charges: false })
+
+const Tallied = Game.Inspector("Test/Tally", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().tally)
 
 const flowOf = (started: ReturnType<typeof start>) => started.runtime.debug.dump().machines["Shooter/Flow"]?.current
 
@@ -245,6 +247,23 @@ describe("falling", () => {
     while (flowOf(team) === "Playing" && guard++ < 1200) team.step()
     expect(flowOf(team)).toBe("GameOver")
     expect(team.field()).toBeUndefined()
+  })
+
+  it("tallies for stars each one who falls and the team's health left (fallen members count none), and each ultimate used", () => {
+    const team = run([swordsman, gunner])
+    team.runtime.tick(putIn(0, fire(400)))
+    let guard = 0
+    while (team.world().members[0]!.health > 0 && guard++ < 600) team.step()
+    team.step()
+    const max = tuning.characters.swordsman.stats.hp + tuning.characters.gunner.stats.hp
+    const left = team.world().members[1]!.health
+    // A burn's ticks are no blows: no hit taken, but a fall.
+    expect(team.runtime.inspect(Tallied)).toMatchObject({ falls: 1, hitsTaken: 0, healthLeft: Math.floor((left / max) * 100), ultimates: 0 })
+
+    const ultimate = run([swordsman, gunner], { party: [{ frame: 1, slot: 1, ultimate: true }] })
+    ultimate.runtime.tick(Game.Schedule(ChargeTeam))
+    ultimate.step(4)
+    expect(ultimate.runtime.inspect(Tallied)).toMatchObject({ ultimates: 1, falls: 0, healthLeft: 100 })
   })
 
   it("holds the one coming in while the one who fell goes down, the enemies crawling; her protection counts from when she steps in", () => {

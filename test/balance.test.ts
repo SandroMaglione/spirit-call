@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { balanceCases, balanceViolations, compareBalance, economyAudit } from "./balance-model.ts"
 import type { BalanceRow } from "./balance-model.ts"
+import { noTally } from "../src/content/stars.ts"
 import { runBot } from "./bot.ts"
 import { energyViolations } from "./energy-model.ts"
 
@@ -48,7 +49,7 @@ describe("balance measurements", () => {
 
   it("flags easier and harder outcomes, excessive cadence changes, and missing cases", () => {
     const report = { hits: 0, damage: 0, healing: 0, dashes: 0, pressure: 0, clearedAt: 100, endedAt: 100, outcome: "cleared" as const,
-      kills: 30, specials: 10, ultimates: 3, breaks: 10, healthRemaining: 0.5 }
+      kills: 30, specials: 10, ultimates: 3, breaks: 10, healthRemaining: 0.5, tally: noTally }
     const row: BalanceRow = { id: "quest/profile/7", quest: "theSwarm", profile: "swordsman-skills", seed: 7, report }
     expect(compareBalance([row], [row])).toEqual([])
     expect(compareBalance([row], [{ ...row, report: { ...report, endedAt: 60, ultimates: 10 } }])).toHaveLength(2)

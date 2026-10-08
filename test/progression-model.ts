@@ -24,6 +24,7 @@ import type { CharacterId } from "../src/content/characters.ts"
 import type { ElementId } from "../src/content/elements.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
 import type { QuestId } from "../src/content/quests.ts"
+import { tallyMeeting, worstClear } from "../src/content/stars.ts"
 import type { Tally } from "../src/content/stars.ts"
 import type { RunResultValue } from "../src/schema.ts"
 
@@ -77,7 +78,7 @@ export interface Progression {
 }
 
 const tierReach = 4
-const noTally: Tally = { hitsTaken: 99, perfectDodges: 0, breaks: 0 }
+const noTally: Tally = worstClear
 
 export const simulateProgression = (tuning: Tuning, options: ProgressionOptions = { calls: true, runsPerWeek: 40 }): Progression => {
   const firstBanner = Object.keys(tuning.banners)[0] as keyof typeof tuning.banners
@@ -94,13 +95,8 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
   const average = () => team().reduce((sum, character) => sum + level(character), 0) / team().length
   const cleared = (quest: QuestId, rank = 1) => questCleared(account, quest, rank)
 
-  /** A tally meeting the first two stars of `quest` (the clear and its idea), not the hit budget. */
-  const tallyFor = (quest: QuestId): Tally => {
-    const tally: Record<string, number> = { ...noTally }
-    const goal = tuning.quests[quest].stars[1]
-    if (goal.kind === "tally" && goal.least !== undefined) tally[goal.tally] = goal.least
-    return tally as Tally
-  }
+  /** A tally meeting the first two stars of `quest` (a decent run and its idea), not the clean run's. */
+  const tallyFor = (quest: QuestId): Tally => tallyMeeting(tuning.quests[quest].stars.slice(0, 2))
 
   const ahead = options.levelsAhead ?? 0
   // Losses owed before the next clear, so that a share `lost` of all runs are lost.

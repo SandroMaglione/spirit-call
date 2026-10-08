@@ -42,9 +42,10 @@ interface Case {
   readonly budget: number | null
 }
 
+/** The quest's tightest hit budget among its stars, if it has one. */
 const budgetOf = (quest: QuestId): number | null => {
-  const goal = tuning.quests[quest].stars[2]
-  return goal.kind === "tally" && goal.tally === "hitsTaken" && goal.most !== undefined ? goal.most : null
+  const budgets = tuning.quests[quest].stars.flatMap((goal) => (goal.tally === "hitsTaken" && goal.most !== undefined ? [goal.most] : []))
+  return budgets.length > 0 ? Math.min(...budgets) : null
 }
 
 const cases: Array<Case> = []

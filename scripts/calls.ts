@@ -31,6 +31,7 @@ import { newAccount } from "../src/content/account.ts"
 import type { CharacterId } from "../src/content/characters.ts"
 import { elements } from "../src/content/elements.ts"
 import type { ChapterId, QuestId } from "../src/content/quests.ts"
+import { tallyMeeting, worstClear } from "../src/content/stars.ts"
 import type { Tally } from "../src/content/stars.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
 import type { RunResultValue } from "../src/schema.ts"
@@ -55,11 +56,7 @@ const week = 7 * 24 * 60 * 60 * 1000
 const anchor = tuning.calls.rotation.anchor
 
 /** A tally that meets every star of `quest`. */
-const tallyFor = (quest: QuestId): Tally => {
-  const tally: Record<string, number> = { hitsTaken: 0, perfectDodges: 0, breaks: 0 }
-  for (const goal of tuning.quests[quest].stars) if (goal.kind === "tally" && goal.least !== undefined) tally[goal.tally] = goal.least
-  return tally as Tally
-}
+const tallyFor = (quest: QuestId): Tally => tallyMeeting(tuning.quests[quest].stars)
 
 const teamOf = (account: Account): ReadonlyArray<CharacterId> => (Object.keys(account.owned.characters) as Array<CharacterId>).slice(-3)
 
@@ -84,7 +81,7 @@ const play = (account: Account, quest: QuestId, now: number): Account => {
   const challenge = tuning.quests[quest].challenge
   for (let run = 1; run <= runsPerQuest; run++) {
     const last = run === runsPerQuest
-    next = recordRun(tuning, next, { kind: "quest", quest }, resultFor(next, challenge, last, last ? tallyFor(quest) : { hitsTaken: 99, perfectDodges: 0, breaks: 0 }), now).account
+    next = recordRun(tuning, next, { kind: "quest", quest }, resultFor(next, challenge, last, last ? tallyFor(quest) : worstClear), now).account
   }
   return next
 }
@@ -95,7 +92,7 @@ const hardcoreWeek = (account: Account, level: number, now: number): Account => 
     tuning.tracks[track].tiers.forEach((tier, index) => {
       const tierPlay: Play = { kind: "tier", track, tier: index + 1 }
       if (tier.enemyLevel > level + tierReach || playLock(tuning, next, tierPlay) !== null) return
-      next = recordRun(tuning, next, tierPlay, resultFor(next, tier.challenge, true, { hitsTaken: 0, perfectDodges: 0, breaks: 0 }), now).account
+      next = recordRun(tuning, next, tierPlay, resultFor(next, tier.challenge, true, worstClear), now).account
     })
   }
   return next

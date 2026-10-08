@@ -12,7 +12,7 @@
  * Signing up goes through the game's own API (`TESTERS_URL`, with
  * `TESTERS_PASSWORD`), so the login is made as any player's is. Clearing
  * chapter 1 does too: each of its quests is selected and a run that cleared
- * it is recorded (meeting only the clear's star), so the server's own rules
+ * it is recorded (meeting no star), so the server's own rules
  * pay what a player would get. The wallet
  * is then written straight to the database with the write key
  * (`D1_WRITE_TOKEN`, see deploy/stacks/writer.ts), logged as a `testerFill`
@@ -29,7 +29,7 @@ import { currencies } from "../src/content/currencies.ts"
 import type { ResourceId } from "../src/content/currencies.ts"
 import { materials } from "../src/content/materials.ts"
 import type { QuestId } from "../src/content/quests.ts"
-import type { Tally } from "../src/content/stars.ts"
+import { worstClear } from "../src/content/stars.ts"
 import { emptyRunLog } from "../src/schema.ts"
 import type { RunResultValue } from "../src/schema.ts"
 
@@ -100,15 +100,6 @@ const asPlayer = async (username: string, signUp: boolean) => {
 /** Chapter 1's quests, in the order they open. */
 const chapterOne = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((id) => defaultTuning.quests[id].chapter === "one")
 
-/** A tally that meets none of `quest`'s tally goals, so a clear earns only the clear's star. */
-const onlyTheClear = (quest: QuestId): Tally => {
-  const tally: Record<keyof Tally, number> = { hitsTaken: 0, perfectDodges: 0, breaks: 0 }
-  for (const goal of defaultTuning.quests[quest].stars) {
-    if (goal.kind === "tally") tally[goal.tally] = goal.most !== undefined ? goal.most + 1 : Math.max(0, (goal.least ?? 0) - 1)
-  }
-  return tally
-}
-
 /** Clears every chapter 1 quest at rank I for `username`, as runs the server records. */
 const clearChapterOne = async (username: string) => {
   const call = await asPlayer(username, false)
@@ -116,7 +107,7 @@ const clearChapterOne = async (username: string) => {
     const play = { kind: "quest" as const, quest, rank: 1 }
     const team = ["swordsman"] as const
     await call("PUT", "/account/selection", { team, play })
-    const result: RunResultValue = { cleared: true, challenge: encounterOf(defaultTuning, play).challenge, progress: 1, wave: 1, kills: 0, time: 180, team, reactions: [], tally: onlyTheClear(quest) }
+    const result: RunResultValue = { cleared: true, challenge: encounterOf(defaultTuning, play).challenge, progress: 1, wave: 1, kills: 0, time: 180, team, reactions: [], tally: worstClear }
     await call("POST", "/runs", { play, result, log: emptyRunLog })
   }
 }
