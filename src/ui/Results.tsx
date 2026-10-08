@@ -25,6 +25,10 @@ import { Card, CardRow } from "./kit/Card.tsx"
 import { Pill, RoundButton } from "./kit/controls.tsx"
 import { Bar } from "./kit/panel.tsx"
 import { aspectOf } from "../content/aspects.ts"
+import { cosmeticOf } from "../content/cosmetics.ts"
+import type { MaterialId } from "../content/materials.ts"
+import { relicOf } from "../content/relics.ts"
+import { LookIcon, RelicIcon } from "./RelicIcon.tsx"
 import { CharacterCard, MaterialIcon, Stars } from "./menu/parts.tsx"
 import type { Screen } from "./menu/screens.ts"
 import { nextAfter, tabOf } from "./navigation.ts"
@@ -79,16 +83,20 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           <CardRow class="results__loot" label="Rewards">
             {earned.experience > 0 && <Card tint="thunder" art={<Icon name="xp" />} foot={`+${earned.experience}`} label={`${earned.experience} account XP`} />}
             {earnedResources(tuning, earned).map(({ id, total, fromChests }) => {
-              const currency = id === "crystals" || id === "gold"
+              const currency = id === "crystals" || id === "gold" || id === "dust"
               // Part of it from a chest: the chest in the corner, and it glows as a chest's gift does.
               return <Card key={id} fresh={fromChests > 0} corner={fromChests > 0 ? "chest" : undefined}
-                tint={id === "crystals" ? "water" : currency ? undefined : tuning.materials[id].element}
-                art={currency ? <Icon name={id} /> : <MaterialIcon store={store} material={id} />}
+                tint={id === "crystals" ? "water" : currency ? undefined : tuning.materials[id as MaterialId].element}
+                art={currency ? <Icon name={id} /> : <MaterialIcon store={store} material={id as MaterialId} />}
                 foot={`+${total.toLocaleString("en-US")}`} label={`${total} ${resourceName(tuning, id)}${fromChests > 0 ? `, ${fromChests} from a chest` : ""}`} />
             })}
             {earned.rewards?.unlocks.map((unlock) => unlock.kind === "character"
               ? <CharacterCard key={unlock.id} store={store} character={unlock.id} foot="NEW" fresh onClick={enabled ? () => open({ kind: "character", character: unlock.id, tab: "kit" }) : undefined} />
-              : <Card key={unlock.id} fresh tint={tuning.characters[store.team.value[0]?.character ?? "swordsman"].element} art={<AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} />} foot="NEW" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />)}
+              : unlock.kind === "aspect"
+                ? <Card key={unlock.id} fresh tint={tuning.characters[store.team.value[0]?.character ?? "swordsman"].element} art={<AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} />} foot="NEW" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />
+                : unlock.kind === "relic"
+                  ? <Card key={unlock.id} fresh tint={relicOf(tuning.relics, unlock.id).element ?? undefined} art={<RelicIcon slot={relicOf(tuning.relics, unlock.id).slot} element={relicOf(tuning.relics, unlock.id).element} />} foot="RELIC" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />
+                  : <Card key={unlock.id} fresh art={<LookIcon kind={cosmeticOf(tuning.cosmetics, unlock.id).kind} />} foot="LOOK" label={describeUnlock(tuning, unlock)} />)}
           </CardRow>
           {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <p class="results__new results__step" style={at(times.account)}>New: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</p>}
           {earned.discoveries.length > 0 && <p class="results__new results__step" style={at(times.account)}>Discovered: {earned.discoveries.map((id) => tuning.discoveries[id].name).join(", ")}</p>}

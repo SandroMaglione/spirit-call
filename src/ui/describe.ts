@@ -18,6 +18,8 @@ import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from
 import type { Rewards, Unlock } from "../content/quests.ts"
 import type { SkillEffect, SkillSpec } from "../content/skills.ts"
 import { aspectOf } from "../content/aspects.ts"
+import { cosmeticOf } from "../content/cosmetics.ts"
+import { relicOf } from "../content/relics.ts"
 import type { MoveEffect } from "../content/aspects.ts"
 
 export const statNames: { readonly [Stat in keyof Stats]: string } = { hp: "HP", atk: "ATK", def: "DEF", speed: "SPD" }
@@ -203,6 +205,10 @@ export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
       return tuning.characters[unlock.id].name
     case "aspect":
       return aspectOf(tuning.aspects, unlock.id).name
+    case "relic":
+      return `${relicOf(tuning.relics, unlock.id).name} (relic)`
+    case "cosmetic":
+      return `${cosmeticOf(tuning.cosmetics, unlock.id).name} (look)`
   }
 }
 

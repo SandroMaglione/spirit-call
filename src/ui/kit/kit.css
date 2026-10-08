@@ -73,6 +73,13 @@
 
 /* ---------- icons, art ---------- */
 .menu-icon { display: block; flex: none; width: 1em; height: 1em; }
+/* A relic's charm, its slot's sign or its element's emblem inside; a look's drop or streak. */
+.relic-icon { position: relative; display: block; flex: none; width: 1em; height: 1em; color: #9fd2ff; }
+.relic-icon__charm { display: block; width: 100%; height: 100%; }
+.relic-icon__emblem { position: absolute; inset: 22%; display: grid; place-items: center; font-size: .56em; }
+.relic-icon__emblem .menu-icon { width: 100%; height: 100%; }
+.relic-icon--element { color: #ffe08a; }
+.look-icon { color: #ffb3da; }
 .model { pointer-events: none; }
 .model-stage { position: absolute; inset: 0; }
 .model-stage .model { position: absolute; inset: 0; }

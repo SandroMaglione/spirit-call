@@ -2,13 +2,18 @@
  * The Spirit Call (see docs/calls.md): the banner running now, its
  * characters (one focused: the one a call brings), the focused one's model
  * and what she does, with a trial; the guarantees, and Call ×1 and ×10.
- * Two more views: every rate and what is left to get, and the last calls.
+ * Two more views: every rate (characters, aspects, looks, relics, supplies)
+ * and what is left to get, and the last calls.
  * A call shows the seal (`CallReveal`) in place of the screen until every
  * result is seen.
  */
-import { activeBanner, aspectsLeft, callProblem, callsHeld, focusOn, guarantees, leftOn, nextBanner } from "../../account/calls.ts"
+import { activeBanner, aspectsLeft, callProblem, callsHeld, cosmeticsLeft, focusOn, guarantees, leftOn, nextBanner, shares } from "../../account/calls.ts"
+import { relicsOpen } from "../../account/account.ts"
 import type { CallResult } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
+import { cosmeticOf } from "../../content/cosmetics.ts"
+import { relicOf } from "../../content/relics.ts"
+import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
 import type { CharacterId } from "../../content/characters.ts"
 import { elements } from "../../content/elements.ts"
 import { materialOf } from "../../content/materials.ts"
@@ -37,6 +42,14 @@ const CallPrize = ({ store, result }: { readonly store: UiStore; readonly result
       const aspect = aspectOf(tuning.aspects, result.id)
       return <><span class="call__aspect-icon"><AbilityIcon kind={aspect.class} /></span><b>{aspect.name}</b></>
     }
+    case "cosmetic": {
+      const look = cosmeticOf(tuning.cosmetics, result.id)
+      return <><span class="call__aspect-icon"><LookIcon kind={look.kind} /></span><b>{look.name}</b><small>Look</small></>
+    }
+    case "relic": {
+      const relic = relicOf(tuning.relics, result.id)
+      return <><span class="call__aspect-icon"><RelicIcon slot={relic.slot} element={relic.element} /></span><b>{relic.name}</b><small>{result.dust > 0 ? `+${result.dust} dust` : `Tier ${["I", "II", "III"][result.tier - 1]}`}</small></>
+    }
     case "supply":
       return <>
         <span class="call__amount"><Icon name="gold" />{(result.amounts.gold ?? 0).toLocaleString("en-US")}</span>
@@ -54,11 +67,13 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
   if (reveal !== null) return <CallReveal store={store} actions={actions} reveal={reveal} done={() => (store.callReveal.value = null)} />
   const focus = focusOn(tuning, account, banner) ?? spec.characters[0]!
   const problem = callProblem(tuning, account, banner, now), held = callsHeld(tuning, account), left = guarantees(tuning, account)
+  // The shares as the pools stand now (a share with nothing left goes to relics), of a call that brings no character.
+  const odds = shares(tuning, account)
   // With one banner, it runs on: there is nothing to count down to.
   const ends = tuning.banners[nextBanner(tuning, now)] === spec ? undefined : `Ends in ${describeTimeUntil(running.until, now)}`
   const note = problem?.kind === "callsLocked"
     ? `Calls open after ${tuning.quests[problem.quest as QuestId].name}, the end of chapter one.`
-    : problem?.kind === "bannerComplete" ? "Every spirit on this banner is yours." : undefined
+    : leftOn(tuning, account, banner).length === 0 ? "Every spirit on this banner is yours: calls still bring aspects, looks, and relics." : undefined
   const price = tuning.calls.price.crystals ?? 0
   const callButton = (count: number, tone: "cream" | "dark") =>
     <Pill tone={tone} icon="call" disabled={problem !== null || held < count || store.busy.value} label={`Call ${count} times for ${price * count} crystals`} onClick={() => actions.call(banner, count)}>
@@ -70,6 +85,7 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
     <Fact icon="call" label="Calls held" value={held} />
     <Fact icon="character" label="Character within" value={`${left.character} calls`} />
     <Fact icon="aspect" label="Aspect within" value={aspectsLeft(tuning, account).length === 0 ? "All owned" : `${left.aspect} calls`} />
+    <Fact icon="relic" label="Relic within" value={relicsOpen(tuning, account) ? `${left.relic} calls` : "Not open"} />
   </div>
   if (tab === "details") return <Screen name="call">
     {top}
@@ -78,17 +94,24 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
       <Fact label="Character (the focus)" value={`${percent(tuning.calls.character.rate)} a call`} />
       <Fact label="Rising from call" value={`${tuning.calls.character.softFrom}, +${percent(tuning.calls.character.softStep)} each`} />
       <Fact label="Certain by call" value={`${tuning.calls.character.guarantee} (your first: ${tuning.calls.character.firstGuarantee})`} />
-      <Fact label="Aspect" value={`${percent(tuning.calls.aspect.rate)}, certain by call ${tuning.calls.aspect.guarantee}`} />
+      <Fact label="Aspect" value={`${percent(odds.aspect)}, certain by call ${tuning.calls.aspect.guarantee}`} />
+      <Fact label="Look (the Call's own)" value={percent(odds.cosmetic)} />
+      <Fact label="Relic (owned: a tier up)" value={`${percent(odds.relic)}, certain by call ${tuning.calls.relic.guarantee}`} />
       <Fact label="Otherwise, a supply" value={<><Icon name="gold" />{tuning.calls.supply.gold.toLocaleString("en-US")}<span class="call__gap" /><MaterialIcon store={store} material={materialOf(elementOf(tuning, focus))} />{tuning.calls.supply.material}</>} />
-      <p class="dim call__explain">A character that comes is always the one you focus. Nothing you own comes again while something is left to get. The counts carry over from banner to banner.</p>
+      <p class="dim call__explain">A character that comes is always the one you focus. No character, aspect, or look you own comes again while one is left to get; their share goes to relics after. A relic you own comes a tier up, and past tier III turns into {tuning.relicRules.dustPerDuplicate} dust. The counts carry over from banner to banner.</p>
     </Panel>
-    <Panel class="call__left in-right" title="Left to get" detail={`${leftOn(tuning, account, banner).length + aspectsLeft(tuning, account).length}`}>
+    <Panel class="call__left in-right" title="Left to get" detail={`${leftOn(tuning, account, banner).length + aspectsLeft(tuning, account).length + cosmeticsLeft(tuning, account).length}`}>
       <Label>On {spec.name}</Label>
       <Cards>{spec.characters.map((id) => <CharacterCard key={id} store={store} character={id} foot={leftOn(tuning, account, banner).includes(id) ? "Left" : "Yours"} />)}</Cards>
       <Label>Aspects</Label>
       {aspectsLeft(tuning, account).length === 0 ? <p class="dim">Every aspect is yours.</p> : <div class="call__aspects">{aspectsLeft(tuning, account).map((id) => {
         const aspect = aspectOf(tuning.aspects, id)
         return <span key={id}><AbilityIcon kind={aspect.class} />{aspect.name}<small>{tuning.classes[aspect.class].name}</small></span>
+      })}</div>}
+      <Label>Looks</Label>
+      {cosmeticsLeft(tuning, account).length === 0 ? <p class="dim">Every look of the Call is yours.</p> : <div class="call__aspects">{cosmeticsLeft(tuning, account).map((id) => {
+        const look = cosmeticOf(tuning.cosmetics, id)
+        return <span key={id}><LookIcon kind={look.kind} />{look.name}<small>{look.character === null ? "Trail" : tuning.characters[look.character].name}</small></span>
       })}</div>}
     </Panel>
     <Actions>{callButton(1, "dark")}{callButton(10, "cream")}</Actions>

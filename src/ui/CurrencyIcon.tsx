@@ -8,9 +8,19 @@ export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyId }) =>
     <defs>
       <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3c5" /><stop offset=".45" stop-color="#dfb560" /><stop offset="1" stop-color="#a77336" /></linearGradient>
       <linearGradient id={`${id}-gem`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9ffff" /><stop offset=".5" stop-color="#8cdde9" /><stop offset="1" stop-color="#8f94d6" /></linearGradient>
-      <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
+      <radialGradient id={`${id}-dust`} cx=".5" cy=".5" r=".5"><stop stop-color="#fff6ff" /><stop offset=".55" stop-color="#d6a6ff" /><stop offset="1" stop-color="#7a5cc7" stop-opacity="0" /></radialGradient>
+      <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : currency === "dust" ? <circle cx="16" cy="16" r="13" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
     </defs>
-    {currency === "gold" ? <>
+    {currency === "dust" ? <>
+      {/* A heap of glittering motes: what a relic turns into past its last tier. */}
+      <circle cx="16" cy="17" r="12" fill={`url(#${id}-dust)`} />
+      <path d="M6 24c3-5 7-7 10-7s7 2 10 7Z" fill="#b48ae8" stroke="#ecd9ff" stroke-width=".8" />
+      <path d="M10 24c2-3 4-4 6-4s4 1 6 4Z" fill="#e6d0ff" />
+      <path d="m16 5 1.6 4.4L22 11l-4.4 1.6L16 17l-1.6-4.4L10 11l4.4-1.6Z" fill="#fffaff" />
+      <circle cx="9" cy="14" r="1.3" fill="#fbe9ff" />
+      <circle cx="23.5" cy="15.5" r="1.1" fill="#fbe9ff" />
+      <circle cx="12" cy="8" r=".9" fill="#fff" />
+    </> : currency === "gold" ? <>
       <circle cx="16" cy="16" r="12.5" fill={`url(#${id}-gold)`} stroke="#f8d98c" stroke-width="1" />
       <circle cx="16" cy="16" r="9.5" fill="#b98b4430" stroke="#fff0af" stroke-width=".8" />
       <path d="m16 7 2.5 6.5L25 16l-6.5 2.5L16 25l-2.5-6.5L7 16l6.5-2.5Z" fill="#fff2ba" />
