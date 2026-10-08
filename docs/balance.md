@@ -5,6 +5,17 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Combat feel (2026-10-08)
+
+The baseline was recorded again after the step 3 playtest changes (PR
+#71): ultimates have a 0.75 s moment and come about twice as often
+(specials 15 energy, perfect dodges 10), and Gust dives ahead and pushes
+little (enemies stay within reach instead of flying a screen away). Skill
+users take a little more damage early (First Blood 1337: 0 to 12), and the
+learning Swordsman now falls in First Blood on both seeds (it already did on
+42): a first quest a beginner loses is for the difficulty pass to answer.
+The Warlord learning run went from a loss to a clear.
+
 ## Elements and aspects (October 2026)
 
 Weapons are gone (see `docs/aspects.md`): a character's level gives all her
@@ -326,6 +337,11 @@ generate and review a replacement baseline with:
 ```sh
 pnpm balance --output test/balance-baseline.json
 ```
+
+Long escape-only runs can end differently on a laptop (linked bevy-ts)
+than in CI (the published release). When the local baseline fails in CI on
+those rows only, record the report CI uploads instead (`gh run download
+<run>` gives `balance-report.json`, for the same tuning hash).
 
 Profiles include basic attacks, skills used whenever available, levels
 matched to the enemy, a slower learner,
