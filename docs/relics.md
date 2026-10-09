@@ -93,11 +93,13 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
   `relicRules.opensAfter`). Chapter one has none.
 - **Quests** give the first ones: Echo with chapter two's first quest, and
   Momentum with the first side quest.
-- **The Spirit Call** brings them often (its blue light, see `calls.md`):
-  any relic, new at tier I, owned one tier up, and at tier III turned into
-  dust (`relicRules.dustPerDuplicate`).
+- **Never the Spirit Call** (since 2026-10): relics are this game's
+  artifacts, progress to be played for, and Genshin farms those rather
+  than pulling them. The Call brings characters, aspects, and looks (see
+  `calls.md`). Where each relic comes from, and its tiers, is being
+  settled (every relic a quest's, its tiers its ranks' perfect clears).
 - **The shop** sells a relic the account owns one tier up, for dust
-  (`relicRules.prices`): bad luck never keeps a tier out of reach.
+  (`relicRules.prices`): no tier waits on a run that will not come.
 - The **Survival** slot opens after the Brute King (`survivalOpensAfter`),
   the middle of the main line, with its relics.
 
@@ -105,10 +107,10 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
 
 Dust is the shop's currency (`content/currencies.ts`), from **milestones
 off the main line**: side quests' first clears and chests, ranks' first
-clears and chests, hardcore tiers and trials once a period, and relics
-called past tier III. A main quest's first clear pays none, and no run
-pays it by itself, so dust follows progress and the Call stays the quick
-way. Where dust comes in, a little gold (and no material) goes out.
+clears and chests, and hardcore tiers and trials once a period. A main
+quest's first clear pays none, and no run pays it by itself, so dust
+follows progress. Where dust comes in, a little gold (and no material)
+goes out.
 
 ## Looks
 
@@ -118,7 +120,8 @@ spirit sheds as she moves. Each character wears one of each kind, in every
 team. Each look comes from one place:
 
 - **the shop**, for dust;
-- **the Spirit Call**, as its own rose light, never twice;
+- **the Spirit Call**, as its purple light, never twice, or its exchange
+  for sigils (see `calls.md`);
 - **a hard goal**: a few hardcore tiers give one with their first
   rewards (Until Fall's third tier, Brute Siege's second).
 
@@ -189,7 +192,7 @@ arena and the menu's models draw her as she wears them.
 - **A relic**: an entry in `content/relics.ts` (its slot, element for the
   Element slot, three tiers of passives), its id in
   `test/content-ids.json`, and a line here. `validateContent` checks its
-  slot, element, budget, and tiers. It joins the Call at once.
+  slot, element, budget, and tiers, and that it comes from somewhere.
 - **A look**: an entry in `content/cosmetics.ts` (its kind, whose, where
   it comes from), its colors in `presentation/looks.ts`, and its id in
   `test/content-ids.json`.

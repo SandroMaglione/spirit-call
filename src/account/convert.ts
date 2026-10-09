@@ -32,8 +32,7 @@ export type StoredCallResult =
   | { readonly kind: "character"; readonly id: string }
   | { readonly kind: "aspect"; readonly id: string }
   | { readonly kind: "cosmetic"; readonly id: string }
-  | { readonly kind: "relic"; readonly id: string; readonly tier: number; readonly dust: number }
-  | { readonly kind: "supply"; readonly amounts: Readonly<Record<string, number>> }
+  | { readonly kind: "sigils"; readonly amount: number }
 
 /** The account as stored: `Account`'s shape, with every content id a string that may name content that no longer exists. */
 export interface AccountRecord {
@@ -57,8 +56,7 @@ export interface AccountRecord {
   readonly calls: {
     readonly seed: number
     readonly sinceCharacter: number
-    readonly sinceAspect: number
-    readonly sinceRelic: number
+    readonly sinceRare: number
     readonly firstCharacter: boolean
     readonly focus: Readonly<Record<string, string>>
     readonly history: ReadonlyArray<{ readonly at: number; readonly banner: string; readonly result: StoredCallResult }>
@@ -235,10 +233,8 @@ const callsFrom = (tuning: Tuning, saved: AccountRecord["calls"]): CallState => 
         return known(tuning.aspects, result.id) ? { kind: "aspect", id: result.id } : null
       case "cosmetic":
         return known(tuning.cosmetics, result.id) ? { kind: "cosmetic", id: result.id } : null
-      case "relic":
-        return known(tuning.relics, result.id) ? { kind: "relic", id: result.id, tier: tierFrom(result.tier), dust: Math.max(0, result.dust) } : null
-      case "supply":
-        return { kind: "supply", amounts: Object.fromEntries(Object.entries(result.amounts).filter(([id]) => known({ ...tuning.currencies, ...tuning.materials }, id))) }
+      case "sigils":
+        return { kind: "sigils", amount: Math.max(0, Math.round(result.amount)) }
     }
   }
   const history: Array<CallRecord> = []
@@ -246,7 +242,7 @@ const callsFrom = (tuning: Tuning, saved: AccountRecord["calls"]): CallState => 
     const result = resultFrom(record.result)
     if (result !== null && known(tuning.banners, record.banner)) history.push({ at: record.at, banner: record.banner, result })
   }
-  return { seed: saved.seed >>> 0, sinceCharacter: saved.sinceCharacter, sinceAspect: saved.sinceAspect, sinceRelic: saved.sinceRelic, firstCharacter: saved.firstCharacter, focus, history }
+  return { seed: saved.seed >>> 0, sinceCharacter: saved.sinceCharacter, sinceRare: saved.sinceRare, firstCharacter: saved.firstCharacter, focus, history }
 }
 
 /** A stored tier held to the tiers there are (1 to 3). */

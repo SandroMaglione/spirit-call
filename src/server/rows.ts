@@ -22,8 +22,7 @@ export const AccountRow = Schema.Struct({
   seconds_played: Int,
   call_seed: Int,
   calls_since_character: Int,
-  calls_since_aspect: Int,
-  calls_since_relic: Int,
+  calls_since_rare: Int,
   first_character_called: Int,
   play_kind: Schema.Literals(["quest", "tier"]),
   play_quest: Schema.NullOr(Text),
@@ -53,7 +52,7 @@ export const tables = {
   chests: { row: Schema.Struct({ user_id: Text, star_group: Text, rank: Int, opened: Int }), key: ["star_group", "rank"] },
   call_focus: { row: Schema.Struct({ user_id: Text, banner: Text, character: Text }), key: ["banner"] },
   calls: {
-    row: Schema.Struct({ user_id: Text, place: Int, at: Int, banner: Text, kind: Schema.Literals(["character", "aspect", "cosmetic", "relic", "supply"]), item: Schema.NullOr(Text), tier: OptionalInt }),
+    row: Schema.Struct({ user_id: Text, place: Int, at: Int, banner: Text, kind: Schema.Literals(["character", "aspect", "cosmetic", "sigils"]), item: Schema.NullOr(Text) }),
     key: ["place"]
   },
   call_amounts: { row: Schema.Struct({ user_id: Text, place: Int, resource: Text, amount: Int }), key: ["place", "resource"] }
@@ -83,8 +82,7 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
         seconds_played: account.totals.secondsPlayed,
         call_seed: account.calls.seed,
         calls_since_character: account.calls.sinceCharacter,
-        calls_since_aspect: account.calls.sinceAspect,
-        calls_since_relic: account.calls.sinceRelic,
+        calls_since_rare: account.calls.sinceRare,
         first_character_called: account.calls.firstCharacter ? 1 : 0,
         play_kind: play.kind,
         play_quest: play.kind === "quest" ? play.quest : null,
@@ -124,14 +122,10 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
       at: call.at,
       banner: call.banner,
       kind: call.result.kind,
-      item: call.result.kind === "supply" ? null : call.result.id,
-      tier: call.result.kind === "relic" ? call.result.tier : null
+      item: call.result.kind === "sigils" ? null : call.result.id
     })),
-    call_amounts: account.calls.history.flatMap((call, place) =>
-      call.result.kind === "supply"
-        ? Object.entries(call.result.amounts).map(([resource, amount]) => ({ user_id, place, resource, amount }))
-        : call.result.kind === "relic" && call.result.dust > 0 ? [{ user_id, place, resource: "dust", amount: call.result.dust }] : []
-    )
+    // Sigils a call brought sit in `call_amounts`, as supplies did.
+    call_amounts: account.calls.history.flatMap((call, place) => call.result.kind === "sigils" ? [{ user_id, place, resource: "sigils", amount: call.result.amount }] : [])
   }
 }
 
@@ -142,9 +136,8 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
   const byPlace = new Map<number, Record<string, number>>()
   for (const amount of rows.call_amounts) byPlace.set(amount.place, { ...byPlace.get(amount.place), [amount.resource]: amount.amount })
   const resultOf = (call: RowOf<"calls">): StoredCallResult | undefined => {
-    if (call.kind === "supply") return { kind: "supply", amounts: byPlace.get(call.place) ?? {} }
+    if (call.kind === "sigils") return { kind: "sigils", amount: byPlace.get(call.place)?.["sigils"] ?? 0 }
     if (call.item === null) return undefined
-    if (call.kind === "relic") return { kind: "relic", id: call.item, tier: call.tier ?? 1, dust: byPlace.get(call.place)?.["dust"] ?? 0 }
     return { kind: call.kind, id: call.item }
   }
   const history = [...rows.calls]
@@ -194,8 +187,7 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
     calls: {
       seed: row.call_seed,
       sinceCharacter: row.calls_since_character,
-      sinceAspect: row.calls_since_aspect,
-      sinceRelic: row.calls_since_relic,
+      sinceRare: row.calls_since_rare,
       firstCharacter: row.first_character_called === 1,
       focus: Object.fromEntries(rows.call_focus.map((focus) => [focus.banner, focus.character])),
       history

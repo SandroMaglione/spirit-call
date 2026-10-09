@@ -26,6 +26,7 @@ import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { Api, Password, Username } from "../api/api.ts"
 import { defaultTuning } from "../config/tuning.ts"
+import type { RareItem } from "../account/calls.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
@@ -73,6 +74,8 @@ export interface App {
   readonly buyRelic: (relic: RelicId) => Promise<Account | undefined>
   /** Buys a look the shop sells with dust (refused when owned already, not sold, or short of dust). */
   readonly buyCosmetic: (cosmetic: CosmeticId) => Promise<Account | undefined>
+  /** Buys an aspect or a look from the Call's exchange with sigils. */
+  readonly exchange: (item: RareItem) => Promise<Account | undefined>
   /** Clears chapter one (calls open, its rewards owned) and adds crystals for 30 calls (a dev tool, to try the Spirit Call). */
   readonly openCalls: () => void
   /** `openCalls`, done when saved. */
@@ -188,6 +191,8 @@ export const startApp = async (username: string): Promise<App> => {
     wear: (character, kind, cosmetic) => run(api.account.wear({ params: { character, kind }, payload: { cosmetic } })),
     buyRelic: (relic) => run(api.account.buyRelic({ params: { relic } })),
     buyCosmetic: (cosmetic) => run(api.account.buyCosmetic({ params: { cosmetic } })),
+    // The client types the payload by each kind of the union: pick the branch.
+    exchange: (item) => run(item.kind === "aspect" ? api.account.exchange({ payload: item }) : api.account.exchange({ payload: item })),
     openCalls: () => void openCalls(),
     openCallsNow: () => openCalls(),
     unlockEverything: () => void run(api.dev.unlockEverything()),

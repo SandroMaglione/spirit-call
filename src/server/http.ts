@@ -118,6 +118,7 @@ const AccountLive = HttpApiBuilder.group(
       .handle("wear", ({ params, payload }) => forPlayer((id) => accounts.wear(id, params.character, params.kind, payload.cosmetic)))
       .handle("buyRelic", ({ params }) => forPlayer((id) => accounts.buyRelic(id, params.relic)))
       .handle("buyCosmetic", ({ params }) => forPlayer((id) => accounts.buyCosmetic(id, params.cosmetic)))
+      .handle("exchange", ({ payload }) => forPlayer((id) => accounts.exchange(id, payload)))
       .handle("train", ({ params }) => forPlayer((id) => accounts.train(id, params.character)))
       .handle("ascend", ({ params }) => forPlayer((id) => accounts.ascend(id, params.character)))
       .handle("call", ({ params, payload }) => forPlayer((id) => accounts.call(id, params.banner, payload.count)))

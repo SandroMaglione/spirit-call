@@ -247,6 +247,23 @@ describe("accounts", () => {
     expect((await player.send("POST", "/api/runs", played(null, { ...run, team: ["wizard"] }))).status).toBe(400)
   })
 
+  it("keeps the calls that remain when relics and supplies leave the Call, and one count since the last rare thing", () => {
+    const migration = (name: string) => readFileSync(new URL(`../src/server/migrations/${name}`, import.meta.url), "utf8")
+    const database = new DatabaseSync(":memory:")
+    for (const name of ["0001_accounts.sql", "0002_logs.sql", "0003_reset_accounts.sql", "0004_quest_ranks.sql", "0005_relics.sql", "0006_star_goals.sql", "0007_side_chests.sql"]) database.exec(migration(name))
+    database.exec(`INSERT INTO users VALUES ('u', 'stella', 'hash', 'salt', 0)`)
+    database.exec(`INSERT INTO accounts (user_id, created_at, experience, runs, clears, kills, seconds_played, call_seed, calls_since_character, calls_since_aspect, calls_since_relic, first_character_called, play_kind, play_quest) VALUES ('u', 0, 0, 0, 0, 0, 0, 7, 3, 5, 2, 0, 'quest', 'firstBlood')`)
+    database.exec(`INSERT INTO calls VALUES ('u', 0, 1, 'stormAndStone', 'supply', NULL, NULL), ('u', 1, 1, 'stormAndStone', 'relic', 'echo', 2), ('u', 2, 1, 'stormAndStone', 'aspect', 'arc', NULL), ('u', 3, 1, 'stormAndStone', 'character', 'stormcaller', NULL)`)
+    database.exec(`INSERT INTO call_amounts VALUES ('u', 0, 'gold', 400), ('u', 0, 'fireEssence', 6)`)
+    database.exec(migration("0008_call_tiers.sql"))
+    expect(database.prepare(`SELECT calls_since_character, calls_since_rare FROM accounts`).all()).toEqual([{ calls_since_character: 3, calls_since_rare: 5 }])
+    expect(database.prepare(`SELECT place, kind, item FROM calls ORDER BY place`).all()).toEqual([{ place: 2, kind: "aspect", item: "arc" }, { place: 3, kind: "character", item: "stormcaller" }])
+    expect(database.prepare(`SELECT count(*) AS n FROM call_amounts`).all()).toEqual([{ n: 0 }])
+    expect(() => database.exec(`INSERT INTO calls VALUES ('u', 4, 1, 'stormAndStone', 'relic', 'echo')`)).toThrow()
+    database.exec(`INSERT INTO calls VALUES ('u', 4, 1, 'stormAndStone', 'sigils', NULL)`)
+    database.close()
+  })
+
   it("makes calls and keeps them made", async () => {
     const handler = server({ devTools: true, secureCookies: true })
     const player = await signUp(handler)
@@ -361,14 +378,12 @@ describe("account rows", () => {
     calls: {
       seed: 42,
       sinceCharacter: 3,
-      sinceAspect: 1,
-      sinceRelic: 2,
+      sinceRare: 1,
       firstCharacter: false,
       focus: {},
       history: [
-        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "supply", amounts: { gold: 50 } } },
-        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "relic", id: "echo", tier: 2, dust: 0 } },
-        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "relic", id: "repel", tier: 3, dust: 50 } },
+        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "sigils", amount: 1 } },
+        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "aspect", id: "arc" } },
         { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "cosmetic", id: "blueFlame" } }
       ]
     },
@@ -380,14 +395,13 @@ describe("account rows", () => {
     expect(fromRecord(defaultTuning, newAccount, fromRows(toRows("player", toRecord(account)))!, 10).account).toEqual(account)
   })
 
-  it("keeps relics at their tier, the team's relics, the looks worn, and the Call's relics and looks", () => {
+  it("keeps relics at their tier, the team's relics, the looks worn, and the Call's results", () => {
     expect(account.owned.relics).toEqual({ echo: { unlockedAt: 7, tier: 2 }, emberHeart: { unlockedAt: 8, tier: 1 } })
     expect(account.selection.relics).toEqual({ gunner: { strike: "echo", element: "emberHeart" } })
     expect(account.worn).toEqual({ gunner: { trail: "starfall", tint: "blueFlame" } })
     expect(account.calls.history.map((record) => record.result)).toEqual([
-      { kind: "supply", amounts: { gold: 50 } },
-      { kind: "relic", id: "echo", tier: 2, dust: 0 },
-      { kind: "relic", id: "repel", tier: 3, dust: 50 },
+      { kind: "sigils", amount: 1 },
+      { kind: "aspect", id: "arc" },
       { kind: "cosmetic", id: "blueFlame" }
     ])
   })

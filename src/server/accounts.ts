@@ -15,7 +15,8 @@ import type * as Statement from "effect/sql/Statement"
 
 import { ascend, buyCosmetic, buyRelic, createAccount, earn, everything, noQuestProgress, questProgress, recordRun, select, train, unlock, wear, withClearedRewards } from "../account/account.ts"
 import type { Account, CallResult, Checked, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
-import { call, setFocus } from "../account/calls.ts"
+import { call, exchange, setFocus } from "../account/calls.ts"
+import type { RareItem } from "../account/calls.ts"
 import { fromRecord, toRecord } from "../account/convert.ts"
 import { Refused } from "../api/api.ts"
 import type { BannerId } from "../content/calls.ts"
@@ -47,6 +48,7 @@ export class Accounts extends Context.Service<
     readonly buyCosmetic: (userId: string, cosmetic: CosmeticId) => Effect.Effect<Account, Refused>
     readonly train: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
     readonly ascend: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
+    readonly exchange: (userId: string, item: RareItem) => Effect.Effect<Account, Refused>
     readonly call: (userId: string, banner: BannerId, count: number) => Effect.Effect<{ readonly account: Account; readonly results: ReadonlyArray<CallResult> }, Refused>
     readonly focus: (userId: string, banner: BannerId, character: CharacterId) => Effect.Effect<Account, Refused>
     /** Records a run that ended, with its log (kept for measuring play, see `Logs`). */
@@ -139,6 +141,7 @@ export class Accounts extends Context.Service<
         buyCosmetic: (userId, cosmetic) => act(userId, "buyCosmetic", about(cosmetic), (account, now) => buyCosmetic(tuning, account, cosmetic, now), same),
         train: (userId, character) => act(userId, "train", about(character), (account) => train(tuning, account, character), same),
         ascend: (userId, character) => act(userId, "ascend", about(character), (account) => ascend(tuning, account, character), same),
+        exchange: (userId, item) => act(userId, "exchange", about(item.id), (account, now) => exchange(tuning, account, item, now), same),
         call: (userId, banner, count) => act(userId, "call", about(banner), (account, now) => call(tuning, account, banner, count, now), (called) => called.account),
         focus: (userId, banner, character) => act(userId, "focus", about(banner), (account) => setFocus(tuning, account, banner, character), same),
         recordRun: (userId, play, result, log) =>

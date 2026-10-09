@@ -128,15 +128,13 @@ export const samePlay = (a: Play, b: Play): boolean =>
 
 /**
  * What one call brought: a character, an aspect, a look (each new to the
- * account), a relic (at the tier it reached; `dust`: what it turned into,
- * already at its last tier), or a supply bundle.
+ * account), or sigils (the Call's token, for its exchange).
  */
 export type CallResult =
   | { readonly kind: "character"; readonly id: CharacterId }
   | { readonly kind: "aspect"; readonly id: AspectId }
   | { readonly kind: "cosmetic"; readonly id: CosmeticId }
-  | { readonly kind: "relic"; readonly id: RelicId; readonly tier: RelicTier; readonly dust: number }
-  | { readonly kind: "supply"; readonly amounts: Amounts }
+  | { readonly kind: "sigils"; readonly amount: number }
 
 /** A call in the history: when, on which banner, and what it brought. */
 export interface CallRecord {
@@ -148,15 +146,14 @@ export interface CallRecord {
 /**
  * The account's Spirit Call (see `account/calls.ts`): where its random
  * draws stand (saved, so reloading never draws again), the calls since the
- * last character, since the last aspect (or character), and since the last
- * relic (or anything rarer), whether its first character came yet, the
- * character focused on each banner, and the last calls, newest first.
+ * last character and since the last rare thing (an aspect or a look),
+ * whether its first character came yet, the character focused on each
+ * banner, and the last calls, newest first.
  */
 export interface CallState {
   readonly seed: number
   readonly sinceCharacter: number
-  readonly sinceAspect: number
-  readonly sinceRelic: number
+  readonly sinceRare: number
   readonly firstCharacter: boolean
   readonly focus: { readonly [Id in BannerId]?: CharacterId }
   readonly history: ReadonlyArray<CallRecord>
@@ -170,7 +167,7 @@ export const seedOf = (text: string): number => {
 }
 
 /** No calls made yet, drawing from `seed`. */
-export const noCalls = (seed: number): CallState => ({ seed, sinceCharacter: 0, sinceAspect: 0, sinceRelic: 0, firstCharacter: false, focus: {}, history: [] })
+export const noCalls = (seed: number): CallState => ({ seed, sinceCharacter: 0, sinceRare: 0, firstCharacter: false, focus: {}, history: [] })
 
 export interface Account {
   readonly id: string
@@ -586,7 +583,7 @@ export type Refusal =
   | { readonly kind: "relicsLocked"; readonly quest: QuestId }
   /** A relic already at its last tier. */
   | { readonly kind: "maxTier"; readonly item: Item }
-  /** Not something the shop sells (a look from the Call or a reward), or already owned. */
+  /** Not something the shop or the exchange sells (a look from a reward, a quest's aspect), or already owned. */
   | { readonly kind: "notForSale"; readonly item: Item }
   /** A look that is not of that kind, or not for her. */
   | { readonly kind: "badLook"; readonly character: CharacterId; readonly cosmetic: CosmeticId }
@@ -601,7 +598,7 @@ export type Refusal =
   | { readonly kind: "callsLocked"; readonly quest: QuestId }
   /** The banner is not running now (see `activeBanner`). */
   | { readonly kind: "bannerClosed"; readonly banner: BannerId }
-  /** Every character on the banner is owned, and relics are not open: a call there could bring nothing new. */
+  /** Every character on the banner is owned and nothing rare is left: a call there could bring nothing new. */
   | { readonly kind: "bannerComplete"; readonly banner: BannerId }
   /** A focus that is not on the banner, or already owned. */
   | { readonly kind: "badFocus"; readonly banner: BannerId; readonly character: CharacterId }
