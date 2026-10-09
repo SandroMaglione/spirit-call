@@ -53,7 +53,8 @@ const positive = (problems: Array<string>, where: string, values: Record<string,
  * The Spirit Call (see docs/calls.md): every character comes from
  * somewhere (the new account, a quest, or a banner) and from one place
  * only, so a call never brings what a quest gives; banners hold
- * characters; the odds are shares and the guarantees can be reached.
+ * characters; the odds are shares, the guarantees can be reached, and
+ * the exchange's prices are whole sigils.
  */
 const checkCalls = (problems: Array<string>, tuning: Tuning): void => {
   const rules = tuning.calls
@@ -77,18 +78,16 @@ const checkCalls = (problems: Array<string>, tuning: Tuning): void => {
   if (Object.keys(tuning.banners).length === 0) problems.push("the Spirit Call: needs a banner")
   if (!has(tuning.quests, rules.opensAfter)) problems.push(`the Spirit Call: opens after unknown quest ${rules.opensAfter}`)
   checkAmounts(problems, "the Spirit Call's price", tuning, rules.price)
-  const { character, aspect, look, relic } = rules
-  for (const [name, share] of [["character rate", character.rate], ["character softStep", character.softStep], ["aspect rate", aspect.rate], ["look rate", look.rate], ["relic rate", relic.rate]] as const) {
+  const { character, rare } = rules
+  for (const [name, share] of [["character rate", character.rate], ["character softStep", character.softStep], ["rare rate", rare.rate]] as const) {
     if (!(share >= 0 && share <= 1)) problems.push(`the Spirit Call: ${name} must be a share from 0 to 1 (is ${share})`)
   }
-  if (aspect.rate + look.rate + relic.rate > 1) problems.push("the Spirit Call: the aspect, look, and relic rates add up to more than every call")
-  if (!(aspect.rate < relic.rate && look.rate < relic.rate)) problems.push("the Spirit Call: relics come more often than aspects and looks")
-  for (const [name, count] of [["character softFrom", character.softFrom], ["character guarantee", character.guarantee], ["character firstGuarantee", character.firstGuarantee], ["aspect guarantee", aspect.guarantee], ["relic guarantee", relic.guarantee], ["history", rules.history]] as const) {
-    if (!(Number.isInteger(count) && count >= 1)) problems.push(`the Spirit Call: ${name} must be a whole number of calls, at least 1 (is ${count})`)
+  for (const [name, count] of [["character softFrom", character.softFrom], ["character guarantee", character.guarantee], ["character firstGuarantee", character.firstGuarantee], ["rare guarantee", rare.guarantee], ["sigils", rules.sigils], ["exchange aspect", rules.exchange.aspect], ["exchange look", rules.exchange.look], ["history", rules.history]] as const) {
+    if (!(Number.isInteger(count) && count >= 1)) problems.push(`the Spirit Call: ${name} must be a whole number, at least 1 (is ${count})`)
   }
   if (character.firstGuarantee > character.guarantee) problems.push("the Spirit Call: the first character's guarantee must come no later than the others'")
-  positive(problems, "the Spirit Call's supply", { gold: rules.supply.gold })
-  if (!(Number.isInteger(rules.supply.material) && rules.supply.material >= 0)) problems.push(`the Spirit Call's supply: material must be a whole number (is ${rules.supply.material})`)
+  // The exchange is the slower road to the purple tier: a sigil a call, so a price is calls; no cheaper than the pool is likely to give it.
+  if (rules.exchange.aspect < rules.exchange.look) problems.push("the Spirit Call: an aspect costs no less than a look in the exchange")
   positive(problems, "the Spirit Call's rotation", { days: rules.rotation.days })
 }
 

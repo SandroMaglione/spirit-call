@@ -165,7 +165,8 @@
   "currencies": [
     "crystals",
     "gold",
-    "dust"
+    "dust",
+    "sigils"
   ],
   "tracks": [
     "gauntlet",

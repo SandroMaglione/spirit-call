@@ -40,7 +40,7 @@ const RelicShelf = ({ store, actions }: { readonly store: UiStore; readonly acti
   const dust = account.wallet.dust ?? 0
   return <>
     <div class="shop__cards scroll in-left">
-      {owned.length === 0 ? <p class="dim shop__empty">No relic yet: relics come from the Spirit Call and a few quests. Once you own one, its next tier is sold here.</p>
+      {owned.length === 0 ? <p class="dim shop__empty">No relic yet: relics come from quests. Once you own one, its next tier is sold here.</p>
         : <Cards>{owned.map((id) => {
           const spec = relicOf(tuning.relics, id), at = relicTier(account, id)!, next = relicPrice(tuning, account, id)
           return <Card key={id} tint={spec.element ?? undefined} art={<span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><TierMarks tier={at} /></span>} label={`${spec.name}, tier ${tierNames[at]}`}

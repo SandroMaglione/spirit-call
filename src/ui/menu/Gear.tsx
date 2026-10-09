@@ -82,7 +82,7 @@ const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly
 /** Where a relic not owned yet comes from. */
 const relicSource = (store: UiStore, relic: RelicId): string => {
   const tuning = store.tuning.value, quest = sourceOf(tuning, { kind: "relic", id: relic })
-  return quest !== null ? `A reward for clearing ${tuning.quests[quest].name}, and the Spirit Call.` : "Comes from the Spirit Call."
+  return quest !== null ? `A reward for clearing ${tuning.quests[quest].name}.` : "Not to be had yet."
 }
 
 /** Her relic slots, then the relics of the slot picked, the one picked explained with its three tiers. */

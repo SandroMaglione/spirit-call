@@ -17,7 +17,7 @@ import * as HttpApiMiddleware from "effect/http-api/HttpApiMiddleware"
 import * as HttpApiSchema from "effect/http-api/HttpApiSchema"
 import * as HttpApiSecurity from "effect/http-api/HttpApiSecurity"
 
-import { Account, AccountEvent, BannerId, CallResult, CharacterId, CosmeticId, CosmeticKind, Earned, Play, RelicId, RunLog, RunResult, StoredRun, TeamAspects, TeamRelics } from "./schemas.ts"
+import { Account, AccountEvent, BannerId, CallResult, CharacterId, CosmeticId, CosmeticKind, Earned, Play, RareItem, RelicId, RunLog, RunResult, StoredRun, TeamAspects, TeamRelics } from "./schemas.ts"
 
 // ── Players ───────────────────────────────────────────────────────────────
 
@@ -89,6 +89,8 @@ export class AccountApi extends HttpApiGroup.make("account")
     HttpApiEndpoint.post("buyRelic", "/shop/relics/:relic", { params: { relic: RelicId }, success: Account, error: Refused }),
     /** Buys a look the shop sells, with dust. */
     HttpApiEndpoint.post("buyCosmetic", "/shop/looks/:cosmetic", { params: { cosmetic: CosmeticId }, success: Account, error: Refused }),
+    /** Buys an aspect or a look of the Call's from its exchange, with sigils. */
+    HttpApiEndpoint.post("exchange", "/exchange", { payload: RareItem, success: Account, error: Refused }),
     /** Makes `count` calls on a banner. */
     HttpApiEndpoint.post("call", "/banners/:banner/calls", {
       params: { banner: BannerId },

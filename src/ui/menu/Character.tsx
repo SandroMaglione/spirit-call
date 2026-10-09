@@ -42,7 +42,7 @@ const sourceNote = (store: UiStore, item: Parameters<typeof sourceOf>[1]): strin
   if (quest !== null) return `A reward for clearing ${tuning.quests[quest].name}.`
   const banner = item.kind === "character" ? Object.values(tuning.banners).find((spec) => spec.characters.includes(item.id)) : undefined
   if (banner !== undefined) return `Comes from the Spirit Call (the ${banner.name} banner).`
-  return item.kind === "aspect" ? "Comes from the Spirit Call." : "Not owned yet."
+  return item.kind === "aspect" ? `Comes from the Spirit Call, or its exchange for ${tuning.calls.exchange.aspect} sigils.` : "Not owned yet."
 }
 
 const Attributes = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {

@@ -25,7 +25,7 @@ export type GearFocus = RelicSlot | CosmeticKind
 /** The shop's shelves: relics one tier up, looks, and the inventory (what the wallet holds). */
 export type ShopTab = "relics" | "looks" | "inventory"
 /** The Spirit Call's views: the banner running, its odds, and the last calls. */
-export type CallTab = "banner" | "details" | "history"
+export type CallTab = "banner" | "details" | "exchange" | "history"
 
 /** Moving between screens: `go` opens one over the current one, `replace` swaps it (a tab), `back` returns to the one before. */
 export interface Nav {

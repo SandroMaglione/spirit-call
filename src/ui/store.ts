@@ -12,6 +12,7 @@ import { Descriptor } from "@typeonce/bevy-ts"
 import type { Account, CallResult, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
 import type { RelicId } from "../content/relics.ts"
+import type { RareItem } from "../account/calls.ts"
 import type { BannerId } from "../content/calls.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
@@ -157,6 +158,8 @@ export interface UiActions {
   readonly buyRelic: (relic: RelicId) => void
   /** Buy a look the shop sells with dust (saved at once). */
   readonly buyCosmetic: (cosmetic: CosmeticId) => void
+  /** Buy an aspect or a look of the Call's from its exchange with sigils (saved at once). */
+  readonly exchange: (item: RareItem) => void
   /** Put a look of `kind` on `character` (`null`: her own look; saved at once). */
   readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => void
   /** Take an owned character to its next level with gold (saved at once). */

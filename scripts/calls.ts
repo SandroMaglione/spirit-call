@@ -15,16 +15,20 @@
  * on a banner that never runs out (copies of the banner's characters
  * stand in for the characters to come), focusing the first one left.
  *
+ * After every spend it buys from the exchange, saving for the dearest
+ * thing left (an aspect before a look, as a player after new ways to play
+ * would).
+ *
  * Reported: crystals earned by the end of each chapter (as calls), and how
  * many characters calls brought by then, over the accounts (median, and the
  * unlucky and lucky tenths). The target is about one every two chapters.
- * Then what else the calls brought by then, on average: aspects, looks,
- * relics (each copy, a tier up or turned into dust), the relic tiers owned,
- * and the dust (from calls, and in all).
+ * Then what else the calls brought by then, on average: aspects and looks
+ * pulled (the purple light), sigils earned, aspects and looks bought with
+ * them, and how much of the pool is left to get.
  */
 import { createAccount, playLock, recordRun } from "../src/account/account.ts"
 import type { Account, CallResult, Play } from "../src/account/account.ts"
-import { activeBanner, call, callsHeld, callsOpen } from "../src/account/calls.ts"
+import { activeBanner, call, callsHeld, callsOpen, exchange, exchangePrice, rareLeft } from "../src/account/calls.ts"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -99,26 +103,42 @@ const hardcoreWeek = (account: Account, level: number, now: number): Account => 
   return next
 }
 
-/** Calls with all it holds; how many characters came, and everything that came. */
-const spendAll = (account: Account, now: number): { readonly account: Account; readonly characters: number; readonly results: ReadonlyArray<CallResult> } => {
-  if (!callsOpen(tuning, account)) return { account, characters: 0, results: [] }
+/** Calls with all it holds, then buys what its sigils pay for; how many characters came, everything that came, and what was bought. */
+const spendAll = (account: Account, now: number): { readonly account: Account; readonly characters: number; readonly results: ReadonlyArray<CallResult>; readonly bought: ReadonlyArray<CallResult> } => {
+  if (!callsOpen(tuning, account)) return { account, characters: 0, results: [], bought: [] }
   const count = callsHeld(tuning, account)
-  if (count === 0) return { account, characters: 0, results: [] }
-  const called = call(tuning, account, activeBanner(tuning, now).banner, count, now)
-  if (!called.ok) return { account, characters: 0, results: [] }
-  return { account: called.value.account, characters: called.value.results.filter((result) => result.kind === "character").length, results: called.value.results }
+  let next = account
+  const results: Array<CallResult> = []
+  if (count > 0) {
+    const called = call(tuning, next, activeBanner(tuning, now).banner, count, now)
+    if (called.ok) {
+      next = called.value.account
+      results.push(...called.value.results)
+    }
+  }
+  // The exchange: saving for the dearest thing left, bought as soon as the sigils are there.
+  const bought: Array<CallResult> = []
+  for (;;) {
+    const pick = [...rareLeft(tuning, next)].sort((a, b) => (exchangePrice(tuning, b)?.sigils ?? 0) - (exchangePrice(tuning, a)?.sigils ?? 0))[0]
+    if (pick === undefined || (exchangePrice(tuning, pick)?.sigils ?? Infinity) > (next.wallet.sigils ?? 0)) break
+    const paid = exchange(tuning, next, pick, now)
+    if (!paid.ok) break
+    next = paid.value
+    bought.push(pick)
+  }
+  return { account: next, characters: results.filter((result) => result.kind === "character").length, results, bought }
 }
 
 /** What else calls brought, and where the account stands, summed over the accounts at the end of each chapter. */
 interface Brought {
   aspects: number
   looks: number
-  relics: number
-  tiers: number
-  callDust: number
-  dust: number
+  sigils: number
+  boughtAspects: number
+  boughtLooks: number
+  left: number
 }
-const nothing = (): Brought => ({ aspects: 0, looks: 0, relics: 0, tiers: 0, callDust: 0, dust: 0 })
+const nothing = (): Brought => ({ aspects: 0, looks: 0, sigils: 0, boughtAspects: 0, boughtLooks: 0, left: 0 })
 
 const chapters = Object.keys(tuning.chapters) as Array<ChapterId>
 const main = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].line === "main")
@@ -159,14 +179,15 @@ for (let index = 0; index < accounts; index++) {
   let account: Account = createAccount(tuning, newAccount, `sim-${index}`, anchor)
   let earned = 0, called = 0, now = anchor + 1
   const brought = nothing()
-  const tally = (results: ReadonlyArray<CallResult>) => {
+  const tally = (results: ReadonlyArray<CallResult>, bought: ReadonlyArray<CallResult>) => {
     for (const result of results) {
       if (result.kind === "aspect") brought.aspects += 1
       if (result.kind === "cosmetic") brought.looks += 1
-      if (result.kind === "relic") {
-        brought.relics += 1
-        brought.callDust += result.dust
-      }
+      if (result.kind === "sigils") brought.sigils += result.amount
+    }
+    for (const item of bought) {
+      if (item.kind === "aspect") brought.boughtAspects += 1
+      if (item.kind === "cosmetic") brought.boughtLooks += 1
     }
   }
   const credit = (before: Account, after: Account) => (earned += Math.max(0, (after.wallet.crystals ?? 0) - (before.wallet.crystals ?? 0)))
@@ -174,7 +195,7 @@ for (let index = 0; index < accounts; index++) {
     const spent = spendAll(account, now)
     account = spent.account
     called += spent.characters
-    tally(spent.results)
+    tally(spent.results, spent.bought)
   }
   stages.forEach((stage, at) => {
     // A replay goes round until nothing more opens (a rank's quests open along the ranks below).
@@ -204,10 +225,10 @@ for (let index = 0; index < accounts; index++) {
     const sum = broughtBy[at]!
     sum.aspects += brought.aspects
     sum.looks += brought.looks
-    sum.relics += brought.relics
-    sum.callDust += brought.callDust
-    sum.tiers += Object.values(account.owned.relics).reduce((total, relic) => total + (relic?.tier ?? 0), 0)
-    sum.dust += account.wallet.dust ?? 0
+    sum.sigils += brought.sigils
+    sum.boughtAspects += brought.boughtAspects
+    sum.boughtLooks += brought.boughtLooks
+    sum.left += rareLeft(tuning, account).length
   })
 }
 
@@ -225,11 +246,11 @@ stages.forEach((stage, at) => {
   console.log(`${stage.name.padEnd(30)} ${String(crystals).padStart(6)} (${String(Math.floor(crystals / price)).padStart(3)})        ${String(median).padStart(6)}  ${String(quantile(calledBy[at]!, 0.1)).padStart(11)}  ${String(quantile(calledBy[at]!, 0.9)).padStart(9)}   ${(at < chapters.length ? (mean / (at + 1)).toFixed(2) : "").padStart(7)}`)
 })
 console.log("\nTarget: the first character in chapter 5, the next more slowly, in the rank replays.")
-const relicCount = Object.keys(tuning.relics).length
-console.log(`\nWhat else calls brought by the end of each chapter, on average (relic tiers owned: of ${relicCount * 3}, from calls and quests; dust held, unspent):`)
-console.log("By the end of                  aspects  looks  relics  relic tiers  dust from calls  dust held")
+const poolSize = rareLeft(tuning, createAccount(tuning, newAccount, "pool", anchor)).length
+console.log(`\nWhat else calls brought by the end of each chapter, on average (the pool: ${poolSize} aspects and looks; bought: from the exchange, saving for the dearest thing left):`)
+console.log("By the end of                  aspects  looks  sigils  bought aspects  bought looks  left in the pool")
 stages.forEach((stage, at) => {
   const mean = (value: number) => (value / accounts).toFixed(1)
   const sum = broughtBy[at]!
-  console.log(`${stage.name.padEnd(30)} ${mean(sum.aspects).padStart(7)} ${mean(sum.looks).padStart(6)} ${mean(sum.relics).padStart(7)} ${mean(sum.tiers).padStart(12)} ${mean(sum.callDust).padStart(16)} ${mean(sum.dust).padStart(10)}`)
+  console.log(`${stage.name.padEnd(30)} ${mean(sum.aspects).padStart(7)} ${mean(sum.looks).padStart(6)} ${mean(sum.sigils).padStart(7)} ${mean(sum.boughtAspects).padStart(15)} ${mean(sum.boughtLooks).padStart(13)} ${mean(sum.left).padStart(17)}`)
 })

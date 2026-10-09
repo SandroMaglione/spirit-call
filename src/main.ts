@@ -194,6 +194,7 @@ const start = async (mount: HTMLElement) => {
     focus: (banner, character) => change(() => shell.focus(banner, character), null),
     buyRelic: (relic) => change(() => shell.buyRelic(relic), `${tuning.relics[relic].name} reached its next tier`),
     buyCosmetic: (cosmetic) => change(() => shell.buyCosmetic(cosmetic), `${tuning.cosmetics[cosmetic].name} is yours`),
+    exchange: (item) => change(() => shell.exchange(item), `${item.kind === "aspect" ? tuning.aspects[item.id].name : tuning.cosmetics[item.id].name} is yours`),
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])

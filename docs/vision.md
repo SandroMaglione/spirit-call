@@ -285,15 +285,16 @@ Decided so far (the rest is in the open questions):
   Aspects change how she plays and have no levels. Relics (a closed set,
   slot by slot) add small reactions, not stats; their tiers add behavior,
   with a little power at most, held to one budget.
-- **Three currencies and the materials,** each from one clear place:
+- **Four currencies and the materials,** each from one clear place:
   crystals for pulls, gold for leveling characters, **dust** for the shop
-  (a relic's next tier, and looks), and **ascension materials** for the
-  steps between a character's level phases.
+  (a relic's next tier, and looks), **sigils** for the Call's exchange,
+  and **ascension materials** for the steps between a character's level
+  phases.
 - **Dust comes from milestones off the main line**: side quests, ranks,
   and their chests on a first clear, hardcore tiers and trials once a
-  period, and relics called past their last tier. Never from a main
-  quest's first clear, and never per run, so the shop speeds the Call up
-  without replacing it, and every relic tier can be had by playing.
+  period. Never from a main quest's first clear, and never per run, so
+  every relic tier can be had by playing. **Sigils** are the Call's own
+  (see "The gacha"), from calls and nowhere else.
 - **Ascension.** A character's levels come in phases (1–10, 10–20, 20–30,
   30–40); gold buys the levels within a phase, and crossing into the next
   costs gold and **her element's material**. Each element has one
@@ -330,25 +331,27 @@ Decided so far (the rest is in the open questions):
 
 The rules are in `docs/calls.md` (the Spirit Call); in short:
 
-- **Every pull is meaningful.** The opposite of pools where most results
-  are thrown away: fewer results per pull (even a single one), but each one
-  worth having. The pool holds only things that matter: a character, an
-  aspect or a look not owned yet, a relic (new, or a tier up), or a supply
-  that helps a character grow. No character, aspect, or look owned comes
-  twice while one is left to get; a relic coming again is progress (its
-  next tier, then dust).
-- **What it can give, rarest first:** characters (the main excitement: a
-  new way to play, gold light), aspects (purple), looks only the Call gives
-  (rose), relics (blue, often: a new one or a tier up), and supplies of
-  gold and material (white).
+- **A character is the prize, and feels like one.** Genshin's 5★: rare,
+  guaranteed within a known number of pulls, and the only thing that
+  reaches the gold light. Everything else is quieter, so that it stays
+  loud.
+- **Three tiers, rarest first:** characters (gold), rare things (purple:
+  an aspect or a look not owned yet, from one pool, a few per banner:
+  one in ten pulls if lucky, two if very lucky), and sigils (white: the
+  Call's own token). No character, aspect, or look owned comes twice
+  while one is left to get. Relics are not pulled: they are played for
+  (Genshin's artifacts, see `docs/relics.md`).
+- **Every pull leaves something.** A white pull leaves a sigil; sigils
+  buy any aspect or look of the Call's in its exchange, never a
+  character. The sure road to the purple tier, and the slower one.
 - **Banners, in turn.** A banner is a pool of characters that runs for a
   while, then the next one; each comes back later (nothing is missable).
   The player chooses which of its characters to call for: a
   character that comes is always that one.
 - **Bad luck is capped and shown**: a character within a known number of
-  pulls, an aspect within fewer, a relic within a few, and the counts are
-  on screen and carry across banners. Dust buys a relic's next tier in the
-  shop, so no tier waits on luck alone.
+  pulls, a rare thing within fewer, and the counts are on screen and carry
+  across banners. Dust buys a relic's next tier in the shop, so no tier
+  waits on a run that will not come.
 - **Duplicates never add raw power.** A relic's tier adds behavior, with a
   little power at most (see `docs/relics.md`), and the shop reaches every
   tier too. Direction for the rest (details to settle): a duplicate

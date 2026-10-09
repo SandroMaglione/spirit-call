@@ -55,6 +55,7 @@ only as its SHA-256 hash. Logging out deletes it.
 | `POST /api/shop/looks/{id}` | Buy a look the shop sells, with dust. |
 | `POST /api/characters/{id}/training` | Level a character with gold. |
 | `POST /api/characters/{id}/ascension` | Ascend a character. |
+| `POST /api/exchange` | Buy an aspect or a look of the Call's from its exchange, with sigils. |
 | `POST /api/banners/{id}/calls` | Make calls on a banner. |
 | `PUT /api/banners/{id}/focus` | Focus a character on a banner. |
 | `POST /api/runs` | Record a run that ended, with its log: the account after it, and what it earned. |
@@ -81,7 +82,12 @@ to by reference, so destroying a preview never touches it.
   merged. Before the game opened, three reset every account instead
   (`0003`, `0004`, which also keyed quest progress, stars, and chests by
   rank; `0005`, which brought relics, looks, and dust, and rebuilt the
-  calls' table for their results). Main's CI applies new ones before deploying prod. Previews and
+  calls' table for their results). `0008` (the Call in three tiers) is the
+  one exception since: it renamed the count since the last aspect to the
+  count since the last rare thing, dropped the count since the last relic,
+  and rebuilt the calls' table once more for the kinds there are now,
+  keeping the calls that remain (relics and supplies left the Call; what
+  they gave stays). Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
 - **Two round trips an action.** An action reads the whole account in one
   batch and writes everything it changed (its rows, its log lines) in
@@ -133,7 +139,8 @@ guesses (`src/server/logs.ts`, migration `0002_logs.sql`):
   A killing blow counts its whole damage.
 - **Account events.** Each change to an account is kept with what it
   gained and spent of every resource: training, ascending,
-  calls, focus, selection, a run's pay and rewards, and the dev tools.
+  calls, the exchange, focus, selection, a run's pay and rewards, and the
+  dev tools.
   A refused action leaves nothing.
 
 `pnpm runs` reads them as the player (see `scripts/runs.ts`):

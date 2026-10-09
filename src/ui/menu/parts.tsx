@@ -166,10 +166,8 @@ export const describeResult = (store: UiStore, result: CallResult): string => {
       return `${aspectOf(tuning.aspects, result.id).name} (${tuning.classes[aspectOf(tuning.aspects, result.id).class].name} aspect)`
     case "cosmetic":
       return `${cosmeticOf(tuning.cosmetics, result.id).name} (look)`
-    case "relic":
-      return result.dust > 0 ? `${relicOf(tuning.relics, result.id).name} (${result.dust} dust)` : `${relicOf(tuning.relics, result.id).name} (relic, tier ${["I", "II", "III"][result.tier - 1]})`
-    case "supply":
-      return describeAmounts(tuning, result.amounts)
+    case "sigils":
+      return describeAmounts(tuning, { sigils: result.amount })
   }
 }
 
@@ -191,7 +189,7 @@ export const KitLines = ({ store, character }: { readonly store: UiStore; readon
 export const lookSource = (store: UiStore, id: CosmeticId, inShop: boolean): { readonly text: string; readonly icon: IconName } => {
   const tuning = store.tuning.value, look = cosmeticOf(tuning.cosmetics, id)
   if (look.source.kind === "shop") return { text: `${inShop ? "Sold here" : "In the shop"} for ${look.source.dust} dust`, icon: "dust" }
-  if (look.source.kind === "call") return { text: "Only from the Spirit Call", icon: "call" }
+  if (look.source.kind === "call") return { text: `Only from the Spirit Call, or its exchange for ${tuning.calls.exchange.look} sigils`, icon: "call" }
   // The hardcore tier whose first clear gives it.
   for (const track of Object.values(tuning.tracks)) {
     const at = track.tiers.findIndex((tier) => tier.rewards.cosmetics?.includes(id) === true)

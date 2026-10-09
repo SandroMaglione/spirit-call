@@ -9,9 +9,17 @@ export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyId }) =>
       <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3c5" /><stop offset=".45" stop-color="#dfb560" /><stop offset="1" stop-color="#a77336" /></linearGradient>
       <linearGradient id={`${id}-gem`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9ffff" /><stop offset=".5" stop-color="#8cdde9" /><stop offset="1" stop-color="#8f94d6" /></linearGradient>
       <radialGradient id={`${id}-dust`} cx=".5" cy=".5" r=".5"><stop stop-color="#fff6ff" /><stop offset=".55" stop-color="#d6a6ff" /><stop offset="1" stop-color="#7a5cc7" stop-opacity="0" /></radialGradient>
-      <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : currency === "dust" ? <circle cx="16" cy="16" r="13" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
+      <linearGradient id={`${id}-sigil`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6f6a9c" /><stop offset=".5" stop-color="#3a3658" /><stop offset="1" stop-color="#1e1c30" /></linearGradient>
+      <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : currency === "dust" || currency === "sigils" ? <circle cx="16" cy="16" r="13" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
     </defs>
-    {currency === "dust" ? <>
+    {currency === "sigils" ? <>
+      {/* A stone token with a rune cut into it: what a plain call leaves behind, for the Call's exchange. */}
+      <circle cx="16" cy="16" r="13" fill={`url(#${id}-sigil)`} stroke="#b9b2e6" stroke-width="1" />
+      <circle cx="16" cy="16" r="9.5" fill="none" stroke="#8d86c4" stroke-width=".8" />
+      <path d="M16 8.5 22 16l-6 7.5L10 16Z" fill="none" stroke="#e8e2ff" stroke-width="1.6" stroke-linejoin="round" />
+      <path d="M16 12v8M12.5 16h7" fill="none" stroke="#e8e2ff" stroke-width="1.4" stroke-linecap="round" />
+      <circle cx="16" cy="16" r="1.6" fill="#fff8ff" />
+    </> : currency === "dust" ? <>
       {/* A heap of glittering motes: what a relic turns into past its last tier. */}
       <circle cx="16" cy="17" r="12" fill={`url(#${id}-dust)`} />
       <path d="M6 24c3-5 7-7 10-7s7 2 10 7Z" fill="#b48ae8" stroke="#ecd9ff" stroke-width=".8" />

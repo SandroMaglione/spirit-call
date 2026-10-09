@@ -73,8 +73,13 @@ export const CallResult = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("character"), id: CharacterId }),
   Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId }),
   Schema.Struct({ kind: Schema.Literal("cosmetic"), id: CosmeticId }),
-  Schema.Struct({ kind: Schema.Literal("relic"), id: RelicId, tier: RelicTier, dust: Count }),
-  Schema.Struct({ kind: Schema.Literal("supply"), amounts: Amounts })
+  Schema.Struct({ kind: Schema.Literal("sigils"), amount: Count })
+])
+
+/** What the exchange sells: an aspect or a look of the Call's. */
+export const RareItem = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId }),
+  Schema.Struct({ kind: Schema.Literal("cosmetic"), id: CosmeticId })
 ])
 
 const RunCount = {
@@ -105,8 +110,7 @@ export const Account = Schema.Struct({
   calls: Schema.Struct({
     seed: Schema.Number,
     sinceCharacter: Count,
-    sinceAspect: Count,
-    sinceRelic: Count,
+    sinceRare: Count,
     firstCharacter: Schema.Boolean,
     focus: Schema.Record(BannerId, Schema.optionalKey(CharacterId)),
     history: Schema.Array(Schema.Struct({ at: Schema.Number, banner: BannerId, result: CallResult }))

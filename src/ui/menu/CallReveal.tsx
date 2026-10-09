@@ -4,13 +4,13 @@
  * brought. A stone seal, held (or swiped up) until it cracks: the light
  * coming through starts white; once cracked (and the answer is in: the
  * seal holds, nearly broken, until it is), it rises to tell the best
- * result, honestly: blue for a relic, rose for a look, purple for an
- * aspect, then gold (the room dims, a pulse, a sting), and a gold light
+ * result, honestly: it stays white (sigils), or turns purple (an aspect or
+ * a look), then gold (the room dims, a pulse, a sting), and a gold light
  * turns her element's colour as it bursts. Then each character, aspect,
- * look, and relic in turn, the best last (a character as her model
- * arriving, with what she does and a trial), and all of it in a row at the
- * end. A single call that brings a supply shows it alone. A call that
- * could not be made crumbles back to stone.
+ * and look in turn, the best last (a character as her model arriving,
+ * with what she does and a trial), and all of it in a row at the end. A
+ * single call that brings sigils shows them alone. A call that could not
+ * be made crumbles back to stone.
  */
 import { useSignal } from "@preact/signals"
 import { useEffect, useRef } from "preact/hooks"
@@ -18,9 +18,8 @@ import type { CallResult } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { cosmeticOf } from "../../content/cosmetics.ts"
 import { elements } from "../../content/elements.ts"
-import { relicOf } from "../../content/relics.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
-import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
+import { LookIcon } from "../RelicIcon.tsx"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import { Model } from "../kit/art.tsx"
@@ -28,7 +27,7 @@ import { Card } from "../kit/Card.tsx"
 import { Pill, RoundButton } from "../kit/controls.tsx"
 import { Label } from "../kit/panel.tsx"
 import type { CallReveal as Reveal, UiActions, UiStore } from "../store.ts"
-import { CharacterCard, describeResult, KitLines, MaterialIcon, materialsIn } from "./parts.tsx"
+import { CharacterCard, describeResult, KitLines } from "./parts.tsx"
 
 /** How long holding the seal takes to break it, and how fast it heals when let go (shares per second). */
 const holdSeconds = 1.1
@@ -36,34 +35,31 @@ const healRate = 0.7
 /** How far up a swipe breaks it at once (units). */
 const swipe = 60
 /** How long the burst lasts before the first result, in milliseconds: a gold one turns her colour first. */
-const burstMs = { white: 750, blue: 800, rose: 900, purple: 950, gold: 1500 } as const
+const burstMs = { white: 750, purple: 950, gold: 1500 } as const
 /** How far the seal cracks before the server's answer is in: it holds there, nearly broken. */
 const waitingCrack = 0.9
 /** The least time from the seal showing to its light rising, in milliseconds (the build-up, however fast the answer). */
 const buildUpMs = 1500
 /** The light rising once the seal broke, in milliseconds: the white holds, then turns to the best result's (a gold one through purple, the room dimmed), before the burst. */
-const riseMs = { white: 250, blue: 500, rose: 550, purple: 600, gold: 750 } as const
+const riseMs = { white: 250, purple: 600, gold: 750 } as const
 /** How long a call that could not be made takes to crumble, in milliseconds. */
 const crumbleMs = 900
 
 type Light = keyof typeof burstMs
 
-/** Each result's light, rarest brightest: gold a character, purple an aspect, rose a look, blue a relic, white a supply. */
+/** Each result's light, rarest brightest: gold a character, purple an aspect or a look, white sigils. */
 const lightOf = (result: CallResult): Light => {
   switch (result.kind) {
     case "character":
       return "gold"
     case "aspect":
-      return "purple"
     case "cosmetic":
-      return "rose"
-    case "relic":
-      return "blue"
-    case "supply":
+      return "purple"
+    case "sigils":
       return "white"
   }
 }
-const rank = { white: 0, blue: 1, rose: 2, purple: 3, gold: 4 } as const
+const rank = { white: 0, purple: 1, gold: 2 } as const
 
 /** The seal's cracks: jagged lines from the middle out, in a 200-unit box around the centre. */
 const cracks = [
@@ -87,9 +83,9 @@ const triangle = (turn: number) => [0, 1, 2].map((corner) => {
 export const CallReveal = ({ store, actions, reveal, done }: { readonly store: UiStore; readonly actions: UiActions; readonly reveal: Reveal; readonly done: () => void }) => {
   const tuning = store.tuning.value
   const results = reveal.results ?? []
-  // The best last; a ten-call reveals what is not a supply one by one, its supplies in the row at the end.
+  // The best last; a ten-call reveals what is not sigils one by one, its sigils in the row at the end.
   const ordered = results.map((result, index) => ({ result, index })).sort((a, b) => rank[lightOf(a.result)] - rank[lightOf(b.result)] || a.index - b.index).map((each) => each.result)
-  const shown = ordered.length === 1 ? ordered : ordered.filter((result) => result.kind !== "supply")
+  const shown = ordered.length === 1 ? ordered : ordered.filter((result) => result.kind !== "sigils")
   const best = ordered[ordered.length - 1]
   const light: Light = best === undefined ? "white" : lightOf(best)
   const phase = useSignal<"seal" | "rise" | "burst" | "show" | "summary" | "crumble">("seal")
@@ -164,7 +160,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
     if (phase.value !== "show") return
     const result = shown[index.value]
     if (result?.kind === "character") actions.cue("character")
-    else if (result?.kind === "aspect" || result?.kind === "cosmetic" || result?.kind === "relic") actions.cue("aspect")
+    else if (result?.kind === "aspect" || result?.kind === "cosmetic") actions.cue("aspect")
   }, [phase.value, index.value])
 
   const next = () => {
@@ -261,27 +257,11 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
         </section>
       </div>
     }
-    if (current.kind === "relic") {
-      const relic = relicOf(tuning.relics, current.id)
-      const tiers = ["I", "II", "III"] as const
-      return <div class="reveal reveal--relic" key={`r-${index.value}`}>
-        <section class="reveal__prize">
-          {counter}
-          <span class="reveal__orb"><RelicIcon slot={relic.slot} element={relic.element} /></span>
-          <Label>{current.dust > 0 ? "Relic · already at its last tier" : current.tier === 1 ? `New relic · ${slotName(relic.slot)}` : `Relic · tier ${tiers[current.tier - 1]}`}</Label>
-          <h1>{relic.name}</h1>
-          {current.dust > 0
-            ? <p class="reveal__supply"><span><Icon name="dust" />+{current.dust}</span></p>
-            : <p>{current.tier === 1 ? relic.tiers[1].adds : `Tier ${tiers[current.tier - 1]}: ${relic.tiers[current.tier].adds}`}</p>}
-          <p class="dim">{current.dust > 0 ? "It turned into dust: spend it in the shop." : relic.about}</p>
-          <Pill icon="next" onClick={next}>Next</Pill>
-        </section>
-      </div>
-    }
     return <div class="reveal reveal--supply" key={`s-${index.value}`}>
       <section class="reveal__prize">
-        <Label>Supply</Label>
-        <SupplyAmounts store={store} result={current} />
+        <Label>Sigils</Label>
+        <p class="reveal__supply"><span><Icon name="sigils" />+{current.amount}</span></p>
+        <p class="dim">For the exchange: any aspect or look of the Call's.</p>
         <Pill icon="next" onClick={next}>Next</Pill>
       </section>
     </div>
@@ -297,23 +277,10 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
             ? <Card fresh tint="thunder" art={<AbilityIcon kind={aspectOf(tuning.aspects, result.id).class} />} foot="NEW" label={describeResult(store, result)} />
             : result.kind === "cosmetic"
               ? <Card fresh art={<LookIcon kind={cosmeticOf(tuning.cosmetics, result.id).kind} />} foot="NEW" label={describeResult(store, result)} />
-              : result.kind === "relic"
-                ? <Card fresh={result.tier === 1 && result.dust === 0} tint={relicOf(tuning.relics, result.id).element ?? undefined} art={<span class="relic-art"><RelicIcon slot={relicOf(tuning.relics, result.id).slot} element={relicOf(tuning.relics, result.id).element} /><TierMarks tier={result.tier} /></span>} foot={result.dust > 0 ? `+${result.dust}` : result.tier === 1 ? "NEW" : "TIER UP"} label={describeResult(store, result)} />
-                : <Card art={<Icon name="gold" />} foot={`+${(result.amounts.gold ?? 0).toLocaleString("en-US")}`} label={describeResult(store, result)} />}
-        <small>{result.kind === "supply" ? "Supply" : describeResult(store, result).replace(/ \(.*\)$/, "")}</small>
+              : <Card art={<Icon name="sigils" />} foot={`+${result.amount}`} label={describeResult(store, result)} />}
+        <small>{result.kind === "sigils" ? "Sigils" : describeResult(store, result).replace(/ \(.*\)$/, "")}</small>
       </div>)}</div>
       <Pill icon="check" onClick={done}>Done</Pill>
     </section>
   </div>
 }
-
-/** How a relic's slot is called. */
-const slotName = (slot: "strike" | "dash" | "element" | "survival"): string => slot === "strike" ? "Strike" : slot === "dash" ? "Dash" : slot === "element" ? "Element" : "Survival"
-
-/** A supply's gold and materials, large. */
-const SupplyAmounts = ({ store, result }: { readonly store: UiStore; readonly result: Extract<CallResult, { kind: "supply" }> }) => (
-  <div class="reveal__supply">
-    <span><Icon name="gold" />{(result.amounts.gold ?? 0).toLocaleString("en-US")}</span>
-    {materialsIn(store, result.amounts).map((id) => <span key={id}><MaterialIcon store={store} material={id} />{result.amounts[id]}</span>)}
-  </div>
-)

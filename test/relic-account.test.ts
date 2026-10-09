@@ -4,21 +4,18 @@
  * team in open slots that fit, and the shop sells a relic's next tier and
  * its own looks for dust; looks are worn per character; the main line gives
  * the first relic, side quests, ranks, and hardcore tiers give dust, and a
- * few hard tiers give a look once; the Call brings looks (never twice) and
- * relics (a tier up, then dust).
+ * few hard tiers give a look once.
  */
 import { describe, expect, it } from "vitest"
 
 import { buildOf, buyCosmetic, buyRelic, createAccount, earn, questRewards, recordRun, relicsOpen, select, slotOpen, unlock, wear } from "../src/account/account.ts"
-import type { Account, CallResult, Play } from "../src/account/account.ts"
-import { activeBanner, call, callCost, cosmeticsLeft, shares } from "../src/account/calls.ts"
+import type { Account, Play } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 import { noTally } from "../src/content/stars.ts"
 
 const tuning = defaultTuning
-const now = tuning.calls.rotation.anchor + 1000
-const banner = activeBanner(tuning, now).banner
+const now = 5000
 const cleared = (quest: string) => ({ [quest]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1500, stars: [0] } } })
 /** A new account that cleared the end of chapter one (calls and relics open), owning the Gunner too. */
 const opened = (id = "relics-1"): Account => {
@@ -137,54 +134,5 @@ describe("rewards", () => {
     const again = recordRun(tuning, first.account, play, { ...clear, challenge: spec.challenge, team: ["swordsman"] }, now + week)
     expect(again.earned.rewards?.unlocks).toEqual([])
     expect(again.earned.rewards?.currencies.dust).toBeGreaterThan(0)
-  })
-})
-
-describe("the Spirit Call's relics and looks", () => {
-  const calls = (account: Account, count: number): { readonly account: Account; readonly results: ReadonlyArray<CallResult> } => {
-    let next = earn(account, callCost(tuning, count))
-    const results: Array<CallResult> = []
-    for (let index = 0; index < count; index++) {
-      const called = call(tuning, next, banner, 1, now)
-      if (!called.ok) break
-      next = called.value.account
-      results.push(...called.value.results)
-    }
-    return { account: next, results }
-  }
-
-  it("brings relics often, a relic or better within its guarantee, and looks never twice", () => {
-    const { results } = calls(opened(), 60)
-    // Every character on the banner comes along the way: calls go on for relics after.
-    expect(results).toHaveLength(60)
-    const kinds = results.map((result) => result.kind)
-    expect(kinds.filter((kind) => kind === "relic").length).toBeGreaterThanOrEqual(60 / tuning.calls.relic.guarantee)
-    // Never more calls in a row than the guarantee without a relic or better.
-    let since = 0
-    for (const kind of kinds) {
-      since = kind === "supply" ? since + 1 : 0
-      expect(since).toBeLessThan(tuning.calls.relic.guarantee)
-    }
-    const looks = results.flatMap((result) => (result.kind === "cosmetic" ? [result.id] : []))
-    expect(new Set(looks).size).toBe(looks.length)
-  })
-
-  it("raises an owned relic's tier, and past the last pays dust, as the account records it", () => {
-    const { account, results } = calls(opened(), 120)
-    for (const result of results) if (result.kind === "relic" && result.dust > 0) expect(result.tier).toBe(3)
-    const dust = results.reduce((sum, result) => sum + (result.kind === "relic" ? result.dust : 0), 0)
-    expect(account.wallet.dust ?? 0).toBe(dust)
-    for (const [id, owned] of Object.entries(account.owned.relics)) {
-      const reached = results.filter((result) => result.kind === "relic" && result.id === id).length
-      expect(owned!.tier).toBe(Math.min(3, reached))
-    }
-  })
-
-  it("gives an aspect's and a look's share to relics once none is left", () => {
-    const everything = Object.keys(tuning.cosmetics).reduce((next, id) => unlock(tuning, next, { kind: "cosmetic", id: id as "aurora" }, 1), Object.keys(tuning.aspects).reduce((next, id) => unlock(tuning, next, { kind: "aspect", id: id as "arc" }, 1), opened()))
-    expect(cosmeticsLeft(tuning, everything)).toEqual([])
-    const share = shares(tuning, everything), odds = tuning.calls
-    expect(share).toMatchObject({ aspect: 0, cosmetic: 0 })
-    expect(share.relic).toBeCloseTo(odds.relic.rate + odds.aspect.rate + odds.look.rate)
   })
 })
