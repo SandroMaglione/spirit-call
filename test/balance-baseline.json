@@ -362,32 +362,32 @@
       "ultimates": 2
     },
     {
-      "id": "stonekeeper/1/1",
-      "character": "stonekeeper",
+      "id": "bastion/1/1",
+      "character": "bastion",
       "level": 1,
       "targets": 1,
       "specials": 6,
       "ultimates": 2
     },
     {
-      "id": "stonekeeper/1/6",
-      "character": "stonekeeper",
+      "id": "bastion/1/6",
+      "character": "bastion",
       "level": 1,
       "targets": 6,
       "specials": 6,
       "ultimates": 2
     },
     {
-      "id": "stonekeeper/40/1",
-      "character": "stonekeeper",
+      "id": "bastion/40/1",
+      "character": "bastion",
       "level": 40,
       "targets": 1,
       "specials": 6,
       "ultimates": 2
     },
     {
-      "id": "stonekeeper/40/6",
-      "character": "stonekeeper",
+      "id": "bastion/40/6",
+      "character": "bastion",
       "level": 40,
       "targets": 6,
       "specials": 6,

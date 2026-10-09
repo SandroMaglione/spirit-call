@@ -41,14 +41,14 @@ describe("the Spirit Call", () => {
   it("runs one banner at a time, each for its days, in turn and round again", () => {
     const first = activeBanner(tuning, rules.rotation.anchor)
     expect(first.until - first.from).toBe(rules.rotation.days * 24 * 60 * 60 * 1000)
-    const two = tuningWith({ banners: { ...tuning.banners, later: { name: "Later", theme: "", characters: ["stonekeeper"] } } as typeof tuning.banners })
+    const two = tuningWith({ banners: { ...tuning.banners, later: { name: "Later", theme: "", characters: ["bastion"] } } as typeof tuning.banners })
     const one = activeBanner(two, rules.rotation.anchor)
-    expect(one.banner).toBe("stormAndStone")
+    expect(one.banner).toBe("emberAndStorm")
     expect(nextBanner(two, rules.rotation.anchor)).toBe("later")
     expect(activeBanner(two, one.until + 1).banner).toBe("later")
-    expect(activeBanner(two, activeBanner(two, one.until).until).banner).toBe("stormAndStone")
+    expect(activeBanner(two, activeBanner(two, one.until).until).banner).toBe("emberAndStorm")
     // A banner not running cannot be called.
-    expect(call(two, opened(), "stormAndStone", 1, one.until + 1)).toMatchObject({ ok: false, refusal: { kind: "bannerClosed" } })
+    expect(call(two, opened(), "emberAndStorm", 1, one.until + 1)).toMatchObject({ ok: false, refusal: { kind: "bannerClosed" } })
   })
 
   it("is paid for, and refused when the crystals are short", () => {
@@ -67,7 +67,7 @@ describe("the Spirit Call", () => {
     expect(focused.ok).toBe(true)
     if (!focused.ok) return
     expect(focusOn(tuning, focused.value, banner)).toBe(second)
-    expect(setFocus(tuning, account, banner, "gunner")).toMatchObject({ ok: false, refusal: { kind: "badFocus" } })
+    expect(setFocus(tuning, account, banner, "tidecaller")).toMatchObject({ ok: false, refusal: { kind: "badFocus" } })
     const { account: after, results } = callMany(focused.value, rules.character.firstGuarantee)
     const characters = results.filter((result) => result.kind === "character")
     expect(characters).toEqual([{ kind: "character", id: second }])

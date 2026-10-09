@@ -7,9 +7,12 @@
  * the same challenge. See docs/quests.md.
  *
  * The main line is written for the team a new account has by then (see
- * docs/quests.md, "Chapters"): chapter one for the Swordsman alone, then a
- * character more at the end of chapters one and three, and an aspect at the
- * end of chapters two, four, and six: one unlock per chapter at most. Each main quest
+ * docs/quests.md, "Chapters"): chapter one for the Swordsman alone (an
+ * attacker), then the Tidecaller (a healer) at the end of chapter one and
+ * Bastion (a guardian) at the end of chapter three (see docs/roster.md), and
+ * an aspect for them at the end of chapters two, four, and six: one unlock
+ * per chapter at most. A quest pays the material of an element the team
+ * owns by then. Each main quest
  * brings one new thing (see `content/novelties.ts`); side quests mix what
  * the main line has brought by the quest they come after.
  *
@@ -202,7 +205,7 @@ export const quests = {
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
     stars: [atMost("hitsTaken", 8), atLeast("breaks", 15), atLeast("healthLeft", 60)],
-    rewards: pays(140, 110, 700, [character("gunner")])
+    rewards: pays(140, 110, 700, [character("tidecaller")])
   }),
 
   // Chapter 2: the Swordsman and the Gunner.
@@ -212,7 +215,7 @@ export const quests = {
     chapter: "two",
     challenge: "swarm",
     enemyLevel: 6,
-    element: "fire",
+    element: "water",
     after: "packLeader",
     introduces: brings("Swarmers: tiny, fast, in packs. Reach many at once", enemy("swarmer")),
     stars: [nobodyFalls(), atLeast("ultimates", 3), atMost("hitsTaken", 3)],
@@ -226,7 +229,7 @@ export const quests = {
     chapter: "two",
     challenge: "emberKiln",
     enemyLevel: 7,
-    element: "fire",
+    element: "water",
     after: "theSwarm",
     introduces: brings("Fire in the floor: it burns whoever walks in, enemies too", hazard("fire")),
     stars: [atMost("hitsTaken", 10), nobodyFalls(), atLeast("healthLeft", 45)],
@@ -251,7 +254,7 @@ export const quests = {
     chapter: "two",
     challenge: "bulwark",
     enemyLevel: 10,
-    element: "fire",
+    element: "water",
     after: "ironGuard",
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
     stars: [atMost("hitsTaken", 9), nobodyFalls(), atMost("hitsTaken", 4)],
@@ -265,7 +268,7 @@ export const quests = {
     chapter: "three",
     challenge: "ashfall",
     enemyLevel: 11,
-    element: "fire",
+    element: "wind",
     after: "bulwark",
     introduces: brings("Elites: bigger, tougher, and carrying fire or water", elites("fire", "water")),
     stars: [atMost("hitsTaken", 9), atLeast("ultimates", 4), atMost("hitsTaken", 3)],
@@ -278,7 +281,7 @@ export const quests = {
     chapter: "three",
     challenge: "outposts",
     enemyLevel: 13,
-    element: "thunder",
+    element: "water",
     after: "ashfall",
     introduces: brings("Snipers: a fast thunder bullet from afar. Walls stop it", enemy("sniper")),
     stars: [nobodyFalls(), atLeast("perfectDodges", 5), atMost("hitsTaken", 3)],
@@ -291,7 +294,7 @@ export const quests = {
     chapter: "three",
     challenge: "brute",
     enemyLevel: 15,
-    element: "rock",
+    element: "wind",
     after: "outposts",
     introduces: brings("Brutes: slow and heavy. Break them, then punish them", enemy("brute")),
     stars: [atMost("hitsTaken", 9), atLeast("breaks", 20), atMost("hitsTaken", 4)],
@@ -304,11 +307,11 @@ export const quests = {
     chapter: "three",
     challenge: "bruteKing",
     enemyLevel: 16,
-    element: "water",
+    element: "rock",
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
     stars: [atMost("hitsTaken", 10), atLeast("longestChain", 3), atMost("hitsTaken", 3)],
-    rewards: pays(300, 150, 5000, [character("tidecaller")])
+    rewards: pays(300, 150, 5000, [character("bastion")])
   }),
 
   // Chapter 4: three characters.
@@ -318,7 +321,7 @@ export const quests = {
     chapter: "four",
     challenge: "highTide",
     enemyLevel: 17,
-    element: "water",
+    element: "rock",
     after: "bruteKing",
     introduces: brings("Water in the floor: it soaks whoever wades in, and soaked blows hit softer", hazard("water")),
     stars: [nobodyFalls(), atLeast("ultimates", 5), atLeast("healthLeft", 75)],
@@ -330,7 +333,7 @@ export const quests = {
     chapter: "four",
     challenge: "bombardment",
     enemyLevel: 19,
-    element: "fire",
+    element: "water",
     after: "highTide",
     introduces: brings("Firebombers: bombs over walls, flames where they burst", enemy("charger")),
     stars: [atMost("hitsTaken", 8), atLeast("perfectDodges", 6), atLeast("healthLeft", 80)],
@@ -342,7 +345,7 @@ export const quests = {
     chapter: "four",
     challenge: "shieldWall",
     enemyLevel: 21,
-    element: "water",
+    element: "rock",
     after: "bombardment",
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
     stars: [atMost("hitsTaken", 11), atLeast("breaks", 22), atMost("hitsTaken", 3)],
@@ -359,7 +362,7 @@ export const quests = {
     after: "shieldWall",
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
     stars: [nobodyFalls(), atLeast("ultimates", 6), atMost("hitsTaken", 4)],
-    rewards: pays(380, 150, 6300, [aspect("marksman")])
+    rewards: pays(380, 150, 6300, [aspect("whirlpool")])
   }),
 
   // Chapter 5.

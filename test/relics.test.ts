@@ -205,8 +205,8 @@ describe("relics in play", () => {
       }
       return rocks
     }
-    expect(fight({ character: "stonekeeper" })).toBe(0)
-    expect(fight({ character: "stonekeeper", relics: { element: relic("bedrock") } })).toBeGreaterThan(0)
+    expect(fight({ character: "bastion" })).toBe(0)
+    expect(fight({ character: "bastion", relics: { element: relic("bedrock") } })).toBeGreaterThan(0)
   })
 
   describe("on a perfect dodge", () => {

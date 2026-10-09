@@ -196,7 +196,7 @@ const thunderSpirit: BodyLook = {
 }
 
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
-  stonekeeper: {
+  bastion: {
     kind: "model", model: "rockSpirit", widthFactor: 1.5,
     heightFactor: view.bodyHeightFactor, grounded: true,
     moments: { ...spiritMoments(3, "stoneRise", "stoneGuard"), run: { clip: "Run", distance: 115 } },

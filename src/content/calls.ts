@@ -25,10 +25,10 @@ const banner = (spec: BannerSpec): BannerSpec => spec
 
 /** Every banner, by id, in the order they run (see `CallRules.rotation`). */
 export const banners = {
-  stormAndStone: banner({
-    name: "Storm & Stone",
-    theme: "A healer who calls lightning, and a defender who raises the ground.",
-    characters: ["stormcaller", "stonekeeper"]
+  emberAndStorm: banner({
+    name: "Ember & Storm",
+    theme: "An attacker who rains fire, and a healer who calls lightning.",
+    characters: ["gunner", "stormcaller"]
   })
 }
 

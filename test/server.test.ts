@@ -416,7 +416,8 @@ describe("account rows", () => {
       discoveries: [...rows.discoveries, { user_id: "player", discovery: "oldThing", made_at: 1 }]
     }
     const { account: repaired, dropped } = fromRecord(defaultTuning, newAccount, fromRows(stale)!, 10)
-    expect(Object.keys(repaired.owned.characters).sort()).toEqual(["gunner", "swordsman"])
+    // The Pack Leader, cleared, now gives the Tidecaller: she comes with the repair.
+    expect(Object.keys(repaired.owned.characters).sort()).toEqual(["gunner", "swordsman", "tidecaller"])
     expect(repaired.selection.team).toEqual(["gunner", "swordsman"])
     expect(repaired.discoveries).toEqual(account.discoveries)
     expect(dropped).toEqual(expect.arrayContaining(["character wizard", "discovery oldThing"]))

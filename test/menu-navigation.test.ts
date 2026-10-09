@@ -22,9 +22,9 @@ describe("menu navigation", () => {
       cleared: true, progress: 1, team: ["swordsman"], reactions: [], tally: noTally, challenge: "swarm", wave: 3, kills: 9, time: 60
     }, 1).account
     expect(nextMainQuest(tuning, cleared)).toEqual({ kind: "quest", quest: "crossfire" })
-    const source = sourceOf(tuning, { kind: "character", id: "gunner" })
+    const source = sourceOf(tuning, { kind: "character", id: "tidecaller" })
     expect(source).not.toBeNull()
-    expect(tuning.quests[source!].rewards.unlocks).toContainEqual({ kind: "character", id: "gunner" })
+    expect(tuning.quests[source!].rewards.unlocks).toContainEqual({ kind: "character", id: "tidecaller" })
   })
   it("goes on in the list just played: after a side quest, the next side quest", () => {
     const clear = (on: Account, play: Play): Account => recordRun(tuning, on, play, {

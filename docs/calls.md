@@ -17,9 +17,10 @@ from play (see `relics.md`), never from a call.
 ## Where things come from
 
 - **The new account** owns the Swordsman.
-- **Quests** give the Gunner (the end of chapter one, Pack Leader) and the
-  Tidecaller (the end of chapter three, Brute King), and the aspects that go
-  with the first three characters: Duelist, Marksman, Riptide. Relics come
+- **Quests** give the Tidecaller (a healer, the end of chapter one, Pack
+  Leader) and Bastion (a guardian, the end of chapter three, Brute King),
+  and the aspects that go with the first three characters: Duelist,
+  Whirlpool, Riptide (see `roster.md`, "Where they come from"). Relics come
   from quests too (see `relics.md`).
 - **The Spirit Call** gives every other character, every other aspect, and
   the looks that are its own. It opens once chapter one is cleared, when
@@ -33,8 +34,8 @@ a look comes from the shop, the Call, or a hardcore tier.
 
 ## Banners
 
-- A **banner** is a pool of characters with a theme (Storm & Stone: the
-  Stormcaller and the Stonekeeper). One runs at a time, for
+- A **banner** is a pool of characters with a theme (Ember & Storm: the
+  Gunner and the Stormcaller). One runs at a time, for
   `rotation.days`, and the banners take turns, round and round: a banner
   is limited in time, but always comes back, so nothing is missable.
 - The player **focuses** one character of the banner not owned yet. A

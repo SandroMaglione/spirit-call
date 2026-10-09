@@ -101,7 +101,7 @@ export const tracks = {
   /** Clearing mixed formations with elite leaders. */
   gauntlet: track({
     name: "Gauntlet",
-    element: "fire",
+    element: "water",
     tiers: [
       tier(10, "gauntlet", "bulwark", 140, { crystals: 15, gold: 2400 }),
       tier(22, "gauntlet2", "swarmMother", 220, { crystals: 20, gold: 6000 }),
@@ -123,18 +123,19 @@ export const tracks = {
     ]
   }),
   /**
-   * The element trials: one per element, opening along the main line (wind
-   * after chapter 2, fire after 3, water after 4, thunder after 5, rock
-   * after 6), each built from what its element struggles against: enemies
+   * The element trials: one per element, opening along the main line with
+   * the quest team's elements first (wind after chapter 2, water after 3,
+   * rock after 4, fire after 5, thunder after 6), each built from what its
+   * element struggles against: enemies
    * that resist it and elites that carry it. They pay their element's
    * material on every clear, at their rank's enemy level: the top rank open
    * is where materials come from, and lower ranks pay little.
    */
   windTrial: trial("Wind Trial", "wind", [[11, "windTrial", "bulwark"], [17, "windTrial2", "bruteKing"], [23, "windTrial3", "swarmMother"], [29, "windTrial4", "theWarlord"], [35, "windTrial5", "colossus"], ...late("windTrial5")]),
-  fireTrial: trial("Fire Trial", "fire", [[17, "fireTrial", "bruteKing"], [23, "fireTrial2", "swarmMother"], [29, "fireTrial3", "theWarlord"], [35, "fireTrial4", "colossus"], ...late("fireTrial4")]),
-  waterTrial: trial("Water Trial", "water", [[23, "waterTrial", "swarmMother"], [29, "waterTrial2", "theWarlord"], [35, "waterTrial3", "colossus"], ...late("waterTrial3")]),
-  thunderTrial: trial("Thunder Trial", "thunder", [[29, "thunderTrial", "theWarlord"], [35, "thunderTrial2", "colossus"], ...late("thunderTrial2")]),
-  rockTrial: trial("Rock Trial", "rock", [[35, "rockTrial", "colossus"], ...late("rockTrial")]),
+  waterTrial: trial("Water Trial", "water", [[17, "waterTrial", "bruteKing"], [23, "waterTrial2", "swarmMother"], [29, "waterTrial3", "theWarlord"], [35, "waterTrial4", "colossus"], ...late("waterTrial4")]),
+  rockTrial: trial("Rock Trial", "rock", [[23, "rockTrial", "swarmMother"], [29, "rockTrial2", "theWarlord"], [35, "rockTrial3", "colossus"], ...late("rockTrial3")]),
+  fireTrial: trial("Fire Trial", "fire", [[29, "fireTrial", "theWarlord"], [35, "fireTrial2", "colossus"], ...late("fireTrial2")]),
+  thunderTrial: trial("Thunder Trial", "thunder", [[35, "thunderTrial", "colossus"], ...late("thunderTrial")]),
   /** The citadel's last stand, hunted by a champion stalker. */
   keep: track({
     name: "The Keep",

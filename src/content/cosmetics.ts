@@ -43,8 +43,8 @@ export const cosmetics = {
   coral: tint("tidecaller", "Coral Tide", "Warm coral and sea-foam.", call),
   paleSky: tint("stormcaller", "Pale Sky", "A storm in soft daylight blues.", shop(400)),
   crimsonStorm: tint("stormcaller", "Crimson Storm", "Red lightning under a dark sky.", call),
-  obsidian: tint("stonekeeper", "Obsidian", "Black glassy stone, glowing seams.", shop(400)),
-  jade: tint("stonekeeper", "Jade", "Polished green stone.", call),
+  obsidian: tint("bastion", "Obsidian", "Black glassy stone, glowing seams.", shop(400)),
+  jade: tint("bastion", "Jade", "Polished green stone.", call),
   // Trails: anyone's.
   starfall: trail("Starfall", "White and gold sparkles.", shop(300)),
   petals: trail("Petals", "Drifting pink petals.", shop(300)),

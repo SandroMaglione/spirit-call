@@ -36,7 +36,7 @@ describe("ranks", () => {
 
   it("twist the waves: elite leaders from rank 2, shields too from rank 3", () => {
     expect(rankTwist(defaultTuning, "outposts", 1)).toEqual({ elites: null, shields: false })
-    expect(rankTwist(defaultTuning, "outposts", 2)).toEqual({ elites: "thunder", shields: false })
+    expect(rankTwist(defaultTuning, "outposts", 2)).toEqual({ elites: "water", shields: false })
     // Wind makes no elites: water stands in.
     expect(rankTwist(defaultTuning, "firstBlood", 3)).toEqual({ elites: "water", shields: true })
   })
