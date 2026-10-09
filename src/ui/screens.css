@@ -56,7 +56,7 @@
 .goal__stars .menu-icon { margin: 0 -1px; }
 .goal__dust { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; font-weight: 800; color: var(--cream); }
 /* The dust as rewards show amounts (see `.amounts`): an 18px icon centred beside its number. */
-.goal .goal__dust { font-size: 14px; line-height: 1; gap: 4px; }
+.goal .goal__dust { font-size: 14px; line-height: 1; gap: 4px; margin-left: 2px; }
 .goal .goal__dust .currency-icon { font-size: 18px; }
 @keyframes star-in { from { transform: scale(0) rotate(-40deg); } }
 .row[aria-pressed="true"] .star { color: rgba(59, 66, 85, .3); }

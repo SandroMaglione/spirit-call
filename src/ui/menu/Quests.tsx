@@ -296,7 +296,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         <Label>Stars</Label>
         {quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)}
         {/* All three in one run, once: its dust (a quest-rank that unlocks a relic shows the relic below instead). */}
-        {perfectDust !== null && <div class={`goal goal--perfect${perfected ? " is-earned" : ""}`}><span class="goal__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>In one run<span class="goal__dust"><Icon name="dust" />{perfectDust}</span></div>}
+        {perfectDust !== null && <div class={`goal goal--perfect${perfected ? " is-earned" : ""}`}><span class="goal__stars" aria-label="All three stars in one run"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span><span class="goal__dust"><Icon name="dust" />{perfectDust}</span></div>}
       </div>}
       {challenge.objective.kind === "endure" && <div>
         <Label>Each wave</Label>
@@ -341,7 +341,7 @@ const RelicPrize = ({ store, relic, plain }: { readonly store: UiStore; readonly
       <Label end={had ? <span class="claimed"><Icon name="check" />Claimed</span> : undefined}>New relic</Label>
       <b class="relic-prize__name">{spec.name}</b>
       <p>{spec.tiers[1].adds}</p>
-      <p class="relic-prize__ask">{plain ? <><Icon name="check" />On the first clear</> : <><span class="relic-prize__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>All three stars in one run</>}</p>
+      <p class="relic-prize__ask">{plain ? <><Icon name="quests" />On the first clear</> : <><span class="relic-prize__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>All three stars in one run</>}</p>
     </div>
   </div>
 }
