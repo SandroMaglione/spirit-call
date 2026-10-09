@@ -103,7 +103,7 @@ const Relics = ({ store, actions, character, first, save }: { readonly store: Ui
   const equipped = equippedIn(slot.value)
   const holder = picked.value === null ? undefined : draft.value.team.find((other) => other !== character && Object.values(draft.value.relics[other] ?? {}).includes(picked.value!))
   const price = picked.value === null ? null : relicPrice(tuning, account, picked.value)
-  const note = !relicsOpen(tuning, account) ? `Relics open after ${tuning.quests[tuning.relicRules.opensAfter as QuestId].name}, with the Spirit Call.`
+  const note = !relicsOpen(tuning, account) ? `Relics open after ${tuning.quests[tuning.relicRules.opensAfter as QuestId].name}.`
     : !open ? "This slot opens later, with its relics."
     : picked.value === null ? undefined
     : tier === null ? relicSource(store, picked.value)
@@ -117,7 +117,6 @@ const Relics = ({ store, actions, character, first, save }: { readonly store: Ui
       <div class="gear__slots" role="tablist" aria-label="Relic slots">{relicSlots.map((each) => {
         const held = equippedIn(each)
         return <button key={each} type="button" role="tab" class="gear__slot" aria-selected={each === slot.value} aria-label={`${slotNames[each]} slot: ${held === null ? "none" : relicOf(tuning.relics, held).name}`} onClick={() => pick(each)}>
-          <RelicIcon slot={each} element={each === "element" ? elementOf(tuning, character) : null} />
           <span><b>{slotNames[each]}</b><small>{held === null ? "None" : relicOf(tuning.relics, held).name}</small></span>
         </button>
       })}</div>
@@ -174,7 +173,7 @@ const Looks = ({ store, actions, character, first }: { readonly store: UiStore; 
   return <>
     <div class="gear__cards scroll in-left">
       <div class="gear__slots" role="tablist" aria-label="Kinds of look">{cosmeticKinds.map((each) => <button key={each} type="button" role="tab" class="gear__slot" aria-selected={each === kind.value} onClick={() => switchKind(each)}>
-        <LookIcon kind={each} /><span><b>{kindNames[each]}</b><small>{account.worn[character]?.[each] === undefined ? "Her own" : cosmeticOf(tuning.cosmetics, account.worn[character]![each]!).name}</small></span>
+        <span><b>{kindNames[each]}</b><small>{account.worn[character]?.[each] === undefined ? "Her own" : cosmeticOf(tuning.cosmetics, account.worn[character]![each]!).name}</small></span>
       </button>)}</div>
       <Cards>{[null, ...options].map((id) => {
         const spec = id === null ? null : cosmeticOf(tuning.cosmetics, id)

@@ -116,8 +116,7 @@
 .gear__cards { position: absolute; left: calc(var(--left) - 14px); top: 48px; bottom: 0; right: calc(var(--right) + 304px); z-index: 3; padding: 14px 14px 30px; display: grid; gap: 10px; align-content: start; }
 .gear__panel { position: absolute; right: var(--right); top: 60px; width: 300px; max-height: calc(100% - 130px); z-index: 3; }
 .gear__slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.gear__slot { display: flex; align-items: center; gap: 7px; min-width: 0; height: 42px; padding: 0 10px 0 8px; border-radius: 21px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); text-align: left; text-shadow: none; }
-.gear__slot > .relic-icon, .gear__slot > .look-icon { font-size: 24px; }
+.gear__slot { display: flex; align-items: center; min-width: 0; height: 42px; padding: 0 16px; border-radius: 21px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); text-align: left; text-shadow: none; }
 .gear__slot span { display: grid; min-width: 0; line-height: 1.1; }
 .gear__slot b { font-size: 13px; font-weight: 800; }
 .gear__slot small { font-size: 11px; color: var(--dim); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -132,9 +131,11 @@
 .gear__tier[data-state="ahead"] > .tier-marks { --tier-on: #6b7385; }
 .gear__tier[data-state="ahead"] span { color: var(--dim); }
 /* Her gear in short on her page: a card each, by group. */
-.gear-summary { display: grid; gap: 12px; }
+.gear-summary { display: grid; gap: 14px; }
+/* The same room on every side of the cards. */
+.character__panel .panel__body:has(.gear-summary) { padding: 14px; }
 .gear-summary__row { display: flex; gap: 8px; }
-.gear-summary__row + .gear-summary__row { padding-top: 12px; border-top: 1px solid var(--line); }
+.gear-summary__row + .gear-summary__row { padding-top: 14px; border-top: 1px solid var(--line); }
 .gear-summary__gap { flex: 1; max-width: 18px; }
 .gear-summary .card__art > .relic-icon { font-size: 36px; }
 /* What a tap does: a plus where nothing is chosen, a swap where something is. */
@@ -147,8 +148,7 @@
 @container (max-width: 800px) {
   .gear__cards { right: calc(var(--right) + 272px); }
   .gear__panel { width: 268px; }
-  .gear__slot { gap: 5px; padding: 0 8px 0 6px; }
-  .gear__slot > .relic-icon, .gear__slot > .look-icon { font-size: 20px; }
+  .gear__slot { padding: 0 12px; }
 }
 
 /* ---------- shop ---------- */
