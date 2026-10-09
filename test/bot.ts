@@ -32,6 +32,10 @@ import { projection } from "../src/config/view.ts"
 import { stateSpeed } from "../src/features/elements.ts"
 import { currentAttack } from "../src/features/moveset.ts"
 import { skillAim } from "../src/features/skills.ts"
+import { basicAttack } from "../src/content/aspects.ts"
+import type { AttackMove } from "../src/content/attacks.ts"
+import type { SkillEffect } from "../src/content/skills.ts"
+import { aspectFor } from "../src/features/build.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
@@ -255,6 +259,12 @@ export interface Style {
   readonly every: number
   /** Basic attack reach for non-sword kits in the full balance sweep. */
   readonly reach?: number
+  /**
+   * Charge the power attack this often (seconds), when the way is clear and
+   * its target is in its reach: holding the button through the charge and
+   * letting go once full, as a player does. Missing: it only taps.
+   */
+  readonly chargeEvery?: number
 }
 
 /** Only dodging, from afar, reacting at once: the fairness check (anything it cannot dodge, nobody can). */
@@ -330,6 +340,10 @@ export interface Move {
   /** Skill drag in projected coordinates, relative to the button. */
   readonly skillAim?: Vec2
   readonly ultimateAim?: Vec2
+  /** Keep the attack button held (charging), without a new press. */
+  readonly hold?: boolean
+  /** Every way it could run was clear: nothing to dodge this step. */
+  readonly safe?: boolean
 }
 
 const directions: ReadonlyArray<Vec2> = [
@@ -388,6 +402,7 @@ export const decide = (seen: Battlefield, tuning: Tuning, last: Vec2, style: Sty
     if (best === undefined || danger > best.danger || (danger === best.danger && score > best.liking)) best = { move: { direction, dash: false, attack, target: targetId }, danger, liking: score }
   }
   if (best!.danger === Infinity) {
+    best = { ...best!, move: { ...best!.move, safe: true } }
     // Safe: close a gap the dash covers in one go, keeping a charge to dodge with.
     if (target === undefined || !field.player.dashReady || field.player.charges < field.player.maxCharges) return best!.move
     const gap = Math.hypot(target.at.x - at.x, target.at.y - at.y)
@@ -416,11 +431,12 @@ export const botTouch = () => {
     snapshot() {
       const screen = toScreen(projection, move.direction)
       const length = Math.hypot(screen.x, screen.y)
-      const attack = move.attack && !tapped
+      const attack = move.attack && (!tapped || move.hold === true)
       tapped = attack
       const pressed = (name: TouchButton) => (name === "dash" && move.dash) || (name === "attack" && attack) || (name === "special" && move.special === true) || (name === "ultimate" && move.ultimate === true)
       const buttons = Object.fromEntries(touchButtons.map((name) => {
         const skill = name === "special" || name === "ultimate"
+        if (name === "attack" && !attack && move.hold === true) return [name, { ...idleButton, held: true }]
         return [name, pressed(name) ? { ...idleButton, held: !skill, pressed: true, released: skill, aim: name === "ultimate" ? move.ultimateAim ?? null : skill ? move.skillAim ?? null : null } : idleButton]
       }))
       return {
@@ -459,6 +475,40 @@ const Members = Game.Inspector("Bot/Members", {
 }, ({ queries }) => queries.members.each().map(({ data }) => ({ ...data.member.get(), health: data.health.get(), active: data.player.present })))
 
 const Tallied = Game.Inspector("Bot/Tally", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().tally)
+
+/**
+ * How near an enemy has to be for a skill to land on it (the bot holds a
+ * skill until then, as a player would): its reach, area, or range, and a
+ * little more. A guard is raised whenever it is ready.
+ */
+export const skillReach = (effect: SkillEffect): number => {
+  const more = 40
+  switch (effect.kind) {
+    case "cut":
+      return effect.length + more
+    case "blast":
+    case "leap":
+    case "nova":
+    case "thunderclap":
+    case "earthrise":
+      return effect.radius + more
+    case "plunge":
+      return effect.distance + effect.radius + more
+    case "lob":
+    case "barrage":
+      return effect.maxRange + more
+    case "vortex":
+      return effect.maxRange + effect.radius + more
+    case "totem":
+      return effect.offset + effect.radius + more
+    case "guard":
+      return Infinity
+  }
+}
+
+/** How far a move reaches from her: a melee move's reach, how far a shot or a disc flies, where a lob can land. */
+export const moveReach = (move: AttackMove): number =>
+  move.shape === "shot" || move.shape === "disc" ? move.range : move.shape === "lob" ? move.maxRange : move.reach
 
 export interface BotRun {
   readonly tuning: Tuning
@@ -599,6 +649,8 @@ export const runBot = (run: BotRun): BotReport => {
   const total = Math.ceil(run.seconds / engine.stepSeconds)
   const style = run.style ?? dodger
   let move: Move = { direction: { x: 0, y: 0 }, dash: false, attack: false, target: null }
+  let charging = 0
+  let sinceCharge = 0
   for (let step = 0; step < total; step++) {
     const field = sim.runtime.inspect(ReadBattlefield)
     if (run.measurePressure !== false && field.player !== undefined && playOut({ ...field, player: { ...field.player, invulnerable: 0 } }, tuning, { x: 0, y: 0 }, false).danger < Infinity) pressed += 1
@@ -606,21 +658,44 @@ export const runBot = (run: BotRun): BotReport => {
     move = run.still === true
       ? { direction: { x: 0, y: 0 }, dash: false, attack: run.stationaryAttack === true && step % style.every === 0, target: null }
       : step % style.every === 0 ? decide(field, tuning, last, style, move.target) : { ...move, dash: false, attack: false, special: false, ultimate: false }
+    const active = members.find((member) => member.active)
+    const build = team[active?.slot ?? 0] ?? team[0]!
     if (run.abilities === true && step % style.every === 0 && field.enemies.length > 0) {
       const target = field.enemies.find((enemy) => enemy.id === move.target) ?? field.enemies[0]!
       const from = field.player?.at ?? target.at
-      const active = members.find((member) => member.active)
-      const character = team[active?.slot ?? 0]?.character ?? "swordsman"
+      const character = build.character
       const offset = { x: target.at.x - from.x, y: target.at.y - from.y }
       const distance = Math.hypot(offset.x, offset.y)
       const screen = toScreen(projection, offset)
       const screenLength = Math.hypot(screen.x, screen.y)
+      const effectOf = (slot: "special" | "ultimate") => tuning.skills[tuning.characters[character].skills[slot]].effect
       const aimed = (slot: "special" | "ultimate"): Vec2 => {
-        const aim = skillAim(tuning.skills[tuning.characters[character].skills[slot]].effect)
+        const aim = skillAim(effectOf(slot))
         const fraction = aim.kind === "point" ? Math.min(1, distance / aim.range) : 1
         return screenLength === 0 ? { x: 1, y: 0 } : { x: screen.x / screenLength * fraction, y: screen.y / screenLength * fraction }
       }
-      move = { ...move, special: true, ultimate: true, skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
+      // A skill waits for an enemy it can reach (a totem also for when she is hurt, to heal by it).
+      const hurt = active !== undefined && active.health.current < active.health.max * 0.8
+      const lands = (slot: "special" | "ultimate") => distance <= skillReach(effectOf(slot)) || (effectOf(slot).kind === "totem" && hurt)
+      move = { ...move, special: lands("special"), ultimate: lands("ultimate"), skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
+    }
+    // Charging: pressed once, held through the charge, let go once full; a threat lets go early (the charge is lost).
+    if (style.chargeEvery !== undefined && !(run.still === true)) {
+      const spec = basicAttack(tuning.classes[tuning.characters[build.character].class], ((id) => id === null ? null : tuning.aspects[id])(aspectFor(tuning, build.character, build.aspect)))
+      sinceCharge += engine.stepSeconds
+      if (charging > 0) {
+        if (move.dash || move.safe === false) charging = 0
+        else charging -= 1
+        move = { ...move, attack: false, hold: charging > 0 }
+      } else if (spec.power !== null && move.attack && move.safe === true && sinceCharge >= style.chargeEvery && field.player !== undefined) {
+        const target = field.enemies.find((enemy) => enemy.id === move.target)
+        const reach = moveReach(spec.power.move) * (spec.power.move.shape === "shot" || spec.power.move.shape === "disc" ? 0.8 : 1)
+        if (target !== undefined && Math.hypot(target.at.x - field.player.at.x, target.at.y - field.player.at.y) <= reach) {
+          charging = Math.ceil((spec.power.holdDelay + spec.power.chargeTime) / engine.stepSeconds) + 2
+          sinceCharge = 0
+          move = { ...move, attack: true, hold: true }
+        }
+      }
     }
     if (run.rotateEvery !== undefined && step > 0 && step % Math.max(1, Math.round(run.rotateEvery / engine.stepSeconds)) === 0) rotate = 1
     touch.set(move)

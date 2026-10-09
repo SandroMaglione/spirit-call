@@ -5,6 +5,44 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The matrix, and a bot that plays each build (2026-10-09)
+
+`pnpm balance --matrix` puts builds side by side: every character with
+every aspect of her class (her plain one too), alone, at the enemies' level,
+through eight quests that each ask something different (`matrixQuests`), by
+a skilled and a learning player. It prints each character and each build:
+clears, time beside the median build on the same quest and seed (1 the
+middle, lower is faster; a loss counts as the whole horizon), hits a run,
+and health left. It has no baseline and checks nothing: it is the picture
+the balance of characters is read from (`--output` keeps it, `--tuning`
+tries a patch). It takes about ten minutes, so CI does not run it.
+
+**How to read it.** The two profiles lean opposite ways. The skilled bot
+dodges about three times as well as a person, so it values damage (a build
+that kills sooner looks best); the learning bot takes many hits, so it
+values health (a bulky build looks best). People sit between them. A
+build that is far out on both is out of line; one that is out on one only
+is a matter of who plays her, for a playtest to settle.
+
+The bot was changed with it, so every row moved and the baseline was
+recorded again:
+
+- **Its range comes from the build**, not a table by character: in close
+  at a melee move's reach, shots and bolts from two thirds of their range,
+  discs from most of theirs (`styleFor`). The Stormcaller was played at 210
+  with a staff reaching 560, and a Scattergun at 420 with shots fizzling at
+  300.
+- **It charges** its power attack every few seconds when the way is clear
+  and the target is in its reach (`chargeEvery`), so charged attacks and
+  what they set off (Lightning Rod's rod) are measured.
+- **A skill waits for an enemy it can reach** (`skillReach`), as a
+  player's would; a totem also for when she is hurt. It cast every skill
+  the moment it was ready, whatever the distance.
+
+What it found first: the Gunner falls in every run, to her own fire. A
+burning enemy touching her sets her burning with her own burn (all 25
+"hits" of a lost Swarm run were her burn ticks).
+
 ## Gold, materials, and chapter 3 for two (2026-10-09)
 
 With the Spirit Call's first character moved to chapter 5, chapter 3 is
@@ -448,9 +486,10 @@ hypothetical builds, not a claim that an account can own every character
 at that point. Seeds are fixed and reports include the tuning hash.
 
 The bot uses touch input, aims specials and ultimates toward a visible
-target, and counts emitted casts rather than failed input attempts. It
-does not optimize charged attacks, bursts, or every aspect's passive.
-Range preferences are approximate. Its movement planner extrapolates
+target once one is within their reach, charges its power attack every few
+seconds when safe, and counts emitted casts rather than failed input
+attempts. It does not plan bursts. Its range comes from the build's basic
+attack, approximately. Its movement planner extrapolates
 visible threats; human success rates cannot be inferred from it. A learner
 can outperform the quick profile on a seed through a different path.
 
