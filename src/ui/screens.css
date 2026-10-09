@@ -55,8 +55,9 @@
 .goal__stars { display: inline-flex; gap: 0; font-size: 11px; }
 .goal__stars .menu-icon { margin: 0 -1px; }
 .goal__dust { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; font-weight: 800; color: var(--cream); }
-/* The dust icon's sparkles sit high in its box: lowered to sit on the text's line. */
-.goal__dust .menu-icon { translate: 0 2px; }
+/* The dust as rewards show amounts (see `.amounts`): an 18px icon centred beside its number. */
+.goal .goal__dust { font-size: 14px; line-height: 1; gap: 4px; }
+.goal .goal__dust .currency-icon { font-size: 18px; }
 @keyframes star-in { from { transform: scale(0) rotate(-40deg); } }
 .row[aria-pressed="true"] .star { color: rgba(59, 66, 85, .3); }
 .row[aria-pressed="true"] .star.is-earned { color: #b8862d; filter: none; }
@@ -333,7 +334,7 @@
 .goal .menu-icon { font-size: 15px; color: rgba(255, 255, 255, .3); }
 .goal.is-earned { color: var(--text); }
 .goal.is-earned .menu-icon { color: var(--gold-hi); }
-.goal.is-earned .menu-icon path { fill: currentColor; }
+.goal.is-earned .menu-icon:not(.currency-icon) path { fill: currentColor; }
 
 /* ---------- practice, discoveries, inventory ---------- */
 .inventory__cards { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 376px; z-index: 3; padding: 6px 6px 28px; }
