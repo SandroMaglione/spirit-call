@@ -21,7 +21,6 @@ import type { Amounts } from "./currencies.ts"
 import type { AspectId } from "./aspects.ts"
 import type { CosmeticId } from "./cosmetics.ts"
 import type { RelicId } from "./relics.ts"
-import { elements } from "./elements.ts"
 import type { ElementId } from "./elements.ts"
 import { materialOf, materialRules, worthAt } from "./materials.ts"
 import type { EnemyKind } from "./enemies.ts"
@@ -252,7 +251,7 @@ export const quests = {
     element: "fire",
     after: "bulwark",
     introduces: brings("Elites: bigger, tougher, and carrying fire or water", elites("fire", "water")),
-    stars: [atMost("hitsTaken", 9), atLeast("ultimates", 4), atLeast("healthLeft", 55)],
+    stars: [atMost("hitsTaken", 9), atLeast("ultimates", 4), atMost("hitsTaken", 3)],
     rewards: pays(240, 110, 3000)
   }),
   outposts: quest({
@@ -264,7 +263,7 @@ export const quests = {
     element: "thunder",
     after: "ashfall",
     introduces: brings("Snipers: a fast thunder bullet from afar. Walls stop it", enemy("sniper")),
-    stars: [nobodyFalls(), atLeast("perfectDodges", 6), atMost("hitsTaken", 3)],
+    stars: [nobodyFalls(), atLeast("perfectDodges", 5), atMost("hitsTaken", 3)],
     rewards: pays(260, 110, 3500)
   }),
   theBrute: quest({
@@ -276,7 +275,7 @@ export const quests = {
     element: "rock",
     after: "outposts",
     introduces: brings("Brutes: slow and heavy. Break them, then punish them", enemy("brute")),
-    stars: [atMost("hitsTaken", 9), atLeast("breaks", 22), atLeast("healthLeft", 60)],
+    stars: [atMost("hitsTaken", 9), atLeast("breaks", 20), atMost("hitsTaken", 4)],
     rewards: pays(280, 110, 4000)
   }),
   bruteKing: quest({
@@ -533,15 +532,20 @@ export const quests = {
 /** Chests come one every this many stars, in every group (see docs/quests.md). */
 export const starsPerChest = 3
 
+/** The elements whose material `group`'s quests pay: a chapter's, or the side quests'. */
+const elementsOf = (group: StarGroup): ReadonlyArray<ElementId> =>
+  [...new Set(Object.values(quests).filter((quest) => (group === "secondary" ? quest.line === "secondary" : quest.chapter === group)).map((quest) => quest.element))]
+
 /**
- * A chest at `stars`: crystals, gold (and dust, off the main line), and some of every element's material
- * (a clear's worth at `level`, its quests' enemy level), so a character the Spirit Call brought
- * early can take her first steps before her element's trial opens.
+ * A chest of `group` at `stars`: crystals, gold (and dust, off the main
+ * line), and the material of each element its quests pay (a clear's worth
+ * at `level`, its quests' enemy level, times `materialShare`). Only those:
+ * other elements' come from their quests and trials, where they are farmed.
  */
-const chest = (stars: number, crystals: number, gold: number, level: number, materialShare = 1, dust = 0): ChestSpec => ({
+const chest = (group: StarGroup, stars: number, crystals: number, gold: number, level: number, materialShare = 1, dust = 0): ChestSpec => ({
   stars,
   level,
-  rewards: { crystals, gold, ...(dust > 0 ? { dust } : {}), ...Object.fromEntries((Object.keys(elements) as Array<ElementId>).map((element) => [materialOf(element), Math.max(1, Math.round(worthAt(materialRules, level) * materialShare))])) }
+  rewards: { crystals, gold, ...(dust > 0 ? { dust } : {}), ...Object.fromEntries(elementsOf(group).map((element) => [materialOf(element), Math.max(1, Math.round(worthAt(materialRules, level) * materialShare))])) }
 })
 
 /**
@@ -551,52 +555,52 @@ const chest = (stars: number, crystals: number, gold: number, level: number, mat
  */
 export const chests: { readonly [Group in StarGroup]: ReadonlyArray<ChestSpec> } = {
   one: [
-    chest(3, 45, 350, 3),
-    chest(6, 45, 500, 3),
-    chest(9, 75, 900, 3)
+    chest("one", 3, 45, 350, 3),
+    chest("one", 6, 45, 500, 3),
+    chest("one", 9, 75, 900, 3)
   ],
-  // Four chests share evenly what three held before: the same crystals, gold, and materials in all.
+  // Four chests share evenly what three held before.
   two: [
-    chest(3, 50, 950, 8, 0.75),
-    chest(6, 50, 950, 8, 0.75),
-    chest(9, 50, 950, 8, 0.75),
-    chest(12, 50, 1000, 8, 0.75)
+    chest("two", 3, 50, 950, 8, 0.75),
+    chest("two", 6, 50, 950, 8, 0.75),
+    chest("two", 9, 50, 950, 8, 0.75),
+    chest("two", 12, 50, 1000, 8, 0.75)
   ],
   three: [
-    chest(3, 50, 1900, 13, 0.75),
-    chest(6, 50, 1900, 13, 0.75),
-    chest(9, 50, 1900, 13, 0.75),
-    chest(12, 50, 2000, 13, 0.75)
+    chest("three", 3, 50, 1900, 13, 0.75),
+    chest("three", 6, 50, 1900, 13, 0.75),
+    chest("three", 9, 50, 1900, 13, 0.75),
+    chest("three", 12, 50, 2000, 13, 0.75)
   ],
   four: [
-    chest(3, 70, 2800, 19, 0.75),
-    chest(6, 70, 2800, 19, 0.75),
-    chest(9, 70, 2800, 19, 0.75),
-    chest(12, 70, 2800, 19, 0.75)
+    chest("four", 3, 70, 2800, 19, 0.75),
+    chest("four", 6, 70, 2800, 19, 0.75),
+    chest("four", 9, 70, 2800, 19, 0.75),
+    chest("four", 12, 70, 2800, 19, 0.75)
   ],
   five: [
-    chest(3, 70, 4100, 25, 0.75),
-    chest(6, 70, 4100, 25, 0.75),
-    chest(9, 70, 4100, 25, 0.75),
-    chest(12, 70, 4150, 25, 0.75)
+    chest("five", 3, 70, 4100, 25, 0.75),
+    chest("five", 6, 70, 4100, 25, 0.75),
+    chest("five", 9, 70, 4100, 25, 0.75),
+    chest("five", 12, 70, 4150, 25, 0.75)
   ],
   six: [
-    chest(3, 70, 5400, 31, 0.75),
-    chest(6, 70, 5400, 31, 0.75),
-    chest(9, 70, 5400, 31, 0.75),
-    chest(12, 70, 5500, 31, 0.75)
+    chest("six", 3, 70, 5400, 31, 0.75),
+    chest("six", 6, 70, 5400, 31, 0.75),
+    chest("six", 9, 70, 5400, 31, 0.75),
+    chest("six", 12, 70, 5500, 31, 0.75)
   ],
   // The side quests' chests hold dust too, and a little less gold (dust is off the main line's). One every
   // 3 stars, holding in all what one every 6 did, and never more by 6, 12, or 18 stars than those had
   // (accounts that opened those count two of these for each, see migration 0006).
   secondary: [
-    chest(3, 20, 350, 15, 3 / 7, 30),
-    chest(6, 20, 500, 15, 3 / 7, 30),
-    chest(9, 25, 900, 15, 3 / 7, 40),
-    chest(12, 25, 1100, 15, 3 / 7, 40),
-    chest(15, 30, 1400, 15, 3 / 7, 40),
-    chest(18, 30, 1600, 15, 3 / 7, 40),
-    chest(21, 40, 1750, 15, 3 / 7, 50)
+    chest("secondary", 3, 20, 350, 15, 3 / 7, 30),
+    chest("secondary", 6, 20, 500, 15, 3 / 7, 30),
+    chest("secondary", 9, 25, 900, 15, 3 / 7, 40),
+    chest("secondary", 12, 25, 1100, 15, 3 / 7, 40),
+    chest("secondary", 15, 30, 1400, 15, 3 / 7, 40),
+    chest("secondary", 18, 30, 1600, 15, 3 / 7, 40),
+    chest("secondary", 21, 40, 1750, 15, 3 / 7, 50)
   ]
 }
 

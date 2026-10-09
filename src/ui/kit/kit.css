@@ -195,6 +195,8 @@
 .panel__body::-webkit-scrollbar, .scroll::-webkit-scrollbar { display: none; }
 .panel__note { flex: none; background: var(--cream); color: var(--ink); font-weight: 700; font-size: 12px; line-height: 1.25; padding: 6px 14px; display: flex; align-items: center; gap: 6px; }
 .panel__note .menu-icon { font-size: 14px; }
+.panel__note > span { flex: 1; display: flex; align-items: center; gap: 10px; }
+.panel__link { margin-left: auto; flex: none; font: inherit; color: var(--ink); background: none; border: 0; padding: 2px 0; text-decoration: underline; cursor: pointer; }
 .scroll { overflow-y: auto; touch-action: pan-y; scrollbar-width: none; }
 .scroll-x { overflow-x: auto; touch-action: pan-x; scrollbar-width: none; }
 .scroll-x::-webkit-scrollbar { display: none; }
