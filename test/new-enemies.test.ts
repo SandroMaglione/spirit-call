@@ -8,7 +8,7 @@ import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, grenadeSkill, gunShot, gunner, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
+import { ClearEnemies, grenadeSkill, gunShot, gunner, plainEnemies, playerLoss, start, swordsman, hitBy } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -156,7 +156,7 @@ describe("a shielded enemy", () => {
       pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }), press: ["primary"] }, { frame: 1, release: ["primary"] }]
     }, true)
     run.step(10)
-    expect(run.world().enemies[0]!.health).toBe(hp - gunShot.power)
+    expect(run.world().enemies[0]!.health).toBe(hp - hitBy("gunner", gunShot.power))
   })
 
   it("does not stop explosions: a grenade hits it from the front", () => {
@@ -169,7 +169,7 @@ describe("a shielded enemy", () => {
     run.step(turnSteps + steps(grenadeSkill.effect.flightTime + grenadeSkill.effect.fuse) + 4)
     expect(run.world().enemies[0]!.facing!.x).toBeLessThan(-0.99)
     // The guardian is weak to the grenade's fire.
-    expect(run.world().enemies[0]!.health).toBe(hp - grenadeSkill.effect.power * defaultTuning.elements.affinity.weak.damage)
+    expect(run.world().enemies[0]!.health).toBe(hp - hitBy("gunner", grenadeSkill.effect.power) * defaultTuning.elements.affinity.weak.damage)
   })
 
   it("is a wave's choice, not the kind's: a guardian without one takes shots from the front", () => {

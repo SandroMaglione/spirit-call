@@ -12,6 +12,7 @@ import { RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import { slotNames } from "./Gear.tsx"
 import { materialOf } from "../../content/materials.ts"
 import { aspectOf } from "../../content/aspects.ts"
+import { roleNames } from "../../content/characters.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import { elements } from "../../content/elements.ts"
 import { skillSlots } from "../../content/skills.ts"
@@ -53,7 +54,7 @@ const Attributes = ({ store, actions, character }: { readonly store: UiStore; re
   return <>
     <section class="character__side in-right">
       <h1>{spec.name}</h1>
-      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name}</span></div>
+      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name} · {roleNames[spec.role]}</span></div>
       {owned && <Bar value={progress.level / maxLevel} label="Level" />}
       <div class="character__stats" aria-label="Attributes">{statOrder.map((stat) => <Fact key={stat} icon={statIcons[stat]} label={statLabels[stat]} gain={owned && cost !== null && next[stat] > now[stat] ? `+${Math.round(next[stat] - now[stat])}` : undefined} value={Math.round(now[stat])} />)}</div>
       <p class="dim">{owned ? classSpec.description : sourceNote(store, { kind: "character", id: character })}</p>

@@ -178,11 +178,11 @@ describe("the rule", () => {
 
 describe("the grenade's fire", () => {
   it("sets what it hits burning; the burn ticks down and wears off", () => {
-    // Without its fire pool, which would keep the dummy burning.
-    const noPool = withGrenade({ leaves: null })
+    // Without its fire pool, which would keep the dummy burning; a sturdy dummy, so the burn wears off before it falls.
+    const noPool = tuningWith({ ...withGrenade({ leaves: null }), enemies: { dummy: { hp: 1000 } } })
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: noPool })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
-    const hit = tuning.enemies.dummy.hp - (atk * grenade.power) / 100
+    const hit = 1000 - (atk * grenade.power) / 100
     const [dummy] = run.world().enemies
     expect(dummy!.health).toBeCloseTo(hit, 6)
     expect(dummy!.state?.id).toBe("burning")
@@ -224,6 +224,14 @@ describe("states alone", () => {
     expect(run.dummy(touching).state!.remaining).toBeLessThanOrEqual(2)
     expect(run.dummy(wet).state?.id).toBe("soaked")
     expect(run.dummy({ x: 200, y: 300 }).state).toBeNull()
+  })
+
+  it("burning spreads within a side: a burning enemy pressed against the player never sets her alight", () => {
+    const touching = { x: tuning.characters.swordsman.radius + tuning.enemies.dummy.radius + 2, y: 0 }
+    const run = range([touching], { x: 200, y: 0 })
+    run.putIn(state("burning", 2), touching)
+    run.step(4)
+    expect(run.world().player.state).toBeNull()
   })
 
   it("soaked slows the player down", () => {

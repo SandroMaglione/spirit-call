@@ -93,6 +93,11 @@ It is a personal project, not a commercial one.
 - **Each character owns her kit**: her element, her class, her special and
   her ultimate, and her own mechanics. Kits are designed as a whole; they
   are not assembled from a shared pool of skills.
+- **Her body is hers too**: bulky or quick, hard-hitting or frail, so each
+  one feels different to play, and all of them equally strong overall. Her
+  stats spend one budget (see `docs/balance.md`, "Bodies"), set by her role
+  (a fighter, a support, a guardian: a support's or a guardian's kit does
+  part of what her stats would) and her class's range.
 - **Discovery is the fun**, for players and for development alike: what is
   she strong at, what are her mechanics, which teams and matchups suit her.
 - **Effects define strategy.** A character applies something (an element, a
@@ -242,7 +247,8 @@ The game has two areas, and Extras for practice.
   stronger than the weakest, not orders of magnitude, so a skilled low-level
   clear is long but possible. The band's size is a deliberate number.
 - New content follows the same stat curves as old content of its rarity and
-  level; it differs in effects and playstyle, not in numbers.
+  level, and the same body budget; it differs in effects and playstyle, not
+  in numbers.
 - Enemy levels are fixed per quest or tier (Until Fall's rise by the same
   amount each wave, for everyone); they never scale to the player.
 

@@ -5,7 +5,7 @@ import { chainFrom } from "../src/features/thunder.ts"
 import type { Struck } from "../src/features/thunder.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Health, Member, Player, Position, Stats, Totem } from "../src/schema.ts"
-import { center, cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, placeDummies, start, steps, hitBy } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const totemSpec = defaultTuning.skills.sparkTotem.effect
@@ -83,7 +83,7 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
     run.step(3)
     const [totem] = run.world().totems
     expect(Math.hypot(totem!.at.x - center.x - totemSpec.offset, totem!.at.y - center.y)).toBeLessThan(3)
-    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([1000 - totemSpec.power, 1000 - totemSpec.power])
+    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([1000 - hitBy("stormcaller", totemSpec.power), 1000 - hitBy("stormcaller", totemSpec.power)])
     // Both now charged: blows on them arc on to each other too.
     run.step(steps(totemSpec.tick))
     expect(run.world().enemies[0]!.health).toBeLessThan(1000 - 2 * totemSpec.power)
@@ -107,14 +107,16 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
   })
 
   it("heals the one on the field instead, while she is within its reach hurt; once she is whole, it zaps again", () => {
+    // A few zaps short of whole, so the totem lasts long enough to heal her up and turn on the enemy.
+    const low = sturdy.characters.stormcaller.stats.hp - 6
     const run = range([{ x: 120, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
-    run.runtime.tick(Game.Schedule(Hurt(60)))
+    run.runtime.tick(Game.Schedule(Hurt(low)))
     run.step(3)
     const max = run.world().player!.max
-    expect(run.world().player!.current).toBeCloseTo(60 + (max * totemSpec.heal) / 100, 6)
+    expect(run.world().player!.current).toBeCloseTo(low + (max * totemSpec.heal) / 100, 6)
     expect(run.world().enemies[0]!.health).toBe(1000)
     // Healed to the full, it turns on the enemy.
-    run.step(steps(totemSpec.tick * Math.ceil((max - 60) / ((max * totemSpec.heal) / 100))) + 2)
+    run.step(steps(totemSpec.tick * Math.ceil((max - low) / ((max * totemSpec.heal) / 100))) + 2)
     expect(run.world().player!.current).toBe(max)
     run.step(steps(totemSpec.tick))
     expect(run.world().enemies[0]!.health).toBeLessThan(1000)
@@ -157,8 +159,8 @@ describe("the Stormcaller's Thunderclap (Shift)", () => {
     run.runtime.tick(Game.Schedule(FillEnergy, Hurt(30)))
     run.step(3)
     const [near, other, far] = run.world().enemies
-    expect(near!.health).toBe(1000 - clapSpec.power)
-    expect(other!.health).toBe(1000 - clapSpec.power)
+    expect(near!.health).toBe(1000 - hitBy("stormcaller", clapSpec.power))
+    expect(other!.health).toBe(1000 - hitBy("stormcaller", clapSpec.power))
     expect(far!.health).toBe(1000)
     const { members } = run.world()
     expect(members.stormcaller).toBeCloseTo(30 + (defaultTuning.characters.stormcaller.stats.hp * clapSpec.heal) / 100, 0)

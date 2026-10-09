@@ -9,7 +9,7 @@ import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack } from "./helpers.ts"
+import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -148,7 +148,7 @@ describe("a cut of wind (Space)", () => {
   it("cuts everything along its line toward the cursor, once each, and nothing beside it", () => {
     const run = range([{ x: 100, y: 0 }, { x: 260, y: 0 }, { x: 150, y: 120 }], { x: 200, y: 0 }, { keys: [cut(1)], tuning })
     run.step(4)
-    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - wave.power, hp - wave.power, hp])
+    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - hitBy("swordsman", wave.power), hp - hitBy("swordsman", wave.power), hp])
     expect(run.player().aim.x).toBeCloseTo(1, 6)
   })
 
@@ -169,7 +169,7 @@ describe("a cut of wind (Space)", () => {
     const again = steps(defaultTuning.skills.bladeWave.cooldown) - 10
     const run = range([{ x: 100, y: 0 }], { x: 200, y: 0 }, { keys: [cut(1), cut(again)], tuning })
     run.step(again + 3)
-    expect(run.world().enemies[0]!.health).toBe(hp - wave.power)
+    expect(run.world().enemies[0]!.health).toBe(hp - hitBy("swordsman", wave.power))
   })
 })
 
@@ -188,7 +188,7 @@ describe("grenade (Space)", () => {
     run.step(steps(spec.flightTime + spec.fuse) - 2)
     expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp, hp])
     run.step(6)
-    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - spec.power, hp])
+    expect(run.world().enemies.map((enemy) => enemy.health)).toEqual([hp - hitBy("gunner", spec.power), hp])
     expect(run.world().grenades).toEqual([])
   })
 
@@ -327,7 +327,7 @@ describe("ultimates (Shift)", () => {
       expect(run.world().enemies[0]!.health).toBe(1000)
       expect(run.player().position).toEqual(from)
       run.step(6)
-      expect(run.world().enemies[0]!.health).toBe(1000 - tide.power)
+      expect(run.world().enemies[0]!.health).toBe(1000 - hitBy("tidecaller", tide.power))
       expect(run.world().enemies[0]!.state).toBe("soaked")
     })
 
@@ -347,7 +347,7 @@ describe("ultimates (Shift)", () => {
       run.runtime.tick(Game.Schedule(FillEnergy))
       run.step(4)
       const [inside, outside] = run.world().enemies
-      expect(inside!.health).toBe(1000 - spec.power)
+      expect(inside!.health).toBe(1000 - hitBy("tidecaller", spec.power))
       expect(inside!.state).toBe("soaked")
       expect(outside!.health).toBe(1000)
       expect(run.world().energy).toBe(0)
