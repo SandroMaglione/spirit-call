@@ -486,8 +486,9 @@
 .reveal__rays { position: absolute; left: 34%; top: 52%; width: 760px; height: 760px; translate: -50% -50%; pointer-events: none; opacity: .5; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--glow) 45%, transparent) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(closest-side, #000, transparent); mask: radial-gradient(closest-side, #000, transparent); animation: rays 24s linear infinite, rays-in .8s ease-out both; }
 .reveal--aspect { --glow: #b98bff; }
 .reveal--aspect .reveal__rays, .reveal--look .reveal__rays { left: 50%; }
-.reveal--look { --glow: #ff8fc8; }
-.reveal--look .reveal__orb { color: #ffe1f1; background: radial-gradient(circle at 35% 30%, #8e4a76, #301827 70%); box-shadow: 0 0 0 3px #ff8fc8, 0 0 30px #ff8fc8; }
+/* A look is the purple tier too (an aspect's peer): its orb keeps a warmer tint inside the same light. */
+.reveal--look { --glow: #b98bff; }
+.reveal--look .reveal__orb { color: #f1e1ff; background: radial-gradient(circle at 35% 30%, #7a4a8e, #281830 70%); box-shadow: 0 0 0 3px #b98bff, 0 0 30px #b98bff; }
 .reveal--relic .reveal__orb { color: #d9efff; background: radial-gradient(circle at 35% 30%, #3f6a95, #151f30 70%); box-shadow: 0 0 0 3px #7cc4ff, 0 0 24px #7cc4ff; }
 .reveal--relic .reveal__prize p:not(.dim) { color: var(--text, #fff); }
 @keyframes rays { to { rotate: 1turn; } }
