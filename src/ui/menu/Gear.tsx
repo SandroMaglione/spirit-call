@@ -79,10 +79,12 @@ const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly
   </>
 }
 
-/** Where a relic not owned yet comes from. */
+/** Where a relic not owned yet comes from: its quest's perfect clear (or its first clear, for the two that introduce their slots). */
 const relicSource = (store: UiStore, relic: RelicId): string => {
   const tuning = store.tuning.value, quest = sourceOf(tuning, { kind: "relic", id: relic })
-  return quest !== null ? `A reward for clearing ${tuning.quests[quest].name}.` : "Not to be had yet."
+  const home = (Object.keys(tuning.quests) as Array<QuestId>).find((id) => tuning.quests[id].relic === relic)
+  if (quest !== null) return `A reward for clearing ${tuning.quests[quest].name}; its next tiers for clearing it with all three stars in one run at ranks II and III.`
+  return home !== undefined ? `For clearing ${tuning.quests[home].name} with all three stars in one run; its next tiers at ranks II and III.` : "Not to be had yet."
 }
 
 /** Her relic slots, then the relics of the slot picked, the one picked explained with its three tiers. */

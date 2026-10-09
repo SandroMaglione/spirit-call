@@ -52,7 +52,8 @@ describe("a relic's worth", () => {
     tuning = withRelic(tuning, "traded", traded)
     const problems = validateContent(tuning)
     expect(problems).toContain("relic greedy tier 1: is worth 40.0% (at most 20%: a trade-off may give more by costing something)")
-    expect(problems.filter((problem) => problem.startsWith("relic traded"))).toEqual([])
+    // A test relic has no quest to come from: that problem is not the budget's.
+    expect(problems.filter((problem) => problem.startsWith("relic traded") && !problem.endsWith("no quest gives it"))).toEqual([])
     expect(relicWorth(traded.tiers[1].passives)).toBeCloseTo(15, 9)
   })
 

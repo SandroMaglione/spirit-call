@@ -91,15 +91,39 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
 
 - **They open with the Spirit Call** (the end of chapter one,
   `relicRules.opensAfter`). Chapter one has none.
-- **Quests** give the first ones: Echo with chapter two's first quest, and
-  Momentum with the first side quest.
+- **Every relic is one quest's** (`QuestSpec.relic`), and comes with a
+  struggle: **a perfect clear**, all three stars in one run, at rank r
+  gives the relic at tier r. "Play its quest harder for its next tier."
+  A perfect clear is kept per quest and rank (`QuestProgress.perfectAt`);
+  the stars earned across runs never make one. Two relics introduce their
+  slots at tier I on a plain first clear (Echo with chapter two's first
+  quest, Momentum with the first side quest); their tiers II and III are
+  perfect clears like every relic's.
+- **Where**: spread over chapters two to six, never on two main quests in
+  a row, each Element relic on a quest of its element, the Survival relics
+  after the slot opens. Main line: Echo (The Swarm), Repel (Iron Guard),
+  Ember Heart (Ashfall), Opportunist (The Brute), Undertow (High Tide),
+  Counterpoint (Shield Wall), Anchor (Sandstorm), Afterimage
+  (Thunderhead), Last Stand (Ironclad), Tailwind (Gale Force). Side
+  quests: Momentum (Hold the Line), Bedrock (Night of Packs), Static
+  Charge (Elite Hunt), Glass Edge (Forge Pit), Second Wind (Floodgate),
+  Mending Step (Storm Front), Featherstep (Stone Trial), Overflow (Strange
+  Company). `validateContent` checks each relic has one home and one only,
+  after relics open (a Survival relic's after its slot), and that a relic
+  in a quest's first-clear rewards is that quest's.
 - **Never the Spirit Call** (since 2026-10): relics are this game's
   artifacts, progress to be played for, and Genshin farms those rather
   than pulling them. The Call brings characters, aspects, and looks (see
-  `calls.md`). Where each relic comes from, and its tiers, is being
-  settled (every relic a quest's, its tiers its ranks' perfect clears).
+  `calls.md`).
 - **The shop** sells a relic the account owns one tier up, for dust
-  (`relicRules.prices`): no tier waits on a run that will not come.
+  (`relicRules.prices`: 300 for tier II, 600 for III), **a few a week**
+  (`relicRules.stock`: one): the fallback road, so no tier waits on a run
+  that will not come, without being the way. The stock is a limit, not a
+  timer: nothing counts down but the restock (the hardcore reset's week),
+  and what is not bought does not pile up. A tier is about a week of
+  hardcore and trials mid-game, so the dust and the stock bind together.
+- `pnpm expected` marks each quest run the skilled bot perfected (`P`),
+  so no relic sits behind a run nobody can make.
 - The **Survival** slot opens after the Brute King (`survivalOpensAfter`),
   the middle of the main line, with its relics.
 

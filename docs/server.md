@@ -51,7 +51,7 @@ only as its SHA-256 hash. Logging out deletes it.
 | `GET /api/account` | The account. |
 | `PUT /api/account/selection` | The team, its aspects and relics, and what to play. |
 | `PUT /api/characters/{id}/looks/{kind}` | Wear a look (a tint or a trail), or none. |
-| `POST /api/shop/relics/{id}` | Buy a relic owned one tier up, with dust. |
+| `POST /api/shop/relics/{id}` | Buy a relic owned one tier up, with dust (a few a week: `soldOut` after). |
 | `POST /api/shop/looks/{id}` | Buy a look the shop sells, with dust. |
 | `POST /api/characters/{id}/training` | Level a character with gold. |
 | `POST /api/characters/{id}/ascension` | Ascend a character. |
@@ -87,7 +87,8 @@ to by reference, so destroying a preview never touches it.
   count since the last rare thing, dropped the count since the last relic,
   and rebuilt the calls' table once more for the kinds there are now,
   keeping the calls that remain (relics and supplies left the Call; what
-  they gave stays). Main's CI applies new ones before deploying prod. Previews and
+  they gave stays). `0009` added perfect clears to quest progress and the
+  shop's stock to the account. Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
 - **Two round trips an action.** An action reads the whole account in one
   batch and writes everything it changed (its rows, its log lines) in

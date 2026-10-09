@@ -64,6 +64,13 @@ export interface QuestSpec {
    */
   readonly stars: readonly [StarGoal, StarGoal, StarGoal]
   readonly rewards: Rewards
+  /**
+   * Its relic, if it has one (see docs/relics.md, "Where relics come
+   * from"): a perfect clear (all three stars in one run) at rank r gives
+   * the relic at tier r. The two relics that introduce their slots are in
+   * `rewards.unlocks` too, at tier I on the first clear.
+   */
+  readonly relic: RelicId | null
 }
 
 export interface ChapterSpec {
@@ -118,7 +125,7 @@ export const rankRules: RankRules = { count: 3, offset: 12, chaptersAhead: 2, tw
 /** Whose stars open a set of chests: a chapter's quests (by chapter id), or the secondary quests. */
 export type StarGroup = keyof typeof chapters | "secondary"
 
-const quest = (spec: QuestSpec): QuestSpec => spec
+const quest = (spec: Omit<QuestSpec, "relic"> & { readonly relic?: RelicId }): QuestSpec => ({ relic: null, ...spec })
 /** What a main quest brings, in a line for its card. */
 const brings = (text: string, novelty: Novelty): QuestSpec["introduces"] => ({ text, novelty })
 const enemy = (kind: EnemyKind): Novelty => ({ kind: "enemy", enemy: kind })
@@ -201,8 +208,9 @@ export const quests = {
     after: "packLeader",
     introduces: brings("Swarmers: tiny, fast, in packs. Reach many at once", enemy("swarmer")),
     stars: [nobodyFalls(), atLeast("ultimates", 3), atMost("hitsTaken", 3)],
-    // The first relic, as relics open: Echo, a ring out of every combo.
-    rewards: pays(160, 75, 900, [relic("echo")])
+    // The first relic, as relics open: Echo, a ring out of every combo, at tier I on the first clear (its slot's introduction); its other tiers by perfect clears, like every relic's.
+    rewards: pays(160, 75, 900, [relic("echo")]),
+    relic: "echo"
   }),
   emberKiln: quest({
     name: "Ember Kiln",
@@ -226,7 +234,8 @@ export const quests = {
     after: "emberKiln",
     introduces: brings("Guardians: heavy, patient, and a thrust that reaches far", enemy("guardian")),
     stars: [atMost("hitsTaken", 8), atLeast("breaks", 24), atMost("hitsTaken", 2)],
-    rewards: pays(200, 75, 1200)
+    rewards: pays(200, 75, 1200),
+    relic: "repel"
   }),
   bulwark: quest({
     name: "The Bulwark",
@@ -252,7 +261,8 @@ export const quests = {
     after: "bulwark",
     introduces: brings("Elites: bigger, tougher, and carrying fire or water", elites("fire", "water")),
     stars: [atMost("hitsTaken", 9), atLeast("ultimates", 4), atMost("hitsTaken", 3)],
-    rewards: pays(240, 110, 3000)
+    rewards: pays(240, 110, 3000),
+    relic: "emberHeart"
   }),
   outposts: quest({
     name: "Outposts",
@@ -276,7 +286,8 @@ export const quests = {
     after: "outposts",
     introduces: brings("Brutes: slow and heavy. Break them, then punish them", enemy("brute")),
     stars: [atMost("hitsTaken", 9), atLeast("breaks", 20), atMost("hitsTaken", 4)],
-    rewards: pays(280, 110, 4000)
+    rewards: pays(280, 110, 4000),
+    relic: "opportunist"
   }),
   bruteKing: quest({
     name: "The Brute King",
@@ -302,7 +313,8 @@ export const quests = {
     after: "bruteKing",
     introduces: brings("Water in the floor: it soaks and slows whoever wades in", hazard("water")),
     stars: [nobodyFalls(), atLeast("ultimates", 5), atLeast("healthLeft", 75)],
-    rewards: pays(320, 110, 4200)
+    rewards: pays(320, 110, 4200),
+    relic: "undertow"
   }),
   bombardment: quest({
     name: "Bombardment",
@@ -326,7 +338,8 @@ export const quests = {
     after: "bombardment",
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
     stars: [atMost("hitsTaken", 11), atLeast("breaks", 22), atMost("hitsTaken", 3)],
-    rewards: pays(360, 110, 4900)
+    rewards: pays(360, 110, 4900),
+    relic: "counterpoint"
   }),
   swarmMother: quest({
     name: "The Swarm Mother",
@@ -352,7 +365,8 @@ export const quests = {
     after: "swarmMother",
     introduces: brings("Stalkers: keep away, and they blink to you. Their mark shows where", enemy("stalker")),
     stars: [atLeast("healthLeft", 40), atLeast("longestChain", 2), atMost("hitsTaken", 2)],
-    rewards: pays(400, 150, 6300)
+    rewards: pays(400, 150, 6300),
+    relic: "anchor"
   }),
   theCloister: quest({
     name: "The Cloister",
@@ -376,7 +390,8 @@ export const quests = {
     after: "theCloister",
     introduces: brings("Thunder elites: they strike the soaked hardest", elites("thunder")),
     stars: [atMost("hitsTaken", 10), atLeast("ultimates", 6), atMost("hitsTaken", 3)],
-    rewards: pays(440, 150, 7700)
+    rewards: pays(440, 150, 7700),
+    relic: "afterimage"
   }),
   theWarlord: quest({
     name: "The Warlord",
@@ -402,7 +417,8 @@ export const quests = {
     after: "theWarlord",
     introduces: brings("Juggernauts: armored until broken. Break them, then strike", enemy("juggernaut")),
     stars: [atMost("hitsTaken", 10), atLeast("breaks", 40), atMost("hitsTaken", 2)],
-    rewards: pays(480, 150, 9100)
+    rewards: pays(480, 150, 9100),
+    relic: "lastStand"
   }),
   powderKeg: quest({
     name: "Powder Keg",
@@ -426,7 +442,8 @@ export const quests = {
     after: "powderKeg",
     introduces: brings("Gale casters: a cone of wind that blows everyone around", enemy("galeCaster")),
     stars: [atLeast("healthLeft", 40), atLeast("ultimates", 7), atMost("hitsTaken", 2)],
-    rewards: pays(520, 150, 10500)
+    rewards: pays(520, 150, 10500),
+    relic: "tailwind"
   }),
   colossus: quest({
     name: "The Colossus",
@@ -452,7 +469,8 @@ export const quests = {
     after: "packLeader",
     introduces: null,
     stars: [atMost("hitsTaken", 8), atLeast("perfectDodges", 4), atLeast("healthLeft", 50)],
-    rewards: sidePays(80, 40, 250, 30, [relic("momentum")])
+    rewards: sidePays(80, 40, 250, 30, [relic("momentum")]),
+    relic: "momentum"
   }),
   nightOfPacks: quest({
     name: "Night of Packs",
@@ -464,7 +482,8 @@ export const quests = {
     after: "bulwark",
     introduces: null,
     stars: [atMost("hitsTaken", 9), atLeast("ultimates", 3), atMost("hitsTaken", 2)],
-    rewards: sidePays(120, 45, 560, 40)
+    rewards: sidePays(120, 45, 560, 40),
+    relic: "bedrock"
   }),
   eliteHunt: quest({
     name: "Elite Hunt",
@@ -476,7 +495,8 @@ export const quests = {
     after: "bruteKing",
     introduces: null,
     stars: [atMost("hitsTaken", 10), atLeast("breaks", 18), atLeast("healthLeft", 45)],
-    rewards: sidePays(160, 60, 1400, 50)
+    rewards: sidePays(160, 60, 1400, 50),
+    relic: "staticCharge"
   }),
   forgePit: quest({
     name: "The Forge Pit",
@@ -488,7 +508,8 @@ export const quests = {
     after: "bruteKing",
     introduces: null,
     stars: [atMost("hitsTaken", 10), atLeast("breaks", 20), atLeast("healthLeft", 50)],
-    rewards: sidePays(180, 60, 2000, 55)
+    rewards: sidePays(180, 60, 2000, 55),
+    relic: "glassEdge"
   }),
   floodgate: quest({
     name: "Floodgate",
@@ -500,7 +521,8 @@ export const quests = {
     after: "swarmMother",
     introduces: null,
     stars: [nobodyFalls(), atLeast("perfectDodges", 8), atMost("hitsTaken", 3)],
-    rewards: sidePays(200, 60, 2800, 60)
+    rewards: sidePays(200, 60, 2800, 60),
+    relic: "secondWind"
   }),
   stormFront: quest({
     name: "Storm Front",
@@ -512,7 +534,8 @@ export const quests = {
     after: "theWarlord",
     introduces: null,
     stars: [atLeast("healthLeft", 50), atLeast("longestChain", 2), atMost("hitsTaken", 2)],
-    rewards: sidePays(240, 60, 4200, 70)
+    rewards: sidePays(240, 60, 4200, 70),
+    relic: "mendingStep"
   }),
   /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes. */
   stoneTrial: quest({
@@ -525,7 +548,8 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [atMost("hitsTaken", 9), atLeast("breaks", 40), atLeast("healthLeft", 50)],
-    rewards: sidePays(280, 75, 5600, 80)
+    rewards: sidePays(280, 75, 5600, 80),
+    relic: "featherstep"
   }),
   strangeCompany: quest({
     name: "Strange Company",
@@ -537,7 +561,8 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [nobodyFalls(), atLeast("ultimates", 10), atMost("hitsTaken", 3)],
-    rewards: sidePays(300, 75, 6150, 80)
+    rewards: sidePays(300, 75, 6150, 80),
+    relic: "overflow"
   })
 }
 

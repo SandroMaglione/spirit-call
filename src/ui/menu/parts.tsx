@@ -108,8 +108,9 @@ export const materialsIn = (store: UiStore, amounts: Held): ReadonlyArray<Materi
   ids(store.tuning.value.materials).filter((id) => (amounts[id] ?? 0) > 0)
 
 /** A star per goal, lit when earned (`fresh`: earned just now). */
-export const Stars = ({ earned, total = 3, fresh = [] }: { readonly earned: ReadonlyArray<number>; readonly total?: number; readonly fresh?: ReadonlyArray<number> }) => (
-  <span class="stars" aria-label={`${earned.length} of ${total} stars`}>{Array.from({ length: total }, (_, index) => <span key={index} class={`star${earned.includes(index) ? " is-earned" : ""}${fresh.includes(index) ? " is-fresh" : ""}`}><Icon name="star" /></span>)}</span>
+/** A quest's stars; `perfect`: all of them were earned in one run, which shows as one glow around them. */
+export const Stars = ({ earned, total = 3, fresh = [], perfect = false }: { readonly earned: ReadonlyArray<number>; readonly total?: number; readonly fresh?: ReadonlyArray<number>; readonly perfect?: boolean }) => (
+  <span class={`stars${perfect ? " is-perfect" : ""}`} aria-label={`${earned.length} of ${total} stars${perfect ? ", perfect" : ""}`}>{Array.from({ length: total }, (_, index) => <span key={index} class={`star${earned.includes(index) ? " is-earned" : ""}${fresh.includes(index) ? " is-fresh" : ""}`}><Icon name="star" /></span>)}</span>
 )
 
 /**

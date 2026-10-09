@@ -11,6 +11,7 @@ import type { Signal } from "@preact/signals"
 import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, levelsUnder, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
 import type { QuestId, StarGroup } from "../../content/quests.ts"
+import { relicOf } from "../../content/relics.ts"
 import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
 import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
@@ -40,7 +41,7 @@ const cleared = (store: UiStore, play: Play): boolean => {
 /** What a row says at its right: a quest's stars once cleared (a tier's tick), why it is locked, or its enemies' level. */
 const RowEnd = ({ store, play }: { readonly store: UiStore; readonly play: Play }) => {
   const tuning = store.tuning.value, lock = playLock(tuning, store.account.value, play)
-  if (play.kind === "quest" && cleared(store, play)) return <Stars earned={questProgress(store.account.value, play.quest, rankOf(play))?.stars ?? []} />
+  if (play.kind === "quest" && cleared(store, play)) return <Stars earned={questProgress(store.account.value, play.quest, rankOf(play))?.stars ?? []} perfect={questProgress(store.account.value, play.quest, rankOf(play))?.perfectAt !== undefined} />
   if (cleared(store, play)) return <span class="done"><Icon name="check" /></span>
   if (lock !== null) return <Icon name="lock" />
   return <>Lv {encounterOf(tuning, play).enemyLevel}</>
@@ -258,6 +259,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const quest = selected.kind === "quest" ? tuning.quests[selected.quest] : null
   const rank = selected.kind === "quest" ? rankOf(selected) : 1
   const earnedStars = selected.kind === "quest" ? questProgress(account, selected.quest, rank)?.stars ?? [] : []
+  const perfected = selected.kind === "quest" && questProgress(account, selected.quest, rank)?.perfectAt !== undefined
   const firstClear = selected.kind === "quest" ? questRewards(tuning, selected.quest, rank) : null
   // A quest's first clear stays listed once claimed (ticked and dimmed), so what it gave is still there to read.
   const once = firstClear !== null
@@ -287,6 +289,8 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
       {quest !== null && <div>
         <Label>Stars</Label>
         {quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)}
+        {/* A perfect clear, every star in one run, is what the quest's relic tier asks (see docs/relics.md). */}
+        {quest.relic !== null && <div class={`goal goal--perfect${perfected ? " is-earned" : ""}`}><Icon name="relic" />All three in one run: {relicOf(tuning.relics, quest.relic).name} tier {["I", "II", "III"][Math.min(3, rank) - 1]}</div>}
       </div>}
       {challenge.objective.kind === "endure" && <div>
         <Label>Each wave</Label>

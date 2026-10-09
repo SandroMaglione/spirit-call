@@ -68,8 +68,14 @@ hard:
 3. **A clean run**: a tight hit budget, or ending with most of the health.
 
 Stars are earned across runs (each one once, in any run that clears) and
-kept for good. Only a quest's first rank (its own enemy level) has stars.
-The results screen shows each goal with what the run counted toward it.
+kept for good. The results screen shows each goal with what the run
+counted toward it.
+
+**A perfect clear** is all three stars in one run. It is kept per quest
+and rank (`perfectAt`), shown on the results screen and as a glow around
+the quest's stars in the list, and it is what a quest's relic asks: its
+tier I at rank I, tier II at rank II, tier III at rank III (see
+`relics.md`). Stars earned across runs never add up to one.
 
 **The numbers come from measured runs** (the bot, in `test/bot.ts`, on two
 seeds, with the team a new account has, from `pnpm progression`): the

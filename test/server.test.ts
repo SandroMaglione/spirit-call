@@ -256,6 +256,7 @@ describe("accounts", () => {
     database.exec(`INSERT INTO calls VALUES ('u', 0, 1, 'stormAndStone', 'supply', NULL, NULL), ('u', 1, 1, 'stormAndStone', 'relic', 'echo', 2), ('u', 2, 1, 'stormAndStone', 'aspect', 'arc', NULL), ('u', 3, 1, 'stormAndStone', 'character', 'stormcaller', NULL)`)
     database.exec(`INSERT INTO call_amounts VALUES ('u', 0, 'gold', 400), ('u', 0, 'fireEssence', 6)`)
     database.exec(migration("0008_call_tiers.sql"))
+    database.exec(migration("0009_perfect_clears.sql"))
     expect(database.prepare(`SELECT calls_since_character, calls_since_rare FROM accounts`).all()).toEqual([{ calls_since_character: 3, calls_since_rare: 5 }])
     expect(database.prepare(`SELECT place, kind, item FROM calls ORDER BY place`).all()).toEqual([{ place: 2, kind: "aspect", item: "arc" }, { place: 3, kind: "character", item: "stormcaller" }])
     expect(database.prepare(`SELECT count(*) AS n FROM call_amounts`).all()).toEqual([{ n: 0 }])
@@ -369,7 +370,7 @@ describe("account rows", () => {
       cosmetics: { starfall: { unlockedAt: 8 }, blueFlame: { unlockedAt: 9 } }
     },
     quests: {
-      firstBlood: { "1": { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] }, "2": { attempts: 1, clears: 1, firstClearedAt: 12, stars: [1] } },
+      firstBlood: { "1": { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] }, "2": { attempts: 1, clears: 1, firstClearedAt: 12, stars: [0, 1, 2], perfectAt: 12 } },
       packLeader: { "1": { attempts: 1, clears: 1, firstClearedAt: 10, stars: [0] } }
     },
     hardcore: { gauntlet: { "1": { attempts: 2, clears: 1, firstClearedAt: 5, rewardedPeriod: 3, bestWave: 7 } } },
@@ -387,6 +388,7 @@ describe("account rows", () => {
         { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "cosmetic", id: "blueFlame" } }
       ]
     },
+    shop: { period: 3, bought: 1 },
     selection: { team: ["gunner", "swordsman"], aspects: { gunner: "marksman" }, relics: { gunner: { strike: "echo", element: "emberHeart" } }, play: { kind: "tier", track: "gauntlet", tier: 1 } },
     worn: { gunner: { trail: "starfall", tint: "blueFlame" } }
   }, 10).account), 10).account
