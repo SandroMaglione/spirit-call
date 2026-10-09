@@ -130,21 +130,26 @@ describe("accounts", () => {
     expect(after.body.selection).toEqual({ team: ["swordsman"], aspects: {}, relics: {}, play: { kind: "quest", quest: "firstBlood" } })
   })
 
-  it("counts two of the side quests' chests, now one every 3 stars, for each an account opened at 6, 12, or 18, so none is paid twice", () => {
+  it("keeps an account's side quest chests across their changes of pace (every 6, every 3, every 6 again), so none is paid twice", () => {
     const migration = (name: string) => readFileSync(new URL(`../src/server/migrations/${name}`, import.meta.url), "utf8")
     const database = new DatabaseSync(":memory:")
     for (const name of ["0001_accounts.sql", "0002_logs.sql", "0003_reset_accounts.sql", "0004_quest_ranks.sql", "0005_relics.sql"]) database.exec(migration(name))
     database.exec(`INSERT INTO users VALUES ('u', 'stella', 'hash', 'salt', 0)`)
     database.exec(`INSERT INTO chests VALUES ('u', 'secondary', 1, 1), ('u', 'secondary', 2, 3), ('u', 'one', 1, 2)`)
+    // Every 3 stars: two for each opened every 6.
     database.exec(migration("0006_star_goals.sql"))
-    const opened = database.prepare(`SELECT star_group, rank, opened FROM chests ORDER BY star_group, rank`).all()
+    const opened = () => database.prepare(`SELECT star_group, rank, opened FROM chests ORDER BY star_group, rank`).all()
+    expect(opened()).toEqual([{ star_group: "one", rank: 1, opened: 2 }, { star_group: "secondary", rank: 1, opened: 2 }, { star_group: "secondary", rank: 2, opened: 6 }])
+    // Every 6 again: one for every two, and all seven opened count all four.
+    database.exec(`INSERT INTO chests VALUES ('u', 'secondary', 3, 7)`)
+    database.exec(migration("0007_side_chests.sql"))
+    expect(opened()).toEqual([{ star_group: "one", rank: 1, opened: 2 }, { star_group: "secondary", rank: 1, opened: 1 }, { star_group: "secondary", rank: 2, opened: 3 }, { star_group: "secondary", rank: 3, opened: 4 }])
     database.close()
-    expect(opened).toEqual([{ star_group: "one", rank: 1, opened: 2 }, { star_group: "secondary", rank: 1, opened: 2 }, { star_group: "secondary", rank: 2, opened: 6 }])
-    // Those are the chests at the same stars as before.
-    expect([1, 2, 3].map((count) => defaultTuning.chests.secondary[count * 2 - 1]!.stars)).toEqual([6, 12, 18])
-    // With 7 of its stars, an account that had opened the one at 6 opens nothing again, and the one at 21 waits for its 21st.
+    expect(defaultTuning.chests.secondary.map((chest) => chest.stars)).toEqual([6, 12, 18, 24])
+    // With 9 of its stars, an account that had opened the one at 6 opens nothing again, and the one at 12 waits for its 12th.
     const side = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((id) => defaultTuning.quests[id].line === "secondary")
-    const starred: AccountValue = { ...createAccount(defaultTuning, newAccount, "stella", 0), chests: { secondary: { 1: 2 } }, quests: { [side[0]!]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0, 1, 2] } }, [side[1]!]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0, 1, 2] } }, [side[2]!]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0] } } } }
+    const all = { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0, 1, 2] } }
+    const starred: AccountValue = { ...createAccount(defaultTuning, newAccount, "stella", 0), chests: { secondary: { 1: 1 } }, quests: { [side[0]!]: all, [side[1]!]: all, [side[2]!]: all } }
     expect(withEarnedChests(defaultTuning, starred).opened).toEqual([])
   })
 

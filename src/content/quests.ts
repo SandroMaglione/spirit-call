@@ -478,6 +478,18 @@ export const quests = {
     stars: [atMost("hitsTaken", 10), atLeast("breaks", 18), atLeast("healthLeft", 45)],
     rewards: sidePays(160, 60, 1400, 50)
   }),
+  forgePit: quest({
+    name: "The Forge Pit",
+    line: "secondary",
+    chapter: null,
+    challenge: "forgePit",
+    enemyLevel: 17,
+    element: "fire",
+    after: "bruteKing",
+    introduces: null,
+    stars: [atMost("hitsTaken", 10), atLeast("breaks", 20), atLeast("healthLeft", 50)],
+    rewards: sidePays(180, 60, 2000, 55)
+  }),
   floodgate: quest({
     name: "Floodgate",
     line: "secondary",
@@ -529,8 +541,12 @@ export const quests = {
   })
 }
 
-/** Chests come one every this many stars, in every group (see docs/quests.md). */
-export const starsPerChest = 3
+/**
+ * Chests come one every this many stars (see docs/quests.md): every 3 in a
+ * chapter, every 6 in the side quests (so their row stays short as quests
+ * are added).
+ */
+export const starsPerChest = (group: StarGroup): number => (group === "secondary" ? 6 : 3)
 
 /** The elements whose material `group`'s quests pay: a chapter's, or the side quests'. */
 const elementsOf = (group: StarGroup): ReadonlyArray<ElementId> =>
@@ -591,16 +607,13 @@ export const chests: { readonly [Group in StarGroup]: ReadonlyArray<ChestSpec> }
     chest("six", 12, 70, 5500, 31, 0.75)
   ],
   // The side quests' chests hold dust too, and a little less gold (dust is off the main line's). One every
-  // 3 stars, holding in all what one every 6 did, and never more by 6, 12, or 18 stars than those had
-  // (accounts that opened those count two of these for each, see migration 0006).
+  // 6 stars: the first three each hold what two did when they came every 3 stars, the last (all eight side
+  // quests at three stars) what the 21-star one did; accounts count theirs the same way (migration 0007).
   secondary: [
-    chest("secondary", 3, 20, 350, 15, 3 / 7, 30),
-    chest("secondary", 6, 20, 500, 15, 3 / 7, 30),
-    chest("secondary", 9, 25, 900, 15, 3 / 7, 40),
-    chest("secondary", 12, 25, 1100, 15, 3 / 7, 40),
-    chest("secondary", 15, 30, 1400, 15, 3 / 7, 40),
-    chest("secondary", 18, 30, 1600, 15, 3 / 7, 40),
-    chest("secondary", 21, 40, 1750, 15, 3 / 7, 50)
+    chest("secondary", 6, 40, 850, 15, 3 / 4, 60),
+    chest("secondary", 12, 50, 2000, 15, 3 / 4, 80),
+    chest("secondary", 18, 60, 3000, 15, 3 / 4, 80),
+    chest("secondary", 24, 40, 1750, 15, 3 / 4, 50)
   ]
 }
 

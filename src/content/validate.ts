@@ -19,7 +19,7 @@ import { beyond, challengeShows, holds, introducedBy, nothingSeen, withNovelty }
 import { aheadOfLine, starsPerChest } from "./quests.ts"
 import { noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
 import type { QuestAt, RankTwist } from "./ranks.ts"
-import type { QuestId } from "./quests.ts"
+import type { QuestId, StarGroup } from "./quests.ts"
 import { elements } from "./elements.ts"
 import type { ElementId, StateId } from "./elements.ts"
 import { materialOf } from "./materials.ts"
@@ -764,9 +764,9 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (before !== undefined && step.count <= before.count) problems.push(`ascension step ${index + 1}: must cost more material than the step before`)
   })
 
-  // Chests open in order, one every `starsPerChest` stars (see docs/quests.md), and no more than its group has.
+  // Chests open in order, one every `starsPerChest` stars of their group (see docs/quests.md), and no more than it has.
   for (const [group, list] of Object.entries(tuning.chests)) {
-    const where = `chests of ${group}`
+    const where = `chests of ${group}`, every = starsPerChest(group as StarGroup)
     if (group !== "secondary" && !has(tuning.chapters, group)) problems.push(`${where}: unknown chapter`)
     const total = Object.values(tuning.quests)
       .filter((quest) => (group === "secondary" ? quest.line === "secondary" : quest.chapter === group))
@@ -776,10 +776,10 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (!(Number.isInteger(chest.stars) && chest.stars >= 1)) problems.push(`${where} ${index + 1}: stars must be a whole number of at least 1`)
       if (before !== undefined && chest.stars <= before.stars) problems.push(`${where} ${index + 1}: needs more stars than the chest before`)
       if (chest.stars > total) problems.push(`${where} ${index + 1}: needs ${chest.stars} stars, but its quests have ${total}`)
-      if (chest.stars !== starsPerChest * (index + 1)) problems.push(`${where} ${index + 1}: chests come every ${starsPerChest} stars (needs ${starsPerChest * (index + 1)}, has ${chest.stars})`)
+      if (chest.stars !== every * (index + 1)) problems.push(`${where} ${index + 1}: chests come every ${every} stars (needs ${every * (index + 1)}, has ${chest.stars})`)
       checkAmounts(problems, `${where} ${index + 1}`, tuning, chest.rewards)
     })
-    if (list.length !== Math.floor(total / starsPerChest)) problems.push(`${where}: needs one every ${starsPerChest} of its ${total} stars (has ${list.length})`)
+    if (list.length !== Math.floor(total / every)) problems.push(`${where}: needs one every ${every} of its ${total} stars (has ${list.length})`)
   }
 
   // Discoveries pay crystals only (gold comes from runs), and every character can be discovered.
