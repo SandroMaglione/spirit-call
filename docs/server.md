@@ -91,6 +91,16 @@ to by reference, so destroying a preview never touches it.
   shop's weekly stock to the account (`shop_period`, `shop_bought`; the
   stock was dropped soon after, and the columns are left unused). Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
+- **No players yet: reset, do not migrate.** Until the game opens to
+  players (decided by the developer, and written here when it happens),
+  the only accounts are the developer's test accounts, with nothing to
+  keep. A change that would need a migration to carry accounts over (a
+  character moved from the Call to a quest, a content id renamed) may
+  instead reset every account, with a migration that empties the
+  account's tables (as `0003` did); `pnpm testers new` makes test
+  accounts again. A renamed id then moves to `retired` in
+  `test/content-ids.json`, with no save migration of its own. From the
+  opening on, migrations only add, and shipped ids are permanent.
 - **Two round trips an action.** An action reads the whole account in one
   batch and writes everything it changed (its rows, its log lines) in
   another: a D1 `batch`, one round trip, all or none (`server/batch.ts`;

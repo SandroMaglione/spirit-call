@@ -11,6 +11,8 @@ tiers; `docs/enemies.md`: enemy movesets, behaviors,
 fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 `docs/spirits.md`: characters' spirits, from a character sheet to the game;
 `docs/quests.md`: quests, stars, ranks, materials, and ascension;
+`docs/roster.md`: who the characters are (element, class, role), and how
+support is set up;
 `docs/server.md`: the server, the API, players, and the database).
 
 ## Commands
@@ -125,7 +127,9 @@ simulation); `pnpm check` runs it.
   why); push only when asked.
 - Shipped content ids are permanent: accounts (the server's tables) refer to them.
   `test/content-ids.json` lists them; add new ids there, and never rename or
-  remove one without a database migration.
+  remove one without a database migration. Until the game opens to players,
+  a reset of every account may take the migration's place (see
+  `docs/server.md`, "The database").
 - `validateContent` (`src/content/validate.ts`) holds the rules content must
   follow beyond its types; extend it when adding content with new rules.
 - Comments explain intent in plain language, matching the surrounding code.

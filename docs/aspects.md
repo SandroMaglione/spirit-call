@@ -34,16 +34,32 @@ mechanic names no element**: it plays the same in every element.
 A class handles the same for every character of it (how long a combo
 waits for the next press, how she slows while attacking, how long the
 charged attack holds), so knowing a class is knowing how a new character
-of it moves. Candidates for later classes: a lob (arcing blasts over
-walls) and gauntlets (very close and fast, around the dash).
+of it moves.
 
-One character per class and element, unless her role is clearly
-different (a second wind Blade who supports the team is a new way to play;
-a second wind Blade who fights the same is not). Two characters may share a
-class in different elements when their roles differ: the Tidecaller
-(water) and Bastion (rock) both throw discs, one to slow and scatter, the
-other to guard the team and break the toughest enemies, and the Disc
+Two classes come with the release roster (`roster.md`):
+
+| Class | Range | Rhythm | Its own mechanic |
+|---|---|---|---|
+| **Gauntlets** | very close | fast strings built around the dash | a landed finisher brings her dash back sooner (a fixed amount, once a combo), and a dash cancels the combo's recovery; the dash strike stays everyone's |
+| **Hammer** | close, reaching to middle | slow, heavy swings | every swing sends a shockwave along the ground the way it swings, stopped by walls |
+
+Characters who share a class always differ in role (`roster.md`, "Three
+choices"): the Tidecaller and Bastion both throw discs, one to heal the
+team, the other to guard it and break the toughest enemies, and the Disc
 aspects go to whichever of them the team gives them to.
+
+### Aiming on touch
+
+**A basic attack never asks for a point on the floor.** On touch the
+attack button is tapped and held, never dragged: it gives a direction (the
+stick's, or the enemy the aim assist picked), not a place. So every move of
+an aspect (its combo, charged attack, and dash strike) is aimed by its
+direction: what flies goes that way, and what arcs lands at a set distance
+along it, or on the enemy the assist picked. A mouse may still place it
+where it points. Skills are different: their buttons are dragged, with
+what they will cover drawn on the floor, so a skill may be placed. A class
+whose basic attack needs a point to play well does not fit the touch
+layout (`vision.md`, "Platform and controls").
 
 ## Aspects
 
