@@ -53,8 +53,10 @@ export const Home = ({ store, nav, leader, play, enter }: {
         <span><b>Lv {level.level}</b><Bar value={level.needed === 0 ? 1 : level.into / level.needed} label="Account experience" /></span>
       </span>
       <div class="topbar__fill" />
-      <Wallet store={store} />
-      <RoundButton icon="settings" tone="dark" label="Settings" onClick={() => nav.go({ kind: "settings" })} />
+      <span class="topbar__end">
+        <Wallet store={store} />
+        <RoundButton icon="settings" tone="dark" label="Settings" onClick={() => nav.go({ kind: "settings" })} />
+      </span>
     </header>
     <SideTabs label="Menu" onChange={(id) => nav.go(places[id]!)} tabs={[
       { id: "challenges", label: "Challenges" },
