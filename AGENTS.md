@@ -60,6 +60,10 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 - `pnpm expected`: every quest, side quest, rank, hardcore tier, and trial
   rank fought by the bot with the team a new account has when it opens
   (from `pnpm progression`): cleared or not, and hits beside the hit budget.
+- `pnpm balance --matrix`: every character with every aspect of her
+  class, at the enemies' level, side by side (a skilled and a learning
+  bot; see `docs/balance.md` for how to read it). Run it after changing
+  characters, kits, aspects, or relics.
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
 - `/tools/progress/` on the dev server: a dev-only design aid projecting a

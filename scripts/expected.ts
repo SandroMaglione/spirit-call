@@ -69,7 +69,7 @@ for (const each of cases.filter((candidate) => values.only === undefined || cand
   const { challenge, enemyLevel, twist } = encounterOf(tuning, each.play)
   const reports = seeds.map((seed) => runBot({
     tuning, challenge, enemyLevel, twist, seconds, seed, mortal: true, measurePressure: false, abilities: true, ...(each.team!.length > 1 ? { rotateEvery: 3 } : {}),
-    team: each.team!.map((member) => ({ character: member.character, level: member.level })), style: styleFor(each.team![0]!.character)
+    team: each.team!.map((member) => ({ character: member.character, level: member.level })), style: styleFor(tuning, each.team![0]!)
   }))
   const hits = reports.map((report) => report.hits)
   const row = {
