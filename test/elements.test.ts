@@ -493,7 +493,8 @@ describe("ground", () => {
 })
 
 describe("affinities", () => {
-  const noPool = (elements: object) => withGrenade({ leaves: null }, tuningWith({ enemies: { dummy: { elements } } }))
+  // Sturdy dummies, so the blast never fells one before its state is read.
+  const noPool = (elements: object) => withGrenade({ leaves: null }, tuningWith({ enemies: { dummy: { elements, hp: 1000 } } }))
   const blast = (atk * grenade.power) / 100
 
   it("an enemy weak to an element takes more of its damage, and its state lasts longer", () => {
@@ -501,7 +502,7 @@ describe("affinities", () => {
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: weak })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const [dummy] = run.world().enemies
-    expect(dummy!.health).toBeCloseTo(tuning.enemies.dummy.hp - blast * rules.affinity.weak.damage, 6)
+    expect(dummy!.health).toBeCloseTo(1000 - blast * rules.affinity.weak.damage, 6)
     expect(dummy!.state!.remaining).toBeGreaterThan(rules.burning.seconds)
   })
 
@@ -510,7 +511,7 @@ describe("affinities", () => {
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: immune })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
     const [dummy] = run.world().enemies
-    expect(dummy!.health).toBeCloseTo(tuning.enemies.dummy.hp - blast, 6)
+    expect(dummy!.health).toBeCloseTo(1000 - blast, 6)
     expect(dummy!.state).toBeNull()
   })
 

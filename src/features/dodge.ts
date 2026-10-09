@@ -10,7 +10,8 @@
  * after another make a chain (`DodgeChain`): the slow and the energy grow
  * with it, up to its last step.
  */
-import { Dash, DodgeChain, Dodged, Energy, Enemy, Game, Health, Invulnerable, PerfectDodged, Player, Poise, Position, SlowMotion, Time, Tuning, BasicAttack } from "../schema.ts"
+import { Dash, DodgeChain, Dodged, Energy, Enemy, Game, Health, Invulnerable, Member, PerfectDodged, Player, Poise, Position, SlowMotion, Time, Tuning, BasicAttack } from "../schema.ts"
+import { dashOf } from "./build.ts"
 import { poiseOf } from "./poise.ts"
 
 const Attackers = Game.Query({ selection: { position: Game.Query.read(Position), enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise) } })
@@ -23,7 +24,8 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
         dash: Game.Query.write(Dash),
         energy: Game.Query.write(Energy),
         basicAttack: Game.Query.write(BasicAttack),
-        invulnerable: Game.Query.write(Invulnerable)
+        invulnerable: Game.Query.write(Invulnerable),
+        member: Game.Query.read(Member)
       },
       with: [Player]
     })
@@ -45,8 +47,9 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     const dodged = dodges.find((dodge) => dodge.target === entity.id.value)
     if (dodged === undefined) continue
     // Dashes back (whole charges; all of them back stops the wait for the next).
-    const charges = Math.min(tuning.dash.charges, dash.charges + rules.dashRefund)
-    data.dash.set({ ...dash, perfect: true, charges, cooldown: charges >= tuning.dash.charges ? 0 : dash.cooldown })
+    const most = dashOf(tuning, data.member.get().character).charges
+    const charges = Math.min(most, dash.charges + rules.dashRefund)
+    data.dash.set({ ...dash, perfect: true, charges, cooldown: charges >= most ? 0 : dash.cooldown })
     // The chain's next step (or a new chain): the slow and the energy grow with it.
     const steps = rules.chain.slow.length
     const count = Math.min(Math.max(1, steps), (chain.remaining > 0 ? chain.count : 0) + 1)

@@ -11,7 +11,7 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
-import { attackOf } from "../features/build.ts"
+import { attackOf, dashOf } from "../features/build.ts"
 import { Action, Aim, Airborne, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
@@ -112,13 +112,14 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     // Dash charges around the feet: one arc each, lit while ready, the next one filling back up.
     const ring = radius + 6
     const startAngle = -Math.PI / 2
-    const each = (Math.PI * 2) / tuning.dash.charges
-    const gap = tuning.dash.charges > 1 ? 0.18 : 0
-    for (let charge = 0; charge < tuning.dash.charges; charge++) {
+    const own = dashOf(tuning, data.member.get().character)
+    const each = (Math.PI * 2) / own.charges
+    const gap = own.charges > 1 ? 0.18 : 0
+    for (let charge = 0; charge < own.charges; charge++) {
       const from = startAngle + charge * each + gap / 2
       const span = each - gap
       if (charge < dash.charges) marks.strokeArc(position.x, position.y, ring, from, from + span, 3, view.aim, 0.6)
-      else if (charge === dash.charges) marks.strokeArc(position.x, position.y, ring, from, from + span * (1 - dash.cooldown / tuning.dash.cooldown), 3, 0x5b6b7d, 0.8)
+      else if (charge === dash.charges) marks.strokeArc(position.x, position.y, ring, from, from + span * (1 - dash.cooldown / own.cooldown), 3, 0x5b6b7d, 0.8)
     }
 
     // Charging the power attack: a ring filling up around the feet, brighter and thicker once full.

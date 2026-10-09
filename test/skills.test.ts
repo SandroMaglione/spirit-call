@@ -273,7 +273,7 @@ describe("ultimates (Shift)", () => {
       expect(toCenter(right!.position)).toBeLessThan(130 / 2)
       expect(toCenter(up!.position)).toBeLessThan(120 / 2)
       const ticks = Math.floor(spec.seconds / spec.tick)
-      expect(right!.health).toBeLessThanOrEqual(1000 - ticks * spec.power)
+      expect(right!.health).toBeLessThanOrEqual(1000 - ticks * hitBy("swordsman", spec.power))
       expect(far!.health).toBe(1000)
       expect(far!.position).toEqual({ x: center.x + outside.x, y: center.y + outside.y })
     })

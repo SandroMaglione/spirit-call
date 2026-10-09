@@ -34,7 +34,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
         state: Game.Query.read(ElementState)
       }
     }),
-    team: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player) }, with: [Member] })
+    team: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player), member: Game.Query.read(Member) } })
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), hitStop: Game.System.writeResource(HitStop) },
   events: { hit: Game.System.readEvent(Hit), reaction: Game.System.readEvent(Reaction), broke: Game.System.writeEvent(Broke) }
@@ -43,6 +43,9 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
   const rules = tuning.breaking
   const dt = resources.time.get().dt
   const hits = events.hit.all()
+  // Blows (not burns) fill a bar by the impact of the one on the field (what a benched one left behind too).
+  const fielded = queries.team.each().find(({ data }) => data.player.present)?.data.member.get().character
+  const impact = fielded === undefined ? 1 : tuning.characters[fielded].impact
   // Bursts and wall slams the team set off (an enemy's own on the player do not count), on the body they happened to.
   let breaks = 0
   const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && (reaction.kind === "burst" || reaction.kind === "slam"))
@@ -61,7 +64,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
     let gained = 0
     for (const hit of hits) {
       if (hit.entity !== entity.id.value || hit.killed) continue
-      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1)
+      gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1) * (hit.periodic ? 1 : impact)
     }
     const at = data.position.get()
     const reach = data.hurtbox.get().radius

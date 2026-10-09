@@ -16,7 +16,7 @@ import { roleNames } from "../../content/characters.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import { elements } from "../../content/elements.ts"
 import { skillSlots } from "../../content/skills.ts"
-import { aspectFor, attackOf, statsAtLevel } from "../../features/build.ts"
+import { aspectFor, attackOf, dashOf, statsAtLevel } from "../../features/build.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
 import { describeAmounts, describeSkill, statOrder } from "../describe.ts"
 import { elementOf } from "../draft.ts"
@@ -57,13 +57,29 @@ const Attributes = ({ store, actions, character }: { readonly store: UiStore; re
       <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name} · {roleNames[spec.role]}</span></div>
       {owned && <Bar value={progress.level / maxLevel} label="Level" />}
       <div class="character__stats" aria-label="Attributes">{statOrder.map((stat) => <Fact key={stat} icon={statIcons[stat]} label={statLabels[stat]} gain={owned && cost !== null && next[stat] > now[stat] ? `+${Math.round(next[stat] - now[stat])}` : undefined} value={Math.round(now[stat])} />)}</div>
-      <p class="dim">{owned ? classSpec.description : sourceNote(store, { kind: "character", id: character })}</p>
+      <Traits store={store} character={character} />
+      {!owned && <p class="dim">{sourceNote(store, { kind: "character", id: character })}</p>}
     </section>
     {owned && <Actions>{step !== null ? <Ascension store={store} actions={actions} character={character} /> : cost === null ? <span class="dim">Maximum level</span> : <>
       <span class="cost" aria-label={describeAmounts(tuning, cost)}><Icon name="gold" />{(cost.gold ?? 0).toLocaleString("en-US")}</span>
       <Pill icon="plus" disabled={!train(tuning, account, character).ok || store.busy.value} onClick={() => actions.train(character)}>Level Up</Pill>
     </>}</Actions>}
   </>
+}
+
+/**
+ * What her level does not change, beside the reference body (100%): her
+ * dashes (how many, how far), her impact (how fast her blows break), and her
+ * weight (how firmly she stands against a push).
+ */
+const Traits = ({ store, character }: { readonly store: UiStore; readonly character: CharacterId }) => {
+  const tuning = store.tuning.value, spec = tuning.characters[character], dash = dashOf(tuning, character)
+  const percent = (value: number) => `${Math.round(value * 100)}%`
+  return <div class="character__traits" aria-label="Traits">
+    <span class="trait" title={`${dash.charges} dashes of ${dash.distance}, each back in ${dash.cooldown} s`}><Icon name="dash" /><b>{dash.charges}×{dash.distance}</b><small>Dash</small></span>
+    <span class="trait" title="How fast her blows fill a break bar"><Icon name="impact" /><b>{percent(spec.impact)}</b><small>Impact</small></span>
+    <span class="trait" title="How firmly she stands: heavier, pushed less far"><Icon name="weight" /><b>{percent(spec.weight)}</b><small>Weight</small></span>
+  </div>
 }
 
 /**

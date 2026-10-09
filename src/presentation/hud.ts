@@ -15,6 +15,7 @@ import { view } from "../config/view.ts"
 import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, BasicAttack } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
+import { dashOf } from "../features/build.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { elementOf } from "../ui/draft.ts"
 import { setText } from "./draw.ts"
@@ -74,7 +75,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     attack: player === undefined ? 0 : recharge(player.data.basicAttack.get()),
     special: slots?.special.recharge ?? 0,
     // Ready while a charge is left; otherwise waiting for the next one.
-    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown / tuning.dash.cooldown,
+    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown / dashOf(tuning, player.data.member.get().character).cooldown,
     ultimate: slots?.ultimate.recharge ?? 1
   }
   // Seconds left, on the buttons that wait for a cooldown (the ultimate waits for energy, the attack only a moment).

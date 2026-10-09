@@ -3,10 +3,10 @@
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Member, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { stateSpeed } from "./elements.ts"
 import { charging } from "./basic-attack.ts"
-import { attackOf } from "./build.ts"
+import { attackOf, dashOf } from "./build.ts"
 
 /**
  * Turns controls into aim, facing, and velocity. She aims at the cursor
@@ -35,7 +35,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         stats: Game.Query.read(CombatStats),
         state: Game.Query.read(ElementState),
         raising: Game.Query.optional(Raising),
-        airborne: Game.Query.optional(Airborne)
+        airborne: Game.Query.optional(Airborne),
+        member: Game.Query.read(Member)
       },
       with: [Player]
     })
@@ -51,9 +52,10 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
   const controls = resources.controls.get()
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
-  const dashSpeed = tuning.dash.distance / tuning.dash.duration
-
   for (const { data } of queries.player.each()) {
+    // Her own dash (see `dashOf`): how many, how far, how soon back, how long untouchable.
+    const own = dashOf(tuning, data.member.get().character)
+    const dashSpeed = own.distance / own.duration
     const position = data.position.get()
     const aim = normalizeOr(sub(controls.aimPoint, position), data.aim.get())
     data.aim.set(aim)
@@ -66,32 +68,32 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     let remaining = dash.remaining
     let direction = dash.direction
     // Spent charges come back one at a time.
-    let charges = Math.min(tuning.dash.charges, dash.charges)
-    let cooldown = charges < tuning.dash.charges ? dash.cooldown - dt : 0
-    if (charges < tuning.dash.charges && cooldown <= 0) {
+    let charges = Math.min(own.charges, dash.charges)
+    let cooldown = charges < own.charges ? dash.cooldown - dt : 0
+    if (charges < own.charges && cooldown <= 0) {
       charges += 1
-      cooldown = charges < tuning.dash.charges ? cooldown + tuning.dash.cooldown : 0
+      cooldown = charges < own.charges ? cooldown + own.cooldown : 0
     }
     // Raising a guard, in the air, or held coming in after a fall, she stands: a dash under way stops, and a press is dropped.
     const rooted = data.raising.present || data.airborne.present || resources.arrival.get().remaining > 0
     if (rooted) remaining = 0
-    let buffered = rooted ? 0 : controls.dashPressed ? tuning.dash.inputBuffer : Math.max(0, dash.buffered - dt)
+    let buffered = rooted ? 0 : controls.dashPressed ? own.inputBuffer : Math.max(0, dash.buffered - dt)
     let since = dash.since + dt
     let perfect = dash.perfect
     let from = dash.from
 
     if (remaining <= 0 && buffered > 0 && charges > 0) {
       direction = normalizeOr(controls.move, faces)
-      remaining = tuning.dash.duration
+      remaining = own.duration
       events.action.emit({ kind: "dash", at: position })
-      if (cooldown <= 0) cooldown = tuning.dash.cooldown
+      if (cooldown <= 0) cooldown = own.cooldown
       charges -= 1
       buffered = 0
       since = 0
       perfect = false
       from = position
       const invulnerable = data.invulnerable.get().remaining
-      data.invulnerable.set({ remaining: Math.max(invulnerable, tuning.dash.invulnerability) })
+      data.invulnerable.set({ remaining: Math.max(invulnerable, own.invulnerability) })
     }
 
     if (remaining > 0) {
@@ -101,7 +103,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over (slower when soaked).
       const runSpeed = data.stats.get().speed * stateSpeed(tuning, data.state.get())
-      const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * tuning.dash.exitSpeedFactor))
+      const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * own.exitSpeedFactor))
       // Charging a power attack slows the player down, and so does a move recovering.
       const attack = data.basicAttack.get()
       const spec = attackOf(tuning, attack.attack)
