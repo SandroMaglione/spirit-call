@@ -54,7 +54,7 @@ no other burst and leaves no state.
 
 | Element | Job | Its state (alone) | Its burst |
 |---|---|---|---|
-| **Fire** | Dense packs | **Burning**: damage over time, spreading to the bodies it touches | **Flare**: the burn left, dealt at once, to it and the bodies around it |
+| **Fire** | Dense packs | **Burning**: damage over time, spreading to the bodies of its side it touches | **Flare**: the burn left, dealt at once, to it and the bodies around it |
 | **Water** | Fast enemies | **Soaked**: slowed | **Splash**: it and the bodies around it stop for a moment |
 | **Thunder** | Spread-out groups, enemies at range | **Charged**: a blow on it arcs on to the nearest body of its side, with a share of the damage, charging it | **Discharge**: thunder strikes the bodies around it |
 | **Wind** | Groups to scatter or bunch up | **Swept**: light, pushed further and gliding; slammed into a wall, stunned | **Gale**: it is launched along the blow, the bodies around it thrown away from it, all stunned a moment |
@@ -150,6 +150,10 @@ something:
   hurts her over time, Soaked slows her, Swept makes her light (pushed
   further), and Charged has no one of her side to arc to, nor Cracked a
   break bar to fill: those two only wait to burst.
+- **Fire spreads within a side.** A burning enemy pressed against her
+  never sets her alight (her own fire would come back to her: the Gunner
+  fell to it in every measured run); fire on the floor, an enemy's fire
+  blows, and pools still burn her as they do anyone.
 - **Bursts on her deal their damage, never take control**: she is never
   stopped, stunned, or launched by one. Control stays with the player.
 - **A state stays with the character** when she is switched out, and runs

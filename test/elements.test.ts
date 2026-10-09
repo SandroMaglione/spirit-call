@@ -226,6 +226,14 @@ describe("states alone", () => {
     expect(run.dummy({ x: 200, y: 300 }).state).toBeNull()
   })
 
+  it("burning spreads within a side: a burning enemy pressed against the player never sets her alight", () => {
+    const touching = { x: tuning.characters.swordsman.radius + tuning.enemies.dummy.radius + 2, y: 0 }
+    const run = range([touching], { x: 200, y: 0 })
+    run.putIn(state("burning", 2), touching)
+    run.step(4)
+    expect(run.world().player.state).toBeNull()
+  })
+
   it("soaked slows the player down", () => {
     const right = [{ frame: 0, press: ["right" as const] }]
     const dry = range([], { x: 200, y: 0 }, { keys: right })

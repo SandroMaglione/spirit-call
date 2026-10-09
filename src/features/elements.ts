@@ -97,9 +97,10 @@ export const burnDps = (tuning: TuningValue, atk: number): number => (atk * tuni
 
 /**
  * Runs states down: burning bodies take a burn every tick (from no side:
- * it hurts anyone) and set burning the bodies in no state they touch, for
- * the time the fire has left (so a fire passed around a pack burns out
- * together); a charged body's wait to arc again runs down. Spreading goes one
+ * it hurts anyone) and set burning the bodies of their own side in no state
+ * they touch, for the time the fire has left (so a fire passed around a pack
+ * burns out together, and a burning enemy never sets the team alight by
+ * touching her); a charged body's wait to arc again runs down. Spreading goes one
  * body further each step. A team member on the bench has no body: her state
  * runs down (and burns) all the same, but she touches no one.
  */
@@ -110,7 +111,8 @@ export const TickStates = Game.System("Shooter/TickStates", {
         position: Game.Query.optional(Position),
         body: Game.Query.optional(Body),
         state: Game.Query.write(ElementState),
-        affinities: Game.Query.read(ElementAffinities)
+        affinities: Game.Query.read(ElementAffinities),
+        enemy: Game.Query.optional(Enemy)
       },
       with: [Health]
     })
@@ -124,7 +126,7 @@ export const TickStates = Game.System("Shooter/TickStates", {
   const all = queries.bodies.each()
 
   // Run every state down, burning as it goes.
-  const fires: Array<{ readonly x: number; readonly y: number; readonly r: number; readonly state: ActiveState }> = []
+  const fires: Array<{ readonly x: number; readonly y: number; readonly r: number; readonly enemy: boolean; readonly state: ActiveState }> = []
   for (const { entity, data } of all) {
     const current = data.state.get().current
     if (current === null) continue
@@ -148,18 +150,18 @@ export const TickStates = Game.System("Shooter/TickStates", {
     data.state.set({ current: next })
     if (next?.id === "burning" && data.position.present && data.body.present) {
       const position = data.position.get()
-      fires.push({ x: position.x, y: position.y, r: data.body.get().radius, state: next })
+      fires.push({ x: position.x, y: position.y, r: data.body.get().radius, enemy: data.enemy.present, state: next })
     }
   }
 
-  // Fire spreads to the bodies in no state burning ones touch (unless they are immune to it).
+  // Fire spreads to the bodies of its side in no state burning ones touch (unless they are immune to it).
   if (fires.length === 0) return
   for (const { data } of all) {
     if (!data.position.present || !data.body.present || data.state.get().current !== null) continue
     if (durationFactor(tuning, data.affinities.get().fire) <= 0) continue
     const position = data.position.get()
     const r = data.body.get().radius
-    const fire = fires.find((other) => (other.x - position.x) ** 2 + (other.y - position.y) ** 2 <= (other.r + r + rules.contact) ** 2)
+    const fire = fires.find((other) => other.enemy === data.enemy.present && (other.x - position.x) ** 2 + (other.y - position.y) ** 2 <= (other.r + r + rules.contact) ** 2)
     if (fire === undefined) continue
     data.state.set({ current: { ...fire.state, nextTick: rules.tick } })
     events.reaction.emit({ at: position, kind: "apply", state: "burning", faction: null })
