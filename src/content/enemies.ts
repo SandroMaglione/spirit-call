@@ -458,7 +458,7 @@ export const enemies = {
     ],
     respawnDelay: 0
   }),
-  /** Keeps its distance and shoots bolts aimed ahead of you; up close, it sprays water that soaks and slows. */
+  /** Keeps its distance and shoots bolts aimed ahead of you; up close, it sprays water that soaks (your blows soften). */
   shooter: enemy({
     name: "Shooter",
     description: "Shoots ahead of you; sprays water up close.",
@@ -733,7 +733,7 @@ export const enemies = {
   juggernaut: enemy({
     name: "Juggernaut",
     description: "Armored until broken: blows barely scratch it and never push it. Break it, then strike.",
-    elements: affinities({ thunder: "weak", wind: "resists", rock: "weak" }),
+    elements: affinities({ thunder: "weak", water: "weak", wind: "resists", rock: "weak" }),
     hp: 300,
     atk: 110,
     def: 0,

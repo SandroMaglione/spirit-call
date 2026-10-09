@@ -346,6 +346,9 @@ export const Poise = Descriptor.Component<PoiseValue>()("Shooter/Poise")
 /** Stunned for `remaining` seconds: an enemy neither moves nor goes on with its attack. */
 export const Stunned = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Stunned")
 
+/** Disarmed for `remaining` seconds (water's Splash): an enemy still moves, but its windup is cut off and it starts no attack. */
+export const Disarmed = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Disarmed")
+
 /** The passives of what an entity has equipped (see `content/passives.ts`). */
 export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives")
 
@@ -1160,6 +1163,7 @@ export const Game = Schema.bind(
       Poise,
       Elite,
       Stunned,
+      Disarmed,
       Lobbed,
       Vortex,
       Totem,

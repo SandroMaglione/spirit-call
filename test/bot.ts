@@ -29,7 +29,6 @@ import type { Tally } from "../src/content/stars.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { createSimulation } from "../src/simulation.ts"
 import { projection } from "../src/config/view.ts"
-import { stateSpeed } from "../src/features/elements.ts"
 import { currentAttack } from "../src/features/moveset.ts"
 import { skillAim } from "../src/features/skills.ts"
 import { basicAttack } from "../src/content/aspects.ts"
@@ -232,7 +231,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       at: player.data.position.get(),
       body: player.data.body.get().radius,
       hurtbox: player.data.hurtbox.get().radius,
-      speed: player.data.stats.get().speed * stateSpeed(tuning, player.data.state.get()),
+      speed: player.data.stats.get().speed,
       dashReady: player.data.dash.get().charges > 0 && player.data.dash.get().remaining <= 0,
       charges: player.data.dash.get().charges,
       maxCharges: dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)).charges,

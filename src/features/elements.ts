@@ -38,6 +38,7 @@ import {
   Reaction,
   StateBurst,
   Stunned,
+  Disarmed,
   Time,
   Tuning,
   Zap
@@ -88,9 +89,9 @@ export const afflict = (tuning: TuningValue, current: ActiveState | null, elemen
 export const affinityDamage = (tuning: TuningValue, affinity: Affinity | undefined): number =>
   affinity === undefined ? 1 : tuning.elements.affinity[affinity].damage
 
-/** How fast a body in `state` moves, as a factor of its speed: soaked bodies are slowed. */
-export const stateSpeed = (tuning: TuningValue, state: { readonly current: ActiveState | null } | undefined): number =>
-  state?.current?.id === "soaked" ? 1 - tuning.elements.soaked.slow : 1
+/** How hard the blows of a body in `state` land, as a factor of their damage: a soaked body's are weaker. */
+export const stateDamage = (tuning: TuningValue, state: { readonly current: ActiveState | null } | undefined): number =>
+  state?.current?.id === "soaked" ? 1 - tuning.elements.soaked.weaken : 1
 
 /** Damage per second of a burn set by `atk`. */
 export const burnDps = (tuning: TuningValue, atk: number): number => (atk * tuning.elements.burning.power) / 100
@@ -177,6 +178,7 @@ const Reachable = Game.Query({
     invulnerable: Game.Query.optional(Invulnerable),
     knockback: Game.Query.write(Knockback),
     stunned: Game.Query.write(Stunned),
+    disarmed: Game.Query.write(Disarmed),
     enemy: Game.Query.optional(Enemy),
     player: Game.Query.optional(Player)
   },
@@ -190,7 +192,8 @@ const Reachable = Game.Query({
  *
  * - **Burning** (Flare): the burn left, at once, to the struck body, and a
  *   share of it to the bodies around.
- * - **Soaked** (Splash): they all stop (stunned) a moment, taking a little.
+ * - **Soaked** (Splash): they are all disarmed a moment (still moving, but
+ *   their windups cut off and no attack started), taking a little.
  * - **Charged** (Discharge): thunder strikes the nearest few.
  * - **Swept** (Gale): the struck body is launched along the blow, the others
  *   thrown away from it, all stunned a moment.
@@ -200,7 +203,7 @@ const Reachable = Game.Query({
  *
  * What it deals carries no element (it bursts nothing, leaves no state) and
  * fills no energy. On the team it only deals damage: she is never stopped,
- * stunned, or launched. A body immune to the state's element takes the
+ * stunned, disarmed, or launched. A body immune to the state's element takes the
  * damage, but nothing takes hold of it.
  */
 export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
@@ -242,6 +245,10 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
       if (!takes(target) || seconds <= 0) return
       target.data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
     }
+    const disarm = (target: (typeof bodies)[number], seconds: number) => {
+      if (!takes(target) || seconds <= 0) return
+      target.data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
+    }
     const away = (target: (typeof bodies)[number]) =>
       target.entity.id.value === burst.target ? burst.direction : normalizeOr(sub(target.data.position.get(), at), burst.direction)
     switch (state.id) {
@@ -253,7 +260,7 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
       case "soaked": {
         for (const { body } of around) {
           deal(body, (state.atk * rules.soaked.power) / 100, away(body))
-          stun(body, rules.soaked.stun)
+          disarm(body, rules.soaked.disarm)
         }
         break
       }

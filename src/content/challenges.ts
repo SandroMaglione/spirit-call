@@ -295,8 +295,8 @@ export const challenges = {
   ]),
 
   // Chapter 4: three characters.
-  /** Water in the floor: it soaks and slows whoever wades in. */
-  highTide: waves("High Tide", "Eight waves at the harbor, among pools that soak and slow.", "harbor", [
+  /** Water in the floor: it soaks whoever wades in, and soaked blows hit softer. */
+  highTide: waves("High Tide", "Eight waves at the harbor, among pools that soak: soaked blows hit softer.", "harbor", [
     ["shooter", "chaser", "chaser"],
     ["swarmer", "swarmer", "sniper"],
     [elite("shooter", "water"), "guardian"],

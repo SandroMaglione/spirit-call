@@ -138,13 +138,13 @@ The rules are in `docs/elements.md`; in short:
   different element **bursts** that state, paying it out at once, then
   leaves its own. Each element defines only its state and its burst.
 - **Designed around enemies.** Each element does a job against a kind of
-  enemy situation (fire for packs, water for fast enemies, thunder for
+  enemy situation (fire for packs, water for heavy hitters, thunder for
   spread-out groups, wind to scatter or group, rock for tanky enemies), and
   each state changes a different part of a fight. **A map** of those parts
   (`docs/elements.md`) holds the elements there are and keeps parts for
   those to come (ice for speed, and candidates), so nothing built now
-  takes the place of what comes later. Water moves from speed to how hard
-  an enemy hits, its job becoming heavy hitters (see `docs/roster.md`).
+  takes the place of what comes later: water, which slowed, now weakens
+  what it soaks, leaving speed to ice.
 - **An element belongs to a character**, applied through her skills and one
   moment of her aspect.
 - **Ground effects** (fire pools, puddles) affect everyone standing in them,

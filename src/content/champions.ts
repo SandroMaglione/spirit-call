@@ -181,7 +181,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
   /**
    * The Swarm Mother (chapter four's): small and fast, of the tide. Bites in
    * strings, darts down a lane at a player backing away and bites again,
-   * spits water at one standing still (it soaks and slows where it lands),
+   * spits water at one standing still (it soaks where it lands: her blows soften),
    * scatters everything around it with a ring of water when pressed, and
    * calls her brood. At 60% she darts twice and spits again; at 25% her
    * tides come in pairs, and her brood is bigger.

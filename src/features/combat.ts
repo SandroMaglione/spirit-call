@@ -65,7 +65,7 @@ import {
 import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken, levelGap, traitsIn } from "./build.ts"
-import { affinityDamage, afflict } from "./elements.ts"
+import { affinityDamage, afflict, stateDamage } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { plateTakes } from "./guard.ts"
 import { damageBonusPercent, damageTakenPercent, PassiveHolders, secondWindPercent } from "./passives.ts"
@@ -243,6 +243,9 @@ const Damageable = Game.Query({
 /** A team member dealing a blow: her level, for the level gap. */
 const Leveled = Game.Query({ selection: { position: Game.Query.read(Position), member: Game.Query.read(Member) } })
 
+/** Whoever dealt a blow, for the state it is in (a soaked one's blows are weaker, see `stateDamage`). */
+const Dealer = Game.Query({ selection: { position: Game.Query.read(Position), state: Game.Query.read(ElementState) } })
+
 const Benched = Game.Query({
   selection: { health: Game.Query.write(Health), stats: Game.Query.read(CombatStats), state: Game.Query.write(ElementState), member: Game.Query.read(Member) },
   with: [Member],
@@ -353,7 +356,10 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const gap = damage.faction === "enemy"
       ? (data.member.present ? levelGap(tuning, data.member.get().level, enemyLevel).taken : 1)
       : enemy !== undefined ? levelGap(tuning, dealerLevel(blow), enemyLevel).dealt : 1
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
+    // A soaked dealer's blows are weaker (not its burns: a burn's strength was set as it caught).
+    const dealer = blow.source === null || blow.periodic ? undefined : lookup.getHandle(blow.source.attacker, Dealer)
+    const soaked = dealer?.ok === true ? stateDamage(tuning, dealer.value.data.state.get()) : 1
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
     let current = data.immortal.present
       ? health.current

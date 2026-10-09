@@ -15,7 +15,7 @@ import { behaviorOf, currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { keepOut, readPlayer, skirmishTurn, steer, unstickDirection } from "./behaviors.ts"
 import { waveLevelBonus } from "./challenges.ts"
-import { durationFactor, stateSpeed } from "./elements.ts"
+import { durationFactor } from "./elements.ts"
 import { active } from "./ground.ts"
 import { enemyPace } from "./time.ts"
 import {
@@ -26,7 +26,6 @@ import {
   Brain,
   Challenge,
   CombatStats,
-  ElementState,
   Enemy,
   EnemyLevel,
   EnemyMode,
@@ -258,7 +257,6 @@ export const SteerEnemies = (() => {
           phase: Game.Query.read(AttackPhase),
           knockback: Game.Query.read(Knockback),
           mode: Game.Query.write(EnemyMode),
-          state: Game.Query.read(ElementState),
           stunned: Game.Query.read(Stunned),
           affinities: Game.Query.read(ElementAffinities)
         }
@@ -338,12 +336,11 @@ export const SteerEnemies = (() => {
     for (const { entity, data } of enemies) {
       const kind = data.enemy.get().kind
       const spec = tuning.enemies[kind]
-      // Speed is a stat, so what changes stats (levels) changes it; soaked enemies are slowed, charges included.
-      const slowed = stateSpeed(tuning, data.state.get())
+      // Speed is a stat, so what changes stats (levels) changes it.
       // Closing in on her while she is open, a melee enemy rushes.
       const behavior = behaviorOf(tuning, data.enemy.get())
       const closing = behavior.kind === "chase" || (behavior.kind === "skirmish" && data.mode.get() === "engage")
-      const speed = data.stats.get().speed * slowed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
+      const speed = data.stats.get().speed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
       const position = data.position.get()
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
@@ -358,7 +355,7 @@ export const SteerEnemies = (() => {
       // A charge moves straight down its lane at full speed, ignoring crowding.
       const attack = currentAttack(tuning, data.enemy.get(), attacker)
       if (attack?.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
-        data.velocity.set(scale(attacker.area.direction, attack.speed * slowed))
+        data.velocity.set(scale(attacker.area.direction, attack.speed))
         continue
       }
 

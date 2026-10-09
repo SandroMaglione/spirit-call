@@ -24,7 +24,7 @@ export interface Situation {
   readonly sight: boolean
   /** Center to center. */
   readonly distance: number
-  /** Its running speed now (a soaked enemy runs slower). */
+  /** Its running speed now. */
   readonly speed: number
   readonly dt: number
 }

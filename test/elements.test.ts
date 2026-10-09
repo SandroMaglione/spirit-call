@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { elements } from "../src/content/elements.ts"
 import type { ElementId, StateId } from "../src/content/elements.ts"
-import { afflict, affinityDamage, burnDps, stateSpeed } from "../src/features/elements.ts"
+import { afflict, affinityDamage, burnDps, stateDamage } from "../src/features/elements.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { blow, Damage, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Poise, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
+import { Attacker, blow, Damage, Disarmed, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Poise, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -31,6 +31,8 @@ const World = Game.Inspector("Test/Elements", {
         health: Game.Query.read(Health),
         state: Game.Query.read(ElementState),
         stunned: Game.Query.read(Stunned),
+        disarmed: Game.Query.read(Disarmed),
+        attacker: Game.Query.read(Attacker),
         knockback: Game.Query.read(Knockback)
       },
       with: [Enemy]
@@ -58,6 +60,8 @@ const World = Game.Inspector("Test/Elements", {
       health: data.health.get().current,
       state: data.state.get().current,
       stunned: data.stunned.get().remaining,
+      disarmed: data.disarmed.get().remaining,
+      winding: data.attacker.get().area !== null,
       knockback: data.knockback.get()
     })),
     player: {
@@ -168,11 +172,11 @@ describe("the rule", () => {
     expect(burst?.id).toBe("soaked")
   })
 
-  it("affinities scale damage; soaked bodies are slowed", () => {
+  it("affinities scale damage; a soaked body's blows are weaker", () => {
     expect(affinityDamage(tuning, "weak")).toBe(rules.affinity.weak.damage)
     expect(affinityDamage(tuning, undefined)).toBe(1)
-    expect(stateSpeed(tuning, { current: state("soaked") })).toBeCloseTo(1 - rules.soaked.slow, 9)
-    expect(stateSpeed(tuning, { current: state("burning") })).toBe(1)
+    expect(stateDamage(tuning, { current: state("soaked") })).toBeCloseTo(1 - rules.soaked.weaken, 9)
+    expect(stateDamage(tuning, { current: state("burning") })).toBe(1)
   })
 })
 
@@ -234,15 +238,36 @@ describe("states alone", () => {
     expect(run.world().player.state).toBeNull()
   })
 
-  it("soaked slows the player down", () => {
-    const right = [{ frame: 0, press: ["right" as const] }]
-    const dry = range([], { x: 200, y: 0 }, { keys: right })
-    const wet = range([], { x: 200, y: 0 }, { keys: right })
-    wet.putIn(state("soaked", 10), "player")
-    dry.step(40)
-    wet.step(40)
-    const moved = (run: typeof dry) => Math.hypot(run.player().position.x - center.x, run.player().position.y - center.y)
-    expect(moved(wet) / moved(dry)).toBeCloseTo(1 - rules.soaked.slow, 1)
+  it("a soaked body's blows are weaker, and it runs as fast as ever", () => {
+    // The player's blow on a sturdy dummy, dealt by her (so her state counts).
+    const dealt = (soaked: boolean) => {
+      const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { tuning: sturdy(), keys: [{ frame: 0, press: ["right"] }] })
+      if (soaked) run.putIn(state("soaked", 10), "player")
+      const Blow = Game.System("Test/BlowFromPlayer", {
+        queries: {
+          player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }),
+          enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] })
+        },
+        events: { damage: Game.System.writeEvent(Damage) }
+      }, ({ queries, events }) => {
+        const [player] = queries.player.each()
+        for (const { entity } of queries.enemies.each()) {
+          events.damage.emit({
+            target: Game.Entity.handle(entity.id, Health),
+            faction: "player",
+            direction: { x: 1, y: 0 },
+            blow: blow({ damage: 100, knockback: 0, source: { attacker: Game.Entity.handle(player!.entity.id, Position) } })
+          })
+        }
+      })
+      run.runtime.tick(Game.Schedule(Blow))
+      run.step(30)
+      return { taken: 100_000 - run.world().enemies[0]!.health, moved: run.player().position.x - center.x }
+    }
+    const dry = dealt(false)
+    const wet = dealt(true)
+    expect(wet.taken / dry.taken).toBeCloseTo(1 - rules.soaked.weaken, 6)
+    expect(wet.moved).toBeCloseTo(dry.moved, 6)
   })
 
   it("a blow on a charged body arcs on to the nearest other body of its side, charging it", () => {
@@ -283,14 +308,15 @@ describe("bursts", () => {
     expect(run.runtime.inspect(Reactions)).toEqual(["burning"])
   })
 
-  it("Splash: another element on a soaked body stops it and those around", () => {
+  it("Splash: another element on a soaked body disarms it and those around, without stopping them", () => {
     const run = field()
     run.putIn(state("soaked"), struck)
     run.strike(struck, "fire")
     run.step(4)
-    expect(run.dummy(struck).stunned).toBeGreaterThan(0)
-    expect(run.dummy(near).stunned).toBeGreaterThan(0)
-    expect(run.dummy(far).stunned).toBe(0)
+    expect(run.dummy(struck).disarmed).toBeGreaterThan(0)
+    expect(run.dummy(near).disarmed).toBeGreaterThan(0)
+    expect(run.dummy(far).disarmed).toBe(0)
+    expect(run.dummy(struck).stunned).toBe(0)
     expect(run.dummy(struck).state?.id).toBe("burning")
   })
 
@@ -435,6 +461,33 @@ describe("swept", () => {
     run.step(30)
     const [chaser] = run.world().enemies
     expect(chaser!.position.x - center.x).toBeCloseTo(200, 6)
+  })
+
+  it("cuts a disarmed enemy's windup and starts no attack, while it still moves; armed again, it attacks", () => {
+    const run = range([], { x: 200, y: 0 })
+    const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
+      commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 70, y: center.y }))
+    })
+    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    // Its turn comes, and it winds up a swipe.
+    const windsUp = (seconds: number) => {
+      for (let step = 0; step < steps(seconds); step += 1) {
+        run.step(1)
+        if (run.world().enemies[0]!.winding) return true
+      }
+      return false
+    }
+    expect(windsUp(6)).toBe(true)
+    const Disarm = Game.System("Test/Disarm", { queries: { enemies: Game.Query({ selection: { disarmed: Game.Query.write(Disarmed) }, with: [Enemy] }) } }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) data.disarmed.set({ remaining: 1 })
+    })
+    run.runtime.tick(Game.Schedule(Disarm))
+    const before = run.world().enemies[0]!.position
+    expect(windsUp(0.9)).toBe(false)
+    const after = run.world().enemies[0]!.position
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(5)
+    // Armed again, it swipes once its turn comes.
+    expect(windsUp(6)).toBe(true)
   })
 })
 
