@@ -15,7 +15,7 @@ Every character is three choices, made apart:
 - **Her class**: her range and rhythm (`aspects.md`).
 - **Her role**: what her kit does for the team. An **Attacker** fights; a
   **Healer** keeps the team's health up; a **Guardian** stops blows before
-  they land. (In code: `fighter`, `support`, `guardian`.)
+  they land. (In code: `attacker`, `healer`, `guardian`.)
 
 No element is tied to a role or a range, and no class to an element. **Two
 characters who share an element or a class always differ in role**: a
