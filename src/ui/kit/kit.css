@@ -176,6 +176,9 @@
 .card.is-new { box-shadow: 0 0 0 2px var(--gold-hi), 0 0 18px var(--gold-hi); }
 .card.is-locked .card__art { filter: grayscale(.8) brightness(.6); }
 .card.is-locked .card__foot { color: #8a8f9c; }
+.card.is-faded .card__art { filter: saturate(.25) brightness(.75); }
+.card.is-faded .card__art > * { opacity: .6; }
+.card.is-faded .card__foot { color: #6f7482; }
 .card[data-size="small"] { width: 48px; }
 .card[data-size="small"] .card__art { height: 44px; font-size: 24px; }
 .card[data-size="small"] .card__foot { height: 16px; font-size: 10.5px; line-height: 16px; }

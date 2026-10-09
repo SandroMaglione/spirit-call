@@ -164,23 +164,38 @@ is left, and keep text off it.
   saves it when a screen is left (and when an aspect or a relic is
   equipped), if it follows the rules; entering a run saves it too. Only a
   failure is shown.
-- **The loadout has a screen of its own** (`menu/Loadout.tsx`), since there
+- **Her gear has a screen of its own** (`menu/Gear.tsx`), since there
   will be many aspects, relics, and looks, each with its own explanation:
   tabs Aspect, Relics, Looks; the cards on the left (relics under her slot
   buttons, looks under Tint and Trail), her model in the middle, the one
   picked explained on the right with what can be done (Equip, Take off,
-  buy a relic's next tier or a look, Wear). Aspects and relics are equipped
-  for a member of the party, each on one member at most (equipping moves
-  it; see `aspects.md`, `relics.md`); looks are hers in every party, and a
-  tint picked shows on her model before it is worn. Her page's Loadout tab
-  sums it up (a row each, opening its tab), and each party place's aspect
-  button, with her relics' charms, opens it.
+  buy a relic's next tier or a look, Wear). It is hers alone: no roster
+  in its top bar (her page steps between characters). Aspects and relics
+  are equipped for a member of the party, each on one member at most
+  (equipping moves it; see `aspects.md`, `relics.md`); looks are hers in
+  every party, and a look picked shows on her model before it is worn (a
+  trail as she drifts along shedding it). Her page's Gear tab sums it up
+  as cards (her aspect, each relic slot, each kind of look; quieter where
+  nothing is chosen yet, `Card`'s `faded`), each opening the gear screen
+  on that very slot, and each party place's aspect button, with her
+  relics' charms, opens it.
+- **A relic's tier** shows as three overlapping diamonds, the first ones
+  lit (`TierMarks`): under the charm on its card, and leading each tier's
+  line in its panel.
+- **A look shows as itself**: a tint's card is her portrait wearing it, a
+  trail's a picture of what it sheds (drawn once by the showcase); the
+  shop's looks shelf tries the one picked on a model, like the gear
+  screen.
 - **The shop** (`menu/Shop.tsx`, from the home) sells, for dust, a relic
-  owned one tier up and its own looks; the Call's and the hard goals'
-  looks show where they come from. Its third tab is the **inventory**
-  (`menu/Inventory.tsx`: what the wallet holds, what each is for and where
-  it comes from), open before the shop is, so the home lists no inventory
-  of its own.
+  owned one tier up and its own looks; every look says where it comes
+  from at its panel's foot. Its third tab is the **inventory**
+  (`menu/Inventory.tsx`: what the wallet holds, where each comes from,
+  and what it is for at the panel's foot), open before the shop is, so
+  the home lists no inventory of its own.
+- **The top bar's tabs never move**: the bar is three columns with equal
+  sides, so its middle stays centered whatever stands at its ends (a
+  wallet shown on one tab and not another), and a tab is as wide as its
+  label in bold.
 - **The party's roster opens beside a place** when it is tapped (a panel of
   cards that scrolls, since the roster will grow), over the left of the
   screen; a tap on a card puts her there and closes it.

@@ -23,7 +23,7 @@ import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
 import { InventoryShelf } from "./Inventory.tsx"
-import { slotNames } from "./Loadout.tsx"
+import { slotNames } from "./Gear.tsx"
 import { ids, lookSource, Wallet } from "./parts.tsx"
 import type { Nav, ShopTab } from "./screens.ts"
 
@@ -51,7 +51,7 @@ const RelicShelf = ({ store, actions }: { readonly store: UiStore; readonly acti
       detail={`${slotNames[relic.slot]}${relic.element === null ? "" : ` · ${elements[relic.element].name}`} · Tier ${tierNames[tier]}`}
       note={price === null ? "At its last tier: called again, it turns into dust." : dust < (price.dust ?? 0) ? `${(price.dust ?? 0) - dust} more dust needed.` : undefined} noteIcon={price === null ? "check" : "info"}>
       <p class="dim">{relic.about}</p>
-      <div class="loadout__tiers">{relicTiers.map((each) => <p key={each} class="loadout__tier" data-state={each > tier ? "ahead" : each === tier ? "now" : "had"}><TierMarks tier={each} /><span>{relic.tiers[each].adds}</span></p>)}</div>
+      <div class="gear__tiers">{relicTiers.map((each) => <p key={each} class="gear__tier" data-state={each > tier ? "ahead" : each === tier ? "now" : "had"}><TierMarks tier={each} /><span>{relic.tiers[each].adds}</span></p>)}</div>
     </Panel>}
     <Actions>{price !== null && picked.value !== null && <Pill icon="plus" label={`Buy tier ${tier === 1 ? "II" : "III"} for ${price.dust} dust`} disabled={store.busy.value || dust < (price.dust ?? 0)} onClick={() => actions.buyRelic(picked.value!)}>
       <span class="call__button">Tier {tier === 1 ? "II" : "III"}<small><Icon name="dust" />{price.dust}</small></span>
@@ -68,7 +68,7 @@ const LookShelf = ({ store, actions }: { readonly store: UiStore; readonly actio
   const has = owns(account, { kind: "cosmetic", id: picked.value }), dust = account.wallet.dust ?? 0
   const source = lookSource(look, true, has || price === null ? 0 : (price.dust ?? 0) - dust)
   return <>
-    <div class="shop__cards scroll in-left"><Cards>{all.map((id) => {
+    <div class="shop__cards shop__cards--looks scroll in-left"><Cards>{all.map((id) => {
       const spec = cosmeticOf(tuning.cosmetics, id), owned = owns(account, { kind: "cosmetic", id }), cost = cosmeticPrice(tuning, id)
       return <Card key={id} art={<Portrait of={{ look: id }} />} label={spec.name} locked={!owned && cost === null}
         foot={owned ? spec.name : cost === null ? spec.name : <span class="shop__price"><Icon name="dust" />{cost.dust}</span>} selected={id === picked.value} mark={owned ? "tick" : undefined} onClick={() => (picked.value = id)} />

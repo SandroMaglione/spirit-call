@@ -10,7 +10,7 @@ import { useEffect, useRef } from "preact/hooks"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
 
-export const Card = ({ art, foot, tint, corner, mark, selected = false, locked = false, fresh = false, size, label, onClick }: {
+export const Card = ({ art, foot, tint, corner, mark, selected = false, locked = false, faded = false, fresh = false, size, label, onClick }: {
   /** A `Portrait`, or an icon. */
   readonly art: ComponentChildren
   readonly foot: ComponentChildren
@@ -23,13 +23,15 @@ export const Card = ({ art, foot, tint, corner, mark, selected = false, locked =
   /** The one being looked at. */
   readonly selected?: boolean
   readonly locked?: boolean
+  /** Nothing chosen there yet (an empty slot, the default): its art quieter. */
+  readonly faded?: boolean
   /** Just earned: it glows. */
   readonly fresh?: boolean
   readonly size?: "small" | "large"
   readonly label?: string
   readonly onClick?: (() => void) | undefined
 }) => {
-  const className = `card${selected ? " is-on" : ""}${locked ? " is-locked" : ""}${fresh ? " is-new" : ""}`
+  const className = `card${selected ? " is-on" : ""}${locked ? " is-locked" : ""}${faded ? " is-faded" : ""}${fresh ? " is-new" : ""}`
   const content = <>
     <span class="card__art">{art}</span>
     <span class="card__foot">{foot}</span>

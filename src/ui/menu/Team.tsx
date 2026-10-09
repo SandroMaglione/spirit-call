@@ -47,7 +47,7 @@ export const Team = ({ store, nav, draft, play, enter }: {
         </button>
         {member === undefined ? <span class="lineup__name dim">Empty</span> : <>
           <button type="button" class="lineup__name" aria-label={`Details for ${tuning.characters[member].name}`} onClick={() => nav.go({ kind: "character", character: member, tab: "overview" })}><Icon name={elementOf(tuning, member)} />{tuning.characters[member].name}<small>Lv {characterLevel(tuning, account, member).level}</small></button>
-          <button type="button" class="lineup__aspect" aria-label={`Loadout of ${tuning.characters[member].name}: ${aspectName(member)}`} onClick={() => nav.go({ kind: "loadout", character: member, tab: "aspect" })}>
+          <button type="button" class="lineup__aspect" aria-label={`Gear of ${tuning.characters[member].name}: ${aspectName(member)}`} onClick={() => nav.go({ kind: "gear", character: member, tab: "aspect" })}>
             <AbilityIcon kind={tuning.characters[member].class} />{aspectName(member)}
             {/* Her relics, slot by slot: a charm each (dim when empty). */}
             <span class="lineup__relics">{relicSlots.filter((slot) => slot !== "survival").map((slot) => {
