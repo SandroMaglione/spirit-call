@@ -15,6 +15,7 @@ import type { QuestId } from "../../content/quests.ts"
 import { relicOf, relicTiers } from "../../content/relics.ts"
 import type { RelicId } from "../../content/relics.ts"
 import { Icon } from "../Icon.tsx"
+import { ModelStage, Portrait } from "../kit/art.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Panel } from "../kit/panel.tsx"
@@ -69,10 +70,12 @@ const LookShelf = ({ store, actions }: { readonly store: UiStore; readonly actio
   return <>
     <div class="shop__cards scroll in-left"><Cards>{all.map((id) => {
       const spec = cosmeticOf(tuning.cosmetics, id), owned = owns(account, { kind: "cosmetic", id }), cost = cosmeticPrice(tuning, id)
-      return <Card key={id} art={<LookIcon kind={spec.kind} />} label={spec.name} locked={!owned && cost === null}
+      return <Card key={id} art={<Portrait of={{ look: id }} />} label={spec.name} locked={!owned && cost === null}
         foot={owned ? spec.name : cost === null ? spec.name : <span class="shop__price"><Icon name="dust" />{cost.dust}</span>} selected={id === picked.value} mark={owned ? "tick" : undefined} onClick={() => (picked.value = id)} />
     })}</Cards></div>
-    <Panel class="shop__brief in-right" icon={<LookIcon kind={look.kind} />} title={look.name} detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}
+    {/* Tried on: a tint on her spirit, a trail on the party's leader as she drifts along. */}
+    <div class="shop__stage"><ModelStage key={picked.value} character={look.character ?? store.menuDraft.value.team[0] ?? "swordsman"} tint={look.kind === "tint" ? picked.value : undefined} trail={look.kind === "trail" ? picked.value : undefined} /></div>
+    <Panel class="shop__brief shop__brief--side in-right" icon={<LookIcon kind={look.kind} />} title={look.name} detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}
       note={source.text} noteIcon={source.icon}>
       <p class="dim">{look.about}</p>
       {has && <p class="dim">Wear it from {look.character === null ? "a spirit's" : `${tuning.characters[look.character].name}'s`} gear.</p>}

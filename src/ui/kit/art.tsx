@@ -9,24 +9,27 @@ import { useSignal } from "@preact/signals"
 import { useRef } from "preact/hooks"
 
 import type { CharacterId } from "../../content/characters.ts"
+import type { CosmeticId } from "../../content/cosmetics.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import { Icon } from "../Icon.tsx"
 
 /**
  * Where a character's model stands, playing her idle, in the looks she
- * wears (`tint`: one tried on instead; `none`: her own colors). Its `--el`
- * (from a `data-element` around it) colours her rim light.
+ * wears (`tint`: one tried on instead; `none`: her own colors). With a
+ * `trail` (a look's, or `none` for her own) she drifts along shedding it,
+ * to try it on. Its `--el` (from a `data-element` around it) colours her
+ * rim light.
  */
-export const Model = ({ character, turn, reveal, tint, class: className = "" }: { readonly character: CharacterId; readonly turn?: number; readonly reveal?: boolean; readonly tint?: string | undefined; readonly class?: string }) => (
-  <div class={`model ${className}`} data-model={character} data-turn={turn} data-reveal={reveal ? "true" : undefined} data-tint={tint} />
+export const Model = ({ character, turn, reveal, tint, trail, class: className = "" }: { readonly character: CharacterId; readonly turn?: number; readonly reveal?: boolean; readonly tint?: string | undefined; readonly trail?: string | undefined; readonly class?: string }) => (
+  <div class={`model ${className}`} data-model={character} data-turn={turn} data-reveal={reveal ? "true" : undefined} data-tint={tint} data-trail={trail} />
 )
 
 /** A model the player can turn by dragging it; it fills its parent. This never sends input to the arena. */
-export const ModelStage = ({ character, tint }: { readonly character: CharacterId; readonly tint?: string | undefined }) => {
+export const ModelStage = ({ character, tint, trail }: { readonly character: CharacterId; readonly tint?: string | undefined; readonly trail?: string | undefined }) => {
   const turn = useSignal(-0.45), pulse = useSignal({ id: 0, x: 50, y: 50 })
   const drag = useRef<{ readonly pointer: number; readonly x: number; readonly turn: number } | null>(null)
   return <div class="model-stage">
-    <Model character={character} turn={turn.value} tint={tint} />
+    <Model character={character} turn={turn.value} tint={tint} trail={trail} />
     <button type="button" class="model-stage__touch" aria-label={`Rotate ${character}`}
       onPointerDown={(event) => {
         const rect = event.currentTarget.getBoundingClientRect()
@@ -42,12 +45,12 @@ export const ModelStage = ({ character, tint }: { readonly character: CharacterI
   </div>
 }
 
-/** What a portrait shows: a character, or an enemy kind. */
-export type PortraitOf = { readonly character: CharacterId } | { readonly enemy: EnemyKind }
+/** What a portrait shows: a character, an enemy kind, a look (a tint on her spirit, what a trail sheds), or what a character sheds on her own. */
+export type PortraitOf = { readonly character: CharacterId } | { readonly enemy: EnemyKind } | { readonly look: CosmeticId } | { readonly trail: CharacterId }
 
-/** A picture of a character or an enemy; it fills its parent (a card's art, a face). */
+/** A picture of a character, an enemy, or a look; it fills its parent (a card's art, a face). */
 export const Portrait = ({ of }: { readonly of: PortraitOf }) => (
-  <span class="portrait" data-portrait={"character" in of ? of.character : `enemy:${of.enemy}`} />
+  <span class="portrait" data-portrait={"character" in of ? of.character : "enemy" in of ? `enemy:${of.enemy}` : "look" in of ? `look:${of.look}` : `trail:${of.trail}`} />
 )
 
 /** A round portrait on `tint`'s colours (an element's): a party member, a roster pick. `size` in units (38 when left out). */

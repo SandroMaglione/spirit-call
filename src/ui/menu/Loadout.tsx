@@ -24,7 +24,7 @@ import { AbilityIcon } from "../AbilityIcon.tsx"
 import { describeAspectElement, describeMoveEffect } from "../describe.ts"
 import { aspectsFor, elementOf, equipInDraft, equipRelicInDraft, relicsFor } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
-import { Face, ModelStage } from "../kit/art.tsx"
+import { Face, ModelStage, Portrait } from "../kit/art.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Chips, Panel } from "../kit/panel.tsx"
@@ -151,8 +151,11 @@ const Relics = ({ store, actions, character, save }: { readonly store: UiStore; 
   </>
 }
 
-/** Her looks: her own, then the tints for her and the trails anyone wears; a tint picked shows on her model. */
-const Looks = ({ store, actions, character, preview }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId; readonly preview: (tint: CosmeticId | "none" | undefined) => void }) => {
+/** A look tried on her model: a tint, or a trail she sheds as she drifts along (`none`: her own). */
+type TryOn = { readonly kind: CosmeticKind; readonly id: CosmeticId | "none" }
+
+/** Her looks: her own, then the tints for her and the trails anyone wears; the one picked shows on her model. */
+const Looks = ({ store, actions, character, preview }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId; readonly preview: (tryOn: TryOn | undefined) => void }) => {
   const tuning = store.tuning.value, account = store.account.value
   const kind = useSignal<CosmeticKind>("tint")
   const worn = account.worn[character]?.[kind.value] ?? null
@@ -160,12 +163,13 @@ const Looks = ({ store, actions, character, preview }: { readonly store: UiStore
   const picked = useSignal<CosmeticId | null>(worn)
   const choose = (next: CosmeticId | null) => {
     picked.value = next
-    if (kind.value === "tint") preview(next ?? "none")
+    preview({ kind: kind.value, id: next ?? "none" })
   }
   const switchKind = (next: CosmeticKind) => {
     kind.value = next
     picked.value = account.worn[character]?.[next] ?? null
-    preview(undefined)
+    // A trail shows only while she sheds it: what she wears, until another is picked.
+    preview(next === "trail" ? { kind: "trail", id: picked.value ?? "none" } : undefined)
   }
   const look = picked.value === null ? null : cosmeticOf(tuning.cosmetics, picked.value)
   const has = picked.value === null || owns(account, { kind: "cosmetic", id: picked.value })
@@ -180,7 +184,7 @@ const Looks = ({ store, actions, character, preview }: { readonly store: UiStore
       <Cards>{[null, ...options].map((id) => {
         const spec = id === null ? null : cosmeticOf(tuning.cosmetics, id)
         const owned = id === null || owns(account, { kind: "cosmetic", id })
-        return <Card key={id ?? "own"} art={owned ? <LookIcon kind={kind.value} /> : <Icon name="lock" />} foot={spec?.name ?? "Her own"} label={spec?.name ?? "Her own look"}
+        return <Card key={id ?? "own"} art={<Portrait of={id !== null ? { look: id } : kind.value === "tint" ? { character } : { trail: character }} />} foot={spec?.name ?? "Her own"} label={spec?.name ?? "Her own look"}
           selected={id === picked.value} locked={!owned} mark={id === worn ? "tick" : undefined} onClick={() => choose(id)} />
       })}</Cards>
     </div>
@@ -205,13 +209,14 @@ export const Loadout = ({ store, actions, nav, character, tab, save }: {
   const tuning = store.tuning.value, account = store.account.value
   const element = elementOf(tuning, character)
   // A tint tried on in the Looks tab shows on her model; leaving the tab puts back what she wears.
-  const tryOn = useSignal<CosmeticId | "none" | undefined>(undefined)
+  const tryOn = useSignal<TryOn | undefined>(undefined)
   const go = (next: LoadoutTab) => {
     tryOn.value = undefined
     nav.replace({ kind: "loadout", character, tab: next })
   }
   return <Screen name="loadout" element={element}>
-    <div class="loadout__stage" data-tab={tab}><ModelStage key={`${character}/${tryOn.value ?? ""}`} character={character} tint={tab === "looks" ? tryOn.value : undefined} /></div>
+    <div class="loadout__stage" data-tab={tab}><ModelStage key={`${character}/${tryOn.value?.kind ?? ""}/${tryOn.value?.id ?? ""}`} character={character}
+      tint={tab === "looks" && tryOn.value?.kind === "tint" ? tryOn.value.id : undefined} trail={tab === "looks" && tryOn.value?.kind === "trail" ? tryOn.value.id : undefined} /></div>
     <TopBar icon={element} lead={tuning.characters[character].name} title="Loadout" close={nav.back} end={tab === "aspect" ? undefined : <Wallet store={store} currencies={["dust"]} />}>
       <div class="loadout__top">
         <div class="roster scroll-x" aria-label="Characters">{ids(tuning.characters).filter((id) => owns(account, { kind: "character", id })).map((id) => <button key={id} type="button" class="face-button" aria-label={`Loadout of ${tuning.characters[id].name}`} aria-pressed={id === character}
@@ -221,6 +226,6 @@ export const Loadout = ({ store, actions, nav, character, tab, save }: {
     </TopBar>
     {tab === "aspect" ? <Aspects key={character} store={store} character={character} save={save} />
       : tab === "relics" ? <Relics key={character} store={store} actions={actions} character={character} save={save} />
-      : <Looks key={character} store={store} actions={actions} character={character} preview={(tint) => (tryOn.value = tint)} />}
+      : <Looks key={character} store={store} actions={actions} character={character} preview={(next) => (tryOn.value = next)} />}
   </Screen>
 }

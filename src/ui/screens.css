@@ -159,6 +159,9 @@
 /* ---------- shop ---------- */
 .shop__cards { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 376px; z-index: 3; padding: 6px 6px 28px; }
 .shop__brief { position: absolute; left: calc(var(--left) + 386px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
+/* The looks shelf: her model trying the look on between the cards and a narrower brief. */
+.shop__stage { position: absolute; top: 40px; bottom: 8px; left: calc(var(--left) + 376px); right: calc(var(--right) + 290px); }
+.shop__brief--side { left: auto; width: 280px; }
 .shop__price { display: inline-flex; align-items: center; gap: 3px; }
 .shop__price .menu-icon { font-size: 14px; }
 .shop__empty { padding: 10px 4px; font-size: 13px; }
