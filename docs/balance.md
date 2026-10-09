@@ -5,6 +5,17 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Touch aims what arcs at the pick (2026-10-10)
+
+On touch a charge, held and released, now aims at the enemy the assist
+picks (a lob lands on it), and a tapped skill that is set down goes to the
+pick (see `docs/aspects.md`, "Aiming on touch"). The bot plays with touch,
+so its runs moved: in CI's audit four outcomes flipped (Pack Leader: the
+Swordsman with skills on seed 1337 and with the basic attack on seed 42
+fell, with skills on seed 42 cleared; the Warlord's team with skills timed
+out instead of falling), and the rest changed in time and hits both ways.
+Read as the bot's noise, not a change in difficulty; the baseline is CI's
+own report of this change.
 ## The roles' own measures (2026-10-10)
 
 The roster (`docs/roster.md`) holds healers about equal by health restored
