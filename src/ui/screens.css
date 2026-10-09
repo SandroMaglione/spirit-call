@@ -198,11 +198,9 @@
 /* The ranks, fixed above the quest list (which scrolls under them), styled like the top tabs. */
 .quests__ranks { position: absolute; left: var(--left); top: 62px; width: clamp(200px, 31cqw, 262px); z-index: 4; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .quests__ranks::-webkit-scrollbar { display: none; }
-.quests__ranks button { flex: 1 0 auto; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 10px; font-size: 13px; }
+.quests__ranks button { flex: 1 0 auto; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 14px; font-size: 13px; }
 /* The tabs' larger touch area stays inside the scrolling row. */
 .quests__ranks button::after { inset: -5px 0; }
-.quests__ranks button b { min-width: 20px; height: 18px; padding: 0 4px; border-radius: 9px; display: grid; place-items: center; font-size: 10.5px; font-weight: 800; background: rgba(255, 255, 255, .12); }
-.quests__ranks button[aria-selected="true"] b { background: var(--ink); color: var(--cream); }
 .quests__ranks button .menu-icon { font-size: 11px; }
 .quests__ranks button.is-locked { opacity: .55; }
 .quests__list.has-ranks { top: 114px; }
