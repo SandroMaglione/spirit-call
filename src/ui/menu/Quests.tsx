@@ -13,7 +13,7 @@ import type { ChestRef, Play } from "../../account/account.ts"
 import type { QuestId, StarGroup } from "../../content/quests.ts"
 import { perfectDustAt, relicOf } from "../../content/relics.ts"
 import type { RelicId } from "../../content/relics.ts"
-import { RelicIcon, TierMarks } from "../RelicIcon.tsx"
+import { RelicIcon } from "../RelicIcon.tsx"
 import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
 import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
@@ -339,7 +339,7 @@ const RelicPrize = ({ store, relic, plain }: { readonly store: UiStore; readonly
     </span>
     <div class="relic-prize__about">
       <Label end={had ? <span class="claimed"><Icon name="check" />Claimed</span> : undefined}>New relic</Label>
-      <b class="relic-prize__name">{spec.name}<TierMarks tier={1} /></b>
+      <b class="relic-prize__name">{spec.name}</b>
       <p>{spec.tiers[1].adds}</p>
       <p class="relic-prize__ask">{plain ? <><Icon name="check" />On the first clear</> : <><span class="relic-prize__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>All three stars in one run</>}</p>
     </div>

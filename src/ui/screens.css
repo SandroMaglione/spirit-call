@@ -35,7 +35,7 @@
 .star.is-earned svg path { fill: currentColor; }
 .star.is-fresh { animation: star-in .5s cubic-bezier(.3, 1.6, .5, 1) both; }
 /* A quest's relic, as the prize it is: its icon in a turning gold ring, a soft pulse, a passing glint. */
-.relic-prize, .relic-prize.brief-section { display: flex; align-items: center; gap: 14px; padding: 18px 14px 0; }
+.relic-prize, .relic-prize.brief-section { display: flex; align-items: center; gap: 12px; padding: 18px 14px 0 6px; }
 .relic-prize__orb { position: relative; width: 50px; height: 50px; flex: none; display: grid; place-items: center; border-radius: 50%; animation: unlock-pulse 2.4s ease-in-out infinite; }
 .relic-prize__ring { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, #fff6d6, var(--gold) 20%, #8a6a2e 35%, var(--gold-hi) 50%, #fff6d6 55%, var(--gold) 70%, #8a6a2e 85%, #fff6d6); -webkit-mask: radial-gradient(circle, transparent 21.5px, #000 22.5px); mask: radial-gradient(circle, transparent 21.5px, #000 22.5px); animation: unlock-turn 5s linear infinite; }
 .relic-prize__icon { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; color: var(--gold-hi); background: radial-gradient(circle at 35% 30%, #3f6a95, #151f30 72%); }
@@ -55,6 +55,8 @@
 .goal__stars { display: inline-flex; gap: 0; font-size: 11px; }
 .goal__stars .menu-icon { margin: 0 -1px; }
 .goal__dust { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; font-weight: 800; color: var(--cream); }
+/* The dust icon's sparkles sit high in its box: lowered to sit on the text's line. */
+.goal__dust .menu-icon { translate: 0 2px; }
 @keyframes star-in { from { transform: scale(0) rotate(-40deg); } }
 .row[aria-pressed="true"] .star { color: rgba(59, 66, 85, .3); }
 .row[aria-pressed="true"] .star.is-earned { color: #b8862d; filter: none; }
