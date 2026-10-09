@@ -81,7 +81,6 @@
 /* Room around the faces, so the picked one's glow is never cut square by the scrolling row. */
 .roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); }
 /* The roster stands in the middle of the bar whatever sits beside it (a longer name, the gold shown only for one owned), so the faces never shift. */
-.character .topbar__fill { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: max-content; max-width: calc(100% - 400px); }
 .character .crumb { max-width: 190px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .character .crumb { margin-right: auto; }
 .character__side { position: absolute; right: var(--right); top: 76px; width: 236px; z-index: 3; display: grid; gap: 6px; text-shadow: 0 1px 3px #0007; }

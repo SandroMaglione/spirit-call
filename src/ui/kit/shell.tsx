@@ -35,8 +35,10 @@ export const TopBar = ({ icon, lead, title, detail, children, end, close }: {
   <header class="topbar">
     <span class="crumb"><Icon name={icon} />{lead !== undefined && <>{lead} <i>/</i></>}<b>{title}</b>{detail !== undefined && <i>{detail}</i>}</span>
     <div class="topbar__fill">{children}</div>
-    {end}
-    {close !== undefined && <RoundButton icon="close" label="Close" onClick={close} />}
+    <span class="topbar__end">
+      {end}
+      {close !== undefined && <RoundButton icon="close" label="Close" onClick={close} />}
+    </span>
   </header>
 )
 
@@ -50,7 +52,7 @@ export interface Tab<Id extends string> {
 /** A few views of the same screen, in the top bar. */
 export const TopTabs = <Id extends string>({ label, tabs, current, onChange }: { readonly label: string; readonly tabs: ReadonlyArray<Tab<Id>>; readonly current: Id; readonly onChange: (id: Id) => void }) => (
   <div class="top-tabs" role="tablist" aria-label={label}>
-    {tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={tab.id === current} onClick={() => onChange(tab.id)}>{tab.label}</button>)}
+    {tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={tab.id === current} data-label={tab.label} onClick={() => onChange(tab.id)}><span>{tab.label}</span></button>)}
   </div>
 )
 
