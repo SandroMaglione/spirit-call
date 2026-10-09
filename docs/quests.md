@@ -36,10 +36,10 @@ and 6. Relics are smaller: the first comes with chapter 2's first quest
 
 | Chapter | Team | Enemy levels | Each quest's new thing | At its end |
 |---|---|---|---|---|
-| 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Gunner; the Spirit Call opens |
-| 2 · Embers | + Gunner | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist) |
-| 3 · Gathering Storm | 2 | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | the Tidecaller |
-| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Marksman) |
+| 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Tidecaller; the Spirit Call opens |
+| 2 · Embers | + Tidecaller | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist) |
+| 3 · Gathering Storm | 2 | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | Bastion |
+| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Whirlpool) |
 | 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | |
 | 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | an aspect (Riptide) |
 
@@ -180,8 +180,9 @@ what its element struggles against: enemies that resist it (the content
 check makes sure some do), and elites carrying it, which are immune to it.
 A trial is as long as a quest; playing well and fast is how to farm more.
 
-- **They open with the main line**: wind after chapter 2, fire after 3,
-  water after 4, thunder after 5, rock after 6. A character can be farmed
+- **They open with the main line**, the quest team's elements first: wind
+  after chapter 2, water after 3, rock after 4, fire after 5, thunder
+  after 6. A character can be farmed
   for only once her element's chapter is behind the player.
 - **Ranks** at fixed enemy levels (11, 17, 23, 29, 35, then 41 to 59 with
   the main line's own ranks), each opening with a chapter's last quest and showing only what the main line has brought by

@@ -36,12 +36,12 @@ describe("a character's dash", () => {
 
 describe("a character's weight", () => {
   it("divides the push she takes: a heavier body is pushed less far", () => {
-    const pushed = (character: "swordsman" | "gunner" | "stonekeeper") => knockbackTaken(defaultTuning, undefined, false, character)
-    expect(pushed("stonekeeper")).toBeCloseTo(defaultTuning.player.knockbackTaken / defaultTuning.characters.stonekeeper.weight, 9)
-    expect(pushed("stonekeeper")).toBeLessThan(pushed("swordsman"))
+    const pushed = (character: "swordsman" | "gunner" | "bastion") => knockbackTaken(defaultTuning, undefined, false, character)
+    expect(pushed("bastion")).toBeCloseTo(defaultTuning.player.knockbackTaken / defaultTuning.characters.bastion.weight, 9)
+    expect(pushed("bastion")).toBeLessThan(pushed("swordsman"))
     expect(pushed("gunner")).toBeGreaterThan(pushed("swordsman"))
     // Enemies are pushed by their kind, whoever is on the field.
-    expect(knockbackTaken(defaultTuning, "chaser", false, "stonekeeper")).toBe(defaultTuning.enemies.chaser.knockbackTaken)
+    expect(knockbackTaken(defaultTuning, "chaser", false, "bastion")).toBe(defaultTuning.enemies.chaser.knockbackTaken)
   })
 })
 

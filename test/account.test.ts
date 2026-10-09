@@ -39,7 +39,7 @@ describe("account rules", () => {
     const cleared = { ...fresh(), quests: { bruteKing: { 1: { attempts: 1, clears: 1, firstClearedAt: 1500, stars: [0] } } } }
     const { account, granted } = withClearedRewards(defaultTuning, cleared, 3000)
     expect(granted).toEqual(defaultTuning.quests.bruteKing.rewards.unlocks)
-    expect(owns(account, { kind: "character", id: "tidecaller" })).toBe(true)
+    expect(owns(account, { kind: "character", id: "bastion" })).toBe(true)
     expect(withClearedRewards(defaultTuning, account, 4000).granted).toEqual([])
     expect(withClearedRewards(defaultTuning, fresh(), 4000).granted).toEqual([])
   })

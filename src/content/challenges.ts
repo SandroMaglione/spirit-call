@@ -629,16 +629,17 @@ export const challenges = {
   windTrial3: trial("Wind Trial", "monastery", ["brute", "guardian", "swarmer"], ["charger", "sniper", "shooter"], null),
   windTrial4: trial("Wind Trial", "monastery", ["brute", "guardian", "swarmer"], ["stalker", "warden", "charger"], null),
   windTrial5: trial("Wind Trial", "monastery", ["juggernaut", "galeCaster", "brute", "guardian"], ["stalker", "volatile", "warden"], null),
-  fireTrial: trial("Fire Trial", "kilnworks", ["brute"], ["chaser", "guardian", "shooter"], "fire"),
-  fireTrial2: trial("Fire Trial", "kilnworks", ["brute", "charger"], ["guardian", "chaser", "sniper"], "fire"),
-  fireTrial3: trial("Fire Trial", "kilnworks", ["brute", "charger", "stalker"], ["warden", "guardian", "chaser"], "fire"),
-  fireTrial4: trial("Fire Trial", "kilnworks", ["volatile", "brute", "charger", "stalker"], ["juggernaut", "galeCaster", "guardian"], "fire"),
-  waterTrial: trial("Water Trial", "harbor", ["shooter"], ["charger", "guardian", "swarmer"], "water"),
-  waterTrial2: trial("Water Trial", "harbor", ["shooter", "warden"], ["stalker", "brute", "chaser"], "water"),
-  waterTrial3: trial("Water Trial", "harbor", ["shooter", "warden"], ["juggernaut", "volatile", "galeCaster"], "water"),
-  thunderTrial: trial("Thunder Trial", "necropolis", ["sniper"], ["warden", "guardian", "chaser"], "thunder"),
-  thunderTrial2: trial("Thunder Trial", "necropolis", ["sniper"], ["juggernaut", "stalker", "galeCaster"], "thunder"),
-  rockTrial: trial("Rock Trial", "citadel", ["swarmer", "stalker", "galeCaster"], ["juggernaut", "brute", "chaser"], null),
+  // Its first rank opens before the main line brings water floors: away from the harbor.
+  waterTrial: trial("Water Trial", "sanctuary", ["shooter"], ["chaser", "guardian", "swarmer"], "water"),
+  waterTrial2: trial("Water Trial", "harbor", ["shooter"], ["charger", "guardian", "swarmer"], "water"),
+  waterTrial3: trial("Water Trial", "harbor", ["shooter", "warden"], ["stalker", "brute", "chaser"], "water"),
+  waterTrial4: trial("Water Trial", "harbor", ["shooter", "warden"], ["juggernaut", "volatile", "galeCaster"], "water"),
+  rockTrial: trial("Rock Trial", "citadel", ["swarmer"], ["brute", "chaser", "guardian"], null),
+  rockTrial2: trial("Rock Trial", "citadel", ["swarmer", "stalker"], ["brute", "charger", "chaser"], null),
+  rockTrial3: trial("Rock Trial", "citadel", ["swarmer", "stalker", "galeCaster"], ["juggernaut", "brute", "chaser"], null),
+  fireTrial: trial("Fire Trial", "kilnworks", ["brute", "charger", "stalker"], ["warden", "guardian", "chaser"], "fire"),
+  fireTrial2: trial("Fire Trial", "kilnworks", ["volatile", "brute", "charger", "stalker"], ["juggernaut", "galeCaster", "guardian"], "fire"),
+  thunderTrial: trial("Thunder Trial", "necropolis", ["sniper"], ["juggernaut", "stalker", "galeCaster"], "thunder"),
 
   // Extras.
   /** The Training Ground (an Extra): dummies to practice on, a fire pool near each side, nothing to fear. */

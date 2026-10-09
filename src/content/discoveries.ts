@@ -61,10 +61,10 @@ export const discoveries = {
     check: clearWith("stormcaller"),
     rewards: { crystals: 30 }
   }),
-  withStonekeeper: discovery({
+  withBastion: discovery({
     name: "Bastion",
     description: "Clear a quest or tier with Bastion on the team.",
-    check: clearWith("stonekeeper"),
+    check: clearWith("bastion"),
     rewards: { crystals: 30 }
   }),
   fullTeam: discovery({

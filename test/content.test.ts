@@ -44,9 +44,9 @@ describe("content", () => {
     const broken: Tuning = { ...defaultTuning, characters: { ...defaultTuning.characters, swordsman: { ...swordsman, stats: { ...swordsman.stats, atk: swordsman.stats.atk * 2 } } } }
     expect(validateContent(broken)).toEqual([expect.stringMatching(/^character swordsman: her body scores 2\.\d+, off her budget 1\.050 \(attacker, close range\)/)])
     // A guardian spends her budget on health, not damage: a bulky body with an attacker's ATK is too much.
-    const bastion = defaultTuning.characters.stonekeeper
-    const greedy: Tuning = { ...defaultTuning, characters: { ...defaultTuning.characters, stonekeeper: { ...bastion, stats: { ...bastion.stats, atk: 100 } } } }
-    expect(validateContent(greedy)).toEqual([expect.stringContaining("character stonekeeper: her body scores")])
+    const bastion = defaultTuning.characters.bastion
+    const greedy: Tuning = { ...defaultTuning, characters: { ...defaultTuning.characters, bastion: { ...bastion, stats: { ...bastion.stats, atk: 100 } } } }
+    expect(validateContent(greedy)).toEqual([expect.stringContaining("character bastion: her body scores")])
   })
 
   it("holds aspects to their plain aspect's damage, more for one fighting closer", () => {

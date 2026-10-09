@@ -193,7 +193,7 @@ export const characters = {
     skills: { special: "sparkTotem", ultimate: "thunderclap" }
   }),
   /** Rock, Disc, guardian: a tank, the sturdiest and slowest, hitting lightly; cracks the toughest with an Earthrise, and guards the team with stone plates. */
-  stonekeeper: character({
+  bastion: character({
     name: "Bastion",
     stats: { hp: 85, atk: 72, def: 30, speed: 275 },
     radius: 16,

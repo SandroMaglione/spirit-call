@@ -12,7 +12,7 @@ import { center, cursorAt, doubleTap, placeDummies, start, steps } from "./helpe
 import type { StartOptions } from "./helpers.ts"
 
 const effect = defaultTuning.skills.stoneGuard.effect
-const bastion = { character: "stonekeeper" } as const
+const bastion = { character: "bastion" } as const
 const raise = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
   for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
@@ -74,7 +74,7 @@ const field = (dummies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
 
 describe("raising a guard", () => {
   it("is Bastion's ultimate", () => {
-    expect(defaultTuning.characters.stonekeeper.skills.ultimate).toBe("stoneGuard")
+    expect(defaultTuning.characters.bastion.skills.ultimate).toBe("stoneGuard")
     expect(effect.kind).toBe("guard")
   })
 

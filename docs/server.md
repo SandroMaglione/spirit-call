@@ -89,7 +89,9 @@ to by reference, so destroying a preview never touches it.
   keeping the calls that remain (relics and supplies left the Call; what
   they gave stays). `0009` added perfect clears to quest progress, and the
   shop's weekly stock to the account (`shop_period`, `shop_bought`; the
-  stock was dropped soon after, and the columns are left unused). Main's CI applies new ones before deploying prod. Previews and
+  stock was dropped soon after, and the columns are left unused). `0010`
+  reset every account once more, for the release roster (where characters
+  come from changed; see "No players yet" below). Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
 - **No players yet: reset, do not migrate.** Until the game opens to
   players (decided by the developer, and written here when it happens),

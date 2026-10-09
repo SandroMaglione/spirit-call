@@ -4,7 +4,8 @@
     "gunner",
     "tidecaller",
     "stormcaller",
-    "stonekeeper"
+    "stonekeeper",
+    "bastion"
   ],
   "weapons": [
     "trainingBlade",
@@ -89,14 +90,17 @@
     "windTrial5",
     "fireTrial",
     "fireTrial2",
-    "fireTrial3",
-    "fireTrial4",
     "waterTrial",
     "waterTrial2",
     "waterTrial3",
     "thunderTrial",
-    "thunderTrial2",
-    "rockTrial"
+    "rockTrial",
+    "waterTrial4",
+    "rockTrial2",
+    "rockTrial3",
+    "fireTrial3",
+    "fireTrial4",
+    "thunderTrial2"
   ],
   "attacks": [
     "sword",
@@ -194,6 +198,7 @@
     "discharge",
     "gale",
     "withStonekeeper",
+    "withBastion",
     "shatter"
   ],
   "classes": [
@@ -274,7 +279,8 @@
     "rockEssence"
   ],
   "banners": [
-    "stormAndStone"
+    "stormAndStone",
+    "emberAndStorm"
   ],
   "retired": {
     "skills": [
@@ -285,7 +291,8 @@
     "discoveries": [
       "steam",
       "carried",
-      "shocked"
+      "shocked",
+      "withStonekeeper"
     ],
     "weapons": [
       "trainingBlade",
@@ -306,7 +313,10 @@
       "staff"
     ],
     "challenges": [
-      "endless"
+      "endless",
+      "fireTrial3",
+      "fireTrial4",
+      "thunderTrial2"
     ],
     "materials": [
       "fireShard",
@@ -324,6 +334,12 @@
       "rockShard",
       "rockCore",
       "rockHeart"
+    ],
+    "characters": [
+      "stonekeeper"
+    ],
+    "banners": [
+      "stormAndStone"
     ]
   }
 }
