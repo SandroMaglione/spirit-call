@@ -25,7 +25,7 @@ import { Icon } from "../Icon.tsx"
 import { Face, ModelStage } from "../kit/art.tsx"
 import { Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
-import { Fact, Label, Panel } from "../kit/panel.tsx"
+import { Bar, Fact, Label, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import type { UiActions, UiStore } from "../store.ts"
 import { CallReveal } from "./CallReveal.tsx"
@@ -74,6 +74,8 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
   // The shares as the pool stands now, of a call that brings no character.
   const odds = shares(tuning, account)
   const pool = rareLeft(tuning, account), sigils = account.wallet.sigils ?? 0
+  // The calls a character is certain by: the account's first comes sooner.
+  const characterCap = account.calls.firstCharacter ? tuning.calls.character.guarantee : tuning.calls.character.firstGuarantee
   // With one banner, it runs on: there is nothing to count down to.
   const ends = tuning.banners[nextBanner(tuning, now)] === spec ? undefined : `Ends in ${describeTimeUntil(running.until, now)}`
   const note = problem?.kind === "callsLocked"
@@ -158,6 +160,20 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
       <Cards>{spec.characters.map((id) => <CharacterCard key={id} store={store} character={id} selected={id === focus && !owned(id)} mark={owned(id) ? "tick" : undefined}
         foot={owned(id) ? "Yours" : id === focus ? "Focus" : "Pick"} onClick={owned(id) || id === focus ? undefined : () => actions.focus(banner, id)} />)}</Cards>
       {note !== undefined && <p class="call__note"><Icon name="info" />{note}</p>}
+      {/* How far each guarantee is (see docs/calls.md): the character's bar marks where her odds start rising. */}
+      {problem?.kind !== "callsLocked" && <div class="call__pity">
+        <div>
+          <span><span><Icon name="character" />Character</span><span>within {left.character}</span></span>
+          <div class="bar" role="progressbar" aria-label={`${account.calls.sinceCharacter} of ${characterCap} calls toward a certain character`} aria-valuenow={account.calls.sinceCharacter} aria-valuemin={0} aria-valuemax={characterCap}>
+            <i style={{ width: `${(account.calls.sinceCharacter / characterCap) * 100}%` }} />
+            {tuning.calls.character.softFrom < characterCap && <span class="call__soft" style={{ left: `${((tuning.calls.character.softFrom - 1) / characterCap) * 100}%` }} title="From here her odds rise each call" />}
+          </div>
+        </div>
+        {pool.length > 0 && <div data-rare="">
+          <span><span><Icon name="aspect" />Aspect or look</span><span>within {left.rare}</span></span>
+          <Bar value={account.calls.sinceRare / tuning.calls.rare.guarantee} label={`${account.calls.sinceRare} of ${tuning.calls.rare.guarantee} calls toward a certain aspect or look`} />
+        </div>}
+      </div>}
     </section>
     <div class="call__stage" data-element={element}><ModelStage key={focus} character={focus} /></div>
     {/* Who she is, what she does, and where the calls stand: a tap away, so the stage keeps the room. */}

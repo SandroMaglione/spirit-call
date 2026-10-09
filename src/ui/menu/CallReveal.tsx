@@ -22,6 +22,7 @@ import { AbilityIcon } from "../AbilityIcon.tsx"
 import { LookIcon } from "../RelicIcon.tsx"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
+import { exchangePrice, rareLeft } from "../../account/calls.ts"
 import { Model } from "../kit/art.tsx"
 import { Card } from "../kit/Card.tsx"
 import { Pill, RoundButton } from "../kit/controls.tsx"
@@ -267,6 +268,11 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
     </div>
   }
 
+  // The sigils these calls left, and the cheapest thing left in the exchange: how far they go.
+  const gained = ordered.reduce((sum, result) => sum + (result.kind === "sigils" ? result.amount : 0), 0)
+  const held = store.account.value.wallet.sigils ?? 0
+  const cheapest = [...rareLeft(tuning, store.account.value)].map((item) => ({ item, price: exchangePrice(tuning, item)?.sigils ?? Infinity })).sort((a, b) => a.price - b.price)[0]
+  const toward = cheapest === undefined ? null : `${cheapest.price <= held ? "Enough" : `${cheapest.price - held} more`} for ${cheapest.item.kind === "aspect" ? aspectOf(tuning.aspects, cheapest.item.id).name : cosmeticOf(tuning.cosmetics, cheapest.item.id).name}`
   return <div class="reveal reveal--summary">
     <section class="reveal__summary">
       <h1>{ordered.length === 1 ? "Your call" : `Your ${ordered.length} calls`}</h1>
@@ -280,6 +286,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
               : <Card art={<Icon name="sigils" />} foot={`+${result.amount}`} label={describeResult(store, result)} />}
         <small>{result.kind === "sigils" ? "Sigils" : describeResult(store, result).replace(/ \(.*\)$/, "")}</small>
       </div>)}</div>
+      {gained > 0 && <p class="reveal__sigils"><Icon name="sigils" /><span><b>{held}</b> sigils <small>+{gained}</small></span>{toward !== null && <small>· {toward}</small>}</p>}
       <Pill icon="check" onClick={done}>Done</Pill>
     </section>
   </div>

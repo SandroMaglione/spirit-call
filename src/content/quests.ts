@@ -314,7 +314,7 @@ export const quests = {
     introduces: brings("Water in the floor: it soaks and slows whoever wades in", hazard("water")),
     stars: [nobodyFalls(), atLeast("ultimates", 5), atLeast("healthLeft", 75)],
     rewards: pays(320, 110, 4200),
-    relic: "undertow"
+    relic: "counterpoint"
   }),
   bombardment: quest({
     name: "Bombardment",
@@ -339,7 +339,7 @@ export const quests = {
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
     stars: [atMost("hitsTaken", 11), atLeast("breaks", 22), atMost("hitsTaken", 3)],
     rewards: pays(360, 110, 4900),
-    relic: "counterpoint"
+    relic: "undertow"
   }),
   swarmMother: quest({
     name: "The Swarm Mother",

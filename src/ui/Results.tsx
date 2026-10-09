@@ -1,6 +1,6 @@
 /**
  * How a run ended, over the arena, coming in a piece at a time (a tap shows
- * it all): the title (a victory bright, a defeat falling), a quest's stars
+ * it all): the title (a victory bright, a defeat falling), a quest's goals
  * one by one (the ones earned now land with a ping), what it earned as
  * cards on a line that scrolls when long (a new character glows, and
  * stands beside them; a card a resource, however many places it came from,
@@ -15,7 +15,7 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 import type { JSX } from "preact"
-import { accountLevel, earnedResources, questProgress, rankOf } from "../account/account.ts"
+import { accountLevel, earnedResources } from "../account/account.ts"
 import { AbilityIcon } from "./AbilityIcon.tsx"
 import { describePlay, describeUnlock, resourceName } from "./describe.ts"
 import { elementOf } from "./draft.ts"
@@ -30,12 +30,12 @@ import type { MaterialId } from "../content/materials.ts"
 import { relicOf } from "../content/relics.ts"
 import { describeCount, describeGoal, meets } from "../content/stars.ts"
 import { LookIcon, RelicIcon, TierMarks } from "./RelicIcon.tsx"
-import { CharacterCard, MaterialIcon, Stars } from "./menu/parts.tsx"
+import { CharacterCard, MaterialIcon } from "./menu/parts.tsx"
 import type { Screen } from "./menu/screens.ts"
 import { nextAfter, tabOf } from "./navigation.ts"
 import type { UiActions, UiStore } from "./store.ts"
 
-/** When each piece comes in, in seconds from the screen showing: the title, the stars (one after another when some are new), the line about the run, the rewards, the account's bar, and the buttons (usable from then). */
+/** When each piece comes in, in seconds from the screen showing: the title, the goals (one after another when some are new), the line about the run, the rewards, the account's bar, and the buttons (usable from then). */
 const timeline = (fresh: number) => {
   const stars = 0.5, step = fresh > 0 ? 0.34 : 0.08
   const line = stars + (fresh > 0 ? 3 * step : 0.2)
@@ -74,13 +74,12 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const starred = play?.kind === "quest" && extra === null ? play : null
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}${skipped.value ? " is-skipped" : ""}`} onClick={() => { revealed.value = true; skipped.value = true }}>
     {newcomer?.kind === "character" && <div class="results__newcomer" data-element={elementOf(tuning, newcomer.id)}><Model character={newcomer.id} reveal={!revealed.value} /></div>}
-    <section class="results__content" style={{ "--s0": `${times.star(0)}s`, "--s1": `${times.star(1)}s`, "--s2": `${times.star(2)}s`, "--loot": `${times.loot}s` }}>
+    <section class="results__content" style={{ "--loot": `${times.loot}s` }}>
       <h1 class="results__title">{title}</h1>
-      {starred !== null && earned !== null && <div class="results__stars"><Stars earned={questProgress(account, starred.quest, rankOf(starred))?.stars ?? []} fresh={earned.stars} /></div>}
-      {/* Each star is a goal on top of the clear: which this run met, and what it counted. */}
-      {starred !== null && earned !== null && result.cleared && <div class="results__goals results__step" style={at(times.line)}>
-        {tuning.quests[starred.quest].stars.map((goal, index) => <div key={index} class={`goal${meets(goal, result.cleared, result.tally) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}<span class="results__count">{describeCount(goal, result.tally)}</span></div>)}
-        {earned.perfect !== null && <div class="goal goal--perfect is-earned"><Icon name="relic" />Perfect clear</div>}
+      {/* Each star is a goal on top of the clear: which this run met (the ones new to the account land one by one), and what it counted; one line, so the rest keeps its room. */}
+      {starred !== null && earned !== null && result.cleared && <div class="results__goals">
+        {tuning.quests[starred.quest].stars.map((goal, index) => <div key={index} class={`goal${meets(goal, result.cleared, result.tally) ? " is-earned" : ""}${earned.stars.includes(index) ? " is-fresh" : ""}`} style={at(times.star(index))}><Icon name="star" />{describeGoal(goal)}<span class="results__count">{describeCount(goal, result.tally)}</span></div>)}
+        {earned.perfect !== null && <div class="goal goal--perfect is-earned is-fresh" style={at(times.line)}><Icon name="relic" />Perfect</div>}
       </div>}
       <p class="dim results__step" style={at(times.line)}><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
       <div class="results__rule results__step" style={at(times.line)} />
@@ -106,7 +105,6 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
             {/* A perfect clear's relic tier (see docs/relics.md). */}
             {earned.perfect?.relic != null && <Card fresh tint={relicOf(tuning.relics, earned.perfect.relic.id).element ?? undefined} art={<span class="relic-art"><RelicIcon slot={relicOf(tuning.relics, earned.perfect.relic.id).slot} element={relicOf(tuning.relics, earned.perfect.relic.id).element} /><TierMarks tier={earned.perfect.relic.tier} /></span>} foot={earned.perfect.relic.tier === 1 ? "RELIC" : `TIER ${["I", "II", "III"][earned.perfect.relic.tier - 1]}`} label={`${relicOf(tuning.relics, earned.perfect.relic.id).name}, tier ${["I", "II", "III"][earned.perfect.relic.tier - 1]}, for a perfect clear`} onClick={enabled ? () => open({ kind: "team" }) : undefined} />}
           </CardRow>
-          {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <p class="results__new results__step" style={at(times.account)}>New: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</p>}
           {earned.discoveries.length > 0 && <p class="results__new results__step" style={at(times.account)}>Discovered: {earned.discoveries.map((id) => tuning.discoveries[id].name).join(", ")}</p>}
           <div class="results__account results__step" style={at(times.account)}>
             <div><span>{leveled ? <>Account Lv {earned.level.before} → <b>{earned.level.after}</b></> : `Account Lv ${level.level}`}</span><span>{earned.experience > 0 && <span class="results__gain">+{earned.experience}</span>}<span class="dim">{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed}`}</span></span></div>
@@ -115,7 +113,6 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
           </div>
         </>}
       </>}
-      {canContinue && next !== null && <p class="results__next results__step" style={at(times.done)}><b>Next · {describePlay(tuning, next)}</b> {next.kind === "quest" && rankOf(next) === 1 ? tuning.quests[next.quest].introduces?.text : null}</p>}
       <footer class="results__actions results__step" style={at(times.done)}>
         <RoundButton icon="home" tone="dark" label="Home" disabled={!enabled} onClick={() => open({ kind: "home" })} />
         {extra?.kind === "trial"

@@ -949,13 +949,14 @@ export const recordRun = (
     const perfected = progress.perfectAt === undefined && tuning.quests[quest].stars.every((goal) => meets(goal, result.cleared, result.tally))
     const updated: QuestProgress = { ...counted(progress, result, now), stars: [...progress.stars, ...stars].sort((a, b) => a - b), ...(perfected ? { perfectAt: now } : {}) }
     next = { ...next, quests: { ...next.quests, [quest]: { ...next.quests[quest], [rank]: updated } } }
+    if (firstClear) rewards = questRewards(tuning, quest, rank)
     if (perfected) {
       const relic = tuning.quests[quest].relic, tier = Math.min(3, rank) as RelicTier
-      const had = relic !== null && (relicTier(next, relic) ?? 0) >= tier
+      // Had already: at that tier or above, or coming with this same run's first clear (the two that introduce their slots).
+      const had = relic !== null && ((relicTier(next, relic) ?? 0) >= tier || (rewards?.unlocks.some((item) => item.kind === "relic" && item.id === relic) ?? false))
       perfect = { relic: relic === null || had ? null : { id: relic, tier } }
       if (relic !== null) next = raiseRelic(next, relic, tier, now)
     }
-    if (firstClear) rewards = questRewards(tuning, quest, rank)
   }
   if (play?.kind === "tier") {
     const spec = tuning.tracks[play.track].tiers[play.tier - 1]

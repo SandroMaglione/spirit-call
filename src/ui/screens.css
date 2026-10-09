@@ -344,9 +344,11 @@
 .results__name { color: var(--text); font-weight: 700; }
 /* What a chest gave: its card carries the chest in a gold badge. */
 .results__loot .card.is-new .card__corner { left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: var(--gold-hi); color: var(--ink); filter: none; box-shadow: 0 1px 3px #0008; }
-.results__stars { font-size: 26px; margin: -2px 0; }
-.results__goals { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; }
-.results__goals .goal { font-size: 12px; gap: 5px; }
+/* The goals on one line: the screen's height is the cards' and the buttons'. */
+.results__goals { display: flex; flex-wrap: nowrap; justify-content: center; gap: 4px 14px; max-width: 100%; white-space: nowrap; overflow: hidden; }
+.results__goals .goal { font-size: 12px; gap: 5px; flex: none; animation: from-below .4s ease-out backwards; animation-delay: var(--d); }
+.results__goals .goal.is-earned .menu-icon { animation: star-land .4s cubic-bezier(.3, 1.6, .5, 1) backwards; animation-delay: var(--d); }
+.results__goals .goal.is-fresh .menu-icon { animation-name: star-land-fresh; animation-duration: .55s; }
 .results__count { font-weight: 700; color: var(--text); opacity: .75; }
 .results__rule { width: min(420px, 100%); height: 1px; margin: 3px 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
 .results__loot { width: 100%; }
@@ -361,25 +363,20 @@
 @keyframes title-in { from { opacity: 0; transform: scale(1.7); letter-spacing: .4em; filter: blur(6px); } 60% { opacity: 1; } }
 @keyframes title-glow { from { opacity: 0; transform: scaleX(.3); } 30% { opacity: 1; } }
 @keyframes title-fall { from { opacity: 0; transform: translateY(-18px); filter: grayscale(1); } }
-.results__stars .star { animation: star-land .4s cubic-bezier(.3, 1.6, .5, 1) backwards; }
-.results__stars .star:nth-child(1) { animation-delay: var(--s0); } .results__stars .star:nth-child(2) { animation-delay: var(--s1); } .results__stars .star:nth-child(3) { animation-delay: var(--s2); }
-.results__stars .star.is-fresh { position: relative; animation-name: star-land-fresh; animation-duration: .55s; }
-.results__stars .star.is-fresh::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--gold-hi); opacity: 0; animation: star-ring .6s ease-out backwards; animation-delay: inherit; }
 @keyframes star-land { from { opacity: 0; transform: scale(.4); } }
 @keyframes star-land-fresh { from { opacity: 0; transform: scale(2.6) rotate(-60deg); } 70% { transform: scale(.9); } }
-@keyframes star-ring { from { opacity: 1; transform: scale(.3); } to { opacity: 0; transform: scale(1.5); } }
 .results__account .bar b { animation-delay: calc(var(--d) + .25s); }
-.results.is-skipped :is(.results__step, .results__title, .results__stars .star, .results__loot .card, .results__account .bar b), .results.is-skipped .results__title::after, .results.is-skipped .star::after { animation-delay: 0s; animation-duration: .2s; }
-.results__next { max-width: min(460px, 100%); font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.results__next b { color: var(--gold-hi); margin-right: 8px; }
-.results__new { font-size: 13px; font-weight: 700; color: var(--gold-hi); }
+.results.is-skipped :is(.results__step, .results__title, .results__goals .goal, .results__goals .goal .menu-icon, .results__loot .card, .results__account .bar b), .results.is-skipped .results__title::after { animation-delay: 0s; animation-duration: .2s; }
+.results__new { max-width: min(460px, 100%); font-size: 13px; font-weight: 700; color: var(--gold-hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .results__error { color: #ffc9b8; font-weight: 700; }
 .results__account { width: 300px; display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 .results__account > div:first-child { display: flex; justify-content: space-between; }
 .results__account b { color: var(--gold-hi); }
 .results__account .bar { height: 6px; border-radius: 3px; }
 .results__gain { color: var(--up); margin-right: 8px; }
+/* The buttons on one line, all of a height. */
 .results__actions { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.results__actions .round { width: 40px; height: 40px; }
 .results__newcomer { position: absolute; left: 3%; top: 20px; bottom: 20px; width: 36%; }
 .results__newcomer .model { position: absolute; inset: 0; }
 .results.has-newcomer .results__content { margin-left: 32%; width: min(480px, 64%); }
@@ -391,6 +388,16 @@
 .call__banner .cards { margin: 4px 0 2px; padding: 3px; }
 .call__note { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 6px; background: var(--cream); color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1.25; text-shadow: none; }
 .call__note .menu-icon { font-size: 14px; flex: none; }
+/* How far each guarantee is: a bar filling toward it (the character's with its soft pity marked, where the odds start rising). */
+.call__pity { display: grid; gap: 5px; margin-top: 2px; }
+.call__pity > div { display: grid; gap: 3px; font-size: 12px; font-weight: 700; }
+.call__pity > div > span { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.call__pity > div > span > span { display: flex; align-items: center; gap: 4px; }
+.call__pity .menu-icon { font-size: 14px; color: var(--gold-hi); }
+.call__pity .bar { position: relative; height: 6px; border-radius: 3px; }
+.call__pity .bar i { background: var(--gold); }
+.call__pity[data-rare] .bar i { background: var(--purple, #b98bff); }
+.call__soft { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--cream); opacity: .8; }
 .call__counts { display: grid; }
 .call__counts .menu-icon { color: var(--gold-hi); }
 /* The focus stands in all the room between the banner and the right edge; her details open over the right. */
@@ -437,9 +444,7 @@
 .kit-lines__orb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35); }
 
 /* ---------- the seal ---------- */
-.reveal { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; --white: #eef3ff; --blue: #7cc4ff; --rose: #ff8fc8; --purple: #b98bff; --gold: #ffd56b; --light: var(--white); }
-.reveal[data-light="blue"] { --light: var(--blue); }
-.reveal[data-light="rose"] { --light: var(--rose); }
+.reveal { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; --white: #eef3ff; --purple: #b98bff; --gold: #ffd56b; --light: var(--white); }
 .reveal[data-light="purple"] { --light: var(--purple); }
 .reveal[data-light="gold"] { --light: var(--gold); }
 /* The light turns from one colour to the next (registered, so it can ease). */
@@ -452,8 +457,6 @@
 /* Broken: the light swells and rises to what came; gold dims the room and pulses. */
 .reveal[data-phase="rise"] .reveal__seal { animation: seal-strain .07s linear infinite alternate; }
 .reveal[data-phase="rise"] .reveal__light { opacity: 1; scale: 1.2; transition: scale .5s ease-out; }
-.reveal[data-phase="rise"][data-light="blue"] .reveal__light { animation: light-pulse .5s ease-out; }
-.reveal[data-phase="rise"][data-light="rose"] .reveal__light { animation: light-pulse .55s ease-out; }
 .reveal[data-phase="rise"][data-light="purple"] .reveal__light { animation: light-pulse .6s ease-out; }
 .reveal[data-phase="rise"][data-light="gold"] .reveal__dim { opacity: .6; }
 .reveal[data-phase="rise"][data-light="gold"] .reveal__light { animation: light-pulse .75s ease-out; }
@@ -492,8 +495,6 @@
 /* A look is the purple tier too (an aspect's peer): its orb keeps a warmer tint inside the same light. */
 .reveal--look { --glow: #b98bff; }
 .reveal--look .reveal__orb { color: #f1e1ff; background: radial-gradient(circle at 35% 30%, #7a4a8e, #281830 70%); box-shadow: 0 0 0 3px #b98bff, 0 0 30px #b98bff; }
-.reveal--relic .reveal__orb { color: #d9efff; background: radial-gradient(circle at 35% 30%, #3f6a95, #151f30 70%); box-shadow: 0 0 0 3px #7cc4ff, 0 0 24px #7cc4ff; }
-.reveal--relic .reveal__prize p:not(.dim) { color: var(--text, #fff); }
 @keyframes rays { to { rotate: 1turn; } }
 @keyframes rays-in { from { opacity: 0; scale: .5; } }
 .reveal__stage { position: absolute; left: var(--left); right: 44%; top: 10px; bottom: 10px; }
@@ -523,11 +524,14 @@
 .reveal__item .card { width: 54px; }
 .reveal__item { display: grid; justify-items: center; gap: 4px; width: 56px; animation: prize-in .4s cubic-bezier(.2, .9, .3, 1.25) both; }
 .reveal__item small { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.1; color: var(--dim); }
-.reveal__item[data-light="blue"] .card { box-shadow: 0 0 0 2px #7cc4ff, 0 0 10px #7cc4ff; }
-.reveal__item[data-light="rose"] .card { box-shadow: 0 0 0 2px #ff8fc8, 0 0 12px #ff8fc8; }
 .reveal__item[data-light="purple"] .card { box-shadow: 0 0 0 2px #b98bff, 0 0 14px #b98bff; }
 .reveal__item[data-light="gold"] .card { box-shadow: 0 0 0 2px #ffd56b, 0 0 18px #ffd56b; }
 .reveal__item[data-light="gold"] small { color: var(--gold-hi); }
+/* The sigils counted up at the end of the row, and what they are for: a plain ten still moved something. */
+.reveal__sigils { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px; background: var(--panel); font-size: 15px; font-weight: 800; text-shadow: none; animation: prize-in .4s cubic-bezier(.2, .9, .3, 1.25) .3s both; }
+.reveal__sigils .menu-icon { font-size: 22px; }
+.reveal__sigils b { color: var(--gold-hi); }
+.reveal__sigils small { font-size: 12px; font-weight: 700; color: var(--dim); }
 @media (prefers-reduced-motion: reduce) { .reveal *, .reveal { animation-duration: .01s !important; animation-delay: 0s !important; } }
 .character .side-tabs { top: 92px; }
 

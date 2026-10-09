@@ -163,6 +163,11 @@ describe("rewards", () => {
     const had = recordRun(tuning, relic(first.account, "repel", 3), { kind: "quest", quest: "ironGuard", rank: 2 }, perfect, now)
     expect(had.earned.perfect).toEqual({ relic: null })
     expect(had.account.owned.relics.repel?.tier).toBe(3)
+    // A perfect first clear of The Swarm: Echo comes with the first clear, so the perfect clear says it gave no tier (one card, not two).
+    const swarm = recordRun(tuning, { ...opened(), experience: 1e6 }, quest("theSwarm"), { ...perfect, challenge: "swarm", tally: tallyMeeting(tuning.quests.theSwarm.stars) }, now)
+    expect(swarm.earned.rewards?.unlocks).toEqual([{ kind: "relic", id: "echo" }])
+    expect(swarm.earned.perfect).toEqual({ relic: null })
+    expect(swarm.account.owned.relics.echo?.tier).toBe(1)
     // A quest with no relic: the perfect clear is kept, and gives nothing.
     const none = recordRun(tuning, account, quest("emberKiln"), { ...perfect, challenge: tuning.quests.emberKiln.challenge, tally: tallyMeeting(tuning.quests.emberKiln.stars) }, now)
     expect(none.earned.perfect).toEqual({ relic: null })

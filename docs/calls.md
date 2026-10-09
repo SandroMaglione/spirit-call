@@ -124,7 +124,8 @@ about 5 pulled and 2–3 bought, 4 of the 12 left.
   when it ends; its characters, one focused (tap another to focus her); the
   focused character's model and what she does (her element and class, her
   special and ultimate), with **Try** (the Training Ground with her, before
-  calling); the calls held, the guarantees, Call ×1 and Call ×10. Tabs:
+  calling); two bars, how far each guarantee is (the character's marks
+  where her odds start rising); Call ×1 and Call ×10. Tabs:
   the banner; the rates (every rate, the rate with the guarantee counted
   in, what is left to get); the exchange (sigils held, every aspect and
   look of the Call's with its price, or yours); the history.
@@ -139,8 +140,11 @@ about 5 pulled and 2–3 bought, 4 of the 12 left.
   make crumbles back to stone, and no crystals are spent. It bursts, and
   each result shows in turn, the best last: a character arrives as her
   model, with what she does, **Try** and **Party**; an aspect or a look
-  as its card; sigils as their count. A ten-call ends on all of them in a
-  row. Skip goes to the next result that is not sigils, then to the row.
+  as its card. Sigils get no screen of their own: a ten-call of sigils
+  goes from the burst straight to the row, which ends on the sigils
+  counted up and what they are for ("2 more for Moonwind"), so a plain ten
+  still moved something. Skip goes to the next result that is not sigils,
+  then to the row.
 - Sounds and a short vibration (where the phone allows it) mark the crack,
   the light rising (purple, gold), the burst (or the crumble), and a
   character.
