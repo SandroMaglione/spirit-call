@@ -13,7 +13,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import type * as Statement from "effect/sql/Statement"
 
-import { ascend, buyCosmetic, buyRelic, createAccount, earn, everything, noQuestProgress, questProgress, recordRun, select, train, unlock, wear, withClearedRewards } from "../account/account.ts"
+import { ascend, buyCosmetic, buyRelic, createAccount, earn, everything, noQuestProgress, questProgress, raiseRelic, recordRun, select, train, unlock, wear, withClearedRewards } from "../account/account.ts"
 import type { Account, CallResult, Checked, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
 import { call, exchange, setFocus } from "../account/calls.ts"
 import type { RareItem } from "../account/calls.ts"
@@ -151,7 +151,8 @@ export class Accounts extends Context.Service<
             return { subject: run.id, also: run.statements }
           }, (account, now) => ok(recordRun(tuning, account, play, result, now)), (recorded) => recorded.account).pipe(Effect.catchTag("Refused", Effect.die)),
         unlockEverything: (userId) =>
-          always(userId, "unlockEverything", (account, now) => earn(everything(tuning).reduce((next, item) => unlock(tuning, next, item, now), account), plenty)),
+          always(userId, "unlockEverything", (account, now) =>
+            earn((Object.keys(tuning.relics) as Array<RelicId>).reduce((next, id) => raiseRelic(next, id, 3, now), everything(tuning).reduce((next, item) => unlock(tuning, next, item, now), account)), plenty)),
         openCalls: (userId) =>
           always(userId, "openCalls", (account, now) => {
             const cleared = Object.fromEntries(chapterOne.map((quest) => {

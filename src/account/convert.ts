@@ -48,7 +48,7 @@ export interface AccountRecord {
     readonly cosmetics: Readonly<Record<string, Unlocked>>
   }
   /** Each quest's progress, by rank (as a string key). */
-  readonly quests: Readonly<Record<string, Readonly<Record<string, StoredRunCount & { readonly stars: ReadonlyArray<number> }>>>>
+  readonly quests: Readonly<Record<string, Readonly<Record<string, StoredRunCount & { readonly stars: ReadonlyArray<number>; readonly perfectAt?: number }>>>>
   readonly hardcore: Readonly<Record<string, Readonly<Record<string, StoredRunCount & { readonly rewardedPeriod: number | null; readonly bestWave?: number }>>>>
   readonly discoveries: Readonly<Record<string, { readonly madeAt: number }>>
   /** The chests opened in each group, by rank. */
@@ -72,6 +72,8 @@ export interface AccountRecord {
   }
   /** Each character's looks, by kind. */
   readonly worn: Readonly<Record<string, Readonly<Record<string, string>>>>
+  /** The shop's stock used: the period of the last relic tier bought, and how many in it. */
+  readonly shop: { readonly period: number | null; readonly bought: number }
 }
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -152,6 +154,7 @@ export const fromRecord = (
     discoveries: keep<DiscoveryId, { readonly madeAt: number }>(tuning.discoveries, stored.discoveries, "discovery", dropped),
     chests,
     calls: callsFrom(tuning, stored.calls),
+    shop: { period: stored.shop.period, bought: Math.max(0, Math.round(stored.shop.bought)) },
     selection: starterSelection,
     worn: {}
   }
@@ -268,5 +271,6 @@ export const toRecord = (account: Account): AccountRecord => ({
   chests: account.chests,
   calls: account.calls,
   selection: account.selection,
-  worn: account.worn
+  worn: account.worn,
+  shop: account.shop
 })

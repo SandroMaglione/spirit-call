@@ -34,6 +34,9 @@
 .star.is-earned { color: var(--gold-hi); filter: drop-shadow(0 0 3px rgba(255, 231, 173, .55)); }
 .star.is-earned svg path { fill: currentColor; }
 .star.is-fresh { animation: star-in .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+/* All three in one run: the stars glow as one. */
+.stars.is-perfect { filter: drop-shadow(0 0 4px var(--gold-hi)); }
+.goal--perfect { color: var(--gold-hi); }
 @keyframes star-in { from { transform: scale(0) rotate(-40deg); } }
 .row[aria-pressed="true"] .star { color: rgba(59, 66, 85, .3); }
 .row[aria-pressed="true"] .star.is-earned { color: #b8862d; filter: none; }

@@ -293,8 +293,9 @@ Decided so far (the rest is in the open questions):
 - **Dust comes from milestones off the main line**: side quests, ranks,
   and their chests on a first clear, hardcore tiers and trials once a
   period. Never from a main quest's first clear, and never per run, so
-  every relic tier can be had by playing. **Sigils** are the Call's own
-  (see "The gacha"), from calls and nowhere else.
+  every relic tier can be had by playing (its quest's perfect clears are
+  the main road, the shop the fallback, see `docs/relics.md`). **Sigils**
+  are the Call's own (see "The gacha"), from calls and nowhere else.
 - **Ascension.** A character's levels come in phases (1–10, 10–20, 20–30,
   30–40); gold buys the levels within a phase, and crossing into the next
   costs gold and **her element's material**. Each element has one
@@ -350,8 +351,10 @@ The rules are in `docs/calls.md` (the Spirit Call); in short:
   character that comes is always that one.
 - **Bad luck is capped and shown**: a character within a known number of
   pulls, a rare thing within fewer, and the counts are on screen and carry
-  across banners. Dust buys a relic's next tier in the shop, so no tier
-  waits on a run that will not come.
+  across banners. Relics come from perfect clears (all three stars in one
+  run), and dust buys a relic's next tier in the shop, a few a week, so no
+  tier waits on a run that will not come. That weekly stock is a limit,
+  not a pressure mechanic: nothing counts down, nothing is lost.
 - **Duplicates never add raw power.** A relic's tier adds behavior, with a
   little power at most (see `docs/relics.md`), and the shop reaches every
   tier too. Direction for the rest (details to settle): a duplicate

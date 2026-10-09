@@ -100,7 +100,7 @@ export const Account = Schema.Struct({
     relics: Schema.Record(RelicId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, tier: RelicTier }))),
     cosmetics: Schema.Record(CosmeticId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number })))
   }),
-  quests: Schema.Record(QuestId, Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, stars: Schema.Array(Count) })))),
+  quests: Schema.Record(QuestId, Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, stars: Schema.Array(Count), perfectAt: Schema.optionalKey(Schema.Number) })))),
   hardcore: Schema.Record(
     TrackId,
     Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, rewardedPeriod: Schema.NullOr(Schema.Number), bestWave: Schema.optionalKey(Count) })))
@@ -115,6 +115,7 @@ export const Account = Schema.Struct({
     focus: Schema.Record(BannerId, Schema.optionalKey(CharacterId)),
     history: Schema.Array(Schema.Struct({ at: Schema.Number, banner: BannerId, result: CallResult }))
   }),
+  shop: Schema.Struct({ period: Schema.NullOr(Schema.Number), bought: Count }),
   selection: Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics, play: Play }),
   worn: Worn
 })
@@ -180,7 +181,8 @@ export const Earned = Schema.Struct({
   discoveries: Schema.Array(DiscoveryId),
   rewards: Schema.NullOr(Schema.Struct({ experience: Schema.Number, currencies: Amounts, unlocks: Schema.Array(Item) })),
   stars: Schema.Array(Count),
-  chests: Schema.Array(ChestRef)
+  chests: Schema.Array(ChestRef),
+  perfect: Schema.NullOr(Schema.Struct({ relic: Schema.NullOr(Schema.Struct({ id: RelicId, tier: RelicTier })) }))
 })
 
 // The Schemas describe exactly the types the account's rules use, both ways.

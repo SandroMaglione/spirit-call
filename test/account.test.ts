@@ -390,7 +390,8 @@ describe("what a run earned, for the results", () => {
       discoveries: ["withSwordsman"],
       rewards: { experience: 50, currencies: { crystals: 100, gold: 300 }, unlocks: [] },
       stars: [0, 1, 2],
-      chests: [{ group: "one", index: 0, rank: 1 }]
+      chests: [{ group: "one", index: 0, rank: 1 }],
+      perfect: null
     }
     const chest = defaultTuning.chests.one[0]!.rewards
     const discovery = defaultTuning.discoveries.withSwordsman.rewards

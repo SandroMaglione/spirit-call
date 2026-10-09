@@ -29,7 +29,7 @@ import { cosmeticOf } from "../content/cosmetics.ts"
 import type { MaterialId } from "../content/materials.ts"
 import { relicOf } from "../content/relics.ts"
 import { describeCount, describeGoal, meets } from "../content/stars.ts"
-import { LookIcon, RelicIcon } from "./RelicIcon.tsx"
+import { LookIcon, RelicIcon, TierMarks } from "./RelicIcon.tsx"
 import { CharacterCard, MaterialIcon, Stars } from "./menu/parts.tsx"
 import type { Screen } from "./menu/screens.ts"
 import { nextAfter, tabOf } from "./navigation.ts"
@@ -80,6 +80,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       {/* Each star is a goal on top of the clear: which this run met, and what it counted. */}
       {starred !== null && earned !== null && result.cleared && <div class="results__goals results__step" style={at(times.line)}>
         {tuning.quests[starred.quest].stars.map((goal, index) => <div key={index} class={`goal${meets(goal, result.cleared, result.tally) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}<span class="results__count">{describeCount(goal, result.tally)}</span></div>)}
+        {earned.perfect !== null && <div class="goal goal--perfect is-earned"><Icon name="relic" />Perfect clear</div>}
       </div>}
       <p class="dim results__step" style={at(times.line)}><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
       <div class="results__rule results__step" style={at(times.line)} />
@@ -102,6 +103,8 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
                 : unlock.kind === "relic"
                   ? <Card key={unlock.id} fresh tint={relicOf(tuning.relics, unlock.id).element ?? undefined} art={<RelicIcon slot={relicOf(tuning.relics, unlock.id).slot} element={relicOf(tuning.relics, unlock.id).element} />} foot="RELIC" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />
                   : <Card key={unlock.id} fresh art={<LookIcon kind={cosmeticOf(tuning.cosmetics, unlock.id).kind} />} foot="LOOK" label={describeUnlock(tuning, unlock)} />)}
+            {/* A perfect clear's relic tier (see docs/relics.md). */}
+            {earned.perfect?.relic != null && <Card fresh tint={relicOf(tuning.relics, earned.perfect.relic.id).element ?? undefined} art={<span class="relic-art"><RelicIcon slot={relicOf(tuning.relics, earned.perfect.relic.id).slot} element={relicOf(tuning.relics, earned.perfect.relic.id).element} /><TierMarks tier={earned.perfect.relic.tier} /></span>} foot={earned.perfect.relic.tier === 1 ? "RELIC" : `TIER ${["I", "II", "III"][earned.perfect.relic.tier - 1]}`} label={`${relicOf(tuning.relics, earned.perfect.relic.id).name}, tier ${["I", "II", "III"][earned.perfect.relic.tier - 1]}, for a perfect clear`} onClick={enabled ? () => open({ kind: "team" }) : undefined} />}
           </CardRow>
           {earned.rewards !== null && earned.rewards.unlocks.length > 0 && <p class="results__new results__step" style={at(times.account)}>New: {earned.rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock)).join(", ")}</p>}
           {earned.discoveries.length > 0 && <p class="results__new results__step" style={at(times.account)}>Discovered: {earned.discoveries.map((id) => tuning.discoveries[id].name).join(", ")}</p>}

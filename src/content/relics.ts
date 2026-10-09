@@ -380,13 +380,16 @@ export const relicBudget = { worth: 20, damageBonus: 40, power: 12, every: 0.5, 
 export interface RelicRules {
   readonly opensAfter: string
   readonly survivalOpensAfter: string | null
+  /** What the shop asks for a tier (dust), by the tier reached. */
   readonly prices: { readonly [Tier in Exclude<RelicTier, 1>]: number }
-  readonly dustPerDuplicate: number
+  /** The shop's stock: how many relic tiers it sells in a period of the reset (see `content/hardcore.ts`, `reset`), any owned relic's next. */
+  readonly stock: number
 }
 
 export const relicRules: RelicRules = {
   opensAfter: "packLeader",
   survivalOpensAfter: "bruteKing",
-  prices: { 2: 150, 3: 300 },
-  dustPerDuplicate: 50
+  // A tier is about a week of hardcore and trials mid-game, and the stock binds at the same time.
+  prices: { 2: 300, 3: 600 },
+  stock: 1
 }

@@ -19,7 +19,7 @@ import { beyond, challengeShows, holds, introducedBy, nothingSeen, withNovelty }
 import { aheadOfLine, starsPerChest } from "./quests.ts"
 import { noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
 import type { QuestAt, RankTwist } from "./ranks.ts"
-import type { QuestId, StarGroup } from "./quests.ts"
+import type { QuestId, QuestSpec, StarGroup } from "./quests.ts"
 import { elements } from "./elements.ts"
 import type { ElementId, StateId } from "./elements.ts"
 import { materialOf } from "./materials.ts"
@@ -37,7 +37,7 @@ import type { HitCondition, MoveFilter, Passive } from "./passives.ts"
 import { relicBudget, relicSlots, relicTiers } from "./relics.ts"
 import { bodyRules, bodyScore } from "./characters.ts"
 import type { CosmeticId, CosmeticSpec } from "./cosmetics.ts"
-import type { RelicSpec } from "./relics.ts"
+import type { RelicId, RelicSpec } from "./relics.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
 import type { SkillEffect } from "./skills.ts"
 
@@ -102,7 +102,9 @@ const checkLooks = (problems: Array<string>, tuning: Tuning): void => {
   if (!has(tuning.quests, rules.opensAfter)) problems.push(`relics: open after unknown quest ${rules.opensAfter}`)
   if (rules.survivalOpensAfter !== null && !has(tuning.quests, rules.survivalOpensAfter)) problems.push(`relics: the Survival slot opens after unknown quest ${rules.survivalOpensAfter}`)
   if (rules.survivalOpensAfter !== null && !Object.values(tuning.relics).some((relic) => (relic as RelicSpec).slot === "survival")) problems.push("relics: the Survival slot opens with no relic for it")
-  positive(problems, "relics' prices", { tier2: rules.prices[2], tier3: rules.prices[3], dustPerDuplicate: rules.dustPerDuplicate })
+  positive(problems, "relics' prices", { tier2: rules.prices[2], tier3: rules.prices[3] })
+  if (!(Number.isInteger(rules.stock) && rules.stock >= 1)) problems.push(`relics: the shop's stock must be a whole number of tiers a period, at least 1 (is ${rules.stock})`)
+  checkRelicHomes(problems, tuning)
   const rewarded = new Set(Object.values(tuning.tracks).flatMap((track) => track.tiers.flatMap((tier) => tier.rewards.cosmetics ?? [])))
   for (const id of rewarded) if (!has(tuning.cosmetics, id)) problems.push(`hardcore: rewards unknown look ${id}`)
   for (const [id, spec] of Object.entries(tuning.cosmetics) as Array<[string, CosmeticSpec]>) {
@@ -112,6 +114,37 @@ const checkLooks = (problems: Array<string>, tuning: Tuning): void => {
     if (spec.source.kind === "shop" && !(Number.isInteger(spec.source.dust) && spec.source.dust > 0)) problems.push(`${where}: a shop look needs a price in dust`)
     if ((spec.source.kind === "reward") !== rewarded.has(id as CosmeticId)) problems.push(`${where}: ${spec.source.kind === "reward" ? "a reward look no hardcore tier gives" : "given by a hardcore tier, so its source is a reward"}`)
   }
+}
+
+/**
+ * Where relics come from (see docs/relics.md): every relic is one quest's
+ * (its perfect clears give its tiers), and one quest's only; a relic in a
+ * quest's first-clear rewards is that quest's relic; a relic's quest comes
+ * after relics open (a Survival relic's after the slot opens), so a tier
+ * is never given before it can be equipped.
+ */
+const checkRelicHomes = (problems: Array<string>, tuning: Tuning): void => {
+  const rules = tuning.relicRules
+  const homes = new Map<string, string>()
+  /** Whether `quest` comes after `ancestor` along `after` (or is it). */
+  const comesAfter = (quest: string, ancestor: string): boolean => {
+    for (let at: string | null = quest, steps = 0; at !== null && steps < 100; at = (tuning.quests as Record<string, QuestSpec>)[at]?.after ?? null, steps++) if (at === ancestor) return true
+    return false
+  }
+  for (const [id, quest] of Object.entries(tuning.quests) as Array<[string, QuestSpec]>) {
+    const where = `quest ${id}`
+    for (const item of quest.rewards.unlocks) if (item.kind === "relic" && quest.relic !== item.id) problems.push(`${where}: rewards relic ${item.id} on its first clear, so it must be its relic`)
+    if (quest.relic === null) continue
+    if (!has(tuning.relics, quest.relic)) problems.push(`${where}: its relic ${quest.relic} is unknown`)
+    else {
+      const other = homes.get(quest.relic)
+      if (other !== undefined) problems.push(`${where}: relic ${quest.relic} is quest ${other}'s too`)
+      homes.set(quest.relic, id)
+      if (!comesAfter(id, rules.opensAfter)) problems.push(`${where}: gives relic ${quest.relic} before relics open (after ${rules.opensAfter})`)
+      if ((tuning.relics[quest.relic as RelicId] as RelicSpec).slot === "survival" && rules.survivalOpensAfter !== null && !comesAfter(id, rules.survivalOpensAfter)) problems.push(`${where}: gives Survival relic ${quest.relic} before the slot opens (after ${rules.survivalOpensAfter})`)
+    }
+  }
+  for (const id of Object.keys(tuning.relics)) if (!homes.has(id)) problems.push(`relic ${id}: no quest gives it`)
 }
 
 const checkMove = (problems: Array<string>, where: string, move: AttackMove): void => {
