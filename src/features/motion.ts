@@ -31,12 +31,12 @@ export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall:
 
 /**
  * The share of a push a body takes: an enemy kind's (less for a champion),
- * or the player's, divided by her weight (`character`'s; a heavier body is
- * pushed less far).
+ * or the player's, divided by her weight (`character`'s, and `heavier` from
+ * her relics; a heavier body is pushed less far).
  */
-export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined, champion = false, character?: CharacterId): number =>
+export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined, champion = false, character?: CharacterId, heavier = 1): number =>
   enemy === undefined
-    ? tuning.player.knockbackTaken / (character === undefined ? 1 : tuning.characters[character].weight)
+    ? tuning.player.knockbackTaken / ((character === undefined ? 1 : tuning.characters[character].weight) * heavier)
     : tuning.enemies[enemy].knockbackTaken * (champion ? tuning.champions.knockback : 1)
 
 /** How fast a body's push dies down: slower while it is swept (a glide), else `knockback.decay`. */

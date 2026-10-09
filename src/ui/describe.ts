@@ -14,7 +14,7 @@ import type { AttackSpec, EnemyKind } from "../content/enemies.ts"
 import type { Amounts, CurrencyId, ResourceId } from "../content/currencies.ts"
 import type { MaterialId } from "../content/materials.ts"
 import type { Stats } from "../content/characters.ts"
-import type { HitCondition, MoveFilter, Passive, Trigger, TriggeredEffect } from "../content/passives.ts"
+import type { HitCondition, MoveFilter, Passive, TraitChange, Trigger, TriggeredEffect } from "../content/passives.ts"
 import type { Rewards, Unlock } from "../content/quests.ts"
 import type { SkillEffect, SkillSpec } from "../content/skills.ts"
 import { aspectOf } from "../content/aspects.ts"
@@ -93,6 +93,8 @@ const describeCondition = (condition: HitCondition): string => {
       return condition.state === null ? " to enemies in a state (any one)" : ` to ${condition.state} enemies`
     case "targetHeld":
       return " to stunned or broken enemies"
+    case "wielderHealthBelow":
+      return ` while below ${Math.round(condition.fraction * 100)}% HP`
   }
 }
 
@@ -166,7 +168,25 @@ export const describePassive = (passive: Passive): string => {
       return `+${passive.percent}% damage${describeCondition(passive.when)}`
     case "on":
       return `${describeTrigger(passive.trigger)}: ${describeTriggered(passive.effect)}${passive.every > 0 ? ` (at most every ${passive.every}s)` : ""}`
+    case "damageTaken":
+      return passive.percent >= 0 ? `Takes ${passive.percent}% more damage` : `Takes ${-passive.percent}% less damage`
+    case "trait":
+      return describeTraitChange(passive.change)
+    case "secondWind":
+      return `Once a run, a blow that would fell her leaves her at ${passive.percent}% HP`
   }
+}
+
+/** A trait relic's change, in words: "+1 dash, dashes 25% shorter". */
+const describeTraitChange = (change: TraitChange): string => {
+  const percent = (factor: number, more: string, less: string) => factor > 1 ? `${Math.round((factor - 1) * 100)}% ${more}` : `${Math.round((1 - factor) * 100)}% ${less}`
+  return [
+    change.dashCharges === undefined || change.dashCharges === 0 ? "" : `${change.dashCharges > 0 ? "+" : ""}${change.dashCharges} dash${Math.abs(change.dashCharges) === 1 ? "" : "es"}`,
+    change.dashDistance === undefined ? "" : `dashes ${percent(change.dashDistance, "longer", "shorter")}`,
+    change.dashCooldown === undefined ? "" : `dashes come back ${percent(change.dashCooldown, "slower", "faster")}`,
+    change.weight === undefined ? "" : `${percent(change.weight, "heavier", "lighter")}`,
+    change.energy === undefined ? "" : `${percent(change.energy, "more", "less")} energy`
+  ].filter(Boolean).join(", ")
 }
 
 /** A skill's effect and what it costs. */

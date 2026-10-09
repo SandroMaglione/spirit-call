@@ -32,7 +32,8 @@ import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
 import { enemies, followUpsOf } from "./enemies.ts"
 import type { AttackSpec, EnemyKind } from "./enemies.ts"
-import type { MoveFilter, Passive } from "./passives.ts"
+import { traitsOf } from "./passives.ts"
+import type { HitCondition, MoveFilter, Passive } from "./passives.ts"
 import { relicBudget, relicSlots, relicTiers } from "./relics.ts"
 import { bodyRules, bodyScore } from "./characters.ts"
 import type { CosmeticId, CosmeticSpec } from "./cosmetics.ts"
@@ -271,18 +272,69 @@ const checkPassive = (problems: Array<string>, where: string, passive: Passive):
       }
       if (passive.effect.kind === "heal") positive(problems, where, { percent: passive.effect.percent })
       return
+    case "damageTaken":
+      if (!(passive.percent >= -20 && passive.percent <= 40)) problems.push(`${where}: damageTaken must be from -20% to 40% (is ${passive.percent}%)`)
+      return
+    case "trait": {
+      const { dashCharges, ...factors } = passive.change
+      if (dashCharges !== undefined && !(Number.isInteger(dashCharges) && dashCharges >= -1 && dashCharges <= 2)) problems.push(`${where}: dashCharges must be a whole number from -1 to 2 (is ${dashCharges})`)
+      for (const [name, factor] of Object.entries(factors)) if (!(factor >= 0.5 && factor <= 2.5)) problems.push(`${where}: ${name} must be a factor from 0.5 to 2.5 (is ${factor})`)
+      return
+    }
+    case "secondWind":
+      if (!(passive.percent > 0 && passive.percent <= 50)) problems.push(`${where}: secondWind must leave her at more than 0% and at most 50% (is ${passive.percent}%)`)
+      return
   }
 }
 
 /** The elements a passive names (its pools, what it sets off, the states it reads), with the states it reads. */
 const namedIn = (passive: Passive): { readonly elements: ReadonlyArray<ElementId>; readonly states: ReadonlyArray<StateId> } => {
   if (passive.kind === "damageBonus") return { elements: [], states: passive.when.kind === "targetInState" && passive.when.state !== null ? [passive.when.state] : [] }
+  if (passive.kind !== "on") return { elements: [], states: [] }
   const states = passive.trigger.kind === "kill" && passive.trigger.state !== null && passive.trigger.state !== "any" ? [passive.trigger.state] : []
   const effect = passive.effect
   if (effect.kind === "leave") return { elements: [effect.ground.element], states }
   if (effect.kind !== "cast" || effect.own) return { elements: [], states }
   const named = [effect.effect.element, "leaves" in effect.effect ? effect.effect.leaves?.element ?? null : null].filter((element) => element !== null)
   return { elements: named, states }
+}
+
+/**
+ * How often a condition holds over a fight, as a share of her blows: the
+ * weight of a damage bonus in a relic's worth (see `relicBudget`).
+ */
+const uptime = (condition: HitCondition): number => {
+  switch (condition.kind) {
+    case "always":
+      return 1
+    case "move":
+      return condition.move.kind === "counter" ? 0.1 : condition.move.kind === "power" || condition.move.kind === "dash" ? 0.15 : 0.3
+    case "targetHealthBelow":
+      return Math.min(1, condition.fraction * 0.8)
+    case "targetUnhurt":
+      return 0.2
+    case "targetInState":
+      return condition.state === null ? 0.6 : 0.4
+    case "targetHeld":
+      return 0.3
+    case "wielderHealthBelow":
+      return Math.min(1, condition.fraction * 0.7)
+  }
+}
+
+/**
+ * What a relic tier is worth, in percent of her damage (see `relicBudget`):
+ * its damage bonuses by how often they hold, less what blows on her cost,
+ * and what its trait changes are worth (her dash and weight as a body's
+ * traits count, `bodyRules.personality`; energy at half). What it sets off
+ * is held by `power` and `every` instead.
+ */
+export const relicWorth = (passives: ReadonlyArray<Passive>): number => {
+  const traits = traitsOf(passives)
+  const dash = ((bodyRules.dash.charges + traits.dashCharges) / bodyRules.dash.charges) * traits.dashDistance / traits.dashCooldown
+  const traitWorth = ((dash * traits.weight) ** bodyRules.personality - 1) * 100 + (traits.energy - 1) * 50
+  return passives.reduce((sum, passive) =>
+    sum + (passive.kind === "damageBonus" ? passive.percent * uptime(passive.when) : passive.kind === "damageTaken" ? -passive.percent : 0), traitWorth)
 }
 
 /** The power (percent of ATK) of what a passive sets off; 0 for anything else. */
@@ -308,6 +360,10 @@ const checkRelic = (problems: Array<string>, where: string, relic: RelicSpec): v
     before = spec.passives.length
     const bonus = spec.passives.reduce((sum, passive) => sum + (passive.kind === "damageBonus" ? passive.percent : 0), 0)
     if (bonus > relicBudget.damageBonus) problems.push(`${at}: damage bonuses add up to ${bonus}% (at most ${relicBudget.damageBonus}%: a relic changes what happens, barely how much)`)
+    const worth = relicWorth(spec.passives)
+    if (worth > relicBudget.worth) problems.push(`${at}: is worth ${worth.toFixed(1)}% (at most ${relicBudget.worth}%: a trade-off may give more by costing something)`)
+    const traits = traitsOf(spec.passives)
+    if (bodyRules.dash.charges + traits.dashCharges < 1) problems.push(`${at}: leaves her no dash`)
     spec.passives.forEach((passive, index) => {
       const part = `${at} passive ${index + 1}`
       checkPassive(problems, part, passive)
@@ -317,7 +373,10 @@ const checkRelic = (problems: Array<string>, where: string, relic: RelicSpec): v
         if (!(passive.every >= 0)) problems.push(`${part}: every must not be negative (is ${passive.every})`)
         else if (often && passive.every < relicBudget.every) problems.push(`${part}: goes off on something frequent, so at most every ${relicBudget.every}s (is ${passive.every}s)`)
         if (passive.effect.kind === "heal" && relic.slot !== "survival") problems.push(`${part}: heals (healing is the Survival slot's)`)
+        if (passive.effect.kind === "heal" && passive.effect.percent > relicBudget.heal) problems.push(`${part}: heals ${passive.effect.percent}% (at most ${relicBudget.heal}%)`)
+        if (passive.effect.kind === "heal" && passive.every < 1) problems.push(`${part}: heals at most every second (is ${passive.every}s)`)
       }
+      if (passive.kind === "secondWind" && relic.slot !== "survival") problems.push(`${part}: a second wind is the Survival slot's`)
       const named = namedIn(passive)
       if (relic.element === null) {
         if (named.elements.length > 0 || named.states.length > 0) problems.push(`${part}: names an element (only an Element relic does; others carry hers, with castOwn)`)

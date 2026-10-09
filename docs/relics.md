@@ -18,16 +18,29 @@ kill, a dash, a perfect dodge, a break, a move of her combo) and adds a
 small effect: a ring that throws enemies back, a whirl, a puddle, a dash
 given back, a little more damage on the blows it is about. It never
 replaces a move, and it never gives HP, ATK, DEF, or speed: those are her
-level's.
+level's. It may change her traits (her dash, her weight, the energy she
+gains), and a **trade-off** relic gives more at a price: blows on her hurt
+more, her dashes come back slower, each dash is shorter.
 
 Relics are allowed a little power (a ring hurts a little; a bonus adds a
 little), never much: **a relic changes how a fight plays, barely how
 much damage it deals**. `validateContent` holds every tier to one budget
-(`relicBudget`): damage bonuses that add up to 30% at most, effects that
-deal 12% of her ATK at most, and anything set off by something frequent (a
-kill, a move, a dash) at most once every half second. Content is balanced
-with no relics at all, and the plain aspects with no relics clear
-everything.
+(`relicBudget`), its **worth** (`relicWorth`) at most 20% of her damage:
+
+- a damage bonus counts by how often it holds (always: all of it; on
+  enemies in a state: 60%; on stunned or broken ones: 30%; while she is
+  below half her health: 35%; on her counter: 10%);
+- a cost counts against it (blows on her dealing 20% more take 20);
+- a trait counts as a body's traits do (`bodyRules.personality`: a quarter
+  of her dash and weight together), and energy at half.
+
+So a trade-off can give more because it costs something: Glass Edge's 20%
+more damage is worth nothing once blows on her deal 20% more too. On top,
+damage bonuses add up to 40% at most, effects deal 12% of her ATK at most,
+anything set off by something frequent (a kill, a move, a dash) goes off at
+most once every half second, and a heal gives 5% at most, once a second at
+most. Content is balanced with no relics at all, and the plain aspects with
+no relics clear everything.
 
 ## Slots
 
@@ -39,7 +52,7 @@ others of its slot: two Strike relics never stack.
 | **Strike** | her blows: their targets (in a state, stunned or broken, wounded, unhurt), her combo's moves, her counter, kills | no: what it sets off carries none, or hers at its top tier |
 | **Dash** | her dashes, her perfect dodges, kills and breaks that give a dash back | no, the same |
 | **Element** | anything, with her element's own trick | yes: **its own element**; only characters of it equip it |
-| **Survival** | (later, opened by a main quest in the middle of the line) healing, a fall prevented | — |
+| **Survival** | (opens after the Brute King, the end of chapter 3) healing, a fall prevented | — |
 
 **Healing is the Survival slot's alone**: no Strike, Dash, or Element relic
 heals.
@@ -85,8 +98,8 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
   dust (`relicRules.dustPerDuplicate`).
 - **The shop** sells a relic the account owns one tier up, for dust
   (`relicRules.prices`): bad luck never keeps a tier out of reach.
-- The **Survival** slot opens later, with its relics (`survivalOpensAfter`
-  stays `null` until there are some).
+- The **Survival** slot opens after the Brute King (`survivalOpensAfter`),
+  the middle of the main line, with its relics.
 
 ## Dust
 
@@ -136,6 +149,19 @@ arena and the menu's models draw her as she wears them.
   break too; then kills more often.
 - **Afterimage**: a perfect dodge leaves a whirl where she stood, pulling
   enemies in; then the whirl strikes; then it carries her element.
+- **Featherstep** (a trade-off): one dash more, each 25% shorter; then they
+  come back faster; then a perfect dodge sends out a ring.
+- **Anchor** (a trade-off): 80% heavier, her dashes come back 30% slower;
+  then blows on her deal 10% less; then a perfect dodge stamps the ground,
+  throwing enemies far back.
+
+- **Glass Edge** (a trade-off): blows deal 20% more, and blows on her 20%
+  more too; then 15% more to stunned or broken enemies; then a kill of an
+  enemy in a state sends out a ring.
+- **Last Stand**: below half her health, her blows deal 25% more; then 15%
+  more below a quarter; then a kill gives a dash back.
+- **Overflow** (a trade-off): 25% more energy, and blows on her deal 15%
+  more; then more energy at each tier.
 
 **Element**
 
@@ -149,6 +175,14 @@ arena and the menu's models draw her as she wears them.
   two nearest; then the strikes jump on; then breaks discharge too, stunning.
 - **Bedrock** (rock): a break raises a rock by the enemy; then cracked enemies
   she kills shatter, cracking those around; then a break raises three.
+
+**Survival**
+
+- **Second Wind**: once a run, a blow that would fell her leaves her at 20%
+  health, untouchable a moment; then a perfect dodge heals 2%; then the
+  second wind leaves her at 40%.
+- **Mending Step**: a perfect dodge heals 3%; then a kill heals 1%; then a
+  perfect dodge heals 2% more.
 
 ## Adding
 

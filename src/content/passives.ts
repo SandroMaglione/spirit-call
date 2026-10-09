@@ -2,8 +2,13 @@
  * Passives: what relics do in a fight (see `content/relics.ts`), made of
  * small composable parts so new ones are data:
  *
- * - a damage bonus while a condition holds (`damageBonus`), or
- * - an effect set off by a trigger (`on`), at most once every so often.
+ * - a damage bonus while a condition holds (`damageBonus`),
+ * - an effect set off by a trigger (`on`), at most once every so often,
+ * - a cost: blows on her deal more (`damageTaken`), the price of a
+ *   trade-off,
+ * - a change to her traits (`trait`): her dash, weight, or energy gain, or
+ * - a second wind (`secondWind`): once a run, a blow that would fell her
+ *   leaves her standing (the Survival slot's).
  *
  * Conditions and triggers read facts of the fight: moves of the wielder's
  * basic attack (`MoveFilter`), the target being in a state (any one, or a
@@ -46,6 +51,8 @@ export type HitCondition =
   | { readonly kind: "targetInState"; readonly state: StateId | null }
   /** The target is stunned (by a slam, a burst, a skill) or broken. */
   | { readonly kind: "targetHeld" }
+  /** The wielder's own health is below this fraction of her maximum. */
+  | { readonly kind: "wielderHealthBelow"; readonly fraction: number }
 
 /** What sets off a triggered effect. */
 export type Trigger =
@@ -81,11 +88,30 @@ export type TriggeredEffect =
   /** Gives the wielder one dash charge back. */
   | { readonly kind: "dashCharge" }
 
+/**
+ * What a trait relic changes of her (see `CharacterSpec`): dashes added to
+ * hers, and her dash's distance and recharge, her weight, and the energy she
+ * gains, each multiplied. Missing: unchanged.
+ */
+export interface TraitChange {
+  readonly dashCharges?: number
+  readonly dashDistance?: number
+  readonly dashCooldown?: number
+  readonly weight?: number
+  readonly energy?: number
+}
+
 export type Passive =
   /** Blows that meet `when` deal `percent` more damage (bonuses add up). */
   | { readonly kind: "damageBonus"; readonly percent: number; readonly when: HitCondition }
   /** `effect` when `trigger` happens, at most once every `every` seconds (0: every time). */
   | { readonly kind: "on"; readonly trigger: Trigger; readonly effect: TriggeredEffect; readonly every: number }
+  /** Blows on the wielder deal `percent` more damage (a trade-off's cost; costs add up). */
+  | { readonly kind: "damageTaken"; readonly percent: number }
+  /** Changes her traits while she wears it (see `TraitChange`). */
+  | { readonly kind: "trait"; readonly change: TraitChange }
+  /** Once a run, a blow that would fell her leaves her at `percent` of her maximum health, untouchable a moment. */
+  | { readonly kind: "secondWind"; readonly percent: number }
 
 // Building blocks, so passives read as sentences: `on(kill(), dashBack(), 4)`.
 
@@ -102,6 +128,7 @@ export const targetHealthBelow = (fraction: number): HitCondition => ({ kind: "t
 export const targetUnhurt = (): HitCondition => ({ kind: "targetUnhurt" })
 export const targetInState = (state: StateId | null = null): HitCondition => ({ kind: "targetInState", state })
 export const targetHeld = (): HitCondition => ({ kind: "targetHeld" })
+export const wielderHealthBelow = (fraction: number): HitCondition => ({ kind: "wielderHealthBelow", fraction })
 
 export const kill = (state: StateId | "any" | null = null): Trigger => ({ kind: "kill", state })
 export const doing = (move: MoveFilter): Trigger => ({ kind: "move", move })
@@ -118,3 +145,19 @@ export const dashBack = (): TriggeredEffect => ({ kind: "dashCharge" })
 
 export const damageBonus = (percent: number, when: HitCondition): Passive => ({ kind: "damageBonus", percent, when })
 export const on = (trigger: Trigger, effect: TriggeredEffect, every = 0): Passive => ({ kind: "on", trigger, effect, every })
+export const damageTaken = (percent: number): Passive => ({ kind: "damageTaken", percent })
+export const trait = (change: TraitChange): Passive => ({ kind: "trait", change })
+export const secondWind = (percent: number): Passive => ({ kind: "secondWind", percent })
+
+/** What `passives` change of her traits together: dashes added, everything else multiplied. */
+export const traitsOf = (passives: ReadonlyArray<Passive>): Required<TraitChange> =>
+  passives.reduce<Required<TraitChange>>((all, passive) => passive.kind !== "trait" ? all : {
+    dashCharges: all.dashCharges + (passive.change.dashCharges ?? 0),
+    dashDistance: all.dashDistance * (passive.change.dashDistance ?? 1),
+    dashCooldown: all.dashCooldown * (passive.change.dashCooldown ?? 1),
+    weight: all.weight * (passive.change.weight ?? 1),
+    energy: all.energy * (passive.change.energy ?? 1)
+  }, noTraitChange)
+
+/** No change to her traits. */
+export const noTraitChange: Required<TraitChange> = { dashCharges: 0, dashDistance: 1, dashCooldown: 1, weight: 1, energy: 1 }

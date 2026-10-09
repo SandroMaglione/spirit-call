@@ -27,6 +27,7 @@ import {
   EnergyLedger,
   Game,
   Guard,
+  Heal,
   Health,
   Hit,
   HitFlash,
@@ -38,6 +39,8 @@ import {
   Knockback,
   EnemyLevel,
   Member,
+  PassiveCooldowns,
+  Passives,
   PlateShatter,
   Player,
   Paused,
@@ -61,11 +64,11 @@ import {
 } from "../schema.ts"
 import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
-import { damageTaken, levelGap } from "./build.ts"
+import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { plateTakes } from "./guard.ts"
-import { damageBonusPercent, PassiveHolders } from "./passives.ts"
+import { damageBonusPercent, damageTakenPercent, PassiveHolders, secondWindPercent } from "./passives.ts"
 import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
 import { paceOf } from "./time.ts"
 import { wardedTaken } from "./wards.ts"
@@ -230,7 +233,8 @@ const Damageable = Game.Query({
     poise: Game.Query.optional(Poise),
     stunned: Game.Query.optional(Stunned),
     immortal: Game.Query.optional(Immortal),
-    member: Game.Query.optional(Member)
+    member: Game.Query.optional(Member),
+    passives: Game.Query.optional(Passives)
   }
 })
 
@@ -264,19 +268,21 @@ const Benched = Game.Query({
  */
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: {
-    energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player), member: Game.Query.read(Member) } }),
+    energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player), member: Game.Query.read(Member), passives: Game.Query.optional(Passives) } }),
     wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy) } })
   },
   events: {
     damage: Game.System.readEvent(Damage),
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death),
-    reaction: Game.System.writeEvent(Reaction)
+    reaction: Game.System.writeEvent(Reaction),
+    heal: Game.System.writeEvent(Heal)
   },
   resources: {
     tuning: Game.System.readResource(Tuning),
     stats: Game.System.writeResource(Stats),
     energyLedger: Game.System.writeResource(EnergyLedger),
+    passiveCooldowns: Game.System.writeResource(PassiveCooldowns),
     time: Game.System.readResource(Time),
     hitStop: Game.System.writeResource(HitStop),
     challenge: Game.System.readResource(Challenge),
@@ -330,7 +336,10 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
     const state = data.state.get().current
     const held = (data.stunned.present && data.stunned.get().remaining > 0) || (data.poise.present && data.poise.get().broken > 0)
-    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, { ...health, state: state?.id ?? null, held }) : 0
+    const wielder = holder?.ok === true && holder.value.data.health.present ? holder.value.data.health.get() : undefined
+    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, { ...health, state: state?.id ?? null, held }, wielder) : 0
+    // What her trade-offs cost: blows on her deal more (see `damageTakenPercent`).
+    const cost = data.player.present && data.passives.present ? damageTakenPercent(data.passives.get()) : 0
     const enemy = data.enemy.present ? data.enemy.get().kind : undefined
     const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
     const factor = blow.element === null ? 1 : affinityDamage(tuning, affinity)
@@ -344,11 +353,21 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const gap = damage.faction === "enemy"
       ? (data.member.present ? levelGap(tuning, data.member.get().level, enemyLevel).taken : 1)
       : enemy !== undefined ? levelGap(tuning, dealerLevel(blow), enemyLevel).dealt : 1
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * factor * broken * gap * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
-    const current = data.immortal.present
+    let current = data.immortal.present
       ? health.current
       : training && data.player.present ? Math.max(Math.min(1, health.current), health.current - amount) : Math.max(0, health.current - amount)
+    // A second wind (the Survival slot's): once a run, a blow that would fell her leaves her standing, untouchable a moment.
+    const wind = data.player.present && data.member.present && data.passives.present ? secondWindPercent(data.passives.get()) : null
+    const windKey = data.member.present ? `secondWind/${data.member.get().slot}` : ""
+    let caught = false
+    if (current <= 0 && wind !== null && resources.passiveCooldowns.get()[windKey] === undefined) {
+      current = Math.max(1, (health.max * wind) / 100)
+      caught = true
+      resources.passiveCooldowns.set({ ...resources.passiveCooldowns.get(), [windKey]: Infinity })
+      events.heal.emit({ at: data.position.get(), amount: current })
+    }
     // Only landed attacks and specials charge energy; damage and level do not set the award.
     const landed = data.immortal.present ? Math.min(amount, health.current) : health.current - current
     if (landed > 0 && blow.charges && !blow.periodic && blow.energyAction !== undefined && data.hurtbox.get().faction === "enemy") {
@@ -365,12 +384,12 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       data.flash.set({ remaining: tuning.feedback.hitFlash })
       // One mistake costs one hit: the player is briefly untouchable afterwards.
       if (data.player.present) {
-        data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+        data.invulnerable.set({ remaining: tuning.player.hitInvulnerability * (caught ? 2 : 1) })
         hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
       }
       // A swept body is light: pushed further (see `elementRules.swept`).
       const light = (afflicted?.state ?? state)?.id === "swept" ? tuning.elements.swept.knockback : 1
-      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy, data.enemy.present && data.enemy.get().champion, data.member.present ? data.member.get().character : undefined) * light
+      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy, data.enemy.present && data.enemy.get().champion, data.member.present ? data.member.get().character : undefined, traitsIn(data.passives).weight) * light
       data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
       // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
       if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
@@ -426,7 +445,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   if (energy > 0) {
     for (const { data } of queries.energies.each()) {
       if (data.health.get().current <= 0) continue
-      const gained = data.player.present ? energy : energy * tuning.team.benchEnergyShare
+      const gained = (data.player.present ? energy : energy * tuning.team.benchEnergyShare) * traitsIn(data.passives).energy
       data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + gained) }))
     }
   }

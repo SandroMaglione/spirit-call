@@ -17,8 +17,8 @@ import type { BasicAttackSpec } from "../content/attacks.ts"
 import type { CharacterId, Stats } from "../content/characters.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { StatCurve } from "../content/progression.ts"
-import { doing, on } from "../content/passives.ts"
-import type { Passive } from "../content/passives.ts"
+import { doing, noTraitChange, on, traitsOf } from "../content/passives.ts"
+import type { Passive, TraitChange } from "../content/passives.ts"
 import { relicOf, relicSlots } from "../content/relics.ts"
 import type { EquippedRelic, RelicId, RelicSlot } from "../content/relics.ts"
 import type { SkillId, SkillSlot } from "../content/skills.ts"
@@ -68,8 +68,18 @@ export const statsAtLevel = (tuning: TuningValue, base: Stats, level: number): S
   return { hp: Math.round(base.hp * scale), atk: Math.round(base.atk * scale), def: Math.round(base.def * scale), speed: base.speed }
 }
 
-/** `character`'s dash: the reference dash (`Tuning.dash`) with what her body changes in it. */
-export const dashOf = (tuning: TuningValue, character: CharacterId): TuningValue["dash"] => ({ ...tuning.dash, ...tuning.characters[character].dash })
+/**
+ * `character`'s dash: the reference dash (`Tuning.dash`) with what her body
+ * changes in it, and what her relics change (`traits`, see `traitsOf`).
+ */
+export const dashOf = (tuning: TuningValue, character: CharacterId, traits: Required<TraitChange> = noTraitChange): TuningValue["dash"] => {
+  const own = { ...tuning.dash, ...tuning.characters[character].dash }
+  return { ...own, charges: Math.max(1, own.charges + traits.dashCharges), distance: own.distance * traits.dashDistance, cooldown: own.cooldown * traits.dashCooldown }
+}
+
+/** What `passives` (her relics') change of her traits, read from her `Passives` when she has them. */
+export const traitsIn = (passives: { readonly present: true; get(): ReadonlyArray<Passive> } | { readonly present: false }): Required<TraitChange> =>
+  passives.present ? traitsOf(passives.get()) : noTraitChange
 
 /** The build the game starts with: the first character, fighting with her class's plain aspect. */
 export const defaultBuild: BuildValue = { character: "swordsman" }
