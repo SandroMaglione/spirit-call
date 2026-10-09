@@ -22,6 +22,8 @@ against main with the Swordsman's bot, nothing moved far:
 Fewer runs were lost (four plays lost at least once, from seven), and
 more of Until Fall's tiers ran out of time instead: enemies are no longer
 slowed by the water floors and elites, and a soaked player hits softer.
+CI's audit moved 29 numbers, one outcome (the Warlord's team with skills
+on seed 42 timed out instead of falling); its report is the baseline.
 
 ## Touch aims what arcs at the pick (2026-10-10)
 
