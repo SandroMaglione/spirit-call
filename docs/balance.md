@@ -27,7 +27,8 @@ poorly. Of her aspects, Grapple holds up best for the learning bot (6 of
 16, against 2 for Jab and Flurry). On paper her Spark Step dealt the most
 of any special per second of cooldown (24% ATK every 5 s), so it went to
 20%. For playtests: whether her frailty is fair for someone learning, as
-with the Gunner.
+with the Gunner. CI's audit gains her energy cadence (a row per level and
+wave); its report is the baseline.
 
 ## The quest team: one of each role (2026-10-10)
 
