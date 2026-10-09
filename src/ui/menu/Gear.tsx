@@ -3,8 +3,8 @@
  * aspects, relics, and looks, each with its own explanation): the aspect
  * she fights with, her relics slot by slot, and the looks she wears. It is
  * hers alone (her page steps between characters), and opens on the tab and
- * slot tapped there. Each tab is a grid of cards on the left (it scrolls),
- * her model in the middle (wearing a look tried on), and the one picked explained on the right,
+ * slot tapped there. Each tab is a grid of cards on the left (it scrolls;
+ * a look's card shows it), and the one picked explained on the right,
  * with what can be done with it: equip, take off, buy its next tier or it.
  * Aspects and relics are equipped in the party being set up (each on one
  * member at most: equipping moves it); looks are hers in every party.
@@ -25,7 +25,7 @@ import { AbilityIcon } from "../AbilityIcon.tsx"
 import { describeAspectElement, describeMoveEffect } from "../describe.ts"
 import { aspectsFor, elementOf, equipInDraft, equipRelicInDraft, relicsFor } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
-import { ModelStage, Portrait } from "../kit/art.tsx"
+import { Portrait } from "../kit/art.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Chips, Panel } from "../kit/panel.tsx"
@@ -116,9 +116,9 @@ const Relics = ({ store, actions, character, first, save }: { readonly store: Ui
     <div class="gear__cards scroll in-left">
       <div class="gear__slots" role="tablist" aria-label="Relic slots">{relicSlots.map((each) => {
         const held = equippedIn(each)
-        return <button key={each} type="button" role="tab" class="gear__slot" aria-selected={each === slot.value} aria-label={`${slotNames[each]} slot: ${held === null ? "empty" : relicOf(tuning.relics, held).name}`} onClick={() => pick(each)}>
+        return <button key={each} type="button" role="tab" class="gear__slot" aria-selected={each === slot.value} aria-label={`${slotNames[each]} slot: ${held === null ? "none" : relicOf(tuning.relics, held).name}`} onClick={() => pick(each)}>
           <RelicIcon slot={each} element={each === "element" ? elementOf(tuning, character) : null} />
-          <span><b>{slotNames[each]}</b><small>{!slotOpen(tuning, account, each) ? "Locked" : held === null ? "Empty" : relicOf(tuning.relics, held).name}</small></span>
+          <span><b>{slotNames[each]}</b><small>{held === null ? "None" : relicOf(tuning.relics, held).name}</small></span>
         </button>
       })}</div>
       {options.length === 0
@@ -152,11 +152,8 @@ const Relics = ({ store, actions, character, first, save }: { readonly store: Ui
   </>
 }
 
-/** A look tried on her model: a tint, or a trail she sheds as she drifts along (`none`: her own). */
-type TryOn = { readonly kind: CosmeticKind; readonly id: CosmeticId | "none" }
-
-/** Her looks: her own, then the tints for her and the trails anyone wears; the one picked shows on her model. */
-const Looks = ({ store, actions, character, first, preview }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId; readonly first: CosmeticKind; readonly preview: (tryOn: TryOn | undefined) => void }) => {
+/** Her looks: her own, then the tints for her and the trails anyone wears, each card showing it. */
+const Looks = ({ store, actions, character, first }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId; readonly first: CosmeticKind }) => {
   const tuning = store.tuning.value, account = store.account.value
   const kind = useSignal<CosmeticKind>(first)
   const worn = account.worn[character]?.[kind.value] ?? null
@@ -164,19 +161,16 @@ const Looks = ({ store, actions, character, first, preview }: { readonly store: 
   const picked = useSignal<CosmeticId | null>(worn)
   const choose = (next: CosmeticId | null) => {
     picked.value = next
-    preview({ kind: kind.value, id: next ?? "none" })
   }
   const switchKind = (next: CosmeticKind) => {
     kind.value = next
     picked.value = account.worn[character]?.[next] ?? null
-    // A trail shows only while she sheds it: what she wears, until another is picked.
-    preview(next === "trail" ? { kind: "trail", id: picked.value ?? "none" } : undefined)
   }
   const look = picked.value === null ? null : cosmeticOf(tuning.cosmetics, picked.value)
   const has = picked.value === null || owns(account, { kind: "cosmetic", id: picked.value })
   const price = picked.value === null ? null : cosmeticPrice(tuning, picked.value)
   const mine = owns(account, { kind: "character", id: character })
-  const source = look === null ? null : lookSource(look, false, has || price === null ? 0 : (price.dust ?? 0) - (account.wallet.dust ?? 0))
+  const source = picked.value === null ? null : lookSource(store, picked.value, false)
   return <>
     <div class="gear__cards scroll in-left">
       <div class="gear__slots" role="tablist" aria-label="Kinds of look">{cosmeticKinds.map((each) => <button key={each} type="button" role="tab" class="gear__slot" aria-selected={each === kind.value} onClick={() => switchKind(each)}>
@@ -204,9 +198,6 @@ const Looks = ({ store, actions, character, first, preview }: { readonly store: 
   </>
 }
 
-/** What she sheds as she drifts, while her trails are looked at: the one she wears (`none`: her own). */
-const wornTrail = (store: UiStore, character: CharacterId): TryOn => ({ kind: "trail", id: store.account.value.worn[character]?.trail ?? "none" })
-
 export const Gear = ({ store, actions, nav, character, tab, focus, save }: {
   readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly character: CharacterId; readonly tab: GearTab; readonly focus?: GearFocus | undefined; readonly save: () => void
 }) => {
@@ -214,20 +205,15 @@ export const Gear = ({ store, actions, nav, character, tab, focus, save }: {
   const element = elementOf(tuning, character)
   const slot: RelicSlot = focus !== undefined && (relicSlots as ReadonlyArray<string>).includes(focus) ? focus as RelicSlot : "strike"
   const kind: CosmeticKind = focus === "trail" ? "trail" : "tint"
-  // A look tried on in the Looks tab shows on her model; leaving the tab puts back what she wears.
-  const tryOn = useSignal<TryOn | undefined>(tab === "looks" && kind === "trail" ? wornTrail(store, character) : undefined)
   const go = (next: GearTab) => {
-    tryOn.value = undefined
     nav.replace({ kind: "gear", character, tab: next })
   }
   return <Screen name="gear" element={element}>
-    <div class="gear__stage" data-tab={tab}><ModelStage key={`${character}/${tryOn.value?.kind ?? ""}/${tryOn.value?.id ?? ""}`} character={character}
-      tint={tab === "looks" && tryOn.value?.kind === "tint" ? tryOn.value.id : undefined} trail={tab === "looks" && tryOn.value?.kind === "trail" ? tryOn.value.id : undefined} /></div>
     <TopBar icon={element} lead={tuning.characters[character].name} title="Gear" close={nav.back} end={<Wallet store={store} currencies={["dust"]} />}>
       <TopTabs label="Gear" current={tab} onChange={go} tabs={[{ id: "aspect", label: "Aspect" }, { id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }]} />
     </TopBar>
     {tab === "aspect" ? <Aspects store={store} character={character} save={save} />
       : tab === "relics" ? <Relics store={store} actions={actions} character={character} first={slot} save={save} />
-      : <Looks store={store} actions={actions} character={character} first={kind} preview={(next) => (tryOn.value = next)} />}
+      : <Looks store={store} actions={actions} character={character} first={kind} />}
   </Screen>
 }

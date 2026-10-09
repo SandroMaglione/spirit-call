@@ -6,14 +6,13 @@
  * places, so it never touches the renderer (see `ui/menu/parts.tsx`).
  * A look shows the same way: a tint as her portrait in it, a trail as a
  * picture of what it sheds (`data-portrait` of `look:<id>`, or `trail:<character>`
- * for her own), and a model's place with `data-trail` sheds that trail
- * as she drifts along (a look tried on).
+ * for her own).
  *
  * It draws on its own transparent canvas over the UI (it lets every touch
  * and click through), only where a model's place is, and draws nothing
  * while there is none (in the arena).
  */
-import { Box3, Color, DirectionalLight, Group, HemisphereLight, PerspectiveCamera, RGBAFormat, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from "three"
+import { Box3, Color, DirectionalLight, HemisphereLight, PerspectiveCamera, RGBAFormat, Scene, SRGBColorSpace, Vector3, WebGLRenderer, WebGLRenderTarget } from "three"
 import type { Object3D } from "three"
 
 import type { CharacterId } from "../content/characters.ts"
@@ -21,7 +20,6 @@ import { cosmetics } from "../content/cosmetics.ts"
 import type { CosmeticId } from "../content/cosmetics.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import { view } from "../config/view.ts"
-import { DropTrail } from "./drop-trail.ts"
 import { characterLooks, cosmeticLooks, enemyLooks, enemyPortraits, wornLook, wornTint } from "./looks.ts"
 import type { BodyLook, Drops } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
@@ -41,23 +39,7 @@ const stage = {
   portraitFill: 0.82,
   /** The rim lights' strength, and the key light's direction. */
   rim: 4.5,
-  key: { x: 1.5, y: 2.5, z: 2.5 },
-  /**
-   * A trail tried on: she drifts right at `speed` (the arena's units per
-   * second), shedding as she would there; `height` is her body's height in
-   * those units (the scene is drawn with her one unit tall). Seen this
-   * close, she sheds `more` times as much, each `smaller` times the size.
-   */
-  drift: { speed: 100, height: 40, more: 2.5, smaller: 0.6 }
-}
-
-/** What a model tried on with a trail sheds: drops in the arena's units, in a group scaled to the model, sliding back as she drifts on. */
-interface Shed {
-  readonly group: Group
-  readonly trail: DropTrail
-  readonly drops: Drops
-  owed: number
-  travelled: number
+  key: { x: 1.5, y: 2.5, z: 2.5 }
 }
 
 /** A model in the showcase: a posed copy, and its bounds at rest. */
@@ -66,7 +48,6 @@ interface Shown {
   readonly puppet: Puppet
   readonly bounds: Box3
   readonly rim: Color
-  shed?: Shed
 }
 
 const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, turn = stage.turn): Puppet | null => {
@@ -230,7 +211,7 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
     camera.lookAt(center)
   }
   const show = (shown: Shown) => {
-    for (const child of scene.children) if (child.userData["shown"] === true) child.visible = child === shown.puppet.object || child === shown.shed?.group
+    for (const child of scene.children) if (child.userData["shown"] === true) child.visible = child === shown.puppet.object
     for (const rim of rims) rim.color.copy(shown.rim)
   }
   const add = (key: string, puppet: Puppet, rim: Color): Shown => {
@@ -241,31 +222,6 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
   const remove = (shown: Shown) => {
     scene.remove(shown.puppet.object)
     shown.puppet.dispose()
-    if (shown.shed !== undefined) {
-      shown.shed.trail.dispose()
-      scene.remove(shown.shed.group)
-    }
-  }
-  /** Sheds `shown`'s trail for `seconds`, as she drifts right: what she shed slides left, as the floor would under her. */
-  const shed = (shown: Shown, seconds: number) => {
-    const shedding = shown.shed
-    if (shedding === undefined) return
-    const { group, trail, drops } = shedding
-    const { speed, height, more, smaller } = stage.drift
-    const scale = 1 / height
-    shedding.travelled += speed * seconds
-    shown.bounds.getCenter(center)
-    group.position.set(center.x - shedding.travelled * scale, shown.bounds.min.y, center.z)
-    shedding.owed += drops.rate * more * seconds
-    const radius = height * 0.3, back = { x: -1, y: 0 }
-    while (shedding.owed >= 1) {
-      shedding.owed -= 1
-      const across = (Math.random() - 0.5) * radius * 1.1
-      const kind = drops.kind ?? "drop"
-      const thrown = kind === "drop" ? 50 + Math.random() * 70 : kind === "ember" ? 25 + Math.random() * 40 : 60 + Math.random() * 50
-      trail.emit({ x: shedding.travelled - radius * 0.9, y: across }, height * (0.15 + Math.random() * 0.45), back, thrown, drops.size * smaller * (0.7 + Math.random() * 0.6), drops.colors[Math.floor(Math.random() * drops.colors.length)]!, kind)
-    }
-    trail.update(seconds)
   }
 
   // Keep each character's idle running when the UI changes places.
@@ -278,23 +234,12 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
     // As she wears it, or with a tint tried on (`data-tint`; `none`: her own colors).
     const tryOn = place.dataset["tint"] as CosmeticId | "none" | undefined
     const tint = tryOn === undefined ? wornTint(character) : tryOn === "none" ? undefined : tryOn
-    // A trail tried on (`data-trail`; `none`: her own): she sheds it.
-    const shedding = place.dataset["trail"] as CosmeticId | "none" | undefined
-    const trail = shedding === undefined || shedding === "none" ? undefined : shedding
-    const key = `${character}/${tint ?? ""}/${shedding ?? ""}`
+    const key = `${character}/${tint ?? ""}`
     const known = live.get(key)
     if (known !== undefined) return known
-    const look = wornLook(characterLooks[character], { ...(tint === undefined ? {} : { tint }), ...(trail === undefined ? {} : { trail }) })
-    const puppet = puppetOf(models, look)
+    const puppet = puppetOf(models, wornLook(characterLooks[character], tint === undefined ? {} : { tint }))
     if (puppet === null) return null
     const shown = add(key, puppet, cssColor(place, "--el"))
-    if (shedding !== undefined && look.kind === "model" && look.drops !== undefined) {
-      const group = new Group()
-      group.scale.setScalar(1 / stage.drift.height)
-      group.userData["shown"] = true
-      scene.add(group)
-      shown.shed = { group, trail: new DropTrail(group), drops: look.drops, owed: 0, travelled: 0 }
-    }
     live.set(key, shown)
     return shown
   }
@@ -389,7 +334,6 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
         const shown = liveFor(place)
         if (shown === null) continue
         shown.puppet.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, seconds, false)
-        shed(shown, seconds)
         // A newly earned spirit turns into the light once; its idle keeps running.
         const revealing = place.dataset["reveal"] === "true" && !reducedMotion.matches
         const elapsed = revealing ? Math.min(1, (reveals.get(place) ?? 0) + seconds) : 1

@@ -22,9 +22,9 @@ import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
 import { Face, ModelStage, Portrait } from "../kit/art.tsx"
-import { Card, Cards } from "../kit/Card.tsx"
+import { Card } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
-import { Bar, Chips, Fact, Label, Panel } from "../kit/panel.tsx"
+import { Bar, Chips, Fact, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, SideTabs, TopBar } from "../kit/shell.tsx"
 import { sourceOf } from "../navigation.ts"
 import type { UiActions, UiStore } from "../store.ts"
@@ -88,10 +88,11 @@ const Ascension = ({ store, actions, character }: { readonly store: UiStore; rea
 }
 
 /**
- * Her gear in short: a card for her aspect, each relic slot, and each kind
- * of look, in what she has there (quieter where nothing is chosen yet: an
- * empty slot, the plain aspect, her own look). A tap opens the gear screen
- * on that very slot.
+ * Her gear in short: her aspect and her looks on a row, her relic slots
+ * under them, a card each in what she has there (softer where nothing is
+ * chosen yet: an empty slot, the plain aspect, her own look; a plus in its
+ * corner, a swap where something is). A tap opens the gear screen on that
+ * very slot.
  */
 const GearSummary = ({ store, nav, character }: { readonly store: UiStore; readonly nav: Nav; readonly character: CharacterId }) => {
   const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft.value
@@ -101,22 +102,22 @@ const GearSummary = ({ store, nav, character }: { readonly store: UiStore; reado
   const aspectName = aspect === undefined ? tuning.classes[spec.class].plain.name : aspectOf(tuning.aspects, aspect).name
   return <Panel class="character__panel in-right" icon={<Icon name="relic" />} title="Gear" detail={draft.team.includes(character) ? "In the party" : "Not in the party"}>
     <div class="gear-summary">
-      <div class="gear-summary__group"><Label>Aspect</Label>
-      <Cards><Card size="small" art={<AbilityIcon kind={spec.class} />} tint={spec.element} foot={aspectName} label={`Aspect: ${aspectName}`} faded={aspect === undefined} onClick={() => open("aspect")} /></Cards></div>
-      <div class="gear-summary__group"><Label>Looks</Label>
-      <Cards>{cosmeticKinds.map((kind) => {
-        const id = worn[kind], name = id === undefined ? (kind === "tint" ? "Tint" : "Trail") : cosmeticOf(tuning.cosmetics, id).name
-        return <Card key={kind} size="small" art={<Portrait of={id !== undefined ? { look: id } : kind === "tint" ? { character } : { trail: character }} />} foot={name} faded={id === undefined}
-          label={`${kind === "tint" ? "Tint" : "Trail"}: ${id === undefined ? "her own" : name}`} onClick={() => open("looks", kind)} />
-      })}</Cards></div>
-      <div class="gear-summary__group gear-summary__group--wide"><Label>Relics</Label>
-      <Cards>{relicSlots.map((slot) => {
+      <div class="gear-summary__row">
+        <Card art={<AbilityIcon kind={spec.class} />} tint={spec.element} foot={aspectName} corner={aspect === undefined ? "plus" : "swap"} label={`Aspect: ${aspectName}`} faded={aspect === undefined} onClick={() => open("aspect")} />
+        <span class="gear-summary__gap" />
+        {cosmeticKinds.map((kind) => {
+          const id = worn[kind], name = id === undefined ? (kind === "tint" ? "Tint" : "Trail") : cosmeticOf(tuning.cosmetics, id).name
+          return <Card key={kind} tint={spec.element} art={<Portrait of={id !== undefined ? { look: id } : kind === "tint" ? { character } : { trail: character }} />} foot={name} faded={id === undefined}
+            corner={id === undefined ? "plus" : "swap"} label={`${kind === "tint" ? "Tint" : "Trail"}: ${id === undefined ? "her own" : name}`} onClick={() => open("looks", kind)} />
+        })}
+      </div>
+      <div class="gear-summary__row">{relicSlots.map((slot) => {
         const id = relics[slot], relic = id === undefined ? null : relicOf(tuning.relics, id), tier = id === undefined ? null : relicTier(account, id)
         const locked = !slotOpen(tuning, account, slot)
-        return <Card key={slot} size="small" tint={relic?.element ?? (slot === "element" ? spec.element : undefined)} locked={locked} faded={!locked && relic === null}
+        return <Card key={slot} tint={relic?.element ?? spec.element} locked={locked} faded={!locked && relic === null} corner={locked ? undefined : relic === null ? "plus" : "swap"}
           art={locked ? <Icon name="lock" /> : relic === null ? <RelicIcon slot={slot} element={slot === "element" ? spec.element : null} /> : <span class="relic-art"><RelicIcon slot={relic.slot} element={relic.element} /><TierMarks tier={tier ?? 1} /></span>}
-          foot={relic?.name ?? slotNames[slot]} label={`${slotNames[slot]} slot: ${locked ? "locked" : relic === null ? "empty" : `${relic.name}, tier ${tier ?? 1}`}`} onClick={() => open("relics", slot)} />
-      })}</Cards></div>
+          foot={relic?.name ?? slotNames[slot]} label={`${slotNames[slot]} slot: ${locked ? "opens later" : relic === null ? "none" : `${relic.name}, tier ${tier ?? 1}`}`} onClick={() => open("relics", slot)} />
+      })}</div>
     </div>
   </Panel>
 }

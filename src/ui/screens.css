@@ -112,11 +112,11 @@
 }
 
 /* ---------- gear: her aspect, relics, and looks ---------- */
-.gear__stage { position: absolute; top: 40px; bottom: 8px; left: calc(var(--left) + 296px); right: calc(var(--right) + 306px); }
-.gear__cards { position: absolute; left: calc(var(--left) - 6px); top: 56px; bottom: 0; width: 300px; z-index: 3; padding: 6px 6px 30px; display: grid; gap: 8px; align-content: start; }
+/* No model here: the cards take the room left of the brief (padded, so a picked slot's glow is not cut). */
+.gear__cards { position: absolute; left: calc(var(--left) - 14px); top: 48px; bottom: 0; right: calc(var(--right) + 304px); z-index: 3; padding: 14px 14px 30px; display: grid; gap: 10px; align-content: start; }
 .gear__panel { position: absolute; right: var(--right); top: 60px; width: 300px; max-height: calc(100% - 130px); z-index: 3; }
-.gear__slots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.gear__slot { display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 10px; border-radius: 21px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); text-align: left; text-shadow: none; }
+.gear__slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.gear__slot { display: flex; align-items: center; gap: 7px; min-width: 0; height: 42px; padding: 0 10px 0 8px; border-radius: 21px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); text-align: left; text-shadow: none; }
 .gear__slot > .relic-icon, .gear__slot > .look-icon { font-size: 24px; }
 .gear__slot span { display: grid; min-width: 0; line-height: 1.1; }
 .gear__slot b { font-size: 13px; font-weight: 800; }
@@ -126,35 +126,37 @@
 .gear__empty { padding: 8px 4px; font-size: 13px; }
 .gear__cards .card__art > .relic-icon, .gear__cards .card__art > .look-icon, .shop__cards .card__art > .relic-icon, .shop__cards .card__art > .look-icon { font-size: 40px; }
 .gear__tiers { display: grid; gap: 6px; }
-.gear__tier { display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: start; margin: 0; font-size: 12.5px; line-height: 1.3; }
-.gear__tier > .tier-marks { margin-top: 2px; }
-.gear__tier[data-state="had"] > .tier-marks { opacity: .55; }
-.gear__tier[data-state="ahead"] > .tier-marks { --tier-on: rgba(255, 255, 255, .3); --tier-glow: transparent; }
+.gear__tier { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; margin: 0; font-size: 12.5px; line-height: 1.3; }
+.gear__tier > .tier-marks { margin-top: -1px; }
+.gear__tier[data-state="had"] > .tier-marks { --tier-on: #4d7ba6; }
+.gear__tier[data-state="ahead"] > .tier-marks { --tier-on: #6b7385; }
 .gear__tier[data-state="ahead"] span { color: var(--dim); }
 /* Her gear in short on her page: a card each, by group. */
-.gear-summary { display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; }
-.gear-summary__group { display: grid; gap: 6px; align-content: start; }
-.gear-summary__group--wide { grid-column: 1 / -1; }
-.gear-summary .card { width: 58px; }
-.gear-summary .card__art > .relic-icon { font-size: 30px; }
-.gear-summary .card__art > .relic-art > .relic-icon { font-size: 26px; }
-.gear-summary .relic-art { gap: 2px; }
+.gear-summary { display: grid; gap: 12px; }
+.gear-summary__row { display: flex; gap: 8px; }
+.gear-summary__row + .gear-summary__row { padding-top: 12px; border-top: 1px solid var(--line); }
+.gear-summary__gap { flex: 1; max-width: 18px; }
+.gear-summary .card__art > .relic-icon { font-size: 36px; }
+/* What a tap does: a plus where nothing is chosen, a swap where something is. */
+.gear-summary .card__corner { left: auto; right: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--cream); color: var(--ink); filter: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
 /* A relic card's art: its charm, its tier's diamonds under it. */
-.relic-art { display: grid; justify-items: center; gap: 3px; }
-.card__art > .relic-art > .relic-icon { font-size: 34px; }
+.relic-art { display: grid; justify-items: center; gap: 1px; }
+.card__art > .relic-art > .relic-icon { font-size: 32px; }
 .gear__cards .card__foot, .shop__cards .card__foot { font-size: 12px; }
 /* A 16:9 phone: narrower columns, the model keeps the middle. */
 @container (max-width: 800px) {
-  .gear__cards { width: 268px; }
+  .gear__cards { right: calc(var(--right) + 272px); }
   .gear__panel { width: 268px; }
-  .gear__stage { left: calc(var(--left) + 262px); right: calc(var(--right) + 272px); }
+  .gear__slot { gap: 5px; padding: 0 8px 0 6px; }
+  .gear__slot > .relic-icon, .gear__slot > .look-icon { font-size: 20px; }
 }
 
 /* ---------- shop ---------- */
 .shop__cards { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 376px; z-index: 3; padding: 6px 6px 28px; }
 .shop__brief { position: absolute; left: calc(var(--left) + 386px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
 /* The looks shelf: her model trying the look on between the cards and a narrower brief. */
-.shop__stage { position: absolute; top: 40px; bottom: 8px; left: calc(var(--left) + 376px); right: calc(var(--right) + 290px); }
+.shop__stage { position: absolute; top: 40px; bottom: 8px; left: calc(var(--left) + 376px); right: calc(var(--right) + 290px); display: grid; place-items: center; }
+.shop__trail { width: min(80%, 220px); aspect-ratio: 1; }
 .shop__brief--side { left: auto; width: 280px; }
 @container (max-width: 800px) {
   .shop__cards--looks { width: 268px; }

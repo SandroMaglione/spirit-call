@@ -9,7 +9,7 @@ import type { ResourceId } from "../../content/currencies.ts"
 import type { MaterialId } from "../../content/materials.ts"
 import { Icon } from "../Icon.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
-import { Label, Panel } from "../kit/panel.tsx"
+import { Panel } from "../kit/panel.tsx"
 import type { UiStore } from "../store.ts"
 import { ids } from "./parts.tsx"
 
@@ -52,10 +52,7 @@ export const InventoryShelf = ({ store }: { readonly store: UiStore }) => {
     })}</Cards></div>
     <Panel class="inventory__brief in-right" element={element} icon={<Icon name={element ?? (id as "gold" | "crystals" | "dust")} />} title={name} detail={held.toLocaleString("en-US")}
       note={`For ${isMaterial(store, id) ? `ascending ${element} characters past levels ${tuning.materialRules.ascension.map((step) => step.level).join(", ")}` : uses[tuning.currencies[id as keyof typeof tuning.currencies].use as keyof typeof uses]}`}>
-      <div class="inventory__sources">
-        <Label>Where it comes from</Label>
-        {sources(store, id).map((line) => <p key={line} class="inventory__source">{line}</p>)}
-      </div>
+      <div class="inventory__sources">{sources(store, id).map((line) => <p key={line} class="inventory__source">{line}</p>)}</div>
     </Panel>
   </>
 }

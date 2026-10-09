@@ -66,15 +66,15 @@ const LookShelf = ({ store, actions }: { readonly store: UiStore; readonly actio
   const picked = useSignal<CosmeticId>(all[0]!)
   const look = cosmeticOf(tuning.cosmetics, picked.value), price = cosmeticPrice(tuning, picked.value)
   const has = owns(account, { kind: "cosmetic", id: picked.value }), dust = account.wallet.dust ?? 0
-  const source = lookSource(look, true, has || price === null ? 0 : (price.dust ?? 0) - dust)
+  const source = lookSource(store, picked.value, true)
   return <>
     <div class="shop__cards shop__cards--looks scroll in-left"><Cards>{all.map((id) => {
       const spec = cosmeticOf(tuning.cosmetics, id), owned = owns(account, { kind: "cosmetic", id }), cost = cosmeticPrice(tuning, id)
       return <Card key={id} art={<Portrait of={{ look: id }} />} label={spec.name} locked={!owned && cost === null}
         foot={owned ? spec.name : cost === null ? spec.name : <span class="shop__price"><Icon name="dust" />{cost.dust}</span>} selected={id === picked.value} mark={owned ? "tick" : undefined} onClick={() => (picked.value = id)} />
     })}</Cards></div>
-    {/* Tried on: a tint on her spirit, a trail on the party's leader as she drifts along. */}
-    <div class="shop__stage"><ModelStage key={picked.value} character={look.character ?? store.menuDraft.value.team[0] ?? "swordsman"} tint={look.kind === "tint" ? picked.value : undefined} trail={look.kind === "trail" ? picked.value : undefined} /></div>
+    {/* Tried on: a tint on her spirit; a trail as the picture of what it sheds. */}
+    <div class="shop__stage">{look.character !== null ? <ModelStage key={picked.value} character={look.character} tint={picked.value} /> : <span class="shop__trail"><Portrait of={{ look: picked.value }} /></span>}</div>
     <Panel class="shop__brief shop__brief--side in-right" icon={<LookIcon kind={look.kind} />} title={look.name} detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}
       note={source.text} noteIcon={source.icon}>
       <p class="dim">{look.about}</p>
@@ -86,6 +86,14 @@ const LookShelf = ({ store, actions }: { readonly store: UiStore; readonly actio
   </>
 }
 
+/** Before the shop opens: its shelf as hidden cards, a hint of what it will hold. */
+const Hidden = ({ store, tab }: { readonly store: UiStore; readonly tab: "relics" | "looks" }) => {
+  const tuning = store.tuning.value
+  return <div class="shop__cards scroll in-left" aria-hidden="true"><Cards>{tab === "relics"
+    ? ids(tuning.relics).map((id) => <Card key={id} locked art={<RelicIcon slot={tuning.relics[id].slot} element={tuning.relics[id].element} />} foot="???" />)
+    : ids(tuning.cosmetics).map((id) => <Card key={id} locked art={<Portrait of={{ look: id }} />} foot="???" />)}</Cards></div>
+}
+
 export const Shop = ({ store, actions, nav, tab }: { readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly tab: ShopTab }) => {
   const tuning = store.tuning.value, account = store.account.value
   const open = relicsOpen(tuning, account)
@@ -94,7 +102,7 @@ export const Shop = ({ store, actions, nav, tab }: { readonly store: UiStore; re
       <TopTabs label="Shop" current={tab} onChange={(id) => nav.replace({ kind: "shop", tab: id })} tabs={[{ id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }, { id: "inventory", label: "Inventory" }]} />
     </TopBar>
     {tab === "inventory" ? <InventoryShelf store={store} /> : !open
-      ? <Panel class="shop__brief in-right" icon={<Icon name="lock" />} title="Not open yet"><p class="dim">The shop opens with relics, after {tuning.quests[tuning.relicRules.opensAfter as QuestId].name}: dust from side quests, ranks, hardcore tiers, and trials buys a relic's next tier and looks here.</p></Panel>
+      ? <><Hidden store={store} tab={tab} /><Panel class="shop__brief in-right" icon={<Icon name="lock" />} title="Not open yet"><p class="dim">The shop opens with relics, after {tuning.quests[tuning.relicRules.opensAfter as QuestId].name}: dust from side quests, ranks, hardcore tiers, and trials buys a relic's next tier and looks here.</p></Panel></>
       : tab === "relics" ? <RelicShelf store={store} actions={actions} /> : <LookShelf store={store} actions={actions} />}
   </Screen>
 }
