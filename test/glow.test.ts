@@ -34,6 +34,7 @@ describe("glow", () => {
     const copy = copyModel({ id: "waterSpirit", scene, clips: new Map(), spec: { url: "", height: 1, clips: {} } }, true)
     const material = copy.materials[0]!.material
     expect(material).not.toBe((scene.children[0] as Mesh).material)
-    expect(material.customProgramCacheKey()).toContain("rim:")
+    // One program for every rim (its colors are uniforms), so a tinted copy compiles nothing new.
+    expect(material.customProgramCacheKey()).toBe("rim")
   })
 })

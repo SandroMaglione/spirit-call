@@ -6,7 +6,9 @@
  * places, so it never touches the renderer (see `ui/menu/parts.tsx`).
  * A look shows the same way: a tint as her portrait in it, a trail as a
  * picture of what it sheds (`data-portrait` of `look:<id>`, or `trail:<character>`
- * for her own).
+ * for her own). Portraits are made without ever waiting on the GPU or an
+ * encoder (pixels read back and pictures encoded asynchronously, a few
+ * started per frame): a shelf of them opens at once and fills in.
  *
  * It draws on its own transparent canvas over the UI (it lets every touch
  * and click through), only where a model's place is, and draws nothing
@@ -37,6 +39,8 @@ const stage = {
   portraitPixels: 256,
   portraitTurn: -0.12,
   portraitFill: 0.82,
+  /** Milliseconds a frame may spend making new portraits (at least one is made each frame). */
+  portraitBudget: 6,
   /** The rim lights' strength, and the key light's direction. */
   rim: 4.5,
   key: { x: 1.5, y: 2.5, z: 2.5 }
@@ -64,9 +68,9 @@ const puppetOf = (models: ReadonlyMap<ModelId, ModelSource>, look: BodyLook, tur
 }
 
 /** A placeholder's picture: its capsule standing in the middle, `aspect` wide for its height, lit from the upper left. */
-const capsulePicture = (picture: HTMLCanvasElement, color: number, aspect: number): string => {
+const capsulePicture = (picture: HTMLCanvasElement, color: number, aspect: number): void => {
   const size = picture.width
-  const context = picture.getContext("2d")!
+  const context = picture.getContext("2d", { willReadFrequently: true })!
   context.clearRect(0, 0, size, size)
   const height = size * 0.72
   const width = Math.min(size * 0.8, height * aspect * 0.5)
@@ -83,13 +87,12 @@ const capsulePicture = (picture: HTMLCanvasElement, color: number, aspect: numbe
   context.fill()
   context.fillStyle = light
   context.fill()
-  return picture.toDataURL("image/png")
 }
 
 /** A trail's picture: what it sheds, strewn along a rising curve, the nearest largest, in its colors and its way (drops, embers, wisps). */
-const trailPicture = (picture: HTMLCanvasElement, drops: Omit<Drops, "rate">): string => {
+const trailPicture = (picture: HTMLCanvasElement, drops: Omit<Drops, "rate">): void => {
   const size = picture.width
-  const context = picture.getContext("2d")!
+  const context = picture.getContext("2d", { willReadFrequently: true })!
   context.clearRect(0, 0, size, size)
   const hex = (color: number) => `#${color.toString(16).padStart(6, "0")}`
   // A fixed scatter (the same picture every time).
@@ -135,7 +138,6 @@ const trailPicture = (picture: HTMLCanvasElement, drops: Omit<Drops, "rate">): s
     }
     context.restore()
   }
-  return picture.toDataURL("image/png")
 }
 
 /** A model's bounds, without its glows (halos are wider than the body, and would shrink it in its place). */
@@ -244,64 +246,91 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
     return shown
   }
 
-  // Portraits, rendered once each into a picture.
+  // Portraits, made once each into a picture: none is waited for (see `make`).
   const pictures = new Map<string, string>()
-  const target = new WebGLRenderTarget(stage.portraitPixels, stage.portraitPixels, { format: RGBAFormat, samples: 4 })
-  target.texture.colorSpace = SRGBColorSpace
-  const pixels = new Uint8Array(stage.portraitPixels * stage.portraitPixels * 4)
-  const picture = document.createElement("canvas")
-  picture.width = picture.height = stage.portraitPixels
-  const portraitOf = (id: string, place: HTMLElement): string | null => {
-    const known = pictures.get(id)
-    if (known !== undefined) return known
+  const making = new Set<string>()
+  const failed = new Set<string>()
+  const across = stage.portraitPixels
+  /** A canvas of its own for a picture (drawn on the CPU, so encoding it never waits on the GPU). */
+  const canvasFor = (): HTMLCanvasElement => {
+    const canvas = document.createElement("canvas")
+    canvas.width = canvas.height = across
+    return canvas
+  }
+  const contextOf = (canvas: HTMLCanvasElement) => canvas.getContext("2d", { willReadFrequently: true })!
+  /** Encodes `canvas` as `id`'s picture, off the frame. */
+  const keep = (id: string, canvas: HTMLCanvasElement) => canvas.toBlob((blob) => {
+    making.delete(id)
+    if (blob === null) failed.add(id)
+    else pictures.set(id, URL.createObjectURL(blob))
+  })
+  /** Starts making `id`'s picture: drawn now, read back and encoded later. */
+  const make = (id: string, place: HTMLElement): void => {
+    making.add(id)
+    const canvas = canvasFor()
     // A trail: a picture of what it sheds (her own, or a look's).
     const ownTrail = id.startsWith("trail:") ? characterLooks[id.slice("trail:".length) as CharacterId] : undefined
     const worn = id.startsWith("look:") ? (id.slice("look:".length) as CosmeticId) : null
     const trail = ownTrail?.kind === "model" ? ownTrail.drops : worn === null ? undefined : cosmeticLooks[worn].kind === "trail" ? (cosmeticLooks[worn] as { readonly drops: Omit<Drops, "rate"> }).drops : undefined
     if (trail !== undefined) {
-      const url = trailPicture(picture, trail)
-      pictures.set(id, url)
-      return url
+      trailPicture(canvas, trail)
+      return keep(id, canvas)
     }
     const enemy = id.startsWith("enemy:") ? (id.slice("enemy:".length) as EnemyKind) : null
     // A tint: her portrait wearing it.
     const tinted = worn === null ? null : cosmetics[worn].character
     const look = tinted !== null && worn !== null ? wornLook(characterLooks[tinted], { tint: worn }) : enemy === null ? characterLooks[id as CharacterId] : enemyLooks[enemy]
-    if (look === undefined) return null
+    const puppet = look === undefined || look.kind === "capsule" ? null : puppetOf(models, look, enemy === null ? stage.portraitTurn : stage.turn)
     // A placeholder (no model yet) shows its capsule, in its color.
-    if (look.kind === "capsule") {
-      const url = capsulePicture(picture, look.color, look.widthFactor / look.heightFactor)
-      pictures.set(id, url)
-      return url
+    if (look?.kind === "capsule") {
+      capsulePicture(canvas, look.color, look.widthFactor / look.heightFactor)
+      return keep(id, canvas)
     }
-    const puppet = puppetOf(models, look, enemy === null ? stage.portraitTurn : stage.turn)
-    if (puppet === null) return null
+    if (puppet === null) {
+      making.delete(id)
+      failed.add(id)
+      return
+    }
     const shown = add(id, puppet, cssColor(place, "--el"))
     show(shown)
     // Each shows whole: a character facing the camera, an enemy turned to show its shape.
     frame(shown, 1, 1, enemy === null ? stage.portraitFill : 0.8, 1)
+    // A target of its own: it is read back after later frames have drawn.
+    const target = new WebGLRenderTarget(across, across, { format: RGBAFormat, samples: 4 })
+    target.texture.colorSpace = SRGBColorSpace
     renderer.setRenderTarget(target)
     renderer.clear()
+    // Prepared first, the render itself costs next to nothing (measured: a frame's worth less per portrait).
+    renderer.compile(scene, camera)
     renderer.render(scene, camera)
-    renderer.readRenderTargetPixels(target, 0, 0, stage.portraitPixels, stage.portraitPixels, pixels)
     renderer.setRenderTarget(null)
     remove(shown)
-    // The render target's rows go bottom to top.
-    const image = new ImageData(stage.portraitPixels, stage.portraitPixels)
-    const row = stage.portraitPixels * 4
-    for (let y = 0; y < stage.portraitPixels; y++) image.data.set(pixels.subarray((stage.portraitPixels - 1 - y) * row, (stage.portraitPixels - y) * row), y * row)
-    picture.getContext("2d")!.putImageData(image, 0, 0)
-    const url = picture.toDataURL("image/png")
-    pictures.set(id, url)
-    return url
+    const pixels = new Uint8Array(across * across * 4)
+    void renderer.readRenderTargetPixelsAsync(target, 0, 0, across, across, pixels).then(() => {
+      target.dispose()
+      // The render target's rows go bottom to top.
+      const image = new ImageData(across, across)
+      const row = across * 4
+      for (let y = 0; y < across; y++) image.data.set(pixels.subarray((across - 1 - y) * row, (across - y) * row), y * row)
+      contextOf(canvas).putImageData(image, 0, 0)
+      keep(id, canvas)
+    }, () => {
+      target.dispose()
+      making.delete(id)
+      failed.add(id)
+    })
   }
 
   let drawn = false
   return {
     render(seconds) {
+      // New portraits started within the frame's budget; the rest wait for the next frames.
+      const until = performance.now() + stage.portraitBudget
+      let started = 0
       for (const place of document.querySelectorAll<HTMLElement>("[data-portrait]")) {
         const id = place.dataset["portrait"]!
         if (place.dataset["drawn"] === id) continue
+
         const illustration = id.startsWith("enemy:") ? enemyPortraits[id.slice("enemy:".length) as EnemyKind] : null
         if (illustration != null) {
           const { url, sheet, crop } = illustration
@@ -315,8 +344,14 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
         // A reused place may have shown an illustration before its model portrait.
         place.style.backgroundSize = ""
         place.style.backgroundPosition = ""
-        const url = portraitOf(id, place)
-        if (url === null) continue
+        const url = pictures.get(id)
+        if (url === undefined) {
+          if (!making.has(id) && !failed.has(id) && (started === 0 || performance.now() < until)) {
+            started += 1
+            make(id, place)
+          }
+          continue
+        }
         place.style.backgroundImage = `url(${url})`
         place.dataset["drawn"] = id
       }
@@ -359,7 +394,7 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
       window.removeEventListener("resize", resize)
       for (const shown of live.values()) remove(shown)
       live.clear()
-      target.dispose()
+      for (const url of pictures.values()) if (url.startsWith("blob:")) URL.revokeObjectURL(url)
       renderer.dispose()
       canvas.remove()
     }

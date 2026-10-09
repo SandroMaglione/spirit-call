@@ -84,7 +84,8 @@ const applyRim = (material: MeshStandardMaterial, rim: RimData): void => {
 	totalEmissiveRadiance += rimColor * rimStrength * pow( 1.0 - rimFacing, rimPower );
 	totalEmissiveRadiance += coreColor * coreStrength * pow( rimFacing, corePower );`)
   }
-  material.customProgramCacheKey = () => `rim:${rim.color}:${rim.strength}:${rim.power}:${core.color}:${core.strength}:${core.power}`
+  // Its colors and strengths are uniforms: every rim shares one program (a tinted copy compiles nothing new).
+  material.customProgramCacheKey = () => "rim"
   material.needsUpdate = true
 }
 
