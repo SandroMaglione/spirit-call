@@ -7,7 +7,7 @@ import { basicAttack } from "../src/content/aspects.ts"
 import { isMelee } from "../src/content/attacks.ts"
 import type { BuildValue } from "../src/schema.ts"
 import type { BotReport, BotRun } from "./bot.ts"
-import { dodger, fighter, learner, moveReach } from "./bot.ts"
+import { dodger, fighter, learner, moveReach, skillReach } from "./bot.ts"
 import { experienceTo } from "../src/account/progression.ts"
 
 export interface BalanceCase {
@@ -74,6 +74,31 @@ export const statAudit = (tuning: Tuning) => [1, 5, 10, 18, 30, 40].map((level) 
     basicHitsToKillAtLevel1: Math.ceil(enemy.hp / damageTaken(tuning, damageDealt(base.atk, sword.power), enemy.def)),
     basicHitsToKillMatched: Math.ceil(enemy.hp / damageTaken(tuning, damageDealt(player.atk, sword.power), enemy.def)) }
 })
+
+/**
+ * Every character's kit on paper (see docs/balance.md, "Kits"): what each
+ * skill deals one target per use (% ATK, a totem's or a whirl's every strike
+ * added up, one shell of a volley), how far it reaches, what it costs, and
+ * what else it does (heal, stun, plates). The matrix says what they are
+ * worth in play; this is what to read it against.
+ */
+export const kitAudit = (tuning: Tuning) => Object.entries(tuning.characters).flatMap(([character, spec]) =>
+  (["special", "ultimate"] as const).map((slot) => {
+    const skill = tuning.skills[spec.skills[slot]]
+    const effect = skill.effect
+    const strikes = effect.kind === "totem" ? Math.floor(effect.seconds / effect.tick) : effect.kind === "vortex" ? Math.floor(effect.seconds / effect.tick) : 1
+    const perUse = effect.power * strikes
+    return {
+      character, slot, skill: skill.name, kind: effect.kind, perUse, reach: Math.round(skillReach(effect)),
+      cooldown: skill.cooldown, energy: skill.energy, perCooldownSecond: Number((perUse / skill.cooldown).toFixed(1)),
+      also: [
+        "heal" in effect && effect.heal > 0 ? `heal ${effect.heal}%${effect.kind === "totem" ? " a zap" : ""}` : "",
+        "stun" in effect && effect.stun > 0 ? `stun ${effect.stun}s` : "",
+        effect.kind === "guard" ? `${effect.plates} plates` : "",
+        "leaves" in effect && effect.leaves !== null ? `${effect.leaves.element} pools` : ""
+      ].filter(Boolean).join(", ")
+    }
+  }))
 
 export interface BalanceRow {
   readonly id: string

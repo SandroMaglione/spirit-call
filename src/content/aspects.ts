@@ -61,9 +61,9 @@ export const aspects = {
     against: "Elites and armor; weaker against a crowd.",
     class: "blade",
     combo: [
-      thrust({ reach: 175, width: 52, power: 20, knockback: 380, recovery: 0.22, hitStop: 0.06, heavy: false, lunge: 28 }),
-      thrust({ reach: 180, width: 52, power: 28, knockback: 460, recovery: 0.26, hitStop: 0.07, heavy: false, lunge: 32 }),
-      thrust({ reach: 195, width: 60, power: 44, knockback: 900, recovery: 0.5, hitStop: 0.12, heavy: true, lunge: 44 })
+      thrust({ reach: 175, width: 64, power: 20, knockback: 380, recovery: 0.22, hitStop: 0.06, heavy: false, lunge: 28 }),
+      thrust({ reach: 180, width: 64, power: 28, knockback: 460, recovery: 0.26, hitStop: 0.07, heavy: false, lunge: 32 }),
+      thrust({ reach: 195, width: 72, power: 44, knockback: 900, recovery: 0.5, hitStop: 0.12, heavy: true, lunge: 44 })
     ],
     charged: { chargeTime: 0.5, move: thrust({ reach: 260, width: 70, power: 60, knockback: 1000, recovery: 0.5, hitStop: 0.14, heavy: true, lunge: 160 }) },
     /** A heavy lunge out of the dash: the counter. */
@@ -173,11 +173,11 @@ export const aspects = {
     against: "Fighting in the middle of the pack.",
     class: "gun",
     combo: [
-      shot({ count: 5, spreadDegrees: 30, speed: 900, radius: 5, range: 300, pierce: 0, power: 5, knockback: 520, recovery: 0.16, hitStop: 0.03, heavy: false, lunge: -6 }),
-      shot({ count: 5, spreadDegrees: 30, speed: 900, radius: 5, range: 300, pierce: 0, power: 5, knockback: 520, recovery: 0.16, hitStop: 0.03, heavy: false, lunge: -6 }),
-      shot({ count: 7, spreadDegrees: 44, speed: 900, radius: 5, range: 280, pierce: 0, power: 4, knockback: 700, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: -14 })
+      shot({ count: 5, spreadDegrees: 30, speed: 900, radius: 5, range: 300, pierce: 0, power: 7, knockback: 520, recovery: 0.16, hitStop: 0.03, heavy: false, lunge: -6 }),
+      shot({ count: 5, spreadDegrees: 30, speed: 900, radius: 5, range: 300, pierce: 0, power: 7, knockback: 520, recovery: 0.16, hitStop: 0.03, heavy: false, lunge: -6 }),
+      shot({ count: 7, spreadDegrees: 44, speed: 900, radius: 5, range: 280, pierce: 0, power: 5, knockback: 700, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: -14 })
     ],
-    charged: { chargeTime: 0.55, move: shot({ count: 9, spreadDegrees: 60, speed: 950, radius: 6, range: 220, pierce: 0, power: 6, knockback: 900, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 }) },
+    charged: { chargeTime: 0.55, move: shot({ count: 9, spreadDegrees: 60, speed: 950, radius: 6, range: 220, pierce: 0, power: 7, knockback: 900, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 }) },
     /** A spread out of the dash. */
     dash: shot({ count: 5, spreadDegrees: 40, speed: 900, radius: 5, range: 280, pierce: 0, power: 2, knockback: 420, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: -10 }),
     magazine: { rounds: 4, reload: 1.2 },

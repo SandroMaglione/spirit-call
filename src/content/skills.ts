@@ -335,9 +335,9 @@ export const skills = {
   tide: skill({
     name: "Tide",
     cooldown: 10,
-    energy: 100,
+    energy: 85,
     invulnerability: 0.5,
-    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
+    effect: nova({ radius: 280, power: 65, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
   }),
   /**
    * The Stormcaller's special: a totem planted at her feet that zaps
@@ -351,7 +351,7 @@ export const skills = {
     cooldown: 10,
     energy: 0,
     invulnerability: 0,
-    effect: totem({ offset: 28, seconds: 8, tick: 0.9, radius: 160, heal: 2, jumps: 2, repel: 700, power: 18, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
+    effect: totem({ offset: 28, seconds: 8, tick: 0.9, radius: 160, heal: 2, jumps: 2, repel: 700, power: 14, element: "thunder", knockback: 60, hitStop: 0, heavy: false })
   }),
   /**
    * The Stormcaller's ultimate: thunder striking the enemies around her,
@@ -363,7 +363,7 @@ export const skills = {
     cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
-    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1.5, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
+    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
   }),
   /**
    * Bastion's ultimate (id `stoneGuard`, from her first kit's special): a ring of stone bursts out around her, throwing
@@ -380,7 +380,7 @@ export const skills = {
     invulnerability: 0.2,
     effect: guard({
       raise: 0.9,
-      plates: 4,
+      plates: 3,
       radius: 150,
       breakFill: 0.3,
       shove: { radius: 190, power: 40, knockback: 1100 },

@@ -6,7 +6,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { QuestId } from "../src/content/quests.ts"
 import { validateContent } from "../src/content/validate.ts"
 import { runBot } from "../test/bot.ts"
-import { balanceCases, balanceViolations, compareBalance, economyAudit, matrixCases, matrixQuests, matrixSummary, statAudit } from "../test/balance-model.ts"
+import { balanceCases, balanceViolations, compareBalance, economyAudit, kitAudit, matrixCases, matrixQuests, matrixSummary, statAudit } from "../test/balance-model.ts"
 import type { BalanceRow, MatrixRow } from "../test/balance-model.ts"
 import { energyAudit, energyViolations } from "../test/energy-model.ts"
 
@@ -45,6 +45,7 @@ if (quests.some((quest) => !(quest in tuning.quests))) throw new Error(`Unknown 
 const rows: Array<BalanceRow> = []
 const stats = statAudit(tuning)
 console.table(stats)
+console.table(kitAudit(tuning))
 const economy = economyAudit(tuning)
 console.table(economy)
 console.log("Whole runs with real health. Timeouts are censored observations, not defeats.\n")

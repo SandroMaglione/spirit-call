@@ -49,6 +49,14 @@ describe("content", () => {
     expect(validateContent(greedy)).toEqual([expect.stringContaining("character stonekeeper: her body scores")])
   })
 
+  it("holds aspects to their plain aspect's damage, more for one fighting closer", () => {
+    // The Scattergun fights at 300 against the Sidearm's 660: its budget is above the Sidearm's, so the Sidearm's own numbers fall short.
+    const scattergun = defaultTuning.aspects.scattergun
+    const sidearm = defaultTuning.classes.gun.plain
+    const short: Tuning = { ...defaultTuning, aspects: { ...defaultTuning.aspects, scattergun: { ...scattergun, combo: sidearm.combo.map((move) => ({ ...move, range: 300 })) as typeof scattergun.combo, magazine: sidearm.magazine } } }
+    expect(validateContent(short)).toEqual([expect.stringMatching(/^aspect scattergun: deals \d+ a second against its budget of \d+/)])
+  })
+
   it("reports enemies that would make an element required", () => {
     const broken: Tuning = {
       ...defaultTuning,
