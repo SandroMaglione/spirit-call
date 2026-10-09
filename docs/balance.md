@@ -5,6 +5,26 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The roles' own measures (2026-10-10)
+
+The roster (`docs/roster.md`) holds healers about equal by health restored
+a minute, and guardians by blows stopped a minute, however their kits ask
+for it. `pnpm balance --matrix` now prints both beside clears and health
+left (`healedPerMinute`: health restored a minute, as a share of her own;
+`blockedPerMinute`: blows stopped before they landed, stone plates
+shattered today). Read solo, each character alone at the enemies' level,
+over the matrix's 8 quests and 2 seeds. The two of today are the reference
+a new healer or guardian is tuned against:
+
+| | Skilled bot | Learning bot |
+|---|---|---|
+| Stormcaller, health restored a minute | 11% | 41% |
+| Bastion, blows stopped a minute | 1.1 | 3.6 |
+
+Both follow how often she is hit (the skilled bot is hit about a third as
+often), so compare a new one with the same profile. The rest of the matrix
+is unchanged from "Where the stats pass stands" below.
+
 ## Where the stats pass stands (2026-10-09)
 
 Six steps (PRs #85 to #89, and this note): the matrix and a bot that plays
