@@ -250,9 +250,13 @@ const idleSkills = (at: Vec2): ControlsValue["skills"] => bySlot(() => ({ presse
  * Touch controls into intent. The stick moves (analog) and turns the player
  * where it points; standing still keeps the facing. Each ATTACK tap slashes
  * once, turning toward the enemy the assist picks (see `Tuning.touch.assist`),
- * else along the facing; so does releasing a charged power attack. Skills have no assist: each skill button uses the
- * skill in its slot, aimed by the skill's kind (see `touchSkill`). Cancelled
- * touches do nothing.
+ * else along the facing; so does a charged power attack, held and released.
+ * The aim point is the picked enemy itself (else a set distance along the
+ * facing), so what arcs lands on what the ring marks: a basic attack never
+ * asks for a point (docs/aspects.md, "Aiming on touch"). Each skill button
+ * uses the skill in its slot, aimed by the skill's kind and the button's drag,
+ * or, tapped, at the assist's pick (see `touchSkill`). Cancelled touches do
+ * nothing.
  */
 const resolveTouch = (
   touch: TouchSnapshot,
@@ -273,16 +277,17 @@ const resolveTouch = (
   const heading = moving ? normalizeOr(move, player.aim) : player.aim
   // The pick is shown by a ring at all times, so what the ring marks is what a tap hits.
   const target = assistTargetOf(origin, heading, enemies, previous.assistTarget, player.attack, tuning)
-  // The player faces where the stick moves; an attack (or releasing a charge) turns toward the assist's pick.
-  const ahead = (attack.pressed || attack.released) && target !== undefined
-    ? normalizeOr({ x: target.position.x - origin.x, y: target.position.y - origin.y }, heading)
-    : heading
-  const aimPoint = { x: origin.x + ahead.x * tuning.touch.aimDistance, y: origin.y + ahead.y * tuning.touch.aimDistance }
+  // The player faces where the stick moves; an attack (a tap, or a charge held and released) turns toward the assist's pick, and aims at it.
+  const engaged = (attack.pressed || attack.held || attack.released) && target !== undefined
+  const toTarget = target === undefined ? zero : { x: target.position.x - origin.x, y: target.position.y - origin.y }
+  const ahead = engaged ? normalizeOr(toTarget, heading) : heading
+  const distance = engaged ? length(toTarget) : tuning.touch.aimDistance
+  const aimPoint = { x: origin.x + ahead.x * distance, y: origin.y + ahead.y * distance }
   return {
     device: "touch",
     move,
     aimPoint,
-    skills: bySlot((slot) => touchSkill(touch, slot, tuning.skills[player.skills[slot].skill].effect, origin, ahead, tuning)),
+    skills: bySlot((slot) => touchSkill(touch, slot, tuning.skills[player.skills[slot].skill].effect, origin, ahead, target?.position ?? null, tuning)),
     assistTarget: target?.id ?? null,
     dashPressed: touch.buttons.dash.pressed,
     attackPressed: attack.pressed,
@@ -303,14 +308,23 @@ const resolveTouch = (
  * is long); a tap uses it where the player faces (a lob lands at
  * `tapThrowRange` of its range).
  */
-const touchSkill = (touch: TouchSnapshot, slot: SkillSlot, effect: SkillEffect, origin: Vec2, ahead: Vec2, tuning: TuningValue): SkillControl => {
+/**
+ * A skill button: dragged, it aims along the drag (and, for a skill set down
+ * somewhere, as far as the drag reaches); tapped, at the assist's `pick`
+ * when there is one (set down on it, within the skill's range), else along
+ * `ahead` (set down a share of its range away).
+ */
+const touchSkill = (touch: TouchSnapshot, slot: SkillSlot, effect: SkillEffect, origin: Vec2, ahead: Vec2, pick: Vec2 | null, tuning: TuningValue): SkillControl => {
   const button = touch.buttons[slot]
   const aim = skillAim(effect)
   // Around her, or where she faces: on touch, nothing to aim.
   if (aim.kind === "self" || aim.kind === "facing") return { pressed: button.pressed, at: origin, aiming: null }
   const toward = (drag: Vec2 | null): Vec2 => {
-    const direction = drag === null ? ahead : worldDirection(drag, ahead)
-    const distance = aim.kind === "direction" ? aim.reach : drag === null ? aim.range * tuning.touch.tapThrowRange : aim.range * length(drag)
+    const toPick = drag === null && pick !== null ? { x: pick.x - origin.x, y: pick.y - origin.y } : null
+    const direction = toPick !== null ? normalizeOr(toPick, ahead) : drag === null ? ahead : worldDirection(drag, ahead)
+    const distance = aim.kind === "direction" ? aim.reach
+      : toPick !== null ? Math.min(aim.range, length(toPick))
+      : drag === null ? aim.range * tuning.touch.tapThrowRange : aim.range * length(drag)
     return { x: origin.x + direction.x * distance, y: origin.y + direction.y * distance }
   }
   return {
