@@ -11,7 +11,7 @@ import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, St
 
 const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map(({ data }) => data.lobbed.get()))
 import type { BuildValue } from "../src/schema.ts"
-import { ClearEnemies, gunner, start, swordsman, plainAttack } from "./helpers.ts"
+import { ClearEnemies, gunner, start, swordsman, plainAttack, hitBy } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
@@ -70,7 +70,7 @@ describe("power attack", () => {
     expect(run.world().enemies).toEqual([hp])
     run.step(steps(0.1) + 4)
     expect(run.world().moves).toBe(2)
-    expect(run.world().enemies).toEqual([hp - power.power])
+    expect(run.world().enemies).toEqual([hp - hitBy("swordsman", power.power)])
     // The power move ends the combo.
     expect(run.world().weapon.step).toBe(-1)
   })

@@ -178,11 +178,11 @@ describe("the rule", () => {
 
 describe("the grenade's fire", () => {
   it("sets what it hits burning; the burn ticks down and wears off", () => {
-    // Without its fire pool, which would keep the dummy burning.
-    const noPool = withGrenade({ leaves: null })
+    // Without its fire pool, which would keep the dummy burning; a sturdy dummy, so the burn wears off before it falls.
+    const noPool = tuningWith({ ...withGrenade({ leaves: null }), enemies: { dummy: { hp: 1000 } } })
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { build: gunner, keys: [throwGrenade(1)], tuning: noPool })
     run.step(steps(grenade.flightTime + grenade.fuse) + 4)
-    const hit = tuning.enemies.dummy.hp - (atk * grenade.power) / 100
+    const hit = 1000 - (atk * grenade.power) / 100
     const [dummy] = run.world().enemies
     expect(dummy!.health).toBeCloseTo(hit, 6)
     expect(dummy!.state?.id).toBe("burning")

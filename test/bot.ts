@@ -479,7 +479,8 @@ const Tallied = Game.Inspector("Bot/Tally", { resources: { stats: Game.System.re
 /**
  * How near an enemy has to be for a skill to land on it (the bot holds a
  * skill until then, as a player would): its reach, area, or range, and a
- * little more. A guard is raised whenever it is ready.
+ * little more (see `skillClearance` for how near is too near). A guard is
+ * raised whenever it is ready.
  */
 export const skillReach = (effect: SkillEffect): number => {
   const more = 40
@@ -504,6 +505,18 @@ export const skillReach = (effect: SkillEffect): number => {
     case "guard":
       return Infinity
   }
+}
+
+/**
+ * How far an enemy has to be for a skill not to land on her too: a lob or a
+ * volley leaving fire waits until its blast (and the pools it leaves) would
+ * stay clear of her, as a player aims it away from her own feet. Anything
+ * else: no nearer limit.
+ */
+export const skillClearance = (effect: SkillEffect): number => {
+  if (effect.kind === "barrage" && effect.leaves !== null) return effect.spread + effect.radius + effect.leaves.radius + 20
+  if (effect.kind === "lob" && effect.leaves !== null) return Math.max(effect.radius, effect.leaves.radius) + 20
+  return 0
 }
 
 /** How far a move reaches from her: a melee move's reach, how far a shot or a disc flies, where a lob can land. */
@@ -676,7 +689,7 @@ export const runBot = (run: BotRun): BotReport => {
       }
       // A skill waits for an enemy it can reach (a totem also for when she is hurt, to heal by it).
       const hurt = active !== undefined && active.health.current < active.health.max * 0.8
-      const lands = (slot: "special" | "ultimate") => distance <= skillReach(effectOf(slot)) || (effectOf(slot).kind === "totem" && hurt)
+      const lands = (slot: "special" | "ultimate") => (distance <= skillReach(effectOf(slot)) && distance >= skillClearance(effectOf(slot))) || (effectOf(slot).kind === "totem" && hurt)
       move = { ...move, special: lands("special"), ultimate: lands("ultimate"), skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
     }
     // Charging: pressed once, held through the charge, let go once full; a threat lets go early (the charge is lost).

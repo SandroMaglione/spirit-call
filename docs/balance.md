@@ -5,6 +5,54 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Bodies (2026-10-09)
+
+Every character had 100 ATK, and her HP, DEF, and speed only a little apart:
+they played alike, and the kits and classes made all the difference (the
+matrix: the Stormcaller and Bastion on top, the Tidecaller and the Gunner
+at the bottom). Bodies now differ on purpose, and all keep to one budget.
+
+**The budget.** A body's score multiplies three things, each beside the
+reference body's (75 HP, 100 ATK, 15 DEF, 295 speed: a score of 1): ATK,
+effective health (HP as DEF stretches it, `effectiveHealth`), and speed.
+Her budget is her role's share times her class's range's (`bodyRules`),
+and `validateContent` holds her score within 5% of it:
+
+| Role | Share | Why |
+|---|---|---|
+| Fighter | 1 | Her strength is her blows and her body |
+| Guardian | 0.95 | Her kit shields the team (plates) |
+| Support | 0.85 | Her kit heals and keeps the team going |
+
+| Range | Share | Why |
+|---|---|---|
+| Close | 1.05 | She takes more blows |
+| Middle | 1 | |
+| Long | 0.95 | Distance is a defense of its own |
+
+**The bodies.**
+
+| | HP | ATK | DEF | Speed | Effective health | Score / budget | Feels |
+|---|---|---|---|---|---|---|---|
+| Swordsman (fighter, close) | 82 | 92 | 22 | 290 | 100 | 1.05 / 1.05 | A bruiser: sturdy and steady |
+| Gunner (fighter, long) | 58 | 125 | 8 | 310 | 63 | 0.95 / 0.95 | A glass cannon |
+| Tidecaller (fighter, middle) | 70 | 105 | 12 | 310 | 78 | 1.00 / 1.00 | An agile skirmisher |
+| Stormcaller (support, middle) | 72 | 88 | 15 | 295 | 83 | 0.85 / 0.85 | Her strength is her kit |
+| Bastion (guardian, middle) | 85 | 80 | 30 | 275 | 111 | 0.95 / 0.95 | A tank: slow, bulky, light blows |
+
+Speed counts one for one in the score (5% quicker is worth 5% of ATK or
+health): an approximation, for the matrix and playtests to correct. Each
+role's and range's share is a first guess the same way. The budget keeps
+characters from drifting apart by accident; the kits pass and playtests set
+how much each part is really worth. Tests of mechanics read a character's
+ATK from the tuning (`hitBy`), never a fixed 100.
+
+**Fire spreads within a side.** Found by the matrix: a burning enemy
+pressed against the Gunner set her burning with her own fire, and she fell
+to it in every run (all 25 hits of a lost Swarm run were her own burn).
+Fire now spreads only between bodies of one side; pools, fire on the floor,
+and enemies' fire blows still burn the team.
+
 ## The matrix, and a bot that plays each build (2026-10-09)
 
 `pnpm balance --matrix` puts builds side by side: every character with

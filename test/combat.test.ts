@@ -6,7 +6,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Enemy, Game, Health, PendingSpawn, Position, Projectile, Stats } from "../src/schema.ts"
-import { gunShot, gunner, start, withGun } from "./helpers.ts"
+import { gunShot, gunner, start, withGun, hitBy } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Combat", {
   queries: {
@@ -52,7 +52,7 @@ describe("projectiles", () => {
     run.step(3)
     const world = run.runtime.inspect(World)
     const target = world.enemies.find((enemy) => Math.abs(enemy.position.x - dummy.x) < 1)
-    expect(target?.health).toBe(tuning.enemies.dummy.hp - gunShot.power)
+    expect(target?.health).toBe(tuning.enemies.dummy.hp - hitBy("gunner", gunShot.power))
     expect(world.projectiles).toEqual([])
   })
 
@@ -74,7 +74,7 @@ describe("projectiles", () => {
     const run = start({ tuning, build: gunner, pointer: [{ frame: 0, move: aimAt(target), press: ["primary"], release: ["primary"] }] })
     run.step(3)
     const damaged = run.runtime.inspect(World).enemies.filter((enemy) => enemy.health < tuning.enemies.dummy.hp)
-    expect(damaged.map((enemy) => enemy.health)).toEqual([tuning.enemies.dummy.hp - gunShot.power])
+    expect(damaged.map((enemy) => enemy.health)).toEqual([tuning.enemies.dummy.hp - hitBy("gunner", gunShot.power)])
   })
 })
 

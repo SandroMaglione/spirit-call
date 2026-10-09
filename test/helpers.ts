@@ -9,6 +9,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import type { BasicAttackSpec, ShotMove } from "../src/content/attacks.ts"
 import type { AspectId, AspectSpec } from "../src/content/aspects.ts"
 import type { ClassId } from "../src/content/classes.ts"
+import type { CharacterId } from "../src/content/characters.ts"
 import type { ElementId } from "../src/content/elements.ts"
 import type { Passive } from "../src/content/passives.ts"
 import type { RelicId, RelicSlot, RelicSpec } from "../src/content/relics.ts"
@@ -222,6 +223,9 @@ export const plainEnemies = (tuning: Tuning): Tuning => ({
   progression: { ...tuning.progression, enemies: { ...tuning.progression.enemies, health: 1, healthAtFirst: 1, atk: 1, atkAtFirst: 1 } },
   pacing: { ...tuning.pacing, windupAtFirst: 1 }
 })
+
+/** What a blow of `power` from `character` deals a body with no DEF, at level 1: her ATK's share. */
+export const hitBy = (character: CharacterId, power: number, tuning: Tuning = defaultTuning): number => damageDealt(tuning.characters[character].stats.atk, power)
 
 /** A headless run after setup. Timeline frame `n` is read by fixed step `n + 1`. */
 export const start = (options: StartOptions = {}) => {

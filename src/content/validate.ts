@@ -34,6 +34,7 @@ import { enemies, followUpsOf } from "./enemies.ts"
 import type { AttackSpec, EnemyKind } from "./enemies.ts"
 import type { MoveFilter, Passive } from "./passives.ts"
 import { relicBudget, relicSlots, relicTiers } from "./relics.ts"
+import { bodyRules, bodyScore } from "./characters.ts"
 import type { CosmeticId, CosmeticSpec } from "./cosmetics.ts"
 import type { RelicSpec } from "./relics.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
@@ -580,6 +581,15 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     const where = `character ${id}`
     positive(problems, where, { hp: character.stats.hp, speed: character.stats.speed, radius: character.radius, hurtboxRadius: character.hurtboxRadius })
     if (!has(tuning.classes, character.class)) problems.push(`${where}: unknown class ${character.class}`)
+    else if (!has(bodyRules.role, character.role)) problems.push(`${where}: unknown role ${character.role}`)
+    else {
+      // Every body keeps to one budget: her role's share times her class's range's (see `bodyRules`).
+      const budget = bodyRules.role[character.role] * bodyRules.range[tuning.classes[character.class].range]
+      const score = bodyScore(character.stats, tuning.combat.defenseScale)
+      if (Math.abs(score / budget - 1) > bodyRules.tolerance) {
+        problems.push(`${where}: her body scores ${score.toFixed(3)}, off her budget ${budget.toFixed(3)} (a ${character.role} at ${tuning.classes[character.class].range} range) by more than ${bodyRules.tolerance * 100}%`)
+      }
+    }
     if (!has(elements, character.element)) problems.push(`${where}: unknown element ${character.element}`)
     for (const [slot, skill] of Object.entries(character.skills)) {
       if (!has(tuning.skills, skill)) problems.push(`${where}: unknown ${slot} skill ${skill}`)
