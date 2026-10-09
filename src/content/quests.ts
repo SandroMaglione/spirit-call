@@ -320,7 +320,7 @@ export const quests = {
     enemyLevel: 17,
     element: "water",
     after: "bruteKing",
-    introduces: brings("Water in the floor: it soaks and slows whoever wades in", hazard("water")),
+    introduces: brings("Water in the floor: it soaks whoever wades in, and soaked blows hit softer", hazard("water")),
     stars: [nobodyFalls(), atLeast("ultimates", 5), atLeast("healthLeft", 75)],
     rewards: pays(320, 110, 4200)
   }),

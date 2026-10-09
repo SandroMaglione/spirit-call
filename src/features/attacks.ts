@@ -18,7 +18,8 @@
  *
  * The phase is the `AttackPhase` state component; its moves follow the cycle
  * above, which the type checker enforces. A stunned enemy's attack is put
- * on hold where it is. A blink moves the attacker: it appears in the middle
+ * on hold where it is; a disarmed one's windup is cut off, and it starts no
+ * attack until it is armed again (it still moves). A blink moves the attacker: it appears in the middle
  * of its mark as the windup ends, then strikes the mark. A gust blows along
  * its cone, its own side too (pushed and driven by the wind, no damage). A
  * shockwave's ring runs out along the floor from where it stood.
@@ -74,6 +75,7 @@ import {
   RunScope,
   SlowMotion,
   Stunned,
+  Disarmed,
   Time,
   Tuning,
   Velocity,
@@ -134,6 +136,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         phase: Game.Query.write(AttackPhase),
         stats: Game.Query.read(CombatStats),
         stunned: Game.Query.read(Stunned),
+        disarmed: Game.Query.write(Disarmed),
         poise: Game.Query.read(Poise),
         mode: Game.Query.read(EnemyMode),
         elite: Game.Query.optional(Elite)
@@ -211,13 +214,17 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (rampage !== undefined && rampage.phase > rampage.was) events.roused.emit({ at: data.position.get(), enemy: kind, phase, element: data.elite.present ? data.elite.get().element : null })
     // Low levels wait longer between attacks, a champion less (its telegraphs are its kind's), and less again in its later phases; see `restOf`.
     const rest = (data.enemy.get().rest ?? 1) * phaseRest
-    // A broken enemy's windup is cut off (it starts over once it recovers).
-    if (data.poise.get().broken > 0 && data.phase.get() === "windup") {
+    // A broken or a disarmed enemy's windup is cut off (it starts over once it recovers, or once it is armed again).
+    const disarmed = data.disarmed.get().remaining
+    if (disarmed > 0) data.disarmed.set({ remaining: Math.max(0, disarmed - dt) })
+    if ((data.poise.get().broken > 0 || disarmed > 0) && data.phase.get() === "windup") {
       const cut = data.attacker.get()
       data.phase.transition("windup", "ready")
       windingUp -= 1
       data.attacker.set({ ...cut, elapsed: 0, area: null, cooldown: (attacks[cut.attack ?? -1]?.cooldown ?? 0) * rest })
     }
+    // A disarmed enemy starts no attack (it still moves); a swing already under way finishes.
+    if (disarmed > 0 && data.phase.get() === "ready") continue
     // A stunned enemy's attack waits, its telegraph still showing, until the stun wears off.
     if (attacks.length === 0 || data.stunned.get().remaining > 0) continue
     const position = data.position.get()

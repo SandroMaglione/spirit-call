@@ -5,6 +5,26 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Water weakens, and its burst disarms (2026-10-10)
+
+Water moved to its part of the element map (`docs/elements.md`): a soaked
+body's blows deal 30% less (it no longer slows), and Splash disarms for
+1.5 s (a windup cut off, no attack started) instead of stopping bodies a
+second. The Juggernaut is weak to water too (heavy hitters). Measured
+against main with the Swordsman's bot, nothing moved far:
+
+| | Before | After |
+|---|---|---|
+| `pnpm lab`, hits over every wave (quick / learning) | 368 / 699 | 373 / 706 |
+| `pnpm expected`, cleared on every seed | 140 of 152 | 139 of 152 |
+| `pnpm expected`, quest runs perfect on some seed | 83 of 93 | 89 of 93 |
+
+Fewer runs were lost (four plays lost at least once, from seven), and
+more of Until Fall's tiers ran out of time instead: enemies are no longer
+slowed by the water floors and elites, and a soaked player hits softer.
+CI's audit moved 29 numbers, one outcome (the Warlord's team with skills
+on seed 42 timed out instead of falling); its report is the baseline.
+
 ## Touch aims what arcs at the pick (2026-10-10)
 
 On touch a charge, held and released, now aims at the enemy the assist

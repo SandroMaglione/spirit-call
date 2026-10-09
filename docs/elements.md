@@ -17,7 +17,7 @@ settled here is in the open questions at the end: ask, do not guess.
   elements, so a new element is two definitions, never one per element
   already in the game, and the player learns one rule, not a matrix.
 - **Designed around enemies.** Each element does a job against a kind of
-  enemy situation (packs, fast enemies, spread-out groups, tanky ones). A
+  enemy situation (packs, heavy hitters, spread-out groups, tanky ones). A
   strategy is matching the team's elements to the enemies you will face.
 - **An element belongs to a character**: her special and ultimate apply
   it, and her aspect may give one moment of her basic attack to it (see
@@ -59,7 +59,7 @@ no other burst and leaves no state.
 | Element | Job | Its state (alone) | Its burst |
 |---|---|---|---|
 | **Fire** | Dense packs | **Burning**: damage over time, spreading to the bodies of its side it touches | **Flare**: the burn left, dealt at once, to it and the bodies around it |
-| **Water** | Fast enemies | **Soaked**: slowed | **Splash**: it and the bodies around it stop for a moment |
+| **Water** | Heavy hitters | **Soaked**: its blows are weaker (not its burns) | **Splash**: it and the bodies around it are disarmed a moment: a windup is cut off, and no attack starts, though they still move |
 | **Thunder** | Spread-out groups, enemies at range | **Charged**: a blow on it arcs on to the nearest body of its side, with a share of the damage, charging it | **Discharge**: thunder strikes the bodies around it |
 | **Wind** | Groups to scatter or bunch up | **Swept**: light, pushed further and gliding; slammed into a wall, stunned | **Gale**: it is launched along the blow, the bodies around it thrown away from it, all stunned a moment |
 | **Rock** | Tanky enemies | **Cracked**: its break bar fills faster | **Shatter**: a large share of its break bar at once, and a blow to it and the bodies around it |
@@ -73,8 +73,8 @@ bodies as far as a skill says, on top of Charged.
 Every character applies her own element: each one can build on her own
 state alone, and each pair of characters gets bursts on top. For example,
 the Stormcaller charges a spread-out group, and her blows arc between them;
-with the Tidecaller, thunder on soaked enemies splashes the whole group to
-a stop, and leaves it charged. Bastion cracks the toughest enemies (her
+with the Tidecaller, thunder on soaked enemies splashes the whole group,
+cutting off what it was winding up, and leaves it charged. Bastion cracks the toughest enemies (her
 Earthrise, her special, raises stone under the toughest around her,
 stunning them a moment), so they break sooner under her own blows, and
 any other element shatters them.
@@ -99,12 +99,11 @@ its own).
 | Where it aims | **Light** (a candidate) | Dazzled: it aims where the player was, not where she is | Flash: it and the bodies around lose their target | later |
 | Damage that comes later | **Shadow** (a candidate) | Marked: part of every blow on it is stored | Echo: what was stored, at once | later |
 
-Water's job becomes **heavy hitters** (enemies whose blows hurt most), rock
+Water's job is **heavy hitters** (enemies whose blows hurt most), rock
 keeping **tanky** ones; fast enemies have no element of their own until
 ice. On the player, Soaked makes her blows weaker, and a water pool does so
-to whoever stands in it. **Water moves to its part in the roster's water
-step** (`roster.md`, "Building it"): until then the table above ("The
-elements") is what the game does, Soaked slowing and Splash stopping.
+to whoever stands in it. (Until October 2026 water slowed, and its burst
+stopped bodies a moment: the map gave speed to ice, so water moved.)
 
 Two rules keep the map:
 
@@ -187,7 +186,7 @@ something:
 ## The player
 
 - **The player takes states too**, from enemy blows and pools: Burning
-  hurts her over time, Soaked slows her, Swept makes her light (pushed
+  hurts her over time, Soaked makes her blows weaker, Swept makes her light (pushed
   further), and Charged has no one of her side to arc to, nor Cracked a
   break bar to fill: those two only wait to burst.
 - **Fire spreads within a side.** A burning enemy pressed against her

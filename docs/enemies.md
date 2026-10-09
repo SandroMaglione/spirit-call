@@ -159,8 +159,8 @@ element. Its element shows as a ring under its feet and a glow on its body.
 
 - **Fire** leaves fire on the ground behind it as it moves: it burns its own
   side too.
-- **Water** leaves puddles: they slow and soak the player as much as the
-  enemies standing in them.
+- **Water** leaves puddles: they soak the player as much as the enemies
+  standing in them (a soaked body's blows are weaker).
 - **Thunder** discharges around itself now and then, a ring telegraphed
   where it stood: it charges what it strikes, and bursts the state a body
   already holds.

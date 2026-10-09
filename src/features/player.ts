@@ -3,8 +3,7 @@
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Member, Passives, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
-import { stateSpeed } from "./elements.ts"
+import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, Facing, Game, Invulnerable, Member, Passives, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { charging } from "./basic-attack.ts"
 import { attackOf, dashOf, traitsIn } from "./build.ts"
 
@@ -33,7 +32,6 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         invulnerable: Game.Query.write(Invulnerable),
         basicAttack: Game.Query.read(BasicAttack),
         stats: Game.Query.read(CombatStats),
-        state: Game.Query.read(ElementState),
         raising: Game.Query.optional(Raising),
         airborne: Game.Query.optional(Airborne),
         member: Game.Query.read(Member),
@@ -102,8 +100,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       remaining -= covered
       data.velocity.set(scale(direction, dashSpeed * covered / dt))
     } else {
-      // Leaving a dash keeps some momentum, then normal running takes over (slower when soaked).
-      const runSpeed = data.stats.get().speed * stateSpeed(tuning, data.state.get())
+      // Leaving a dash keeps some momentum, then normal running takes over.
+      const runSpeed = data.stats.get().speed
       const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * own.exitSpeedFactor))
       // Charging a power attack slows the player down, and so does a move recovering.
       const attack = data.basicAttack.get()

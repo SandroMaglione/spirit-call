@@ -27,6 +27,7 @@ import {
   Position,
   PrevPosition,
   Stunned,
+  Disarmed,
   Velocity
 } from "../schema.ts"
 import type { Faction } from "../schema.ts"
@@ -71,7 +72,8 @@ export const bodyParts = (spec: BodySpec, motion: BodyMotion = { previous: spec.
   [Hurtbox, { radius: spec.hurtboxRadius, faction: spec.faction }],
   [HitFlash, { remaining: 0 }],
   [Invulnerable, { remaining: motion.invulnerable }],
-  [Stunned, { remaining: 0 }]
+  [Stunned, { remaining: 0 }],
+  [Disarmed, { remaining: 0 }]
 ] as const
 
 /** A fighter with a body, at rest. */

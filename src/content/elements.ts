@@ -15,7 +15,7 @@
 /** The elements in play. */
 export type ElementId = "fire" | "water" | "wind" | "thunder" | "rock"
 
-/** The state each element leaves on a body: fire burns, water soaks, thunder charges, wind sweeps, rock cracks. */
+/** The state each element leaves on a body: fire burns, water soaks, thunder charges, wind sweeps, rock cracks (see docs/elements.md, "The map"). */
 export type StateId = "burning" | "soaked" | "charged" | "swept" | "cracked"
 
 /**
@@ -40,7 +40,7 @@ export interface ElementSpec {
 export const elements: { readonly [Id in ElementId]: ElementSpec } = {
   /** Burns over time and spreads between bodies that touch: for packs. */
   fire: { name: "Fire", state: "burning" },
-  /** Soaks and slows: for fast enemies. */
+  /** Soaks: a soaked body's blows are weaker, and its burst disarms. For heavy hitters. */
   water: { name: "Water", state: "soaked" },
   /** Pushes, and leaves bodies light: gliding further, slammed into walls. To scatter or group. */
   wind: { name: "Wind", state: "swept" },
@@ -86,11 +86,11 @@ export const elementRules = {
     /** Bodies this close (edge to edge) touch, for fire spreading. */
     contact: 6
   },
-  /** Soaked: slowed. */
+  /** Soaked: its blows (not its burns) are weaker. */
   soaked: {
     seconds: 4,
-    /** Speed lost, as a fraction (0.35: running at 65%). */
-    slow: 0.35
+    /** Damage its blows lose, as a fraction (0.3: dealing 70%). */
+    weaken: 0.3
   },
   /**
    * Charged: a blow on a charged body (any blow but a burn or an arc) arcs
@@ -144,8 +144,12 @@ export const elementRules = {
   bursts: {
     /** Flare: the burn left (its damage per second times the seconds left), at once, `share` of it to the bodies around. */
     burning: { radius: 110, share: 0.6 },
-    /** Splash: the struck body and the bodies around stop (are stunned) for `stun` seconds, and take `power` percent of the ATK of whoever soaked it. */
-    soaked: { radius: 120, stun: 1, power: 8 },
+    /**
+     * Splash: the struck body and the bodies around are disarmed for
+     * `disarm` seconds (they move, but a windup is cut off and no attack
+     * starts), and take `power` percent of the ATK of whoever soaked it.
+     */
+    soaked: { radius: 120, disarm: 1.5, power: 8 },
     /** Discharge: thunder strikes up to `strikes` bodies around (the struck one first), `power` percent of the ATK of whoever charged it each. */
     charged: { radius: 200, strikes: 4, power: 16 },
     /**
