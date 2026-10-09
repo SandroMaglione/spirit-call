@@ -20,7 +20,7 @@ import { elements } from "../../content/elements.ts"
 import type { QuestId } from "../../content/quests.ts"
 import type { Play } from "../../account/account.ts"
 import { relicOf, relicSlots, relicTiers } from "../../content/relics.ts"
-import type { RelicId, RelicSlot, RelicTier } from "../../content/relics.ts"
+import type { RelicId, RelicSlot } from "../../content/relics.ts"
 import { aspectFor, attackOf } from "../../features/build.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
 import { describeAspectElement, describeMoveEffect } from "../describe.ts"
@@ -83,19 +83,18 @@ const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly
 const rankNames = ["I", "II", "III"] as const
 
 /**
- * Where a relic's next tier comes from (see docs/relics.md): its quest at
- * the rank of that tier, cleared with all three stars in one run (tier I of
- * the two that introduce their slots: a plain first clear). `null` once it
- * is at its last tier, or when no quest gives it.
+ * Where a relic not owned yet comes from (see docs/relics.md): its quest at
+ * the rank that unlocks it, cleared with all three stars in one run (a
+ * plain first clear for the two that introduce their slots). `null` once
+ * owned (its tiers are bought) or when no quest gives it.
  */
-const nextTierAt = (store: UiStore, relic: RelicId): { readonly play: Play; readonly text: string } | null => {
-  const tuning = store.tuning.value, tier = relicTier(store.account.value, relic)
-  const home = (Object.keys(tuning.quests) as Array<QuestId>).find((id) => tuning.quests[id].relic === relic)
-  if (home === undefined || tier === 3) return null
-  const next = ((tier ?? 0) + 1) as RelicTier, name = tuning.quests[home].name
-  const play: Play = next === 1 ? { kind: "quest", quest: home } : { kind: "quest", quest: home, rank: next }
-  const plain = next === 1 && sourceOf(tuning, { kind: "relic", id: relic }) === home
-  return { play, text: plain ? `Clear ${name} to get it.` : `Clear ${name}${next === 1 ? "" : ` at rank ${rankNames[next - 1]}`} with all three stars in one run for tier ${rankNames[next - 1]}.` }
+const unlockAt = (store: UiStore, relic: RelicId): { readonly play: Play; readonly text: string } | null => {
+  const tuning = store.tuning.value
+  const home = (Object.keys(tuning.quests) as Array<QuestId>).find((id) => tuning.quests[id].relic?.id === relic)
+  if (home === undefined || relicTier(store.account.value, relic) !== null) return null
+  const rank = tuning.quests[home].relic!.rank, name = tuning.quests[home].name
+  const play: Play = rank === 1 ? { kind: "quest", quest: home } : { kind: "quest", quest: home, rank }
+  return { play, text: sourceOf(tuning, { kind: "relic", id: relic }) === home ? `Clear ${name} to get it.` : `Clear ${name}${rank === 1 ? "" : ` at rank ${rankNames[rank - 1]}`} with all three stars in one run to get it.` }
 }
 
 /** Her relic slots, then the relics of the slot picked, the one picked explained with its three tiers. */
@@ -116,7 +115,7 @@ const Relics = ({ store, actions, nav, character, first, save }: { readonly stor
   const equipped = equippedIn(slot.value)
   const holder = picked.value === null ? undefined : draft.value.team.find((other) => other !== character && Object.values(draft.value.relics[other] ?? {}).includes(picked.value!))
   const price = picked.value === null ? null : relicPrice(tuning, account, picked.value)
-  const next = picked.value === null ? null : nextTierAt(store, picked.value)
+  const next = picked.value === null ? null : unlockAt(store, picked.value)
   const empty = emptyRelicSlots(tuning, account, draft.value, character)
   const note = !relicsOpen(tuning, account) ? `Relics open after ${tuning.quests[tuning.relicRules.opensAfter as QuestId].name}.`
     : !open ? "This slot opens later, with its relics."
@@ -161,9 +160,9 @@ const Relics = ({ store, actions, nav, character, first, save }: { readonly stor
         </p>)}</div>
       </Panel>}
     <Actions>
-      {/* Where its next tier is played for: the quest picked at that rank, a tap away. */}
+      {/* Where a relic not owned yet is played for: its quest at the rank that unlocks it, a tap away. */}
       {next !== null && relicsOpen(tuning, account) && <Pill tone="dark" icon="quests" label={`Go to the quest: ${next.text}`} onClick={() => { store.menuPlay.value = next.play; nav.go({ kind: "quests", tab: tabOf(tuning, next.play) }) }}>
-        <span class="call__button">Quest<small>{tier === null ? "Get it" : `Tier ${rankNames[Math.min(2, tier)]}`}</small></span>
+        <span class="call__button">Quest<small>Get it</small></span>
       </Pill>}
       {price !== null && <Pill tone="dark" icon="plus" label={`Buy tier ${tier === 1 ? "II" : "III"} for ${price.dust} dust`} disabled={store.busy.value || (account.wallet.dust ?? 0) < (price.dust ?? 0)} onClick={() => actions.buyRelic(picked.value!)}>
         <span class="call__button">Tier {tier === 1 ? "II" : "III"}<small><Icon name="dust" />{price.dust}</small></span>

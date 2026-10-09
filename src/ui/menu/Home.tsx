@@ -4,7 +4,7 @@
  * a face leads with her), and the next thing to play, with its enemies,
  * over one Play.
  */
-import { accountLevel, ascend, characterLevel, encounterOf, owns, relicPrice, relicStock, relicsOpen, train } from "../../account/account.ts"
+import { accountLevel, ascend, characterLevel, encounterOf, owns, relicPrice, relicsOpen, train } from "../../account/account.ts"
 import { activeBanner, callProblem, callsHeld } from "../../account/calls.ts"
 import type { Play } from "../../account/account.ts"
 import type { CharacterId } from "../../content/characters.ts"
@@ -38,7 +38,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
   // Something to do at the Call: a call held, and someone on the banner to bring.
   const now = Date.now(), canCall = callProblem(tuning, account, activeBanner(tuning, now).banner, now) === null && callsHeld(tuning, account) > 0
   // Something to buy at the shop: a relic's next tier the dust pays for.
-  const canBuy = relicsOpen(tuning, account) && relicStock(tuning, account, now) > 0 && ids(tuning.relics).some((id) => (relicPrice(tuning, account, id)?.dust ?? Infinity) <= (account.wallet.dust ?? 0))
+  const canBuy = relicsOpen(tuning, account) && ids(tuning.relics).some((id) => (relicPrice(tuning, account, id)?.dust ?? Infinity) <= (account.wallet.dust ?? 0))
   const places: { readonly [Id in string]: Place } = {
     characters: { kind: "character", character: leader, tab: "overview" },
     challenges: { kind: "quests", tab: play.kind === "tier" ? (tuning.tracks[play.track].kind === "trial" ? "trials" : "hardcore") : tuning.quests[play.quest].line },

@@ -24,7 +24,10 @@
  * unlucky and lucky tenths). The target is about one every two chapters.
  * Then what else the calls brought by then, on average: aspects and looks
  * pulled (the purple light), sigils earned, aspects and looks bought with
- * them, and how much of the pool is left to get.
+ * them, and how much of the pool is left to get. Then dust (see
+ * docs/relics.md): earned by then, of it from perfect clears (every run
+ * here ends on one), the relics unlocked, and the relic tiers it would buy
+ * spent as it comes (cheapest first) against all there are to buy.
  */
 import { createAccount, playLock, recordRun } from "../src/account/account.ts"
 import type { Account, CallResult, Play } from "../src/account/account.ts"
@@ -80,13 +83,17 @@ const resultFor = (account: Account, challenge: RunResultValue["challenge"], cle
   } as RunResultValue
 }
 
+/** The dust perfect clears paid, over the account being played (reset for each). */
+let perfectDust = 0
 const play = (account: Account, quest: QuestId, rank: number, now: number): Account => {
   let next = account
   const challenge = tuning.quests[quest].challenge
   const target: Play = rank === 1 ? { kind: "quest", quest } : { kind: "quest", quest, rank }
   for (let run = 1; run <= runsPerQuest; run++) {
     const last = run === runsPerQuest
-    next = recordRun(tuning, next, target, resultFor(next, challenge, last, last ? tallyFor(quest) : worstClear), now).account
+    const recorded = recordRun(tuning, next, target, resultFor(next, challenge, last, last ? tallyFor(quest) : worstClear), now)
+    perfectDust += recorded.earned.perfect?.dust ?? 0
+    next = recorded.account
   }
   return next
 }
@@ -137,8 +144,12 @@ interface Brought {
   boughtAspects: number
   boughtLooks: number
   left: number
+  dust: number
+  perfectDust: number
+  relics: number
+  tiers: number
 }
-const nothing = (): Brought => ({ aspects: 0, looks: 0, sigils: 0, boughtAspects: 0, boughtLooks: 0, left: 0 })
+const nothing = (): Brought => ({ aspects: 0, looks: 0, sigils: 0, boughtAspects: 0, boughtLooks: 0, left: 0, dust: 0, perfectDust: 0, relics: 0, tiers: 0 })
 
 const chapters = Object.keys(tuning.chapters) as Array<ChapterId>
 const main = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].line === "main")
@@ -178,6 +189,7 @@ for (let index = 0; index < accounts; index++) {
   // Each account its own id, so its own draws; the rotation is held still (one banner).
   let account: Account = createAccount(tuning, newAccount, `sim-${index}`, anchor)
   let earned = 0, called = 0, now = anchor + 1
+  perfectDust = 0
   const brought = nothing()
   const tally = (results: ReadonlyArray<CallResult>, bought: ReadonlyArray<CallResult>) => {
     for (const result of results) {
@@ -229,6 +241,18 @@ for (let index = 0; index < accounts; index++) {
     sum.boughtAspects += brought.boughtAspects
     sum.boughtLooks += brought.boughtLooks
     sum.left += rareLeft(tuning, account).length
+    // Dust is never spent here: what it holds is what it earned. The tiers it buys, spent as it comes: every tier II first, then the tier IIIs.
+    const dust = account.wallet.dust ?? 0, owned = Object.keys(account.owned.relics).length
+    let left = dust, tiers = 0
+    for (const price of [...Array(owned).fill(tuning.relicRules.prices[2]), ...Array(owned).fill(tuning.relicRules.prices[3])] as Array<number>) {
+      if (left < price) break
+      left -= price
+      tiers += 1
+    }
+    sum.dust += dust
+    sum.perfectDust += perfectDust
+    sum.relics += owned
+    sum.tiers += tiers
   })
 }
 
@@ -253,4 +277,12 @@ stages.forEach((stage, at) => {
   const mean = (value: number) => (value / accounts).toFixed(1)
   const sum = broughtBy[at]!
   console.log(`${stage.name.padEnd(30)} ${mean(sum.aspects).padStart(7)} ${mean(sum.looks).padStart(6)} ${mean(sum.sigils).padStart(7)} ${mean(sum.boughtAspects).padStart(15)} ${mean(sum.boughtLooks).padStart(13)} ${mean(sum.left).padStart(17)}`)
+})
+const relicCount = Object.keys(tuning.relics).length
+console.log(`\nDust by the end of each chapter, on average (relics unlocked: of ${relicCount}; tiers its dust buys: of the ${relicCount * 2} there are, tier ${tuning.relicRules.prices[2]} and ${tuning.relicRules.prices[3]} dust; every run here ends on a perfect clear):`)
+console.log("By the end of                  dust earned  of it, perfect clears  relics  tiers it buys")
+stages.forEach((stage, at) => {
+  const mean = (value: number) => (value / accounts).toFixed(1)
+  const sum = broughtBy[at]!
+  console.log(`${stage.name.padEnd(30)} ${mean(sum.dust).padStart(11)} ${mean(sum.perfectDust).padStart(22)} ${mean(sum.relics).padStart(7)} ${mean(sum.tiers).padStart(14)}`)
 })

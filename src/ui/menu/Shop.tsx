@@ -1,20 +1,19 @@
 /**
- * The shop (see docs/relics.md): dust for a relic owned one tier up (a
- * few a week: its stock), and for the looks it sells. Three shelves: relics (every relic owned below its
+ * The shop (see docs/relics.md): dust for a relic owned one tier up, and
+ * for the looks it sells. Three shelves: relics (every relic owned below its
  * last tier, the price of its next one), looks (the shop's own; the Call's
  * and the hard goals' are shown with where they come from), and the
  * inventory (everything the wallet holds; open before the shop is). The one
  * picked is explained on the right, with Buy.
  */
 import { useSignal } from "@preact/signals"
-import { cosmeticPrice, nextReset, owns, relicPrice, relicStock, relicTier, relicsOpen } from "../../account/account.ts"
+import { cosmeticPrice, owns, relicPrice, relicTier, relicsOpen } from "../../account/account.ts"
 import { cosmeticOf } from "../../content/cosmetics.ts"
 import type { CosmeticId } from "../../content/cosmetics.ts"
 import { elements } from "../../content/elements.ts"
 import type { QuestId } from "../../content/quests.ts"
 import { relicOf, relicTiers } from "../../content/relics.ts"
 import type { RelicId } from "../../content/relics.ts"
-import { describeTimeUntil } from "../describe.ts"
 import { Icon } from "../Icon.tsx"
 import { ModelStage, Portrait } from "../kit/art.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
@@ -39,12 +38,9 @@ const RelicShelf = ({ store, actions }: { readonly store: UiStore; readonly acti
   const tier = picked.value === null ? null : relicTier(account, picked.value)
   const price = picked.value === null ? null : relicPrice(tuning, account, picked.value)
   const dust = account.wallet.dust ?? 0
-  // The stock: a few tiers a period, any owned relic's next (a limit, not a timer: nothing counts down but the restock).
-  const now = Date.now(), stock = relicStock(tuning, account, now), soldOut = stock <= 0
-  const stockNote = soldOut ? `This week's stock is sold. Restocks in ${describeTimeUntil(nextReset(tuning.reset, now), now)}.` : `This week's stock: ${stock} ${stock === 1 ? "tier" : "tiers"} (of ${tuning.relicRules.stock}).`
   return <>
     <div class="shop__cards scroll in-left">
-      {owned.length === 0 ? <p class="dim shop__empty">No relic yet: relics come from quests, a perfect clear each. Once you own one, its next tier is sold here, a few a week.</p>
+      {owned.length === 0 ? <p class="dim shop__empty">No relic yet: each comes from one quest, cleared with all three stars in one run. Once you own one, its next tier is sold here.</p>
         : <Cards>{owned.map((id) => {
           const spec = relicOf(tuning.relics, id), at = relicTier(account, id)!, next = relicPrice(tuning, account, id)
           return <Card key={id} tint={spec.element ?? undefined} art={<span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><TierMarks tier={at} /></span>} label={`${spec.name}, tier ${tierNames[at]}`}
@@ -53,11 +49,11 @@ const RelicShelf = ({ store, actions }: { readonly store: UiStore; readonly acti
     </div>
     {relic !== null && tier !== null && <Panel class="shop__brief in-right" icon={<RelicIcon slot={relic.slot} element={relic.element} />} title={relic.name}
       detail={`${slotNames[relic.slot]}${relic.element === null ? "" : ` · ${elements[relic.element].name}`} · Tier ${tierNames[tier]}`}
-      note={price === null ? "At its last tier." : soldOut ? stockNote : dust < (price.dust ?? 0) ? `${(price.dust ?? 0) - dust} more dust needed. ${stockNote}` : stockNote} noteIcon={price === null ? "check" : soldOut ? "lock" : "info"}>
+      note={price === null ? "At its last tier." : dust < (price.dust ?? 0) ? `${(price.dust ?? 0) - dust} more dust needed.` : undefined} noteIcon={price === null ? "check" : "info"}>
       <p class="dim">{relic.about}</p>
       <div class="gear__tiers">{relicTiers.map((each) => <p key={each} class="gear__tier" data-state={each > tier ? "ahead" : each === tier ? "now" : "had"}><TierMarks tier={each} /><span>{relic.tiers[each].adds}</span></p>)}</div>
     </Panel>}
-    <Actions>{price !== null && picked.value !== null && <Pill icon="plus" label={`Buy tier ${tier === 1 ? "II" : "III"} for ${price.dust} dust`} disabled={store.busy.value || soldOut || dust < (price.dust ?? 0)} onClick={() => actions.buyRelic(picked.value!)}>
+    <Actions>{price !== null && picked.value !== null && <Pill icon="plus" label={`Buy tier ${tier === 1 ? "II" : "III"} for ${price.dust} dust`} disabled={store.busy.value || dust < (price.dust ?? 0)} onClick={() => actions.buyRelic(picked.value!)}>
       <span class="call__button">Tier {tier === 1 ? "II" : "III"}<small><Icon name="dust" />{price.dust}</small></span>
     </Pill>}</Actions>
   </>

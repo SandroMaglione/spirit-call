@@ -373,23 +373,26 @@ export const relicBudget = { worth: 20, damageBonus: 40, power: 12, every: 0.5, 
 /**
  * How relics are had (see docs/relics.md): they open with the Spirit Call
  * (`opensAfter`, a quest id); the Survival slot later (`survivalOpensAfter`,
- * `null` until it has relics). The shop sells a relic the account owns one
- * tier up, for `prices[tier]` dust (the tier it reaches); a relic coming
- * again at its last tier turns into `dustPerDuplicate` dust.
+ * `null` until it has relics). Each relic is unlocked at tier I by one
+ * quest's perfect clear at one rank (`QuestSpec.relic`); its next tiers
+ * are bought in the shop for `prices[tier]` dust (the tier it reaches).
+ * Every other quest's perfect clear, at each rank, pays `perfectDust`
+ * once: `base` plus `perLevel` for each enemy level, rounded to tens.
  */
 export interface RelicRules {
   readonly opensAfter: string
   readonly survivalOpensAfter: string | null
-  /** What the shop asks for a tier (dust), by the tier reached. */
   readonly prices: { readonly [Tier in Exclude<RelicTier, 1>]: number }
-  /** The shop's stock: how many relic tiers it sells in a period of the reset (see `content/hardcore.ts`, `reset`), any owned relic's next. */
-  readonly stock: number
+  readonly perfectDust: { readonly base: number; readonly perLevel: number }
 }
 
 export const relicRules: RelicRules = {
   opensAfter: "packLeader",
   survivalOpensAfter: "bruteKing",
-  // A tier is about a week of hardcore and trials mid-game, and the stock binds at the same time.
-  prices: { 2: 300, 3: 600 },
-  stock: 1
+  // Every relic maxed costs about what the whole game pays in dust (see `pnpm calls`): the last tiers come with the last ranks.
+  prices: { 2: 400, 3: 800 },
+  perfectDust: { base: 20, perLevel: 2.5 }
 }
+
+/** The dust a perfect clear pays at `enemyLevel` (see `RelicRules.perfectDust`). */
+export const perfectDustAt = (rules: RelicRules, enemyLevel: number): number => 10 * Math.round((rules.perfectDust.base + rules.perfectDust.perLevel * enemyLevel) / 10)

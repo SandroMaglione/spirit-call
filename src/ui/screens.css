@@ -52,6 +52,9 @@
 /* All three in one run: the stars glow as one. */
 .stars.is-perfect { filter: drop-shadow(0 0 4px var(--gold-hi)); }
 .goal--perfect { color: var(--gold-hi); }
+.goal__stars { display: inline-flex; gap: 0; font-size: 11px; }
+.goal__stars .menu-icon { margin: 0 -1px; }
+.goal__dust { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; font-weight: 800; color: var(--cream); }
 @keyframes star-in { from { transform: scale(0) rotate(-40deg); } }
 .row[aria-pressed="true"] .star { color: rgba(59, 66, 85, .3); }
 .row[aria-pressed="true"] .star.is-earned { color: #b8862d; filter: none; }

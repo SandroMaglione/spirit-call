@@ -29,7 +29,7 @@ import type { AspectId } from "../content/aspects.ts"
 import type { BannerId } from "../content/calls.ts"
 import { cosmeticOf } from "../content/cosmetics.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
-import { relicSlots } from "../content/relics.ts"
+import { perfectDustAt, relicSlots } from "../content/relics.ts"
 import type { EquippedRelic, RelicId, RelicSlot, RelicTier } from "../content/relics.ts"
 import { aspectProblems, relicProblems, withValidAspects } from "../features/build.ts"
 import type { AspectProblem, RelicProblem } from "../features/build.ts"
@@ -58,7 +58,7 @@ export interface OwnedAspect extends Unlocked {
   readonly copies: number
 }
 
-/** A relic owned, at a tier (see docs/relics.md): its quest's perfect clears and the shop raise it. */
+/** A relic owned, at a tier (see docs/relics.md): unlocked at tier I by its quest's perfect clear, raised in the shop. */
 export interface OwnedRelic extends Unlocked {
   readonly tier: RelicTier
 }
@@ -102,7 +102,7 @@ export interface RunCount {
 export interface QuestProgress extends RunCount {
   /** The stars earned (by their place in the quest's `stars`), each once. */
   readonly stars: ReadonlyArray<number>
-  /** When it was first cleared perfectly (all three stars in one run; its relic's tier was given then), absent until it is. */
+  /** When it was first cleared perfectly (all three stars in one run; its relic or its dust was given then), absent until it is. */
   readonly perfectAt?: number
 }
 
@@ -161,14 +161,6 @@ export interface CallState {
   readonly history: ReadonlyArray<CallRecord>
 }
 
-/** The shop's stock as the account has used it: the period (see `periodOf`) of the last relic tier bought, and how many were bought in it. */
-export interface ShopState {
-  readonly period: number | null
-  readonly bought: number
-}
-
-export const noShop: ShopState = { period: null, bought: 0 }
-
 /** A 32-bit seed from `text` (an account id): each account draws its own sequence. */
 export const seedOf = (text: string): number => {
   let hash = 2166136261
@@ -199,8 +191,6 @@ export interface Account {
   readonly chests: { readonly [Group in StarGroup]?: { readonly [rank: number]: number } }
   /** The Spirit Call: guarantees, focus, and history. */
   readonly calls: CallState
-  /** The shop's stock: the relic tiers bought in the current period (see `relicStock`). */
-  readonly shop: ShopState
   /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects and relics equipped in it, and what for. */
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly relics: TeamRelics; readonly play: Play }
   /** The looks each character wears. */
@@ -304,7 +294,6 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     discoveries: {},
     chests: {},
     calls: noCalls(seedOf(id)),
-    shop: noShop,
     selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
     worn: {}
   }
@@ -601,8 +590,6 @@ export type Refusal =
   | { readonly kind: "relicsLocked"; readonly quest: QuestId }
   /** A relic already at its last tier. */
   | { readonly kind: "maxTier"; readonly item: Item }
-  /** The shop's stock of relic tiers for this period is sold; it restocks at `until` (epoch milliseconds). */
-  | { readonly kind: "soldOut"; readonly until: number }
   /** Not something the shop or the exchange sells (a look from a reward, a quest's aspect), or already owned. */
   | { readonly kind: "notForSale"; readonly item: Item }
   /** A look that is not of that kind, or not for her. */
@@ -731,16 +718,7 @@ export const relicPrice = (tuning: Tuning, account: Account, relic: RelicId): Am
   return { dust: tuning.relicRules.prices[tier === 1 ? 2 : 3] }
 }
 
-/** How many relic tiers the shop still sells `account` this period (see `Tuning.relicRules.stock`): the stock, less what was bought in it. */
-export const relicStock = (tuning: Tuning, account: Account, now: number): number =>
-  tuning.relicRules.stock - (account.shop.period === periodOf(tuning.reset, now) ? account.shop.bought : 0)
-
-/**
- * `account` with `relic` a tier up, bought with dust, if relics are open,
- * it owns the relic, it is below its last tier, the period's stock is not
- * sold out, and the dust is there. The stock is a limit, not a timer: what
- * is not bought waits, and nothing counts down (see docs/relics.md).
- */
+/** `account` with `relic` a tier up, bought with dust, if relics are open, it owns the relic, it is below its last tier, and the dust is there. */
 export const buyRelic = (tuning: Tuning, account: Account, relic: RelicId, now: number): Checked<Account> => {
   const item: Item = { kind: "relic", id: relic }
   if (!relicsOpen(tuning, account)) return refuse({ kind: "relicsLocked", quest: tuning.relicRules.opensAfter as QuestId })
@@ -748,12 +726,8 @@ export const buyRelic = (tuning: Tuning, account: Account, relic: RelicId, now: 
   const price = relicPrice(tuning, account, relic)
   const tier = relicTier(account, relic)
   if (price === null || tier === null || tier === 3) return refuse({ kind: "maxTier", item })
-  if (relicStock(tuning, account, now) <= 0) return refuse({ kind: "soldOut", until: nextReset(tuning.reset, now) })
   const paid = spend(account, price)
-  if (!paid.ok) return paid
-  const period = periodOf(tuning.reset, now)
-  const shop: ShopState = { period, bought: (account.shop.period === period ? account.shop.bought : 0) + 1 }
-  return { ok: true, value: { ...raiseRelic(paid.value, relic, tier === 1 ? 2 : 3, now), shop } }
+  return paid.ok ? { ok: true, value: raiseRelic(paid.value, relic, tier === 1 ? 2 : 3, now) } : paid
 }
 
 /** What the shop asks for `cosmetic` (dust), or `null` when the shop does not sell it. */
@@ -817,8 +791,8 @@ export interface Earned {
   readonly stars: ReadonlyArray<number>
   /** The chests those stars opened (their rewards are paid with them). */
   readonly chests: ReadonlyArray<ChestRef>
-  /** The quest's first perfect clear at its rank (all three stars in one run), when this run is it: the relic tier it gave (`null`: the quest has none, or the tier was had already). */
-  readonly perfect: { readonly relic: { readonly id: RelicId; readonly tier: RelicTier } | null } | null
+  /** The quest's first perfect clear at its rank (all three stars in one run), when this run is it: the relic it unlocked, or else the dust it paid (see docs/relics.md). */
+  readonly perfect: { readonly relic: RelicId | null; readonly dust: number } | null
 }
 
 /** One resource a run earned, in all: `total`, of which `fromChests` came from the chests its stars opened. */
@@ -836,8 +810,9 @@ export interface EarnedResource {
  * one amount however many places it came from.
  */
 export const earnedResources = (tuning: Tuning, earned: Earned): ReadonlyArray<EarnedResource> => {
-  const chests = earned.chests.map((chest) => tuning.chests[chest.group][chest.index]?.rewards ?? {})
-  const parts: ReadonlyArray<Amounts> = [earned.pay, earned.materials, earned.levelRewards, earned.rewards?.currencies ?? {}, ...earned.discoveries.map((id) => tuning.discoveries[id].rewards)]
+  // What each chest held at its rank (a higher rank's differ: more dust, less of the rest).
+  const chests = earned.chests.map((chest) => tuning.chests[chest.group][chest.index] === undefined ? {} : chestRewards(tuning, chest))
+  const parts: ReadonlyArray<Amounts> = [earned.pay, earned.materials, earned.levelRewards, earned.rewards?.currencies ?? {}, ...earned.discoveries.map((id) => tuning.discoveries[id].rewards), { dust: earned.perfect?.dust ?? 0 }]
   const sum = (amounts: ReadonlyArray<Amounts>, id: ResourceId) => amounts.reduce((total, part) => total + (part[id] ?? 0), 0)
   const resources = [...Object.keys(tuning.currencies), ...Object.keys(tuning.materials)] as Array<ResourceId>
   return resources.flatMap((id) => {
@@ -951,11 +926,11 @@ export const recordRun = (
     next = { ...next, quests: { ...next.quests, [quest]: { ...next.quests[quest], [rank]: updated } } }
     if (firstClear) rewards = questRewards(tuning, quest, rank)
     if (perfected) {
-      const relic = tuning.quests[quest].relic, tier = Math.min(3, rank) as RelicTier
-      // Had already: at that tier or above, or coming with this same run's first clear (the two that introduce their slots).
-      const had = relic !== null && ((relicTier(next, relic) ?? 0) >= tier || (rewards?.unlocks.some((item) => item.kind === "relic" && item.id === relic) ?? false))
-      perfect = { relic: relic === null || had ? null : { id: relic, tier } }
-      if (relic !== null) next = raiseRelic(next, relic, tier, now)
+      // The quest's relic, on the rank that unlocks it (unless its first clear gives it: the two that introduce their slots); else dust, by its enemies' level.
+      const home = tuning.quests[quest].relic
+      const unlocks = home !== null && home.rank === rank && !tuning.quests[quest].rewards.unlocks.some((item) => item.kind === "relic" && item.id === home.id)
+      perfect = unlocks ? { relic: home.id, dust: 0 } : { relic: null, dust: perfectDustAt(tuning.relicRules, enemyLevel) }
+      next = unlocks ? unlock(tuning, next, { kind: "relic", id: home.id }, now) : earn(next, { dust: perfect.dust })
     }
   }
   if (play?.kind === "tier") {

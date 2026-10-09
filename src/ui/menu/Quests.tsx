@@ -11,8 +11,8 @@ import type { Signal } from "@preact/signals"
 import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, levelsUnder, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, relicTier, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
 import type { QuestId, StarGroup } from "../../content/quests.ts"
-import { relicOf } from "../../content/relics.ts"
-import type { RelicId, RelicTier } from "../../content/relics.ts"
+import { perfectDustAt, relicOf } from "../../content/relics.ts"
+import type { RelicId } from "../../content/relics.ts"
 import { RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
@@ -262,6 +262,10 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const rank = selected.kind === "quest" ? rankOf(selected) : 1
   const earnedStars = selected.kind === "quest" ? questProgress(account, selected.quest, rank)?.stars ?? [] : []
   const perfected = selected.kind === "quest" && questProgress(account, selected.quest, rank)?.perfectAt !== undefined
+  // The relic this rank unlocks, if it does (its perfect clear gives it, or its first clear for the two that introduce their slots); every other perfect clear pays dust.
+  const relicHere = quest?.relic != null && quest.relic.rank === rank ? quest.relic.id : null
+  const plainRelic = relicHere !== null && quest!.rewards.unlocks.some((item) => item.kind === "relic" && item.id === relicHere)
+  const perfectDust = relicHere !== null && !plainRelic ? null : perfectDustAt(tuning.relicRules, encounter.enemyLevel)
   const firstClear = selected.kind === "quest" ? questRewards(tuning, selected.quest, rank) : null
   // A quest's first clear stays listed once claimed (ticked and dimmed), so what it gave is still there to read.
   const once = firstClear !== null
@@ -291,6 +295,8 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
       {quest !== null && <div>
         <Label>Stars</Label>
         {quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)}
+        {/* All three in one run, once: its dust (a quest-rank that unlocks a relic shows the relic below instead). */}
+        {perfectDust !== null && <div class={`goal goal--perfect${perfected ? " is-earned" : ""}`}><span class="goal__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>In one run<span class="goal__dust"><Icon name="dust" />{perfectDust}</span></div>}
       </div>}
       {challenge.objective.kind === "endure" && <div>
         <Label>Each wave</Label>
@@ -308,7 +314,7 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         </div>
       </div>
     </div>
-    {quest !== null && quest.relic !== null && selected.kind === "quest" && <RelicPrize store={store} relic={quest.relic} tier={Math.min(3, rank) as RelicTier} plain={rank === 1 && quest.rewards.unlocks.some((item) => item.kind === "relic" && item.id === quest.relic)} perfected={perfected} />}
+    {relicHere !== null && <RelicPrize store={store} relic={relicHere} plain={plainRelic} />}
     <div class="quests__enemies brief-section" aria-label="Enemies, over what they are weak to">
       <EnemyFaces store={store} kinds={challengeEnemies(challenge)} inspected={inspected.value} inspect={(kind) => (inspected.value = kind)} />
     </div>
@@ -316,17 +322,15 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   </Panel>
 }
 
-const tierNames = ["I", "II", "III"] as const
-
 /**
- * The quest's relic at this rank's tier, shown as the prize it is (see
- * docs/relics.md): its icon in a turning gold ring,
- * what the tier adds, and what it asks: all three stars in one run (a plain
- * first clear for the two that introduce their slots). Dimmed once had.
+ * The relic this quest-rank unlocks, shown as the prize it is (see
+ * docs/relics.md): its icon in a turning gold ring, what it does, and what
+ * it asks: all three stars in one run (a plain first clear for the two that
+ * introduce their slots). Dimmed once owned.
  */
-const RelicPrize = ({ store, relic, tier, plain, perfected }: { readonly store: UiStore; readonly relic: RelicId; readonly tier: RelicTier; readonly plain: boolean; readonly perfected: boolean }) => {
+const RelicPrize = ({ store, relic, plain }: { readonly store: UiStore; readonly relic: RelicId; readonly plain: boolean }) => {
   const tuning = store.tuning.value, spec = relicOf(tuning.relics, relic)
-  const had = (relicTier(store.account.value, relic) ?? 0) >= tier
+  const had = relicTier(store.account.value, relic) !== null
   return <div class={`relic-prize brief-section${had ? " is-had" : ""}`} data-element={spec.element ?? undefined}>
     <span class="relic-prize__orb" aria-hidden="true">
       <span class="relic-prize__ring" />
@@ -334,9 +338,9 @@ const RelicPrize = ({ store, relic, tier, plain, perfected }: { readonly store: 
       <span class="unlock-badge__glint" />
     </span>
     <div class="relic-prize__about">
-      <Label end={had ? <span class="claimed"><Icon name="check" />{perfected || plain ? "Claimed" : "Yours"}</span> : undefined}>Relic · tier {tierNames[tier - 1]}</Label>
-      <b class="relic-prize__name">{spec.name}<TierMarks tier={tier} /></b>
-      <p>{spec.tiers[tier].adds}</p>
+      <Label end={had ? <span class="claimed"><Icon name="check" />Claimed</span> : undefined}>New relic</Label>
+      <b class="relic-prize__name">{spec.name}<TierMarks tier={1} /></b>
+      <p>{spec.tiers[1].adds}</p>
       <p class="relic-prize__ask">{plain ? <><Icon name="check" />On the first clear</> : <><span class="relic-prize__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>All three stars in one run</>}</p>
     </div>
   </div>
