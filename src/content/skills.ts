@@ -455,7 +455,7 @@ export const skills = {
     cooldown: 5,
     energy: 0,
     invulnerability: 0.3,
-    effect: cut({ length: 250, width: 90, active: 0.12, power: 24, element: "thunder", knockback: 260, hitStop: 0.05, heavy: false, leaves: null, carries: 220 })
+    effect: cut({ length: 250, width: 90, active: 0.12, power: 20, element: "thunder", knockback: 260, hitStop: 0.05, heavy: false, leaves: null, carries: 220 })
   }),
   /**
    * Sparkfist's ultimate: she turns to lightning and strikes up to six

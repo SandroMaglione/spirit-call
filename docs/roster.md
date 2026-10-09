@@ -60,7 +60,7 @@ marked * are working names.
 | Fire | Hearth* | Healer | Hammer | keeps enemies burning, then turns their burns into the team's health |
 | Water | Tidecaller | Healer | Disc | marks enemies, and heals by hitting them; her ultimate heals more for each one soaked |
 | Water | Tidewarden* | Guardian | Blade | a brace that takes one blow whole and splashes the attacker |
-| Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: darts between enemies, her hits jumping on |
+| Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: the Spark Step darts her through a line of enemies, charging them; the Storm Flurry hops her from one to the next |
 | Thunder | Stormcaller | Healer | Staff | a totem to fight by, and a thunderclap that heals by what it strikes |
 | Rock | Quarry* | Attacker | Hammer | the slow heavy hitter |
 | Rock | Bastion | Guardian | Disc | the slow defender: stone plates |
