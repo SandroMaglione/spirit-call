@@ -102,8 +102,8 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
 - **Where**: spread over chapters two to six, never on two main quests in
   a row, each Element relic on a quest of its element, the Survival relics
   after the slot opens. Main line: Echo (The Swarm), Repel (Iron Guard),
-  Ember Heart (Ashfall), Opportunist (The Brute), Undertow (High Tide),
-  Counterpoint (Shield Wall), Anchor (Sandstorm), Afterimage
+  Ember Heart (Ashfall), Opportunist (The Brute), Counterpoint (High Tide),
+  Undertow (Shield Wall), Anchor (Sandstorm), Afterimage
   (Thunderhead), Last Stand (Ironclad), Tailwind (Gale Force). Side
   quests: Momentum (Hold the Line), Bedrock (Night of Packs), Static
   Charge (Elite Hunt), Glass Edge (Forge Pit), Second Wind (Floodgate),
@@ -123,7 +123,12 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
   and what is not bought does not pile up. A tier is about a week of
   hardcore and trials mid-game, so the dust and the stock bind together.
 - `pnpm expected` marks each quest run the skilled bot perfected (`P`),
-  so no relic sits behind a run nobody can make.
+  so no relic sits behind a run nobody can make. As of 2026-10-09 the bot
+  perfects 83 of 93 quest runs on some seed; of the 54 that give a relic
+  tier it never perfects High Tide (rank I), Ironclad (ranks II and III),
+  Floodgate (rank III), and Heavy Ground (ranks II and III). The bot is
+  approximate (it reads differently from a player); the playtest decides
+  whether those stars need loosening.
 - The **Survival** slot opens after the Brute King (`survivalOpensAfter`),
   the middle of the main line, with its relics.
 
