@@ -84,7 +84,9 @@ It is a personal project, not a commercial one.
   with icons rather than words; the team's party list above them) are the
   reference; keyboard and
   mouse are supported too. A mechanic that does not fit the touch layout
-  needs a very good reason.
+  needs a very good reason. A basic attack never asks for a point on the
+  floor: it goes the way she aims (see `docs/aspects.md`, "Aiming on
+  touch").
 - Runs are around four minutes; menus and preparation should be quick on a
   phone as well.
 
@@ -96,15 +98,23 @@ It is a personal project, not a commercial one.
 - **Her body is hers too**: bulky or quick, hard-hitting or frail, so each
   one feels different to play, and all of them equally strong overall. Her
   stats spend one budget (see `docs/balance.md`, "Bodies"), set by her role
-  (a fighter, a support, a guardian: a support's or a guardian's kit does
+  (an attacker, a healer, a guardian: a healer's or a guardian's kit does
   part of what her stats would) and her class's range.
+- **Three choices make her** (the rules are in `docs/roster.md`): her
+  element, her class, and her role. None is tied to another, and two
+  characters who share an element or a class always differ in role. An
+  element is a direction, not a role: healing and guarding come from kits.
+- **Support is set up.** A heal, a guard, or a buff is earned by something
+  the player does in the fight (a combo, a hit, a skill placed, a blow
+  timed), never by switching out, standing by, or having her on the team.
 - **Discovery is the fun**, for players and for development alike: what is
   she strong at, what are her mechanics, which teams and matchups suit her.
 - **Effects define strategy.** A character applies something (an element, a
   status) to enemies, or something to the team (healing, buffs), and that is
   what a strategy is built from.
 - **Her basic attack is her class's, shaped by an aspect** (the rules are in
-  `docs/aspects.md`). A class (Blade, Gun, Disc, Staff) is a way of fighting
+  `docs/aspects.md`). A class (Blade, Gun, Disc, Staff, and Gauntlets and
+  Hammer with the release roster) is a way of fighting
   with its own range and rhythm, shared by every character of it. An aspect
   is one way of using that class (its combo, charged attack, and dash
   strike), owned by the account and equipped on one character of its class
@@ -130,7 +140,11 @@ The rules are in `docs/elements.md`; in short:
 - **Designed around enemies.** Each element does a job against a kind of
   enemy situation (fire for packs, water for fast enemies, thunder for
   spread-out groups, wind to scatter or group, rock for tanky enemies), and
-  each state changes something different about a fight.
+  each state changes a different part of a fight. **A map** of those parts
+  (`docs/elements.md`) holds the elements there are and keeps parts for
+  those to come (ice for speed, and candidates), so nothing built now
+  takes the place of what comes later. Water moves from speed to how hard
+  an enemy hits, its job becoming heavy hitters (see `docs/roster.md`).
 - **An element belongs to a character**, applied through her skills and one
   moment of her aspect.
 - **Ground effects** (fire pools, puddles) affect everyone standing in them,

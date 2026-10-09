@@ -26,9 +26,13 @@ settled here is in the open questions at the end: ask, do not guess.
   trick (fire spreading from what falls, puddles where she dashes, gusts,
   discharges, stone from breaks), worn only by characters of it.
 - **Each state changes something different about a fight** (damage over
-  time, speed, spreading, position, the break bar, ...). Two elements whose
-  states do the same thing are one element: this is what keeps a long list
-  of elements distinct.
+  time, links, position, the break bar, ...). Two elements whose states do
+  the same thing are one element: this is what keeps a long list of
+  elements distinct. Which part each element owns, now and later, is the
+  map (below).
+- **An element is a direction, not a role.** Its characters may lean one
+  way (see `roster.md`), but healing and guarding come from kits, never
+  from a state: every element stays open to every role.
 - **Readable at a glance.** A state shows on the body that holds it, as a
   ring and an icon in its color, and a burst is seen as it happens. What
   you see on an enemy tells you what hitting it will do.
@@ -75,12 +79,48 @@ Earthrise, her special, raises stone under the toughest around her,
 stunning them a moment), so they break sooner under her own blows, and
 any other element shatters them.
 
+## The map
+
+Each state changes **one part of a fight**, and no two elements change the
+same part. The map lists the parts: those the game's elements hold, and
+those kept for elements to come, so what is built now never takes the
+place of what comes later (a water that slows would leave ice nothing of
+its own).
+
+| Part of a fight | Element | State | Burst | When |
+|---|---|---|---|---|
+| Health over time | **Fire** | Burning | Flare | now |
+| Links between enemies | **Thunder** | Charged | Discharge | now |
+| Position | **Wind** | Swept | Gale | now |
+| Toughness | **Rock** | Cracked | Shatter | now |
+| How hard it hits | **Water** | Soaked: its blows are weaker | Splash: it and the bodies around are disarmed a moment (they move, but start no attack) | now (see below) |
+| Speed, moving and attacking | **Ice** | Chilled: slower in everything (its telegraphs only ever get longer) | Freeze: held where it stands, doing nothing | later |
+| Moving only | **Nature** (a candidate) | Rooted: it cannot move, but still attacks | to design | later |
+| Where it aims | **Light** (a candidate) | Dazzled: it aims where the player was, not where she is | Flash: it and the bodies around lose their target | later |
+| Damage that comes later | **Shadow** (a candidate) | Marked: part of every blow on it is stored | Echo: what was stored, at once | later |
+
+Water's job becomes **heavy hitters** (enemies whose blows hurt most), rock
+keeping **tanky** ones; fast enemies have no element of their own until
+ice. On the player, Soaked makes her blows weaker, and a water pool does so
+to whoever stands in it. **Water moves to its part in the roster's water
+step** (`roster.md`, "Building it"): until then the table above ("The
+elements") is what the game does, Soaked slowing and Splash stopping.
+
+Two rules keep the map:
+
+1. **A new element takes a part no element holds**, or adds a new part to
+   the map; it never shares one. The candidates are reserved, not promised:
+   each is designed when its time comes.
+2. **Ruled out**: poison (fire's health over time), metal or magnetism
+   (thunder's links, wind's pulls), and any state that heals or shields
+   (that is a kit's).
+
 ### Adding an element
 
 A new element brings:
 
-1. **Its job**: the enemy situation it answers, not already answered the
-   same way.
+1. **Its part of a fight**, from the map, and **its job**: the enemy
+   situation it answers, not already answered the same way.
 2. **Its state**: what it does alone, changing something no other state
    changes.
 3. **Its burst**: that state, paid out at once, around the body.
