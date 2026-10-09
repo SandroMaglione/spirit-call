@@ -17,12 +17,14 @@ import type { EnemyKind } from "../../content/enemies.ts"
 import type { Rewards, Unlock } from "../../content/quests.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { cosmeticOf } from "../../content/cosmetics.ts"
+import type { CosmeticSpec } from "../../content/cosmetics.ts"
 import { relicOf } from "../../content/relics.ts"
 import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
 import { AbilityIcon } from "../AbilityIcon.tsx"
 import { affinityList, affinityNames, attackElements, describeAmounts, describeSkill, describeUnlock, resourceName } from "../describe.ts"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
+import type { IconName } from "../Icon.tsx"
 import { Face, Portrait } from "../kit/art.tsx"
 import { Card } from "../kit/Card.tsx"
 import { RoundButton } from "../kit/controls.tsx"
@@ -183,4 +185,16 @@ export const KitLines = ({ store, character }: { readonly store: UiStore; readon
       </div>
     })}
   </div>
+}
+
+/**
+ * Where a look comes from, for the foot of its panel (with the icon that
+ * goes there), and how much dust is still missing when it is for sale and
+ * not affordable (`short`, 0 when it is). `inShop`: said in the shop itself.
+ */
+export const lookSource = (look: CosmeticSpec, inShop: boolean, short = 0): { readonly text: string; readonly icon: IconName } => {
+  const more = short > 0 ? ` · ${short} more dust needed` : ""
+  return look.source.kind === "shop" ? { text: `${inShop ? "Sold here" : "In the shop"} for ${look.source.dust} dust${more}`, icon: "dust" }
+    : look.source.kind === "call" ? { text: "Only from the Spirit Call", icon: "call" }
+    : { text: "A reward for a hard goal: a hardcore tier's first clear", icon: "star" }
 }

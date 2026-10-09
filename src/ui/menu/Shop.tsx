@@ -23,7 +23,7 @@ import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
 import { InventoryShelf } from "./Inventory.tsx"
 import { slotNames } from "./Loadout.tsx"
-import { ids, Wallet } from "./parts.tsx"
+import { ids, lookSource, Wallet } from "./parts.tsx"
 import type { Nav, ShopTab } from "./screens.ts"
 
 const tierNames = { 1: "I", 2: "II", 3: "III" } as const
@@ -65,17 +65,17 @@ const LookShelf = ({ store, actions }: { readonly store: UiStore; readonly actio
   const picked = useSignal<CosmeticId>(all[0]!)
   const look = cosmeticOf(tuning.cosmetics, picked.value), price = cosmeticPrice(tuning, picked.value)
   const has = owns(account, { kind: "cosmetic", id: picked.value }), dust = account.wallet.dust ?? 0
-  const source = look.source.kind === "shop" ? `Sold here for ${look.source.dust} dust.` : look.source.kind === "call" ? "Only the Spirit Call gives it." : "A reward for a hard goal: a hardcore tier's first clear."
+  const source = lookSource(look, true, has || price === null ? 0 : (price.dust ?? 0) - dust)
   return <>
     <div class="shop__cards scroll in-left"><Cards>{all.map((id) => {
       const spec = cosmeticOf(tuning.cosmetics, id), owned = owns(account, { kind: "cosmetic", id }), cost = cosmeticPrice(tuning, id)
       return <Card key={id} art={<LookIcon kind={spec.kind} />} label={spec.name} locked={!owned && cost === null}
         foot={owned ? spec.name : cost === null ? spec.name : <span class="shop__price"><Icon name="dust" />{cost.dust}</span>} selected={id === picked.value} mark={owned ? "tick" : undefined} onClick={() => (picked.value = id)} />
     })}</Cards></div>
-    <Panel class="shop__brief in-right" icon={<LookIcon kind={look.kind} />} title={look.name} detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}`}
-      note={has ? "Yours: wear it from her loadout." : price !== null && dust < (price.dust ?? 0) ? `${(price.dust ?? 0) - dust} more dust needed.` : undefined} noteIcon={has ? "check" : "info"}>
+    <Panel class="shop__brief in-right" icon={<LookIcon kind={look.kind} />} title={look.name} detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}
+      note={source.text} noteIcon={source.icon}>
       <p class="dim">{look.about}</p>
-      <p class="dim">{source}</p>
+      {has && <p class="dim">Wear it from {look.character === null ? "a spirit's" : `${tuning.characters[look.character].name}'s`} gear.</p>}
     </Panel>
     <Actions>{!has && price !== null && <Pill icon="plus" label={`Buy for ${price.dust} dust`} disabled={store.busy.value || dust < (price.dust ?? 0)} onClick={() => actions.buyCosmetic(picked.value)}>
       <span class="call__button">Buy<small><Icon name="dust" />{price.dust}</small></span>

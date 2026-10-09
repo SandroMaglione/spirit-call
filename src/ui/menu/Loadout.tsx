@@ -32,7 +32,7 @@ import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { sourceOf } from "../navigation.ts"
 import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
-import { ids, Wallet } from "./parts.tsx"
+import { ids, lookSource, Wallet } from "./parts.tsx"
 import type { LoadoutTab, Nav } from "./screens.ts"
 
 const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", shot: "Shot", disc: "Disc", lob: "Lob" } as const
@@ -171,7 +171,7 @@ const Looks = ({ store, actions, character, preview }: { readonly store: UiStore
   const has = picked.value === null || owns(account, { kind: "cosmetic", id: picked.value })
   const price = picked.value === null ? null : cosmeticPrice(tuning, picked.value)
   const mine = owns(account, { kind: "character", id: character })
-  const source = look === null ? "" : look.source.kind === "shop" ? `In the shop, for ${look.source.dust} dust.` : look.source.kind === "call" ? "Only the Spirit Call gives it." : "A reward for a hard goal: a hardcore tier's first clear."
+  const source = look === null ? null : lookSource(look, false, has || price === null ? 0 : (price.dust ?? 0) - (account.wallet.dust ?? 0))
   return <>
     <div class="loadout__cards scroll in-left">
       <div class="loadout__slots" role="tablist" aria-label="Kinds of look">{cosmeticKinds.map((each) => <button key={each} type="button" role="tab" class="loadout__slot" aria-selected={each === kind.value} onClick={() => switchKind(each)}>
@@ -184,10 +184,10 @@ const Looks = ({ store, actions, character, preview }: { readonly store: UiStore
           selected={id === picked.value} locked={!owned} mark={id === worn ? "tick" : undefined} onClick={() => choose(id)} />
       })}</Cards>
     </div>
-    <Panel class="loadout__panel in-right" icon={<LookIcon kind={kind.value} />} title={look?.name ?? "Her own look"} detail={`${kindNames[kind.value]}${look === null ? "" : look.character === null ? " · Any spirit" : ` · ${tuning.characters[look.character].name}`}`}
-      note={!mine ? "Hers to wear once she joins you." : picked.value === worn ? "Worn." : !has ? source : undefined} noteIcon={picked.value === worn ? "check" : has ? "info" : "lock"}>
+    <Panel class="loadout__panel in-right" icon={<LookIcon kind={kind.value} />} title={look?.name ?? "Her own look"} detail={`${kindNames[kind.value]}${picked.value === worn ? " · Worn" : has && look !== null ? " · Yours" : ""}`}
+      note={source?.text} noteIcon={source?.icon ?? "info"}>
       <p class="dim">{look?.about ?? (kind.value === "tint" ? "Her spirit in her element's own colors." : "What her spirit sheds as she moves, in her element's colors.")}</p>
-      {look !== null && has && <p class="dim">{source}</p>}
+      {!mine && <p class="dim">Hers to wear once she joins you.</p>}
       <p class="dim">Looks change how she shows, never how she fights.</p>
     </Panel>
     <Actions>

@@ -292,6 +292,7 @@
 .inventory__cards { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 376px; z-index: 3; padding: 6px 6px 28px; }
 .inventory__brief { position: absolute; left: calc(var(--left) + 386px); right: var(--right); top: 62px; max-height: calc(100% - 132px); z-index: 3; }
 .inventory__cards .card__art .menu-icon, .inventory__cards .card__art > span { font-size: 34px; }
+.inventory__sources { display: grid; gap: 8px; align-content: start; }
 .inventory__source { margin: 0; font-size: 13px; color: var(--dim); }
 .practice__picks { position: absolute; left: calc(var(--left) - 6px); top: 59px; bottom: 0; width: 400px; z-index: 3; display: grid; gap: 12px; align-content: start; padding: 6px 6px 28px; }
 .practice__options { display: flex; align-items: center; gap: 8px; }
