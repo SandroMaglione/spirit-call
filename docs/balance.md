@@ -34,11 +34,40 @@ and `validateContent` holds her score within 5% of it:
 
 | | HP | ATK | DEF | Speed | Effective health | Score / budget | Feels |
 |---|---|---|---|---|---|---|---|
-| Swordsman (fighter, close) | 82 | 92 | 22 | 290 | 100 | 1.05 / 1.05 | A bruiser: sturdy and steady |
-| Gunner (fighter, long) | 58 | 125 | 8 | 310 | 63 | 0.95 / 0.95 | A glass cannon |
-| Tidecaller (fighter, middle) | 70 | 105 | 12 | 310 | 78 | 1.00 / 1.00 | An agile skirmisher |
-| Stormcaller (support, middle) | 72 | 88 | 15 | 295 | 83 | 0.85 / 0.85 | Her strength is her kit |
-| Bastion (guardian, middle) | 85 | 80 | 30 | 275 | 111 | 0.95 / 0.95 | A tank: slow, bulky, light blows |
+| Swordsman (fighter, close) | 82 | 86 | 22 | 290 | 100 | 1.06 / 1.05 | A bruiser: sturdy and steady |
+| Gunner (fighter, long) | 58 | 130 | 8 | 310 | 63 | 0.94 / 0.95 | A glass cannon |
+| Tidecaller (fighter, middle) | 70 | 110 | 12 | 310 | 78 | 1.00 / 1.00 | An agile skirmisher |
+| Stormcaller (support, middle) | 74 | 88 | 15 | 295 | 85 | 0.85 / 0.85 | Her strength is her kit |
+| Bastion (guardian, middle) | 85 | 72 | 30 | 275 | 111 | 0.94 / 0.95 | A tank: slow, bulky, light blows |
+
+(Scores count her dash, impact, and weight too, below.)
+
+**Dash, impact, and weight.** Three more traits shape how she plays, and
+her level does not change them (the character page shows them as chips
+under her stats):
+
+- **Dash**: her own charges, distance, recharge, and untouchable time
+  (`CharacterSpec.dash`, over the reference dash `Tuning.dash`, read through
+  `dashOf`). Duration stays everyone's, so a longer dash is a faster one.
+- **Impact**: how much her blows (not burns) fill a break bar, the one on
+  the field's (what a benched one left behind too).
+- **Weight**: a push on her is divided by it (`knockbackTaken`).
+
+They count in the budget too, their product (the dash by `dashScore`:
+charges, distance, recharge, and half its untouchable time) raised to a
+quarter (`bodyRules.personality`): they change how she plays more than how
+strong she is.
+
+| | Dash | Impact | Weight | Why |
+|---|---|---|---|---|
+| Swordsman | 2 × 170, back in 1.1 s (the reference) | 115% | 120% | A bruiser: breaks things and stands her ground |
+| Gunner | 2 × 200 | 85% | 80% | Kites: a longer dash, a light body |
+| Tidecaller | 3 × 140, back in 1.2 s, 0.16 s untouchable | 90% | 85% | Agile: more, shorter dashes |
+| Stormcaller | the reference | 90% | 100% | |
+| Bastion | 2 × 150, back in 1.35 s, 0.24 s untouchable | 125% | 140% | A tank: slow to dodge but untouchable longer, hard to move, breaks the toughest |
+
+To keep the budget, the Swordsman's ATK went to 86, the Gunner's to 130,
+the Tidecaller's to 110, Bastion's to 72, and the Stormcaller's HP to 74.
 
 Speed counts one for one in the score (5% quicker is worth 5% of ATK or
 health): an approximation, for the matrix and playtests to correct. Each

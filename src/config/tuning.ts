@@ -132,6 +132,11 @@ export const defaultTuning = {
     defenseScale: 100
   },
 
+  /**
+   * The reference dash (the Swordsman's): each character changes some of
+   * its distance, charges, cooldown, and invulnerability (her body's `dash`,
+   * see `dashOf`); the rest is everyone's.
+   */
   dash: {
     /** Distance covered by one dash. */
     distance: 170,

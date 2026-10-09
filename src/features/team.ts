@@ -50,7 +50,7 @@ import {
 import type { DashValue } from "../schema.ts"
 import { bodyParts, fighterParts } from "./bodies.ts"
 import type { BodyMotion } from "./bodies.ts"
-import { resolveBuild } from "./build.ts"
+import { dashOf, resolveBuild } from "./build.ts"
 import type { ResolvedBuild } from "./build.ts"
 import { initialSkills } from "./skills.ts"
 import { initialBasicAttack } from "./basic-attack.ts"
@@ -74,12 +74,12 @@ export interface Carried {
   readonly dash: DashValue
 }
 
-/** A body that has not moved yet, aiming right, its dashes ready. */
-const fresh = (tuning: TuningValue, at: Vec2): Carried => ({
+/** `character`'s body that has not moved yet, aiming right, her dashes ready. */
+const fresh = (tuning: TuningValue, character: CharacterId, at: Vec2): Carried => ({
   motion: { previous: at, velocity: { x: 0, y: 0 }, invulnerable: 0 },
   aim: { x: 1, y: 0 },
   facing: { x: 1, y: 0 },
-  dash: { remaining: 0, charges: tuning.dash.charges, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
+  dash: { remaining: 0, charges: dashOf(tuning, character).charges, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
 })
 
 /** `member`'s body on the field at `at`: her size and look, and what it carries. */
@@ -105,7 +105,7 @@ export const SpawnTeam = Game.System("Shooter/SpawnTeam", {
   resources.team.get().slice(0, teamSize).forEach((build, slot) => {
     const resolved = resolveBuild(tuning, build)
     const member = makeMember(resolved, slot)
-    if (slot === 0) commands.spawnIn(RunScope, Game.Command.insert(member, ...fieldParts(tuning, resolved, at, fresh(tuning, at))))
+    if (slot === 0) commands.spawnIn(RunScope, Game.Command.insert(member, ...fieldParts(tuning, resolved, at, fresh(tuning, resolved.character, at))))
     else commands.spawnIn(RunScope, member)
   })
 })

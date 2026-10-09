@@ -68,6 +68,9 @@ export const statsAtLevel = (tuning: TuningValue, base: Stats, level: number): S
   return { hp: Math.round(base.hp * scale), atk: Math.round(base.atk * scale), def: Math.round(base.def * scale), speed: base.speed }
 }
 
+/** `character`'s dash: the reference dash (`Tuning.dash`) with what her body changes in it. */
+export const dashOf = (tuning: TuningValue, character: CharacterId): TuningValue["dash"] => ({ ...tuning.dash, ...tuning.characters[character].dash })
+
 /** The build the game starts with: the first character, fighting with her class's plain aspect. */
 export const defaultBuild: BuildValue = { character: "swordsman" }
 

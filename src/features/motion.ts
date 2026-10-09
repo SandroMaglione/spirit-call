@@ -5,6 +5,7 @@ import { zero } from "../math/vec.ts"
 import { moveCircle } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
+import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import { Body, ElementState, Enemy, Game, Knockback, Position, PrevPosition, SlowMotion, Time, Tuning, Velocity, Wall } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
@@ -28,9 +29,15 @@ export const Walls = Game.Query({ selection: { wall: Game.Query.read(Wall) } })
 export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box } } }>): Array<Box> =>
   walls.map((match) => match.data.wall.get())
 
-/** The share of a push a body takes: an enemy kind's (less for a champion), or the player's. */
-export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined, champion = false): number =>
-  enemy === undefined ? tuning.player.knockbackTaken : tuning.enemies[enemy].knockbackTaken * (champion ? tuning.champions.knockback : 1)
+/**
+ * The share of a push a body takes: an enemy kind's (less for a champion),
+ * or the player's, divided by her weight (`character`'s; a heavier body is
+ * pushed less far).
+ */
+export const knockbackTaken = (tuning: TuningValue, enemy: EnemyKind | undefined, champion = false, character?: CharacterId): number =>
+  enemy === undefined
+    ? tuning.player.knockbackTaken / (character === undefined ? 1 : tuning.characters[character].weight)
+    : tuning.enemies[enemy].knockbackTaken * (champion ? tuning.champions.knockback : 1)
 
 /** How fast a body's push dies down: slower while it is swept (a glide), else `knockback.decay`. */
 export const pushDecay = (tuning: TuningValue, state: ActiveState | null | undefined): number =>

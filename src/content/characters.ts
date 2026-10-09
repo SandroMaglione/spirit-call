@@ -41,6 +41,18 @@ export type Role = "fighter" | "support" | "guardian"
 /** Each role's name, as menus show it. */
 export const roleNames: { readonly [R in Role]: string } = { fighter: "Fighter", support: "Support", guardian: "Guardian" }
 
+/** What a character's dash can change from the reference dash (see `Tuning.dash`). */
+export interface DashProfile {
+  /** Dashes ready at once. */
+  readonly charges: number
+  /** How far one dash carries her. */
+  readonly distance: number
+  /** Seconds for a spent dash to come back. */
+  readonly cooldown: number
+  /** Seconds she is untouchable from the start of a dash. */
+  readonly invulnerability: number
+}
+
 export interface CharacterSpec {
   /** Shown in menus. */
   readonly name: string
@@ -55,6 +67,12 @@ export interface CharacterSpec {
   readonly class: ClassId
   /** What her kit does for the team; with her class's range, how much body she gets (see `bodyRules`). */
   readonly role: Role
+  /** Her dash: what she changes from the reference dash (nothing: the reference's). */
+  readonly dash: Partial<DashProfile>
+  /** How hard her blows hit a break bar: 1 the reference, above 1 she breaks enemies sooner. */
+  readonly impact: number
+  /** How firmly she stands: 1 the reference; a heavier body is pushed less far by blows. */
+  readonly weight: number
   /** Her kit: her own skill in each slot (no other character has them). */
   readonly skills: { readonly [Slot in SkillSlot]: SkillId }
 }
@@ -75,16 +93,40 @@ export const bodyRules = {
   reference: { hp: 75, atk: 100, def: 15, speed: 295 } satisfies Stats,
   role: { fighter: 1, support: 0.85, guardian: 0.95 } satisfies { readonly [R in Role]: number },
   range: { close: 1.05, middle: 1, long: 0.95 },
+  /**
+   * The reference dash (the Swordsman's, `Tuning.dash`), and how much her
+   * dash, impact, and weight count beside her stats: their product, raised
+   * to `personality` (a quarter: they shape how she plays more than how
+   * strong she is).
+   */
+  dash: { charges: 2, distance: 170, cooldown: 1.1, invulnerability: 0.18 } satisfies DashProfile,
+  personality: 0.25,
   tolerance: 0.05
 }
 
 /** Health as DEF stretches it: how much damage of no element it takes to fall (see `Tuning.combat.defenseScale`). */
 export const effectiveHealth = (stats: Stats, defenseScale: number): number => stats.hp * (defenseScale + Math.max(0, stats.def)) / defenseScale
 
-/** A body's score beside the reference body's (1): ATK, effective health, and speed, multiplied. */
-export const bodyScore = (stats: Stats, defenseScale: number): number => {
+/**
+ * A dash beside the reference dash (1): how many, how far, how soon back,
+ * and (counting half) how long untouchable.
+ */
+export const dashScore = (dash: Partial<DashProfile>): number => {
+  const reference = bodyRules.dash
+  const own = { ...reference, ...dash }
+  return (own.charges / reference.charges) * (own.distance / reference.distance) * (reference.cooldown / own.cooldown) * Math.sqrt(own.invulnerability / reference.invulnerability)
+}
+
+/**
+ * A body's score beside the reference body's (1): ATK, effective health,
+ * and speed, multiplied, and her dash, impact, and weight, counting a
+ * quarter (`bodyRules.personality`).
+ */
+export const bodyScore = (spec: Pick<CharacterSpec, "stats" | "dash" | "impact" | "weight">, defenseScale: number): number => {
+  const { stats } = spec
   const reference = bodyRules.reference
-  return (stats.atk / reference.atk) * (effectiveHealth(stats, defenseScale) / effectiveHealth(reference, defenseScale)) * (stats.speed / reference.speed)
+  const core = (stats.atk / reference.atk) * (effectiveHealth(stats, defenseScale) / effectiveHealth(reference, defenseScale)) * (stats.speed / reference.speed)
+  return core * (dashScore(spec.dash) * spec.impact * spec.weight) ** bodyRules.personality
 }
 
 /** Every character, by id. */
@@ -92,56 +134,71 @@ export const characters = {
   /** Wind, Blade, fighter: a bruiser, sturdy and steady in close; the Gust throws a crowd off, the Cyclone draws it in. */
   swordsman: character({
     name: "Swordsman",
-    stats: { hp: 82, atk: 92, def: 22, speed: 290 },
+    stats: { hp: 82, atk: 86, def: 22, speed: 290 },
     radius: 16,
     hurtboxRadius: 11,
     element: "wind",
     class: "blade",
     role: "fighter",
+    dash: {},
+    impact: 1.15,
+    weight: 1.2,
     skills: { special: "bladeWave", ultimate: "cyclone" }
   }),
   /** Fire, Gun, fighter: a glass cannon, quick, hard-hitting, and frail, at range; the Flare Jump leaps out of a crowd, the Barrage rains fire. */
   gunner: character({
     name: "Gunner",
-    stats: { hp: 58, atk: 125, def: 8, speed: 310 },
+    stats: { hp: 58, atk: 130, def: 8, speed: 310 },
     radius: 16,
     hurtboxRadius: 11,
     element: "fire",
     class: "gun",
     role: "fighter",
+    dash: { distance: 200 },
+    impact: 0.85,
+    weight: 0.8,
     skills: { special: "flareJump", ultimate: "barrage" }
   }),
   /** Water, Disc, fighter: an agile skirmisher at middle range, quick and sharp; the Tidal Wave shoves and soaks, the Tide soaks everything around her. */
   tidecaller: character({
     name: "Tidecaller",
-    stats: { hp: 70, atk: 105, def: 12, speed: 310 },
+    stats: { hp: 70, atk: 110, def: 12, speed: 310 },
     radius: 16,
     hurtboxRadius: 11,
     element: "water",
     class: "disc",
     role: "fighter",
+    dash: { charges: 3, distance: 140, cooldown: 1.2, invulnerability: 0.16 },
+    impact: 0.9,
+    weight: 0.85,
     skills: { special: "tidalWave", ultimate: "tide" }
   }),
   /** Thunder, Staff, support: at middle range, her strength in her kit (a totem that zaps enemies or heals whoever stands by it, and a thunderclap that heals the team), not her blows. */
   stormcaller: character({
     name: "Stormcaller",
-    stats: { hp: 72, atk: 88, def: 15, speed: 295 },
+    stats: { hp: 74, atk: 88, def: 15, speed: 295 },
     radius: 16,
     hurtboxRadius: 11,
     element: "thunder",
     class: "staff",
     role: "support",
+    dash: {},
+    impact: 0.9,
+    weight: 1,
     skills: { special: "sparkTotem", ultimate: "thunderclap" }
   }),
   /** Rock, Disc, guardian: a tank, the sturdiest and slowest, hitting lightly; cracks the toughest with an Earthrise, and guards the team with stone plates. */
   stonekeeper: character({
     name: "Bastion",
-    stats: { hp: 85, atk: 80, def: 30, speed: 275 },
+    stats: { hp: 85, atk: 72, def: 30, speed: 275 },
     radius: 16,
     hurtboxRadius: 11,
     element: "rock",
     class: "disc",
     role: "guardian",
+    dash: { distance: 150, cooldown: 1.35, invulnerability: 0.24 },
+    impact: 1.25,
+    weight: 1.4,
     skills: { special: "stoneRise", ultimate: "stoneGuard" }
   })
 }

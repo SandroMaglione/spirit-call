@@ -370,7 +370,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       }
       // A swept body is light: pushed further (see `elementRules.swept`).
       const light = (afflicted?.state ?? state)?.id === "swept" ? tuning.elements.swept.knockback : 1
-      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy, data.enemy.present && data.enemy.get().champion) * light
+      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy, data.enemy.present && data.enemy.get().champion, data.member.present ? data.member.get().character : undefined) * light
       data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
       // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
       if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)

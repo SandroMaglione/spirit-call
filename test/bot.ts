@@ -35,7 +35,7 @@ import { skillAim } from "../src/features/skills.ts"
 import { basicAttack } from "../src/content/aspects.ts"
 import type { AttackMove } from "../src/content/attacks.ts"
 import type { SkillEffect } from "../src/content/skills.ts"
-import { aspectFor } from "../src/features/build.ts"
+import { aspectFor, dashOf } from "../src/features/build.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
@@ -100,6 +100,8 @@ export interface Battlefield {
     /** Dash charges ready, and the most she holds. */
     readonly charges: number
     readonly maxCharges: number
+    /** Her own dash: how far, how fast, how long untouchable (see `dashOf`). */
+    readonly dash: { readonly distance: number; readonly duration: number; readonly invulnerability: number }
     readonly invulnerable: number
   } | undefined
   readonly enemies: ReadonlyArray<{ readonly id: number; readonly at: Vec2 }>
@@ -120,7 +122,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
         stats: Game.Query.read(CombatStats),
         state: Game.Query.read(ElementState),
         dash: Game.Query.read(Dash),
-        invulnerable: Game.Query.read(Invulnerable)
+        invulnerable: Game.Query.read(Invulnerable),
+        member: Game.Query.read(Member)
       },
       with: [Player]
     }),
@@ -229,7 +232,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       speed: player.data.stats.get().speed * stateSpeed(tuning, player.data.state.get()),
       dashReady: player.data.dash.get().charges > 0 && player.data.dash.get().remaining <= 0,
       charges: player.data.dash.get().charges,
-      maxCharges: tuning.dash.charges,
+      maxCharges: dashOf(tuning, player.data.member.get().character).charges,
+      dash: dashOf(tuning, player.data.member.get().character),
       invulnerable: player.data.invulnerable.get().remaining
     },
     enemies: queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, at: data.position.get() })),
@@ -309,12 +313,12 @@ const playOut = (
   dash: boolean
 ): { readonly danger: number; readonly end: Vec2; readonly burns: boolean } => {
   const player = field.player!
-  const dashSpeed = tuning.dash.distance / tuning.dash.duration
-  const safeUntil = Math.max(player.invulnerable, dash ? tuning.dash.invulnerability : 0)
+  const dashSpeed = player.dash.distance / player.dash.duration
+  const safeUntil = Math.max(player.invulnerable, dash ? player.dash.invulnerability : 0)
   let at = player.at
   let burns = false
   for (let t = sample; t <= horizon + 1e-9; t += sample) {
-    const speed = dash && t <= tuning.dash.duration + 1e-9 ? dashSpeed : player.speed
+    const speed = dash && t <= player.dash.duration + 1e-9 ? dashSpeed : player.speed
     at = moveCircle(at, { x: direction.x * speed * sample, y: direction.y * speed * sample }, player.body, field.walls).position
     if (t <= safeUntil) continue
     if (!burns && field.threats.some((threat) => threat.soft === true && touches(threat, at, player.hurtbox, t))) burns = true
@@ -406,7 +410,7 @@ export const decide = (seen: Battlefield, tuning: Tuning, last: Vec2, style: Sty
     // Safe: close a gap the dash covers in one go, keeping a charge to dodge with.
     if (target === undefined || !field.player.dashReady || field.player.charges < field.player.maxCharges) return best!.move
     const gap = Math.hypot(target.at.x - at.x, target.at.y - at.y)
-    if (gap <= reach + 15 || gap > reach + tuning.dash.distance) return best!.move
+    if (gap <= reach + 15 || gap > reach + field.player.dash.distance) return best!.move
     const toward = { x: (target.at.x - at.x) / gap, y: (target.at.y - at.y) / gap }
     const { danger, burns } = playOut(field, tuning, toward, true)
     return danger === Infinity && !burns ? { direction: toward, dash: true, attack: false, closing: true, target: targetId } : best!.move

@@ -90,6 +90,11 @@
 .character__level > .menu-icon { align-self: center; }
 .character__class { margin-left: auto; align-self: center; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--gold-hi); }
 .character__stats { margin-top: 4px; }
+.character__traits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.trait { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 4px; align-items: center; padding: 4px 6px; border-radius: 8px; background: #ffffff10; }
+.trait .menu-icon { grid-row: span 2; width: 16px; height: 16px; }
+.trait b { font-size: 13px; font-weight: 800; line-height: 1.1; }
+.trait small { font-size: 10px; color: var(--dim); font-weight: 700; line-height: 1.1; }
 .character__side p { font-size: 12.5px; }
 .character__panel { position: absolute; right: var(--right); top: 74px; width: 330px; max-height: calc(100% - 142px); z-index: 3; }
 .character__panel .cards { padding: 3px; }

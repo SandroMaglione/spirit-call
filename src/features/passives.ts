@@ -42,6 +42,7 @@ import {
   Tuning
 } from "../schema.ts"
 import type { MoveContext, TriggeredEffectsValue } from "../schema.ts"
+import { dashOf } from "./build.ts"
 import { makeGround } from "./ground.ts"
 import { skillAim } from "./skills.ts"
 
@@ -166,7 +167,7 @@ export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
 
 /** Who carries out a triggered effect: where they are, where they aim, their health, ATK, side, and (a team member) who she is. */
 /** A wielder's dashes (the one on the field), for a dash given back. */
-const Dashers = Game.Query({ selection: { position: Game.Query.read(Position), dash: Game.Query.write(Dash) } })
+const Dashers = Game.Query({ selection: { position: Game.Query.read(Position), dash: Game.Query.write(Dash), member: Game.Query.read(Member) } })
 
 const Wielders = Game.Query({
   selection: {
@@ -212,9 +213,10 @@ export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects"
         const dasher = lookup.getHandle(holder, Dashers)
         if (!dasher.ok) break
         // A whole charge back; all of them back stops the wait for the next.
+        const most = dashOf(tuning, dasher.value.data.member.get().character).charges
         dasher.value.data.dash.update((dash) => {
-          const charges = Math.min(tuning.dash.charges, dash.charges + 1)
-          return { ...dash, charges, cooldown: charges >= tuning.dash.charges ? 0 : dash.cooldown }
+          const charges = Math.min(most, dash.charges + 1)
+          return { ...dash, charges, cooldown: charges >= most ? 0 : dash.cooldown }
         })
         break
       }
