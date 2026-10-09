@@ -3,7 +3,8 @@
  * class, how a team answers a quest's enemies, and setting up the team (its
  * aspects and relics too).
  */
-import type { TeamAspects, TeamRelics } from "../account/account.ts"
+import { owns, slotOpen } from "../account/account.ts"
+import type { Account, TeamAspects, TeamRelics } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import { aspectOf } from "../content/aspects.ts"
 import { teamSize } from "../content/characters.ts"
@@ -41,6 +42,18 @@ export const relicsFor = (tuning: Tuning, character: CharacterId, slot: RelicSlo
     const spec = relicOf(tuning.relics, id)
     return spec.slot === slot && (spec.element === null || spec.element === elementOf(tuning, character))
   })
+
+/**
+ * The slots of `character` in the draft that are open and empty while a
+ * relic the account owns could go there (one no other member wears): a
+ * red mark says so (the menu's "something to do here").
+ */
+export const emptyRelicSlots = (tuning: Tuning, account: Account, draft: Pick<TeamDraft, "team" | "relics">, character: CharacterId): ReadonlyArray<RelicSlot> => {
+  if (!draft.team.includes(character) || !owns(account, { kind: "character", id: character })) return []
+  const worn = new Set(Object.values(draft.relics).flatMap((slots) => Object.values(slots ?? {})))
+  return relicSlots.filter((slot) => slotOpen(tuning, account, slot) && draft.relics[character]?.[slot] === undefined
+    && relicsFor(tuning, character, slot).some((id) => owns(account, { kind: "relic", id }) && !worn.has(id)))
+}
 
 /**
  * `relic` equipped in `slot` of `character` in the draft (`null`: none). A

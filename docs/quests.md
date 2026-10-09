@@ -73,9 +73,10 @@ counted toward it.
 
 **A perfect clear** is all three stars in one run. It is kept per quest
 and rank (`perfectAt`), shown on the results screen and as a glow around
-the quest's stars in the list, and it is what a quest's relic asks: its
-tier I at rank I, tier II at rank II, tier III at rank III (see
-`relics.md`). Stars earned across runs never add up to one.
+the quest's stars in the list. It pays once per quest and rank: the
+quest's relic on the rank that unlocks it, dust everywhere else, more at
+higher enemy levels (see `relics.md`). Stars earned across runs never add
+up to one.
 
 **The numbers come from measured runs** (the bot, in `test/bot.ts`, on two
 seeds, with the team a new account has, from `pnpm progression`): the

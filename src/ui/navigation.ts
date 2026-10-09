@@ -13,6 +13,8 @@ export const playsIn = (tuning: Tuning, tab: QuestTab): ReadonlyArray<Play> => t
 /** Switching category keeps a matching selection, otherwise previews its first open entry. */
 export const selectionIn = (tuning: Tuning, account: Account, tab: QuestTab, current: Play): Play => {
   const plays = playsIn(tuning, tab)
+  // A quest of the tab stays picked at the rank it is at (a link to a rank II quest lands on rank II).
+  if (current.kind === "quest" && plays.some((candidate) => candidate.kind === "quest" && candidate.quest === current.quest)) return current
   return plays.find((candidate) => samePlay(candidate, current)) ?? plays.find((candidate) => playLock(tuning, account, candidate) === null) ?? plays[0] ?? current
 }
 

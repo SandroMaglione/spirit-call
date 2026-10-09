@@ -3,7 +3,7 @@
  * the team a new account has when it opens (see `test/progression-model.ts`)
  * at that team's levels: whether the bot clears it, how many hits it
  * takes beside the quest's hit budget, and whether the run was perfect
- * (every star in it: what a quest's relic tier asks, see docs/relics.md).
+ * (every star in it: what unlocks a quest's relic, see docs/relics.md).
  *
  *   pnpm expected                     everything, two seeds
  *   pnpm expected --only main         main | side | ranks | hardcore | trials
@@ -94,6 +94,6 @@ for (const each of cases.filter((candidate) => values.only === undefined || cand
 const lost = table.filter((row) => String(row.outcome).includes("D")), late = table.filter((row) => String(row.outcome).includes("T"))
 console.log(`\n${table.length - lost.length - late.length} of ${table.length} cleared on every seed${lost.length > 0 ? `; lost at least once: ${lost.map((row) => row.play).join(", ")}` : ""}${late.length > 0 ? `; out of time at least once: ${late.map((row) => row.play).join(", ")}` : ""}.`)
 const quests = table.filter((row) => row.perfect !== ""), perfected = quests.filter((row) => String(row.perfect).includes("P"))
-const relics = quests.filter((row) => { const quest = Object.values(tuning.quests).find((spec) => row.play === spec.name || String(row.play).startsWith(`${spec.name} rank`)); return quest?.relic !== null && quest !== undefined })
+const relics = quests.filter((row) => Object.values(tuning.quests).some((spec) => spec.relic !== null && (row.play === (spec.relic.rank === 1 ? spec.name : `${spec.name} rank ${spec.relic.rank}`))))
 const relicsNever = relics.filter((row) => !String(row.perfect).includes("P"))
-console.log(`${perfected.length} of ${quests.length} quest runs perfect on some seed; of the ${relics.length} that give a relic tier, ${relicsNever.length} perfect on none${relicsNever.length > 0 ? `: ${relicsNever.map((row) => row.play).join(", ")}` : ""}.`)
+console.log(`${perfected.length} of ${quests.length} quest runs perfect on some seed; of the ${relics.length} that unlock a relic, ${relicsNever.length} perfect on none${relicsNever.length > 0 ? `: ${relicsNever.map((row) => row.play).join(", ")}` : ""}.`)

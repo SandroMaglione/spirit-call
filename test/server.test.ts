@@ -388,7 +388,6 @@ describe("account rows", () => {
         { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "cosmetic", id: "blueFlame" } }
       ]
     },
-    shop: { period: 3, bought: 1 },
     selection: { team: ["gunner", "swordsman"], aspects: { gunner: "marksman" }, relics: { gunner: { strike: "echo", element: "emberHeart" } }, play: { kind: "tier", track: "gauntlet", tier: 1 } },
     worn: { gunner: { trail: "starfall", tint: "blueFlame" } }
   }, 10).account), 10).account

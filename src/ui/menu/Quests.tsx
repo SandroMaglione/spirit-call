@@ -8,10 +8,12 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, levelsUnder, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
+import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, levelsUnder, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, relicTier, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
 import type { QuestId, StarGroup } from "../../content/quests.ts"
-import { relicOf } from "../../content/relics.ts"
+import { perfectDustAt, relicOf } from "../../content/relics.ts"
+import type { RelicId } from "../../content/relics.ts"
+import { RelicIcon } from "../RelicIcon.tsx"
 import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
 import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
@@ -260,6 +262,10 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const rank = selected.kind === "quest" ? rankOf(selected) : 1
   const earnedStars = selected.kind === "quest" ? questProgress(account, selected.quest, rank)?.stars ?? [] : []
   const perfected = selected.kind === "quest" && questProgress(account, selected.quest, rank)?.perfectAt !== undefined
+  // The relic this rank unlocks, if it does (its perfect clear gives it, or its first clear for the two that introduce their slots); every other perfect clear pays dust.
+  const relicHere = quest?.relic != null && quest.relic.rank === rank ? quest.relic.id : null
+  const plainRelic = relicHere !== null && quest!.rewards.unlocks.some((item) => item.kind === "relic" && item.id === relicHere)
+  const perfectDust = relicHere !== null && !plainRelic ? null : perfectDustAt(tuning.relicRules, encounter.enemyLevel)
   const firstClear = selected.kind === "quest" ? questRewards(tuning, selected.quest, rank) : null
   // A quest's first clear stays listed once claimed (ticked and dimmed), so what it gave is still there to read.
   const once = firstClear !== null
@@ -289,8 +295,8 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
       {quest !== null && <div>
         <Label>Stars</Label>
         {quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)}
-        {/* A perfect clear, every star in one run, is what the quest's relic tier asks (see docs/relics.md). */}
-        {quest.relic !== null && <div class={`goal goal--perfect${perfected ? " is-earned" : ""}`}><Icon name="relic" />All three in one run: {relicOf(tuning.relics, quest.relic).name} tier {["I", "II", "III"][Math.min(3, rank) - 1]}</div>}
+        {/* All three in one run, once: its dust (a quest-rank that unlocks a relic shows the relic below instead). */}
+        {perfectDust !== null && <div class={`goal goal--perfect${perfected ? " is-earned" : ""}`}><span class="goal__stars" aria-label="All three stars in one run"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span><span class="goal__dust"><Icon name="dust" />{perfectDust}</span></div>}
       </div>}
       {challenge.objective.kind === "endure" && <div>
         <Label>Each wave</Label>
@@ -308,11 +314,36 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         </div>
       </div>
     </div>
+    {relicHere !== null && <RelicPrize store={store} relic={relicHere} plain={plainRelic} />}
     <div class="quests__enemies brief-section" aria-label="Enemies, over what they are weak to">
       <EnemyFaces store={store} kinds={challengeEnemies(challenge)} inspected={inspected.value} inspect={(kind) => (inspected.value = kind)} />
     </div>
     {inspected.value !== null && <EnemyFacts store={store} kind={inspected.value} />}
   </Panel>
+}
+
+/**
+ * The relic this quest-rank unlocks, shown as the prize it is (see
+ * docs/relics.md): its icon in a turning gold ring, what it does, and what
+ * it asks: all three stars in one run (a plain first clear for the two that
+ * introduce their slots). Dimmed once owned.
+ */
+const RelicPrize = ({ store, relic, plain }: { readonly store: UiStore; readonly relic: RelicId; readonly plain: boolean }) => {
+  const tuning = store.tuning.value, spec = relicOf(tuning.relics, relic)
+  const had = relicTier(store.account.value, relic) !== null
+  return <div class={`relic-prize brief-section${had ? " is-had" : ""}`} data-element={spec.element ?? undefined}>
+    <span class="relic-prize__orb" aria-hidden="true">
+      <span class="relic-prize__ring" />
+      <span class="relic-prize__icon"><RelicIcon slot={spec.slot} element={spec.element} /></span>
+      <span class="unlock-badge__glint" />
+    </span>
+    <div class="relic-prize__about">
+      <Label end={had ? <span class="claimed"><Icon name="check" />Claimed</span> : undefined}>New relic</Label>
+      <b class="relic-prize__name">{spec.name}</b>
+      <p>{spec.tiers[1].adds}</p>
+      <p class="relic-prize__ask">{plain ? <><Icon name="quests" />On the first clear</> : <><span class="relic-prize__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>All three stars in one run</>}</p>
+    </div>
+  </div>
 }
 
 export const Quests = ({ store, nav, tab, play, leader, enter }: {

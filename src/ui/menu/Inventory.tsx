@@ -20,7 +20,7 @@ const sources = (store: UiStore, id: ResourceId): ReadonlyArray<string> => {
   const tuning = store.tuning.value
   if (id === "crystals") return ["First clears of quests, and their stars' chests", "Account levels and discoveries", "Hardcore tiers, once per week"]
   if (id === "gold") return ["Every run: more against stronger enemies", "First clears, chests, and hardcore tiers"]
-  if (id === "dust") return ["Side quests, ranks, and their chests: first clears", "Hardcore tiers and trials, once per week", "A relic called again past tier III"]
+  if (id === "dust") return ["Side quests, ranks, and their chests: first clears", "Hardcore tiers and trials, once per week"]
   if (!isMaterial(store, id)) return []
   const element = tuning.materials[id].element
   const trial = Object.values(tuning.tracks).find((track) => track.kind === "trial" && track.element === element)

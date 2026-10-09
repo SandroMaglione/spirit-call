@@ -115,7 +115,6 @@ export const Account = Schema.Struct({
     focus: Schema.Record(BannerId, Schema.optionalKey(CharacterId)),
     history: Schema.Array(Schema.Struct({ at: Schema.Number, banner: BannerId, result: CallResult }))
   }),
-  shop: Schema.Struct({ period: Schema.NullOr(Schema.Number), bought: Count }),
   selection: Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics, play: Play }),
   worn: Worn
 })
@@ -182,7 +181,7 @@ export const Earned = Schema.Struct({
   rewards: Schema.NullOr(Schema.Struct({ experience: Schema.Number, currencies: Amounts, unlocks: Schema.Array(Item) })),
   stars: Schema.Array(Count),
   chests: Schema.Array(ChestRef),
-  perfect: Schema.NullOr(Schema.Struct({ relic: Schema.NullOr(Schema.Struct({ id: RelicId, tier: RelicTier })) }))
+  perfect: Schema.NullOr(Schema.Struct({ relic: Schema.NullOr(RelicId), dust: Count }))
 })
 
 // The Schemas describe exactly the types the account's rules use, both ways.

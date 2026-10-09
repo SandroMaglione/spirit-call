@@ -111,9 +111,9 @@ export const relics = {
     element: null,
     about: "Room to breathe after a combo.",
     tiers: {
-      1: { adds: "The last move of her combo sends out a ring that throws enemies back.", passives: [on(doing(finisher()), cast(ring()), 0.8)] },
-      2: { adds: "Her charged attack sends it out too.", passives: [on(doing(finisher()), cast(ring()), 0.8), on(doing(power()), cast(ring()), 0.8)] },
-      3: { adds: "The ring carries her element.", passives: [on(doing(finisher()), castOwn(ring()), 0.8), on(doing(power()), castOwn(ring()), 0.8)] }
+      1: { adds: "The last move of your combo sends out a ring that throws enemies back.", passives: [on(doing(finisher()), cast(ring()), 0.8)] },
+      2: { adds: "Your charged attack sends it out too.", passives: [on(doing(finisher()), cast(ring()), 0.8), on(doing(power()), cast(ring()), 0.8)] },
+      3: { adds: "The ring carries your element.", passives: [on(doing(finisher()), castOwn(ring()), 0.8), on(doing(power()), castOwn(ring()), 0.8)] }
     }
   }),
   /** Rewards reading an attack: the counter (the dash strike right after a perfect dodge) hits harder, then reaches further. */
@@ -123,9 +123,9 @@ export const relics = {
     element: null,
     about: "Striking back out of a perfect dodge.",
     tiers: {
-      1: { adds: "Her counter (the dash strike right after a perfect dodge) deals 30% more.", passives: [damageBonus(30, withMove(counter()))] },
+      1: { adds: "Your counter (the dash strike right after a perfect dodge) deals 30% more.", passives: [damageBonus(30, withMove(counter()))] },
       2: { adds: "The counter also sends a slash straight ahead.", passives: [damageBonus(30, withMove(counter())), on(doing(counter()), cast(counterSlash), 0.5)] },
-      3: { adds: "The slash carries her element.", passives: [damageBonus(30, withMove(counter())), on(doing(counter()), castOwn(counterSlash), 0.5)] }
+      3: { adds: "The slash carries your element.", passives: [damageBonus(30, withMove(counter())), on(doing(counter()), castOwn(counterSlash), 0.5)] }
     }
   }),
 
@@ -136,7 +136,7 @@ export const relics = {
     element: null,
     about: "Hitting harder, at a price.",
     tiers: {
-      1: { adds: "Blows deal 20% more; blows on her deal 20% more too.", passives: [damageBonus(20, always()), damageTaken(20)] },
+      1: { adds: "Your blows deal 20% more; blows on you deal 20% more too.", passives: [damageBonus(20, always()), damageTaken(20)] },
       2: { adds: "And 15% more to stunned or broken enemies.", passives: [damageBonus(20, always()), damageTaken(20), damageBonus(15, targetHeld())] },
       3: {
         adds: "Killing an enemy in a state sends out a ring where it falls, throwing the others back.",
@@ -151,7 +151,7 @@ export const relics = {
     element: null,
     about: "Fighting on when hurt.",
     tiers: {
-      1: { adds: "Below half her health, her blows deal 25% more.", passives: [damageBonus(25, wielderHealthBelow(0.5))] },
+      1: { adds: "Below half your health, your blows deal 25% more.", passives: [damageBonus(25, wielderHealthBelow(0.5))] },
       2: { adds: "Below a quarter, 15% more on top.", passives: [damageBonus(25, wielderHealthBelow(0.5)), damageBonus(15, wielderHealthBelow(0.25))] },
       3: { adds: "A kill gives a dash back, at most once every 4 seconds.", passives: [damageBonus(25, wielderHealthBelow(0.5)), damageBonus(15, wielderHealthBelow(0.25)), on(kill(), dashBack(), 4)] }
     }
@@ -163,7 +163,7 @@ export const relics = {
     element: null,
     about: "Ultimates sooner, at a price.",
     tiers: {
-      1: { adds: "She gains 25% more energy; blows on her deal 15% more.", passives: [trait({ energy: 1.25 }), damageTaken(15)] },
+      1: { adds: "You gain 25% more energy; blows on you deal 15% more.", passives: [trait({ energy: 1.25 }), damageTaken(15)] },
       2: { adds: "15% more energy on top.", passives: [trait({ energy: 1.25 }), damageTaken(15), trait({ energy: 1.15 })] },
       3: { adds: "10% more energy on top.", passives: [trait({ energy: 1.25 }), damageTaken(15), trait({ energy: 1.15 }), trait({ energy: 1.1 })] }
     }
@@ -178,9 +178,9 @@ export const relics = {
     element: null,
     about: "Getting out of a crowd.",
     tiers: {
-      1: { adds: "Dashing throws back enemies around where she dashed from.", passives: [on(dashing(), cast(ring({ radius: 110, power: 4, knockback: 650 }), "there"), 1.2)] },
-      2: { adds: "The push also clears enemy shots around her.", passives: [on(dashing(), cast(ring({ radius: 110, power: 4, knockback: 650, clearsProjectiles: true }), "there"), 1.2)] },
-      3: { adds: "The push carries her element.", passives: [on(dashing(), castOwn(ring({ radius: 110, power: 4, knockback: 650, clearsProjectiles: true }), "there"), 1.2)] }
+      1: { adds: "Dashing throws back enemies around where you dashed from.", passives: [on(dashing(), cast(ring({ radius: 110, power: 4, knockback: 650 }), "there"), 1.2)] },
+      2: { adds: "The push also clears enemy shots around you.", passives: [on(dashing(), cast(ring({ radius: 110, power: 4, knockback: 650, clearsProjectiles: true }), "there"), 1.2)] },
+      3: { adds: "The push carries your element.", passives: [on(dashing(), castOwn(ring({ radius: 110, power: 4, knockback: 650, clearsProjectiles: true }), "there"), 1.2)] }
     }
   }),
   /** Kills (then breaks) give a dash back: keep moving through a fight. */
@@ -195,16 +195,16 @@ export const relics = {
       3: { adds: "A kill gives one back every 3 seconds.", passives: [on(kill(), dashBack(), 3), on(breaking(), dashBack(), 5)] }
     }
   }),
-  /** A perfect dodge leaves a whirl where she stood, pulling enemies into the spot she left. */
+  /** A perfect dodge leaves a whirl where you stood, pulling enemies into the spot she left. */
   afterimage: relic({
     name: "Afterimage",
     slot: "dash",
     element: null,
     about: "Turning a perfect dodge into an opening.",
     tiers: {
-      1: { adds: "A perfect dodge leaves a whirl where she stood, pulling enemies in for a moment.", passives: [on(perfectDodge(), cast(whirl(), "there"))] },
+      1: { adds: "A perfect dodge leaves a whirl where you stood, pulling enemies in for a moment.", passives: [on(perfectDodge(), cast(whirl(), "there"))] },
       2: { adds: "The whirl strikes what it pulls.", passives: [on(perfectDodge(), cast(whirl({ power: 3 }), "there"))] },
-      3: { adds: "The whirl carries her element.", passives: [on(perfectDodge(), castOwn(whirl({ power: 3 }), "there"))] }
+      3: { adds: "The whirl carries your element.", passives: [on(perfectDodge(), castOwn(whirl({ power: 3 }), "there"))] }
     }
   }),
 
@@ -217,7 +217,7 @@ export const relics = {
     tiers: {
       1: { adds: "One dash more, each 25% shorter.", passives: [trait({ dashCharges: 1, dashDistance: 0.75 })] },
       2: { adds: "Dashes come back 10% faster.", passives: [trait({ dashCharges: 1, dashDistance: 0.75 }), trait({ dashCooldown: 0.9 })] },
-      3: { adds: "A perfect dodge sends out a ring where she stood, throwing enemies back.", passives: [trait({ dashCharges: 1, dashDistance: 0.75 }), trait({ dashCooldown: 0.9 }), on(perfectDodge(), cast(ring(), "there"))] }
+      3: { adds: "A perfect dodge sends out a ring where you stood, throwing enemies back.", passives: [trait({ dashCharges: 1, dashDistance: 0.75 }), trait({ dashCooldown: 0.9 }), on(perfectDodge(), cast(ring(), "there"))] }
     }
   }),
   /** A trade-off: she stands her ground, and dashes less often. */
@@ -227,10 +227,10 @@ export const relics = {
     element: null,
     about: "Standing your ground.",
     tiers: {
-      1: { adds: "She is 80% heavier (pushed less far); dashes come back 30% slower.", passives: [trait({ weight: 1.8, dashCooldown: 1.3 })] },
-      2: { adds: "Blows on her deal 10% less.", passives: [trait({ weight: 1.8, dashCooldown: 1.3 }), damageTaken(-10)] },
+      1: { adds: "You are 80% heavier (pushed less far); dashes come back 30% slower.", passives: [trait({ weight: 1.8, dashCooldown: 1.3 })] },
+      2: { adds: "Blows on you deal 10% less.", passives: [trait({ weight: 1.8, dashCooldown: 1.3 }), damageTaken(-10)] },
       3: {
-        adds: "A perfect dodge stamps the ground where she stood, throwing enemies far back.",
+        adds: "A perfect dodge stamps the ground where you stood, throwing enemies far back.",
         passives: [trait({ weight: 1.8, dashCooldown: 1.3 }), damageTaken(-10), on(perfectDodge(), cast(ring({ radius: 140, power: 8, knockback: 900 }), "there"))]
       }
     }
@@ -245,10 +245,10 @@ export const relics = {
     element: "fire",
     about: "Fire that spreads from what falls.",
     tiers: {
-      1: { adds: "Burning enemies she kills burst into flame, setting those around them burning.", passives: [on(kill("burning"), cast(flare, "there"), 0.5)] },
+      1: { adds: "Burning enemies you defeat burst into flame, setting those around them burning.", passives: [on(kill("burning"), cast(flare, "there"), 0.5)] },
       2: { adds: "The burst leaves fire on the ground.", passives: [on(kill("burning"), cast(flare, "there"), 0.5), on(kill("burning"), leave({ element: "fire", radius: 60, seconds: 3 }), 0.5)] },
       3: {
-        adds: "A perfect dodge bursts into flame where she stood.",
+        adds: "A perfect dodge bursts into flame where you stood.",
         passives: [on(kill("burning"), cast(flare, "there"), 0.5), on(kill("burning"), leave({ element: "fire", radius: 60, seconds: 3 }), 0.5), on(perfectDodge(), cast(flare, "there"))]
       }
     }
@@ -258,12 +258,12 @@ export const relics = {
     name: "Undertow",
     slot: "element",
     element: "water",
-    about: "Puddles wherever she moves.",
+    about: "Puddles wherever you move.",
     tiers: {
-      1: { adds: "Dashing leaves a puddle where she dashed from.", passives: [on(dashing(), leave({ element: "water", radius: 70, seconds: 4 }), 1)] },
-      2: { adds: "Soaked enemies she kills splash, soaking those around them.", passives: [on(dashing(), leave({ element: "water", radius: 70, seconds: 4 }), 1), on(kill("soaked"), cast(splash, "there"), 0.5)] },
+      1: { adds: "Dashing leaves a puddle where you dashed from.", passives: [on(dashing(), leave({ element: "water", radius: 70, seconds: 4 }), 1)] },
+      2: { adds: "Soaked enemies you defeat splash, soaking those around them.", passives: [on(dashing(), leave({ element: "water", radius: 70, seconds: 4 }), 1), on(kill("soaked"), cast(splash, "there"), 0.5)] },
       3: {
-        adds: "A perfect dodge leaves a whirlpool where she stood, pulling enemies in.",
+        adds: "A perfect dodge leaves a whirlpool where you stood, pulling enemies in.",
         passives: [
           on(dashing(), leave({ element: "water", radius: 70, seconds: 4 }), 1),
           on(kill("soaked"), cast(splash, "there"), 0.5),
@@ -279,8 +279,8 @@ export const relics = {
     element: "wind",
     about: "Gusts that scatter, whirls that gather.",
     tiers: {
-      1: { adds: "A perfect dodge throws a gust around where she stood, sweeping enemies away.", passives: [on(perfectDodge(), cast(gust, "there"))] },
-      2: { adds: "Swept enemies she kills leave a whirl, drawing those around them in.", passives: [on(perfectDodge(), cast(gust, "there")), on(kill("swept"), cast(whirl({ power: 2, element: "wind" }), "there"), 1)] },
+      1: { adds: "A perfect dodge throws a gust around where you stood, sweeping enemies away.", passives: [on(perfectDodge(), cast(gust, "there"))] },
+      2: { adds: "Swept enemies you defeat leave a whirl, drawing those around them in.", passives: [on(perfectDodge(), cast(gust, "there")), on(kill("swept"), cast(whirl({ power: 2, element: "wind" }), "there"), 1)] },
       3: {
         adds: "Dashing throws a smaller gust too.",
         passives: [on(perfectDodge(), cast(gust, "there")), on(kill("swept"), cast(whirl({ power: 2, element: "wind" }), "there"), 1), on(dashing(), cast(ring({ radius: 100, power: 2, element: "wind", knockback: 500 }), "there"), 2)]
@@ -294,7 +294,7 @@ export const relics = {
     element: "thunder",
     about: "Thunder passed on from what falls.",
     tiers: {
-      1: { adds: "Charged enemies she kills discharge, striking the two nearest others.", passives: [on(kill("charged"), cast(clap, "there"), 0.5)] },
+      1: { adds: "Charged enemies you defeat discharge, striking the two nearest others.", passives: [on(kill("charged"), cast(clap, "there"), 0.5)] },
       2: { adds: "Each strike jumps on to one more enemy.", passives: [on(kill("charged"), cast({ ...clap, jumps: 1 }, "there"), 0.5)] },
       3: {
         adds: "Breaking an enemy discharges too, stunning the three nearest others.",
@@ -310,7 +310,7 @@ export const relics = {
     about: "Stone from every break.",
     tiers: {
       1: { adds: "Breaking an enemy raises a rock beside it, striking and stunning what it hits.", passives: [on(breaking(), cast(rise, "there"))] },
-      2: { adds: "Cracked enemies she kills shatter, cracking those around them.", passives: [on(breaking(), cast(rise, "there")), on(kill("cracked"), cast(ring({ radius: 120, power: 5, element: "rock", knockback: 300 }), "there"), 0.5)] },
+      2: { adds: "Cracked enemies you defeat shatter, cracking those around them.", passives: [on(breaking(), cast(rise, "there")), on(kill("cracked"), cast(ring({ radius: 120, power: 5, element: "rock", knockback: 300 }), "there"), 0.5)] },
       3: {
         adds: "A break raises three rocks.",
         passives: [on(breaking(), cast({ ...rise, rocks: 3, radius: 160 }, "there")), on(kill("cracked"), cast(ring({ radius: 120, power: 5, element: "rock", knockback: 300 }), "there"), 0.5)]
@@ -327,9 +327,9 @@ export const relics = {
     element: null,
     about: "One more chance.",
     tiers: {
-      1: { adds: "Once a run, a blow that would fell her leaves her at 20% health, untouchable a moment.", passives: [secondWind(20)] },
+      1: { adds: "Once a run, a blow that would fell you leaves you at 20% health, untouchable a moment.", passives: [secondWind(20)] },
       2: { adds: "A perfect dodge heals 2%, at most once every 3 seconds.", passives: [secondWind(20), on(perfectDodge(), heal(2), 3)] },
-      3: { adds: "The second wind leaves her at 40% health.", passives: [secondWind(20), on(perfectDodge(), heal(2), 3), secondWind(40)] }
+      3: { adds: "The second wind leaves you at 40% health.", passives: [secondWind(20), on(perfectDodge(), heal(2), 3), secondWind(40)] }
     }
   }),
   /** Healing by playing well: perfect dodges, then kills. */
@@ -373,23 +373,26 @@ export const relicBudget = { worth: 20, damageBonus: 40, power: 12, every: 0.5, 
 /**
  * How relics are had (see docs/relics.md): they open with the Spirit Call
  * (`opensAfter`, a quest id); the Survival slot later (`survivalOpensAfter`,
- * `null` until it has relics). The shop sells a relic the account owns one
- * tier up, for `prices[tier]` dust (the tier it reaches); a relic coming
- * again at its last tier turns into `dustPerDuplicate` dust.
+ * `null` until it has relics). Each relic is unlocked at tier I by one
+ * quest's perfect clear at one rank (`QuestSpec.relic`); its next tiers
+ * are bought in the shop for `prices[tier]` dust (the tier it reaches).
+ * Every other quest's perfect clear, at each rank, pays `perfectDust`
+ * once: `base` plus `perLevel` for each enemy level, rounded to tens.
  */
 export interface RelicRules {
   readonly opensAfter: string
   readonly survivalOpensAfter: string | null
-  /** What the shop asks for a tier (dust), by the tier reached. */
   readonly prices: { readonly [Tier in Exclude<RelicTier, 1>]: number }
-  /** The shop's stock: how many relic tiers it sells in a period of the reset (see `content/hardcore.ts`, `reset`), any owned relic's next. */
-  readonly stock: number
+  readonly perfectDust: { readonly base: number; readonly perLevel: number }
 }
 
 export const relicRules: RelicRules = {
   opensAfter: "packLeader",
   survivalOpensAfter: "bruteKing",
-  // A tier is about a week of hardcore and trials mid-game, and the stock binds at the same time.
-  prices: { 2: 300, 3: 600 },
-  stock: 1
+  // Every relic maxed costs about what the whole game pays in dust (see `pnpm calls`): the last tiers come with the last ranks.
+  prices: { 2: 400, 3: 800 },
+  perfectDust: { base: 20, perLevel: 2.5 }
 }
+
+/** The dust a perfect clear pays at `enemyLevel` (see `RelicRules.perfectDust`). */
+export const perfectDustAt = (rules: RelicRules, enemyLevel: number): number => 10 * Math.round((rules.perfectDust.base + rules.perfectDust.perLevel * enemyLevel) / 10)

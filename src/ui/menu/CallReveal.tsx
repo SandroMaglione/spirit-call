@@ -222,7 +222,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
           <p class="reveal__kind"><Icon name={own} />{elements[own].name} · {tuning.classes[spec.class].name}</p>
           <KitLines store={store} character={current.id} />
           <div class="reveal__actions">
-            <Pill size="small" tone="dark" onClick={() => { done(); actions.enterExtra([current.id], {}, { kind: "trial", character: current.id }) }}>Try her</Pill>
+            <Pill size="small" tone="dark" onClick={() => { done(); actions.enterExtra([current.id], {}, { kind: "trial", character: current.id }) }}>Try</Pill>
             <Pill icon="next" onClick={next}>Next</Pill>
           </div>
         </section>
@@ -253,7 +253,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
           <Label>New look · {look.kind === "tint" ? `${tuning.characters[look.character!].name}'s tint` : "A trail for any spirit"}</Label>
           <h1>{look.name}</h1>
           <p>{look.about}</p>
-          <p class="dim">Only the Spirit Call gives it. Wear it from her page.</p>
+          <p class="dim">Only the Spirit Call gives it. Wear it from the character page.</p>
           <Pill icon="next" onClick={next}>Next</Pill>
         </section>
       </div>

@@ -129,6 +129,10 @@ simulation); `pnpm check` runs it.
 - `validateContent` (`src/content/validate.ts`) holds the rules content must
   follow beyond its types; extend it when adding content with new rules.
 - Comments explain intent in plain language, matching the surrounding code.
+- Player-facing copy (content descriptions, menus, the HUD) uses no
+  gendered pronouns: "you/your" for what happens in a fight ("Dashing
+  leaves a puddle where you dashed from"), and the character's name or
+  "this character" in menus.
 - Verify gameplay and UI changes in a real browser, on the network address
   (not only localhost), including a phone-sized viewport with touch input.
 - Animation follows the simulation, never the other way round: timings

@@ -91,42 +91,51 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
 
 - **They open with the Spirit Call** (the end of chapter one,
   `relicRules.opensAfter`). Chapter one has none.
-- **Every relic is one quest's** (`QuestSpec.relic`), and comes with a
-  struggle: **a perfect clear**, all three stars in one run, at rank r
-  gives the relic at tier r. "Play its quest harder for its next tier."
-  A perfect clear is kept per quest and rank (`QuestProgress.perfectAt`);
-  the stars earned across runs never make one. Two relics introduce their
-  slots at tier I on a plain first clear (Echo with chapter two's first
-  quest, Momentum with the first side quest); their tiers II and III are
-  perfect clears like every relic's.
-- **Where**: spread over chapters two to six, never on two main quests in
-  a row, each Element relic on a quest of its element, the Survival relics
-  after the slot opens. Main line: Echo (The Swarm), Repel (Iron Guard),
-  Ember Heart (Ashfall), Opportunist (The Brute), Counterpoint (High Tide),
-  Undertow (Shield Wall), Anchor (Sandstorm), Afterimage
-  (Thunderhead), Last Stand (Ironclad), Tailwind (Gale Force). Side
-  quests: Momentum (Hold the Line), Bedrock (Night of Packs), Static
-  Charge (Elite Hunt), Glass Edge (Forge Pit), Second Wind (Floodgate),
-  Mending Step (Storm Front), Featherstep (Stone Trial), Overflow (Strange
-  Company). `validateContent` checks each relic has one home and one only,
-  after relics open (a Survival relic's after its slot), and that a relic
-  in a quest's first-clear rewards is that quest's.
+- **Unlocking is the struggle, levelling up is the spending**, and the
+  two never meet:
+  - **Every relic is one quest's, at one rank** (`QuestSpec.relic`): **a
+    perfect clear** of that quest at that rank, all three stars in one
+    run, unlocks it at tier I. A perfect clear is kept per quest and rank
+    (`QuestProgress.perfectAt`); stars earned across runs never make one.
+    Two relics introduce their slots on a plain first clear instead (Echo
+    with chapter two's first quest, Momentum with the first side quest).
+  - **Every other perfect clear pays dust**, once per quest and rank:
+    20 + 2.5 × its enemy level, rounded to tens (`relicRules.perfectDust`):
+    20 at First Blood, about 110 at the end of the main line, 170 at the
+    top rank. So every quest-rank has its "all three in one run" goal, and
+    none is ever "already had".
+  - **Tiers II and III are bought with dust, and only with dust** (see
+    "The shop" below): no perfect clear raises a tier.
+- **Where**, spread over the ranks so not all come at once (each Element
+  relic on a quest of its element, the Survival relics after their slot
+  opens, none on a quest-rank the bot never perfects):
+
+  | Rank | Relics |
+  | --- | --- |
+  | I (chapters 2–6) | Echo (The Swarm, first clear), Momentum (Hold the Line, first clear), Repel (Iron Guard), Ember Heart (Ashfall), Opportunist (The Brute), Undertow (Shield Wall), Afterimage (Thunderhead), Tailwind (Gale Force) |
+  | II | Counterpoint (Night of Packs), Static Charge (Elite Hunt), Glass Edge (Forge Pit), Second Wind (Floodgate), Bedrock (Sandstorm), Anchor (The Cloister) |
+  | III | Featherstep (Outposts), Mending Step (Storm Front), Last Stand (Powder Keg), Overflow (The Colossus) |
+
+  `validateContent` checks each relic has one home and one only, at a
+  rank there is, after relics open (a Survival relic's after its slot),
+  and that a relic in a quest's first-clear rewards is that quest's, at
+  rank I.
 - **Never the Spirit Call** (since 2026-10): relics are this game's
   artifacts, progress to be played for, and Genshin farms those rather
   than pulling them. The Call brings characters, aspects, and looks (see
   `calls.md`).
 - **The shop** sells a relic the account owns one tier up, for dust
-  (`relicRules.prices`: 300 for tier II, 600 for III), **a few a week**
-  (`relicRules.stock`: one): the fallback road, so no tier waits on a run
-  that will not come, without being the way. The stock is a limit, not a
-  timer: nothing counts down but the restock (the hardcore reset's week),
-  and what is not bought does not pile up. A tier is about a week of
-  hardcore and trials mid-game, so the dust and the stock bind together.
+  (`relicRules.prices`: 400 for tier II, 800 for III), as many as the
+  dust pays for. The price is the pace: every relic maxed costs about
+  21,600 dust, and the shop's looks about 3,100 more, against about
+  25,700 earned by the end of the rank III replay (`pnpm calls`, every
+  run ending on a perfect clear): by chapter six, 8 relics and dust for
+  about 10 tiers; the last tiers come with the last ranks.
 - `pnpm expected` marks each quest run the skilled bot perfected (`P`),
   so no relic sits behind a run nobody can make. As of 2026-10-09 the bot
-  perfects 83 of 93 quest runs on some seed; of the 54 that give a relic
-  tier it never perfects High Tide (rank I), Ironclad (ranks II and III),
-  Floodgate (rank III), and Heavy Ground (ranks II and III). The bot is
+  perfects 83 of 93 quest runs on some seed; it never perfects High Tide
+  (rank I), Ironclad (ranks II and III), Floodgate (rank III), and Heavy
+  Ground (ranks II and III), and no relic is unlocked there. The bot is
   approximate (it reads differently from a player); the playtest decides
   whether those stars need loosening.
 - The **Survival** slot opens after the Brute King (`survivalOpensAfter`),
@@ -136,9 +145,9 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
 
 Dust is the shop's currency (`content/currencies.ts`), from **milestones
 off the main line**: side quests' first clears and chests, ranks' first
-clears and chests, and hardcore tiers and trials once a period. A main
-quest's first clear pays none, and no run pays it by itself, so dust
-follows progress. Where dust comes in, a little gold (and no material)
+clears and chests, hardcore tiers and trials once a period, and perfect
+clears (once each, see above). A main quest's first clear pays none, and
+no run pays it by itself, so dust follows progress. Where dust comes in, a little gold (and no material)
 goes out.
 
 ## Looks

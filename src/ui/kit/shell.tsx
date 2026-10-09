@@ -52,7 +52,7 @@ export interface Tab<Id extends string> {
 /** A few views of the same screen, in the top bar. */
 export const TopTabs = <Id extends string>({ label, tabs, current, onChange }: { readonly label: string; readonly tabs: ReadonlyArray<Tab<Id>>; readonly current: Id; readonly onChange: (id: Id) => void }) => (
   <div class="top-tabs" role="tablist" aria-label={label}>
-    {tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={tab.id === current} data-label={tab.label} onClick={() => onChange(tab.id)}><span>{tab.label}</span></button>)}
+    {tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={tab.id === current} data-label={tab.label} onClick={() => onChange(tab.id)}><span>{tab.label}</span>{tab.badge === true && <Badge />}</button>)}
   </div>
 )
 

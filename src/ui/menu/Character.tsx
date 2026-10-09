@@ -19,7 +19,7 @@ import { skillSlots } from "../../content/skills.ts"
 import { aspectFor, attackOf, dashOf, statsAtLevel } from "../../features/build.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
 import { describeAmounts, describeSkill, statOrder } from "../describe.ts"
-import { elementOf } from "../draft.ts"
+import { elementOf, emptyRelicSlots } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
 import { Face, ModelStage, Portrait } from "../kit/art.tsx"
@@ -77,8 +77,8 @@ const Traits = ({ store, character }: { readonly store: UiStore; readonly charac
   const percent = (value: number) => `${Math.round(value * 100)}%`
   return <div class="character__traits" aria-label="Traits">
     <span class="trait" title={`${dash.charges} dashes of ${dash.distance}, each back in ${dash.cooldown} s`}><Icon name="dash" /><b>{dash.charges}×{dash.distance}</b><small>Dash</small></span>
-    <span class="trait" title="How fast her blows fill a break bar"><Icon name="impact" /><b>{percent(spec.impact)}</b><small>Impact</small></span>
-    <span class="trait" title="How firmly she stands: heavier, pushed less far"><Icon name="weight" /><b>{percent(spec.weight)}</b><small>Weight</small></span>
+    <span class="trait" title="How fast each blow fills a break bar"><Icon name="impact" /><b>{percent(spec.impact)}</b><small>Impact</small></span>
+    <span class="trait" title="How firmly this character stands: heavier, pushed less far"><Icon name="weight" /><b>{percent(spec.weight)}</b><small>Weight</small></span>
   </div>
 }
 
@@ -198,7 +198,7 @@ export const Character = ({ store, actions, nav, character, tab }: {
     </TopBar>
     <SideTabs label="Character details" current={tab} onChange={(id) => nav.replace({ kind: "character", character, tab: id })} tabs={[
       { id: "overview", label: "Attributes", badge: owned && (train(tuning, account, character).ok || ascend(tuning, account, character).ok) },
-      { id: "gear", label: "Gear" },
+      { id: "gear", label: "Gear", badge: emptyRelicSlots(tuning, account, store.menuDraft.value, character).length > 0 },
       { id: "kit", label: "Skills" }
     ]} />
     {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "gear" ? <GearSummary key={character} store={store} nav={nav} character={character} /> : <Skills key={character} store={store} character={character} />}

@@ -24,8 +24,6 @@ export const AccountRow = Schema.Struct({
   calls_since_character: Int,
   calls_since_rare: Int,
   first_character_called: Int,
-  shop_period: OptionalInt,
-  shop_bought: Int,
   play_kind: Schema.Literals(["quest", "tier"]),
   play_quest: Schema.NullOr(Text),
   play_rank: OptionalInt,
@@ -86,8 +84,6 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
         calls_since_character: account.calls.sinceCharacter,
         calls_since_rare: account.calls.sinceRare,
         first_character_called: account.calls.firstCharacter ? 1 : 0,
-        shop_period: account.shop.period,
-        shop_bought: account.shop.bought,
         play_kind: play.kind,
         play_quest: play.kind === "quest" ? play.quest : null,
         play_rank: play.kind === "quest" ? (play.rank ?? null) : null,
@@ -196,7 +192,6 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
       focus: Object.fromEntries(rows.call_focus.map((focus) => [focus.banner, focus.character])),
       history
     },
-    shop: { period: row.shop_period, bought: row.shop_bought },
     selection: {
       team: team.map((member) => member.character),
       aspects: Object.fromEntries(team.flatMap((member) => (member.aspect === null ? [] : [[member.character, member.aspect]]))),

@@ -17,7 +17,8 @@ const paths = {
   character: "m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z",
   team: "M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M16 4a4 4 0 0 1 0 8 M22 20v-2a4 4 0 0 0-4-4",
   formation: "M8 3h8v17l-4 3-4-3z M3 7h2v11l-2 2-2-2V7z M21 7h2v11l-2 2-2-2V7z M12 7v6 M10 10h4",
-  quests: "M4 2h3l8 13-3 2L4 5z M20 2h-3L9 15l3 2 8-12z M7 14l6 4 M17 14l-6 4 M10 18l-3 4 M14 18l3 4",
+  // Two swords crossed corner to corner, filling the square: one blade over, the other passing under it.
+  quests: "M3 3h3.5l9 9-3.5 3.5-9-9z M11 17l6-6 M14.5 14.5l5 5 M18 21l3-3 M21 3h-3.5l-4 4 M21 3v3.5l-4 4 M7 11l6 6 M9.5 14.5l-5 5 M3 18l3 3",
   discovery: "m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z",
   practice: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10 M12 11v2",
   more: "M5 12h.01 M12 12h.01 M19 12h.01",
