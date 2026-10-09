@@ -213,7 +213,7 @@ describe("menu helpers", () => {
     const shockwave = nova({ radius: 150, power: 30, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.03, heavy: false })
     expect(describePassive(on(doing(finisher()), cast(shockwave)))).toMatch(/^On the combo finisher: set off a shockwave/)
     expect(describeSkill(defaultTuning.skills.tide)).toBe("A water shockwave around you (50% ATK), healing the whole team 4% of max HP, 3% more for each soaked enemy it reaches (16% at most) · 10s cooldown, 85 energy, untouchable as it goes off")
-    expect(describeSkill(defaultTuning.skills.tidalWave)).toBe("A water wave ahead of you (22% ATK) leaving puddles, marking what it hits for 5s: hitting a marked enemy heals you 2% of max HP, at most every 0.9s · 6s cooldown")
+    expect(describeSkill(defaultTuning.skills.tidalWave)).toBe("A water wave ahead of you (22% ATK) leaving puddles, marking what it hits for 5s: hitting a marked enemy heals you 2% of max HP, at most every 1s · 6s cooldown")
     expect(describeSkill(defaultTuning.skills.flareJump)).toBe("A fire burst around you (22% ATK) as you leap back from where you face, leaving a fire pool that burns you too · 7s cooldown, untouchable as it goes off")
   })
 })

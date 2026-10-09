@@ -327,7 +327,7 @@ export const skills = {
     effect: cut({
       length: 360, width: 150, active: 0.15, power: 22, element: "water", knockback: 900, hitStop: 0.04, heavy: false,
       leaves: { element: "water", radius: 60, seconds: 4 },
-      marks: { seconds: 5, heal: 2, every: 0.9 }
+      marks: { seconds: 5, heal: 2, every: 1 }
     })
   }),
   /**

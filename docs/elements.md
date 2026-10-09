@@ -130,7 +130,20 @@ works with it from the start.
 
 ## Healing
 
-The Stormcaller heals through her kit, and healing always costs something:
+Healers heal through their kits, never through an element's state, and
+healing always asks for something (`roster.md`, "Support is set up").
+
+The Tidecaller heals by hitting:
+
+- **Her Tidal Wave** marks what it hits for a few seconds, shown as a ring
+  of water under it. A blow of the team on a marked enemy heals whoever is
+  on the field a little, at most once a second across the team, however
+  many are marked: the heal is in the hitting, and a mark outlasts a switch.
+- **Her Tide** heals the whole team, the bench too, a little, and more for
+  each enemy around already soaked as it breaks: soaking them first (her
+  wave, her aspect's moment, puddles) is its set-up.
+
+The Stormcaller heals by standing:
 
 - **Her Spark Totem** is planted at her feet and zaps once a second for a
   few seconds, within one reach for healing and striking alike. A zap heals

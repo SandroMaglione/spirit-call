@@ -5,6 +5,26 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The Tidecaller as a healer (2026-10-10)
+
+The quest team's healer (`docs/roster.md`): her Tidal Wave marks what it
+hits for 5 s, and a blow of the team on a marked enemy heals the one on the
+field 2% of her health, at most once a second across the team; her Tide
+heals the whole team 4%, and 3% more for each enemy around already soaked
+(16% at most), dealing 50% ATK instead of 65%. Her body moved to a healer's
+budget (74 HP, 88 ATK, 305 speed: 0.83 of 0.85). The matrix with the mark's
+wait at 0.9 s:
+
+| | Clears (skilled / learning) | Health restored a minute (skilled / learning) |
+|---|---|---|
+| Tidecaller as an attacker (before) | 46 / 8 of 48 | 0% / 0% |
+| Tidecaller as a healer | 47 / 20 of 48 | 13% / 48% |
+| Stormcaller (the reference) | 46 / 21 of 48 | 11% / 41% |
+
+She sits beside the Stormcaller, a little above on healing, so the mark's
+wait went to 1 s (about a tenth less healing); the learning bot's clears
+went from the bottom of the roster to the Stormcaller's.
+
 ## Water weakens, and its burst disarms (2026-10-10)
 
 Water moved to its part of the element map (`docs/elements.md`): a soaked
