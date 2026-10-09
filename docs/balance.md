@@ -24,6 +24,9 @@ wait at 0.9 s:
 She sits beside the Stormcaller, a little above on healing, so the mark's
 wait went to 1 s (about a tenth less healing); the learning bot's clears
 went from the bottom of the roster to the Stormcaller's.
+CI's audit (its team runs bring the Tidecaller) moved 21 numbers and one
+outcome (the Warlord's team with skills on seed 42 fell instead of timing
+out); its report is the baseline.
 
 ## Water weakens, and its burst disarms (2026-10-10)
 
