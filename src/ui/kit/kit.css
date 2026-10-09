@@ -120,6 +120,8 @@
 /* Each tab as wide as its label in bold, so picking one never moves the others. */
 .top-tabs button::before { content: attr(data-label); grid-area: 1 / 1; height: 0; font-weight: 800; visibility: hidden; overflow: hidden; }
 .top-tabs button > span { grid-area: 1 / 1; }
+/* A red mark on a tab sits on its corner, never over its label. */
+.top-tabs button > .badge { position: absolute; right: -4px; top: -6px; min-width: 15px; height: 15px; font-size: 11px; }
 
 .side-tabs { position: absolute; left: var(--left); top: 78px; display: grid; z-index: 3; }
 .side-tabs button { height: 44px; display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 700; color: rgba(255, 255, 255, .62); text-shadow: 0 1px 4px #0009; white-space: nowrap; animation: from-left .28s cubic-bezier(.2, .8, .2, 1) backwards; }

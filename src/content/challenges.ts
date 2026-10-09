@@ -329,7 +329,7 @@ export const challenges = {
     [shielded(elite("guardian", "fire")), "charger", shielded("shooter"), "swarmer"]
   ]),
   /** The Swarm Mother: a champion swarmer of the tide fighting in phases, small, fast, and hard to pin down; the waves around her light. */
-  swarmMother: waves("The Swarm Mother", "Eight waves at the harbor; midway the Swarm Mother joins, a champion swarmer of the tide that fights in phases, and stays until she falls.", "harbor", [
+  swarmMother: waves("The Swarm Mother", "Eight waves at the harbor; midway the Swarm Mother joins, a champion swarmer of the tide that fights in phases, and stays until it falls.", "harbor", [
     ["chaser", "chaser", "shooter"],
     ["charger", "swarmer"],
     [shielded("shooter"), "sniper", "chaser"],

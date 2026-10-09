@@ -8,9 +8,8 @@
  * A call shows the seal (`CallReveal`) in place of the screen until every
  * result is seen.
  */
-import { activeBanner, aspectsLeft, callAspects, callCosmetics, callProblem, callsHeld, cosmeticsLeft, effectiveRareRate, exchangePrice, focusOn, guarantees, leftOn, nextBanner, rareLeft, shares } from "../../account/calls.ts"
+import { activeBanner, aspectsLeft, callProblem, callsHeld, cosmeticsLeft, effectiveRareRate, exchangePrice, focusOn, guarantees, leftOn, nextBanner, rareLeft, shares } from "../../account/calls.ts"
 import type { RareItem } from "../../account/calls.ts"
-import { owns } from "../../account/account.ts"
 import type { CallResult } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { cosmeticOf } from "../../content/cosmetics.ts"
@@ -88,7 +87,8 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
       <span class="call__button">Call ×{count}<small><Icon name="crystals" />{(price * count).toLocaleString("en-US")}</small></span>
     </Pill>
   const tabs = <TopTabs label="Spirit Call" current={tab} onChange={(id) => nav.replace({ kind: "call", tab: id })} tabs={[{ id: "banner", label: "Banner" }, { id: "details", label: "Rates" }, { id: "exchange", label: "Exchange" }, { id: "history", label: "History" }]} />
-  const top = <TopBar icon="call" title="Spirit Call" close={nav.back} end={<Wallet store={store} currencies={["crystals", "sigils"]} />}>{tabs}</TopBar>
+  // One currency in the top bar, the one the tab spends (four tabs leave room for no more): sigils in the exchange, crystals elsewhere.
+  const top = <TopBar icon="call" title="Spirit Call" close={nav.back} end={<Wallet store={store} currencies={[tab === "exchange" ? "sigils" : "crystals"]} />}>{tabs}</TopBar>
   const counts = <div class="call__counts">
     <Fact icon="call" label="Calls held" value={held} />
     <Fact icon="character" label="Character within" value={`${left.character} calls`} />
@@ -117,22 +117,20 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
     <Actions>{callButton(1, "dark")}{callButton(10, "cream")}</Actions>
   </Screen>
   if (tab === "exchange") {
-    // Everything the Call gives, the ones left to buy first, each with its price.
-    const all: ReadonlyArray<RareItem> = [...callAspects(tuning).map((id): RareItem => ({ kind: "aspect", id })), ...callCosmetics(tuning).map((id): RareItem => ({ kind: "cosmetic", id }))]
-    const sorted = [...all].sort((a, b) => Number(owns(account, a)) - Number(owns(account, b)))
+    // What sigils can buy: the Call's aspects and looks not owned yet, aspects first.
     return <Screen name="call">
       {top}
-      <Panel class="call__history in-left" title="The exchange" detail={<><Icon name="sigils" />{sigils}</>}>
-        <p class="dim">A sigil for every call that brings nothing rarer. They buy any aspect or look of the Call's, the ones a call could bring, never a character.</p>
-        <div class="call__aspects call__exchange">{sorted.map((item) => {
-          const price = exchangePrice(tuning, item), has = owns(account, item), cost = price?.sigils ?? 0
+      <Panel class="call__history in-left" title="The exchange" detail={<span class="call__held"><Icon name="sigils" />{sigils}</span>}>
+        <p class="dim">A sigil for every call that brings nothing rarer. They buy any aspect or look a call could bring, never a character.</p>
+        {pool.length === 0 ? <p class="dim">Every aspect and look of the Call is yours.</p> : <div class="call__aspects call__exchange">{pool.map((item) => {
+          const cost = exchangePrice(tuning, item)?.sigils ?? 0
           return <span key={`${item.kind}-${item.id}`}>
             <RareLine store={store} item={item} />
-            {has
-              ? <em class="call__yours">Yours</em>
-              : <Pill size="small" icon="sigils" label={`Buy for ${cost} sigils`} disabled={problem?.kind === "callsLocked" || store.busy.value || sigils < cost} onClick={() => actions.exchange(item)}>{cost}</Pill>}
+            <button type="button" class="call__buy" disabled={problem?.kind === "callsLocked" || store.busy.value || sigils < cost} aria-label={`Buy for ${cost} sigils`} onClick={() => actions.exchange(item)}>
+              <Icon name="sigils" /><b>{cost}</b>
+            </button>
           </span>
-        })}</div>
+        })}</div>}
       </Panel>
       {counts}
       <Actions>{callButton(1, "dark")}{callButton(10, "cream")}</Actions>
@@ -166,7 +164,7 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
           <span><span><Icon name="character" />Character</span><span>within {left.character}</span></span>
           <div class="bar" role="progressbar" aria-label={`${account.calls.sinceCharacter} of ${characterCap} calls toward a certain character`} aria-valuenow={account.calls.sinceCharacter} aria-valuemin={0} aria-valuemax={characterCap}>
             <i style={{ width: `${(account.calls.sinceCharacter / characterCap) * 100}%` }} />
-            {tuning.calls.character.softFrom < characterCap && <span class="call__soft" style={{ left: `${((tuning.calls.character.softFrom - 1) / characterCap) * 100}%` }} title="From here her odds rise each call" />}
+            {tuning.calls.character.softFrom < characterCap && <span class="call__soft" style={{ left: `${((tuning.calls.character.softFrom - 1) / characterCap) * 100}%` }} title="From here the odds rise each call" />}
           </div>
         </div>
         {pool.length > 0 && <div data-rare="">
@@ -177,13 +175,13 @@ export const Call = ({ store, actions, nav, tab }: { readonly store: UiStore; re
     </section>
     <div class="call__stage" data-element={element}><ModelStage key={focus} character={focus} /></div>
     {/* Who she is, what she does, and where the calls stand: a tap away, so the stage keeps the room. */}
-    <button type="button" class="call__tag in-right" aria-label={`${name}: open her page`} onClick={() => nav.go({ kind: "character", character: focus, tab: "overview" })}>
+    <button type="button" class="call__tag in-right" aria-label={`${name}: open the character page`} onClick={() => nav.go({ kind: "character", character: focus, tab: "overview" })}>
       <Icon name={element} />
       <span><b>{name}</b><small>{elements[element].name} · {tuning.classes[tuning.characters[focus].class].name} · {owned(focus) ? "Yours" : "The focus"}</small></span>
       <Icon name="next" />
     </button>
     <Actions>
-      <Pill tone="dark" icon="play" label={`Try ${name} on the Training Ground`} onClick={() => actions.enterExtra([focus], {}, { kind: "trial", character: focus })}><span class="call__button">Try her<small>Training</small></span></Pill>
+      <Pill tone="dark" icon="play" label={`Try ${name} on the Training Ground`} onClick={() => actions.enterExtra([focus], {}, { kind: "trial", character: focus })}><span class="call__button">Try<small>Training</small></span></Pill>
       {callButton(1, "dark")}{callButton(10, "cream")}
     </Actions>
   </Screen>

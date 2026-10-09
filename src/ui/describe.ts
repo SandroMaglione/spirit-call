@@ -59,7 +59,7 @@ export const describeMove = (move: MoveFilter): string => {
 
 /** An aspect's elemental moment for a character of `element`: which move carries it, and what her element leaves. */
 export const describeInfuse = (move: MoveFilter, element: ElementId): string =>
-  `${capitalized(describeMove(move))} carries her element (${elements[element].name}): it leaves ${elements[element].state}, or bursts another state.`
+  `${capitalized(describeMove(move))} carries your element (${elements[element].name}): it leaves ${elements[element].state}, or bursts another state.`
 
 /**
  * Where an aspect's element comes from, for a character of `element` (or,
@@ -70,12 +70,12 @@ export const describeAspectElement = (aspect: { readonly infuse: MoveFilter | nu
   const sameForAll = "The rest, pulls and pushes too, is the same for every element."
   if (aspect.infuse !== null) return `${element === null ? `${capitalized(describeMove(aspect.infuse))} carries the element of whoever wears it.` : describeInfuse(aspect.infuse, element)} ${sameForAll}`
   const own = aspect.effects.find((effect) => effect.own)
-  return own !== undefined ? `Only what ${describeMove(own.move)} sets off carries ${element === null ? "the wearer's element" : `her element (${elements[element].name})`}. ${sameForAll}` : "None of its moves carries her element."
+  return own !== undefined ? `Only what ${describeMove(own.move)} sets off carries ${element === null ? "the wearer's element" : `your element (${elements[element].name})`}. ${sameForAll}` : "None of its moves carries your element."
 }
 
 /** What a move of an aspect also sets off, in a sentence. */
 export const describeMoveEffect = (effect: MoveEffect): string =>
-  `${capitalized(describeMove(effect.move))} also sets off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? ", carrying her element" : ""}.`
+  `${capitalized(describeMove(effect.move))} also sets off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.own ? ", carrying your element" : ""}.`
 
 const capitalized = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
 
@@ -154,7 +154,7 @@ const describeTriggered = (effect: TriggeredEffect): string => {
     case "heal":
       return `heal ${effect.percent}% of max HP`
     case "cast":
-      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.at === "there" ? " there" : ""}${effect.own ? ", carrying her element" : ""}`
+      return `set off ${describeEffect(effect.own ? { ...effect.effect, element: null } : effect.effect)}${effect.at === "there" ? " there" : ""}${effect.own ? ", carrying your element" : ""}`
     case "leave":
       return `leave ${poolNames[effect.ground.element]} for ${effect.ground.seconds}s`
     case "dashCharge":
@@ -173,7 +173,7 @@ export const describePassive = (passive: Passive): string => {
     case "trait":
       return describeTraitChange(passive.change)
     case "secondWind":
-      return `Once a run, a blow that would fell her leaves her at ${passive.percent}% HP`
+      return `Once a run, a blow that would fell you leaves you at ${passive.percent}% HP`
   }
 }
 

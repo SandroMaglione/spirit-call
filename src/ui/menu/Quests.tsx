@@ -8,10 +8,12 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, levelsUnder, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
+import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, levelsUnder, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, relicTier, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
 import type { QuestId, StarGroup } from "../../content/quests.ts"
 import { relicOf } from "../../content/relics.ts"
+import type { RelicId, RelicTier } from "../../content/relics.ts"
+import { RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import { describeGoal } from "../../content/stars.ts"
 import { entryChampion, entryElite, entryKind, entryShield } from "../../content/challenges.ts"
 import type { ChallengeId, ChallengeSpec, WaveEntry } from "../../content/challenges.ts"
@@ -289,8 +291,6 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
       {quest !== null && <div>
         <Label>Stars</Label>
         {quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)}
-        {/* A perfect clear, every star in one run, is what the quest's relic tier asks (see docs/relics.md). */}
-        {quest.relic !== null && <div class={`goal goal--perfect${perfected ? " is-earned" : ""}`}><Icon name="relic" />All three in one run: {relicOf(tuning.relics, quest.relic).name} tier {["I", "II", "III"][Math.min(3, rank) - 1]}</div>}
       </div>}
       {challenge.objective.kind === "endure" && <div>
         <Label>Each wave</Label>
@@ -308,11 +308,38 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
         </div>
       </div>
     </div>
+    {quest !== null && quest.relic !== null && selected.kind === "quest" && <RelicPrize store={store} relic={quest.relic} tier={Math.min(3, rank) as RelicTier} plain={rank === 1 && quest.rewards.unlocks.some((item) => item.kind === "relic" && item.id === quest.relic)} perfected={perfected} />}
     <div class="quests__enemies brief-section" aria-label="Enemies, over what they are weak to">
       <EnemyFaces store={store} kinds={challengeEnemies(challenge)} inspected={inspected.value} inspect={(kind) => (inspected.value = kind)} />
     </div>
     {inspected.value !== null && <EnemyFacts store={store} kind={inspected.value} />}
   </Panel>
+}
+
+const tierNames = ["I", "II", "III"] as const
+
+/**
+ * The quest's relic at this rank's tier, shown as the prize it is (see
+ * docs/relics.md): its icon in a turning gold ring,
+ * what the tier adds, and what it asks: all three stars in one run (a plain
+ * first clear for the two that introduce their slots). Dimmed once had.
+ */
+const RelicPrize = ({ store, relic, tier, plain, perfected }: { readonly store: UiStore; readonly relic: RelicId; readonly tier: RelicTier; readonly plain: boolean; readonly perfected: boolean }) => {
+  const tuning = store.tuning.value, spec = relicOf(tuning.relics, relic)
+  const had = (relicTier(store.account.value, relic) ?? 0) >= tier
+  return <div class={`relic-prize brief-section${had ? " is-had" : ""}`} data-element={spec.element ?? undefined}>
+    <span class="relic-prize__orb" aria-hidden="true">
+      <span class="relic-prize__ring" />
+      <span class="relic-prize__icon"><RelicIcon slot={spec.slot} element={spec.element} /></span>
+      <span class="unlock-badge__glint" />
+    </span>
+    <div class="relic-prize__about">
+      <Label end={had ? <span class="claimed"><Icon name="check" />{perfected || plain ? "Claimed" : "Yours"}</span> : undefined}>Relic · tier {tierNames[tier - 1]}</Label>
+      <b class="relic-prize__name">{spec.name}<TierMarks tier={tier} /></b>
+      <p>{spec.tiers[tier].adds}</p>
+      <p class="relic-prize__ask">{plain ? <><Icon name="check" />On the first clear</> : <><span class="relic-prize__stars"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>All three stars in one run</>}</p>
+    </div>
+  </div>
 }
 
 export const Quests = ({ store, nav, tab, play, leader, enter }: {

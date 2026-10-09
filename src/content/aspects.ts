@@ -102,7 +102,7 @@ export const aspects = {
   riptide: aspect({
     name: "Riptide",
     description: "Discs bounce on between enemies in a state.",
-    against: "Enemies already in a state, from her or her team.",
+    against: "Enemies already in a state, from you or your team.",
     class: "disc",
     combo: [
       disc({ count: 1, spreadDegrees: 0, speed: 1250, radius: 15, range: 360, hover: 0, hoverTick: 0, bounces: 2, power: 8, knockback: 340, recovery: 0.2, hitStop: 0.04, heavy: false, lunge: 0 }),
@@ -146,7 +146,7 @@ export const aspects = {
    */
   gatheringEdge: aspect({
     name: "Gathering Edge",
-    description: "Two slashes, then a spin that pulls enemies in toward her. Charged: a wide sweep that pulls in too.",
+    description: "Two slashes, then a spin that pulls enemies in toward you. Charged: a wide sweep that pulls in too.",
     against: "Packs: keeps them together for the next combo, or a teammate's skill.",
     class: "blade",
     combo: [
@@ -192,7 +192,7 @@ export const aspects = {
    */
   whirlpool: aspect({
     name: "Whirlpool",
-    description: "Every disc hovers a moment at the end of its throw. Charged: a disc that hovers long and pulls enemies in. The finisher pushes back what is around her.",
+    description: "Every disc hovers a moment at the end of its throw. Charged: a disc that hovers long and pulls enemies in. The finisher pushes back what is around you.",
     against: "Holding ground.",
     class: "disc",
     combo: [
@@ -214,7 +214,7 @@ export const aspects = {
    */
   lightningRod: aspect({
     name: "Lightning Rod",
-    description: "Her charged attack also plants a rod ahead of her that zaps the nearest enemy for a few seconds.",
+    description: "The charged attack also plants a rod ahead that zaps the nearest enemy for a few seconds.",
     against: "A place to fight from.",
     class: "staff",
     combo: [

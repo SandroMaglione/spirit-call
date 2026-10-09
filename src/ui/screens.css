@@ -34,6 +34,21 @@
 .star.is-earned { color: var(--gold-hi); filter: drop-shadow(0 0 3px rgba(255, 231, 173, .55)); }
 .star.is-earned svg path { fill: currentColor; }
 .star.is-fresh { animation: star-in .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+/* A quest's relic, as the prize it is: its icon in a turning gold ring, a soft pulse, a passing glint. */
+.relic-prize, .relic-prize.brief-section { display: flex; align-items: center; gap: 14px; padding: 18px 14px 0; }
+.relic-prize__orb { position: relative; width: 50px; height: 50px; flex: none; display: grid; place-items: center; border-radius: 50%; animation: unlock-pulse 2.4s ease-in-out infinite; }
+.relic-prize__ring { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, #fff6d6, var(--gold) 20%, #8a6a2e 35%, var(--gold-hi) 50%, #fff6d6 55%, var(--gold) 70%, #8a6a2e 85%, #fff6d6); -webkit-mask: radial-gradient(circle, transparent 21.5px, #000 22.5px); mask: radial-gradient(circle, transparent 21.5px, #000 22.5px); animation: unlock-turn 5s linear infinite; }
+.relic-prize__icon { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; color: var(--gold-hi); background: radial-gradient(circle at 35% 30%, #3f6a95, #151f30 72%); }
+.relic-prize__orb .unlock-badge__glint { inset: 4px; }
+.relic-prize__about { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.relic-prize__name { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 800; color: var(--cream); }
+.relic-prize__name .tier-marks { width: 16px; height: 16px; }
+.relic-prize__about p { font-size: 12px; color: var(--dim); line-height: 1.25; }
+.relic-prize__ask { display: flex; align-items: center; gap: 6px; font-weight: 800; color: var(--gold-hi) !important; }
+.relic-prize__stars { display: inline-flex; gap: 1px; font-size: 12px; }
+.relic-prize.is-had .relic-prize__orb { animation: none; filter: grayscale(.6) brightness(.8); }
+.relic-prize.is-had .unlock-badge__glint { display: none; }
+.relic-prize.is-had .relic-prize__ring { animation: none; }
 /* All three in one run: the stars glow as one. */
 .stars.is-perfect { filter: drop-shadow(0 0 4px var(--gold-hi)); }
 .goal--perfect { color: var(--gold-hi); }
@@ -123,13 +138,30 @@
 /* No model here: the cards take the room left of the brief (padded, so a picked slot's glow is not cut). */
 .gear__cards { position: absolute; left: calc(var(--left) - 14px); top: 48px; bottom: 0; right: calc(var(--right) + 304px); z-index: 3; padding: 14px 14px 30px; display: grid; gap: 10px; align-content: start; }
 .gear__panel { position: absolute; right: var(--right); top: 60px; width: 300px; max-height: calc(100% - 130px); z-index: 3; }
-.gear__slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.gear__slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
 .gear__slot { display: flex; align-items: center; min-width: 0; height: 44px; padding: 0 14px; border-radius: 10px; background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); text-align: left; text-shadow: none; }
 .gear__slot span { display: grid; min-width: 0; line-height: 1.1; }
 .gear__slot b { font-size: 13px; font-weight: 800; }
 .gear__slot small { font-size: 11px; color: var(--dim); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gear__slot[aria-selected="true"] { background: var(--cream); color: var(--ink); box-shadow: 0 0 10px var(--gold-hi); }
 .gear__slot[aria-selected="true"] small { color: color-mix(in srgb, var(--ink) 70%, transparent); }
+/* A relic slot shows what she wears there: the relic in its socket, an empty dashed socket, or a lock; a red mark where one could go. */
+/* The same 5px all round the socket, and between it and the name. */
+.gear__slot.gear__slot--relic { position: relative; gap: 5px; height: 34px; padding: 0 5px; }
+.gear__slot--relic b { font-size: 11.5px; }
+.gear__slot--relic small { font-size: 9.5px; }
+.gear__slot--relic > span:last-of-type { flex: 1; overflow: hidden; }
+.gear__slot--relic b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gear__socket { width: 24px; height: 24px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 18px; color: var(--gold-hi); background: radial-gradient(circle at 35% 30%, #3f6a95, #151f30 72%); box-shadow: inset 0 0 0 1.5px var(--gold); }
+.gear__socket .relic-art { display: grid; justify-items: center; line-height: 1; }
+.gear__socket .relic-art > .relic-icon { font-size: 13px; }
+.gear__socket .tier-marks { width: 9px; height: 9px; margin-top: -3px; }
+.gear__slot--relic[data-state="empty"] .gear__socket { background: none; box-shadow: none; border: 2px dashed color-mix(in srgb, var(--cream) 45%, transparent); color: color-mix(in srgb, var(--cream) 60%, transparent); font-size: 12px; border-width: 1.5px; }
+.gear__slot--relic[data-state="empty"] small { font-style: italic; }
+.gear__slot--relic[data-state="locked"] .gear__socket { background: rgba(255, 255, 255, .06); box-shadow: none; color: var(--dim); font-size: 11px; }
+.gear__slot--relic[data-state="locked"] { opacity: .7; }
+.gear__slot[aria-selected="true"][data-state="empty"] .gear__socket { border-color: color-mix(in srgb, var(--ink) 45%, transparent); color: color-mix(in srgb, var(--ink) 60%, transparent); }
+.gear__slot--relic .badge { position: absolute; right: -4px; top: -6px; }
 .gear__empty { padding: 8px 4px; font-size: 13px; }
 .gear__cards .card__art > .relic-icon, .gear__cards .card__art > .look-icon, .shop__cards .card__art > .relic-icon, .shop__cards .card__art > .look-icon { font-size: 40px; }
 .gear__tiers { display: grid; gap: 6px; }
@@ -435,6 +467,12 @@
 .call__amount { display: flex; align-items: center; gap: 4px; }
 .call__amount .menu-icon, .call__amount .material-icon { font-size: 18px; }
 .call__amount + .call__amount { margin-left: 6px; }
+/* The exchange: a price that is its own button, the sigil centred beside its count. */
+.call__held { display: inline-flex; align-items: center; gap: 4px; }
+.call__exchange > span { min-height: 34px; }
+.call__buy { margin-left: 10px; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; min-width: 68px; padding: 0 12px 0 8px; border-radius: 15px; background: var(--cream); color: var(--ink); font-size: 14px; font-weight: 800; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
+.call__buy .menu-icon { font-size: 18px; color: var(--ink); opacity: 1; }
+.call__buy:disabled { background: rgba(255, 255, 255, .1); color: var(--dim); box-shadow: inset 0 0 0 1px var(--line); }
 /* What one character does: her special and her ultimate, each a line. */
 .kit-lines { display: grid; gap: 8px; }
 .kit-lines__one { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: start; font-size: 12.5px; line-height: 1.3; }

@@ -4,12 +4,12 @@
  * a face leads with her), and the next thing to play, with its enemies,
  * over one Play.
  */
-import { accountLevel, ascend, characterLevel, encounterOf, owns, relicPrice, relicsOpen, train } from "../../account/account.ts"
+import { accountLevel, ascend, characterLevel, encounterOf, owns, relicPrice, relicStock, relicsOpen, train } from "../../account/account.ts"
 import { activeBanner, callProblem, callsHeld } from "../../account/calls.ts"
 import type { Play } from "../../account/account.ts"
 import type { CharacterId } from "../../content/characters.ts"
 import { challengeEnemies, describePlay } from "../describe.ts"
-import { elementOf } from "../draft.ts"
+import { elementOf, emptyRelicSlots } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import { Face, ModelStage } from "../kit/art.tsx"
 import { Pill, RoundButton } from "../kit/controls.tsx"
@@ -32,11 +32,13 @@ export const Home = ({ store, nav, leader, play, enter }: {
 }) => {
   const tuning = store.tuning.value, account = store.account.value, team = store.menuDraft.value.team
   const level = accountLevel(tuning, account), encounter = encounterOf(tuning, play)
+  // Someone to grow, or a relic to put on a party member with an empty slot.
   const canTrain = ids(tuning.characters).some((id) => owns(account, { kind: "character", id }) && (train(tuning, account, id).ok || ascend(tuning, account, id).ok))
+    || team.some((id) => emptyRelicSlots(tuning, account, store.menuDraft.value, id).length > 0)
   // Something to do at the Call: a call held, and someone on the banner to bring.
   const now = Date.now(), canCall = callProblem(tuning, account, activeBanner(tuning, now).banner, now) === null && callsHeld(tuning, account) > 0
   // Something to buy at the shop: a relic's next tier the dust pays for.
-  const canBuy = relicsOpen(tuning, account) && ids(tuning.relics).some((id) => (relicPrice(tuning, account, id)?.dust ?? Infinity) <= (account.wallet.dust ?? 0))
+  const canBuy = relicsOpen(tuning, account) && relicStock(tuning, account, now) > 0 && ids(tuning.relics).some((id) => (relicPrice(tuning, account, id)?.dust ?? Infinity) <= (account.wallet.dust ?? 0))
   const places: { readonly [Id in string]: Place } = {
     characters: { kind: "character", character: leader, tab: "overview" },
     challenges: { kind: "quests", tab: play.kind === "tier" ? (tuning.tracks[play.track].kind === "trial" ? "trials" : "hardcore") : tuning.quests[play.quest].line },

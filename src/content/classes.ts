@@ -96,7 +96,7 @@ export const classes = {
   gun: classSpec({
     name: "Gun",
     range: "long",
-    description: "Quick shots from a magazine; the charged attack spends what is left, then she reloads.",
+    description: "Quick shots from a magazine; the charged attack spends what is left, then reloads.",
     shapes: ["shot", "lob"],
     magazine: true,
     handling: { comboWindow: 0.5, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6 },
