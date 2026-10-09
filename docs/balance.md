@@ -5,6 +5,35 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Kits and basic attacks (2026-10-09)
+
+Read from the matrix after the bodies: the Gunner was the weakest in both
+profiles, the learning bot's clears followed effective health (Bastion 40
+of 48, the Tidecaller 4, the Gunner 0), and the plain aspects trailed their
+own class's others.
+
+- **Bodies.** Distance protected the Gunner less than the budget assumed:
+  long range now gets a fighter's whole share (1, was 0.95), and her body
+  went to 64 HP, 128 ATK. The Tidecaller traded ATK for health (76 HP, 100
+  ATK).
+- **Kits** (`pnpm balance` prints each kit on paper, `kitAudit`):
+
+  | Skill | Before | After | Why |
+  |---|---|---|---|
+  | Tide | 50% ATK, 100 energy | 65%, 85 energy | The weakest ultimate, on the weakest fighter |
+  | Spark Totem | 18% a zap | 14% | Damage and healing from one special, three times another's damage |
+  | Thunderclap | 1.5 s stun | 1 s | Damage, stun, break, and a team heal in one ultimate |
+  | Stoneguard | 4 plates | 3 | Most of a run's blows cancelled (people take 3 to 5 a run) |
+
+  An ultimate's energy is its kit's to set (at most 100): a cheaper one is
+  a way to make it come more often without adding to what it does.
+- **Basic attacks.** Aspects' budgets follow their reach (see
+  `docs/aspects.md`, "Rules"): the Scattergun, fighting at 300 on the
+  Gun's budget for 660, went from 5 to 7 a pellet. The plain Sidearm,
+  Ring, and Spark rose by about one power a move, so a plain aspect is
+  never the obvious worst; Duelist's thrusts widened (52 to 64) so its
+  pattern catches more than one enemy, without more damage.
+
 ## Bodies (2026-10-09)
 
 Every character had 100 ATK, and her HP, DEF, and speed only a little apart:

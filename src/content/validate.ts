@@ -27,7 +27,7 @@ import { meets, tallies, tallyMeeting, worstClear } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
 import { basicAttack } from "./aspects.ts"
 import type { AspectSpec } from "./aspects.ts"
-import { dashStrikePower, hitsOf, isMelee } from "./attacks.ts"
+import { dashStrikePower, hitsOf, isMelee, reachOf, reachShare } from "./attacks.ts"
 import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
 import { enemies, followUpsOf } from "./enemies.ts"
@@ -381,8 +381,12 @@ const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, am
   }
 }
 
-/** How far an aspect's damage over a fight may be from its class's plain aspect's (see docs/aspects.md). */
-const aspectBudget = 0.25
+/**
+ * How far an aspect's damage over a fight may be from its budget: its
+ * class's plain aspect's, moved by how much closer or further it fights
+ * (`reachShare`; see docs/aspects.md).
+ */
+const aspectBudget = 0.15
 
 /** The blows a move lands on one target: a shot's projectiles, a disc's (out and back). */
 
@@ -545,11 +549,13 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     const moments = (aspect.infuse === null ? 0 : 1) + aspect.effects.filter((effect) => effect.own).length
     if (moments > 1) problems.push(`${where}: gives her element ${moments} moments (one at most)`)
     if (aspect.infuse !== null) checkFilter(problems, `${where} elemental moment`, aspect.infuse)
-    const plain = sustainedDamage(basicAttack(spec, null))
-    const own = sustainedDamage(basicAttack(spec, aspect))
-    // (A plain aspect with no combo is reported on its own.)
-    if (plain > 0 && Math.abs(own / plain - 1) > aspectBudget) {
-      problems.push(`${where}: deals ${own.toFixed(0)} a second against ${plain.toFixed(0)} for the plain aspect (aspects are different, never stronger or weaker: within ${aspectBudget * 100}%)`)
+    const plainAttack = basicAttack(spec, null), ownAttack = basicAttack(spec, aspect)
+    const plain = sustainedDamage(plainAttack)
+    const own = sustainedDamage(ownAttack)
+    // (A plain aspect with no combo is reported on its own.) Fighting closer than the plain aspect, it may deal more; further, less.
+    const budget = plainAttack.combo.length === 0 || ownAttack.combo.length === 0 ? plain : plain * reachShare(reachOf(ownAttack.combo[0]!)) / reachShare(reachOf(plainAttack.combo[0]!))
+    if (budget > 0 && Math.abs(own / budget - 1) > aspectBudget) {
+      problems.push(`${where}: deals ${own.toFixed(0)} a second against its budget of ${budget.toFixed(0)} (its plain aspect's ${plain.toFixed(0)}, for its reach; aspects are different, never stronger or weaker: within ${aspectBudget * 100}%)`)
     }
   }
 

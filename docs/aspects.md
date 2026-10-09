@@ -86,9 +86,12 @@ teammates' states count too.
 ### Rules
 
 - **Different, never stronger.** Every aspect of a class deals about the
-  same damage over a fight as its plain aspect (`validateContent` checks it
-  from the numbers); what changes is range, rhythm, risk, and what it is
-  good against. The plain aspect clears everything.
+  same damage over a fight as its plain aspect, moved by its reach: one
+  fighting closer (the Scattergun at 300 beside the Sidearm at 660) may
+  deal more, one fighting further less (`reachShare`: the whole budget up
+  to 150, falling in a line to 60% at 800). `validateContent` checks it from
+  the numbers, within 15%; what changes is range, rhythm, risk, and what it
+  is good against. The plain aspect clears everything.
 - **No levels.** A character's level gives all her stats; an aspect has
   none to raise, and a duplicate never adds power.
 - **No bonuses.** What a move sets off is part of its pattern; a bonus is a

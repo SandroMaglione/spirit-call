@@ -92,7 +92,7 @@ const character = (spec: CharacterSpec): CharacterSpec => spec
 export const bodyRules = {
   reference: { hp: 75, atk: 100, def: 15, speed: 295 } satisfies Stats,
   role: { fighter: 1, support: 0.85, guardian: 0.95 } satisfies { readonly [R in Role]: number },
-  range: { close: 1.05, middle: 1, long: 0.95 },
+  range: { close: 1.05, middle: 1, long: 1 },
   /**
    * The reference dash (the Swordsman's, `Tuning.dash`), and how much her
    * dash, impact, and weight count beside her stats: their product, raised
@@ -148,7 +148,7 @@ export const characters = {
   /** Fire, Gun, fighter: a glass cannon, quick, hard-hitting, and frail, at range; the Flare Jump leaps out of a crowd, the Barrage rains fire. */
   gunner: character({
     name: "Gunner",
-    stats: { hp: 58, atk: 130, def: 8, speed: 310 },
+    stats: { hp: 64, atk: 128, def: 8, speed: 310 },
     radius: 16,
     hurtboxRadius: 11,
     element: "fire",
@@ -162,7 +162,7 @@ export const characters = {
   /** Water, Disc, fighter: an agile skirmisher at middle range, quick and sharp; the Tidal Wave shoves and soaks, the Tide soaks everything around her. */
   tidecaller: character({
     name: "Tidecaller",
-    stats: { hp: 70, atk: 110, def: 12, speed: 310 },
+    stats: { hp: 76, atk: 100, def: 12, speed: 310 },
     radius: 16,
     hurtboxRadius: 11,
     element: "water",

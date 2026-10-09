@@ -254,7 +254,7 @@ describe("ultimates (Shift)", () => {
       expect(spec.invulnerability).toBeGreaterThan(0)
       expect(run.player().invulnerable, character).toBeGreaterThan(spec.invulnerability - 0.05)
       expect(run.player().invulnerable, character).toBeLessThanOrEqual(spec.invulnerability)
-      expect(run.world().energy).toBe(0)
+      expect(run.world().energy).toBe(defaultTuning.energy.max - spec.energy)
     }
   })
 
@@ -322,7 +322,7 @@ describe("ultimates (Shift)", () => {
       run.runtime.tick(Game.Schedule(FillEnergy))
       run.step(3)
       const from = run.player().position
-      expect(run.world().energy).toBe(0)
+      expect(run.world().energy).toBe(defaultTuning.energy.max - defaultTuning.skills.tide.energy)
       run.step(steps(moment) - 4)
       expect(run.world().enemies[0]!.health).toBe(1000)
       expect(run.player().position).toEqual(from)
@@ -350,7 +350,7 @@ describe("ultimates (Shift)", () => {
       expect(inside!.health).toBe(1000 - hitBy("tidecaller", spec.power))
       expect(inside!.state).toBe("soaked")
       expect(outside!.health).toBe(1000)
-      expect(run.world().energy).toBe(0)
+      expect(run.world().energy).toBe(defaultTuning.energy.max - defaultTuning.skills.tide.energy)
       run.step(30)
       expect(run.world().enemies[0]!.position.x).toBeGreaterThan(center.x + spec.radius)
     })

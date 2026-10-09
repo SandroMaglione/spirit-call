@@ -92,6 +92,20 @@ export type AttackMove = MeleeMove | ShotMove | DiscMove | LobMove
 /** Whether a move is a melee move (an area around the attacker), not something thrown or shot. */
 export const isMelee = (move: AttackMove): move is MeleeMove => move.shape === "arc" || move.shape === "thrust" || move.shape === "spin"
 
+/** How far `move` reaches from her: a melee move's reach, how far a shot or a disc flies, where a lob can land. */
+export const reachOf = (move: AttackMove): number =>
+  move.shape === "shot" || move.shape === "disc" ? move.range : move.shape === "lob" ? move.maxRange : move.reach
+
+/**
+ * The share of the close-range damage budget a basic attack reaching
+ * `reach` gets: 1 up to `close`, falling in a line to `farShare` at `far`
+ * and beyond. Fighting closer is riskier, so it may deal more (see
+ * docs/aspects.md).
+ */
+export const reachRules = { close: 150, far: 800, farShare: 0.6 }
+export const reachShare = (reach: number): number =>
+  1 - (1 - reachRules.farShare) * Math.max(0, Math.min(1, (reach - reachRules.close) / (reachRules.far - reachRules.close)))
+
 /** How many times `move` hits one target when all of it lands: each of its shots, a disc going and coming back. */
 export const hitsOf = (move: AttackMove): number => (isMelee(move) || move.shape === "lob" ? 1 : move.shape === "disc" ? move.count * 2 : move.count)
 
