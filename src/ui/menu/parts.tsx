@@ -17,12 +17,14 @@ import type { EnemyKind } from "../../content/enemies.ts"
 import type { Rewards, Unlock } from "../../content/quests.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { cosmeticOf } from "../../content/cosmetics.ts"
+import type { CosmeticId } from "../../content/cosmetics.ts"
 import { relicOf } from "../../content/relics.ts"
 import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
 import { AbilityIcon } from "../AbilityIcon.tsx"
 import { affinityList, affinityNames, attackElements, describeAmounts, describeSkill, describeUnlock, resourceName } from "../describe.ts"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
+import type { IconName } from "../Icon.tsx"
 import { Face, Portrait } from "../kit/art.tsx"
 import { Card } from "../kit/Card.tsx"
 import { RoundButton } from "../kit/controls.tsx"
@@ -183,4 +185,17 @@ export const KitLines = ({ store, character }: { readonly store: UiStore; readon
       </div>
     })}
   </div>
+}
+
+/** Where a look comes from, for the foot of its panel (with the icon that goes there). `inShop`: said in the shop itself. */
+export const lookSource = (store: UiStore, id: CosmeticId, inShop: boolean): { readonly text: string; readonly icon: IconName } => {
+  const tuning = store.tuning.value, look = cosmeticOf(tuning.cosmetics, id)
+  if (look.source.kind === "shop") return { text: `${inShop ? "Sold here" : "In the shop"} for ${look.source.dust} dust`, icon: "dust" }
+  if (look.source.kind === "call") return { text: "Only from the Spirit Call", icon: "call" }
+  // The hardcore tier whose first clear gives it.
+  for (const track of Object.values(tuning.tracks)) {
+    const at = track.tiers.findIndex((tier) => tier.rewards.cosmetics?.includes(id) === true)
+    if (at >= 0) return { text: `First clear of ${track.name}, tier ${at + 1}`, icon: "star" }
+  }
+  return { text: "A hardcore tier's first clear", icon: "star" }
 }

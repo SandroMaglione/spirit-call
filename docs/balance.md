@@ -92,6 +92,16 @@ small timing shifts do; none is a new wall. Champions with their own
 moveset (only the Brute King so far) are not in the audit's challenges;
 the King was measured with the bots separately (see the PR).
 
+## One dash strike (2026-10-09)
+
+The baseline was recorded again (from CI's report) once every dash strike
+dealt the same 10% ATK to one target (`dashStrikePower`; it had been 18 to
+40, the Gun's spread the most). The bot dashes in and swings, so it leaned
+on dash strikes more than a player would: the Swordsman's runs moved most
+(the learning Swordsman falls in First Blood 1337 and the Warlord 1337, the
+basic one in the Pack Leader 42; the learning one clears the Pack Leader
+1337). Tuning around it is a gameplay pass of its own.
+
 ## Combat feel (2026-10-08)
 
 The baseline was recorded again after the step 3 playtest changes (PR

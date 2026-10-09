@@ -9,6 +9,7 @@ import { useSignal } from "@preact/signals"
 import { useRef } from "preact/hooks"
 
 import type { CharacterId } from "../../content/characters.ts"
+import type { CosmeticId } from "../../content/cosmetics.ts"
 import type { EnemyKind } from "../../content/enemies.ts"
 import { Icon } from "../Icon.tsx"
 
@@ -42,12 +43,12 @@ export const ModelStage = ({ character, tint }: { readonly character: CharacterI
   </div>
 }
 
-/** What a portrait shows: a character, or an enemy kind. */
-export type PortraitOf = { readonly character: CharacterId } | { readonly enemy: EnemyKind }
+/** What a portrait shows: a character, an enemy kind, a look (a tint on her spirit, what a trail sheds), or what a character sheds on her own. */
+export type PortraitOf = { readonly character: CharacterId } | { readonly enemy: EnemyKind } | { readonly look: CosmeticId } | { readonly trail: CharacterId }
 
-/** A picture of a character or an enemy; it fills its parent (a card's art, a face). */
+/** A picture of a character, an enemy, or a look; it fills its parent (a card's art, a face). */
 export const Portrait = ({ of }: { readonly of: PortraitOf }) => (
-  <span class="portrait" data-portrait={"character" in of ? of.character : `enemy:${of.enemy}`} />
+  <span class="portrait" data-portrait={"character" in of ? of.character : "enemy" in of ? `enemy:${of.enemy}` : "look" in of ? `look:${of.look}` : `trail:${of.trail}`} />
 )
 
 /** A round portrait on `tint`'s colours (an element's): a party member, a roster pick. `size` in units (38 when left out). */

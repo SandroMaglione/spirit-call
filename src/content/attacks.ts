@@ -92,6 +92,19 @@ export type AttackMove = MeleeMove | ShotMove | DiscMove | LobMove
 /** Whether a move is a melee move (an area around the attacker), not something thrown or shot. */
 export const isMelee = (move: AttackMove): move is MeleeMove => move.shape === "arc" || move.shape === "thrust" || move.shape === "spin"
 
+/** How many times `move` hits one target when all of it lands: each of its shots, a disc going and coming back. */
+export const hitsOf = (move: AttackMove): number => (isMelee(move) || move.shape === "lob" ? 1 : move.shape === "disc" ? move.count * 2 : move.count)
+
+/**
+ * What every dash strike deals one target when all of it lands, % ATK: the
+ * same for every character and aspect (its shape, reach, and push stay her
+ * own), so it is a rule of dashing rather than a skill of hers. About one
+ * combo hit: what a dash strike is worth is the recovery it cuts short, not
+ * its damage (more, and dashing to attack would beat the combo).
+ * `validateContent` holds each dash strike to it (power times `hitsOf`).
+ */
+export const dashStrikePower = 10
+
 /**
  * Hold the attack button after a press to charge; release once full for the
  * power move. Quick taps never charge, and a release before full does nothing.
@@ -129,7 +142,8 @@ export interface BasicAttackSpec {
    * The dash strike: what an attack pressed during a dash (or just after
    * it, see `Tuning.dash.attackWindow`) does instead of the combo's next
    * move, once per dash, cutting a move's recovery short. The combo starts
-   * over after it.
+   * over after it. Its shape is the class's (or aspect's) own; its damage is
+   * everyone's (`dashStrikePower`).
    */
   readonly dash: AttackMove
   /**

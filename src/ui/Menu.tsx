@@ -9,7 +9,7 @@ import { menuElement } from "./Backdrop.tsx"
 import { Call } from "./menu/Call.tsx"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
-import { Loadout } from "./menu/Loadout.tsx"
+import { Gear } from "./menu/Gear.tsx"
 import { Shop } from "./menu/Shop.tsx"
 import { Extra } from "./menu/Extra.tsx"
 import { Home } from "./menu/Home.tsx"
@@ -67,7 +67,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       case "quests": return <Quests store={store} nav={nav} tab={screen.tab} play={play} leader={leader} enter={enter} />
       case "team": return <Team store={store} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value, draft.value.relics)} />
       case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
-      case "loadout": return <Loadout store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} save={save} />
+      case "gear": return <Gear store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} focus={screen.focus} save={save} />
       case "shop": return <Shop store={store} actions={actions} nav={nav} tab={screen.tab} />
       case "discoveries": return <Discoveries store={store} nav={nav} />
       case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} leader={leader} />

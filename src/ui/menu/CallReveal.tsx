@@ -20,7 +20,7 @@ import { cosmeticOf } from "../../content/cosmetics.ts"
 import { elements } from "../../content/elements.ts"
 import { relicOf } from "../../content/relics.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
-import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
+import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import { Model } from "../kit/art.tsx"
@@ -298,7 +298,7 @@ export const CallReveal = ({ store, actions, reveal, done }: { readonly store: U
             : result.kind === "cosmetic"
               ? <Card fresh art={<LookIcon kind={cosmeticOf(tuning.cosmetics, result.id).kind} />} foot="NEW" label={describeResult(store, result)} />
               : result.kind === "relic"
-                ? <Card fresh={result.tier === 1 && result.dust === 0} tint={relicOf(tuning.relics, result.id).element ?? undefined} art={<RelicIcon slot={relicOf(tuning.relics, result.id).slot} element={relicOf(tuning.relics, result.id).element} />} foot={result.dust > 0 ? `+${result.dust}` : result.tier === 1 ? "NEW" : `TIER ${["I", "II", "III"][result.tier - 1]}`} label={describeResult(store, result)} />
+                ? <Card fresh={result.tier === 1 && result.dust === 0} tint={relicOf(tuning.relics, result.id).element ?? undefined} art={<span class="relic-art"><RelicIcon slot={relicOf(tuning.relics, result.id).slot} element={relicOf(tuning.relics, result.id).element} /><TierMarks tier={result.tier} /></span>} foot={result.dust > 0 ? `+${result.dust}` : result.tier === 1 ? "NEW" : "TIER UP"} label={describeResult(store, result)} />
                 : <Card art={<Icon name="gold" />} foot={`+${(result.amounts.gold ?? 0).toLocaleString("en-US")}`} label={describeResult(store, result)} />}
         <small>{result.kind === "supply" ? "Supply" : describeResult(store, result).replace(/ \(.*\)$/, "")}</small>
       </div>)}</div>

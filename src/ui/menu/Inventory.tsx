@@ -1,17 +1,15 @@
 /**
  * The inventory, a shelf of the shop (see `Shop.tsx`): everything the
  * wallet holds, a card each (the currencies, then each element's material),
- * and the one selected explained beside them: what it is for, where it
- * comes from, and who on the roster needs it next.
+ * and the one selected explained beside them: where it comes from, and
+ * what it is for (at its foot).
  */
 import { useSignal } from "@preact/signals"
-import { ascensionStep, owns } from "../../account/account.ts"
-import type { CharacterId } from "../../content/characters.ts"
 import type { ResourceId } from "../../content/currencies.ts"
 import type { MaterialId } from "../../content/materials.ts"
 import { Icon } from "../Icon.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
-import { Fact, Label, Panel } from "../kit/panel.tsx"
+import { Panel } from "../kit/panel.tsx"
 import type { UiStore } from "../store.ts"
 import { ids } from "./parts.tsx"
 
@@ -36,7 +34,7 @@ const sources = (store: UiStore, id: ResourceId): ReadonlyArray<string> => {
 }
 
 /** What a currency is for, in a few words. */
-const uses = { pulls: "Spirit Calls", upgrades: "Training characters, and ascending them", "the shop": "The shop: a relic's next tier, and looks" } as const
+const uses = { pulls: "Spirit Calls", upgrades: "training characters, and ascending them", "the shop": "the shop: a relic's next tier, and looks" } as const
 
 export const InventoryShelf = ({ store }: { readonly store: UiStore }) => {
   const tuning = store.tuning.value, account = store.account.value
@@ -45,11 +43,6 @@ export const InventoryShelf = ({ store }: { readonly store: UiStore }) => {
   const id = selected.value, held = account.wallet[id] ?? 0
   const name = isMaterial(store, id) ? tuning.materials[id].name : tuning.currencies[id as keyof typeof tuning.currencies].name
   const element = isMaterial(store, id) ? tuning.materials[id].element : undefined
-  // Who owns a character of this material's element, and what her next step asks.
-  const needs = element === undefined ? [] : ids(tuning.characters).filter((character: CharacterId) => tuning.characters[character].element === element && owns(account, { kind: "character", id: character })).map((character) => {
-    const next = tuning.materialRules.ascension[account.owned.characters[character]?.ascension ?? 0]
-    return { character, count: next?.count ?? null, now: ascensionStep(tuning, account, character) !== null }
-  })
   return <>
     <div class="inventory__cards scroll in-left"><Cards>{all.map((each) => {
       const material = isMaterial(store, each)
@@ -57,18 +50,9 @@ export const InventoryShelf = ({ store }: { readonly store: UiStore }) => {
         selected={each === id} onClick={() => (selected.value = each)} art={<Icon name={material ? tuning.materials[each].element : (each as "gold" | "crystals" | "dust")} />}
         foot={(account.wallet[each] ?? 0).toLocaleString("en-US")} />
     })}</Cards></div>
-    <Panel class="inventory__brief in-right" element={element} icon={<Icon name={element ?? (id as "gold" | "crystals" | "dust")} />} title={name} detail={held.toLocaleString("en-US")}>
-      <div>
-        <Fact label="For" value={isMaterial(store, id) ? `Ascending ${element} characters past levels ${tuning.materialRules.ascension.map((step) => step.level).join(", ")}` : uses[tuning.currencies[id as keyof typeof tuning.currencies].use as keyof typeof uses]} />
-      </div>
-      <div class="brief-section">
-        <Label>Where it comes from</Label>
-        {sources(store, id).map((line) => <p key={line} class="inventory__source">{line}</p>)}
-      </div>
-      {needs.length > 0 && <div class="brief-section">
-        <Label>Next ascension</Label>
-        {needs.map((need) => <p key={need.character} class="inventory__source">{tuning.characters[need.character].name}: {need.count === null ? "fully ascended" : `${need.count.toLocaleString("en-US")}${need.now ? ", now" : ""}`}</p>)}
-      </div>}
+    <Panel class="inventory__brief in-right" element={element} icon={<Icon name={element ?? (id as "gold" | "crystals" | "dust")} />} title={name} detail={held.toLocaleString("en-US")}
+      note={`For ${isMaterial(store, id) ? `ascending ${element} characters past levels ${tuning.materialRules.ascension.map((step) => step.level).join(", ")}` : uses[tuning.currencies[id as keyof typeof tuning.currencies].use as keyof typeof uses]}`}>
+      <div class="inventory__sources">{sources(store, id).map((line) => <p key={line} class="inventory__source">{line}</p>)}</div>
     </Panel>
   </>
 }

@@ -39,3 +39,13 @@ export const LookIcon = ({ kind }: { readonly kind: CosmeticKind }) =>
         <circle cx="14" cy="16" r="1" fill="currentColor" />
       </>}
   </svg>
+
+/**
+ * A relic's tier as three tall diamonds stacked left to right, each over
+ * most of the next (the first on top), the first `tier` of them lit; the
+ * three together fill a square, so they fit under a card's icon.
+ */
+export const TierMarks = ({ tier }: { readonly tier: number }) =>
+  <svg class="tier-marks" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
+    {[2, 1, 0].map((index) => <path key={index} d={`M${7 + index * 4} 1.5 ${13 + index * 4} 11 ${7 + index * 4} 20.5 ${1 + index * 4} 11z`} data-on={index < tier ? "" : undefined} />)}
+  </svg>

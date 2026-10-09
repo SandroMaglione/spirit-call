@@ -87,7 +87,7 @@ export const classes = {
       ],
       charged: { chargeTime: 0.55, move: thrust({ reach: 230, width: 72, power: 55, knockback: 1100, recovery: 0.5, hitStop: 0.14, heavy: true, lunge: 110 }) },
       /** A lunging thrust out of the dash. */
-      dash: thrust({ reach: 165, width: 64, power: 22, knockback: 520, recovery: 0.28, hitStop: 0.07, heavy: false, lunge: 70 }),
+      dash: thrust({ reach: 165, width: 64, power: 10, knockback: 520, recovery: 0.28, hitStop: 0.07, heavy: false, lunge: 70 }),
       magazine: null,
       chain: null
     }
@@ -114,7 +114,7 @@ export const classes = {
         move: lob({ maxRange: 400, flightTime: 0.35, fuse: 0.3, radius: 100, element: null, leaves: null, power: 42, knockback: 420, recovery: 0.4, hitStop: 0.08, heavy: true, lunge: -10 })
       },
       /** Point-blank: a spread of shots, short and wide. */
-      dash: shot({ count: 5, spreadDegrees: 34, speed: 950, radius: 5, range: 340, pierce: 0, power: 8, knockback: 260, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: -10 }),
+      dash: shot({ count: 5, spreadDegrees: 34, speed: 950, radius: 5, range: 340, pierce: 0, power: 2, knockback: 260, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: -10 }),
       magazine: { rounds: 6, reload: 1.3 },
       chain: null
     }
@@ -141,7 +141,7 @@ export const classes = {
         move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 7, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 })
       },
       /** A fast, heavy disc thrown out of the dash. */
-      dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, power: 11, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
+      dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, power: 5, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
       magazine: null,
       chain: null
     }
@@ -168,7 +168,7 @@ export const classes = {
         move: shot({ count: 1, spreadDegrees: 0, speed: 560, radius: 13, range: 640, pierce: 6, power: 32, knockback: 420, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 })
       },
       /** A bolt that passes through a line of enemies. */
-      dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 18, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
+      dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 10, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
       magazine: null,
       chain: null
     }

@@ -1,6 +1,6 @@
 /**
  * A character: her attributes and leveling, what she fights and shows with
- * (her loadout, in short: its own screen holds the choices), and her moves. The roster in the top bar steps between characters; one not
+ * (her gear, in short: its own screen holds the choices), and her moves. The roster in the top bar steps between characters; one not
  * owned yet shows the same pages, to look forward to.
  */
 import { useSignal } from "@preact/signals"
@@ -8,8 +8,8 @@ import type { ComponentChildren } from "preact"
 import { ascend, ascensionCost, ascensionStep, characterLevel, levelCap, owns, relicTier, slotOpen, train, trainingCost } from "../../account/account.ts"
 import { cosmeticKinds, cosmeticOf } from "../../content/cosmetics.ts"
 import { relicOf, relicSlots } from "../../content/relics.ts"
-import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
-import { slotNames } from "./Loadout.tsx"
+import { RelicIcon, TierMarks } from "../RelicIcon.tsx"
+import { slotNames } from "./Gear.tsx"
 import { materialOf } from "../../content/materials.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import type { CharacterId } from "../../content/characters.ts"
@@ -21,14 +21,15 @@ import { describeAmounts, describeSkill, statOrder } from "../describe.ts"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
-import { Face, ModelStage } from "../kit/art.tsx"
+import { Face, ModelStage, Portrait } from "../kit/art.tsx"
+import { Card } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Bar, Chips, Fact, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, SideTabs, TopBar } from "../kit/shell.tsx"
 import { sourceOf } from "../navigation.ts"
 import type { UiActions, UiStore } from "../store.ts"
 import { ids, MaterialIcon, Wallet } from "./parts.tsx"
-import type { CharacterTab, Nav } from "./screens.ts"
+import type { CharacterTab, GearFocus, GearTab, Nav } from "./screens.ts"
 
 const statLabels = { hp: "Max HP", atk: "ATK", def: "DEF", speed: "Speed" } as const
 const statIcons: { readonly [Stat in keyof typeof statLabels]: IconName } = { hp: "hp", atk: "atk", def: "def", speed: "speed" }
@@ -52,7 +53,7 @@ const Attributes = ({ store, actions, character }: { readonly store: UiStore; re
   return <>
     <section class="character__side in-right">
       <h1>{spec.name}</h1>
-      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name} · {classSpec.range} range</span></div>
+      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name}</span></div>
       {owned && <Bar value={progress.level / maxLevel} label="Level" />}
       <div class="character__stats" aria-label="Attributes">{statOrder.map((stat) => <Fact key={stat} icon={statIcons[stat]} label={statLabels[stat]} gain={owned && cost !== null && next[stat] > now[stat] ? `+${Math.round(next[stat] - now[stat])}` : undefined} value={Math.round(now[stat])} />)}</div>
       <p class="dim">{owned ? classSpec.description : sourceNote(store, { kind: "character", id: character })}</p>
@@ -87,29 +88,38 @@ const Ascension = ({ store, actions, character }: { readonly store: UiStore; rea
 }
 
 /**
- * What she fights and shows with, in short: her aspect, her relics slot by
- * slot, and her looks, each a row that opens her loadout on its tab.
+ * Her gear in short: her aspect and her looks on a row, her relic slots
+ * under them, a card each in what she has there (softer where nothing is
+ * chosen yet: an empty slot, the plain aspect, her own look; a plus in its
+ * corner, a swap where something is). A tap opens the gear screen on that
+ * very slot.
  */
-const LoadoutSummary = ({ store, nav, character }: { readonly store: UiStore; readonly nav: Nav; readonly character: CharacterId }) => {
+const GearSummary = ({ store, nav, character }: { readonly store: UiStore; readonly nav: Nav; readonly character: CharacterId }) => {
   const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft.value
   const spec = tuning.characters[character], aspect = draft.aspects[character]
   const relics = draft.relics[character] ?? {}, worn = account.worn[character] ?? {}
-  const open = (tab: "aspect" | "relics" | "looks") => nav.go({ kind: "loadout", character, tab })
-  return <>
-    <Panel class="character__panel in-right" icon={<Icon name="relic" />} title="Loadout" detail={draft.team.includes(character) ? "In the party" : "Not in the party"}>
-      <button type="button" class="loadout-row" onClick={() => open("aspect")}><AbilityIcon kind={spec.class} /><span><small>Aspect</small><b>{aspect === undefined ? tuning.classes[spec.class].plain.name : aspectOf(tuning.aspects, aspect).name}</b></span><Icon name="next" /></button>
-      {relicSlots.map((slot) => {
-        const id = relics[slot]
-        return <button key={slot} type="button" class="loadout-row" onClick={() => open("relics")}>
-          <RelicIcon slot={slot} element={slot === "element" ? spec.element : null} />
-          <span><small>{slotNames[slot]}</small><b>{!slotOpen(tuning, account, slot) ? "Locked" : id === undefined ? "Empty" : `${relicOf(tuning.relics, id).name} ${["I", "II", "III"][(relicTier(account, id) ?? 1) - 1]}`}</b></span>
-          <Icon name="next" />
-        </button>
-      })}
-      {cosmeticKinds.map((kind) => <button key={kind} type="button" class="loadout-row" onClick={() => open("looks")}><LookIcon kind={kind} /><span><small>{kind === "tint" ? "Tint" : "Trail"}</small><b>{worn[kind] === undefined ? "Her own" : cosmeticOf(tuning.cosmetics, worn[kind]!).name}</b></span><Icon name="next" /></button>)}
-    </Panel>
-    <Actions><Pill icon="next" onClick={() => open("aspect")}>Open loadout</Pill></Actions>
-  </>
+  const open = (tab: GearTab, focus?: GearFocus) => nav.go({ kind: "gear", character, tab, ...(focus === undefined ? {} : { focus }) })
+  const aspectName = aspect === undefined ? tuning.classes[spec.class].plain.name : aspectOf(tuning.aspects, aspect).name
+  return <Panel class="character__panel in-right" icon={<Icon name="relic" />} title="Gear" detail={draft.team.includes(character) ? "In the party" : "Not in the party"}>
+    <div class="gear-summary">
+      <div class="gear-summary__row">
+        <Card art={<AbilityIcon kind={spec.class} />} tint={spec.element} foot={aspectName} corner={aspect === undefined ? "plus" : "swap"} label={`Aspect: ${aspectName}`} faded={aspect === undefined} onClick={() => open("aspect")} />
+        <span class="gear-summary__gap" />
+        {cosmeticKinds.map((kind) => {
+          const id = worn[kind], name = id === undefined ? (kind === "tint" ? "Tint" : "Trail") : cosmeticOf(tuning.cosmetics, id).name
+          return <Card key={kind} tint={spec.element} art={<Portrait of={id !== undefined ? { look: id } : kind === "tint" ? { character } : { trail: character }} />} foot={name} faded={id === undefined}
+            corner={id === undefined ? "plus" : "swap"} label={`${kind === "tint" ? "Tint" : "Trail"}: ${id === undefined ? "default" : name}`} onClick={() => open("looks", kind)} />
+        })}
+      </div>
+      <div class="gear-summary__row">{relicSlots.map((slot) => {
+        const id = relics[slot], relic = id === undefined ? null : relicOf(tuning.relics, id), tier = id === undefined ? null : relicTier(account, id)
+        const locked = !slotOpen(tuning, account, slot)
+        return <Card key={slot} tint={relic?.element ?? spec.element} locked={locked} faded={!locked && relic === null} corner={locked ? undefined : relic === null ? "plus" : "swap"}
+          art={locked ? <Icon name="lock" /> : relic === null ? <RelicIcon slot={slot} element={slot === "element" ? spec.element : null} /> : <span class="relic-art"><RelicIcon slot={relic.slot} element={relic.element} /><TierMarks tier={tier ?? 1} /></span>}
+          foot={relic?.name ?? slotNames[slot]} label={`${slotNames[slot]} slot: ${locked ? "opens later" : relic === null ? "none" : `${relic.name}, tier ${tier ?? 1}`}`} onClick={() => open("relics", slot)} />
+      })}</div>
+    </div>
+  </Panel>
 }
 
 interface Move {
@@ -146,15 +156,10 @@ const Skills = ({ store, character }: { readonly store: UiStore; readonly charac
         <div>
           {skill.cooldown > 0 && <Fact label="Cooldown" value={`${skill.cooldown} s`} />}
           {skill.energy > 0 && <Fact label="Energy" value={skill.energy} />}
-          {element !== null && <Fact label="Leaves" value={<><Icon name={element} />{elements[element].state}</>} />}
-          {skill.invulnerability > 0 && <Fact label="As it goes off" value="Untouchable" />}
+          {element !== null && <Fact label="Element" value={<Icon name={element} />} />}
         </div>
       </> }
-    }),
-    { name: "Dash strike", slot: "Attack after a dash", icon: <AbilityIcon kind="dash" />, body: <>
-      <p>Attack during a dash, or just after it: once per dash, and it cuts a move's recovery short.</p>
-      <div><Fact label="Damage" value={`${attack.dash.power}% ATK`} /></div>
-    </> }
+    })
   ]
   const move = moves[Math.min(selected.value, moves.length - 1)]!
   return <>
@@ -176,9 +181,9 @@ export const Character = ({ store, actions, nav, character, tab }: {
     </TopBar>
     <SideTabs label="Character details" current={tab} onChange={(id) => nav.replace({ kind: "character", character, tab: id })} tabs={[
       { id: "overview", label: "Attributes", badge: owned && (train(tuning, account, character).ok || ascend(tuning, account, character).ok) },
-      { id: "loadout", label: "Loadout" },
+      { id: "gear", label: "Gear" },
       { id: "kit", label: "Skills" }
     ]} />
-    {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "loadout" ? <LoadoutSummary key={character} store={store} nav={nav} character={character} /> : <Skills key={character} store={store} character={character} />}
+    {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "gear" ? <GearSummary key={character} store={store} nav={nav} character={character} /> : <Skills key={character} store={store} character={character} />}
   </Screen>
 }

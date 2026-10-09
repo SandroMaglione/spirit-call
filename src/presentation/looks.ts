@@ -978,7 +978,9 @@ export const cosmeticLooks: Readonly<Record<CosmeticId, { readonly kind: "tint";
   aurora: { kind: "trail", drops: { colors: [0x7dffc4, 0x58e1ff, 0xb48cff], size: 2.4, kind: "wisp" } },
   nightshade: { kind: "trail", drops: { colors: [0x5a2d8c, 0x8b4fd1, 0x2a1640], size: 2.4, kind: "wisp" } },
   lastLight: { kind: "trail", drops: { colors: [0xffe27a, 0xffb347, 0xfff6d0], size: 2.2, kind: "ember" } },
-  stoneDust: { kind: "trail", drops: { colors: [0xb9b2a6, 0x8a8378, 0xffc56b], size: 1.8, kind: "drop" } }
+  stoneDust: { kind: "trail", drops: { colors: [0xb9b2a6, 0x8a8378, 0xffc56b], size: 1.8, kind: "drop" } },
+  // Every color of the rainbow, red through violet.
+  prism: { kind: "trail", drops: { colors: [0xff5a5a, 0xffa94d, 0xffe066, 0x69db7c, 0x4dabf7, 0x9775fa], size: 2.2, kind: "ember" } }
 }
 
 /** The looks a character wears, by kind (see `Worn` on the account). */

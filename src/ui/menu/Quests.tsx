@@ -111,7 +111,7 @@ const RankTabs = ({ store, tab, play, chest }: { readonly store: UiStore; readon
         play.value = questAt(play.value.kind === "quest" ? play.value.quest : quests[0]!, each)
         chest.value = null
       }}>
-        <b>{rankNames[index]}</b>Rank {each}{locked && <Icon name="lock" />}
+        Rank {each}{locked && <Icon name="lock" />}
       </button>
     })}
   </div>
