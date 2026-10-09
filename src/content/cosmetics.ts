@@ -51,7 +51,8 @@ export const cosmetics = {
   aurora: trail("Aurora", "Ribbons of green, cyan, and violet.", call),
   nightshade: trail("Nightshade", "Dark violet wisps.", call),
   lastLight: trail("Last Light", "Bright gold sparks, for lasting until the end.", reward),
-  stoneDust: trail("Siege Dust", "Grey grit and sparks, for breaking the siege.", reward)
+  stoneDust: trail("Siege Dust", "Grey grit and sparks, for breaking the siege.", reward),
+  prism: trail("Prism", "Sparks in every color of the rainbow.", shop(500))
 } satisfies { readonly [id: string]: CosmeticSpec }
 
 export type CosmeticId = keyof typeof cosmetics

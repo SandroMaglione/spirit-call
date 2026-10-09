@@ -238,7 +238,8 @@
     "aurora",
     "nightshade",
     "lastLight",
-    "stoneDust"
+    "stoneDust",
+    "prism"
   ],
   "materials": [
     "fireShard",
