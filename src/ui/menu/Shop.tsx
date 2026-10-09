@@ -19,7 +19,7 @@ import { Card, Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Panel } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
-import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
+import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
 import { InventoryShelf } from "./Inventory.tsx"
 import { slotNames } from "./Loadout.tsx"
@@ -42,7 +42,7 @@ const RelicShelf = ({ store, actions }: { readonly store: UiStore; readonly acti
       {owned.length === 0 ? <p class="dim shop__empty">No relic yet: relics come from the Spirit Call and a few quests. Once you own one, its next tier is sold here.</p>
         : <Cards>{owned.map((id) => {
           const spec = relicOf(tuning.relics, id), at = relicTier(account, id)!, next = relicPrice(tuning, account, id)
-          return <Card key={id} tint={spec.element ?? undefined} art={<span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><b class="relic-art__tier">{tierNames[at]}</b></span>} label={`${spec.name}, tier ${tierNames[at]}`}
+          return <Card key={id} tint={spec.element ?? undefined} art={<span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><TierMarks tier={at} /></span>} label={`${spec.name}, tier ${tierNames[at]}`}
             foot={next === null ? spec.name : <span class="shop__price"><Icon name="dust" />{next.dust}</span>} selected={id === picked.value} mark={at === 3 ? "tick" : undefined} onClick={() => (picked.value = id)} />
         })}</Cards>}
     </div>
@@ -50,7 +50,7 @@ const RelicShelf = ({ store, actions }: { readonly store: UiStore; readonly acti
       detail={`${slotNames[relic.slot]}${relic.element === null ? "" : ` · ${elements[relic.element].name}`} · Tier ${tierNames[tier]}`}
       note={price === null ? "At its last tier: called again, it turns into dust." : dust < (price.dust ?? 0) ? `${(price.dust ?? 0) - dust} more dust needed.` : undefined} noteIcon={price === null ? "check" : "info"}>
       <p class="dim">{relic.about}</p>
-      <div class="loadout__tiers">{relicTiers.map((each) => <p key={each} class="loadout__tier" data-state={each > tier ? "ahead" : each === tier ? "now" : "had"}><b>{tierNames[each]}</b><span>{relic.tiers[each].adds}</span></p>)}</div>
+      <div class="loadout__tiers">{relicTiers.map((each) => <p key={each} class="loadout__tier" data-state={each > tier ? "ahead" : each === tier ? "now" : "had"}><TierMarks tier={each} /><span>{relic.tiers[each].adds}</span></p>)}</div>
     </Panel>}
     <Actions>{price !== null && picked.value !== null && <Pill icon="plus" label={`Buy tier ${tier === 1 ? "II" : "III"} for ${price.dust} dust`} disabled={store.busy.value || dust < (price.dust ?? 0)} onClick={() => actions.buyRelic(picked.value!)}>
       <span class="call__button">Tier {tier === 1 ? "II" : "III"}<small><Icon name="dust" />{price.dust}</small></span>

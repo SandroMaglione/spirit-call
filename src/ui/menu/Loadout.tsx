@@ -30,7 +30,7 @@ import { Pill } from "../kit/controls.tsx"
 import { Chips, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { sourceOf } from "../navigation.ts"
-import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
+import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
 import { ids, Wallet } from "./parts.tsx"
 import type { LoadoutTab, Nav } from "./screens.ts"
@@ -124,7 +124,7 @@ const Relics = ({ store, actions, character, save }: { readonly store: UiStore; 
         ? <p class="dim loadout__empty">{slot.value === "survival" ? "Survival relics are to come." : "No relic for this slot yet."}</p>
         : <Cards>{options.map((id) => {
           const spec = relicOf(tuning.relics, id), at = relicTier(account, id)
-          return <Card key={id} tint={spec.element ?? undefined} art={at === null ? <Icon name="lock" /> : <span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><b class="relic-art__tier">{tierNames[at]}</b></span>}
+          return <Card key={id} tint={spec.element ?? undefined} art={at === null ? <Icon name="lock" /> : <span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><TierMarks tier={at} /></span>}
             foot={spec.name} label={at === null ? spec.name : `${spec.name}, tier ${tierNames[at]}`} selected={id === picked.value} locked={at === null}
             mark={id === equipped && inParty ? "tick" : undefined} onClick={() => (picked.value = id)} />
         })}</Cards>}
@@ -138,7 +138,7 @@ const Relics = ({ store, actions, character, save }: { readonly store: UiStore; 
         note={note} noteIcon={tier === null || !open ? "lock" : picked.value === equipped ? "check" : "info"}>
         <p class="dim">{relic.about}</p>
         <div class="loadout__tiers">{relicTiers.map((each) => <p key={each} class="loadout__tier" data-state={tier === null || each > tier ? "ahead" : each === tier ? "now" : "had"}>
-          <b>{tierNames[each]}</b><span>{relic.tiers[each].adds}</span>
+          <TierMarks tier={each} /><span>{relic.tiers[each].adds}</span>
         </p>)}</div>
       </Panel>}
     <Actions>
