@@ -5,6 +5,42 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Where the stats pass stands (2026-10-09)
+
+Six steps (PRs #85 to #89, and this note): the matrix and a bot that plays
+each build's range, bodies on one budget, dash, impact, and weight, kits and
+basic attacks, and trade-off relics with the Survival slot. The matrix at the
+end (`pnpm balance --matrix`, 8 quests, 2 seeds, every aspect):
+
+| | Skilled bot: clears / time | Learning bot: clears / health left |
+|---|---|---|
+| Swordsman | 46 of 48 / 0.79 | 29 of 48 / 20% |
+| Gunner | 23 / 1.33 | 0 / 0% |
+| Tidecaller | 46 / 1.01 | 8 / 5% |
+| Stormcaller | 46 / 0.95 | 21 / 36% |
+| Bastion | 47 / 1.23 | 34 / 35% |
+
+At the start the skilled bot cleared 0 of 48 with the Gunner (her own fire
+spread back to her) and the learning bot 0 to 2 with the Tidecaller. Four
+characters now sit close together for the skilled bot; Bastion is slower
+but safest, as a tank should be.
+
+**Still open, for playtests to settle:**
+
+- **The Gunner.** Her own fire is most of what she loses to: Barrage's
+  pools land where she fights, worst with the Scattergun (1 of 16). Shrinking
+  the pools did not help; the rule that her own fire burns her is a design
+  call, not tuning.
+- **Frail bodies and the learning bot.** Its clears follow effective health
+  (Bastion 34, the Swordsman 29, the Tidecaller 8, the Gunner 0). People dodge
+  better than it does but not as well as the skilled bot: whether the
+  Gunner and the Tidecaller are too fragile for someone learning is for a
+  person to say.
+- **Duelist** still trails the other Blade aspects for the learning bot (5
+  of 16 against 11 and 13): its pattern asks for perfect dodges.
+- **Relics are not in the matrix** (the bots carry none): trade-offs and the
+  Survival slot are judged in play.
+
 ## Kits and basic attacks (2026-10-09)
 
 Read from the matrix after the bodies: the Gunner was the weakest in both
