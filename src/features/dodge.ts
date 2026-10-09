@@ -10,8 +10,8 @@
  * after another make a chain (`DodgeChain`): the slow and the energy grow
  * with it, up to its last step.
  */
-import { Dash, DodgeChain, Dodged, Energy, Enemy, Game, Health, Invulnerable, Member, PerfectDodged, Player, Poise, Position, SlowMotion, Time, Tuning, BasicAttack } from "../schema.ts"
-import { dashOf } from "./build.ts"
+import { Dash, DodgeChain, Dodged, Energy, Enemy, Game, Health, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, SlowMotion, Time, Tuning, BasicAttack } from "../schema.ts"
+import { dashOf, traitsIn } from "./build.ts"
 import { poiseOf } from "./poise.ts"
 
 const Attackers = Game.Query({ selection: { position: Game.Query.read(Position), enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise) } })
@@ -25,7 +25,8 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
         energy: Game.Query.write(Energy),
         basicAttack: Game.Query.write(BasicAttack),
         invulnerable: Game.Query.write(Invulnerable),
-        member: Game.Query.read(Member)
+        member: Game.Query.read(Member),
+        passives: Game.Query.optional(Passives)
       },
       with: [Player]
     })
@@ -47,7 +48,8 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     const dodged = dodges.find((dodge) => dodge.target === entity.id.value)
     if (dodged === undefined) continue
     // Dashes back (whole charges; all of them back stops the wait for the next).
-    const most = dashOf(tuning, data.member.get().character).charges
+    const traits = traitsIn(data.passives)
+    const most = dashOf(tuning, data.member.get().character, traits).charges
     const charges = Math.min(most, dash.charges + rules.dashRefund)
     data.dash.set({ ...dash, perfect: true, charges, cooldown: charges >= most ? 0 : dash.cooldown })
     // The chain's next step (or a new chain): the slow and the energy grow with it.
@@ -55,7 +57,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     const count = Math.min(Math.max(1, steps), (chain.remaining > 0 ? chain.count : 0) + 1)
     resources.chain.set({ count, remaining: rules.chain.window })
     const slow = rules.slowSeconds * (rules.chain.slow[count - 1] ?? 1)
-    const energy = rules.energy * (rules.chain.energy[count - 1] ?? 1)
+    const energy = rules.energy * (rules.chain.energy[count - 1] ?? 1) * traits.energy
     if (slow > 0) resources.slowMotion.set({ remaining: slow, scale: rules.slowScale, dodge: true })
     if (energy > 0) data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + energy) }))
     if (rules.reload) data.basicAttack.update((attack) => ({ ...attack, spent: 0, reloading: 0 }))

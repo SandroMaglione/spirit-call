@@ -12,22 +12,28 @@
  */
 import type { ElementId } from "./elements.ts"
 import {
+  always,
   breaking,
   cast,
   castOwn,
   counter,
   damageBonus,
+  damageTaken,
   dashBack,
   dashing,
   doing,
   finisher,
+  heal,
   kill,
   leave,
   on,
   perfectDodge,
   power,
+  secondWind,
   targetHeld,
   targetInState,
+  trait,
+  wielderHealthBelow,
   withMove
 } from "./passives.ts"
 import type { Passive } from "./passives.ts"
@@ -123,6 +129,46 @@ export const relics = {
     }
   }),
 
+  /** A trade-off: every blow hits harder, and so does every blow on her. */
+  glassEdge: relic({
+    name: "Glass Edge",
+    slot: "strike",
+    element: null,
+    about: "Hitting harder, at a price.",
+    tiers: {
+      1: { adds: "Blows deal 20% more; blows on her deal 20% more too.", passives: [damageBonus(20, always()), damageTaken(20)] },
+      2: { adds: "And 15% more to stunned or broken enemies.", passives: [damageBonus(20, always()), damageTaken(20), damageBonus(15, targetHeld())] },
+      3: {
+        adds: "Killing an enemy in a state sends out a ring where it falls, throwing the others back.",
+        passives: [damageBonus(20, always()), damageTaken(20), damageBonus(15, targetHeld()), on(kill("any"), cast(ring(), "there"), 1)]
+      }
+    }
+  }),
+  /** Hurt, she hits harder: a reason to stay in the fight rather than back off. */
+  lastStand: relic({
+    name: "Last Stand",
+    slot: "strike",
+    element: null,
+    about: "Fighting on when hurt.",
+    tiers: {
+      1: { adds: "Below half her health, her blows deal 25% more.", passives: [damageBonus(25, wielderHealthBelow(0.5))] },
+      2: { adds: "Below a quarter, 15% more on top.", passives: [damageBonus(25, wielderHealthBelow(0.5)), damageBonus(15, wielderHealthBelow(0.25))] },
+      3: { adds: "A kill gives a dash back, at most once every 4 seconds.", passives: [damageBonus(25, wielderHealthBelow(0.5)), damageBonus(15, wielderHealthBelow(0.25)), on(kill(), dashBack(), 4)] }
+    }
+  }),
+  /** A trade-off: her ultimate comes sooner, and blows on her hurt more. */
+  overflow: relic({
+    name: "Overflow",
+    slot: "strike",
+    element: null,
+    about: "Ultimates sooner, at a price.",
+    tiers: {
+      1: { adds: "She gains 25% more energy; blows on her deal 15% more.", passives: [trait({ energy: 1.25 }), damageTaken(15)] },
+      2: { adds: "15% more energy on top.", passives: [trait({ energy: 1.25 }), damageTaken(15), trait({ energy: 1.15 })] },
+      3: { adds: "10% more energy on top.", passives: [trait({ energy: 1.25 }), damageTaken(15), trait({ energy: 1.15 }), trait({ energy: 1.1 })] }
+    }
+  }),
+
   // ── Dash: her dashes and dodges ─────────────────────────────────────────
 
   /** A dash out of a crowd pushes it away. */
@@ -159,6 +205,34 @@ export const relics = {
       1: { adds: "A perfect dodge leaves a whirl where she stood, pulling enemies in for a moment.", passives: [on(perfectDodge(), cast(whirl(), "there"))] },
       2: { adds: "The whirl strikes what it pulls.", passives: [on(perfectDodge(), cast(whirl({ power: 3 }), "there"))] },
       3: { adds: "The whirl carries her element.", passives: [on(perfectDodge(), castOwn(whirl({ power: 3 }), "there"))] }
+    }
+  }),
+
+  /** A trade-off: more dashes, each shorter. */
+  featherstep: relic({
+    name: "Featherstep",
+    slot: "dash",
+    element: null,
+    about: "Many short dashes.",
+    tiers: {
+      1: { adds: "One dash more, each 25% shorter.", passives: [trait({ dashCharges: 1, dashDistance: 0.75 })] },
+      2: { adds: "Dashes come back 10% faster.", passives: [trait({ dashCharges: 1, dashDistance: 0.75 }), trait({ dashCooldown: 0.9 })] },
+      3: { adds: "A perfect dodge sends out a ring where she stood, throwing enemies back.", passives: [trait({ dashCharges: 1, dashDistance: 0.75 }), trait({ dashCooldown: 0.9 }), on(perfectDodge(), cast(ring(), "there"))] }
+    }
+  }),
+  /** A trade-off: she stands her ground, and dashes less often. */
+  anchor: relic({
+    name: "Anchor",
+    slot: "dash",
+    element: null,
+    about: "Standing your ground.",
+    tiers: {
+      1: { adds: "She is 80% heavier (pushed less far); dashes come back 30% slower.", passives: [trait({ weight: 1.8, dashCooldown: 1.3 })] },
+      2: { adds: "Blows on her deal 10% less.", passives: [trait({ weight: 1.8, dashCooldown: 1.3 }), damageTaken(-10)] },
+      3: {
+        adds: "A perfect dodge stamps the ground where she stood, throwing enemies far back.",
+        passives: [trait({ weight: 1.8, dashCooldown: 1.3 }), damageTaken(-10), on(perfectDodge(), cast(ring({ radius: 140, power: 8, knockback: 900 }), "there"))]
+      }
     }
   }),
 
@@ -242,6 +316,33 @@ export const relics = {
         passives: [on(breaking(), cast({ ...rise, rocks: 3, radius: 160 }, "there")), on(kill("cracked"), cast(ring({ radius: 120, power: 5, element: "rock", knockback: 300 }), "there"), 0.5)]
       }
     }
+  }),
+
+  // ── Survival: staying up (healing is this slot's alone) ─────────────────
+
+  /** Once a run, a blow that would fell her leaves her standing. */
+  secondWind: relic({
+    name: "Second Wind",
+    slot: "survival",
+    element: null,
+    about: "One more chance.",
+    tiers: {
+      1: { adds: "Once a run, a blow that would fell her leaves her at 20% health, untouchable a moment.", passives: [secondWind(20)] },
+      2: { adds: "A perfect dodge heals 2%, at most once every 3 seconds.", passives: [secondWind(20), on(perfectDodge(), heal(2), 3)] },
+      3: { adds: "The second wind leaves her at 40% health.", passives: [secondWind(20), on(perfectDodge(), heal(2), 3), secondWind(40)] }
+    }
+  }),
+  /** Healing by playing well: perfect dodges, then kills. */
+  mendingStep: relic({
+    name: "Mending Step",
+    slot: "survival",
+    element: null,
+    about: "Healing by dodging well.",
+    tiers: {
+      1: { adds: "A perfect dodge heals 3%, at most once every 2 seconds.", passives: [on(perfectDodge(), heal(3), 2)] },
+      2: { adds: "A kill heals 1%, at most once a second.", passives: [on(perfectDodge(), heal(3), 2), on(kill(), heal(1), 1)] },
+      3: { adds: "A perfect dodge heals 2% more.", passives: [on(perfectDodge(), heal(3), 2), on(kill(), heal(1), 1), on(perfectDodge(), heal(2), 2)] }
+    }
   })
 } satisfies { readonly [id: string]: RelicSpec }
 
@@ -258,13 +359,16 @@ export interface EquippedRelic {
 
 /**
  * The budget every relic keeps to at every tier (see docs/relics.md): a
- * relic changes what happens, barely how much. `damageBonus`: the most its
- * damage bonuses add up to; `power`: the most any effect it sets off deals
- * (percent of ATK); `every`: the least time between two effects set off by
- * something she does often (a kill, a move, a dash), so nothing fires
- * every blow.
+ * relic changes what happens, barely how much. `worth`: the most a tier is
+ * worth (`relicWorth`: its damage bonuses by how often they hold, less what
+ * its costs take, and its trait changes), so a trade-off may give more
+ * because it costs something; `damageBonus`: the most its bonuses add up to
+ * all the same; `power`: the most any effect it sets off deals (percent of
+ * ATK); `every`: the least time between two effects set off by something she
+ * does often (a kill, a move, a dash), so nothing fires every blow; `heal`:
+ * the most a heal gives (percent of her health), the Survival slot's.
  */
-export const relicBudget = { damageBonus: 30, power: 12, every: 0.5 } as const
+export const relicBudget = { worth: 20, damageBonus: 40, power: 12, every: 0.5, heal: 5 } as const
 
 /**
  * How relics are had (see docs/relics.md): they open with the Spirit Call
@@ -282,7 +386,7 @@ export interface RelicRules {
 
 export const relicRules: RelicRules = {
   opensAfter: "packLeader",
-  survivalOpensAfter: null,
+  survivalOpensAfter: "bruteKing",
   prices: { 2: 150, 3: 300 },
   dustPerDuplicate: 50
 }

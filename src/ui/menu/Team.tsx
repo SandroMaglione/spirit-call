@@ -6,7 +6,7 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, owns, playLock } from "../../account/account.ts"
+import { characterLevel, owns, playLock, slotOpen } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { relicOf, relicSlots } from "../../content/relics.ts"
@@ -50,7 +50,7 @@ export const Team = ({ store, nav, draft, play, enter }: {
           <button type="button" class="lineup__aspect" aria-label={`Gear of ${tuning.characters[member].name}: ${aspectName(member)}`} onClick={() => nav.go({ kind: "gear", character: member, tab: "aspect" })}>
             <AbilityIcon kind={tuning.characters[member].class} />{aspectName(member)}
             {/* Her relics, slot by slot: a charm each (dim when empty). */}
-            <span class="lineup__relics">{relicSlots.filter((slot) => slot !== "survival").map((slot) => {
+            <span class="lineup__relics">{relicSlots.filter((slot) => slot !== "survival" || slotOpen(tuning, account, slot)).map((slot) => {
               const id = relics[member]?.[slot]
               return <span key={slot} class="lineup__relic" data-empty={id === undefined ? "" : undefined} title={id === undefined ? `${slot}: empty` : relicOf(tuning.relics, id).name}><RelicIcon slot={slot} element={slot === "element" ? elementOf(tuning, member) : null} /></span>
             })}</span>

@@ -12,10 +12,10 @@ import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import { view } from "../config/view.ts"
-import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, BasicAttack } from "../schema.ts"
+import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Passives, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, BasicAttack } from "../schema.ts"
 import type { SkillsValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
-import { dashOf } from "../features/build.ts"
+import { dashOf, traitsIn } from "../features/build.ts"
 import { skillRecharge } from "../features/skills.ts"
 import { elementOf } from "../ui/draft.ts"
 import { setText } from "./draw.ts"
@@ -29,7 +29,7 @@ import { skillIcons, stateIcons, classIcons } from "./icons.ts"
 export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   queries: {
     player: Game.Query({
-      selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), basicAttack: Game.Query.read(BasicAttack), member: Game.Query.read(Member) },
+      selection: { dash: Game.Query.read(Dash), skills: Game.Query.read(Skills), energy: Game.Query.read(Energy), basicAttack: Game.Query.read(BasicAttack), member: Game.Query.read(Member), passives: Game.Query.optional(Passives) },
       with: [Player]
     })
   },
@@ -75,7 +75,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     attack: player === undefined ? 0 : recharge(player.data.basicAttack.get()),
     special: slots?.special.recharge ?? 0,
     // Ready while a charge is left; otherwise waiting for the next one.
-    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown / dashOf(tuning, player.data.member.get().character).cooldown,
+    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown / dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)).cooldown,
     ultimate: slots?.ultimate.recharge ?? 1
   }
   // Seconds left, on the buttons that wait for a cooldown (the ultimate waits for energy, the attack only a moment).

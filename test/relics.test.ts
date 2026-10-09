@@ -100,7 +100,7 @@ describe("the shipped relics", () => {
     const problems = validateContent(tuning)
     expect(problems).toContain("relic misnamed tier 1 passive 1: names an element (only an Element relic does; others carry hers, with castOwn)")
     expect(problems).toContain("relic healing tier 1 passive 1: heals (healing is the Survival slot's)")
-    expect(problems).toContain("relic strong tier 1: damage bonuses add up to 40% (at most 30%: a relic changes what happens, barely how much)")
+    expect(problems).toContain("relic strong tier 1: is worth 40.0% (at most 20%: a trade-off may give more by costing something)")
     expect(problems).toContain("relic strong tier 1 passive 2: sets off 30% ATK (at most 12%)")
     expect(problems).toContain("relic spammy tier 1 passive 1: goes off on something frequent, so at most every 0.5s (is 0s)")
     expect(problems).toContain("relic wrongState tier 1 passive 1: names another element than its own (fire)")

@@ -3,10 +3,10 @@
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Member, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, ElementState, Facing, Game, Invulnerable, Member, Passives, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { stateSpeed } from "./elements.ts"
 import { charging } from "./basic-attack.ts"
-import { attackOf, dashOf } from "./build.ts"
+import { attackOf, dashOf, traitsIn } from "./build.ts"
 
 /**
  * Turns controls into aim, facing, and velocity. She aims at the cursor
@@ -36,7 +36,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         state: Game.Query.read(ElementState),
         raising: Game.Query.optional(Raising),
         airborne: Game.Query.optional(Airborne),
-        member: Game.Query.read(Member)
+        member: Game.Query.read(Member),
+        passives: Game.Query.optional(Passives)
       },
       with: [Player]
     })
@@ -54,7 +55,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
   const dt = resources.time.get().dt
   for (const { data } of queries.player.each()) {
     // Her own dash (see `dashOf`): how many, how far, how soon back, how long untouchable.
-    const own = dashOf(tuning, data.member.get().character)
+    const own = dashOf(tuning, data.member.get().character, traitsIn(data.passives))
     const dashSpeed = own.distance / own.duration
     const position = data.position.get()
     const aim = normalizeOr(sub(controls.aimPoint, position), data.aim.get())

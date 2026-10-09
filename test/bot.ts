@@ -35,7 +35,7 @@ import { skillAim } from "../src/features/skills.ts"
 import { basicAttack } from "../src/content/aspects.ts"
 import type { AttackMove } from "../src/content/attacks.ts"
 import type { SkillEffect } from "../src/content/skills.ts"
-import { aspectFor, dashOf } from "../src/features/build.ts"
+import { aspectFor, dashOf, traitsIn } from "../src/features/build.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
@@ -66,6 +66,7 @@ import {
   Invulnerable,
   Player,
   Member,
+  Passives,
   Position,
   Projectile,
   RunScope,
@@ -123,7 +124,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
         state: Game.Query.read(ElementState),
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
-        member: Game.Query.read(Member)
+        member: Game.Query.read(Member),
+        passives: Game.Query.optional(Passives)
       },
       with: [Player]
     }),
@@ -232,8 +234,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       speed: player.data.stats.get().speed * stateSpeed(tuning, player.data.state.get()),
       dashReady: player.data.dash.get().charges > 0 && player.data.dash.get().remaining <= 0,
       charges: player.data.dash.get().charges,
-      maxCharges: dashOf(tuning, player.data.member.get().character).charges,
-      dash: dashOf(tuning, player.data.member.get().character),
+      maxCharges: dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)).charges,
+      dash: dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)),
       invulnerable: player.data.invulnerable.get().remaining
     },
     enemies: queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, at: data.position.get() })),

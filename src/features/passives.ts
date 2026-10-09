@@ -42,7 +42,7 @@ import {
   Tuning
 } from "../schema.ts"
 import type { MoveContext, TriggeredEffectsValue } from "../schema.ts"
-import { dashOf } from "./build.ts"
+import { dashOf, traitsIn } from "./build.ts"
 import { makeGround } from "./ground.ts"
 import { skillAim } from "./skills.ts"
 
@@ -75,7 +75,15 @@ export interface TargetFacts {
   readonly held: boolean
 }
 
-const holds = (condition: HitCondition, move: MoveContext | undefined, target: TargetFacts): boolean => {
+/** What a passive's condition may read of the wielder: her health (none known: whole). */
+export interface WielderFacts {
+  readonly current: number
+  readonly max: number
+}
+
+const whole: WielderFacts = { current: 1, max: 1 }
+
+const holds = (condition: HitCondition, move: MoveContext | undefined, target: TargetFacts, wielder: WielderFacts): boolean => {
   switch (condition.kind) {
     case "always":
       return true
@@ -89,6 +97,8 @@ const holds = (condition: HitCondition, move: MoveContext | undefined, target: T
       return condition.state === null ? target.state !== null : target.state === condition.state
     case "targetHeld":
       return target.held
+    case "wielderHealthBelow":
+      return wielder.current < wielder.max * condition.fraction
   }
 }
 
@@ -96,21 +106,30 @@ const holds = (condition: HitCondition, move: MoveContext | undefined, target: T
 export const damageBonusPercent = (
   passives: ReadonlyArray<Passive>,
   move: MoveContext | undefined,
-  target: TargetFacts
+  target: TargetFacts,
+  wielder: WielderFacts = whole
 ): number => {
   let percent = 0
   for (const passive of passives) {
-    if (passive.kind === "damageBonus" && holds(passive.when, move, target)) percent += passive.percent
+    if (passive.kind === "damageBonus" && holds(passive.when, move, target, wielder)) percent += passive.percent
   }
   return percent
 }
+
+/** How much more (percent, costs add up) blows on a wielder of `passives` deal: what her trade-offs cost. */
+export const damageTakenPercent = (passives: ReadonlyArray<Passive>): number =>
+  passives.reduce((sum, passive) => sum + (passive.kind === "damageTaken" ? passive.percent : 0), 0)
+
+/** The health a second wind leaves her at (percent of her maximum, the best of hers), or `null`: she has none. */
+export const secondWindPercent = (passives: ReadonlyArray<Passive>): number | null =>
+  passives.reduce<number | null>((best, passive) => passive.kind === "secondWind" ? Math.max(best ?? 0, passive.percent) : best, null)
 
 /** Whether a kill of a body that was in `state` meets the kill trigger's `wanted` state. */
 const killMatches = (wanted: StateId | "any" | null, state: StateId | null): boolean =>
   wanted === null ? true : wanted === "any" ? state !== null : state === wanted
 
 /** What can hold passives, looked up from a blow's source. */
-export const PassiveHolders = Game.Query({ selection: { position: Game.Query.read(Position), passives: Game.Query.read(Passives) } })
+export const PassiveHolders = Game.Query({ selection: { position: Game.Query.read(Position), passives: Game.Query.read(Passives), health: Game.Query.optional(Health) } })
 
 /**
  * Queues the effects passives set off this step: moves, dashes, and perfect
@@ -167,7 +186,7 @@ export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
 
 /** Who carries out a triggered effect: where they are, where they aim, their health, ATK, side, and (a team member) who she is. */
 /** A wielder's dashes (the one on the field), for a dash given back. */
-const Dashers = Game.Query({ selection: { position: Game.Query.read(Position), dash: Game.Query.write(Dash), member: Game.Query.read(Member) } })
+const Dashers = Game.Query({ selection: { position: Game.Query.read(Position), dash: Game.Query.write(Dash), member: Game.Query.read(Member), passives: Game.Query.optional(Passives) } })
 
 const Wielders = Game.Query({
   selection: {
@@ -213,7 +232,7 @@ export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects"
         const dasher = lookup.getHandle(holder, Dashers)
         if (!dasher.ok) break
         // A whole charge back; all of them back stops the wait for the next.
-        const most = dashOf(tuning, dasher.value.data.member.get().character).charges
+        const most = dashOf(tuning, dasher.value.data.member.get().character, traitsIn(dasher.value.data.passives)).charges
         dasher.value.data.dash.update((dash) => {
           const charges = Math.min(most, dash.charges + 1)
           return { ...dash, charges, cooldown: charges >= most ? 0 : dash.cooldown }

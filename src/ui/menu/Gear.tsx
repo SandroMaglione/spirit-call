@@ -121,7 +121,7 @@ const Relics = ({ store, actions, character, first, save }: { readonly store: Ui
         </button>
       })}</div>
       {options.length === 0
-        ? <p class="dim gear__empty">{slot.value === "survival" ? "Survival relics are to come." : "No relic for this slot yet."}</p>
+        ? <p class="dim gear__empty">No relic for this slot yet.</p>
         : <Cards>{options.map((id) => {
           const spec = relicOf(tuning.relics, id), at = relicTier(account, id)
           return <Card key={id} tint={spec.element ?? undefined} art={at === null ? <Icon name="lock" /> : <span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><TierMarks tier={at} /></span>}

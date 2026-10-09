@@ -183,7 +183,7 @@ describe("menu helpers", () => {
     expect(relicsFor(defaultTuning, "gunner", "element")).toEqual(["emberHeart"])
     expect(relicsFor(defaultTuning, "tidecaller", "element")).toEqual(["undertow"])
     expect(relicsFor(defaultTuning, "gunner", "dash").every((id) => defaultTuning.relics[id].slot === "dash")).toBe(true)
-    expect(relicsFor(defaultTuning, "gunner", "survival")).toEqual([])
+    expect(relicsFor(defaultTuning, "gunner", "survival")).toEqual(["secondWind", "mendingStep"])
   })
 
   it("offers a character only aspects of her class", () => {

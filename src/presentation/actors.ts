@@ -11,8 +11,8 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
-import { attackOf, dashOf } from "../features/build.ts"
-import { Action, Aim, Airborne, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { attackOf, dashOf, traitsIn } from "../features/build.ts"
+import { Action, Aim, Airborne, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -66,7 +66,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         state: Game.Query.read(ElementState),
         member: Game.Query.read(Member),
         velocity: Game.Query.read(Velocity),
-        airborne: Game.Query.optional(Airborne)
+        airborne: Game.Query.optional(Airborne),
+        passives: Game.Query.optional(Passives)
       },
       with: [Player]
     })
@@ -112,7 +113,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     // Dash charges around the feet: one arc each, lit while ready, the next one filling back up.
     const ring = radius + 6
     const startAngle = -Math.PI / 2
-    const own = dashOf(tuning, data.member.get().character)
+    const own = dashOf(tuning, data.member.get().character, traitsIn(data.passives))
     const each = (Math.PI * 2) / own.charges
     const gap = own.charges > 1 ? 0.18 : 0
     for (let charge = 0; charge < own.charges; charge++) {
