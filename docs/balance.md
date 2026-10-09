@@ -16,6 +16,7 @@ fell, with skills on seed 42 cleared; the Warlord's team with skills timed
 out instead of falling), and the rest changed in time and hits both ways.
 Read as the bot's noise, not a change in difficulty; the baseline is CI's
 own report of this change.
+
 ## The roles' own measures (2026-10-10)
 
 The roster (`docs/roster.md`) holds healers about equal by health restored
