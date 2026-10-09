@@ -29,6 +29,12 @@ export const banners = {
     name: "Ember & Storm",
     theme: "An attacker who rains fire, and a healer who calls lightning.",
     characters: ["gunner", "stormcaller"]
+  }),
+  /** The roster's second banner (see docs/roster.md); its guardian joins it with step 6. Pairings are revisited with the Call's pace. */
+  sparkAndFrost: banner({
+    name: "Spark & Frost",
+    theme: "An attacker who darts through a crowd in a flash.",
+    characters: ["sparkfist"]
   })
 }
 

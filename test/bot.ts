@@ -498,6 +498,7 @@ export const skillReach = (effect: SkillEffect): number => {
     case "nova":
     case "thunderclap":
     case "earthrise":
+    case "flurry":
       return effect.radius + more
     case "plunge":
       return effect.distance + effect.radius + more

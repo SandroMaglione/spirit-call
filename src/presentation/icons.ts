@@ -53,7 +53,11 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   // Spark Totem: a post with a spark over it.
   sparkTotem: icon(`<path d="M8 21h8M10 21V10h4v11M9 10l3-3.5L15 10"/><path d="M12 1.5l-1.5 2.5h3L12 6.5" />`),
   // Thunderclap: a bolt.
-  thunderclap: icon(`<path d="M13.5 2L4.5 13.5h6.5L9.5 22l9.5-12h-6.5z" fill="currentColor" fill-opacity="0.35"/>`)
+  thunderclap: icon(`<path d="M13.5 2L4.5 13.5h6.5L9.5 22l9.5-12h-6.5z" fill="currentColor" fill-opacity="0.35"/>`),
+  // Spark Step: a bolt darting forward, speed lines behind it.
+  sparkStep: icon(`<path d="M2 9h5M2 13h4M2 17h5"/><path d="M13 3l-4 9h5l-3 9 9-12h-5l3-6z" fill="currentColor" fill-opacity="0.35"/>`),
+  // Storm Flurry: a bolt hopping between three points.
+  stormFlurry: icon(`<circle cx="4.5" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19.5" cy="17" r="2"/><path d="M6 16l2.5-5h2l1-3M13.5 8l1.5 4h-2l4 3.5"/>`)
 }
 
 /** The state the one on the field is in, over her health bar. */

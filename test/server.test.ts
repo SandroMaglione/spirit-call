@@ -6,6 +6,7 @@ import * as Schema from "effect/Schema"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createAccount, recordRun, withEarnedChests } from "../src/account/account.ts"
+import { activeBanner } from "../src/account/calls.ts"
 import type { Account as AccountValue, Play } from "../src/account/account.ts"
 import { fromRecord, toRecord } from "../src/account/convert.ts"
 import { Account, Earned } from "../src/api/schemas.ts"
@@ -269,7 +270,8 @@ describe("accounts", () => {
     const handler = server({ devTools: true, secureCookies: true })
     const player = await signUp(handler)
     await player.send("POST", "/api/dev/open-calls")
-    const banner = Object.keys(defaultTuning.banners)[0]!
+    // The banner running now: the others cannot be called.
+    const banner = activeBanner(defaultTuning, Date.now()).banner
     const called = await player.send("POST", `/api/banners/${banner}/calls`, { count: 10 })
     expect(called.status).toBe(200)
     expect(called.body.results).toHaveLength(10)

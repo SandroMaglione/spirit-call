@@ -206,7 +206,9 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   swordsman: windSpirit,
   gunner: fireSpirit,
   tidecaller: waterSpirit,
-  stormcaller: thunderSpirit
+  stormcaller: thunderSpirit,
+  // A placeholder until her own spirit: the thunder spirit, turned an electric blue.
+  sparkfist: { ...thunderSpirit, moments: spiritMoments(4, "sparkStep", "stormFlurry"), tint: { hue: -80, saturation: 1.3, lightness: 1.05 } }
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({

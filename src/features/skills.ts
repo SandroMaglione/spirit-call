@@ -25,6 +25,8 @@ import { clampLength, normalizeOr, rotate, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
+  Body,
+  Zap,
   Aim,
   Airborne,
   Arrival,
@@ -102,6 +104,8 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "thunderclap":
     case "guard":
     case "earthrise":
+    // A flurry finds its targets: nothing to aim.
+    case "flurry":
       return { kind: "self" }
   }
 }
@@ -281,8 +285,9 @@ const Facers = Game.Query({ selection: { position: Game.Query.read(Position), fa
 /** Cuts: a lane toward the aim that hits everything along it once, shortened by walls. */
 export const CastCuts = Game.System("Shooter/CastCuts", {
   queries: { walls: Walls },
+  resources: { tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ queries, events, lookup, commands }) => {
+}, ({ queries, resources, events, lookup, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "cut") continue
@@ -308,6 +313,62 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     if (caster.ok) caster.value.data.aim.set(direction)
     const facer = lookup.getHandle(cast.caster, Facers)
     if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
+    // A dart: she is carried along it (a push, as a lunge is), as far as the cut reaches before a wall.
+    const carried = Math.min(effect.carries, Math.max(0, length - effect.width / 4))
+    const pushed = carried > 0 ? lookup.getHandle(cast.caster, Leapers) : undefined
+    if (pushed?.ok === true) {
+      const push = scale(direction, carried * resources.tuning.get().knockback.decay)
+      pushed.value.data.knockback.update((knockback) => ({ x: knockback.x + push.x, y: knockback.y + push.y }))
+    }
+  }
+})
+
+/** Bodies a flurry can strike, and where they stand. */
+const Flurried = Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) }, with: [Health] })
+const Landers = Game.Query({ selection: { position: Game.Query.write(Position), body: Game.Query.read(Body), facing: Game.Query.write(Facing) } })
+
+/**
+ * Flurries (see `FlurryEffect`): the nearest body of the other side within
+ * reach of the caster is struck, then the nearest not struck yet within a
+ * hop of the last, up to its strikes; thunder shows the path, and the
+ * caster lands beside the last one struck, on the side she came from.
+ */
+export const CastFlurries = Game.System("Shooter/CastFlurries", {
+  queries: { bodies: Flurried },
+  events: { cast: Game.System.readEvent(Cast), damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap) }
+}, ({ queries, events, lookup }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "flurry") continue
+    const candidates = queries.bodies.each().filter(({ data }) => data.hurtbox.get().faction !== cast.faction && !(data.invulnerable.present && data.invulnerable.get().remaining > 0))
+    const gap = (at: Vec2, body: (typeof candidates)[number]) => Math.hypot(body.data.position.get().x - at.x, body.data.position.get().y - at.y) - body.data.hurtbox.get().radius
+    const path: Array<Vec2> = [cast.from]
+    const struck: Array<(typeof candidates)[number]> = []
+    let at = cast.from
+    let reach = effect.radius
+    while (struck.length < effect.strikes) {
+      const from = at
+      const next = candidates
+        .filter((body) => !struck.includes(body) && gap(from, body) <= reach)
+        .sort((left, right) => gap(from, left) - gap(from, right))[0]
+      if (next === undefined) break
+      struck.push(next)
+      const there = next.data.position.get()
+      events.damage.emit({ target: Game.Entity.handle(next.entity.id, Health), faction: cast.faction, direction: normalizeOr(sub(there, from), cast.direction), blow: castBlow(cast, effect) })
+      path.push(there)
+      at = there
+      reach = effect.hop
+    }
+    const last = struck.at(-1)
+    if (last === undefined) continue
+    events.zap.emit({ path, heal: false })
+    const lander = lookup.getHandle(cast.caster, Landers)
+    if (!lander.ok) continue
+    const before = path.at(-2) ?? cast.from
+    const way = normalizeOr(sub(at, before), cast.direction)
+    const back = last.data.hurtbox.get().radius + lander.value.data.body.get().radius + 6
+    lander.value.data.position.set({ x: at.x - way.x * back, y: at.y - way.y * back })
+    lander.value.data.facing.set({ direction: way, hold: 0.3 })
   }
 })
 

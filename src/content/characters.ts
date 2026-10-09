@@ -205,6 +205,26 @@ export const characters = {
     impact: 1.25,
     weight: 1.4,
     skills: { special: "stoneRise", ultimate: "stoneGuard" }
+  }),
+  /**
+   * Thunder, Gauntlets, attacker (a working name): the fast one, very close,
+   * hard-hitting, light and frail. The Spark Step darts her through a line
+   * of enemies, charging them; the Storm Flurry hops her from one to the
+   * next. Her dash is a little slower than her quickness suggests: the
+   * Gauntlets' blows bring it back (see `Handling.dashFeed`).
+   */
+  sparkfist: character({
+    name: "Sparkfist",
+    stats: { hp: 68, atk: 121, def: 10, speed: 330 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "thunder",
+    class: "gauntlets",
+    role: "attacker",
+    dash: { distance: 150, cooldown: 1, invulnerability: 0.15 },
+    impact: 0.9,
+    weight: 0.8,
+    skills: { special: "sparkStep", ultimate: "stormFlurry" }
   })
 }
 

@@ -49,6 +49,8 @@ export interface CutEffect extends EffectBase {
   readonly active: number
   /** The mark it leaves on what it hits, or `null`. */
   readonly marks: MarkSpec | null
+  /** How far the caster darts along it as it goes (through enemies; walls stop her), 0: she stays. */
+  readonly carries: number
 }
 
 /**
@@ -248,7 +250,20 @@ export interface EarthriseEffect extends EffectBase {
   readonly breakFill: number
 }
 
-export type SkillEffect = CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+/**
+ * Lightning hopping between enemies: the nearest body of the other side
+ * within `radius` of the caster is struck, then the nearest not struck yet
+ * within `hop` of the last, up to `strikes` bodies, and the caster lands
+ * beside the last one struck (none in reach: she stays, striking nothing).
+ */
+export interface FlurryEffect extends EffectBase {
+  readonly kind: "flurry"
+  readonly radius: number
+  readonly strikes: number
+  readonly hop: number
+}
+
+export type SkillEffect = FlurryEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -270,7 +285,8 @@ export type SkillSlot = (typeof skillSlots)[number]
 export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in SkillSlot]: T } => ({ special: each("special"), ultimate: each("ultimate") })
 
 /** Effect builders, also used by passives that set off a skill effect. */
-export const cut = (spec: Omit<CutEffect, "kind" | "marks"> & Partial<Pick<CutEffect, "marks">>): CutEffect => ({ kind: "cut", marks: null, ...spec })
+export const cut = (spec: Omit<CutEffect, "kind" | "marks" | "carries"> & Partial<Pick<CutEffect, "marks" | "carries">>): CutEffect => ({ kind: "cut", marks: null, carries: 0, ...spec })
+export const flurry = (spec: Omit<FlurryEffect, "kind">): FlurryEffect => ({ kind: "flurry", ...spec })
 export const blast = (spec: Omit<BlastEffect, "kind">): BlastEffect => ({ kind: "blast", ...spec })
 export const plunge = (spec: Omit<PlungeEffect, "kind">): PlungeEffect => ({ kind: "plunge", ...spec })
 export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "leap", ...spec })
@@ -429,6 +445,29 @@ export const skills = {
       hitStop: 0.06,
       heavy: true
     })
+  }),
+  /**
+   * Sparkfist's special: she darts along her aim through enemies, striking
+   * each she passes with thunder (charging it), untouchable as she goes.
+   */
+  sparkStep: skill({
+    name: "Spark Step",
+    cooldown: 5,
+    energy: 0,
+    invulnerability: 0.3,
+    effect: cut({ length: 250, width: 90, active: 0.12, power: 24, element: "thunder", knockback: 260, hitStop: 0.05, heavy: false, leaves: null, carries: 220 })
+  }),
+  /**
+   * Sparkfist's ultimate: she turns to lightning and strikes up to six
+   * enemies in turn, nearest first, hopping from one to the next, and lands
+   * beside the last. No aim: it finds them.
+   */
+  stormFlurry: skill({
+    name: "Storm Flurry",
+    cooldown: 10,
+    energy: 90,
+    invulnerability: 0.8,
+    effect: flurry({ radius: 320, strikes: 6, hop: 240, power: 42, element: "thunder", knockback: 380, hitStop: 0.05, heavy: true })
   }),
   /**
    * Bastion's special (id `stoneRise`): three rocks erupt from the ground around her, under
