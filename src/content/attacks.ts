@@ -172,6 +172,10 @@ export interface BasicAttackSpec {
   readonly chain: { readonly range: number; readonly share: number } | null
   /** Its one elemental moment: the move whose blows carry the character's element (see `docs/aspects.md`); `null`: none. */
   readonly infuse: MoveFilter | null
+  /** Seconds a landed blow of the combo or the charged attack takes off her dash's recharge, once a move (its class's, see `Handling.dashFeed`). */
+  readonly dashFeed: number
+  /** Her dash strike keeps the combo's place (its class's, see `Handling.weave`). */
+  readonly weave: boolean
 }
 
 export const arc = (spec: Omit<Extract<MeleeMove, { shape: "arc" }>, "shape">): AttackMove => ({ shape: "arc", ...spec })

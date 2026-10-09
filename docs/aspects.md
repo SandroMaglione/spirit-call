@@ -30,18 +30,22 @@ mechanic names no element**: it plays the same in every element.
 | **Gun** | long | quick shots | a magazine: the charged attack spends what is left, then a reload |
 | **Disc** | middle | throws that come back | a disc hits on the way out and again on the way back |
 | **Staff** | middle to long | slower bolts | bolts pierce a line; the charged bolt goes through many |
+| **Gauntlets** | very close | fast strings built around the dash | a landed blow takes time off her dash's recharge (once a move, however many it hits), and her dash strike keeps the combo's place: dash out of a blow, dash back in, finish the string |
 
 A class handles the same for every character of it (how long a combo
 waits for the next press, how she slows while attacking, how long the
 charged attack holds), so knowing a class is knowing how a new character
 of it moves.
 
-Two classes come with the release roster (`roster.md`):
+One more comes with the release roster (`roster.md`):
 
 | Class | Range | Rhythm | Its own mechanic |
 |---|---|---|---|
-| **Gauntlets** | very close | fast strings built around the dash | a landed finisher brings her dash back sooner (a fixed amount, once a combo), and a dash cancels the combo's recovery; the dash strike stays everyone's |
 | **Hammer** | close, reaching to middle | slow, heavy swings | every swing sends a shockwave along the ground the way it swings, stopped by walls |
+
+(The roster first gave the Gauntlets "a dash cancels the combo's
+recovery": every class's dash already does, so the Gauntlets weave
+instead. Their dash strike stays everyone's.)
 
 Characters who share a class always differ in role (`roster.md`, "Three
 choices"): the Tidecaller and Bastion both throw discs, one to heal the
@@ -160,6 +164,18 @@ teammates' states count too.
 - **Whirlpool**: every disc hovers a moment at the end of its throw.
   Charged: a disc that hovers long and draws enemies in, carrying her
   element. Her finisher pushes back what is around her. Holds ground.
+
+### Gauntlets
+
+- **Jab** (plain): a jab, another, a cross, and an uppercut that pops
+  enemies away. Charged: a rushing straight. Dash strike: a straight.
+- **Flurry**: four quick light blows, then a heavier one carrying her
+  element. Charged: a spinning burst of blows all around her. More moves,
+  so it feeds the dash most often. For a crowd up close.
+- **Grapple**: two jabs, then a reaching grab that yanks what is in a line
+  ahead to her, carrying her element. Charged: a slam where she stands.
+  Dash strike: a grab that pulls in. Picks one enemy out of its group
+  (Gathering Edge draws a whole pack in instead).
 
 ### Staff
 

@@ -205,7 +205,8 @@
     "blade",
     "gun",
     "disc",
-    "staff"
+    "staff",
+    "gauntlets"
   ],
   "aspects": [
     "duelist",
@@ -215,7 +216,9 @@
     "gatheringEdge",
     "scattergun",
     "whirlpool",
-    "lightningRod"
+    "lightningRod",
+    "flurry",
+    "grapple"
   ],
   "relics": [
     "opportunist",

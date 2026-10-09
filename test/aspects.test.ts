@@ -47,7 +47,7 @@ const Soak = Game.System("Test/SoakAll", { queries: { enemies: Game.Query({ sele
   for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, atk: 0, nextTick: 0, charges: false } })
 })
 
-const context = (extra: Partial<MoveContext>): MoveContext => ({ step: 0, finisher: false, power: false, dash: false, counter: false, lastRound: false, ...extra })
+const context = (extra: Partial<MoveContext>): MoveContext => ({ step: 0, finisher: false, power: false, dash: false, counter: false, lastRound: false, serial: 0, ...extra })
 
 describe("the shipped aspects", () => {
   it("keep to their class, name no element, and deal about what their class's plain aspect deals", () => {

@@ -43,7 +43,7 @@ import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
 import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastPlunges, CastVortices, LandAirborne, ReleaseUltimates, UpdateLobbed, UpdateVortices, UseSkills } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
-import { UseBasicAttack } from "./features/basic-attack.ts"
+import { UseBasicAttack, FeedDash } from "./features/basic-attack.ts"
 import { DirectWaves } from "./features/waves.ts"
 import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema.ts"
 
@@ -176,6 +176,8 @@ const runOutcome = Game.Schedule.when(
   UpdateWards,
   // Blows on marked enemies heal the one on the field.
   MendFromMarks,
+  // Blows that feed the dash (the Gauntlets').
+  FeedDash,
   // The step's hits, perfect dodges, and breaks, counted for stars before a result is made; and the run's log.
   RecordTally,
   RecordRunLog,

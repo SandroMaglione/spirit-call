@@ -26,7 +26,9 @@ export const classIcons: { readonly [Class in ClassId]: string } = {
   // A ring with four blades.
   disc: icon(`<circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>`),
   // A staff and its orb.
-  staff: icon(`<path d="M5 21L15.5 8.5"/><circle cx="17.5" cy="6.5" r="3" fill="currentColor" fill-opacity="0.35"/><path d="M21 2l-1 1M14 3l1 1M21 10l-1-1"/>`)
+  staff: icon(`<path d="M5 21L15.5 8.5"/><circle cx="17.5" cy="6.5" r="3" fill="currentColor" fill-opacity="0.35"/><path d="M21 2l-1 1M14 3l1 1M21 10l-1-1"/>`),
+  // A fist: three knuckles over the palm.
+  gauntlets: icon(`<path d="M5 11h13a2.5 2.5 0 0 1 2.5 2.5V16a6 6 0 0 1-6 6H10a5 5 0 0 1-5-5z" fill="currentColor" fill-opacity="0.35"/><path d="M5 11V8a2 2 0 0 1 4 0v3M9 11V7a2 2 0 0 1 4 0v4M13 11V8a2 2 0 0 1 4 0v3M9 16h6"/>`)
 }
 
 /** The dash: speed lines into an arrow. */

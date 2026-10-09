@@ -229,6 +229,8 @@ export interface MoveContext {
   readonly counter: boolean
   /** The round that empties the magazine. */
   readonly lastRound: boolean
+  /** Which use of a move this is (the step it was used on): every blow of one move shares it. */
+  readonly serial: number
 }
 
 /** Who dealt a blow (so their passives apply), and with which move of their basic attack (none: a skill). */
@@ -414,6 +416,8 @@ export interface BasicAttackValue {
   readonly reloading: number
   /** Seconds since her last dash strike (one per dash, see `BasicAttackSpec.dash`). */
   readonly sinceDashStrike: number
+  /** The move (its `MoveContext.serial`) that last took time off her dash (once a move, see `BasicAttackSpec.dashFeed`); -1: none. */
+  readonly fed: number
 }
 export const BasicAttack = Descriptor.Component<BasicAttackValue>()("Shooter/BasicAttack")
 
