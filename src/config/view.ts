@@ -265,8 +265,13 @@ export const view = {
   },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6, ash: 0x3a3330 },
-  /** A marked enemy's ring (see `DrawMarks`): `gap` beyond its body, fading over the mark's last `fadeSeconds`. */
-  marks: { gap: 10, width: 3, fill: 0.12, outline: 0.8, fadeSeconds: 1 },
+  /**
+   * A marked enemy's rings (see `DrawMarks`): two bright outlines, `gap`
+   * beyond its body and `inner` within that, pulsing every `pulse` seconds
+   * and fading over the mark's last `fadeSeconds`. Unfilled and paler than
+   * water, so they read apart from a puddle under the same enemy.
+   */
+  marks: { color: 0xbfeeff, gap: 12, inner: 7, width: 3, outline: 0.95, pulse: 0.8, fadeSeconds: 1 },
   /**
    * Arena hazards as part of the floor (see `presentation/hazards.ts`): a
    * pool level with the floor's top (`level` world units over it), its flat

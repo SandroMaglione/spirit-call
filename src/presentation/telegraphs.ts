@@ -267,9 +267,10 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
 })
 
 /**
- * Marked enemies (see `Marked`): a ring of water on the floor around each,
- * fading as its mark runs out, so what heals when hit reads at a glance.
- * Drawn over the telegraphs (after `DrawTelegraphs` clears them).
+ * Marked enemies (see `Marked`): two pale rings on the floor around each,
+ * pulsing, and fading as its mark runs out, so what heals when hit reads at
+ * a glance (apart from the puddles the marking wave leaves). Drawn over the
+ * telegraphs (after `DrawTelegraphs` clears them).
  */
 export const DrawMarks = Game.System("Shooter/DrawMarks", {
   queries: {
@@ -283,8 +284,9 @@ export const DrawMarks = Game.System("Shooter/DrawMarks", {
     if (remaining <= 0) continue
     const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
     const fade = Math.min(1, remaining / view.marks.fadeSeconds)
+    const pulse = 0.75 + 0.25 * Math.sin((performance.now() / 1000 / view.marks.pulse) * Math.PI * 2)
     const radius = data.body.get().radius + view.marks.gap
-    g.fillCircle(at.x, at.y, radius, view.elements.water, view.marks.fill * fade)
-    g.strokeCircle(at.x, at.y, radius, view.marks.width, view.elements.water, view.marks.outline * fade)
+    g.strokeCircle(at.x, at.y, radius, view.marks.width, view.marks.color, view.marks.outline * fade * pulse)
+    g.strokeCircle(at.x, at.y, radius - view.marks.inner, view.marks.width - 1, view.marks.color, view.marks.outline * fade * pulse * 0.6)
   }
 })
