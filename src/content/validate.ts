@@ -687,7 +687,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       const budget = bodyRules.role[character.role] * bodyRules.range[tuning.classes[character.class].range]
       const score = bodyScore(character, tuning.combat.defenseScale)
       if (Math.abs(score / budget - 1) > bodyRules.tolerance) {
-        problems.push(`${where}: her body scores ${score.toFixed(3)}, off her budget ${budget.toFixed(3)} (a ${character.role} at ${tuning.classes[character.class].range} range) by more than ${bodyRules.tolerance * 100}%`)
+        problems.push(`${where}: her body scores ${score.toFixed(3)}, off her budget ${budget.toFixed(3)} (${character.role}, ${tuning.classes[character.class].range} range) by more than ${bodyRules.tolerance * 100}%`)
       }
     }
     if (!has(elements, character.element)) problems.push(`${where}: unknown element ${character.element}`)

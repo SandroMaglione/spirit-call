@@ -56,6 +56,7 @@ import {
   Game,
   Health,
   Heal,
+  Guarded,
   Hit,
   Stats,
   Elite,
@@ -562,6 +563,10 @@ export interface BotReport {
   readonly hits: number
   readonly damage: number
   readonly healing: number
+  /** Health restored, as a share of the team's whole health (a healer's measure, see docs/roster.md). */
+  readonly restored: number
+  /** Enemy blows stopped before they landed: stone plates shattered (a guardian's measure). */
+  readonly blocked: number
   /** What dodging needed: dashes used to dodge (not those closing in). */
   readonly dashes: number
   /** The share of the time something on screen would hit her if she stood still: how much of the run asks her to move. */
@@ -615,9 +620,11 @@ export const runBot = (run: BotRun): BotReport => {
   let dealtHits = 0
   let taken = 0
   let healing = 0
+  let blocked = 0
   const Measure = Game.System("Bot/Measure", {
-    events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal) }
+    events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal), guarded: Game.System.readEvent(Guarded) }
   }, ({ events }) => {
+    blocked += events.guarded.all().filter((guarded) => guarded.kind === "shattered").length
     for (const cast of events.cast.all()) {
       // A landing is part of a skill already used (see `Airborne`).
       if (cast.faction !== "player" || cast.skill === null || cast.landing === true) continue
@@ -662,6 +669,7 @@ export const runBot = (run: BotRun): BotReport => {
     hits: run.mortal === true ? dealtHits : hits, damage: Math.round(run.mortal === true ? taken : damage), dashes,
     pressure: pressed / Math.max(1, Math.round(elapsed / engine.stepSeconds)), clearedAt: outcome === "cleared" ? elapsed : null,
     endedAt: elapsed, outcome, kills, specials, ultimates, breaks, healing: Math.round(healing),
+    restored: healing / members.reduce((sum, member) => sum + member.health.max, 0), blocked,
     healthRemaining: members.reduce((sum, member) => sum + member.health.current, 0) / members.reduce((sum, member) => sum + member.health.max, 0),
     tally: sim.runtime.inspect(Tallied)
   })

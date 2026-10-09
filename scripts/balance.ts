@@ -29,7 +29,7 @@ if (values.matrix) {
   const quests = values.quest === undefined ? matrixQuests : values.quest.split(",") as Array<QuestId>
   for (const each of matrixCases(tuning, quests, seeds, seconds)) {
     const report = runBot(each.run)
-    rows.push({ build: each.build, character: each.character, profile: each.profile, quest: each.quest, seed: each.seed, outcome: report.outcome, seconds: Number((report.clearedAt ?? report.endedAt).toFixed(1)), hits: report.hits, healthRemaining: Number(report.healthRemaining.toFixed(2)) })
+    rows.push({ build: each.build, character: each.character, profile: each.profile, quest: each.quest, seed: each.seed, outcome: report.outcome, seconds: Number((report.clearedAt ?? report.endedAt).toFixed(1)), hits: report.hits, healthRemaining: Number(report.healthRemaining.toFixed(2)), restored: Number(report.restored.toFixed(3)), blocked: report.blocked })
   }
   console.log("Every character with every aspect of her class, alone, at the enemies' level.")
   console.log("time: beside the median build on the same quest and seed (1 the middle, lower is faster; a loss counts as the whole horizon).\n")
