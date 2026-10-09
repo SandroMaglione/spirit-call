@@ -1,7 +1,7 @@
 import { experienceTo } from "../src/account/progression.ts"
 import { describe, expect, it } from "vitest"
 
-import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, earnedResources, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold } from "../src/account/account.ts"
+import { accountLevel, buildOf, characterLevel, createAccount, discovered, earn, earnedResources, owns, encounterOf, groupStars, nextReset, playLock, questLock, recordRun, runPay, select, teamOf, tierRewardsAvailable, spend, train, trainingCost, unlock, withClearedRewards, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold, levelsUnder, underLevelWarning } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { rankGates } from "../src/content/ranks.ts"
 import type { ChestRef, Earned, Play } from "../src/account/account.ts"
@@ -398,9 +398,19 @@ describe("what a run earned, for the results", () => {
     expect(resources.slice(0, 3)).toEqual([
       { id: "crystals", total: 20 + 100 + (discovery.crystals ?? 0) + (chest.crystals ?? 0), fromChests: chest.crystals ?? 0 },
       { id: "gold", total: 400 + 300 + (discovery.gold ?? 0) + (chest.gold ?? 0), fromChests: chest.gold ?? 0 },
-      { id: "fireEssence", total: 2 + (chest.fireEssence ?? 0), fromChests: chest.fireEssence ?? 0 }
+      { id: "fireEssence", total: 2, fromChests: 0 }
     ])
-    // A chest also holds a little of every other element's material.
-    expect(resources.slice(3)).toEqual((["waterEssence", "windEssence", "thunderEssence", "rockEssence"] as const).map((id) => ({ id, total: chest[id] ?? 0, fromChests: chest[id] ?? 0 })))
+    // A chest holds only the material of its quests' elements: chapter one's is wind's.
+    expect(chest.fireEssence).toBeUndefined()
+    expect(resources.slice(3)).toEqual([{ id: "windEssence", total: chest.windEssence, fromChests: chest.windEssence }])
+  })
+})
+
+describe("the under-level warning", () => {
+  it("warns a party standing well under a run's enemies, by how far", () => {
+    const account = fresh()
+    expect(levelsUnder(defaultTuning, account, ["swordsman"], 1 + underLevelWarning - 1)).toBeNull()
+    expect(levelsUnder(defaultTuning, account, ["swordsman"], 1 + underLevelWarning)).toBe(underLevelWarning)
+    expect(levelsUnder(defaultTuning, account, ["swordsman"], 16)).toBe(15)
   })
 })

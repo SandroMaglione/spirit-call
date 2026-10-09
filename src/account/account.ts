@@ -316,6 +316,15 @@ export const characterLevel = (tuning: Tuning, account: Account, character: Char
 export const teamLevel = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>): number =>
   team.length === 0 ? 1 : Math.max(1, Math.round(team.reduce((sum, character) => sum + characterLevel(tuning, account, character).level, 0) / team.length))
 
+/** How many levels under a run's enemies a party is before the game warns it (see `levelGap`). */
+export const underLevelWarning = 3
+
+/** How many levels `team` (at `teamLevel`) stands under `enemyLevel`, when it is far enough to warn about; `null` otherwise. */
+export const levelsUnder = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, enemyLevel: number): number | null => {
+  const under = enemyLevel - teamLevel(tuning, account, team)
+  return under >= underLevelWarning ? under : null
+}
+
 /** `account` with `experience` added to `character` (when owned). */
 const addCharacterExperience = (account: Account, character: CharacterId, experience: number): Account => {
   const current = account.owned.characters[character]

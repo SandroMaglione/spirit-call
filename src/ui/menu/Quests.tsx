@@ -8,7 +8,7 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { chestRewards, chestsOpened, clearPay, encounterOf, groupStars, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
+import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, levelsUnder, materialPay, nextReset, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress, tierRewardsAvailable } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
 import type { QuestId, StarGroup } from "../../content/quests.ts"
 import { describeGoal } from "../../content/stars.ts"
@@ -240,6 +240,10 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
   const inspected = useSignal<EnemyKind | null>(null)
   const tuning = store.tuning.value, account = store.account.value, selected = play.value
   const lock = playLock(tuning, account, selected), encounter = encounterOf(tuning, selected), challenge = tuning.challenges[encounter.challenge]
+  // Levels matter (see `levelGap`): a party well under the enemies is told so, with the way to train its weakest.
+  const team = store.menuDraft.value.team
+  const under = lock === null ? levelsUnder(tuning, account, team, encounter.enemyLevel) : null
+  const weakest = [...team].sort((a, b) => characterLevel(tuning, account, a).level - characterLevel(tuning, account, b).level)[0]
   const done = cleared(store, selected)
   const element = selected.kind === "quest" ? tuning.quests[selected.quest].element : tuning.tracks[selected.track].element
   const trial = selected.kind === "tier" && tuning.tracks[selected.track].kind === "trial"
@@ -266,7 +270,8 @@ const Brief = ({ store, nav, play, now }: { readonly store: UiStore; readonly na
     title={selected.kind === "quest" ? tuning.quests[selected.quest].name : tuning.tracks[selected.track].name}
     subtitle={quest !== null && quest.introduces === null ? "Side quest · what you have met, mixed" : undefined}
     detail={steps.length > 1 ? describeObjective(challenge.objective, challenge.waves.scripted.length) : `${describeObjective(challenge.objective, challenge.waves.scripted.length)} · Lv ${encounter.enemyLevel}`}
-    note={lock === null ? undefined : describeLock(tuning, lock)} noteIcon="lock">
+    note={lock !== null ? describeLock(tuning, lock) : under !== null ? <>Your party is {under} levels under the enemies: they take less from it and hit harder.{weakest !== undefined && <button type="button" class="panel__link" onClick={() => nav.go({ kind: "character", character: weakest, tab: "overview" })}>Train</button>}</> : undefined}
+    noteIcon={lock !== null ? "lock" : "info"}>
     {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
     {quest !== null && rank > 1 && <RankTwist rank={rank} twist={encounter.twist} />}
     {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : "Tier"}>

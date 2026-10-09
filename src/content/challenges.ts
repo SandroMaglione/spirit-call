@@ -244,7 +244,7 @@ export const challenges = {
     ["swarmer", "shooter"]
   ]),
 
-  // Chapter 3: two characters, and whoever the Spirit Call brings.
+  // Chapter 3: two characters (the Tidecaller joins at its end; the Spirit Call's first character comes in chapter 5).
   /** Elites: bigger, tougher, and carrying fire or water. */
   ashfall: waves("Ashfall", "Eight waves in the citadel, led by elites of fire and water.", "citadel", [
     ["chaser", "chaser", "swarmer"],
@@ -253,8 +253,8 @@ export const challenges = {
     [elite("shooter", "water"), "chaser", "chaser"],
     ["swarmer", "swarmer", "guardian"],
     [elite("swarmer", "fire"), "shooter", "shooter"],
-    [elite("guardian", "water"), "chaser", "chaser", "swarmer"],
-    [elite("chaser", "fire"), elite("shooter", "water"), "guardian", "swarmer"]
+    [elite("guardian", "water"), "chaser", "swarmer"],
+    [elite("chaser", "fire"), elite("shooter", "water"), "guardian"]
   ]),
   /** Snipers from afar: walls stop their shots. */
   outposts: waves("Outposts", "Eight waves of snipers keeping far away, with shooters and packs between them.", "monastery", [
@@ -263,9 +263,9 @@ export const challenges = {
     ["sniper", "guardian", "chaser"],
     ["sniper", "shooter", "swarmer"],
     [elite("shooter", "water"), "sniper", "chaser"],
-    ["sniper", "sniper", "guardian", "swarmer"],
+    ["sniper", "sniper", "guardian"],
     [elite("chaser", "fire"), "sniper", "shooter", "swarmer"],
-    [elite("sniper", "water"), "sniper", "shooter", "guardian", "chaser"]
+    [elite("sniper", "water"), "sniper", "shooter", "guardian"]
   ]),
   /** Brutes: slow, heavy, best broken before they fall. */
   brute: waves("The Brute", "Eight waves with brutes among them: break them, then punish them.", "courtyard", [
@@ -275,7 +275,7 @@ export const challenges = {
     ["brute", "sniper", "chaser"],
     [elite("chaser", "fire"), "swarmer", "shooter"],
     ["brute", "guardian", "swarmer"],
-    [elite("guardian", "water"), "sniper", "chaser", "chaser"],
+    [elite("guardian", "water"), "sniper", "chaser"],
     [elite("brute", "fire"), "brute", "shooter", "swarmer"]
   ]),
   /**

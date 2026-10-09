@@ -25,8 +25,9 @@ brought up to it, with enemies at most `aheadOfLine` (4) levels above it.
 
 The main line is written for the team a new account has by then: chapter 1
 for the Swordsman alone (three quests, so the second character comes
-soon), then a character more at the end of chapters 1 and 3, and whoever
-the Spirit Call brings from the end of chapter 1. Each chapter ends with a
+soon), then a character more at the end of chapters 1 and 3; the Spirit
+Call (open from the end of chapter 1) brings its first character around
+chapter 5 (see `calls.md`), so chapter 3 is written for two. Each chapter ends with a
 champion, a different kind each time, and unlocks one thing at most: a
 character at the end of chapters 1 and 3, an aspect at the end of 2, 4,
 and 6. Relics are smaller: the first comes with chapter 2's first quest
@@ -37,7 +38,7 @@ and 6. Relics are smaller: the first comes with chapter 2's first quest
 |---|---|---|---|---|
 | 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Gunner; the Spirit Call opens |
 | 2 · Embers | + Gunner | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist) |
-| 3 · Gathering Storm | 2 + calls | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | the Tidecaller |
+| 3 · Gathering Storm | 2 | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | the Tidecaller |
 | 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Marksman) |
 | 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | |
 | 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | an aspect (Riptide) |
@@ -102,7 +103,9 @@ is a new tally: one system that counts it in the run, and an entry here.
 **Chests.** Stars open chests, **one every 3 stars** in every group: a
 chapter's (3, 6, 9, and 12 in a chapter of four quests, its rewards spread
 evenly over them), and the side quests' (3 to 21). Chests give crystals,
-gold, and materials: the milestone rewards that pay for playing well. The
+gold, and the material of their quests' elements (a chapter's, or the side
+quests'): the milestone rewards that pay for playing well. Other elements'
+material comes from their own quests and trials, where it is farmed. The
 side quests' chests also hold **dust** (see `relics.md`), with a little
 less gold: dust comes from off the main line. The side quests' chests came
 every 6 stars before; they hold the same in all, and an account that had

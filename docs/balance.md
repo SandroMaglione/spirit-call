@@ -5,6 +5,18 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Gold, materials, and chapter 3 for two (2026-10-09)
+
+With the Spirit Call's first character moved to chapter 5, chapter 3 is
+played by two (the Tidecaller joins at its end): its late waves lost an
+enemy or two, the Brute King's health went to 0.65 of its kind's, and its
+health goals became hit budgets. The skilled bot clears all four on both
+seeds; the learning bot still loses the Brute King. Chests now hold only
+their quests' elements' material, so trials are where other elements are
+farmed (`pnpm progression` still finds no member waiting at a step without
+its trial). The quest card warns a party 3 or more levels under the
+enemies, with a way to train its weakest.
+
 ## Stars as goals (2026-10-09)
 
 Stars became three goals on top of the clear (see `docs/quests.md`), from

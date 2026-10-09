@@ -115,7 +115,7 @@ export const championMovesets: Partial<Record<EnemyKind, ChampionMoveset>> = {
    * again, its shockwaves come in pairs, and it calls more help.
    */
   brute: {
-    health: 1,
+    health: 0.65,
     phases: [{ below: 0.6, rest: 0.85 }, { below: 0.25, rest: 0.7 }],
     attacks: [
       // Its strings. A blow in the middle of one recovers quickly; the last, slowly: the opening.
