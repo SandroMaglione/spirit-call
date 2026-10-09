@@ -27,7 +27,7 @@ import { meets, tallies, tallyMeeting, worstClear } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
 import { basicAttack } from "./aspects.ts"
 import type { AspectSpec } from "./aspects.ts"
-import { isMelee } from "./attacks.ts"
+import { dashStrikePower, hitsOf, isMelee } from "./attacks.ts"
 import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
 import { enemies, followUpsOf } from "./enemies.ts"
@@ -384,7 +384,6 @@ const checkAmounts = (problems: Array<string>, where: string, tuning: Tuning, am
 const aspectBudget = 0.25
 
 /** The blows a move lands on one target: a shot's projectiles, a disc's (out and back). */
-const hitsOf = (move: AttackMove): number => (isMelee(move) || move.shape === "lob" ? 1 : move.shape === "disc" ? move.count * 2 : move.count)
 
 /**
  * Damage a second of `attack`'s combo, pressed in rhythm against one target
@@ -415,6 +414,7 @@ const checkMoves = (problems: Array<string>, where: string, spec: ClassSpec, mov
     if (!spec.shapes.includes(move.shape)) problems.push(`${where} ${name}: a ${move.shape} is not a ${spec.name} move (${spec.shapes.join(", ")})`)
     if ((move.shape === "lob" && move.element !== null) || (move.shape === "lob" && move.leaves !== null)) problems.push(`${where} ${name}: names an element (an aspect gives one moment to her element instead)`)
   }
+  if (moves.dash.power * hitsOf(moves.dash) !== dashStrikePower) problems.push(`${where} dash strike: deals ${moves.dash.power * hitsOf(moves.dash)}% ATK to one target, every dash strike deals ${dashStrikePower}%`)
   if (moves.charged !== null) positive(problems, `${where} charged attack`, { chargeTime: moves.charged.chargeTime })
   if (spec.magazine !== (moves.magazine !== null)) problems.push(`${where}: ${spec.magazine ? "needs" : "has no"} magazine (${spec.name})`)
   if (moves.magazine !== null) {

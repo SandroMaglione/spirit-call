@@ -159,11 +159,7 @@ const Skills = ({ store, character }: { readonly store: UiStore; readonly charac
           {element !== null && <Fact label="Element" value={<Icon name={element} />} />}
         </div>
       </> }
-    }),
-    { name: "Dash strike", slot: "Attack after a dash", icon: <AbilityIcon kind="dash" />, body: <>
-      <p>Attack during a dash, or just after it: once per dash, and it cuts a move's recovery short.</p>
-      <div><Fact label="Damage" value={`${attack.dash.power}% ATK`} /></div>
-    </> }
+    })
   ]
   const move = moves[Math.min(selected.value, moves.length - 1)]!
   return <>

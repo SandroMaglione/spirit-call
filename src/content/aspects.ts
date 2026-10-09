@@ -67,7 +67,7 @@ export const aspects = {
     ],
     charged: { chargeTime: 0.5, move: thrust({ reach: 260, width: 70, power: 60, knockback: 1000, recovery: 0.5, hitStop: 0.14, heavy: true, lunge: 160 }) },
     /** A heavy lunge out of the dash: the counter. */
-    dash: thrust({ reach: 185, width: 64, power: 28, knockback: 620, recovery: 0.3, hitStop: 0.1, heavy: true, lunge: 90 }),
+    dash: thrust({ reach: 185, width: 64, power: 10, knockback: 620, recovery: 0.3, hitStop: 0.1, heavy: true, lunge: 90 }),
     magazine: null,
     chain: null,
     effects: [],
@@ -88,7 +88,7 @@ export const aspects = {
     ],
     charged: { chargeTime: 0.7, move: shot({ count: 1, spreadDegrees: 0, speed: 1900, radius: 9, range: 900, pierce: 12, power: 70, knockback: 520, recovery: 0.5, hitStop: 0.1, heavy: true, lunge: -20 }) },
     /** A piercing shot out of the dash. */
-    dash: shot({ count: 1, spreadDegrees: 0, speed: 1500, radius: 7, range: 700, pierce: 2, power: 26, knockback: 300, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: -10 }),
+    dash: shot({ count: 1, spreadDegrees: 0, speed: 1500, radius: 7, range: 700, pierce: 2, power: 10, knockback: 300, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: -10 }),
     magazine: { rounds: 3, reload: 1.1 },
     chain: null,
     effects: [],
@@ -110,7 +110,7 @@ export const aspects = {
       disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 380, hover: 0, hoverTick: 0, bounces: 2, power: 7, knockback: 420, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
     ],
     charged: { chargeTime: 0.6, move: disc({ count: 1, spreadDegrees: 0, speed: 1100, radius: 22, range: 340, hover: 1.2, hoverTick: 0.2, power: 7, knockback: 30, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 }) },
-    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, bounces: 2, power: 11, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
+    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0, hoverTick: 0, bounces: 2, power: 5, knockback: 320, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
     magazine: null,
     chain: null,
     effects: [],
@@ -132,7 +132,7 @@ export const aspects = {
       shot({ count: 2, spreadDegrees: 14, speed: 860, radius: 7, range: 520, pierce: 1, power: 11, knockback: 300, recovery: 0.32, hitStop: 0.045, heavy: false, lunge: -6 })
     ],
     charged: { chargeTime: 0.6, move: shot({ count: 1, spreadDegrees: 0, speed: 560, radius: 13, range: 640, pierce: 6, power: 32, knockback: 420, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 }) },
-    dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 18, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
+    dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 10, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
     magazine: null,
     chain: { range: 150, share: 0.6 },
     effects: [],
@@ -156,7 +156,7 @@ export const aspects = {
     ],
     charged: { chargeTime: 0.6, move: arc({ reach: 175, arcDegrees: 240, power: 52, knockback: -380, recovery: 0.5, hitStop: 0.12, heavy: true, lunge: 20 }) },
     /** A wide slash out of the dash. */
-    dash: arc({ reach: 130, arcDegrees: 160, power: 22, knockback: 450, recovery: 0.28, hitStop: 0.07, heavy: false, lunge: 60 }),
+    dash: arc({ reach: 130, arcDegrees: 160, power: 10, knockback: 450, recovery: 0.28, hitStop: 0.07, heavy: false, lunge: 60 }),
     magazine: null,
     chain: null,
     effects: [],
@@ -179,7 +179,7 @@ export const aspects = {
     ],
     charged: { chargeTime: 0.55, move: shot({ count: 9, spreadDegrees: 60, speed: 950, radius: 6, range: 220, pierce: 0, power: 6, knockback: 900, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 }) },
     /** A spread out of the dash. */
-    dash: shot({ count: 5, spreadDegrees: 40, speed: 900, radius: 5, range: 280, pierce: 0, power: 6, knockback: 420, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: -10 }),
+    dash: shot({ count: 5, spreadDegrees: 40, speed: 900, radius: 5, range: 280, pierce: 0, power: 2, knockback: 420, recovery: 0.3, hitStop: 0.04, heavy: false, lunge: -10 }),
     magazine: { rounds: 4, reload: 1.2 },
     chain: null,
     effects: [],
@@ -201,7 +201,7 @@ export const aspects = {
       disc({ count: 2, spreadDegrees: 26, speed: 1300, radius: 15, range: 360, hover: 0.3, hoverTick: 0.15, power: 7, knockback: 220, recovery: 0.38, hitStop: 0.05, heavy: false, lunge: -6 })
     ],
     charged: { chargeTime: 0.6, move: disc({ count: 1, spreadDegrees: 0, speed: 1050, radius: 26, range: 320, hover: 2, hoverTick: 0.25, power: 6, knockback: -140, recovery: 0.5, hitStop: 0.04, heavy: true, lunge: -12 }) },
-    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0.3, hoverTick: 0.15, power: 11, knockback: 220, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
+    dash: disc({ count: 1, spreadDegrees: 0, speed: 1150, radius: 16, range: 280, hover: 0.3, hoverTick: 0.15, power: 5, knockback: 220, recovery: 0.3, hitStop: 0.05, heavy: false, lunge: 0 }),
     magazine: null,
     chain: null,
     effects: [{ move: finisher(), own: false, effect: nova({ radius: 130, power: 8, element: null, knockback: 700, active: 0.08, clearsProjectiles: false, hitStop: 0.02, heavy: false }) }],
@@ -223,7 +223,7 @@ export const aspects = {
       shot({ count: 2, spreadDegrees: 14, speed: 860, radius: 7, range: 520, pierce: 1, power: 11, knockback: 300, recovery: 0.32, hitStop: 0.045, heavy: false, lunge: -6 })
     ],
     charged: { chargeTime: 0.6, move: shot({ count: 1, spreadDegrees: 0, speed: 560, radius: 13, range: 640, pierce: 6, power: 32, knockback: 420, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: -24 }) },
-    dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 18, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
+    dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 10, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
     magazine: null,
     chain: null,
     effects: [{ move: power(), own: true, effect: totem({ offset: 70, seconds: 3, tick: 0.5, radius: 150, heal: 0, jumps: 0, repel: 0, power: 10, element: null, knockback: 40, hitStop: 0, heavy: false }) }],

@@ -54,6 +54,15 @@ Lightning Rod's charged attack planting a rod). Every class has a **plain
 aspect**, the one every character of it fights with when nothing else is
 equipped: it is part of the class, not something to collect.
 
+**The dash strike's shape is the aspect's, its damage everyone's.** An
+attack during a dash (or just after it) is the aspect's own move (a lunge,
+a spread, a bolt), but every dash strike deals one target the same
+`dashStrikePower` (10% ATK, about one combo hit, split among a spread's
+shots; a disc hits going and coming back), held by `validateContent`: it is
+worth the recovery it cuts short, not its damage, so dashing to attack never
+beats the combo. It is a rule of dashing, not a skill: the character screen
+does not list it.
+
 **An aspect is a pattern, never a bonus.** It has no passive: more damage
 to enemies in a state, a counter that hits harder, a dash back on a kill
 are relics' (see `relics.md`), chosen apart from the aspect. So an aspect
