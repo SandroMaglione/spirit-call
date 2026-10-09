@@ -53,7 +53,7 @@ const Attributes = ({ store, actions, character }: { readonly store: UiStore; re
   return <>
     <section class="character__side in-right">
       <h1>{spec.name}</h1>
-      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name} · {classSpec.range} range</span></div>
+      <div class="character__level">{owned ? <>Level {progress.level} <small>/ {cap}</small></> : <><Icon name="lock" /> Locked</>}<span class="character__class"><AbilityIcon kind={spec.class} />{classSpec.name}</span></div>
       {owned && <Bar value={progress.level / maxLevel} label="Level" />}
       <div class="character__stats" aria-label="Attributes">{statOrder.map((stat) => <Fact key={stat} icon={statIcons[stat]} label={statLabels[stat]} gain={owned && cost !== null && next[stat] > now[stat] ? `+${Math.round(next[stat] - now[stat])}` : undefined} value={Math.round(now[stat])} />)}</div>
       <p class="dim">{owned ? classSpec.description : sourceNote(store, { kind: "character", id: character })}</p>
@@ -108,7 +108,7 @@ const GearSummary = ({ store, nav, character }: { readonly store: UiStore; reado
         {cosmeticKinds.map((kind) => {
           const id = worn[kind], name = id === undefined ? (kind === "tint" ? "Tint" : "Trail") : cosmeticOf(tuning.cosmetics, id).name
           return <Card key={kind} tint={spec.element} art={<Portrait of={id !== undefined ? { look: id } : kind === "tint" ? { character } : { trail: character }} />} foot={name} faded={id === undefined}
-            corner={id === undefined ? "plus" : "swap"} label={`${kind === "tint" ? "Tint" : "Trail"}: ${id === undefined ? "her own" : name}`} onClick={() => open("looks", kind)} />
+            corner={id === undefined ? "plus" : "swap"} label={`${kind === "tint" ? "Tint" : "Trail"}: ${id === undefined ? "default" : name}`} onClick={() => open("looks", kind)} />
         })}
       </div>
       <div class="gear-summary__row">{relicSlots.map((slot) => {
@@ -156,8 +156,7 @@ const Skills = ({ store, character }: { readonly store: UiStore; readonly charac
         <div>
           {skill.cooldown > 0 && <Fact label="Cooldown" value={`${skill.cooldown} s`} />}
           {skill.energy > 0 && <Fact label="Energy" value={skill.energy} />}
-          {element !== null && <Fact label="Leaves" value={<><Icon name={element} />{elements[element].state}</>} />}
-          {skill.invulnerability > 0 && <Fact label="As it goes off" value="Untouchable" />}
+          {element !== null && <Fact label="Element" value={<Icon name={element} />} />}
         </div>
       </> }
     }),

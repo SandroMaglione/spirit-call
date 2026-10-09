@@ -173,16 +173,16 @@ const Looks = ({ store, actions, character, first }: { readonly store: UiStore; 
   return <>
     <div class="gear__cards scroll in-left">
       <div class="gear__slots" role="tablist" aria-label="Kinds of look">{cosmeticKinds.map((each) => <button key={each} type="button" role="tab" class="gear__slot" aria-selected={each === kind.value} onClick={() => switchKind(each)}>
-        <span><b>{kindNames[each]}</b><small>{account.worn[character]?.[each] === undefined ? "Her own" : cosmeticOf(tuning.cosmetics, account.worn[character]![each]!).name}</small></span>
+        <span><b>{kindNames[each]}</b><small>{account.worn[character]?.[each] === undefined ? "Default" : cosmeticOf(tuning.cosmetics, account.worn[character]![each]!).name}</small></span>
       </button>)}</div>
       <Cards>{[null, ...options].map((id) => {
         const spec = id === null ? null : cosmeticOf(tuning.cosmetics, id)
         const owned = id === null || owns(account, { kind: "cosmetic", id })
-        return <Card key={id ?? "own"} art={<Portrait of={id !== null ? { look: id } : kind.value === "tint" ? { character } : { trail: character }} />} foot={spec?.name ?? "Her own"} label={spec?.name ?? "Her own look"}
+        return <Card key={id ?? "own"} art={<Portrait of={id !== null ? { look: id } : kind.value === "tint" ? { character } : { trail: character }} />} foot={spec?.name ?? "Default"} label={spec?.name ?? "Default look"}
           selected={id === picked.value} locked={!owned} mark={id === worn ? "tick" : undefined} onClick={() => choose(id)} />
       })}</Cards>
     </div>
-    <Panel class="gear__panel in-right" icon={<LookIcon kind={kind.value} />} title={look?.name ?? "Her own look"} detail={`${kindNames[kind.value]}${picked.value === worn ? " · Worn" : has && look !== null ? " · Yours" : ""}`}
+    <Panel class="gear__panel in-right" icon={<LookIcon kind={kind.value} />} title={look?.name ?? "Default"} detail={`${kindNames[kind.value]}${picked.value === worn ? " · Worn" : has && look !== null ? " · Yours" : ""}`}
       note={source?.text} noteIcon={source?.icon ?? "info"}>
       <p class="dim">{look?.about ?? (kind.value === "tint" ? "Her spirit in her element's own colors." : "What her spirit sheds as she moves, in her element's colors.")}</p>
       {!mine && <p class="dim">Hers to wear once she joins you.</p>}
@@ -192,7 +192,7 @@ const Looks = ({ store, actions, character, first }: { readonly store: UiStore; 
       {!has && price !== null && <Pill tone="dark" icon="plus" label={`Buy for ${price.dust} dust`} disabled={store.busy.value || !relicsOpen(tuning, account) || (account.wallet.dust ?? 0) < (price.dust ?? 0)} onClick={() => actions.buyCosmetic(picked.value!)}>
         <span class="call__button">Buy<small><Icon name="dust" />{price.dust}</small></span>
       </Pill>}
-      <Pill icon="check" disabled={!mine || !has || picked.value === worn || store.busy.value} onClick={() => actions.wear(character, kind.value, picked.value)}>{picked.value === null ? "Wear her own" : "Wear"}</Pill>
+      <Pill icon="check" disabled={!mine || !has || picked.value === worn || store.busy.value} onClick={() => actions.wear(character, kind.value, picked.value)}>{picked.value === null ? "Wear default" : "Wear"}</Pill>
     </Actions>
   </>
 }
