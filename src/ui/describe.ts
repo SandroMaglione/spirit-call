@@ -118,12 +118,14 @@ const elementWord = (element: ElementId | null): string => (element === null ? "
 
 /** What each element leaves on the ground. */
 const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire pool", water: "a puddle", wind: "a gust", thunder: "a charge", rock: "rubble" }
+/** The same, several of them. */
+const poolsNames: { readonly [Element in ElementId]: string } = { fire: "fire pools", water: "puddles", wind: "gusts", thunder: "charges", rock: "rubble" }
 
 /** A skill effect in a few words. */
 export const describeEffect = (effect: SkillEffect): string => {
   switch (effect.kind) {
     case "cut":
-      return `a ${elementWord(effect.element)}wave ahead of you (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
+      return `a ${elementWord(effect.element)}wave ahead of you (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolsNames[effect.leaves.element]}`}${effect.marks === null ? "" : `, marking what it hits for ${effect.marks.seconds}s: hitting a marked enemy heals you ${effect.marks.heal}% of max HP, at most every ${effect.marks.every}s`}`
     case "leap":
       return `a ${elementWord(effect.element)}burst around you (${effect.power}% ATK) as you leap back from where you face${effect.leaves === null ? "" : `, leaving ${poolNames[effect.leaves.element]} that burns you too`}`
     case "plunge":
@@ -133,7 +135,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "lob":
       return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":
-      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)`
+      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, healing the whole team ${effect.heals.base}% of max HP, ${effect.heals.perSoaked}% more for each soaked enemy it reaches (${effect.heals.most}% at most)`}`
     case "vortex":
       return `a ${elementWord(effect.element)}whirl${effect.maxRange > 0 ? "" : " at your feet"} that pulls enemies in for ${effect.seconds}s${effect.power > 0 ? ` (${effect.power}% ATK every ${effect.tick}s)` : ", hurting nobody"}`
     case "totem":
@@ -141,7 +143,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "thunderclap":
       return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
     case "barrage":
-      return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}s`}`
+      return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolsNames[effect.leaves.element]}`}`
     case "earthrise":
       return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them and filling their break bars`
     case "guard":

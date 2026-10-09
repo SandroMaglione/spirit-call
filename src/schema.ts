@@ -343,6 +343,17 @@ export interface PoiseValue {
 }
 export const Poise = Descriptor.Component<PoiseValue>()("Shooter/Poise")
 
+/**
+ * Marked for `remaining` seconds by a skill (the Tidal Wave's, see
+ * `MarkSpec`): a blow of the team on it heals the one on the field `heal`
+ * percent of her health, at most once every `every` seconds across the
+ * team (`Mending`). Every enemy has one (`remaining` 0: unmarked).
+ */
+export const Marked = Descriptor.Component<{ readonly remaining: number; readonly heal: number; readonly every: number }>()("Shooter/Marked")
+
+/** When (run seconds) a blow on a marked enemy may heal again: once every so often across the team, however many are marked (see `Marked`). */
+export const Mending = Descriptor.Resource<{ readonly ready: number }>()("Shooter/Mending")
+
 /** Stunned for `remaining` seconds: an enemy neither moves nor goes on with its attack. */
 export const Stunned = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Stunned")
 
@@ -1164,6 +1175,7 @@ export const Game = Schema.bind(
       Elite,
       Stunned,
       Disarmed,
+      Marked,
       Lobbed,
       Vortex,
       Totem,
@@ -1208,6 +1220,7 @@ export const Game = Schema.bind(
       Twist,
       TriggeredEffects,
       PassiveCooldowns,
+      Mending,
       Time,
       Keys,
       PointerState,

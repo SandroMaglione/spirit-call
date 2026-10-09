@@ -7,7 +7,7 @@ import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Burst, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Burst, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
@@ -263,5 +263,28 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const progress = 1 - pending.remaining / pending.duration
     g.strokeCircle(pending.at.x, pending.at.y, radius, 3, view.spawnWarning, 0.8)
     g.fillCircle(pending.at.x, pending.at.y, radius * progress, view.spawnWarning, 0.25)
+  }
+})
+
+/**
+ * Marked enemies (see `Marked`): a ring of water on the floor around each,
+ * fading as its mark runs out, so what heals when hit reads at a glance.
+ * Drawn over the telegraphs (after `DrawTelegraphs` clears them).
+ */
+export const DrawMarks = Game.System("Shooter/DrawMarks", {
+  queries: {
+    marked: Game.Query({ selection: { marked: Game.Query.read(Marked), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }, with: [Enemy] })
+  },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ queries, services }) => {
+  const g = services.host.telegraphs
+  for (const { data } of queries.marked.each()) {
+    const { remaining } = data.marked.get()
+    if (remaining <= 0) continue
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const fade = Math.min(1, remaining / view.marks.fadeSeconds)
+    const radius = data.body.get().radius + view.marks.gap
+    g.fillCircle(at.x, at.y, radius, view.elements.water, view.marks.fill * fade)
+    g.strokeCircle(at.x, at.y, radius, view.marks.width, view.elements.water, view.marks.outline * fade)
   }
 })

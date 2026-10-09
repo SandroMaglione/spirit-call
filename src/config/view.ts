@@ -265,6 +265,8 @@ export const view = {
   },
   /** Pools of elements on the floor: their fill and outline, a fire's hot core, and the fade as they run out. */
   pools: { fill: 0.24, outline: 0.55, fireCore: 0xffd166, fadeSeconds: 0.6, ash: 0x3a3330 },
+  /** A marked enemy's ring (see `DrawMarks`): `gap` beyond its body, fading over the mark's last `fadeSeconds`. */
+  marks: { gap: 10, width: 3, fill: 0.12, outline: 0.8, fadeSeconds: 1 },
   /**
    * Arena hazards as part of the floor (see `presentation/hazards.ts`): a
    * pool level with the floor's top (`level` world units over it), its flat
