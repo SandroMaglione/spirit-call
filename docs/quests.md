@@ -100,16 +100,18 @@ and all three met together by one run:
 A goal is a tally with a bound (`at least` or `at most`). A new kind of goal
 is a new tally: one system that counts it in the run, and an entry here.
 
-**Chests.** Stars open chests, **one every 3 stars** in every group: a
-chapter's (3, 6, 9, and 12 in a chapter of four quests, its rewards spread
-evenly over them), and the side quests' (3 to 21). Chests give crystals,
-gold, and the material of their quests' elements (a chapter's, or the side
-quests'): the milestone rewards that pay for playing well. Other elements'
-material comes from their own quests and trials, where it is farmed. The
-side quests' chests also hold **dust** (see `relics.md`), with a little
-less gold: dust comes from off the main line. The side quests' chests came
-every 6 stars before; they hold the same in all, and an account that had
-opened some counts two for each (migration 0006).
+**Chests.** Stars open chests: in a chapter **one every 3 stars** (3, 6,
+9, and 12 in a chapter of four quests, its rewards spread evenly over
+them), and in the side quests **one every 6** (6 to 24 for eight), so their
+row stays short as side quests are added; the last is the reward for every
+side quest at three stars. Chests give crystals, gold, and the material of
+their quests' elements (a chapter's, or the side quests'): the milestone
+rewards that pay for playing well. Other elements' material comes from
+their own quests and trials, where it is farmed. The side quests' chests
+also hold **dust** (see `relics.md`), with a little less gold: dust comes
+from off the main line. The side quests' chests came every 6 stars, then
+every 3, then every 6 again, holding the same in all; migrations 0006 and
+0007 kept each account's count in step, so none is paid twice.
 
 ## Ranks
 

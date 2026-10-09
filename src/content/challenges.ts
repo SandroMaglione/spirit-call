@@ -466,6 +466,17 @@ export const challenges = {
     [elite("guardian", "fire"), elite("shooter", "water"), "swarmer"],
     [elite("brute", "fire"), elite("guardian", "water"), elite("chaser", "fire")]
   ]),
+  /** Chapter 3's brutes back in the kilnworks, among its fire, with guardians, snipers, and elites. */
+  forgePit: waves("The Forge Pit", "Eight waves in the kilnworks: brutes and guardians among the fire, snipers behind them, elites of fire and water.", "kilnworks", [
+    ["brute", "chaser"],
+    ["guardian", "sniper", "swarmer"],
+    [elite("chaser", "fire"), "brute"],
+    ["sniper", "shooter", "chaser"],
+    [elite("guardian", "water"), "swarmer", "swarmer"],
+    ["brute", "shooter"],
+    [elite("sniper", "fire"), "guardian", "chaser"],
+    [elite("brute", "water"), "brute", "sniper"]
+  ]),
   /** Firebombers and shields in the flooded cistern. */
   floodgate: waves("Floodgate", "Eight waves in the cistern: firebombers, shields, and brutes wading in.", "cistern", [
     ["charger", "shooter", "chaser"],
