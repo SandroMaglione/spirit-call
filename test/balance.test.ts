@@ -49,7 +49,7 @@ describe("balance measurements", () => {
 
   it("flags easier and harder outcomes, excessive cadence changes, and missing cases", () => {
     const report = { hits: 0, damage: 0, healing: 0, dashes: 0, pressure: 0, clearedAt: 100, endedAt: 100, outcome: "cleared" as const,
-      kills: 30, specials: 10, ultimates: 3, breaks: 10, healthRemaining: 0.5, tally: noTally }
+      kills: 30, specials: 10, ultimates: 3, breaks: 10, restored: 0, blocked: 0, healthRemaining: 0.5, tally: noTally }
     const row: BalanceRow = { id: "quest/profile/7", quest: "theSwarm", profile: "swordsman-skills", seed: 7, report }
     expect(compareBalance([row], [row])).toEqual([])
     expect(compareBalance([row], [{ ...row, report: { ...report, endedAt: 60, ultimates: 10 } }])).toHaveLength(2)

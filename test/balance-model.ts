@@ -192,13 +192,22 @@ export interface MatrixRow {
   readonly seconds: number
   readonly hits: number
   readonly healthRemaining: number
+  /** Health restored over the run, as a share of her health (see `BotReport.restored`). */
+  readonly restored: number
+  /** Blows stopped before they landed (see `BotReport.blocked`). */
+  readonly blocked: number
 }
 
 /**
  * Each build (and each character, over her aspects) by profile: clears, its
  * time beside the median of every build on the same quest and seed (1: the
- * middle; a loss counts as the whole horizon), hits a run, and health left.
+ * middle; a loss counts as the whole horizon), hits a run, and health left;
+ * and the roles' own measures (docs/roster.md, "Support is set up"): health
+ * restored a minute, as a share of her health, and blows stopped a minute.
  */
+/** The minutes a group of runs lasted, each to its clear or its end. */
+const minutes = (group: ReadonlyArray<MatrixRow>): number => group.reduce((sum, row) => sum + row.seconds, 0) / 60
+
 export const matrixSummary = (rows: ReadonlyArray<MatrixRow>, horizon: number, by: "build" | "character") => {
   const median = new Map<string, number>()
   const key = (row: MatrixRow) => `${row.profile}/${row.quest}/${row.seed}`
@@ -215,7 +224,9 @@ export const matrixSummary = (rows: ReadonlyArray<MatrixRow>, horizon: number, b
       clears: `${group.filter((row) => row.outcome === "cleared").length}/${group.length}`,
       time: Number(Math.exp(relative.reduce((sum, value) => sum + Math.log(value), 0) / relative.length).toFixed(2)),
       hits: Number((group.reduce((sum, row) => sum + row.hits, 0) / group.length).toFixed(1)),
-      health: `${Math.round(group.reduce((sum, row) => sum + row.healthRemaining, 0) / group.length * 100)}%`
+      health: `${Math.round(group.reduce((sum, row) => sum + row.healthRemaining, 0) / group.length * 100)}%`,
+      healedPerMinute: `${Math.round(group.reduce((sum, row) => sum + row.restored, 0) / minutes(group) * 100)}%`,
+      blockedPerMinute: Number((group.reduce((sum, row) => sum + row.blocked, 0) / minutes(group)).toFixed(1))
     }
   })
 }
