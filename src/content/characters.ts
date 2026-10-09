@@ -159,15 +159,20 @@ export const characters = {
     weight: 0.8,
     skills: { special: "flareJump", ultimate: "barrage" }
   }),
-  /** Water, Disc, attacker: an agile skirmisher at middle range, quick and sharp; the Tidal Wave shoves and soaks, the Tide soaks everything around her. */
+  /**
+   * Water, Disc, healer: agile at middle range, her strength in her kit. Her
+   * healing asks for blows: the Tidal Wave marks what it hits, and hitting the
+   * marked heals whoever is on the field; the Tide heals the whole team, more
+   * for each enemy already soaked.
+   */
   tidecaller: character({
     name: "Tidecaller",
-    stats: { hp: 76, atk: 100, def: 12, speed: 310 },
+    stats: { hp: 74, atk: 88, def: 12, speed: 305 },
     radius: 16,
     hurtboxRadius: 11,
     element: "water",
     class: "disc",
-    role: "attacker",
+    role: "healer",
     dash: { charges: 3, distance: 140, cooldown: 1.2, invulnerability: 0.16 },
     impact: 0.9,
     weight: 0.85,

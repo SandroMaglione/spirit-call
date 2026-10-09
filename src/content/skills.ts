@@ -25,6 +25,19 @@ interface EffectBase {
   readonly heavy: boolean
 }
 
+/**
+ * A mark a skill leaves on the enemies it hits, for `seconds` (see
+ * `Marked`): a blow of the team on a marked enemy heals the one on the field
+ * `heal` percent of her health, at most once every `every` seconds across
+ * the team, however many are marked. Healing by hitting: it asks for blows
+ * on what she marked (docs/roster.md, "Support is set up").
+ */
+export interface MarkSpec {
+  readonly seconds: number
+  readonly heal: number
+  readonly every: number
+}
+
 /** A straight cut toward the aim that hits everything along it once, stops at walls, and turns the caster that way. */
 export interface CutEffect extends EffectBase {
   readonly kind: "cut"
@@ -34,6 +47,8 @@ export interface CutEffect extends EffectBase {
   readonly leaves: GroundSpec | null
   /** How long the cut's hitbox stays out (seconds). */
   readonly active: number
+  /** The mark it leaves on what it hits, or `null`. */
+  readonly marks: MarkSpec | null
 }
 
 /**
@@ -91,6 +106,18 @@ export interface LobEffect extends EffectBase {
   readonly leaves: GroundSpec | null
 }
 
+/**
+ * What a blast heals as it goes off: every member of the caster's team still
+ * standing (on the field or on the bench) heals `base` percent of her health,
+ * and `perSoaked` more for each enemy within its radius already soaked when
+ * it goes off, `most` at most. Soaking enemies first is its set-up.
+ */
+export interface SoakedHeal {
+  readonly base: number
+  readonly perSoaked: number
+  readonly most: number
+}
+
 /** A blast around the caster that knocks everything back. */
 export interface NovaEffect extends EffectBase {
   readonly kind: "nova"
@@ -99,6 +126,8 @@ export interface NovaEffect extends EffectBase {
   readonly active: number
   /** Destroy enemy projectiles inside the radius. */
   readonly clearsProjectiles: boolean
+  /** What it heals the team, or `null`. */
+  readonly heals: SoakedHeal | null
 }
 
 /**
@@ -241,12 +270,12 @@ export type SkillSlot = (typeof skillSlots)[number]
 export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in SkillSlot]: T } => ({ special: each("special"), ultimate: each("ultimate") })
 
 /** Effect builders, also used by passives that set off a skill effect. */
-export const cut = (spec: Omit<CutEffect, "kind">): CutEffect => ({ kind: "cut", ...spec })
+export const cut = (spec: Omit<CutEffect, "kind" | "marks"> & Partial<Pick<CutEffect, "marks">>): CutEffect => ({ kind: "cut", marks: null, ...spec })
 export const blast = (spec: Omit<BlastEffect, "kind">): BlastEffect => ({ kind: "blast", ...spec })
 export const plunge = (spec: Omit<PlungeEffect, "kind">): PlungeEffect => ({ kind: "plunge", ...spec })
 export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "leap", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
-export const nova = (spec: Omit<NovaEffect, "kind">): NovaEffect => ({ kind: "nova", ...spec })
+export const nova = (spec: Omit<NovaEffect, "kind" | "heals"> & Partial<Pick<NovaEffect, "heals">>): NovaEffect => ({ kind: "nova", heals: null, ...spec })
 export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
 export const totem = (spec: Omit<TotemEffect, "kind">): TotemEffect => ({ kind: "totem", ...spec })
@@ -286,15 +315,20 @@ export const skills = {
   }),
   /**
    * The Tidecaller's special: a wave rolling out ahead of her, soaking and
-   * shoving back everything in its way, and leaving puddles behind (that
-   * slow, and that her discs and thunder make the most of).
+   * shoving back everything in its way, leaving puddles behind, and marking
+   * what it hits: for a few seconds, blows on the marked heal whoever is on
+   * the field (her healing asks for hits on what she marked).
    */
   tidalWave: skill({
     name: "Tidal Wave",
     cooldown: 6,
     energy: 0,
     invulnerability: 0,
-    effect: cut({ length: 360, width: 150, active: 0.15, power: 22, element: "water", knockback: 900, hitStop: 0.04, heavy: false, leaves: { element: "water", radius: 60, seconds: 4 } })
+    effect: cut({
+      length: 360, width: 150, active: 0.15, power: 22, element: "water", knockback: 900, hitStop: 0.04, heavy: false,
+      leaves: { element: "water", radius: 60, seconds: 4 },
+      marks: { seconds: 5, heal: 2, every: 1 }
+    })
   }),
   /**
    * The Swordsman's ultimate: a cyclone whirling at her feet that pulls
@@ -331,13 +365,18 @@ export const skills = {
       leaves: { element: "fire", radius: 55, seconds: 3 }
     })
   }),
-  /** The Tidecaller's ultimate: a tide breaking out around her that soaks everything far around, drives it back, and washes away shots. */
+  /**
+   * The Tidecaller's ultimate: a tide breaking out around her that soaks
+   * everything far around, drives it back, and washes away shots, healing
+   * the whole team, the bench too: more for each enemy around already
+   * soaked (soak them first).
+   */
   tide: skill({
     name: "Tide",
     cooldown: 10,
     energy: 85,
     invulnerability: 0.5,
-    effect: nova({ radius: 280, power: 65, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
+    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { base: 4, perSoaked: 3, most: 16 } })
   }),
   /**
    * The Stormcaller's special: a totem planted at her feet that zaps

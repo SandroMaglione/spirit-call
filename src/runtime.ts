@@ -35,6 +35,7 @@ export const initialResources = (
   Twist: twist,
   TriggeredEffects: [],
   PassiveCooldowns: {},
+  Mending: { ready: 0 },
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),

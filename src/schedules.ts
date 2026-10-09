@@ -16,6 +16,7 @@ import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { CallSupport, LeavePools, PressChampions, ReleaseShockwaves } from "./features/patterns.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
+import { HealFromTides, MendFromMarks } from "./features/mending.ts"
 import { MoveDiscs } from "./features/discs.ts"
 import { ApplyStateBursts, ArcCharges, TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
@@ -109,6 +110,7 @@ const gameplay = Game.Schedule.when(
   CastLeaps,
   CastLobs,
   CastNovas,
+  HealFromTides,
   CastBarrages,
   CastVortices,
   CastTotems,
@@ -172,6 +174,8 @@ const runOutcome = Game.Schedule.when(
   // a warder's tether cut.
   ArmBursts,
   UpdateWards,
+  // Blows on marked enemies heal the one on the field.
+  MendFromMarks,
   // The step's hits, perfect dodges, and breaks, counted for stars before a result is made; and the run's log.
   RecordTally,
   RecordRunLog,

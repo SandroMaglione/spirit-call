@@ -5,7 +5,7 @@
  */
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
-import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -145,6 +145,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     teamSwitch: Game.System.writeResource(TeamSwitch),
     guard: Game.System.writeResource(Guard),
     passiveCooldowns: Game.System.writeResource(PassiveCooldowns),
+    mending: Game.System.writeResource(Mending),
     paused: Game.System.writeResource(Paused),
     practiceField: Game.System.writeResource(PracticeField)
   }
@@ -165,6 +166,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.teamSwitch.set({ cooldown: 0 })
   resources.guard.set(noGuard)
   resources.passiveCooldowns.set({})
+  resources.mending.set({ ready: 0 })
   resources.paused.set({ paused: false })
   resources.practiceField.set({ spots: [], turn: 0 })
 })
