@@ -5,6 +5,28 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The quest team: one of each role (2026-10-10)
+
+The quests now give the Tidecaller (a healer) at the end of chapter one and
+Bastion (a guardian) at the end of chapter three; the Gunner and the
+Stormcaller come from the Call. Quest materials, chests, and trials follow
+that team (water from chapter two, rock from the Brute King; trials open
+wind, water, rock, fire, thunder), and Whirlpool replaces Marksman as
+chapter four's aspect. Against main:
+
+| | Before | After |
+|---|---|---|
+| `pnpm expected` (the team a new account has), cleared on every seed | 140 of 152 | 142 of 152 |
+| `pnpm expected`, quest runs perfect on some seed | 83 of 93 | 93 of 93 |
+| `pnpm progression`, runs to the end of rank III | 372 | 368 |
+| `pnpm progression`, quests where the team stops to farm | 11 | 10 |
+| `pnpm calls`, first character from the Call | chapter 5 | chapter 5 |
+
+Every main quest is cleared on both seeds by the quest team, and nothing
+was lost on any seed; what is left are Until Fall's tiers running out of
+time. No ascension waits on a trial that is not open: the Brute King pays
+rock as Bastion arrives (as it paid water when it brought the Tidecaller).
+
 ## The Tidecaller as a healer (2026-10-10)
 
 The quest team's healer (`docs/roster.md`): her Tidal Wave marks what it
