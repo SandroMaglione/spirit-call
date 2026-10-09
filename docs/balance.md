@@ -5,6 +5,31 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The Gauntlets and Sparkfist (2026-10-10)
+
+The roster's fifth class and first new character (`docs/roster.md`).
+Sparkfist is a glass cannon up close (68 HP, 121 ATK, 330 speed, on a
+close attacker's budget of 1.05; her dashes come back in 1 s rather than
+the quick 0.8 s first sketched, paying for the Gauntlets' refunds). The
+matrix:
+
+| | Clears (skilled / learning) | Time (skilled) |
+|---|---|---|
+| Sparkfist | 45 / 10 of 48 | 0.66, the fastest |
+| Swordsman | 47 / 24 | 0.74 |
+| Gunner | 24 / 0 | 1.27 |
+| Tidecaller (healer) | 47 / 17 | 1.22 |
+
+Skilled, she clears the quickest of anyone; learning, she falls often, as
+the other frail bodies do (between the Gunner and the Tidecaller): her
+dashes, fed by her blows, are her defense, and the learning bot dodges
+poorly. Of her aspects, Grapple holds up best for the learning bot (6 of
+16, against 2 for Jab and Flurry). On paper her Spark Step dealt the most
+of any special per second of cooldown (24% ATK every 5 s), so it went to
+20%. For playtests: whether her frailty is fair for someone learning, as
+with the Gunner. CI's audit gains her energy cadence (a row per level and
+wave); its report is the baseline.
+
 ## The quest team: one of each role (2026-10-10)
 
 The quests now give the Tidecaller (a healer) at the end of chapter one and

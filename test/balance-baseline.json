@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "4ebd8e49c65870cadf94eb6f13da7bfa0568dcd340537bd5d8ce1e210c66fb14",
+  "tuningHash": "8012f5da817b082e56e6a01ca69d93deb98a534de3eb44d12b32741248a738c6",
   "stats": [
     {
       "level": 1,
@@ -392,6 +392,38 @@
       "targets": 6,
       "specials": 6,
       "ultimates": 2
+    },
+    {
+      "id": "sparkfist/1/1",
+      "character": "sparkfist",
+      "level": 1,
+      "targets": 1,
+      "specials": 10,
+      "ultimates": 3
+    },
+    {
+      "id": "sparkfist/1/6",
+      "character": "sparkfist",
+      "level": 1,
+      "targets": 6,
+      "specials": 10,
+      "ultimates": 4
+    },
+    {
+      "id": "sparkfist/40/1",
+      "character": "sparkfist",
+      "level": 40,
+      "targets": 1,
+      "specials": 10,
+      "ultimates": 3
+    },
+    {
+      "id": "sparkfist/40/6",
+      "character": "sparkfist",
+      "level": 40,
+      "targets": 6,
+      "specials": 10,
+      "ultimates": 4
     }
   ],
   "rows": [

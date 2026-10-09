@@ -5,7 +5,8 @@
     "tidecaller",
     "stormcaller",
     "stonekeeper",
-    "bastion"
+    "bastion",
+    "sparkfist"
   ],
   "weapons": [
     "trainingBlade",
@@ -32,7 +33,9 @@
     "flareJump",
     "tidalWave",
     "stoneGuard",
-    "stoneRise"
+    "stoneRise",
+    "sparkStep",
+    "stormFlurry"
   ],
   "challenges": [
     "swarm",
@@ -199,7 +202,8 @@
     "gale",
     "withStonekeeper",
     "withBastion",
-    "shatter"
+    "shatter",
+    "withSparkfist"
   ],
   "classes": [
     "blade",
@@ -283,7 +287,8 @@
   ],
   "banners": [
     "stormAndStone",
-    "emberAndStorm"
+    "emberAndStorm",
+    "sparkAndFrost"
   ],
   "retired": {
     "skills": [

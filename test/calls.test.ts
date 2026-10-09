@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { createAccount, earn, owns, unlock } from "../src/account/account.ts"
 import type { Account, CallResult } from "../src/account/account.ts"
 import { activeBanner, aspectsLeft, call, callCost, callsHeld, characterChance, cosmeticsLeft, effectiveRareRate, exchange, exchangePrice, focusOn, guarantees, nextBanner, rareLeft, setFocus, shares } from "../src/account/calls.ts"
-import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
+import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
 
 const tuning = defaultTuning
@@ -41,7 +41,8 @@ describe("the Spirit Call", () => {
   it("runs one banner at a time, each for its days, in turn and round again", () => {
     const first = activeBanner(tuning, rules.rotation.anchor)
     expect(first.until - first.from).toBe(rules.rotation.days * 24 * 60 * 60 * 1000)
-    const two = tuningWith({ banners: { ...tuning.banners, later: { name: "Later", theme: "", characters: ["bastion"] } } as typeof tuning.banners })
+    // Two banners: the first, and one after it.
+    const two = { ...tuning, banners: { emberAndStorm: tuning.banners.emberAndStorm, later: { name: "Later", theme: "", characters: ["bastion"] } } } as unknown as typeof tuning
     const one = activeBanner(two, rules.rotation.anchor)
     expect(one.banner).toBe("emberAndStorm")
     expect(nextBanner(two, rules.rotation.anchor)).toBe("later")

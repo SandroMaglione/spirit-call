@@ -226,6 +226,11 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
   switch (effect.kind) {
     case "cut":
       positive(problems, where, { length: effect.length, width: effect.width, active: effect.active })
+      if (!(effect.carries >= 0 && effect.carries <= effect.length)) problems.push(`${where}: carries must be between 0 and its length (is ${effect.carries})`)
+      return
+    case "flurry":
+      positive(problems, where, { radius: effect.radius, strikes: effect.strikes, hop: effect.hop })
+      if (!Number.isInteger(effect.strikes)) problems.push(`${where}: strikes must be a whole number (is ${effect.strikes})`)
       return
     case "blast":
       positive(problems, where, { radius: effect.radius, arcDegrees: effect.arcDegrees, active: effect.active })

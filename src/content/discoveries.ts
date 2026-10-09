@@ -67,6 +67,12 @@ export const discoveries = {
     check: clearWith("bastion"),
     rewards: { crystals: 30 }
   }),
+  withSparkfist: discovery({
+    name: "Sparkfist",
+    description: "Clear a quest or tier with Sparkfist on the team.",
+    check: clearWith("sparkfist"),
+    rewards: { crystals: 30 }
+  }),
   fullTeam: discovery({
     name: "Full team",
     description: "Clear a quest or tier with three characters.",

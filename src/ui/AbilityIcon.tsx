@@ -21,7 +21,9 @@ const shapes = {
   barrage: "M10 2 5 13l5-3 3-7Z M20 1 12 17l6-4 5-10Z M29 7 21 23l6-4 4-10Z M9 14l4 5-4 5-4-5Z M18 18l4 6-4 6-4-6Z M27 23l3 4-3 4-3-4Z",
   tide: "M16 2 24 13 25 19 22 24H10L7 19l1-6Z M2 20l3 2 1 5 5 3H5l-4-5Z M30 20l-3 2-1 5-5 3h6l4-5Z",
   sparkTotem: "M13 10h6v16l5 4H8l5-4Z M16 3l7 7-7 5-7-5Z M7 2 2 11h4l-2 7 7-10H7Z M27 3l-4 8h4l-2 6 6-9h-4Z",
-  thunderclap: "M16 1 7 12h7l-2 10 12-14h-8Z M3 14l4 3-2 5 5 5-6-1-3-6Z M29 14l-4 3 2 5-5 5 6-1 3-6Z M13 25h6v2h-6Z M15 23h2v6h-2Z"
+  thunderclap: "M16 1 7 12h7l-2 10 12-14h-8Z M3 14l4 3-2 5 5 5-6-1-3-6Z M29 14l-4 3 2 5-5 5 6-1 3-6Z M13 25h6v2h-6Z M15 23h2v6h-2Z",
+  sparkStep: "M19 2 11 15h6l-4 15 13-18h-7l5-10Z M1 10h9l-2 3H1Z M1 17h7l-2 3H1Z M1 24h6l-2 3H1Z",
+  stormFlurry: "M5 22a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M16 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M27 21a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M7 21l4-8h3l2-4 1 1-1 4h-3l-4 8Z M18 10l3 7h-3l6 5-1 1-7-5h3l-2-7Z"
 } satisfies Record<AbilityKind, string>
 
 export const AbilityIcon = ({ kind, charged = false }: { readonly kind: AbilityKind; readonly charged?: boolean }) => {

@@ -125,6 +125,7 @@ const poolsNames: { readonly [Element in ElementId]: string } = { fire: "fire po
 export const describeEffect = (effect: SkillEffect): string => {
   switch (effect.kind) {
     case "cut":
+      if (effect.carries > 0) return `a ${elementWord(effect.element)}dart ahead through enemies, striking each you pass (${effect.power}% ATK)`
       return `a ${elementWord(effect.element)}wave ahead of you (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolsNames[effect.leaves.element]}`}${effect.marks === null ? "" : `, marking what it hits for ${effect.marks.seconds}s: hitting a marked enemy heals you ${effect.marks.heal}% of max HP, at most every ${effect.marks.every}s`}`
     case "leap":
       return `a ${elementWord(effect.element)}burst around you (${effect.power}% ATK) as you leap back from where you face${effect.leaves === null ? "" : `, leaving ${poolNames[effect.leaves.element]} that burns you too`}`
@@ -144,6 +145,8 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
     case "barrage":
       return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolsNames[effect.leaves.element]}`}`
+    case "flurry":
+      return `${elementWord(effect.element)}hopping between up to ${effect.strikes} enemies around you, nearest first (${effect.power}% ATK each), landing by the last`
     case "earthrise":
       return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them and filling their break bars`
     case "guard":
