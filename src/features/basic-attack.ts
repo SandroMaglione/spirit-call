@@ -24,7 +24,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim, Airborne, Arrival,
-  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
+  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
 import { attackOf, damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
@@ -45,7 +45,8 @@ export const initialBasicAttack = (build: { readonly attack: AttackRef }): Basic
   slowed: 1,
   spent: 0,
   reloading: 0,
-  sinceDashStrike: Infinity
+  sinceDashStrike: Infinity,
+  fed: -1
 })
 
 /** How far a power attack held for `held` seconds is charged, 0 to 1. */
@@ -183,7 +184,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         dash: striking,
         // Out of a dash that perfectly dodged a blow.
         counter: striking && dash.perfect,
-        lastRound: !power && spec.magazine !== null && spent + 1 >= spec.magazine.rounds
+        lastRound: !power && spec.magazine !== null && spent + 1 >= spec.magazine.rounds,
+        serial: resources.time.get().step
       }
       // A power move from a magazine fires every round left: its damage is their share of a full one. The
       // press that started the charge fired a round of its own, so it still counts toward the share.
@@ -282,8 +284,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     }
 
     if (dashing && reloading <= 0 && buffered > 0 && !powerQueued) {
-      // The combo starts over after it.
-      use(spec.dash, -1, false)
+      // The combo starts over after it, unless her class weaves: then it keeps its place.
+      use(spec.dash, spec.weave ? step : -1, false)
       continue
     }
     if (ready && powerQueued && spec.power !== null) {
@@ -302,4 +304,31 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     data.basicAttack.set({ ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading, sinceDashStrike })
   }
   if (moves > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + moves }))
+})
+
+const Feeders = Game.Query({ selection: { position: Game.Query.read(Position), basicAttack: Game.Query.write(BasicAttack), dash: Game.Query.write(Dash) } })
+
+/**
+ * Blows that feed the dash (the Gauntlets', see `BasicAttackSpec.dashFeed`):
+ * a landed blow of her combo or charged attack (not her dash strike, nor a
+ * burn) takes time off her dash's recharge, once a move however many it
+ * hits. Runs with the run's outcome, from every hit of the step (a blow's
+ * hit-stop must not drop them).
+ */
+export const FeedDash = Game.System("Shooter/FeedDash", {
+  resources: { tuning: Game.System.readResource(Tuning) },
+  events: { hit: Game.System.readEvent(Hit) }
+}, ({ resources, events, lookup }) => {
+  const tuning = resources.tuning.get()
+  for (const hit of events.hit.all()) {
+    const move = hit.source?.move
+    if (hit.faction !== "enemy" || hit.periodic || move === undefined || move.dash || hit.source === null) continue
+    const found = lookup.getHandle(hit.source.attacker, Feeders)
+    if (!found.ok) continue
+    const attack = found.value.data.basicAttack.get()
+    const feed = attackOf(tuning, attack.attack).dashFeed
+    if (feed <= 0 || attack.fed === move.serial) continue
+    found.value.data.basicAttack.set({ ...attack, fed: move.serial })
+    found.value.data.dash.update((dash) => ({ ...dash, cooldown: Math.max(0, dash.cooldown - feed) }))
+  }
 })

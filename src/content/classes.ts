@@ -9,7 +9,7 @@
 import { arc, disc, lob, shot, spin, thrust } from "./attacks.ts"
 import type { AttackMove } from "./attacks.ts"
 
-export type ClassId = "blade" | "gun" | "disc" | "staff"
+export type ClassId = "blade" | "gun" | "disc" | "staff" | "gauntlets"
 
 /** How a class handles: the same for every character of it, whatever her aspect (see `BasicAttackSpec`). */
 export interface Handling {
@@ -27,6 +27,18 @@ export interface Handling {
   readonly holdDelay: number
   /** Her running speed while charging, as a fraction of it. */
   readonly chargingSpeed: number
+  /**
+   * Seconds a landed blow of the combo or the charged attack takes off her
+   * dash's recharge, once a move however many it hits (the Gauntlets': a
+   * string keeps dashes coming); 0: none.
+   */
+  readonly dashFeed: number
+  /**
+   * Her dash strike keeps the combo's place: the next press goes on from
+   * where the combo was (within its window), instead of starting it over
+   * (the Gauntlets': dash out of a blow, dash back in, finish the string).
+   */
+  readonly weave: boolean
 }
 
 /** What an aspect sets: its moves (see `BasicAttackSpec` for each). */
@@ -70,7 +82,7 @@ export const classes = {
     description: "A combo that lunges in close; its finisher launches, and it breaks enemies soonest.",
     shapes: ["arc", "thrust", "spin"],
     magazine: false,
-    handling: { comboWindow: 0.8, inputBuffer: 0.15, active: 0.08, lungeStop: 12, attackingSpeed: 0.5, holdDelay: 0.2, chargingSpeed: 0.55 },
+    handling: { comboWindow: 0.8, inputBuffer: 0.15, active: 0.08, lungeStop: 12, attackingSpeed: 0.5, holdDelay: 0.2, chargingSpeed: 0.55, dashFeed: 0, weave: false },
     /**
      * Edge: a side slash, the backhand, a thrust, and a spin that launches
      * enemies away. Early moves push lightly, so enemies stay in reach for
@@ -99,7 +111,7 @@ export const classes = {
     description: "Quick shots from a magazine; the charged attack spends what is left, then reloads.",
     shapes: ["shot", "lob"],
     magazine: true,
-    handling: { comboWindow: 0.5, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6 },
+    handling: { comboWindow: 0.5, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false },
     /** Sidearm: two quick shots and a spread; charged, a grenade lobbed over walls to the cursor. */
     plain: {
       name: "Sidearm",
@@ -126,7 +138,7 @@ export const classes = {
     description: "Discs that cut there and back, hitting on the way out and again on the way back.",
     shapes: ["disc"],
     magazine: false,
-    handling: { comboWindow: 0.6, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.6, holdDelay: 0.2, chargingSpeed: 0.6 },
+    handling: { comboWindow: 0.6, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.6, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false },
     /** Ring: two throws through a line of enemies, then a pair in a V; charged, a disc that hovers where it is aimed. */
     plain: {
       name: "Ring",
@@ -153,7 +165,7 @@ export const classes = {
     description: "Slower bolts that pierce a line of enemies; the charged bolt goes through many.",
     shapes: ["shot"],
     magazine: false,
-    handling: { comboWindow: 0.55, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.65, holdDelay: 0.2, chargingSpeed: 0.6 },
+    handling: { comboWindow: 0.55, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.65, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false },
     /** Spark: two sparks through the first enemy, then a pair in a V; charged, a slow orb through a line of enemies. */
     plain: {
       name: "Spark",
@@ -169,6 +181,38 @@ export const classes = {
       },
       /** A bolt that passes through a line of enemies. */
       dash: shot({ count: 1, spreadDegrees: 0, speed: 900, radius: 11, range: 460, pierce: 3, power: 10, knockback: 360, recovery: 0.3, hitStop: 0.06, heavy: false, lunge: -12 }),
+      magazine: null,
+      chain: null
+    }
+  }),
+  /**
+   * Very close: fast strings of blows built around the dash. A landed blow
+   * takes time off her dash's recharge, and her dash strike keeps the
+   * combo's place, so she darts out of a blow and back in to finish it.
+   */
+  gauntlets: classSpec({
+    name: "Gauntlets",
+    range: "close",
+    description: "Fast strings of blows up close; hits bring the dash back sooner, and a dash strike keeps the string going.",
+    shapes: ["thrust", "arc", "spin"],
+    magazine: false,
+    handling: { comboWindow: 0.6, inputBuffer: 0.15, active: 0.07, lungeStop: 10, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0.1, weave: true },
+    /**
+     * Jab: a jab, another, a cross, and an uppercut that pops enemies away.
+     * Charged: a rushing straight.
+     */
+    plain: {
+      name: "Jab",
+      description: "Jab, jab, cross, and an uppercut that pops enemies away. Charged: a rushing straight.",
+      combo: [
+        thrust({ reach: 95, width: 50, power: 12, knockback: 220, recovery: 0.13, hitStop: 0.04, heavy: false, lunge: 14 }),
+        thrust({ reach: 95, width: 50, power: 12, knockback: 220, recovery: 0.13, hitStop: 0.04, heavy: false, lunge: 14 }),
+        thrust({ reach: 105, width: 56, power: 18, knockback: 380, recovery: 0.17, hitStop: 0.06, heavy: false, lunge: 20 }),
+        thrust({ reach: 110, width: 70, power: 30, knockback: 900, recovery: 0.42, hitStop: 0.1, heavy: true, lunge: 18 })
+      ],
+      charged: { chargeTime: 0.45, move: thrust({ reach: 150, width: 64, power: 50, knockback: 1000, recovery: 0.45, hitStop: 0.12, heavy: true, lunge: 140 }) },
+      /** A straight out of the dash. */
+      dash: thrust({ reach: 120, width: 60, power: 10, knockback: 480, recovery: 0.22, hitStop: 0.06, heavy: false, lunge: 80 }),
       magazine: null,
       chain: null
     }

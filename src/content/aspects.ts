@@ -228,6 +228,54 @@ export const aspects = {
     chain: null,
     effects: [{ move: power(), own: true, effect: totem({ offset: 70, seconds: 3, tick: 0.5, radius: 150, heal: 0, jumps: 0, repel: 0, power: 10, element: null, knockback: 40, hitStop: 0, heavy: false }) }],
     infuse: null
+  }),
+  /**
+   * Flurry (Gauntlets): four quick light blows, then a heavier one carrying
+   * her element; charged, a spinning burst of blows around her. More moves,
+   * each lighter: for a crowd, and it feeds the dash often.
+   */
+  flurry: aspect({
+    name: "Flurry",
+    description: "Four quick light blows, then a heavier one. Charged: a spinning burst of blows all around you.",
+    against: "A crowd up close.",
+    class: "gauntlets",
+    combo: [
+      thrust({ reach: 90, width: 48, power: 10, knockback: 160, recovery: 0.1, hitStop: 0.03, heavy: false, lunge: 10 }),
+      thrust({ reach: 90, width: 48, power: 10, knockback: 160, recovery: 0.1, hitStop: 0.03, heavy: false, lunge: 10 }),
+      thrust({ reach: 90, width: 48, power: 10, knockback: 160, recovery: 0.1, hitStop: 0.03, heavy: false, lunge: 10 }),
+      thrust({ reach: 90, width: 48, power: 10, knockback: 160, recovery: 0.1, hitStop: 0.03, heavy: false, lunge: 10 }),
+      thrust({ reach: 105, width: 64, power: 24, knockback: 800, recovery: 0.36, hitStop: 0.09, heavy: true, lunge: 16 })
+    ],
+    charged: { chargeTime: 0.5, move: spin({ reach: 120, power: 45, knockback: 700, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: 10 }) },
+    /** A wide hook out of the dash. */
+    dash: arc({ reach: 110, arcDegrees: 120, power: 10, knockback: 420, recovery: 0.22, hitStop: 0.05, heavy: false, lunge: 70 }),
+    magazine: null,
+    chain: null,
+    effects: [],
+    infuse: finisher()
+  }),
+  /**
+   * Grapple (Gauntlets): two jabs, then a reaching grab that yanks what is
+   * in a line ahead to her, carrying her element; charged, a slam where she
+   * stands. Pulls a target out of its group into the next string.
+   */
+  grapple: aspect({
+    name: "Grapple",
+    description: "Two jabs, then a reaching grab that yanks enemies in a line to you. Charged: a slam where you stand.",
+    against: "Picking one enemy out of its group.",
+    class: "gauntlets",
+    combo: [
+      thrust({ reach: 95, width: 50, power: 14, knockback: 220, recovery: 0.14, hitStop: 0.04, heavy: false, lunge: 14 }),
+      thrust({ reach: 95, width: 50, power: 14, knockback: 220, recovery: 0.14, hitStop: 0.04, heavy: false, lunge: 14 }),
+      thrust({ reach: 200, width: 44, power: 30, knockback: -900, recovery: 0.45, hitStop: 0.1, heavy: true, lunge: 0 })
+    ],
+    charged: { chargeTime: 0.5, move: spin({ reach: 150, power: 50, knockback: 900, recovery: 0.5, hitStop: 0.12, heavy: true, lunge: 0 }) },
+    /** A grab out of the dash, pulling what it catches in. */
+    dash: thrust({ reach: 140, width: 50, power: 10, knockback: -500, recovery: 0.25, hitStop: 0.06, heavy: false, lunge: 60 }),
+    magazine: null,
+    chain: null,
+    effects: [],
+    infuse: finisher()
   })
 } satisfies { readonly [id: string]: AspectSpec }
 
@@ -252,6 +300,8 @@ export const basicAttack = (spec: ClassSpec, aspect: AspectSpec | null): BasicAt
     dash: moves.dash,
     magazine: moves.magazine,
     chain: moves.chain,
-    infuse: aspect?.infuse ?? null
+    infuse: aspect?.infuse ?? null,
+    dashFeed: handling.dashFeed,
+    weave: handling.weave
   }
 }
