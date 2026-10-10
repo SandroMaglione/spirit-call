@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "2361e939e4056315e0474d1be5b3b9a775639e95b3e52e55a9b5dd619691f4fa",
+  "tuningHash": "6d7087ea8c6596ecbf80cdac182c8cc990d0e74d09416693144f885d62a02965",
   "stats": [
     {
       "level": 1,
@@ -80,155 +80,155 @@
     {
       "quest": "crossfire",
       "enemyLevel": 3,
-      "goldBeforeFirstAttempt": 425,
-      "singleBuildCost": 165,
+      "goldBeforeFirstAttempt": 360,
+      "singleBuildCost": 259,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "packLeader",
       "enemyLevel": 5,
-      "goldBeforeFirstAttempt": 950,
-      "singleBuildCost": 550,
+      "goldBeforeFirstAttempt": 860,
+      "singleBuildCost": 837,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "theSwarm",
       "enemyLevel": 6,
-      "goldBeforeFirstAttempt": 1875,
-      "singleBuildCost": 850,
+      "goldBeforeFirstAttempt": 1710,
+      "singleBuildCost": 1281,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "emberKiln",
       "enemyLevel": 7,
-      "goldBeforeFirstAttempt": 3025,
-      "singleBuildCost": 1235,
+      "goldBeforeFirstAttempt": 2790,
+      "singleBuildCost": 1848,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "ironGuard",
       "enemyLevel": 9,
-      "goldBeforeFirstAttempt": 4350,
-      "singleBuildCost": 2300,
+      "goldBeforeFirstAttempt": 4060,
+      "singleBuildCost": 3408,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "bulwark",
       "enemyLevel": 10,
-      "goldBeforeFirstAttempt": 5875,
-      "singleBuildCost": 3000,
+      "goldBeforeFirstAttempt": 5560,
+      "singleBuildCost": 4430,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "ashfall",
       "enemyLevel": 11,
-      "goldBeforeFirstAttempt": 7975,
-      "singleBuildCost": 3825,
+      "goldBeforeFirstAttempt": 7660,
+      "singleBuildCost": 5632,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "outposts",
       "enemyLevel": 13,
-      "goldBeforeFirstAttempt": 11350,
-      "singleBuildCost": 5890,
+      "goldBeforeFirstAttempt": 11060,
+      "singleBuildCost": 8635,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "theBrute",
       "enemyLevel": 15,
-      "goldBeforeFirstAttempt": 15275,
-      "singleBuildCost": 8575,
+      "goldBeforeFirstAttempt": 15080,
+      "singleBuildCost": 12533,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "bruteKing",
       "enemyLevel": 16,
-      "goldBeforeFirstAttempt": 19750,
-      "singleBuildCost": 10175,
+      "goldBeforeFirstAttempt": 19730,
+      "singleBuildCost": 14853,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "highTide",
       "enemyLevel": 17,
-      "goldBeforeFirstAttempt": 25250,
-      "singleBuildCost": 11960,
+      "goldBeforeFirstAttempt": 25450,
+      "singleBuildCost": 17440,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "bombardment",
       "enemyLevel": 19,
-      "goldBeforeFirstAttempt": 29975,
-      "singleBuildCost": 16125,
+      "goldBeforeFirstAttempt": 30450,
+      "singleBuildCost": 23472,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "shieldWall",
       "enemyLevel": 21,
-      "goldBeforeFirstAttempt": 35100,
-      "singleBuildCost": 21150,
+      "goldBeforeFirstAttempt": 35960,
+      "singleBuildCost": 30744,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "swarmMother",
       "enemyLevel": 22,
-      "goldBeforeFirstAttempt": 40625,
-      "singleBuildCost": 24010,
+      "goldBeforeFirstAttempt": 42010,
+      "singleBuildCost": 34881,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "sandstorm",
       "enemyLevel": 23,
-      "goldBeforeFirstAttempt": 47575,
-      "singleBuildCost": 27115,
+      "goldBeforeFirstAttempt": 49560,
+      "singleBuildCost": 39371,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "theCloister",
       "enemyLevel": 25,
-      "goldBeforeFirstAttempt": 54550,
-      "singleBuildCost": 34100,
+      "goldBeforeFirstAttempt": 57210,
+      "singleBuildCost": 49469,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "thunderhead",
       "enemyLevel": 27,
-      "goldBeforeFirstAttempt": 62275,
-      "singleBuildCost": 42185,
+      "goldBeforeFirstAttempt": 65760,
+      "singleBuildCost": 61152,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "theWarlord",
       "enemyLevel": 28,
-      "goldBeforeFirstAttempt": 70750,
-      "singleBuildCost": 46665,
+      "goldBeforeFirstAttempt": 75260,
+      "singleBuildCost": 67624,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "ironclad",
       "enemyLevel": 29,
-      "goldBeforeFirstAttempt": 80650,
-      "singleBuildCost": 51450,
+      "goldBeforeFirstAttempt": 86260,
+      "singleBuildCost": 74536,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "powderKeg",
       "enemyLevel": 31,
-      "goldBeforeFirstAttempt": 90575,
-      "singleBuildCost": 61975,
+      "goldBeforeFirstAttempt": 97360,
+      "singleBuildCost": 89736,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "galeForce",
       "enemyLevel": 32,
-      "goldBeforeFirstAttempt": 101250,
-      "singleBuildCost": 67735,
+      "goldBeforeFirstAttempt": 109460,
+      "singleBuildCost": 98053,
       "extraClearsAtPreviousQuest": 0
     },
     {
       "quest": "colossus",
       "enemyLevel": 34,
-      "goldBeforeFirstAttempt": 112650,
-      "singleBuildCost": 80300,
+      "goldBeforeFirstAttempt": 122360,
+      "singleBuildCost": 116193,
       "extraClearsAtPreviousQuest": 0
     }
   ],
@@ -463,7 +463,7 @@
       "level": 1,
       "targets": 1,
       "specials": 8,
-      "ultimates": 2
+      "ultimates": 3
     },
     {
       "id": "quarry/1/6",
@@ -479,7 +479,7 @@
       "level": 40,
       "targets": 1,
       "specials": 8,
-      "ultimates": 2
+      "ultimates": 3
     },
     {
       "id": "quarry/40/6",
