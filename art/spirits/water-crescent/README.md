@@ -1,9 +1,9 @@
-# Water Spirit, crescent model and animations
+# Tidewarden, crescent Water Spirit
 
 A static model of the supplied Water Spirit sheet. The dark faceted core,
 tall cyan eyes, large left crescent, smaller right crescent, soft head highlight and
-three floating fins carry its silhouette. This study lives beside the
-existing Water Spirit so the new direction can be reviewed independently.
+three floating fins carry its silhouette. Tidewarden uses this model;
+Tidecaller retains the original Water Spirit.
 
 ![Static model](renders/preview.png)
 
@@ -119,8 +119,11 @@ or lose its held stretch.
 object-animated meshes, 1,798 triangles and two materials. `animation.json`
 records timing, contact frames, rest height and hashes. `export-animated.py`
 generates `src/presentation/assets/water-crescent.ts`; the model is registered
-as `waterCrescent` for the actual `Puppet` preview. This animation asset does
-not replace Tidecaller's current gameplay look or change her kit.
+as `waterCrescent` for the actual `Puppet` preview and Tidewarden's gameplay
+look. Her four-hit Blade combo uses AttackA, AttackB, AttackA, AttackC;
+Brace plays Cast and Floodgate plays Ultimate. A restrained blue rim and
+halo preserve the pale shell facets, and her movement sheds water drops.
+The look uses the same body height factor as the existing spirits.
 
 The inspector now opens the animated model, with all ten clip buttons,
 Preview all, rest pose, scrubbing, speed controls and the game's blending.
@@ -136,6 +139,31 @@ skipped. The production build passes. The live GLB preview was checked at
 1280 x 800 and 390 x 844 with a synthetic touch orbit. All ten representative
 poses fit the phone viewport. These checks do not establish physical-device
 performance. `animation-review.json` records the asset hash and review data.
+
+## Tidewarden integration
+
+![Same-ground-line size comparison](renders/gameplay-scale.png)
+
+The three live game models use the same radius (16), look factors, facing,
+camera and first Idle sample. Mesh-only world-axis width is 42.0 units for
+Tidewarden, 43.6 for Tidecaller and 36.0 for Gunner. Tidewarden's central
+core is smaller (29.3 units), with the opposing crescents completing the
+body's width. Glow sprites are excluded from these measurements.
+
+The [gameplay recording](renders/gameplay-phone.mp4) and desktop/phone
+screenshots show the actual game. DOM keyboard and synthetic touch input
+exercise movement, all four combo blows, the charged move, dash, Brace,
+Floodgate and switching to Tidecaller/Gunner and back. The shared browser
+throttles animation frames during automation, so this review also steps the
+real simulation and render schedules explicitly. Synthetic pointer capture
+is skipped in the review page only and restored afterwards.
+
+`gameplay-review.json` keeps the observed simulation contact times, clip
+mapping and scale comparison. After rebasing onto the existing Tidewarden
+kit, typecheck, lint, 84 test files (693 passed, one skipped) and the
+production build pass. Hurt is covered by the animation audit; this game
+recording does not exercise the hurt/fall lifecycle or prove physical-phone
+performance.
 
 ## Rebuild
 

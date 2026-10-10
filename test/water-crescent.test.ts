@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest"
 
 import { closeLoop, models } from "../src/presentation/models.ts"
 import { Puppet } from "../src/presentation/puppet.ts"
+import { characterLooks } from "../src/presentation/looks.ts"
 
 const spec = models.waterCrescent
 const load = async () => {
@@ -15,6 +16,20 @@ const load = async () => {
 }
 
 describe("Crescent Water Spirit animation", () => {
+  it("gives Tidewarden her own model and maps her Blade combo, Brace, and Floodgate", () => {
+    const look = characterLooks.tidewarden
+    expect(look.kind).toBe("model")
+    if (look.kind !== "model") throw new Error("Tidewarden needs her crescent model")
+    expect(look.model).toBe("waterCrescent")
+    expect(look.tint).toBeUndefined()
+    expect(look.moments?.attack).toEqual([
+      { clip: "AttackA", contact: 4 / 30 }, { clip: "AttackB", contact: 4 / 30 },
+      { clip: "AttackA", contact: 4 / 30 }, { clip: "AttackC", contact: 6 / 30 }
+    ])
+    expect(look.moments?.skills).toEqual({ brace: "Cast", floodgate: "Ultimate" })
+    expect(characterLooks.tidecaller.kind === "model" && characterLooks.tidecaller.model).toBe("waterSpirit")
+  })
+
   it("preserves the approved rest geometry and exports the complete spirit vocabulary", async () => {
     const gltf = await load()
     expect(gltf.animations.map(c => c.name).sort()).toEqual(Object.keys(spec.clips).sort())
