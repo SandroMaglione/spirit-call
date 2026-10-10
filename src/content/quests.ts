@@ -130,6 +130,19 @@ export interface RankRules {
 
 export const rankRules: RankRules = { count: 3, offset: 12, twists: ["eliteLeaders", "shieldLeaders"], goldRuns: 2, chestGold: 0.9 }
 
+/**
+ * What a quest's first perfect clear at a rank pays (all three stars in one
+ * run, see docs/quests.md), on top of what is written for it (a relic or a
+ * relic's tier): gold worth `goldRuns` runs at its level, and `essenceClears`
+ * trial clears' worth of its rank's grade of essence (its element's at rank I).
+ */
+export interface PerfectRules {
+  readonly goldRuns: number
+  readonly essenceClears: number
+}
+
+export const perfectRules: PerfectRules = { goldRuns: 4, essenceClears: 2 }
+
 /** Whose stars open a set of chests: a chapter's quests (by chapter id), or the secondary quests. */
 export type StarGroup = keyof typeof chapters | "secondary"
 
@@ -190,7 +203,7 @@ export const quests = {
     after: "firstBlood",
     introduces: brings("Shooters: they keep away and shoot ahead of you. Close the distance", enemy("shooter")),
     stars: [atLeast("healthLeft", 25), atLeast("longestChain", 2), atMost("hitsTaken", 3)],
-    rewards: pays(350)
+    rewards: pays(400)
   }),
   packLeader: quest({
     name: "The Pack Leader",

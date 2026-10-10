@@ -66,7 +66,8 @@ describe("account rules", () => {
   it("pays gold for every run by its enemies' level, and a loss its share of the progress made", () => {
     const { gold, loss } = defaultTuning.progression
     const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: noTally, challenge: "swarm" as const, wave: 3, kills: 40, time: 60 }
-    const clear = (level: number) => gold.base + gold.perLevel * level
+    // The base, a share for each level, and a share for its square (the endgame pays far more), counted as a person would.
+    const clear = (level: number) => roundGold(gold.base + gold.perLevel * level + gold.square * level * level)
     expect(runPay(gold, loss, 5, run)).toBe(clear(5))
     expect(runPay(gold, loss, 20, run)).toBe(clear(20))
     expect(runPay(gold, loss, 5, { ...run, cleared: false, progress: 2 / 3 })).toBe(roundGold(clear(5) * loss * 2 / 3))
@@ -137,15 +138,6 @@ describe("account rules", () => {
     expect(saveTeam(defaultTuning, fresh(), 1, { ...team, team: ["gunner"] })).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
     const emptied = saved.ok ? saveTeam(defaultTuning, saved.value, 2, null) : saved
     expect(emptied.ok && emptied.value.saved).toEqual({})
-  })
-
-  it("trains a character who joined late, below the leading three, for a share of the gold", () => {
-    const curve = defaultTuning.progression.character.curve, { catchUp } = defaultTuning.progression.character
-    const at = (level: number) => ({ unlockedAt: 1, experience: experienceTo(curve, level), ascension: defaultTuning.materialRules.ascension.filter((step) => step.level <= level).length })
-    const account = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: at(35), tidecaller: at(35), bastion: at(35), gunner: at(12) } } }
-    expect(trainingCost(defaultTuning, account, "gunner")).toEqual({ gold: Math.ceil(experienceFor(curve, 12) * catchUp.share) })
-    // The leading three pay in full.
-    expect(trainingCost(defaultTuning, account, "bastion")).toEqual({ gold: experienceFor(curve, 35) })
   })
 
   it("selects only a team of owned characters and an open quest", () => {

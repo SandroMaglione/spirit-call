@@ -159,7 +159,7 @@ export const Earned = Schema.Struct({
   rewards: Schema.NullOr(Schema.Struct({ currencies: Amounts, unlocks: Schema.Array(Item) })),
   stars: Schema.Array(Count),
   chests: Schema.Array(ChestRef),
-  perfect: Schema.NullOr(Schema.Struct({ unlock: Schema.NullOr(Item) })),
+  perfect: Schema.NullOr(Schema.Struct({ unlock: Schema.NullOr(Item), currencies: Amounts })),
   granted: Schema.Array(Item)
 })
 

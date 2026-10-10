@@ -90,8 +90,10 @@ An aspect is owned once: there are no copies and no duplicates.
   unlocked at rank II takes tier III from a hardcore tier; one unlocked at
   rank III takes both from hardcore tiers. Every tier is written on its
   card (a quest's `perfect` rewards, a tier's `unlocks`).
-- A perfect clear with nothing written pays nothing more than its stars:
-  it is its own goal.
+- **Every perfect clear pays**, once per quest and rank, on top of any
+  relic: gold worth four runs at its level and two trial clears' worth of
+  its rank's essence (`perfectRules`), so chasing all three stars in one
+  run is always worth it.
 
 ## Looks
 
@@ -119,13 +121,6 @@ Two things are earned, and both only level characters:
   player has reached: the top trial ranks pay Core Essence on every
   clear, the one place to farm the last levels, and they open last.
 
-- **Catching up.** The account's three highest characters set the pace: a
-  level below the third of them costs a fifth of its gold
-  (`progression.character.catchUp`). A character who joins late (from an
-  audition, at its level) catches up quickly, while the team that leads
-  pays in full, so the main team reaches the top with the collection and
-  the other seven follow in the hours after.
-
 There is no account level, no shop, and no reset: a hardcore tier pays
 once, on its first clear, like a quest.
 
@@ -141,9 +136,15 @@ runs an hour:
 
 | Player | Everything owned | All ten at 60 |
 |---|---|---|
-| Skilled (no run lost) | 46 h | 87 h |
-| The one the pace is for (a quarter of runs lost) | 56 h | 107 h |
-| Struggling (two runs in five lost) | 65 h | 125 h |
+| Skilled (no run lost) | 44 h | 75 h |
+| The one the pace is for (a quarter of runs lost) | 55 h | 92 h |
+| Struggling (two runs in five lost) | 62 h | 105 h |
+
+Every character's level costs the same gold, whoever she is. What keeps
+the last characters from taking as long as the first is the gold a run
+pays: `50 + 10 × level + 2 × level²` (`progression.gold`), so a run of the
+endgame pays several times a run of the main line, and the characters
+taken up last are taken up at the endgame's pace.
 
 The model plays an audition's part twice (the second a clear) and a
 perfect clear that gives something three times; a player who needs more

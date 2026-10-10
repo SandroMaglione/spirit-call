@@ -626,8 +626,6 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   if (!(tuning.energy.targetCap >= 1 && tuning.energy.targetCap <= 2)) problems.push("energy: targetCap must be between 1 and 2")
   if (!(tuning.team.benchEnergyShare >= 0 && tuning.team.benchEnergyShare <= 1)) problems.push("team: benchEnergyShare must be between 0 and 1")
   checkCurve(problems, "character levels", progression.character.curve)
-  if (!(progression.character.catchUp.share > 0 && progression.character.catchUp.share <= 1)) problems.push(`character levels: catchUp's share must be in (0, 1] (is ${progression.character.catchUp.share})`)
-  if (!(Number.isInteger(progression.character.catchUp.leaders) && progression.character.catchUp.leaders >= 1)) problems.push(`character levels: catchUp's leaders must be a whole number from 1 (is ${progression.character.catchUp.leaders})`)
   checkPay(problems, "run gold", progression.gold)
   if (!(progression.loss >= 0 && progression.loss <= 1)) problems.push(`a loss's share must be in [0, 1] (is ${progression.loss})`)
   if (!(progression.stats.band >= 1)) problems.push(`stat curve: band must be 1 or more, or levels would weaken (is ${progression.stats.band})`)

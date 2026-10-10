@@ -15,18 +15,19 @@ import type { ProgressionRow } from "../../test/progression-model.ts"
 import type { PlayOptions } from "./knobs.ts"
 
 /** Where gold comes from. */
-export const sources = ["runPay", "firstClears", "chests", "tiers", "discoveries"] as const
+export const sources = ["runPay", "firstClears", "perfects", "chests", "tiers", "discoveries"] as const
 export type Source = (typeof sources)[number]
 export const sourceNames: { readonly [S in Source]: string } = {
   runPay: "Run pay",
   firstClears: "First clears",
+  perfects: "Perfect clears",
   chests: "Star chests",
   tiers: "Track tiers",
   discoveries: "Discoveries"
 }
 
 type BySource = { [S in Source]: number }
-const none = (): BySource => ({ runPay: 0, firstClears: 0, chests: 0, tiers: 0, discoveries: 0 })
+const none = (): BySource => ({ runPay: 0, firstClears: 0, perfects: 0, chests: 0, tiers: 0, discoveries: 0 })
 
 /** An essence by what it is called on the chart: its element's, or a shared grade. */
 export type EssenceKey = string
@@ -87,6 +88,7 @@ export const journeyOf = (tuning: Tuning, play: PlayOptions): Journey => {
   const earnedFrom = (target: Play, earned: Earned) => {
     add("runPay", earned.pay)
     add(target.kind === "quest" ? "firstClears" : "tiers", { ...earned.materials, ...earned.rewards?.currencies })
+    add("perfects", earned.perfect?.currencies ?? {})
     for (const chest of earned.chests) add("chests", chestRewards(tuning, chest))
     for (const id of earned.discoveries) add("discoveries", tuning.discoveries[id].rewards)
   }

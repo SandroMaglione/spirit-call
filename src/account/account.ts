@@ -629,24 +629,11 @@ export const ascend = (tuning: Tuning, account: Account, character: CharacterId)
   return { ok: true, value: { ...paid.value, owned: { ...paid.value.owned, characters: { ...paid.value.owned.characters, [character]: { ...owned, ascension: owned.ascension + 1 } } } } }
 }
 
-/** The level the account's `place`th highest character stands at (1 for the highest; level 1 when it has fewer). */
-export const leadingLevel = (tuning: Tuning, account: Account, place: number): number =>
-  (Object.keys(account.owned.characters) as Array<CharacterId>).map((id) => characterLevel(tuning, account, id).level).sort((a, b) => b - a)[place - 1] ?? 1
-
-/**
- * The gold that takes `character` to its next level from where it is, or
- * `null` at the maximum level or at an ascension step. The account's
- * `catchUp.leaders` highest characters set the pace: a level below the last
- * of them costs `catchUp.share` of it, so a character who joins late
- * catches up (see docs/collection.md) while the team that leads pays in
- * full.
- */
+/** The gold that takes `character` to its next level from where it is, or `null` at the maximum level or at an ascension step. */
 export const trainingCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
   const progress = characterLevel(tuning, account, character)
   if (progress.needed === 0 || progress.level >= levelCap(tuning, account, character)) return null
-  const { catchUp } = tuning.progression.character
-  const share = progress.level < leadingLevel(tuning, account, catchUp.leaders) ? catchUp.share : 1
-  return { gold: Math.max(1, Math.ceil((progress.needed - progress.into) * share)) }
+  return { gold: Math.ceil(progress.needed - progress.into) }
 }
 
 /** `account` with `character` taken to its next level with gold, if it owns it, it is below the maximum and its next step, and the gold is there. */
@@ -757,7 +744,7 @@ export interface Earned {
   /** The chests those stars opened (their rewards are paid with them). */
   readonly chests: ReadonlyArray<ChestRef>
   /** The quest's first perfect clear at its rank (all three stars in one run), when this run is it: what it unlocked, if anything is written there (see `perfectUnlock`). */
-  readonly perfect: { readonly unlock: Unlock | null } | null
+  readonly perfect: { readonly unlock: Unlock | null; readonly currencies: Amounts } | null
   /** Everything the run made the account's (from its rewards, its perfect clear, and a relic's tier waiting for it). */
   readonly granted: ReadonlyArray<Item>
 }
@@ -779,7 +766,7 @@ export interface EarnedResource {
 export const earnedResources = (tuning: Tuning, earned: Earned): ReadonlyArray<EarnedResource> => {
   // What each chest held at its rank (a higher rank's hold its grade of essence).
   const chests = earned.chests.map((chest) => tuning.chests[chest.group][chest.index] === undefined ? {} : chestRewards(tuning, chest))
-  const parts: ReadonlyArray<Amounts> = [earned.pay, earned.materials, earned.rewards?.currencies ?? {}, ...earned.discoveries.map((id) => tuning.discoveries[id].rewards)]
+  const parts: ReadonlyArray<Amounts> = [earned.pay, earned.materials, earned.rewards?.currencies ?? {}, earned.perfect?.currencies ?? {}, ...earned.discoveries.map((id) => tuning.discoveries[id].rewards)]
   const sum = (amounts: ReadonlyArray<Amounts>, id: ResourceId) => amounts.reduce((total, part) => total + (part[id] ?? 0), 0)
   const resources = [...Object.keys(tuning.currencies), ...Object.keys(tuning.materials)] as Array<ResourceId>
   return resources.flatMap((id) => {
@@ -807,7 +794,7 @@ export const roundGold = (amount: number): number => {
 }
 
 /** What a clear against enemies of `enemyLevel` pays along `pay`. */
-export const clearPay = (pay: RunPay, enemyLevel: number): number => pay.base + pay.perLevel * enemyLevel
+export const clearPay = (pay: RunPay, enemyLevel: number): number => roundGold(pay.base + pay.perLevel * enemyLevel + pay.square * enemyLevel * enemyLevel)
 
 /**
  * `clears` clears' worth of essence of `grade` (`element`'s at grade 1)
@@ -816,6 +803,12 @@ export const clearPay = (pay: RunPay, enemyLevel: number): number => pay.base + 
  */
 export const materialPay = (tuning: Tuning, grade: Grade, element: ElementId, enemyLevel: number, clears: number): Amounts =>
   ({ [essenceOf(grade, element)]: Math.round(worthAt(tuning.materialRules, enemyLevel) * clears) })
+
+/** What `quest`'s first perfect clear at `rank` pays (see `PerfectRules`), on top of what is written for it. */
+export const perfectPay = (tuning: Tuning, quest: QuestId, rank: number): Amounts => {
+  const level = questLevel(tuning, quest, rank)
+  return { gold: tuning.perfect.goldRuns * clearPay(tuning.progression.gold, level), ...materialPay(tuning, gradeOfRank(rank), tuning.quests[quest].element, level, tuning.perfect.essenceClears) }
+}
 
 /** Whether a run of a quest or tier that ended with `result` makes a discovery checked by `check`. */
 export const discovered = (check: DiscoveryCheck, result: RunResultValue): boolean => {
@@ -886,7 +879,7 @@ export const recordRun = (
     const updated: QuestProgress = { ...counted(progress, result, now), stars: [...progress.stars, ...stars].sort((a, b) => a - b), ...(perfected ? { perfectAt: now } : {}) }
     next = { ...next, quests: { ...next.quests, [quest]: { ...next.quests[quest], [rank]: updated } } }
     if (firstClear) rewards = questRewards(tuning, quest, rank)
-    if (perfected) perfect = { unlock: perfectUnlock(tuning, quest, rank) }
+    if (perfected) perfect = { unlock: perfectUnlock(tuning, quest, rank), currencies: perfectPay(tuning, quest, rank) }
   }
   if (play?.kind === "tier") {
     const track = tuning.tracks[play.track]
@@ -904,6 +897,7 @@ export const recordRun = (
   }
   next = earn(earn(next, pay), materials)
   if (rewards !== null) next = earn(next, rewards.currencies)
+  if (perfect !== null) next = earn(next, perfect.currencies)
   const chests = withEarnedChests(tuning, next)
   next = chests.account
   const made: Array<DiscoveryId> = []

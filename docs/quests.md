@@ -74,8 +74,8 @@ counted toward it.
 and rank (`perfectAt`), shown on the results screen and as a glow around
 the quest's stars in the list. It pays once per quest and rank: the
 quest's relic on the rank that unlocks it, and that relic's next tiers on
-the ranks above it (see `collection.md`); a perfect clear with nothing
-written is its own goal. Stars earned across runs never add up to one.
+the ranks above it (see `collection.md`); and every perfect clear pays gold
+and its rank's essence too (`perfectRules`). Stars earned across runs never add up to one.
 
 **The numbers come from measured runs** (the bot, in `test/bot.ts`, on two
 seeds, with the team a new account has, from `pnpm progression`): the

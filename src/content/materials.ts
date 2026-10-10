@@ -74,11 +74,11 @@ export const materialRules: MaterialRules = {
   tierClear: 2,
   // About six clears of the trial rank opening around each step's level; Refined and Core from the ranks' own trials.
   ascension: [
-    { level: 10, gold: 1300, grade: 1, count: 36 },
-    { level: 20, gold: 4000, grade: 1, count: 120 },
-    { level: 30, gold: 9300, grade: 1, count: 384 },
-    { level: 40, gold: 48000, grade: 2, count: 1200 },
-    { level: 50, gold: 77000, grade: 3, count: 4800 }
+    { level: 10, gold: 2300, grade: 1, count: 36 },
+    { level: 20, gold: 7200, grade: 1, count: 120 },
+    { level: 30, gold: 16700, grade: 1, count: 384 },
+    { level: 40, gold: 86000, grade: 2, count: 1200 },
+    { level: 50, gold: 139000, grade: 3, count: 4800 }
   ]
 }
 

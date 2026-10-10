@@ -103,7 +103,8 @@ balance, not a curve. A later tier may also go off more often (Momentum III).
     perfect clear one rank up, its tier III two ranks up. Where the ranks
     run out (a relic unlocked at rank II or III), the missing tiers are a
     hardcore tier's rewards, written on it.
-  - A perfect clear that gives nothing written is its own goal.
+  - Every perfect clear also pays gold and essence (`perfectRules`), relic
+    or not.
 - **Where**, spread over the ranks so not all come at once (each Element
   relic on a quest of its element, the Survival relics after their slot
   opens, none on a quest-rank the bot never perfects):
