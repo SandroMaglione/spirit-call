@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "8012f5da817b082e56e6a01ca69d93deb98a534de3eb44d12b32741248a738c6",
+  "tuningHash": "2361e939e4056315e0474d1be5b3b9a775639e95b3e52e55a9b5dd619691f4fa",
   "stats": [
     {
       "level": 1,
@@ -423,6 +423,134 @@
       "level": 40,
       "targets": 6,
       "specials": 10,
+      "ultimates": 4
+    },
+    {
+      "id": "tidewarden/1/1",
+      "character": "tidewarden",
+      "level": 1,
+      "targets": 1,
+      "specials": 0,
+      "ultimates": 1
+    },
+    {
+      "id": "tidewarden/1/6",
+      "character": "tidewarden",
+      "level": 1,
+      "targets": 6,
+      "specials": 0,
+      "ultimates": 2
+    },
+    {
+      "id": "tidewarden/40/1",
+      "character": "tidewarden",
+      "level": 40,
+      "targets": 1,
+      "specials": 0,
+      "ultimates": 1
+    },
+    {
+      "id": "tidewarden/40/6",
+      "character": "tidewarden",
+      "level": 40,
+      "targets": 6,
+      "specials": 0,
+      "ultimates": 2
+    },
+    {
+      "id": "quarry/1/1",
+      "character": "quarry",
+      "level": 1,
+      "targets": 1,
+      "specials": 8,
+      "ultimates": 2
+    },
+    {
+      "id": "quarry/1/6",
+      "character": "quarry",
+      "level": 1,
+      "targets": 6,
+      "specials": 7,
+      "ultimates": 4
+    },
+    {
+      "id": "quarry/40/1",
+      "character": "quarry",
+      "level": 40,
+      "targets": 1,
+      "specials": 8,
+      "ultimates": 2
+    },
+    {
+      "id": "quarry/40/6",
+      "character": "quarry",
+      "level": 40,
+      "targets": 6,
+      "specials": 7,
+      "ultimates": 4
+    },
+    {
+      "id": "hearth/1/1",
+      "character": "hearth",
+      "level": 1,
+      "targets": 1,
+      "specials": 9,
+      "ultimates": 3
+    },
+    {
+      "id": "hearth/1/6",
+      "character": "hearth",
+      "level": 1,
+      "targets": 6,
+      "specials": 9,
+      "ultimates": 4
+    },
+    {
+      "id": "hearth/40/1",
+      "character": "hearth",
+      "level": 40,
+      "targets": 1,
+      "specials": 9,
+      "ultimates": 3
+    },
+    {
+      "id": "hearth/40/6",
+      "character": "hearth",
+      "level": 40,
+      "targets": 6,
+      "specials": 9,
+      "ultimates": 4
+    },
+    {
+      "id": "windwall/1/1",
+      "character": "windwall",
+      "level": 1,
+      "targets": 1,
+      "specials": 8,
+      "ultimates": 2
+    },
+    {
+      "id": "windwall/1/6",
+      "character": "windwall",
+      "level": 1,
+      "targets": 6,
+      "specials": 8,
+      "ultimates": 4
+    },
+    {
+      "id": "windwall/40/1",
+      "character": "windwall",
+      "level": 40,
+      "targets": 1,
+      "specials": 8,
+      "ultimates": 2
+    },
+    {
+      "id": "windwall/40/6",
+      "character": "windwall",
+      "level": 40,
+      "targets": 6,
+      "specials": 8,
       "ultimates": 4
     }
   ],
@@ -1087,13 +1215,13 @@
         "healing": 11,
         "restored": 0.03709856035437434,
         "blocked": 0,
-        "healthRemaining": 0.9598985294496382,
+        "healthRemaining": 0.9456792603466482,
         "tally": {
           "hitsTaken": 2,
           "perfectDodges": 20,
           "breaks": 27,
           "falls": 0,
-          "healthLeft": 95,
+          "healthLeft": 94,
           "longestChain": 3,
           "ultimates": 8
         }
@@ -1533,7 +1661,7 @@
         "ultimates": 12,
         "breaks": 35,
         "healing": 109,
-        "restored": 0.15350901633000535,
+        "restored": 0.15350901633000538,
         "blocked": 0,
         "healthRemaining": 1,
         "tally": {
@@ -1756,16 +1884,16 @@
         "specials": 34,
         "ultimates": 13,
         "breaks": 35,
-        "healing": 122,
-        "restored": 0.17203588115764692,
+        "healing": 125,
+        "restored": 0.17628224183231397,
         "blocked": 0,
-        "healthRemaining": 0.9551869787463007,
+        "healthRemaining": 0.9409496906107075,
         "tally": {
           "hitsTaken": 4,
           "perfectDodges": 16,
           "breaks": 35,
           "falls": 0,
-          "healthLeft": 95,
+          "healthLeft": 94,
           "longestChain": 2,
           "ultimates": 13
         }
