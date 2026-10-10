@@ -70,8 +70,9 @@ interface Bolt {
 
 /**
  * Something drawn fresh every frame for `life` seconds, after `delay`: a
- * hammer swung up and down onto where it lands, cracks spreading from it
- * (see `presentation/hammer.ts`). `paint` gets how far through its life it
+ * hammer swung up and down onto where it lands (see
+ * `presentation/hammer.ts`), a skill's own look (see
+ * `presentation/signatures.ts`). `paint` gets how far through its life it
  * is (0..1), a layer drawn over the floor's effects, and one that adds
  * light.
  */

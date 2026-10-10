@@ -16,8 +16,6 @@ import { SpatialGrid } from "../physics/grid.ts"
 import {
   Arc,
   Barrier,
-  BraceCounter,
-  Bracing,
   Challenge,
   CombatStats,
   Damage,
@@ -28,14 +26,17 @@ import {
   Enemy,
   Energy,
   EnergyLedger,
+  Explosion,
   Game,
   Guard,
+  Mantle,
   Guarded,
   Heal,
   Health,
   Hit,
   HitFlash,
   HitStop,
+  Hitbox,
   Hurtbox,
   Immortal,
   Impact,
@@ -72,7 +73,7 @@ import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { barrierMeets } from "./barriers.ts"
-import { braceTakes } from "./brace.ts"
+import { mantleMeets, mantleTaken } from "./windwall.ts"
 import { plateTakes } from "./guard.ts"
 import { damageBonusPercent, damageTakenPercent, PassiveHolders, secondWindPercent } from "./passives.ts"
 import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
@@ -109,10 +110,17 @@ export const MoveProjectiles = (() => {
       walls: Walls,
       barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } })
     },
-    resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded) }
+    resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) }
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
+    /** A shot that bursts where it stops (see `OverdriveEffect`): its blast there. */
+    const burst = (projectile: ProjectileValue, at: Vec2): void => {
+      const blast = projectile.blast
+      if (blast === undefined || blast === null) return
+      commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, { area: { kind: "circle", center: at, radius: blast.radius }, faction: projectile.faction, blow: blast.blow, remaining: 0.06, hit: [] }]))
+      events.explosion.emit({ at, radius: blast.radius, faction: projectile.faction, kind: "blast", heavy: false, element: blast.blow.element?.id ?? null, skill: blast.skill })
+    }
     const window = resources.tuning.get().perfectDodge.window
     const boxes = wallBoxes(queries.walls.each())
 
@@ -126,6 +134,7 @@ export const MoveProjectiles = (() => {
     // Bodies that just dashed: a shot through where they stood dodged them, wherever they are now.
     const dashers = targets.filter((target) => target.dashed !== undefined && target.dashed.since <= window)
     const barriers = queries.barriers.each().map(({ data }) => data.barrier.get())
+    const mantle = resources.mantle.get()
 
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()
@@ -157,6 +166,8 @@ export const MoveProjectiles = (() => {
         if (barrier.faction === projectile.faction) continue
         barred = Math.min(barred, barrierMeets(barrier, origin, delta, r) ?? Infinity)
       }
+      // The team's mantle of wind absorbs the other side's shots that reach it (see `features/windwall.ts`).
+      barred = Math.min(barred, mantleMeets(mantle, projectile.faction, origin, delta, r) ?? Infinity)
       if (barred < (wall?.time ?? Infinity) && barred <= (contacts[0]?.time ?? Infinity)) {
         const at = { x: origin.x + delta.x * barred, y: origin.y + delta.y * barred }
         data.position.set(at)
@@ -209,12 +220,14 @@ export const MoveProjectiles = (() => {
 
       if (shieldedAt !== undefined) {
         data.position.set(shieldedAt)
+        burst(projectile, shieldedAt)
         events.impact.emit({ at: shieldedAt, faction: projectile.faction, wall: false, shielded: true })
         commands.despawn(entity.id)
         continue
       }
       if (stopAt !== undefined) {
         data.position.set({ x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
+        burst(projectile, { x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
         commands.despawn(entity.id)
         continue
       }
@@ -222,6 +235,7 @@ export const MoveProjectiles = (() => {
         const at = { x: origin.x + delta.x * wall.time, y: origin.y + delta.y * wall.time }
         data.position.set(at)
         events.impact.emit({ at, faction: projectile.faction, wall: true, shielded: false })
+        burst(projectile, at)
         commands.despawn(entity.id)
         continue
       }
@@ -230,6 +244,7 @@ export const MoveProjectiles = (() => {
       const range = projectile.range - travel
       if (range <= 1e-6) {
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: false })
+        burst(projectile, at)
         commands.despawn(entity.id)
         continue
       }
@@ -257,8 +272,7 @@ const Damageable = Game.Query({
     stunned: Game.Query.optional(Stunned),
     immortal: Game.Query.optional(Immortal),
     member: Game.Query.optional(Member),
-    passives: Game.Query.optional(Passives),
-    bracing: Game.Query.optional(Bracing)
+    passives: Game.Query.optional(Passives)
   }
 })
 
@@ -287,8 +301,6 @@ const Benched = Game.Query({
  *
  * A stone plate (see `GuardEffect`) takes an enemy's blow on the one on the
  * field whole: nothing of it lands, and the plate shatters (`PlateShatter`).
- * A brace (see `BraceEffect`) takes the first one on her while she braces,
- * and she answers it (`BraceCounter`).
  *
  * A team member who falls stays in the team, fallen (`SwitchCharacter`
  * brings in the next one); an enemy that dies is gone. Energy from damage
@@ -316,6 +328,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     hitStop: Game.System.writeResource(HitStop),
     challenge: Game.System.readResource(Challenge),
     guard: Game.System.writeResource(Guard),
+    mantle: Game.System.readResource(Mantle),
     enemyLevel: Game.System.readResource(EnemyLevel)
   }
 }, ({ queries, events, resources, lookup, commands }) => {
@@ -360,14 +373,6 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       commands.spawnIn(RunScope, Game.Command.spawn([PlateShatter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, effect: guard.effect, atk: guard.atk, charges: guard.charges }]))
       continue
     }
-    if (data.bracing.present && braceTakes(true, data.player.present, damage.faction, blow.periodic)) {
-      const { effect, blow: answer, slot } = data.bracing.get()
-      commands.remove(entity.id, Bracing)
-      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
-      hitStop = Math.max(hitStop, effect.hitStop)
-      commands.spawnIn(RunScope, Game.Command.spawn([BraceCounter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, bracer: Game.Entity.handle(entity.id, Position), effect, blow: answer, slot }]))
-      continue
-    }
 
     const health = data.health.get()
     const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
@@ -393,7 +398,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     // A soaked dealer's blows are weaker (not its burns: a burn's strength was set as it caught).
     const dealer = blow.source === null || blow.periodic ? undefined : lookup.getHandle(blow.source.attacker, Dealer)
     const soaked = dealer?.ok === true ? stateDamage(tuning, dealer.value.data.state.get()) : 1
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
+    // Under the team's mantle of wind, blows on the one on the field land weaker (see `features/windwall.ts`).
+    const mantled = mantleTaken(resources.mantle.get(), data.player.present, damage.faction, blow.periodic)
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * mantled * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
     let current = data.immortal.present
       ? health.current
@@ -443,7 +450,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       at,
       direction: damage.direction,
       amount,
-      faction: data.hurtbox.get().faction,
+      // An enemy's side, even turned (see `Turned`): a blow on it is never one on the team (tallies, falls, the hurt).
+      faction: enemy !== undefined ? "enemy" : data.hurtbox.get().faction,
       killed,
       heavy: blow.heavy,
       periodic: blow.periodic,

@@ -19,6 +19,7 @@ import { makeBody } from "./bodies.ts"
 import type { RenderHostValue } from "./host-types.ts"
 import { arenaLooks, characterLooks } from "./looks.ts"
 import { enemyColor, projectileColor } from "./nodes.ts"
+import { ownLook } from "./signatures.ts"
 
 /** A world direction as a unit direction on screen. */
 const screenDirection = (direction: Vec2): Vec2 => normalizeOr(toScreen(projection, direction), { x: 0, y: -1 })
@@ -198,7 +199,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   // A wave (the Tidal Wave): spray of its element rushing down its lane.
   for (const cast of events.cast.all()) {
     const effect = cast.effect
-    if (effect.kind !== "cut") continue
+    if (effect.kind !== "cut" || (cast.skill !== null && ownLook.has(cast.skill))) continue
     const at = toScreen(projection, cast.from)
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const base = Math.atan2(cast.direction.y, cast.direction.x)
@@ -249,7 +250,9 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     services.host.feedback.punch = Math.max(services.host.feedback.punch, grow)
     services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake * grow)
   }
+  // The skills with a look of their own are drawn by `ShowSignatures`.
   for (const explosion of events.explosion.all()) {
+    if (explosion.skill != null && ownLook.has(explosion.skill)) continue
     // A hammer's blow is drawn by `ShowHammerBlows`.
     if (explosion.kind === "blow") continue
     const at = toScreen(projection, explosion.at)
@@ -284,12 +287,6 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   // A guard: its plates rising around her in a puff of dust; a plate breaking, its chunks thrown out.
   for (const guarded of events.guarded.all()) {
     const at = toScreen(projection, guarded.at)
-    // A brace taking a blow: a flash of water where it struck (its answer is drawn as an explosion).
-    if (guarded.kind === "braced") {
-      fx.flash({ x: at.x, y: at.y - impact.height * projection.zoom }, 52, view.elements.water, 0.16)
-      services.host.feedback.shake = Math.max(services.host.feedback.shake, view.impact.heavyShake)
-      continue
-    }
     // A shot breaking on a barrier: a puff of wind where it met it.
     if (guarded.kind === "barred") {
       fx.burst(at, { color: view.elements.wind, count: 8, speed: 220, size: 4, life: 0.35 })
@@ -308,6 +305,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   for (const reaction of events.reaction.all()) react(services.host, toScreen(projection, reaction.at), reaction.kind, reaction.state, resources.tuning.get())
   // Thunder: a bolt along its path at body height, a spark where it lands; a healing zap in the heal color.
   for (const zap of events.zap.all()) {
+    if (zap.skill != null && ownLook.has(zap.skill)) continue
     const color = zap.heal ? view.totem.heal : view.elements.thunder
     const points = zap.path.map((point) => {
       const at = toScreen(projection, point)
@@ -498,7 +496,8 @@ export const ReactToHits = Game.System("Shooter/ReactToHits", {
     if (recoil === undefined || recoil.age >= recoil.life) {
       pivot.scale.setScalar(1)
       pivot.quaternion.identity()
-      pivot.position.set(0, 0, 0)
+      // (Its height is a lift's, see `presentation/windwall.ts`.)
+      pivot.position.set(0, pivot.position.y, 0)
     } else {
       // Sharp at the blow, springing back with a small overshoot.
       const t = recoil.age / recoil.life
@@ -508,7 +507,7 @@ export const ReactToHits = Game.System("Shooter/ReactToHits", {
       // Tipped over the feet, the top away from the blow: about the floor axis across the push.
       leanAxis.set(recoil.y, 0, -recoil.x)
       pivot.quaternion.setFromAxisAngle(leanAxis, spec.recoil.lean * k)
-      pivot.position.set(recoil.x * spec.recoil.shift * k, 0, recoil.y * spec.recoil.shift * k)
+      pivot.position.set(recoil.x * spec.recoil.shift * k, pivot.position.y, recoil.y * spec.recoil.shift * k)
     }
     const push = data.knockback.get()
     const speed = Math.hypot(push.x, push.y)

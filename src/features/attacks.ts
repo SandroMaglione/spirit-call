@@ -79,6 +79,7 @@ import {
   Disarmed,
   Time,
   Tuning,
+  Turned,
   Velocity,
   BasicAttack
 } from "../schema.ts"
@@ -140,7 +141,9 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         disarmed: Game.Query.write(Disarmed),
         poise: Game.Query.read(Poise),
         mode: Game.Query.read(EnemyMode),
-        elite: Game.Query.optional(Elite)
+        elite: Game.Query.optional(Elite),
+        velocity: Game.Query.read(Velocity),
+        turned: Game.Query.optional(Turned)
       }
     }),
     player: Game.Query({
@@ -175,12 +178,10 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     ? undefined
     : { at: target, velocity: clampLength(player.data.velocity.get(), player.data.stats.get().speed) }
   const boxes = wallBoxes(queries.walls.each())
-  const faction: Faction = "enemy"
   // While she is open (see `readPlayer`), the melee enemies' attacks come round faster (never their telegraphs);
   // those keeping their distance keep their rhythm.
-  const open = player !== undefined && target !== undefined &&
+  const openToRush = player !== undefined && target !== undefined &&
     readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges }).opening
-  const cooldownRate = open ? tuning.reading.cooldownRate : 1
   const random = new Random(resources.rng.get().state)
 
   // Champions' phases, by their health (see `ChampionMoveset`): the one each is in, and the last it opened.
@@ -202,6 +203,19 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   let windingUp = attackers.filter(({ data }) => data.phase.get() === "windup").length
   // How many stand on the field (spawn warnings included), for an attacker short of support (`alone`).
   const standing = attackers.length + queries.pending.each().length
+  // Enemies turned to her side (see `Turned`) and those still against her: each fights the nearest of the other.
+  const sides = attackers.map(({ entity, data }) => ({
+    id: entity.id.value,
+    turned: data.turned.present,
+    moving: { at: data.position.get(), velocity: data.velocity.get() } satisfies Moving
+  }))
+  /** What an attacker goes for: a turned one, the nearest still against her; the others, her or a turned one, the nearer. */
+  const targetOf = (id: number, at: Vec2, turned: boolean): { readonly moving: Moving; readonly her: boolean } | undefined => {
+    const others = sides.filter((side) => side.id !== id && side.turned !== turned).map((side) => ({ moving: side.moving, her: false }))
+    const all = turned || moving === undefined ? others : [{ moving, her: true }, ...others]
+    return all.reduce<(typeof all)[number] | undefined>((best, next) =>
+      best === undefined || Math.hypot(next.moving.at.x - at.x, next.moving.at.y - at.y) < Math.hypot(best.moving.at.x - at.x, best.moving.at.y - at.y) ? next : best, undefined)
+  }
 
   for (const { entity, data } of order.map((index) => attackers[index]!)) {
     const kind = data.enemy.get().kind
@@ -215,6 +229,13 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (rampage !== undefined && rampage.phase > rampage.was) events.roused.emit({ at: data.position.get(), enemy: kind, phase, element: data.elite.present ? data.elite.get().element : null })
     // Low levels wait longer between attacks, a champion less (its telegraphs are its kind's), and less again in its later phases; see `restOf`.
     const rest = (data.enemy.get().rest ?? 1) * phaseRest
+    // Turned, it fights for her side (see `Turned`), at the nearest of its old side, past the crowd's windups.
+    const turned = data.turned.present ? data.turned.get() : null
+    const faction: Faction = turned?.faction ?? "enemy"
+    const goal = targetOf(entity.id.value, data.position.get(), turned !== null)
+    const moving = goal?.moving
+    const open = goal?.her === true && openToRush
+    const cooldownRate = open ? tuning.reading.cooldownRate : 1
     // A broken or a disarmed enemy's windup is cut off (it starts over once it recovers, or once it is armed again).
     const disarmed = data.disarmed.get().remaining
     if (disarmed > 0) data.disarmed.set({ remaining: Math.max(0, disarmed - dt) })
@@ -250,7 +271,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     }
 
     // A skirmisher attacks only while holding an engagement slot (see `Behavior`).
-    const engaged = behavior.kind !== "skirmish" || data.mode.get() === "engage"
+    const engaged = turned !== null || behavior.kind !== "skirmish" || data.mode.get() === "engage"
     if (cycle.get() === "ready") {
       elapsed = 0
       // A phase begun: its opening attack, at once.
@@ -258,8 +279,9 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       if (rampage !== undefined && moving !== undefined && rampage.opened < phase) {
         rampage.opened = phase
         if (opener >= 0) begin(opener, moving)
-      } else if ((cooldown <= 0 || pressed) && engaged && (rampage !== undefined || windingUp < tuning.crowd.windups) && moving !== undefined) {
-        const usable = attacks.flatMap((spec, index) => (spec.weight > 0 && !spec.opens && spec.phase <= phase && canStart(spec, position, moving.at, boxes) ? [index] : []))
+      } else if ((cooldown <= 0 || pressed) && engaged && (rampage !== undefined || turned !== null || windingUp < tuning.crowd.windups) && moving !== undefined) {
+        // A turned one calls no help (its old side would come).
+        const usable = attacks.flatMap((spec, index) => (spec.weight > 0 && !spec.opens && spec.phase <= phase && !(turned !== null && spec.kind === "call") && canStart(spec, position, moving.at, boxes) ? [index] : []))
         const reading = readFrom(position, moving, player?.data.stats.get().speed ?? 1, boxes, open, standing - 1 < tuning.champions.alone, pressed)
         // Pressed, its answer comes as soon as it is free, its rest cut short; otherwise it rests first.
         const answers = answering(attacks, usable, reading)
@@ -313,7 +335,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       windingUp -= 1
       // A blink: it appears in the middle of its mark (walls push it out as it moves on), with nothing to blend from.
       const struckFrom = spec.kind === "blink" && area.kind === "circle" ? area.center : position
-      events.released.emit({ attacker: entity.id.value, at: struckFrom, attack: spec, area, blow: struck })
+      events.released.emit({ attacker: entity.id.value, at: struckFrom, attack: spec, area, blow: struck, faction })
       if (struckFrom !== position) {
         data.position.set(struckFrom)
         data.previous.set(struckFrom)
@@ -345,7 +367,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           area, faction, blow: struck, remaining: Math.max(spec.active, 1e-6), hit: [], follows: struckFrom, pushAlong: along
         }]))
-        commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
+        // (A turned one's gust only strikes: it pushes neither side's own.)
+        if (turned === null) commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           area, faction: "player", blow: blow({ damage: 0, knockback: spec.knockback, element: { id: "wind", atk } }),
           // Not the caster itself, at the cone's tip.
           remaining: Math.max(spec.active, 1e-6), hit: [entity.id.value], follows: struckFrom, pushAlong: along

@@ -209,9 +209,10 @@ export const characters = {
   /**
    * Thunder, Gauntlets, attacker (a working name): the fast one, very close,
    * hard-hitting, light and frail. The Spark Step darts her through a line
-   * of enemies, charging them; the Storm Flurry hops her from one to the
-   * next. Her dash is a little slower than her quickness suggests: the
-   * Gauntlets' blows bring it back (see `Handling.dashFeed`).
+   * of enemies, charging them; the Overcharge turns her to lightning for a
+   * while, every dash a Spark Step of its own and all but endless. Her dash
+   * is a little slower than her quickness suggests: the Gauntlets' blows
+   * bring it back (see `Handling.dashFeed`).
    */
   sparkfist: character({
     name: "Sparkfist",
@@ -247,9 +248,9 @@ export const characters = {
   }),
   /**
    * Rock, Hammer, attacker (a working name): the slow, heavy hitter, frail
-   * for her strength and slow on her feet, her dash short. The Fault Line
-   * splits the ground along her aim; the Landslide shakes it ever wider
-   * around her.
+   * for her strength and slow on her feet, her dash short. With Splinters
+   * her blows throw rock splinters that burst a moment later; the
+   * Rockburst bursts them out all around her.
    */
   quarry: character({
     name: "Quarry",

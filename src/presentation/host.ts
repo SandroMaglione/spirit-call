@@ -9,6 +9,7 @@ import { makeCamera, placeCamera } from "./camera.ts"
 import { DropTrail } from "./drop-trail.ts"
 import { Stones } from "./stones.ts"
 import { Fx } from "./fx.ts"
+import { Haze } from "./haze.ts"
 import { trackPartyTaps } from "./party-taps.ts"
 import { readSafeArea } from "./safe-area.ts"
 import { dashIcon } from "./icons.ts"
@@ -200,6 +201,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
   const projected = new Group()
   const overlay = new Shapes({ depthTest: false })
   const fx = new Fx(projected, projection.squash)
+  const haze = new Haze()
   projected.add(overlay.mesh)
   const reticle = new Shapes({ depthTest: false })
   const edges = new Shapes({ depthTest: false })
@@ -249,6 +251,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     overlay,
     projected,
     fx,
+    haze,
     drops: new DropTrail(scene),
     stones: new Stones(scene),
     trails: new SlashTrails(trails),
@@ -261,7 +264,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
     showArena,
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
     fallen: [],
-    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, moment: 0, protection: 0, entrance: Infinity, wideEyes: 0, stepIn: null, sway: { x: 0, y: 0, vx: 0, vy: 0, last: null }, recoil: new Map(), stateClock: { id: null, full: 0 }, meter: { recent: [] } },
+    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, moment: 0, protection: 0, entrance: Infinity, wideEyes: 0, stepIn: null, sway: { x: 0, y: 0, vx: 0, vy: 0, last: null }, recoil: new Map(), stateClock: { id: null, full: 0 }, hover: null, squish: null, meter: { recent: [] } },
     toCanvas: (world, height) => {
       const center = toScreen(projection, cameraView.center)
       const at = toScreenAt(projection, world, height)
@@ -289,6 +292,8 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       renderer.info.reset()
       renderer.clear()
       renderer.render(scene, camera)
+      // Heat bends the scene, under the overlay.
+      haze.apply(renderer, host.toCanvas)
       renderer.clearDepth()
       renderer.render(overlayScene, overlayCamera)
     }
@@ -308,6 +313,7 @@ export const createBrowserHost = async (mount: HTMLElement, arena: { readonly wi
       nodes.clear()
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
+      haze.dispose()
       host.drops.dispose()
       host.stones.dispose()
       assets.dispose()

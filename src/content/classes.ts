@@ -250,17 +250,19 @@ export const classes = {
     handling: { comboWindow: 0.75, inputBuffer: 0.2, active: 0.1, lungeStop: 14, attackingSpeed: 0.35, holdDelay: 0.22, chargingSpeed: 0.5, dashFeed: 0, weave: false, shockwave: null },
     /**
      * Quake: an overhead blow (lighter, to open), a heavier one, and a great
-     * one; charged, the greatest, widest of all.
+     * one; charged, the greatest, widest of all. Each comes down just ahead
+     * of her, its circle reaching back to her feet, so what crowds her is
+     * struck too.
      */
     plain: {
       name: "Quake",
       description: "Two overhead blows and a great one, each landing ahead of you. Charged: the greatest blow, widest of all.",
       combo: [
-        slam({ reach: 175, radius: 55, windup: 0.2, power: 22, knockback: 520, recovery: 0.52, hitStop: 0.08, heavy: false, lunge: 8 }),
-        slam({ reach: 185, radius: 60, windup: 0.22, power: 48, knockback: 600, recovery: 0.7, hitStop: 0.09, heavy: false, lunge: 8 }),
-        slam({ reach: 200, radius: 80, windup: 0.3, power: 94, knockback: 1100, recovery: 1.08, hitStop: 0.14, heavy: true, lunge: 10 })
+        slam({ reach: 150, radius: 72, windup: 0.2, power: 22, knockback: 520, recovery: 0.52, hitStop: 0.08, heavy: false, lunge: 8 }),
+        slam({ reach: 160, radius: 78, windup: 0.22, power: 48, knockback: 600, recovery: 0.7, hitStop: 0.09, heavy: false, lunge: 8 }),
+        slam({ reach: 180, radius: 95, windup: 0.3, power: 94, knockback: 1100, recovery: 1.08, hitStop: 0.14, heavy: true, lunge: 10 })
       ],
-      charged: { chargeTime: 0.7, move: slam({ reach: 215, radius: 95, windup: 0.14, power: 110, knockback: 1250, recovery: 0.9, hitStop: 0.16, heavy: true, lunge: 0 }) },
+      charged: { chargeTime: 0.7, move: slam({ reach: 200, radius: 110, windup: 0.14, power: 110, knockback: 1250, recovery: 0.9, hitStop: 0.16, heavy: true, lunge: 0 }) },
       /** A shoulder charge out of the dash. */
       dash: thrust({ reach: 110, width: 70, power: 10, knockback: 700, recovery: 0.3, hitStop: 0.07, heavy: false, lunge: 90 }),
       magazine: null,

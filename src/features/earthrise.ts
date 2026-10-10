@@ -150,10 +150,11 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
         blow: rock.blow
       })
     }
-    // An enemy it catches is held: stunned a while, its break bar filled (unless broken already).
+    // An enemy it catches is held: stunned a while (never a champion: skills do not hold the fight's own), its break
+    // bar filled (unless broken already).
     for (const { entity: held, data: enemy } of queries.holdable.each()) {
       if (!caught.has(held.id.value)) continue
-      if (effect.stun > 0) enemy.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
+      if (effect.stun > 0 && !enemy.enemy.get().champion) enemy.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
       const bar = poiseOf(tuning, enemy.enemy.get().kind, enemy.health.get().max, enemy.enemy.get().champion)
       if (bar > 0 && effect.breakFill > 0 && enemy.poise.get().broken <= 0) {
         enemy.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))

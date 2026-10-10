@@ -2,11 +2,12 @@
  * Rock's stone, in the 3D scene (low-poly, flat-shaded, in the rock
  * spirit's colors): the plates of a guard circling whoever wears them, the
  * spikes of an Earthrise shooting out of the floor and sinking back, and
- * chunks thrown when stone breaks. Three instanced meshes, reused; positions
+ * chunks thrown when stone breaks, and Quarry's splinters in flight and
+ * stuck in the floor. Four instanced meshes, reused; positions
  * in world units (the floor's x, height, the floor's y). No model: the
  * shapes are made here.
  */
-import { Color, ConeGeometry, Euler, IcosahedronGeometry, InstancedMesh, Matrix4, MeshStandardMaterial, Quaternion, Vector3 } from "three"
+import { Color, ConeGeometry, Euler, IcosahedronGeometry, InstancedMesh, Matrix4, MeshStandardMaterial, OctahedronGeometry, Quaternion, Vector3 } from "three"
 import type { BufferAttribute, BufferGeometry, Object3D } from "three"
 
 import { view } from "../config/view.ts"
@@ -42,6 +43,7 @@ interface Chunk {
 const MAX_PLATES = 6
 const MAX_SPIKES = 96
 const MAX_CHUNKS = 192
+const MAX_SPLINTERS = 64
 const GRAVITY = 900
 /** A spike's life: rising (with an overshoot), standing, then sinking into the floor. */
 const RISE = 0.13
@@ -74,6 +76,7 @@ export class Stones {
   private readonly plateMesh: InstancedMesh
   private readonly spikeMesh: InstancedMesh
   private readonly chunkMesh: InstancedMesh
+  private readonly splinterMesh: InstancedMesh
   private readonly spikes: Array<Spike> = []
   private readonly chunks: Array<Chunk> = []
   private readonly matrix = new Matrix4()
@@ -91,7 +94,9 @@ export class Stones {
     // A spike: a five-sided cone, its base on the floor.
     this.spikeMesh = new InstancedMesh(rough(new ConeGeometry(1, 1, 5, 2).translate(0, 0.5, 0), 0.3), material(), MAX_SPIKES)
     this.chunkMesh = new InstancedMesh(rough(new IcosahedronGeometry(1, 0), 0.4), material(), MAX_CHUNKS)
-    for (const mesh of [this.plateMesh, this.spikeMesh, this.chunkMesh]) {
+    // A splinter: a long, rough shard, pointed at both ends (along its y).
+    this.splinterMesh = new InstancedMesh(rough(new OctahedronGeometry(1, 0).scale(0.45, 1.4, 0.35), 0.3), new MeshStandardMaterial({ flatShading: true, roughness: 0.9, metalness: 0, emissive: view.stone.glow, emissiveIntensity: 0.12 }), MAX_SPLINTERS)
+    for (const mesh of [this.plateMesh, this.spikeMesh, this.chunkMesh, this.splinterMesh]) {
       mesh.count = 0
       mesh.frustumCulled = false
       mesh.setColorAt(0, new Color(0xffffff))
@@ -160,6 +165,31 @@ export class Stones {
     this.shatter(at, 18, 10, 4, 460)
   }
 
+  /**
+   * Rock splinters this frame (see `SplintersEffect`): each a shard `size`
+   * long at `x`, `y` (height), `z`, its long axis along `along` (world: the
+   * floor's x, height, the floor's y), turned `roll` about it.
+   */
+  splinters(list: ReadonlyArray<{ readonly x: number; readonly y: number; readonly z: number; readonly along: Vector3; readonly roll: number; readonly size: number }>): void {
+    const shown = Math.min(MAX_SPLINTERS, list.length)
+    const up = new Vector3(0, 1, 0)
+    const spin = new Quaternion()
+    for (let index = 0; index < shown; index++) {
+      const splinter = list[index]!
+      this.turn.setFromUnitVectors(up, splinter.along)
+      spin.setFromAxisAngle(up, splinter.roll)
+      this.turn.multiply(spin)
+      this.position.set(splinter.x, splinter.y, splinter.z)
+      this.scale.set(splinter.size, splinter.size, splinter.size)
+      this.matrix.compose(this.position, this.turn, this.scale)
+      this.splinterMesh.setMatrixAt(index, this.matrix)
+      this.splinterMesh.setColorAt(index, index % 3 === 0 ? this.light : this.middle)
+    }
+    this.splinterMesh.count = shown
+    this.splinterMesh.instanceMatrix.needsUpdate = true
+    if (this.splinterMesh.instanceColor !== null) this.splinterMesh.instanceColor.needsUpdate = true
+  }
+
   /** Chunks of stone thrown up and out from `at` (a floor point), `height` up. */
   shatter(at: Vec2, count: number, height: number, size: number, speed: number): void {
     for (let index = 0; index < count && this.chunks.length < MAX_CHUNKS; index++) {
@@ -215,7 +245,7 @@ export class Stones {
   }
 
   dispose(): void {
-    for (const mesh of [this.plateMesh, this.spikeMesh, this.chunkMesh]) {
+    for (const mesh of [this.plateMesh, this.spikeMesh, this.chunkMesh, this.splinterMesh]) {
       mesh.removeFromParent()
       mesh.geometry.dispose()
       ;(mesh.material as MeshStandardMaterial).dispose()

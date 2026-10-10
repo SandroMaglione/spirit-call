@@ -54,7 +54,8 @@ import {
   Ward,
   Immortal,
   PracticeUnit,
-  Waves
+  Waves,
+  Turned
 } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
 import type { EliteElement } from "../content/challenges.ts"
@@ -260,7 +261,8 @@ export const SteerEnemies = (() => {
           knockback: Game.Query.read(Knockback),
           mode: Game.Query.write(EnemyMode),
           stunned: Game.Query.read(Stunned),
-          affinities: Game.Query.read(ElementAffinities)
+          affinities: Game.Query.read(ElementAffinities),
+          turned: Game.Query.optional(Turned)
         }
       }),
       pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
@@ -280,7 +282,7 @@ export const SteerEnemies = (() => {
     const [player] = queries.player.each()
     const target = player?.data.position.get()
     // What the enemies make of her: open to a rush, or a threat to keep out of reach of (see `readPlayer`).
-    const read = player === undefined || target === undefined
+    const herRead = player === undefined || target === undefined
       ? undefined
       : readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges })
     const boxes = wallBoxes(queries.walls.each())
@@ -323,7 +325,7 @@ export const SteerEnemies = (() => {
         const mode = data.mode.get()
         if (mode === "engage") engaged += 1
         // Open, she gets the circling ones at once.
-        else if (mode === "orbit" && (read?.opening === true || data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds)) {
+        else if (mode === "orbit" && (herRead?.opening === true || data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds)) {
           const position = data.position.get()
           waiting.push({ distance: Math.hypot(position.x - target.x, position.y - target.y), mode: data.mode, brain: data.brain })
         }
@@ -335,9 +337,22 @@ export const SteerEnemies = (() => {
       }
     }
 
+    // Enemies turned to her side (see `Turned`) and those still against her: each goes for the nearest of the other.
+    const sides = enemies.map(({ entity, data }) => ({ id: entity.id.value, at: data.position.get(), turned: data.turned.present }))
+    /** Where an enemy goes: a turned one, to the nearest still against her; the others, to her or a turned one, the nearer. */
+    const goalOf = (id: number, at: Vec2, turned: boolean): { readonly at: Vec2; readonly her: boolean } | undefined => {
+      const others = sides.filter((side) => side.id !== id && side.turned !== turned).map((side) => ({ at: side.at, her: false }))
+      const all = turned || target === undefined ? others : [{ at: target, her: true }, ...others]
+      return all.reduce<(typeof all)[number] | undefined>((best, next) =>
+        best === undefined || Math.hypot(next.at.x - at.x, next.at.y - at.y) < Math.hypot(best.at.x - at.x, best.at.y - at.y) ? next : best, undefined)
+    }
+
     for (const { entity, data } of enemies) {
       const kind = data.enemy.get().kind
       const spec = tuning.enemies[kind]
+      const chase = goalOf(entity.id.value, data.position.get(), data.turned.present)
+      // What it makes of the one it goes for: only she is read (see `readPlayer`).
+      const read = chase?.her === true ? herRead : undefined
       // Speed is a stat, so what changes stats (levels) changes it.
       // Closing in on her while she is open, a melee enemy rushes.
       const behavior = behaviorOf(tuning, data.enemy.get())
@@ -385,13 +400,14 @@ export const SteerEnemies = (() => {
         continue
       }
       let desired: Vec2 = zero
-      if (target !== undefined) {
-        const toward = normalizeOr(sub(target, position), zero)
-        // Straight at her when nothing is in between; around the walls (and the arena's hazards) otherwise.
-        const way = hasLineOfSight(position, target, radius, avoided) ? toward : (paths.way(position) ?? toward)
+      if (chase !== undefined) {
+        const toward = normalizeOr(sub(chase.at, position), zero)
+        // Straight at her when nothing is in between; around the walls (and the arena's hazards) otherwise (the
+        // paths lead to her: one going for a turned enemy heads straight for it).
+        const way = hasLineOfSight(position, chase.at, radius, avoided) || !chase.her ? toward : (paths.way(position) ?? toward)
         // Seeing her over the arena's pools counts (shots fly over them); only walls hide her.
-        const sight = way === toward || hasLineOfSight(position, target, radius, boxes)
-        const distance = length(sub(target, position))
+        const sight = way === toward || hasLineOfSight(position, chase.at, radius, boxes)
+        const distance = length(sub(chase.at, position))
         const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, sight, distance, speed, dt })
         // Under her threat, a skirmisher whose turn it is keeps just out of her reach, circling, until it runs out of patience.
         const wary = behavior.kind === "skirmish" && mode === "engage" && read !== undefined && read.threatens(position) && data.brain.get().modeTimer < tuning.reading.patience

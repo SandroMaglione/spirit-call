@@ -87,7 +87,7 @@ export const kitAudit = (tuning: Tuning) => Object.entries(tuning.characters).fl
   (["special", "ultimate"] as const).map((slot) => {
     const skill = tuning.skills[spec.skills[slot]]
     const effect = skill.effect
-    const strikes = effect.kind === "totem" ? Math.floor(effect.seconds / effect.tick) : effect.kind === "vortex" ? Math.floor(effect.seconds / effect.tick) : 1
+    const strikes = effect.kind === "companions" ? effect.count * Math.floor(effect.budget / effect.power) : effect.kind === "totem" ? Math.floor(effect.seconds / effect.tick) : effect.kind === "vortex" ? Math.floor(effect.seconds / effect.tick) : 1
     const perUse = effect.power * strikes
     return {
       character, slot, skill: skill.name, kind: effect.kind, perUse, reach: Math.round(skillReach(effect)),

@@ -7,10 +7,11 @@ import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Barrier, Body, Bracing, Burst, Projectile, Velocity, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Player, Rebrace, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
+import { AttackPhase, Attacker, Barrier, Body, Burst, Projectile, Velocity, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Turned, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
+import { unmarkedHits } from "./signatures.ts"
 
 /**
  * Everything dangerous, drawn on the floor: pools of elements (under
@@ -30,7 +31,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     waves: Game.Query({ selection: { projectile: Game.Query.read(Projectile), velocity: Game.Query.read(Velocity), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     attackers: Game.Query({
-      selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), position: Game.Query.read(Position), body: Game.Query.read(Body) }
+      selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), position: Game.Query.read(Position), body: Game.Query.read(Body), turned: Game.Query.optional(Turned) }
     }),
     enemyBodies: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) }, with: [Enemy] }),
     wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
@@ -79,7 +80,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     // An element's attack is drawn in its element's color, so what it would put on you shows before it lands.
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
     // A gust shows as wind: what it does is push. A call for help, as the spawn warnings of what it calls.
-    const color = spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
+    // A turned one's (see `Turned`) in her side's color: it is not coming for her.
+    const color = data.turned.present ? view.turned.glow : spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
     // Where, never when: no fill counting down to the hit (its timing is read from its body).
     drawArea(g, area, 0, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
     // A blink: a ring around where it stands, as its mark shows where it will land.
@@ -166,6 +168,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
+    const label = hitbox.blow.source?.label
+    if (label?.kind === "skill" && unmarkedHits.has(label.skill)) continue
     const color = hitbox.faction === "enemy" ? view.telegraphLocked : hitbox.blow.element === null ? view.playerArea : view.elements[hitbox.blow.element.id]
     // A hammer's blow (one with a windup) softer: faint while it falls, its own look marking where it lands.
     const style = hitbox.delay === undefined ? { fill: 0.55, outline: 1 } : hitbox.delay > 0 ? { fill: 0.1, outline: 0.3 } : { fill: 0.3, outline: 0.6 }
@@ -186,6 +190,18 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     }
     const flight = Math.min(1, elapsed / spec.flightTime)
     const fuse = spec.fuse > 0 ? Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse)) : flight >= 1 ? 1 : 0
+    // A rock splinter, once down: the circle its burst will strike, filling as its fuse burns.
+    if (lobbed.splinter === true) {
+      if (flight >= 1) {
+        g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.12 + 0.12 * fuse)
+        g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 1.5, color, 0.3 + 0.5 * fuse)
+        continue
+      }
+      // In flight, its shadow (the shard itself is in the 3D scene, see `ShowSplinters`).
+      const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
+      g.fillCircle(ground.x, ground.y, 4, view.shadow, 0.3)
+      continue
+    }
     g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, flight < 1 ? 0.35 : 0.9)
     // A bomb's fuse shows burning only for the team's own (an enemy's is read from it landing, never counted down).
     if (fuse > 0 && lobbed.faction === "player") g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.25)
@@ -302,34 +318,6 @@ export const DrawMarks = Game.System("Shooter/DrawMarks", {
     const radius = data.body.get().radius + view.marks.gap
     g.strokeCircle(at.x, at.y, radius, view.marks.width, view.marks.color, view.marks.outline * fade * pulse)
     g.strokeCircle(at.x, at.y, radius - view.marks.inner, view.marks.width - 1, view.marks.color, view.marks.outline * fade * pulse * 0.6)
-  }
-})
-
-/**
- * A brace held (see `Bracing`): a bright ring of water at her feet where
- * her answer would reach, filling in as the moment passes; while a
- * Floodgate readies her braces (see `Rebrace`), a faint ring stays.
- */
-export const DrawBraces = Game.System("Shooter/DrawBraces", {
-  queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), bracing: Game.Query.optional(Bracing) }, with: [Player] })
-  },
-  resources: { rebrace: Game.System.readResource(Rebrace) },
-  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
-}, ({ queries, resources, services }) => {
-  const g = services.host.telegraphs
-  const [player] = queries.player.each()
-  if (player === undefined) return
-  const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
-  const color = view.elements.water
-  if (player.data.bracing.present) {
-    const { remaining, effect } = player.data.bracing.get()
-    const left = Math.max(0, Math.min(1, remaining / effect.window))
-    g.fillCircle(at.x, at.y, effect.radius, color, view.braces.fill * (1 - left))
-    g.strokeCircle(at.x, at.y, effect.radius, view.braces.width, color, view.braces.outline)
-  } else if (resources.rebrace.get().remaining > 0) {
-    const pulse = 0.7 + 0.3 * Math.sin((performance.now() / 1000) * Math.PI * 2 / view.braces.pulse)
-    g.strokeCircle(at.x, at.y, view.braces.ready, view.braces.width - 1, color, view.braces.outline * 0.4 * pulse)
   }
 })
 

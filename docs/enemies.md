@@ -203,7 +203,9 @@ own movesets" below; the others fight with their kind's moveset.
 - **Elemental, like an elite**: immune to its element, every blow carrying
   it, and a thunder champion discharges around itself. It leaves no trail:
   staying for waves, it would flood the floor. States and bursts land on it
-  as on any enemy; over its long life they add up.
+  as on any enemy; over its long life they add up. A skill never takes it
+  out of the fight: no lift, no turning it to her side, and a skill's stun
+  passes it by (its break bar still fills, and a break still holds it).
 - **Harder to move**: pushed less than its kind (a Gale or a wall slam
   still counts), and its break bar is a smaller share of its health than
   its kind's, so it breaks a few times in a fight, each a window.

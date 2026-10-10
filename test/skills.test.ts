@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
+import type { Tuning } from "../src/config/tuning.ts"
+import { nova } from "../src/content/skills.ts"
 import { damageDealt } from "../src/features/build.ts"
-import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
-import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy } from "./helpers.ts"
+import { BasicAttack, Cast, Companion, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Overdriven, Player, Position, Projectile, Skills } from "../src/schema.ts"
+import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy, volley, withVolley } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -288,11 +289,45 @@ describe("ultimates (Shift)", () => {
     })
   })
 
-  describe("the Gunner's Barrage", () => {
+  describe("the Gunner's Overdrive", () => {
     const spec = defaultTuning.skills.barrage.effect
+    if (spec.kind !== "overdrive") throw new Error("the Barrage is an Overdrive")
+    const Gun = Game.Inspector("Test/Gun", {
+      queries: { player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack), overdriven: Game.Query.optional(Overdriven) }, with: [Player] }) }
+    }, ({ queries }) => {
+      const { data } = queries.player.each()[0]!
+      return { reloading: data.basicAttack.get().reloading, spent: data.basicAttack.get().spent, overdriven: data.overdriven.present }
+    })
+    /** Taps of the trigger, one every `every` steps from `from`. */
+    const taps = (count: number, from: number, every: number) => Array.from({ length: count }, (_, index) => [{ frame: from + index * every, press: ["primary" as const] }, { frame: from + index * every + 1, release: ["primary" as const] }]).flat()
+
+    it("runs her gun hot a while: her magazine never runs dry, then it wears off", () => {
+      const run = range([], { x: 300, y: 0 }, { build: gunner, keys: [ultimate(1)], pointer: taps(10, 6, 7) })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(4)
+      expect(run.runtime.inspect(Gun).overdriven).toBe(true)
+      run.step(80)
+      expect(run.runtime.inspect(Gun).reloading).toBe(0)
+      expect(run.runtime.inspect(Gun).spent).toBe(0)
+      run.step(steps(spec.seconds))
+      expect(run.runtime.inspect(Gun).overdriven).toBe(false)
+    })
+
+    it("sets what her shots hit alight, and each shot bursts on what it hits, catching what stands by", () => {
+      const run = range([{ x: 300, y: 0 }, { x: 300, y: spec.blast.radius - 5 }], { x: 300, y: 0 }, { tuning: sturdy, build: gunner, keys: [ultimate(1)], pointer: taps(1, 8, 7) })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(40)
+      const [aimed, beside] = run.world().enemies
+      expect(aimed!.state).toBe("burning")
+      expect(beside!.health).toBeLessThan(1000)
+    })
+  })
+
+  describe("a volley (the Gunner's Barrage before the Overdrive)", () => {
+    const spec = volley
 
     it("lobs its shells one after the other around the cursor, each blasting and leaving a fire pool", () => {
-      const run = range([{ x: 250, y: 0 }], { x: 250, y: 0 }, { tuning: sturdy, build: gunner, keys: [ultimate(1)] })
+      const run = range([{ x: 250, y: 0 }], { x: 250, y: 0 }, { tuning: withVolley(sturdy), build: gunner, keys: [ultimate(1)] })
       run.runtime.tick(Game.Schedule(FillEnergy))
       run.step(3)
       const shells = run.world().grenades
@@ -312,13 +347,15 @@ describe("ultimates (Shift)", () => {
   })
 
   describe("an ultimate's moment", () => {
-    const tide = defaultTuning.skills.tide.effect
+    // A shockwave for an ultimate (the Tide before the Tidal Echo): what it hits says when it went off.
+    const tide = nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
+    const novaTide = { ...sturdy, skills: { ...sturdy.skills, tide: { ...sturdy.skills.tide, effect: tide } } } as unknown as Tuning
     const moment = defaultTuning.ultimate.moment
 
     it("stands the world still as she calls it up, then goes off where she called it", () => {
       expect(moment).toBeGreaterThan(0)
       // She also holds a direction: nothing moves while the world stands still.
-      const run = range([{ x: tide.radius - 20, y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, moments: true, keys: [ultimate(1), { frame: 2, press: ["right"] }] })
+      const run = range([{ x: tide.radius - 20, y: 0 }], { x: 200, y: 0 }, { tuning: novaTide, build: tidecaller, moments: true, keys: [ultimate(1), { frame: 2, press: ["right"] }] })
       run.runtime.tick(Game.Schedule(FillEnergy))
       run.step(3)
       const from = run.player().position
@@ -339,32 +376,36 @@ describe("ultimates (Shift)", () => {
     })
   })
 
-  describe("the Tidecaller's Tide", () => {
+  describe("the Tidecaller's Tidal Echo", () => {
     const spec = defaultTuning.skills.tide.effect
+    if (spec.kind !== "companions") throw new Error("the Tide calls companions")
+    const Companions = Game.Inspector("Test/Companions", { queries: { companions: Game.Query({ selection: { companion: Game.Query.read(Companion) } }) } }, ({ queries }) => queries.companions.each().length)
 
-    it("soaks and drives back everything within its radius, without refilling the energy", () => {
-      const run = range([{ x: spec.radius - 20, y: 0 }, { x: -(spec.radius + 40), y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, keys: [ultimate(1)] })
+    it("calls up her echo, throwing at the nearest enemy within its reach, soaking it; never one beyond", () => {
+      const run = range([{ x: 150, y: 0 }, { x: -(spec.radius + 300), y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, keys: [ultimate(1)] })
       run.runtime.tick(Game.Schedule(FillEnergy))
-      run.step(4)
-      const [inside, outside] = run.world().enemies
-      expect(inside!.health).toBe(1000 - hitBy("tidecaller", spec.power))
-      expect(inside!.state).toBe("soaked")
-      expect(outside!.health).toBe(1000)
+      run.step(steps(1.05))
+      expect(run.runtime.inspect(Companions)).toBe(spec.count)
+      const [near, far] = run.world().enemies
+      expect(near!.health).toBeLessThan(1000)
+      expect(near!.state).toBe("soaked")
+      expect(far!.health).toBe(1000)
       expect(run.world().energy).toBe(defaultTuning.energy.max - defaultTuning.skills.tide.energy)
-      run.step(30)
-      expect(run.world().enemies[0]!.position.x).toBeGreaterThan(center.x + spec.radius)
     })
 
-    it("washes away enemy shots inside its radius", () => {
-      const run = range([], { x: 200, y: 0 }, { build: tidecaller, keys: [ultimate(1)] })
-      const Bolts = Game.System("Test/Bolts", {}, ({ commands }) => {
-        const bolt = { faction: "enemy" as const, style: "bolt" as const, radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 5, pierce: 0, hit: [] }
-        commands.spawnIn(RunScope, makeProjectile({ x: center.x + 150, y: center.y }, { x: 0, y: 0 }, bolt))
-        commands.spawnIn(RunScope, makeProjectile({ x: center.x + spec.radius + 100, y: center.y }, { x: 0, y: 0 }, bolt))
-      })
-      run.runtime.tick(Game.Schedule(FillEnergy, Bolts, Game.Schedule.applyDeferred()))
-      run.step(2)
-      expect(run.world().projectiles).toHaveLength(1)
+    it("each leaves once it has dealt its share, or when its time is up", () => {
+      const shots = Math.ceil(spec.budget / spec.power)
+      const fighting = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { tuning: tuningWith({ enemies: { dummy: { hp: 1_000_000 } } }), build: tidecaller, keys: [ultimate(1)] })
+      fighting.runtime.tick(Game.Schedule(FillEnergy))
+      // The last of them acts a tick's share after the first.
+      fighting.step(steps(0.6 + spec.tick * shots + 0.2))
+      expect(fighting.runtime.inspect(Companions)).toBe(0)
+      const idle = range([], { x: 200, y: 0 }, { build: tidecaller, keys: [ultimate(1)] })
+      idle.runtime.tick(Game.Schedule(FillEnergy))
+      idle.step(steps(spec.seconds - 0.5))
+      expect(idle.runtime.inspect(Companions)).toBe(spec.count)
+      idle.step(steps(1))
+      expect(idle.runtime.inspect(Companions)).toBe(0)
     })
   })
 })

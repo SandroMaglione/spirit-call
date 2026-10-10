@@ -10,7 +10,7 @@ export const energyAudit = (tuning: Tuning) => {
     classes: Object.fromEntries(Object.entries(tuning.classes).map(([id, spec]) => [id, { ...spec, plain: { ...spec.plain,
       combo: spec.plain.combo.map((move) => ({ ...move, lunge: 0, knockback: 0 })), dash: { ...spec.plain.dash, lunge: 0, knockback: 0 } } }])),
     skills: { bladeWave: { effect: { knockback: 0 } }, tidalWave: { effect: { knockback: 0 } },
-      flareJump: { effect: { distance: 0, knockback: 0, leaves: null } }, barrage: { effect: { leaves: null } } },
+      flareJump: { effect: { distance: 0, knockback: 0, leaves: null } } },
     enemies: { dummy: { hp: 1000000, knockbackTaken: 0 } }
   })
   return (Object.keys(tuning.characters) as Array<CharacterId>).flatMap((character) => [1, 40].flatMap((level) => [1, 6].map((targets) => {

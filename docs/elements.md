@@ -147,16 +147,19 @@ The Stormcaller heals by standing:
   and more for each enemy it strikes already charged: her totem's zaps
   (and any thunder of the team) charging them first is its set-up.
 
-Hearth heals by burning:
+Hearth heals by burning a crowd:
 
-- **Her Kindle** slams around her and puts out every burning enemy in
-  reach: the rest of each burn is dealt at once, and the whole team heals
-  a little, more for each. Her own fire then catches what it struck, so
-  keeping the crowd burning keeps the next one healing.
-- **Her Wildfire** sets the crowd far around her alight, with a small heal
-  of its own: what the next Kindle feeds on.
+- **Her Kindle** is a ring of fire around her at a distance: it builds
+  up a moment, then burns a moment, and every enemy standing in it (or
+  walking into it) is struck once and set burning far longer than a blow
+  leaves it. What crowds her, inside the ring, is spared.
+- **Her Wildfire** is a pyre where she stands, staying there: it strikes
+  as it goes up, then burns what is inside every second, and a share of
+  what it deals heals whoever is on the field, up to a cap each time. A
+  crowd fills the cap; one or two enemies give little: it is tuned for
+  its best case, so many enemies never make it heal more.
 
-The big heals (the Tide, the Thunderclap, the Kindle) share one rule
+The big heals (the Tide, the Thunderclap) share one rule
 (`StateHeal`): a base for the team, more for each enemy in a state the
 skill reaches, up to a most. Each asks for its own state, so each healer
 sets it up her own way.
@@ -184,16 +187,16 @@ something. Bastion guards by plates:
   pays off in the fight: an enemy hitting the team cracks itself for the
   next blow of any element.
 
-Tidewarden guards by timing:
+Tidewarden guards by softening and turning the crowd:
 
-- **Her Brace** sets her a moment, rooted (she cannot run, attack, or
-  dash). The first enemy blow on her meanwhile (a shot too) is taken whole,
-  and she answers with a slash of water around her that disarms the
-  attacker. A brace that takes nothing is soon ready again; one that takes
-  a blow waits out its whole cooldown.
-- **Her Floodgate** soaks the crowd around her and drives it back, and for
-  a while after, a brace that takes a blow is ready again at once: a run
-  of parries, each timed.
+- **Her Tide Dome** rises over whoever is on the field and goes with her
+  (switched out, it stays over the one switched in), small enough for
+  close fighting. It strikes what is in it as it rises; after, it only
+  wets: what comes in is soaked (its blows weaker) and stays so inside.
+- **Her Riptide Bond** lashes a chain of water onto the toughest enemy
+  near her (never a champion) and turns it to her side a while: it fights
+  its old side with its own attacks, and they turn on it. Then the chain
+  snaps, striking it hard and leaving it stunned.
 
 Windwall guards by placing:
 
@@ -204,7 +207,7 @@ Windwall guards by placing:
 - **Her Eye of the Storm** rings where she stands: its gust throws what is
   inside out to it, then shots break on it and whoever comes through is
   thrown back out. Blows struck through neither are stopped: a barrier
-  stops shots, a brace or a plate stops blows.
+  stops shots, a plate stops blows.
 
 ## Ground
 

@@ -10,7 +10,7 @@ import type { Vec2 } from "../src/math/vec.ts"
 import type { LobMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Controls, Enemy, Energy, Game, Lobbed, Player, Position, Projectile, RunScope, Velocity } from "../src/schema.ts"
-import { ClearEnemies, gunner, plainAttack, start, swordsman, tidecaller, withWindCut, grenadeSkill } from "./helpers.ts"
+import { ClearEnemies, gunner, plainAttack, start, swordsman, tidecaller, withWindCut, grenadeSkill, volley, withVolley } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
@@ -160,8 +160,9 @@ describe("touch controls", () => {
     tide.step(2)
     expect(tide.player().invulnerable).toBeCloseTo(defaultTuning.skills.tide.invulnerability, 6)
 
-    const spec = defaultTuning.skills.barrage.effect
-    const thrown = start({ tuning: tuningWith({ touch: { assist: { enabled: false } } }), build: gunner, touch: [{ frame: 0, press: ["ultimate"] }, { frame: 2, release: ["ultimate"] }] })
+    // A volley (the Barrage before the Overdrive) for an ultimate aimed at a point.
+    const spec = volley
+    const thrown = start({ tuning: withVolley(tuningWith({ touch: { assist: { enabled: false } } })), build: gunner, touch: [{ frame: 0, press: ["ultimate"] }, { frame: 2, release: ["ultimate"] }] })
     thrown.runtime.tick(Game.Schedule(Charge))
     thrown.step(2)
     expect(thrown.runtime.inspect(World).grenades).toEqual([])

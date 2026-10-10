@@ -13,7 +13,7 @@ import type { CharacterId } from "../src/content/characters.ts"
 import type { ElementId } from "../src/content/elements.ts"
 import type { Passive } from "../src/content/passives.ts"
 import type { RelicId, RelicSlot, RelicSpec } from "../src/content/relics.ts"
-import { cut, lob, vortex } from "../src/content/skills.ts"
+import { cut, lob, vortex, barrage } from "../src/content/skills.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { attackOf, damageDealt, damageTaken } from "../src/features/build.ts"
@@ -102,6 +102,13 @@ export const withWindCut = (tuning: Tuning = defaultTuning): Tuning =>
   // The content types each skill by its effect; a test swaps one kind for another.
   ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Wind Cut", effect: windCut } } }) as unknown as Tuning
 
+/** The Barrage (the Gunner's ultimate before the Overdrive): fire shells lobbed one after the other around the cursor. */
+export const volley = barrage({ maxRange: 380, shells: 7, spread: 110, interval: 0.08, flightTime: 0.45, fuse: 0.15, radius: 70, power: 45, element: "fire", knockback: 260, hitStop: 0, heavy: false, leaves: { element: "fire", radius: 55, seconds: 3 } })
+
+/** `tuning` with the Gunner's ultimate swapped for `volley`. */
+export const withVolley = (tuning: Tuning = defaultTuning): Tuning =>
+  ({ ...tuning, skills: { ...tuning.skills, barrage: { ...tuning.skills.barrage, name: "Barrage", effect: volley } } }) as unknown as Tuning
+
 /**
  * The Gale (the Swordsman's special before it became the Gust): a whirl at
  * her feet pulling enemies in. The Cyclone, her ultimate, is one too;
@@ -123,7 +130,7 @@ export const grenadeSkill = {
   effect: lob({ maxRange: 360, flightTime: 0.35, fuse: 0.45, radius: 95, power: 38, element: "fire", knockback: 380, hitStop: 0, heavy: false, leaves: { element: "fire", radius: 80, seconds: 3 } })
 } as const
 
-/** The Splash (the Tidecaller's special before the Tidal Wave): water lobbed to the cursor, soaking and leaving a puddle. */
+/** The Splash (the Tidecaller's special before the Tidal Wave and the Tidefall): water lobbed to the cursor, soaking and leaving a puddle. */
 export const splashSkill = {
   name: "Splash",
   label: "SPLASH",
@@ -146,7 +153,7 @@ export const withLobbedSpecials = (tuning: Tuning = defaultTuning): Tuning => {
     skills: {
       ...tuning.skills,
       flareJump: skills.flareJump!.effect.kind === "leap" ? grenadeSkill : skills.flareJump,
-      tidalWave: skills.tidalWave!.effect.kind === "cut" ? splashSkill : skills.tidalWave
+      tidalWave: skills.tidalWave!.effect.kind === "plunge" ? splashSkill : skills.tidalWave
     }
   }) as unknown as Tuning
 }

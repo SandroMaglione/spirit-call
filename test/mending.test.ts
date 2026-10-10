@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
+import type { Tuning } from "../src/config/tuning.ts"
 import { blow, Damage, ElementState, Enemy, Energy, Game, Health, Marked, Player, Position } from "../src/schema.ts"
 import type { StateId } from "../src/content/elements.ts"
+import { cut } from "../src/content/skills.ts"
 import { center, cursorAt, placeDummies, start, steps, tidecaller } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
-const tidalWave = defaultTuning.skills.tidalWave.effect
 const tide = defaultTuning.skills.tide.effect
-const mark = tidalWave.kind === "cut" ? tidalWave.marks! : null!
-const heals = tide.kind === "nova" ? tide.heals! : null!
+const tidefall = defaultTuning.skills.tidalWave.effect
+/** A wave that marks (the Tidecaller's special before the Tidefall): no shipped skill marks now, but the rule stands. */
+const markingWave = cut({ length: 360, width: 150, active: 0.15, power: 22, element: "water", knockback: 900, hitStop: 0.04, heavy: false, leaves: null, marks: { seconds: 5, heal: 2, every: 1 } })
+const mark = markingWave.marks!
 
 const World = Game.Inspector("Test/Mending", {
   queries: {
@@ -22,8 +25,9 @@ const World = Game.Inspector("Test/Mending", {
 }))
 
 /** The Tidecaller with her shipped kit, sturdy dummies at `offsets`, aiming at `aim`. */
-const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: number; y: number }, options: StartOptions = {}) => {
-  const tuning = tuningWith({ enemies: { dummy: { hp: 100_000 } } })
+const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: number; y: number }, options: StartOptions = {}, marking = false) => {
+  const sturdy = tuningWith({ enemies: { dummy: { hp: 100_000 } } })
+  const tuning: Tuning = marking ? ({ ...sturdy, skills: { ...sturdy.skills, tidalWave: { ...sturdy.skills.tidalWave, effect: markingWave } } } as unknown as Tuning) : sturdy
   const run = start({ tuning, kits: "shipped", build: tidecaller, ...options, pointer: [{ frame: 0, move: cursorAt(aim) }] })
   run.runtime.tick(placeDummies(offsets, tuning))
   const world = () => run.runtime.inspect(World)
@@ -58,8 +62,8 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
 }
 
 describe("the Tidecaller's healing asks for blows", () => {
-  it("the Tidal Wave marks what it hits; a blow on the marked heals the one on the field, at most once every so often", () => {
-    const run = arena([{ x: 150, y: 0 }], { x: 150, y: 0 }, { keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
+  it("a wave that marks what it hits: a blow on the marked heals the one on the field, at most once every so often", () => {
+    const run = arena([{ x: 150, y: 0 }], { x: 150, y: 0 }, { keys: [{ frame: 1, press: ["special"], release: ["special"] }] }, true)
     run.step(6)
     expect(run.world().marks[0]).toBeGreaterThan(mark.seconds - 0.2)
     run.hurt()
@@ -84,19 +88,39 @@ describe("the Tidecaller's healing asks for blows", () => {
     expect(run.world().marks[0]).toBe(0)
   })
 
-  it("the Tide heals the team its base, and more for each enemy around already soaked", () => {
-    const near = [{ x: 120, y: 0 }, { x: -120, y: 60 }]
-    const far = { x: tide.kind === "nova" ? tide.radius + 200 : 0, y: 0 }
-    const run = arena([...near, far], { x: 150, y: 0 }, { keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
+  it("the Tidefall heals the team as she lands, more for each enemy around where she lands already soaked", () => {
+    const heals = tidefall.kind === "plunge" ? tidefall.lands!.heals! : null!
+    const distance = tidefall.kind === "plunge" ? tidefall.distance : 0
+    const near = [{ x: distance + 80, y: 0 }, { x: distance, y: 90 }]
+    const far = { x: -400, y: 0 }
+    const run = arena([...near, far], { x: 300, y: 0 }, { keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
     run.putIn("soaked", [...near, far])
+    run.hurt()
+    const before = run.world().health
+    run.step(steps(tidefall.kind === "plunge" ? tidefall.rise + tidefall.dive : 0) + 4)
+    const percent = Math.min(heals.most, heals.base + heals.per * near.length)
+    expect(run.world().health.current - before.current).toBeCloseTo((before.max * percent) / 100, 6)
+  })
+
+  it("the Tidal Echo heals her while no enemy is near and she is close to it, and not when she is far", () => {
+    if (tide.kind !== "companions") throw new Error("the Tide calls companions")
+    const run = arena([], { x: 150, y: 0 }, { keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
     run.hurt()
     const Fill = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
       for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
     })
     run.runtime.tick(Game.Schedule(Fill))
     const before = run.world().health
-    run.step(4)
-    const percent = Math.min(heals.most, heals.base + heals.per * near.length)
-    expect(run.world().health.current - before.current).toBeCloseTo((before.max * percent) / 100, 6)
+    // One heal from each of the three, one after the other.
+    run.step(steps(0.6 + (tide.tick * (tide.count - 1)) / tide.count + 0.2))
+    expect(run.world().health.current - before.current).toBeCloseTo((before.max * tide.heal * tide.count) / 100, 6)
+    // Far from them (they drift after her, slower than she runs): no more heals until they catch up.
+    const Away = Game.System("Test/Away", { queries: { player: Game.Query({ selection: { position: Game.Query.write(Position) }, with: [Player] }) } }, ({ queries }) => {
+      for (const { data } of queries.player.each()) data.position.set({ x: data.position.get().x + 320, y: data.position.get().y })
+    })
+    run.runtime.tick(Game.Schedule(Away))
+    const away = run.world().health.current
+    run.step(steps(0.5))
+    expect(run.world().health.current).toBe(away)
   })
 })

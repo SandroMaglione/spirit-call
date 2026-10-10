@@ -5,6 +5,44 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Every character's own kit (2026-10-10)
+
+Every special and ultimate was reworked or given its own look (PR #117).
+`pnpm expected` beside main, two seeds: 176 of 180 runs cleared (main
+180), 153 perfect (main 155); most quests take far fewer hits (Powder Keg
+37 to 0, The Brute 24 to 3). The two left failing on a seed are a
+wind-heavy team (Windwall, Swordsman, Gunner) against juggernauts, which
+resist wind and must be broken: Ironclad rank 2 (main cleared it taking
+43 and 29 hits against a budget of 2) and The Colossus rank 2. Read solo
+(the 8 matrix quests, seed 1337), the Windwall first cleared 5 to 6 of 8
+skilled: the Wind Mantle was up half the time and only struck what
+touched it, the Sky Lift takes the lifted out of reach. Its current now
+strikes 36% ATK (from 24%) over a reach of 64 (from 56), and it comes
+back after 12 s (from 16 s), so it is up 8 s of every 12: 7 of 8 skilled
+at 1.37 of the median time (her barriers' 1.37), 2 of 8 learning. The
+Gunner's Overdrive: 8 of 8 at 0.94. The Tidecaller: 8 of 8 at 1.14.
+
+## Quarry's Splinters, and the Hammer's reach (2026-10-10)
+
+Quarry's kit became Splinters (her blows throw rock splinters for 8 s) and
+Rockburst (splinters burst out all around her); see `docs/roster.md`. Read
+solo on the matrix's 8 quests (seed 1337), beside the Quarry measured
+before the Hammer's blows:
+
+| Quarry | Clears (skilled / learning) | Hits a run (skilled) |
+|---|---|---|
+| Before the Hammer's blows (waves) | 8 / 3 of 8 | 1 |
+| Hammer's blows, old kit | 6 / 0 | 6 |
+| Hammer's blows, Splinters | 6 / 0 | 4.6 |
+| Quake's blows nearer, Splinters | 8 / 0 | 2.1 |
+
+What cost her was the Hammer, not the kit: Quake's blows came down with
+their near edge 65 ahead, so an enemy hugging her was never struck. Its
+circles now reach back to her feet (centers 78 to 90 ahead, radii 72 to
+110). Stronger splinters moved the learning bot by one clear at most: she
+falls to blows as the other frail attackers do (Sparkfist 1, the Gunner 0),
+for a playtest to settle.
+
 ## The rest of the roster (2026-10-10)
 
 Tidewarden, the Hammer with Quarry, Hearth (and the Thunderclap's heal by
@@ -29,9 +67,12 @@ balance pass:
   of anyone, Hearth clearing more than any attacker for the learning bot.
   Its waves went from half a swing's blow to 35%; both now sit with the
   Swordsman and the Stormcaller.
-- **Tidewarden** clears as Bastion does. She stops more blows (the bot
-  braces each blow perfectly, a player will not); her Brace went from 6 s
-  to 8 s.
+- **Tidewarden** (Tide Dome and Riptide Bond, October 2026) clears 7 of 8
+  skilled and 2 of 8 learning, a little slower than most, inside the
+  roster's range. Each half of her kit counts: without the Bond she takes
+  twice the hits, without the Dome she clears 5 of 8. A shorter Dome
+  cooldown or a cheaper Bond moved nothing beyond noise, so her numbers
+  stay for the playtest to decide.
 - **Windwall** first cleared 27 of 48 skilled: her barriers struck too
   lightly. They now strike harder (20% ATK, 28% for the ring), the wall is
   longer and stands 7 s, every 7 s, and the Eye of the Storm costs 70
@@ -515,14 +556,6 @@ top of a champion's health kept matched teams from clearing in time, so it
 was swapped for the Stalker. Fire champions leave no trail: in the lab a
 long-lived fire trail did most of the damage the dodging bot took. The
 baseline was recorded again with them.
-
-## Hammer blows (October 2026)
-
-The Hammer's swings stopped sending shockwaves: each blow winds up and
-comes down on a circle ahead of her (the `slam` move, see
-`docs/aspects.md`). With fewer, slower blows, Quarry's single-target energy
-probe builds three ultimates in its window instead of two; Hearth's
-cadence held. The baseline was recorded again from CI's report.
 
 ## Implemented tuning
 

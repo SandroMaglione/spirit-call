@@ -6,7 +6,7 @@
     42
   ],
   "full": false,
-  "tuningHash": "6d7087ea8c6596ecbf80cdac182c8cc990d0e74d09416693144f885d62a02965",
+  "tuningHash": "1929f9bf72095969c46650eae50142520b61919ed56b25488459f4eaba469d5f",
   "stats": [
     {
       "level": 1,
@@ -271,7 +271,7 @@
       "level": 1,
       "targets": 1,
       "specials": 8,
-      "ultimates": 2
+      "ultimates": 3
     },
     {
       "id": "gunner/1/6",
@@ -287,7 +287,7 @@
       "level": 40,
       "targets": 1,
       "specials": 8,
-      "ultimates": 2
+      "ultimates": 3
     },
     {
       "id": "gunner/40/6",
@@ -302,15 +302,15 @@
       "character": "tidecaller",
       "level": 1,
       "targets": 1,
-      "specials": 8,
-      "ultimates": 2
+      "specials": 10,
+      "ultimates": 3
     },
     {
       "id": "tidecaller/1/6",
       "character": "tidecaller",
       "level": 1,
       "targets": 6,
-      "specials": 7,
+      "specials": 9,
       "ultimates": 3
     },
     {
@@ -318,15 +318,15 @@
       "character": "tidecaller",
       "level": 40,
       "targets": 1,
-      "specials": 8,
-      "ultimates": 2
+      "specials": 10,
+      "ultimates": 3
     },
     {
       "id": "tidecaller/40/6",
       "character": "tidecaller",
       "level": 40,
       "targets": 6,
-      "specials": 7,
+      "specials": 9,
       "ultimates": 3
     },
     {
@@ -398,39 +398,39 @@
       "character": "sparkfist",
       "level": 1,
       "targets": 1,
-      "specials": 10,
-      "ultimates": 3
+      "specials": 11,
+      "ultimates": 2
     },
     {
       "id": "sparkfist/1/6",
       "character": "sparkfist",
       "level": 1,
       "targets": 6,
-      "specials": 10,
-      "ultimates": 4
+      "specials": 11,
+      "ultimates": 3
     },
     {
       "id": "sparkfist/40/1",
       "character": "sparkfist",
       "level": 40,
       "targets": 1,
-      "specials": 10,
-      "ultimates": 3
+      "specials": 11,
+      "ultimates": 2
     },
     {
       "id": "sparkfist/40/6",
       "character": "sparkfist",
       "level": 40,
       "targets": 6,
-      "specials": 10,
-      "ultimates": 4
+      "specials": 11,
+      "ultimates": 3
     },
     {
       "id": "tidewarden/1/1",
       "character": "tidewarden",
       "level": 1,
       "targets": 1,
-      "specials": 0,
+      "specials": 4,
       "ultimates": 1
     },
     {
@@ -438,15 +438,15 @@
       "character": "tidewarden",
       "level": 1,
       "targets": 6,
-      "specials": 0,
-      "ultimates": 2
+      "specials": 4,
+      "ultimates": 3
     },
     {
       "id": "tidewarden/40/1",
       "character": "tidewarden",
       "level": 40,
       "targets": 1,
-      "specials": 0,
+      "specials": 4,
       "ultimates": 1
     },
     {
@@ -454,40 +454,40 @@
       "character": "tidewarden",
       "level": 40,
       "targets": 6,
-      "specials": 0,
-      "ultimates": 2
+      "specials": 4,
+      "ultimates": 3
     },
     {
       "id": "quarry/1/1",
       "character": "quarry",
       "level": 1,
       "targets": 1,
-      "specials": 8,
-      "ultimates": 3
+      "specials": 6,
+      "ultimates": 2
     },
     {
       "id": "quarry/1/6",
       "character": "quarry",
       "level": 1,
       "targets": 6,
-      "specials": 7,
-      "ultimates": 4
+      "specials": 5,
+      "ultimates": 3
     },
     {
       "id": "quarry/40/1",
       "character": "quarry",
       "level": 40,
       "targets": 1,
-      "specials": 8,
-      "ultimates": 3
+      "specials": 6,
+      "ultimates": 2
     },
     {
       "id": "quarry/40/6",
       "character": "quarry",
       "level": 40,
       "targets": 6,
-      "specials": 7,
-      "ultimates": 4
+      "specials": 5,
+      "ultimates": 3
     },
     {
       "id": "hearth/1/1",
@@ -495,7 +495,7 @@
       "level": 1,
       "targets": 1,
       "specials": 9,
-      "ultimates": 3
+      "ultimates": 1
     },
     {
       "id": "hearth/1/6",
@@ -511,7 +511,7 @@
       "level": 40,
       "targets": 1,
       "specials": 9,
-      "ultimates": 3
+      "ultimates": 1
     },
     {
       "id": "hearth/40/6",
@@ -526,32 +526,32 @@
       "character": "windwall",
       "level": 1,
       "targets": 1,
-      "specials": 8,
-      "ultimates": 2
+      "specials": 5,
+      "ultimates": 3
     },
     {
       "id": "windwall/1/6",
       "character": "windwall",
       "level": 1,
       "targets": 6,
-      "specials": 8,
-      "ultimates": 4
+      "specials": 5,
+      "ultimates": 2
     },
     {
       "id": "windwall/40/1",
       "character": "windwall",
       "level": 40,
       "targets": 1,
-      "specials": 8,
-      "ultimates": 2
+      "specials": 5,
+      "ultimates": 3
     },
     {
       "id": "windwall/40/6",
       "character": "windwall",
       "level": 40,
       "targets": 6,
-      "specials": 8,
-      "ultimates": 4
+      "specials": 5,
+      "ultimates": 2
     }
   ],
   "rows": [
@@ -721,29 +721,29 @@
       "profile": "team-skills",
       "seed": 1337,
       "report": {
-        "hits": 0,
-        "damage": 0,
-        "dashes": 17,
+        "hits": 1,
+        "damage": 9,
+        "dashes": 8,
         "pressure": 0,
-        "clearedAt": 51.2,
-        "endedAt": 51.2,
+        "clearedAt": 51.13333333333333,
+        "endedAt": 51.13333333333333,
         "outcome": "cleared",
         "kills": 23,
-        "specials": 13,
-        "ultimates": 5,
+        "specials": 14,
+        "ultimates": 3,
         "breaks": 22,
-        "healing": 0,
-        "restored": 0,
+        "healing": 2,
+        "restored": 0.0071304347826086955,
         "blocked": 0,
-        "healthRemaining": 1,
+        "healthRemaining": 0.9814768353528154,
         "tally": {
-          "hitsTaken": 0,
-          "perfectDodges": 16,
+          "hitsTaken": 1,
+          "perfectDodges": 8,
           "breaks": 22,
           "falls": 0,
-          "healthLeft": 100,
-          "longestChain": 3,
-          "ultimates": 5
+          "healthLeft": 98,
+          "longestChain": 2,
+          "ultimates": 3
         }
       }
     },
@@ -753,29 +753,29 @@
       "profile": "team-matched",
       "seed": 1337,
       "report": {
-        "hits": 0,
-        "damage": 0,
-        "dashes": 17,
+        "hits": 1,
+        "damage": 9,
+        "dashes": 8,
         "pressure": 0,
-        "clearedAt": 51.2,
-        "endedAt": 51.2,
+        "clearedAt": 51.13333333333333,
+        "endedAt": 51.13333333333333,
         "outcome": "cleared",
         "kills": 23,
-        "specials": 13,
-        "ultimates": 5,
+        "specials": 14,
+        "ultimates": 3,
         "breaks": 22,
-        "healing": 0,
-        "restored": 0,
+        "healing": 2,
+        "restored": 0.0071304347826086955,
         "blocked": 0,
-        "healthRemaining": 1,
+        "healthRemaining": 0.9814768353528154,
         "tally": {
-          "hitsTaken": 0,
-          "perfectDodges": 16,
+          "hitsTaken": 1,
+          "perfectDodges": 8,
           "breaks": 22,
           "falls": 0,
-          "healthLeft": 100,
-          "longestChain": 3,
-          "ultimates": 5
+          "healthLeft": 98,
+          "longestChain": 2,
+          "ultimates": 3
         }
       }
     },
@@ -947,26 +947,26 @@
       "report": {
         "hits": 0,
         "damage": 0,
-        "dashes": 8,
+        "dashes": 12,
         "pressure": 0,
-        "clearedAt": 50,
-        "endedAt": 50,
+        "clearedAt": 45.06666666666666,
+        "endedAt": 45.06666666666666,
         "outcome": "cleared",
         "kills": 23,
-        "specials": 13,
+        "specials": 11,
         "ultimates": 4,
-        "breaks": 28,
+        "breaks": 24,
         "healing": 0,
         "restored": 0,
         "blocked": 0,
         "healthRemaining": 1,
         "tally": {
           "hitsTaken": 0,
-          "perfectDodges": 10,
-          "breaks": 28,
+          "perfectDodges": 8,
+          "breaks": 24,
           "falls": 0,
           "healthLeft": 100,
-          "longestChain": 3,
+          "longestChain": 2,
           "ultimates": 4
         }
       }
@@ -979,26 +979,26 @@
       "report": {
         "hits": 0,
         "damage": 0,
-        "dashes": 8,
+        "dashes": 12,
         "pressure": 0,
-        "clearedAt": 50,
-        "endedAt": 50,
+        "clearedAt": 45.06666666666666,
+        "endedAt": 45.06666666666666,
         "outcome": "cleared",
         "kills": 23,
-        "specials": 13,
+        "specials": 11,
         "ultimates": 4,
-        "breaks": 28,
+        "breaks": 24,
         "healing": 0,
         "restored": 0,
         "blocked": 0,
         "healthRemaining": 1,
         "tally": {
           "hitsTaken": 0,
-          "perfectDodges": 10,
-          "breaks": 28,
+          "perfectDodges": 8,
+          "breaks": 24,
           "falls": 0,
           "healthLeft": 100,
-          "longestChain": 3,
+          "longestChain": 2,
           "ultimates": 4
         }
       }
@@ -1169,29 +1169,29 @@
       "profile": "team-skills",
       "seed": 1337,
       "report": {
-        "hits": 1,
-        "damage": 14,
-        "dashes": 20,
+        "hits": 9,
+        "damage": 49,
+        "dashes": 16,
         "pressure": 0,
-        "clearedAt": 103.35,
-        "endedAt": 103.35,
+        "clearedAt": 93.5,
+        "endedAt": 93.5,
         "outcome": "cleared",
-        "kills": 23,
-        "specials": 24,
-        "ultimates": 11,
-        "breaks": 39,
-        "healing": 13,
-        "restored": 0.05469565217391304,
+        "kills": 21,
+        "specials": 23,
+        "ultimates": 10,
+        "breaks": 31,
+        "healing": 0,
+        "restored": 0,
         "blocked": 0,
-        "healthRemaining": 1,
+        "healthRemaining": 0.8560912330719885,
         "tally": {
-          "hitsTaken": 1,
-          "perfectDodges": 22,
-          "breaks": 39,
+          "hitsTaken": 2,
+          "perfectDodges": 18,
+          "breaks": 31,
           "falls": 0,
-          "healthLeft": 100,
+          "healthLeft": 85,
           "longestChain": 3,
-          "ultimates": 11
+          "ultimates": 10
         }
       }
     },
@@ -1201,29 +1201,29 @@
       "profile": "team-matched",
       "seed": 1337,
       "report": {
-        "hits": 9,
-        "damage": 55,
-        "dashes": 19,
+        "hits": 0,
+        "damage": 0,
+        "dashes": 10,
         "pressure": 0,
-        "clearedAt": 85.88333333333333,
-        "endedAt": 85.88333333333333,
+        "clearedAt": 60.65,
+        "endedAt": 60.65,
         "outcome": "cleared",
         "kills": 21,
-        "specials": 21,
-        "ultimates": 8,
-        "breaks": 27,
-        "healing": 11,
-        "restored": 0.03709856035437434,
+        "specials": 16,
+        "ultimates": 4,
+        "breaks": 28,
+        "healing": 0,
+        "restored": 0,
         "blocked": 0,
-        "healthRemaining": 0.9456792603466482,
+        "healthRemaining": 1,
         "tally": {
-          "hitsTaken": 2,
-          "perfectDodges": 20,
-          "breaks": 27,
+          "hitsTaken": 0,
+          "perfectDodges": 8,
+          "breaks": 28,
           "falls": 0,
-          "healthLeft": 94,
+          "healthLeft": 100,
           "longestChain": 3,
-          "ultimates": 8
+          "ultimates": 4
         }
       }
     },
@@ -1394,28 +1394,28 @@
       "seed": 42,
       "report": {
         "hits": 1,
-        "damage": 18,
-        "dashes": 22,
+        "damage": 12,
+        "dashes": 20,
         "pressure": 0,
-        "clearedAt": 100.6,
-        "endedAt": 100.6,
+        "clearedAt": 95.11666666666666,
+        "endedAt": 95.11666666666666,
         "outcome": "cleared",
-        "kills": 23,
+        "kills": 21,
         "specials": 26,
-        "ultimates": 10,
-        "breaks": 34,
+        "ultimates": 9,
+        "breaks": 32,
         "healing": 0,
         "restored": 0,
         "blocked": 0,
-        "healthRemaining": 0.9367070563079116,
+        "healthRemaining": 1,
         "tally": {
           "hitsTaken": 1,
-          "perfectDodges": 16,
-          "breaks": 34,
+          "perfectDodges": 13,
+          "breaks": 32,
           "falls": 0,
-          "healthLeft": 93,
+          "healthLeft": 100,
           "longestChain": 3,
-          "ultimates": 10
+          "ultimates": 9
         }
       }
     },
@@ -1427,27 +1427,27 @@
       "report": {
         "hits": 0,
         "damage": 0,
-        "dashes": 14,
+        "dashes": 12,
         "pressure": 0,
-        "clearedAt": 66.2,
-        "endedAt": 66.2,
+        "clearedAt": 69.2,
+        "endedAt": 69.2,
         "outcome": "cleared",
-        "kills": 21,
-        "specials": 17,
-        "ultimates": 6,
-        "breaks": 27,
+        "kills": 23,
+        "specials": 18,
+        "ultimates": 7,
+        "breaks": 31,
         "healing": 0,
         "restored": 0,
         "blocked": 0,
         "healthRemaining": 1,
         "tally": {
           "hitsTaken": 0,
-          "perfectDodges": 11,
-          "breaks": 27,
+          "perfectDodges": 13,
+          "breaks": 31,
           "falls": 0,
           "healthLeft": 100,
           "longestChain": 3,
-          "ultimates": 6
+          "ultimates": 7
         }
       }
     },
@@ -1617,29 +1617,29 @@
       "profile": "team-skills",
       "seed": 1337,
       "report": {
-        "hits": 3,
-        "damage": 261,
-        "dashes": 77,
+        "hits": 4,
+        "damage": 323,
+        "dashes": 81,
         "pressure": 0,
         "clearedAt": null,
         "endedAt": 240,
         "outcome": "timeout",
-        "kills": 11,
-        "specials": 60,
-        "ultimates": 27,
-        "breaks": 34,
-        "healing": 56,
-        "restored": 0.24295652173913038,
+        "kills": 10,
+        "specials": 45,
+        "ultimates": 21,
+        "breaks": 29,
+        "healing": 28,
+        "restored": 0.12098298676748585,
         "blocked": 0,
-        "healthRemaining": 0.6434782608695652,
+        "healthRemaining": 0.19686386315039203,
         "tally": {
-          "hitsTaken": 3,
-          "perfectDodges": 50,
-          "breaks": 34,
-          "falls": 1,
-          "healthLeft": 64,
+          "hitsTaken": 4,
+          "perfectDodges": 48,
+          "breaks": 29,
+          "falls": 2,
+          "healthLeft": 19,
           "longestChain": 3,
-          "ultimates": 27
+          "ultimates": 21
         }
       }
     },
@@ -1649,29 +1649,29 @@
       "profile": "team-matched",
       "seed": 1337,
       "report": {
-        "hits": 6,
-        "damage": 134,
-        "dashes": 30,
+        "hits": 0,
+        "damage": 0,
+        "dashes": 24,
         "pressure": 0,
-        "clearedAt": 118.73333333333333,
-        "endedAt": 118.73333333333333,
+        "clearedAt": 125.58333333333333,
+        "endedAt": 125.58333333333333,
         "outcome": "cleared",
-        "kills": 25,
-        "specials": 31,
-        "ultimates": 12,
-        "breaks": 35,
-        "healing": 109,
-        "restored": 0.15350901633000538,
+        "kills": 28,
+        "specials": 34,
+        "ultimates": 13,
+        "breaks": 36,
+        "healing": 0,
+        "restored": 0,
         "blocked": 0,
         "healthRemaining": 1,
         "tally": {
-          "hitsTaken": 4,
-          "perfectDodges": 20,
-          "breaks": 35,
+          "hitsTaken": 0,
+          "perfectDodges": 19,
+          "breaks": 36,
           "falls": 0,
           "healthLeft": 100,
           "longestChain": 3,
-          "ultimates": 12
+          "ultimates": 13
         }
       }
     },
@@ -1841,29 +1841,29 @@
       "profile": "team-skills",
       "seed": 42,
       "report": {
-        "hits": 5,
-        "damage": 360,
-        "dashes": 51,
+        "hits": 3,
+        "damage": 293,
+        "dashes": 45,
         "pressure": 0,
         "clearedAt": null,
-        "endedAt": 204.65,
+        "endedAt": 150.71666666666667,
         "outcome": "defeated",
         "kills": 8,
-        "specials": 45,
-        "ultimates": 20,
-        "breaks": 19,
-        "healing": 45,
-        "restored": 0.19694571968674038,
+        "specials": 32,
+        "ultimates": 15,
+        "breaks": 24,
+        "healing": 0,
+        "restored": 0,
         "blocked": 0,
         "healthRemaining": 0,
         "tally": {
-          "hitsTaken": 5,
-          "perfectDodges": 36,
-          "breaks": 19,
+          "hitsTaken": 3,
+          "perfectDodges": 32,
+          "breaks": 24,
           "falls": 3,
           "healthLeft": 0,
           "longestChain": 3,
-          "ultimates": 20
+          "ultimates": 15
         }
       }
     },
@@ -1873,29 +1873,29 @@
       "profile": "team-matched",
       "seed": 42,
       "report": {
-        "hits": 7,
-        "damage": 202,
-        "dashes": 33,
+        "hits": 1,
+        "damage": 51,
+        "dashes": 24,
         "pressure": 0,
-        "clearedAt": 126.88333333333333,
-        "endedAt": 126.88333333333333,
+        "clearedAt": 117.95,
+        "endedAt": 117.95,
         "outcome": "cleared",
-        "kills": 28,
-        "specials": 34,
-        "ultimates": 13,
-        "breaks": 35,
-        "healing": 125,
-        "restored": 0.17628224183231397,
+        "kills": 25,
+        "specials": 30,
+        "ultimates": 12,
+        "breaks": 32,
+        "healing": 42,
+        "restored": 0.05882469380180621,
         "blocked": 0,
-        "healthRemaining": 0.9409496906107075,
+        "healthRemaining": 1,
         "tally": {
-          "hitsTaken": 4,
-          "perfectDodges": 16,
-          "breaks": 35,
+          "hitsTaken": 1,
+          "perfectDodges": 13,
+          "breaks": 32,
           "falls": 0,
-          "healthLeft": 94,
+          "healthLeft": 100,
           "longestChain": 2,
-          "ultimates": 13
+          "ultimates": 12
         }
       }
     }

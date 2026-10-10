@@ -37,12 +37,12 @@ differ in what their healing asks, guardians in what they stop:
 
 | | Asks | Stops |
 |---|---|---|
-| Healer by hitting (the Tidecaller) | hitting the enemies she marked | |
+| Healer by soaking (the Tidecaller) | enemies soaked before her Tidefall, staying close to her echo | |
 | Healer by standing (the Stormcaller) | fighting by her totem | |
-| Healer by burning (Hearth) | enemies kept burning, then her special | |
+| Healer by burning (Hearth) | a crowd kept in her pyre | |
 | Guardian by plates (Bastion) | raising them in a quiet moment | any blow, a few times |
-| Guardian by bracing (Tidewarden) | the moment of a blow | the first blow in that moment |
-| Guardian by barriers (Windwall) | where her wall stands | shots |
+| Guardian by soaking (Tidewarden) | keeping the fight under her dome; whom to turn | part of every blow (soaked enemies hit softer) |
+| Guardian by wind (Windwall) | when her mantle goes up; when to lift the crowd | shots, part of every blow |
 
 Health restored a minute is held about equal across healers, and blows
 stopped a minute across guardians (`kitAudit`, see `balance.md`).
@@ -55,14 +55,14 @@ marked * are working names.
 | Element | Character | Role | Class | How she plays |
 |---|---|---|---|---|
 | Wind | Swordsman | Attacker | Blade | a steady bruiser; the Gust throws a crowd off, the Cyclone draws it in |
-| Wind | Windwall* | Guardian | Staff | wind barriers that stop shots and throw back what touches them: the Gale Wall across her aim, the Eye of the Storm around her |
+| Wind | Windwall* | Guardian | Staff | the Wind Mantle, a current round whoever is on the field that absorbs shots, softens blows, and throws back what touches it; the Sky Lift takes the crowd up with her and leaves it out of the fight a while |
 | Fire | Gunner | Attacker | Gun | a glass cannon who kites |
-| Fire | Hearth* | Healer | Hammer | keeps enemies burning (the Wildfire), then turns their burns into the team's health (the Kindle) |
-| Water | Tidecaller | Healer | Disc | marks enemies, and heals by hitting them; her ultimate heals more for each one soaked |
-| Water | Tidewarden* | Guardian | Blade | the Brace takes one blow whole and disarms the attacker; the Floodgate soaks the crowd and readies a brace that takes a blow at once |
-| Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: the Spark Step darts her through a line of enemies, charging them; the Storm Flurry hops her from one to the next |
+| Fire | Hearth* | Healer | Hammer | sets a crowd burning from a distance (the Kindle), then burns it in a pyre that heals her side by what it deals (the Wildfire) |
+| Water | Tidecaller | Healer | Disc | the Tidefall bounces her in place, its water healing the team more for each enemy soaked; the Tidal Echo, a ghost of her, keeps them soaked and heals whoever stays close |
+| Water | Tidewarden* | Guardian | Blade | the Tide Dome soaks what comes in around whoever is on the field; the Riptide Bond turns the toughest enemy to her side a while, then snaps, stunning it |
+| Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: the Spark Step darts her through a line of enemies, charging them; the Overcharge turns her to lightning for a while, every dash a Spark Step of its own and all but endless |
 | Thunder | Stormcaller | Healer | Staff | a totem to fight by, and a thunderclap that heals by what it strikes |
-| Rock | Quarry* | Attacker | Hammer | the slow heavy hitter: the Fault Line splits the ground along her aim, the Landslide slams ever wider around her |
+| Rock | Quarry* | Attacker | Hammer | the slow heavy hitter: Splinters makes her blows throw rock splinters that burst a moment later; Rockburst bursts them out all around her |
 | Rock | Bastion | Guardian | Disc | the slow defender: stone plates |
 
 Four attackers (wind, fire, thunder, rock), three healers (water, thunder,
