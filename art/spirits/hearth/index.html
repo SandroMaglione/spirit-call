@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hearth · static model review</title>
+  <style>
+    :root { color-scheme:dark; font:15px/1.45 system-ui,sans-serif; color:#e8e1dc; background:#101a27; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:18px 24px; border-bottom:1px solid #314052; }
+    h1 { margin:0; font-size:24px; letter-spacing:.02em; }
+    header p { margin:4px 0 0; color:#a8b2c0; }
+    a { color:#ffd175; text-underline-offset:4px; }
+    .files { display:flex; gap:18px; flex-wrap:wrap; }
+    main { display:grid; grid-template-columns:minmax(0,1fr) 360px; min-height:calc(100dvh - 90px); }
+    .model { min-width:0; display:flex; flex-direction:column; }
+    #view { position:relative; flex:1; min-height:470px; overflow:hidden; background:radial-gradient(ellipse at 50% 52%,#223144,#101a27 70%); }
+    canvas { display:block; width:100%; height:100%; touch-action:none; }
+    #hint { position:absolute; bottom:12px; left:16px; color:#a4afbd; pointer-events:none; font-size:12px; }
+    #status { padding:11px 18px; border-top:1px solid #314052; color:#ffc76a; font-size:13px; }
+    aside { border-left:1px solid #314052; padding:20px; }
+    h2 { font-size:13px; letter-spacing:.1em; text-transform:uppercase; margin:0 0 12px; color:#a4b6cf; }
+    .buttons { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:20px; }
+    button { border:1px solid #435063; border-radius:5px; background:#192637; color:#d9e0e8; padding:8px 11px; font:inherit; font-size:13px; cursor:pointer; min-height:36px; }
+    button:hover { background:#2b3d51; }
+    button[aria-pressed="true"] { border-color:#f88d4c; color:#ffe0a0; background:#4b3027; }
+    .options { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:20px; font-size:13px; }
+    label { display:flex; align-items:center; gap:6px; }
+    input { accent-color:#f89b55; }
+    #reference { width:100%; max-height:330px; object-fit:contain; background:#111c29; border:1px solid #314052; }
+    #reference-caption { color:#a8b2c0; font-size:12px; margin-top:7px; }
+    .note { color:#aebac7; font-size:13px; margin-top:18px; }
+    #error { color:#ff9584; white-space:pre-wrap; }
+    @media(max-width:760px) {
+      header { padding:12px 16px; align-items:start; }
+      header p { font-size:12px; }
+      h1 { font-size:21px; }
+      .files { gap:8px; font-size:12px; }
+      main { display:block; }
+      #view { height:55dvh; min-height:280px; }
+      aside { border-left:0; border-top:1px solid #314052; padding:16px; }
+      #reference { max-height:290px; }
+    }
+    @media(max-height:500px) and (min-width:650px) {
+      header { padding:8px 15px; }
+      header p { display:none; }
+      main { display:grid; grid-template-columns:minmax(0,1fr) 290px; }
+      #view { height:calc(100dvh - 105px); min-height:260px; }
+      aside { height:calc(100dvh - 58px); overflow:auto; padding:12px; }
+      #reference { max-height:230px; }
+      .buttons,.options { margin-bottom:12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>Hearth</h1><p>Static model · fire spirit · reference review</p></div>
+    <nav class="files" aria-label="Model files"><a href="hearth-spirit.glb" download>GLB</a><a href="hearth-spirit.blend" download>Blender</a><a href="reference/sheet.png" target="_blank">Full sheet</a></nav>
+  </header>
+  <main>
+    <section class="model" aria-label="Interactive 3D model">
+      <div id="view"><div id="hint">Drag to orbit · scroll or pinch to zoom</div></div>
+      <div id="status" role="status">Loading static GLB…</div>
+    </section>
+    <aside>
+      <h2>Camera</h2>
+      <div class="buttons">
+        <button data-view="hero" aria-pressed="true">Reference ¾</button><button data-view="game">Game 30°</button>
+        <button data-view="front">Front</button><button data-view="back">Back</button>
+        <button data-view="left">Sheet left</button><button data-view="right">Sheet right</button>
+        <button data-view="top">Top</button><button data-view="bottom">Bottom</button>
+        <button data-view="true-front">Level front</button><button data-view="true-left">Level left</button><button data-view="true-right">Level right</button><button data-view="face">Face detail</button>
+      </div>
+      <div class="options">
+        <label><input id="wireframe" type="checkbox">Wireframe</label>
+        <label><input id="glow" type="checkbox" checked>Glow</label>
+        <label><input id="small" type="checkbox">32 px</label>
+      </div>
+      <h2>Supplied reference</h2>
+      <img id="reference" src="reference/hero.png" alt="Hearth from the supplied character sheet">
+      <div id="reference-caption">Reference isometric view</div>
+      <p class="note">The rim is an open stone bowl, with a recessed face below it. Three stone supports float around the tapered body. The flame and molten seams use colored geometry.</p>
+      <p class="note"><a href="renders/review-reference.png">Reference comparison</a> · <a href="renders/review-angles.png">All angles</a> · <a href="verification.json">Export audit</a></p>
+      <div id="error" role="alert"></div>
+    </aside>
+  </main>
+  <script type="module" src="viewer.mjs"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-10",
+  "url": "http://192.168.0.45:5208/art/spirits/hearth/index.html",
+  "glb_sha256": "0c26ed80097107c60a16d4b4edb205191486a70ab184d16d0e21f57393b2e254",
+  "loaded_triangles": 2982,
+  "loaded_clips": 0,
+  "model_load_error": "",
+  "camera_presets_checked": ["front", "back", "left", "right", "top", "bottom", "true-front", "true-left", "true-right", "face", "game", "hero"],
+  "wireframe_toggle_passed": true,
+  "small_mode_passed": true,
+  "synthetic_touch_orbit_changed_camera": true,
+  "touch_method": "Synthetic touch PointerEvents, with canvas pointer capture stubbed for the probe and restored afterward",
+  "portrait": {"width": 390, "height": 844, "horizontal_overflow": false, "capture": "renders/browser-phone-portrait.png"},
+  "landscape": {"width": 844, "height": 390, "capture": "renders/browser-phone-landscape.png"},
+  "desktop": {"width": 1280, "height": 900, "capture": "renders/browser-desktop.png"},
+  "physical_phone_tested": false,
+  "checks": {"typecheck": "passed", "lint": "passed", "tests_passed": 565, "tests_skipped": 1, "build": "passed with the existing bundle-size warning"}
+}

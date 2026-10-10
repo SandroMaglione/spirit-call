@@ -1,0 +1,47 @@
+{
+  "views": {
+    "front": {
+      "silhouette_iou": 0.83590442876623,
+      "camera_turn_deg": 0,
+      "camera_elevation_deg": 10,
+      "normalization": "equal full silhouette height and horizontal bounds center"
+    },
+    "left": {
+      "silhouette_iou": 0.7201799008239048,
+      "camera_turn_deg": 72,
+      "camera_elevation_deg": 10,
+      "normalization": "equal full silhouette height and horizontal bounds center"
+    },
+    "back": {
+      "silhouette_iou": 0.8474169637299835,
+      "camera_turn_deg": 180,
+      "camera_elevation_deg": 10,
+      "normalization": "equal full silhouette height and horizontal bounds center"
+    },
+    "right": {
+      "silhouette_iou": 0.7513159952050867,
+      "camera_turn_deg": -72,
+      "camera_elevation_deg": 10,
+      "normalization": "equal full silhouette height and horizontal bounds center"
+    },
+    "top": {
+      "silhouette_iou": 0.8506274385742908,
+      "camera_turn_deg": 0,
+      "camera_elevation_deg": 90,
+      "normalization": "equal full silhouette height and horizontal bounds center"
+    },
+    "bottom": {
+      "silhouette_iou": 0.8281657154311154,
+      "camera_turn_deg": 0,
+      "camera_elevation_deg": -90,
+      "normalization": "equal full silhouette height and horizontal bounds center"
+    },
+    "hero": {
+      "silhouette_iou": 0.8079251184947289,
+      "camera_turn_deg": -20,
+      "camera_elevation_deg": 16,
+      "normalization": "equal full silhouette height and horizontal bounds center"
+    }
+  },
+  "note": "Silhouette overlap is a shape diagnostic, not a score for colors or detail. The reference drawings use elevated cardinal cameras and inconsistent front/back depth. This model preserves one coherent bowl and three-support arrangement."
+}

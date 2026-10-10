@@ -1,0 +1,215 @@
+{
+  "passed": true,
+  "triangles": 2982,
+  "materials": 4,
+  "meshes": 7,
+  "primitives": 12,
+  "native_topology": [
+    {
+      "name": "HearthBody",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "BowlRim",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "EmberBasin",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "Support.L",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "Support.R",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "Support.Front",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "Jaw.L",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "Jaw.R",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "BowlCrack.-1",
+      "surface_detail": true,
+      "boundary_edges": 82,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "RimCrack.-1",
+      "surface_detail": true,
+      "boundary_edges": 28,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "BowlCrack.1",
+      "surface_detail": true,
+      "boundary_edges": 82,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "RimCrack.1",
+      "surface_detail": true,
+      "boundary_edges": 28,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "RearCrack.-1",
+      "surface_detail": true,
+      "boundary_edges": 88,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "RearCrack.1",
+      "surface_detail": true,
+      "boundary_edges": 88,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "FaceEmberSeam",
+      "surface_detail": true,
+      "boundary_edges": 190,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "SupportEmber.0",
+      "surface_detail": true,
+      "boundary_edges": 56,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "SupportEmber.1",
+      "surface_detail": true,
+      "boundary_edges": 56,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "SupportEmber.2",
+      "surface_detail": true,
+      "boundary_edges": 40,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "FlameCore",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "FlameTongue.L",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "FlameTongue.Rear",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "Eye.L",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    },
+    {
+      "name": "Eye.R",
+      "surface_detail": false,
+      "boundary_edges": 0,
+      "nonmanifold_interior_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0
+    }
+  ],
+  "round_trip_native_bounds_m": {
+    "min": [
+      -0.39842918515205383,
+      -0.42739051580429077,
+      0.07999999821186066
+    ],
+    "max": [
+      0.3967802822589874,
+      0.3316631317138672,
+      0.8799999952316284
+    ]
+  },
+  "hover_gap_m": 0.07999999821186066,
+  "height_m": 0.8799999952316284,
+  "animations": 0,
+  "skins": 0,
+  "textures": 0,
+  "helpers": 0,
+  "eyes_on_recessed_backing": true,
+  "export_faces_positive_z": true,
+  "colored_unlit_flame": true,
+  "sha256": "0c26ed80097107c60a16d4b4edb205191486a70ab184d16d0e21f57393b2e254"
+}
