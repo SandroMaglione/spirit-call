@@ -46,20 +46,29 @@ order the player chooses.
 (`content/quests.ts`, written on their cards): the finales of chapters 2,
 4, 5, and 6, then the Brute King and the Warlord at rank II, and the
 Bulwark at rank III. Spending one opens the audition of the character
-the player gives it to (the Auditions tab, from the Bulwark on, lists all
-seven); an invitation is never lost, and can be kept for later.
+the player gives it to; an invitation is never lost, and can be kept for
+later. An audition can be invited once the main line has brought what its
+fights show, so each is written around her kit with the enemies that
+test it, and every invitation has a choice:
+
+| Audition | Can be invited after |
+|---|---|
+| Gunner, Hearth | chapter 2's finale (the Bulwark) |
+| Stormcaller | Bombardment (chapter 4) |
+| Sparkfist | chapter 5's finale (the Warlord) |
+| Quarry, Windwall | Ironclad, Gale Force (chapter 6) |
+| Tidewarden | chapter 6's finale (the Colossus) |
 
 **The order sets the difficulty, not the character.** An audition plays
 at the level and twist of its **slot**, the place it was opened in
 (`invitationSlots`, `content/auditions.ts`): the first opened plays at
 level 10, plainly, and each next one higher, adding elite leaders of her
 element, shielded leaders, or a kind of enemy leading every wave, up to
-the seventh at level 46 with all of them. So the parts' own fights use
-only what chapter two has brought, and what comes later arrives through
-the slot; `validateContent` checks that every part, at every slot, shows
-only what the main line has brought once that many invitations are in
-hand, and sits at most a few levels above it. A character taken up late
-arrives at a higher level, as before.
+the seventh at level 46 with all of them. `validateContent` checks that
+every part, at every slot, shows only what the main line has brought once
+it is open and that many invitations are in hand, and sits at most a few
+levels above it. A character taken up late arrives at a higher level, as
+before.
 
 **An audition is three quests** played as that character alone: no team,
 no aspect but her class's plain one, no relics, at a fixed level (the

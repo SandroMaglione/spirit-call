@@ -135,7 +135,7 @@ describe("content", () => {
     expect(problems).toEqual(expect.arrayContaining([
       "invitations: the quests give 6, for 7 auditions (one each)",
       expect.stringMatching(/^track gunnerAudition part 1 at invitation slot 1: shows .*juggernaut/),
-      expect.stringMatching(/^track sparkfistAudition part 1 at invitation slot 2: shows thunder elites/)
+      expect.stringMatching(/^track stormcallerAudition part 1 at invitation slot 2: shows thunder elites/)
     ]))
   })
 

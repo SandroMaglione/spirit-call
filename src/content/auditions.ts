@@ -13,9 +13,11 @@
  * **invitation** (a currency, from a few milestones along the game, see
  * `content/quests.ts`). Its parts are played at the level and twist of the
  * invitation's place: the first audition opened is the gentlest, the
- * seventh the hardest, whoever it is for (`invitationSlots`). So the
- * parts' own fights use only what chapter two has brought, and what comes
- * later arrives through the slot's twist.
+ * seventh the hardest, whoever it is for (`invitationSlots`). An audition
+ * can be invited once the main line has brought what its fights show, so
+ * each is written around her kit with the enemies that test it: the
+ * Gunner's and Hearth's with chapter two's (the first invitation has two to
+ * choose from), the rest later, so every invitation has a choice.
  *
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
@@ -54,9 +56,6 @@ export const invitationSlots: ReadonlyArray<InvitationSlot> = [
   { level: 46, elites: true, shields: true, leader: "stalker" }
 ]
 
-/** Where every audition's parts open (with an invitation): the end of chapter two, where the first invitation comes. */
-const partsOpen = { quest: "bulwark" as QuestId, rank: 1 }
-
 /** Where every mastery opens: rank III, once rank II's main line is done. */
 const masteryOpens = { quest: "colossus" as QuestId, rank: 2, level: 50 }
 
@@ -75,18 +74,20 @@ const mastery = (character: CharacterId, challenge: ChallengeId, tint: CosmeticI
 })
 
 /**
- * `character`'s audition: three parts, written at the first slot's levels
- * (an opened audition plays them at its slot's, see `invitationSlots`), the
- * third making her the account's (and giving `aspect`), then her mastery
- * (the third's fight, harder) for `tint`.
+ * `character`'s audition: three parts, open to an invitation once `opens`
+ * (a main quest) is cleared, as it brings the last of what they show;
+ * written at the first slot's levels (an opened audition plays them at its
+ * slot's, see `invitationSlots`), the third making her the account's (and
+ * giving `aspect`), then her mastery (the third's fight, harder) for `tint`.
  */
 const audition = (
   character: CharacterId,
+  opens: QuestId,
   fights: readonly [ChallengeId, ChallengeId, ChallengeId],
   aspect: AspectId | null,
   tint: CosmeticId
 ): TrackSpec => {
-  const level = invitationSlots[0]!.level, opens = partsOpen.quest, opensRank = partsOpen.rank
+  const level = invitationSlots[0]!.level, opensRank = 1
   const gold = (at: number) => Math.round((5 * (100 + 25 * at)) / 100) * 100
   return {
     name: `${characters[character].name}'s Audition`,
@@ -113,13 +114,13 @@ const masteryOnly = (character: CharacterId, challenge: ChallengeId, tint: Cosme
 
 /** Every audition, by track id: the seven characters a player invites, in any order, then the quest characters' masteries. */
 export const auditions = {
-  gunnerAudition: audition("gunner", ["gunnerOpenGround", "gunnerHoldTheRange", "gunnerPackReturns"], "marksman", "blueFlame"),
-  stormcallerAudition: audition("stormcaller", ["stormSpreadOut", "stormByTheTotem", "stormDrownedBrute"], "arc", "crimsonStorm"),
-  sparkfistAudition: audition("sparkfist", ["sparkFiringLines", "sparkQuickHands", "sparkTheHunter"], "flurry", "verdantSpark"),
-  tidewardenAudition: audition("tidewarden", ["tideHeavyBlows", "tideHoldTheGate", "tideIronGiant"], null, "glacier"),
-  hearthAudition: audition("hearth", ["hearthKeepBurning", "hearthEmbersToHealth", "hearthBrood"], "furrow", "emberRose"),
-  windwallAudition: audition("windwall", ["windUnderFire", "windTheGale", "windStormGuard"], null, "duskGale"),
-  quarryAudition: audition("quarry", ["quarryStoneAndShield", "quarryBreakThem", "quarryThunderKing"], null, "rust"),
+  gunnerAudition: audition("gunner", "bulwark", ["gunnerOpenGround", "gunnerHoldTheRange", "gunnerPackReturns"], "marksman", "blueFlame"),
+  stormcallerAudition: audition("stormcaller", "bombardment", ["stormSpreadOut", "stormByTheTotem", "stormDrownedBrute"], "arc", "crimsonStorm"),
+  sparkfistAudition: audition("sparkfist", "theWarlord", ["sparkFiringLines", "sparkQuickHands", "sparkTheHunter"], "flurry", "verdantSpark"),
+  tidewardenAudition: audition("tidewarden", "colossus", ["tideHeavyBlows", "tideHoldTheGate", "tideIronGiant"], null, "glacier"),
+  hearthAudition: audition("hearth", "bulwark", ["hearthKeepBurning", "hearthEmbersToHealth", "hearthBrood"], "furrow", "emberRose"),
+  windwallAudition: audition("windwall", "galeForce", ["windUnderFire", "windTheGale", "windStormGuard"], null, "duskGale"),
+  quarryAudition: audition("quarry", "ironclad", ["quarryStoneAndShield", "quarryBreakThem", "quarryThunderKing"], null, "rust"),
   swordsmanMastery: masteryOnly("swordsman", "swordsmanMastery", "moonwind"),
   tidecallerMastery: masteryOnly("tidecaller", "tidecallerMastery", "coral"),
   bastionMastery: masteryOnly("bastion", "bastionMastery", "jade")

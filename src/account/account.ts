@@ -462,6 +462,9 @@ export const lentFor = (tuning: Tuning, play: Play, account?: Account): { readon
 export const openAudition = (tuning: Tuning, account: Account, character: CharacterId, now: number): Checked<Account> => {
   const track = (Object.keys(tuning.tracks) as Array<TrackId>).find((id) => tuning.tracks[id].character === character && isAuditionPart(tuning, id, 1))
   if (track === undefined || owns(account, { kind: "character", id: character }) || account.auditions[character] !== undefined) return refuse({ kind: "badAudition", character })
+  // Only once the main line has opened it: an invitation is never spent on an audition that cannot be played yet.
+  const lock = playLock(tuning, account, { kind: "tier", track, tier: 1 })
+  if (lock !== null && lock.kind !== "invite") return refuse({ kind: "locked", play: { kind: "tier", track, tier: 1 }, lock })
   const paid = spend(account, { invitations: 1 })
   if (!paid.ok) return paid
   const slot = Object.keys(account.auditions).length + 1

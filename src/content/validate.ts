@@ -627,7 +627,7 @@ const checkInvitations = (problems: Array<string>, tuning: Tuning): void => {
       const twist: RankTwist = { elites: slot.elites ? eliteElementOf(tuning.characters[character].element) : null, shields: slot.shields, leader: slot.leader }
       spec.tiers.forEach((tier, part) => {
         if (!isPart(track, part + 1) || !has(tuning.quests, tier.opens)) return
-        checkGated(problems, `track ${track} part ${part + 1} at invitation slot ${index + 1}`, tuning, tier.challenge, tier.enemyLevel + slot.level - first.level, [{ quest: tier.opens, rank: tier.opensRank }, gate], twist, true)
+        checkGated(problems, `track ${track} part ${part + 1} at invitation slot ${index + 1}`, tuning, tier.challenge, tier.enemyLevel + slot.level - first.level, [{ quest: tier.opens, rank: tier.opensRank }, ...(gate.quest === tier.opens && gate.rank === tier.opensRank ? [] : [gate])], twist, true)
       })
     }
   })

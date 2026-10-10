@@ -134,9 +134,13 @@ describe("account rules", () => {
   })
 
   it("opens the audition the player invites, spending an invitation, at the next slot's level and twist", () => {
-    const withInvitations = (count: number): Account => ({ ...fresh(), wallet: { ...fresh().wallet, invitations: count } })
-    // Nothing to give, or nobody to give it to: refused.
-    expect(openAudition(defaultTuning, fresh(), "sparkfist", 1).ok).toBe(false)
+    // The main line cleared, so every audition is open to an invitation.
+    const main = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((id) => defaultTuning.quests[id].line === "main")
+    const cleared: Account = { ...fresh(), quests: Object.fromEntries(main.map((id) => [id, { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [] } }])) }
+    const withInvitations = (count: number): Account => ({ ...cleared, wallet: { ...cleared.wallet, invitations: count } })
+    // Nothing to give, nobody to give it to, or an audition the main line has not opened yet: refused.
+    expect(openAudition(defaultTuning, cleared, "sparkfist", 1).ok).toBe(false)
+    expect(openAudition(defaultTuning, { ...fresh(), wallet: { invitations: 1 } }, "sparkfist", 1)).toMatchObject({ ok: false, refusal: { kind: "locked" } })
     expect(openAudition(defaultTuning, withInvitations(1), "swordsman", 1)).toMatchObject({ ok: false, refusal: { kind: "badAudition" } })
     // Whoever is invited first plays at the first slot, the next at the second.
     const first = openAudition(defaultTuning, withInvitations(2), "sparkfist", 1)
