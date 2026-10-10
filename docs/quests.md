@@ -20,6 +20,9 @@ picks. `validateContent` checks it (`content/novelties.ts`): a main quest
 brings something no quest before it did, its waves show it, and nothing else
 new; anything that opens after a quest shows only what the main line has
 brought up to it, with enemies at most `aheadOfLine` (4) levels above it.
+Auditions alone may show more (see `collection.md`): any can be chosen
+from the first invitation on, and meeting an enemy there first is the
+player's choice.
 
 ## Chapters
 

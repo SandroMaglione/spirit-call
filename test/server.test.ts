@@ -312,16 +312,15 @@ describe("accounts", () => {
     const upTo = main.slice(0, main.indexOf(audition.tiers[0]!.opens) + 1)
     const send = (runs: ReadonlyArray<unknown>) => runs.reduce<Promise<Array<number>>>((before, body) => before.then(async (statuses) => [...statuses, (await player.send("POST", "/api/runs", body)).status]), Promise.resolve([]))
     expect((await send(upTo.map((quest) => played({ kind: "quest", quest })))).every((status) => status === 200)).toBe(true)
-    // The end of chapter two gives an invitation: not for Sparkfist yet (the Warlord opens hers), but Hearth's opens at the first slot.
-    expect(await player.send("POST", "/api/characters/sparkfist/audition")).toMatchObject({ status: 409, body: { kind: "locked" } })
-    expect(await player.send("POST", "/api/characters/hearth/audition")).toMatchObject({ status: 200, body: { auditions: { hearth: { slot: 1 } } } })
+    // The end of chapter two gives an invitation, for anyone: spent on Sparkfist, her audition opens at the first slot.
+    expect(await player.send("POST", "/api/characters/sparkfist/audition")).toMatchObject({ status: 200, body: { auditions: { sparkfist: { slot: 1 } } } })
     expect(await player.send("POST", "/api/characters/gunner/audition")).toMatchObject({ status: 409, body: { kind: "notEnough" } })
     expect(await player.send("POST", "/api/characters/swordsman/audition")).toMatchObject({ status: 409, body: { kind: "badAudition" } })
-    const parts = [1, 2, 3].map((tier) => played({ kind: "tier", track: "hearthAudition", tier }, { ...run, team: ["hearth"], challenge: defaultTuning.tracks.hearthAudition.tiers[tier - 1]!.challenge }))
+    const parts = [1, 2, 3].map((tier) => played({ kind: "tier", track: "sparkfistAudition", tier }, { ...run, team: ["sparkfist"], challenge: defaultTuning.tracks.sparkfistAudition.tiers[tier - 1]!.challenge }))
     expect((await send(parts)).every((status) => status === 200)).toBe(true)
     const account = (await player.send("GET", "/api/account")).body
-    expect(account.owned.characters.hearth).toBeDefined()
-    expect(account.owned.aspects.furrow).toBeDefined()
+    expect(account.owned.characters.sparkfist).toBeDefined()
+    expect(account.owned.aspects.flurry).toBeDefined()
   })
 
   it("answers the dev tools only where they are on", async () => {

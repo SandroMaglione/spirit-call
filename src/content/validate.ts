@@ -561,7 +561,7 @@ const checkOpening = (problems: Array<string>, where: string, tuning: Tuning, ch
   checkGated(problems, where, tuning, challenge, enemyLevel, [{ quest: opens, rank: opensRank }], twist)
 
 /** `checkOpening` for something opening once all of `gates` are cleared: what they introduced together, and the highest of their levels. */
-const checkGated = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, gates: ReadonlyArray<QuestAt>, twist: RankTwist = noTwist, highestCleared = false): void => {
+const checkGated = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, gates: ReadonlyArray<QuestAt>, twist: RankTwist = noTwist, highestCleared = false, showsChecked = true): void => {
   if (!has(tuning.challenges, challenge) || gates.length === 0) return
   const shown = challengeShows(tuning, challenge)
   const shows = { ...shown, enemies: new Set([...shown.enemies, ...(twist.leader === null ? [] : [twist.leader])]), elites: new Set([...shown.elites, ...(twist.elites === null ? [] : [twist.elites])]), shield: shown.shield || twist.shields }
@@ -579,7 +579,8 @@ const checkGated = (problems: Array<string>, where: string, tuning: Tuning, chal
     champions: new Set([...all.champions, ...seen.champions]), shield: all.shield || seen.shield
   }))
   const named = gates.map((gate) => (gate.rank === 1 ? gate.quest : `${gate.quest} at rank ${gate.rank}`)).join(" and ")
-  const early = beyond(shows, known)
+  // (`showsChecked` off: an audition's part, which may show what the main line has not brought yet.)
+  const early = showsChecked ? beyond(shows, known) : []
   if (early.length > 0) problems.push(`${where}: shows ${early.join(", ")} before the main line introduces it (it opens after ${named})`)
   // The gates' own levels, or (`highestCleared`) the highest of everything cleared before them.
   const highest = highestCleared
@@ -588,21 +589,23 @@ const checkGated = (problems: Array<string>, where: string, tuning: Tuning, chal
   if (enemyLevel > highest + aheadOfLine) problems.push(`${where}: enemies of level ${enemyLevel} are more than ${aheadOfLine} levels above ${named} (${highest}), which opens it`)
 }
 
+/** Whether `part` of `track` is an audition's (the parts before its mastery), which plays at its slot. */
+const isAuditionPart = (tuning: Tuning, track: TrackId, part: number): boolean => {
+  const spec = tuning.tracks[track]
+  return spec.kind === "audition" && spec.character !== null && spec.tiers.length > 1 && part < spec.tiers.length
+}
+
 /**
  * Invitations (see content/auditions.ts): one for each audition to open,
  * and a slot for each; the nth invitation, in the order the quests give
  * them (rank by rank, along the main line), opens the nth slot, so every
- * audition part, at every slot's level and twist, shows only what the main
- * line has introduced once that invitation is in hand, and sits at most
- * `aheadOfLine` levels above everything cleared by then.
+ * audition part, at every slot's level, sits at most `aheadOfLine` levels
+ * above everything cleared once that invitation is in hand. What it shows
+ * is not held to the main line: an audition may be the first place the
+ * player meets an enemy, by choice.
  */
 const checkInvitations = (problems: Array<string>, tuning: Tuning): void => {
-  /** Whether `part` of `track` is an audition's (the parts before its mastery), which plays at its slot. */
-  const isPart = (track: TrackId, part: number): boolean => {
-    const spec = tuning.tracks[track]
-    return spec.kind === "audition" && spec.character !== null && spec.tiers.length > 1 && part < spec.tiers.length
-  }
-  const auditions = (Object.keys(tuning.tracks) as Array<TrackId>).filter((id) => isPart(id, 1))
+  const auditions = (Object.keys(tuning.tracks) as Array<TrackId>).filter((id) => isAuditionPart(tuning, id, 1))
   const order = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].line === "main")
   const given: Array<QuestAt> = []
   for (let rank = 1; rank <= tuning.ranks.count; rank++) {
@@ -626,8 +629,8 @@ const checkInvitations = (problems: Array<string>, tuning: Tuning): void => {
       if (!has(tuning.characters, character)) continue
       const twist: RankTwist = { elites: slot.elites ? eliteElementOf(tuning.characters[character].element) : null, shields: slot.shields, leader: slot.leader }
       spec.tiers.forEach((tier, part) => {
-        if (!isPart(track, part + 1) || !has(tuning.quests, tier.opens)) return
-        checkGated(problems, `track ${track} part ${part + 1} at invitation slot ${index + 1}`, tuning, tier.challenge, tier.enemyLevel + slot.level - first.level, [{ quest: tier.opens, rank: tier.opensRank }, ...(gate.quest === tier.opens && gate.rank === tier.opensRank ? [] : [gate])], twist, true)
+        if (!isAuditionPart(tuning, track, part + 1) || !has(tuning.quests, tier.opens)) return
+        checkGated(problems, `track ${track} part ${part + 1} at invitation slot ${index + 1}`, tuning, tier.challenge, tier.enemyLevel + slot.level - first.level, [{ quest: tier.opens, rank: tier.opensRank }, ...(gate.quest === tier.opens && gate.rank === tier.opensRank ? [] : [gate])], twist, true, false)
       })
     }
   })
@@ -916,6 +919,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       if (!(Number.isInteger(tier.opensRank) && tier.opensRank >= 1 && tier.opensRank <= tuning.ranks.count)) problems.push(`${at}: opens at rank ${tier.opensRank}, which there is not`)
       if (!has(tuning.challenges, tier.challenge)) problems.push(`${at}: unknown challenge ${tier.challenge}`)
       else if (!has(tuning.quests, tier.opens)) problems.push(`${at}: opens after unknown quest ${tier.opens}`)
+      else if (isAuditionPart(tuning, id as TrackId, index + 1)) checkGated(problems, at, tuning, tier.challenge, tier.enemyLevel, [{ quest: tier.opens, rank: tier.opensRank }], tier.twist, false, false)
       else checkOpening(problems, at, tuning, tier.challenge, tier.enemyLevel, tier.opens, tier.opensRank, tier.twist)
     })
   }

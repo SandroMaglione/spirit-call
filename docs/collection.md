@@ -47,17 +47,11 @@ order the player chooses.
 4, 5, and 6, then the Brute King and the Warlord at rank II, and the
 Bulwark at rank III. Spending one opens the audition of the character
 the player gives it to; an invitation is never lost, and can be kept for
-later. An audition can be invited once the main line has brought what its
-fights show, so each is written around her kit with the enemies that
-test it, and every invitation has a choice:
-
-| Audition | Can be invited after |
-|---|---|
-| Gunner, Hearth | chapter 2's finale (the Bulwark) |
-| Stormcaller | Bombardment (chapter 4) |
-| Sparkfist | chapter 5's finale (the Warlord) |
-| Quarry, Windwall | Ironclad, Gale Force (chapter 6) |
-| Tidewarden | chapter 6's finale (the Colossus) |
+later. Every audition can be invited from the first invitation on, so
+the player chooses the path toward a character, not the main line: each
+audition is written around her kit with the enemies that test it, even
+ones the main line has not brought yet (its card shows them, as a quest's
+does; `validateContent` holds every other place to the main line).
 
 **The order sets the difficulty, not the character.** An audition plays
 at the level and twist of its **slot**, the place it was opened in
@@ -65,10 +59,9 @@ at the level and twist of its **slot**, the place it was opened in
 level 10, plainly, and each next one higher, adding elite leaders of her
 element, shielded leaders, or a kind of enemy leading every wave, up to
 the seventh at level 46 with all of them. `validateContent` checks that
-every part, at every slot, shows only what the main line has brought once
-it is open and that many invitations are in hand, and sits at most a few
-levels above it. A character taken up late arrives at a higher level, as
-before.
+every part, at every slot, sits at most a few levels above the main line
+once that many invitations are in hand. A character taken up late
+arrives at a higher level, as before.
 
 **An audition is three quests** played as that character alone: no team,
 no aspect but her class's plain one, no relics, at a fixed level (the

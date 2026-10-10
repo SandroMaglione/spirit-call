@@ -712,7 +712,7 @@ export const challenges = {
   thunderTrial: trial("Thunder Trial", "necropolis", ["sniper"], ["juggernaut", "stalker", "galeCaster"], "thunder"),
 
   // Auditions (see content/auditions.ts): a character alone, in three fights around her kit, the last against a champion.
-  // Each opens to an invitation once the main line has brought what its fights show (Hearth's and the Gunner's with the first invitation).
+  // Any can be invited from the first invitation on, so they may show what the main line has not brought yet: the player chose to meet it.
   // The Gunner: keep your distance, then hold it against the patient, then a champion that closes in.
   gunnerOpenGround: waves("Open Ground", "Six waves of chasers and swarmers in the open: keep moving, keep firing.", "courtyard", [
     ["chaser", "chaser"], ["swarmer"], ["chaser", "swarmer"], ["chaser", "chaser", "chaser"], ["swarmer", "swarmer"], ["chaser", "chaser", "swarmer"]
@@ -753,15 +753,15 @@ export const challenges = {
   tideIronGiant: waves("The Iron Giant", "Six waves in the citadel; a burning champion juggernaut joins midway, and stays until it falls.", "citadel", [
     ["chaser", "chaser"], ["shooter", "volatile"], [champion("juggernaut", "fire")], ["chaser"], ["galeCaster"], ["shooter"]
   ]),
-  // Hearth: packs to keep burning, the team's health from them, then a champion's pack.
+  // Hearth: packs to keep burning, the team's health from them, then a champion's brood.
   hearthKeepBurning: waves("Keep Them Burning", "Six waves of packs in the kilnworks: set them alight and keep them so.", "kilnworks", [
-    ["swarmer", "swarmer"], ["chaser", "chaser", "swarmer"], ["swarmer", "swarmer", "shooter"], ["chaser", "chaser", "chaser", "chaser"], ["swarmer", "swarmer", "swarmer"], ["swarmer", "swarmer", "chaser", "chaser"]
+    ["swarmer", "swarmer"], ["chaser", "chaser", "swarmer"], ["swarmer", "swarmer", "shooter"], ["chaser", "chaser", "chaser", "chaser"], ["swarmer", "swarmer", "swarmer"], [elite("swarmer", "water"), "swarmer", "chaser"]
   ]),
-  hearthEmbersToHealth: waves("Embers to Health", "Six waves of guardians among packs: their burns are your health.", "courtyard", [
-    ["guardian", "swarmer"], ["chaser", "chaser", "swarmer"], ["guardian", "swarmer", "swarmer"], ["guardian", "guardian", "shooter"], ["swarmer", "swarmer", "swarmer"], ["guardian", "swarmer", "swarmer"]
+  hearthEmbersToHealth: waves("Embers to Health", "Six waves of tough enemies among packs: their burns are your health.", "harbor", [
+    ["guardian", "swarmer"], ["stalker", "chaser"], ["warden", "swarmer", "swarmer"], ["guardian", "guardian", "shooter"], ["stalker", "volatile"], [elite("guardian", "thunder"), "swarmer", "swarmer"]
   ]),
-  hearthBrood: waves("The Pack", "Six waves; a burning champion chaser joins midway with its pack, and stays until it falls.", "monastery", [
-    ["chaser", "swarmer"], ["shooter", "swarmer"], [champion("chaser", "fire")], ["chaser"], ["swarmer"], ["shooter"]
+  hearthBrood: waves("The Brood", "Six waves; a soaked champion swarmer joins midway with its brood, and stays until it falls.", "monastery", [
+    ["chaser", "swarmer"], ["shooter", "swarmer"], [champion("swarmer", "water")], ["chaser"], ["swarmer"], ["shooter"]
   ]),
   // Windwall: shots to stop, winds to stand in, then a champion's charge.
   windUnderFire: waves("Under Fire", "Six waves of shooters and snipers: wall off their shots.", "sanctuary", [

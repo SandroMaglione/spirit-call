@@ -138,7 +138,7 @@ describe("account rules", () => {
     const main = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((id) => defaultTuning.quests[id].line === "main")
     const cleared: Account = { ...fresh(), quests: Object.fromEntries(main.map((id) => [id, { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [] } }])) }
     const withInvitations = (count: number): Account => ({ ...cleared, wallet: { ...cleared.wallet, invitations: count } })
-    // Nothing to give, nobody to give it to, or an audition the main line has not opened yet: refused.
+    // Nothing to give, nobody to give it to, or before the first invitation's quest: refused.
     expect(openAudition(defaultTuning, cleared, "sparkfist", 1).ok).toBe(false)
     expect(openAudition(defaultTuning, { ...fresh(), wallet: { invitations: 1 } }, "sparkfist", 1)).toMatchObject({ ok: false, refusal: { kind: "locked" } })
     expect(openAudition(defaultTuning, withInvitations(1), "swordsman", 1)).toMatchObject({ ok: false, refusal: { kind: "badAudition" } })

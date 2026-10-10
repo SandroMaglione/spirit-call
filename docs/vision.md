@@ -206,7 +206,8 @@ The game has two areas, and Extras for practice.
     enemy, a hazard, elites, a champion, or an ability like a shield), shown
     first on its card, and later quests mix what came before. Nothing
     anywhere else (side quests, ranks, hardcore, practice) shows a thing
-    before the main line brings it. You know what you will face before you
+    before the main line brings it, but an audition, where meeting it
+    first is the player's choice. You know what you will face before you
     enter.
   - **The main line is paced for the team you have**: chapter 1 is short
     and for the first character alone, and each chapter after brings its
