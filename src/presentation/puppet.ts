@@ -5,7 +5,7 @@
  * direction, plays its loops by how its body moves, and plays one-shot
  * moments over them (see `animation.ts`).
  */
-import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshStandardMaterial, PropertyBinding, SkinnedMesh, Sprite } from "three"
+import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshBasicMaterial, MeshStandardMaterial, PropertyBinding, SkinnedMesh, Sprite } from "three"
 import type { AnimationAction, BufferGeometry, Material, Object3D, Quaternion, Skeleton, SpriteMaterial, Vector3 } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
 
@@ -19,7 +19,7 @@ import type { Tint } from "./tint.ts"
 import type { ModelSource } from "./models.ts"
 
 /** A copy's materials that are its own, with their colors before any tint, and their own glow (glowing eyes) before any flash. */
-export type OwnMaterials = ReadonlyArray<{ readonly material: MeshStandardMaterial; readonly base: Color; readonly glow: Color }>
+export type OwnMaterials = ReadonlyArray<{ readonly material: MeshStandardMaterial | MeshBasicMaterial; readonly base: Color; readonly glow: Color }>
 
 /** A copy's own halo (see `glow.ts`): its sprite, with its opacity and size before the body's state changes them. */
 export interface OwnHalo {
@@ -32,19 +32,19 @@ export interface OwnHalo {
 /** A copy of `source`; with `ownMaterials`, its materials are copies too (to tint or fade it alone), and so is its halo's. */
 export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonly object: Object3D; readonly materials: OwnMaterials; readonly halo: OwnHalo | null } => {
   const object = clone(source.scene)
-  const materials: Array<{ material: MeshStandardMaterial; base: Color; glow: Color }> = []
+  const materials: Array<OwnMaterials[number]> = []
   let halo: OwnHalo | null = null
   if (ownMaterials) {
-    const copies = new Map<Material, MeshStandardMaterial>()
+    const copies = new Map<Material, MeshStandardMaterial | MeshBasicMaterial>()
     // Parts sharing a material keep sharing the copy.
     const own = (material: Material): Material => {
-      if (!(material instanceof MeshStandardMaterial)) return material
+      if (!(material instanceof MeshStandardMaterial) && !(material instanceof MeshBasicMaterial)) return material
       const known = copies.get(material)
       if (known !== undefined) return known
       const copy = material.clone()
       keepRim(copy)
       copies.set(material, copy)
-      materials.push({ material: copy, base: copy.color.clone(), glow: copy.emissive.clone().multiplyScalar(copy.emissiveIntensity) })
+      materials.push({ material: copy, base: copy.color.clone(), glow: copy instanceof MeshStandardMaterial ? copy.emissive.clone().multiplyScalar(copy.emissiveIntensity) : new Color(0) })
       return copy
     }
     object.traverse((part) => {
@@ -89,8 +89,13 @@ export const paintMaterials = (materials: OwnMaterials, tint: number, glowColor:
   const seeThrough = opacity < 1
   for (const { material, base, glow: own } of materials) {
     material.color.copy(base).multiply(tinted)
-    material.emissive.copy(own).add(flash)
-    material.emissiveIntensity = 1
+    if (material instanceof MeshStandardMaterial) {
+      material.emissive.copy(own).add(flash)
+      material.emissiveIntensity = 1
+    } else {
+      // Unlit palette models still flash and fade independently of copies.
+      material.color.add(flash)
+    }
     material.opacity = opacity
     if (material.transparent !== seeThrough) {
       material.transparent = seeThrough

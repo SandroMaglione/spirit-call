@@ -1,0 +1,12 @@
+{
+  "method": "uniform height normalization; full filled silhouette intersection over union; no width warp",
+  "strict_camera_scores": {
+    "front": 0.8641761835826497,
+    "back": 0.8453154051359435,
+    "left": 0.4150712235083292,
+    "right": 0.45289195366675705,
+    "top": 0.772710314583172,
+    "bottom": 0.725805400945274,
+    "hero": 0.8258225260333483
+  }
+}

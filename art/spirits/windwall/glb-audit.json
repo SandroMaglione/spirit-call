@@ -1,0 +1,75 @@
+{
+  "passed": true,
+  "triangles": 416,
+  "materials": 3,
+  "meshes": [
+    {
+      "name": "Body",
+      "triangles": 32,
+      "vertex_colors": true
+    },
+    {
+      "name": "Cape.Lower.L",
+      "triangles": 20,
+      "vertex_colors": true
+    },
+    {
+      "name": "Cape.Lower.R",
+      "triangles": 20,
+      "vertex_colors": true
+    },
+    {
+      "name": "Cape.Upper.L",
+      "triangles": 20,
+      "vertex_colors": true
+    },
+    {
+      "name": "Cape.Upper.R",
+      "triangles": 20,
+      "vertex_colors": true
+    },
+    {
+      "name": "Crest.Side",
+      "triangles": 16,
+      "vertex_colors": true
+    },
+    {
+      "name": "Crest.Tall",
+      "triangles": 16,
+      "vertex_colors": true
+    },
+    {
+      "name": "Eye.L",
+      "triangles": 48,
+      "vertex_colors": true
+    },
+    {
+      "name": "Eye.R",
+      "triangles": 48,
+      "vertex_colors": true
+    },
+    {
+      "name": "Gem",
+      "triangles": 8,
+      "vertex_colors": true
+    },
+    {
+      "name": "Hood",
+      "triangles": 144,
+      "vertex_colors": true
+    },
+    {
+      "name": "Mantle.Back",
+      "triangles": 24,
+      "vertex_colors": true
+    }
+  ],
+  "animations": 0,
+  "skins": 0,
+  "cameras": 0,
+  "lights": 0,
+  "textures": 0,
+  "embedded_buffer": true,
+  "compression": false,
+  "glb_sha256": "3a5695c9e59cf825046df84e88446881a2d52e1b981142fcde1a6df3ca362f36"
+}

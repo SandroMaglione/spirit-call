@@ -10,7 +10,7 @@ import type { ModelId } from "../src/presentation/models.ts"
 import { characterLooks } from "../src/presentation/looks.ts"
 import { Puppet } from "../src/presentation/puppet.ts"
 
-const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit" | "rockSpirit" | "quarrySpirit") => {
+const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit" | "rockSpirit" | "quarrySpirit" | "windwallSpirit") => {
   const bytes = readFileSync(path.join(import.meta.dirname, "..", models[id].url))
   return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
 }
@@ -118,6 +118,36 @@ describe("Quarry's approved spirit", () => {
     mixer.setTime(6 / 30)
     expect(Math.min(...feet.map(foot => new Box3().setFromObject(foot, true).min.y))).toBeGreaterThan(.1)
     expect(gltf.scene.getObjectByName("Torso")!.position.z).toBeGreaterThan(.2)
+  })
+})
+
+describe("Windwall export", () => {
+  it("fits the arena height and plays object clips without moving the facing root", async () => {
+    const gltf = await loadSpirit("windwallSpirit")
+    const spec = models.windwallSpirit
+    const clips = new Map(gltf.animations.map(clip => [clip.name, closeLoop(clip, spec.clips[clip.name as keyof typeof spec.clips])]))
+    const puppet = new Puppet({ id: "windwallSpirit", spec, scene: gltf.scene, clips }, 1, null)
+    expect(new Box3().setFromObject(puppet.object, true).max.y).toBeCloseTo(1, 5)
+    const root = puppet.object.getObjectByName("Windwall")!
+    const mixer = new AnimationMixer(puppet.object)
+    const gem = puppet.object.getObjectByName("Gem")!
+    const rest = gem.position.clone()
+    mixer.clipAction(clips.get("Idle")!).play()
+    mixer.setTime(1.36)
+    for (const name of ["EyeL", "EyeR"]) expect(puppet.object.getObjectByName(name)!.scale.y).toBeLessThan(.2)
+    expect(gem.position.distanceTo(rest)).toBeGreaterThan(.001)
+    for (const clip of clips.values()) {
+      mixer.stopAllAction()
+      mixer.clipAction(clip).setLoop(LoopOnce, 1).play()
+      for (const time of [0, clip.duration / 2, clip.duration - .001]) {
+        mixer.setTime(time)
+        expect(root.position.toArray(), clip.name).toEqual([0, 0, 0])
+        expect(root.quaternion.toArray(), clip.name).toEqual([0, 0, 0, 1])
+      }
+    }
+    mixer.stopAllAction()
+    mixer.uncacheRoot(puppet.object)
+    puppet.dispose()
   })
 })
 

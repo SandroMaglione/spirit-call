@@ -21,7 +21,7 @@ import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { arenaPropModels } from "./assets/arena-props.ts"
 import { enemyModels } from "./assets/enemies.ts"
-import { fireSpiritModel, iceSpiritModel, quarrySpiritModel, rockSpiritModel, sparkfistSpiritModel, thunderSpiritModel, waterCrescentModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
+import { fireSpiritModel, iceSpiritModel, quarrySpiritModel, rockSpiritModel, sparkfistSpiritModel, thunderSpiritModel, waterCrescentModel, waterSpiritModel, windSpiritModel, windwallSpiritModel } from "./assets/spirits.ts"
 import { addGlow } from "./glow.ts"
 import type { GlowSpec } from "./glow.ts"
 
@@ -112,6 +112,14 @@ export const models = {
   },
   fireSpirit: { ...fireSpiritModel, glow: fireGlow },
   windSpirit: { ...windSpiritModel, glow: windGlow },
+  windwallSpirit: {
+    ...windwallSpiritModel,
+    glow: {
+      rim: { color: 0x2cb9a6, strength: .18, power: 3 },
+      halo: { color: 0x2cb9a6, opacity: .16, size: 1.4 },
+      eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xfff6a5, opacity: .2, size: .15 }
+    }
+  },
   thunderSpirit: { ...thunderSpiritModel, glow: thunderGlow },
   rockSpirit: { ...rockSpiritModel, glow: rockGlow },
   quarrySpirit: { ...quarrySpiritModel, glow: rockGlow },
