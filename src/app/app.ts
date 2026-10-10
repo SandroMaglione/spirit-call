@@ -10,7 +10,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
 
-import { ascend, openAudition, recordRun, saveTeam, select, train, wear } from "../account/account.ts"
+import { ascend, encounterOf, openAudition, recordRun, saveTeam, select, train, wear } from "../account/account.ts"
 import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import { AccountStore, layer as accountLayer } from "../account/account-store.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
@@ -19,7 +19,9 @@ import { defaultTuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
-import type { RunLogValue, RunResultValue } from "../schema.ts"
+import type { BuildValue, RunLogValue, RunResultValue } from "../schema.ts"
+import { randomId } from "./ids.ts"
+import { Playtest, reportOf } from "./playtest.ts"
 import { storageLayer } from "./storage.ts"
 
 export interface App {
@@ -44,19 +46,24 @@ export interface App {
   readonly openAudition: (character: CharacterId) => Account | undefined
   /** Saves a team in `slot` to load in a tap, or empties the slot (`null`; refused when it breaks the rules). */
   readonly saveTeam: (slot: number, team: SavedTeam | null) => Account | undefined
-  /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, and its log: what it earned. */
-  readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue) => Earned
+  /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, played by `team` (as it entered the arena), and its log: what it earned. A playtest build also sends it. */
+  readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue, team: ReadonlyArray<BuildValue>) => Earned
   /** Saves the sound settings (the sound board applies them itself). */
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
 }
 
-/** Starts the app runtime over this device's storage, and loads the account. */
+/**
+ * Starts the app runtime over this device's storage, and loads the account.
+ * A playtest build loads its sender here; in a release build `SHOOTER_PLAYTEST`
+ * is `null` as it is built, so the import is left out of the bundle.
+ */
 export const startApp = async (): Promise<App> => {
   const tuning = defaultTuning
-  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount)).pipe(Layer.provide(storageLayer)))
-  const { settings, accounts } = await runtime.runPromise(Effect.gen(function*() {
-    return { settings: yield* SettingsStore, accounts: yield* AccountStore }
+  const playtest = SHOOTER_PLAYTEST === null ? Playtest.off : (await import("./playtest-send.ts")).layer(SHOOTER_PLAYTEST)
+  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount), playtest).pipe(Layer.provide(storageLayer)))
+  const { settings, accounts, sender } = await runtime.runPromise(Effect.gen(function*() {
+    return { settings: yield* SettingsStore, accounts: yield* AccountStore, sender: yield* Playtest }
   }))
   let account = accounts.account
   const listeners: Array<(account: Account) => void> = []
@@ -98,9 +105,13 @@ export const startApp = async (): Promise<App> => {
     wear: (character, kind, cosmetic) => apply(wear(tuning, account, character, kind, cosmetic)),
     openAudition: (character) => apply(openAudition(tuning, account, character, Date.now())),
     saveTeam: (slot, team) => apply(saveTeam(tuning, account, slot, team)),
-    recordRun: (play, result, _log) => {
-      const recorded = recordRun(tuning, account, play, result, Date.now())
+    recordRun: (play, result, log, team) => {
+      const before = account
+      const at = Date.now()
+      const recorded = recordRun(tuning, before, play, result, at)
       changed(recorded.account)
+      const enemyLevel = play === null ? 0 : encounterOf(tuning, play, before).enemyLevel
+      runtime.runFork(sender.recordRun(reportOf({ id: randomId(), at, build: SHOOTER_BUILD, play, enemyLevel, team, result, log, earned: recorded.earned })))
       return recorded.earned
     },
     setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),

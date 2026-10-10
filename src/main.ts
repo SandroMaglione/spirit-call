@@ -101,7 +101,7 @@ const start = async (mount: HTMLElement) => {
     if (result === reported) return
     reported = result
     if (!recording) return
-    uiStore.earned.value = shell.recordRun(playing, result, uiStore.runLog.peek())
+    uiStore.earned.value = shell.recordRun(playing, result, uiStore.runLog.peek(), uiStore.team.peek())
   })
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined
   const notify = (message: string, error = false, title?: string) => {
