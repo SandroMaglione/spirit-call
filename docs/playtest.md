@@ -64,7 +64,8 @@ The server holds no account, so each run carries what it needs to be read
 on its own (`PlaytestRun`, `src/api/schemas.ts`):
 
 - **Who played it**: the device (a random id, made the first time the
-  playtest build runs on it) and the tester's name.
+  playtest build runs on it) and the tester: the account played, or the
+  name given (see "Who the tester is").
 - **Which build**: the commit it was built from (`dev` for a dev build), so
   runs from before and after a change can be told apart.
 - **What was played**: a quest at a rank, a tier, or nothing for a `?play`
@@ -95,14 +96,15 @@ on its own (`PlaytestRun`, `src/api/schemas.ts`):
   logged. A run the server will never take (it names content the server's
   build does not know) is dropped rather than tried forever.
 
-## Who the tester is, and opting in
+## Who the tester is, and opting out
 
-A tester opts in by name. The name comes from the build
-(`PLAYTEST_TESTER`; a dev build's is `dev`), or from the address: opening
-the game once with `?tester=Robin` names this device's tester from then on
-(remembered on the device). Without a name, nothing is recorded, not even
-into the outbox. Opening it with `?tester=` and no name opts this device
-out, over the build's name too, and lets go of what waited to be sent.
+Playing a playtest build is taking part: the link to one is only given to
+testers, and the release sends nothing. Each run is named by the account
+it was played on (accounts are names, see [saves.md](saves.md)), unless a
+tester is named: by the build (`PLAYTEST_TESTER`), or once in the address
+(`?tester=Robin`, remembered on the device, over the build's). Opening it
+with `?tester=` and no name opts this device out, over the build's name
+too: nothing is recorded, and what waited to be sent is let go.
 
 ## The key and CORS
 

@@ -110,12 +110,12 @@ export const holdAccount = (id: string): Promise<boolean> =>
 
 /**
  * Starts the app runtime over this device's storage, and loads the account
- * `id` (picked from `openAccounts`; a new one by that id when it was never
+ * `id`, named `name` (picked from `openAccounts`; a new one by that id when it was never
  * played).
  * A playtest build loads its sender here; in a release build `SHOOTER_PLAYTEST`
  * is `null` as it is built, so the import is left out of the bundle.
  */
-export const startApp = async (id: string): Promise<App> => {
+export const startApp = async (id: string, name: string): Promise<App> => {
   const tuning = defaultTuning
   const playtest = SHOOTER_PLAYTEST === null ? Playtest.off : (await import("./playtest-send.ts")).layer(SHOOTER_PLAYTEST)
   const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
@@ -170,7 +170,7 @@ export const startApp = async (id: string): Promise<App> => {
       const recorded = recordRun(tuning, before, play, result, at)
       changed(recorded.account)
       const enemyLevel = play === null ? 0 : encounterOf(tuning, play, before).enemyLevel
-      runtime.runFork(sender.recordRun(reportOf({ id: randomId(), at, build: SHOOTER_BUILD, play, enemyLevel, team, result, log, earned: recorded.earned })))
+      runtime.runFork(sender.recordRun(reportOf({ id: randomId(), at, build: SHOOTER_BUILD, play, enemyLevel, team, result, log, earned: recorded.earned }), name))
       return recorded.earned
     },
     setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),

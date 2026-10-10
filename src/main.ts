@@ -78,7 +78,7 @@ const start = async (mount: HTMLElement) => {
   const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
   const accounts = openAccounts()
   const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount)
-  const shell = await startApp(picked.id)
+  const shell = await startApp(picked.id, picked.name)
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).

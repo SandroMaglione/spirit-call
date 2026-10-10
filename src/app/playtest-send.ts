@@ -11,10 +11,10 @@
  * after its answer was lost is kept once.
  *
  * Who played it: this device (a random id, made once) and the tester's
- * name: the build's, or the one given in the address (`?tester=name`),
- * remembered on the device. Sending is opted into by that name: with none
- * (or after `?tester=` with no name, which opts out), nothing is recorded,
- * and what waited is let go.
+ * name: one given in the address (`?tester=name`, remembered on the
+ * device), else the build's, else the name of the account played. Playing
+ * a playtest build is taking part; opening it with `?tester=` and no name
+ * opts this device out: nothing is recorded, and what waited is let go.
  */
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
@@ -49,16 +49,15 @@ export interface SenderConfig {
 /** How sending a run went: taken, never to be taken (dropped), or to try again later. */
 type Sent = "taken" | "refused" | "later"
 
-/** The tester's name (empty: not opted in): one given in the address now (remembered, an empty one too), else the one remembered, else the build's. */
-const testerOf = (store: KeyValueStore.KeyValueStore, built: string, search: string) =>
+/** The tester's name given on this device (empty: opted out), or `undefined` for none: one given in the address now (remembered, an empty one too), else the one remembered. */
+const testerOf = (store: KeyValueStore.KeyValueStore, search: string) =>
   Effect.gen(function*() {
     const given = new URLSearchParams(search).get("tester")?.trim().slice(0, 40)
     if (given !== undefined) {
       yield* store.set(testerKey, given).pipe(Effect.ignore)
       return given
     }
-    const remembered = yield* store.get(testerKey).pipe(Effect.orElseSucceed(() => undefined))
-    return remembered ?? built
+    return yield* store.get(testerKey).pipe(Effect.orElseSucceed(() => undefined))
   })
 
 /** This device's id, made the first time. */
@@ -78,9 +77,9 @@ export const layer = (config: SenderConfig, options: { readonly send?: typeof fe
     Effect.gen(function*() {
       const store = yield* KeyValueStore.KeyValueStore
       const send = options.send ?? ((input, init) => fetch(input, init))
-      const tester = yield* testerOf(store, config.tester, options.search ?? globalThis.location?.search ?? "")
-      // Not opted in: nothing is recorded, and nothing kept from before is sent.
-      if (tester === "") {
+      const named = yield* testerOf(store, options.search ?? globalThis.location?.search ?? "")
+      // Opted out: nothing is recorded, and nothing kept from before is sent.
+      if (named === "") {
         yield* store.remove(outboxKey).pipe(Effect.ignore)
         return Playtest.of({ recordRun: () => Effect.void })
       }
@@ -113,9 +112,10 @@ export const layer = (config: SenderConfig, options: { readonly send?: typeof fe
         Effect.catchCause((cause) => Effect.logWarning("The playtest runs could not be sent", cause))
       )
 
-      const recordRun = (reported: Omit<PlaytestRunValue, "device" | "tester">) =>
+      const recordRun = (reported: Omit<PlaytestRunValue, "device" | "tester">, player: string) =>
         lock.withPermits(1)(Effect.gen(function*() {
           const runs = yield* load
+          const tester = named ?? (config.tester !== "" ? config.tester : player)
           yield* save([...runs, { ...reported, device, tester }].slice(-outboxLimit))
         })).pipe(
           Effect.andThen(flush),

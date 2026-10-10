@@ -22,14 +22,14 @@ export default defineConfig(({ command, mode }) => {
   // (and `PLAYTEST_URL` when the server is not the game's own address, as
   // for a phone app; `PLAYTEST_TESTER` to name its tester) in the
   // environment. A dev build sends to the laptop's own
-  // server, as the tester "dev". A tester opts in by name (see
-  // src/app/playtest-send.ts). Any other build is a release build: `SHOOTER_PLAYTEST` is `null`,
+  // server. Runs are named by the account played unless a tester is named
+  // (see src/app/playtest-send.ts). Any other build is a release build: `SHOOTER_PLAYTEST` is `null`,
   // so the sender is left out of the bundle.
   const env = process.env
   const playtest = mode === "test"
     ? null
     : command === "serve"
-    ? { url: "", key: devPlaytestKey, tester: env.PLAYTEST_TESTER ?? "dev" }
+    ? { url: "", key: devPlaytestKey, tester: env.PLAYTEST_TESTER ?? "" }
     : env.PLAYTEST_KEY !== undefined && env.PLAYTEST_KEY !== ""
     ? { url: env.PLAYTEST_URL ?? "", key: env.PLAYTEST_KEY, tester: env.PLAYTEST_TESTER ?? "" }
     : null

@@ -17,8 +17,8 @@ import type { BuildValue, RunLogValue, RunResultValue } from "../schema.ts"
 export type ReportedRun = Omit<PlaytestRunValue, "device" | "tester">
 
 export class Playtest extends Context.Service<Playtest, {
-  /** Reports a run that ended; never fails, and never holds up play. */
-  readonly recordRun: (run: ReportedRun) => Effect.Effect<void>
+  /** Reports a run that ended, played on the account named `player`; never fails, and never holds up play. */
+  readonly recordRun: (run: ReportedRun, player: string) => Effect.Effect<void>
 }>()("Shooter/Playtest") {
   /** A release build: nothing is sent. */
   static readonly off = Layer.succeed(Playtest, Playtest.of({ recordRun: () => Effect.void }))

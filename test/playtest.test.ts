@@ -40,7 +40,7 @@ const onDevice = (server: ReturnType<typeof fakeServer>, runs: ReadonlyArray<Rep
       const playtest = yield* Effect.provide(Effect.gen(function*() {
         return yield* Playtest
       }), senderLayer({ url: "https://runs.test", key: "secret", tester: built }, { send: server.send, search, online: (then) => (online = then) }))
-      for (const run of runs) yield* playtest.recordRun(run)
+      for (const run of runs) yield* playtest.recordRun(run, "Robin's account")
       const outbox = () => kv.get(outboxKey).pipe(Effect.map((raw) => (raw === undefined ? [] : (JSON.parse(raw) as Array<{ readonly id: string }>).map((run) => run.id))))
       return { outbox: yield* outbox(), kv, online, outboxAfter: outbox }
     }).pipe(Effect.provide(KeyValueStore.layerMemory))
@@ -103,10 +103,13 @@ describe("playtest sender", () => {
     expect(await Effect.runPromise(kv.get(testerKey))).toBe("Robin")
   })
 
-  it("records nothing until a tester is named, and forgets what waited when one opts out", async () => {
-    const unnamed = fakeServer([204])
-    expect((await onDevice(unnamed, [reported("a")], {}, "", "")).outbox).toEqual([])
-    expect(unnamed.sent).toEqual([])
+  it("names runs by the account played when no tester is named", async () => {
+    const server = fakeServer([204])
+    await onDevice(server, [reported("a")], {}, "", "")
+    expect(server.sent[0]!.body.tester).toBe("Robin's account")
+  })
+
+  it("records nothing once a device opts out, and forgets what waited", async () => {
     const waiting = await onDevice(fakeServer([503]), [reported("a")])
     const server = fakeServer([204])
     const optedOut = await onDevice(server, [reported("b")], { [outboxKey]: (await Effect.runPromise(waiting.kv.get(outboxKey)))! }, "?tester=")
