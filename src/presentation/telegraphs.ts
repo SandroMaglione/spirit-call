@@ -7,7 +7,7 @@ import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Bracing, Burst, Projectile, Velocity, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Player, Rebrace, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
+import { AttackPhase, Attacker, Barrier, Body, Bracing, Burst, Projectile, Velocity, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Player, Rebrace, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
@@ -328,5 +328,49 @@ export const DrawBraces = Game.System("Shooter/DrawBraces", {
   } else if (resources.rebrace.get().remaining > 0) {
     const pulse = 0.7 + 0.3 * Math.sin((performance.now() / 1000) * Math.PI * 2 / view.braces.pulse)
     g.strokeCircle(at.x, at.y, view.braces.ready, view.braces.width - 1, color, view.braces.outline * 0.4 * pulse)
+  }
+})
+
+/**
+ * Barriers standing (see `Barrier`): a band of wind on the floor (a wall's
+ * strip, a ring's circle) with streaks running along it, fading out as its
+ * time runs out.
+ */
+export const DrawBarriers = Game.System("Shooter/DrawBarriers", {
+  queries: { barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } }) },
+  services: { host: Game.System.service(RenderHost) }
+}, ({ queries, services }) => {
+  const g = services.host.telegraphs
+  const now = performance.now() / 1000
+  const spec = view.barriers
+  for (const { data } of queries.barriers.each()) {
+    const { shape, effect, remaining } = data.barrier.get()
+    const color = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const fade = Math.min(1, remaining / spec.fadeSeconds)
+    const half = effect.thickness / 2
+    if (shape.kind === "wall") {
+      const along = { x: shape.to.x - shape.from.x, y: shape.to.y - shape.from.y }
+      const length = Math.hypot(along.x, along.y)
+      const unit = { x: along.x / length, y: along.y / length }
+      const across = { x: -unit.y * half, y: unit.x * half }
+      g.fillPoly([shape.from.x + across.x, shape.from.y + across.y, shape.to.x + across.x, shape.to.y + across.y, shape.to.x - across.x, shape.to.y - across.y, shape.from.x - across.x, shape.from.y - across.y], color, spec.fill * fade)
+      g.line(shape.from.x + across.x, shape.from.y + across.y, shape.to.x + across.x, shape.to.y + across.y, spec.width, color, spec.edge * fade)
+      g.line(shape.from.x - across.x, shape.from.y - across.y, shape.to.x - across.x, shape.to.y - across.y, spec.width, color, spec.edge * fade)
+      // Streaks of wind running along it.
+      for (let streak = 0; streak < spec.streaks; streak++) {
+        const t = (now * 0.9 + streak / spec.streaks) % 1
+        const start = { x: shape.from.x + along.x * t, y: shape.from.y + along.y * t }
+        const end = Math.min(length, length * t + spec.streakLength)
+        g.line(start.x, start.y, shape.from.x + unit.x * end, shape.from.y + unit.y * end, spec.width - 1, view.hitFlash, spec.edge * fade * 0.6)
+      }
+      continue
+    }
+    g.strokeCircle(shape.center.x, shape.center.y, shape.radius, effect.thickness, color, spec.fill * 1.5 * fade)
+    g.strokeCircle(shape.center.x, shape.center.y, shape.radius + half, spec.width, color, spec.edge * fade)
+    g.strokeCircle(shape.center.x, shape.center.y, shape.radius - half, spec.width, color, spec.edge * fade)
+    for (let streak = 0; streak < spec.streaks; streak++) {
+      const turn = now * 1.6 + (streak / spec.streaks) * Math.PI * 2
+      g.strokeArc(shape.center.x, shape.center.y, shape.radius, turn, turn + spec.streakLength / shape.radius, spec.width - 1, view.hitFlash, spec.edge * fade * 0.6)
+    }
   }
 })

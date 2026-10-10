@@ -105,7 +105,7 @@ export const view = {
   /** Quiet facet rim and authored luminous eyes, gems and lava. */
   enemyRim: { color: 0xb3cad8, strength: 0.075, power: 3, emission: 1.05 },
   /** Each character's body color, so a switch is seen at once (and her switch button matches). */
-  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a, bastion: 0xc8a575, sparkfist: 0x5fd8ff, tidewarden: 0x2f9fb8, quarry: 0xb8875a, hearth: 0xff8a4a } satisfies Record<CharacterId, number>,
+  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a, bastion: 0xc8a575, sparkfist: 0x5fd8ff, tidewarden: 0x2f9fb8, quarry: 0xb8875a, hearth: 0xff8a4a, windwall: 0x9be7d2 } satisfies Record<CharacterId, number>,
   playerDashing: 0xd9fffb,
   shadow: 0x000000,
   /** Body height of actors relative to their radius. */
@@ -272,6 +272,8 @@ export const view = {
    * water, so they read apart from a puddle under the same enemy.
    */
   marks: { color: 0xbfeeff, gap: 12, inner: 7, width: 3, outline: 0.95, pulse: 0.8, fadeSeconds: 1 },
+  /** A barrier standing: its band's fill and edge, the streaks of wind running along it, and how long it fades out. */
+  barriers: { fill: 0.18, edge: 0.75, width: 3, streaks: 5, streakLength: 26, fadeSeconds: 0.6 },
   /** A brace held: its reach ring, filling in as the moment passes; `ready`: the faint ring while a Floodgate readies braces. */
   braces: { width: 4, outline: 0.9, fill: 0.22, ready: 46, pulse: 0.7 },
   /**

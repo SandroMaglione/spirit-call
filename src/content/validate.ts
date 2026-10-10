@@ -260,6 +260,10 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       checkHeals(problems, where, effect.heals)
       if (!(effect.readies >= 0)) problems.push(`${where}: readies must not be negative (is ${effect.readies})`)
       return
+    case "barrier":
+      positive(problems, where, { seconds: effect.seconds, thickness: effect.thickness, tick: effect.tick, ...(effect.shape.kind === "wall" ? { length: effect.shape.length } : { radius: effect.shape.radius }) })
+      if (effect.shape.kind === "wall" && !(effect.shape.ahead >= 0)) problems.push(`${where}: ahead must not be negative (is ${effect.shape.ahead})`)
+      return
     case "fault":
       positive(problems, where, { length: effect.length, rocks: effect.rocks, size: effect.size })
       if (!Number.isInteger(effect.rocks)) problems.push(`${where}: rocks must be a whole number (is ${effect.rocks})`)

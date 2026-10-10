@@ -297,6 +297,23 @@ export interface QuakeEffect extends EffectBase {
 }
 
 /**
+ * A barrier of the caster's element for `seconds`, `thickness` thick: a
+ * wall across her aim, `ahead` in front of her and `length` long, or a ring
+ * of `radius` around where she stands. The other side's shots that meet it
+ * stop there. A body of the other side touching it is struck (its blow) and
+ * thrown back, at most once every `tick` seconds: off a wall to the side it
+ * came from, out of a ring. A ring goes up with a gust that throws what is
+ * inside it out to it.
+ */
+export interface BarrierEffect extends EffectBase {
+  readonly kind: "barrier"
+  readonly shape: { readonly kind: "wall"; readonly ahead: number; readonly length: number } | { readonly kind: "ring"; readonly radius: number }
+  readonly seconds: number
+  readonly thickness: number
+  readonly tick: number
+}
+
+/**
  * A brace: the caster sets herself for `window` seconds, rooted (she cannot
  * run, attack, or dash; switched out, it is lost). The first enemy blow on
  * her meanwhile (a shot too; burns and bursts pass through) is taken whole,
@@ -327,7 +344,7 @@ export interface FlurryEffect extends EffectBase {
   readonly hop: number
 }
 
-export type SkillEffect = FaultEffect | QuakeEffect | BraceEffect | FlurryEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+export type SkillEffect = BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | FlurryEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -357,6 +374,7 @@ export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "le
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
 export const nova = (spec: Omit<NovaEffect, "kind" | "heals" | "readies"> & Partial<Pick<NovaEffect, "heals" | "readies">>): NovaEffect => ({ kind: "nova", heals: null, readies: 0, ...spec })
 export const brace = (spec: Omit<BraceEffect, "kind">): BraceEffect => ({ kind: "brace", ...spec })
+export const barrier = (spec: Omit<BarrierEffect, "kind">): BarrierEffect => ({ kind: "barrier", ...spec })
 export const fault = (spec: Omit<FaultEffect, "kind">): FaultEffect => ({ kind: "fault", ...spec })
 export const quake = (spec: Omit<QuakeEffect, "kind">): QuakeEffect => ({ kind: "quake", ...spec })
 export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
@@ -622,6 +640,30 @@ export const skills = {
     energy: 90,
     invulnerability: 0.5,
     effect: nova({ radius: 300, power: 40, element: "fire", knockback: 700, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "burning", base: 5, per: 0, most: 5, consumes: false } })
+  }),
+  /**
+   * Windwall's special: a wall of wind raised across her aim, a little
+   * ahead of her, for a while. Shots break on it; whoever walks into it is
+   * thrown back to the side it came from, swept.
+   */
+  galeWall: skill({
+    name: "Gale Wall",
+    cooldown: 9,
+    energy: 0,
+    invulnerability: 0,
+    effect: barrier({ shape: { kind: "wall", ahead: 110, length: 240 }, seconds: 6, thickness: 18, tick: 0.35, power: 8, element: "wind", knockback: 650, hitStop: 0, heavy: false })
+  }),
+  /**
+   * Windwall's ultimate: a ring of wind around where she stands, a gust
+   * throwing what is inside out to it. For a while shots break on it, and
+   * whoever comes through is thrown back out. No aim.
+   */
+  eyeOfTheStorm: skill({
+    name: "Eye of the Storm",
+    cooldown: 10,
+    energy: 90,
+    invulnerability: 0.5,
+    effect: barrier({ shape: { kind: "ring", radius: 190 }, seconds: 6, thickness: 18, tick: 0.35, power: 12, element: "wind", knockback: 800, hitStop: 0, heavy: true })
   })
 }
 

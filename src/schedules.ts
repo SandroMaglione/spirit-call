@@ -31,6 +31,7 @@ import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
 import { CastBraces, CounterBraces, TickBraces } from "./features/brace.ts"
+import { CastBarriers, UpdateBarriers } from "./features/barriers.ts"
 import { CastEarthrise, CastFaults, CastQuakes, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
@@ -120,6 +121,7 @@ const gameplay = Game.Schedule.when(
   CastFlurries,
   CastGuards,
   CastBraces,
+  CastBarriers,
   CastEarthrise,
   CastFaults,
   CastQuakes,
@@ -146,6 +148,7 @@ const gameplay = Game.Schedule.when(
   MoveDiscs,
   ResolveHitboxes,
   UpdateVortices,
+  UpdateBarriers,
   UpdateTotems,
   UpdateRocks,
   UpdateGround,

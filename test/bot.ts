@@ -501,6 +501,9 @@ export const skillReach = (effect: SkillEffect): number => {
       return effect.length + more
     case "quake":
       return effect.first + more
+    // A wall goes up between her and what comes; a ring around her, once enemies close in.
+    case "barrier":
+      return effect.shape.kind === "wall" ? effect.shape.ahead + effect.shape.length + more : effect.shape.radius + more
     case "blast":
     case "leap":
     case "nova":
@@ -576,7 +579,7 @@ export interface BotReport {
   readonly healing: number
   /** Health restored, as a share of the team's whole health (a healer's measure, see docs/roster.md). */
   readonly restored: number
-  /** Enemy blows stopped before they landed: stone plates shattered, blows braced (a guardian's measure). */
+  /** Enemy blows stopped before they landed: stone plates shattered, blows braced, shots broken on barriers (a guardian's measure). */
   readonly blocked: number
   /** What dodging needed: dashes used to dodge (not those closing in). */
   readonly dashes: number
@@ -635,7 +638,7 @@ export const runBot = (run: BotRun): BotReport => {
   const Measure = Game.System("Bot/Measure", {
     events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal), guarded: Game.System.readEvent(Guarded) }
   }, ({ events }) => {
-    blocked += events.guarded.all().filter((guarded) => guarded.kind === "shattered" || guarded.kind === "braced").length
+    blocked += events.guarded.all().filter((guarded) => guarded.kind === "shattered" || guarded.kind === "braced" || guarded.kind === "barred").length
     for (const cast of events.cast.all()) {
       // A landing is part of a skill already used (see `Airborne`).
       if (cast.faction !== "player" || cast.skill === null || cast.landing === true) continue

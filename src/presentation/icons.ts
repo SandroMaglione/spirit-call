@@ -70,6 +70,10 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   kindle: icon(`<path d="M12 2c3 3 5 5.5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3.5 0-3 .5-5.5 1-8z" fill="currentColor" fill-opacity="0.35"/><path d="M12 17v5M9.5 19.5h5"/>`),
   // Wildfire: flames all around a ring.
   wildfire: icon(`<circle cx="12" cy="12" r="4"/><path d="M12 1.5l1.5 3h-3zM12 22.5l1.5-3h-3zM1.5 12l3-1.5v3zM22.5 12l-3-1.5v3zM4.5 4.5l3 1-2 2zM19.5 19.5l-3-1 2-2zM19.5 4.5l-1 3-2-2zM4.5 19.5l1-3 2 2z"/>`),
+  // Gale Wall: a wall of wind, a shot breaking on it.
+  galeWall: icon(`<path d="M14 3v18"/><path d="M17 6c2 0 2 2 4 2M17 12c2 0 2 2 4 2M17 18c2 0 2-2 4-2"/><path d="M3 12h6M8 9.5l2.5 2.5L8 14.5"/>`),
+  // Eye of the Storm: a ring of wind around a still center.
+  eyeOfTheStorm: icon(`<circle cx="12" cy="12" r="2" fill="currentColor" fill-opacity="0.35"/><path d="M12 3a9 9 0 0 1 9 9M21 12a9 9 0 0 1-9 9M12 21a9 9 0 0 1-9-9M3 12a9 9 0 0 1 9-9"/><path d="M19 3l2 2-2 1M5 21l-2-2 2-1"/>`),
   // Floodgate: a wave breaking out of a ring.
   floodgate: icon(`<circle cx="12" cy="12" r="9"/><path d="M5 14c2 0 2-2 3.5-2s1.5 2 3.5 2 2-2 3.5-2 1.5 2 3.5 2"/><path d="M12 3v4M12 17v4"/>`)
 }

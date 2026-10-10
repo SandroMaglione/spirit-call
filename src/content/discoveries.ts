@@ -91,6 +91,12 @@ export const discoveries = {
     check: clearWith("hearth"),
     rewards: { crystals: 30 }
   }),
+  withWindwall: discovery({
+    name: "Windwall",
+    description: "Clear a quest or tier with Windwall on the team.",
+    check: clearWith("windwall"),
+    rewards: { crystals: 30 }
+  }),
   fullTeam: discovery({
     name: "Full team",
     description: "Clear a quest or tier with three characters.",

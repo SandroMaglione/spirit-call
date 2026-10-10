@@ -18,7 +18,7 @@ import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { BraceEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { BarrierEffect, BraceEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
@@ -139,6 +139,23 @@ export interface VortexValue {
   readonly nextTick: number
 }
 export const Vortex = Descriptor.Component<VortexValue>()("Shooter/Vortex")
+
+/**
+ * A barrier standing (see `BarrierEffect`): a wall from `from` to `to`, or a
+ * ring of `radius` around `center`, `thickness` thick, for `remaining` more
+ * seconds of `seconds`. The other side's shots meeting it stop; its bodies
+ * touching it take `blow` and are thrown back, every `tick` (`nextTick`:
+ * time to the next).
+ */
+export interface BarrierValue {
+  readonly shape: { readonly kind: "wall"; readonly from: Vec2; readonly to: Vec2 } | { readonly kind: "ring"; readonly center: Vec2; readonly radius: number }
+  readonly effect: BarrierEffect
+  readonly faction: Faction
+  readonly blow: Blow
+  readonly remaining: number
+  readonly nextTick: number
+}
+export const Barrier = Descriptor.Component<BarrierValue>()("Shooter/Barrier")
 
 /**
  * A totem planted by a skill (see `TotemEffect`), standing at its
@@ -795,7 +812,7 @@ export const Explosion = Descriptor.Event<{
 }>()("Shooter/Explosion")
 
 /** The team's guard changed (see `GuardEffect`): its plates raised around the one on the field at `at`, or one shattered there, for effects. */
-export const Guarded = Descriptor.Event<{ readonly at: Vec2; readonly kind: "raised" | "shattered" | "braced" }>()("Shooter/Guarded")
+export const Guarded = Descriptor.Event<{ readonly at: Vec2; readonly kind: "raised" | "shattered" | "braced" | "barred" }>()("Shooter/Guarded")
 
 /** Health restored to an entity at `at` (an aspect's passive, a totem, a thunderclap), for effects. */
 export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: number }>()("Shooter/Heal")
@@ -1208,6 +1225,7 @@ export const Game = Schema.bind(
       Marked,
       Lobbed,
       Vortex,
+      Barrier,
       Totem,
       Raising,
       Bracing,

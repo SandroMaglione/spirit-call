@@ -143,6 +143,8 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":
       return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, ${describeHeals(effect.heals, "it reaches")}`}${effect.readies > 0 ? `; for ${effect.readies}s after, a brace that takes a blow is ready again at once` : ""}`
+    case "barrier":
+      return `${effect.shape.kind === "wall" ? `a ${elementWord(effect.element)}wall across your aim` : `a ${elementWord(effect.element)}ring around you, its gust throwing what is inside out,`} for ${effect.seconds}s: shots break on it, and enemies that touch it are struck (${effect.power}% ATK) and thrown back${effect.shape.kind === "wall" ? "" : " out"}`
     case "fault":
       return `the ground splitting ahead of you, ${effect.rocks} ${elementWord(effect.element)}rocks erupting down the line one after the other (${effect.power}% ATK each), holding what they catch a moment`
     case "quake":

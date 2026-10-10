@@ -9,7 +9,8 @@
     "sparkfist",
     "tidewarden",
     "quarry",
-    "hearth"
+    "hearth",
+    "windwall"
   ],
   "weapons": [
     "trainingBlade",
@@ -44,7 +45,9 @@
     "faultLine",
     "landslide",
     "kindle",
-    "wildfire"
+    "wildfire",
+    "galeWall",
+    "eyeOfTheStorm"
   ],
   "challenges": [
     "swarm",
@@ -215,7 +218,8 @@
     "withSparkfist",
     "withTidewarden",
     "withQuarry",
-    "withHearth"
+    "withHearth",
+    "withWindwall"
   ],
   "classes": [
     "blade",

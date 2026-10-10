@@ -282,6 +282,24 @@ export const characters = {
     impact: 1.2,
     weight: 1.3,
     skills: { special: "kindle", ultimate: "wildfire" }
+  }),
+  /**
+   * Wind, Staff, guardian (a working name): quick at middle range, a
+   * guardian who stops shots by where she puts her walls. The Gale Wall
+   * stands across her aim; the Eye of the Storm rings her round.
+   */
+  windwall: character({
+    name: "Windwall",
+    stats: { hp: 78, atk: 84, def: 22, speed: 300 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "wind",
+    class: "staff",
+    role: "guardian",
+    dash: { distance: 180 },
+    impact: 1,
+    weight: 0.95,
+    skills: { special: "galeWall", ultimate: "eyeOfTheStorm" }
   })
 }
 

@@ -88,6 +88,9 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "cut":
     case "fault":
       return { kind: "direction", reach: effect.length }
+    case "barrier":
+      // A wall goes up across her aim, ahead of her; a ring around her, with nothing to aim.
+      return effect.shape.kind === "wall" ? { kind: "direction", reach: effect.shape.ahead } : { kind: "self" }
     case "blast":
       return { kind: "direction", reach: effect.radius }
     case "plunge":

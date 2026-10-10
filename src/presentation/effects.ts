@@ -288,6 +288,11 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       services.host.feedback.shake = Math.max(services.host.feedback.shake, view.impact.heavyShake)
       continue
     }
+    // A shot breaking on a barrier: a puff of wind where it met it.
+    if (guarded.kind === "barred") {
+      fx.burst(at, { color: view.elements.wind, count: 8, speed: 220, size: 4, life: 0.35 })
+      continue
+    }
     if (guarded.kind === "raised") {
       fx.ring(at, 60 * projection.zoom, view.stone.glow, 0.3)
       fx.burst(at, { color: view.stone.light, count: 14, speed: 160, size: 6, life: 0.6, gravity: -80, drag: 3, alpha: 0.5 })
