@@ -8,7 +8,7 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, lentFor, levelsUnder, materialPay, owns, perfectPay, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress } from "../../account/account.ts"
+import { auditionSlot, characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, lentFor, levelsUnder, materialPay, owns, perfectPay, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
 import { perfectUnlock } from "../../content/collection.ts"
 import { gradeOfRank } from "../../content/materials.ts"
@@ -35,7 +35,7 @@ import { Pill } from "../kit/controls.tsx"
 import { Bar, Label, Panel, Row } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { playsIn } from "../navigation.ts"
-import type { UiStore } from "../store.ts"
+import type { UiActions, UiStore } from "../store.ts"
 import { Amounts, EnemyRow, ids, PartyStrip, Stars } from "./parts.tsx"
 import type { Nav, QuestTab } from "./screens.ts"
 
@@ -50,7 +50,7 @@ const RowEnd = ({ store, play }: { readonly store: UiStore; readonly play: Play 
   if (play.kind === "quest" && cleared(store, play)) return <Stars earned={questProgress(store.account.value, play.quest, rankOf(play))?.stars ?? []} perfect={questProgress(store.account.value, play.quest, rankOf(play))?.perfectAt !== undefined} />
   if (cleared(store, play)) return <span class="done"><Icon name="check" /></span>
   if (lock !== null) return <Icon name="lock" />
-  return <>Lv {encounterOf(tuning, play).enemyLevel}</>
+  return <>Lv {encounterOf(tuning, play, store.account.value).enemyLevel}</>
 }
 
 /** A group's chests along its stars at `rank`: each at the stars it needs, opened ones ticked; tap one to see what it holds (`picked`: the one shown). */
@@ -159,7 +159,7 @@ const TrackList = ({ store, play, kind }: { readonly store: UiStore; readonly pl
   return <>
     {kind === "hardcore"
       ? <Label end="Each tier pays once">Tracks</Label>
-      : kind === "audition" ? <Label end="Played alone">Auditions</Label>
+      : kind === "audition" ? <Label end={<><Icon name="invitations" />{account.wallet.invitations ?? 0} to give</>}>Auditions · you choose who</Label>
       : <Label end="Every clear pays">Element trials</Label>}
     {ids(tuning.tracks).filter((track) => tuning.tracks[track].kind === kind).map((track) => {
       const spec = tuning.tracks[track], first: Play = { kind: "tier", track, tier: 1 }, lock = playLock(tuning, account, first)
@@ -167,8 +167,10 @@ const TrackList = ({ store, play, kind }: { readonly store: UiStore; readonly pl
       const done = spec.tiers.filter((_, index) => cleared(store, { kind: "tier", track, tier: index + 1 })).length
       // An audition shows whose it is; one whose character is owned is ticked.
       const lead = spec.character === null ? undefined : <Face of={{ character: spec.character }} tint={elementOf(tuning, spec.character)} size={26} />
-      return <Row key={track} tall lead={lead} selected={play.value.kind === "tier" && play.value.track === track} locked={lock !== null} onClick={() => (play.value = open(track))}
-        end={lock !== null ? <Icon name="lock" /> : tuning.challenges[spec.tiers[0]!.challenge].objective.kind === "endure" && best > 0 ? `Best wave ${best}` : `${done} / ${spec.tiers.length}`}>{spec.character === null ? spec.name : tuning.characters[spec.character].name}</Row>
+      // An audition waiting for its invitation shows it can be given one now.
+      const invitable = lock?.kind === "invite" && (account.wallet.invitations ?? 0) > 0
+      return <Row key={track} tall lead={lead} selected={play.value.kind === "tier" && play.value.track === track} locked={lock !== null && !invitable} onClick={() => (play.value = open(track))}
+        end={invitable ? <Icon name="invitations" /> : lock !== null ? <Icon name="lock" /> : tuning.challenges[spec.tiers[0]!.challenge].objective.kind === "endure" && best > 0 ? `Best wave ${best}` : `${done} / ${spec.tiers.length}`}>{spec.character === null ? spec.name : tuning.characters[spec.character].name}</Row>
     })}
   </>
 }
@@ -250,7 +252,7 @@ const RankTwist = ({ store, title, twist }: { readonly store: UiStore; readonly 
  */
 const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Nav; readonly play: Signal<Play> }) => {
   const tuning = store.tuning.value, account = store.account.value, selected = play.value
-  const lock = playLock(tuning, account, selected), encounter = encounterOf(tuning, selected), challenge = tuning.challenges[encounter.challenge]
+  const lock = playLock(tuning, account, selected), encounter = encounterOf(tuning, selected, account), challenge = tuning.challenges[encounter.challenge]
   // Levels matter (see `levelGap`): a party well under the enemies is told so, with the way to train its weakest.
   const team = store.menuDraft.value.team
   const under = lock === null ? levelsUnder(tuning, account, team, encounter.enemyLevel) : null
@@ -259,7 +261,7 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
   const element = selected.kind === "quest" ? tuning.quests[selected.quest].element : tuning.tracks[selected.track].element
   const track = selected.kind === "tier" ? tuning.tracks[selected.track] : null
   const trial = track?.kind === "trial"
-  const lent = lentFor(tuning, selected)
+  const lent = lentFor(tuning, selected, account)
   // The grade of essence this pays: a quest's rank's, a track tier's by the rank that opens it.
   const grade = gradeOfRank(selected.kind === "quest" ? rankOf(selected) : track!.tiers[selected.tier - 1]?.opensRank ?? 1)
   // Only a trial pays essence on every clear; a quest pays it on its first clear, a hardcore tier with its rewards, once.
@@ -293,7 +295,7 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
     title={selected.kind === "quest" ? tuning.quests[selected.quest].name : tuning.tracks[selected.track].name}
     subtitle={quest !== null && quest.introduces === null ? "Side quest · what you have met, mixed" : undefined}
     detail={steps.length > 1 ? describeObjective(challenge.objective, challenge.waves.scripted.length) : `${describeObjective(challenge.objective, challenge.waves.scripted.length)} · Lv ${encounter.enemyLevel}`}
-    note={lock !== null ? describeLock(tuning, lock) : lent !== null ? `You play as ${tuning.characters[lent.character].name} alone, at level ${lent.level}: your own levels do not count.` : under !== null ? <>Your party is {under} levels under the enemies: they take less from it and hit harder.{weakest !== undefined && <button type="button" class="panel__link" onClick={() => nav.go({ kind: "character", character: weakest, tab: "overview" })}>Train</button>}</> : undefined}
+    note={lock?.kind === "invite" ? inviteNote(store, lock.character) : lock !== null ? describeLock(tuning, lock) : lent !== null ? `You play as ${tuning.characters[lent.character].name} alone, at level ${lent.level}: your own levels do not count.` : under !== null ? <>Your party is {under} levels under the enemies: they take less from it and hit harder.{weakest !== undefined && <button type="button" class="panel__link" onClick={() => nav.go({ kind: "character", character: weakest, tab: "overview" })}>Train</button>}</> : undefined}
     noteIcon={lock !== null ? "lock" : "info"}>
     {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} />}
     {quest !== null && rank > 1 && <RankTwist store={store} title={`Rank ${rankNames[rank - 1] ?? rank}`} twist={encounter.twist} />}
@@ -302,8 +304,8 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
       <Label>{selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"}</Label>
       {steps.map((step) => {
         const locked = playLock(tuning, account, step.play) !== null, on = samePlay(step.play, selected)
-        return <button type="button" role="radio" key={step.name} class={`step${locked ? " is-locked" : ""}`} aria-checked={on} aria-label={`${selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"} ${step.name}, enemies level ${encounterOf(tuning, step.play).enemyLevel}`} onClick={() => (play.value = step.play)}>
-          <b>{step.name}</b><span>{locked ? <Icon name="lock" /> : null}Lv {encounterOf(tuning, step.play).enemyLevel}</span>
+        return <button type="button" role="radio" key={step.name} class={`step${locked ? " is-locked" : ""}`} aria-checked={on} aria-label={`${selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"} ${step.name}, enemies level ${encounterOf(tuning, step.play, account).enemyLevel}`} onClick={() => (play.value = step.play)}>
+          <b>{step.name}</b><span>{locked ? <Icon name="lock" /> : null}Lv {encounterOf(tuning, step.play, account).enemyLevel}</span>
         </button>
       })}
     </div>}
@@ -335,6 +337,17 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
       <EnemyRow store={store} kinds={challengeEnemies(challenge)} />
     </div>
   </Panel>
+}
+
+/** What opening an audition takes, and where it would stand: the next slot's level (see `invitationSlots`). */
+const inviteNote = (store: UiStore, character: CharacterId): string => {
+  const tuning = store.tuning.value, account = store.account.value
+  const held = account.wallet.invitations ?? 0, place = Object.keys(account.auditions).length + 1
+  const slot = auditionSlot(tuning, account, character)
+  const ordinal = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"][place - 1] ?? `${place}th`
+  return held > 0
+    ? `Invite ${tuning.characters[character].name} with an invitation (you hold ${held}): as your ${ordinal} audition, it plays from level ${slot.level}.`
+    : `Invitations come with milestones of the main line and the ranks: one opens the audition of the character you choose.`
 }
 
 /** What a prize is called above its name. */
@@ -384,11 +397,14 @@ const Prize = ({ store, prize, ask, preview }: { readonly store: UiStore; readon
 /** A role's name. */
 const roleNames = { attacker: "Attacker", healer: "Healer", guardian: "Guardian" } as const
 
-export const Quests = ({ store, nav, tab, play, leader, enter }: {
-  readonly store: UiStore; readonly nav: Nav; readonly tab: QuestTab; readonly play: Signal<Play>; readonly leader: CharacterId; readonly enter: () => void
+export const Quests = ({ store, actions, nav, tab, play, leader, enter }: {
+  readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly tab: QuestTab; readonly play: Signal<Play>; readonly leader: CharacterId; readonly enter: () => void
 }) => {
   const chest = useSignal<ChestRef | null>(null)
   const tuning = store.tuning.value, selected = play.value
+  const lock = playLock(tuning, store.account.value, selected)
+  // An audition waiting for its invitation: who it is for.
+  const inviting = lock?.kind === "invite" ? lock.character : null
   const key = selected.kind === "quest" ? `${selected.quest}-${rankOf(selected)}` : `${selected.track}-${selected.tier}`
   // A chest picked in one tab is not shown in another.
   const shownChest = (tab === "main" || tab === "secondary") && chest.value !== null && (chest.value.group === "secondary") === (tab === "secondary") ? chest.value : null
@@ -404,7 +420,12 @@ export const Quests = ({ store, nav, tab, play, leader, enter }: {
       {lentFor(tuning, selected) === null
         ? <PartyStrip store={store} team={store.menuDraft.value.team} leader={leader} size={34} pick={() => nav.go({ kind: "team" })} edit={() => nav.go({ kind: "team" })} />
         : <Face of={{ character: lentFor(tuning, selected)!.character }} tint={elementOf(tuning, lentFor(tuning, selected)!.character)} size={38} selected />}
-      <Pill icon="play" disabled={playLock(tuning, store.account.value, selected) !== null || store.busy.value} onClick={enter}>Enter</Pill>
+      {/* An audition not opened yet is opened here, with an invitation: the player's choice of who auditions next. */}
+      {inviting !== null
+        ? <Pill icon="invitations" disabled={store.busy.value || (store.account.value.wallet.invitations ?? 0) < 1} onClick={() => actions.openAudition(inviting)}>
+          <span class="prize__button">Invite<small>{store.account.value.wallet.invitations ?? 0} held</small></span>
+        </Pill>
+        : <Pill icon="play" disabled={playLock(tuning, store.account.value, selected) !== null || store.busy.value} onClick={enter}>Enter</Pill>}
     </Actions>
   </Screen>
 }

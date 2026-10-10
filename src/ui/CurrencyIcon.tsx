@@ -1,6 +1,6 @@
 import { useId } from "preact/hooks"
-/** What the miniature artwork draws: gold, or a shared grade of essence (Refined, a cut gem; Core, a rune-cut stone). */
-export type CurrencyArt = "gold" | "refined" | "core"
+/** What the miniature artwork draws: gold, an invitation (a sealed letter), or a shared grade of essence (Refined, a cut gem; Core, a rune-cut stone). */
+export type CurrencyArt = "gold" | "invitations" | "refined" | "core"
 
 /** The wallet, costs, and rewards use the same miniature currency artwork. */
 export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyArt }) => {
@@ -12,7 +12,13 @@ export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyArt }) =
       <linearGradient id={`${id}-sigil`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6f6a9c" /><stop offset=".5" stop-color="#3a3658" /><stop offset="1" stop-color="#1e1c30" /></linearGradient>
       <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : currency === "core" ? <circle cx="16" cy="16" r="13" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
     </defs>
-    {currency === "core" ? <>
+    {currency === "invitations" ? <>
+      {/* A folded letter closed with a wax seal: an invitation to audition. */}
+      <path d="M4 9h24v16H4Z" fill="#f3e6c8" stroke="#c9a96a" stroke-width="1" />
+      <path d="m4 9 12 9 12-9" fill="none" stroke="#c9a96a" stroke-width="1.2" stroke-linejoin="round" />
+      <circle cx="16" cy="18" r="4.4" fill="#b8323a" stroke="#ff8a8a" stroke-width=".8" />
+      <path d="m16 15.4.8 1.8 1.9.2-1.4 1.3.4 1.9-1.7-1-1.7 1 .4-1.9-1.4-1.3 1.9-.2Z" fill="#ffd9a8" />
+    </> : currency === "core" ? <>
       {/* A stone with a rune cut into it: Core Essence, the last grade. */}
       <circle cx="16" cy="16" r="13" fill={`url(#${id}-sigil)`} stroke="#b9b2e6" stroke-width="1" />
       <circle cx="16" cy="16" r="9.5" fill="none" stroke="#8d86c4" stroke-width=".8" />

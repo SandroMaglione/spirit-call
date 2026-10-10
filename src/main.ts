@@ -74,7 +74,7 @@ const start = async (mount: HTMLElement) => {
   const lastTeam = teamOf(tuning, account, account.selection.team)
   // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
   const team = withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, devQuery, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
-  const selected = encounterOf(tuning, account.selection.play)
+  const selected = encounterOf(tuning, account.selection.play, account)
   const challenge = quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
   const enemyLevel = quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
   const practice = quickStart && challenge === "practice" ? practiceFromQuery(tuning, devQuery) : undefined
@@ -150,7 +150,7 @@ const start = async (mount: HTMLElement) => {
       uiStore.play.value = play
       uiStore.extra.value = null
       // An audition lends its character alone, at its level (see `entryTeam`).
-      uiRequests.pending.push({ kind: "start", team: entryTeam(tuning, selected.account, play, team), ...encounterOf(tuning, play) })
+      uiRequests.pending.push({ kind: "start", team: entryTeam(tuning, selected.account, play, team), ...encounterOf(tuning, play, selected.account) })
       void selected.saved.then((saved) => {
         if (saved !== "refused") return
         // The server refused what this page allowed (the account changed elsewhere): the run stops, unrecorded.
@@ -178,6 +178,7 @@ const start = async (mount: HTMLElement) => {
         ...(extra.kind === "practice" ? { practice: extra.picks } : {})
       })
     },
+    openAudition: (character) => change(() => shell.openAudition(character), `${tuning.characters[character].name}'s audition is open`),
     saveTeamTo: (slot, saved) => change(() => shell.saveTeam(slot, saved), saved === null ? null : "Team saved"),
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
