@@ -8,13 +8,13 @@ import { describe, expect, it } from "vitest"
 import { closeLoop, models } from "../src/presentation/models.ts"
 import { Puppet } from "../src/presentation/puppet.ts"
 
-const spec = models.iceSpirit
-const load = async () => {
-  const bytes = readFileSync(path.join(import.meta.dirname, "..", spec.url))
-  return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
-}
+describe.each(["iceSpirit", "sparkfistSpirit"] as const)("%s game animation", (id) => {
+  const spec = models[id]
+  const load = async () => {
+    const bytes = readFileSync(path.join(import.meta.dirname, "..", spec.url))
+    return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
+  }
 
-describe("Ice Spirit game animation", () => {
   it("exports the full spirit clip vocabulary at the accepted rest scale", async () => {
     const gltf = await load()
     expect(gltf.animations.map(c => c.name).sort()).toEqual(Object.keys(spec.clips).sort())
@@ -95,7 +95,7 @@ describe("Ice Spirit game animation", () => {
       mixer.setTime(contact)
       const expected = target.scene.getObjectByName("IceSpirit")!
       const clips = new Map(gltf.animations.map(c => [c.name, closeLoop(c, spec.clips[c.name as keyof typeof spec.clips])]))
-      const puppet = new Puppet({ id: "iceSpirit", spec, scene: gltf.scene, clips }, .8,
+      const puppet = new Puppet({ id, spec, scene: gltf.scene, clips }, .8,
         { idle: "Idle", run: { clip: "Run", distance: 120 } }, ["Eye.L", "Eye.R"])
       puppet.animate({ x: 0, y: 0 }, { x: 0, y: 1 }, 0, false)
       puppet.play({ clip: name, contact }, .3, .04)

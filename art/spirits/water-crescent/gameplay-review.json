@@ -1,0 +1,121 @@
+{
+  "character": "tidewarden",
+  "model": "waterCrescent",
+  "glbSha256": "f780e9749683925106f22e134126ae8f631dda9b8b1e62116c40767f1079dec9",
+  "date": "2026-10-10",
+  "checks": {
+    "typecheck": true,
+    "lint": true,
+    "testsPassed": 693,
+    "testsSkipped": 1,
+    "testFilesPassed": 84,
+    "productionBuild": true
+  },
+  "browser": {
+    "network": "http://192.168.0.45:5219/?play&team=tidewarden,tidecaller,gunner&challenge=practice&charged&touch",
+    "desktop": [
+      1280,
+      800
+    ],
+    "phoneLandscape": [
+      844,
+      390
+    ],
+    "input": "DOM keyboard and synthetic pointerType touch through live game controls",
+    "driver": "Explicit fixedUpdate and presentation frame ticks; collaborative browser RAF throttled during automation. Paced browser recording keeps the real game render path.",
+    "syntheticTouch": "Pointer capture skipped for synthetic pointer id only, then restored. Native pointer capture requires an active browser pointer.",
+    "recording": "renders/gameplay-phone.mp4",
+    "physicalDeviceTested": false,
+    "observedCombo": [
+      {
+        "clip": "AttackA",
+        "seconds": 0.2,
+        "hitAt": 0.04
+      },
+      {
+        "clip": "AttackB",
+        "seconds": 0.18,
+        "hitAt": 0.04
+      },
+      {
+        "clip": "AttackA",
+        "seconds": 0.24,
+        "hitAt": 0.04
+      },
+      {
+        "clip": "AttackC",
+        "seconds": 0.55,
+        "hitAt": 0.04
+      }
+    ],
+    "otherObservedClips": [
+      "Power",
+      "Dash",
+      "Cast",
+      "Ultimate"
+    ],
+    "switches": [
+      "tidecaller",
+      "gunner",
+      "tidewarden"
+    ]
+  },
+  "scale": {
+    "camera": "same 3D camera, facing, ground line and first Idle sample for all three",
+    "measurement": "World-axis bounds of mesh geometry only, excluding glow sprites; central body excludes child ornaments.",
+    "models": {
+      "gunner": {
+        "coreOnly": [
+          35.995132388347585,
+          38.168938806209496,
+          35.37508792654793
+        ],
+        "full": [
+          35.995132388347585,
+          46.60969068989704,
+          35.37508792654793
+        ],
+        "heightFactor": 2.4,
+        "radius": 16,
+        "scaleHeight": 40.62768775266122,
+        "widthFactor": 1.5
+      },
+      "tidecaller": {
+        "coreOnly": [
+          43.483095264993146,
+          31.500110632604567,
+          42.59250825254108
+        ],
+        "full": [
+          43.60327043834744,
+          36.623324774602075,
+          42.59250825254108
+        ],
+        "heightFactor": 2.4,
+        "radius": 16,
+        "scaleHeight": 40.62768775266122,
+        "widthFactor": 1.5
+      },
+      "tidewarden": {
+        "coreOnly": [
+          29.265780058857082,
+          20.421213735039345,
+          29.104135674245413
+        ],
+        "full": [
+          41.98042006644097,
+          40.910664078028674,
+          38.410738359765745
+        ],
+        "heightFactor": 2.4,
+        "radius": 16,
+        "scaleHeight": 40.62768775266122,
+        "widthFactor": 1.5
+      }
+    }
+  },
+  "limits": [
+    "Runtime Hurt and procedural fall not exercised in this integration recording; Hurt export and floor clearance covered by animation audit/tests.",
+    "Browser viewport evidence does not establish physical-phone performance."
+  ]
+}

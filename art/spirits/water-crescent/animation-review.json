@@ -1,0 +1,303 @@
+{
+  "asset_sha256": "f780e9749683925106f22e134126ae8f631dda9b8b1e62116c40767f1079dec9",
+  "url": "http://192.168.0.45:5219/art/spirits/water-crescent/?animation=review",
+  "desktop": {
+    "clips": [
+      {
+        "clip": "Idle",
+        "finite": true,
+        "playing": true,
+        "selected": "Idle"
+      },
+      {
+        "clip": "Run",
+        "finite": true,
+        "playing": true,
+        "selected": "Run"
+      },
+      {
+        "clip": "AttackA",
+        "finite": true,
+        "playing": true,
+        "selected": "AttackA"
+      },
+      {
+        "clip": "AttackB",
+        "finite": true,
+        "playing": true,
+        "selected": "AttackB"
+      },
+      {
+        "clip": "AttackC",
+        "finite": true,
+        "playing": true,
+        "selected": "AttackC"
+      },
+      {
+        "clip": "Power",
+        "finite": true,
+        "playing": true,
+        "selected": "Power"
+      },
+      {
+        "clip": "Dash",
+        "finite": true,
+        "playing": true,
+        "selected": "Dash"
+      },
+      {
+        "clip": "Hurt",
+        "finite": true,
+        "playing": true,
+        "selected": "Hurt"
+      },
+      {
+        "clip": "Cast",
+        "finite": true,
+        "playing": true,
+        "selected": "Cast"
+      },
+      {
+        "clip": "Ultimate",
+        "finite": true,
+        "playing": true,
+        "selected": "Ultimate"
+      }
+    ],
+    "drawCalls": 9,
+    "error": "",
+    "gameBlending": true,
+    "sha256": "f780e9749683925106f22e134126ae8f631dda9b8b1e62116c40767f1079dec9",
+    "viewport": [
+      1280,
+      800
+    ]
+  },
+  "phone": {
+    "buttons": 20,
+    "checks": [
+      {
+        "fits": true,
+        "lowest": 0.020203182180341263,
+        "name": "Idle"
+      },
+      {
+        "fits": true,
+        "lowest": 0.0492037993263006,
+        "name": "Run"
+      },
+      {
+        "fits": true,
+        "lowest": 0.03895817340101271,
+        "name": "AttackA"
+      },
+      {
+        "fits": true,
+        "lowest": 0.030997386549915906,
+        "name": "AttackB"
+      },
+      {
+        "fits": true,
+        "lowest": 0.04193335548762933,
+        "name": "AttackC"
+      },
+      {
+        "fits": true,
+        "lowest": 0.029666236295651127,
+        "name": "Power"
+      },
+      {
+        "fits": true,
+        "lowest": 0.01776211803370037,
+        "name": "Dash"
+      },
+      {
+        "fits": true,
+        "lowest": 0.00009890504338135736,
+        "name": "Hurt"
+      },
+      {
+        "fits": true,
+        "lowest": 0.07343127489759874,
+        "name": "Cast"
+      },
+      {
+        "fits": true,
+        "lowest": 0.2183052873732525,
+        "name": "Ultimate"
+      }
+    ],
+    "error": "",
+    "minimumButtonHeight": 44,
+    "overflow": false,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  "phoneAnimationFraming": {
+    "allClipsFit": true,
+    "error": "",
+    "results": [
+      {
+        "clip": "Idle",
+        "fits": true,
+        "maxX": 0.7214245461082865,
+        "maxY": 0.47225705340777646,
+        "view": "hero"
+      },
+      {
+        "clip": "Run",
+        "fits": true,
+        "maxX": 0.6966362386738848,
+        "maxY": 0.4763868727144321,
+        "view": "hero"
+      },
+      {
+        "clip": "AttackA",
+        "fits": true,
+        "maxX": 0.7615428144320561,
+        "maxY": 0.5038361289878613,
+        "view": "hero"
+      },
+      {
+        "clip": "AttackB",
+        "fits": true,
+        "maxX": 0.750280285153628,
+        "maxY": 0.5047721953179845,
+        "view": "hero"
+      },
+      {
+        "clip": "AttackC",
+        "fits": true,
+        "maxX": 0.749154550634748,
+        "maxY": 0.5053627176711447,
+        "view": "hero"
+      },
+      {
+        "clip": "Power",
+        "fits": true,
+        "maxX": 0.7624454538879162,
+        "maxY": 0.5090109225667281,
+        "view": "hero"
+      },
+      {
+        "clip": "Dash",
+        "fits": true,
+        "maxX": 0.7165070521019106,
+        "maxY": 0.5033912485671693,
+        "view": "hero"
+      },
+      {
+        "clip": "Hurt",
+        "fits": true,
+        "maxX": 0.8545185406015334,
+        "maxY": 0.4978512667246407,
+        "view": "hero"
+      },
+      {
+        "clip": "Cast",
+        "fits": true,
+        "maxX": 0.779004521365557,
+        "maxY": 0.5616799612923511,
+        "view": "hero"
+      },
+      {
+        "clip": "Ultimate",
+        "fits": true,
+        "maxX": 0.8747616560641285,
+        "maxY": 0.7958945925627617,
+        "view": "hero"
+      },
+      {
+        "clip": "Idle",
+        "fits": true,
+        "maxX": 0.7186956144624571,
+        "maxY": 0.48809002755013525,
+        "view": "game"
+      },
+      {
+        "clip": "Run",
+        "fits": true,
+        "maxX": 0.6914136732428633,
+        "maxY": 0.484804307392998,
+        "view": "game"
+      },
+      {
+        "clip": "AttackA",
+        "fits": true,
+        "maxX": 0.7661930652640848,
+        "maxY": 0.5165604969861046,
+        "view": "game"
+      },
+      {
+        "clip": "AttackB",
+        "fits": true,
+        "maxX": 0.7635267648345164,
+        "maxY": 0.5258918502761938,
+        "view": "game"
+      },
+      {
+        "clip": "AttackC",
+        "fits": true,
+        "maxX": 0.7437855117430174,
+        "maxY": 0.5919366657398276,
+        "view": "game"
+      },
+      {
+        "clip": "Power",
+        "fits": true,
+        "maxX": 0.767079125350065,
+        "maxY": 0.6140088361893327,
+        "view": "game"
+      },
+      {
+        "clip": "Dash",
+        "fits": true,
+        "maxX": 0.712238174643567,
+        "maxY": 0.504562549242229,
+        "view": "game"
+      },
+      {
+        "clip": "Hurt",
+        "fits": true,
+        "maxX": 0.8391249834768211,
+        "maxY": 0.504562549242229,
+        "view": "game"
+      },
+      {
+        "clip": "Cast",
+        "fits": true,
+        "maxX": 0.7750834489502539,
+        "maxY": 0.504562549242229,
+        "view": "game"
+      },
+      {
+        "clip": "Ultimate",
+        "fits": true,
+        "maxX": 0.867695367453189,
+        "maxY": 0.8078780393103302,
+        "view": "game"
+      }
+    ],
+    "sampleRate": 30,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  "touch": {
+    "error": "",
+    "mode": true,
+    "syntheticTouchDrag": true
+  },
+  "physicalDeviceTested": false,
+  "evidence": [
+    "renders/browser-animation-desktop.png",
+    "renders/browser-animation-phone.png",
+    "renders/animation-poses.png",
+    "renders/animation-preview.mp4"
+  ],
+  "reelSource": "Animated Blender source object keys, sampled at 24 fps; GLB contacts and blending verified separately through Puppet.",
+  "browserRecording": "The collaborative recorder host disconnected before transfer; the delivered reel is rendered from Blender."
+}

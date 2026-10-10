@@ -186,9 +186,11 @@ includes deliberate changes for personality and readable facing.
 | Character | Source and review notes | What to copy |
 | --- | --- | --- |
 | Tidecaller, water | [Water](../art/spirits/water/README.md) | Measured loft, glowing surface eyes, winding throws, tail fin and offset nub for rear facing |
+| Tidewarden, water | [Crescent Water](../art/spirits/water-crescent/README.md) | Dark core between opposing crescents, soft head highlight, balanced floating fins, restrained blue glow, four-hit Blade combo and guard casts |
 | Gunner, fire | [Fire](../art/spirits/fire/README.md) | Flame and separate shards, dark slanted eyes, recoil on shots, warm core and ember trail |
 | Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
 | Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
+| Sparkfist, thunder | [Sparkfist](../art/spirits/sparkfist/README.md) | Approved Ice silhouette and motion, violet body, gold floating shards, warm eyes and rear lightning mark; original node names and pivots retained for animation reuse |
 | Bastion, rock | [Rock](../art/spirits/rock/README.md) | Broad grounded boulder, round optimistic eyes, weight-bearing feet, short rear heel, floating ornaments, planted Disc recoil and ground slam |
 | Ice, animation asset | [Ice](../art/spirits/ice/README.md) | Approved crystal silhouette, joined crown, recessed face, four floating shards, ten object clips; character kit not yet defined |
 

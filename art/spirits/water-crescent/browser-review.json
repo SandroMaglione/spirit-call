@@ -1,0 +1,80 @@
+{
+  "url": "http://192.168.0.45:5219/art/spirits/water-crescent/?review=balanced-fins",
+  "phone": {
+    "animations": 0,
+    "cameraPositions": {
+      "back": [
+        4.898587196589413e-16,
+        0.3000000000000002,
+        -4
+      ],
+      "bottom": [
+        0,
+        -3.7,
+        0.00004000000165587346
+      ],
+      "front": [
+        0,
+        0.3000000000000002,
+        4
+      ],
+      "game": [
+        -1.1847925309040954,
+        2.2999999999999994,
+        3.255190725397495
+      ],
+      "hero": [
+        -1.0857992201134616,
+        0.9945927106677208,
+        3.786631883334881
+      ],
+      "left": [
+        -4,
+        0.3000000000000002,
+        2.4492935982947064e-16
+      ],
+      "reference": [
+        -1.1025494232679967,
+        0.3000000000000002,
+        3.8450467837532756
+      ],
+      "right": [
+        4,
+        0.3000000000000002,
+        2.4492935982947064e-16
+      ],
+      "top": [
+        0,
+        4.3,
+        0.000040000001656307385
+      ]
+    },
+    "error": "",
+    "horizontalOverflow": false,
+    "meshes": 8,
+    "minimumButtonHeight": 44,
+    "completeModelVisible": ["hero", "front", "reference", "game"],
+    "sha256": "ce94454b539be0344ed2961138ef57dd1e2d9e726c63d2f26c3fc783ef902631",
+    "syntheticTouchDrag": true,
+    "triangles": 1798,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  "desktop": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "assetDrawCalls": 8,
+    "gridDrawCalls": 1,
+    "error": ""
+  },
+  "physicalDeviceTested": false,
+  "evidence": [
+    "renders/browser-phone.png",
+    "renders/browser-desktop.png"
+  ],
+  "touchMethod": "Synthetic PointerEvent touch drag through OrbitControls; pointer capture stubbed for untrusted event dispatch."
+}
