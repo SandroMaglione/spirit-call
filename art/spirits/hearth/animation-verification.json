@@ -1,0 +1,182 @@
+{
+  "passed": true,
+  "triangles": 2982,
+  "meshes": 7,
+  "materials": 4,
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 2.966666666666667,
+      "loopSeconds": 3.0,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.07955234670507833,
+      "maximum_height_m": 0.9108155183109812,
+      "closing_error_m": 0.0,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true
+    },
+    "Run": {
+      "lastKeySeconds": 0.7666666666666667,
+      "loopSeconds": 0.8,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.052364046683497784,
+      "maximum_height_m": 0.9101405945913226,
+      "closing_error_m": 0.0,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true
+    },
+    "AttackA": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.0937413775662583,
+      "closing_error_m": 5.090620147640834e-09,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true,
+      "contact_seconds": 0.13333333333333333,
+      "flare_peaks_at_contact": true
+    },
+    "AttackB": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.0932794418967835,
+      "closing_error_m": 5.090620147640834e-09,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true,
+      "contact_seconds": 0.13333333333333333,
+      "flare_peaks_at_contact": true
+    },
+    "AttackC": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.1580448586023482,
+      "closing_error_m": 1.7817154862598272e-08,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true,
+      "contact_seconds": 0.2,
+      "flare_peaks_at_contact": true
+    },
+    "Power": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.193572391570966,
+      "closing_error_m": 1.7817154862598272e-08,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true,
+      "contact_seconds": 0.2,
+      "flare_peaks_at_contact": true
+    },
+    "Dash": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.047798809712408505,
+      "maximum_height_m": 0.9537398660704977,
+      "closing_error_m": 8.898989323213868e-09,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 0.9414512145991156,
+      "closing_error_m": 2.307501634213338e-09,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true
+    },
+    "Cast": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.061754414953190284,
+      "maximum_height_m": 1.2595133389859494,
+      "closing_error_m": 6.940692576229424e-09,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true
+    },
+    "Ultimate": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": null,
+      "sampled_at_hz": 120,
+      "minimum_clearance_m": 0.0577076462424686,
+      "maximum_height_m": 1.3982716378739917,
+      "closing_error_m": 0.0,
+      "rigid_bowl": true,
+      "no_horizontal_root_motion": true,
+      "eyes_attached": true
+    }
+  },
+  "helpers": 0,
+  "skins": 0,
+  "textures": 0,
+  "contact_frames": {
+    "AttackA": 4,
+    "AttackB": 4,
+    "AttackC": 6,
+    "Power": 6
+  },
+  "preserved_static_geometry": true,
+  "preserved_vertex_colors_and_materials": true,
+  "maximum_rest_vertex_error_m": 1.4901161193847656e-08,
+  "static_sha256": "0c26ed80097107c60a16d4b4edb205191486a70ab184d16d0e21f57393b2e254",
+  "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2",
+  "revision_comparison": {
+    "baseline_commit": "72bec23",
+    "unchanged_clip_channels": [
+      "Idle",
+      "Run",
+      "Dash",
+      "Hurt"
+    ],
+    "clip_lengths_preserved": true,
+    "impact": {
+      "AttackA": {
+        "previous_peak_flame_volume_factor": 1.2421316989128446,
+        "revised_peak_flame_volume_factor": 2.0353086581006363,
+        "ratio": 1.6385610800223573
+      },
+      "AttackB": {
+        "previous_peak_flame_volume_factor": 1.2421316989128446,
+        "revised_peak_flame_volume_factor": 2.0353086581006363,
+        "ratio": 1.6385610800223573
+      },
+      "AttackC": {
+        "previous_peak_flame_volume_factor": 1.3098266430707552,
+        "revised_peak_flame_volume_factor": 2.5609602309999158,
+        "ratio": 1.9551902112755968
+      },
+      "Power": {
+        "previous_peak_flame_volume_factor": 1.3966058287161276,
+        "revised_peak_flame_volume_factor": 2.924603090479234,
+        "ratio": 2.0940791097569487
+      },
+      "Cast": {
+        "previous_peak_flame_volume_factor": 1.375281318472301,
+        "revised_peak_flame_volume_factor": 2.9000449091323834,
+        "ratio": 2.108692141876711
+      },
+      "Ultimate": {
+        "previous_peak_flame_volume_factor": 1.492889487143881,
+        "revised_peak_flame_volume_factor": 3.5027334222582343,
+        "ratio": 2.3462777736880462
+      }
+    }
+  }
+}

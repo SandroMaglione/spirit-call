@@ -1,0 +1,168 @@
+{
+  "passed": true,
+  "url": "http://192.168.0.45:5208/art/spirits/hearth/animation.html",
+  "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2",
+  "revision": "Stronger anticipation, one-frame releases, impact holds, rebounds and delayed stones for attacks, Power, Cast and Ultimate",
+  "desktop": {
+    "error": "",
+    "results": [
+      {
+        "camera": "hero",
+        "clip": "Idle",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7386793595160679
+      },
+      {
+        "camera": "hero",
+        "clip": "Run",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7622983012584329
+      },
+      {
+        "camera": "hero",
+        "clip": "AttackA",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7389898514958011
+      },
+      {
+        "camera": "hero",
+        "clip": "AttackB",
+        "contained": true,
+        "maximumScreenCoordinate": 0.738857146564141
+      },
+      {
+        "camera": "hero",
+        "clip": "AttackC",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7386793595160679
+      },
+      {
+        "camera": "hero",
+        "clip": "Power",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7386793595160679
+      },
+      {
+        "camera": "hero",
+        "clip": "Dash",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7553143426803003
+      },
+      {
+        "camera": "hero",
+        "clip": "Hurt",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7386793595160679
+      },
+      {
+        "camera": "hero",
+        "clip": "Cast",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7805650880778446
+      },
+      {
+        "camera": "hero",
+        "clip": "Ultimate",
+        "contained": true,
+        "maximumScreenCoordinate": 0.9316362453737821
+      },
+      {
+        "camera": "game",
+        "clip": "Idle",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7654651999601804
+      },
+      {
+        "camera": "game",
+        "clip": "Run",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7682811777375717
+      },
+      {
+        "camera": "game",
+        "clip": "AttackA",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7684728757530592
+      },
+      {
+        "camera": "game",
+        "clip": "AttackB",
+        "contained": true,
+        "maximumScreenCoordinate": 0.76830451543172
+      },
+      {
+        "camera": "game",
+        "clip": "AttackC",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7659120094912719
+      },
+      {
+        "camera": "game",
+        "clip": "Power",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7658930870143227
+      },
+      {
+        "camera": "game",
+        "clip": "Dash",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7659286962140126
+      },
+      {
+        "camera": "game",
+        "clip": "Hurt",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7654651999601804
+      },
+      {
+        "camera": "game",
+        "clip": "Cast",
+        "contained": true,
+        "maximumScreenCoordinate": 0.7900892855886047
+      },
+      {
+        "camera": "game",
+        "clip": "Ultimate",
+        "contained": true,
+        "maximumScreenCoordinate": 0.8731646006470019
+      }
+    ],
+    "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2"
+  },
+  "portrait": {
+    "clip": "Power",
+    "error": "",
+    "overflow": false,
+    "small": true,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  "landscape": {
+    "clip": "Ultimate",
+    "error": "",
+    "overflow": false,
+    "viewport": [
+      844,
+      390
+    ]
+  },
+  "captures": {
+    "desktop": "renders/animation-browser-desktop.png",
+    "portrait": "renders/animation-browser-portrait.png",
+    "landscape": "renders/animation-browser-landscape.png",
+    "all_clips": "renders/hearth-animation-preview.mp4",
+    "revised_actions": "renders/hearth-impact-preview.mp4"
+  },
+  "playback": "Actual animated GLB in the network browser. All ten clips, 28 seconds, 1280 x 900 at 30 fps. Impact cut excludes locomotion, dash and hurt.",
+  "prior_touch_review": "Synthetic touch orbit passed in the initial animation review, now preserved at 72bec23 after rebase. The orbit controls are unchanged. No physical-device evidence.",
+  "snapshot_tool": "Desktop snapshot failed; phone screenshots and recording succeeded. Desktop image is a recording frame.",
+  "checks": [
+    "Blender export sampled at 120 Hz",
+    "Compared Idle, Run, Dash, Hurt against 72bec23: decoded channels identical",
+    "Rest geometry, colors, rigid bowl and contact frames preserved",
+    "All six revised actions have larger peak flame volume",
+    "pnpm check --maxWorkers=2: 565 passed, 1 skipped"
+  ]
+}

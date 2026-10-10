@@ -223,8 +223,12 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
     moments: spiritMoments(3, "galeWall", "eyeOfTheStorm"), eyes: spiritEyes,
     drops: { rate: 24, colors: [0x5ee6c4, 0x2cb9a6, 0xb7f4a7], size: 1.8, kind: "wisp" }
   },
-  // A placeholder until her own spirit: the fire spirit, a warmer, deeper glow.
-  hearth: { ...fireSpirit, moments: spiritMoments(3, "kindle", "wildfire"), tint: { hue: 15, saturation: 0.9, lightness: 0.9 } },
+  // Hearth's floating brazier keeps its stone facets and warm flame colors from the sheet.
+  hearth: {
+    kind: "model", model: "hearthSpirit", widthFactor: 1.5, heightFactor: view.bodyHeightFactor,
+    moments: spiritMoments(3, "kindle", "wildfire"), eyes: spiritEyes,
+    drops: { rate: 20, colors: [0xffd54a, 0xff8a3d, 0xe6391f], size: 2, kind: "ember" }
+  },
   // Four connected stone legs carry the moss mantle; preserve its approved sheet colors.
   quarry: {
     kind: "model", model: "quarrySpirit", widthFactor: 1.5,

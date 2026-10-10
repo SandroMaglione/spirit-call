@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 
-import { AnimationMixer, Box3, LoopOnce, Vector3 } from "three"
+import { AnimationMixer, Box3, LoopOnce, MeshBasicMaterial, Vector3 } from "three"
+import type { Mesh } from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { describe, expect, it } from "vitest"
 
@@ -9,11 +10,88 @@ import { closeLoop, models } from "../src/presentation/models.ts"
 import type { ModelId } from "../src/presentation/models.ts"
 import { characterLooks } from "../src/presentation/looks.ts"
 import { Puppet } from "../src/presentation/puppet.ts"
+import { addGlow } from "../src/presentation/glow.ts"
 
-const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit" | "rockSpirit" | "quarrySpirit" | "windwallSpirit") => {
+const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit" | "rockSpirit" | "hearthSpirit" | "quarrySpirit" | "windwallSpirit") => {
   const bytes = readFileSync(path.join(import.meta.dirname, "..", models[id].url))
   return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
 }
+
+describe("Hearth spirit export", () => {
+  it("uses the measured ground-origin height alongside Water and Fire, excluding glow", async () => {
+    const ids = ["hearthSpirit", "waterSpirit", "fireSpirit"] as const
+    const loaded = await Promise.all(ids.map(loadSpirit))
+    const boxes = loaded.map((gltf, index) => {
+      const id = ids[index]!
+      const puppet = new Puppet({ id, spec: models[id], scene: gltf.scene, clips: new Map() }, 1, null)
+      const box = new Box3().setFromObject(puppet.object, true)
+      puppet.dispose()
+      return box
+    })
+    expect(boxes[0]!.max.y).toBeCloseTo(boxes[1]!.max.y, 3)
+    // Fire's existing flame exceeds its registered rest height; do not inherit that extra scale.
+    expect(boxes[0]!.max.y).toBeLessThan(boxes[2]!.max.y)
+    expect(boxes[0]!.max.y / boxes[2]!.max.y).toBeGreaterThan(.8)
+    expect(boxes[0]!.min.y).toBeGreaterThan(.08)
+    expect(boxes[0]!.getSize(new Vector3()).x).toBeLessThan(boxes[1]!.getSize(new Vector3()).x * 1.3)
+  })
+
+  it("keeps the eye glows attached during clips and preserves the unlit flame", async () => {
+    const gltf = await loadSpirit("hearthSpirit")
+    const spec = models.hearthSpirit
+    addGlow(gltf.scene, spec.glow, spec.height)
+    const look = characterLooks.hearth
+    if (look.kind !== "model") throw new Error("Hearth must use her spirit")
+    const clips = new Map(gltf.animations.map(clip => [clip.name, closeLoop(clip, spec.clips[clip.name as keyof typeof spec.clips])]))
+    const puppet = new Puppet({ id: "hearthSpirit", spec, scene: gltf.scene, clips }, 1, look.moments!)
+    const body = puppet.object.getObjectByName("HearthBody")!
+    const eye = puppet.object.getObjectByName("EyeL")!
+    const restEye = eye.position.clone()
+    expect(eye.parent).toBe(body)
+    expect(eye.children.some(child => child.userData["glow"] === true)).toBe(true)
+    const flame = puppet.object.getObjectByName("FlameCore")! as Mesh
+    expect(flame.material).toBeInstanceOf(MeshBasicMaterial)
+    const mixer = new AnimationMixer(puppet.object)
+    for (const clip of clips.values()) {
+      mixer.stopAllAction()
+      mixer.clipAction(clip).setLoop(LoopOnce, 1).play()
+      for (const fraction of [0, .25, .5, .75, 1]) {
+        mixer.setTime(clip.duration * fraction)
+        expect(body.position.x, clip.name).toBeCloseTo(0, 6)
+        expect(body.position.z, clip.name).toBeCloseTo(0, 6)
+        expect(body.scale.toArray(), clip.name).toEqual([1, 1, 1])
+        expect(eye.position.distanceTo(restEye), clip.name).toBeLessThan(1e-6)
+      }
+    }
+    mixer.stopAllAction()
+    puppet.dispose()
+  })
+
+  it("reaches the exported heavy contact through Puppet after moving", async () => {
+    const [actual, expected] = await Promise.all([loadSpirit("hearthSpirit"), loadSpirit("hearthSpirit")])
+    const spec = models.hearthSpirit
+    const look = characterLooks.hearth
+    if (look.kind !== "model") throw new Error("Hearth must use her spirit")
+    const clips = new Map(actual.animations.map(clip => [clip.name, closeLoop(clip, spec.clips[clip.name as keyof typeof spec.clips])]))
+    const puppet = new Puppet({ id: "hearthSpirit", spec, scene: actual.scene, clips }, 1, look.moments!)
+    puppet.animate({ x: 0, y: 0 }, { x: 1, y: 0 }, .1, false)
+    puppet.animate({ x: 60, y: 0 }, { x: 1, y: 0 }, .2, false)
+    puppet.play(look.moments!.attack![2]!, .75, .2)
+    puppet.animate({ x: 60, y: 0 }, { x: 1, y: 0 }, .2, false)
+    const mixer = new AnimationMixer(expected.scene)
+    mixer.clipAction(expected.animations.find(clip => clip.name === "AttackC")!).play()
+    mixer.setTime(6 / 30)
+    for (const name of ["HearthBody", "FlameCore", "SupportL", "SupportR"]) {
+      const posed = puppet.object.getObjectByName(name)!
+      const target = expected.scene.getObjectByName(name)!
+      expect(posed.quaternion.angleTo(target.quaternion), name).toBeLessThan(.001)
+      expect(posed.position.distanceTo(target.position), name).toBeLessThan(1e-6)
+      expect(posed.scale.distanceTo(target.scale), name).toBeLessThan(1e-6)
+    }
+    mixer.stopAllAction()
+    puppet.dispose()
+  })
+})
 
 describe("thunder spirit export", () => {
   it("fits the existing spirits' arena silhouette at the same requested height", async () => {
