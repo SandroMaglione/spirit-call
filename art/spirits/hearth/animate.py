@@ -7,12 +7,14 @@ import hashlib
 import json
 import math
 import struct
+import sys
 from pathlib import Path
 
 import bpy
 from mathutils import Matrix, Vector
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
 FPS = 30
 TAU = math.tau
 REST = dict(rise=0., pitch=0., roll=0., yaw=0., flare=0., bend=0.,
@@ -257,6 +259,8 @@ def export(timing):
         static_reference_sha256=gltf['extras']['staticReferenceSha256'],
         bytes=path.stat().st_size, sha256=hashlib.sha256(path.read_bytes()).hexdigest())
     (HERE/'animation.json').write_text(json.dumps(info, indent=2)+'\n')
+    from runtime_spec import write_spec
+    write_spec(info)
     print(json.dumps(dict(clips=timing, bytes=info['bytes'], sha256=info['sha256']), indent=2))
 
 

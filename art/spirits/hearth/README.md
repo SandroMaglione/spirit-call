@@ -19,6 +19,7 @@ speed, a sequence of all clips, camera controls and a 32 px view.
 - [Animation contact poses](renders/animation-poses.png)
 - [All clips in motion](renders/hearth-animation-preview.mp4)
 - [Revised attacks, cast and ultimate](renders/hearth-impact-preview.mp4)
+- [In-game touch combat](renders/hearth-gameplay-preview.mp4) and [runtime review](game-review.json)
 - [32 px and 64 px samples](renders/animation-game-size.png)
 - [Clip metadata](animation.json) and [animation audit](animation-verification.json)
 
@@ -58,9 +59,13 @@ on every mesh to review a clip in Blender. Tracks are saved muted so the
 file opens at the approved rest pose. The original static source keeps
 all 23 separate pieces for geometry editing.
 
-Hearth has no character content id in this checkout. The animated asset
-and inspector are ready for review; runtime registration and gameplay
-wiring remain a separate step.
+The game's existing `hearth` character uses this asset through the
+`hearthSpirit` model registration and `characterLooks.hearth`. Kindle plays
+Cast; Wildfire plays Ultimate. Attack contacts follow the simulation using
+the same frame 4 / frame 6 convention as the other spirits. Runtime glow
+adds a restrained orange halo and warm eye discs, preserving the matte
+stone and the flame's unlit colors. The exporter generates the model spec
+from the measured ground-origin height and clip metadata.
 
 ![Static model beside the supplied reference](renders/preview.png)
 
@@ -136,6 +141,7 @@ uv run --with pillow --with numpy art/spirits/hearth/review.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/hearth/verify_animation.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/hearth/render_animation.py
 uv run --with pillow art/spirits/hearth/review_animation.py
+python3 art/spirits/hearth/runtime_spec.py
 pnpm dev --host --port 5208 --strictPort
 ```
 

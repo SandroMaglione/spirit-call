@@ -220,8 +220,12 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   // A placeholder until her own spirit: the rock spirit, a darker, redder stone.
   // A placeholder until her own spirit: the wind spirit, a paler, cooler air.
   windwall: { ...windSpirit, moments: spiritMoments(3, "galeWall", "eyeOfTheStorm"), tint: { hue: 25, saturation: 0.75, lightness: 1.1 } },
-  // A placeholder until her own spirit: the fire spirit, a warmer, deeper glow.
-  hearth: { ...fireSpirit, moments: spiritMoments(3, "kindle", "wildfire"), tint: { hue: 15, saturation: 0.9, lightness: 0.9 } },
+  // Hearth's floating brazier keeps its stone facets and warm flame colors from the sheet.
+  hearth: {
+    kind: "model", model: "hearthSpirit", widthFactor: 1.5, heightFactor: view.bodyHeightFactor,
+    moments: spiritMoments(3, "kindle", "wildfire"), eyes: spiritEyes,
+    drops: { rate: 20, colors: [0xffd54a, 0xff8a3d, 0xe6391f], size: 2, kind: "ember" }
+  },
   quarry: { ...rockSpirit, moments: { ...spiritMoments(3, "faultLine", "landslide"), run: { clip: "Run", distance: 115 } }, tint: { hue: -15, saturation: 1.2, lightness: 0.8 } }
 }
 

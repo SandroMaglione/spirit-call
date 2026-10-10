@@ -1,0 +1,20 @@
+{
+  "asset_sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2",
+  "character": "hearth",
+  "model": "hearthSpirit",
+  "url": "http://192.168.0.45:5208/?play&team=hearth,tidecaller,gunner&challenge=practice&practice=chaser&charged&touch",
+  "viewport_css_pixels": [844, 390],
+  "input": "Synthetic touch PointerEvents through the real canvas input, plus keyboard movement and party switching; pointer capture stubbed for automation",
+  "physical_device_tested": false,
+  "confirmed": ["idle", "movement", "double-tap dash", "touch dash", "three combo steps", "charged attack", "Kindle", "Wildfire", "hurt from enemies", "switch to Water and Fire and back to Hearth"],
+  "combat": {"combo_steps_observed": [0, 1, 2], "shots": 4, "hits_taken": 3, "breaks": 1, "ultimates": 1, "ending_health": 49.52542372881355},
+  "scale_comparison": {
+    "basis": "Loaded rest meshes, same requested ground-origin height, glow sprites excluded; central width excludes detached supports and shards",
+    "hearth": {"normalized_top": 0.9999999945813959, "normalized_width": 0.9036471220580015, "normalized_central_width": 0.7465114647691901},
+    "water": {"normalized_top": 0.9999455432241351, "normalized_width": 0.7783420072925934, "normalized_central_width": 0.7783420072925934},
+    "fire": {"normalized_top": 1.1893192433422397, "normalized_width": 0.6665150306874286, "normalized_central_width": 0.6388707455006339}
+  },
+  "runtime_contact_test": "Puppet reaches AttackC's exported frame 6 pose after Run, including bowl rotation, flame scale and support transforms",
+  "source_audit": "All ten clips sampled at 120 Hz; rest geometry and colors preserved; rigid bowl; no horizontal root motion; minimum ground clearance 0.0478 m",
+  "checks": {"files_passed": 83, "tests_passed": 699, "tests_skipped": 1, "build": "passed"}
+}
