@@ -1,0 +1,132 @@
+{
+  "name": "Hearth",
+  "stage": "animated",
+  "height_m": 0.8799999952316284,
+  "silhouette_height_m": 0.7999999970197678,
+  "hover_gap_m": 0.07999999821186066,
+  "height_basis": "ground origin to highest rest mesh vertex, including curled flame",
+  "native_axes": "meters, +Z up, -Y forward",
+  "glb_axes": "meters, +Y up, +Z forward",
+  "origin": "ground point under the floating body",
+  "dimensions_m": {
+    "width": 0.7952094674110413,
+    "depth": 0.759053647518158,
+    "height": 0.7999999970197678
+  },
+  "native_bounds_m": {
+    "min": [
+      -0.39842918515205383,
+      -0.42739051580429077,
+      0.07999999821186066
+    ],
+    "max": [
+      0.3967802822589874,
+      0.3316631317138672,
+      0.8799999952316284
+    ]
+  },
+  "triangles": 2982,
+  "materials": [
+    "Hearth stone facets",
+    "Hearth dark recess",
+    "Hearth flame and molten seams",
+    "Hearth warm eyes"
+  ],
+  "meshes": [
+    {
+      "name": "HearthBody",
+      "primitives": 3
+    },
+    {
+      "name": "Support.L",
+      "primitives": 2
+    },
+    {
+      "name": "Support.R",
+      "primitives": 2
+    },
+    {
+      "name": "Support.Front",
+      "primitives": 2
+    },
+    {
+      "name": "FlameCore",
+      "primitives": 1
+    },
+    {
+      "name": "Eye.L",
+      "primitives": 1
+    },
+    {
+      "name": "Eye.R",
+      "primitives": 1
+    }
+  ],
+  "primitives": 12,
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 2.966666666666667,
+      "loopSeconds": 3.0
+    },
+    "Run": {
+      "lastKeySeconds": 0.7666666666666667,
+      "loopSeconds": 0.8
+    },
+    "AttackA": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackB": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackC": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Power": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Dash": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Cast": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Ultimate": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": null
+    }
+  },
+  "reference": "reference/sheet.png",
+  "bytes": 339464,
+  "sha256": "862ad4192a3fca4940686584bed0e10de5718f2138c9285faf15ccfb57b2168e",
+  "fps": 30,
+  "root_motion": false,
+  "contact_frames": {
+    "AttackA": 4,
+    "AttackB": 4,
+    "AttackC": 6,
+    "Power": 6
+  },
+  "descriptions": {
+    "Idle": "Slow hover, flame flicker, loose stone drift and one warm blink.",
+    "Run": "Forward hover lean, flame streaming back and stones trailing.",
+    "AttackA": "Left recoil and small flame pulse.",
+    "AttackB": "Mirrored right recoil and small flame pulse.",
+    "AttackC": "Stronger finishing recoil and flare.",
+    "Power": "Charged recoil with a broad flame flare.",
+    "Dash": "Compact forward lean, trailing flame and stones, then a soft brake.",
+    "Hurt": "Rigid bowl recoil, narrowed eyes and a flame dip, then recovery.",
+    "Cast": "Warm healing pulse, opening stones and taller flame.",
+    "Ultimate": "Gather inward, rise into a beacon flare, then settle."
+  },
+  "static_reference_sha256": "0c26ed80097107c60a16d4b4edb205191486a70ab184d16d0e21f57393b2e254"
+}

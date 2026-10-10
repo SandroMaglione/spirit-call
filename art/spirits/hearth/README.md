@@ -1,9 +1,56 @@
-# Hearth static spirit
+# Hearth spirit
 
 Hearth modeled from the supplied Fire Spirit sheet. A thick, open stone
 brazier holds a solid faceted flame. The face is cut into the tapered body,
 with two warm oval eyes on its inset backing. Two broad side stones and a
 smaller front stone float around it. Angular jaw plates belong to the bowl.
+
+The approved model now has ten object animation clips. The stone bowl
+stays rigid, while its flame flickers and flares from a pivot inside the
+basin. The floating stones drift, trail during movement and open during
+healing casts. The eyes blink and react without leaving the face recess.
+
+Open [the animation inspector](animation.html) through Vite. It loads
+`hearth-animated.glb` and offers each clip, pause, scrubbing, playback
+speed, a sequence of all clips, camera controls and a 32 px view.
+
+- [Animated GLB](hearth-animated.glb)
+- [Editable animation source](hearth-animated.blend)
+- [Animation contact poses](renders/animation-poses.png)
+- [All clips in motion](renders/hearth-animation-preview.mp4)
+- [32 px and 64 px samples](renders/animation-game-size.png)
+- [Clip metadata](animation.json) and [animation audit](animation-verification.json)
+
+| Clip | Last key | Loop length | Motion |
+| --- | --- | --- | --- |
+| Idle | 2.967 s | 3 s | Calm hover, flicker, stone drift, blink |
+| Run | 0.767 s | 0.8 s | Hover lean, trailing flame and stones |
+| AttackA / AttackB | 0.367 s | One-shot | Mirrored recoil and flame pulse |
+| AttackC | 0.533 s | One-shot | Finishing recoil and flare |
+| Power | 0.533 s | One-shot | Strong charged flare |
+| Dash | 0.367 s | One-shot | Forward lean and a soft brake |
+| Hurt | 0.3 s | One-shot | Recoil, narrowed eyes, flame dip |
+| Cast | 0.367 s | One-shot | Warm healing pulse |
+| Ultimate | 0.567 s | One-shot | Gather, rise, beacon flare, settle |
+
+The attack contact poses use the existing spirit convention at 30 fps,
+frame 4 for AttackA/B and frame 6 for AttackC/Power. Simulation owns
+movement and combat timing. Every clip plays in place; the bowl's
+horizontal translation is constant. One-shots start and end at the
+approved rest pose. Loops omit their closing key, as required by
+`docs/models.md`. Consumers must close Idle at 3 s and Run at 0.8 s using
+the generated timing. The inspector restores those keys using the game's
+`closeLoop` convention.
+
+The animated source keeps seven meshes with editable NLA tracks, ten per
+object. The bowl parents the other six parts. Enable one named NLA track
+on every mesh to review a clip in Blender. Tracks are saved muted so the
+file opens at the approved rest pose. The original static source keeps
+all 23 separate pieces for geometry editing.
+
+Hearth has no character content id in this checkout. The animated asset
+and inspector are ready for review; runtime registration and gameplay
+wiring remain a separate step.
 
 ![Static model beside the supplied reference](renders/preview.png)
 
@@ -28,11 +75,11 @@ The silhouette is approximately 0.80 m wide. Exact bounds are in the export
 metadata. The native file uses Blender +Z up and -Y forward; the GLB uses
 +Y up and +Z forward.
 
-This is the static review stage. It contains no rig, animation clips or
-runtime registration. The source preserves the bowl, jaw plates, flame
+The original static files contain no rig or animation clips. Their source
+preserves the bowl, jaw plates, flame
 lobes, supports, eyes and surface seams as editable pieces. The exporter
 combines the body details and joins each support's seam to its stone,
-keeping seven named nodes for a future animation pass.
+keeping seven named nodes, also used by the animated version.
 
 ## Reading the sheet
 
@@ -75,16 +122,30 @@ uv run --with pillow --with numpy art/spirits/hearth/sheet.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/hearth/verify.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/hearth/render.py
 uv run --with pillow --with numpy art/spirits/hearth/review.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/hearth/animate.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/hearth/verify_animation.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/hearth/render_animation.py
+uv run --with pillow art/spirits/hearth/review_animation.py
 pnpm dev --host --port 5208 --strictPort
 ```
 
 Open `/art/spirits/hearth/index.html` on the printed network address.
+The animated inspector is `/art/spirits/hearth/animation.html`.
 `render.py -- front,hero` renders only those named views for iteration.
 The scripts are self-contained and do not change the shared spirit tools.
 
 ## Validation
 
-The native geometry audit checks closed solid parts, flat triangular
+The animation audit compares every exported triangle corner, vertex color
+and material against the approved static GLB. The largest rest position
+difference is below one micrometer. It samples the actual GLB channels at
+120 Hz, including quaternion interpolation, to check constant horizontal
+root translation, rigid bowl scale, attached eyes, finite transforms,
+ground clearance and rest recovery. Minimum clearance is 0.0478 m. Both
+loops close exactly after restoring the first key. The source audit checks
+the mesh hierarchy and all 70 editable NLA tracks.
+
+The native static geometry audit checks closed solid parts, flat triangular
 faces, no degenerate faces or loose vertices, symmetric eyes on the
 recessed backing, and no animation or helper objects. Molten seam strips
 are intentional open surface details. The GLB audit checks the triangle
@@ -98,8 +159,17 @@ synthetic touch PointerEvents, with pointer capture stubbed during that
 probe. This is browser evidence, not physical-phone performance evidence.
 `browser-review.json` records the export hash and saved captures.
 
+`animation-browser-review.json` records the animated export's network
+browser review. All ten clips stay within both the hero and game cameras.
+Phone portrait and landscape layouts have no horizontal overflow. The
+portrait review includes synthetic touch orbiting and the 32 px view.
+Saved screenshots and an actual GLB playback recording are in `renders/`.
+The animation inspector scrolls its controls independently on desktop so
+the model stays visible. Some desktop snapshot requests failed in the
+preview tool; browser evaluation, later captures and recording worked.
+
 `pnpm check --maxWorkers=2` passed typecheck, lint and 565 tests, with one
 existing skipped test. `pnpm build` passed with the existing bundle-size
-warning. The first check used an incomplete shared dependency directory;
-installing this worktree's frozen lockfile resolved the missing SQL
-packages. Only files under `art/spirits/hearth/` belong to this change.
+warning. These checks passed again after adding animation. The main game
+build does not include Hearth until it is registered for a character.
+Only files under `art/spirits/hearth/` belong to this change.
