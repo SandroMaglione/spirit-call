@@ -1,84 +1,108 @@
 /**
- * A player's runs as the server kept them (see docs/server.md): the numbers
- * to tune against, from real play.
+ * Testers' runs, a readable line each with what hurt the most and how the
+ * skills did (see docs/playtest.md): the numbers to tune against, from real
+ * play. `pnpm db` shows the same runs as tables.
  *
- *   pnpm runs                          every run, a line each, then what hurt the most
- *   pnpm runs --since 2026-10-06       from that day on
- *   pnpm runs --quest theBrute         one quest's runs
- *   pnpm runs --events                 the account's changes instead (gains, spending, calls)
+ *   pnpm runs                          every run, then what hurt the most
+ *   pnpm runs --tester robin           one tester's runs (--device, --build: one device's, one build's)
+ *   pnpm runs --since 2d --quest theBrute
+ *   pnpm runs --local                  the runs `pnpm dev` kept on this laptop
  *   pnpm runs --json                   everything, as JSON (for reading in full)
  *
- * It logs in as the player: `RUNS_URL` (the game's address; the local dev
- * server when absent), `RUNS_USERNAME`, and `RUNS_PASSWORD`, from the
- * environment or from `.env.runs` (gitignored).
+ * It reads the deployed playtest database with the read-only key in
+ * `.env.database` (see deploy/stacks/reader.ts; `--stage pr-12` for a
+ * preview's), or the dev server's with `--local`.
  */
-import { existsSync, readFileSync } from "node:fs"
 import { parseArgs } from "node:util"
 
-import * as Effect from "effect/Effect"
-import * as FetchHttpClient from "effect/http/FetchHttpClient"
-import * as HttpClient from "effect/http/HttpClient"
-import * as HttpClientRequest from "effect/http/HttpClientRequest"
-import * as HttpApiClient from "effect/http-api/HttpApiClient"
-
-import { Api } from "../src/api/api.ts"
-import type { AccountEvent, StoredRun } from "../src/api/schemas.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
+import { openDatabase, runFilter, runOptions } from "./playtest-db.ts"
 
-const { values } = parseArgs({
-  options: {
-    since: { type: "string" },
-    quest: { type: "string" },
-    events: { type: "boolean", default: false },
-    json: { type: "boolean", default: false }
+const { values } = parseArgs({ options: { ...runOptions, json: { type: "boolean", default: false } } })
+
+const { query, where } = await openDatabase({ local: values.local, stage: values.stage })
+const filter = runFilter(values)
+
+/** A run as kept, with its team and its log. */
+interface Run {
+  readonly id: string
+  readonly at: number
+  readonly tester: string
+  readonly device: string
+  readonly build: string
+  readonly quest: string | null
+  readonly rank: number | null
+  readonly track: string | null
+  readonly tier: number | null
+  readonly challenge: string
+  readonly enemyLevel: number
+  readonly cleared: boolean
+  readonly wave: number
+  readonly seconds: number
+  readonly hitsTaken: number
+  readonly perfectDodges: number
+  readonly breaks: number
+  readonly earned: unknown
+  readonly team: ReadonlyArray<{ readonly character: string; readonly level: number; readonly aspect: string | null }>
+  readonly log: {
+    readonly waves: ReadonlyArray<{ readonly damageTaken: number }>
+    readonly hurts: ReadonlyArray<{ readonly enemy: string | null; readonly attack: string | null; readonly hits: number; readonly damage: number }>
+    readonly skills: ReadonlyArray<{ readonly character: string; readonly skill: string; readonly uses: number; readonly hits: number; readonly damage: number }>
+    readonly knockouts: ReadonlyArray<{ readonly character: string; readonly wave: number; readonly enemy: string | null; readonly attack: string | null }>
   }
-})
-
-/** `.env.runs` lines (`NAME=value`), under what the environment already has. */
-const fromFile = existsSync(".env.runs")
-  ? Object.fromEntries(readFileSync(".env.runs", "utf8").split("\n").flatMap((line) => {
-    const at = line.indexOf("=")
-    return at <= 0 || line.trimStart().startsWith("#") ? [] : [[line.slice(0, at).trim(), line.slice(at + 1).trim()]]
-  }))
-  : {}
-const setting = (name: string): string | undefined => process.env[name] ?? fromFile[name]
-
-const url = (setting("RUNS_URL") ?? "http://localhost:5199").replace(/\/$/, "")
-const username = setting("RUNS_USERNAME")
-const password = setting("RUNS_PASSWORD")
-if (username === undefined || password === undefined) {
-  console.error("Set RUNS_USERNAME and RUNS_PASSWORD (and RUNS_URL), in the environment or in .env.runs.")
-  process.exit(1)
 }
 
-/** Logs in: the session cookie. */
-const login = await fetch(`${url}/api/sessions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username, password }) })
-if (!login.ok) {
-  console.error(`Logging in to ${url} failed (${login.status}).`)
-  process.exit(1)
-}
-const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? ""
+type Row = Record<string, unknown> & { readonly run_id: string }
 
-const since = values.since === undefined ? 0 : Date.parse(values.since)
-const api = HttpApiClient.make(Api, {
-  baseUrl: url,
-  transformClient: HttpClient.mapRequest(HttpClientRequest.setHeader("cookie", cookie))
-}).pipe(Effect.provide(FetchHttpClient.layer))
+const rows = await query<Record<string, unknown> & { id: string }>(`SELECT * FROM runs r WHERE ${filter.sql} ORDER BY r.at`, filter.params)
+const ids = rows.map((row) => row.id)
+/** The rows of `table` for the runs shown, by run. */
+const byRun = async (table: string, order: string) => {
+  const found = ids.length === 0 ? [] : await query<Row>(`SELECT * FROM ${table} WHERE run_id IN (SELECT r.id FROM runs r WHERE ${filter.sql}) ORDER BY ${order}`, filter.params)
+  return (id: string) => found.filter((row) => row.run_id === id)
+}
+const [members, waves, hurts, skills, knockouts] = await Promise.all([byRun("run_members", "slot"), byRun("run_waves", "wave"), byRun("run_hurts", "place"), byRun("run_skills", "damage DESC"), byRun("run_knockouts", "place")])
+const runs: ReadonlyArray<Run> = rows.map((row) => ({
+  id: row.id,
+  at: row.at as number,
+  tester: row.tester as string,
+  device: row.device as string,
+  build: row.build as string,
+  quest: row.quest as string | null,
+  rank: row.rank as number | null,
+  track: row.track as string | null,
+  tier: row.tier as number | null,
+  challenge: row.challenge as string,
+  enemyLevel: row.enemy_level as number,
+  cleared: row.cleared === 1,
+  wave: row.wave as number,
+  seconds: row.seconds as number,
+  hitsTaken: row.hits_taken as number,
+  perfectDodges: row.perfect_dodges as number,
+  breaks: row.breaks as number,
+  earned: JSON.parse(row.earned as string),
+  team: members(row.id).map((member) => ({ character: member.character as string, level: member.level as number, aspect: member.aspect as string | null })),
+  log: {
+    waves: waves(row.id).map((wave) => ({ damageTaken: wave.damage_taken as number })),
+    hurts: hurts(row.id).map((hurt) => ({ enemy: hurt.enemy as string | null, attack: hurt.attack as string | null, hits: hurt.hits as number, damage: hurt.damage as number })),
+    skills: skills(row.id).map((used) => ({ character: used.character as string, skill: used.skill as string, uses: used.uses as number, hits: used.hits as number, damage: used.damage as number })),
+    knockouts: knockouts(row.id).map((fall) => ({ character: fall.character as string, wave: fall.wave as number, enemy: fall.enemy as string | null, attack: fall.attack as string | null }))
+  }
+}))
 
 const name = (enemy: string | null, attack: string | null) => (enemy === null ? "burns, ground, bursts" : `${defaultTuning.enemies[enemy as keyof typeof defaultTuning.enemies].name} · ${attack}`)
 const when = (at: number) => new Date(at).toISOString().slice(0, 16).replace("T", " ")
 const fixed = (value: number, digits = 0) => value.toFixed(digits)
 
-const showRuns = (runs: ReadonlyArray<typeof StoredRun.Type>) => {
-  const shown = runs.filter((run) => values.quest === undefined || (run.play?.kind === "quest" && run.play.quest === values.quest))
+const showRuns = (shown: ReadonlyArray<Run>) => {
   if (values.json) return console.log(JSON.stringify(shown, null, 2))
-  console.log(`${shown.length} runs on ${url}, as ${username}.\n`)
+  console.log(`${shown.length} runs from ${where}.\n`)
   for (const run of shown) {
-    const what = run.play === null ? `nothing (${run.challenge})` : run.play.kind === "quest" ? `${run.play.quest}${run.play.rank === undefined ? "" : ` rank ${run.play.rank}`}` : `${run.play.track} tier ${run.play.tier}`
+    const what = run.quest !== null ? `${run.quest}${(run.rank ?? 1) > 1 ? ` rank ${run.rank}` : ""}` : run.track !== null ? `${run.track} tier ${run.tier}` : `nothing (${run.challenge})`
     const team = run.team.map((member) => `${member.character} ${member.level}${member.aspect === null ? "" : ` (${member.aspect})`}`).join(", ")
     const taken = run.log.waves.reduce((sum, wave) => sum + wave.damageTaken, 0)
     const falls = run.log.knockouts.map((fall) => `${fall.character} w${fall.wave} by ${name(fall.enemy, fall.attack)}`).join("; ")
-    console.log(`${when(run.at)}  ${what.padEnd(22)} Lv ${String(run.enemyLevel).padStart(2)}  ${(run.cleared ? "cleared" : `lost w${run.wave}`).padEnd(9)} ${fixed(run.seconds).padStart(4)}s  hits ${String(run.tally.hitsTaken).padStart(3)}  dmg ${fixed(taken).padStart(4)}  dodges ${run.tally.perfectDodges}  breaks ${run.tally.breaks}  [${team}]${falls === "" ? "" : `  falls: ${falls}`}`)
+    console.log(`${when(run.at)}  ${run.tester.padEnd(10)} ${run.build.padEnd(8)} ${what.padEnd(22)} Lv ${String(run.enemyLevel).padStart(2)}  ${(run.cleared ? "cleared" : `lost w${run.wave}`).padEnd(9)} ${fixed(run.seconds).padStart(4)}s  hits ${String(run.hitsTaken).padStart(3)}  dmg ${fixed(taken).padStart(4)}  dodges ${run.perfectDodges}  breaks ${run.breaks}  [${team}]${falls === "" ? "" : `  falls: ${falls}`}`)
   }
   // What hurt the most, over every run shown.
   const hurts = new Map<string, { hits: number; damage: number }>()
@@ -104,16 +128,4 @@ const showRuns = (runs: ReadonlyArray<typeof StoredRun.Type>) => {
   for (const [key, total] of [...skills].sort((a, b) => b[1].uses - a[1].uses)) console.log(`  ${key.padEnd(30)} ${String(total.uses).padStart(4)}  ${fixed(total.hits / Math.max(1, total.uses), 1).padStart(5)}  ${fixed(total.damage / Math.max(1, total.uses)).padStart(6)}`)
 }
 
-const showEvents = (events: ReadonlyArray<typeof AccountEvent.Type>) => {
-  if (values.json) return console.log(JSON.stringify(events, null, 2))
-  for (const event of events) {
-    const amounts = Object.entries(event.amounts).map(([id, change]) => `${(change ?? 0) > 0 ? "+" : ""}${change} ${id}`).join(", ")
-    console.log(`${when(event.at)}  ${event.action.padEnd(16)} ${(event.subject ?? "").padEnd(38)} ${amounts}`)
-  }
-}
-
-await Effect.runPromise(Effect.gen(function*() {
-  const client = yield* api
-  if (values.events) showEvents(yield* client.account.events({ query: { since } }))
-  else showRuns(yield* client.account.runs({ query: { since } }))
-}))
+showRuns(runs)
