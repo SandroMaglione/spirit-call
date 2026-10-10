@@ -112,6 +112,9 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "mantle":
     case "lift":
     case "earthrise":
+    // A ring of fire around her, a pyre where she stands.
+    case "emberRing":
+    case "pyre":
     // A dome goes over her, a turn finds the toughest: nothing to aim.
     case "dome":
     case "turn":

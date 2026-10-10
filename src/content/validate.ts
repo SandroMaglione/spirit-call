@@ -282,6 +282,15 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
     case "dome":
       positive(problems, where, { radius: effect.radius, seconds: effect.seconds })
       return
+    case "emberRing":
+      positive(problems, where, { outer: effect.outer, seconds: effect.seconds, linger: effect.linger })
+      if (!(effect.delay >= 0)) problems.push(`${where}: delay must not be negative (is ${effect.delay})`)
+      if (!(effect.inner >= 0 && effect.inner < effect.outer)) problems.push(`${where}: inner must be from 0 and less than outer (is ${effect.inner})`)
+      return
+    case "pyre":
+      positive(problems, where, { radius: effect.radius, seconds: effect.seconds, tick: effect.tick, tickPower: effect.tickPower, most: effect.most })
+      if (!(effect.drain >= 0 && effect.drain <= 1)) problems.push(`${where}: drain must be a share in [0, 1] (is ${effect.drain})`)
+      return
     case "turn":
       positive(problems, where, { radius: effect.radius, seconds: effect.seconds, snapPower: effect.snap.power })
       if (!(effect.snap.stun >= 0)) problems.push(`${where}: snap stun must not be negative (is ${effect.snap.stun})`)

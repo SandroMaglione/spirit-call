@@ -514,11 +514,14 @@ export const skillReach = (effect: SkillEffect): number => {
     case "earthrise":
     case "dome":
     case "turn":
+    case "pyre":
     // Her gun runs hot: worth it once enemies are in her shots' reach.
     case "overdrive":
       return 520
     case "overcharge":
       return effect.radius + more
+    case "emberRing":
+      return effect.outer + more
     case "plunge":
       return effect.distance + effect.radius + more
     case "lob":

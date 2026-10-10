@@ -33,6 +33,7 @@ import { CastCompanions, UpdateCompanions } from "./features/companions.ts"
 import { CastLifts, CastMantles, KeepMantle, UpdateLifted } from "./features/windwall.ts"
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
 import { CastTidewarden, UpdateDomes, UpdateTurned } from "./features/tidewarden.ts"
+import { CastHearth, DrainFromPyres, UpdateEmberRings, UpdatePyres } from "./features/hearth.ts"
 import { CastOvercharges, TickOvercharges } from "./features/sparkfist.ts"
 import { CastOverdrives, TickOverdrives } from "./features/gunner.ts"
 import { CastSplinters, ThrowSplinters } from "./features/splinters.ts"
@@ -132,6 +133,7 @@ const gameplay = Game.Schedule.when(
   CastOverdrives,
   CastGuards,
   CastTidewarden,
+  CastHearth,
   CastBarriers,
   CastEarthrise,
   CastFaults,
@@ -170,6 +172,8 @@ const gameplay = Game.Schedule.when(
   UpdateCompanions,
   UpdateLifted,
   UpdateDomes,
+  UpdatePyres,
+  UpdateEmberRings,
   UpdateRocks,
   UpdateGround,
   TickStates,
@@ -205,6 +209,7 @@ const runOutcome = Game.Schedule.when(
   UpdateWards,
   // Blows on marked enemies heal the one on the field.
   MendFromMarks,
+  DrainFromPyres,
   // Blows that feed the dash (the Gauntlets').
   FeedDash,
   // The step's hits, perfect dodges, and breaks, counted for stars before a result is made; and the run's log.

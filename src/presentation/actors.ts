@@ -151,13 +151,15 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       }
     }
 
-    // A skill around her ready to use (a nova, a thunderclap): a faint ring showing what it would catch.
+    // A skill around her ready to use (a thunderclap, a pyre; a ring of fire's both edges): a faint ring showing what it would catch.
     const skills = data.skills.get()
     const energy = data.energy.get().current
     for (const slot of skillSlots) {
       const spec = tuning.skills[skills[slot].skill]
-      if ((spec.effect.kind !== "nova" && spec.effect.kind !== "thunderclap") || skillRecharge(spec, skills[slot].cooldown, energy) > 0) continue
-      marks.strokeCircle(position.x, position.y, spec.effect.radius, 3, view.ultimate, view.ultimateReadyAlpha)
+      const effect = spec.effect
+      const radii = effect.kind === "thunderclap" || effect.kind === "pyre" ? [effect.radius] : effect.kind === "emberRing" ? [effect.inner, effect.outer] : []
+      if (radii.length === 0 || skillRecharge(spec, skills[slot].cooldown, energy) > 0) continue
+      for (const radius of radii) marks.strokeCircle(position.x, position.y, radius, 3, view.ultimate, view.ultimateReadyAlpha)
     }
 
     const node = services.nodes.get(entity.id)

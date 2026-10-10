@@ -147,16 +147,19 @@ The Stormcaller heals by standing:
   and more for each enemy it strikes already charged: her totem's zaps
   (and any thunder of the team) charging them first is its set-up.
 
-Hearth heals by burning:
+Hearth heals by burning a crowd:
 
-- **Her Kindle** slams around her and puts out every burning enemy in
-  reach: the rest of each burn is dealt at once, and the whole team heals
-  a little, more for each. Her own fire then catches what it struck, so
-  keeping the crowd burning keeps the next one healing.
-- **Her Wildfire** sets the crowd far around her alight, with a small heal
-  of its own: what the next Kindle feeds on.
+- **Her Kindle** is a ring of fire around her at a distance: it builds
+  up a moment, then burns a moment, and every enemy standing in it (or
+  walking into it) is struck once and set burning far longer than a blow
+  leaves it. What crowds her, inside the ring, is spared.
+- **Her Wildfire** is a pyre where she stands, staying there: it strikes
+  as it goes up, then burns what is inside every second, and a share of
+  what it deals heals whoever is on the field, up to a cap each time. A
+  crowd fills the cap; one or two enemies give little: it is tuned for
+  its best case, so many enemies never make it heal more.
 
-The big heals (the Tide, the Thunderclap, the Kindle) share one rule
+The big heals (the Tide, the Thunderclap) share one rule
 (`StateHeal`): a base for the team, more for each enemy in a state the
 skill reaches, up to a most. Each asks for its own state, so each healer
 sets it up her own way.

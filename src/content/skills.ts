@@ -362,6 +362,42 @@ export interface BarrierEffect extends EffectBase {
 }
 
 /**
+ * A ring of the caster's element where she stands, `inner` to `outer` from
+ * there: it builds up for `delay` seconds, then burns for `linger` more.
+ * While it burns, each body of the other side in it strikes its blow once,
+ * and what it sets in its state (a body in none, or in it already) stays so
+ * `seconds` (longer than a blow leaves it). What is within `inner` is
+ * spared: the ring is kept at a distance.
+ */
+export interface EmberRingEffect extends EffectBase {
+  readonly kind: "emberRing"
+  readonly inner: number
+  readonly outer: number
+  readonly seconds: number
+  readonly delay: number
+  readonly linger: number
+}
+
+/**
+ * A pyre where the caster stands, `radius` around, for `seconds`, staying
+ * there (she can walk out of it; switched out, it keeps burning). It
+ * strikes its blow as it goes up; then every `tick` seconds each body of
+ * the other side inside it takes `tickPower` percent of the caster's ATK,
+ * and `drain` of what the pyre deals comes back to the one on the field as
+ * health, at most `most` percent of her health at a time (a crowd fills
+ * it; a few enemies give less). Casting again starts it over.
+ */
+export interface PyreEffect extends EffectBase {
+  readonly kind: "pyre"
+  readonly radius: number
+  readonly seconds: number
+  readonly tick: number
+  readonly tickPower: number
+  readonly drain: number
+  readonly most: number
+}
+
+/**
  * A dome of the caster's element over whoever is on the field, for
  * `seconds`: it goes with her (switched out, it stays over the one switched
  * in), `radius` around her. As it goes up, its blow lands on the other side
@@ -456,7 +492,7 @@ export interface OverdriveEffect extends EffectBase {
   readonly blast: { readonly radius: number; readonly power: number }
 }
 
-export type SkillEffect = SplintersEffect | OverdriveEffect | MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | DomeEffect | TurnEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+export type SkillEffect = EmberRingEffect | PyreEffect | SplintersEffect | OverdriveEffect | MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | DomeEffect | TurnEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -485,6 +521,8 @@ export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "le
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
 export const nova = (spec: Omit<NovaEffect, "kind" | "heals"> & Partial<Pick<NovaEffect, "heals">>): NovaEffect => ({ kind: "nova", heals: null, ...spec })
 export const dome = (spec: Omit<DomeEffect, "kind">): DomeEffect => ({ kind: "dome", ...spec })
+export const emberRing = (spec: Omit<EmberRingEffect, "kind">): EmberRingEffect => ({ kind: "emberRing", ...spec })
+export const pyre = (spec: Omit<PyreEffect, "kind">): PyreEffect => ({ kind: "pyre", ...spec })
 export const turn = (spec: Omit<TurnEffect, "kind">): TurnEffect => ({ kind: "turn", ...spec })
 export const overcharge = (spec: Omit<OverchargeEffect, "kind">): OverchargeEffect => ({ kind: "overcharge", ...spec })
 export const barrier = (spec: Omit<BarrierEffect, "kind">): BarrierEffect => ({ kind: "barrier", ...spec })
@@ -739,30 +777,29 @@ export const skills = {
     effect: splinters({ seconds: 0, count: 16, near: 60, far: 240, flight: 0.35, fuse: { first: 0.35, last: 1.4 }, radius: 55, power: 32, element: "rock", knockback: 500, hitStop: 0.04, heavy: true })
   }),
   /**
-   * Hearth's special: she brings her hammer down and the fires around her
-   * flare up into the team's health: every burning enemy near her is put
-   * out, the rest of its burn dealt at once, and the team heals more for
-   * each. Her own fire then catches what it struck (keep them burning, and
-   * the next one heals again).
+   * Hearth's special: a ring of fire around her at a distance, building up
+   * a moment, then burning a moment: what stands in it, or walks into it,
+   * is set burning for long (what crowds her is spared).
    */
   kindle: skill({
     name: "Kindle",
     cooldown: 6,
     energy: 0,
     invulnerability: 0,
-    effect: nova({ radius: 210, power: 24, element: "fire", knockback: 320, active: 0.1, clearsProjectiles: false, hitStop: 0.05, heavy: false, heals: { state: "burning", base: 2, per: 3, most: 14, consumes: true } })
+    effect: emberRing({ inner: 90, outer: 230, seconds: 9, delay: 0.45, linger: 0.8, power: 24, element: "fire", knockback: 160, hitStop: 0.04, heavy: false })
   }),
   /**
-   * Hearth's ultimate: a ring of fire bursting out around her, setting
-   * everything far around burning and throwing it back, and warming the
-   * whole team a little: what the next Kindle feeds on.
+   * Hearth's ultimate: a pyre where she stands for a while, staying there.
+   * It strikes as it goes up, then burns what is inside again
+   * and again, and what it burns comes back to the one on the field as
+   * health.
    */
   wildfire: skill({
     name: "Wildfire",
     cooldown: 10,
     energy: 90,
     invulnerability: 0.5,
-    effect: nova({ radius: 300, power: 40, element: "fire", knockback: 700, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "burning", base: 5, per: 0, most: 5, consumes: false } })
+    effect: pyre({ radius: 200, seconds: 6, tick: 1, tickPower: 14, drain: 0.15, most: 3, power: 30, element: "fire", knockback: 300, hitStop: 0.05, heavy: true })
   }),
   /**
    * Windwall's special (id `galeWall`, from when it was a wall of wind

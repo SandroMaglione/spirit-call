@@ -157,6 +157,10 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `${effect.slams} ${elementWord(effect.element)}slams around you, each wider than the last (${effect.power}% ATK each), the last stunning what it catches for ${effect.stun}s`
     case "dome":
       return `a ${elementWord(effect.element)}dome over you for ${effect.seconds}s, going with whoever is on the field: it strikes the enemies in it as it rises (${effect.power}% ATK)${effect.element === null ? "" : `; after, enemies inside it stay ${elements[effect.element].state}`}`
+    case "emberRing":
+      return `a ${elementWord(effect.element)}ring around you, ${effect.inner} to ${effect.outer} away, building up ${effect.delay}s and then burning ${effect.linger}s: enemies in it are struck once (${effect.power}% ATK)${effect.element === null ? "" : ` and stay ${elements[effect.element].state} for ${effect.seconds}s`}; enemies closer to you are spared`
+    case "pyre":
+      return `a ${elementWord(effect.element)}pyre where you stand for ${effect.seconds}s, staying there: it strikes as it rises (${effect.power}% ATK), then the enemies inside it every ${effect.tick}s (${effect.tickPower}% ATK), and ${Math.round(effect.drain * 100)}% of what it deals heals whoever is on the field (at most ${effect.most}% of max HP each time)`
     case "turn":
       return `a ${elementWord(effect.element)}chain lashing the enemy with the most health near you (${effect.power}% ATK) and turning it to your side for ${effect.seconds}s: it fights its own with its own attacks, and they turn on it; then the chain snaps (${effect.snap.power}% ATK), stunning it ${effect.snap.stun}s (never a champion)`
     case "overdrive":

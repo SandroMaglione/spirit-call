@@ -17,6 +17,7 @@ import type { Drops } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import type { Fx } from "./fx.ts"
 import type { Shapes } from "./shapes.ts"
+import type { Haze } from "./haze.ts"
 import type { SlashTrails } from "./trails.ts"
 import type { AnimationAtlas } from "./animation-atlas.ts"
 
@@ -296,6 +297,8 @@ export interface RenderHostValue {
   /** The overlay layer that follows the camera (projected coordinates). */
   readonly projected: Group
   readonly fx: Fx
+  /** Heat haze bending the scene (see `Haze`): sources added each frame. */
+  readonly haze: Haze
   /** Drops shed by moving spirits, in the 3D scene (hidden behind bodies). */
   readonly drops: DropTrail
   /** Rock's stone (plates, an Earthrise's spikes, chunks), in the 3D scene. */

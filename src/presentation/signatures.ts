@@ -35,6 +35,11 @@
  *   then, while it lasts, her body lit with thunder and its halo blazing
  *   (see `DrawPlayer`), lightning thrown out with each blow, and every
  *   dash a Spark Step of its own.
+ * - Kindle: the floor glowing hot in a ring at its distance, heat bending
+ *   the air over it (`Haze`), embers lifting off it.
+ * - Wildfire: she rises on heat and comes down in a wave of it; then the
+ *   pyre around her, the air over it bending, and what it burns streaming
+ *   back into her as embers.
  * - Barriers (no shipped skill raises one now): walls of wind standing up
  *   off the floor, streaks running up them.
  *
@@ -43,19 +48,20 @@
  */
 import { projection, view } from "../config/view.ts"
 import { isMelee } from "../content/attacks.ts"
-import type { CompanionsEffect, CutEffect, SkillId } from "../content/skills.ts"
+import type { CompanionsEffect, CutEffect, EmberRingEffect, SkillId } from "../content/skills.ts"
 import { companionStart } from "../features/companions.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Barrier, Cast, Companion, Dome, Overcharged, Overdriven, Explosion, Game, RenderNodes, Player, Position, Turned, PrevPosition, RenderClock, RenderHost, Tuning, UltimateCalled, Zap } from "../schema.ts"
+import { Action, Barrier, Cast, Companion, Dome, Pyre, Hit, Overcharged, Overdriven, Explosion, Game, RenderNodes, Player, Position, Turned, PrevPosition, RenderClock, RenderHost, Tuning, UltimateCalled, Zap } from "../schema.ts"
 import type { CastValue } from "../schema.ts"
 import type { Fx } from "./fx.ts"
+import type { Haze } from "./haze.ts"
 import type { CompanionNode, FeedbackState } from "./host-types.ts"
 import type { Shapes } from "./shapes.ts"
 
 /** Skills drawn here alone: the shared looks (a nova's ring, a cut's streaks, a zap's bolt) leave them out. */
-export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "brace", "floodgate", "thunderclap", "sparkStep", "stormFlurry", "faultLine", "landslide"])
+export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "brace", "floodgate", "thunderclap", "sparkStep", "stormFlurry", "kindle", "wildfire", "faultLine", "landslide"])
 
 /** Skills whose hits are seen in their own look alone: the flat shape of what they strike is not drawn too (see `presentation/telegraphs.ts`). */
 export const unmarkedHits: ReadonlySet<SkillId> = new Set<SkillId>(["sparkStep", "stormFlurry", "faultLine", "landslide"])
@@ -666,12 +672,145 @@ const overchargeBlow = (fx: Fx, from: Vec2, direction: Vec2, reach: number): voi
   fx.burst(b, { color: thunder, count: 5, speed: 240, size: 2.5, life: 0.18, stretch: 4 })
 }
 
+/** Embers lifting off the floor at `where` (world), drifting up and out. */
+const embers = (fx: Fx, where: Vec2, count: number, spread = 1): void => {
+  const foot = at(where)
+  for (let index = 0; index < count; index++) {
+    fx.mote({ x: foot.x + (Math.random() - 0.5) * z(14) * spread, y: foot.y - Math.random() * z(6) }, (Math.random() - 0.5) * 50 * spread, -60 - Math.random() * 90, {
+      color: Math.random() < 0.45 ? flame : fire,
+      size: 2 + Math.random() * 2.5,
+      life: 0.6 + Math.random() * 0.6,
+      gravity: -40,
+      drag: 1.2
+    })
+  }
+}
+
+/** The floor between `inner` and `outer` around `center` (world) filled, as flat quads. */
+const annulus = (g: Shapes, center: Vec2, inner: number, outer: number, color: number, alpha: number, segments = 56): void => {
+  if (alpha <= 0 || outer <= inner) return
+  for (let index = 0; index < segments; index++) {
+    const a = (index / segments) * Math.PI * 2
+    const b = ((index + 1) / segments) * Math.PI * 2
+    const [ia, oa, ob, ib] = [at(around(center, inner, a)), at(around(center, outer, a)), at(around(center, outer, b)), at(around(center, inner, b))]
+    g.fillPoly([ia.x, ia.y, oa.x, oa.y, ob.x, ob.y, ib.x, ib.y], color, alpha)
+  }
+}
+
+/** The floor glowing hot between `inner` and `outer` around `center` (world): ember light, hottest in the middle of the band, its edges bright. */
+const hotBand = (g: Shapes, glow: Shapes, center: Vec2, inner: number, outer: number, alpha: number, now: number): void => {
+  const foot = at(center)
+  const width = outer - inner
+  const flicker = 0.85 + 0.15 * Math.sin(now * 17)
+  // Nested bands, each a little narrower: a soft glow, hottest along the middle.
+  const layers = 7
+  for (let layer = 0; layer < layers; layer++) {
+    const inset = (width * 0.45 * layer) / layers
+    annulus(layer < 2 ? g : glow, center, inner + inset, outer - inset, layer < 4 ? fire : flame, (layer < 2 ? 0.06 : 0.07) * alpha * flicker)
+  }
+  g.strokeEllipse(foot.x, foot.y, z(outer), z(outer) * projection.squash, z(2.5), flame, 0.7 * alpha)
+  if (inner > 0) g.strokeEllipse(foot.x, foot.y, z(inner), z(inner) * projection.squash, z(2), fire, 0.5 * alpha)
+}
+
+const kindle = (fx: Fx, haze: Haze, cast: CastValue, effect: EmberRingEffect): void => {
+  const center = cast.from
+  const { inner, outer, delay, linger } = effect
+  const fade = 0.35
+  const total = delay + linger + fade
+  // Building up: its edges drawn on the floor, the band warming, heat starting to rise; embers gathering into it.
+  fx.animate(total, (t, g, glow) => {
+    const now = performance.now() / 1000
+    const seconds = t * total
+    const foot = at(center)
+    if (seconds < delay) {
+      const warm = seconds / delay
+      const pulse = 0.75 + 0.25 * Math.sin(now * 22)
+      g.strokeEllipse(foot.x, foot.y, z(outer), z(outer) * projection.squash, z(2), flame, 0.6 * warm * pulse)
+      g.strokeEllipse(foot.x, foot.y, z(inner), z(inner) * projection.squash, z(1.5), fire, 0.45 * warm * pulse)
+      hotBand(g, glow, center, inner, outer, 0.35 * warm * warm, now)
+      haze.add({ at: center, radius: outer, inner: inner / outer, rise: 40 * warm, strength: 3 * warm })
+      return
+    }
+    // Burning: the band hot, the air over it bending; then it cools away.
+    const burning = seconds - delay
+    const swell = easeOut(clamp01(burning / 0.08))
+    const left = clamp01((total - seconds) / fade)
+    hotBand(g, glow, center, inner, outer, swell * left, now)
+    haze.add({ at: center, radius: outer, inner: inner / outer, rise: 120 * swell, strength: 7 * left })
+  })
+  const gather = 20
+  for (let index = 0; index < gather; index++) {
+    fx.later(Math.random() * delay * 0.8, () => {
+      const where = at(around(center, inner + (outer - inner) * Math.random(), Math.random() * Math.PI * 2))
+      const from = { x: where.x + (Math.random() - 0.5) * z(30), y: where.y - z(30 + Math.random() * 30) }
+      const seconds = 0.3
+      fx.mote(from, (where.x - from.x) / seconds, (where.y - from.y) / seconds, { color: Math.random() < 0.5 ? flame : fire, size: 2.5, life: seconds, gravity: 0, drag: 0, stretch: 2 })
+    })
+  }
+  // It goes up: a ring rushing out along it, embers lifting all along it while it burns.
+  fx.later(delay, () => {
+    fx.ring(at(center), z(outer), flame, 0.3)
+    const count = 26
+    for (let index = 0; index < count; index++) {
+      const where = around(center, inner + (outer - inner) * Math.random(), (index / count) * Math.PI * 2 + Math.random() * 0.2)
+      fx.later(Math.random() * linger * 0.7, () => embers(fx, where, 2))
+    }
+  })
+}
+
+const wildfireRise = (fx: Fx, haze: Haze, feedback: FeedbackState, moment: number): void => {
+  const height = 80
+  riseAndSlam(feedback, moment, height)
+  // The heat she rises on: the air under and around her bending, embers streaming up.
+  fx.animate(moment + 0.05, (t) => {
+    haze.add({ at: tracked.at, radius: 70, inner: 0, rise: 200 * easeOut(clamp01(t * 1.2)), strength: 8 })
+    if (Math.random() < 0.8) embers(fx, tracked.at, 2, 2)
+  })
+}
+
+const wildfire = (fx: Fx, haze: Haze, cast: CastValue, radius: number): void => {
+  const center = cast.from
+  fx.flash(at(center, 10), z(radius * 0.5), flame, 0.2)
+  fx.ring(at(center), z(radius), flame, 0.35)
+  // A wave of heat running out to the pyre's edge.
+  fx.animate(0.45, (t) => {
+    const reach = radius * easeOut(t)
+    haze.add({ at: center, radius: reach, inner: 0.7, rise: 90, strength: 10 * (1 - t) })
+  })
+  for (let index = 0; index < 20; index++) embers(fx, around(center, radius * Math.random(), Math.random() * Math.PI * 2), 2)
+}
+
+/**
+ * A pyre standing where it was cast: the floor hot under it, its
+ * edge glowing, the air over it bending, embers lifting; rising as cast and
+ * fading as it goes.
+ */
+const pyreBurning = (fx: Fx, haze: Haze, g: Shapes, glow: Shapes, center: Vec2, radius: number, rising: number, fade: number, now: number): void => {
+  const alpha = rising * fade
+  const foot = at(center)
+  glow.fillEllipse(foot.x, foot.y, z(radius), z(radius) * projection.squash, fire, 0.05 * alpha)
+  hotBand(g, glow, center, radius * 0.8, radius, alpha * (0.8 + 0.2 * Math.sin(now * 6)), now)
+  haze.add({ at: center, radius, inner: 0, rise: 150, strength: 4.5 * alpha })
+  if (Math.random() < 0.9 * alpha) embers(fx, around(center, radius * Math.sqrt(Math.random()), Math.random() * Math.PI * 2), 1, 1.5)
+}
+
+/** What a pyre burns coming back: embers streaming from what it struck into the one on the field. */
+const pyreDrain = (fx: Fx, from: Vec2, to: Vec2): void => {
+  const start = at(from, 20)
+  const end = at(to, 26)
+  const seconds = 0.35
+  for (let index = 0; index < 3; index++) {
+    fx.mote({ x: start.x + (Math.random() - 0.5) * 12, y: start.y + (Math.random() - 0.5) * 12 }, (end.x - start.x) / seconds, (end.y - start.y) / seconds, { color: index === 0 ? flame : fire, size: 3, life: seconds, gravity: 0, drag: 0, stretch: 2.5 })
+  }
+}
+
 // ── The system ────────────────────────────────────────────────────────────
 
 export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   queries: {
     player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), overcharged: Game.Query.optional(Overcharged), overdriven: Game.Query.optional(Overdriven) }, with: [Player] }),
     domes: Game.Query({ selection: { dome: Game.Query.read(Dome), position: Game.Query.read(Position) } }),
+    pyres: Game.Query({ selection: { pyre: Game.Query.read(Pyre), position: Game.Query.read(Position) } }),
     turned: Game.Query({ selection: { turned: Game.Query.read(Turned), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } }),
     companions: Game.Query({ selection: { companion: Game.Query.read(Companion), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } })
@@ -682,7 +821,8 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
     called: Game.System.readEvent(UltimateCalled),
     zap: Game.System.readEvent(Zap),
     action: Game.System.readEvent(Action),
-    explosion: Game.System.readEvent(Explosion)
+    explosion: Game.System.readEvent(Explosion),
+    hit: Game.System.readEvent(Hit)
   },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), nodes: Game.System.service(RenderNodes) }
 }, ({ queries, resources, events, services }) => {
@@ -698,6 +838,7 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   for (const called of events.called.all()) {
     if (called.skill === "thunderclap") riseAndSlam(feedback, moment, 45)
     if (called.skill === "landslide") riseAndSlam(feedback, moment, 60)
+    if (called.skill === "wildfire") wildfireRise(fx, host.haze, feedback, moment)
   }
 
   const zaps = events.zap.all()
@@ -725,6 +866,12 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
       case "floodgate":
         // Its lash: the zap from where she cast it.
         if (effect.kind === "turn") for (const zap of zaps) if (zap.skill === "floodgate" && zap.path[0] === cast.from && zap.path[1] !== undefined) riptideLash(fx, feedback, cast.from, zap.path[1])
+        break
+      case "kindle":
+        if (effect.kind === "emberRing") kindle(fx, host.haze, cast, effect)
+        break
+      case "wildfire":
+        if (effect.kind === "pyre") wildfire(fx, host.haze, cast, effect.radius)
         break
       case "sparkTotem":
         if (effect.kind === "totem") sparkTotem(fx, cast, effect.offset)
@@ -816,6 +963,16 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
     const center = faction === "player" && player !== undefined ? tracked.at : data.position.get()
     const age = effect.seconds - remaining
     dome(g, g, center, effect.radius, easeOut(clamp01(age / 0.25)), Math.min(1, remaining / 0.4), now)
+  }
+  // Wildfire: the pyre where it was cast, and what it burns streaming back into the one on the field.
+  for (const { data } of queries.pyres.each()) {
+    const { effect, remaining } = data.pyre.get()
+    const center = data.position.get()
+    pyreBurning(fx, host.haze, g, g, center, effect.radius, easeOut(clamp01((effect.seconds - remaining) / 0.3)), Math.min(1, remaining / 0.5), now)
+  }
+  for (const hit of events.hit.all()) {
+    const label = hit.source?.label
+    if (player !== undefined && hit.faction === "enemy" && !hit.periodic && label?.kind === "skill" && tuning.skills[label.skill].effect.kind === "pyre") pyreDrain(fx, hit.at, tracked.at)
   }
   // Tidal Echo: her echo walking after her, throwing; foam as it goes.
   const shown = new Set<number>()

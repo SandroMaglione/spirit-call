@@ -39,7 +39,7 @@ differ in what their healing asks, guardians in what they stop:
 |---|---|---|
 | Healer by soaking (the Tidecaller) | enemies soaked before her Tidefall, staying close to her echo | |
 | Healer by standing (the Stormcaller) | fighting by her totem | |
-| Healer by burning (Hearth) | enemies kept burning, then her special | |
+| Healer by burning (Hearth) | a crowd kept in her pyre | |
 | Guardian by plates (Bastion) | raising them in a quiet moment | any blow, a few times |
 | Guardian by soaking (Tidewarden) | keeping the fight under her dome; whom to turn | part of every blow (soaked enemies hit softer) |
 | Guardian by wind (Windwall) | when her mantle goes up; when to lift the crowd | shots, part of every blow |
@@ -57,7 +57,7 @@ marked * are working names.
 | Wind | Swordsman | Attacker | Blade | a steady bruiser; the Gust throws a crowd off, the Cyclone draws it in |
 | Wind | Windwall* | Guardian | Staff | the Wind Mantle, a current round whoever is on the field that absorbs shots, softens blows, and throws back what touches it; the Sky Lift takes the crowd up with her and leaves it out of the fight a while |
 | Fire | Gunner | Attacker | Gun | a glass cannon who kites |
-| Fire | Hearth* | Healer | Hammer | keeps enemies burning (the Wildfire), then turns their burns into the team's health (the Kindle) |
+| Fire | Hearth* | Healer | Hammer | sets a crowd burning from a distance (the Kindle), then burns it in a pyre that heals her side by what it deals (the Wildfire) |
 | Water | Tidecaller | Healer | Disc | the Tidefall bounces her in place, its water healing the team more for each enemy soaked; the Tidal Echo, a ghost of her, keeps them soaked and heals whoever stays close |
 | Water | Tidewarden* | Guardian | Blade | the Tide Dome soaks what comes in around whoever is on the field; the Riptide Bond turns the toughest enemy to her side a while, then snaps, stunning it |
 | Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: the Spark Step darts her through a line of enemies, charging them; the Overcharge turns her to lightning for a while, every dash a Spark Step of its own and all but endless |

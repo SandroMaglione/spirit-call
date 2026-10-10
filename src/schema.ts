@@ -18,7 +18,7 @@ import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { BarrierEffect, CompanionsEffect, MantleEffect, OverchargeEffect, OverdriveEffect, SplintersEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect, DomeEffect, TurnEffect } from "./content/skills.ts"
+import type { BarrierEffect, CompanionsEffect, MantleEffect, OverchargeEffect, OverdriveEffect, SplintersEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect, DomeEffect, TurnEffect, PyreEffect, EmberRingEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
@@ -214,6 +214,38 @@ export interface DomeValue {
   readonly inside: ReadonlyArray<number>
 }
 export const Dome = Descriptor.Component<DomeValue>()("Shooter/Dome")
+
+/**
+ * A ring of fire cast by a skill (see `EmberRingEffect`), at its `Position`:
+ * building up for `wait` more seconds, then burning for `remaining` more.
+ * `struck`: the bodies it has struck already (once each).
+ */
+export interface EmberRingValue {
+  readonly faction: Faction
+  readonly effect: EmberRingEffect
+  readonly blow: Blow
+  /** The ATK its burns are set with, and whether they fill energy. */
+  readonly atk: number
+  readonly charges: boolean
+  readonly wait: number
+  readonly remaining: number
+  readonly struck: ReadonlyArray<number>
+}
+export const EmberRing = Descriptor.Component<EmberRingValue>()("Shooter/EmberRing")
+
+/**
+ * A pyre cast by a skill (see `PyreEffect`), standing at its `Position`
+ * where it was cast, for `remaining` more seconds; it burns
+ * what is inside again in `next` seconds.
+ */
+export interface PyreValue {
+  readonly faction: Faction
+  readonly effect: PyreEffect
+  readonly tick: Blow
+  readonly remaining: number
+  readonly next: number
+}
+export const Pyre = Descriptor.Component<PyreValue>()("Shooter/Pyre")
 
 /**
  * An enemy turned by a skill (see `TurnEffect`), fighting for `faction` for
@@ -1338,6 +1370,8 @@ export const Game = Schema.bind(
       Companion,
       Lifted,
       Dome,
+      Pyre,
+      EmberRing,
       Turned,
       Overcharged,
       Splintering,
