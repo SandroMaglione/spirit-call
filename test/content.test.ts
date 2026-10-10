@@ -123,6 +123,20 @@ describe("content", () => {
     ]))
   })
 
+  it("reports invitations short of the auditions, and slots far above the main line", () => {
+    const quests = defaultTuning.quests, slots = defaultTuning.invitations
+    const broken: Tuning = {
+      ...defaultTuning,
+      // The Colossus gives no invitation; the second slot plays at level 40, after the fourth chapter.
+      quests: { ...quests, colossus: { ...quests.colossus, rewards: { ...quests.colossus.rewards, currencies: { gold: quests.colossus.rewards.currencies.gold ?? 0 } } } },
+      invitations: [slots[0]!, { ...slots[1]!, level: 40 }, ...slots.slice(2)]
+    }
+    expect(validateContent(broken)).toEqual(expect.arrayContaining([
+      "invitations: the quests give 6, for 7 auditions (one each)",
+      expect.stringMatching(/^track gunnerAudition part 1 at invitation slot 2: enemies of level 40 are more than 4 levels above/)
+    ]))
+  })
+
   it("reports quests that cannot be reached or refer to nothing", () => {
     const quests = defaultTuning.quests
     const broken: Tuning = {

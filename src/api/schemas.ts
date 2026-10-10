@@ -97,7 +97,8 @@ export const Account = Schema.Struct({
   chests: Schema.Record(StarGroup, Schema.optionalKey(Schema.Record(Schema.Int, Count))),
   selection: Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics, play: Play }),
   worn: Worn,
-  saved: Schema.Record(Schema.Int, SavedTeam)
+  saved: Schema.Record(Schema.Int, SavedTeam),
+  auditions: Schema.Record(CharacterId, Schema.optionalKey(Schema.Struct({ slot: Count, openedAt: Schema.Number })))
 })
 
 const ReactionRecord = Schema.Literals(["burning", "soaked", "charged", "swept", "cracked", "slam"])
@@ -159,7 +160,7 @@ export const Earned = Schema.Struct({
   rewards: Schema.NullOr(Schema.Struct({ currencies: Amounts, unlocks: Schema.Array(Item) })),
   stars: Schema.Array(Count),
   chests: Schema.Array(ChestRef),
-  perfect: Schema.NullOr(Schema.Struct({ unlock: Schema.NullOr(Item) })),
+  perfect: Schema.NullOr(Schema.Struct({ unlock: Schema.NullOr(Item), currencies: Amounts })),
   granted: Schema.Array(Item)
 })
 

@@ -63,6 +63,8 @@ export interface App {
   readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects, relics?: TeamRelics) => Selected
   /** Puts a look of `kind` on `character` (`null`: her own look). */
   readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => Promise<Account | undefined>
+  /** Opens `character`'s audition with an invitation (refused without one, or when she has none to open). */
+  readonly openAudition: (character: CharacterId) => Promise<Account | undefined>
   /** Saves a team in `slot` to load in a tap, or empties the slot (`null`; refused when it breaks the rules). */
   readonly saveTeam: (slot: number, team: SavedTeam | null) => Promise<Account | undefined>
   /** Owns every character, aspect, relic (at its last tier), and look, and adds plenty of gold and essence (a dev tool). */
@@ -180,6 +182,7 @@ export const startApp = async (username: string): Promise<App> => {
       return { ok: true, account: checked.value, saved }
     },
     wear: (character, kind, cosmetic) => run(api.account.wear({ params: { character, kind }, payload: { cosmetic } })),
+    openAudition: (character) => run(api.account.openAudition({ params: { character } })),
     saveTeam: (slot, team) => run(api.account.saveTeam({ params: { slot }, payload: { team } })),
     unlockEverything: () => void run(api.dev.unlockEverything()),
     recordRun: (play, result, log) => {

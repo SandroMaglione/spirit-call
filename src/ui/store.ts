@@ -136,6 +136,8 @@ export interface UiActions {
   readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play, relics?: TeamRelics) => void
   /** Enter an Extra with `team`, `aspects`, and `relics` (the saved ones when not given): nothing it does is recorded on the account. */
   readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra, relics?: TeamRelics) => void
+  /** Open `character`'s audition with an invitation (saved at once). */
+  readonly openAudition: (character: CharacterId) => void
   /** Save a team in `slot` to load in a tap, or empty the slot (`null`; saved at once). */
   readonly saveTeamTo: (slot: number, saved: SavedTeam | null) => void
   /** Put a look of `kind` on `character` (`null`: her own look; saved at once). */

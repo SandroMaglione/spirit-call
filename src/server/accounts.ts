@@ -13,7 +13,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import type * as Statement from "effect/sql/Statement"
 
-import { ascend, createAccount, earn, everything, raiseRelic, recordRun, saveTeam, select, train, unlock, wear } from "../account/account.ts"
+import { ascend, createAccount, openAudition, earn, everything, raiseRelic, recordRun, saveTeam, select, train, unlock, wear } from "../account/account.ts"
 import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import { fromRecord, toRecord } from "../account/convert.ts"
 import { Refused } from "../api/api.ts"
@@ -40,6 +40,8 @@ export class Accounts extends Context.Service<
     readonly get: (userId: string) => Effect.Effect<Account>
     readonly select: (userId: string, team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects, relics?: TeamRelics) => Effect.Effect<Account, Refused>
     readonly wear: (userId: string, character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => Effect.Effect<Account, Refused>
+    /** Opens `character`'s audition with an invitation. */
+    readonly openAudition: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
     /** Saves a team in `slot` to load in a tap, or empties the slot (`null`). */
     readonly saveTeam: (userId: string, slot: number, team: SavedTeam | null) => Effect.Effect<Account, Refused>
     readonly train: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
@@ -126,6 +128,7 @@ export class Accounts extends Context.Service<
           }),
         select: (userId, team, play, aspects, relics) => act(userId, "select", about(play.kind === "quest" ? play.quest : play.track), (account) => select(tuning, account, team, play, aspects, relics), same),
         wear: (userId, character, kind, cosmetic) => act(userId, "wear", about(character), (account) => wear(tuning, account, character, kind, cosmetic), same),
+        openAudition: (userId, character) => act(userId, "openAudition", about(character), (account, now) => openAudition(tuning, account, character, now), same),
         saveTeam: (userId, slot, team) => act(userId, "saveTeam", about(String(slot)), (account) => saveTeam(tuning, account, slot, team), same),
         train: (userId, character) => act(userId, "train", about(character), (account) => train(tuning, account, character), same),
         ascend: (userId, character) => act(userId, "ascend", about(character), (account) => ascend(tuning, account, character), same),

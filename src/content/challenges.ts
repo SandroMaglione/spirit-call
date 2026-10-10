@@ -712,6 +712,7 @@ export const challenges = {
   thunderTrial: trial("Thunder Trial", "necropolis", ["sniper"], ["juggernaut", "stalker", "galeCaster"], "thunder"),
 
   // Auditions (see content/auditions.ts): a character alone, in three fights around her kit, the last against a champion.
+  // Any can be invited from the first invitation on, so they may show what the main line has not brought yet: the player chose to meet it.
   // The Gunner: keep your distance, then hold it against the patient, then a champion that closes in.
   gunnerOpenGround: waves("Open Ground", "Six waves of chasers and swarmers in the open: keep moving, keep firing.", "courtyard", [
     ["chaser", "chaser"], ["swarmer"], ["chaser", "swarmer"], ["chaser", "chaser", "chaser"], ["swarmer", "swarmer"], ["chaser", "chaser", "swarmer"]
@@ -782,17 +783,6 @@ export const challenges = {
   quarryThunderKing: waves("The Thunder King", "Six waves in the kilnworks; a champion brute charged with thunder joins midway, and stays until it falls.", "kilnworks", [
     ["chaser", "swarmer"], ["guardian", "shooter"], [champion("brute", "thunder")], ["chaser"], ["warden"], ["shooter"]
   ]),
-  // The quest characters' masteries (the others' are their auditions' last fight, harder).
-  swordsmanMastery: waves("The Wind's Rival", "Six waves; a burning champion stalker joins midway, and stays until it falls.", "courtyard", [
-    ["chaser", "chaser", "swarmer"], ["shooter", "stalker"], [champion("stalker", "fire")], ["chaser"], ["shooter"], ["swarmer"]
-  ]),
-  tidecallerMastery: waves("The Storm Brood", "Six waves at the harbor; a champion swarmer charged with thunder joins midway, and stays until it falls.", "harbor", [
-    ["swarmer", "shooter"], ["chaser", "sniper"], [champion("swarmer", "thunder")], ["chaser"], ["shooter"], ["sniper"]
-  ]),
-  bastionMastery: waves("The Last Wall", "Six waves in the citadel; a burning champion brute joins midway, and stays until it falls.", "citadel", [
-    ["guardian", "chaser"], ["shooter", "brute"], [champion("brute", "fire")], ["chaser"], ["shooter"], ["guardian"]
-  ]),
-
   // Extras.
   /** The Training Ground (an Extra): dummies to practice on, a fire pool near each side, nothing to fear. */
   trainingGround: challenge({

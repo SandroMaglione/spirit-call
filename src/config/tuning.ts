@@ -25,9 +25,10 @@ import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
 import { enemies, fairness, shields } from "../content/enemies.ts"
 import { tracks } from "../content/hardcore.ts"
+import { invitationSlots } from "../content/auditions.ts"
 import { materialRules, materials } from "../content/materials.ts"
 import { progression } from "../content/progression.ts"
-import { chapters, chests, quests, rankRules } from "../content/quests.ts"
+import { chapters, chests, perfectRules, quests, rankRules } from "../content/quests.ts"
 import { skills } from "../content/skills.ts"
 
 /** Fixed-step timing. Changing these needs a reload. */
@@ -96,9 +97,13 @@ export const defaultTuning = {
   chests,
   /** The ranks: every quest played again, harder, with its own first clears, stars, and chests (see content/quests.ts). */
   ranks: rankRules,
+  /** What a perfect clear pays, on top of what is written for it (see content/quests.ts). */
+  perfect: perfectRules,
 
   /** Tracks in tiers: hardcore, the trials, and the auditions (see content/hardcore.ts, content/auditions.ts). */
   tracks,
+  /** The places auditions are opened at, one per invitation, each with its level and twist (see content/auditions.ts). */
+  invitations: invitationSlots,
 
   /** One-time feats that point at something worth trying, for a little gold (see content/discoveries.ts). */
   discoveries,

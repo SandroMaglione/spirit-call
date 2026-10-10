@@ -13,9 +13,9 @@ You pick a team of characters, each with her own kit and effects, and face a
 known set of enemies: part of the challenge is preparing the right strategy
 (which characters, which effects, against which enemies), and part is
 executing it well (dodging out of a bad spot and striking back with a chain of
-moves). You earn characters one at a time, each in an audition that teaches
-her kit, and skill is always enough: nothing requires the newest character
-or the best aspect. It is a personal project, not a commercial one, and it
+moves). You earn characters one at a time, in the order you choose, each
+in an audition that teaches her kit, and skill is always enough: nothing
+requires the newest character or the best aspect. It is a personal project, not a commercial one, and it
 ships **complete**: every character, element, and challenge is in the
 release, free, with nothing bought, nothing random, and nothing added
 later. Everything can be owned in about 55 hours of play, and every
@@ -206,7 +206,8 @@ The game has two areas, and Extras for practice.
     enemy, a hazard, elites, a champion, or an ability like a shield), shown
     first on its card, and later quests mix what came before. Nothing
     anywhere else (side quests, ranks, hardcore, practice) shows a thing
-    before the main line brings it. You know what you will face before you
+    before the main line brings it, but an audition, where meeting it
+    first is the player's choice. You know what you will face before you
     enter.
   - **The main line is paced for the team you have**: chapter 1 is short
     and for the first character alone, and each chapter after brings its
@@ -237,8 +238,9 @@ The game has two areas, and Extras for practice.
   clears the tier, and how far the team got is kept as its best.
 - **Auditions**: how a character joins. Three quests played as her alone,
   at a fixed level, the last against a champion; winning makes her the
-  account's (see `docs/collection.md`). A harder fourth, her mastery,
-  gives her tint.
+  account's (see `docs/collection.md`). The player chooses who comes
+  next: milestones give invitations, and each opens the audition of the
+  character it is given to. A harder fourth, her mastery, gives her tint.
 - **Extras**, for practice: a Training Ground (dummies that never fall,
   one that breaks, one that swings to dodge, fire to push them into) and
   Enemy Practice (the enemies picked, all on the field together and coming
@@ -316,8 +318,9 @@ How everything is owned is in `docs/collection.md`; in short:
   pays for kills or for speed. No stamina, no daily tasks, no weekly caps.
 - **Everything else is a reward written on a card**: a character on an
   audition's last quest, an aspect on a first clear, a relic and its tiers
-  on perfect clears, a look on a mastery audition or a hardcore tier. Each
-  comes from one place, shown before it is played, and never at random.
+  on perfect clears, a look on a mastery audition, a rank, or a hardcore
+  tier. Each comes from one place, shown before it is played, and never at
+  random.
 - **Pacing.** About 55 hours to own everything, about 100 to take all ten
   characters to 60; something new every three to five hours. Every level
   adds stats, so each run moves something forward.

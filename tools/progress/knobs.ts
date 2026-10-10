@@ -85,7 +85,6 @@ export const knobs: ReadonlyArray<Knob> = [
   number("Character levels", "Gold per level (base)", "Gold to go from level 1 to 2.", ["progression", "character", "curve", "base"], 5),
   number("Character levels", "Growth per level", "Gold each level adds to the next one's cost.", ["progression", "character", "curve", "growth"], 5),
   number("Character levels", "Square growth", "Gold × (level − 1)² added to each level: makes the top cost more.", ["progression", "character", "curve", "square"], 1),
-  number("Character levels", "Catch-up share", "What a level costs a character below the account's third-highest one.", ["progression", "character", "catchUp", "share"], 0.05),
   number("Character levels", "Strength band", "How many times stronger the reference level is than level 1.", ["progression", "stats", "band"], 0.25, 1),
   number("Character levels", "Band reached at level", "The level where strength is band × level 1's.", ["progression", "stats", "at"], 1, 2),
   multiplier("ascensionGold", "Ascension", "Ascension gold ×", "Scales the gold every ascension step costs.", (by, current) =>

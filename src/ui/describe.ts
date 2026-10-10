@@ -280,7 +280,9 @@ export const describeLock = (tuning: Tuning, lock: Lock): string => {
     case "after":
       return `Clear ${tuning.quests[lock.quest].name}${(lock.rank ?? 1) > 1 ? ` at rank ${["I", "II", "III", "IV", "V"][lock.rank! - 1] ?? lock.rank}` : ""} first`
     case "tier":
-      return `Clear Tier ${lock.tier} first`
+      return tuning.tracks[lock.track].kind === "audition" ? `Clear part ${lock.tier} first` : `Clear Tier ${lock.tier} first`
+    case "invite":
+      return `Invite ${tuning.characters[lock.character].name} to audition first`
   }
 }
 

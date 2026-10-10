@@ -19,13 +19,16 @@ export interface LevelCurve {
 }
 
 /**
- * What a cleared run pays: `base + perLevel × enemy level`, so the best
- * place to earn is at the edge of what you can beat. A lost run pays its
+ * What a cleared run pays: `base + perLevel × enemy level + square × enemy
+ * level²`, so the best place to earn is at the edge of what you can beat,
+ * and the endgame pays far more than the start. A lost run pays its
  * share of the progress made (see `ProgressionSpec.loss`).
  */
 export interface RunPay {
   readonly base: number
   readonly perLevel: number
+  /** Gold added for each enemy level squared: later content pays much more, so the last levels of a large roster come at the pace of the endgame. */
+  readonly square: number
 }
 
 /**
@@ -79,7 +82,7 @@ export const progression = {
    */
   loss: 0.5,
   /** Gold every run pays (see `RunPay`): the steady income for training characters. */
-  gold: { base: 100, perLevel: 25 } satisfies RunPay,
+  gold: { base: 50, perLevel: 10, square: 2 } satisfies RunPay,
   /**
    * Each character's own level: from gold spent on her (training), not from
    * fighting, so nobody falls behind on the bench (see docs/vision.md,
@@ -90,8 +93,6 @@ export const progression = {
    * would.
    */
   character: {
-    curve: { maxLevel: 60, base: 54, growth: 32, square: 4 } satisfies LevelCurve,
-    /** What a level costs, as a share, while it is below the level of the account's `leaders`th highest character: who joins late catches up, the team that leads pays in full. */
-    catchUp: { share: 0.2, leaders: 3 }
+    curve: { maxLevel: 60, base: 97, growth: 58, square: 7.2 } satisfies LevelCurve
   }
 }

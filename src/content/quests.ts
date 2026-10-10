@@ -68,6 +68,8 @@ export interface QuestSpec {
   readonly rewards: Rewards
   /** What its first clear at a higher rank unlocks besides (an aspect on some finales; see docs/collection.md), by rank. */
   readonly rankUnlocks: { readonly [rank: number]: ReadonlyArray<Unlock> }
+  /** What its first clear at a higher rank pays besides its gold and essence (an invitation on some finales), by rank. */
+  readonly rankCurrencies: { readonly [rank: number]: Amounts }
   /**
    * The relic it unlocks, if it has one, and at which rank (see
    * docs/relics.md, "Where relics come from"): a perfect clear (all three
@@ -130,10 +132,27 @@ export interface RankRules {
 
 export const rankRules: RankRules = { count: 3, offset: 12, twists: ["eliteLeaders", "shieldLeaders"], goldRuns: 2, chestGold: 0.9 }
 
+/**
+ * What a quest's first perfect clear at a rank pays (all three stars in one
+ * run, see docs/quests.md), on top of what is written for it (a relic or a
+ * relic's tier): gold worth `goldRuns` runs at its level, and `essenceClears`
+ * trial clears' worth of its rank's grade of essence (its element's at rank I).
+ */
+export interface PerfectRules {
+  readonly goldRuns: number
+  readonly essenceClears: number
+}
+
+export const perfectRules: PerfectRules = { goldRuns: 4, essenceClears: 2 }
+
 /** Whose stars open a set of chests: a chapter's quests (by chapter id), or the secondary quests. */
 export type StarGroup = keyof typeof chapters | "secondary"
 
-const quest = (spec: Omit<QuestSpec, "relic" | "rankUnlocks"> & { readonly relic?: QuestRelic; readonly rankUnlocks?: QuestSpec["rankUnlocks"] }): QuestSpec => ({ relic: null, rankUnlocks: {}, ...spec })
+const quest = (spec: Omit<QuestSpec, "relic" | "rankUnlocks" | "rankCurrencies"> & { readonly relic?: QuestRelic; readonly rankUnlocks?: QuestSpec["rankUnlocks"]; readonly rankCurrencies?: QuestSpec["rankCurrencies"] }): QuestSpec => ({ relic: null, rankUnlocks: {}, rankCurrencies: {}, ...spec })
+/** `rewards` with an invitation besides (see content/auditions.ts). */
+const invite = (rewards: Rewards): Rewards => ({ ...rewards, currencies: { ...rewards.currencies, invitations: 1 } })
+/** An invitation on a higher rank's first clear. */
+const invitation: Amounts = { invitations: 1 }
 /** What a main quest brings, in a line for its card. */
 const brings = (text: string, novelty: Novelty): QuestSpec["introduces"] => ({ text, novelty })
 const enemy = (kind: EnemyKind): Novelty => ({ kind: "enemy", enemy: kind })
@@ -143,6 +162,8 @@ const champion = (kind: EnemyKind): Novelty => ({ kind: "champion", enemy: kind 
 const shields: Novelty = { kind: "shield" }
 const character = (id: CharacterId): Unlock => ({ kind: "character", id })
 const aspect = (id: AspectId): Unlock => ({ kind: "aspect", id })
+/** A character's tint: the three the quests give take theirs at rank III of the quest that brought them (the others' come with their mastery). */
+const tint = (id: CosmeticId): Unlock => ({ kind: "cosmetic", id })
 const relic = (id: RelicId): Unlock => ({ kind: "relic", id })
 const pays = (gold: number, unlocks: ReadonlyArray<Unlock> = []): Rewards => ({ currencies: { gold }, unlocks })
 /** A side quest's first clear: a little less gold than a main quest's. */
@@ -178,7 +199,8 @@ export const quests = {
     after: null,
     introduces: brings("Chasers: they run in and swipe twice. Dodge, then strike back", enemy("chaser")),
     stars: [atLeast("healthLeft", 25), atLeast("perfectDodges", 3), atMost("hitsTaken", 3)],
-    rewards: pays(300)
+    rewards: pays(300),
+    rankUnlocks: { 3: [tint("moonwind")] }
   }),
   crossfire: quest({
     name: "Crossfire",
@@ -190,7 +212,7 @@ export const quests = {
     after: "firstBlood",
     introduces: brings("Shooters: they keep away and shoot ahead of you. Close the distance", enemy("shooter")),
     stars: [atLeast("healthLeft", 25), atLeast("longestChain", 2), atMost("hitsTaken", 3)],
-    rewards: pays(350)
+    rewards: pays(400)
   }),
   packLeader: quest({
     name: "The Pack Leader",
@@ -202,7 +224,8 @@ export const quests = {
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
     stars: [atMost("hitsTaken", 8), atLeast("breaks", 15), atLeast("healthLeft", 60)],
-    rewards: pays(700, [character("tidecaller")])
+    rewards: pays(700, [character("tidecaller")]),
+    rankUnlocks: { 3: [tint("coral")] }
   }),
 
   // Chapter 2: the Swordsman and the Gunner.
@@ -256,7 +279,8 @@ export const quests = {
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
     stars: [atMost("hitsTaken", 9), nobodyFalls(), atMost("hitsTaken", 4)],
     rankUnlocks: { 2: [aspect("gatheringEdge")] },
-    rewards: pays(1750, [aspect("duelist")])
+    rankCurrencies: { 3: invitation },
+    rewards: invite(pays(1750, [aspect("duelist")]))
   }),
 
   // Chapter 3: two characters.
@@ -309,7 +333,8 @@ export const quests = {
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
     stars: [atMost("hitsTaken", 10), atLeast("longestChain", 3), atMost("hitsTaken", 3)],
-    rankUnlocks: { 3: [aspect("grapple")] },
+    rankUnlocks: { 3: [aspect("grapple"), tint("jade")] },
+    rankCurrencies: { 2: invitation },
     rewards: pays(5000, [character("bastion")])
   }),
 
@@ -362,7 +387,7 @@ export const quests = {
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
     stars: [nobodyFalls(), atLeast("ultimates", 6), atMost("hitsTaken", 4)],
     rankUnlocks: { 2: [aspect("scattergun")] },
-    rewards: pays(6300, [aspect("whirlpool")])
+    rewards: invite(pays(6300, [aspect("whirlpool")]))
   }),
 
   // Chapter 5.
@@ -416,7 +441,8 @@ export const quests = {
     introduces: brings("A champion stalker charged with thunder, hunting you through every wave", champion("stalker")),
     stars: [nobodyFalls(), atLeast("perfectDodges", 10), atMost("hitsTaken", 2)],
     rankUnlocks: { 3: [aspect("tremor")] },
-    rewards: pays(9100)
+    rankCurrencies: { 2: invitation },
+    rewards: invite(pays(9100))
   }),
 
   // Chapter 6.
@@ -469,7 +495,7 @@ export const quests = {
     introduces: brings("A burning champion juggernaut, armored until broken", champion("juggernaut")),
     stars: [atMost("hitsTaken", 10), atLeast("longestChain", 3), atMost("hitsTaken", 4)],
     rankUnlocks: { 2: [aspect("lightningRod")] },
-    rewards: pays(12600, [aspect("riptide")]),
+    rewards: invite(pays(12600, [aspect("riptide")])),
     relic: { id: "overflow", rank: 3 }
   }),
 

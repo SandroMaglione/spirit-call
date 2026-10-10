@@ -31,7 +31,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
   readonly store: UiStore; readonly nav: Nav; readonly leader: CharacterId; readonly play: Play; readonly enter: () => void
 }) => {
   const tuning = store.tuning.value, account = store.account.value, team = store.menuDraft.value.team
-  const encounter = encounterOf(tuning, play)
+  const encounter = encounterOf(tuning, play, account)
   // The collection: how much of everything there is to own is owned (see docs/collection.md).
   const collection = sourcesOf(tuning), owned = collection.filter((each) => owns(account, each.item)).length
   // Someone to grow, or a relic to put on a party member with an empty slot.

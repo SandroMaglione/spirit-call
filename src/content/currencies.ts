@@ -3,8 +3,10 @@
  * "Progression"), from every run and on top from first clears, chests,
  * hardcore tiers, and feats. The wallet also holds the essences (see
  * `content/materials.ts`), so rewards and costs are one kind of amount.
- * Nothing else is spent: characters, aspects, relics, and looks are each
- * a reward written on one card (see docs/collection.md).
+ * Invitations open a character's audition, whichever the player chooses
+ * (see `content/auditions.ts`): a few milestones give one each. Nothing
+ * else is spent: characters, aspects, relics, and looks are each a reward
+ * written on one card (see docs/collection.md).
  */
 import type { MaterialId } from "./materials.ts"
 
@@ -15,7 +17,8 @@ export interface CurrencySpec {
 }
 
 export const currencies = {
-  gold: { name: "Gold", use: "upgrades" } satisfies CurrencySpec
+  gold: { name: "Gold", use: "upgrades" } satisfies CurrencySpec,
+  invitations: { name: "Invitation", use: "auditions" } satisfies CurrencySpec
 }
 
 export type CurrencyId = keyof typeof currencies

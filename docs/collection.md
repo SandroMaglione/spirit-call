@@ -24,32 +24,48 @@ the reasoning they follow.
 
 | Act | Hours | What is played | What comes |
 |---|---|---|---|
-| The main line | 0–12 | chapters 1–6, side quests, the first trials and hardcore tiers | 3 quest characters, 4 auditions, the first relics, element essence (cap 40) |
-| Rank II | 12–25 | every quest again, harder | 2 auditions, tier II relics, Refined essence (cap 50) |
-| Rank III | 25–40 | every quest at its hardest | the last audition, mastery auditions, Core essence (cap 60) |
+| The main line | 0–12 | chapters 1–6, side quests, the first trials and hardcore tiers | 3 quest characters, 4 invitations, the first relics, element essence (cap 40) |
+| Rank II | 12–25 | every quest again, harder | 2 invitations, tier II relics, Refined essence (cap 50) |
+| Rank III | 25–40 | every quest at its hardest | the last invitation, mastery auditions, Core essence (cap 60) |
 | Hardcore | 40–55 | the rulesets, Until Fall | trails, the last relic tiers |
 | Mastery | 55–100 | anything | levels, up to 60 for everyone |
 
 ## Characters
 
-Three come from the main line, and seven from **auditions**.
+Three come from the main line, and seven from **auditions**, in the
+order the player chooses.
 
-| Character | How | Opens after |
-|---|---|---|
-| Swordsman | a new account | |
-| Tidecaller | the main line | chapter 1's finale (the Pack Leader) |
-| Gunner | audition | chapter 2's finale (the Bulwark) |
-| Bastion | the main line | chapter 3's finale (the Brute King) |
-| Stormcaller | audition | chapter 4's finale (the Swarm Mother) |
-| Sparkfist | audition | chapter 5's finale (the Warlord) |
-| Tidewarden | audition | chapter 6's finale (the Colossus) |
-| Hearth | audition | the Brute King at rank II |
-| Windwall | audition | the Warlord at rank II |
-| Quarry | audition | the Bulwark at rank III |
+| Character | How |
+|---|---|
+| Swordsman | a new account |
+| Tidecaller | the main line: chapter 1's finale (the Pack Leader) |
+| Bastion | the main line: chapter 3's finale (the Brute King) |
+| Gunner, Stormcaller, Sparkfist, Tidewarden, Hearth, Windwall, Quarry | an audition, opened with an invitation |
+
+**Invitations** are a currency, one for each audition, from milestones
+(`content/quests.ts`, written on their cards): the finales of chapters 2,
+4, 5, and 6, then the Brute King and the Warlord at rank II, and the
+Bulwark at rank III. Spending one opens the audition of the character
+the player gives it to; an invitation is never lost, and can be kept for
+later. Every audition can be invited from the first invitation on, so
+the player chooses the path toward a character, not the main line: each
+audition is written around her kit with the enemies that test it, even
+ones the main line has not brought yet (its card shows them, as a quest's
+does; `validateContent` holds every other place to the main line).
+
+**The order sets the difficulty, not the character.** An audition plays
+at the level and twist of its **slot**, the place it was opened in
+(`invitationSlots`, `content/auditions.ts`): the first opened plays at
+level 10, plainly, and each next one higher, adding elite leaders of her
+element, shielded leaders, or a kind of enemy leading every wave, up to
+the seventh at level 46 with all of them. `validateContent` checks that
+every part, at every slot, sits at most a few levels above the main line
+once that many invitations are in hand. A character taken up late
+arrives at a higher level, as before.
 
 **An audition is three quests** played as that character alone: no team,
 no aspect but her class's plain one, no relics, at a fixed level (the
-enemies' own, so no gap either way). The first two are written around
+enemies' own, so no gap either way: its slot's). The first two are written around
 her kit (what she is good at, then what she must answer), and the third
 ends on a champion, fought as a boss. The quests open in order, and
 clearing the third makes her the account's, at the audition's level (her
@@ -64,8 +80,11 @@ played and kept like a hardcore track's tiers.
 **A mastery audition** is a fourth tier of each character's audition: her
 champion fight again at level 50, with rank III's twists (elite leaders
 carrying shields), still alone and lent. It opens with rank III (the Pack
-Leader at rank III) and gives her tint. The three quest characters have a
-track with this tier only.
+Leader at rank III) and gives her tint. The three quest characters have no
+audition (the Auditions tab lists the seven to invite); each takes her tint
+with the rank III first clear of the quest that brings her: the Swordsman
+from First Blood, the Tidecaller from the Pack Leader, Bastion from the
+Brute King.
 
 ## Aspects
 
@@ -90,14 +109,16 @@ An aspect is owned once: there are no copies and no duplicates.
   unlocked at rank II takes tier III from a hardcore tier; one unlocked at
   rank III takes both from hardcore tiers. Every tier is written on its
   card (a quest's `perfect` rewards, a tier's `unlocks`).
-- A perfect clear with nothing written pays nothing more than its stars:
-  it is its own goal.
+- **Every perfect clear pays**, once per quest and rank, on top of any
+  relic: gold worth four runs at its level and two trial clears' worth of
+  its rank's essence (`perfectRules`), so chasing all three stars in one
+  run is always worth it.
 
 ## Looks
 
 | Kind | How many | From |
 |---|---|---|
-| Tint | one per character | her mastery audition |
+| Tint | one per character | her mastery audition (a quest character's: her quest at rank III) |
 | Trail | seven, anyone's | hardcore tiers, written on them |
 
 ## Resources
@@ -119,21 +140,15 @@ Two things are earned, and both only level characters:
   player has reached: the top trial ranks pay Core Essence on every
   clear, the one place to farm the last levels, and they open last.
 
-- **Catching up.** The account's three highest characters set the pace: a
-  level below the third of them costs a fifth of its gold
-  (`progression.character.catchUp`). A character who joins late (from an
-  audition, at its level) catches up quickly, while the team that leads
-  pays in full, so the main team reaches the top with the collection and
-  the other seven follow in the hours after.
-
 There is no account level, no shop, and no reset: a hardcore tier pays
 once, on its first clear, like a quest.
 
 ## Measuring it
 
 `pnpm progression` plays a new account through the game on its own rules
-(the main line, auditions, ranks II and III, the hardcore tiers, and the
-trials to farm), at a number of runs an hour, and reports the hour each
+(the main line, auditions opened in the order they are written as
+invitations come, ranks II and III, the hardcore tiers, and the trials to
+farm), at a number of runs an hour, and reports the hour each
 character, aspect, and relic arrives, when the collection is complete,
 when the main team reaches 60, and when all ten do. Run it after changing
 rewards, costs, or what opens when. Measured on October 10, 2026, at 15
@@ -141,11 +156,19 @@ runs an hour:
 
 | Player | Everything owned | All ten at 60 |
 |---|---|---|
-| Skilled (no run lost) | 46 h | 87 h |
-| The one the pace is for (a quarter of runs lost) | 56 h | 107 h |
-| Struggling (two runs in five lost) | 65 h | 125 h |
+| Skilled (no run lost) | 45 h | 72 h |
+| The one the pace is for (a quarter of runs lost) | 55 h | 88 h |
+| Struggling (two runs in five lost) | 65 h | 103 h |
+
+Every character's level costs the same gold, whoever she is. What keeps
+the last characters from taking as long as the first is the gold a run
+pays: `50 + 10 × level + 2 × level²` (`progression.gold`), so a run of the
+endgame pays several times a run of the main line, and the characters
+taken up last are taken up at the endgame's pace.
 
 The model plays an audition's part twice (the second a clear) and a
 perfect clear that gives something three times; a player who needs more
 takes longer, which the hours above do not count. `test/new-account.test.ts`
-keeps the middle row near its targets.
+keeps the middle row near its targets. `pnpm expected --only auditions`
+has the bot fight every audition at the slot the model opens it at, or
+all at one slot with `--slot`.

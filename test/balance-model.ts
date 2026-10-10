@@ -9,6 +9,7 @@ import type { BuildValue } from "../src/schema.ts"
 import type { BotReport, BotRun } from "./bot.ts"
 import { dodger, fighter, learner, moveReach, skillReach } from "./bot.ts"
 import { experienceTo } from "../src/account/progression.ts"
+import { clearPay } from "../src/account/account.ts"
 
 export interface BalanceCase {
   readonly id: string
@@ -111,12 +112,12 @@ export interface BalanceRow {
 /** Currency available before entering each main quest, with no secondary rewards or pulls. */
 export const economyAudit = (tuning: Tuning) => {
   let available = 0
-  let previousPay = tuning.progression.gold.base + tuning.progression.gold.perLevel
+  let previousPay = clearPay(tuning.progression.gold, 1)
   return Object.entries(tuning.quests).filter(([, quest]) => quest.line === "main").map(([quest, spec]) => {
     const buildCost = experienceTo(tuning.progression.character.curve, spec.enemyLevel)
     const row = { quest, enemyLevel: spec.enemyLevel, goldBeforeFirstAttempt: available, singleBuildCost: buildCost,
       extraClearsAtPreviousQuest: Math.ceil(Math.max(0, buildCost - available) / previousPay) }
-    previousPay = tuning.progression.gold.base + tuning.progression.gold.perLevel * spec.enemyLevel
+    previousPay = clearPay(tuning.progression.gold, spec.enemyLevel)
     available += (spec.rewards.currencies.gold ?? 0) + previousPay
     return row
   })

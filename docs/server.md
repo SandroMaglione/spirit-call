@@ -71,6 +71,7 @@ looks after her own account:
 | `PUT /api/account/teams/{slot}` | Save a team (with its aspects and relics) in a slot, 1 to 3, or empty it. |
 | `POST /api/characters/{id}/training` | Level a character with gold. |
 | `POST /api/characters/{id}/ascension` | Ascend a character. |
+| `POST /api/characters/{id}/audition` | Open a character's audition with an invitation. |
 | `POST /api/runs` | Record a run that ended, with its log: the account after it, and what it earned. |
 | `GET /api/runs?since=` | The player's runs, with their logs. |
 | `GET /api/account/events?since=` | The changes to the player's account. |
@@ -112,7 +113,9 @@ account. (Until October 2026 every stage shared the one database.)
   tables are left empty and unused, and the account's own row keeps its
   Call and experience columns, written as zero); it also added the saved
   teams' tables. `0012` added recovery codes, the attempts' counts, and an
-  index for sweeping sessions. Deploying prod (by hand, see "Releasing")
+  index for sweeping sessions. `0013` added the auditions opened with an
+  invitation (and carried accounts over: auditions already played opened,
+  invitations for the milestones already cleared). Deploying prod (by hand, see "Releasing")
   applies new ones first.
 - **No players yet: reset, do not migrate.** Until the game opens to
   players (decided by the developer, and written here when it happens),

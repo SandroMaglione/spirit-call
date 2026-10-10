@@ -1,9 +1,9 @@
 import { experienceFor, experienceTo } from "../src/account/progression.ts"
 import { describe, expect, it } from "vitest"
 
-import { buildOf, characterLevel, clearPay, createAccount, discovered, earn, earnedResources, entryTeam, owns, encounterOf, groupStars, playLock, questLock, recordRun, runPay, saveTeam, select, teamOf, spend, train, trainingCost, unlock, withSources, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold, levelsUnder, underLevelWarning } from "../src/account/account.ts"
+import { buildOf, characterLevel, clearPay, createAccount, discovered, earn, earnedResources, entryTeam, owns, encounterOf, groupStars, playLock, questLock, recordRun, runPay, saveTeam, select, teamOf, spend, train, trainingCost, unlock, withSources, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold, levelsUnder, underLevelWarning, lentFor, openAudition } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import { rankGates } from "../src/content/ranks.ts"
+import { eliteElementOf, rankGates } from "../src/content/ranks.ts"
 import type { Account, Earned, Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
 import type { DiscoveryId } from "../src/content/discoveries.ts"
@@ -66,7 +66,8 @@ describe("account rules", () => {
   it("pays gold for every run by its enemies' level, and a loss its share of the progress made", () => {
     const { gold, loss } = defaultTuning.progression
     const run = { cleared: true, progress: 1, team: ["swordsman" as const], reactions: [], tally: noTally, challenge: "swarm" as const, wave: 3, kills: 40, time: 60 }
-    const clear = (level: number) => gold.base + gold.perLevel * level
+    // The base, a share for each level, and a share for its square (the endgame pays far more), counted as a person would.
+    const clear = (level: number) => roundGold(gold.base + gold.perLevel * level + gold.square * level * level)
     expect(runPay(gold, loss, 5, run)).toBe(clear(5))
     expect(runPay(gold, loss, 20, run)).toBe(clear(20))
     expect(runPay(gold, loss, 5, { ...run, cleared: false, progress: 2 / 3 })).toBe(roundGold(clear(5) * loss * 2 / 3))
@@ -113,13 +114,16 @@ describe("account rules", () => {
     // It enters with the lent character alone, whoever the party is.
     expect(entryTeam(defaultTuning, fresh(), part(1), ["swordsman"])).toEqual([{ character: "gunner", level: audition.tiers[0]!.enemyLevel }])
     expect(entryTeam(defaultTuning, fresh(), quest("firstBlood"), ["swordsman"])).toEqual(teamOf(defaultTuning, fresh(), ["swordsman"]))
-    // Its parts open after their quest, in order.
-    const opened = { ...fresh(), quests: { [audition.tiers[0]!.opens]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0] } } } }
+    // Its parts open after their quest and an invitation, in order.
+    const after = { ...fresh(), quests: { [audition.tiers[0]!.opens]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0] } } } }
     expect(playLock(defaultTuning, fresh(), part(1))).toEqual({ kind: "after", quest: audition.tiers[0]!.opens })
-    expect(playLock(defaultTuning, opened, part(1))).toBeNull()
-    expect(playLock(defaultTuning, opened, part(2))).toEqual({ kind: "tier", track: "gunnerAudition", tier: 1 })
+    expect(playLock(defaultTuning, after, part(1))).toEqual({ kind: "invite", character: "gunner" })
+    const opened = openAudition(defaultTuning, { ...after, wallet: { ...after.wallet, invitations: 1 } }, "gunner", 1500)
+    if (!opened.ok) throw new Error("the audition did not open")
+    expect(playLock(defaultTuning, opened.value, part(1))).toBeNull()
+    expect(playLock(defaultTuning, opened.value, part(2))).toEqual({ kind: "tier", track: "gunnerAudition", tier: 1 })
     const run = (challenge: string) => ({ cleared: true, progress: 1, team: ["gunner" as const], reactions: [], tally: noTally, challenge: challenge as "swarm", wave: 6, kills: 20, time: 150 })
-    let account: Account = opened
+    let account: Account = opened.value
     for (const number of [1, 2]) account = recordRun(defaultTuning, account, part(number), run(audition.tiers[number - 1]!.challenge), 2000).account
     expect(owns(account, { kind: "character", id: "gunner" })).toBe(false)
     const last = recordRun(defaultTuning, account, part(3), run(audition.tiers[2]!.challenge), 3000)
@@ -127,6 +131,33 @@ describe("account rules", () => {
     expect(characterLevel(defaultTuning, last.account, "gunner").level).toBe(audition.tiers[2]!.enemyLevel)
     // Past her first step already: it comes with her.
     expect(last.account.owned.characters.gunner?.ascension).toBe(defaultTuning.materialRules.ascension.filter((step) => step.level < audition.tiers[2]!.enemyLevel).length)
+  })
+
+  it("opens the audition the player invites, spending an invitation, at the next slot's level and twist", () => {
+    // The main line cleared, so every audition is open to an invitation.
+    const main = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((id) => defaultTuning.quests[id].line === "main")
+    const cleared: Account = { ...fresh(), quests: Object.fromEntries(main.map((id) => [id, { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [] } }])) }
+    const withInvitations = (count: number): Account => ({ ...cleared, wallet: { ...cleared.wallet, invitations: count } })
+    // Nothing to give, nobody to give it to, or before the first invitation's quest: refused.
+    expect(openAudition(defaultTuning, cleared, "sparkfist", 1).ok).toBe(false)
+    expect(openAudition(defaultTuning, { ...fresh(), wallet: { invitations: 1 } }, "sparkfist", 1)).toMatchObject({ ok: false, refusal: { kind: "locked" } })
+    expect(openAudition(defaultTuning, withInvitations(1), "swordsman", 1)).toMatchObject({ ok: false, refusal: { kind: "badAudition" } })
+    // Whoever is invited first plays at the first slot, the next at the second.
+    const first = openAudition(defaultTuning, withInvitations(2), "sparkfist", 1)
+    if (!first.ok) throw new Error("the first audition did not open")
+    expect(first.value.wallet.invitations).toBe(1)
+    expect(first.value.auditions).toEqual({ sparkfist: { slot: 1, openedAt: 1 } })
+    expect(openAudition(defaultTuning, first.value, "sparkfist", 2)).toMatchObject({ ok: false, refusal: { kind: "badAudition" } })
+    const second = openAudition(defaultTuning, first.value, "gunner", 2)
+    if (!second.ok) throw new Error("the second audition did not open")
+    const [slotOne, slotTwo] = defaultTuning.invitations
+    const spark = defaultTuning.tracks.sparkfistAudition.tiers, gunner = defaultTuning.tracks.gunnerAudition.tiers
+    expect(encounterOf(defaultTuning, tier("sparkfistAudition", 1), second.value).enemyLevel).toBe(slotOne!.level)
+    expect(encounterOf(defaultTuning, tier("gunnerAudition", 3), second.value)).toMatchObject({ challenge: gunner[2]!.challenge, enemyLevel: slotTwo!.level + 2, twist: { elites: slotTwo!.elites ? eliteElementOf(defaultTuning.characters.gunner.element) : null, shields: slotTwo!.shields } })
+    expect(lentFor(defaultTuning, tier("gunnerAudition", 2), second.value)).toEqual({ character: "gunner", level: slotTwo!.level + 1 })
+    // An audition not opened yet shows the slot it would take; masteries keep their own level.
+    expect(encounterOf(defaultTuning, tier("tidewardenAudition", 1), second.value).enemyLevel).toBe(defaultTuning.invitations[2]!.level)
+    expect(encounterOf(defaultTuning, tier("sparkfistAudition", 4), second.value).enemyLevel).toBe(spark[3]!.enemyLevel)
   })
 
   it("saves up to three teams to load in a tap, each keeping the rules", () => {
@@ -137,15 +168,6 @@ describe("account rules", () => {
     expect(saveTeam(defaultTuning, fresh(), 1, { ...team, team: ["gunner"] })).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
     const emptied = saved.ok ? saveTeam(defaultTuning, saved.value, 2, null) : saved
     expect(emptied.ok && emptied.value.saved).toEqual({})
-  })
-
-  it("trains a character who joined late, below the leading three, for a share of the gold", () => {
-    const curve = defaultTuning.progression.character.curve, { catchUp } = defaultTuning.progression.character
-    const at = (level: number) => ({ unlockedAt: 1, experience: experienceTo(curve, level), ascension: defaultTuning.materialRules.ascension.filter((step) => step.level <= level).length })
-    const account = { ...fresh(), owned: { ...fresh().owned, characters: { swordsman: at(35), tidecaller: at(35), bastion: at(35), gunner: at(12) } } }
-    expect(trainingCost(defaultTuning, account, "gunner")).toEqual({ gold: Math.ceil(experienceFor(curve, 12) * catchUp.share) })
-    // The leading three pay in full.
-    expect(trainingCost(defaultTuning, account, "bastion")).toEqual({ gold: experienceFor(curve, 35) })
   })
 
   it("selects only a team of owned characters and an open quest", () => {

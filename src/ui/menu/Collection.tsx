@@ -7,6 +7,7 @@
  * that card in the challenges. Nothing here is bought or drawn.
  */
 import { useSignal } from "@preact/signals"
+import type { ComponentChildren } from "preact"
 import { owns, playLock, relicTier, sourcesOf } from "../../account/account.ts"
 import type { Item, Play } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
@@ -32,11 +33,10 @@ import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiStore } from "../store.ts"
 import { slotNames } from "./Gear.tsx"
 import { InventoryShelf } from "./Inventory.tsx"
-import { CharacterCard, describeSource, ids, KitLines } from "./parts.tsx"
+import { CharacterCard, describeSource, ids } from "./parts.tsx"
 import type { CollectionTab, Nav } from "./screens.ts"
 
 const tierNames = { 1: "I", 2: "II", 3: "III" } as const
-const roleNames = { attacker: "Attacker", healer: "Healer", guardian: "Guardian" } as const
 
 /** Where a source is played: a quest at its rank, or a track's tier; `null` for a new account's. */
 const playOf = (source: Source): Play | null =>
@@ -62,19 +62,31 @@ const GoThere = ({ store, nav, item }: { readonly store: UiStore; readonly nav: 
   </Pill></Actions>
 }
 
+/**
+ * What a model shelf says over its stage, kept short: the name, a few
+ * icons (her element and class, a look's kind), and whether it is owned or
+ * where it comes from.
+ */
+const Tag = ({ store, item, name, icons, element }: { readonly store: UiStore; readonly item: Item; readonly name: string; readonly icons: ComponentChildren; readonly element?: string | undefined }) => {
+  const owned = owns(store.account.value, item), source = sourceOf(sourcesOf(store.tuning.value), item)
+  return <div class="collection__tag in-right" data-element={element}>
+    <b>{name}</b>
+    <span class="collection__icons">{icons}</span>
+    <small>{owned ? <><Icon name="check" />Yours</> : <><Icon name="lock" />{source === undefined ? "Not owned yet" : describeSource(store, source)}</>}</small>
+  </div>
+}
+
 const CharacterShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
   const tuning = store.tuning.value
   const all = ids(tuning.characters)
   const picked = useSignal<CharacterId>(all[0]!)
-  const spec = tuning.characters[picked.value], owned = owns(store.account.value, { kind: "character", id: picked.value })
+  const spec = tuning.characters[picked.value]
   return <>
     <div class="collection__cards collection__cards--looks scroll in-left"><Cards>{all.map((id) => <CharacterCard key={id} store={store} character={id} selected={id === picked.value} onClick={() => (picked.value = id)} />)}</Cards></div>
-    <div class="collection__stage"><ModelStage key={picked.value} character={picked.value} /></div>
-    <Panel class="collection__brief collection__brief--side in-right" element={spec.element} icon={<Icon name={spec.element} />} title={spec.name}
-      detail={`${elements[spec.element].name} · ${tuning.classes[spec.class].name} · ${roleNames[spec.role]}${owned ? " · Yours" : ""}`}>
-      <KitLines store={store} character={picked.value} />
-      <From store={store} item={{ kind: "character", id: picked.value }} />
-    </Panel>
+    <div class="collection__stage collection__stage--wide"><ModelStage key={picked.value} character={picked.value} /></div>
+    <Tag store={store} item={{ kind: "character", id: picked.value }} name={spec.name} element={spec.element}
+      icons={<><Icon name={spec.element} /><AbilityIcon kind={spec.class} /></>} />
+    <div class="collection__details"><Pill tone="dark" size="small" icon="character" onClick={() => nav.go({ kind: "character", character: picked.value, tab: "overview" })}>Details</Pill></div>
     <GoThere store={store} nav={nav} item={{ kind: "character", id: picked.value }} />
   </>
 }
@@ -131,19 +143,18 @@ const LookShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav 
   const all = ids(tuning.cosmetics)
   const picked = useSignal<CosmeticId>(all[0]!)
   const look = cosmeticOf(tuning.cosmetics, picked.value), has = owns(account, { kind: "cosmetic", id: picked.value })
+  const wearer = store.menuDraft.value.team[0] ?? "swordsman"
   return <>
     <div class="collection__cards collection__cards--looks scroll in-left"><Cards>{all.map((id) => {
       const spec = cosmeticOf(tuning.cosmetics, id), owned = owns(account, { kind: "cosmetic", id })
       return <Card key={id} art={<Portrait of={{ look: id }} />} label={spec.name} locked={!owned} foot={spec.name} selected={id === picked.value} mark={owned ? "tick" : undefined} onClick={() => (picked.value = id)} />
     })}</Cards></div>
     {/* Tried on: a tint on her spirit; a trail as the picture of what it sheds. */}
-    <div class="collection__stage">{look.character !== null ? <ModelStage key={picked.value} character={look.character} tint={picked.value} /> : <span class="collection__trail"><Portrait of={{ look: picked.value }} /></span>}</div>
-    <Panel class="collection__brief collection__brief--side in-right" icon={<LookIcon kind={look.kind} />} title={look.name}
-      detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}>
-      <p class="dim">{look.about}</p>
-      {has && <p class="dim">Wear it from {look.character === null ? "a spirit's" : `${tuning.characters[look.character].name}'s`} gear.</p>}
-      <From store={store} item={{ kind: "cosmetic", id: picked.value }} />
-    </Panel>
+    <div class="collection__stage collection__stage--wide">{look.character !== null ? <ModelStage key={picked.value} character={look.character} tint={picked.value} /> : <span class="collection__trail"><Portrait of={{ look: picked.value }} /></span>}</div>
+    <Tag store={store} item={{ kind: "cosmetic", id: picked.value }} name={look.name} element={look.character === null ? undefined : tuning.characters[look.character].element}
+      icons={<><LookIcon kind={look.kind} />{look.character !== null && <Icon name={tuning.characters[look.character].element} />}</>} />
+    {/* Worn from a character's gear: a tint's own, a trail on the party's leader. */}
+    {has && <div class="collection__details"><Pill tone="dark" size="small" icon="look" onClick={() => nav.go({ kind: "gear", character: look.character ?? wearer, tab: "looks", focus: look.kind })}>Wear it</Pill></div>}
     <GoThere store={store} nav={nav} item={{ kind: "cosmetic", id: picked.value }} />
   </>
 }

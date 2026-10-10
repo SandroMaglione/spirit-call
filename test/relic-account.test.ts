@@ -101,7 +101,7 @@ describe("rewards", () => {
     const perfect = { ...clear, challenge: tuning.quests.ironGuard.challenge, team: ["swordsman" as const], tally: tallyMeeting(tuning.quests.ironGuard.stars) }
     const first = recordRun(tuning, account, quest("ironGuard"), perfect, now)
     expect(first.earned.stars).toEqual([0, 1, 2])
-    expect(first.earned.perfect).toEqual({ unlock: { kind: "relic", id: "repel" } })
+    expect(first.earned.perfect).toMatchObject({ unlock: { kind: "relic", id: "repel" } })
     expect(first.account.owned.relics.repel?.tier).toBe(1)
     expect(first.account.quests.ironGuard?.[1]?.perfectAt).toBe(now)
     // Again: nothing new (the perfect clear is had).
@@ -113,15 +113,18 @@ describe("rewards", () => {
     expect(recordRun(tuning, twoThenOne.account, quest("ironGuard"), { ...perfect, tally: { ...perfect.tally, perfectDodges: 0, longestChain: 0, breaks: 0, ultimates: 0 } }, now).earned.perfect).toBeNull()
     // Rank II of the same quest: the relic's tier II.
     const atTwo = recordRun(tuning, first.account, { kind: "quest", quest: "ironGuard", rank: 2 }, perfect, now)
-    expect(atTwo.earned.perfect).toEqual({ unlock: { kind: "relicTier", id: "repel", tier: 2 } })
+    expect(atTwo.earned.perfect).toMatchObject({ unlock: { kind: "relicTier", id: "repel", tier: 2 } })
     expect(atTwo.account.owned.relics.repel?.tier).toBe(2)
     // A quest with no relic: its perfect clear is its own goal.
     const none = recordRun(tuning, account, quest("emberKiln"), { ...perfect, challenge: tuning.quests.emberKiln.challenge, tally: tallyMeeting(tuning.quests.emberKiln.stars) }, now)
-    expect(none.earned.perfect).toEqual({ unlock: null })
+    expect(none.earned.perfect).toMatchObject({ unlock: null })
+    // Every perfect clear pays gold and its rank's essence, relic or not.
+    expect(none.earned.perfect?.currencies.gold).toBeGreaterThan(0)
+    expect(first.earned.perfect?.currencies.gold).toBeGreaterThan(0)
     // The Swarm gives Echo on its first clear (its slot's introduction): its perfect clear at rank I gives nothing more.
     const swarm = recordRun(tuning, opened(), quest("theSwarm"), { ...perfect, challenge: "swarm", tally: tallyMeeting(tuning.quests.theSwarm.stars) }, now)
     expect(swarm.earned.rewards?.unlocks).toEqual([{ kind: "relic", id: "echo" }])
-    expect(swarm.earned.perfect).toEqual({ unlock: null })
+    expect(swarm.earned.perfect).toMatchObject({ unlock: null })
     expect(swarm.account.owned.relics.echo?.tier).toBe(1)
   })
 

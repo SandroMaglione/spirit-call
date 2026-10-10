@@ -85,7 +85,7 @@ export class Logs extends Context.Service<
           track: play?.kind === "tier" ? play.track : null,
           tier: play?.kind === "tier" ? play.tier : null,
           challenge: result.challenge,
-          enemy_level: play === null ? 0 : encounterOf(tuning, play).enemyLevel,
+          enemy_level: play === null ? 0 : encounterOf(tuning, play, account).enemyLevel,
           cleared: result.cleared ? 1 : 0,
           progress: result.progress,
           wave: result.wave,

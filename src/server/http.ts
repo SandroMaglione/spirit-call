@@ -133,6 +133,7 @@ const AccountLive = HttpApiBuilder.group(
       .handle("get", () => forPlayer(accounts.get))
       .handle("select", ({ payload }) => forPlayer((id) => accounts.select(id, payload.team, payload.play, payload.aspects, payload.relics)))
       .handle("wear", ({ params, payload }) => forPlayer((id) => accounts.wear(id, params.character, params.kind, payload.cosmetic)))
+      .handle("openAudition", ({ params }) => forPlayer((id) => accounts.openAudition(id, params.character)))
       .handle("saveTeam", ({ params, payload }) => forPlayer((id) => accounts.saveTeam(id, params.slot, payload.team)))
       .handle("train", ({ params }) => forPlayer((id) => accounts.train(id, params.character)))
       .handle("ascend", ({ params }) => forPlayer((id) => accounts.ascend(id, params.character)))

@@ -15,7 +15,6 @@ import { materialOf } from "../../content/materials.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { roleNames } from "../../content/characters.ts"
 import type { CharacterId } from "../../content/characters.ts"
-import { elements } from "../../content/elements.ts"
 import { skillSlots } from "../../content/skills.ts"
 import { aspectFor, attackOf, dashOf, statsAtLevel } from "../../features/build.ts"
 import { AbilityIcon } from "../AbilityIcon.tsx"
@@ -191,7 +190,7 @@ export const Character = ({ store, actions, nav, character, tab }: {
   const owned = owns(account, { kind: "character", id: character })
   return <Screen name="character" element={element}>
     <div class="character__stage" data-tab={tab}><ModelStage key={character} character={character} /></div>
-    <TopBar icon={element} lead={elements[element].name} title={tuning.characters[character].name} close={nav.back} end={tab === "overview" && owned ? <Wallet store={store} currencies={["gold"]} /> : undefined}>
+    <TopBar icon="team" title="Characters" close={nav.back} end={tab === "overview" && owned ? <Wallet store={store} currencies={["gold"]} /> : undefined}>
       <div class="roster scroll-x" aria-label="Characters">{roster.map((id) => <button key={id} type="button" class="face-button" aria-label={`View ${tuning.characters[id].name}`} aria-pressed={id === character} onClick={() => nav.replace({ kind: "character", character: id, tab })}><Face of={{ character: id }} tint={elementOf(tuning, id)} selected={id === character} locked={!owns(account, { kind: "character", id })} /></button>)}</div>
     </TopBar>
     <SideTabs label="Character details" current={tab} onChange={(id) => nav.replace({ kind: "character", character, tab: id })} tabs={[
