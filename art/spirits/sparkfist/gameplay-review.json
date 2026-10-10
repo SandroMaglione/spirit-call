@@ -1,0 +1,21 @@
+{
+  "url": "http://192.168.0.45:5221/?play&challenge=trainingGround&team=sparkfist,tidecaller,swordsman&charged&touch",
+  "model": "sparkfistSpirit",
+  "glb_sha256": "bf8ba7d8779e2fd016f22a4fac71a4ec5ddd169cc019086b0d045202b8bcaecb",
+  "desktop_viewport": [1280, 800],
+  "phone_viewport": [844, 390],
+  "keyboard_movement_world_units": 150.24866666666614,
+  "touch_movement_world_units": 183.0726666666679,
+  "observed_combo_clips": ["AttackA", "AttackB", "AttackA", "AttackC"],
+  "observed_other_clips": ["Power", "Dash", "Cast", "Ultimate"],
+  "simulation_contact_seconds": 0.035,
+  "clip_contacts_seconds": {"AttackA": 0.13333333333333333, "AttackB": 0.13333333333333333, "AttackC": 0.2, "Power": 0.2},
+  "party_portraits_loaded": true,
+  "keyboard_switch_to_water_and_back": true,
+  "touch_switch_to_water": true,
+  "touch_method": "Synthetic PointerEvents at live control positions, capture temporarily stubbed",
+  "probe": "Temporary ActorBody.play wrapper records calls and forwards arguments unchanged",
+  "evidence": ["renders/gameplay-desktop.mp4", "renders/gameplay-touch.mp4", "renders/gameplay-desktop.png", "renders/gameplay-touch.png"],
+  "snapshot_limitation": "Preview snapshot failed; recordings and extracted frames reviewed",
+  "physical_device_tested": false
+}

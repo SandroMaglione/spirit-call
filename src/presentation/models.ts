@@ -21,7 +21,7 @@ import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { arenaPropModels } from "./assets/arena-props.ts"
 import { enemyModels } from "./assets/enemies.ts"
-import { fireSpiritModel, iceSpiritModel, rockSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
+import { fireSpiritModel, iceSpiritModel, rockSpiritModel, sparkfistSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
 import { addGlow } from "./glow.ts"
 import type { GlowSpec } from "./glow.ts"
 
@@ -84,6 +84,14 @@ const rockGlow: GlowSpec = {
 
 /** Every model the game can show. Add new ones here (with their module in `assets/`). */
 export const models = {
+  sparkfistSpirit: {
+    ...sparkfistSpiritModel,
+    glow: {
+      rim: { color: 0x7953c5, strength: .35, power: 2.8 },
+      halo: { color: 0x7953c5, opacity: .18, size: 1.45 },
+      eyes: { nodes: ["Eye.L", "Eye.R"], color: 0xffe476, opacity: .35, size: .22 }
+    }
+  },
   iceSpirit: {
     ...iceSpiritModel,
     glow: {
