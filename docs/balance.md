@@ -5,6 +5,23 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Every character's own kit (2026-10-10)
+
+Every special and ultimate was reworked or given its own look (PR #117).
+`pnpm expected` beside main, two seeds: 176 of 180 runs cleared (main
+180), 153 perfect (main 155); most quests take far fewer hits (Powder Keg
+37 to 0, The Brute 24 to 3). The two left failing on a seed are a
+wind-heavy team (Windwall, Swordsman, Gunner) against juggernauts, which
+resist wind and must be broken: Ironclad rank 2 (main cleared it taking
+43 and 29 hits against a budget of 2) and The Colossus rank 2. Read solo
+(the 8 matrix quests, seed 1337), the Windwall first cleared 5 to 6 of 8
+skilled: the Wind Mantle was up half the time and only struck what
+touched it, the Sky Lift takes the lifted out of reach. Its current now
+strikes 36% ATK (from 24%) over a reach of 64 (from 56), and it comes
+back after 12 s (from 16 s), so it is up 8 s of every 12: 7 of 8 skilled
+at 1.37 of the median time (her barriers' 1.37), 2 of 8 learning. The
+Gunner's Overdrive: 8 of 8 at 0.94. The Tidecaller: 8 of 8 at 1.14.
+
 ## Quarry's Splinters, and the Hammer's reach (2026-10-10)
 
 Quarry's kit became Splinters (her blows throw rock splinters for 8 s) and

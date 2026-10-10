@@ -809,10 +809,10 @@ export const skills = {
    */
   galeWall: skill({
     name: "Wind Mantle",
-    cooldown: 16,
+    cooldown: 12,
     energy: 0,
     invulnerability: 0,
-    effect: mantle({ seconds: 8, radius: 56, reduce: 0.4, tick: 0.4, power: 24, element: "wind", knockback: 450, hitStop: 0, heavy: false })
+    effect: mantle({ seconds: 8, radius: 64, reduce: 0.4, tick: 0.4, power: 36, element: "wind", knockback: 450, hitStop: 0, heavy: false })
   }),
   /**
    * Windwall's ultimate (id `eyeOfTheStorm`, from when it was a ring of
