@@ -55,9 +55,10 @@
 .relic-prize__stars { display: inline-flex; gap: 1px; font-size: 12px; }
 .relic-prize.is-had .relic-prize__orb { animation: none; filter: grayscale(.6) brightness(.8); }
 .relic-prize.is-had .unlock-badge__glint { display: none; }
+/* As wide as the other sections: the full width, past the body's padding on each side. */
+.relic-prize--button.brief-section { width: calc(100% + 28px); }
 .relic-prize--button { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .relic-prize__icon .face { width: 40px; height: 40px; }
-.goal--perfect .amounts { margin-left: 6px; }
 .relic-prize.is-had .relic-prize__ring { animation: none; }
 /* All three in one run: the stars glow as one. */
 .stars.is-perfect { filter: drop-shadow(0 0 4px var(--gold-hi)); }
@@ -116,9 +117,8 @@
 .roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); overflow-x: auto; scrollbar-width: none; }
 .roster::-webkit-scrollbar { display: none; }
 /* The roster takes a fixed share of the bar and scrolls within it as the cast grows; the name and the close button keep their places. */
-/* The name keeps its width; the roster takes what is left between it and the end, up to 330px, scrolling beyond. */
-.character .topbar { grid-template-columns: auto minmax(0, 1fr) auto; }
-.character .topbar__fill > .roster { max-width: min(330px, calc(100% + 16px)); }
+/* The roster stays put whoever is shown: both sides keep room for their widest (the title, the gold and close), and it takes the middle, up to 330px, scrolling beyond. */
+.character .topbar { grid-template-columns: minmax(190px, 1fr) minmax(0, 330px) minmax(190px, 1fr); }
 .character .topbar__fill { justify-content: safe center; }
 .character .roster { -webkit-mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); }
 /* The roster stands in the middle of the bar whatever sits beside it (a longer name, the gold shown only for one owned), so the faces never shift. */
@@ -329,7 +329,10 @@
 .quests__goals > div { gap: 2px; }
 .quests__brief .panel__body { padding-top: 14px; padding-bottom: 10px; }
 .quests__goals > .quests__side-by-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
-.claimed { display: inline-flex; align-items: center; gap: 4px; }
+.claimed { display: inline-flex; align-items: center; margin-left: 6px; vertical-align: -2px; }
+.quests__rewards .label > span:first-child, .relic-prize .label > span:first-child { display: inline-flex; align-items: center; }
+.quests__rewards .label .goal__stars { margin-right: 6px; color: var(--gold-hi); }
+.quests__rewards .label .goal__stars .menu-icon { font-size: 11px; }
 .claimed .menu-icon { color: var(--up); }
 /* A first clear already claimed: still listed, dimmed. */
 .is-claimed { opacity: 0.55; }
