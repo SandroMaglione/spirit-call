@@ -138,7 +138,7 @@
   "static_sha256": "0c26ed80097107c60a16d4b4edb205191486a70ab184d16d0e21f57393b2e254",
   "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2",
   "revision_comparison": {
-    "baseline_commit": "0b282d3",
+    "baseline_commit": "72bec23",
     "unchanged_clip_channels": [
       "Idle",
       "Run",

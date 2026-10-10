@@ -156,11 +156,11 @@
     "revised_actions": "renders/hearth-impact-preview.mp4"
   },
   "playback": "Actual animated GLB in the network browser. All ten clips, 28 seconds, 1280 x 900 at 30 fps. Impact cut excludes locomotion, dash and hurt.",
-  "prior_touch_review": "Synthetic touch orbit passed in the initial animation review at 0b282d3. The orbit controls are unchanged. No physical-device evidence.",
+  "prior_touch_review": "Synthetic touch orbit passed in the initial animation review, now preserved at 72bec23 after rebase. The orbit controls are unchanged. No physical-device evidence.",
   "snapshot_tool": "Desktop snapshot failed; phone screenshots and recording succeeded. Desktop image is a recording frame.",
   "checks": [
     "Blender export sampled at 120 Hz",
-    "Compared Idle, Run, Dash, Hurt against 0b282d3: decoded channels identical",
+    "Compared Idle, Run, Dash, Hurt against 72bec23: decoded channels identical",
     "Rest geometry, colors, rigid bowl and contact frames preserved",
     "All six revised actions have larger peak flame volume",
     "pnpm check --maxWorkers=2: 565 passed, 1 skipped"

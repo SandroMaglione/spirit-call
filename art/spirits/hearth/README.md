@@ -150,7 +150,7 @@ The animated inspector is `/art/spirits/hearth/animation.html`.
 `render.py -- front,hero` renders only those named views for iteration.
 The scripts are self-contained and do not change the shared spirit tools.
 To compare the impact revision with the initial animation export, run
-`verify_animation.py -- 0b282d3` through Blender. The optional comparison
+`verify_animation.py -- 72bec23` through Blender. The optional comparison
 reads that local commit and checks the unchanged clip channels, clip
 lengths and increased flame volume in all six revised actions.
 
