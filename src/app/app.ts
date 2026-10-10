@@ -54,6 +54,23 @@ export interface App {
 }
 
 /**
+ * Holds the save for this page as long as it is open, so only one tab of the
+ * game plays at a time (two would save over each other's progress): `false`
+ * when another tab already holds it. Where the browser cannot tell (no Web
+ * Locks, as over a local network's plain HTTP), every tab plays.
+ */
+export const holdSave = (): Promise<boolean> =>
+  typeof navigator === "undefined" || navigator.locks === undefined
+    ? Promise.resolve(true)
+    : new Promise((held) => {
+      void navigator.locks.request("shooter.save", { ifAvailable: true }, (lock) => {
+        held(lock !== null)
+        // Kept until the page goes.
+        return lock === null ? undefined : new Promise<void>(() => {})
+      })
+    })
+
+/**
  * Starts the app runtime over this device's storage, and loads the account.
  * A playtest build loads its sender here; in a release build `SHOOTER_PLAYTEST`
  * is `null` as it is built, so the import is left out of the bundle.

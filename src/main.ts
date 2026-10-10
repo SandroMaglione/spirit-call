@@ -6,7 +6,7 @@ import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
-import { startApp } from "./app/app.ts"
+import { holdSave, startApp } from "./app/app.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
 import { mountUi } from "./ui/mount.tsx"
@@ -62,7 +62,14 @@ const start = async (mount: HTMLElement) => {
   const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
   const tuning = waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
-  // The account is saved on this device; the menu starts from its last selection.
+  // The account is saved on this device, by one tab at a time; the menu starts from its last selection.
+  if (!(await holdSave())) {
+    const message = document.createElement("p")
+    message.className = "boot-error"
+    message.textContent = "The game is already open in another tab. Close it there to play here."
+    mount.append(message)
+    return
+  }
   const shell = await startApp()
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
