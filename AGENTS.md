@@ -35,10 +35,11 @@ keeps them, and releasing).
   `deploy/`, `pnpm alchemy deploy` builds and deploys your own stage
   (`live_<user>`, with a database of its own); `pnpm alchemy destroy`
   removes it. CI (`.github/workflows/deploy.yml`) deploys a `pr-<n>`
-  preview per pull request (with its own database), and `prod` only when
-  started by hand from main (it applies the playtest database's migrations,
-  `deploy/stacks/database.ts`, first), every stage a playtest build until
-  the release, building against the published
+  preview per pull request (a playtest build with its own database), and,
+  only when started by hand from main, `prod` (the release, sending
+  nothing) or `playtest` (the testers' game, sending their runs; it applies
+  the playtest database's migrations, `deploy/stacks/database.ts`, first),
+  building against the published
   bevy-ts release in package.json `bevyTsRelease`
   (`scripts/use-published-bevy-ts.ts` does the swap). Its Cloudflare
   secrets come from `deploy/stacks/github.ts`. Moving to a newer bevy-ts

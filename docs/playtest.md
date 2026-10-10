@@ -47,8 +47,16 @@ The build decides, in `vite.config.ts`:
   kinds and fails if the release build carries any of it; `pnpm check`
   runs it.
 
-Every stage deployed to Cloudflare (`deploy/alchemy.run.ts`) is a playtest
-build until the release (see "Releasing").
+On Cloudflare (`deploy/alchemy.run.ts`), each stage is one or the other:
+
+- **`prod`, the release**: a release build, sending nothing; its Worker has
+  no key and refuses every run.
+- **`playtest`, the testers' game**: a playtest build, its runs kept in the
+  playtest database.
+- **A pull request's preview** (`pr-<n>`) or a laptop's own stage: a
+  playtest build with a database of its own.
+
+Both `prod` and `playtest` deploy from main, by hand (see "Releasing").
 
 ## What a run carries
 
@@ -109,19 +117,20 @@ its own origin: the server answers CORS for Capacitor's
 
 ## The database
 
-Prod's runs go to the playtest database, its own Alchemy stack
-(`deploy/stacks/database.ts`, stage `shared`) that prod binds to by
-reference. Every other stage (a pull request's preview, a laptop's
-deployed stage) makes a database of its own with the same migrations,
-destroyed with it, so only prod's runs are testers'.
+The testers' runs (the `playtest` stage's) go to the playtest database,
+its own Alchemy stack (`deploy/stacks/database.ts`, stage `shared`) that
+the stage binds to by reference (prod binds it too, and never writes).
+Every other stage (a pull request's preview, a laptop's deployed stage)
+makes a database of its own with the same migrations, destroyed with it,
+so only the `playtest` stage's runs are testers'.
 
 - **One row a run** (`runs`, with what it earned as JSON), and its team,
   waves, what hurt, skills, and falls in their own tables
   (`migrations/0001_playtest.sql`).
 - **Content ids are `TEXT`.** A run naming content the server's build does
   not know is refused as it arrives.
-- **Migrations only add** and never change once merged. Deploying prod
-  (by hand, see "Releasing") applies new ones first.
+- **Migrations only add** and never change once merged. Deploying prod or
+  playtest (by hand, see "Releasing") applies new ones first.
 - **Logs stop growing.** Each device's last 200 runs keep their whole log
   (`keptLogs`); older runs keep their row and their team, and lose their
   waves, hurts, skills, and falls.
@@ -150,7 +159,8 @@ Both take `--since 2d` (or a date), `--tester`, `--device`, `--build`, and
 - **the deployed database**, with a read-only key: a Cloudflare token
   allowed only to read D1, made by `deploy/stacks/reader.ts` from a laptop
   with the admin profile and saved to `.env.database` (gitignored, readable
-  by its owner only). Prod's by default, `--stage pr-12` for a preview's.
+  by its owner only). The testers' by default, `--stage pr-12` for a
+  preview's.
   Destroying the stack revokes it.
 - **the dev server's database** with `--local` (`.data/playtest.sqlite`).
 
@@ -159,19 +169,21 @@ Both take `--since 2d` (or a date), `--tester`, `--device`, `--build`, and
 The game is a finished release (`vision.md`): it changes only when its
 developer decides, and nothing changes it on its own.
 
-- **Prod deploys by hand**: Actions, "Deploy", run from main (it applies
-  the playtest database's new migrations, then deploys). Merging to main
-  deploys nothing; pull requests still get their previews.
+- **Prod and playtest deploy by hand**: Actions, "Deploy", run from main,
+  picking the stage (it applies the playtest database's new migrations,
+  then deploys). Merging to main deploys nothing; pull requests still get
+  their previews.
 - **bevy-ts stays at `bevyTsRelease`**; `.github/workflows/bevy-ts.yml`
   moves it to a newer release only when started by hand.
 - **Dev tools are a dev build's** (`pnpm dev`): the tuning panel and its
   saved numbers, the URL's quick starts and tools, and the monitor are not
   in a built game.
-- **The release** (the day is written here when it comes): the hosted game
-  is built without `PLAYTEST_KEY` (a release build), so it sends nothing;
-  the Worker's `/api/` route and the playtest database can then go. From
-  then on, a change to the save's shape needs a save migration (see
-  [saves.md](saves.md)), and shipped content ids are permanent.
+- **The release** is `prod`, built without `PLAYTEST_KEY`, so it sends
+  nothing. When playtesting ends (the day is written here when it comes),
+  the `playtest` stage, the Worker's `/api/` route, and the playtest
+  database can go. Once players have the release, a change to the save's
+  shape needs a save migration (see [saves.md](saves.md)), and shipped
+  content ids are permanent.
 
 ## On a laptop
 

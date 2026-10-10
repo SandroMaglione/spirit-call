@@ -10,8 +10,9 @@ import { DatabaseSync } from "node:sqlite"
 
 export type Query = <Row = Record<string, unknown>>(sql: string, params?: ReadonlyArray<unknown>) => Promise<Array<Row>>
 
-/** The deployed database of `stage` (prod's when absent), as deploy/alchemy.run.ts names it. */
-export const databaseName = (stage: string | undefined) => (stage === undefined || stage === "prod" ? "top-down-team-shooter-playtest" : `top-down-team-shooter-playtest-${stage}`)
+/** The deployed database of `stage` (the testers', `playtest`'s, when absent), as deploy/alchemy.run.ts names it. */
+export const databaseName = (stage: string | undefined) =>
+  stage === undefined || stage === "playtest" || stage === "prod" ? "top-down-team-shooter-playtest" : `top-down-team-shooter-playtest-${stage}`
 
 /** The key, from the environment or `.env.database`. */
 const key = (): { readonly account: string; readonly token: string } => {

@@ -1,11 +1,12 @@
-// The playtest database (see docs/playtest.md): the runs playtest builds
-// send to prod, kept for tuning. Prod binds to it by reference
-// (deploy/alchemy.run.ts); every other stage makes a database of its own.
+// The playtest database (see docs/playtest.md): the runs testers' playtest
+// builds send to the `playtest` stage, kept for tuning. That stage binds to
+// it by reference (deploy/alchemy.run.ts; prod binds it too, and never
+// writes); every other stage makes a database of its own.
 // It is its own stack so that no stage of the game owns it: destroying a
 // preview never touches it.
 //
 // Deploying it applies the migrations it has not had yet (src/server/migrations,
-// additive only); CI does that from main before deploying prod:
+// additive only); CI does that from main before deploying prod or playtest:
 //
 //   pnpm alchemy deploy --config stacks/database.ts --stage shared
 import { fileURLToPath } from "node:url"
