@@ -1,0 +1,6 @@
+{
+  "front_silhouette_iou": 0.9072686445125151,
+  "alignment": "Fixed traced coordinates, one uniform pixel scale; native camera turn 16 deg, elevation 0 deg.",
+  "limitations": "Mask overlap only. Does not measure color, depth or view consistency. Oblique side/rear images are qualitative references.",
+  "asset_sha256": "e2b691c1b8dc29de3f5565812c83d48c0173cd4e29a9ad6362bffd5976c95e69"
+}

@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "triangles": 2374,
+  "materials": 2,
+  "named_meshes": 9,
+  "primitives": 9,
+  "dimensions_m": {
+    "width": 0.6292983889579773,
+    "depth": 0.30416399240493774,
+    "height": 0.6000000238418579
+  },
+  "native_topology": [
+    {
+      "name": "WaterCore",
+      "triangles": 320,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Shell.Main",
+      "triangles": 156,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Shell.Right",
+      "triangles": 132,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Shell.Crest",
+      "triangles": 576,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Fin.Upper",
+      "triangles": 14,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Fin.Tail",
+      "triangles": 14,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Fin.Lower",
+      "triangles": 10,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Eye.L",
+      "triangles": 576,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Eye.R",
+      "triangles": 576,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    }
+  ],
+  "round_trip_bounds_native_z_up": {
+    "min": [
+      -0.3768318295478821,
+      -0.15994785726070404,
+      0.0
+    ],
+    "max": [
+      0.2524665594100952,
+      0.1442161500453949,
+      0.6000000238418579
+    ]
+  },
+  "animations": 0,
+  "skins": 0,
+  "textures": 0,
+  "helpers": 0,
+  "glb_faces_positive_z": true,
+  "sha256": "e2b691c1b8dc29de3f5565812c83d48c0173cd4e29a9ad6362bffd5976c95e69"
+}
