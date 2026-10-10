@@ -75,10 +75,10 @@ const Login = ({ signIn, done }: { readonly signIn: SignIn; readonly done: (user
         <span class="login__label">{current === "recover" ? "New password" : "Password"}</span>
         <input class="text-input" name="password" type="password" autocomplete={current === "logIn" ? "current-password" : "new-password"} required value={password.value} onInput={(event) => (password.value = event.currentTarget.value)} />
       </label>
+      {current === "logIn" && <button type="button" class="login__link" onClick={() => switchTo("recover")}>Forgot your password?</button>}
       {problem.value !== null && <p class="login__problem" role="alert">{problem.value}</p>}
       <div class="login__actions">
         <Pill tone="dark" size="small" onClick={() => switchTo(current === "logIn" ? "signUp" : "logIn")}>{current === "logIn" ? "New here? Create one" : "I have an account"}</Pill>
-        {current === "logIn" && <Pill tone="dark" size="small" onClick={() => switchTo("recover")}>Forgot it?</Pill>}
         <button type="submit" class="pill" disabled={busy.value}><span class="pill__label">{submits[current]}</span></button>
       </div>
     </form>
