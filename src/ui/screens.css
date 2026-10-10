@@ -10,6 +10,13 @@
 .enemies { display: flex; gap: 8px; padding: 3px; margin: -3px; }
 .enemies__one { display: grid; gap: 2px; justify-items: center; flex: none; }
 .amounts__unlocks { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; }
+/* Compact: the badges in line with the amounts, at their size. */
+.amounts--compact .amounts__unlocks { flex-basis: auto; margin-top: 0; gap: 4px 8px; }
+.amounts--compact .amounts__unlock { min-height: 0; }
+.unlock-badge--small { width: 26px; height: 26px; }
+.amounts .unlock-badge--small .face { box-shadow: none; }
+.unlock-badge--small .unlock-badge__aspect { width: 21px; height: 21px; font-size: 13px; }
+.unlock-badge--small .unlock-badge__glint { inset: 2px; }
 .amounts__unlock { display: flex; align-items: center; gap: 8px; font-weight: 800; min-height: 28px; color: var(--gold-hi); }
 /* A reward that makes something yours (a character, an aspect): a prize, in a turning gold ring that pulses, with a passing glint. */
 .unlock-badge { position: relative; width: 34px; height: 34px; display: grid; place-items: center; flex: none; border-radius: 50%; animation: unlock-pulse 2.4s ease-in-out infinite; }
@@ -50,7 +57,7 @@
 .relic-prize.is-had .unlock-badge__glint { display: none; }
 .relic-prize--button { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .relic-prize__icon .face { width: 40px; height: 40px; }
-.goal--perfect .amounts { margin-left: auto; }
+.goal--perfect .amounts { margin-left: 6px; }
 .relic-prize.is-had .relic-prize__ring { animation: none; }
 /* All three in one run: the stars glow as one. */
 .stars.is-perfect { filter: drop-shadow(0 0 4px var(--gold-hi)); }
@@ -109,7 +116,9 @@
 .roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); overflow-x: auto; scrollbar-width: none; }
 .roster::-webkit-scrollbar { display: none; }
 /* The roster takes a fixed share of the bar and scrolls within it as the cast grows; the name and the close button keep their places. */
-.character .topbar { grid-template-columns: minmax(0, 1fr) minmax(0, 330px) minmax(0, 1fr); }
+/* The name keeps its width; the roster takes what is left between it and the end, up to 330px, scrolling beyond. */
+.character .topbar { grid-template-columns: auto minmax(0, 1fr) auto; }
+.character .topbar__fill > .roster { max-width: min(330px, calc(100% + 16px)); }
 .character .topbar__fill { justify-content: safe center; }
 .character .roster { -webkit-mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); }
 /* The roster stands in the middle of the bar whatever sits beside it (a longer name, the gold shown only for one owned), so the faces never shift. */
