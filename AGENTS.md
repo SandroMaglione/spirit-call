@@ -24,8 +24,9 @@ keeps them, and releasing).
 - `pnpm dev --host --port 5199`: dev server, reachable from a phone on the
   same network (plain HTTP there is not a secure context: no
   `crypto.randomUUID`, clipboard, and similar).
-  The account is saved in the browser (see `docs/saves.md`; clear the
-  site's data to start over). A dev build is a playtest build: its runs go
+  Accounts are saved in the browser, as many as you make (see
+  `docs/saves.md`; delete one from the list, or clear the site's data to
+  start over). A dev build is a playtest build: its runs go
   to the dev server's own `/api`, over a local SQLite file
   (`.data/playtest.sqlite`, see `docs/playtest.md`).
 - `pnpm check`: typecheck, lint, and tests. Run it before every commit.

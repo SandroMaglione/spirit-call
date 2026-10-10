@@ -1,14 +1,21 @@
 # Saves
 
-The account lives on the player's device (see [vision.md](vision.md)):
-there is no login, and nothing of it is on a server. The game loads it as
-it starts, runs every change through the account's rules
+The accounts live on the player's device (see [vision.md](vision.md)):
+there is no login, and nothing of them is on a server. A device holds as
+many accounts as the player makes, each a name with its own progress. The
+game opens on the list of them (`src/ui/Accounts.tsx`): pick one to play,
+make one (a name, no password), or delete one. The game then loads the one
+picked, runs every change through the account's rules
 (`src/account/account.ts`), and saves the whole account after each one.
+Settings, Account, "Switch account" goes back to the list.
 
 ## Where things are
 
-- `src/account/account-store.ts`: **the account store** (`AccountStore`):
-  loads the save (or starts a new account) and saves the account whole, one
+- `src/account/account-list.ts`: **the accounts on this device**
+  (`AccountList`): their names, and when each was made and last played;
+  making and deleting them.
+- `src/account/account-store.ts`: **one account's store** (`AccountStore`):
+  loads its save (or starts a new account) and saves the account whole, one
   save at a time, in order.
 - `src/account/settings.ts`: **the device's settings** (sound), saved the
   same way.
@@ -33,17 +40,18 @@ changes. Tests give an in-memory one (`KeyValueStore.layerMemory`).
 
 | Key | What |
 | --- | --- |
-| `shooter.account` | The account. |
+| `shooter.accounts` | The list of accounts: each one's id, name, and when it was made and last played. |
+| `shooter.account.<id>` | One account. |
 | `shooter.settings` | The device's settings. |
 | `shooter.playtest.outbox`, `.device`, `.tester` | A playtest build's runs waiting to be sent, and who is playing (see [playtest.md](playtest.md)). |
 | `<key>.unreadable` | A save that could not be read, set aside. |
 
 ## Loading never fails
 
-- **No save**: a new account (the starter set, `content/account.ts`), with a
-  random id.
+- **No save**: a new account (the starter set, `content/account.ts`), by
+  the id the list gave it.
 - **A save that cannot be read** (broken, or from a newer version of the
-  game than this one): it is set aside under `shooter.account.unreadable`,
+  game than this one): it is set aside under `shooter.account.<id>.unreadable`,
   never overwritten, and a new account starts, with a notice on the home
   screen.
 - **An older save** is brought to the latest shape, one version at a time
@@ -54,6 +62,12 @@ changes. Tests give an in-memory one (`KeyValueStore.layerMemory`).
   home screen says what was done.
 
 What loading repaired or migrated is saved at once.
+
+The list loads the same way: one that cannot be read is set aside
+(`shooter.accounts.unreadable`) and the device starts with none. A device
+that played before it could hold several accounts has one save under
+`shooter.account`: it joins the list as "Player" the first time the list is
+read.
 
 ## Changing the save's shape
 
@@ -68,12 +82,13 @@ is no undoing an update, so:
 - **Content changes need no migration** of their own: `fromRecord` repairs
   them. A renamed content id is the exception (see `AGENTS.md`).
 
-## One tab at a time
+## One tab per account
 
-Two tabs of the game in one browser would share one save and write over
-each other's progress, so the first tab holds the save (a Web Lock,
-`holdSave`) and any other says the game is open elsewhere. Over a local
-network's plain HTTP the browser has no Web Locks, and every tab plays.
+Two tabs playing one account would write over each other's progress, so the
+tab that picks an account holds it (a Web Lock, `holdAccount`), and another
+tab picking it is told it is open elsewhere. Two tabs may play two accounts.
+Over a local network's plain HTTP the browser has no Web Locks, and nothing
+is held.
 
 ## When a save fails
 
@@ -83,5 +98,5 @@ the whole account again.
 
 ## Not yet
 
-- **Moving a save** to another device (export and import) is left for
+- **Moving an account** to another device (export and import) is left for
   later.
