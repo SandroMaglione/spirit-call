@@ -1,0 +1,81 @@
+{
+  "passed": true,
+  "sample_rate_hz": 120,
+  "triangles": 416,
+  "materials": 3,
+  "clips": {
+    "Idle": {
+      "seconds": 1.9666666666666666,
+      "channels": 12,
+      "min_height_m": 0.04025749566729824,
+      "min_crystal_gap_m": 0.0146172739701773,
+      "returns_to_rest": false
+    },
+    "Run": {
+      "seconds": 0.5,
+      "channels": 10,
+      "min_height_m": 0.04142616444769467,
+      "min_crystal_gap_m": 0.014618811238173268,
+      "returns_to_rest": false
+    },
+    "AttackA": {
+      "seconds": 0.36666666666666664,
+      "channels": 13,
+      "min_height_m": 0.033065684052479324,
+      "min_crystal_gap_m": 0.01638212054967879,
+      "returns_to_rest": true
+    },
+    "AttackB": {
+      "seconds": 0.36666666666666664,
+      "channels": 13,
+      "min_height_m": 0.033065684052479324,
+      "min_crystal_gap_m": 0.01638212054967879,
+      "returns_to_rest": true
+    },
+    "AttackC": {
+      "seconds": 0.5333333333333333,
+      "channels": 13,
+      "min_height_m": 0.030133452288603334,
+      "min_crystal_gap_m": 0.01638212054967879,
+      "returns_to_rest": true
+    },
+    "Power": {
+      "seconds": 0.5333333333333333,
+      "channels": 13,
+      "min_height_m": 0.027131424244195828,
+      "min_crystal_gap_m": 0.01638212054967879,
+      "returns_to_rest": true
+    },
+    "Dash": {
+      "seconds": 0.36666666666666664,
+      "channels": 10,
+      "min_height_m": 0.03875009966473525,
+      "min_crystal_gap_m": 0.016382120549678775,
+      "returns_to_rest": true
+    },
+    "Hurt": {
+      "seconds": 0.3,
+      "channels": 13,
+      "min_height_m": 0.0230972676627138,
+      "min_crystal_gap_m": 0.016382120549678802,
+      "returns_to_rest": true
+    },
+    "Cast": {
+      "seconds": 0.36666666666666664,
+      "channels": 13,
+      "min_height_m": 0.040000006556510925,
+      "min_crystal_gap_m": 0.016382120549678802,
+      "returns_to_rest": true
+    },
+    "Ultimate": {
+      "seconds": 0.5666666666666667,
+      "channels": 13,
+      "min_height_m": 0.03040001780457041,
+      "min_crystal_gap_m": 0.016382120549678802,
+      "returns_to_rest": true
+    }
+  },
+  "approved_geometry_and_palette_preserved": true,
+  "root_motion": false,
+  "glb_sha256": "23eb458a4b155831196b88d04d09db4a7f8f2d995dc5db88293094122942e354"
+}

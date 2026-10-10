@@ -19,6 +19,9 @@ import type { ResourceId } from "../content/currencies.ts"
 import type { RunLogValue, RunResultValue } from "../schema.ts"
 import { Content } from "./content.ts"
 
+/** How many of a player's runs keep their whole log (see `runWrites`). */
+export const keptLogs = 200
+
 const Text = Schema.String
 const Int = Schema.Number
 const Nullable = Schema.NullOr
@@ -118,6 +121,10 @@ export class Logs extends Context.Service<
         if (hurts.length > 0) statements.push(sql`INSERT INTO run_hurts ${sql.insert(hurts)}`)
         if (skills.length > 0) statements.push(sql`INSERT INTO run_skills ${sql.insert(skills)}`)
         if (knockouts.length > 0) statements.push(sql`INSERT INTO run_knockouts ${sql.insert(knockouts)}`)
+        // Only a player's last `keptLogs` runs keep their blow-by-blow logs: the older ones keep the run and who played it, so the tables stop growing.
+        for (const table of ["run_waves", "run_hurts", "run_skills", "run_knockouts"] as const) {
+          statements.push(sql`DELETE FROM ${sql(table)} WHERE run_id IN (SELECT id FROM runs WHERE user_id = ${userId} ORDER BY at DESC LIMIT -1 OFFSET ${keptLogs})`)
+        }
         return { id, statements }
       }
 

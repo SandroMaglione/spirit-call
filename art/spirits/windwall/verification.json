@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "blender_round_trip": true,
+  "closed_after_welding_color_seams": [
+    "Body",
+    "Cape.Lower.L",
+    "Cape.Lower.R",
+    "Cape.Upper.L",
+    "Cape.Upper.R",
+    "Crest.Side",
+    "Crest.Tall",
+    "Eye.L",
+    "Eye.R",
+    "Gem",
+    "Hood",
+    "Mantle.Back"
+  ],
+  "triangles": 416,
+  "bounds_blender": {
+    "min": [
+      -0.4057723581790924,
+      -0.12450406700372696,
+      0.040000006556510925
+    ],
+    "max": [
+      0.4057723581790924,
+      0.15563008189201355,
+      0.6600000262260437
+    ]
+  },
+  "hover_m": 0.040000006556510925,
+  "chest_crystal_gap_m": 0.016382120549678802,
+  "animations": 0,
+  "armatures": 0,
+  "cameras": 0,
+  "lights": 0
+}

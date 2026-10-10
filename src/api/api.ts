@@ -28,10 +28,16 @@ export const Password = Schema.String.check(Schema.isMinLength(8, { message: "A 
 
 export const Credentials = Schema.Struct({ username: Username, password: Password })
 export const Player = Schema.Struct({ username: Schema.String })
+/** A player and her recovery code, shown to her once: on signing up, and on recovering (a new one each time). */
+export const NewPlayer = Schema.Struct({ username: Schema.String, recoveryCode: Schema.String })
+/** What setting a new password with a recovery code asks. */
+export const Recovery = Schema.Struct({ username: Username, code: Schema.String.check(Schema.isMaxLength(64)), password: Password })
 
 export class Unauthorized extends Schema.TaggedError<Unauthorized>()("Unauthorized", {}, { httpApiStatus: 401 }) {}
 export class UsernameTaken extends Schema.TaggedError<UsernameTaken>()("UsernameTaken", {}, { httpApiStatus: 409 }) {}
 export class WrongCredentials extends Schema.TaggedError<WrongCredentials>()("WrongCredentials", {}, { httpApiStatus: 401 }) {}
+/** Too many attempts from one address in a while (see `attemptLimits`): try again later. */
+export class TooManyAttempts extends Schema.TaggedError<TooManyAttempts>()("TooManyAttempts", {}, { httpApiStatus: 429 }) {}
 
 /** The session cookie. */
 export const sessionCookie = HttpApiSecurity.apiKey({ key: "session", in: "cookie" })
@@ -46,10 +52,12 @@ export class Authorization extends HttpApiMiddleware.Service<Authorization, { pr
 
 export class PlayersApi extends HttpApiGroup.make("players")
   .add(
-    /** Signs up (the username must be free) and logs in. */
-    HttpApiEndpoint.post("signUp", "/users", { payload: Credentials, success: Player.pipe(HttpApiSchema.status(201)), error: UsernameTaken }),
+    /** Signs up (the username must be free) and logs in: the answer carries the recovery code, shown once. */
+    HttpApiEndpoint.post("signUp", "/users", { payload: Credentials, success: NewPlayer.pipe(HttpApiSchema.status(201)), error: [UsernameTaken, TooManyAttempts] }),
     /** Logs in. */
-    HttpApiEndpoint.post("logIn", "/sessions", { payload: Credentials, success: Player, error: WrongCredentials })
+    HttpApiEndpoint.post("logIn", "/sessions", { payload: Credentials, success: Player, error: [WrongCredentials, TooManyAttempts] }),
+    /** Sets a new password with the recovery code, and logs in: the answer carries a new recovery code (every other session closes). */
+    HttpApiEndpoint.post("recover", "/recovery", { payload: Recovery, success: NewPlayer, error: [WrongCredentials, TooManyAttempts] })
   )
   .prefix("/api")
 {}

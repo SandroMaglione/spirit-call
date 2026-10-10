@@ -17,5 +17,5 @@
   },
   "runtime_contact_test": "Puppet reaches AttackC's exported frame 6 pose after Run, including bowl rotation, flame scale and support transforms",
   "source_audit": "All ten clips sampled at 120 Hz; rest geometry and colors preserved; rigid bowl; no horizontal root motion; minimum ground clearance 0.0478 m",
-  "checks": {"files_passed": 83, "tests_passed": 706, "tests_skipped": 1, "build": "passed", "basis": "After merging current main with Quarry's integration"}
+  "checks": {"files_passed": 83, "tests_passed": 710, "tests_skipped": 1, "build": "passed", "basis": "After merging current main with Quarry and Windwall integrations"}
 }

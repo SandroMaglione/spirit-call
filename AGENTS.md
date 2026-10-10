@@ -29,16 +29,16 @@ support is set up;
 - Deploying (Cloudflare, with Alchemy): `deploy/` is its own package
   (`pnpm --dir deploy install`) holding `deploy/alchemy.run.ts`. From
   `deploy/`, `pnpm alchemy deploy` builds and deploys your own stage
-  (`live_<user>`); `pnpm alchemy destroy` removes it. CI
-  (`.github/workflows/deploy.yml`) deploys `prod` from main and a `pr-<n>`
-  preview per pull request, building against the published bevy-ts release
-  in package.json `bevyTsRelease` (`scripts/use-published-bevy-ts.ts` does
-  the swap). Its Cloudflare secrets come from `deploy/stacks/github.ts`.
-  Every stage shares one database (`deploy/stacks/database.ts`), which
-  main's CI deploys (applying new migrations) before prod.
-  Bumping `bevyTsRelease` is automatic: `.github/workflows/bevy-ts.yml`
-  checks npm hourly, checks the game against a new release, commits the
-  bump to main, and deploys prod.
+  (`live_<user>`, with a database of its own); `pnpm alchemy destroy`
+  removes it. CI (`.github/workflows/deploy.yml`) deploys a `pr-<n>`
+  preview per pull request (with its own database), and `prod` only when
+  started by hand from main (it applies the players' database's migrations,
+  `deploy/stacks/database.ts`, first), building against the published
+  bevy-ts release in package.json `bevyTsRelease`
+  (`scripts/use-published-bevy-ts.ts` does the swap). Its Cloudflare
+  secrets come from `deploy/stacks/github.ts`. Moving to a newer bevy-ts
+  release is by hand too (`.github/workflows/bevy-ts.yml`). See
+  `docs/server.md`, "Releasing".
 - `pnpm effect-source`: puts the source of the Effect release the game
   uses in `.repos/effect` (a single-commit copy of github.com/Effect-TS/effect
   at the installed version's tag, gitignored; rerun after upgrading Effect).
@@ -73,7 +73,7 @@ support is set up;
 - `/tools/progress/` on the dev server: a dev-only design aid projecting a
   new account's journey from the game's numbers, editable live (see
   `tools/progress/README.md`). It never edits content or ships.
-- `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
+- In a dev build only (`pnpm dev`): `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
   `?character=`, `?aspect=`, `?challenge=` for a quick start, and `?arena=` to
   fight every challenge in one arena, `?wave=4` to start every challenge at a
   wave, and `?charged` to keep the

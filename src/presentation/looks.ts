@@ -217,8 +217,12 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   },
   // Opposing crescents frame Tidewarden's dark core; keep the sheet's own colors.
   tidewarden: { ...waterSpirit, model: "waterCrescent", moments: spiritMoments(4, "brace", "floodgate") },
-  // A placeholder until her own spirit: the wind spirit, a paler, cooler air.
-  windwall: { ...windSpirit, moments: spiritMoments(3, "galeWall", "eyeOfTheStorm"), tint: { hue: 25, saturation: 0.75, lightness: 1.1 } },
+  // The cream hood and mint cape keep the approved sheet palette.
+  windwall: {
+    kind: "model", model: "windwallSpirit", widthFactor: 1.5, heightFactor: view.bodyHeightFactor,
+    moments: spiritMoments(3, "galeWall", "eyeOfTheStorm"), eyes: spiritEyes,
+    drops: { rate: 24, colors: [0x5ee6c4, 0x2cb9a6, 0xb7f4a7], size: 1.8, kind: "wisp" }
+  },
   // Hearth's floating brazier keeps its stone facets and warm flame colors from the sheet.
   hearth: {
     kind: "model", model: "hearthSpirit", widthFactor: 1.5, heightFactor: view.bodyHeightFactor,

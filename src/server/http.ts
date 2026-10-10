@@ -11,6 +11,7 @@ import * as Redacted from "effect/Redacted"
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder"
 import * as HttpRouter from "effect/http/HttpRouter"
 import * as HttpServer from "effect/http/HttpServer"
+import * as HttpServerRequest from "effect/http/HttpServerRequest"
 import type * as SqlClient from "effect/sql/SqlClient"
 
 import type { Account } from "../account/account.ts"
@@ -42,6 +43,12 @@ const AuthorizationLive = Layer.effect(
   })
 )
 
+/** Where a request comes from: the address Cloudflare saw (a laptop's, or a test's, is all one). */
+const addressOf = Effect.gen(function*() {
+  const request = yield* HttpServerRequest.HttpServerRequest
+  return request.headers["cf-connecting-ip"] ?? "local"
+})
+
 /** Sets the session cookie (an empty one that expires at once, to log out). */
 const setSession = (config: ServerConfig["Service"], session: Session | null) =>
   HttpApiBuilder.securitySetCookie(sessionCookie, session?.token ?? "", {
@@ -61,17 +68,27 @@ const PlayersLive = HttpApiBuilder.group(
     return handlers
       .handle("signUp", ({ payload }) =>
         Effect.gen(function*() {
+          yield* players.attempt("signUp", yield* addressOf)
           const session = yield* players.signUp(payload.username, payload.password)
           yield* accounts.create(session.player.id)
           yield* setSession(config, session)
-          return { username: session.player.username }
+          return { username: session.player.username, recoveryCode: session.recoveryCode }
         })
       )
       .handle("logIn", ({ payload }) =>
         Effect.gen(function*() {
+          yield* players.attempt("logIn", yield* addressOf)
           const session = yield* players.logIn(payload.username, payload.password)
           yield* setSession(config, session)
           return { username: session.player.username }
+        })
+      )
+      .handle("recover", ({ payload }) =>
+        Effect.gen(function*() {
+          yield* players.attempt("recover", yield* addressOf)
+          const session = yield* players.recover(payload.username, payload.code, payload.password)
+          yield* setSession(config, session)
+          return { username: session.player.username, recoveryCode: session.recoveryCode }
         })
       )
   })
