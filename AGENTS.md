@@ -15,16 +15,19 @@ fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 owned, auditions, and the game's pace;
 `docs/roster.md`: who the characters are (element, class, role), and how
 support is set up;
-`docs/server.md`: the server, the API, players, and the database).
+`docs/saves.md`: the account saved on the device, and its versions;
+`docs/playtest.md`: playtest builds, the runs they send, the server that
+keeps them, and releasing).
 
 ## Commands
 
 - `pnpm dev --host --port 5199`: dev server, reachable from a phone on the
   same network (plain HTTP there is not a secure context: no
   `crypto.randomUUID`, clipboard, and similar).
-  It also answers `/api` with the game's server over a local SQLite file
-  (`.data/dev.sqlite`, see `docs/server.md`): sign up as many players as
-  needed, and delete the file to start over.
+  The account is saved in the browser (see `docs/saves.md`; clear the
+  site's data to start over). A dev build is a playtest build: its runs go
+  to the dev server's own `/api`, over a local SQLite file
+  (`.data/playtest.sqlite`, see `docs/playtest.md`).
 - `pnpm check`: typecheck, lint, and tests. Run it before every commit.
 - Deploying (Cloudflare, with Alchemy): `deploy/` is its own package
   (`pnpm --dir deploy install`) holding `deploy/alchemy.run.ts`. From
@@ -32,13 +35,14 @@ support is set up;
   (`live_<user>`, with a database of its own); `pnpm alchemy destroy`
   removes it. CI (`.github/workflows/deploy.yml`) deploys a `pr-<n>`
   preview per pull request (with its own database), and `prod` only when
-  started by hand from main (it applies the players' database's migrations,
-  `deploy/stacks/database.ts`, first), building against the published
+  started by hand from main (it applies the playtest database's migrations,
+  `deploy/stacks/database.ts`, first), every stage a playtest build until
+  the release, building against the published
   bevy-ts release in package.json `bevyTsRelease`
   (`scripts/use-published-bevy-ts.ts` does the swap). Its Cloudflare
   secrets come from `deploy/stacks/github.ts`. Moving to a newer bevy-ts
   release is by hand too (`.github/workflows/bevy-ts.yml`). See
-  `docs/server.md`, "Releasing".
+  `docs/playtest.md`, "Releasing".
 - `pnpm effect-source`: puts the source of the Effect release the game
   uses in `.repos/effect` (a single-commit copy of github.com/Effect-TS/effect
   at the installed version's tag, gitignored; rerun after upgrading Effect).
@@ -46,15 +50,15 @@ support is set up;
   writing Effect code: `LLMS.md` and `ai-docs/` there are its own guides
   (services, errors, Schema, `HttpApi`, SQL, testing), and `packages/` its
   source, which is the truth when a guide and the code disagree.
-- `pnpm runs`: a player's runs as the server kept them, with their logs
-  (what hurt, skills, falls, by wave), or `--events` for the account's
-  gains and spending; logs in as the player (`RUNS_URL`, `RUNS_USERNAME`,
-  `RUNS_PASSWORD`, or `.env.runs`). Tune against these (see
-  `docs/server.md`).
-- `pnpm db`: every player's runs and account changes, read from the
-  database with the read-only key in `.env.database` (made by
-  `deploy/stacks/reader.ts`): `players`, `summary`, `runs`, `run <id>`,
-  `hurts`, `events`, `sql` (see `docs/server.md`, "Measuring play").
+- `pnpm runs`: testers' runs as playtest builds sent them, a line each with
+  their logs (what hurt, skills, falls, by wave). Tune against these (see
+  `docs/playtest.md`).
+- `pnpm db`: the same runs as tables: `testers`, `summary`, `runs`,
+  `run <id>`, `hurts`, `sql` (see `docs/playtest.md`, "Measuring play").
+  Both read the deployed playtest database with the read-only key in
+  `.env.database` (made by `deploy/stacks/reader.ts`), or the dev server's
+  with `--local`, and pick runs with `--tester`, `--device`, `--build`,
+  `--quest`, and `--since`.
 - `pnpm progression`: a new account played through the whole game on the
   account's rules (levels, farming, essence, trials, auditions, the
   collection; see `docs/collection.md`): the hour each thing arrives, when
@@ -78,7 +82,7 @@ support is set up;
   fight every challenge in one arena, `?wave=4` to start every challenge at a
   wave, and `?charged` to keep the
   team's energy full, to try ultimates); backquote (or the key left of 1 or of Z)
-  opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all").
+  opens the tuning panel (live numbers, spawns and elite spawns).
 
 ## How the code is organized
 
@@ -109,14 +113,18 @@ support is set up;
   (`src/ui/kit/`, and the game's own in `src/ui/menu/parts.tsx`), laid out
   for a phone in landscape and scaled as one piece: read `docs/menu-ui.md`
   before adding or changing one.
-- `src/account/`: the account's pure rules (`account.ts`), the
-  account as stored (`convert.ts`), and the device's own settings (Effect,
-  a `KeyValueStore`). The account itself lives on the server.
-- `src/api/` and `src/server/`: the game's HTTP API (Effect `HttpApi`,
-  shared by both sides) and the server (a Cloudflare Worker over D1; SQLite
-  locally): players, sessions, and the account in tables, every change one
-  of the account's rules (see `docs/server.md`). `src/app/app.ts` is the
-  game's side: the login, and the account through the API.
+- `src/account/`: the account's pure rules (`account.ts`), the account as
+  stored (`convert.ts`, `stored.ts`, with every version of the save), and
+  the stores that keep the account and the device's settings (Effect, over
+  a `KeyValueStore`; see `docs/saves.md`).
+- `src/app/`: the shell (`app.ts`): the Effect runtime, given where the
+  device keeps things (`storage.ts`, the one module a phone build swaps),
+  and plain functions for the rest of the game; and a playtest build's
+  sender (`playtest.ts`, `playtest-send.ts`).
+- `src/api/` and `src/server/`: the playtest API (Effect `HttpApi`, shared
+  by the sender and the server) and the server that keeps the runs
+  playtest builds send (a Cloudflare Worker over D1; SQLite locally; see
+  `docs/playtest.md`). A release build contains none of it.
 
 `tools/lint/plugin.mjs` enforces these boundaries (which part may import
 which, Effect imported by module, no clocks or `Math.random` in the
@@ -126,11 +134,11 @@ simulation); `pnpm check` runs it.
 
 - Commit after each step (small, focused commits with a message explaining
   why); push only when asked.
-- Shipped content ids are permanent: accounts (the server's tables) refer to them.
+- Shipped content ids are permanent: saves on players' devices refer to them.
   `test/content-ids.json` lists them; add new ids there, and never rename or
-  remove one without a database migration. Until the game opens to players,
-  a reset of every account may take the migration's place (see
-  `docs/server.md`, "The database").
+  remove one without a save migration (see `docs/saves.md`). Until the
+  release, a renamed id may instead move to `retired`, and testers' saves
+  lose what it named.
 - `validateContent` (`src/content/validate.ts`) holds the rules content must
   follow beyond its types; extend it when adding content with new rules.
 - Comments explain intent in plain language, matching the surrounding code.

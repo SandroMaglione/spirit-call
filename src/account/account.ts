@@ -2,9 +2,8 @@
  * The player's account: what it owns (characters, aspects for their
  * classes, relics, looks), its wallet (gold and essence), and lifetime
  * totals, how far it got in each quest and track, and what it last entered.
- * These are the account's rules as pure functions; the server runs them
- * (see docs/server.md), and the game runs the same ones to show a result
- * before the server answers.
+ * These are the account's rules as pure functions: the game runs them on
+ * the device, and saves the account each leaves (see docs/saves.md).
  *
  * Everything owned comes from one card (see docs/collection.md and
  * `content/collection.ts`): a quest's first or perfect clear, or a tier's

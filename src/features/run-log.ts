@@ -2,8 +2,8 @@
  * The run's log (`RunLog`), for measuring play: each step's blows, skills,
  * dashes, switches, and falls, added up by wave, by what dealt them, and by
  * team member. It only watches (events and resources), so it changes
- * nothing of the run; the run's result carries it to the account (see
- * docs/server.md).
+ * nothing of the run; the run's result carries it to the shell, which a
+ * playtest build sends on (see docs/playtest.md).
  */
 import type { CharacterId } from "../content/characters.ts"
 import type { SkillId } from "../content/skills.ts"

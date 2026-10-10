@@ -26,13 +26,13 @@ const layers = [
     parts: ["content", "simulation"],
     packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-browser"]
   },
-  // The account's rules are pure (no Effect), so the UI can use them; storing the account is the Effect side.
+  // The account's rules are pure (no Effect), so the UI can use them; storing the account (and a playtest build's sending) is the Effect side.
   { name: "account rules", paths: ["src/account/account.ts", "src/account/calls.ts", "src/account/progression.ts", "src/account/convert.ts"], parts: ["content", "simulation", "account rules"], packages: [] },
   { name: "persistence", paths: ["src/account/", "src/app/"], parts: ["content", "simulation", "account rules", "persistence", "api"], packages: ["effect", "@effect/"] },
-  // What the game and the server say to each other: shared by both, so it holds no code of either.
+  // What a playtest build sends the server: shared by both, so it holds no code of either.
   { name: "api", paths: ["src/api/"], parts: ["content", "api"], packages: ["effect"] },
-  // The server runs the account's rules over its database; it never touches rendering or the UI.
-  { name: "server", paths: ["src/server/"], parts: ["content", "simulation", "account rules", "api", "server"], packages: ["effect", "@effect/", "node:fs", "node:http"] },
+  // The server only keeps the runs playtest builds send: it knows the API and its database, and nothing of the game.
+  { name: "server", paths: ["src/server/"], parts: ["api", "server"], packages: ["effect", "@effect/", "node:fs", "node:http"] },
   { name: "ui", paths: ["src/ui/"], parts: ["content", "simulation", "account rules", "ui"], packages: ["preact", "@preact/", "@typeonce/bevy-ts"] },
   {
     name: "presentation",
