@@ -17,9 +17,10 @@ import { entryChampion, entryKind } from "./challenges.ts"
 import type { ChallengeId } from "./challenges.ts"
 import { beyond, challengeShows, holds, introducedBy, nothingSeen, withNovelty } from "./novelties.ts"
 import { aheadOfLine, starsPerChest } from "./quests.ts"
-import { noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
+import { eliteElementOf, noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
 import type { QuestAt, RankTwist } from "./ranks.ts"
 import type { QuestId, QuestSpec, StarGroup, Unlock } from "./quests.ts"
+import type { TrackId } from "./hardcore.ts"
 import { elements } from "./elements.ts"
 import type { ElementId, StateId } from "./elements.ts"
 import { materialOf } from "./materials.ts"
@@ -560,7 +561,7 @@ const checkOpening = (problems: Array<string>, where: string, tuning: Tuning, ch
   checkGated(problems, where, tuning, challenge, enemyLevel, [{ quest: opens, rank: opensRank }], twist)
 
 /** `checkOpening` for something opening once all of `gates` are cleared: what they introduced together, and the highest of their levels. */
-const checkGated = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, gates: ReadonlyArray<QuestAt>, twist: RankTwist = noTwist): void => {
+const checkGated = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, gates: ReadonlyArray<QuestAt>, twist: RankTwist = noTwist, highestCleared = false): void => {
   if (!has(tuning.challenges, challenge) || gates.length === 0) return
   const shown = challengeShows(tuning, challenge)
   const shows = { ...shown, enemies: new Set([...shown.enemies, ...(twist.leader === null ? [] : [twist.leader])]), elites: new Set([...shown.elites, ...(twist.elites === null ? [] : [twist.elites])]), shield: shown.shield || twist.shields }
@@ -580,8 +581,56 @@ const checkGated = (problems: Array<string>, where: string, tuning: Tuning, chal
   const named = gates.map((gate) => (gate.rank === 1 ? gate.quest : `${gate.quest} at rank ${gate.rank}`)).join(" and ")
   const early = beyond(shows, known)
   if (early.length > 0) problems.push(`${where}: shows ${early.join(", ")} before the main line introduces it (it opens after ${named})`)
-  const highest = Math.max(...gates.map((gate) => rankLevel(tuning, gate.quest, gate.rank)))
+  // The gates' own levels, or (`highestCleared`) the highest of everything cleared before them.
+  const highest = highestCleared
+    ? Math.max(...[...cleared].map((key) => rankLevel(tuning, key.split("@")[0] as QuestId, Number(key.split("@")[1]))))
+    : Math.max(...gates.map((gate) => rankLevel(tuning, gate.quest, gate.rank)))
   if (enemyLevel > highest + aheadOfLine) problems.push(`${where}: enemies of level ${enemyLevel} are more than ${aheadOfLine} levels above ${named} (${highest}), which opens it`)
+}
+
+/**
+ * Invitations (see content/auditions.ts): one for each audition to open,
+ * and a slot for each; the nth invitation, in the order the quests give
+ * them (rank by rank, along the main line), opens the nth slot, so every
+ * audition part, at every slot's level and twist, shows only what the main
+ * line has introduced once that invitation is in hand, and sits at most
+ * `aheadOfLine` levels above everything cleared by then.
+ */
+const checkInvitations = (problems: Array<string>, tuning: Tuning): void => {
+  /** Whether `part` of `track` is an audition's (the parts before its mastery), which plays at its slot. */
+  const isPart = (track: TrackId, part: number): boolean => {
+    const spec = tuning.tracks[track]
+    return spec.kind === "audition" && spec.character !== null && spec.tiers.length > 1 && part < spec.tiers.length
+  }
+  const auditions = (Object.keys(tuning.tracks) as Array<TrackId>).filter((id) => isPart(id, 1))
+  const order = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].line === "main")
+  const given: Array<QuestAt> = []
+  for (let rank = 1; rank <= tuning.ranks.count; rank++) {
+    for (const quest of [...order, ...(Object.keys(tuning.quests) as Array<QuestId>).filter((id) => !order.includes(id))]) {
+      const spec = tuning.quests[quest]
+      const count = (rank === 1 ? spec.rewards.currencies.invitations ?? 0 : 0) + (spec.rankCurrencies[rank]?.invitations ?? 0)
+      for (let each = 0; each < count; each++) given.push({ quest, rank })
+    }
+  }
+  if (given.length !== auditions.length) problems.push(`invitations: the quests give ${given.length}, for ${auditions.length} auditions (one each)`)
+  if (tuning.invitations.length !== auditions.length) problems.push(`invitations: ${tuning.invitations.length} slots, for ${auditions.length} auditions (one each)`)
+  const first = tuning.invitations[0]
+  tuning.invitations.forEach((slot, index) => {
+    const before = tuning.invitations[index - 1]
+    if (before !== undefined && slot.level < before.level) problems.push(`invitations: slot ${index + 1} plays below the slot before it (${slot.level} after ${before.level})`)
+    if (slot.leader !== null && !has(tuning.enemies, slot.leader)) problems.push(`invitations: slot ${index + 1} is led by unknown enemy ${slot.leader}`)
+    const gate = given[index]
+    if (first === undefined || gate === undefined) return
+    for (const track of auditions) {
+      const spec = tuning.tracks[track], character = spec.character!
+      if (!has(tuning.characters, character)) continue
+      const twist: RankTwist = { elites: slot.elites ? eliteElementOf(tuning.characters[character].element) : null, shields: slot.shields, leader: slot.leader }
+      spec.tiers.forEach((tier, part) => {
+        if (!isPart(track, part + 1) || !has(tuning.quests, tier.opens)) return
+        checkGated(problems, `track ${track} part ${part + 1} at invitation slot ${index + 1}`, tuning, tier.challenge, tier.enemyLevel + slot.level - first.level, [{ quest: tier.opens, rank: tier.opensRank }, gate], twist, true)
+      })
+    }
+  })
 }
 
 /**
@@ -870,6 +919,8 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       else checkOpening(problems, at, tuning, tier.challenge, tier.enemyLevel, tier.opens, tier.opensRank, tier.twist)
     })
   }
+
+  checkInvitations(problems, tuning)
 
   // Every element has its material, and a trial that pays it on every clear (see content/materials.ts).
   const rules = tuning.materialRules

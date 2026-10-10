@@ -55,6 +55,8 @@ export interface AccountRecord {
   }
   /** Each character's looks, by kind. */
   readonly worn: Readonly<Record<string, Readonly<Record<string, string>>>>
+  /** The auditions opened, by character: their place (1 the first) and when. */
+  readonly auditions: Readonly<Record<string, { readonly slot: number; readonly openedAt: number }>>
   /** Teams saved to load in a tap, by slot: members in order, each one's aspect, and each one's relics by slot. */
   readonly saved: Readonly<Record<string, { readonly team: ReadonlyArray<string>; readonly aspects: Readonly<Record<string, string>>; readonly relics: Readonly<Record<string, Readonly<Record<string, string>>>> }>>
 }
@@ -138,7 +140,8 @@ export const fromRecord = (
     chests,
     selection: starterSelection,
     worn: {},
-    saved: {}
+    saved: {},
+    auditions: keep<CharacterId, { readonly slot: number; readonly openedAt: number }>(tuning.characters, stored.auditions, "audition", dropped)
   }
 
   // A character never stands below a step her level is already past (levels trained before ascension, or steps moved since).
@@ -237,5 +240,6 @@ export const toRecord = (account: Account): AccountRecord => ({
   chests: account.chests,
   selection: account.selection,
   worn: account.worn,
-  saved: account.saved
+  saved: account.saved,
+  auditions: account.auditions
 })

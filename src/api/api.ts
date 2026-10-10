@@ -89,6 +89,8 @@ export class AccountApi extends HttpApiGroup.make("account")
     }),
     /** Takes a character to her next level with gold. */
     HttpApiEndpoint.post("train", "/characters/:character/training", { params: { character: CharacterId }, success: Account, error: Refused }),
+    /** Opens a character's audition with an invitation (the player's choice of who auditions next). */
+    HttpApiEndpoint.post("openAudition", "/characters/:character/audition", { params: { character: CharacterId }, success: Account, error: Refused }),
     /** Takes a character past the ascension step she stands at. */
     HttpApiEndpoint.post("ascend", "/characters/:character/ascension", { params: { character: CharacterId }, success: Account, error: Refused }),
     /** Puts on a look of a kind (`null`: her own look). */

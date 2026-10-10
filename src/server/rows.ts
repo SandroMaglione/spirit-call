@@ -57,7 +57,8 @@ export const tables = {
   discoveries: { row: Schema.Struct({ user_id: Text, discovery: Text, made_at: Int }), key: ["discovery"] },
   chests: { row: Schema.Struct({ user_id: Text, star_group: Text, rank: Int, opened: Int }), key: ["star_group", "rank"] },
   saved_team_members: { row: Schema.Struct({ user_id: Text, team: Int, slot: Int, character: Text, aspect: Schema.NullOr(Text) }), key: ["team", "slot"] },
-  saved_team_relics: { row: Schema.Struct({ user_id: Text, team: Int, character: Text, slot: Text, relic: Text }), key: ["team", "character", "slot"] }
+  saved_team_relics: { row: Schema.Struct({ user_id: Text, team: Int, character: Text, slot: Text, relic: Text }), key: ["team", "character", "slot"] },
+  auditions: { row: Schema.Struct({ user_id: Text, character: Text, slot: Int, opened_at: Int }), key: ["character"] }
 } as const
 
 export type TableName = keyof typeof tables
@@ -118,6 +119,7 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
     discoveries: Object.entries(account.discoveries).map(([discovery, made]) => ({ user_id, discovery, made_at: made.madeAt })),
     chests: Object.entries(account.chests).flatMap(([star_group, ranks]) => Object.entries(ranks).map(([rank, opened]) => ({ user_id, star_group, rank: Number(rank), opened }))),
     saved_team_members: Object.entries(account.saved).flatMap(([team, saved]) => saved.team.map((character, slot) => ({ user_id, team: Number(team), slot, character, aspect: saved.aspects[character] ?? null }))),
+    auditions: Object.entries(account.auditions).map(([character, opened]) => ({ user_id, character, slot: opened.slot, opened_at: opened.openedAt })),
     saved_team_relics: Object.entries(account.saved).flatMap(([team, saved]) => Object.entries(saved.relics).flatMap(([character, slots]) => Object.entries(slots).map(([slot, relic]) => ({ user_id, team: Number(team), character, slot, relic }))))
   }
 }
@@ -172,7 +174,8 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
           : { kind: "tier", track: row.play_track ?? "", tier: row.play_tier ?? 1 }
     },
     worn: grouped(rows.worn_cosmetics.map((row) => [row.character, row.kind, row.cosmetic])),
-    saved: savedFrom(rows)
+    saved: savedFrom(rows),
+    auditions: Object.fromEntries(rows.auditions.map((row) => [row.character, { slot: row.slot, openedAt: row.opened_at }]))
   }
 }
 

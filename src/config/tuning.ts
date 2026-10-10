@@ -25,6 +25,7 @@ import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
 import { enemies, fairness, shields } from "../content/enemies.ts"
 import { tracks } from "../content/hardcore.ts"
+import { invitationSlots } from "../content/auditions.ts"
 import { materialRules, materials } from "../content/materials.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, chests, perfectRules, quests, rankRules } from "../content/quests.ts"
@@ -101,6 +102,8 @@ export const defaultTuning = {
 
   /** Tracks in tiers: hardcore, the trials, and the auditions (see content/hardcore.ts, content/auditions.ts). */
   tracks,
+  /** The places auditions are opened at, one per invitation, each with its level and twist (see content/auditions.ts). */
+  invitations: invitationSlots,
 
   /** One-time feats that point at something worth trying, for a little gold (see content/discoveries.ts). */
   discoveries,

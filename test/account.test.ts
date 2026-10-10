@@ -1,9 +1,9 @@
 import { experienceFor, experienceTo } from "../src/account/progression.ts"
 import { describe, expect, it } from "vitest"
 
-import { buildOf, characterLevel, clearPay, createAccount, discovered, earn, earnedResources, entryTeam, owns, encounterOf, groupStars, playLock, questLock, recordRun, runPay, saveTeam, select, teamOf, spend, train, trainingCost, unlock, withSources, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold, levelsUnder, underLevelWarning } from "../src/account/account.ts"
+import { buildOf, characterLevel, clearPay, createAccount, discovered, earn, earnedResources, entryTeam, owns, encounterOf, groupStars, playLock, questLock, recordRun, runPay, saveTeam, select, teamOf, spend, train, trainingCost, unlock, withSources, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold, levelsUnder, underLevelWarning, lentFor, openAudition } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import { rankGates } from "../src/content/ranks.ts"
+import { eliteElementOf, rankGates } from "../src/content/ranks.ts"
 import type { Account, Earned, Play } from "../src/account/account.ts"
 import { newAccount } from "../src/content/account.ts"
 import type { DiscoveryId } from "../src/content/discoveries.ts"
@@ -114,13 +114,16 @@ describe("account rules", () => {
     // It enters with the lent character alone, whoever the party is.
     expect(entryTeam(defaultTuning, fresh(), part(1), ["swordsman"])).toEqual([{ character: "gunner", level: audition.tiers[0]!.enemyLevel }])
     expect(entryTeam(defaultTuning, fresh(), quest("firstBlood"), ["swordsman"])).toEqual(teamOf(defaultTuning, fresh(), ["swordsman"]))
-    // Its parts open after their quest, in order.
-    const opened = { ...fresh(), quests: { [audition.tiers[0]!.opens]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0] } } } }
+    // Its parts open after their quest and an invitation, in order.
+    const after = { ...fresh(), quests: { [audition.tiers[0]!.opens]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1, stars: [0] } } } }
     expect(playLock(defaultTuning, fresh(), part(1))).toEqual({ kind: "after", quest: audition.tiers[0]!.opens })
-    expect(playLock(defaultTuning, opened, part(1))).toBeNull()
-    expect(playLock(defaultTuning, opened, part(2))).toEqual({ kind: "tier", track: "gunnerAudition", tier: 1 })
+    expect(playLock(defaultTuning, after, part(1))).toEqual({ kind: "invite", character: "gunner" })
+    const opened = openAudition(defaultTuning, { ...after, wallet: { ...after.wallet, invitations: 1 } }, "gunner", 1500)
+    if (!opened.ok) throw new Error("the audition did not open")
+    expect(playLock(defaultTuning, opened.value, part(1))).toBeNull()
+    expect(playLock(defaultTuning, opened.value, part(2))).toEqual({ kind: "tier", track: "gunnerAudition", tier: 1 })
     const run = (challenge: string) => ({ cleared: true, progress: 1, team: ["gunner" as const], reactions: [], tally: noTally, challenge: challenge as "swarm", wave: 6, kills: 20, time: 150 })
-    let account: Account = opened
+    let account: Account = opened.value
     for (const number of [1, 2]) account = recordRun(defaultTuning, account, part(number), run(audition.tiers[number - 1]!.challenge), 2000).account
     expect(owns(account, { kind: "character", id: "gunner" })).toBe(false)
     const last = recordRun(defaultTuning, account, part(3), run(audition.tiers[2]!.challenge), 3000)
@@ -128,6 +131,29 @@ describe("account rules", () => {
     expect(characterLevel(defaultTuning, last.account, "gunner").level).toBe(audition.tiers[2]!.enemyLevel)
     // Past her first step already: it comes with her.
     expect(last.account.owned.characters.gunner?.ascension).toBe(defaultTuning.materialRules.ascension.filter((step) => step.level < audition.tiers[2]!.enemyLevel).length)
+  })
+
+  it("opens the audition the player invites, spending an invitation, at the next slot's level and twist", () => {
+    const withInvitations = (count: number): Account => ({ ...fresh(), wallet: { ...fresh().wallet, invitations: count } })
+    // Nothing to give, or nobody to give it to: refused.
+    expect(openAudition(defaultTuning, fresh(), "sparkfist", 1).ok).toBe(false)
+    expect(openAudition(defaultTuning, withInvitations(1), "swordsman", 1)).toMatchObject({ ok: false, refusal: { kind: "badAudition" } })
+    // Whoever is invited first plays at the first slot, the next at the second.
+    const first = openAudition(defaultTuning, withInvitations(2), "sparkfist", 1)
+    if (!first.ok) throw new Error("the first audition did not open")
+    expect(first.value.wallet.invitations).toBe(1)
+    expect(first.value.auditions).toEqual({ sparkfist: { slot: 1, openedAt: 1 } })
+    expect(openAudition(defaultTuning, first.value, "sparkfist", 2)).toMatchObject({ ok: false, refusal: { kind: "badAudition" } })
+    const second = openAudition(defaultTuning, first.value, "gunner", 2)
+    if (!second.ok) throw new Error("the second audition did not open")
+    const [slotOne, slotTwo] = defaultTuning.invitations
+    const spark = defaultTuning.tracks.sparkfistAudition.tiers, gunner = defaultTuning.tracks.gunnerAudition.tiers
+    expect(encounterOf(defaultTuning, tier("sparkfistAudition", 1), second.value).enemyLevel).toBe(slotOne!.level)
+    expect(encounterOf(defaultTuning, tier("gunnerAudition", 3), second.value)).toMatchObject({ challenge: gunner[2]!.challenge, enemyLevel: slotTwo!.level + 2, twist: { elites: slotTwo!.elites ? eliteElementOf(defaultTuning.characters.gunner.element) : null, shields: slotTwo!.shields } })
+    expect(lentFor(defaultTuning, tier("gunnerAudition", 2), second.value)).toEqual({ character: "gunner", level: slotTwo!.level + 1 })
+    // An audition not opened yet shows the slot it would take; masteries keep their own level.
+    expect(encounterOf(defaultTuning, tier("tidewardenAudition", 1), second.value).enemyLevel).toBe(defaultTuning.invitations[2]!.level)
+    expect(encounterOf(defaultTuning, tier("sparkfistAudition", 4), second.value).enemyLevel).toBe(spark[3]!.enemyLevel)
   })
 
   it("saves up to three teams to load in a tap, each keeping the rules", () => {

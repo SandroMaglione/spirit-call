@@ -304,21 +304,23 @@ describe("accounts", () => {
     expect((await player.send("PUT", "/api/account/teams/2", { team: null })).body.saved).toEqual({})
   })
 
-  it("plays an audition: its character lent alone, and the account's once its last part is cleared", async () => {
+  it("plays an audition: the character invited, lent alone, and the account's once its last part is cleared", async () => {
     const player = await signUp(server())
     const audition = defaultTuning.tracks.gunnerAudition
-    // Its parts open after the end of chapter two: clear the main line up to it, then the three parts, in order.
+    // Auditions open after the end of chapter two: clear the main line up to it, invite someone, then play the three parts, in order.
     const main = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((quest) => defaultTuning.quests[quest].line === "main")
     const upTo = main.slice(0, main.indexOf(audition.tiers[0]!.opens) + 1)
-    const runs = [
-      ...upTo.map((quest) => played({ kind: "quest", quest })),
-      ...[1, 2, 3].map((tier) => played({ kind: "tier", track: "gunnerAudition", tier }, { ...run, team: ["gunner"], challenge: audition.tiers[tier - 1]!.challenge }))
-    ]
-    const answers = await runs.reduce<Promise<Array<number>>>((before, body) => before.then(async (statuses) => [...statuses, (await player.send("POST", "/api/runs", body)).status]), Promise.resolve([]))
-    expect(answers.every((status) => status === 200)).toBe(true)
+    const send = (runs: ReadonlyArray<unknown>) => runs.reduce<Promise<Array<number>>>((before, body) => before.then(async (statuses) => [...statuses, (await player.send("POST", "/api/runs", body)).status]), Promise.resolve([]))
+    expect((await send(upTo.map((quest) => played({ kind: "quest", quest })))).every((status) => status === 200)).toBe(true)
+    // The end of chapter two gives an invitation: spent on the Gunner, her audition opens at the first slot.
+    expect(await player.send("POST", "/api/characters/sparkfist/audition")).toMatchObject({ status: 200, body: { auditions: { sparkfist: { slot: 1 } } } })
+    expect(await player.send("POST", "/api/characters/gunner/audition")).toMatchObject({ status: 409, body: { kind: "notEnough" } })
+    expect(await player.send("POST", "/api/characters/swordsman/audition")).toMatchObject({ status: 409, body: { kind: "badAudition" } })
+    const parts = [1, 2, 3].map((tier) => played({ kind: "tier", track: "sparkfistAudition", tier }, { ...run, team: ["sparkfist"], challenge: defaultTuning.tracks.sparkfistAudition.tiers[tier - 1]!.challenge }))
+    expect((await send(parts)).every((status) => status === 200)).toBe(true)
     const account = (await player.send("GET", "/api/account")).body
-    expect(account.owned.characters.gunner).toBeDefined()
-    expect(account.owned.aspects.marksman).toBeDefined()
+    expect(account.owned.characters.sparkfist).toBeDefined()
+    expect(account.owned.aspects.flurry).toBeDefined()
   })
 
   it("answers the dev tools only where they are on", async () => {
@@ -418,7 +420,8 @@ describe("account rows", () => {
     chests: { one: { "1": 1, "2": 0 } },
     selection: { team: ["gunner", "swordsman"], aspects: { gunner: "marksman" }, relics: { gunner: { strike: "echo", element: "emberHeart" } }, play: { kind: "tier", track: "gauntlet", tier: 1 } },
     worn: { gunner: { trail: "starfall", tint: "blueFlame" } },
-    saved: { "1": { team: ["swordsman", "gunner"], aspects: { gunner: "marksman" }, relics: { swordsman: { strike: "echo" } } } }
+    saved: { "1": { team: ["swordsman", "gunner"], aspects: { gunner: "marksman" }, relics: { swordsman: { strike: "echo" } } } },
+    auditions: { gunner: { slot: 1, openedAt: 6 }, sparkfist: { slot: 2, openedAt: 9 } }
   }, 10).account), 10).account
 
   it("turns an account into rows and back, unchanged", () => {
@@ -430,6 +433,7 @@ describe("account rows", () => {
     expect(account.selection.relics).toEqual({ gunner: { strike: "echo", element: "emberHeart" } })
     expect(account.worn).toEqual({ gunner: { trail: "starfall", tint: "blueFlame" } })
     expect(account.saved).toEqual({ 1: { team: ["swordsman", "gunner"], aspects: { gunner: "marksman" }, relics: { swordsman: { strike: "echo" } } } })
+    expect(account.auditions).toEqual({ gunner: { slot: 1, openedAt: 6 }, sparkfist: { slot: 2, openedAt: 9 } })
   })
 
   it("drops rows naming content that no longer exists, and repairs what depended on it", () => {

@@ -26,7 +26,8 @@ import type { AscensionStep, Grade } from "../content/materials.ts"
 import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
 import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
-import { rankGates, rankLevel, rankTwist } from "../content/ranks.ts"
+import { eliteElementOf, rankGates, rankLevel, rankTwist } from "../content/ranks.ts"
+import type { InvitationSlot } from "../content/auditions.ts"
 import type { TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, StarGroup, Unlock } from "../content/quests.ts"
 import { meets } from "../content/stars.ts"
@@ -135,6 +136,12 @@ export interface SavedTeam {
   readonly relics: TeamRelics
 }
 
+/** An audition opened with an invitation: its place among those opened (1 the first, see `invitationSlots`), and when. */
+export interface OpenedAudition {
+  readonly slot: number
+  readonly openedAt: number
+}
+
 /** How many teams can be saved besides the one set up. */
 export const savedTeamSlots = 3
 
@@ -160,6 +167,8 @@ export interface Account {
   readonly worn: Worn
   /** Teams saved to load in a tap, by slot (1 to `savedTeamSlots`). */
   readonly saved: { readonly [slot: number]: SavedTeam }
+  /** The auditions opened with an invitation, by character (see `openAudition`). */
+  readonly auditions: { readonly [Id in CharacterId]?: OpenedAudition }
 }
 
 /** Something that can be owned. */
@@ -247,7 +256,7 @@ export const withSources = (tuning: Tuning, account: Account, now: number): { re
     if (owns(next, item)) continue
     let after = unlock(tuning, next, item, now)
     if (after === next) continue
-    if (item.kind === "character" && source.kind === "tier") after = joinedAt(tuning, after, item.id, tuning.tracks[source.track].tiers[source.tier - 1]?.enemyLevel ?? 1)
+    if (item.kind === "character" && source.kind === "tier") after = joinedAt(tuning, after, item.id, encounterOf(tuning, { kind: "tier", track: source.track, tier: source.tier }, next).enemyLevel)
     next = after
     granted.push(item)
   }
@@ -290,7 +299,8 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     chests: {},
     selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
     worn: {},
-    saved: {}
+    saved: {},
+    auditions: {}
   }
   const items: Array<Item> = [
     ...starter.aspects.map((id) => ({ kind: "aspect" as const, id })),
@@ -339,6 +349,8 @@ export const earn = (account: Account, amounts: Amounts): Account => {
 export type Lock =
   | { readonly kind: "after"; readonly quest: QuestId; readonly rank?: number }
   | { readonly kind: "tier"; readonly track: TrackId; readonly tier: number }
+  /** An audition not opened yet: it takes an invitation (see `openAudition`). */
+  | { readonly kind: "invite"; readonly character: CharacterId }
 
 /** `account`'s progress in `quest` at `rank`, if it attempted it. */
 export const questProgress = (account: Account, quest: QuestId, rank = 1): QuestProgress | undefined => account.quests[quest]?.[rank]
@@ -369,7 +381,7 @@ export const twistOf = (tuning: Tuning, quest: QuestId, rank: number): TwistValu
 export const questRewards = (tuning: Tuning, quest: QuestId, rank: number): Rewards => {
   const spec = tuning.quests[quest]
   if (rank === 1) return spec.rewards
-  return { currencies: { gold: tuning.ranks.goldRuns * clearPay(tuning.progression.gold, questLevel(tuning, quest, rank)) }, unlocks: spec.rankUnlocks[rank] ?? [] }
+  return { currencies: { gold: tuning.ranks.goldRuns * clearPay(tuning.progression.gold, questLevel(tuning, quest, rank)), ...spec.rankCurrencies[rank] }, unlocks: spec.rankUnlocks[rank] ?? [] }
 }
 
 /** What `account` has met along the main line: everything the quests it cleared introduced (see `content/novelties.ts`). */
@@ -393,27 +405,67 @@ export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | n
   // Each tier opens along the main line, and once the tier before it is cleared.
   const { opens, opensRank } = spec.tiers[play.tier - 1]!
   if (isQuest(tuning, opens) && !questCleared(account, opens, opensRank)) return { kind: "after", quest: opens, ...(opensRank === 1 ? {} : { rank: opensRank }) }
+  // An audition's parts open with an invitation spent on her (or once she is the account's, however she came).
+  if (isAuditionPart(tuning, play.track, play.tier) && spec.character !== null && account.auditions[spec.character] === undefined && !owns(account, { kind: "character", id: spec.character })) return { kind: "invite", character: spec.character }
   // A hardcore tier and an audition's also wait for the tier before it; a trial's ranks open with the main line alone.
   if (spec.kind !== "trial" && play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null) return { kind: "tier", track: play.track, tier: play.tier - 1 }
   return null
 }
 
-/** What the arena is entered with for `play`: its challenge, its enemies' level, and its rank's twist on the waves. */
-export const encounterOf = (tuning: Tuning, play: Play): { readonly challenge: ChallengeId; readonly enemyLevel: number; readonly twist: TwistValue } => {
+/** Whether `track`'s tier `tier` is one of an audition's parts (opened with an invitation, played at its slot), not its mastery. */
+export const isAuditionPart = (tuning: Tuning, track: TrackId, tier: number): boolean => {
+  const spec = tuning.tracks[track]
+  return spec.kind === "audition" && spec.character !== null && spec.tiers.length > 1 && tier < spec.tiers.length
+}
+
+/** The place `character`'s audition plays at: the one it was opened at, or (not opened yet) the next to be opened. */
+export const auditionSlot = (tuning: Tuning, account: Account, character: CharacterId): InvitationSlot => {
+  const place = account.auditions[character]?.slot ?? Object.keys(account.auditions).length + 1
+  return tuning.invitations[Math.min(Math.max(1, place), tuning.invitations.length) - 1]!
+}
+
+/**
+ * What the arena is entered with for `play`: its challenge, its enemies'
+ * level, and its rank's twist on the waves. An audition's part plays at its
+ * slot's level and twist (see `auditionSlot`): `account`'s, or the first
+ * slot's without one.
+ */
+export const encounterOf = (tuning: Tuning, play: Play, account?: Account): { readonly challenge: ChallengeId; readonly enemyLevel: number; readonly twist: TwistValue } => {
   if (play.kind === "quest") {
     const rank = rankOf(play)
     return { challenge: tuning.quests[play.quest].challenge, enemyLevel: questLevel(tuning, play.quest, rank), twist: twistOf(tuning, play.quest, rank) }
   }
-  const tier = tuning.tracks[play.track].tiers[play.tier - 1] ?? tuning.tracks[play.track].tiers[0]!
-  return { challenge: tier.challenge, enemyLevel: tier.enemyLevel, twist: tier.twist }
+  const track = tuning.tracks[play.track]
+  const tier = track.tiers[play.tier - 1] ?? track.tiers[0]!
+  if (!isAuditionPart(tuning, play.track, play.tier) || track.character === null) return { challenge: tier.challenge, enemyLevel: tier.enemyLevel, twist: tier.twist }
+  const first = tuning.invitations[0]!, slot = account === undefined ? first : auditionSlot(tuning, account, track.character)
+  return {
+    challenge: tier.challenge,
+    enemyLevel: tier.enemyLevel + slot.level - first.level,
+    twist: { elites: slot.elites ? eliteElementOf(tuning.characters[track.character].element) : null, shields: slot.shields, leader: slot.leader }
+  }
 }
 
-/** The character an audition lends for `play`, at its tier's level, or `null` when `play` is not an audition's. */
-export const lentFor = (tuning: Tuning, play: Play): { readonly character: CharacterId; readonly level: number } | null => {
+/** The character an audition lends for `play`, at its part's level (see `encounterOf`), or `null` when `play` is not an audition's. */
+export const lentFor = (tuning: Tuning, play: Play, account?: Account): { readonly character: CharacterId; readonly level: number } | null => {
   if (play.kind !== "tier") return null
   const track = tuning.tracks[play.track]
-  const tier = track.tiers[play.tier - 1]
-  return track.kind === "audition" && track.character !== null && tier !== undefined ? { character: track.character, level: tier.enemyLevel } : null
+  return track.kind === "audition" && track.character !== null && track.tiers[play.tier - 1] !== undefined ? { character: track.character, level: encounterOf(tuning, play, account).enemyLevel } : null
+}
+
+/**
+ * `account` with `character`'s audition opened, an invitation spent on it:
+ * its parts open, at the next slot (see `invitationSlots`). Refused when she
+ * has no audition, is owned, or has hers opened already, or without an
+ * invitation.
+ */
+export const openAudition = (tuning: Tuning, account: Account, character: CharacterId, now: number): Checked<Account> => {
+  const track = (Object.keys(tuning.tracks) as Array<TrackId>).find((id) => tuning.tracks[id].character === character && isAuditionPart(tuning, id, 1))
+  if (track === undefined || owns(account, { kind: "character", id: character }) || account.auditions[character] !== undefined) return refuse({ kind: "badAudition", character })
+  const paid = spend(account, { invitations: 1 })
+  if (!paid.ok) return paid
+  const slot = Object.keys(account.auditions).length + 1
+  return { ok: true, value: { ...paid.value, auditions: { ...paid.value.auditions, [character]: { slot, openedAt: now } } } }
 }
 
 /** The quests whose stars count toward `group`: a chapter's, or the secondary ones. */
@@ -582,6 +634,8 @@ export type Refusal =
   | { readonly kind: "notAtStep"; readonly item: Item }
   /** A saved team's slot that there is not (see `savedTeamSlots`). */
   | { readonly kind: "badSlot"; readonly slot: number }
+  /** No audition to open for her: she has none, is owned, or has hers opened already. */
+  | { readonly kind: "badAudition"; readonly character: CharacterId }
 
 export type Checked<A> = { readonly ok: true; readonly value: A } | { readonly ok: false; readonly refusal: Refusal }
 
@@ -849,7 +903,7 @@ export const recordRun = (
   now: number
 ): { readonly account: Account; readonly earned: Earned } => {
   const { progression } = tuning
-  const encounter = play === null ? null : encounterOf(tuning, play)
+  const encounter = play === null ? null : encounterOf(tuning, play, account)
   const enemyLevel = encounter?.enemyLevel ?? 1
   const pay: Amounts = play === null ? {} : { gold: runPay(progression.gold, progression.loss, enemyLevel, result) }
   let next: Account = {
@@ -946,6 +1000,6 @@ export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<Cha
  * otherwise `team` as the account has it (see `teamOf`).
  */
 export const entryTeam = (tuning: Tuning, account: Account, play: Play | null, team: ReadonlyArray<CharacterId>, aspects: TeamAspects = account.selection.aspects, relics: TeamRelics = account.selection.relics): ReadonlyArray<BuildValue> => {
-  const lent = play === null ? null : lentFor(tuning, play)
+  const lent = play === null ? null : lentFor(tuning, play, account)
   return lent === null ? teamOf(tuning, account, team, aspects, relics) : [{ character: lent.character, level: lent.level }]
 }
