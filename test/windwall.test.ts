@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { makeProjectile } from "../src/features/combat.ts"
+import { makeEnemy } from "../src/features/enemies.ts"
 import { barrierMeets } from "../src/features/barriers.ts"
 import { mantleMeets, mantleTaken } from "../src/features/windwall.ts"
 import { barrier } from "../src/content/skills.ts"
@@ -101,6 +102,19 @@ describe("Windwall's Wind Mantle", () => {
 
 describe("Windwall's Sky Lift", () => {
   if (lift.kind !== "lift") throw new Error("the Eye of the Storm is a lift")
+
+  it("never lifts a champion: skills do not take the fight's own out of it", () => {
+    const run = arena([], [press("ultimate", 1)])
+    const Champion = Game.System("Test/Champion", {}, ({ commands }) => {
+      commands.spawnIn(RunScope, makeEnemy(tuning, "brute", { x: center.x + 120, y: center.y }, 1, 1, "water", true))
+      commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x - 120, y: center.y }, 1, 1))
+    })
+    run.runtime.tick(Game.Schedule(Champion, Game.Schedule.applyDeferred()))
+    run.step(4)
+    const [champion, chaser] = [...run.world().enemies].sort((left, right) => right.offset.x - left.offset.x)
+    expect(champion!.lifted).toBe(false)
+    expect(chaser!.lifted).toBe(true)
+  })
 
   it("lifts every enemy around her, harmless, then drops them, hurt by the fall; none beyond its reach", () => {
     const run = arena([{ x: 120, y: 0 }, { x: lift.radius + 150, y: 0 }], [press("ultimate", 1)])

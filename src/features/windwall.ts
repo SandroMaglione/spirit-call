@@ -7,7 +7,8 @@
  *   (`MoveProjectiles` asks `mantleMeets`); blows on her land weaker
  *   (`ApplyDamage` asks `mantleTaken`); what touches it is struck and
  *   thrown out.
- * - The Sky Lift (see `LiftEffect`): every enemy around her rises off the
+ * - The Sky Lift (see `LiftEffect`): every enemy around her (never a
+ *   champion) rises off the
  *   floor and stays up a while, out of the fight (stunned, its windup cut
  *   off, and untouchable: shots pass under it, blows miss it), then falls,
  *   and the fall is its blow.
@@ -92,7 +93,7 @@ export const KeepMantle = Game.System("Shooter/KeepMantle", {
 /** Lifts cast: every enemy within reach of the caster rises, harmless until it falls. */
 export const CastLifts = Game.System("Shooter/CastLifts", {
   queries: {
-    enemies: Game.Query({ selection: { position: Game.Query.read(Position), stunned: Game.Query.write(Stunned), disarmed: Game.Query.write(Disarmed), invulnerable: Game.Query.write(Invulnerable) }, with: [Enemy, Health] })
+    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), stunned: Game.Query.write(Stunned), disarmed: Game.Query.write(Disarmed), invulnerable: Game.Query.write(Invulnerable) }, with: [Health] })
   },
   events: { cast: Game.System.readEvent(Cast) }
 }, ({ queries, events, commands }) => {
@@ -102,7 +103,8 @@ export const CastLifts = Game.System("Shooter/CastLifts", {
     const blow: Blow = castBlow(cast, effect)
     for (const { entity, data } of queries.enemies.each()) {
       const at = data.position.get()
-      if (Math.hypot(at.x - cast.from.x, at.y - cast.from.y) > effect.radius) continue
+      // Never a champion: skills do not take the fight's own out of it.
+      if (data.enemy.get().champion || Math.hypot(at.x - cast.from.x, at.y - cast.from.y) > effect.radius) continue
       data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
       data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
       // Out of the fight while up: the team cannot touch it either.

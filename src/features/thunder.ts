@@ -266,10 +266,11 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
       strikes += 1
       for (const body of strike(tuning, events, at, target, bodies, { faction: cast.faction, blow: hit, jumps: effect.jumps, skip: struck })) struck.add(body.id)
     }
-    // What it struck is held: stunned a while, its break bar filled up (a full one breaks, see `BuildPoise`).
+    // What it struck is held: stunned a while (never a champion: skills do not hold the fight's own), its break bar
+    // filled up (a full one breaks, see `BuildPoise`).
     for (const { entity, data } of queries.stunnable.each()) {
       if (!struck.has(entity.id.value)) continue
-      if (effect.stun > 0) data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
+      if (effect.stun > 0 && !data.enemy.get().champion) data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
       const bar = poiseOf(tuning, data.enemy.get().kind, data.health.get().max, data.enemy.get().champion)
       if (bar > 0 && effect.breakFill > 0 && data.poise.get().broken <= 0) {
         data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))

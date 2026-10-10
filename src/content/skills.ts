@@ -427,7 +427,8 @@ export interface MantleEffect extends EffectBase {
 }
 
 /**
- * A lift: every enemy within `radius` of the caster rises off the floor
+ * A lift: every enemy within `radius` of the caster (never a champion:
+ * skills do not take the fight's own out of it) rises off the floor
  * over `rise` seconds, and stays up for `seconds` in all, harmless (stunned,
  * its windup cut off); then it falls, and the fall is its blow (`power`).
  */

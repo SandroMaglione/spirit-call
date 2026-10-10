@@ -176,11 +176,11 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "barrage":
       return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolsNames[effect.leaves.element]}`}`
     case "earthrise":
-      return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them and filling their break bars`
+      return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them (not a champion) and filling their break bars`
     case "mantle":
       return `a current of ${elementWord(effect.element)}around you for ${effect.seconds}s, staying with your team when you switch out: shots that reach it are absorbed, and blows land ${Math.round(effect.reduce * 100)}% weaker`
     case "lift":
-      return `you rise, and every enemy around you rises with you, left up for ${effect.seconds}s, harmless, then falls (${effect.power}% ATK)`
+      return `you rise, and every enemy around you (not a champion) rises with you, left up for ${effect.seconds}s, harmless, then falls (${effect.power}% ATK)`
     case "guard":
       return `a ${elementWord(effect.element)}ring throwing back what is around you (${effect.shove.power}% ATK), then, after standing still ${effect.raise}s, ${effect.plates} plates for the team, each taking a blow whole and shattering around you (${effect.power}% ATK)`
   }
