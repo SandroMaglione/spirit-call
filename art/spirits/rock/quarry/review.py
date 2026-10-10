@@ -44,8 +44,8 @@ def main():
     views = ("front","left","back","right","top","bottom","hero")
     board = Image.new("RGB",(1840,1260),BG)
     draw = ImageDraw.Draw(board)
-    draw.text((24,18),"QUARRY / STATIC MODEL",font=TITLE,fill=(235,213,186))
-    draw.text((24,57),"Reference left, 3D model right. Each pair uses the same figure height.",font=FONT,fill=(163,189,204))
+    draw.text((24,18),"QUARRY / REVISED STATIC MODEL",font=TITLE,fill=(235,213,186))
+    draw.text((24,57),"Reference left, revision right. Whole-figure height includes the requested floating rock.",font=FONT,fill=(163,189,204))
     overlays = Image.new("RGB",(1840,720),BG)
     scores = {}
     for i,name in enumerate(views):

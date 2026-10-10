@@ -71,8 +71,11 @@ assert abs(bounds[1][1]-audit["height_m"]) < 1e-6
 for name in ("Stone.Front.L","Stone.Front.R","Stone.Rear.L","Stone.Rear.R"):
     assert abs(world[name][:,1].min()) < 1e-6, f"{name} is not planted"
 assert min(world["Eye.L"][:,2].min(),world["Eye.R"][:,2].min()) > .3, "Model does not face +Z"
+gap = float(world["FloatRock"][:,1].min()-world["MossCap"][:,1].max())
+assert gap > .05 and abs(gap-audit["floating_rock_gap_m"]) < 1e-6
+assert "CrownStone" not in world
 result = {"passed":True,"triangles":triangles,"materials":len(gltf["materials"]),"parts":len(world),
           "bytes":len(raw),"bounds_gltf_m":bounds,"four_supports_grounded":True,"forward":"+Z",
-          "animations":0,"skeletons":0,"textures":0,"external_buffers":0,"cameras":0,"lights":0}
+          "floating_rock_gap_m":gap,"animations":0,"skeletons":0,"textures":0,"external_buffers":0,"cameras":0,"lights":0}
 (HERE/"glb-audit.json").write_text(json.dumps(result,indent=2)+"\n")
 print(json.dumps(result,indent=2))

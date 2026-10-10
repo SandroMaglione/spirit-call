@@ -98,10 +98,10 @@ def stone(name, center, rings, segments, mat, lean=0):
 
 def moss(mat):
     """One closed cap with a sloping dome and a chunky irregular skirt."""
-    n = 24
+    n = 16
     verts, faces = [], []
     # The front rim is behind the brow; the side skirt hangs lower.
-    rings = [(1.0, .337), (.99, .408), (.87, .493), (.67, .554), (.38, .588), (.10, .603)]
+    rings = [(1.0, .337), (.99, .408), (.87, .493), (.60, .566), (.10, .603)]
     for i, (radius, z) in enumerate(rings):
         for j in range(n):
             a = j*math.tau/n + i*.08 + RNG.uniform(-.035,.035)
@@ -126,8 +126,13 @@ def moss(mat):
 
 def recess(head, dark):
     # A real pocket in the head, with sloped sides and a recessed backing.
-    outline = [(-.159,.254),(-.134,.327),(-.071,.347),(.063,.345),
+    corners = [(-.159,.254),(-.134,.327),(-.071,.347),(.063,.345),
                (.137,.311),(.154,.231),(.092,.158),(-.084,.155)]
+    # Trim each hard corner into a gentler turn before carving the pocket.
+    outline = []
+    for i,(x,z) in enumerate(corners):
+        for neighbor in (corners[i-1],corners[(i+1)%len(corners)]):
+            outline.append((x*.78+neighbor[0]*.22,z*.78+neighbor[1]*.22))
     def backing(z):
         return -.375 + (z-.24)*.23
     rear = [(x*.86, .24+(z-.24)*.88) for x,z in outline]
@@ -144,6 +149,19 @@ def recess(head, dark):
     bpy.context.view_layer.objects.active = head
     bpy.ops.object.modifier_apply(modifier=modifier.name)
     bpy.data.objects.remove(cutter, do_unlink=True)
+    bm = bmesh.new()
+    bm.from_mesh(head.data)
+    lip = [edge for edge in bm.edges if len(edge.link_faces) == 2 and
+           {face.material_index for face in edge.link_faces} == {0,1}]
+    assert lip, "Socket lip edges were not found"
+    bevel = bmesh.ops.bevel(bm,geom=lip,offset=.009,segments=2,
+                            affect="EDGES",clamp_overlap=True)
+    for face in bevel["faces"]:
+        face.material_index = 0
+        face.smooth = True
+    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+    bm.to_mesh(head.data)
+    bm.free()
     colors(head, "stone")
     # The recess shares the vertex-color material with every stone. Keep
     # its dark color in the mesh rather than paying another material slot.
@@ -185,13 +203,13 @@ def main():
         for end, y in (("Front",-.205),("Rear",.227)):
             # Broad shoulders taper to blunt planted points like the sheet.
             rings = [(0,.024,.063),(.095,.072,.118),(.23,.15,.168),
-                     (.315,.136,.15),(.38,.095,.102),(.414,.047,.045)]
-            stone(f"Stone.{end}.{label}", (side*.342,y,0), rings, 10, stone_mat, -side*.22)
-        cheek = stone(f"Cheek.{label}", (side*.145,-.395,0),
-              [(.079,.026,.028),(.11,.055,.046),(.151,.059,.05),(.181,.025,.025)], 8, stone_mat, -side*.16)
+                     (.315,.136,.15),(.414,.047,.045)]
+            stone(f"Stone.{end}.{label}", (side*.342,y,0), rings, 8, stone_mat, -side*.22)
+        cheek = stone(f"Cheek.{label}", (side*.125,-.35,0),
+              [(.098,.024,.028),(.134,.052,.043),(.175,.03,.027)], 6, stone_mat, -side*.12)
         # The detail panel shows moss at the inner upper cheek corners.
         for face in cheek.data.polygons:
-            if face.center.z > .145 and face.center.x*side < .145:
+            if face.center.z > .145 and face.center.x*side < .125:
                 for index in face.loop_indices:
                     cheek.data.color_attributes["Color"].data[index].color = (*linear("#809638"),1)
     moss(moss_mat)
@@ -200,8 +218,8 @@ def main():
     tree = recess(head, dark)
     for side in (-1,1):
         eye(side,head,tree,amber)
-    stone("CrownStone", (0,.023,0), [(.571,.075,.07),(.595,.105,.097),
-          (.616,.085,.072),(.627,.036,.03)], 10, stone_mat)
+    stone("FloatRock", (0,.025,0), [(.685,.045,.042),(.711,.09,.075),
+          (.75,.077,.064),(.772,.026,.025)], 8, stone_mat)
     # The back view exposes a broad heel beneath the moss.
     stone("RearStone", (0,.275,0), [(.078,.08,.05),(.116,.145,.093),
           (.19,.19,.112),(.271,.16,.106),(.307,.088,.057)], 12, stone_mat)
@@ -239,7 +257,13 @@ def main():
     bpy.ops.export_scene.gltf(filepath=str(HERE / "quarry.glb"), export_format="GLB",
         export_apply=True, export_vertex_color="ACTIVE", export_animations=False,
         export_cameras=False, export_lights=False)
-    audit = {"status":"static model, awaiting visual review", "triangles":sum(len(p.vertices)-2 for o in meshes for p in o.data.polygons),
+    part_triangles = {o.name:sum(len(p.vertices)-2 for p in o.data.polygons) for o in meshes}
+    cap_top = max((bpy.data.objects["MossCap"].matrix_world @ v.co).z for v in bpy.data.objects["MossCap"].data.vertices)
+    float_bottom = min((bpy.data.objects["FloatRock"].matrix_world @ v.co).z for v in bpy.data.objects["FloatRock"].data.vertices)
+    assert float_bottom-cap_top > .05, "Floating rock touches the moss"
+    audit = {"status":"revised static model, awaiting visual review", "triangles":sum(part_triangles.values()),
+             "part_triangles":part_triangles,"floating_rock_gap_m":float_bottom-cap_top,
+             "socket_bevel_m":.009,"socket_bevel_segments":2,
              "materials":[m.name for m in bpy.data.materials], "objects":[o.name for o in meshes],
              "bounds_blender_m":bounds, "height_m":bounds[2][1], "width_m":bounds[0][1]-bounds[0][0],
              "depth_m":bounds[1][1]-bounds[1][0], "closed_meshes":manifold,

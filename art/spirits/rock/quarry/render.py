@@ -41,7 +41,8 @@ camera.data.type = "ORTHO"
 camera.data.ortho_scale = 1.18
 scene.collection.objects.link(camera)
 scene.camera = camera
-target = Vector((0,0,.315))
+info = json.loads((HERE/"audit.json").read_text())
+target = Vector((0,0,info["height_m"]/2))
 
 def direction(turn, elevation):
     t,e = math.radians(turn),math.radians(elevation)
