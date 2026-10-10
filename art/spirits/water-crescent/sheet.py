@@ -23,7 +23,7 @@ data = {
     "policy": {
         "shape": "Front and isometric views establish the silhouette, palette, exposed core, tall eyes, and swept crescents.",
         "cameras": "The labelled front and sides are oblique stylized views, not mutually consistent orthographic projections.",
-        "depth": "Closed lenticular crescent volumes flank a spherical core. Third shell is the swept crest visible across the upper core; its depth continues around the sphere. Rear thickness is interpreted from back/top views.",
+        "depth": "Closed lenticular crescent volumes flank a spherical core. User review clarified that the pale head sweep was overread as a solid third shell; it is now a soft color transition across core facets. Rear shell thickness is interpreted from back/top views.",
         "scale": "No dimension is supplied. Provisional 0.60 m overall mesh height, matching the existing compact Water Spirit scale. Single uniform pixel scale.",
         "scope": "Independent static study. No replacement of the shipped Water Spirit, clips, gameplay registration, or kit decisions."
     },
@@ -34,7 +34,6 @@ data = {
         [74,124,220], [81,129,240], [97,142,260], [112,152,273],
         [128,164,284], [145,170,290], [176,176,293]
     ],
-    "crest_shell_rows": [[181,181,124],[180,195,145],[185,200,170],[197,208,188],[216,216,204]],
     "right_shell_rows": [
         [170,170,154], [174,195,160], [179,205,168], [184,216,180],
         [190,224,190], [197,228,200], [206,230,211], [209,230,220],

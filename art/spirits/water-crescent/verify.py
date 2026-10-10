@@ -23,7 +23,8 @@ for obj in bpy.context.scene.objects:
     assert all(len(p.vertices)==3 for p in obj.data.polygons)
     assert not obj.animation_data
     native.append({"name":obj.name,"triangles":len(bm.faces),**errors});bm.free()
-assert len(native)==9
+assert len(native)==8
+assert "Shell.Crest" not in bpy.data.objects,"The head sweep must be core facet color"
 raw=(HERE/"water-crescent.glb").read_bytes()
 magic,version,length=struct.unpack_from("<4sII",raw)
 assert magic==b"glTF" and version==2 and length==len(raw)
@@ -34,7 +35,7 @@ for k in ("animations","skins","cameras","textures","images"):
     assert not g.get(k),k
 for k in ("KHR_lights_punctual","KHR_draco_mesh_compression"):
     assert k not in g.get("extensionsUsed",[])
-assert len(g["meshes"])==9 and len(g["materials"])==2
+assert len(g["meshes"])==8 and len(g["materials"])==2
 tris=0
 for m in g["meshes"]:
     for p in m["primitives"]:
@@ -56,7 +57,7 @@ for a,b in zip(dimensions,[expected["dimensions_m"][k] for k in ("width","depth"
 assert abs(hi[2]-.6)<.00001 and abs(lo[2])<.00001
 eyes=[o for o in bpy.context.scene.objects if o.name.startswith("Eye")]
 assert len(eyes)==2 and all(o.matrix_world.translation.y<-.05 for o in eyes)
-result={"passed":True,"triangles":tris,"materials":2,"named_meshes":9,
+result={"passed":True,"triangles":tris,"materials":2,"named_meshes":8,
         "primitives":sum(len(m["primitives"]) for m in g["meshes"]),
         "dimensions_m":expected["dimensions_m"],"native_topology":native,
         "round_trip_bounds_native_z_up":{"min":lo,"max":hi},

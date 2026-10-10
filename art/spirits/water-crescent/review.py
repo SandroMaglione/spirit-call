@@ -77,7 +77,7 @@ d.text((840,175),"0.60 m",font=font,fill="#a7eafd")
 d.text((840,212),"Provisional height",font=small,fill="#8eabc5")
 d.text((840,267),f"{info['triangles']:,} triangles",font=font,fill="#d9efff")
 d.text((840,305),"2 materials",font=small,fill="#8eabc5")
-d.text((840,338),"9 editable parts",font=small,fill="#8eabc5")
+d.text((840,338),f"{len(info['objects'])} editable parts",font=small,fill="#8eabc5")
 for i,color in enumerate(S["swatches"].values()):
     d.rounded_rectangle((840+i*42,399,874+i*42,433),radius=4,fill=color)
 d.text((840,469),"Geometry only",font=small,fill="#8eabc5")

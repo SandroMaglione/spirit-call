@@ -1,5 +1,5 @@
 {
-  "url": "http://192.168.0.45:5219/art/spirits/water-crescent/",
+  "url": "http://192.168.0.45:5219/art/spirits/water-crescent/?review=soft-head-highlight",
   "phone": {
     "animations": 0,
     "cameraPositions": {
@@ -51,11 +51,11 @@
     },
     "error": "",
     "horizontalOverflow": false,
-    "meshes": 9,
+    "meshes": 8,
     "minimumButtonHeight": 44,
-    "sha256": "e2b691c1b8dc29de3f5565812c83d48c0173cd4e29a9ad6362bffd5976c95e69",
+    "sha256": "51c4098470805b87f0a49a6514e7a4631d6d9260408abe13a42a101e669faf9b",
     "syntheticTouchDrag": true,
-    "triangles": 2374,
+    "triangles": 1798,
     "viewport": [
       390,
       844
@@ -66,7 +66,7 @@
       1280,
       800
     ],
-    "assetDrawCalls": 9,
+    "assetDrawCalls": 8,
     "gridDrawCalls": 1,
     "wireframeToggle": true,
     "smallRestHeightPx": 32,

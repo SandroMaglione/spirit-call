@@ -1,4 +1,4 @@
-"""Build closed faceted core, three crescent volumes and detached fins.
+"""Build closed faceted core, two crescent volumes and detached fins.
 
 Front-image traces live in sheet.json. Native meters, +Z up, +Y forward.
 """
@@ -62,6 +62,14 @@ def shade(obj,role):
             bright=max(.14,min(.95,.24+.45*high+.15*p.normal.z+noise*.6))
             rgb=tuple(c*bright for c in royal)
             if q.z>.34 and p.normal.z>.4:rgb=blend(rgb,sky,.13)
+            # The pale sweep in the sheet is light across the water core,
+            # not an extra solid headband. Blend it through existing facets.
+            px=S["center_px"]-q.x/SCALE
+            row=S["ground_px"]-q.z/SCALE
+            sweep=math.exp(-((row-(187+.30*(px-145)))/10)**2)
+            taper=max(0,1-((px-168)/42)**2)
+            strength=.68*sweep*taper*max(0,min(1,p.normal.y*1.6))
+            rgb=blend(rgb,sky,strength)
         else:
             high=max(0,min(1,q.z/.6))
             front=p.normal.y
@@ -76,9 +84,8 @@ def shade(obj,role):
                         if obj.name!="Shell.Main":u=1-u
                         bright=max(0,min(1,1.25-1.15*u+noise))
                         break
-                if obj.name=="Shell.Crest":bright=max(0,min(1,.73+.13*p.normal.z+noise*.5))
             rgb=blend(royal,sky,bright*2) if bright<.5 else blend(sky,pale,(bright-.5)*2)
-            if role=="shell" and obj.name!="Shell.Crest" and bright>.75:rgb=blend(rgb,(1,1,1),(bright-.75)*1.2)
+            if role=="shell" and bright>.75:rgb=blend(rgb,(1,1,1),(bright-.75)*1.2)
             # The exposed inner edge and lower point have a blue/lavender seam.
             lavender_height=.24 if obj.name=="Shell.Right" else .13
             if role=="shell" and q.z<lavender_height:
@@ -160,21 +167,6 @@ bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
 bpy.context.view_layer.update();shade(core,"core")
 crescent("Shell.Main",S["main_shell_rows"],.056,.085,palette)
 crescent("Shell.Right",S["right_shell_rows"],.010,.070,palette)
-# The third piece is the pale crest over the dark core in the front/hero.
-# Its closed section gives the cap depth while leaving the face exposed.
-crest=crescent("Shell.Crest",S["crest_shell_rows"],.072,.054,palette,horizontal=True)
-bm=bmesh.new();bm.from_mesh(crest.data)
-bmesh.ops.subdivide_edges(bm,edges=list(bm.edges),cuts=3,use_grid_fill=True)
-bmesh.ops.triangulate(bm,faces=list(bm.faces));bm.to_mesh(crest.data);bm.free()
-for v in crest.data.vertices:
-    world=crest.matrix_world@v.co
-    hit,loc,normal,index=core.ray_cast(core.matrix_world.inverted()@Vector((world.x,1,world.z)),Vector((0,-1,0)))
-    if hit:
-        surface=core.matrix_world@loc
-        world.y=surface.y+.007+(world.y-.08)*.12
-        v.co=crest.matrix_world.inverted()@world
-bm=bmesh.new();bm.from_mesh(crest.data)
-bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(crest.data);bm.free()
 for name,outline in S["fins"].items():fin(name,outline,palette)
 for name,cx in zip(("Eye.L","Eye.R"),(160,185)):
     eye(name,cx,238,glow,core)

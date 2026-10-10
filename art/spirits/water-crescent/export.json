@@ -11,7 +11,7 @@
   "glb_axes": "meters, +Y up, +Z forward",
   "origin": "world (0,0,0), ground under the floating core",
   "height_basis": "ground origin to highest rest mesh vertex, including shell",
-  "triangles": 2374,
+  "triangles": 1798,
   "materials": [
     "Eyes \u2022 cyan emission",
     "Water \u2022 faceted vertex palette"
@@ -42,15 +42,6 @@
         -0.17775042355060577,
         0.07531124353408813,
         0.2999504506587982
-      ]
-    },
-    {
-      "name": "Shell.Crest",
-      "triangles": 576,
-      "native_pivot_m": [
-        -0.0326666422188282,
-        0.09764065593481064,
-        0.3554190993309021
       ]
     },
     {
@@ -101,6 +92,6 @@
   ],
   "clips": {},
   "reference_policy": "sheet.json",
-  "sha256": "e2b691c1b8dc29de3f5565812c83d48c0173cd4e29a9ad6362bffd5976c95e69",
-  "bytes": 206204
+  "sha256": "51c4098470805b87f0a49a6514e7a4631d6d9260408abe13a42a101e669faf9b",
+  "bytes": 146060
 }

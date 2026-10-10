@@ -1,7 +1,7 @@
 # Water Spirit, crescent study
 
 A static model of the supplied Water Spirit sheet. The dark faceted core,
-tall cyan eyes, large left crescent, smaller right crescent, pale crest and
+tall cyan eyes, large left crescent, smaller right crescent, soft head highlight and
 three floating fins carry its silhouette. This study lives beside the
 existing Water Spirit so the new direction can be reviewed independently.
 
@@ -17,9 +17,10 @@ renderings. Their apparent scale and part overlap vary, so they help
 interpret volume rather than establish exact orthographic measurements.
 
 The main and right shells are closed curved blades with a front and rear
-keel. The third piece is the pale sweep across the upper core, conformed
-to the sphere's facets. This interprets the sheet's note about three shell
-pieces. It is a cap rather than an invented extra vertical blade. The rear
+keel. Static review clarified that the pale sweep over the head looked too
+solid as a separate cap. It now blends through the core's existing facet
+colors, with no raised plate or seam. This visual correction takes priority
+over treating the sheet's note about three shell pieces literally. The rear
 and shell thickness remain an interpretation; the static viewer exposes
 that choice from every direction.
 
@@ -38,7 +39,7 @@ in meters, with a ground reference at world origin.
 
 ![Same-scale reference and silhouette overlay](renders/review-reference.png)
 
-The front silhouette overlap is 90.7%, with fixed traced coordinates and
+The front silhouette overlap is 90.6%, with fixed traced coordinates and
 one pixel scale. The overlay includes the core, shells and fins. It measures
 the mask, not color accuracy, depth or consistency across the generated
 views. Yellow is reference only; red is model only. This is a useful outline
@@ -57,9 +58,9 @@ viewport evidence, not physical-phone performance evidence.
 
 ## Files and verification
 
-- `water-crescent.blend` is the editable static source, with nine mesh
+- `water-crescent.blend` is the editable static source, with eight mesh
   objects and individual pivots. No skeleton or keyframes.
-- `water-crescent.glb` has 2,374 triangles, two materials, nine primitives,
+- `water-crescent.glb` has 1,798 triangles, two materials, eight primitives,
   vertex colors, cyan eye emission and no textures. Its native-facing
   dimensions are approximately 0.629 x 0.304 x 0.600 m.
 - `export.json` records bounds, pivots, triangle counts and the file hash.
@@ -68,9 +69,9 @@ viewport evidence, not physical-phone performance evidence.
   Blender round trip. `reference-review.json` ties the overlay to the GLB hash.
 - `browser-review.json` records the exported asset loaded in the inspector.
 
-The eye and crest surfaces have extra triangles to follow the faceted core.
+The eye surfaces have extra triangles to follow the faceted core.
 All parts share one vertex-color material except the emissive eyes. Separate
-meshes still mean nine draw calls in this standalone inspector.
+meshes still mean eight draw calls in this standalone inspector.
 
 Typecheck, lint and all 79 test files pass, with 665 tests passed and one
 skipped. The production build passes. Gameplay content and the shipped Water
