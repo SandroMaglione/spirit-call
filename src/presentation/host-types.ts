@@ -77,6 +77,19 @@ export type TotemNode = {
   readonly dispose: () => void
 }
 
+/**
+ * A skill's companion (see `CompanionsEffect`): an echo of a character,
+ * her own body on a `pivot` (a little smaller, pale and see-through),
+ * walking over its `shadow`.
+ */
+export type CompanionNode = {
+  readonly kind: "companion"
+  readonly root: Group
+  readonly pivot: Group
+  readonly body: ActorBody
+  readonly shadow: Instance
+}
+
 /** An arena hazard laid into the floor (see `presentation/hazards.ts`); `show` it lit or put out (`out`: seconds it stays out). */
 export type HazardNode = {
   readonly kind: "hazard"
@@ -85,7 +98,7 @@ export type HazardNode = {
   readonly dispose: () => void
 }
 
-export type RenderNode = ActorNode | ProjectileNode | WallNode | TotemNode | HazardNode
+export type RenderNode = ActorNode | ProjectileNode | WallNode | TotemNode | CompanionNode | HazardNode
 
 /** Geometry, materials, and batches made once and shared by many nodes. */
 export interface RenderAssets {
@@ -213,6 +226,15 @@ export interface FeedbackState {
   readonly recoil: Map<number, { age: number; life: number; x: number; y: number; strength: number }>
   /** The state the one on the field is in, and the most it had left (refreshed by a new hit), so its icon's ring shows what is left. */
   readonly stateClock: { id: StateId | null; full: number }
+  /**
+   * The one on the field lifted off the floor for a skill's look alone (no
+   * gameplay: she is where the simulation says, only drawn higher): `lift`
+   * gives the height in screen pixels at zoom 1, `age` seconds into its
+   * `life` (see `presentation/signatures.ts`).
+   */
+  hover: { age: number; readonly life: number; readonly lift: (age: number) => number } | null
+  /** The player's body squashed and stretched a moment (a water body bouncing): `stretch(age)` above 0 taller and thinner, below 0 flatter and wider. */
+  squish: { age: number; readonly life: number; readonly stretch: (age: number) => number } | null
   /** The Extras' damage readout: the blows of the last few seconds (`age` in seconds), for the damage and the hits a second. */
   readonly meter: { recent: Array<{ age: number; amount: number }> }
 }

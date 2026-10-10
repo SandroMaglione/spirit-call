@@ -123,7 +123,7 @@ export const grenadeSkill = {
   effect: lob({ maxRange: 360, flightTime: 0.35, fuse: 0.45, radius: 95, power: 38, element: "fire", knockback: 380, hitStop: 0, heavy: false, leaves: { element: "fire", radius: 80, seconds: 3 } })
 } as const
 
-/** The Splash (the Tidecaller's special before the Tidal Wave): water lobbed to the cursor, soaking and leaving a puddle. */
+/** The Splash (the Tidecaller's special before the Tidal Wave and the Tidefall): water lobbed to the cursor, soaking and leaving a puddle. */
 export const splashSkill = {
   name: "Splash",
   label: "SPLASH",
@@ -146,7 +146,7 @@ export const withLobbedSpecials = (tuning: Tuning = defaultTuning): Tuning => {
     skills: {
       ...tuning.skills,
       flareJump: skills.flareJump!.effect.kind === "leap" ? grenadeSkill : skills.flareJump,
-      tidalWave: skills.tidalWave!.effect.kind === "cut" ? splashSkill : skills.tidalWave
+      tidalWave: skills.tidalWave!.effect.kind === "plunge" ? splashSkill : skills.tidalWave
     }
   }) as unknown as Tuning
 }

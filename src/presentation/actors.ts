@@ -12,7 +12,7 @@ import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import { attackOf, dashOf, traitsIn } from "../features/build.ts"
-import { Action, Aim, Airborne, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Overcharged, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -67,6 +67,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         member: Game.Query.read(Member),
         velocity: Game.Query.read(Velocity),
         airborne: Game.Query.optional(Airborne),
+        overcharged: Game.Query.optional(Overcharged),
         passives: Game.Query.optional(Passives)
       },
       with: [Player]
@@ -163,12 +164,17 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       // Charging glows toward the full-charge color; once full it pulses.
       const pulse = charge >= 1 ? 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.charge.pulseHz * Math.PI * 2) : 0
       const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
-      // A hit flashes her white, a dash lights her up; otherwise a charge glows. Protected: see-through.
+      // A hit flashes her white, a dash lights her up; overcharged she flickers with thunder; otherwise a charge glows. Protected: see-through.
       const flashing = data.flash.get().remaining > 0
+      // Overcharged: lit with thunder, surging; strobing as it runs out.
+      const now = performance.now() / 1000
+      const overcharged = data.overcharged.present ? data.overcharged.get() : null
+      const strobe = overcharged === null ? 0 : overcharged.remaining < 1.2 ? (Math.sin(now * 40) > 0 ? 1 : 0.2) : 0.8 + 0.2 * Math.sin(now * 23) * Math.sin(now * 7)
+      const surge = charge <= 0 ? 0.6 * strobe : 0
       node.body.paint(
         stateTint(0xffffff, data.state.get().current),
-        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : view.charge.full,
-        flashing ? 1 : dash.remaining > 0 ? 0.65 : glow,
+        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : surge > 0 ? view.elements.thunder : view.charge.full,
+        flashing ? 1 : dash.remaining > 0 ? 0.65 : surge > 0 ? surge : glow,
         data.invulnerable.get().remaining > 0 ? 0.55 : 1)
       // Her body says how she is: its halo bright and pulsing while her ultimate is ready, dimming as her health runs low.
       const spirit = view.spirit
@@ -179,7 +185,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const left = health.max > 0 ? health.current / health.max : 1
       const dim = spirit.low + (1 - spirit.low) * Math.min(1, left / spirit.lowHealth)
       const beat = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * spirit.pulseHz * Math.PI * 2)
-      node.body.aura?.(dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
+      // Overcharged, the halo blazes, larger, surging with her.
+      node.body.aura?.(overcharged !== null ? 1 + 3 * strobe : dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
       // Her eyes: shut once she has fallen, wide for a moment after a perfect dodge or coming in after a fall.
       const wide = 1 + (spirit.wide - 1) * Math.min(1, feedback.wideEyes / (spirit.wideSeconds * 0.5))
       if (health.current <= 0) node.body.express?.(1, spirit.shut)
@@ -217,7 +224,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const still = Math.max(0, 1 - Math.hypot(velocity.x, velocity.y) / (pace * 0.5)) * (0.5 - 0.5 * onScreen.y)
       // Diving, she tips head first toward where she lands.
       const dive = data.airborne.present && diving(data.airborne.get()) ? data.airborne.get().dive!.velocity : null
-      const ahead = dive === null ? null : normalizeOr(dive, aim)
+      // (A dive in place, straight down, stays upright.)
+      const ahead = dive === null || Math.hypot(dive.x, dive.y) < 1e-6 ? null : normalizeOr(dive, aim)
       const tilt = ahead !== null ? { x: ahead.x * view.airborne.plunge.lean, y: ahead.y * view.airborne.plunge.lean } : { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
       const look = characterLooks[data.member.get().character]
       const grounded = look.kind === "model" && look.grounded === true
@@ -233,9 +241,22 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const pop = Math.min(1, feedback.entrance / spirit.popSeconds)
       const size = pop < 0 ? 0 : pop >= 1 ? 1 : spirit.pop + (1 - spirit.pop) * (pop + 0.35 * Math.sin(pop * Math.PI))
       const stretch = pop < 0 || pop >= 1 ? 1 : 1 + 0.25 * Math.sin(pop * Math.PI)
-      node.pivot.scale.set(size * (1 + squash * 0.5), size * stretch * (1 - squash), size * (1 + squash * 0.5))
+      const squish = feedback.squish
+      if (squish !== null) {
+        squish.age += services.clock.frameSeconds
+        if (squish.age >= squish.life) feedback.squish = null
+      }
+      const tall = feedback.squish === null ? 0 : feedback.squish.stretch(feedback.squish.age)
+      const thin = 1 / Math.sqrt(Math.max(0.2, 1 + tall))
+      node.pivot.scale.set(size * (1 + squash * 0.5) * thin, size * stretch * (1 - squash) * (1 + tall), size * (1 + squash * 0.5) * thin)
       // In the air: lifted off her shadow, which shrinks under her.
-      const lift = data.airborne.present ? airborneLift(data.airborne.get()) : 0
+      const hover = feedback.hover
+      if (hover !== null) {
+        hover.age += services.clock.frameSeconds
+        if (hover.age >= hover.life) feedback.hover = null
+      }
+      const hovering = feedback.hover === null ? 0 : worldHeight(projection, Math.max(0, feedback.hover.lift(feedback.hover.age)))
+      const lift = (data.airborne.present ? airborneLift(data.airborne.get()) : 0) + hovering
       node.pivot.position.y = lift
       const shadow = radius * (1 - (1 - view.airborne.shadow) * Math.min(1, lift / worldHeight(projection, view.airborne.plunge.height)))
       node.shadow.object.scale.set(shadow, 1, shadow)

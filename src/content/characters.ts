@@ -209,9 +209,10 @@ export const characters = {
   /**
    * Thunder, Gauntlets, attacker (a working name): the fast one, very close,
    * hard-hitting, light and frail. The Spark Step darts her through a line
-   * of enemies, charging them; the Storm Flurry hops her from one to the
-   * next. Her dash is a little slower than her quickness suggests: the
-   * Gauntlets' blows bring it back (see `Handling.dashFeed`).
+   * of enemies, charging them; the Overcharge turns her to lightning for a
+   * while, every dash a Spark Step of its own and all but endless. Her dash
+   * is a little slower than her quickness suggests: the Gauntlets' blows
+   * bring it back (see `Handling.dashFeed`).
    */
   sparkfist: character({
     name: "Sparkfist",

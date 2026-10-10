@@ -4,13 +4,14 @@
  * - An ultimate's moment (see `UltimateMoment`): the camera pushes in, the
  *   world dims around her, the edges glow in her element's color, its lines
  *   turn in and its light gathers into her, building; then it goes off with
- *   a flash, rings, a deep blast, and a shake.
+ *   a flash, a ring, a deep blast, and a shake, and its element's own
+ *   release (see `release`); the skill's own look is `signatures.ts`'s.
  * - Gust's hop: wind streaming off her as she dives, and rings, streaks,
  *   and dust where she lands.
  * - Flare Jump's leap: flames trailing off her as she flies back, sparks
  *   where she lands.
- * - A volley's shells: smoke trailing behind them, and a column of fire
- *   where each one blasts.
+ * - A volley's shells: smoke trailing behind them (where they blast is
+ *   `signatures.ts`'s).
  * - A champion's roar as a phase begins (see `Roused`): a flash of its
  *   element, rings, and a long shake; and its shockwaves throwing up dust
  *   along their rings as they run out.
@@ -20,7 +21,9 @@ import { toScreen } from "../math/iso.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment } from "../schema.ts"
+import type { ElementId } from "../content/elements.ts"
 import { airborneLift, diving } from "./actors.ts"
+import type { RenderHostValue } from "./host-types.ts"
 
 const css = (color: number): string => `#${color.toString(16).padStart(6, "0")}`
 
@@ -32,6 +35,44 @@ const screenAt = (at: Vec2, lift = 0): Vec2 => {
 
 /** How high her body's middle shows, in pixels (for a flash on her rather than at her feet). */
 const bodyLift = () => view.impact.height * projection.zoom
+
+/**
+ * How an ultimate's element goes off, on top of its flash: wind in streaks
+ * whirling out, fire in embers shooting up, water thrown up and falling
+ * back, thunder in bolts out of the sky, rock in grit and dust.
+ */
+const release = (fx: RenderHostValue["fx"], element: ElementId | null, at: Vec2, body: Vec2, color: number): void => {
+  switch (element) {
+    case "wind":
+      for (let streak = 0; streak < 30; streak++) {
+        const angle = (streak / 30) * Math.PI * 2
+        const speed = 520 + Math.random() * 120
+        // Out and around: each streak thrown off a turn.
+        fx.mote(body, Math.cos(angle) * speed - Math.sin(angle) * 260, (Math.sin(angle) * speed + Math.cos(angle) * 260) * 0.5, { color: streak % 3 === 0 ? view.hitFlash : color, size: 3, life: 0.4, stretch: 7, drag: 3, gravity: 0 })
+      }
+      return
+    case "fire":
+      fx.burst(at, { color, count: 34, speed: 260, size: 4.5, life: 0.7, gravity: -1100, drag: 1, stretch: 5 })
+      fx.burst(at, { color: view.ultimate, count: 16, speed: 200, size: 3.5, life: 0.5, gravity: -900, drag: 1, stretch: 4 })
+      return
+    case "water":
+      for (let drop = 0; drop < 36; drop++) fx.mote(body, (Math.random() - 0.5) * 520, -380 - Math.random() * 320, { color: drop % 3 === 0 ? 0xe8f6ff : color, size: 3.5 + Math.random() * 2, life: 0.7, gravity: 1500, drag: 0.6 })
+      return
+    case "thunder":
+      for (let bolt = 0; bolt < 3; bolt++) {
+        const x = at.x + (bolt - 1) * 90 * projection.zoom
+        fx.bolt([{ x: x + (Math.random() - 0.5) * 60, y: at.y - 480 * projection.zoom }, { x: x + (Math.random() - 0.5) * 40, y: at.y - 240 * projection.zoom }, { x: (x + at.x) / 2, y: at.y - 20 * projection.zoom }], color, 0.25)
+      }
+      fx.burst(body, { color, count: 22, speed: 560, size: 3, life: 0.35, stretch: 6, drag: 3 })
+      return
+    case "rock":
+      fx.burst(at, { color: view.stone.light, count: 30, speed: 380, size: 7, life: 0.8, gravity: -120, drag: 3, alpha: 0.55 })
+      fx.burst(body, { color: view.stone.dark, count: 20, speed: 520, size: 5, life: 0.6, gravity: 1200 })
+      return
+    default:
+      fx.burst(body, { color, count: 26, speed: 520, size: 4, life: 0.5, stretch: 5, drag: 2 })
+  }
+}
 
 export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
   queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) }, with: [Player] }) },
@@ -81,9 +122,8 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
     const body = screenAt(cast.from, bodyLift())
     host.fx.flash(body, spec.flash, view.hitFlash, 0.18)
     host.fx.flash(body, spec.flash * 1.4, color, 0.35)
-    host.fx.ring(at, 260 * projection.zoom, color, 0.6)
-    host.fx.ring(at, 150 * projection.zoom, view.hitFlash, 0.4)
-    host.fx.burst(body, { color, count: 26, speed: 520, size: 4, life: 0.5, stretch: 5, drag: 2 })
+    host.fx.ring(at, 200 * projection.zoom, color, 0.5)
+    release(host.fx, element, at, body, color)
     feedback.shake = Math.max(feedback.shake, spec.shake)
     feedback.punch = Math.max(feedback.punch, 1.2)
     services.sounds.play("ultimateRelease")
@@ -110,13 +150,23 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
     const at = player.data.position.get()
     const lift = airborneLift(airborne)
     if (airborne.kind === "plunge" && diving(airborne)) {
-      // Diving: wind streaming off her, back along where she came from.
+      // Diving: her element (wind for the Gust, water for the Tidefall) streaming off her, back along where she came from.
       const body = screenAt(at, lift * projection.zoom + bodyLift() * 0.5)
       const back = normalizeOr(toScreen(projection, { x: -(airborne.dive?.velocity.x ?? 0), y: -(airborne.dive?.velocity.y ?? 0) }), { x: 0, y: -1 })
-      const count = Math.floor(520 * seconds + Math.random())
-      for (let index = 0; index < count; index++) {
-        const from = { x: body.x + (Math.random() - 0.5) * 14, y: body.y + (Math.random() - 0.5) * 14 }
-        fx.mote(from, back.x * 260 + (Math.random() - 0.5) * 40, back.y * 260 - 60 * Math.random(), { color: Math.random() < 0.3 ? view.hitFlash : view.elements.wind, size: 2.5 + Math.random() * 2.5, life: 0.22, stretch: 6, drag: 4 })
+      const element = airborne.landing[0]?.effect.element ?? "wind"
+      const trail = element === null ? view.elements.wind : view.elements[element]
+      if (element === "water") {
+        // Water does not stream like wind: drops shaken off her, falling with her.
+        const count = Math.floor(160 * seconds + Math.random())
+        for (let index = 0; index < count; index++) {
+          fx.mote({ x: body.x + (Math.random() - 0.5) * 22, y: body.y + (Math.random() - 0.5) * 16 }, (Math.random() - 0.5) * 160, -60 - Math.random() * 80, { color: Math.random() < 0.3 ? view.hitFlash : trail, size: 3 + Math.random() * 2, life: 0.3, gravity: 1200, drag: 0.5 })
+        }
+      } else {
+        const count = Math.floor(520 * seconds + Math.random())
+        for (let index = 0; index < count; index++) {
+          const from = { x: body.x + (Math.random() - 0.5) * 14, y: body.y + (Math.random() - 0.5) * 14 }
+          fx.mote(from, back.x * 260 + (Math.random() - 0.5) * 40, back.y * 260 - 60 * Math.random(), { color: Math.random() < 0.3 ? view.hitFlash : trail, size: 2.5 + Math.random() * 2.5, life: 0.22, stretch: 6, drag: 4 })
+        }
       }
     } else if (airborne.kind === "leap") {
       // Flames trailing off her as she flies.
@@ -148,13 +198,6 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
     const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
     const at = screenAt(ground, (4 * view.grenadeArc * flight * (1 - flight) + 6) * projection.zoom)
     fx.mote(at, (Math.random() - 0.5) * 20, -10 - Math.random() * 15, { color: 0x6b6470, size: 4 + Math.random() * 3, life: 0.5, gravity: -30, drag: 2, alpha: 0.5 })
-  }
-  // Fire blasting from a shell or a grenade: a column of flame.
-  for (const explosion of events.explosion.all()) {
-    if (explosion.faction !== "player" || explosion.element !== "fire" || explosion.kind !== "blast") continue
-    const at = screenAt(explosion.at)
-    fx.burst(at, { color: view.elements.fire, count: 14, speed: 200, size: 4, life: 0.55, gravity: -900, drag: 1, stretch: 5 })
-    fx.burst(at, { color: view.ultimate, count: 6, speed: 160, size: 3, life: 0.4, gravity: -700, drag: 1, stretch: 4 })
   }
 })
 

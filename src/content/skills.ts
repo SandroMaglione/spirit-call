@@ -79,6 +79,12 @@ export interface PlungeEffect extends EffectBase {
   readonly distance: number
   readonly radius: number
   readonly active: number
+  /**
+   * What she lands as, if not that blast: a nova of the same reach and blow
+   * (see `NovaEffect`), washing away the other side's shots within it if
+   * `clearsProjectiles`, and healing the team as `heals` says.
+   */
+  readonly lands: { readonly clearsProjectiles: boolean; readonly heals: StateHeal | null } | null
 }
 
 /**
@@ -199,6 +205,32 @@ export interface TotemEffect extends EffectBase {
   readonly jumps: number
   /** A body of the other side stepping into its reach is zapped and thrown back out this hard (0: it is not). */
   readonly repel: number
+}
+
+/**
+ * Companions called up behind the caster, echoes of her, `count` of them,
+ * for at most `seconds`. Each walks after the one on the field (whoever she
+ * is) on the floor, at `follow` (world units a second, slower than a run:
+ * running off leaves them behind). Each acts every `tick` seconds (one
+ * after the other), from where it is: with an enemy within `radius` of it,
+ * it throws a disc at the nearest (flying at `shotSpeed`, there and back,
+ * hitting each way); with none, it heals her `heal` percent of her maximum
+ * health if she is hurt and within `healRadius` of it. Each leaves once its
+ * throws come to `budget` percent of ATK (`power` a throw), or when its
+ * time runs out, whichever comes first. Its throws come from her ATK when
+ * called.
+ */
+export interface CompanionsEffect extends EffectBase {
+  readonly kind: "companions"
+  readonly count: number
+  readonly seconds: number
+  readonly tick: number
+  readonly radius: number
+  readonly heal: number
+  readonly healRadius: number
+  readonly follow: number
+  readonly shotSpeed: number
+  readonly budget: number
 }
 
 /**
@@ -332,19 +364,52 @@ export interface BraceEffect extends EffectBase {
 }
 
 /**
- * Lightning hopping between enemies: the nearest body of the other side
- * within `radius` of the caster is struck, then the nearest not struck yet
- * within `hop` of the last, up to `strikes` bodies, and the caster lands
- * beside the last one struck (none in reach: she stays, striking nothing).
+ * Her body taken over by her element for `seconds` (lost if she leaves the
+ * field): she runs `speed` times as fast, every blow of hers carries the
+ * effect's element, a dash spent comes back after `dash` seconds at most
+ * (all but endless), and every dash strikes as it starts, like her Spark
+ * Step, everything along its way (`dashStrike`: `power` percent of ATK,
+ * `width` across). As it takes hold, a burst of `radius` all around her, its
+ * blow on what it reaches.
  */
-export interface FlurryEffect extends EffectBase {
-  readonly kind: "flurry"
+export interface OverchargeEffect extends EffectBase {
+  readonly kind: "overcharge"
+  readonly seconds: number
+  readonly speed: number
+  readonly dash: number
   readonly radius: number
-  readonly strikes: number
-  readonly hop: number
+  readonly dashStrike: { readonly power: number; readonly width: number; readonly knockback: number }
 }
 
-export type SkillEffect = BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | FlurryEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+/**
+ * A mantle of wind around the one on the field (whoever she is: it stays
+ * with the team when its caster leaves the field), for `seconds`: the other
+ * side's shots that reach `radius` of her are absorbed (nothing of them
+ * lands), and blows struck on her land `reduce` (a share) weaker. Every
+ * `tick` seconds, its blow strikes the other side's bodies touching it,
+ * throwing them out.
+ */
+export interface MantleEffect extends EffectBase {
+  readonly kind: "mantle"
+  readonly seconds: number
+  readonly radius: number
+  readonly reduce: number
+  readonly tick: number
+}
+
+/**
+ * A lift: every enemy within `radius` of the caster rises off the floor
+ * over `rise` seconds, and stays up for `seconds` in all, harmless (stunned,
+ * its windup cut off); then it falls, and the fall is its blow (`power`).
+ */
+export interface LiftEffect extends EffectBase {
+  readonly kind: "lift"
+  readonly radius: number
+  readonly rise: number
+  readonly seconds: number
+}
+
+export type SkillEffect = MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -367,19 +432,22 @@ export const bySlot = <T>(each: (slot: SkillSlot) => T): { readonly [Slot in Ski
 
 /** Effect builders, also used by passives that set off a skill effect. */
 export const cut = (spec: Omit<CutEffect, "kind" | "marks" | "carries"> & Partial<Pick<CutEffect, "marks" | "carries">>): CutEffect => ({ kind: "cut", marks: null, carries: 0, ...spec })
-export const flurry = (spec: Omit<FlurryEffect, "kind">): FlurryEffect => ({ kind: "flurry", ...spec })
 export const blast = (spec: Omit<BlastEffect, "kind">): BlastEffect => ({ kind: "blast", ...spec })
-export const plunge = (spec: Omit<PlungeEffect, "kind">): PlungeEffect => ({ kind: "plunge", ...spec })
+export const plunge = (spec: Omit<PlungeEffect, "kind" | "lands"> & Partial<Pick<PlungeEffect, "lands">>): PlungeEffect => ({ kind: "plunge", lands: null, ...spec })
 export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "leap", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
 export const nova = (spec: Omit<NovaEffect, "kind" | "heals" | "readies"> & Partial<Pick<NovaEffect, "heals" | "readies">>): NovaEffect => ({ kind: "nova", heals: null, readies: 0, ...spec })
+export const overcharge = (spec: Omit<OverchargeEffect, "kind">): OverchargeEffect => ({ kind: "overcharge", ...spec })
 export const brace = (spec: Omit<BraceEffect, "kind">): BraceEffect => ({ kind: "brace", ...spec })
 export const barrier = (spec: Omit<BarrierEffect, "kind">): BarrierEffect => ({ kind: "barrier", ...spec })
+export const mantle = (spec: Omit<MantleEffect, "kind">): MantleEffect => ({ kind: "mantle", ...spec })
+export const lift = (spec: Omit<LiftEffect, "kind">): LiftEffect => ({ kind: "lift", ...spec })
 export const fault = (spec: Omit<FaultEffect, "kind">): FaultEffect => ({ kind: "fault", ...spec })
 export const quake = (spec: Omit<QuakeEffect, "kind">): QuakeEffect => ({ kind: "quake", ...spec })
 export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
 export const totem = (spec: Omit<TotemEffect, "kind">): TotemEffect => ({ kind: "totem", ...spec })
+export const companions = (spec: Omit<CompanionsEffect, "kind">): CompanionsEffect => ({ kind: "companions", ...spec })
 export const thunderclap = (spec: Omit<ThunderclapEffect, "kind">): ThunderclapEffect => ({ kind: "thunderclap", ...spec })
 export const guard = (spec: Omit<GuardEffect, "kind">): GuardEffect => ({ kind: "guard", ...spec })
 export const earthrise = (spec: Omit<EarthriseEffect, "kind">): EarthriseEffect => ({ kind: "earthrise", ...spec })
@@ -415,20 +483,20 @@ export const skills = {
     effect: leap({ radius: 150, active: 0.1, distance: 230, air: 0.32, power: 22, element: "fire", knockback: 900, hitStop: 0.05, heavy: false, leaves: { element: "fire", radius: 70, seconds: 2.5 } })
   }),
   /**
-   * The Tidecaller's special: a wave rolling out ahead of her, soaking and
-   * shoving back everything in its way, leaving puddles behind, and marking
-   * what it hits: for a few seconds, blows on the marked heal whoever is on
-   * the field (her healing asks for hits on what she marked).
+   * The Tidecaller's special (id `tidalWave`, from when it was a wave
+   * rolling ahead of her): she bounces straight up and splashes down where
+   * she stood, a ring of water bursting out around her that soaks and drives
+   * back what is around, washes away shots, and heals the whole team, more
+   * for each enemy already soaked. Untouchable while in the air.
    */
   tidalWave: skill({
-    name: "Tidal Wave",
-    cooldown: 6,
+    name: "Tidefall",
+    cooldown: 5,
     energy: 0,
-    invulnerability: 0,
-    effect: cut({
-      length: 360, width: 150, active: 0.15, power: 22, element: "water", knockback: 900, hitStop: 0.04, heavy: false,
-      leaves: { element: "water", radius: 60, seconds: 4 },
-      marks: { seconds: 5, heal: 2, every: 1 }
+    invulnerability: 0.42,
+    effect: plunge({
+      rise: 0.3, dive: 0.12, distance: 0, radius: 210, active: 0.12, power: 30, element: "water", knockback: 900, hitStop: 0.06, heavy: false,
+      lands: { clearsProjectiles: true, heals: { state: "soaked", base: 4, per: 3, most: 16, consumes: false } }
     })
   }),
   /**
@@ -467,17 +535,20 @@ export const skills = {
     })
   }),
   /**
-   * The Tidecaller's ultimate: a tide breaking out around her that soaks
-   * everything far around, drives it back, and washes away shots, healing
-   * the whole team, the bench too: more for each enemy around already
-   * soaked (soak them first).
+   * The Tidecaller's ultimate (id `tide`, from when it was a tide breaking
+   * out around her): an echo of her, pale as sea foam, called up behind
+   * her, walking after whoever is on the field a little slower than a run,
+   * throwing discs at the nearest enemy in its reach (a fraction of her own
+   * blows: it soaks more than it hurts), or healing her when
+   * none is and she is close, until it has dealt its share or its time is
+   * up.
    */
   tide: skill({
-    name: "Tide",
+    name: "Tidal Echo",
     cooldown: 10,
     energy: 85,
     invulnerability: 0.5,
-    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "soaked", base: 4, per: 3, most: 16, consumes: false } })
+    effect: companions({ count: 1, seconds: 16, tick: 1.4, radius: 280, heal: 3, healRadius: 140, follow: 85, shotSpeed: 1000, budget: 40, power: 4, element: "water", knockback: 120, hitStop: 0, heavy: false })
   }),
   /**
    * The Stormcaller's special: a totem planted at her feet that zaps
@@ -541,19 +612,24 @@ export const skills = {
     cooldown: 5,
     energy: 0,
     invulnerability: 0.3,
-    effect: cut({ length: 250, width: 90, active: 0.12, power: 20, element: "thunder", knockback: 260, hitStop: 0.05, heavy: false, leaves: null, carries: 220 })
+    effect: cut({ length: 380, width: 90, active: 0.12, power: 20, element: "thunder", knockback: 260, hitStop: 0.05, heavy: false, leaves: null, carries: 340 })
   }),
   /**
-   * Sparkfist's ultimate: she turns to lightning and strikes up to six
-   * enemies in turn, nearest first, hopping from one to the next, and lands
-   * beside the last. No aim: it finds them.
+   * Sparkfist's ultimate (id `stormFlurry`, from when it hopped her from one
+   * enemy to the next): Overcharge. Thunder bursts out of her and she
+   * becomes lightning for a while: quicker, her blows charging what they
+   * strike, her dashes all but endless, and every dash a Spark Step of its
+   * own, lighter. Dash, strike, dash.
    */
   stormFlurry: skill({
-    name: "Storm Flurry",
+    name: "Overcharge",
     cooldown: 10,
     energy: 90,
-    invulnerability: 0.8,
-    effect: flurry({ radius: 320, strikes: 6, hop: 240, power: 42, element: "thunder", knockback: 380, hitStop: 0.05, heavy: true })
+    invulnerability: 0.5,
+    effect: overcharge({
+      seconds: 7, speed: 1.25, dash: 0.25, radius: 170, power: 40, element: "thunder", knockback: 700, hitStop: 0.08, heavy: true,
+      dashStrike: { power: 12, width: 70, knockback: 220 }
+    })
   }),
   /**
    * Bastion's special (id `stoneRise`): three rocks erupt from the ground around her, under
@@ -642,28 +718,30 @@ export const skills = {
     effect: nova({ radius: 300, power: 40, element: "fire", knockback: 700, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "burning", base: 5, per: 0, most: 5, consumes: false } })
   }),
   /**
-   * Windwall's special: a wall of wind raised across her aim, a little
-   * ahead of her, for a while. Shots break on it; whoever walks into it is
-   * thrown back to the side it came from, swept.
+   * Windwall's special (id `galeWall`, from when it was a wall of wind
+   * raised across her aim): a mantle of wind, a current running round the
+   * one on the field, staying with the team when she leaves the field. Shots
+   * that reach it are absorbed; blows land weaker.
    */
   galeWall: skill({
-    name: "Gale Wall",
-    cooldown: 7,
+    name: "Wind Mantle",
+    cooldown: 16,
     energy: 0,
     invulnerability: 0,
-    effect: barrier({ shape: { kind: "wall", ahead: 110, length: 300 }, seconds: 7, thickness: 18, tick: 0.35, power: 20, element: "wind", knockback: 650, hitStop: 0, heavy: false })
+    effect: mantle({ seconds: 8, radius: 56, reduce: 0.4, tick: 0.4, power: 24, element: "wind", knockback: 450, hitStop: 0, heavy: false })
   }),
   /**
-   * Windwall's ultimate: a ring of wind around where she stands, a gust
-   * throwing what is inside out to it. For a while shots break on it, and
-   * whoever comes through is thrown back out. No aim.
+   * Windwall's ultimate (id `eyeOfTheStorm`, from when it was a ring of
+   * wind around her): she rises slowly, and every enemy around rises with
+   * her; she comes down, they stay up, harmless a while, then fall, hurt by
+   * the fall.
    */
   eyeOfTheStorm: skill({
-    name: "Eye of the Storm",
+    name: "Sky Lift",
     cooldown: 10,
-    energy: 70,
+    energy: 60,
     invulnerability: 0.5,
-    effect: barrier({ shape: { kind: "ring", radius: 190 }, seconds: 6, thickness: 18, tick: 0.35, power: 28, element: "wind", knockback: 800, hitStop: 0, heavy: true })
+    effect: lift({ radius: 260, rise: 1, seconds: 5.5, power: 100, element: "wind", knockback: 0, hitStop: 0.05, heavy: true })
   })
 }
 

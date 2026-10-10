@@ -1,6 +1,6 @@
 /**
  * Each character's answer to her weakness: the Gunner's Flare Jump out of a
- * crowd, the Tidecaller's Tidal Wave and her discs' payoff on soaked
+ * crowd, the Tidecaller's Tidefall and her discs' payoff on soaked
  * enemies, the Stormcaller's repelling totem, jumping sparks, and a
  * Thunderclap that holds what it strikes.
  */
@@ -80,13 +80,13 @@ describe("the Gunner's Flare Jump", () => {
 })
 
 describe("the Tidecaller", () => {
-  it("rolls a Tidal Wave ahead of her: it soaks and drives back what it meets, leaving puddles", () => {
-    const run = arena([{ x: 140, y: 0 }], { x: 300, y: 0 }, { build: tidecaller, keys: [press("special", 1)] })
-    run.step(30)
+  it("splashes down in a Tidefall where she stands: what is around her is soaked and driven back", () => {
+    const run = arena([{ x: 120, y: 0 }], { x: 300, y: 0 }, { build: tidecaller, keys: [press("special", 1)] })
+    run.step(40)
     const [enemy] = run.world().enemies
+    expect(Math.abs(run.world().player.x - center.x)).toBeLessThan(10)
     expect(enemy!.state).toBe("soaked")
-    expect(enemy!.position.x - center.x).toBeGreaterThan(200)
-    expect(run.world().pools.filter((pool) => pool.element === "water").length).toBeGreaterThan(1)
+    expect(enemy!.position.x - center.x).toBeGreaterThan(160)
   })
 })
 

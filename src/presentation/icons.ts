@@ -58,8 +58,8 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   thunderclap: icon(`<path d="M13.5 2L4.5 13.5h6.5L9.5 22l9.5-12h-6.5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Spark Step: a bolt darting forward, speed lines behind it.
   sparkStep: icon(`<path d="M2 9h5M2 13h4M2 17h5"/><path d="M13 3l-4 9h5l-3 9 9-12h-5l3-6z" fill="currentColor" fill-opacity="0.35"/>`),
-  // Storm Flurry: a bolt hopping between three points.
-  stormFlurry: icon(`<circle cx="4.5" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19.5" cy="17" r="2"/><path d="M6 16l2.5-5h2l1-3M13.5 8l1.5 4h-2l4 3.5"/>`),
+  // Overcharge: a bolt inside a crackling ring.
+  stormFlurry: icon(`<circle cx="12" cy="12" r="9" stroke-dasharray="3 2"/><path d="M13 5l-4 7h4l-2 7 6-9h-4l2-5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Brace: a blade held across, a blow breaking on it.
   brace: icon(`<path d="M4 18L18 4M15 4h3v3M5 15l4 4"/><path d="M15 15l5 5M19 13l2-1M13 19l-1 2M20 17h2" />`),
   // Fault Line: a crack running ahead, rocks along it.

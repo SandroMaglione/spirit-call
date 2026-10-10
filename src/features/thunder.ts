@@ -281,6 +281,6 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
       const held = queries.states.each().filter(({ entity, data }) => struck.has(entity.id.value) && data.state.get().current?.id === state).length
       healTeam(queries.members.each(), stateHealPercent(effect.heals, held), (amount) => events.heal.emit({ at, amount }))
     }
-    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element })
+    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
   }
 })

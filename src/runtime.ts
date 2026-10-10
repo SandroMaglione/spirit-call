@@ -10,7 +10,7 @@ import { noGuard } from "./features/guard.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
-import { emptyRunLog, Flow, Game, noTwist, noUltimateMoment } from "./schema.ts"
+import { emptyRunLog, Flow, Game, noMantle, noTwist, noUltimateMoment } from "./schema.ts"
 import type { BuildValue, TwistValue, ViewportValue } from "./schema.ts"
 
 /**
@@ -31,6 +31,7 @@ export const initialResources = (
   TeamSwitch: { cooldown: 0 },
   Guard: noGuard,
   Rebrace: { remaining: 0 },
+  Mantle: noMantle,
   Challenge: challenge,
   EnemyLevel: enemyLevel,
   Twist: twist,

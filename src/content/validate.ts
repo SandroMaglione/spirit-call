@@ -231,9 +231,8 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       positive(problems, where, { length: effect.length, width: effect.width, active: effect.active })
       if (!(effect.carries >= 0 && effect.carries <= effect.length)) problems.push(`${where}: carries must be between 0 and its length (is ${effect.carries})`)
       return
-    case "flurry":
-      positive(problems, where, { radius: effect.radius, strikes: effect.strikes, hop: effect.hop })
-      if (!Number.isInteger(effect.strikes)) problems.push(`${where}: strikes must be a whole number (is ${effect.strikes})`)
+    case "overcharge":
+      positive(problems, where, { seconds: effect.seconds, speed: effect.speed, dash: effect.dash, radius: effect.radius })
       return
     case "blast":
       positive(problems, where, { radius: effect.radius, arcDegrees: effect.arcDegrees, active: effect.active })
@@ -285,6 +284,11 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       if (!(effect.heal >= 0)) problems.push(`${where}: heal must not be negative (is ${effect.heal})`)
       if (!(effect.offset >= 0)) problems.push(`${where}: offset must not be negative (is ${effect.offset})`)
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
+      return
+    case "companions":
+      positive(problems, where, { count: effect.count, seconds: effect.seconds, tick: effect.tick, radius: effect.radius, follow: effect.follow, shotSpeed: effect.shotSpeed, budget: effect.budget, power: effect.power })
+      if (!Number.isInteger(effect.count)) problems.push(`${where}: count must be a whole number (is ${effect.count})`)
+      if (!(effect.heal >= 0 && effect.healRadius >= 0)) problems.push(`${where}: heal and healRadius must not be negative`)
       return
     case "thunderclap":
       positive(problems, where, { radius: effect.radius, strikes: effect.strikes })

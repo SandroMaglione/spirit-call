@@ -29,8 +29,11 @@ import { KeepPracticeField } from "./features/practice.ts"
 import { BuildPoise } from "./features/poise.ts"
 import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
+import { CastCompanions, UpdateCompanions } from "./features/companions.ts"
+import { CastLifts, CastMantles, KeepMantle, UpdateLifted } from "./features/windwall.ts"
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
 import { CastBraces, CounterBraces, TickBraces } from "./features/brace.ts"
+import { CastOvercharges, TickOvercharges } from "./features/sparkfist.ts"
 import { CastBarriers, UpdateBarriers } from "./features/barriers.ts"
 import { CastEarthrise, CastFaults, CastQuakes, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
@@ -43,7 +46,7 @@ import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
-import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastPlunges, CastVortices, LandAirborne, ReleaseUltimates, UpdateLobbed, UpdateVortices, UseSkills, CastFlurries } from "./features/skills.ts"
+import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastPlunges, CastVortices, LandAirborne, ReleaseUltimates, UpdateLobbed, UpdateVortices, UseSkills, ReadySkillsInPractice } from "./features/skills.ts"
 import { AdvanceTime } from "./features/time.ts"
 import { UseBasicAttack, FeedDash } from "./features/basic-attack.ts"
 import { DirectWaves } from "./features/waves.ts"
@@ -103,8 +106,10 @@ const gameplay = Game.Schedule.when(
   TickBraces,
   LandAirborne,
   ControlPlayer,
+  TickOvercharges,
   // Casts (from skills, and from passives queued last step) are carried out
   // right after they are made, in the same step.
+  ReadySkillsInPractice,
   UseSkills,
   ApplyTriggeredEffects,
   CastCuts,
@@ -117,8 +122,11 @@ const gameplay = Game.Schedule.when(
   CastBarrages,
   CastVortices,
   CastTotems,
+  CastCompanions,
+  CastMantles,
+  CastLifts,
   CastThunderclaps,
-  CastFlurries,
+  CastOvercharges,
   CastGuards,
   CastBraces,
   CastBarriers,
@@ -141,6 +149,7 @@ const gameplay = Game.Schedule.when(
   // swept body moved with its push.
   SlamSwept,
   DecayKnockback,
+  KeepMantle,
   // Everything that hurts emits `Damage`: things in flight, hitboxes, then
   // pools and states (pools set states; states burn), and last step's bursts,
   // arcs, and shattered plates.
@@ -150,6 +159,8 @@ const gameplay = Game.Schedule.when(
   UpdateVortices,
   UpdateBarriers,
   UpdateTotems,
+  UpdateCompanions,
+  UpdateLifted,
   UpdateRocks,
   UpdateGround,
   TickStates,

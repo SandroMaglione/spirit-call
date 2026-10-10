@@ -11,6 +11,7 @@ import { AttackPhase, Attacker, Barrier, Body, Bracing, Burst, Projectile, Veloc
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
+import { unmarkedHits } from "./signatures.ts"
 
 /**
  * Everything dangerous, drawn on the floor: pools of elements (under
@@ -166,6 +167,8 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
+    const label = hitbox.blow.source?.label
+    if (label?.kind === "skill" && unmarkedHits.has(label.skill)) continue
     const color = hitbox.faction === "enemy" ? view.telegraphLocked : hitbox.blow.element === null ? view.playerArea : view.elements[hitbox.blow.element.id]
     // A hammer's blow (one with a windup) softer: faint while it falls, its own look marking where it lands.
     const style = hitbox.delay === undefined ? { fill: 0.55, outline: 1 } : hitbox.delay > 0 ? { fill: 0.1, outline: 0.3 } : { fill: 0.3, outline: 0.6 }

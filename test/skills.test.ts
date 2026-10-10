@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
+import type { Tuning } from "../src/config/tuning.ts"
+import { nova } from "../src/content/skills.ts"
 import { damageDealt } from "../src/features/build.ts"
-import { makeProjectile } from "../src/features/combat.ts"
 import { CastCuts } from "../src/features/skills.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { blow, Cast, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, RunScope, Skills } from "../src/schema.ts"
+import { Cast, Companion, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, Skills } from "../src/schema.ts"
 import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
@@ -312,13 +313,15 @@ describe("ultimates (Shift)", () => {
   })
 
   describe("an ultimate's moment", () => {
-    const tide = defaultTuning.skills.tide.effect
+    // A shockwave for an ultimate (the Tide before the Tidal Echo): what it hits says when it went off.
+    const tide = nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
+    const novaTide = { ...sturdy, skills: { ...sturdy.skills, tide: { ...sturdy.skills.tide, effect: tide } } } as unknown as Tuning
     const moment = defaultTuning.ultimate.moment
 
     it("stands the world still as she calls it up, then goes off where she called it", () => {
       expect(moment).toBeGreaterThan(0)
       // She also holds a direction: nothing moves while the world stands still.
-      const run = range([{ x: tide.radius - 20, y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, moments: true, keys: [ultimate(1), { frame: 2, press: ["right"] }] })
+      const run = range([{ x: tide.radius - 20, y: 0 }], { x: 200, y: 0 }, { tuning: novaTide, build: tidecaller, moments: true, keys: [ultimate(1), { frame: 2, press: ["right"] }] })
       run.runtime.tick(Game.Schedule(FillEnergy))
       run.step(3)
       const from = run.player().position
@@ -339,32 +342,36 @@ describe("ultimates (Shift)", () => {
     })
   })
 
-  describe("the Tidecaller's Tide", () => {
+  describe("the Tidecaller's Tidal Echo", () => {
     const spec = defaultTuning.skills.tide.effect
+    if (spec.kind !== "companions") throw new Error("the Tide calls companions")
+    const Companions = Game.Inspector("Test/Companions", { queries: { companions: Game.Query({ selection: { companion: Game.Query.read(Companion) } }) } }, ({ queries }) => queries.companions.each().length)
 
-    it("soaks and drives back everything within its radius, without refilling the energy", () => {
-      const run = range([{ x: spec.radius - 20, y: 0 }, { x: -(spec.radius + 40), y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, keys: [ultimate(1)] })
+    it("calls up her echo, throwing at the nearest enemy within its reach, soaking it; never one beyond", () => {
+      const run = range([{ x: 150, y: 0 }, { x: -(spec.radius + 300), y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, keys: [ultimate(1)] })
       run.runtime.tick(Game.Schedule(FillEnergy))
-      run.step(4)
-      const [inside, outside] = run.world().enemies
-      expect(inside!.health).toBe(1000 - hitBy("tidecaller", spec.power))
-      expect(inside!.state).toBe("soaked")
-      expect(outside!.health).toBe(1000)
+      run.step(steps(1.05))
+      expect(run.runtime.inspect(Companions)).toBe(spec.count)
+      const [near, far] = run.world().enemies
+      expect(near!.health).toBeLessThan(1000)
+      expect(near!.state).toBe("soaked")
+      expect(far!.health).toBe(1000)
       expect(run.world().energy).toBe(defaultTuning.energy.max - defaultTuning.skills.tide.energy)
-      run.step(30)
-      expect(run.world().enemies[0]!.position.x).toBeGreaterThan(center.x + spec.radius)
     })
 
-    it("washes away enemy shots inside its radius", () => {
-      const run = range([], { x: 200, y: 0 }, { build: tidecaller, keys: [ultimate(1)] })
-      const Bolts = Game.System("Test/Bolts", {}, ({ commands }) => {
-        const bolt = { faction: "enemy" as const, style: "bolt" as const, radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 5, pierce: 0, hit: [] }
-        commands.spawnIn(RunScope, makeProjectile({ x: center.x + 150, y: center.y }, { x: 0, y: 0 }, bolt))
-        commands.spawnIn(RunScope, makeProjectile({ x: center.x + spec.radius + 100, y: center.y }, { x: 0, y: 0 }, bolt))
-      })
-      run.runtime.tick(Game.Schedule(FillEnergy, Bolts, Game.Schedule.applyDeferred()))
-      run.step(2)
-      expect(run.world().projectiles).toHaveLength(1)
+    it("each leaves once it has dealt its share, or when its time is up", () => {
+      const shots = Math.ceil(spec.budget / spec.power)
+      const fighting = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { tuning: tuningWith({ enemies: { dummy: { hp: 1_000_000 } } }), build: tidecaller, keys: [ultimate(1)] })
+      fighting.runtime.tick(Game.Schedule(FillEnergy))
+      // The last of them acts a tick's share after the first.
+      fighting.step(steps(0.6 + spec.tick * shots + 0.2))
+      expect(fighting.runtime.inspect(Companions)).toBe(0)
+      const idle = range([], { x: 200, y: 0 }, { build: tidecaller, keys: [ultimate(1)] })
+      idle.runtime.tick(Game.Schedule(FillEnergy))
+      idle.step(steps(spec.seconds - 0.5))
+      expect(idle.runtime.inspect(Companions)).toBe(spec.count)
+      idle.step(steps(1))
+      expect(idle.runtime.inspect(Companions)).toBe(0)
     })
   })
 })

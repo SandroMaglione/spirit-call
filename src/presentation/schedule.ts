@@ -19,6 +19,8 @@ import { DrawBarriers, DrawBraces, DrawMarks, DrawTelegraphs } from "./telegraph
 import { ShowAirborne, ShowChampions, ShowUltimateMoments } from "./flourish.ts"
 import { ShowHammerBlows } from "./hammer.ts"
 import { ShowHazards } from "./hazards.ts"
+import { ShowSignatures } from "./signatures.ts"
+import { ShowWindwall } from "./windwall.ts"
 
 export const frame = Game.Schedule(
   SyncArena,
@@ -43,6 +45,8 @@ export const frame = Game.Schedule(
   ShowUltimateMoments,
   ShowAirborne,
   ShowChampions,
+  ShowSignatures,
+  ShowWindwall,
   ReactToHits,
   ShedStateMotes,
   ShedArenaEmbers,

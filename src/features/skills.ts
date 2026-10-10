@@ -19,14 +19,13 @@
  * that takes her off the ground (a plunge, a leap) keeps her in the air for
  * a moment (`Airborne`), acting on landing (`LandAirborne`).
  */
-import { blast, bySlot, lob } from "../content/skills.ts"
+import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import { clampLength, normalizeOr, rotate, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
-  Body,
-  Zap,
+  Challenge,
   Aim,
   Airborne,
   Arrival,
@@ -105,13 +104,19 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
       return { kind: "point", range: effect.maxRange }
     case "nova":
     case "totem":
+    // Companions find their own targets.
+    case "companions":
     case "thunderclap":
     case "guard":
+    // A mantle wraps the one on the field; a lift takes what is around her.
+    case "mantle":
+    case "lift":
     case "earthrise":
-    // A flurry finds its targets, a brace waits for them: nothing to aim.
-    case "flurry":
+    // A brace waits for its targets: nothing to aim.
     case "brace":
     case "quake":
+    // Thunder goes through her: nothing to aim.
+    case "overcharge":
       return { kind: "self" }
   }
 }
@@ -136,6 +141,26 @@ export const skillRecharge = (spec: SkillSpec, cooldown: number, energy: number)
   const missing = spec.energy > 0 ? Math.max(0, 1 - energy / spec.energy) : 0
   return Math.min(1, Math.max(waiting, missing))
 }
+
+/**
+ * In practice (the Training Ground, Enemy Practice) every skill is always
+ * ready: the team's energy stays full and no cooldown holds, so a kit can
+ * be tried over and over.
+ */
+export const ReadySkillsInPractice = Game.System("Shooter/ReadySkillsInPractice", {
+  queries: { team: Game.Query({ selection: { skills: Game.Query.write(Skills), energy: Game.Query.write(Energy) }, with: [Member] }) },
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge) }
+}, ({ queries, resources }) => {
+  const tuning = resources.tuning.get()
+  const kind = tuning.challenges[resources.challenge.get()].objective.kind
+  if (kind !== "training" && kind !== "practice") return
+  const max = tuning.energy.max
+  for (const { data } of queries.team.each()) {
+    if (data.energy.get().current < max) data.energy.set({ current: max })
+    const skills = data.skills.get()
+    if (skills.special.cooldown > 0 || skills.ultimate.cooldown > 0) data.skills.set(bySlot((slot) => ({ ...skills[slot], cooldown: 0 })))
+  }
+})
 
 /**
  * Uses the skill of each slot pressed this step, once it is off cooldown and
@@ -329,55 +354,6 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
   }
 })
 
-/** Bodies a flurry can strike, and where they stand. */
-const Flurried = Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) }, with: [Health] })
-const Landers = Game.Query({ selection: { position: Game.Query.write(Position), body: Game.Query.read(Body), facing: Game.Query.write(Facing) } })
-
-/**
- * Flurries (see `FlurryEffect`): the nearest body of the other side within
- * reach of the caster is struck, then the nearest not struck yet within a
- * hop of the last, up to its strikes; thunder shows the path, and the
- * caster lands beside the last one struck, on the side she came from.
- */
-export const CastFlurries = Game.System("Shooter/CastFlurries", {
-  queries: { bodies: Flurried },
-  events: { cast: Game.System.readEvent(Cast), damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap) }
-}, ({ queries, events, lookup }) => {
-  for (const cast of events.cast.all()) {
-    const effect = cast.effect
-    if (effect.kind !== "flurry") continue
-    const candidates = queries.bodies.each().filter(({ data }) => data.hurtbox.get().faction !== cast.faction && !(data.invulnerable.present && data.invulnerable.get().remaining > 0))
-    const gap = (at: Vec2, body: (typeof candidates)[number]) => Math.hypot(body.data.position.get().x - at.x, body.data.position.get().y - at.y) - body.data.hurtbox.get().radius
-    const path: Array<Vec2> = [cast.from]
-    const struck: Array<(typeof candidates)[number]> = []
-    let at = cast.from
-    let reach = effect.radius
-    while (struck.length < effect.strikes) {
-      const from = at
-      const next = candidates
-        .filter((body) => !struck.includes(body) && gap(from, body) <= reach)
-        .sort((left, right) => gap(from, left) - gap(from, right))[0]
-      if (next === undefined) break
-      struck.push(next)
-      const there = next.data.position.get()
-      events.damage.emit({ target: Game.Entity.handle(next.entity.id, Health), faction: cast.faction, direction: normalizeOr(sub(there, from), cast.direction), blow: castBlow(cast, effect) })
-      path.push(there)
-      at = there
-      reach = effect.hop
-    }
-    const last = struck.at(-1)
-    if (last === undefined) continue
-    events.zap.emit({ path, heal: false })
-    const lander = lookup.getHandle(cast.caster, Landers)
-    if (!lander.ok) continue
-    const before = path.at(-2) ?? cast.from
-    const way = normalizeOr(sub(at, before), cast.direction)
-    const back = last.data.hurtbox.get().radius + lander.value.data.body.get().radius + 6
-    lander.value.data.position.set({ x: at.x - way.x * back, y: at.y - way.y * back })
-    lander.value.data.facing.set({ direction: way, hold: 0.3 })
-  }
-})
-
 /** Blasts: a cone fanning out from the caster toward the aim, driving what it hits away from her; she turns that way. */
 export const CastBlasts = Game.System("Shooter/CastBlasts", {
   events: { cast: Game.System.readEvent(Cast) }
@@ -403,7 +379,8 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
 /**
  * Plunges: she goes up, straight, then dives ahead where she faces (in
  * the air all the while, see `Airborne`), carrying the blast that goes off
- * as she lands (see `LandAirborne`); she keeps facing that way.
+ * as she lands (or the nova, see `PlungeEffect.lands`; see `LandAirborne`);
+ * she keeps facing that way.
  */
 export const CastPlunges = Game.System("Shooter/CastPlunges", {
   events: { cast: Game.System.readEvent(Cast) }
@@ -411,8 +388,10 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "plunge") continue
-    const { power, element, knockback, hitStop, heavy, radius, active, rise, dive, distance } = effect
-    const landing = blast({ radius, arcDegrees: 360, active, power, element, knockback, hitStop, heavy })
+    const { power, element, knockback, hitStop, heavy, radius, active, rise, dive, distance, lands } = effect
+    const landing = lands === null
+      ? blast({ radius, arcDegrees: 360, active, power, element, knockback, hitStop, heavy })
+      : nova({ radius, active, power, element, knockback, hitStop, heavy, clearsProjectiles: lands.clearsProjectiles, heals: lands.heals })
     const caster = lookup.getHandle(cast.caster, Facers)
     if (!caster.ok) continue
     const seconds = rise + dive
@@ -453,7 +432,7 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
       hit: []
     }]))
     if (effect.leaves !== null) commands.spawnIn(RunScope, makeGround(effect.leaves, at, cast.atk, cast.charges))
-    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element })
+    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
     const caster = lookup.getHandle(cast.caster, Leapers)
     if (caster.ok) {
       const away = scale(cast.direction, -effect.distance * decay)
@@ -628,7 +607,7 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
       remaining: effect.active,
       hit: []
     }]))
-    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element })
+    events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
     if (!effect.clearsProjectiles) continue
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()

@@ -9,13 +9,14 @@ import { projection, view } from "../config/view.ts"
 import { depthOf, toScreenAt, worldHeight } from "../math/iso.ts"
 import type { Box } from "../physics/shapes.ts"
 import type { Vec2 } from "../math/vec.ts"
+import type { CharacterId } from "../content/characters.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { EnemyKind, Faction, ProjectileStyle, RenderableValue } from "../schema.ts"
 import { Instance } from "./batch.ts"
 import { makeBody } from "./bodies.ts"
 import { mixColor } from "./draw.ts"
 import { floorLayers } from "./layers.ts"
-import type { ProjectileNode, RenderAssets, RenderNode, TotemNode, WallNode } from "./host-types.ts"
+import type { CompanionNode, ProjectileNode, RenderAssets, RenderNode, TotemNode, WallNode } from "./host-types.ts"
 import { hazardNode } from "./hazards.ts"
 import { arenaLooks, characterLook, enemyLooks } from "./looks.ts"
 import type { BodyLook, WallLook } from "./looks.ts"
@@ -134,6 +135,17 @@ const totemNode = (assets: RenderAssets, element: ElementId | null): TotemNode =
       orbMaterial.dispose()
     }
   }
+}
+
+/**
+ * A skill's companion: an echo of `character`, her own body (never
+ * batched: it is painted see-through), a little smaller (see
+ * `view.companion`).
+ */
+const companionNode = (assets: RenderAssets, character: CharacterId, radius: number): CompanionNode => {
+  const { root, pivot, shadow, body } = actorParts(assets, characterLook(character), radius, false)
+  pivot.scale.setScalar(view.companion.size)
+  return { kind: "companion", root, pivot, body, shadow }
 }
 
 /** One of `count` variants for a place on the floor, the same every time. */
@@ -281,6 +293,8 @@ export const createNode = (renderable: RenderableValue, assets: RenderAssets, pr
     }
     case "totem":
       return totemNode(assets, renderable.element)
+    case "companion":
+      return companionNode(assets, renderable.character, renderable.radius)
     case "hazard":
       return hazardNode(renderable.element, renderable.half, arenaLooks[renderable.arena].pools)
   }
@@ -298,6 +312,8 @@ export const instancesOf = (node: RenderNode): ReadonlyArray<Instance> => {
       return node.instances
     case "totem":
       return [node.shadow]
+    case "companion":
+      return [node.shadow, ...node.body.instances]
     case "hazard":
       return []
   }
@@ -311,6 +327,9 @@ export const disposeNode = (node: RenderNode): void => {
       node.body.dispose()
       return
     case "projectile":
+      return
+    case "companion":
+      node.body.dispose()
       return
     case "wall":
     case "totem":

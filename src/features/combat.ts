@@ -30,6 +30,7 @@ import {
   EnergyLedger,
   Game,
   Guard,
+  Mantle,
   Guarded,
   Heal,
   Health,
@@ -72,6 +73,7 @@ import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
 import { barrierMeets } from "./barriers.ts"
+import { mantleMeets, mantleTaken } from "./windwall.ts"
 import { braceTakes } from "./brace.ts"
 import { plateTakes } from "./guard.ts"
 import { damageBonusPercent, damageTakenPercent, PassiveHolders, secondWindPercent } from "./passives.ts"
@@ -109,7 +111,7 @@ export const MoveProjectiles = (() => {
       walls: Walls,
       barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } })
     },
-    resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
+    resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
     events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded) }
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
@@ -126,6 +128,7 @@ export const MoveProjectiles = (() => {
     // Bodies that just dashed: a shot through where they stood dodged them, wherever they are now.
     const dashers = targets.filter((target) => target.dashed !== undefined && target.dashed.since <= window)
     const barriers = queries.barriers.each().map(({ data }) => data.barrier.get())
+    const mantle = resources.mantle.get()
 
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()
@@ -157,6 +160,8 @@ export const MoveProjectiles = (() => {
         if (barrier.faction === projectile.faction) continue
         barred = Math.min(barred, barrierMeets(barrier, origin, delta, r) ?? Infinity)
       }
+      // The team's mantle of wind absorbs the other side's shots that reach it (see `features/windwall.ts`).
+      barred = Math.min(barred, mantleMeets(mantle, projectile.faction, origin, delta, r) ?? Infinity)
       if (barred < (wall?.time ?? Infinity) && barred <= (contacts[0]?.time ?? Infinity)) {
         const at = { x: origin.x + delta.x * barred, y: origin.y + delta.y * barred }
         data.position.set(at)
@@ -316,6 +321,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     hitStop: Game.System.writeResource(HitStop),
     challenge: Game.System.readResource(Challenge),
     guard: Game.System.writeResource(Guard),
+    mantle: Game.System.readResource(Mantle),
     enemyLevel: Game.System.readResource(EnemyLevel)
   }
 }, ({ queries, events, resources, lookup, commands }) => {
@@ -393,7 +399,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     // A soaked dealer's blows are weaker (not its burns: a burn's strength was set as it caught).
     const dealer = blow.source === null || blow.periodic ? undefined : lookup.getHandle(blow.source.attacker, Dealer)
     const soaked = dealer?.ok === true ? stateDamage(tuning, dealer.value.data.state.get()) : 1
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
+    // Under the team's mantle of wind, blows on the one on the field land weaker (see `features/windwall.ts`).
+    const mantled = mantleTaken(resources.mantle.get(), data.player.present, damage.faction, blow.periodic)
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * mantled * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
     let current = data.immortal.present
       ? health.current

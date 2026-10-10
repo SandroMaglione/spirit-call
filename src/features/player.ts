@@ -3,7 +3,7 @@
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, Facing, Game, Invulnerable, Member, Passives, Player, Position, Raising, Bracing, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, Facing, Game, Invulnerable, Member, Overcharged, Passives, Player, Position, Raising, Bracing, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { charging } from "./basic-attack.ts"
 import { attackOf, dashOf, traitsIn } from "./build.ts"
 
@@ -35,6 +35,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         raising: Game.Query.optional(Raising),
         bracing: Game.Query.optional(Bracing),
         airborne: Game.Query.optional(Airborne),
+        overcharged: Game.Query.optional(Overcharged),
         member: Game.Query.read(Member),
         passives: Game.Query.optional(Passives)
       },
@@ -56,6 +57,9 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     // Her own dash (see `dashOf`): how many, how far, how soon back, how long untouchable.
     const own = dashOf(tuning, data.member.get().character, traitsIn(data.passives))
     const dashSpeed = own.distance / own.duration
+    // Overcharged (see `OverchargeEffect`): quicker, and a spent dash comes back all but at once.
+    const surge = data.overcharged.present ? data.overcharged.get().effect : null
+    const recharge = surge === null ? own.cooldown : Math.min(own.cooldown, surge.dash)
     const position = data.position.get()
     const aim = normalizeOr(sub(controls.aimPoint, position), data.aim.get())
     data.aim.set(aim)
@@ -69,10 +73,10 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     let direction = dash.direction
     // Spent charges come back one at a time.
     let charges = Math.min(own.charges, dash.charges)
-    let cooldown = charges < own.charges ? dash.cooldown - dt : 0
+    let cooldown = charges < own.charges ? Math.min(dash.cooldown, recharge) - dt : 0
     if (charges < own.charges && cooldown <= 0) {
       charges += 1
-      cooldown = charges < own.charges ? cooldown + own.cooldown : 0
+      cooldown = charges < own.charges ? cooldown + recharge : 0
     }
     // Raising a guard, bracing, in the air, or held coming in after a fall, she stands: a dash under way stops, and a press is dropped.
     const rooted = data.raising.present || data.bracing.present || data.airborne.present || resources.arrival.get().remaining > 0
@@ -86,7 +90,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       direction = normalizeOr(controls.move, faces)
       remaining = own.duration
       events.action.emit({ kind: "dash", at: position })
-      if (cooldown <= 0) cooldown = own.cooldown
+      if (cooldown <= 0) cooldown = recharge
       charges -= 1
       buffered = 0
       since = 0
@@ -102,7 +106,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       data.velocity.set(scale(direction, dashSpeed * covered / dt))
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over.
-      const runSpeed = data.stats.get().speed
+      const runSpeed = data.stats.get().speed * (surge === null ? 1 : surge.speed)
       const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * own.exitSpeedFactor))
       // Charging a power attack slows the player down, and so does a move recovering.
       const attack = data.basicAttack.get()

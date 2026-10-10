@@ -125,6 +125,8 @@ export const view = {
    * healing zaps.
    */
   totem: { height: 46, radius: 8, orb: 9, heal: 0x7ee08a },
+  /** A skill's companion, an echo of its caster: her body this much her size, washed toward `color` by `wash` (0..1), see-through at `opacity`. */
+  companion: { size: 0.82, color: 0xeaf6ff, wash: 0.75, opacity: 0.5 },
   /** Faint ring at a nova's radius while it is ready. */
   ultimateReadyAlpha: 0.22,
   ultimateShake: 12,

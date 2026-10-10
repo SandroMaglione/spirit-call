@@ -25,7 +25,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim, Airborne, Arrival,
-  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, Bracing, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
+  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, Bracing, RunScope, Overcharged, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
 import { attackOf, damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
@@ -149,7 +149,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         member: Game.Query.read(Member),
         raising: Game.Query.optional(Raising),
         bracing: Game.Query.optional(Bracing),
-        airborne: Game.Query.optional(Airborne)
+        airborne: Game.Query.optional(Airborne),
+        overcharged: Game.Query.optional(Overcharged)
       },
       with: [Player]
     }),
@@ -205,6 +206,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       if (before < 1 && after >= 1) events.action.emit({ kind: "charged", at: position })
     }
 
+    // A body taken over by thunder (see `OverchargeEffect`): every blow carries it.
+    const surge = data.overcharged.present ? data.overcharged.get().effect.element : null
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
       const striking = move === spec.dash
       const context: MoveContext = {
@@ -232,7 +235,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         source: { attacker: Game.Entity.handle(entity.id, Position), move: context },
         chain: spec.chain,
         // Her aspect's elemental moment: these blows carry her element.
-        element: spec.infuse !== null && moveMatches(spec.infuse, context) ? { id: element, atk } : null
+        element: surge !== null ? { id: surge, atk } : spec.infuse !== null && moveMatches(spec.infuse, context) ? { id: element, atk } : null
       })
       if (move.shape === "shot") {
         const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))

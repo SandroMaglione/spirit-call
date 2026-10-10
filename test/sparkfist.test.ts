@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import { ElementState, Enemy, Energy, Game, Health, Player, Position } from "../src/schema.ts"
-import { center, cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { Dash, ElementState, Enemy, Energy, Game, Health, Overcharged, Player, Position } from "../src/schema.ts"
+import { center, cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
 
 const sparkStep = defaultTuning.skills.sparkStep.effect
-const stormFlurry = defaultTuning.skills.stormFlurry.effect
+const overcharge = defaultTuning.skills.stormFlurry.effect
 const sparkfist = { character: "sparkfist" } as const
 const sturdy = tuningWith({ enemies: { dummy: { hp: 100_000, knockbackTaken: 0 } } })
 
@@ -18,6 +18,14 @@ const World = Game.Inspector("Test/Sparkfist", {
   enemies: queries.enemies.each().map(({ data }) => ({ at: data.position.get(), hurt: data.health.get().current < data.health.get().max, state: data.state.get().current?.id ?? null })),
   player: queries.player.each()[0]!.data.position.get()
 }))
+
+/** Whether the one on the field is overcharged. */
+const Surge = Game.Inspector("Test/Surge", { queries: { player: Game.Query({ selection: { overcharged: Game.Query.optional(Overcharged) }, with: [Player] }) } }, ({ queries }) =>
+  queries.player.each()[0]!.data.overcharged.present)
+
+/** The one on the field's dash: charges ready, and the time until the next comes back. */
+const Dashes = Game.Inspector("Test/Dashes", { queries: { player: Game.Query({ selection: { dash: Game.Query.read(Dash) }, with: [Player] }) } }, ({ queries }) =>
+  queries.player.each()[0]!.data.dash.get())
 
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
   for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
@@ -44,17 +52,27 @@ describe("Sparkfist's kit", () => {
     expect(world.player.x - center.x).toBeGreaterThan((sparkStep.kind === "cut" ? sparkStep.carries : 0) * 0.8)
   })
 
-  it("the Storm Flurry hops between enemies, nearest first, and lands beside the last; one out of reach is spared", () => {
-    expect(stormFlurry.kind).toBe("flurry")
-    const hop = stormFlurry.kind === "flurry" ? stormFlurry.hop : 0
-    // A chain of three, each within a hop of the one before, and one far beyond the last.
-    const chain = [{ x: 150, y: 0 }, { x: 300, y: 60 }, { x: 450, y: 0 }]
-    const run = arena([...chain, { x: 450 + hop + 300, y: 0 }], "ultimate")
-    run.step(6)
-    const world = run.world()
-    expect(world.enemies.map((enemy) => enemy.hurt)).toEqual([true, true, true, false])
-    // Beside the last one struck.
-    const last = world.enemies[2]!.at
-    expect(Math.hypot(world.player.x - last.x, world.player.y - last.y)).toBeLessThan(60)
+  it("Overcharge makes her quicker, her blows charge, her dashes come back all but at once, and every dash strikes and charges what is along its way, as her Spark Step does", () => {
+    expect(overcharge.kind).toBe("overcharge")
+    // Her burst kept small, so only the dash reaches the dummies.
+    const quiet = tuningWith({ enemies: { dummy: { hp: 100_000, knockbackTaken: 0 } }, skills: { stormFlurry: { effect: { radius: 1 } } } })
+    const after = 2 + steps(defaultTuning.ultimate.moment + 0.3)
+    const run = start({ tuning: quiet, kits: "shipped", build: sparkfist, keys: [{ frame: 2, press: ["ultimate"], release: ["ultimate"] }, ...doubleTap("right", after)] })
+    // Screen right is world (1, -1): two dummies along the dash, one well aside.
+    const along = (distance: number) => ({ x: distance * Math.SQRT1_2, y: -distance * Math.SQRT1_2 })
+    run.runtime.tick(placeDummies([along(50), along(110), { x: -200, y: -200 }], quiet))
+    run.runtime.tick(Game.Schedule(FillEnergy))
+    run.step(after)
+    expect(run.runtime.inspect(Surge)).toBe(true)
+    run.step(steps(0.6))
+    const [near, far, aside] = run.runtime.inspect(World).enemies
+    expect(near!.hurt && far!.hurt).toBe(true)
+    expect(near!.state).toBe("charged")
+    expect(aside!.hurt).toBe(false)
+    // The dash spent is back within a moment.
+    expect(run.runtime.inspect(Dashes).cooldown).toBeLessThanOrEqual(overcharge.kind === "overcharge" ? overcharge.dash : 0)
+    // Long after, it is over.
+    run.step(steps(overcharge.kind === "overcharge" ? overcharge.seconds : 0))
+    expect(run.runtime.inspect(Surge)).toBe(false)
   })
 })

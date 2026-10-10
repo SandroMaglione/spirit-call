@@ -18,7 +18,7 @@ import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { BarrierEffect, BraceEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { BarrierEffect, BraceEffect, CompanionsEffect, MantleEffect, OverchargeEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
@@ -173,6 +173,39 @@ export interface TotemValue {
   readonly inside: ReadonlyArray<number>
 }
 export const Totem = Descriptor.Component<TotemValue>()("Shooter/Totem")
+
+/**
+ * A companion called up by a skill (see `CompanionsEffect`), walking after
+ * the one on the field (a `Body` with a `Velocity`): the `index`th of its call. It acts
+ * every tick until it has dealt its share (`dealt`, percent of ATK) or its
+ * time runs out.
+ */
+export interface CompanionValue {
+  readonly faction: Faction
+  readonly effect: CompanionsEffect
+  readonly blow: Blow
+  readonly skill: SkillId | null
+  readonly index: number
+  readonly remaining: number
+  /** Time until it acts next. */
+  readonly nextTick: number
+  readonly dealt: number
+  /** Where it faces (where it walks, or where it last threw). */
+  readonly facing: Vec2
+}
+export const Companion = Descriptor.Component<CompanionValue>()("Shooter/Companion")
+
+/**
+ * A body taken over by an element (see `OverchargeEffect`), on the member
+ * overcharged, for `remaining` more seconds: each dash she starts strikes
+ * with `blow`; `skill` names it on what it strikes.
+ */
+export const Overcharged = Descriptor.Component<{
+  readonly remaining: number
+  readonly effect: OverchargeEffect
+  readonly blow: Blow
+  readonly skill: SkillId | null
+}>()("Shooter/Overcharged")
 
 /**
  * A guard being raised (see `GuardEffect`), on the member raising it: she is
@@ -679,6 +712,8 @@ export type RenderableValue =
   /** A wall of the arena; `prop`, when it is one of the arena's props (its place among them: see `content/arena.ts`). */
   | { readonly kind: "wall"; readonly box: Box; readonly placement: WallPlacement; readonly arena: ArenaId; readonly prop?: number }
   | { readonly kind: "totem"; readonly element: ElementId | null }
+  /** A skill's companion (see `CompanionsEffect`): an echo of `character`, its body `radius`. */
+  | { readonly kind: "companion"; readonly character: CharacterId; readonly radius: number }
   /** An arena hazard: a basin of water or a fire pit (see `content/arena.ts`). */
   | { readonly kind: "hazard"; readonly element: "fire" | "water"; readonly half: Vec2; readonly arena: ArenaId }
 
@@ -811,6 +846,8 @@ export const Explosion = Descriptor.Event<{
   readonly heavy: boolean
   /** Its element, if any, for its color and sound. */
   readonly element: ElementId | null
+  /** The skill it is from, if a skill used set it off (a skill with a look of its own draws it, see `presentation/signatures.ts`). */
+  readonly skill?: SkillId | null
 }>()("Shooter/Explosion")
 
 /** The team's guard changed (see `GuardEffect`): its plates raised around the one on the field at `at`, or one shattered there, for effects. */
@@ -824,7 +861,7 @@ export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: numbe
  * struck in turn), or a totem's zap healed the one at the path's end
  * (`heal`), for effects.
  */
-export const Zap = Descriptor.Event<{ readonly path: ReadonlyArray<Vec2>; readonly heal: boolean }>()("Shooter/Zap")
+export const Zap = Descriptor.Event<{ readonly path: ReadonlyArray<Vec2>; readonly heal: boolean; readonly skill?: SkillId | null }>()("Shooter/Zap")
 
 /**
  * A skill was used: its effect goes off from `from`, aimed at `at` (along
@@ -927,6 +964,29 @@ export interface GuardValue {
   readonly charges: boolean
 }
 export const Guard = Descriptor.Resource<GuardValue>()("Shooter/Guard")
+
+/**
+ * A mantle of wind on the team (see `MantleEffect`): for `remaining` more
+ * seconds, round the one on the field (`at`, where she stood last step),
+ * whoever she is; `effect` `null` when there is none.
+ */
+export interface MantleValue {
+  readonly remaining: number
+  readonly effect: MantleEffect | null
+  readonly at: Vec2
+  /** Its blow on what touches it (from its caster's ATK), and the time until it next strikes. */
+  readonly blow: Blow | null
+  readonly nextTick: number
+}
+export const Mantle = Descriptor.Resource<MantleValue>()("Shooter/Mantle")
+export const noMantle: MantleValue = { remaining: 0, effect: null, at: { x: 0, y: 0 }, blow: null, nextTick: 0 }
+
+/**
+ * Lifted off the floor by a lift (see `LiftEffect`): up for `remaining` more
+ * seconds of `seconds` (rising over the first `rise`), harmless meanwhile;
+ * as it falls, `blow` lands on it.
+ */
+export const Lifted = Descriptor.Component<{ readonly remaining: number; readonly seconds: number; readonly rise: number; readonly blow: Blow }>()("Shooter/Lifted")
 
 /** For `remaining` more seconds, a brace that takes a blow is ready again at once (see `NovaEffect.readies`). */
 export const Rebrace = Descriptor.Resource<{ readonly remaining: number }>()("Shooter/Rebrace")
@@ -1229,6 +1289,9 @@ export const Game = Schema.bind(
       Vortex,
       Barrier,
       Totem,
+      Companion,
+      Lifted,
+      Overcharged,
       Raising,
       Bracing,
       BraceCounter,
@@ -1268,6 +1331,7 @@ export const Game = Schema.bind(
       Arrival,
       Guard,
       Rebrace,
+      Mantle,
       Challenge,
       EnemyLevel,
       Twist,

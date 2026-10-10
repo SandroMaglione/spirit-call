@@ -509,7 +509,7 @@ export const skillReach = (effect: SkillEffect): number => {
     case "nova":
     case "thunderclap":
     case "earthrise":
-    case "flurry":
+    case "overcharge":
       return effect.radius + more
     case "plunge":
       return effect.distance + effect.radius + more
@@ -520,8 +520,15 @@ export const skillReach = (effect: SkillEffect): number => {
       return effect.maxRange + effect.radius + more
     case "totem":
       return effect.offset + effect.radius + more
+    case "companions":
+      return effect.radius + more
     case "guard":
       return Infinity
+    // A mantle goes on as enemies come near; a lift takes what is around her.
+    case "mantle":
+      return 220
+    case "lift":
+      return effect.radius
     // A brace waits for a blow on its way instead (see `braceDue`).
     case "brace":
       return -Infinity

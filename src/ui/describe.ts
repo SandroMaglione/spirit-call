@@ -136,7 +136,9 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "leap":
       return `a ${elementWord(effect.element)}burst around you (${effect.power}% ATK) as you leap back from where you face${effect.leaves === null ? "" : `, leaving ${poolNames[effect.leaves.element]} that burns you too`}`
     case "plunge":
-      return `a hop straight up and a dive ahead, landing with a ${elementWord(effect.element)}blast all around you that drives enemies back (${effect.power}% ATK)`
+      return effect.lands === null
+        ? `a hop straight up and a dive ahead, landing with a ${elementWord(effect.element)}blast all around you that drives enemies back (${effect.power}% ATK)`
+        : `${effect.distance > 0 ? "a leap straight up and a crash down ahead" : "a bounce straight up and a splash down where you stand"}, landing with a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.lands.clearsProjectiles ? " that washes away shots" : ""}${effect.lands.heals === null ? "" : `, ${describeHeals(effect.lands.heals, "it reaches")}`}`
     case "blast":
       return `a ${elementWord(effect.element)}blast ${effect.arcDegrees >= 360 ? "all around you" : "wide in front of you"} that drives enemies far back (${effect.power}% ATK)`
     case "lob":
@@ -151,18 +153,26 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `${effect.slams} ${elementWord(effect.element)}slams around you, each wider than the last (${effect.power}% ATK each), the last stunning what it catches for ${effect.stun}s`
     case "brace":
       return `a ${effect.window}s brace, standing still: the first blow on you is taken whole, and you answer with a ${elementWord(effect.element)}slash around you (${effect.power}% ATK) that disarms the attacker for ${effect.disarm}s; if nothing comes, it is ready again ${effect.whiff}s later`
+    case "overcharge":
+      return `you become ${elementWord(effect.element)}for ${effect.seconds}s, after a burst around you (${effect.power}% ATK): you run ${Math.round((effect.speed - 1) * 100)}% faster, your blows carry its element, your dashes come back within ${effect.dash}s, and every dash strikes everything along its way (${effect.dashStrike.power}% ATK)`
     case "vortex":
       return `a ${elementWord(effect.element)}whirl${effect.maxRange > 0 ? "" : " at your feet"} that pulls enemies in for ${effect.seconds}s${effect.power > 0 ? ` (${effect.power}% ATK every ${effect.tick}s)` : ", hurting nobody"}`
     case "totem":
       return `a ${elementWord(effect.element)}totem ${effect.offset > 0 ? "ahead of you" : "at your feet"} for ${effect.seconds}s that zaps enemies around it (${effect.power}% ATK${effect.jumps > 0 ? `, jumping ${effect.jumps} times` : ""})${effect.heal > 0 ? `, or heals you ${effect.heal}% of max HP while you stand in its reach hurt` : ""}`
+    case "companions": {
+      const who = effect.count === 1 ? `a ${elementWord(effect.element)}echo of you` : `${effect.count} ${elementWord(effect.element)}echoes of you`
+      return `${who} for up to ${effect.seconds}s, walking after you: ${effect.count === 1 ? "it throws" : "each throws"} a disc at the nearest enemy in reach every ${effect.tick}s (${effect.power}% ATK each way), leaving once its throws come to ${effect.budget}% ATK${effect.heal > 0 ? `; with no enemy near, it heals you ${effect.heal}% of max HP while you are close to it` : ""}`
+    }
     case "thunderclap":
       return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) ${effect.heals === null ? "" : ` and ${describeHeals(effect.heals, "it strikes")}`}`
     case "barrage":
       return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolsNames[effect.leaves.element]}`}`
-    case "flurry":
-      return `${elementWord(effect.element)}hopping between up to ${effect.strikes} enemies around you, nearest first (${effect.power}% ATK each), landing by the last`
     case "earthrise":
       return `${effect.rocks} ${elementWord(effect.element)}spikes erupting under the toughest enemies around you (${effect.power}% ATK each), stunning them and filling their break bars`
+    case "mantle":
+      return `a current of ${elementWord(effect.element)}around you for ${effect.seconds}s, staying with your team when you switch out: shots that reach it are absorbed, and blows land ${Math.round(effect.reduce * 100)}% weaker`
+    case "lift":
+      return `you rise, and every enemy around you rises with you, left up for ${effect.seconds}s, harmless, then falls (${effect.power}% ATK)`
     case "guard":
       return `a ${elementWord(effect.element)}ring throwing back what is around you (${effect.shove.power}% ATK), then, after standing still ${effect.raise}s, ${effect.plates} plates for the team, each taking a blow whole and shattering around you (${effect.power}% ATK)`
   }

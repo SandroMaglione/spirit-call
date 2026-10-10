@@ -18,7 +18,7 @@ const comboPitchStep = 0.067
 const powerPitch = 0.85
 
 /** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`; a volley as its shells land). */
-const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", blast: "wave", plunge: "dash", leap: "boom", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", thunderclap: null, guard: "crack", earthrise: "crack", flurry: "zap", brace: "slash", fault: "crack", quake: null, barrier: "spin" }
+const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", blast: "wave", plunge: "dash", leap: "boom", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", companions: "splash", mantle: "spin", lift: "spin", thunderclap: null, guard: "crack", earthrise: "crack", brace: "slash", overcharge: "zap", fault: "crack", quake: null, barrier: "spin" }
 
 /** The sound of a state taking hold (a charge and a sweep are heard in their blow), and of each state bursting. */
 const applySounds: Record<StateId, SoundName | null> = { burning: "ignite", soaked: "splash", charged: null, swept: null, cracked: "crack" }
@@ -87,7 +87,8 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     if (sound !== null) sounds.play(sound, { pan: pan(cast.from) })
   }
   // Thunder crackles as it strikes; a healing zap chimes.
-  for (const zap of events.zap.all()) sounds.play(zap.heal ? "mend" : "zap", { pan: pan(zap.path[zap.path.length - 1] ?? zap.path[0]!), volume: zap.heal ? 0.7 : 0.8 })
+  // (A water companion's shot splashes.)
+  for (const zap of events.zap.all()) sounds.play(zap.heal ? "mend" : zap.skill === "tide" ? "splash" : "zap", { pan: pan(zap.path[zap.path.length - 1] ?? zap.path[0]!), volume: zap.heal ? 0.7 : 0.8 })
   for (const reaction of events.reaction.all()) {
     const sound = reactionSound(reaction.kind, reaction.state)
     if (sound !== null) sounds.play(sound, { pan: pan(reaction.at), volume: reaction.kind === "out" ? 0.5 : 1 })
