@@ -14,7 +14,7 @@ import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
 import { withValidAspects, withValidRelics } from "./features/build.ts"
-import { buildOf, encounterOf, teamLevel, teamOf, validAspects, validRelics } from "./account/account.ts"
+import { buildOf, encounterOf, entryTeam, teamLevel, teamOf, validAspects, validRelics } from "./account/account.ts"
 import { wearLooks } from "./presentation/looks.ts"
 import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
@@ -41,14 +41,12 @@ import {
 import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
-/** What each moment of a call or of the results sounds like, and how long it buzzes (milliseconds; a list is buzz, pause, buzz; none for 0). */
+/** What each moment of the results sounds like, and how long it buzzes (milliseconds; a list is buzz, pause, buzz; none for 0). */
 const cueSounds = {
-  crack: "sealCrack", rise: "sealRise", gold: "sealGold", burst: "sealBurst", crumble: "sealCrumble", aspect: "revealAspect", character: "revealCharacter",
-  victory: "victory", defeat: "defeat", star: "star", reward: "uiReward"
+  aspect: "revealAspect", character: "revealCharacter", victory: "victory", defeat: "defeat", star: "star", reward: "uiReward"
 } as const
 const cueBuzz: Record<keyof typeof cueSounds, number | Array<number>> = {
-  crack: 12, rise: 20, gold: [60, 80, 25], burst: 40, crumble: [30, 30, 30], aspect: [20, 40, 20], character: [30, 50, 30, 50, 60],
-  victory: 0, defeat: 0, star: 10, reward: 0
+  aspect: [20, 40, 20], character: [30, 50, 30, 50, 60], victory: 0, defeat: 0, star: 10, reward: 0
 }
 
 const start = async (mount: HTMLElement) => {
@@ -59,15 +57,7 @@ const start = async (mount: HTMLElement) => {
   // The player logs in (or signs up) first; her account comes from the server, and the menu starts from its last selection.
   const username = (await currentPlayer()) ?? (await showLogin(mount, signIn))
   const shell = await startApp(username)
-  let account = shell.account
-  // `?openCalls` clears chapter one and adds crystals, once (a dev tool to try the Spirit Call on a phone,
-  // where the tuning panel's keys are out of reach); the parameter is dropped so a reload does not repeat it.
-  const query = new URLSearchParams(window.location.search)
-  if (query.has("openCalls")) {
-    query.delete("openCalls")
-    window.history.replaceState(null, "", `${window.location.pathname}${query.size > 0 ? `?${query}` : ""}`)
-    account = (await shell.openCallsNow()) ?? account
-  }
+  const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
   const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
@@ -150,7 +140,8 @@ const start = async (mount: HTMLElement) => {
       recording = true
       uiStore.play.value = play
       uiStore.extra.value = null
-      uiRequests.pending.push({ kind: "start", team: teamOf(tuning, selected.account, team), ...encounterOf(tuning, play) })
+      // An audition lends its character alone, at its level (see `entryTeam`).
+      uiRequests.pending.push({ kind: "start", team: entryTeam(tuning, selected.account, play, team), ...encounterOf(tuning, play) })
       void selected.saved.then((saved) => {
         if (saved !== "refused") return
         // The server refused what this page allowed (the account changed elsewhere): the run stops, unrecorded.
@@ -178,23 +169,7 @@ const start = async (mount: HTMLElement) => {
         ...(extra.kind === "practice" ? { practice: extra.picks } : {})
       })
     },
-    call: (banner, count) => {
-      if (uiStore.callReveal.peek() !== null) return
-      if (shell.saves().failed) { notify(notSaved, true, "Not saved yet"); return }
-      // The seal shows at once; what comes out of it is the server's answer, on its way meanwhile.
-      uiStore.callReveal.value = { banner, count, results: null, failed: false }
-      void shell.call(banner, count).then((results) => {
-        const reveal = uiStore.callReveal.peek()
-        if (reveal === null) return
-        uiStore.callReveal.value = results === undefined ? { ...reveal, failed: true } : { ...reveal, results }
-        // Said once the seal has crumbled (see `CallReveal`).
-        if (results === undefined) setTimeout(() => notify("The server could not be reached. No crystals were spent.", true, "Call not made"), 900)
-      })
-    },
-    focus: (banner, character) => change(() => shell.focus(banner, character), null),
-    buyRelic: (relic) => change(() => shell.buyRelic(relic), `${tuning.relics[relic].name} reached its next tier`),
-    buyCosmetic: (cosmetic) => change(() => shell.buyCosmetic(cosmetic), `${tuning.cosmetics[cosmetic].name} is yours`),
-    exchange: (item) => change(() => shell.exchange(item), `${item.kind === "aspect" ? tuning.aspects[item.id].name : tuning.cosmetics[item.id].name} is yours`),
+    saveTeamTo: (slot, saved) => change(() => shell.saveTeam(slot, saved), saved === null ? null : "Team saved"),
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])
@@ -293,7 +268,7 @@ const start = async (mount: HTMLElement) => {
   })
   // The menu's models and portraits, over the UI.
   const showcase = createShowcase(mount, browser.models)
-  createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything, openCalls: shell.openCalls })
+  createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, the (usually empty) stress top-up, and `?charged`'s full energy.
   const step = chargedFromQuery(window.location.search)

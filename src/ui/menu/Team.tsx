@@ -3,10 +3,13 @@
  * a place opens the roster over the left of the screen, as cards (it scrolls: the roster will
  * grow); a tap on a card puts her there (one already in the party swaps
  * places). Nothing here needs confirming, the party is kept as it is set up.
+ * Three more parties can be saved (each with its aspects and relics) and
+ * loaded in a tap: tap an empty slot to save the party there, a saved one
+ * to load it, and Save to keep the party in the slot last loaded.
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, owns, playLock, slotOpen } from "../../account/account.ts"
+import { characterLevel, owns, playLock, savedTeamSlots, slotOpen } from "../../account/account.ts"
 import type { Play } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { relicOf, relicSlots } from "../../content/relics.ts"
@@ -17,26 +20,40 @@ import { AbilityIcon } from "../AbilityIcon.tsx"
 import { elementOf, placeInTeam, removeFromTeam } from "../draft.ts"
 import type { TeamDraft } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
-import { Model } from "../kit/art.tsx"
+import { Face, Model } from "../kit/art.tsx"
 import { Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Panel } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar } from "../kit/shell.tsx"
-import type { UiStore } from "../store.ts"
+import type { UiActions, UiStore } from "../store.ts"
 import { CharacterCard, ids } from "./parts.tsx"
 import type { Nav } from "./screens.ts"
 
-export const Team = ({ store, nav, draft, play, enter }: {
-  readonly store: UiStore; readonly nav: Nav; readonly draft: Signal<TeamDraft>; readonly play: Play; readonly enter: () => void
+export const Team = ({ store, actions, nav, draft, play, enter }: {
+  readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly draft: Signal<TeamDraft>; readonly play: Play; readonly enter: () => void
 }) => {
   const picking = useSignal(false)
+  /** The saved slot last loaded or saved to: Save keeps the party there. */
+  const slot = useSignal<number | null>(null)
   const tuning = store.tuning.value, account = store.account.value, { team, focus, aspects, relics } = draft.value
   const aspectName = (member: CharacterId) => {
     const aspect = aspects[member]
     return aspect === undefined ? tuning.classes[tuning.characters[member].class].plain.name : aspectOf(tuning.aspects, aspect).name
   }
   return <Screen name="lineup">
-    <TopBar icon="team" title="Party" close={nav.back} />
+    <TopBar icon="team" title="Party" close={nav.back} end={<div class="lineup__saved" role="group" aria-label="Saved parties">
+      {Array.from({ length: savedTeamSlots }, (_, index) => {
+        const at = index + 1, saved = account.saved[at]
+        return <button type="button" key={at} class="lineup__slot" aria-pressed={slot.value === at} aria-label={saved === undefined ? `Save the party as party ${at}` : `Load party ${at}`} onClick={() => {
+          slot.value = at
+          if (saved === undefined) actions.saveTeamTo(at, { team, aspects, relics })
+          else draft.value = { team: saved.team, focus: 0, aspects: saved.aspects, relics: saved.relics }
+        }}>
+          <b>{at}</b>{saved === undefined ? <Icon name="plus" /> : saved.team.map((member) => <Face key={member} of={{ character: member }} tint={elementOf(tuning, member)} size={20} />)}
+        </button>
+      })}
+      {slot.value !== null && <Pill size="small" tone="dark" onClick={() => actions.saveTeamTo(slot.value!, { team, aspects, relics })}>Save</Pill>}
+    </div>} />
     <div class="lineup__places">{Array.from({ length: teamSize }, (_, place) => {
       const member = team[place]
       return <section key={place} class={`lineup__place${picking.value && place === focus ? " is-on" : ""}`} data-element={member === undefined ? undefined : elementOf(tuning, member)}>

@@ -1,108 +1,157 @@
 /**
- * The shop (see docs/relics.md): dust for a relic owned one tier up, and
- * for the looks it sells. Three shelves: relics (every relic owned below its
- * last tier, the price of its next one), looks (the shop's own; the Call's
- * and the hard goals' are shown with where they come from), and the
- * inventory (everything the wallet holds; open before the shop is). The one
- * picked is explained on the right, with Buy.
+ * The collection (see docs/collection.md): everything the game has to own,
+ * on shelves (characters, aspects, relics, looks) with what the wallet
+ * holds beside them. Each card shows whether it is owned; the one picked is
+ * explained on the right with where it comes from (one card each: a quest's
+ * first or perfect clear, an audition, a hardcore tier), and Go there opens
+ * that card in the challenges. Nothing here is bought or drawn.
  */
 import { useSignal } from "@preact/signals"
-import { cosmeticPrice, owns, relicPrice, relicTier, relicsOpen } from "../../account/account.ts"
+import { owns, playLock, relicTier, sourcesOf } from "../../account/account.ts"
+import type { Item, Play } from "../../account/account.ts"
+import { aspectOf } from "../../content/aspects.ts"
+import type { AspectId } from "../../content/aspects.ts"
+import type { CharacterId } from "../../content/characters.ts"
+import { sourceOf } from "../../content/collection.ts"
+import type { Source } from "../../content/collection.ts"
 import { cosmeticOf } from "../../content/cosmetics.ts"
 import type { CosmeticId } from "../../content/cosmetics.ts"
 import { elements } from "../../content/elements.ts"
-import type { QuestId } from "../../content/quests.ts"
 import { relicOf, relicTiers } from "../../content/relics.ts"
 import type { RelicId } from "../../content/relics.ts"
+import { AbilityIcon } from "../AbilityIcon.tsx"
+import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import { ModelStage, Portrait } from "../kit/art.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Panel } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
+import { tabOf } from "../navigation.ts"
 import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
-import type { UiActions, UiStore } from "../store.ts"
-import { InventoryShelf } from "./Inventory.tsx"
+import type { UiStore } from "../store.ts"
 import { slotNames } from "./Gear.tsx"
-import { ids, lookSource, Wallet } from "./parts.tsx"
-import type { Nav, ShopTab } from "./screens.ts"
+import { InventoryShelf } from "./Inventory.tsx"
+import { CharacterCard, describeSource, ids, KitLines } from "./parts.tsx"
+import type { CollectionTab, Nav } from "./screens.ts"
 
 const tierNames = { 1: "I", 2: "II", 3: "III" } as const
+const roleNames = { attacker: "Attacker", healer: "Healer", guardian: "Guardian" } as const
 
-const RelicShelf = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
+/** Where a source is played: a quest at its rank, or a track's tier; `null` for a new account's. */
+const playOf = (source: Source): Play | null =>
+  source.kind === "start" ? null : source.kind === "tier" ? { kind: "tier", track: source.track, tier: source.tier } : source.rank === 1 ? { kind: "quest", quest: source.quest } : { kind: "quest", quest: source.quest, rank: source.rank }
+
+/** Where `item` comes from, said in a line, and a way to go there while it is not owned. */
+const From = ({ store, nav, item }: { readonly store: UiStore; readonly nav: Nav; readonly item: Item }) => {
   const tuning = store.tuning.value, account = store.account.value
-  // What the shop sells: every relic owned, below its last tier first.
-  const owned = ids(tuning.relics).filter((id) => relicTier(account, id) !== null).sort((a, b) => (relicTier(account, a) === 3 ? 1 : 0) - (relicTier(account, b) === 3 ? 1 : 0))
-  const picked = useSignal<RelicId | null>(owned[0] ?? null)
-  const relic = picked.value === null ? null : relicOf(tuning.relics, picked.value)
-  const tier = picked.value === null ? null : relicTier(account, picked.value)
-  const price = picked.value === null ? null : relicPrice(tuning, account, picked.value)
-  const dust = account.wallet.dust ?? 0
+  const source = sourceOf(sourcesOf(tuning), item), play = source === undefined ? null : playOf(source)
+  if (source === undefined) return null
+  const owned = owns(account, item), locked = play !== null && playLock(tuning, account, play) !== null
   return <>
-    <div class="shop__cards scroll in-left">
-      {owned.length === 0 ? <p class="dim shop__empty">No relic yet: each comes from one quest, cleared with all three stars in one run. Once you own one, its next tier is sold here.</p>
-        : <Cards>{owned.map((id) => {
-          const spec = relicOf(tuning.relics, id), at = relicTier(account, id)!, next = relicPrice(tuning, account, id)
-          return <Card key={id} tint={spec.element ?? undefined} art={<span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><TierMarks tier={at} /></span>} label={`${spec.name}, tier ${tierNames[at]}`}
-            foot={next === null ? spec.name : <span class="shop__price"><Icon name="dust" />{next.dust}</span>} selected={id === picked.value} mark={at === 3 ? "tick" : undefined} onClick={() => (picked.value = id)} />
-        })}</Cards>}
-    </div>
-    {relic !== null && tier !== null && <Panel class="shop__brief in-right" icon={<RelicIcon slot={relic.slot} element={relic.element} />} title={relic.name}
-      detail={`${slotNames[relic.slot]}${relic.element === null ? "" : ` · ${elements[relic.element].name}`} · Tier ${tierNames[tier]}`}
-      note={price === null ? "At its last tier." : dust < (price.dust ?? 0) ? `${(price.dust ?? 0) - dust} more dust needed.` : undefined} noteIcon={price === null ? "check" : "info"}>
-      <p class="dim">{relic.about}</p>
-      <div class="gear__tiers">{relicTiers.map((each) => <p key={each} class="gear__tier" data-state={each > tier ? "ahead" : each === tier ? "now" : "had"}><TierMarks tier={each} /><span>{relic.tiers[each].adds}</span></p>)}</div>
-    </Panel>}
-    <Actions>{price !== null && picked.value !== null && <Pill icon="plus" label={`Buy tier ${tier === 1 ? "II" : "III"} for ${price.dust} dust`} disabled={store.busy.value || dust < (price.dust ?? 0)} onClick={() => actions.buyRelic(picked.value!)}>
-      <span class="call__button">Tier {tier === 1 ? "II" : "III"}<small><Icon name="dust" />{price.dust}</small></span>
+    <p class="collection__from"><Icon name={owned ? "check" : locked ? "lock" : "star"} />{describeSource(store, source)}{owned ? "" : locked ? " (not open yet)" : ""}</p>
+    <Actions>{!owned && play !== null && <Pill icon="quests" label={`Go there: ${describeSource(store, source)}`} onClick={() => { store.menuPlay.value = play; nav.go({ kind: "quests", tab: tabOf(tuning, play) }) }}>
+      <span class="prize__button">Go there<small>{locked ? "Not open yet" : "Open"}</small></span>
     </Pill>}</Actions>
   </>
 }
 
-const LookShelf = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
-  const tuning = store.tuning.value, account = store.account.value
-  // The shop's own looks first, then the rest (where they come from).
-  const all = ids(tuning.cosmetics).sort((a, b) => (cosmeticPrice(tuning, a) === null ? 1 : 0) - (cosmeticPrice(tuning, b) === null ? 1 : 0))
-  const picked = useSignal<CosmeticId>(all[0]!)
-  const look = cosmeticOf(tuning.cosmetics, picked.value), price = cosmeticPrice(tuning, picked.value)
-  const has = owns(account, { kind: "cosmetic", id: picked.value }), dust = account.wallet.dust ?? 0
-  const source = lookSource(store, picked.value, true)
+const CharacterShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
+  const tuning = store.tuning.value
+  const all = ids(tuning.characters)
+  const picked = useSignal<CharacterId>(all[0]!)
+  const spec = tuning.characters[picked.value], owned = owns(store.account.value, { kind: "character", id: picked.value })
   return <>
-    <div class="shop__cards shop__cards--looks scroll in-left"><Cards>{all.map((id) => {
-      const spec = cosmeticOf(tuning.cosmetics, id), owned = owns(account, { kind: "cosmetic", id }), cost = cosmeticPrice(tuning, id)
-      return <Card key={id} art={<Portrait of={{ look: id }} />} label={spec.name} locked={!owned && cost === null}
-        foot={owned ? spec.name : cost === null ? spec.name : <span class="shop__price"><Icon name="dust" />{cost.dust}</span>} selected={id === picked.value} mark={owned ? "tick" : undefined} onClick={() => (picked.value = id)} />
+    <div class="collection__cards collection__cards--looks scroll in-left"><Cards>{all.map((id) => <CharacterCard key={id} store={store} character={id} selected={id === picked.value} onClick={() => (picked.value = id)} />)}</Cards></div>
+    <div class="collection__stage"><ModelStage key={picked.value} character={picked.value} /></div>
+    <Panel class="collection__brief collection__brief--side in-right" element={spec.element} icon={<Icon name={spec.element} />} title={spec.name}
+      detail={`${elements[spec.element].name} · ${tuning.classes[spec.class].name} · ${roleNames[spec.role]}${owned ? " · Yours" : ""}`}>
+      <KitLines store={store} character={picked.value} />
+      <From store={store} nav={nav} item={{ kind: "character", id: picked.value }} />
+    </Panel>
+  </>
+}
+
+const AspectShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
+  const tuning = store.tuning.value, account = store.account.value
+  const all = ids(tuning.aspects)
+  const picked = useSignal<AspectId>(all[0]!)
+  const spec = aspectOf(tuning.aspects, picked.value)
+  return <>
+    <div class="collection__cards scroll in-left"><Cards>{all.map((id) => {
+      const each = aspectOf(tuning.aspects, id), owned = owns(account, { kind: "aspect", id })
+      return <Card key={id} art={owned ? <AbilityIcon kind={each.class} /> : <Icon name="lock" />} foot={each.name} label={each.name} locked={!owned} mark={owned ? "tick" : undefined} selected={id === picked.value} onClick={() => (picked.value = id)} />
+    })}</Cards></div>
+    <Panel class="collection__brief in-right" icon={<AbilityIcon kind={spec.class} />} title={spec.name} detail={`${tuning.classes[spec.class].name} aspect`}>
+      <p class="dim">{spec.against}</p>
+      <From store={store} nav={nav} item={{ kind: "aspect", id: picked.value }} />
+    </Panel>
+  </>
+}
+
+const RelicShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
+  const tuning = store.tuning.value, account = store.account.value
+  const all = ids(tuning.relics)
+  const picked = useSignal<RelicId>(all[0]!)
+  const relic = relicOf(tuning.relics, picked.value), tier = relicTier(account, picked.value)
+  const sources = sourcesOf(tuning)
+  // The next thing to play for: the relic itself, then its tiers.
+  const next: Item = tier === null ? { kind: "relic", id: picked.value } : tier === 3 ? { kind: "relicTier", id: picked.value, tier: 3 } : { kind: "relicTier", id: picked.value, tier: tier === 1 ? 2 : 3 }
+  return <>
+    <div class="collection__cards scroll in-left"><Cards>{all.map((id) => {
+      const spec = relicOf(tuning.relics, id), at = relicTier(account, id)
+      return <Card key={id} tint={spec.element ?? undefined} art={at === null ? <Icon name="lock" /> : <span class="relic-art"><RelicIcon slot={spec.slot} element={spec.element} /><TierMarks tier={at} /></span>}
+        foot={spec.name} label={at === null ? spec.name : `${spec.name}, tier ${tierNames[at]}`} locked={at === null} mark={at === 3 ? "tick" : undefined} selected={id === picked.value} onClick={() => (picked.value = id)} />
+    })}</Cards></div>
+    <Panel class="collection__brief in-right" icon={<RelicIcon slot={relic.slot} element={relic.element} />} title={relic.name}
+      detail={`${slotNames[relic.slot]}${relic.element === null ? "" : ` · ${elements[relic.element].name}`}${tier === null ? "" : ` · Tier ${tierNames[tier]}`}`}>
+      <p class="dim">{relic.about}</p>
+      <div class="gear__tiers">{relicTiers.map((each) => {
+        const source = sourceOf(sources, each === 1 ? { kind: "relic", id: picked.value } : { kind: "relicTier", id: picked.value, tier: each })
+        return <p key={each} class="gear__tier" data-state={tier === null || each > tier ? "ahead" : each === tier ? "now" : "had"}>
+          <TierMarks tier={each} /><span>{relic.tiers[each].adds}{source === undefined ? null : <small class="collection__tier-from">{describeSource(store, source)}</small>}</span>
+        </p>
+      })}</div>
+      <From store={store} nav={nav} item={next} />
+    </Panel>
+  </>
+}
+
+const LookShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
+  const tuning = store.tuning.value, account = store.account.value
+  const all = ids(tuning.cosmetics)
+  const picked = useSignal<CosmeticId>(all[0]!)
+  const look = cosmeticOf(tuning.cosmetics, picked.value), has = owns(account, { kind: "cosmetic", id: picked.value })
+  return <>
+    <div class="collection__cards collection__cards--looks scroll in-left"><Cards>{all.map((id) => {
+      const spec = cosmeticOf(tuning.cosmetics, id), owned = owns(account, { kind: "cosmetic", id })
+      return <Card key={id} art={<Portrait of={{ look: id }} />} label={spec.name} locked={!owned} foot={spec.name} selected={id === picked.value} mark={owned ? "tick" : undefined} onClick={() => (picked.value = id)} />
     })}</Cards></div>
     {/* Tried on: a tint on her spirit; a trail as the picture of what it sheds. */}
-    <div class="shop__stage">{look.character !== null ? <ModelStage key={picked.value} character={look.character} tint={picked.value} /> : <span class="shop__trail"><Portrait of={{ look: picked.value }} /></span>}</div>
-    <Panel class="shop__brief shop__brief--side in-right" icon={<LookIcon kind={look.kind} />} title={look.name} detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}
-      note={source.text} noteIcon={source.icon}>
+    <div class="collection__stage">{look.character !== null ? <ModelStage key={picked.value} character={look.character} tint={picked.value} /> : <span class="collection__trail"><Portrait of={{ look: picked.value }} /></span>}</div>
+    <Panel class="collection__brief collection__brief--side in-right" icon={<LookIcon kind={look.kind} />} title={look.name}
+      detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}>
       <p class="dim">{look.about}</p>
       {has && <p class="dim">Wear it from {look.character === null ? "a spirit's" : `${tuning.characters[look.character].name}'s`} gear.</p>}
+      <From store={store} nav={nav} item={{ kind: "cosmetic", id: picked.value }} />
     </Panel>
-    <Actions>{!has && price !== null && <Pill icon="plus" label={`Buy for ${price.dust} dust`} disabled={store.busy.value || dust < (price.dust ?? 0)} onClick={() => actions.buyCosmetic(picked.value)}>
-      <span class="call__button">Buy<small><Icon name="dust" />{price.dust}</small></span>
-    </Pill>}</Actions>
   </>
 }
 
-/** Before the shop opens: its shelf as hidden cards, a hint of what it will hold. */
-const Hidden = ({ store, tab }: { readonly store: UiStore; readonly tab: "relics" | "looks" }) => {
-  const tuning = store.tuning.value
-  return <div class="shop__cards scroll in-left" aria-hidden="true"><Cards>{tab === "relics"
-    ? ids(tuning.relics).map((id) => <Card key={id} locked art={<RelicIcon slot={tuning.relics[id].slot} element={tuning.relics[id].element} />} foot="???" />)
-    : ids(tuning.cosmetics).map((id) => <Card key={id} locked art={<Portrait of={{ look: id }} />} foot="???" />)}</Cards></div>
-}
-
-export const Shop = ({ store, actions, nav, tab }: { readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly tab: ShopTab }) => {
+export const Collection = ({ store, nav, tab }: { readonly store: UiStore; readonly nav: Nav; readonly tab: CollectionTab }) => {
   const tuning = store.tuning.value, account = store.account.value
-  const open = relicsOpen(tuning, account)
-  return <Screen name="shop">
-    <TopBar icon="shop" title="Shop" close={nav.back} end={tab === "inventory" ? undefined : <Wallet store={store} currencies={["dust"]} />}>
-      <TopTabs label="Shop" current={tab} onChange={(id) => nav.replace({ kind: "shop", tab: id })} tabs={[{ id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }, { id: "inventory", label: "Inventory" }]} />
+  const all = sourcesOf(tuning), owned = all.filter((each) => owns(account, each.item)).length
+  const first = ids(tuning.characters)[0]!
+  return <Screen name="collection" element={tab === "characters" ? elementOf(tuning, first) : undefined}>
+    <TopBar icon="collection" title="Collection" detail={`${owned} / ${all.length}`} close={nav.back}>
+      <TopTabs label="Collection" current={tab} onChange={(id) => nav.replace({ kind: "collection", tab: id })} tabs={[
+        { id: "characters", label: "Characters" }, { id: "aspects", label: "Aspects" }, { id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }, { id: "inventory", label: "Inventory" }
+      ]} />
     </TopBar>
-    {tab === "inventory" ? <InventoryShelf store={store} /> : !open
-      ? <><Hidden store={store} tab={tab} /><Panel class="shop__brief in-right" icon={<Icon name="lock" />} title="Not open yet"><p class="dim">The shop opens with relics, after {tuning.quests[tuning.relicRules.opensAfter as QuestId].name}: dust from side quests, ranks, hardcore tiers, and trials buys a relic's next tier and looks here.</p></Panel></>
-      : tab === "relics" ? <RelicShelf store={store} actions={actions} /> : <LookShelf store={store} actions={actions} />}
+    {tab === "characters" ? <CharacterShelf store={store} nav={nav} />
+      : tab === "aspects" ? <AspectShelf store={store} nav={nav} />
+      : tab === "relics" ? <RelicShelf store={store} nav={nav} />
+      : tab === "looks" ? <LookShelf store={store} nav={nav} />
+      : <InventoryShelf store={store} />}
   </Screen>
 }

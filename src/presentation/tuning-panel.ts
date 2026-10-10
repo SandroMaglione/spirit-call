@@ -54,8 +54,6 @@ const stepFor = (value: number): number => {
 export interface DevAccountActions {
   /** Own every character and aspect, with plenty of each currency. */
   readonly unlockEverything: () => void
-  /** Clears chapter one and adds crystals: the Spirit Call, ready to try. */
-  readonly openCalls: () => void
 }
 
 export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: DevCommandsValue, account: DevAccountActions) => {
@@ -80,7 +78,6 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
         <button data-copy>Copy JSON</button>
         <button data-reset>Reset</button>
         <button data-unlock title="Own every character and aspect on this account, with plenty of each currency">Unlock all</button>
-        <button data-calls title="Clear chapter one (the Spirit Call opens) and add crystals for 30 calls">Open the Call</button>
       </div>
     </header>
     <section class="tuning__spawn">
@@ -183,7 +180,6 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
     void navigator.clipboard?.writeText(JSON.stringify(current, null, 2))
   })
   root.querySelector("[data-unlock]")!.addEventListener("click", account.unlockEverything)
-  root.querySelector("[data-calls]")!.addEventListener("click", account.openCalls)
   root.querySelector("[data-reset]")!.addEventListener("click", () => {
     overrides.clear()
     localStorage.removeItem(storageKey)

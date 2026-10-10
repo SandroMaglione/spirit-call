@@ -9,11 +9,8 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, CallResult, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
+import type { Account, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
-import type { RelicId } from "../content/relics.ts"
-import type { RareItem } from "../account/calls.ts"
-import type { BannerId } from "../content/calls.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
@@ -23,19 +20,11 @@ import type { BuildValue, FlowState, PracticeValue, RunLogValue, RunResultValue 
 import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
-/** An Extra to play (nothing recorded): the Training Ground, Enemy Practice with its picks, or a character's trial (the Training Ground with her alone, owned or not: trying her before calling). */
+/** An Extra to play (nothing recorded): the Training Ground, Enemy Practice with its picks, or a character's trial (the Training Ground with her alone, owned or not: trying her before her audition). */
 export type Extra =
   | { readonly kind: "training" }
   | { readonly kind: "practice"; readonly picks: PracticeValue }
   | { readonly kind: "trial"; readonly character: CharacterId }
-
-/** Calls just made, to reveal: on which banner, how many, and what each brought, in the order they came (`null` until the server answers; `failed` when it could not). */
-export interface CallReveal {
-  readonly banner: BannerId
-  readonly count: number
-  readonly results: ReadonlyArray<CallResult> | null
-  readonly failed: boolean
-}
 
 /** The account's changes on their way to the server: how many must not be lost (a run, a selection), and whether one could not be saved and waits for the player to try again (nothing new starts meanwhile). */
 export interface Saves {
@@ -44,12 +33,11 @@ export interface Saves {
 }
 
 /**
- * Moments that sound (and, on a phone, buzz): a call's seal cracking, its
- * light rising to purple or gold, bursting (or crumbling, a call not made),
- * and what comes out of it; a run's results coming in (victory or defeat,
- * each star, the rewards).
+ * Moments that sound (and, on a phone, buzz): a run's results coming in
+ * (victory or defeat, each star, the rewards), and something new made the
+ * account's (a character, an aspect).
  */
-export type Cue = "crack" | "rise" | "gold" | "burst" | "crumble" | "aspect" | "character" | "victory" | "defeat" | "star" | "reward"
+export type Cue = "aspect" | "character" | "victory" | "defeat" | "star" | "reward"
 
 export interface UiStore {
   readonly busy: Signal<boolean>
@@ -92,12 +80,8 @@ export interface UiStore {
   readonly practicePicks: Signal<PracticeValue>
   /** A screen the menu opens on when it shows next (from the results: back to the practice picks), or `null`. */
   readonly menuOpens: Signal<Screen | null>
-  /** Calls made and not revealed yet (the seal is showing), or `null`. */
-  readonly callReveal: Signal<CallReveal | null>
-  /** The menu's sky while the seal shows: plain stone, or an element's (a character arriving); `null` when the menu decides (see `menuElement`). */
+  /** The menu's sky: plain stone, or an element's; `null` when the menu decides (see `menuElement`). */
   readonly sky: Signal<ElementId | "plain" | null>
-  /** A character stands in the seal's reveal: her rays turn in the backdrop, behind her model (the UI's layer is over the models). */
-  readonly rays: Signal<boolean>
 }
 
 export interface Sound {
@@ -139,9 +123,7 @@ export const createUiStore = (initial: {
   extra: signal(null),
   practicePicks: signal({ kinds: [], elites: false }),
   menuOpens: signal(null),
-  callReveal: signal(null),
-  sky: signal(null),
-  rays: signal(false)
+  sky: signal(null)
 })
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
@@ -154,23 +136,15 @@ export interface UiActions {
   readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play, relics?: TeamRelics) => void
   /** Enter an Extra with `team`, `aspects`, and `relics` (the saved ones when not given): nothing it does is recorded on the account. */
   readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra, relics?: TeamRelics) => void
-  /** Buy `relic` one tier up with dust (saved at once). */
-  readonly buyRelic: (relic: RelicId) => void
-  /** Buy a look the shop sells with dust (saved at once). */
-  readonly buyCosmetic: (cosmetic: CosmeticId) => void
-  /** Buy an aspect or a look of the Call's from its exchange with sigils (saved at once). */
-  readonly exchange: (item: RareItem) => void
+  /** Save a team in `slot` to load in a tap, or empty the slot (`null`; saved at once). */
+  readonly saveTeamTo: (slot: number, saved: SavedTeam | null) => void
   /** Put a look of `kind` on `character` (`null`: her own look; saved at once). */
   readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => void
   /** Take an owned character to its next level with gold (saved at once). */
   readonly train: (character: CharacterId) => void
   /** Take an owned character past the ascension step she stands at (saved at once). */
   readonly ascend: (character: CharacterId) => void
-  /** Make `count` calls on `banner`: the seal shows at once (`callReveal`), what they brought once the server answers. */
-  readonly call: (banner: BannerId, count: number) => void
-  /** Focus `character` on `banner`: the character a call there brings. */
-  readonly focus: (banner: BannerId, character: CharacterId) => void
-  /** Sound (and buzz, on a phone) a moment of a call or of the results. */
+  /** Sound (and buzz, on a phone) a moment of the results. */
   readonly cue: (cue: Cue) => void
   /** Try again to save the change that could not be saved (see `Saves`). */
   readonly retrySaves: () => void

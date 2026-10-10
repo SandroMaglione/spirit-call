@@ -4,8 +4,8 @@
  * one by one (the ones earned now land with a ping), what it earned as
  * cards on a line that scrolls when long (a new character glows, and
  * stands beside them; a card a resource, however many places it came from,
- * a chest in the corner when part of it came from one), the account's
- * progress, and what comes next in the same list (main quests, side
+ * a chest in the corner when part of it came from one), how much of the
+ * collection is owned, and what comes next in the same list (main quests, side
  * quests, a track): played at once as the main button, or opened in the
  * menu beside it, with home, party, and retry.
  *
@@ -15,7 +15,7 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 import type { JSX } from "preact"
-import { accountLevel, earnedResources } from "../account/account.ts"
+import { earnedResources, owns, sourcesOf } from "../account/account.ts"
 import { AbilityIcon } from "./AbilityIcon.tsx"
 import { describePlay, describeUnlock, resourceName } from "./describe.ts"
 import { elementOf } from "./draft.ts"
@@ -62,13 +62,15 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   if (result === null) return null
   const tuning = store.tuning.value, account = store.account.value, play = store.play.value, extra = store.extra.value
   const objective = tuning.challenges[result.challenge].objective
-  const newcomer = earned?.rewards?.unlocks.find((unlock) => unlock.kind === "character")
+  const newcomer = earned?.granted.find((unlock) => unlock.kind === "character")
   const name = play === null ? tuning.challenges[result.challenge].name : describePlay(tuning, play)
   const enabled = armed.value && (shown.value || skipped.value)
   const open = (screen: Screen) => { store.menuOpens.value = screen; actions.menu() }
-  const level = accountLevel(tuning, account), next = play === null ? null : nextAfter(tuning, account, play)
+  const next = play === null ? null : nextAfter(tuning, account, play)
+  // The collection: everything there is to own, and how much of it is (see docs/collection.md).
+  const collection = sourcesOf(tuning), owned = collection.filter((each) => owns(account, each.item)).length
+  const gained = earned?.granted.length ?? 0
   const canContinue = extra === null && result.cleared && next !== null
-  const leveled = earned !== null && earned.level.after > earned.level.before
   const title = extra?.kind === "trial" ? `${tuning.characters[extra.character].name} · Trial` : extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   const time = `${Math.floor(result.time / 60)}:${String(Math.floor(result.time % 60)).padStart(2, "0")}`
   const starred = play?.kind === "quest" && extra === null ? play : null
@@ -86,37 +88,34 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       {extra !== null ? <p class="dim results__step" style={at(times.line)}>{extra.kind === "trial" ? "A trial records nothing." : "Practice records nothing."}</p> : <>
         {earned !== null && <>
           <CardRow class="results__loot" label="Rewards">
-            {earned.experience > 0 && <Card tint="thunder" art={<Icon name="xp" />} foot={`+${earned.experience}`} label={`${earned.experience} account XP`} />}
             {earnedResources(tuning, earned).map(({ id, total, fromChests }) => {
-              const currency = id === "crystals" || id === "gold" || id === "dust"
+              const currency = id === "gold"
               // Part of it from a chest: the chest in the corner, and it glows as a chest's gift does.
               return <Card key={id} fresh={fromChests > 0} corner={fromChests > 0 ? "chest" : undefined}
-                tint={id === "crystals" ? "water" : currency ? undefined : tuning.materials[id as MaterialId].element}
-                art={currency ? <Icon name={id} /> : <MaterialIcon store={store} material={id as MaterialId} />}
+                tint={currency ? undefined : tuning.materials[id as MaterialId].element ?? undefined}
+                art={currency ? <Icon name="gold" /> : <MaterialIcon store={store} material={id as MaterialId} />}
                 foot={`+${total.toLocaleString("en-US")}`} label={`${total} ${resourceName(tuning, id)}${fromChests > 0 ? `, ${fromChests} from a chest` : ""}`} />
             })}
-            {earned.rewards?.unlocks.map((unlock) => unlock.kind === "character"
+            {earned.granted.map((unlock) => unlock.kind === "character"
               ? <CharacterCard key={unlock.id} store={store} character={unlock.id} foot="NEW" fresh onClick={enabled ? () => open({ kind: "character", character: unlock.id, tab: "kit" }) : undefined} />
               : unlock.kind === "aspect"
                 ? <Card key={unlock.id} fresh tint={tuning.characters[store.team.value[0]?.character ?? "swordsman"].element} art={<AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} />} foot="NEW" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />
-                : unlock.kind === "relic"
-                  ? <Card key={unlock.id} fresh tint={relicOf(tuning.relics, unlock.id).element ?? undefined} art={<RelicIcon slot={relicOf(tuning.relics, unlock.id).slot} element={relicOf(tuning.relics, unlock.id).element} />} foot="RELIC" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />
-                  : <Card key={unlock.id} fresh art={<LookIcon kind={cosmeticOf(tuning.cosmetics, unlock.id).kind} />} foot="LOOK" label={describeUnlock(tuning, unlock)} />)}
-            {/* The relic a perfect clear unlocked (its dust, when it pays dust, is in the dust card). */}
-            {earned.perfect?.relic != null && <Card fresh tint={relicOf(tuning.relics, earned.perfect.relic).element ?? undefined} art={<span class="relic-art"><RelicIcon slot={relicOf(tuning.relics, earned.perfect.relic).slot} element={relicOf(tuning.relics, earned.perfect.relic).element} /><TierMarks tier={1} /></span>} foot="RELIC" label={`${relicOf(tuning.relics, earned.perfect.relic).name}, a new relic, for a perfect clear`} onClick={enabled ? () => open({ kind: "team" }) : undefined} />}
+                : unlock.kind === "relic" || unlock.kind === "relicTier"
+                  ? <Card key={`${unlock.kind}-${unlock.id}`} fresh tint={relicOf(tuning.relics, unlock.id).element ?? undefined} art={<span class="relic-art"><RelicIcon slot={relicOf(tuning.relics, unlock.id).slot} element={relicOf(tuning.relics, unlock.id).element} /><TierMarks tier={unlock.kind === "relic" ? 1 : unlock.tier} /></span>} foot={unlock.kind === "relic" ? "RELIC" : "TIER"} label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "team" }) : undefined} />
+                  : <Card key={unlock.id} fresh art={<LookIcon kind={cosmeticOf(tuning.cosmetics, unlock.id).kind} />} foot="LOOK" label={describeUnlock(tuning, unlock)} onClick={enabled ? () => open({ kind: "collection", tab: "looks" }) : undefined} />)}
           </CardRow>
           {earned.discoveries.length > 0 && <p class="results__new results__step" style={at(times.account)}>Discovered: {earned.discoveries.map((id) => tuning.discoveries[id].name).join(", ")}</p>}
           <div class="results__account results__step" style={at(times.account)}>
-            <div><span>{leveled ? <>Account Lv {earned.level.before} → <b>{earned.level.after}</b></> : `Account Lv ${level.level}`}</span><span>{earned.experience > 0 && <span class="results__gain">+{earned.experience}</span>}<span class="dim">{level.needed === 0 ? "MAX" : `${Math.floor(level.into)} / ${level.needed}`}</span></span></div>
-            {/* What the run added grows in from where the bar stood (from empty after a level-up: the new level's bar is all new). */}
-            <Bar value={level.needed === 0 ? 1 : level.into / level.needed} from={level.needed === 0 ? undefined : leveled ? 0 : (level.into - earned.experience) / level.needed} label="Account experience" />
+            <div><span>Collection</span><span>{gained > 0 && <span class="results__gain">+{gained}</span>}<span class="dim">{owned} / {collection.length}</span></span></div>
+            {/* What the run added grows in from where the bar stood. */}
+            <Bar value={owned / collection.length} from={(owned - gained) / collection.length} label="Collection" />
           </div>
         </>}
       </>}
       <footer class="results__actions results__step" style={at(times.done)}>
         <RoundButton icon="home" tone="dark" label="Home" disabled={!enabled} onClick={() => open({ kind: "home" })} />
         {extra?.kind === "trial"
-          ? <RoundButton icon="call" tone="dark" label="Back to the Spirit Call" disabled={!enabled} onClick={() => open({ kind: "call", tab: "banner" })} />
+          ? <RoundButton icon="collection" tone="dark" label="Back to the collection" disabled={!enabled} onClick={() => open({ kind: "collection", tab: "characters" })} />
           : <RoundButton icon={extra?.kind === "practice" ? "practice" : "team"} tone="dark" label={extra?.kind === "practice" ? "Change enemies" : "Adjust party"} disabled={!enabled} onClick={() => open(extra?.kind === "practice" ? { kind: "extra", mode: "practice" } : { kind: "team" })} />}
         {canContinue && <RoundButton icon="retry" tone="dark" label="Retry" disabled={!enabled} onClick={actions.retry} />}
         {canContinue && next !== null && <Pill icon="quests" tone="dark" disabled={!enabled} onClick={() => { store.menuPlay.value = next; open({ kind: "quests", tab: tabOf(tuning, next) }) }}>Next in menu</Pill>}

@@ -6,11 +6,10 @@
 import { useEffect } from "preact/hooks"
 import { owns, playLock, teamProblems, teamRelicProblems } from "../account/account.ts"
 import { menuElement } from "./Backdrop.tsx"
-import { Call } from "./menu/Call.tsx"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
 import { Gear } from "./menu/Gear.tsx"
-import { Shop } from "./menu/Shop.tsx"
+import { Collection } from "./menu/Collection.tsx"
 import { Extra } from "./menu/Extra.tsx"
 import { Home } from "./menu/Home.tsx"
 import { Quests } from "./menu/Quests.tsx"
@@ -65,14 +64,13 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
         return <Home store={store} nav={nav} leader={leader} play={playable} enter={() => actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, playable, draft.value.relics)} />
       }
       case "quests": return <Quests store={store} nav={nav} tab={screen.tab} play={play} leader={leader} enter={enter} />
-      case "team": return <Team store={store} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value, draft.value.relics)} />
+      case "team": return <Team store={store} actions={actions} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value, draft.value.relics)} />
       case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
       case "gear": return <Gear store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} focus={screen.focus} save={save} />
-      case "shop": return <Shop store={store} actions={actions} nav={nav} tab={screen.tab} />
+      case "collection": return <Collection store={store} nav={nav} tab={screen.tab} />
       case "discoveries": return <Discoveries store={store} nav={nav} />
       case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} leader={leader} />
       case "settings": return <Settings store={store} actions={actions} nav={nav} />
-      case "call": return <Call store={store} actions={actions} nav={nav} tab={screen.tab} />
     }
   }
   return <div class="menu" data-element={menuElement(store)}>{current()}</div>
