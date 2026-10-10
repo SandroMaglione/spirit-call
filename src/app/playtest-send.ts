@@ -12,7 +12,9 @@
  *
  * Who played it: this device (a random id, made once) and the tester's
  * name: the build's, or the one given in the address (`?tester=name`),
- * remembered on the device.
+ * remembered on the device. Sending is opted into by that name: with none
+ * (or after `?tester=` with no name, which opts out), nothing is recorded,
+ * and what waited is let go.
  */
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
@@ -47,11 +49,11 @@ export interface SenderConfig {
 /** How sending a run went: taken, never to be taken (dropped), or to try again later. */
 type Sent = "taken" | "refused" | "later"
 
-/** The tester's name: one given in the address now (remembered), else the one remembered, else the build's. */
+/** The tester's name (empty: not opted in): one given in the address now (remembered, an empty one too), else the one remembered, else the build's. */
 const testerOf = (store: KeyValueStore.KeyValueStore, built: string, search: string) =>
   Effect.gen(function*() {
     const given = new URLSearchParams(search).get("tester")?.trim().slice(0, 40)
-    if (given !== undefined && given !== "") {
+    if (given !== undefined) {
       yield* store.set(testerKey, given).pipe(Effect.ignore)
       return given
     }
@@ -76,8 +78,13 @@ export const layer = (config: SenderConfig, options: { readonly send?: typeof fe
     Effect.gen(function*() {
       const store = yield* KeyValueStore.KeyValueStore
       const send = options.send ?? ((input, init) => fetch(input, init))
-      const device = yield* deviceOf(store)
       const tester = yield* testerOf(store, config.tester, options.search ?? globalThis.location?.search ?? "")
+      // Not opted in: nothing is recorded, and nothing kept from before is sent.
+      if (tester === "") {
+        yield* store.remove(outboxKey).pipe(Effect.ignore)
+        return Playtest.of({ recordRun: () => Effect.void })
+      }
+      const device = yield* deviceOf(store)
       // One change to the outbox at a time.
       const lock = yield* Semaphore.make(1)
       const load = read(store, outboxKey, Outbox).pipe(Effect.map((saved) => (saved._tag === "Read" ? saved.value : [])))

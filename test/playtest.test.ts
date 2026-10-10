@@ -31,7 +31,7 @@ const fakeServer = (statuses: Array<number>) => {
 }
 
 /** Starts the sender on a device holding `saved`, reports `runs`, and answers with what the device holds after (and the hook to call when back online). */
-const onDevice = (server: ReturnType<typeof fakeServer>, runs: ReadonlyArray<ReportedRun>, saved: Record<string, string> = {}, search = "") =>
+const onDevice = (server: ReturnType<typeof fakeServer>, runs: ReadonlyArray<ReportedRun>, saved: Record<string, string> = {}, search = "", built = "built") =>
   Effect.runPromise(
     Effect.gen(function*() {
       const kv = yield* KeyValueStore.KeyValueStore
@@ -39,7 +39,7 @@ const onDevice = (server: ReturnType<typeof fakeServer>, runs: ReadonlyArray<Rep
       let online = () => {}
       const playtest = yield* Effect.provide(Effect.gen(function*() {
         return yield* Playtest
-      }), senderLayer({ url: "https://runs.test", key: "secret", tester: "built" }, { send: server.send, search, online: (then) => (online = then) }))
+      }), senderLayer({ url: "https://runs.test", key: "secret", tester: built }, { send: server.send, search, online: (then) => (online = then) }))
       for (const run of runs) yield* playtest.recordRun(run)
       const outbox = () => kv.get(outboxKey).pipe(Effect.map((raw) => (raw === undefined ? [] : (JSON.parse(raw) as Array<{ readonly id: string }>).map((run) => run.id))))
       return { outbox: yield* outbox(), kv, online, outboxAfter: outbox }
@@ -101,5 +101,18 @@ describe("playtest sender", () => {
     const { kv } = await onDevice(server, [reported("a")], { [deviceKey]: "my-phone" }, "?tester=Robin")
     expect(server.sent[0]!.body).toMatchObject({ device: "my-phone", tester: "Robin" })
     expect(await Effect.runPromise(kv.get(testerKey))).toBe("Robin")
+  })
+
+  it("records nothing until a tester is named, and forgets what waited when one opts out", async () => {
+    const unnamed = fakeServer([204])
+    expect((await onDevice(unnamed, [reported("a")], {}, "", "")).outbox).toEqual([])
+    expect(unnamed.sent).toEqual([])
+    const waiting = await onDevice(fakeServer([503]), [reported("a")])
+    const server = fakeServer([204])
+    const optedOut = await onDevice(server, [reported("b")], { [outboxKey]: (await Effect.runPromise(waiting.kv.get(outboxKey)))! }, "?tester=")
+    expect(optedOut.outbox).toEqual([])
+    expect(server.sent).toEqual([])
+    // Opting out is remembered over the build's name.
+    expect((await onDevice(fakeServer([204]), [reported("c")], { [testerKey]: "" })).outbox).toEqual([])
   })
 })

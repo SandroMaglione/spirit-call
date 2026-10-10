@@ -87,12 +87,14 @@ on its own (`PlaytestRun`, `src/api/schemas.ts`):
   logged. A run the server will never take (it names content the server's
   build does not know) is dropped rather than tried forever.
 
-## Who the tester is
+## Who the tester is, and opting in
 
-The tester's name comes from the build (`PLAYTEST_TESTER`), or from the
-address: opening the game once with `?tester=Robin` names this device's
-tester from then on (remembered on the device). Without either, runs are
-told apart by device only.
+A tester opts in by name. The name comes from the build
+(`PLAYTEST_TESTER`; a dev build's is `dev`), or from the address: opening
+the game once with `?tester=Robin` names this device's tester from then on
+(remembered on the device). Without a name, nothing is recorded, not even
+into the outbox. Opening it with `?tester=` and no name opts this device
+out, over the build's name too, and lets go of what waited to be sent.
 
 ## The key and CORS
 
