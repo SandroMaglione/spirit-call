@@ -116,13 +116,9 @@ const AccountLive = HttpApiBuilder.group(
       .handle("get", () => forPlayer(accounts.get))
       .handle("select", ({ payload }) => forPlayer((id) => accounts.select(id, payload.team, payload.play, payload.aspects, payload.relics)))
       .handle("wear", ({ params, payload }) => forPlayer((id) => accounts.wear(id, params.character, params.kind, payload.cosmetic)))
-      .handle("buyRelic", ({ params }) => forPlayer((id) => accounts.buyRelic(id, params.relic)))
-      .handle("buyCosmetic", ({ params }) => forPlayer((id) => accounts.buyCosmetic(id, params.cosmetic)))
-      .handle("exchange", ({ payload }) => forPlayer((id) => accounts.exchange(id, payload)))
+      .handle("saveTeam", ({ params, payload }) => forPlayer((id) => accounts.saveTeam(id, params.slot, payload.team)))
       .handle("train", ({ params }) => forPlayer((id) => accounts.train(id, params.character)))
       .handle("ascend", ({ params }) => forPlayer((id) => accounts.ascend(id, params.character)))
-      .handle("call", ({ params, payload }) => forPlayer((id) => accounts.call(id, params.banner, payload.count)))
-      .handle("focus", ({ params, payload }) => forPlayer((id) => accounts.focus(id, params.banner, payload.character)))
       .handle("recordRun", ({ payload }) => forPlayer((id) => accounts.recordRun(id, payload.play, payload.result, payload.log)))
       .handle("runs", ({ query }) => forPlayer((id) => logs.runs(id, query.since ?? 0)))
       .handle("events", ({ query }) => forPlayer((id) => logs.events(id, query.since ?? 0)))
@@ -141,7 +137,7 @@ const DevLive = HttpApiBuilder.group(
         const player = yield* CurrentPlayer
         return yield* action(player.id)
       })
-    return handlers.handle("unlockEverything", () => tool(accounts.unlockEverything)).handle("openCalls", () => tool(accounts.openCalls))
+    return handlers.handle("unlockEverything", () => tool(accounts.unlockEverything))
   })
 )
 

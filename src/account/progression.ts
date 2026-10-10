@@ -14,8 +14,8 @@ export interface LevelProgress {
   readonly needed: number
 }
 
-/** Experience needed to go from `level` to the next. */
-export const experienceFor = (curve: LevelCurve, level: number): number => curve.base + curve.growth * (level - 1) + curve.square * (level - 1) ** 2
+/** Experience needed to go from `level` to the next: whole gold, so a level paid for is always reached. */
+export const experienceFor = (curve: LevelCurve, level: number): number => Math.round(curve.base + curve.growth * (level - 1) + curve.square * (level - 1) ** 2)
 
 /** Total experience needed to reach `level` from level 1. */
 export const experienceTo = (curve: LevelCurve, level: number): number => {

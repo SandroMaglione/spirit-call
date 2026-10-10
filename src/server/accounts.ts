@@ -13,19 +13,15 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import type * as Statement from "effect/sql/Statement"
 
-import { ascend, buyCosmetic, buyRelic, createAccount, earn, everything, noQuestProgress, questProgress, raiseRelic, recordRun, select, train, unlock, wear, withClearedRewards } from "../account/account.ts"
-import type { Account, CallResult, Checked, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
-import { call, exchange, setFocus } from "../account/calls.ts"
-import type { RareItem } from "../account/calls.ts"
+import { ascend, createAccount, earn, everything, raiseRelic, recordRun, saveTeam, select, train, unlock, wear } from "../account/account.ts"
+import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import { fromRecord, toRecord } from "../account/convert.ts"
 import { Refused } from "../api/api.ts"
-import type { BannerId } from "../content/calls.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
 import type { RelicId } from "../content/relics.ts"
 import type { Amounts } from "../content/currencies.ts"
 import { materials } from "../content/materials.ts"
-import type { QuestId } from "../content/quests.ts"
 import type { RunLogValue, RunResultValue } from "../schema.ts"
 import { Batch } from "./batch.ts"
 import { Content } from "./content.ts"
@@ -34,7 +30,7 @@ import { Logs } from "./logs.ts"
 import { Store } from "./store.ts"
 
 /** What the dev tool adds: enough to level and ascend anything while testing. */
-const plenty: Amounts = { crystals: 10_000, gold: 100_000, dust: 5000, ...Object.fromEntries(Object.keys(materials).map((id) => [id, 5000])) }
+const plenty: Amounts = { gold: 1_000_000, ...Object.fromEntries(Object.keys(materials).map((id) => [id, 50_000])) }
 
 export class Accounts extends Context.Service<
   Accounts,
@@ -44,19 +40,14 @@ export class Accounts extends Context.Service<
     readonly get: (userId: string) => Effect.Effect<Account>
     readonly select: (userId: string, team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects, relics?: TeamRelics) => Effect.Effect<Account, Refused>
     readonly wear: (userId: string, character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => Effect.Effect<Account, Refused>
-    readonly buyRelic: (userId: string, relic: RelicId) => Effect.Effect<Account, Refused>
-    readonly buyCosmetic: (userId: string, cosmetic: CosmeticId) => Effect.Effect<Account, Refused>
+    /** Saves a team in `slot` to load in a tap, or empties the slot (`null`). */
+    readonly saveTeam: (userId: string, slot: number, team: SavedTeam | null) => Effect.Effect<Account, Refused>
     readonly train: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
     readonly ascend: (userId: string, character: CharacterId) => Effect.Effect<Account, Refused>
-    readonly exchange: (userId: string, item: RareItem) => Effect.Effect<Account, Refused>
-    readonly call: (userId: string, banner: BannerId, count: number) => Effect.Effect<{ readonly account: Account; readonly results: ReadonlyArray<CallResult> }, Refused>
-    readonly focus: (userId: string, banner: BannerId, character: CharacterId) => Effect.Effect<Account, Refused>
     /** Records a run that ended, with its log (kept for measuring play, see `Logs`). */
     readonly recordRun: (userId: string, play: Play | null, result: RunResultValue, log: RunLogValue) => Effect.Effect<{ readonly account: Account; readonly earned: Earned }>
-    /** Owns every character, aspect, relic (at its last tier), and look, and adds plenty of each currency (a dev tool). */
+    /** Owns every character, aspect, relic (at its last tier), and look, and adds plenty of gold and essence (a dev tool). */
     readonly unlockEverything: (userId: string) => Effect.Effect<Account>
-    /** Clears chapter one and adds crystals for 30 calls (a dev tool, to try the Spirit Call). */
-    readonly openCalls: (userId: string) => Effect.Effect<Account>
   }
 >()("Shooter/Server/Accounts") {
   static readonly layer = Layer.effect(
@@ -119,11 +110,9 @@ export class Accounts extends Context.Service<
       const always = (userId: string, action: string, change: (account: Account, now: number) => Account) =>
         act(userId, action, about(null), (account, now) => ok(change(account, now)), same).pipe(Effect.catchTag("Refused", Effect.die))
 
-      const chapterOne = (Object.keys(tuning.quests) as Array<QuestId>).filter((id) => tuning.quests[id].chapter === "one")
-
       return Accounts.of({
         create: Effect.fn("Accounts.create")(function*(userId: string) {
-          // The account's id is its player's (its calls draw from it, see `seedOf`).
+          // The account's id is its player's.
           const account = createAccount(tuning, starter, userId, yield* Clock.currentTimeMillis)
           yield* write(store.writes(userId, noRows, toRows(userId, toRecord(account))))
           return account
@@ -137,13 +126,9 @@ export class Accounts extends Context.Service<
           }),
         select: (userId, team, play, aspects, relics) => act(userId, "select", about(play.kind === "quest" ? play.quest : play.track), (account) => select(tuning, account, team, play, aspects, relics), same),
         wear: (userId, character, kind, cosmetic) => act(userId, "wear", about(character), (account) => wear(tuning, account, character, kind, cosmetic), same),
-        buyRelic: (userId, relic) => act(userId, "buyRelic", about(relic), (account, now) => buyRelic(tuning, account, relic, now), same),
-        buyCosmetic: (userId, cosmetic) => act(userId, "buyCosmetic", about(cosmetic), (account, now) => buyCosmetic(tuning, account, cosmetic, now), same),
+        saveTeam: (userId, slot, team) => act(userId, "saveTeam", about(String(slot)), (account) => saveTeam(tuning, account, slot, team), same),
         train: (userId, character) => act(userId, "train", about(character), (account) => train(tuning, account, character), same),
         ascend: (userId, character) => act(userId, "ascend", about(character), (account) => ascend(tuning, account, character), same),
-        exchange: (userId, item) => act(userId, "exchange", about(item.id), (account, now) => exchange(tuning, account, item, now), same),
-        call: (userId, banner, count) => act(userId, "call", about(banner), (account, now) => call(tuning, account, banner, count, now), (called) => called.account),
-        focus: (userId, banner, character) => act(userId, "focus", about(banner), (account) => setFocus(tuning, account, banner, character), same),
         recordRun: (userId, play, result, log) =>
           act(userId, "run", (before, now) => {
             // The run is kept with the account as it was played (her team's levels and aspects then), with the change it made.
@@ -152,16 +137,7 @@ export class Accounts extends Context.Service<
           }, (account, now) => ok(recordRun(tuning, account, play, result, now)), (recorded) => recorded.account).pipe(Effect.catchTag("Refused", Effect.die)),
         unlockEverything: (userId) =>
           always(userId, "unlockEverything", (account, now) =>
-            earn((Object.keys(tuning.relics) as Array<RelicId>).reduce((next, id) => raiseRelic(next, id, 3, now), everything(tuning).reduce((next, item) => unlock(tuning, next, item, now), account)), plenty)),
-        openCalls: (userId) =>
-          always(userId, "openCalls", (account, now) => {
-            const cleared = Object.fromEntries(chapterOne.map((quest) => {
-              const progress = questProgress(account, quest) ?? noQuestProgress
-              return [quest, { ...account.quests[quest], 1: { ...progress, firstClearedAt: progress.firstClearedAt ?? now } }]
-            }))
-            const rewarded = withClearedRewards(tuning, { ...account, quests: { ...account.quests, ...cleared } }, now).account
-            return earn(rewarded, { crystals: 30 * (tuning.calls.price.crystals ?? 0) })
-          })
+            earn((Object.keys(tuning.relics) as Array<RelicId>).reduce((next, id) => raiseRelic(next, id, 3, now), everything(tuning).reduce((next, item) => unlock(tuning, next, item, now), account)), plenty))
       })
     })
   )
