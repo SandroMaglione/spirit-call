@@ -9,6 +9,7 @@
  * `NovaEffect.readies`), one that takes a blow is ready again at once.
  */
 import type { BraceEffect } from "../content/skills.ts"
+import type { Vec2 } from "../math/vec.ts"
 import { BraceCounter, Bracing, Cast, Disarmed, ElementAffinities, Enemy, Explosion, Game, Guarded, Hitbox, Hurtbox, Member, Player, Position, Rebrace, RunScope, Skills, Time, Tuning } from "../schema.ts"
 import type { Faction, SkillsValue } from "../schema.ts"
 import { durationFactor } from "./elements.ts"
@@ -77,7 +78,7 @@ const Disarmable = Game.Query({
 const Rebracers = Game.Query({ selection: { position: Game.Query.read(Position), skills: Game.Query.write(Skills) }, with: [Member] })
 
 /** Whether a body of `radius` at `at` is within `effect`'s reach of `from` (edge to edge). */
-const inReach = (effect: BraceEffect, from: { readonly x: number; readonly y: number }, at: { readonly x: number; readonly y: number }, radius: number): boolean =>
+const inReach = (effect: BraceEffect, from: Vec2, at: Vec2, radius: number): boolean =>
   Math.hypot(at.x - from.x, at.y - from.y) - radius <= effect.radius
 
 /**

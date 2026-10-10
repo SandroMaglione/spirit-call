@@ -31,17 +31,12 @@ mechanic names no element**: it plays the same in every element.
 | **Disc** | middle | throws that come back | a disc hits on the way out and again on the way back |
 | **Staff** | middle to long | slower bolts | bolts pierce a line; the charged bolt goes through many |
 | **Gauntlets** | very close | fast strings built around the dash | a landed blow takes time off her dash's recharge (once a move, however many it hits), and her dash strike keeps the combo's place: dash out of a blow, dash back in, finish the string |
+| **Hammer** | close, reaching to middle | slow, heavy swings | every swing (not the dash strike) sends shockwaves along the ground the way it swings, from the end of its reach: a thrust one ahead, an arc a fan, a spin a ring. They run on through every enemy, about a third of the swing's blow, and stop at walls |
 
 A class handles the same for every character of it (how long a combo
 waits for the next press, how she slows while attacking, how long the
 charged attack holds), so knowing a class is knowing how a new character
 of it moves.
-
-One more comes with the release roster (`roster.md`):
-
-| Class | Range | Rhythm | Its own mechanic |
-|---|---|---|---|
-| **Hammer** | close, reaching to middle | slow, heavy swings | every swing sends a shockwave along the ground the way it swings, stopped by walls |
 
 (The roster first gave the Gauntlets "a dash cancels the combo's
 recovery": every class's dash already does, so the Gauntlets weave
@@ -176,6 +171,21 @@ teammates' states count too.
   ahead to her, carrying her element. Charged: a slam where she stands.
   Dash strike: a grab that pulls in. Picks one enemy out of its group
   (Gathering Edge draws a whole pack in instead).
+
+### Hammer
+
+- **Quake** (plain): an overhead blow, a sweep, and a slam all around,
+  each sending its waves on. Charged: a great blow, its wave running far.
+  Dash strike: a shoulder charge.
+- **Furrow**: long, narrow blows straight ahead, so each wave runs far
+  down a line; the last carries her element. Charged: a great blow whose
+  wave runs farthest. For a line of enemies, or one kept at a distance.
+- **Tremor**: three slams where she stands, each sending a ring of short
+  waves all around; the last carries her element. Charged: a wider slam.
+  For a crowd closing in from every side.
+
+Like every class's, a Hammer's opening blow never fells the smallest enemy
+alone (`feel.test.ts`): its weight is in the later blows and the waves.
 
 ### Staff
 

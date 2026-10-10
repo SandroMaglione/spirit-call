@@ -155,13 +155,28 @@ The Stormcaller heals by standing:
 - **It keeps going off the field**: switched out, the Stormcaller's totem
   keeps zapping for whoever is on the field (what a character released
   finishes on its own).
-- **Her Thunderclap** heals the whole team, the bench included, so the
-  health of the characters waiting is worth looking after.
+- **Her Thunderclap** heals the whole team, the bench included, a little,
+  and more for each enemy it strikes already charged: her totem's zaps
+  (and any thunder of the team) charging them first is its set-up.
+
+Hearth heals by burning:
+
+- **Her Kindle** slams around her and puts out every burning enemy in
+  reach: the rest of each burn is dealt at once, and the whole team heals
+  a little, more for each. Her own fire then catches what it struck, so
+  keeping the crowd burning keeps the next one healing.
+- **Her Wildfire** sets the crowd far around her alight, with a small heal
+  of its own: what the next Kindle feeds on.
+
+The big heals (the Tide, the Thunderclap, the Kindle) share one rule
+(`StateHeal`): a base for the team, more for each enemy in a state the
+skill reaches, up to a most. Each asks for its own state, so each healer
+sets it up her own way.
 
 ## Guarding
 
-Bastion guards the team through her kit, and a guard always costs
-something:
+Guardians guard the team through their kits, and a guard always costs
+something. Bastion guards by plates:
 
 - **Her Stoneguard** (her ultimate) takes a moment to raise. As she casts
   it a ring of stone bursts out around her, cracking and throwing back
@@ -180,6 +195,28 @@ something:
 - So a guard is set up in the quiet (between waves, behind the team) and
   pays off in the fight: an enemy hitting the team cracks itself for the
   next blow of any element.
+
+Tidewarden guards by timing:
+
+- **Her Brace** sets her a moment, rooted (she cannot run, attack, or
+  dash). The first enemy blow on her meanwhile (a shot too) is taken whole,
+  and she answers with a slash of water around her that disarms the
+  attacker. A brace that takes nothing is soon ready again; one that takes
+  a blow waits out its whole cooldown.
+- **Her Floodgate** soaks the crowd around her and drives it back, and for
+  a while after, a brace that takes a blow is ready again at once: a run
+  of parries, each timed.
+
+Windwall guards by placing:
+
+- **Her Gale Wall** stands across her aim, a little ahead of her, for a
+  while. Shots of the other side break on it; whoever touches it is
+  struck, swept, and thrown back to the side it came from (into a wall, it
+  is stunned).
+- **Her Eye of the Storm** rings where she stands: its gust throws what is
+  inside out to it, then shots break on it and whoever comes through is
+  thrown back out. Blows struck through neither are stopped: a barrier
+  stops shots, a brace or a plate stops blows.
 
 ## Ground
 

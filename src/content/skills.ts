@@ -648,10 +648,10 @@ export const skills = {
    */
   galeWall: skill({
     name: "Gale Wall",
-    cooldown: 9,
+    cooldown: 7,
     energy: 0,
     invulnerability: 0,
-    effect: barrier({ shape: { kind: "wall", ahead: 110, length: 240 }, seconds: 6, thickness: 18, tick: 0.35, power: 8, element: "wind", knockback: 650, hitStop: 0, heavy: false })
+    effect: barrier({ shape: { kind: "wall", ahead: 110, length: 300 }, seconds: 7, thickness: 18, tick: 0.35, power: 20, element: "wind", knockback: 650, hitStop: 0, heavy: false })
   }),
   /**
    * Windwall's ultimate: a ring of wind around where she stands, a gust
@@ -661,9 +661,9 @@ export const skills = {
   eyeOfTheStorm: skill({
     name: "Eye of the Storm",
     cooldown: 10,
-    energy: 90,
+    energy: 70,
     invulnerability: 0.5,
-    effect: barrier({ shape: { kind: "ring", radius: 190 }, seconds: 6, thickness: 18, tick: 0.35, power: 12, element: "wind", knockback: 800, hitStop: 0, heavy: true })
+    effect: barrier({ shape: { kind: "ring", radius: 190 }, seconds: 6, thickness: 18, tick: 0.35, power: 28, element: "wind", knockback: 800, hitStop: 0, heavy: true })
   })
 }
 

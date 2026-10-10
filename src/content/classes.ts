@@ -249,7 +249,7 @@ export const classes = {
     magazine: false,
     handling: {
       comboWindow: 0.7, inputBuffer: 0.18, active: 0.1, lungeStop: 14, attackingSpeed: 0.45, holdDelay: 0.22, chargingSpeed: 0.5, dashFeed: 0, weave: false,
-      shockwave: { share: 0.5, reach: 1.6, speed: 720, radius: 20, fan: 3, ring: 6 }
+      shockwave: { share: 0.35, reach: 1.6, speed: 720, radius: 20, fan: 3, ring: 6 }
     },
     /**
      * Quake: an overhead blow, a sweep, and a slam all around; charged, a
