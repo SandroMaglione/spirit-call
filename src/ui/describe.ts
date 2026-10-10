@@ -16,7 +16,7 @@ import type { MaterialId } from "../content/materials.ts"
 import type { Stats } from "../content/characters.ts"
 import type { HitCondition, MoveFilter, Passive, TraitChange, Trigger, TriggeredEffect } from "../content/passives.ts"
 import type { Rewards, Unlock } from "../content/quests.ts"
-import type { SkillEffect, SkillSpec } from "../content/skills.ts"
+import type { SkillEffect, SkillSpec, StateHeal } from "../content/skills.ts"
 import { aspectOf } from "../content/aspects.ts"
 import { cosmeticOf } from "../content/cosmetics.ts"
 import { relicOf } from "../content/relics.ts"
@@ -121,6 +121,12 @@ const poolNames: { readonly [Element in ElementId]: string } = { fire: "a fire p
 /** The same, several of them. */
 const poolsNames: { readonly [Element in ElementId]: string } = { fire: "fire pools", water: "puddles", wind: "gusts", thunder: "charges", rock: "rubble" }
 
+/** What a skill heals, in a few words (`which`: the enemies it counts). */
+const describeHeals = (heals: StateHeal, which: string): string =>
+  heals.per <= 0
+    ? `healing the whole team ${heals.base}% of max HP`
+    : `${heals.consumes ? `putting out every ${heals.state} enemy ${which} (the rest of its burn dealt at once) and ` : ""}healing the whole team ${heals.base}% of max HP, ${heals.per}% more for each ${heals.state} enemy ${which} (${heals.most}% at most)`
+
 /** A skill effect in a few words. */
 export const describeEffect = (effect: SkillEffect): string => {
   switch (effect.kind) {
@@ -136,7 +142,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "lob":
       return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":
-      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, healing the whole team ${effect.heals.base}% of max HP, ${effect.heals.perSoaked}% more for each soaked enemy it reaches (${effect.heals.most}% at most)`}${effect.readies > 0 ? `; for ${effect.readies}s after, a brace that takes a blow is ready again at once` : ""}`
+      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, ${describeHeals(effect.heals, "it reaches")}`}${effect.readies > 0 ? `; for ${effect.readies}s after, a brace that takes a blow is ready again at once` : ""}`
     case "fault":
       return `the ground splitting ahead of you, ${effect.rocks} ${elementWord(effect.element)}rocks erupting down the line one after the other (${effect.power}% ATK each), holding what they catch a moment`
     case "quake":
@@ -148,7 +154,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "totem":
       return `a ${elementWord(effect.element)}totem ${effect.offset > 0 ? "ahead of you" : "at your feet"} for ${effect.seconds}s that zaps enemies around it (${effect.power}% ATK${effect.jumps > 0 ? `, jumping ${effect.jumps} times` : ""})${effect.heal > 0 ? `, or heals you ${effect.heal}% of max HP while you stand in its reach hurt` : ""}`
     case "thunderclap":
-      return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) and healing the whole team ${effect.heal}% of max HP`
+      return `${elementWord(effect.element)}striking ${effect.strikes} enemies around you (${effect.power}% ATK, jumping ${effect.jumps} times) ${effect.heals === null ? "" : ` and ${describeHeals(effect.heals, "it strikes")}`}`
     case "barrage":
       return `${effect.shells} lobbed ${elementWord(effect.element)}blasts (${effect.power}% ATK each)${effect.leaves === null ? "" : ` leaving ${poolsNames[effect.leaves.element]}`}`
     case "flurry":

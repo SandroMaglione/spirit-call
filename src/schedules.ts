@@ -16,7 +16,7 @@ import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { CallSupport, LeavePools, PressChampions, ReleaseShockwaves } from "./features/patterns.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
-import { HealFromTides, MendFromMarks } from "./features/mending.ts"
+import { HealFromStates, MendFromMarks } from "./features/mending.ts"
 import { MoveDiscs } from "./features/discs.ts"
 import { ApplyStateBursts, ArcCharges, TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
@@ -112,7 +112,7 @@ const gameplay = Game.Schedule.when(
   CastLeaps,
   CastLobs,
   CastNovas,
-  HealFromTides,
+  HealFromStates,
   CastBarrages,
   CastVortices,
   CastTotems,

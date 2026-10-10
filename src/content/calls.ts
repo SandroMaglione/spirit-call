@@ -39,8 +39,8 @@ export const banners = {
   /** The roster's third banner (see docs/roster.md), holding the rest of it for now. Pairings are revisited with the Call's pace. */
   forgeAndGale: banner({
     name: "Forge & Gale",
-    theme: "An attacker who splits the ground.",
-    characters: ["quarry"]
+    theme: "An attacker who splits the ground, and a healer who turns fire into health.",
+    characters: ["quarry", "hearth"]
   })
 }
 

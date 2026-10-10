@@ -215,6 +215,8 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   // A placeholder until her own spirit: the water spirit, a deeper sea green.
   tidewarden: { ...waterSpirit, moments: spiritMoments(4, "brace", "floodgate"), tint: { hue: -30, saturation: 0.85, lightness: 0.8 } },
   // A placeholder until her own spirit: the rock spirit, a darker, redder stone.
+  // A placeholder until her own spirit: the fire spirit, a warmer, deeper glow.
+  hearth: { ...fireSpirit, moments: spiritMoments(3, "kindle", "wildfire"), tint: { hue: 15, saturation: 0.9, lightness: 0.9 } },
   quarry: { ...rockSpirit, moments: { ...spiritMoments(3, "faultLine", "landslide"), run: { clip: "Run", distance: 115 } }, tint: { hue: -15, saturation: 1.2, lightness: 0.8 } }
 }
 

@@ -82,7 +82,7 @@ const counterSlash = cut({ length: 240, width: 50, power: 10, element: null, kno
 const flare = ring({ radius: 110, element: "fire", knockback: 250 })
 const splash = ring({ radius: 120, power: 4, element: "water", knockback: 300 })
 const gust = ring({ radius: 140, power: 4, element: "wind", knockback: 800 })
-const clap = thunderclap({ radius: 220, strikes: 2, jumps: 0, heal: 0, stun: 0, breakFill: 0, power: 8, element: "thunder", knockback: 100, hitStop: 0.02, heavy: false })
+const clap = thunderclap({ radius: 220, strikes: 2, jumps: 0, heals: null, stun: 0, breakFill: 0, power: 8, element: "thunder", knockback: 100, hitStop: 0.02, heavy: false })
 const rise = earthrise({ radius: 60, rocks: 1, warning: 0.25, interval: 0.1, size: 70, ring: 90, stun: 0.5, breakFill: 0, power: 10, element: "rock", knockback: 300, hitStop: 0.04, heavy: false })
 
 /** Every relic, by id. */

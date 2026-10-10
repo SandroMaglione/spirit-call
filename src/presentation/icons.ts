@@ -66,6 +66,10 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   faultLine: icon(`<path d="M2 20l5-4 3 2 4-6 3 2 5-9"/><path d="M6 14l1-3 2 1M13 10l1-3 2 1M18 6l1-3 2 1"/>`),
   // Landslide: three rings shaking out from a slam.
   landslide: icon(`<circle cx="12" cy="14" r="2.5" fill="currentColor" fill-opacity="0.35"/><path d="M6.5 14a5.5 5.5 0 0 1 11 0M3.5 14a8.5 8.5 0 0 1 17 0M1 18h22"/>`),
+  // Kindle: a flame over a cross of healing.
+  kindle: icon(`<path d="M12 2c3 3 5 5.5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3.5 0-3 .5-5.5 1-8z" fill="currentColor" fill-opacity="0.35"/><path d="M12 17v5M9.5 19.5h5"/>`),
+  // Wildfire: flames all around a ring.
+  wildfire: icon(`<circle cx="12" cy="12" r="4"/><path d="M12 1.5l1.5 3h-3zM12 22.5l1.5-3h-3zM1.5 12l3-1.5v3zM22.5 12l-3-1.5v3zM4.5 4.5l3 1-2 2zM19.5 19.5l-3-1 2-2zM19.5 4.5l-1 3-2-2zM4.5 19.5l1-3 2 2z"/>`),
   // Floodgate: a wave breaking out of a ring.
   floodgate: icon(`<circle cx="12" cy="12" r="9"/><path d="M5 14c2 0 2-2 3.5-2s1.5 2 3.5 2 2-2 3.5-2 1.5 2 3.5 2"/><path d="M12 3v4M12 17v4"/>`)
 }

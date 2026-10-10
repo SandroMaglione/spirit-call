@@ -263,6 +263,25 @@ export const characters = {
     impact: 1.4,
     weight: 1.5,
     skills: { special: "faultLine", ultimate: "landslide" }
+  }),
+  /**
+   * Fire, Hammer, healer (a working name): close and sturdy for a healer,
+   * her strength in her kit. Her healing asks for fire: the Kindle turns
+   * the burns around her into the team's health, more for each enemy kept
+   * burning; the Wildfire sets the crowd alight for it.
+   */
+  hearth: character({
+    name: "Hearth",
+    stats: { hp: 78, atk: 80, def: 18, speed: 280 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "fire",
+    class: "hammer",
+    role: "healer",
+    dash: { distance: 160, cooldown: 1.2 },
+    impact: 1.2,
+    weight: 1.3,
+    skills: { special: "kindle", ultimate: "wildfire" }
   })
 }
 

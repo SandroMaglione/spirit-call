@@ -85,6 +85,12 @@ export const discoveries = {
     check: clearWith("quarry"),
     rewards: { crystals: 30 }
   }),
+  withHearth: discovery({
+    name: "Hearth",
+    description: "Clear a quest or tier with Hearth on the team.",
+    check: clearWith("hearth"),
+    rewards: { crystals: 30 }
+  }),
   fullTeam: discovery({
     name: "Full team",
     description: "Clear a quest or tier with three characters.",

@@ -8,7 +8,8 @@
     "bastion",
     "sparkfist",
     "tidewarden",
-    "quarry"
+    "quarry",
+    "hearth"
   ],
   "weapons": [
     "trainingBlade",
@@ -41,7 +42,9 @@
     "brace",
     "floodgate",
     "faultLine",
-    "landslide"
+    "landslide",
+    "kindle",
+    "wildfire"
   ],
   "challenges": [
     "swarm",
@@ -211,7 +214,8 @@
     "shatter",
     "withSparkfist",
     "withTidewarden",
-    "withQuarry"
+    "withQuarry",
+    "withHearth"
   ],
   "classes": [
     "blade",

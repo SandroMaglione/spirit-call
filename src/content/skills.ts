@@ -3,7 +3,7 @@
  * live-tunable: they are part of the `Tuning` resource.
  */
 
-import type { ElementId, GroundSpec } from "./elements.ts"
+import type { ElementId, GroundSpec, StateId } from "./elements.ts"
 
 // ── Skill shapes ──────────────────────────────────────────────────────────
 //
@@ -109,15 +109,20 @@ export interface LobEffect extends EffectBase {
 }
 
 /**
- * What a blast heals as it goes off: every member of the caster's team still
- * standing (on the field or on the bench) heals `base` percent of her health,
- * and `perSoaked` more for each enemy within its radius already soaked when
- * it goes off, `most` at most. Soaking enemies first is its set-up.
+ * What a skill heals the team as it goes off: every member of the caster's
+ * team still standing (on the field or on the bench) heals `base` percent
+ * of her health, and `per` more for each enemy in `state` it reaches as it
+ * goes off (a blast: within its radius; a clap: among those it strikes),
+ * `most` at most. Putting enemies in that state first is its set-up
+ * (docs/roster.md, "Support is set up"). `consumes` (burning only): the
+ * burns are put out as it heals, the rest of each dealt at once.
  */
-export interface SoakedHeal {
+export interface StateHeal {
+  readonly state: StateId
   readonly base: number
-  readonly perSoaked: number
+  readonly per: number
   readonly most: number
+  readonly consumes: boolean
 }
 
 /** A blast around the caster that knocks everything back. */
@@ -129,7 +134,7 @@ export interface NovaEffect extends EffectBase {
   /** Destroy enemy projectiles inside the radius. */
   readonly clearsProjectiles: boolean
   /** What it heals the team, or `null`. */
-  readonly heals: SoakedHeal | null
+  readonly heals: StateHeal | null
   /**
    * For this many seconds after it goes off, a brace of the caster's team
    * that takes a blow is ready again at once (see `BraceEffect`); 0: none.
@@ -198,16 +203,16 @@ export interface TotemEffect extends EffectBase {
 
 /**
  * A clap around the caster: the `strikes` nearest bodies of the other side
- * within `radius` are struck, each strike jumping on `jumps` times, and
- * every member of the caster's team still standing (on the field or on the
- * bench) heals `heal` percent of her maximum health.
+ * within `radius` are struck, each strike jumping on `jumps` times, and it
+ * heals the team as `heals` says, by the enemies it strikes (`null`: it
+ * heals nobody).
  */
 export interface ThunderclapEffect extends EffectBase {
   readonly kind: "thunderclap"
   readonly radius: number
   readonly strikes: number
   readonly jumps: number
-  readonly heal: number
+  readonly heals: StateHeal | null
   /** Seconds every struck enemy is stunned, and the share of its break bar the strike fills. */
   readonly stun: number
   readonly breakFill: number
@@ -454,7 +459,7 @@ export const skills = {
     cooldown: 10,
     energy: 85,
     invulnerability: 0.5,
-    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { base: 4, perSoaked: 3, most: 16 } })
+    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "soaked", base: 4, per: 3, most: 16, consumes: false } })
   }),
   /**
    * The Stormcaller's special: a totem planted at her feet that zaps
@@ -473,14 +478,15 @@ export const skills = {
   /**
    * The Stormcaller's ultimate: thunder striking the enemies around her,
    * jumping between them, stunning them and filling their break bars, and
-   * healing the whole team, the bench too.
+   * healing the whole team, the bench too: more for each enemy it strikes
+   * already charged (her totem's zaps charge them).
    */
   thunderclap: skill({
     name: "Thunderclap",
     cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
-    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
+    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heals: { state: "charged", base: 4, per: 2, most: 14, consumes: false }, stun: 1, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
   }),
   /**
    * Bastion's ultimate (id `stoneGuard`, from her first kit's special): a ring of stone bursts out around her, throwing
@@ -590,6 +596,32 @@ export const skills = {
     energy: 90,
     invulnerability: 0.8,
     effect: quake({ slams: 3, interval: 0.35, first: 150, growth: 60, stun: 1.2, breakFill: 0.4, power: 45, element: "rock", knockback: 700, hitStop: 0.08, heavy: true })
+  }),
+  /**
+   * Hearth's special: she brings her hammer down and the fires around her
+   * flare up into the team's health: every burning enemy near her is put
+   * out, the rest of its burn dealt at once, and the team heals more for
+   * each. Her own fire then catches what it struck (keep them burning, and
+   * the next one heals again).
+   */
+  kindle: skill({
+    name: "Kindle",
+    cooldown: 6,
+    energy: 0,
+    invulnerability: 0,
+    effect: nova({ radius: 210, power: 24, element: "fire", knockback: 320, active: 0.1, clearsProjectiles: false, hitStop: 0.05, heavy: false, heals: { state: "burning", base: 2, per: 3, most: 14, consumes: true } })
+  }),
+  /**
+   * Hearth's ultimate: a ring of fire bursting out around her, setting
+   * everything far around burning and throwing it back, and warming the
+   * whole team a little: what the next Kindle feeds on.
+   */
+  wildfire: skill({
+    name: "Wildfire",
+    cooldown: 10,
+    energy: 90,
+    invulnerability: 0.5,
+    effect: nova({ radius: 300, power: 40, element: "fire", knockback: 700, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "burning", base: 5, per: 0, most: 5, consumes: false } })
   })
 }
 

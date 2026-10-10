@@ -4,12 +4,16 @@
  * A skill that marks (`MarkSpec`, the Tidal Wave's) leaves `Marked` on the
  * enemies it hits; a blow of the team on a marked enemy then heals the one
  * on the field, at most once every so often across the team (`Mending`),
- * however many are marked. A blast that heals (`SoakedHeal`, the Tide's)
- * heals every member still standing, more for each enemy around it already
- * soaked as it goes off.
+ * however many are marked. A blast that heals (`StateHeal`: the Tide's, the
+ * Kindle's) heals every member still standing, more for each enemy around
+ * it in its state as it goes off.
  */
-import type { SkillEffect, MarkSpec } from "../content/skills.ts"
-import { Cast, ElementState, Enemy, Game, Heal, Health, Hit, Hurtbox, Marked, Member, Mending, Player, Position, Time, Tuning } from "../schema.ts"
+import type { WriteCell } from "@typeonce/bevy-ts/Query"
+
+import type { SkillEffect, MarkSpec, StateHeal } from "../content/skills.ts"
+import { normalizeOr, sub } from "../math/vec.ts"
+import { blow, Cast, Damage, ElementState, Enemy, Game, Heal, Health, Hit, Hurtbox, Marked, Member, Mending, Player, Position, Time, Tuning } from "../schema.ts"
+import { burnDps } from "./elements.ts"
 
 /** The mark `effect` leaves on what it hits, if any. */
 export const markOf = (effect: SkillEffect): MarkSpec | null => (effect.kind === "cut" ? effect.marks : null)
@@ -58,35 +62,61 @@ export const MendFromMarks = Game.System("Shooter/MendFromMarks", {
   }
 })
 
+/** The share of health a skill healing as `heals` says restores, with `count` enemies in its state. */
+export const stateHealPercent = (heals: StateHeal, count: number): number => Math.min(heals.most, heals.base + heals.per * count)
+
+/** Heals every member still standing `percent` of her health (the one on the field shows it, at `at`). */
+export const healTeam = (
+  members: ReadonlyArray<{ readonly data: { readonly health: WriteCell<{ readonly current: number; readonly max: number }>; readonly player: { readonly present: boolean } } }>,
+  percent: number,
+  heal: (amount: number) => void
+): void => {
+  if (percent <= 0) return
+  for (const { data } of members) {
+    const health = data.health.get()
+    if (health.current <= 0 || health.current >= health.max) continue
+    const amount = Math.min(health.max - health.current, (health.max * percent) / 100)
+    data.health.set({ current: health.current + amount, max: health.max })
+    if (data.player.present) heal(amount)
+  }
+}
+
 /**
- * Blasts that heal (`SoakedHeal`): as one goes off, every member of the
- * caster's team still standing heals its base, and more for each enemy
- * within its radius (edge to edge) already soaked, up to its most. Reads
- * the states before the blast's own water lands (it is cast this step, and
- * hits after).
+ * Blasts that heal (`StateHeal`, the Tide's and the Kindle's): as one goes
+ * off, every member of the caster's team still standing heals its base, and
+ * more for each enemy within its radius (edge to edge) in its state, up to
+ * its most. Reads the states before the blast's own element lands (it is
+ * cast this step, and hits after). One that consumes the state takes it off
+ * them, dealing at once what it had left (a burn: the rest of its burning,
+ * as a Flare does, to that body alone), so its own element lands on bodies
+ * in no state.
  */
-export const HealFromTides = Game.System("Shooter/HealFromTides", {
+export const HealFromStates = Game.System("Shooter/HealFromStates", {
   queries: {
-    enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), state: Game.Query.read(ElementState) }, with: [Enemy] }),
+    enemies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), state: Game.Query.write(ElementState) }, with: [Enemy] }),
     // The bench has no body: members are healed wherever they are.
     members: Game.Query({ selection: { health: Game.Query.write(Health), player: Game.Query.optional(Player) }, with: [Member] })
   },
-  events: { cast: Game.System.readEvent(Cast), heal: Game.System.writeEvent(Heal) }
-}, ({ queries, events }) => {
+  resources: { tuning: Game.System.readResource(Tuning) },
+  events: { cast: Game.System.readEvent(Cast), heal: Game.System.writeEvent(Heal), damage: Game.System.writeEvent(Damage) }
+}, ({ queries, resources, events }) => {
+  const tuning = resources.tuning.get()
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "nova" || effect.heals === null || cast.faction !== "player") continue
-    const soaked = queries.enemies.each().filter(({ data }) => {
+    const heals = effect.heals
+    const held = queries.enemies.each().filter(({ data }) => {
       const at = data.position.get()
-      return data.state.get().current?.id === "soaked" && Math.hypot(at.x - cast.from.x, at.y - cast.from.y) - data.hurtbox.get().radius <= effect.radius
-    }).length
-    const percent = Math.min(effect.heals.most, effect.heals.base + effect.heals.perSoaked * soaked)
-    for (const { data } of queries.members.each()) {
-      const health = data.health.get()
-      if (health.current <= 0 || health.current >= health.max) continue
-      const amount = Math.min(health.max - health.current, (health.max * percent) / 100)
-      data.health.set({ current: health.current + amount, max: health.max })
-      if (data.player.present) events.heal.emit({ at: cast.from, amount })
+      return data.state.get().current?.id === heals.state && Math.hypot(at.x - cast.from.x, at.y - cast.from.y) - data.hurtbox.get().radius <= effect.radius
+    })
+    if (heals.consumes) for (const { entity, data } of held) {
+      const state = data.state.get().current!
+      data.state.set({ current: null })
+      const rest = state.id === "burning" ? burnDps(tuning, state.atk) * Math.max(0, state.remaining) : 0
+      if (rest <= 0) continue
+      const at = data.position.get()
+      events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: cast.faction, direction: normalizeOr(sub(at, cast.from), cast.direction), blow: blow({ damage: rest, knockback: 0, heavy: true }) })
     }
+    healTeam(queries.members.each(), stateHealPercent(heals, held.length), (amount) => events.heal.emit({ at: cast.from, amount }))
   }
 })

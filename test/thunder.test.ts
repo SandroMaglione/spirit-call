@@ -163,7 +163,24 @@ describe("the Stormcaller's Thunderclap (Shift)", () => {
     expect(other!.health).toBe(1000 - hitBy("stormcaller", clapSpec.power))
     expect(far!.health).toBe(1000)
     const { members } = run.world()
-    expect(members.stormcaller).toBeCloseTo(30 + (defaultTuning.characters.stormcaller.stats.hp * clapSpec.heal) / 100, 0)
+    // None of them charged: its base.
+    expect(members.stormcaller).toBeCloseTo(30 + (defaultTuning.characters.stormcaller.stats.hp * clapSpec.heals!.base) / 100, 0)
     expect(members.gunner).toBeGreaterThan(30)
+  })
+
+  it("heals more for each enemy it strikes already charged", () => {
+    const heals = clapSpec.heals!
+    expect(heals.state).toBe("charged")
+    const Charge = Game.System("Test/Charge", {
+      queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) }
+    }, ({ queries }) => {
+      for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "charged", remaining: 60, atk: 100, nextTick: 0, charges: false } })
+    })
+    const run = range([{ x: 120, y: 0 }, { x: -150, y: 0 }], { x: 200, y: 0 }, { keys: [ultimate(1)] })
+    run.runtime.tick(Game.Schedule(FillEnergy, Hurt(30), Charge))
+    run.step(3)
+    const percent = Math.min(heals.most, heals.base + heals.per * 2)
+    expect(percent).toBeGreaterThan(heals.base)
+    expect(run.world().members.stormcaller).toBeCloseTo(30 + (defaultTuning.characters.stormcaller.stats.hp * percent) / 100, 0)
   })
 })
