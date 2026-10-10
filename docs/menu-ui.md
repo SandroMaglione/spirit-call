@@ -101,10 +101,8 @@ earned just now), `UnlockBadge` (a character or an aspect a reward makes
 yours: her face, or the aspect's class on a dark disc, in a turning gold ring
 that pulses; rewards show unlocks on a line of their own, named), and
 `PartyStrip`, `KitLines` (a character's special and ultimate, a line each:
-the Spirit Call), and `describeResult` (what a call brought, in a few words).
-The Spirit Call's seal (`menu/CallReveal.tsx`) shows over its screen, and
-sets the sky (`store.sky`) while it does: plain stone, then the arriving
-character's element.
+the collection's character shelf), and `describeSource` (where something
+comes from, in a few words, from `content/collection.ts`).
 
 Icons are `src/ui/Icon.tsx` (line icons, currencies, elements, XP) and
 `src/ui/AbilityIcon.tsx` (a class or a skill). They size with the text:
@@ -187,15 +185,21 @@ is left, and keep text off it.
   and leading each tier's line in its panel.
 - **A look shows as itself**: a tint's card is her portrait wearing it, a
   trail's a picture of what it sheds (drawn once by the showcase); the
-  shop's looks shelf shows the one picked large between the cards and the
-  brief (a tint on her model, a trail's picture).
-- **The shop** (`menu/Shop.tsx`, from the home) sells, for dust, a relic
-  owned one tier up and its own looks; every look says where it comes
-  from at its panel's foot. Before it opens, its shelves show as hidden
-  cards beside the note saying when it will. Its third tab is the **inventory**
-  (`menu/Inventory.tsx`: what the wallet holds, where each comes from,
-  and what it is for at the panel's foot), open before the shop is, so
-  the home lists no inventory of its own.
+  collection's looks shelf shows the one picked large between the cards and
+  the brief (a tint on her model, a trail's picture).
+- **The collection** (`menu/Collection.tsx`, from the home) shows
+  everything to own, shelf by shelf (characters, aspects, relics, looks),
+  owned or locked, each saying where it comes from (and a relic each of its
+  tiers), with Go there to open that card in the challenges. Its last tab
+  is the **inventory** (`menu/Inventory.tsx`: what the wallet holds, where
+  each comes from, and what it is for at the panel's foot). The home's top
+  shows how much of the collection is owned.
+- **Auditions** are a tab of the challenges: each lends its character, so
+  the party strip gives way to her face, and the brief says she is played
+  alone at the tier's level.
+- **Saved parties**: the party screen's top bar holds three slots (tap an
+  empty one to save the party there, a saved one to load it, Save to keep
+  the party in the slot last used).
 - **The top bar's tabs never move**: the bar is three columns with equal
   sides, so its middle stays centered whatever stands at its ends (a
   wallet shown on one tab and not another), and a tab is as wide as its
@@ -205,8 +209,9 @@ is left, and keep text off it.
   screen; a tap on a card puts her there and closes it.
 - **Leading**: a tap on a party face on the home leads the next run with
   her, without changing the party's order.
-- **Locked things stay visible** and say where they come from, from shipped
-  rewards only (`sourceOf`), never an invented rule.
+- **Locked things stay visible** and say where they come from, from the
+  collection's sources only (`content/collection.ts`), never an invented
+  rule.
 - **Escape** closes the dialog, else goes back one screen; in the pause
   menu it resumes.
 - Menu routing and the party being set up survive a visit to the arena.
@@ -223,5 +228,4 @@ party of one and of three, a run to its results, and the pause menu.
 - Badges for a new character or aspect not looked at yet (needs a "seen"
   record on the device).
 - One-line character blurbs and move tips, if wanted: content, not UI.
-- Duplicates, several saved parties, and revive rules remain the vision's
-  open decisions.
+- Duplicates and reviving are settled as "never" (`vision.md`).

@@ -1,33 +1,24 @@
 import { useId } from "preact/hooks"
-import type { CurrencyId } from "../content/currencies.ts"
+/** What the miniature artwork draws: gold, or a shared grade of essence (Refined, a cut gem; Core, a rune-cut stone). */
+export type CurrencyArt = "gold" | "refined" | "core"
 
 /** The wallet, costs, and rewards use the same miniature currency artwork. */
-export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyId }) => {
+export const CurrencyIcon = ({ currency }: { readonly currency: CurrencyArt }) => {
   const id = useId()
   return <svg class={`menu-icon currency-icon currency-icon--${currency}`} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3c5" /><stop offset=".45" stop-color="#dfb560" /><stop offset="1" stop-color="#a77336" /></linearGradient>
       <linearGradient id={`${id}-gem`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9ffff" /><stop offset=".5" stop-color="#8cdde9" /><stop offset="1" stop-color="#8f94d6" /></linearGradient>
-      <radialGradient id={`${id}-dust`} cx=".5" cy=".5" r=".5"><stop stop-color="#fff6ff" /><stop offset=".55" stop-color="#d6a6ff" /><stop offset="1" stop-color="#7a5cc7" stop-opacity="0" /></radialGradient>
       <linearGradient id={`${id}-sigil`} x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6f6a9c" /><stop offset=".5" stop-color="#3a3658" /><stop offset="1" stop-color="#1e1c30" /></linearGradient>
-      <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : currency === "dust" || currency === "sigils" ? <circle cx="16" cy="16" r="13" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
+      <clipPath id={`${id}-shape`}>{currency === "gold" ? <circle cx="16" cy="16" r="12.5" /> : currency === "core" ? <circle cx="16" cy="16" r="13" /> : <path d="m16 2 10 8 3 8-13 12L3 18l3-8Z" />}</clipPath>
     </defs>
-    {currency === "sigils" ? <>
-      {/* A stone token with a rune cut into it: what a plain call leaves behind, for the Call's exchange. */}
+    {currency === "core" ? <>
+      {/* A stone with a rune cut into it: Core Essence, the last grade. */}
       <circle cx="16" cy="16" r="13" fill={`url(#${id}-sigil)`} stroke="#b9b2e6" stroke-width="1" />
       <circle cx="16" cy="16" r="9.5" fill="none" stroke="#8d86c4" stroke-width=".8" />
       <path d="M16 8.5 22 16l-6 7.5L10 16Z" fill="none" stroke="#e8e2ff" stroke-width="1.6" stroke-linejoin="round" />
       <path d="M16 12v8M12.5 16h7" fill="none" stroke="#e8e2ff" stroke-width="1.4" stroke-linecap="round" />
       <circle cx="16" cy="16" r="1.6" fill="#fff8ff" />
-    </> : currency === "dust" ? <>
-      {/* A heap of glittering motes: what a relic turns into past its last tier. */}
-      <circle cx="16" cy="17" r="12" fill={`url(#${id}-dust)`} />
-      <path d="M6 24c3-5 7-7 10-7s7 2 10 7Z" fill="#b48ae8" stroke="#ecd9ff" stroke-width=".8" />
-      <path d="M10 24c2-3 4-4 6-4s4 1 6 4Z" fill="#e6d0ff" />
-      <path d="m16 5 1.6 4.4L22 11l-4.4 1.6L16 17l-1.6-4.4L10 11l4.4-1.6Z" fill="#fffaff" />
-      <circle cx="9" cy="14" r="1.3" fill="#fbe9ff" />
-      <circle cx="23.5" cy="15.5" r="1.1" fill="#fbe9ff" />
-      <circle cx="12" cy="8" r=".9" fill="#fff" />
     </> : currency === "gold" ? <>
       <circle cx="16" cy="16" r="12.5" fill={`url(#${id}-gold)`} stroke="#f8d98c" stroke-width="1" />
       <circle cx="16" cy="16" r="9.5" fill="#b98b4430" stroke="#fff0af" stroke-width=".8" />

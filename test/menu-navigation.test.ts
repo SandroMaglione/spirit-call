@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest"
-import { createAccount, playLock, recordRun } from "../src/account/account.ts"
+import { createAccount, playLock, recordRun, sourcesOf } from "../src/account/account.ts"
 import type { Account, Play } from "../src/account/account.ts"
 import { defaultTuning as tuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
-import { nextAfter, nextMainQuest, playsIn, selectionIn, sourceOf, tabOf } from "../src/ui/navigation.ts"
+import { nextAfter, nextMainQuest, playsIn, selectionIn, tabOf } from "../src/ui/navigation.ts"
+import { sourceOf } from "../src/content/collection.ts"
 import { noTally } from "../src/content/stars.ts"
 
 const account = createAccount(tuning, newAccount, "menu-test", 0)
 
 describe("menu navigation", () => {
   it("always previews a challenge from the displayed category, including locked categories", () => {
-    for (const tab of ["main", "secondary", "hardcore"] as const) {
+    for (const tab of ["main", "secondary", "auditions", "hardcore"] as const) {
       const selection = selectionIn(tuning, account, tab, account.selection.play)
       expect(playsIn(tuning, tab)).toContainEqual(selection)
       expect(selectionIn(tuning, account, tab, selection)).toEqual(selection)
@@ -22,9 +23,8 @@ describe("menu navigation", () => {
       cleared: true, progress: 1, team: ["swordsman"], reactions: [], tally: noTally, challenge: "swarm", wave: 3, kills: 9, time: 60
     }, 1).account
     expect(nextMainQuest(tuning, cleared)).toEqual({ kind: "quest", quest: "crossfire" })
-    const source = sourceOf(tuning, { kind: "character", id: "tidecaller" })
-    expect(source).not.toBeNull()
-    expect(tuning.quests[source!].rewards.unlocks).toContainEqual({ kind: "character", id: "tidecaller" })
+    expect(sourceOf(sourcesOf(tuning), { kind: "character", id: "tidecaller" })).toEqual({ kind: "firstClear", quest: "packLeader", rank: 1 })
+    expect(sourceOf(sourcesOf(tuning), { kind: "character", id: "gunner" })).toEqual({ kind: "tier", track: "gunnerAudition", tier: 3 })
   })
   it("goes on in the list just played: after a side quest, the next side quest", () => {
     const clear = (on: Account, play: Play): Account => recordRun(tuning, on, play, {

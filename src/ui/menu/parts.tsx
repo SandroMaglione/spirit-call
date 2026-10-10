@@ -6,8 +6,9 @@
  * draw its own.
  */
 import type { CharacterId } from "../../content/characters.ts"
-import { characterLevel, owns } from "../../account/account.ts"
-import type { CallResult } from "../../account/account.ts"
+import { characterLevel, owns, sourcesOf } from "../../account/account.ts"
+import { sourceOf as itemSource } from "../../content/collection.ts"
+import type { Source } from "../../content/collection.ts"
 import { skillSlots } from "../../content/skills.ts"
 import type { Amounts as Held, CurrencyId } from "../../content/currencies.ts"
 import type { MaterialId } from "../../content/materials.ts"
@@ -21,7 +22,7 @@ import type { CosmeticId } from "../../content/cosmetics.ts"
 import { relicOf } from "../../content/relics.ts"
 import { LookIcon, RelicIcon } from "../RelicIcon.tsx"
 import { AbilityIcon } from "../AbilityIcon.tsx"
-import { affinityList, affinityNames, attackElements, describeAmounts, describeSkill, describeUnlock, resourceName } from "../describe.ts"
+import { affinityList, affinityNames, attackElements, describeSkill, describeUnlock, resourceName } from "../describe.ts"
 import { elementOf } from "../draft.ts"
 import { Icon } from "../Icon.tsx"
 import type { IconName } from "../Icon.tsx"
@@ -97,10 +98,16 @@ export const EnemyFacts = ({ store, kind }: { readonly store: UiStore; readonly 
   </>
 }
 
-/** A material: its element's emblem (named in full for touch and screen readers). */
+/** A material: its element's emblem, or its grade's stone (named in full for touch and screen readers). */
 export const MaterialIcon = ({ store, material }: { readonly store: UiStore; readonly material: MaterialId }) => {
   const spec = store.tuning.value.materials[material]
-  return <span class="material-icon" data-element={spec.element} title={spec.name}><Icon name={spec.element} /></span>
+  return <span class="material-icon" data-element={spec.element ?? undefined} title={spec.name}><Icon name={materialIconOf(store, material)} /></span>
+}
+
+/** The icon of a material: its element's emblem, or for the shared grades their stone. */
+export const materialIconOf = (store: UiStore, material: MaterialId): IconName => {
+  const spec = store.tuning.value.materials[material]
+  return spec.element ?? (spec.grade === 2 ? "refined" : "core")
 }
 
 /** The materials among `amounts`, in the content's order (each element, lowest grade first). */
@@ -126,22 +133,21 @@ export const UnlockBadge = ({ store, unlock }: { readonly store: UiStore; readon
       ? <Face of={{ character: unlock.id }} tint={elementOf(tuning, unlock.id)} size={28} />
       : <span class="unlock-badge__aspect">{unlock.kind === "aspect"
         ? <AbilityIcon kind={aspectOf(tuning.aspects, unlock.id).class} />
-        : unlock.kind === "relic"
+        : unlock.kind === "relic" || unlock.kind === "relicTier"
           ? <RelicIcon slot={relicOf(tuning.relics, unlock.id).slot} element={relicOf(tuning.relics, unlock.id).element} />
           : <LookIcon kind={cosmeticOf(tuning.cosmetics, unlock.id).kind} />}</span>}
     <span class="unlock-badge__glint" aria-hidden="true" />
   </span>
 }
 
-/** What something gives: experience, currencies and materials, then what it unlocks on a line of its own (`preview` opens an unlocked character; `compact`: unlocks as their badge alone, named on touch). */
+/** What something gives: gold and essence, then what it unlocks on a line of its own (`preview` opens an unlocked character; `compact`: unlocks as their badge alone, named on touch). */
 export const Amounts = ({ store, rewards, preview, compact = false }: { readonly store: UiStore; readonly rewards: Rewards; readonly preview?: (character: CharacterId) => void; readonly compact?: boolean }) => {
   const tuning = store.tuning.value
   return <div class="amounts">
-    {rewards.experience > 0 && <span aria-label={`${rewards.experience} account XP`}><Icon name="xp" />{rewards.experience}</span>}
     {ids(tuning.currencies).filter((id) => (rewards.currencies[id] ?? 0) > 0).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${tuning.currencies[id].name}`}><Icon name={id} />{(rewards.currencies[id] ?? 0).toLocaleString("en-US")}</span>)}
     {materialsIn(store, rewards.currencies).map((id) => <span key={id} aria-label={`${rewards.currencies[id]} ${resourceName(tuning, id)}`}><MaterialIcon store={store} material={id} />{rewards.currencies[id]}</span>)}
     {rewards.unlocks.length > 0 && <span class="amounts__unlocks">{rewards.unlocks.map((unlock) => unlock.kind !== "character"
-      ? <span key={unlock.id} class="amounts__unlock" aria-label={describeUnlock(tuning, unlock)} title={describeUnlock(tuning, unlock)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</span>
+      ? <span key={`${unlock.kind}-${unlock.id}`} class="amounts__unlock" aria-label={describeUnlock(tuning, unlock)} title={describeUnlock(tuning, unlock)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</span>
       : <button type="button" key={unlock.id} class="amounts__unlock" aria-label={`Preview ${describeUnlock(tuning, unlock)}`} title={describeUnlock(tuning, unlock)} onClick={() => preview?.(unlock.id)}><UnlockBadge store={store} unlock={unlock} />{compact ? null : describeUnlock(tuning, unlock)}</button>)}</span>}
   </div>
 }
@@ -155,21 +161,6 @@ export const PartyStrip = ({ store, team, leader, pick, edit, size = 38 }: {
     {team.map((member) => <button type="button" class="face-button" key={member} aria-label={tuning.characters[member].name} aria-pressed={member === leader} onClick={() => pick(member)}><Face of={{ character: member }} tint={elementOf(tuning, member)} selected={member === leader} size={member === leader ? size + 4 : size} /></button>)}
     <RoundButton icon="swap" tone="dark" label="Change party" onClick={edit} />
   </div>
-}
-
-/** A call's result named in a few words (the history, the summary). */
-export const describeResult = (store: UiStore, result: CallResult): string => {
-  const tuning = store.tuning.value
-  switch (result.kind) {
-    case "character":
-      return tuning.characters[result.id].name
-    case "aspect":
-      return `${aspectOf(tuning.aspects, result.id).name} (${tuning.classes[aspectOf(tuning.aspects, result.id).class].name} aspect)`
-    case "cosmetic":
-      return `${cosmeticOf(tuning.cosmetics, result.id).name} (look)`
-    case "sigils":
-      return describeAmounts(tuning, { sigils: result.amount })
-  }
 }
 
 /** What one character does, in a few lines: her element and class, then her special and her ultimate. */
@@ -186,15 +177,26 @@ export const KitLines = ({ store, character }: { readonly store: UiStore; readon
   </div>
 }
 
-/** Where a look comes from, for the foot of its panel (with the icon that goes there). `inShop`: said in the shop itself. */
-export const lookSource = (store: UiStore, id: CosmeticId, inShop: boolean): { readonly text: string; readonly icon: IconName } => {
-  const tuning = store.tuning.value, look = cosmeticOf(tuning.cosmetics, id)
-  if (look.source.kind === "shop") return { text: `${inShop ? "Sold here" : "In the shop"} for ${look.source.dust} dust`, icon: "dust" }
-  if (look.source.kind === "call") return { text: `Only from the Spirit Call, or its exchange for ${tuning.calls.exchange.look} sigils`, icon: "call" }
-  // The hardcore tier whose first clear gives it.
-  for (const track of Object.values(tuning.tracks)) {
-    const at = track.tiers.findIndex((tier) => tier.rewards.cosmetics?.includes(id) === true)
-    if (at >= 0) return { text: `First clear of ${track.name}, tier ${at + 1}`, icon: "star" }
+/** Where `source` is, in a few words: a new account, a quest's first or perfect clear at a rank, or a track's tier. */
+export const describeSource = (store: UiStore, source: Source): string => {
+  const tuning = store.tuning.value, ranks = ["I", "II", "III", "IV", "V"]
+  switch (source.kind) {
+    case "start":
+      return "Yours from the start"
+    case "firstClear":
+      return `First clear of ${tuning.quests[source.quest].name}${source.rank > 1 ? ` at rank ${ranks[source.rank - 1]}` : ""}`
+    case "perfect":
+      return `All three stars in one run of ${tuning.quests[source.quest].name}${source.rank > 1 ? ` at rank ${ranks[source.rank - 1]}` : ""}`
+    case "tier": {
+      const track = tuning.tracks[source.track]
+      if (track.kind === "audition") return track.character !== null && source.tier === track.tiers.length && track.tiers.length !== 3 ? `${track.name}: the mastery` : `${track.name}, part ${source.tier}`
+      return `First clear of ${track.name}, tier ${source.tier}`
+    }
   }
-  return { text: "A hardcore tier's first clear", icon: "star" }
+}
+
+/** Where a look comes from, for the foot of its panel (with the icon that goes there). */
+export const lookSource = (store: UiStore, id: CosmeticId): { readonly text: string; readonly icon: IconName } => {
+  const source = itemSource(sourcesOf(store.tuning.value), { kind: "cosmetic", id })
+  return source === undefined ? { text: "Not given anywhere", icon: "lock" } : { text: describeSource(store, source), icon: "star" }
 }

@@ -5,12 +5,14 @@
  * hers alone (her page steps between characters), and opens on the tab and
  * slot tapped there. Each tab is a grid of cards on the left (it scrolls;
  * a look's card shows it), and the one picked explained on the right,
- * with what can be done with it: equip, take off, buy its next tier or it.
+ * with what can be done with it: equip, take off, or go to where its next
+ * tier comes from.
  * Aspects and relics are equipped in the party being set up (each on one
  * member at most: equipping moves it); looks are hers in every party.
  */
 import { useSignal } from "@preact/signals"
-import { cosmeticPrice, fits, owns, relicPrice, relicTier, relicsOpen, slotOpen } from "../../account/account.ts"
+import { fits, owns, relicTier, relicsOpen, slotOpen, sourcesOf } from "../../account/account.ts"
+import { sourceOf as itemSource } from "../../content/collection.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import type { AspectId } from "../../content/aspects.ts"
 import type { CharacterId } from "../../content/characters.ts"
@@ -31,10 +33,10 @@ import { Card, Cards } from "../kit/Card.tsx"
 import { Badge, Pill } from "../kit/controls.tsx"
 import { Chips, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
-import { sourceOf, tabOf } from "../navigation.ts"
+import { tabOf } from "../navigation.ts"
 import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
-import { ids, lookSource, Wallet } from "./parts.tsx"
+import { ids, describeSource, lookSource } from "./parts.tsx"
 import type { GearFocus, GearTab, Nav } from "./screens.ts"
 
 const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", shot: "Shot", disc: "Disc", lob: "Lob" } as const
@@ -59,8 +61,8 @@ const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly
   const attack = attackOf(tuning, { class: spec.class, aspect: aspectFor(tuning, character, picked.value) })
   const inParty = draft.value.team.includes(character)
   const holder = picked.value === null ? undefined : draft.value.team.find((other) => other !== character && draft.value.aspects[other] === picked.value)
-  const quest = picked.value === null ? null : sourceOf(tuning, { kind: "aspect", id: picked.value })
-  const note = !has(picked.value) ? (quest !== null ? `A reward for clearing ${tuning.quests[quest].name}.` : "Comes from the Spirit Call.")
+  const source = picked.value === null ? undefined : itemSource(sourcesOf(tuning), { kind: "aspect", id: picked.value })
+  const note = !has(picked.value) ? (source !== undefined ? `${describeSource(store, source)}.` : "Not owned yet.")
     : !owns(account, { kind: "character", id: character }) ? "Can be equipped once this character joins you."
     : !inParty ? "Add this character to the party to equip an aspect."
     : picked.value === equipped ? "Equipped."
@@ -80,8 +82,6 @@ const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly
   </>
 }
 
-const rankNames = ["I", "II", "III"] as const
-
 /**
  * Where a relic not owned yet comes from (see docs/relics.md): its quest at
  * the rank that unlocks it, cleared with all three stars in one run (a
@@ -89,16 +89,17 @@ const rankNames = ["I", "II", "III"] as const
  * owned (its tiers are bought) or when no quest gives it.
  */
 const unlockAt = (store: UiStore, relic: RelicId): { readonly play: Play; readonly text: string } | null => {
-  const tuning = store.tuning.value
-  const home = (Object.keys(tuning.quests) as Array<QuestId>).find((id) => tuning.quests[id].relic?.id === relic)
-  if (home === undefined || relicTier(store.account.value, relic) !== null) return null
-  const rank = tuning.quests[home].relic!.rank, name = tuning.quests[home].name
-  const play: Play = rank === 1 ? { kind: "quest", quest: home } : { kind: "quest", quest: home, rank }
-  return { play, text: sourceOf(tuning, { kind: "relic", id: relic }) === home ? `Clear ${name} to get it.` : `Clear ${name}${rank === 1 ? "" : ` at rank ${rankNames[rank - 1]}`} with all three stars in one run to get it.` }
+  const tuning = store.tuning.value, tier = relicTier(store.account.value, relic)
+  if (tier === 3) return null
+  // Not owned: where it comes from; owned: where its next tier does.
+  const source = itemSource(sourcesOf(tuning), tier === null ? { kind: "relic", id: relic } : { kind: "relicTier", id: relic, tier: tier === 1 ? 2 : 3 })
+  if (source === undefined || source.kind === "start") return null
+  const play: Play = source.kind === "tier" ? { kind: "tier", track: source.track, tier: source.tier } : source.rank === 1 ? { kind: "quest", quest: source.quest } : { kind: "quest", quest: source.quest, rank: source.rank }
+  return { play, text: `${tier === null ? "Get it" : `Tier ${tier === 1 ? "II" : "III"}`}: ${describeSource(store, source)}.` }
 }
 
 /** Her relic slots, then the relics of the slot picked, the one picked explained with its three tiers. */
-const Relics = ({ store, actions, nav, character, first, save }: { readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly character: CharacterId; readonly first: RelicSlot; readonly save: () => void }) => {
+const Relics = ({ store, nav, character, first, save }: { readonly store: UiStore; readonly nav: Nav; readonly character: CharacterId; readonly first: RelicSlot; readonly save: () => void }) => {
   const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft
   const equippedIn = (slot: RelicSlot) => draft.value.relics[character]?.[slot] ?? null
   const slot = useSignal<RelicSlot>(first)
@@ -114,13 +115,13 @@ const Relics = ({ store, actions, nav, character, first, save }: { readonly stor
   const tier = picked.value === null ? null : relicTier(account, picked.value)
   const equipped = equippedIn(slot.value)
   const holder = picked.value === null ? undefined : draft.value.team.find((other) => other !== character && Object.values(draft.value.relics[other] ?? {}).includes(picked.value!))
-  const price = picked.value === null ? null : relicPrice(tuning, account, picked.value)
   const next = picked.value === null ? null : unlockAt(store, picked.value)
   const empty = emptyRelicSlots(tuning, account, draft.value, character)
   const note = !relicsOpen(tuning, account) ? `Relics open after ${tuning.quests[tuning.relicRules.opensAfter as QuestId].name}.`
     : !open ? "This slot opens later, with its relics."
     : picked.value === null ? undefined
     : tier === null ? (next?.text ?? "Not to be had yet.")
+    : next !== null && picked.value !== equipped && holder === undefined && mine && inParty ? next.text
     : !mine ? "Can be equipped once this character joins you."
     : !inParty ? "Add this character to the party to equip a relic."
     : picked.value === equipped ? "Equipped."
@@ -161,11 +162,8 @@ const Relics = ({ store, actions, nav, character, first, save }: { readonly stor
       </Panel>}
     <Actions>
       {/* Where a relic not owned yet is played for: its quest at the rank that unlocks it, a tap away. */}
-      {next !== null && relicsOpen(tuning, account) && <Pill tone="dark" icon="quests" label={`Go to the quest: ${next.text}`} onClick={() => { store.menuPlay.value = next.play; nav.go({ kind: "quests", tab: tabOf(tuning, next.play) }) }}>
-        <span class="call__button">Quest<small>Get it</small></span>
-      </Pill>}
-      {price !== null && <Pill tone="dark" icon="plus" label={`Buy tier ${tier === 1 ? "II" : "III"} for ${price.dust} dust`} disabled={store.busy.value || (account.wallet.dust ?? 0) < (price.dust ?? 0)} onClick={() => actions.buyRelic(picked.value!)}>
-        <span class="call__button">Tier {tier === 1 ? "II" : "III"}<small><Icon name="dust" />{price.dust}</small></span>
+      {next !== null && relicsOpen(tuning, account) && <Pill tone="dark" icon="quests" label={`Go there: ${next.text}`} onClick={() => { store.menuPlay.value = next.play; nav.go({ kind: "quests", tab: tabOf(tuning, next.play) }) }}>
+        <span class="prize__button">{tier === null ? "Get it" : `Tier ${tier === 1 ? "II" : "III"}`}<small>Go there</small></span>
       </Pill>}
       {equipped !== null && <Pill tone="dark" onClick={() => { draft.value = equipRelicInDraft(draft.value, character, slot.value, null); save() }}>Take off</Pill>}
       <Pill icon="swap" disabled={!canEquip} onClick={() => { draft.value = equipRelicInDraft(draft.value, character, slot.value, picked.value); save() }}>Equip</Pill>
@@ -189,9 +187,8 @@ const Looks = ({ store, actions, character, first }: { readonly store: UiStore; 
   }
   const look = picked.value === null ? null : cosmeticOf(tuning.cosmetics, picked.value)
   const has = picked.value === null || owns(account, { kind: "cosmetic", id: picked.value })
-  const price = picked.value === null ? null : cosmeticPrice(tuning, picked.value)
   const mine = owns(account, { kind: "character", id: character })
-  const source = picked.value === null ? null : lookSource(store, picked.value, false)
+  const source = picked.value === null ? null : lookSource(store, picked.value)
   return <>
     <div class="gear__cards scroll in-left">
       <div class="gear__slots" role="tablist" aria-label="Kinds of look">{cosmeticKinds.map((each) => <button key={each} type="button" role="tab" class="gear__slot" aria-selected={each === kind.value} onClick={() => switchKind(each)}>
@@ -211,9 +208,6 @@ const Looks = ({ store, actions, character, first }: { readonly store: UiStore; 
       <p class="dim">Looks change how a character shows, never how it fights.</p>
     </Panel>
     <Actions>
-      {!has && price !== null && <Pill tone="dark" icon="plus" label={`Buy for ${price.dust} dust`} disabled={store.busy.value || !relicsOpen(tuning, account) || (account.wallet.dust ?? 0) < (price.dust ?? 0)} onClick={() => actions.buyCosmetic(picked.value!)}>
-        <span class="call__button">Buy<small><Icon name="dust" />{price.dust}</small></span>
-      </Pill>}
       <Pill icon="check" disabled={!mine || !has || picked.value === worn || store.busy.value} onClick={() => actions.wear(character, kind.value, picked.value)}>{picked.value === null ? "Wear default" : "Wear"}</Pill>
     </Actions>
   </>
@@ -231,11 +225,11 @@ export const Gear = ({ store, actions, nav, character, tab, focus, save }: {
     nav.replace({ kind: "gear", character, tab: next })
   }
   return <Screen name="gear" element={element}>
-    <TopBar icon={element} lead={tuning.characters[character].name} title="Gear" close={nav.back} end={<Wallet store={store} currencies={["dust"]} />}>
+    <TopBar icon={element} lead={tuning.characters[character].name} title="Gear" close={nav.back}>
       <TopTabs label="Gear" current={tab} onChange={go} tabs={[{ id: "aspect", label: "Aspect" }, { id: "relics", label: "Relics", badge: emptyRelicSlots(tuning, store.account.value, store.menuDraft.value, character).length > 0 }, { id: "looks", label: "Looks" }]} />
     </TopBar>
     {tab === "aspect" ? <Aspects store={store} character={character} save={save} />
-      : tab === "relics" ? <Relics store={store} actions={actions} nav={nav} character={character} first={slot} save={save} />
+      : tab === "relics" ? <Relics store={store} nav={nav} character={character} first={slot} save={save} />
       : <Looks store={store} actions={actions} character={character} first={kind} />}
   </Screen>
 }

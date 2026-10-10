@@ -67,11 +67,11 @@ const summary = (journey: Journey) => {
   const sum = (by: Record<string, number> | undefined) => Object.values(by ?? {}).reduce((total, value) => total + value, 0)
   return {
     runs: journey.runs,
-    weeks: journey.weeks,
     hours: journey.hours,
+    // When the last thing of the collection came.
+    collected: journey.moments.find((moment) => moment.owned >= journey.collection)?.hours ?? null,
     farmed: journey.rows.reduce((total, row) => total + row.farmed, 0),
     gold: sum(last?.gold),
-    crystals: sum(last?.crystals),
     walls: journey.rows.filter((row) => row.walls.length > 0).length,
     heavy: journey.rows.filter((row) => row.farmed >= farmFlag).length
   }
@@ -113,13 +113,7 @@ const Sidebar = (props: { readonly values: Values; readonly play: PlayOptions; r
         <h4>Player</h4>
         <PlayNumber label="Minutes a run" help="How long a run takes with its menus: turns runs into hours played." value={props.play.minutesPerRun} shipped={defaultPlay.minutesPerRun} step={0.5} min={0.5}
           set={(value) => props.setPlay({ ...props.play, minutesPerRun: value })} />
-        <PlayNumber label="Runs a week" help="How many runs the player plays a week: paces the weekly hardcore rewards (more weeks, more of them)." value={props.play.runsPerWeek} shipped={defaultPlay.runsPerWeek} step={5} min={1}
-          set={(value) => props.setPlay({ ...props.play, runsPerWeek: value })} />
         <SkillNumbers skill={props.play} shipped={defaultPlay} set={(skill) => props.setPlay({ ...props.play, ...skill })} />
-        <label class={props.play.calls !== defaultPlay.calls ? "knob changed" : "knob"} title="Whether the Spirit Call brings a fourth character in chapter 3.">
-          <span class="knob-label">A called character in chapter 3</span>
-          <input type="checkbox" checked={props.play.calls} onChange={(event) => props.setPlay({ ...props.play, calls: (event.currentTarget as HTMLInputElement).checked })} />
-        </label>
       </section>
       <section>
         <h4>Range: skilled player</h4>
@@ -191,8 +185,6 @@ const App = () => {
   const progress = (of: Journey): ReadonlyArray<Point> => [[0, 0], ...of.rows.map((row, index): Point => [of.hoursAt(row.runs), index + 1])]
   const problems = useMemo(() => (Object.keys(values).length === 0 ? [] : validateContent(tuning)), [tuning, values])
   const now = summary(journey), before = summary(shipped)
-  const price = tuning.calls.price.crystals ?? 1
-
   const rankDone: ReadonlyArray<Marker> = Array.from({ length: tuning.ranks.count }, (_, index) => journey.rows.findLast((row) => row.rank === index + 1))
     .flatMap((row, index) => (row === undefined ? [] : [{ x: journey.hoursAt(row.runs), label: `rank ${index + 1} done` }]))
   const characters = journey.arrivals.map((arrival) => arrival.character)
@@ -240,7 +232,7 @@ const App = () => {
           <p>
             A new account played through the game's own account rules (<code>test/progression-model.ts</code>): every quest at every rank as it opens, the
             team trained evenly with all its gold, farming the best quest (or a trial, for essences) until the team's average level reaches the next quest's
-            enemies. It never loses, never plays above its level, and never spends crystals. Change a number on the left; gray dashed lines are the shipped numbers.
+            enemies, then every audition and track tier, then levels until all ten are at the top. Change a number on the left; gray dashed lines are the shipped numbers.
           </p>
           {problems.length === 0 ? null : (
             <div class="problems">
@@ -250,10 +242,10 @@ const App = () => {
           )}
         </header>
         <div class="tiles">
-          <Tile label="Everything cleared" value={hours(now.hours)} sub={`skilled ${hours(skilled.hours)} – struggling ${hours(struggling.hours)} · ${now.runs} runs, ${now.weeks.toFixed(1)} weeks`} now={now.hours} shipped={before.hours} format={hours} />
+          <Tile label="Everything owned" value={now.collected === null ? "never" : hours(now.collected)} sub={`target about 55 h · skilled ${summary(skilled).collected === null ? "never" : hours(summary(skilled).collected!)} – struggling ${summary(struggling).collected === null ? "never" : hours(summary(struggling).collected!)}`} now={now.collected ?? 0} shipped={before.collected ?? 0} format={hours} />
+          <Tile label="All ten at the top" value={hours(now.hours)} sub={`target about 100 h · skilled ${hours(skilled.hours)} – struggling ${hours(struggling.hours)} · ${now.runs} runs`} now={now.hours} shipped={before.hours} format={hours} />
           <Tile label="Runs farming" value={`${now.farmed}`} sub={`${Math.round((now.farmed / Math.max(1, now.runs)) * 100)}% of all runs`} now={now.farmed} shipped={before.farmed} format={(value) => `${Math.round(value)}`} />
           <Tile label="Gold earned" value={compact(now.gold)} now={now.gold} shipped={before.gold} format={compact} />
-          <Tile label="Crystals earned" value={compact(now.crystals)} sub={`${Math.floor(now.crystals / price)} calls`} now={now.crystals} shipped={before.crystals} format={compact} />
           <Tile label="Quests with heavy farming" value={`${now.heavy}`} sub={`${farmFlag}+ runs before them · ${now.walls} with a wall`} now={now.heavy} shipped={before.heavy} format={(value) => `${Math.round(value)}`} />
         </div>
         <div class="charts">
@@ -306,23 +298,27 @@ const App = () => {
             formatY={compact}
           />
           <Chart
-            title="Crystals earned, by source"
-            note={`Crystals earned so far (never spent here), stacked by source. A call costs ${price}.`}
-            stack={stackOf((moment) => moment.crystals)}
-            ghosts={[{ id: "shipped", label: "Earned (shipped)", color: "var(--ghost)", points: shipped.moments.map((moment): Point => [moment.hours, totalOf(moment.crystals)]) }]}
+            title="The collection"
+            note={`How many of the ${journey.collection} things to own (characters, aspects, relics and their tiers, looks) are owned, by hours played.`}
+            lines={[
+              { id: "skilled", label: "Skilled", color: "var(--s1)", dashed: true, step: true, points: skilled.moments.map((moment): Point => [moment.hours, moment.owned]) },
+              { id: "line", label: "The line", color: "var(--ink-1)", step: true, points: journey.moments.map((moment): Point => [moment.hours, moment.owned]) },
+              { id: "struggling", label: "Struggling", color: "var(--s2)", dashed: true, step: true, points: struggling.moments.map((moment): Point => [moment.hours, moment.owned]) }
+            ]}
+            ghosts={[{ id: "shipped", label: "The line (shipped)", color: "var(--ghost)", step: true, points: shipped.moments.map((moment): Point => [moment.hours, moment.owned]) }]}
             markers={rankDone}
             xTitle={`Hours played, at ${play.minutesPerRun} minutes a run`}
             formatX={hours}
-            formatY={compact}
-            extra={(x) => {
-              const moment = journey.moments.findLast((each) => each.hours <= x + 1e-9)
-              return moment === undefined ? null : `≈ ${Math.floor(totalOf(moment.crystals) / price)} calls`
-            }}
+            formatY={(value) => `${Math.round(value)}`}
           />
           <Chart
             title="Essences earned, by element"
             note={`Ascension materials earned so far. Steps cost ${tuning.materialRules.ascension.map((step) => `${compact(step.count)} at ${step.level}`).join(", ")}.`}
-            lines={elementOrder.map((element): Series => ({ id: element, label: elements[element].name, color: elementColor(element), points: journey.moments.map((moment): Point => [moment.hours, moment.essences[element] ?? 0]) }))}
+            lines={[
+              ...elementOrder.map((element): Series => ({ id: element, label: elements[element].name, color: elementColor(element), points: journey.moments.map((moment): Point => [moment.hours, moment.essences[element] ?? 0]) })),
+              { id: "refined", label: "Refined", color: "var(--ink-2)", dashed: true, points: journey.moments.map((moment): Point => [moment.hours, moment.essences["refined"] ?? 0]) },
+              { id: "core", label: "Core", color: "var(--ink-1)", dashed: true, points: journey.moments.map((moment): Point => [moment.hours, moment.essences["core"] ?? 0]) }
+            ]}
             markers={rankDone}
             xTitle={`Hours played, at ${play.minutesPerRun} minutes a run`}
             formatX={hours}

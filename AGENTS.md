@@ -55,12 +55,12 @@ support is set up;
   database with the read-only key in `.env.database` (made by
   `deploy/stacks/reader.ts`): `players`, `summary`, `runs`, `run <id>`,
   `hurts`, `events`, `sql` (see `docs/server.md`, "Measuring play").
-- `pnpm calls`: the Spirit Call's pace (when characters come from calls
-  along the quest line; see `docs/calls.md`). Run it after changing crystal
-  rewards or call numbers.
-- `pnpm progression`: a new account played through the main line on the
-  account's rules (levels, farming, materials, trials; see
-  `docs/quests.md`). Run it after changing rewards, costs, or quests.
+- `pnpm progression`: a new account played through the whole game on the
+  account's rules (levels, farming, essence, trials, auditions, the
+  collection; see `docs/collection.md`): the hour each thing arrives, when
+  everything is owned (about 55 hours), and when all ten characters reach
+  the top (about 100). `--lost 0.25` loses a share of runs (the measure the
+  targets are for). Run it after changing rewards, costs, or quests.
 - `pnpm expected`: every quest, side quest, rank, hardcore tier, and trial
   rank fought by the bot with the team a new account has when it opens
   (from `pnpm progression`): cleared or not, and hits beside the hit budget.
@@ -76,17 +76,16 @@ support is set up;
 - `?play` in the URL skips the menu (with `?team=swordsman,tidecaller`,
   `?character=`, `?aspect=`, `?challenge=` for a quick start, and `?arena=` to
   fight every challenge in one arena, `?wave=4` to start every challenge at a
-  wave, and `?openCalls` to clear chapter one
-  and add crystals once, to try the Spirit Call, and `?charged` to keep the
+  wave, and `?charged` to keep the
   team's energy full, to try ultimates); backquote (or the key left of 1 or of Z)
-  opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all", "Open the Call").
+  opens the tuning panel (live numbers, spawns and elite spawns, "Unlock all").
 
 ## How the code is organized
 
 - `src/content/`: the game's content as data (characters, classes, aspects
   and what their moves set off, relics, skills, enemies, challenges, quests, hardcore tracks,
-  discoveries, currencies, progression numbers, the starter set, the Spirit
-  Call's banners and odds). Adding
+  auditions, discoveries, gold and essence, progression numbers, the starter
+  set, and where everything is owned from, `collection.ts`). Adding
   content is mostly adding entries; new kinds (a new effect, condition, or
   objective) extend the vocabulary in one place.
 - The arena is a black box to everything around it: it is entered with a
@@ -110,7 +109,7 @@ support is set up;
   (`src/ui/kit/`, and the game's own in `src/ui/menu/parts.tsx`), laid out
   for a phone in landscape and scaled as one piece: read `docs/menu-ui.md`
   before adding or changing one.
-- `src/account/`: the account's pure rules (`account.ts`, `calls.ts`), the
+- `src/account/`: the account's pure rules (`account.ts`), the
   account as stored (`convert.ts`), and the device's own settings (Effect,
   a `KeyValueStore`). The account itself lives on the server.
 - `src/api/` and `src/server/`: the game's HTTP API (Effect `HttpApi`,

@@ -1,40 +1,44 @@
 /**
- * The player's account on this device: what it owns (characters, and aspects
- * for their classes), its experience, currency, and lifetime totals, how far it got in
- * each quest and hardcore tier, and what it last entered. These are the account's rules as pure
- * functions; `AccountStore` loads, saves, and exposes them as named actions
- * (a server can later expose the same actions and validate them).
+ * The player's account: what it owns (characters, aspects for their
+ * classes, relics, looks), its wallet (gold and essence), and lifetime
+ * totals, how far it got in each quest and track, and what it last entered.
+ * These are the account's rules as pure functions; the server runs them
+ * (see docs/server.md), and the game runs the same ones to show a result
+ * before the server answers.
  *
- * Owned things are records per content id (not bare ids), so each can grow
- * its own progress (levels, copies) without changing the shape.
+ * Everything owned comes from one card (see docs/collection.md and
+ * `content/collection.ts`): a quest's first or perfect clear, or a tier's
+ * first clear. Nothing is random and nothing is bought.
  */
 import type { Tuning } from "../config/tuning.ts"
+import { newAccount } from "../content/account.ts"
 import type { StarterSet } from "../content/account.ts"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
+import { collectionSources, perfectUnlock } from "../content/collection.ts"
+import type { Source, Sourced } from "../content/collection.ts"
 import type { Amounts, ResourceId } from "../content/currencies.ts"
 import { metIn } from "../content/novelties.ts"
 import type { Seen } from "../content/novelties.ts"
 import type { ElementId } from "../content/elements.ts"
-import { materialOf, worthAt } from "../content/materials.ts"
-import type { AscensionStep } from "../content/materials.ts"
+import { essenceOf, gradeOfRank, worthAt } from "../content/materials.ts"
+import type { AscensionStep, Grade } from "../content/materials.ts"
 import type { DiscoveryCheck, DiscoveryId } from "../content/discoveries.ts"
 import type { RunPay } from "../content/progression.ts"
 import type { ChallengeId } from "../content/challenges.ts"
-import { noTwist, rankGates, rankLevel, rankTwist } from "../content/ranks.ts"
-import type { ResetSpec, TrackId } from "../content/hardcore.ts"
+import { rankGates, rankLevel, rankTwist } from "../content/ranks.ts"
+import type { TrackId } from "../content/hardcore.ts"
 import type { QuestId, Rewards, StarGroup, Unlock } from "../content/quests.ts"
 import { meets } from "../content/stars.ts"
 import type { AspectId } from "../content/aspects.ts"
-import type { BannerId } from "../content/calls.ts"
 import { cosmeticOf } from "../content/cosmetics.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
-import { perfectDustAt, relicSlots } from "../content/relics.ts"
+import { relicSlots } from "../content/relics.ts"
 import type { EquippedRelic, RelicId, RelicSlot, RelicTier } from "../content/relics.ts"
 import { aspectProblems, relicProblems, withValidAspects } from "../features/build.ts"
 import type { AspectProblem, RelicProblem } from "../features/build.ts"
 import type { BuildValue, RunResultValue, TwistValue } from "../schema.ts"
-import { levelOf } from "./progression.ts"
+import { experienceTo, levelOf } from "./progression.ts"
 import type { LevelProgress } from "./progression.ts"
 
 /** When something was unlocked (epoch milliseconds). */
@@ -53,12 +57,10 @@ export interface OwnedCharacter extends Unlocked {
   readonly ascension: number
 }
 
-/** An aspect owned, once: `copies` counts it coming again (duplicates add no power; see docs/aspects.md). */
-export interface OwnedAspect extends Unlocked {
-  readonly copies: number
-}
+/** An aspect owned (once: an aspect comes from one card, see docs/collection.md). */
+export type OwnedAspect = Unlocked
 
-/** A relic owned, at a tier (see docs/relics.md): unlocked at tier I by its quest's perfect clear, raised in the shop. */
+/** A relic owned, at a tier (see docs/relics.md): unlocked at tier I by its quest's perfect clear, its next tiers from the cards above it. */
 export interface OwnedRelic extends Unlocked {
   readonly tier: RelicTier
 }
@@ -108,10 +110,8 @@ export interface QuestProgress extends RunCount {
 
 export const noQuestProgress: QuestProgress = { attempts: 0, clears: 0, firstClearedAt: null, stars: [] }
 
-/** How far the account got in a hardcore tier. */
+/** How far the account got in a track's tier. */
 export interface TierProgress extends RunCount {
-  /** The last period (see `periodOf`) its rewards were given in, or `null`. */
-  readonly rewardedPeriod: number | null
   /** The furthest wave a run reached (lasting until the team falls, how far it got); absent before any run. */
   readonly bestWave?: number
 }
@@ -128,55 +128,20 @@ export const rankOf = (play: Extract<Play, { kind: "quest" }>): number => play.r
 export const samePlay = (a: Play, b: Play): boolean =>
   a.kind === "quest" ? b.kind === "quest" && a.quest === b.quest && rankOf(a) === rankOf(b) : b.kind === "tier" && a.track === b.track && a.tier === b.tier
 
-/**
- * What one call brought: a character, an aspect, a look (each new to the
- * account), or sigils (the Call's token, for its exchange).
- */
-export type CallResult =
-  | { readonly kind: "character"; readonly id: CharacterId }
-  | { readonly kind: "aspect"; readonly id: AspectId }
-  | { readonly kind: "cosmetic"; readonly id: CosmeticId }
-  | { readonly kind: "sigils"; readonly amount: number }
-
-/** A call in the history: when, on which banner, and what it brought. */
-export interface CallRecord {
-  readonly at: number
-  readonly banner: BannerId
-  readonly result: CallResult
+/** A team saved to load in a tap: its members in order, and the aspects and relics equipped in it. */
+export interface SavedTeam {
+  readonly team: ReadonlyArray<CharacterId>
+  readonly aspects: TeamAspects
+  readonly relics: TeamRelics
 }
 
-/**
- * The account's Spirit Call (see `account/calls.ts`): where its random
- * draws stand (saved, so reloading never draws again), the calls since the
- * last character and since the last rare thing (an aspect or a look),
- * whether its first character came yet, the character focused on each
- * banner, and the last calls, newest first.
- */
-export interface CallState {
-  readonly seed: number
-  readonly sinceCharacter: number
-  readonly sinceRare: number
-  readonly firstCharacter: boolean
-  readonly focus: { readonly [Id in BannerId]?: CharacterId }
-  readonly history: ReadonlyArray<CallRecord>
-}
-
-/** A 32-bit seed from `text` (an account id): each account draws its own sequence. */
-export const seedOf = (text: string): number => {
-  let hash = 2166136261
-  for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619)
-  return hash >>> 0
-}
-
-/** No calls made yet, drawing from `seed`. */
-export const noCalls = (seed: number): CallState => ({ seed, sinceCharacter: 0, sinceRare: 0, firstCharacter: false, focus: {}, history: [] })
+/** How many teams can be saved besides the one set up. */
+export const savedTeamSlots = 3
 
 export interface Account {
   readonly id: string
   /** Epoch milliseconds. */
   readonly createdAt: number
-  /** Total account experience; the account level comes from it (see `accountLevel`). */
-  readonly experience: number
   readonly totals: Totals
   /** Currency held. */
   readonly wallet: Amounts
@@ -189,12 +154,12 @@ export interface Account {
   readonly discoveries: { readonly [Id in DiscoveryId]?: { readonly madeAt: number } }
   /** How many of each group's chests are open at each rank (they open in order, see `Tuning.chests`). */
   readonly chests: { readonly [Group in StarGroup]?: { readonly [rank: number]: number } }
-  /** The Spirit Call: guarantees, focus, and history. */
-  readonly calls: CallState
   /** What the menu starts from: the team last entered with (in order; see `teamSize`), the aspects and relics equipped in it, and what for. */
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly relics: TeamRelics; readonly play: Play }
   /** The looks each character wears. */
   readonly worn: Worn
+  /** Teams saved to load in a tap, by slot (1 to `savedTeamSlots`). */
+  readonly saved: { readonly [slot: number]: SavedTeam }
 }
 
 /** Something that can be owned. */
@@ -208,6 +173,8 @@ export const owns = (account: Account, item: Item): boolean => {
       return account.owned.aspects[item.id] !== undefined
     case "relic":
       return account.owned.relics[item.id] !== undefined
+    case "relicTier":
+      return (account.owned.relics[item.id]?.tier ?? 0) >= item.tier
     case "cosmetic":
       return account.owned.cosmetics[item.id] !== undefined
   }
@@ -218,31 +185,25 @@ export const relicTier = (account: Account, relic: RelicId): RelicTier | null =>
 
 /**
  * `account` with `item` owned. A character comes with her kit, and fights
- * with her class's plain aspect until another is equipped. An aspect owned
- * again counts a copy (it adds no power); a character, a look, or a relic
- * owned again is unchanged (a relic's tiers come from its quest's perfect
- * clears and the shop, see `raiseRelic`).
+ * with her class's plain aspect until another is equipped; a relic comes at
+ * tier I, and a relic's tier raises it when it is owned (one not owned yet
+ * gets the tier when it comes, see `withSources`). Something owned already
+ * is unchanged.
  */
 export const unlock = (tuning: Tuning, account: Account, item: Item, now: number): Account => {
   const owned = account.owned
+  if (owns(account, item)) return account
   switch (item.kind) {
-    case "character": {
-      if (owns(account, item)) return account
+    case "character":
       return { ...account, owned: { ...owned, characters: { ...owned.characters, [item.id]: { unlockedAt: now, experience: 0, ascension: 0 } } } }
-    }
-    case "aspect": {
-      const current = owned.aspects[item.id] as OwnedAspect | undefined
-      const aspect: OwnedAspect = current === undefined ? { unlockedAt: now, copies: 1 } : { ...current, copies: current.copies + 1 }
-      return { ...account, owned: { ...owned, aspects: { ...owned.aspects, [item.id]: aspect } } }
-    }
-    case "relic": {
-      if (owns(account, item)) return account
+    case "aspect":
+      return { ...account, owned: { ...owned, aspects: { ...owned.aspects, [item.id]: { unlockedAt: now } } } }
+    case "relic":
       return { ...account, owned: { ...owned, relics: { ...owned.relics, [item.id]: { unlockedAt: now, tier: 1 } } } }
-    }
-    case "cosmetic": {
-      if (owns(account, item)) return account
+    case "relicTier":
+      return owned.relics[item.id] === undefined ? account : raiseRelic(account, item.id, item.tier, now)
+    case "cosmetic":
       return { ...account, owned: { ...owned, cosmetics: { ...owned.cosmetics, [item.id]: { unlockedAt: now } } } }
-    }
   }
 }
 
@@ -253,23 +214,58 @@ export const raiseRelic = (account: Account, relic: RelicId, tier: RelicTier, no
   return { ...account, owned: { ...account.owned, relics: { ...account.owned.relics, [relic]: { unlockedAt: current?.unlockedAt ?? now, tier } } } }
 }
 
+/** Every item in the content with the card it comes from (see `content/collection.ts`). */
+export const sourcesOf = (tuning: Tuning, starter: StarterSet = newAccount): ReadonlyArray<Sourced> => collectionSources(tuning, starter)
+
+/** Whether `account` has done what `source` asks: started, cleared a quest at a rank, perfected one, or cleared a tier. */
+export const sourceMet = (account: Account, source: Source): boolean => {
+  switch (source.kind) {
+    case "start":
+      return true
+    case "firstClear":
+      return questCleared(account, source.quest, source.rank)
+    case "perfect":
+      return questProgress(account, source.quest, source.rank)?.perfectAt !== undefined
+    case "tier":
+      return (tierProgress(account, source.track, source.tier)?.firstClearedAt ?? null) !== null
+  }
+}
+
 /**
- * `account` owning every unlock of the quests it has cleared, and what that
- * gave: rewards added to a quest after it was cleared (new content) are
- * given when the account loads, so nothing is missed.
+ * `account` owning everything whose card it has met, and what that gave:
+ * after a run, and when the account loads (so content added to a card
+ * already met is not missed). A relic's tier waits for the relic: met
+ * before it, it is given with it. A character an audition gives joins at
+ * its tier's level (see `joinedAt`).
  */
-export const withClearedRewards = (tuning: Tuning, account: Account, now: number): { readonly account: Account; readonly granted: ReadonlyArray<Item> } => {
+export const withSources = (tuning: Tuning, account: Account, now: number): { readonly account: Account; readonly granted: ReadonlyArray<Item> } => {
   let next = account
   const granted: Array<Item> = []
-  for (const id of Object.keys(account.quests) as Array<QuestId>) {
-    if (!questCleared(account, id)) continue
-    for (const item of tuning.quests[id].rewards.unlocks) {
-      if (owns(next, item)) continue
-      next = unlock(tuning, next, item, now)
-      granted.push(item)
-    }
+  const met = sourcesOf(tuning).filter((each) => sourceMet(account, each.source))
+  // Characters, aspects, relics, and looks first, then the relics' tiers on what is owned by then.
+  for (const { item, source } of [...met.filter((each) => each.item.kind !== "relicTier"), ...met.filter((each) => each.item.kind === "relicTier")]) {
+    if (owns(next, item)) continue
+    let after = unlock(tuning, next, item, now)
+    if (after === next) continue
+    if (item.kind === "character" && source.kind === "tier") after = joinedAt(tuning, after, item.id, tuning.tracks[source.track].tiers[source.tier - 1]?.enemyLevel ?? 1)
+    next = after
+    granted.push(item)
   }
   return { account: next, granted }
+}
+
+/**
+ * `account` with `character` at `level` (when below it): the gold of every
+ * level up to it trained into her, and every ascension step below it taken
+ * (at a step's own level she stands at it, to ascend as anyone would).
+ */
+export const joinedAt = (tuning: Tuning, account: Account, character: CharacterId, level: number): Account => {
+  const owned = account.owned.characters[character]
+  const curve = tuning.progression.character.curve
+  const experience = experienceTo(curve, Math.min(level, curve.maxLevel))
+  if (owned === undefined || owned.experience >= experience) return account
+  const ascension = tuning.materialRules.ascension.filter((step) => step.level < level).length
+  return { ...account, owned: { ...account.owned, characters: { ...account.owned.characters, [character]: { ...owned, experience, ascension: Math.max(owned.ascension, ascension) } } } }
 }
 
 /** Every item in the content, for unlocking everything (a dev tool); relics are raised to their last tier besides (see `raiseRelic`). */
@@ -285,7 +281,6 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
   const empty: Account = {
     id,
     createdAt: now,
-    experience: 0,
     totals: noTotals,
     wallet: {},
     owned: { characters: {}, aspects: {}, relics: {}, cosmetics: {} },
@@ -293,9 +288,9 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     hardcore: {},
     discoveries: {},
     chests: {},
-    calls: noCalls(seedOf(id)),
     selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
-    worn: {}
+    worn: {},
+    saved: {}
   }
   const items: Array<Item> = [
     ...starter.aspects.map((id) => ({ kind: "aspect" as const, id })),
@@ -303,9 +298,6 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
   ]
   return items.reduce((account, item) => unlock(tuning, account, item, now), empty)
 }
-
-/** The account's level, from its experience. */
-export const accountLevel = (tuning: Tuning, account: Account): LevelProgress => levelOf(tuning.progression.account.curve, account.experience)
 
 /** `character`'s level in `account`, from its experience (level 1 when not owned). */
 export const characterLevel = (tuning: Tuning, account: Account, character: CharacterId): LevelProgress =>
@@ -371,19 +363,13 @@ export const twistOf = (tuning: Tuning, quest: QuestId, rank: number): TwistValu
 
 /**
  * What `quest`'s first clear at `rank` gives: rank 1's rewards as written;
- * a higher rank's, its experience, `Tuning.ranks.crystals` of its crystals,
- * gold worth `goldRuns` runs at its level, and `Tuning.ranks.dust` (no
- * unlocks).
+ * a higher rank's, gold worth `goldRuns` runs at its level, and what is
+ * written for that rank (an aspect on some finales).
  */
 export const questRewards = (tuning: Tuning, quest: QuestId, rank: number): Rewards => {
-  const rewards = tuning.quests[quest].rewards
-  if (rank === 1) return rewards
-  const rules = tuning.ranks
-  return {
-    experience: rewards.experience,
-    unlocks: [],
-    currencies: { crystals: Math.round((rewards.currencies.crystals ?? 0) * rules.crystals), gold: rules.goldRuns * clearPay(tuning.progression.gold, questLevel(tuning, quest, rank)), dust: rules.dust }
-  }
+  const spec = tuning.quests[quest]
+  if (rank === 1) return spec.rewards
+  return { currencies: { gold: tuning.ranks.goldRuns * clearPay(tuning.progression.gold, questLevel(tuning, quest, rank)) }, unlocks: spec.rankUnlocks[rank] ?? [] }
 }
 
 /** What `account` has met along the main line: everything the quests it cleared introduced (see `content/novelties.ts`). */
@@ -407,8 +393,8 @@ export const playLock = (tuning: Tuning, account: Account, play: Play): Lock | n
   // Each tier opens along the main line, and once the tier before it is cleared.
   const { opens, opensRank } = spec.tiers[play.tier - 1]!
   if (isQuest(tuning, opens) && !questCleared(account, opens, opensRank)) return { kind: "after", quest: opens, ...(opensRank === 1 ? {} : { rank: opensRank }) }
-  // A hardcore tier also waits for the tier before it; a trial's ranks open with the main line alone.
-  if (spec.kind === "hardcore" && play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null) return { kind: "tier", track: play.track, tier: play.tier - 1 }
+  // A hardcore tier and an audition's also wait for the tier before it; a trial's ranks open with the main line alone.
+  if (spec.kind !== "trial" && play.tier > 1 && (tierProgress(account, play.track, play.tier - 1)?.firstClearedAt ?? null) === null) return { kind: "tier", track: play.track, tier: play.tier - 1 }
   return null
 }
 
@@ -419,19 +405,15 @@ export const encounterOf = (tuning: Tuning, play: Play): { readonly challenge: C
     return { challenge: tuning.quests[play.quest].challenge, enemyLevel: questLevel(tuning, play.quest, rank), twist: twistOf(tuning, play.quest, rank) }
   }
   const tier = tuning.tracks[play.track].tiers[play.tier - 1] ?? tuning.tracks[play.track].tiers[0]!
-  return { challenge: tier.challenge, enemyLevel: tier.enemyLevel, twist: noTwist }
+  return { challenge: tier.challenge, enemyLevel: tier.enemyLevel, twist: tier.twist }
 }
 
-/** The reset period `now` falls in (see `Tuning.reset`): periods count up from the anchor. */
-export const periodOf = (reset: ResetSpec, now: number): number => Math.floor((now - reset.anchor) / (reset.days * 24 * 60 * 60 * 1000))
-
-/** When the period after `now`'s starts (epoch milliseconds). */
-export const nextReset = (reset: ResetSpec, now: number): number => reset.anchor + (periodOf(reset, now) + 1) * reset.days * 24 * 60 * 60 * 1000
-
-/** Whether a tier's rewards can still be had this period: never given, or last given in an earlier period. */
-export const tierRewardsAvailable = (tuning: Tuning, account: Account, track: TrackId, tier: number, now: number): boolean => {
-  const given = tierProgress(account, track, tier)?.rewardedPeriod ?? null
-  return given === null || given < periodOf(tuning.reset, now)
+/** The character an audition lends for `play`, at its tier's level, or `null` when `play` is not an audition's. */
+export const lentFor = (tuning: Tuning, play: Play): { readonly character: CharacterId; readonly level: number } | null => {
+  if (play.kind !== "tier") return null
+  const track = tuning.tracks[play.track]
+  const tier = track.tiers[play.tier - 1]
+  return track.kind === "audition" && track.character !== null && tier !== undefined ? { character: track.character, level: tier.enemyLevel } : null
 }
 
 /** The quests whose stars count toward `group`: a chapter's, or the secondary ones. */
@@ -462,16 +444,19 @@ export const chestsOpened = (account: Account, group: StarGroup, rank = 1): numb
 
 /**
  * What a chest holds at `rank`: rank 1's rewards as written; at a higher
- * rank, `Tuning.ranks.crystals` of its crystals, `chestGold` of its gold at
- * its quests' level there, and `chestDust` (ranks are off the main line).
+ * rank, `chestGold` of its gold at its quests' level there, and its rank's
+ * grade of essence instead of its elements' (as much as one of them held,
+ * at that level).
  */
 export const chestRewards = (tuning: Tuning, chest: ChestRef): Amounts => {
   const spec = tuning.chests[chest.group][chest.index]!
   if (chest.rank === 1) return spec.rewards
   const level = spec.level + tuning.ranks.offset * (chest.rank - 1)
   const gold = roundGold((spec.rewards.gold ?? 0) * tuning.ranks.chestGold * clearPay(tuning.progression.gold, level) / clearPay(tuning.progression.gold, spec.level))
-  // Materials come from the trials by then: a higher rank's chests hold none.
-  return { crystals: Math.round((spec.rewards.crystals ?? 0) * tuning.ranks.crystals), gold, dust: (spec.rewards.dust ?? 0) + tuning.ranks.chestDust }
+  const held = Math.max(0, ...(Object.keys(tuning.materials) as Array<keyof typeof tuning.materials>).map((id) => spec.rewards[id] ?? 0))
+  const share = held / worthAt(tuning.materialRules, spec.level)
+  const essence = Math.max(1, Math.round(worthAt(tuning.materialRules, level) * share))
+  return { gold, [essenceOf(gradeOfRank(chest.rank), "wind")]: essence }
 }
 
 /**
@@ -515,7 +500,7 @@ export type TeamRelicProblem =
   | { readonly kind: "relicNotOwned"; readonly character: CharacterId; readonly relic: RelicId }
   | { readonly kind: "slotLocked"; readonly character: CharacterId; readonly slot: RelicSlot }
 
-/** Whether relics are open to `account`: once the quest that opens them is cleared (with the Spirit Call). */
+/** Whether relics are open to `account`: once the quest that opens them is cleared. */
 export const relicsOpen = (tuning: Tuning, account: Account): boolean => questCleared(account, tuning.relicRules.opensAfter as QuestId)
 
 /** Whether `slot` is open to `account`: Strike, Dash, and Element with relics; Survival once its quest is cleared (never while it has none). */
@@ -586,12 +571,6 @@ export type Refusal =
   | { readonly kind: "badAspects"; readonly problems: ReadonlyArray<TeamProblem> }
   /** Relics that break the rules (see `teamRelicProblems`). */
   | { readonly kind: "badRelics"; readonly problems: ReadonlyArray<TeamRelicProblem> }
-  /** Relics (and their shop) open once `quest` is cleared (see `Tuning.relicRules.opensAfter`). */
-  | { readonly kind: "relicsLocked"; readonly quest: QuestId }
-  /** A relic already at its last tier. */
-  | { readonly kind: "maxTier"; readonly item: Item }
-  /** Not something the shop or the exchange sells (a look from a reward, a quest's aspect), or already owned. */
-  | { readonly kind: "notForSale"; readonly item: Item }
   /** A look that is not of that kind, or not for her. */
   | { readonly kind: "badLook"; readonly character: CharacterId; readonly cosmetic: CosmeticId }
   | { readonly kind: "locked"; readonly play: Play; readonly lock: Lock }
@@ -601,14 +580,8 @@ export type Refusal =
   | { readonly kind: "needsAscension"; readonly item: Item }
   /** Not at a step: she has levels to train first, or none left. */
   | { readonly kind: "notAtStep"; readonly item: Item }
-  /** Calls open once `quest` is cleared (see `Tuning.calls.opensAfter`). */
-  | { readonly kind: "callsLocked"; readonly quest: QuestId }
-  /** The banner is not running now (see `activeBanner`). */
-  | { readonly kind: "bannerClosed"; readonly banner: BannerId }
-  /** Every character on the banner is owned and nothing rare is left: a call there could bring nothing new. */
-  | { readonly kind: "bannerComplete"; readonly banner: BannerId }
-  /** A focus that is not on the banner, or already owned. */
-  | { readonly kind: "badFocus"; readonly banner: BannerId; readonly character: CharacterId }
+  /** A saved team's slot that there is not (see `savedTeamSlots`). */
+  | { readonly kind: "badSlot"; readonly slot: number }
 
 export type Checked<A> = { readonly ok: true; readonly value: A } | { readonly ok: false; readonly refusal: Refusal }
 
@@ -637,11 +610,11 @@ export const ascensionStep = (tuning: Tuning, account: Account, character: Chara
 export const levelCap = (tuning: Tuning, account: Account, character: CharacterId): number =>
   tuning.materialRules.ascension[account.owned.characters[character]?.ascension ?? 0]?.level ?? tuning.progression.character.curve.maxLevel
 
-/** What taking the step she stands at costs `character`: gold, and her element's material; `null` when she stands at none. */
+/** What taking the step she stands at costs `character`: gold, and essence of the step's grade (her element's at grade 1); `null` when she stands at none. */
 export const ascensionCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
   const step = ascensionStep(tuning, account, character)
   if (step === null) return null
-  return { gold: step.gold, [materialOf(tuning.characters[character].element)]: step.count }
+  return { gold: step.gold, [essenceOf(step.grade, tuning.characters[character].element)]: step.count }
 }
 
 /** `account` with `character` past the step she stands at (her next levels open), if it owns her, she stands at one, and it holds the cost. */
@@ -656,11 +629,24 @@ export const ascend = (tuning: Tuning, account: Account, character: CharacterId)
   return { ok: true, value: { ...paid.value, owned: { ...paid.value.owned, characters: { ...paid.value.owned.characters, [character]: { ...owned, ascension: owned.ascension + 1 } } } } }
 }
 
-/** The gold that takes `character` to its next level from where it is, or `null` at the maximum level or at an ascension step. */
+/** The level the account's `place`th highest character stands at (1 for the highest; level 1 when it has fewer). */
+export const leadingLevel = (tuning: Tuning, account: Account, place: number): number =>
+  (Object.keys(account.owned.characters) as Array<CharacterId>).map((id) => characterLevel(tuning, account, id).level).sort((a, b) => b - a)[place - 1] ?? 1
+
+/**
+ * The gold that takes `character` to its next level from where it is, or
+ * `null` at the maximum level or at an ascension step. The account's
+ * `catchUp.leaders` highest characters set the pace: a level below the last
+ * of them costs `catchUp.share` of it, so a character who joins late
+ * catches up (see docs/collection.md) while the team that leads pays in
+ * full.
+ */
 export const trainingCost = (tuning: Tuning, account: Account, character: CharacterId): Amounts | null => {
   const progress = characterLevel(tuning, account, character)
   if (progress.needed === 0 || progress.level >= levelCap(tuning, account, character)) return null
-  return { gold: Math.ceil(progress.needed - progress.into) }
+  const { catchUp } = tuning.progression.character
+  const share = progress.level < leadingLevel(tuning, account, catchUp.leaders) ? catchUp.share : 1
+  return { gold: Math.max(1, Math.ceil((progress.needed - progress.into) * share)) }
 }
 
 /** `account` with `character` taken to its next level with gold, if it owns it, it is below the maximum and its next step, and the gold is there. */
@@ -711,39 +697,30 @@ export const select = (
   return { ok: true, value: { ...account, selection: { team, aspects: kept, relics: keptRelics, play } } }
 }
 
-/** What the shop asks for `relic`'s next tier (dust), or `null` when it is not owned or at its last tier. */
-export const relicPrice = (tuning: Tuning, account: Account, relic: RelicId): Amounts | null => {
-  const tier = relicTier(account, relic)
-  if (tier === null || tier === 3) return null
-  return { dust: tuning.relicRules.prices[tier === 1 ? 2 : 3] }
-}
-
-/** `account` with `relic` a tier up, bought with dust, if relics are open, it owns the relic, it is below its last tier, and the dust is there. */
-export const buyRelic = (tuning: Tuning, account: Account, relic: RelicId, now: number): Checked<Account> => {
-  const item: Item = { kind: "relic", id: relic }
-  if (!relicsOpen(tuning, account)) return refuse({ kind: "relicsLocked", quest: tuning.relicRules.opensAfter as QuestId })
-  if (!owns(account, item)) return refuse({ kind: "notOwned", item })
-  const price = relicPrice(tuning, account, relic)
-  const tier = relicTier(account, relic)
-  if (price === null || tier === null || tier === 3) return refuse({ kind: "maxTier", item })
-  const paid = spend(account, price)
-  return paid.ok ? { ok: true, value: raiseRelic(paid.value, relic, tier === 1 ? 2 : 3, now) } : paid
-}
-
-/** What the shop asks for `cosmetic` (dust), or `null` when the shop does not sell it. */
-export const cosmeticPrice = (tuning: Tuning, cosmetic: CosmeticId): Amounts | null => {
-  const source = cosmeticOf(tuning.cosmetics, cosmetic).source
-  return source.kind === "shop" ? { dust: source.dust } : null
-}
-
-/** `account` owning `cosmetic`, bought with dust, if relics (and the shop) are open, the shop sells it, it is not owned yet, and the dust is there. */
-export const buyCosmetic = (tuning: Tuning, account: Account, cosmetic: CosmeticId, now: number): Checked<Account> => {
-  const item: Item = { kind: "cosmetic", id: cosmetic }
-  if (!relicsOpen(tuning, account)) return refuse({ kind: "relicsLocked", quest: tuning.relicRules.opensAfter as QuestId })
-  const price = cosmeticPrice(tuning, cosmetic)
-  if (price === null || owns(account, item)) return refuse({ kind: "notForSale", item })
-  const paid = spend(account, price)
-  return paid.ok ? { ok: true, value: unlock(tuning, paid.value, item, now) } : paid
+/**
+ * `account` with `team`, its aspects, and its relics saved in `slot` (1 to
+ * `savedTeamSlots`), to load in a tap, if it is a team the account owns and
+ * its aspects and relics keep the rules; `null` empties the slot.
+ */
+export const saveTeam = (tuning: Tuning, account: Account, slot: number, saved: SavedTeam | null): Checked<Account> => {
+  if (!(Number.isInteger(slot) && slot >= 1 && slot <= savedTeamSlots)) return refuse({ kind: "badSlot", slot })
+  if (saved === null) {
+    const { [slot]: _gone, ...rest } = account.saved
+    return { ok: true, value: { ...account, saved: rest } }
+  }
+  const { team, aspects, relics } = saved
+  if (!validTeam(team)) return refuse({ kind: "badTeam", team })
+  const missing = team.find((character) => !owns(account, { kind: "character", id: character }))
+  if (missing !== undefined) return refuse({ kind: "notOwned", item: { kind: "character", id: missing } })
+  const problems = teamProblems(tuning, account, team, aspects)
+  if (problems.length > 0) return refuse({ kind: "badAspects", problems })
+  const relicTrouble = teamRelicProblems(tuning, account, team, relics)
+  if (relicTrouble.length > 0) return refuse({ kind: "badRelics", problems: relicTrouble })
+  const kept: { [Id in CharacterId]?: AspectId } = {}
+  for (const character of team) if (aspects[character] !== undefined) kept[character] = aspects[character]
+  const keptRelics: { [Id in CharacterId]?: { readonly [Slot in RelicSlot]?: RelicId } } = {}
+  for (const character of team) if (relics[character] !== undefined && Object.keys(relics[character]).length > 0) keptRelics[character] = relics[character]
+  return { ok: true, value: { ...account, saved: { ...account.saved, [slot]: { team, aspects: kept, relics: keptRelics } } } }
 }
 
 /** `account` with `character` wearing `cosmetic` as her look of `kind` (`null`: her own look), if it owns both, and the look is of that kind and for her. */
@@ -765,34 +742,24 @@ export const fits = (tuning: Tuning, character: CharacterId, kind: CosmeticKind,
   return spec.kind === kind && (spec.character === null || spec.character === character)
 }
 
-/** Levels before and after something. */
-export interface LevelChange {
-  readonly before: number
-  readonly after: number
-}
-
 /** What a run earned, for the results screen. */
 export interface Earned {
-  /** Account experience from the run, and from a first clear's rewards. */
-  readonly experience: number
-  /** The account level before and after the run. */
-  readonly level: LevelChange
   /** What the run itself paid (gold, by its enemies' level and how far it got). */
   readonly pay: Amounts
-  /** The materials a clear paid (its element's, at the grade of its enemy level; more on a first clear). */
+  /** The essence it paid: a first clear's (its rank's grade), a hardcore tier's first clear, or a trial's every clear. */
   readonly materials: Amounts
-  /** What the account levels gained gave. */
-  readonly levelRewards: Amounts
   /** The discoveries the run made (their rewards are paid with them). */
   readonly discoveries: ReadonlyArray<DiscoveryId>
-  /** A quest's first-clear rewards, or a tier's rewards for the period, when this run earned them. */
+  /** A quest's or a tier's first-clear rewards, when this run earned them. */
   readonly rewards: Rewards | null
   /** The quest's stars this run earned for the first time (by their place in its `stars`). */
   readonly stars: ReadonlyArray<number>
   /** The chests those stars opened (their rewards are paid with them). */
   readonly chests: ReadonlyArray<ChestRef>
-  /** The quest's first perfect clear at its rank (all three stars in one run), when this run is it: the relic it unlocked, or else the dust it paid (see docs/relics.md). */
-  readonly perfect: { readonly relic: RelicId | null; readonly dust: number } | null
+  /** The quest's first perfect clear at its rank (all three stars in one run), when this run is it: what it unlocked, if anything is written there (see `perfectUnlock`). */
+  readonly perfect: { readonly unlock: Unlock | null } | null
+  /** Everything the run made the account's (from its rewards, its perfect clear, and a relic's tier waiting for it). */
+  readonly granted: ReadonlyArray<Item>
 }
 
 /** One resource a run earned, in all: `total`, of which `fromChests` came from the chests its stars opened. */
@@ -803,16 +770,16 @@ export interface EarnedResource {
 }
 
 /**
- * Everything `earned` added to the account, one entry per resource (the
- * currencies, then the materials, in their content order): what the run
- * paid, its materials, the account levels gained, a quest's rewards, the
- * discoveries, and the chests, added together, so the same currency is
- * one amount however many places it came from.
+ * Everything `earned` added to the account, one entry per resource (gold,
+ * then the essences, in their content order): what the run paid, its
+ * essence, a first clear's rewards, the discoveries, and the chests, added
+ * together, so the same resource is one amount however many places it came
+ * from.
  */
 export const earnedResources = (tuning: Tuning, earned: Earned): ReadonlyArray<EarnedResource> => {
-  // What each chest held at its rank (a higher rank's differ: more dust, less of the rest).
+  // What each chest held at its rank (a higher rank's hold its grade of essence).
   const chests = earned.chests.map((chest) => tuning.chests[chest.group][chest.index] === undefined ? {} : chestRewards(tuning, chest))
-  const parts: ReadonlyArray<Amounts> = [earned.pay, earned.materials, earned.levelRewards, earned.rewards?.currencies ?? {}, ...earned.discoveries.map((id) => tuning.discoveries[id].rewards), { dust: earned.perfect?.dust ?? 0 }]
+  const parts: ReadonlyArray<Amounts> = [earned.pay, earned.materials, earned.rewards?.currencies ?? {}, ...earned.discoveries.map((id) => tuning.discoveries[id].rewards)]
   const sum = (amounts: ReadonlyArray<Amounts>, id: ResourceId) => amounts.reduce((total, part) => total + (part[id] ?? 0), 0)
   const resources = [...Object.keys(tuning.currencies), ...Object.keys(tuning.materials)] as Array<ResourceId>
   return resources.flatMap((id) => {
@@ -843,22 +810,16 @@ export const roundGold = (amount: number): number => {
 export const clearPay = (pay: RunPay, enemyLevel: number): number => pay.base + pay.perLevel * enemyLevel
 
 /**
- * `clears` clears' worth of `element`'s material against enemies of
- * `enemyLevel` (see `worthAt`): a trial pays one on every clear, a quest's
- * first clear and a hardcore tier's weekly reward a few, once.
+ * `clears` clears' worth of essence of `grade` (`element`'s at grade 1)
+ * against enemies of `enemyLevel` (see `worthAt`): a trial pays one on
+ * every clear, a first clear a few, once.
  */
-export const materialPay = (tuning: Tuning, element: ElementId, enemyLevel: number, clears: number): Amounts =>
-  ({ [materialOf(element)]: Math.round(worthAt(tuning.materialRules, enemyLevel) * clears) })
-
-/** `amounts` times `times`. */
-const times = (amounts: Amounts, count: number): Amounts =>
-  Object.fromEntries(Object.entries(amounts).map(([id, amount]) => [id, (amount ?? 0) * count]).filter(([, amount]) => amount !== 0))
+export const materialPay = (tuning: Tuning, grade: Grade, element: ElementId, enemyLevel: number, clears: number): Amounts =>
+  ({ [essenceOf(grade, element)]: Math.round(worthAt(tuning.materialRules, enemyLevel) * clears) })
 
 /** Whether a run of a quest or tier that ended with `result` makes a discovery checked by `check`. */
 export const discovered = (check: DiscoveryCheck, result: RunResultValue): boolean => {
   switch (check.kind) {
-    case "clearWith":
-      return result.cleared && result.team.includes(check.character)
     case "fullTeam":
       return result.cleared && result.team.length >= teamSize
     case "reaction":
@@ -876,13 +837,14 @@ const counted = <P extends RunCount>(progress: P, result: RunResultValue, now: n
 
 /**
  * `account` after a run that ended with `result`, and what the run earned.
- * Every run pays gold and account experience by its enemies' level and how
- * far it got (see `runPay`); each account level gained gives crystals. A
- * run counts toward what it played: clearing a quest the first time gives
- * its rewards, and clearing a hardcore tier gives its rewards the first
- * time in each period; each discovery it makes pays its rewards once. A run
- * of nothing (a dev quick start) only adds to the totals and experience (as
- * at enemy level 1): it pays no gold and makes no discoveries.
+ * Every run pays gold by its enemies' level and how far it got (see
+ * `runPay`). A run counts toward what it played: clearing a quest at a rank
+ * the first time gives its rewards and its rank's essence; a perfect clear
+ * what is written for it (a relic, a relic's tier); a track's tier, its
+ * rewards on its first clear (a hardcore tier its essence too, an
+ * audition's last tier its character); a trial its essence on every clear.
+ * Each discovery pays its rewards once. A run of nothing (a dev quick
+ * start) only adds to the totals: it pays no gold and makes no discoveries.
  * Characters do not grow from runs: they are trained with gold (see
  * `train`), so none falls behind on the bench.
  */
@@ -896,7 +858,6 @@ export const recordRun = (
   const { progression } = tuning
   const encounter = play === null ? null : encounterOf(tuning, play)
   const enemyLevel = encounter?.enemyLevel ?? 1
-  let experience = runPay(progression.account.run, progression.loss, enemyLevel, result)
   const pay: Amounts = play === null ? {} : { gold: runPay(progression.gold, progression.loss, enemyLevel, result) }
   let next: Account = {
     ...account,
@@ -916,42 +877,33 @@ export const recordRun = (
     const progress = questProgress(account, quest, rank) ?? noQuestProgress
     // Every rank has its own first clear and stars (see docs/quests.md, "Ranks").
     const firstClear = result.cleared && progress.firstClearedAt === null
-    // Only a first clear pays materials (see content/materials.ts): replaying a quest earns none.
-    if (firstClear) materials = materialPay(tuning, tuning.quests[quest].element, enemyLevel, rank === 1 ? tuning.materialRules.firstClear : tuning.materialRules.rankFirstClear)
+    // Only a first clear pays essence (see content/materials.ts): replaying a quest earns none.
+    if (firstClear) materials = materialPay(tuning, gradeOfRank(rank), tuning.quests[quest].element, enemyLevel, rank === 1 ? tuning.materialRules.firstClear : tuning.materialRules.rankFirstClear)
     // Each star once, in any run that clears.
     stars = tuning.quests[quest].stars.flatMap((goal, index) => !progress.stars.includes(index) && meets(goal, result.cleared, result.tally) ? [index] : [])
-    // A perfect clear (every star in this one run), the first time: the quest's relic at the rank's tier (see docs/relics.md).
+    // A perfect clear (every star in this one run), the first time: what is written for it (see `perfectUnlock`).
     const perfected = progress.perfectAt === undefined && tuning.quests[quest].stars.every((goal) => meets(goal, result.cleared, result.tally))
     const updated: QuestProgress = { ...counted(progress, result, now), stars: [...progress.stars, ...stars].sort((a, b) => a - b), ...(perfected ? { perfectAt: now } : {}) }
     next = { ...next, quests: { ...next.quests, [quest]: { ...next.quests[quest], [rank]: updated } } }
     if (firstClear) rewards = questRewards(tuning, quest, rank)
-    if (perfected) {
-      // The quest's relic, on the rank that unlocks it (unless its first clear gives it: the two that introduce their slots); else dust, by its enemies' level.
-      const home = tuning.quests[quest].relic
-      const unlocks = home !== null && home.rank === rank && !tuning.quests[quest].rewards.unlocks.some((item) => item.kind === "relic" && item.id === home.id)
-      perfect = unlocks ? { relic: home.id, dust: 0 } : { relic: null, dust: perfectDustAt(tuning.relicRules, enemyLevel) }
-      next = unlocks ? unlock(tuning, next, { kind: "relic", id: home.id }, now) : earn(next, { dust: perfect.dust })
-    }
+    if (perfected) perfect = { unlock: perfectUnlock(tuning, quest, rank) }
   }
   if (play?.kind === "tier") {
-    const spec = tuning.tracks[play.track].tiers[play.tier - 1]
-    const progress = tierProgress(account, play.track, play.tier) ?? { attempts: 0, clears: 0, firstClearedAt: null, rewardedPeriod: null }
-    // Its rewards once per period: the first clear since the last reset gives them.
-    const rewarded = result.cleared && spec !== undefined && tierRewardsAvailable(tuning, account, play.track, play.tier, now)
-    const updated: TierProgress = {
-      ...counted(progress, result, now),
-      rewardedPeriod: rewarded ? periodOf(tuning.reset, now) : progress.rewardedPeriod,
-      bestWave: Math.max(progress.bestWave ?? 0, result.wave)
-    }
-    next = { ...next, hardcore: { ...next.hardcore, [play.track]: { ...next.hardcore[play.track], [play.tier]: updated } } }
-    // A trial pays its element on every clear; a hardcore tier, with its rewards once per period.
     const track = tuning.tracks[play.track]
-    if (result.cleared && track.kind === "trial") materials = materialPay(tuning, track.element, enemyLevel, 1)
-    if (rewarded && track.kind === "hardcore") materials = materialPay(tuning, track.element, enemyLevel, tuning.materialRules.weekly)
-    // A tier's looks come with its rewards, the first time (never twice).
-    if (rewarded) rewards = { experience: spec.rewards.experience, currencies: spec.rewards.currencies, unlocks: (spec.rewards.cosmetics ?? []).filter((id) => !owns(account, { kind: "cosmetic", id })).map((id) => ({ kind: "cosmetic" as const, id })) }
+    const spec = track.tiers[play.tier - 1]
+    const progress = tierProgress(account, play.track, play.tier) ?? { attempts: 0, clears: 0, firstClearedAt: null }
+    // Its rewards once, on its first clear.
+    const firstClear = result.cleared && spec !== undefined && progress.firstClearedAt === null
+    const updated: TierProgress = { ...counted(progress, result, now), bestWave: Math.max(progress.bestWave ?? 0, result.wave) }
+    next = { ...next, hardcore: { ...next.hardcore, [play.track]: { ...next.hardcore[play.track], [play.tier]: updated } } }
+    const grade = gradeOfRank(spec?.opensRank ?? 1)
+    // A trial pays its essence on every clear; a hardcore tier, with its rewards, once.
+    if (result.cleared && track.kind === "trial") materials = materialPay(tuning, grade, track.element, enemyLevel, 1)
+    if (firstClear && track.kind === "hardcore") materials = materialPay(tuning, grade, track.element, enemyLevel, tuning.materialRules.tierClear)
+    if (firstClear) rewards = spec.rewards
   }
   next = earn(earn(next, pay), materials)
+  if (rewards !== null) next = earn(next, rewards.currencies)
   const chests = withEarnedChests(tuning, next)
   next = chests.account
   const made: Array<DiscoveryId> = []
@@ -962,15 +914,10 @@ export const recordRun = (
       next = earn({ ...next, discoveries: { ...next.discoveries, [id]: { madeAt: now } } }, spec.rewards)
     }
   }
-  if (rewards !== null) {
-    experience += rewards.experience
-    next = rewards.unlocks.reduce((owner, item) => unlock(tuning, owner, item, now), earn(next, rewards.currencies))
-  }
-  next = { ...next, experience: account.experience + experience }
-  const level = { before: accountLevel(tuning, account).level, after: accountLevel(tuning, next).level }
-  const levelRewards = times(progression.account.levelUp, level.after - level.before)
-  next = earn(next, levelRewards)
-  return { account: next, earned: { experience, level, pay, materials, levelRewards, discoveries: made, rewards, stars, chests: chests.opened, perfect } }
+  // What the cards met give (the rewards' unlocks, the perfect clear's, a relic's tier waiting for it).
+  const given = withSources(tuning, next, now)
+  next = given.account
+  return { account: next, earned: { pay, materials, discoveries: made, rewards, stars, chests: chests.opened, perfect, granted: given.granted } }
 }
 
 /**
@@ -997,3 +944,14 @@ export const buildOf = (tuning: Tuning, account: Account, character: CharacterId
 /** The builds `team` enters the arena with, in order, with `aspects` and `relics` equipped (see `buildOf`). */
 export const teamOf = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects = account.selection.aspects, relics: TeamRelics = account.selection.relics): ReadonlyArray<BuildValue> =>
   team.map((character) => buildOf(tuning, account, character, aspects, relics))
+
+/**
+ * The builds the arena is entered with for `play`: an audition's character
+ * alone, lent at its tier's level with her class's plain aspect and no
+ * relics (the player's own levels never help, see docs/collection.md);
+ * otherwise `team` as the account has it (see `teamOf`).
+ */
+export const entryTeam = (tuning: Tuning, account: Account, play: Play | null, team: ReadonlyArray<CharacterId>, aspects: TeamAspects = account.selection.aspects, relics: TeamRelics = account.selection.relics): ReadonlyArray<BuildValue> => {
+  const lent = play === null ? null : lentFor(tuning, play)
+  return lent === null ? teamOf(tuning, account, team, aspects, relics) : [{ character: lent.character, level: lent.level }]
+}

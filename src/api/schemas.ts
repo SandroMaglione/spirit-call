@@ -7,11 +7,10 @@
  */
 import * as Schema from "effect/Schema"
 
-import type { Account as AccountValue, CallResult as CallResultValue, ChestRef as ChestRefValue, Earned as EarnedValue, Play as PlayValue } from "../account/account.ts"
+import type { Account as AccountValue, ChestRef as ChestRefValue, Earned as EarnedValue, Play as PlayValue, SavedTeam as SavedTeamValue } from "../account/account.ts"
 import { aspects } from "../content/aspects.ts"
 import { cosmeticKinds, cosmetics } from "../content/cosmetics.ts"
 import { relicSlots, relics } from "../content/relics.ts"
-import { banners } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
 import { currencies } from "../content/currencies.ts"
@@ -38,7 +37,6 @@ export const CosmeticKind = Schema.Literals(cosmeticKinds)
 export const QuestId = idsOf(quests)
 export const TrackId = idsOf(tracks)
 export const DiscoveryId = idsOf(discoveries)
-export const BannerId = idsOf(banners)
 export const ChallengeId = idsOf(challenges)
 export const ResourceId = idsOf({ ...currencies, ...materials })
 export const StarGroup = idsOf(chests)
@@ -55,6 +53,7 @@ export const Item = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("character"), id: CharacterId }),
   Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId }),
   Schema.Struct({ kind: Schema.Literal("relic"), id: RelicId }),
+  Schema.Struct({ kind: Schema.Literal("relicTier"), id: RelicId, tier: Schema.Literals([2, 3]) }),
   Schema.Struct({ kind: Schema.Literal("cosmetic"), id: CosmeticId })
 ])
 
@@ -69,18 +68,8 @@ export const TeamRelics = Schema.Record(CharacterId, Schema.optionalKey(Schema.R
 
 export const Worn = Schema.Record(CharacterId, Schema.optionalKey(Schema.Record(CosmeticKind, Schema.optionalKey(CosmeticId))))
 
-export const CallResult = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("character"), id: CharacterId }),
-  Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId }),
-  Schema.Struct({ kind: Schema.Literal("cosmetic"), id: CosmeticId }),
-  Schema.Struct({ kind: Schema.Literal("sigils"), amount: Count })
-])
-
-/** What the exchange sells: an aspect or a look of the Call's. */
-export const RareItem = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("aspect"), id: AspectId }),
-  Schema.Struct({ kind: Schema.Literal("cosmetic"), id: CosmeticId })
-])
+/** A team saved to load in a tap. */
+export const SavedTeam = Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics })
 
 const RunCount = {
   attempts: Count,
@@ -91,32 +80,24 @@ const RunCount = {
 export const Account = Schema.Struct({
   id: Schema.String,
   createdAt: Schema.Number,
-  experience: Schema.Number,
   totals: Schema.Struct({ runs: Count, clears: Count, kills: Count, secondsPlayed: Schema.Number }),
   wallet: Amounts,
   owned: Schema.Struct({
     characters: Schema.Record(CharacterId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, experience: Schema.Number, ascension: Count }))),
-    aspects: Schema.Record(AspectId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, copies: Count }))),
+    aspects: Schema.Record(AspectId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number }))),
     relics: Schema.Record(RelicId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, tier: RelicTier }))),
     cosmetics: Schema.Record(CosmeticId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number })))
   }),
   quests: Schema.Record(QuestId, Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, stars: Schema.Array(Count), perfectAt: Schema.optionalKey(Schema.Number) })))),
   hardcore: Schema.Record(
     TrackId,
-    Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, rewardedPeriod: Schema.NullOr(Schema.Number), bestWave: Schema.optionalKey(Count) })))
+    Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, bestWave: Schema.optionalKey(Count) })))
   ),
   discoveries: Schema.Record(DiscoveryId, Schema.optionalKey(Schema.Struct({ madeAt: Schema.Number }))),
   chests: Schema.Record(StarGroup, Schema.optionalKey(Schema.Record(Schema.Int, Count))),
-  calls: Schema.Struct({
-    seed: Schema.Number,
-    sinceCharacter: Count,
-    sinceRare: Count,
-    firstCharacter: Schema.Boolean,
-    focus: Schema.Record(BannerId, Schema.optionalKey(CharacterId)),
-    history: Schema.Array(Schema.Struct({ at: Schema.Number, banner: BannerId, result: CallResult }))
-  }),
   selection: Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics, play: Play }),
-  worn: Worn
+  worn: Worn,
+  saved: Schema.Record(Schema.Int, SavedTeam)
 })
 
 const ReactionRecord = Schema.Literals(["burning", "soaked", "charged", "swept", "cracked", "slam"])
@@ -172,16 +153,14 @@ export const AccountEvent = Schema.Struct({ id: Schema.String, at: Schema.Number
 const ChestRef = Schema.Struct({ group: StarGroup, index: Count, rank: Count })
 
 export const Earned = Schema.Struct({
-  experience: Schema.Number,
-  level: Schema.Struct({ before: Schema.Number, after: Schema.Number }),
   pay: Amounts,
   materials: Amounts,
-  levelRewards: Amounts,
   discoveries: Schema.Array(DiscoveryId),
-  rewards: Schema.NullOr(Schema.Struct({ experience: Schema.Number, currencies: Amounts, unlocks: Schema.Array(Item) })),
+  rewards: Schema.NullOr(Schema.Struct({ currencies: Amounts, unlocks: Schema.Array(Item) })),
   stars: Schema.Array(Count),
   chests: Schema.Array(ChestRef),
-  perfect: Schema.NullOr(Schema.Struct({ relic: Schema.NullOr(RelicId), dust: Count }))
+  perfect: Schema.NullOr(Schema.Struct({ unlock: Schema.NullOr(Item) })),
+  granted: Schema.Array(Item)
 })
 
 // The Schemas describe exactly the types the account's rules use, both ways.
@@ -189,7 +168,7 @@ type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
 const same = <_ extends true>() => undefined
 same<Same<typeof Account.Type, AccountValue>>()
 same<Same<typeof Play.Type, PlayValue>>()
-same<Same<typeof CallResult.Type, CallResultValue>>()
+same<Same<typeof SavedTeam.Type, SavedTeamValue>>()
 same<Same<typeof RunResult.Type, RunResultValue>>()
 same<Same<typeof Earned.Type, EarnedValue>>()
 same<Same<typeof ChestRef.Type, ChestRefValue>>()

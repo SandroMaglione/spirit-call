@@ -6,12 +6,18 @@
  */
 import * as Schema from "effect/Schema"
 
-import type { AccountRecord, StoredCallResult } from "../account/convert.ts"
+import type { AccountRecord } from "../account/convert.ts"
 
 const Text = Schema.String
 const Int = Schema.Number
 const OptionalInt = Schema.NullOr(Schema.Number)
 
+/**
+ * The account's own row. Some columns are left from the Spirit Call and the
+ * account level (`experience`, `call_seed`, `calls_since_*`,
+ * `first_character_called`): migrations only add, so they stay, written as
+ * zero.
+ */
 export const AccountRow = Schema.Struct({
   user_id: Text,
   created_at: Int,
@@ -50,12 +56,8 @@ export const tables = {
   },
   discoveries: { row: Schema.Struct({ user_id: Text, discovery: Text, made_at: Int }), key: ["discovery"] },
   chests: { row: Schema.Struct({ user_id: Text, star_group: Text, rank: Int, opened: Int }), key: ["star_group", "rank"] },
-  call_focus: { row: Schema.Struct({ user_id: Text, banner: Text, character: Text }), key: ["banner"] },
-  calls: {
-    row: Schema.Struct({ user_id: Text, place: Int, at: Int, banner: Text, kind: Schema.Literals(["character", "aspect", "cosmetic", "sigils"]), item: Schema.NullOr(Text) }),
-    key: ["place"]
-  },
-  call_amounts: { row: Schema.Struct({ user_id: Text, place: Int, resource: Text, amount: Int }), key: ["place", "resource"] }
+  saved_team_members: { row: Schema.Struct({ user_id: Text, team: Int, slot: Int, character: Text, aspect: Schema.NullOr(Text) }), key: ["team", "slot"] },
+  saved_team_relics: { row: Schema.Struct({ user_id: Text, team: Int, character: Text, slot: Text, relic: Text }), key: ["team", "character", "slot"] }
 } as const
 
 export type TableName = keyof typeof tables
@@ -75,15 +77,15 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
       {
         user_id,
         created_at: account.createdAt,
-        experience: account.experience,
+        experience: 0,
         runs: account.totals.runs,
         clears: account.totals.clears,
         kills: account.totals.kills,
         seconds_played: account.totals.secondsPlayed,
-        call_seed: account.calls.seed,
-        calls_since_character: account.calls.sinceCharacter,
-        calls_since_rare: account.calls.sinceRare,
-        first_character_called: account.calls.firstCharacter ? 1 : 0,
+        call_seed: 0,
+        calls_since_character: 0,
+        calls_since_rare: 0,
+        first_character_called: 0,
         play_kind: play.kind,
         play_quest: play.kind === "quest" ? play.quest : null,
         play_rank: play.kind === "quest" ? (play.rank ?? null) : null,
@@ -93,7 +95,7 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
     ],
     balances: Object.entries(account.wallet).map(([resource, amount]) => ({ user_id, resource, amount })),
     characters: Object.entries(account.owned.characters).map(([character, owned]) => ({ user_id, character, unlocked_at: owned.unlockedAt, experience: owned.experience, ascension: owned.ascension })),
-    aspects: Object.entries(account.owned.aspects).map(([aspect, owned]) => ({ user_id, aspect, unlocked_at: owned.unlockedAt, copies: owned.copies })),
+    aspects: Object.entries(account.owned.aspects).map(([aspect, owned]) => ({ user_id, aspect, unlocked_at: owned.unlockedAt, copies: 1 })),
     relics: Object.entries(account.owned.relics).map(([relic, owned]) => ({ user_id, relic, unlocked_at: owned.unlockedAt, tier: owned.tier })),
     cosmetics: Object.entries(account.owned.cosmetics).map(([cosmetic, owned]) => ({ user_id, cosmetic, unlocked_at: owned.unlockedAt })),
     team_members: account.selection.team.map((character, slot) => ({ user_id, slot, character, aspect: account.selection.aspects[character] ?? null })),
@@ -109,23 +111,14 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
         attempts: progress.attempts,
         clears: progress.clears,
         first_cleared_at: progress.firstClearedAt,
-        rewarded_period: progress.rewardedPeriod,
+        rewarded_period: null,
         best_wave: progress.bestWave ?? null
       }))
     ),
     discoveries: Object.entries(account.discoveries).map(([discovery, made]) => ({ user_id, discovery, made_at: made.madeAt })),
     chests: Object.entries(account.chests).flatMap(([star_group, ranks]) => Object.entries(ranks).map(([rank, opened]) => ({ user_id, star_group, rank: Number(rank), opened }))),
-    call_focus: Object.entries(account.calls.focus).map(([banner, character]) => ({ user_id, banner, character })),
-    calls: account.calls.history.map((call, place) => ({
-      user_id,
-      place,
-      at: call.at,
-      banner: call.banner,
-      kind: call.result.kind,
-      item: call.result.kind === "sigils" ? null : call.result.id
-    })),
-    // Sigils a call brought sit in `call_amounts`, as supplies did.
-    call_amounts: account.calls.history.flatMap((call, place) => call.result.kind === "sigils" ? [{ user_id, place, resource: "sigils", amount: call.result.amount }] : [])
+    saved_team_members: Object.entries(account.saved).flatMap(([team, saved]) => saved.team.map((character, slot) => ({ user_id, team: Number(team), slot, character, aspect: saved.aspects[character] ?? null }))),
+    saved_team_relics: Object.entries(account.saved).flatMap(([team, saved]) => Object.entries(saved.relics).flatMap(([character, slots]) => Object.entries(slots).map(([slot, relic]) => ({ user_id, team: Number(team), character, slot, relic }))))
   }
 }
 
@@ -133,19 +126,6 @@ export const toRows = (userId: string, account: AccountRecord): AccountRows => {
 export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
   const row = rows.accounts[0]
   if (row === undefined) return undefined
-  const byPlace = new Map<number, Record<string, number>>()
-  for (const amount of rows.call_amounts) byPlace.set(amount.place, { ...byPlace.get(amount.place), [amount.resource]: amount.amount })
-  const resultOf = (call: RowOf<"calls">): StoredCallResult | undefined => {
-    if (call.kind === "sigils") return { kind: "sigils", amount: byPlace.get(call.place)?.["sigils"] ?? 0 }
-    if (call.item === null) return undefined
-    return { kind: call.kind, id: call.item }
-  }
-  const history = [...rows.calls]
-    .sort((a, b) => a.place - b.place)
-    .flatMap((call) => {
-      const result = resultOf(call)
-      return result === undefined ? [] : [{ at: call.at, banner: call.banner, result }]
-    })
   const team = [...rows.team_members].sort((a, b) => a.slot - b.slot)
   // Quests and chests by rank.
   const quests: Record<string, Record<string, AccountRecord["quests"][string][string]>> = {}
@@ -163,7 +143,6 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
         attempts: tier.attempts,
         clears: tier.clears,
         firstClearedAt: tier.first_cleared_at,
-        rewardedPeriod: tier.rewarded_period,
         ...(tier.best_wave === null ? {} : { bestWave: tier.best_wave })
       }
     }
@@ -171,12 +150,11 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
   return {
     id: row.user_id,
     createdAt: row.created_at,
-    experience: row.experience,
     totals: { runs: row.runs, clears: row.clears, kills: row.kills, secondsPlayed: row.seconds_played },
     wallet: Object.fromEntries(rows.balances.map((balance) => [balance.resource, balance.amount])),
     owned: {
       characters: Object.fromEntries(rows.characters.map((owned) => [owned.character, { unlockedAt: owned.unlocked_at, experience: owned.experience, ascension: owned.ascension }])),
-      aspects: Object.fromEntries(rows.aspects.map((owned) => [owned.aspect, { unlockedAt: owned.unlocked_at, copies: owned.copies }])),
+      aspects: Object.fromEntries(rows.aspects.map((owned) => [owned.aspect, { unlockedAt: owned.unlocked_at }])),
       relics: Object.fromEntries(rows.relics.map((owned) => [owned.relic, { unlockedAt: owned.unlocked_at, tier: owned.tier }])),
       cosmetics: Object.fromEntries(rows.cosmetics.map((owned) => [owned.cosmetic, { unlockedAt: owned.unlocked_at }]))
     },
@@ -184,14 +162,6 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
     hardcore,
     discoveries: Object.fromEntries(rows.discoveries.map((discovery) => [discovery.discovery, { madeAt: discovery.made_at }])),
     chests,
-    calls: {
-      seed: row.call_seed,
-      sinceCharacter: row.calls_since_character,
-      sinceRare: row.calls_since_rare,
-      firstCharacter: row.first_character_called === 1,
-      focus: Object.fromEntries(rows.call_focus.map((focus) => [focus.banner, focus.character])),
-      history
-    },
     selection: {
       team: team.map((member) => member.character),
       aspects: Object.fromEntries(team.flatMap((member) => (member.aspect === null ? [] : [[member.character, member.aspect]]))),
@@ -201,8 +171,24 @@ export const fromRows = (rows: AccountRows): AccountRecord | undefined => {
           ? { kind: "quest", quest: row.play_quest ?? "", ...(row.play_rank === null ? {} : { rank: row.play_rank }) }
           : { kind: "tier", track: row.play_track ?? "", tier: row.play_tier ?? 1 }
     },
-    worn: grouped(rows.worn_cosmetics.map((row) => [row.character, row.kind, row.cosmetic]))
+    worn: grouped(rows.worn_cosmetics.map((row) => [row.character, row.kind, row.cosmetic])),
+    saved: savedFrom(rows)
   }
+}
+
+/** The saved teams in `rows`, by slot: members in order, with their aspects and relics. */
+const savedFrom = (rows: AccountRows): AccountRecord["saved"] => {
+  const saved: Record<string, { team: Array<string>; aspects: Record<string, string>; relics: Record<string, Record<string, string>> }> = {}
+  for (const member of [...rows.saved_team_members].sort((a, b) => a.slot - b.slot)) {
+    const team = (saved[member.team] ??= { team: [], aspects: {}, relics: {} })
+    team.team.push(member.character)
+    if (member.aspect !== null) team.aspects[member.character] = member.aspect
+  }
+  for (const relic of rows.saved_team_relics) {
+    const team = saved[relic.team]
+    if (team !== undefined) team.relics[relic.character] = { ...team.relics[relic.character], [relic.slot]: relic.relic }
+  }
+  return saved
 }
 
 /** `[outer, inner, value]` triples as a record of records. */

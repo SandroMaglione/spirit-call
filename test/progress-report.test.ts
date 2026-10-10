@@ -31,7 +31,7 @@ describe("progress report", () => {
     expect(journeyOf(defaultTuning, playing(defaultPlay, defaultPlay.skilled)).hours).toBeLessThan(line.hours)
     expect(journeyOf(defaultTuning, playing(defaultPlay, defaultPlay.struggling)).hours).toBeGreaterThan(line.hours)
     // Losing alone costs runs: about a share `lost` of them.
-    const losing = journeyOf(defaultTuning, playing(defaultPlay, { levelsAhead: 0, lost: 0.2 }))
+    const losing = journeyOf(defaultTuning, playing(defaultPlay, { levelsAhead: defaultPlay.levelsAhead, lost: defaultPlay.lost + 0.2 }))
     expect(losing.runs).toBeGreaterThan(line.runs)
   })
 })

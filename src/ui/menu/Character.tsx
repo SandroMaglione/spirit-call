@@ -5,7 +5,8 @@
  */
 import { useSignal } from "@preact/signals"
 import type { ComponentChildren } from "preact"
-import { ascend, ascensionCost, ascensionStep, characterLevel, levelCap, owns, relicTier, slotOpen, train, trainingCost } from "../../account/account.ts"
+import { ascend, ascensionCost, ascensionStep, characterLevel, levelCap, owns, relicTier, slotOpen, sourcesOf, train, trainingCost } from "../../account/account.ts"
+import type { Item } from "../../account/account.ts"
 import { cosmeticKinds, cosmeticOf } from "../../content/cosmetics.ts"
 import { relicOf, relicSlots } from "../../content/relics.ts"
 import { RelicIcon, TierMarks } from "../RelicIcon.tsx"
@@ -27,22 +28,19 @@ import { Card } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Bar, Chips, Fact, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, SideTabs, TopBar } from "../kit/shell.tsx"
-import { sourceOf } from "../navigation.ts"
+import { sourceOf } from "../../content/collection.ts"
 import type { UiActions, UiStore } from "../store.ts"
-import { ids, MaterialIcon, Wallet } from "./parts.tsx"
+import { describeSource, ids, MaterialIcon, Wallet } from "./parts.tsx"
 import type { CharacterTab, GearFocus, GearTab, Nav } from "./screens.ts"
 
 const statLabels = { hp: "Max HP", atk: "ATK", def: "DEF", speed: "Speed" } as const
 const statIcons: { readonly [Stat in keyof typeof statLabels]: IconName } = { hp: "hp", atk: "atk", def: "def", speed: "speed" }
 const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", shot: "Shot", disc: "Disc", lob: "Lob" } as const
 
-/** Where something not owned comes from, from shipped rewards only. */
-const sourceNote = (store: UiStore, item: Parameters<typeof sourceOf>[1]): string => {
-  const tuning = store.tuning.value, quest = sourceOf(tuning, item)
-  if (quest !== null) return `A reward for clearing ${tuning.quests[quest].name}.`
-  const banner = item.kind === "character" ? Object.values(tuning.banners).find((spec) => spec.characters.includes(item.id)) : undefined
-  if (banner !== undefined) return `Comes from the Spirit Call (the ${banner.name} banner).`
-  return item.kind === "aspect" ? `Comes from the Spirit Call, or its exchange for ${tuning.calls.exchange.aspect} sigils.` : "Not owned yet."
+/** Where something not owned comes from (see docs/collection.md). */
+const sourceNote = (store: UiStore, item: Item): string => {
+  const source = sourceOf(sourcesOf(store.tuning.value), item)
+  return source === undefined ? "Not owned yet." : `${describeSource(store, source)}.`
 }
 
 const Attributes = ({ store, actions, character }: { readonly store: UiStore; readonly actions: UiActions; readonly character: CharacterId }) => {

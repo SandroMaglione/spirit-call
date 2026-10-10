@@ -17,7 +17,7 @@ import * as HttpApiMiddleware from "effect/http-api/HttpApiMiddleware"
 import * as HttpApiSchema from "effect/http-api/HttpApiSchema"
 import * as HttpApiSecurity from "effect/http-api/HttpApiSecurity"
 
-import { Account, AccountEvent, BannerId, CallResult, CharacterId, CosmeticId, CosmeticKind, Earned, Play, RareItem, RelicId, RunLog, RunResult, StoredRun, TeamAspects, TeamRelics } from "./schemas.ts"
+import { Account, AccountEvent, CharacterId, CosmeticId, CosmeticKind, Earned, Play, RunLog, RunResult, SavedTeam, StoredRun, TeamAspects, TeamRelics } from "./schemas.ts"
 
 // ── Players ───────────────────────────────────────────────────────────────
 
@@ -85,21 +85,8 @@ export class AccountApi extends HttpApiGroup.make("account")
     HttpApiEndpoint.post("ascend", "/characters/:character/ascension", { params: { character: CharacterId }, success: Account, error: Refused }),
     /** Puts on a look of a kind (`null`: her own look). */
     HttpApiEndpoint.put("wear", "/characters/:character/looks/:kind", { params: { character: CharacterId, kind: CosmeticKind }, payload: Schema.Struct({ cosmetic: Schema.NullOr(CosmeticId) }), success: Account, error: Refused }),
-    /** Buys a relic owned one tier up, with dust. */
-    HttpApiEndpoint.post("buyRelic", "/shop/relics/:relic", { params: { relic: RelicId }, success: Account, error: Refused }),
-    /** Buys a look the shop sells, with dust. */
-    HttpApiEndpoint.post("buyCosmetic", "/shop/looks/:cosmetic", { params: { cosmetic: CosmeticId }, success: Account, error: Refused }),
-    /** Buys an aspect or a look of the Call's from its exchange, with sigils. */
-    HttpApiEndpoint.post("exchange", "/exchange", { payload: RareItem, success: Account, error: Refused }),
-    /** Makes `count` calls on a banner. */
-    HttpApiEndpoint.post("call", "/banners/:banner/calls", {
-      params: { banner: BannerId },
-      payload: Schema.Struct({ count: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 10 })) }),
-      success: Schema.Struct({ account: Account, results: Schema.Array(CallResult) }),
-      error: Refused
-    }),
-    /** Focuses a character on a banner. */
-    HttpApiEndpoint.put("focus", "/banners/:banner/focus", { params: { banner: BannerId }, payload: Schema.Struct({ character: CharacterId }), success: Account, error: Refused }),
+    /** Saves a team (its aspects and relics) in a slot to load in a tap, or empties the slot (`null`). */
+    HttpApiEndpoint.put("saveTeam", "/account/teams/:slot", { params: { slot: Schema.NumberFromString }, payload: Schema.Struct({ team: Schema.NullOr(SavedTeam) }), success: Account, error: Refused }),
     /** Records a run that ended, of a quest or tier (`null`: a run of nothing, a dev quick start): the account after it, and what it earned. */
     HttpApiEndpoint.post("recordRun", "/runs", {
       payload: Schema.Struct({ play: Schema.NullOr(Play), result: RunResult, log: RunLog }),
@@ -121,10 +108,8 @@ export class DevToolsOff extends Schema.TaggedError<DevToolsOff>()("DevToolsOff"
 
 export class DevApi extends HttpApiGroup.make("dev")
   .add(
-    /** Owns every character and aspect, and adds plenty of each currency. */
-    HttpApiEndpoint.post("unlockEverything", "/dev/unlock-everything", { success: Account, error: DevToolsOff }),
-    /** Clears chapter one and adds crystals for 30 calls (to try the Spirit Call). */
-    HttpApiEndpoint.post("openCalls", "/dev/open-calls", { success: Account, error: DevToolsOff })
+    /** Owns every character, aspect, relic, and look, and adds plenty of gold and essence. */
+    HttpApiEndpoint.post("unlockEverything", "/dev/unlock-everything", { success: Account, error: DevToolsOff })
   )
   .middleware(Authorization)
   .prefix("/api")

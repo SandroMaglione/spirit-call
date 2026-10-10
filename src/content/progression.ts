@@ -80,22 +80,18 @@ export const progression = {
   loss: 0.5,
   /** Gold every run pays (see `RunPay`): the steady income for training characters. */
   gold: { base: 100, perLevel: 25 } satisfies RunPay,
-  /** The account level: it rises by playing, in every mode, and gates later quests. */
-  account: {
-    curve: { maxLevel: 30, base: 100, growth: 50, square: 0 } satisfies LevelCurve,
-    run: { base: 40, perLevel: 5 } satisfies RunPay,
-    /** Crystals for each account level gained. */
-    levelUp: { crystals: 40 }
-  },
   /**
    * Each character's own level: from gold spent on her (training), not from
    * fighting, so nobody falls behind on the bench (see docs/vision.md,
    * "Progression"). Her experience is the gold trained into her. The first
-   * levels take a run or less each, the last ones several. Enemies share
+   * levels take a run or less each, the last ones several: all ten to the
+   * top take about 100 hours of play (see docs/collection.md). Enemies share
    * these levels: an enemy of level n has the stats a character of level n
    * would.
    */
   character: {
-    curve: { maxLevel: 60, base: 60, growth: 40, square: 5 } satisfies LevelCurve
+    curve: { maxLevel: 60, base: 54, growth: 32, square: 4 } satisfies LevelCurve,
+    /** What a level costs, as a share, while it is below the level of the account's `leaders`th highest character: who joins late catches up, the team that leads pays in full. */
+    catchUp: { share: 0.2, leaders: 3 }
   }
 }

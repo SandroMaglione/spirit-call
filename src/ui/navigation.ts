@@ -1,12 +1,15 @@
 import { playLock, questCleared, questLevel, questLock, samePlay } from "../account/account.ts"
-import type { Account, Item, Play } from "../account/account.ts"
+import type { Account, Play } from "../account/account.ts"
 import type { Tuning } from "../config/tuning.ts"
 import type { QuestId } from "../content/quests.ts"
 import type { TrackId } from "../content/hardcore.ts"
 import type { QuestTab } from "./menu/screens.ts"
 
-export const playsIn = (tuning: Tuning, tab: QuestTab): ReadonlyArray<Play> => tab === "hardcore" || tab === "trials"
-  ? (Object.keys(tuning.tracks) as Array<TrackId>).filter((track) => tuning.tracks[track].kind === (tab === "trials" ? "trial" : "hardcore"))
+/** The kind of track a tab of the challenges lists. */
+const trackKinds = { hardcore: "hardcore", trials: "trial", auditions: "audition" } as const
+
+export const playsIn = (tuning: Tuning, tab: QuestTab): ReadonlyArray<Play> => tab === "hardcore" || tab === "trials" || tab === "auditions"
+  ? (Object.keys(tuning.tracks) as Array<TrackId>).filter((track) => tuning.tracks[track].kind === trackKinds[tab])
     .flatMap((track) => tuning.tracks[track].tiers.map((_, index) => ({ kind: "tier" as const, track, tier: index + 1 })))
   : (Object.keys(tuning.quests) as Array<QuestId>).filter((quest) => tuning.quests[quest].line === tab).map((quest) => ({ kind: "quest" as const, quest }))
 
@@ -50,8 +53,4 @@ export const nextAfter = (tuning: Tuning, account: Account, played: Play): Play 
 
 /** The tab of the challenges that lists `play`. */
 export const tabOf = (tuning: Tuning, play: Play): QuestTab =>
-  play.kind === "quest" ? tuning.quests[play.quest].line : tuning.tracks[play.track].kind === "trial" ? "trials" : "hardcore"
-
-/** Unlocks are described from shipped rewards, never from invented acquisition rules. */
-export const sourceOf = (tuning: Tuning, item: Item): QuestId | null =>
-  (Object.keys(tuning.quests) as Array<QuestId>).find((quest) => tuning.quests[quest].rewards.unlocks.some((unlock) => unlock.kind === item.kind && unlock.id === item.id)) ?? null
+  play.kind === "quest" ? tuning.quests[play.quest].line : tuning.tracks[play.track].kind === "trial" ? "trials" : tuning.tracks[play.track].kind === "audition" ? "auditions" : "hardcore"

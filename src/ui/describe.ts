@@ -246,6 +246,8 @@ export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
       return aspectOf(tuning.aspects, unlock.id).name
     case "relic":
       return `${relicOf(tuning.relics, unlock.id).name} (relic)`
+    case "relicTier":
+      return `${relicOf(tuning.relics, unlock.id).name}, tier ${unlock.tier === 2 ? "II" : "III"}`
     case "cosmetic":
       return `${cosmeticOf(tuning.cosmetics, unlock.id).name} (look)`
   }
@@ -255,7 +257,7 @@ export const describeUnlock = (tuning: Tuning, unlock: Unlock): string => {
 export const resourceName = (tuning: Tuning, id: ResourceId): string =>
   Object.hasOwn(tuning.currencies, id) ? tuning.currencies[id as CurrencyId].name : tuning.materials[id as MaterialId].name
 
-/** Amounts of currency and materials, like "100 Crystals · 300 Gold · 2 Fire Shard" (each after `sign`, like "+"). */
+/** Amounts of gold and essence, like "300 Gold · 20 Fire Essence" (each after `sign`, like "+"). */
 export const describeAmounts = (tuning: Tuning, amounts: Amounts, sign = ""): string =>
   (Object.entries(amounts) as Array<[ResourceId, number]>)
     .filter(([, amount]) => amount > 0)
@@ -264,13 +266,13 @@ export const describeAmounts = (tuning: Tuning, amounts: Amounts, sign = ""): st
 
 /** What a first clear gives, in a few words. */
 export const describeRewards = (tuning: Tuning, rewards: Rewards): string =>
-  [`+${rewards.experience} XP`, describeAmounts(tuning, rewards.currencies), ...rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock))]
+  [describeAmounts(tuning, rewards.currencies), ...rewards.unlocks.map((unlock) => describeUnlock(tuning, unlock))]
     .filter((part) => part !== "")
     .join(" · ")
 
 /** What `play` is called: a quest's name (and its rank above the first), or a track's name and tier. */
 export const describePlay = (tuning: Tuning, play: Play): string =>
-  play.kind === "quest" ? `${tuning.quests[play.quest].name}${(play.rank ?? 1) > 1 ? ` · Rank ${["I", "II", "III", "IV", "V"][play.rank! - 1] ?? play.rank}` : ""}` : `${tuning.tracks[play.track].name} · ${tuning.tracks[play.track].kind === "trial" ? "Rank" : "Tier"} ${play.tier}`
+  play.kind === "quest" ? `${tuning.quests[play.quest].name}${(play.rank ?? 1) > 1 ? ` · Rank ${["I", "II", "III", "IV", "V"][play.rank! - 1] ?? play.rank}` : ""}` : `${tuning.tracks[play.track].name} · ${tuning.tracks[play.track].kind === "trial" ? "Rank" : tuning.tracks[play.track].kind === "audition" ? (tuning.tracks[play.track].tiers.length === 1 || play.tier === 4 ? "Mastery" : "Part") : "Tier"}${tuning.tracks[play.track].kind === "audition" && (tuning.tracks[play.track].tiers.length === 1 || play.tier === 4) ? "" : ` ${play.tier}`}`
 
 /** Why something is locked, in a few words. */
 export const describeLock = (tuning: Tuning, lock: Lock): string => {

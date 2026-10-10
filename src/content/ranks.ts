@@ -38,21 +38,22 @@ export const rankLevel = (content: RankContent, quest: QuestId, rank: number): n
 export const finaleOf = (content: RankContent, chapter: string): QuestId | undefined =>
   (Object.keys(content.quests) as Array<QuestId>).findLast((id) => content.quests[id].line === "main" && content.quests[id].chapter === chapter)
 
+/** The main line's last quest (its finale): every rank above opens once it is cleared at the rank below. */
+export const lineFinaleOf = (content: RankContent): QuestId | undefined =>
+  (Object.keys(content.quests) as Array<QuestId>).findLast((id) => content.quests[id].line === "main")
+
 /**
- * What must be cleared before `quest` opens at `rank`: at rank 1, the quest
- * it comes after; at a higher rank, the quest it comes after at that rank,
- * and for a main quest the last quest of the chapter `(rank − 1) ×
- * chaptersAhead` chapters on, at rank 1, when the main line has it (past
- * the main line's end, a rank's replay goes on in its own order).
+ * What must be cleared before `quest` opens at `rank`: the quest it comes
+ * after, at that rank; and for the main line's first quest at a higher
+ * rank, the main line's finale at the rank below (a rank opens once the
+ * rank below is done, see docs/quests.md, "Ranks").
  */
 export const rankGates = (content: RankContent, quest: QuestId, rank: number): ReadonlyArray<QuestAt> => {
   const spec = content.quests[quest]
   const before = isQuest(content, spec.after) ? [{ quest: spec.after, rank }] : []
-  if (rank === 1 || spec.line !== "main" || spec.chapter === null) return before
-  const chapters = Object.keys(content.chapters)
-  const ahead = chapters[chapters.indexOf(spec.chapter) + (rank - 1) * content.ranks.chaptersAhead]
-  const finale = ahead === undefined ? undefined : finaleOf(content, ahead)
-  return finale === undefined ? before : [...before, { quest: finale, rank: 1 }]
+  if (rank === 1 || spec.line !== "main" || before.length > 0) return before
+  const finale = lineFinaleOf(content)
+  return finale === undefined ? before : [{ quest: finale, rank: rank - 1 }]
 }
 
 /** The element an elite carries for a quest of `element`: wind and rock make no elites, so water and fire stand in. */

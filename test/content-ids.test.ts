@@ -21,7 +21,10 @@ import { defaultTuning } from "../src/config/tuning.ts"
  * when the main line was rebuilt into six chapters and every account was
  * reset (migrations/0003): each hardcore tier now has its own challenge;
  * the graded materials (Shard, Core, Heart), when each element got one
- * material on a curve (an account loading drops what it no longer knows).
+ * material on a curve (an account loading drops what it no longer knows);
+ * the Spirit Call's banners, crystals, dust, and sigils, the shop's tints,
+ * and the "clear with her" discoveries, when the game became a complete
+ * release with auditions (every account reset, migrations/0011).
  */
 const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>> & {
   readonly retired?: Record<string, ReadonlyArray<string>>
@@ -41,8 +44,7 @@ const current: Record<string, ReadonlyArray<string>> = {
   currencies: Object.keys(defaultTuning.currencies),
   materials: Object.keys(defaultTuning.materials),
   tracks: Object.keys(defaultTuning.tracks),
-  discoveries: Object.keys(defaultTuning.discoveries),
-  banners: Object.keys(defaultTuning.banners)
+  discoveries: Object.keys(defaultTuning.discoveries)
 }
 
 describe("content ids", () => {

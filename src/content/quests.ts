@@ -23,7 +23,7 @@ import type { CharacterId } from "./characters.ts"
 import type { Amounts } from "./currencies.ts"
 import type { AspectId } from "./aspects.ts"
 import type { CosmeticId } from "./cosmetics.ts"
-import type { RelicId } from "./relics.ts"
+import type { RelicId, RelicTier } from "./relics.ts"
 import type { ElementId } from "./elements.ts"
 import { materialOf, materialRules, worthAt } from "./materials.ts"
 import type { EnemyKind } from "./enemies.ts"
@@ -31,17 +31,16 @@ import type { HazardElement, Novelty } from "./novelties.ts"
 import { atLeast, atMost, nobodyFalls } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
 
-/** Something a reward can give to own: a character, an aspect, a relic (owned already: a tier up), or a look. */
+/** Something a reward can give to own: a character, an aspect, a relic (at tier I), a relic's next tier, or a look. */
 export type Unlock =
   | { readonly kind: "character"; readonly id: CharacterId }
   | { readonly kind: "aspect"; readonly id: AspectId }
   | { readonly kind: "relic"; readonly id: RelicId }
+  | { readonly kind: "relicTier"; readonly id: RelicId; readonly tier: Exclude<RelicTier, 1> }
   | { readonly kind: "cosmetic"; readonly id: CosmeticId }
 
-/** What a quest gives the first time it is cleared, on top of what the run pays: gold worth several runs at its level. */
+/** What a quest gives the first time it is cleared, on top of what the run pays: gold worth several runs at its level, and what it unlocks. */
 export interface Rewards {
-  /** Account experience, on top of what the run itself earns. */
-  readonly experience: number
   readonly currencies: Amounts
   readonly unlocks: ReadonlyArray<Unlock>
 }
@@ -67,13 +66,16 @@ export interface QuestSpec {
    */
   readonly stars: readonly [StarGoal, StarGoal, StarGoal]
   readonly rewards: Rewards
+  /** What its first clear at a higher rank unlocks besides (an aspect on some finales; see docs/collection.md), by rank. */
+  readonly rankUnlocks: { readonly [rank: number]: ReadonlyArray<Unlock> }
   /**
    * The relic it unlocks, if it has one, and at which rank (see
    * docs/relics.md, "Where relics come from"): a perfect clear (all three
    * stars in one run) of the quest at that rank gives the relic at tier I.
    * The two relics that introduce their slots come on the first clear
-   * instead (they are in `rewards.unlocks` too). Every other perfect clear
-   * pays dust (`RelicRules.perfectDust`).
+   * instead (they are in `rewards.unlocks` too). The relic grows with the
+   * quest: its perfect clear one rank up gives tier II, two ranks up tier
+   * III (see `perfectUnlock`).
    */
   readonly relic: QuestRelic | null
 }
@@ -111,32 +113,27 @@ export type Twist = "eliteLeaders" | "shieldLeaders"
 /**
  * Ranks: the main line and the side quests played again, each rank a
  * harder pass with its own first clears, stars, and chests (see
- * docs/quests.md, "Ranks").
+ * docs/quests.md, "Ranks"). A rank opens once the main line is done at the
+ * rank below (its last main quest cleared there).
  */
 export interface RankRules {
   /** How many ranks every quest has; rank 1 is the quest as written. */
   readonly count: number
   /** Enemy levels each rank adds over the one below. */
   readonly offset: number
-  /** A chapter's rank r opens once the main line is `(r − 1) × chaptersAhead` chapters further on (and the quest before it, at rank r, is cleared). */
-  readonly chaptersAhead: number
   /** The twists of each rank, rank 2 first; a rank has its own and those of the ranks below. */
   readonly twists: ReadonlyArray<Twist>
-  /** A higher rank's first clear and chests pay `crystals` times rank 1's crystals, and gold worth `goldRuns` runs at its level. */
-  readonly crystals: number
+  /** A higher rank's first clear pays gold worth `goldRuns` runs at its level; its chests `chestGold` of their gold (at its level). */
   readonly goldRuns: number
-  /** A higher rank's first clear pays `dust`, each of its chests `chestDust` (and `chestGold` of their gold): ranks are off the main line. */
-  readonly dust: number
-  readonly chestDust: number
   readonly chestGold: number
 }
 
-export const rankRules: RankRules = { count: 3, offset: 12, chaptersAhead: 2, twists: ["eliteLeaders", "shieldLeaders"], crystals: 0.4, goldRuns: 2, dust: 30, chestDust: 40, chestGold: 0.9 }
+export const rankRules: RankRules = { count: 3, offset: 12, twists: ["eliteLeaders", "shieldLeaders"], goldRuns: 2, chestGold: 0.9 }
 
 /** Whose stars open a set of chests: a chapter's quests (by chapter id), or the secondary quests. */
 export type StarGroup = keyof typeof chapters | "secondary"
 
-const quest = (spec: Omit<QuestSpec, "relic"> & { readonly relic?: QuestRelic }): QuestSpec => ({ relic: null, ...spec })
+const quest = (spec: Omit<QuestSpec, "relic" | "rankUnlocks"> & { readonly relic?: QuestRelic; readonly rankUnlocks?: QuestSpec["rankUnlocks"] }): QuestSpec => ({ relic: null, rankUnlocks: {}, ...spec })
 /** What a main quest brings, in a line for its card. */
 const brings = (text: string, novelty: Novelty): QuestSpec["introduces"] => ({ text, novelty })
 const enemy = (kind: EnemyKind): Novelty => ({ kind: "enemy", enemy: kind })
@@ -147,9 +144,9 @@ const shields: Novelty = { kind: "shield" }
 const character = (id: CharacterId): Unlock => ({ kind: "character", id })
 const aspect = (id: AspectId): Unlock => ({ kind: "aspect", id })
 const relic = (id: RelicId): Unlock => ({ kind: "relic", id })
-const pays = (experience: number, crystals: number, gold: number, unlocks: ReadonlyArray<Unlock> = []): Rewards => ({ experience, currencies: { crystals, gold }, unlocks })
-/** A side quest's first clear: dust on top, a little less gold than a main quest's (dust is off the main line's, see docs/relics.md). */
-const sidePays = (experience: number, crystals: number, gold: number, dust: number, unlocks: ReadonlyArray<Unlock> = []): Rewards => ({ experience, currencies: { crystals, gold, dust }, unlocks })
+const pays = (gold: number, unlocks: ReadonlyArray<Unlock> = []): Rewards => ({ currencies: { gold }, unlocks })
+/** A side quest's first clear: a little less gold than a main quest's. */
+const sidePays = pays
 
 /**
  * How far above the main quest that opens it a side quest, a rank, or a
@@ -181,7 +178,7 @@ export const quests = {
     after: null,
     introduces: brings("Chasers: they run in and swipe twice. Dodge, then strike back", enemy("chaser")),
     stars: [atLeast("healthLeft", 25), atLeast("perfectDodges", 3), atMost("hitsTaken", 3)],
-    rewards: pays(60, 75, 300)
+    rewards: pays(300)
   }),
   crossfire: quest({
     name: "Crossfire",
@@ -193,7 +190,7 @@ export const quests = {
     after: "firstBlood",
     introduces: brings("Shooters: they keep away and shoot ahead of you. Close the distance", enemy("shooter")),
     stars: [atLeast("healthLeft", 25), atLeast("longestChain", 2), atMost("hitsTaken", 3)],
-    rewards: pays(90, 75, 350)
+    rewards: pays(350)
   }),
   packLeader: quest({
     name: "The Pack Leader",
@@ -205,7 +202,7 @@ export const quests = {
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
     stars: [atMost("hitsTaken", 8), atLeast("breaks", 15), atLeast("healthLeft", 60)],
-    rewards: pays(140, 110, 700, [character("tidecaller")])
+    rewards: pays(700, [character("tidecaller")])
   }),
 
   // Chapter 2: the Swordsman and the Gunner.
@@ -220,7 +217,7 @@ export const quests = {
     introduces: brings("Swarmers: tiny, fast, in packs. Reach many at once", enemy("swarmer")),
     stars: [nobodyFalls(), atLeast("ultimates", 3), atMost("hitsTaken", 3)],
     // The first relic, as relics open: Echo, a ring out of every combo, on the first clear (its slot's introduction).
-    rewards: pays(160, 75, 900, [relic("echo")]),
+    rewards: pays(900, [relic("echo")]),
     relic: { id: "echo", rank: 1 }
   }),
   emberKiln: quest({
@@ -233,7 +230,7 @@ export const quests = {
     after: "theSwarm",
     introduces: brings("Fire in the floor: it burns whoever walks in, enemies too", hazard("fire")),
     stars: [atMost("hitsTaken", 10), nobodyFalls(), atLeast("healthLeft", 45)],
-    rewards: pays(180, 75, 1050)
+    rewards: pays(1050)
   }),
   ironGuard: quest({
     name: "Iron Guard",
@@ -245,7 +242,7 @@ export const quests = {
     after: "emberKiln",
     introduces: brings("Guardians: heavy, patient, and a thrust that reaches far", enemy("guardian")),
     stars: [atMost("hitsTaken", 8), atLeast("breaks", 24), atMost("hitsTaken", 2)],
-    rewards: pays(200, 75, 1200),
+    rewards: pays(1200),
     relic: { id: "repel", rank: 1 }
   }),
   bulwark: quest({
@@ -258,10 +255,11 @@ export const quests = {
     after: "ironGuard",
     introduces: brings("A burning champion guardian, among the citadel's fire", champion("guardian")),
     stars: [atMost("hitsTaken", 9), nobodyFalls(), atMost("hitsTaken", 4)],
-    rewards: pays(220, 110, 1750, [aspect("duelist")])
+    rankUnlocks: { 2: [aspect("gatheringEdge")] },
+    rewards: pays(1750, [aspect("duelist")])
   }),
 
-  // Chapter 3: two characters, and whoever the Spirit Call brings.
+  // Chapter 3: two characters.
   ashfall: quest({
     name: "Ashfall",
     line: "main",
@@ -272,7 +270,7 @@ export const quests = {
     after: "bulwark",
     introduces: brings("Elites: bigger, tougher, and carrying fire or water", elites("fire", "water")),
     stars: [atMost("hitsTaken", 9), atLeast("ultimates", 4), atMost("hitsTaken", 3)],
-    rewards: pays(240, 110, 3000),
+    rewards: pays(3000),
     relic: { id: "emberHeart", rank: 1 }
   }),
   outposts: quest({
@@ -285,7 +283,7 @@ export const quests = {
     after: "ashfall",
     introduces: brings("Snipers: a fast thunder bullet from afar. Walls stop it", enemy("sniper")),
     stars: [nobodyFalls(), atLeast("perfectDodges", 5), atMost("hitsTaken", 3)],
-    rewards: pays(260, 110, 3500),
+    rewards: pays(3500),
     relic: { id: "featherstep", rank: 3 }
   }),
   theBrute: quest({
@@ -298,7 +296,7 @@ export const quests = {
     after: "outposts",
     introduces: brings("Brutes: slow and heavy. Break them, then punish them", enemy("brute")),
     stars: [atMost("hitsTaken", 9), atLeast("breaks", 20), atMost("hitsTaken", 4)],
-    rewards: pays(280, 110, 4000),
+    rewards: pays(4000),
     relic: { id: "opportunist", rank: 1 }
   }),
   bruteKing: quest({
@@ -311,7 +309,8 @@ export const quests = {
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
     stars: [atMost("hitsTaken", 10), atLeast("longestChain", 3), atMost("hitsTaken", 3)],
-    rewards: pays(300, 150, 5000, [character("bastion")])
+    rankUnlocks: { 3: [aspect("grapple")] },
+    rewards: pays(5000, [character("bastion")])
   }),
 
   // Chapter 4: three characters.
@@ -325,7 +324,7 @@ export const quests = {
     after: "bruteKing",
     introduces: brings("Water in the floor: it soaks whoever wades in, and soaked blows hit softer", hazard("water")),
     stars: [nobodyFalls(), atLeast("ultimates", 5), atLeast("healthLeft", 75)],
-    rewards: pays(320, 110, 4200)
+    rewards: pays(4200)
   }),
   bombardment: quest({
     name: "Bombardment",
@@ -337,7 +336,7 @@ export const quests = {
     after: "highTide",
     introduces: brings("Firebombers: bombs over walls, flames where they burst", enemy("charger")),
     stars: [atMost("hitsTaken", 8), atLeast("perfectDodges", 6), atLeast("healthLeft", 80)],
-    rewards: pays(340, 110, 4550)
+    rewards: pays(4550)
   }),
   shieldWall: quest({
     name: "Shield Wall",
@@ -349,7 +348,7 @@ export const quests = {
     after: "bombardment",
     introduces: brings("Shields: any foe may carry one. Shots stop against it; go around", shields),
     stars: [atMost("hitsTaken", 11), atLeast("breaks", 22), atMost("hitsTaken", 3)],
-    rewards: pays(360, 110, 4900),
+    rewards: pays(4900),
     relic: { id: "undertow", rank: 1 }
   }),
   swarmMother: quest({
@@ -362,7 +361,8 @@ export const quests = {
     after: "shieldWall",
     introduces: brings("A champion swarmer of the tide: small, fast, and hard to pin down", champion("swarmer")),
     stars: [nobodyFalls(), atLeast("ultimates", 6), atMost("hitsTaken", 4)],
-    rewards: pays(380, 150, 6300, [aspect("whirlpool")])
+    rankUnlocks: { 2: [aspect("scattergun")] },
+    rewards: pays(6300, [aspect("whirlpool")])
   }),
 
   // Chapter 5.
@@ -376,7 +376,7 @@ export const quests = {
     after: "swarmMother",
     introduces: brings("Stalkers: keep away, and they blink to you. Their mark shows where", enemy("stalker")),
     stars: [atLeast("healthLeft", 40), atLeast("longestChain", 2), atMost("hitsTaken", 2)],
-    rewards: pays(400, 150, 6300),
+    rewards: pays(6300),
     relic: { id: "bedrock", rank: 2 }
   }),
   theCloister: quest({
@@ -389,7 +389,7 @@ export const quests = {
     after: "sandstorm",
     introduces: brings("Wardens: they ward an ally from afar. Cross the tether to break it", enemy("warden")),
     stars: [atMost("hitsTaken", 9), nobodyFalls(), atLeast("healthLeft", 75)],
-    rewards: pays(420, 150, 7000),
+    rewards: pays(7000),
     relic: { id: "anchor", rank: 2 }
   }),
   thunderhead: quest({
@@ -402,7 +402,7 @@ export const quests = {
     after: "theCloister",
     introduces: brings("Thunder elites: they strike the soaked hardest", elites("thunder")),
     stars: [atMost("hitsTaken", 10), atLeast("ultimates", 6), atMost("hitsTaken", 3)],
-    rewards: pays(440, 150, 7700),
+    rewards: pays(7700),
     relic: { id: "afterimage", rank: 1 }
   }),
   theWarlord: quest({
@@ -415,7 +415,8 @@ export const quests = {
     after: "thunderhead",
     introduces: brings("A champion stalker charged with thunder, hunting you through every wave", champion("stalker")),
     stars: [nobodyFalls(), atLeast("perfectDodges", 10), atMost("hitsTaken", 2)],
-    rewards: pays(460, 190, 9100)
+    rankUnlocks: { 3: [aspect("tremor")] },
+    rewards: pays(9100)
   }),
 
   // Chapter 6.
@@ -429,7 +430,7 @@ export const quests = {
     after: "theWarlord",
     introduces: brings("Juggernauts: armored until broken. Break them, then strike", enemy("juggernaut")),
     stars: [atMost("hitsTaken", 10), atLeast("breaks", 40), atMost("hitsTaken", 2)],
-    rewards: pays(480, 150, 9100)
+    rewards: pays(9100)
   }),
   powderKeg: quest({
     name: "Powder Keg",
@@ -441,7 +442,7 @@ export const quests = {
     after: "ironclad",
     introduces: brings("Volatiles: they burst where they fall, their own side too", enemy("volatile")),
     stars: [nobodyFalls(), atLeast("perfectDodges", 8), atMost("hitsTaken", 3)],
-    rewards: pays(500, 150, 9800),
+    rewards: pays(9800),
     relic: { id: "lastStand", rank: 3 }
   }),
   galeForce: quest({
@@ -454,7 +455,7 @@ export const quests = {
     after: "powderKeg",
     introduces: brings("Gale casters: a cone of wind that blows everyone around", enemy("galeCaster")),
     stars: [atLeast("healthLeft", 40), atLeast("ultimates", 7), atMost("hitsTaken", 2)],
-    rewards: pays(520, 150, 10500),
+    rewards: pays(10500),
     relic: { id: "tailwind", rank: 1 }
   }),
   colossus: quest({
@@ -467,7 +468,8 @@ export const quests = {
     after: "galeForce",
     introduces: brings("A burning champion juggernaut, armored until broken", champion("juggernaut")),
     stars: [atMost("hitsTaken", 10), atLeast("longestChain", 3), atMost("hitsTaken", 4)],
-    rewards: pays(560, 190, 12600, [aspect("riptide")]),
+    rankUnlocks: { 2: [aspect("lightningRod")] },
+    rewards: pays(12600, [aspect("riptide")]),
     relic: { id: "overflow", rank: 3 }
   }),
 
@@ -482,7 +484,7 @@ export const quests = {
     after: "packLeader",
     introduces: null,
     stars: [atMost("hitsTaken", 8), atLeast("perfectDodges", 4), atLeast("healthLeft", 50)],
-    rewards: sidePays(80, 40, 250, 30, [relic("momentum")]),
+    rewards: sidePays(250, [relic("momentum")]),
     relic: { id: "momentum", rank: 1 }
   }),
   nightOfPacks: quest({
@@ -495,7 +497,7 @@ export const quests = {
     after: "bulwark",
     introduces: null,
     stars: [atMost("hitsTaken", 9), atLeast("ultimates", 3), atMost("hitsTaken", 2)],
-    rewards: sidePays(120, 45, 560, 40),
+    rewards: sidePays(560),
     relic: { id: "counterpoint", rank: 2 }
   }),
   eliteHunt: quest({
@@ -508,7 +510,7 @@ export const quests = {
     after: "bruteKing",
     introduces: null,
     stars: [atMost("hitsTaken", 10), atLeast("breaks", 18), atLeast("healthLeft", 45)],
-    rewards: sidePays(160, 60, 1400, 50),
+    rewards: sidePays(1400),
     relic: { id: "staticCharge", rank: 2 }
   }),
   forgePit: quest({
@@ -521,7 +523,7 @@ export const quests = {
     after: "bruteKing",
     introduces: null,
     stars: [atMost("hitsTaken", 10), atLeast("breaks", 20), atLeast("healthLeft", 50)],
-    rewards: sidePays(180, 60, 2000, 55),
+    rewards: sidePays(2000),
     relic: { id: "glassEdge", rank: 2 }
   }),
   floodgate: quest({
@@ -534,7 +536,7 @@ export const quests = {
     after: "swarmMother",
     introduces: null,
     stars: [nobodyFalls(), atLeast("perfectDodges", 8), atMost("hitsTaken", 3)],
-    rewards: sidePays(200, 60, 2800, 60),
+    rewards: sidePays(2800),
     relic: { id: "secondWind", rank: 2 }
   }),
   stormFront: quest({
@@ -547,7 +549,7 @@ export const quests = {
     after: "theWarlord",
     introduces: null,
     stars: [atLeast("healthLeft", 50), atLeast("longestChain", 2), atMost("hitsTaken", 2)],
-    rewards: sidePays(240, 60, 4200, 70),
+    rewards: sidePays(4200),
     relic: { id: "mendingStep", rank: 3 }
   }),
   /** Heavy Ground (id `stoneTrial`, from when it was a rematch of the Brute): the heaviest foes. */
@@ -561,7 +563,7 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [atMost("hitsTaken", 9), atLeast("breaks", 40), atLeast("healthLeft", 50)],
-    rewards: sidePays(280, 75, 5600, 80)
+    rewards: sidePays(5600)
   }),
   strangeCompany: quest({
     name: "Strange Company",
@@ -573,7 +575,7 @@ export const quests = {
     after: "colossus",
     introduces: null,
     stars: [nobodyFalls(), atLeast("ultimates", 10), atMost("hitsTaken", 3)],
-    rewards: sidePays(300, 75, 6150, 80)
+    rewards: sidePays(6150)
   })
 }
 
@@ -589,15 +591,16 @@ const elementsOf = (group: StarGroup): ReadonlyArray<ElementId> =>
   [...new Set(Object.values(quests).filter((quest) => (group === "secondary" ? quest.line === "secondary" : quest.chapter === group)).map((quest) => quest.element))]
 
 /**
- * A chest of `group` at `stars`: crystals, gold (and dust, off the main
- * line), and the material of each element its quests pay (a clear's worth
- * at `level`, its quests' enemy level, times `materialShare`). Only those:
- * other elements' come from their quests and trials, where they are farmed.
+ * A chest of `group` at `stars`: gold, and the essence of each element its
+ * quests pay (a clear's worth at `level`, its quests' enemy level, times
+ * `materialShare`). Only those: other elements' come from their quests and
+ * trials, where they are farmed. At a higher rank a chest holds its rank's
+ * grade instead (see `chestRewards`).
  */
-const chest = (group: StarGroup, stars: number, crystals: number, gold: number, level: number, materialShare = 1, dust = 0): ChestSpec => ({
+const chest = (group: StarGroup, stars: number, gold: number, level: number, materialShare = 1): ChestSpec => ({
   stars,
   level,
-  rewards: { crystals, gold, ...(dust > 0 ? { dust } : {}), ...Object.fromEntries(elementsOf(group).map((element) => [materialOf(element), Math.max(1, Math.round(worthAt(materialRules, level) * materialShare))])) }
+  rewards: { gold, ...Object.fromEntries(elementsOf(group).map((element) => [materialOf(element), Math.max(1, Math.round(worthAt(materialRules, level) * materialShare))])) }
 })
 
 /**
@@ -607,49 +610,49 @@ const chest = (group: StarGroup, stars: number, crystals: number, gold: number, 
  */
 export const chests: { readonly [Group in StarGroup]: ReadonlyArray<ChestSpec> } = {
   one: [
-    chest("one", 3, 45, 350, 3),
-    chest("one", 6, 45, 500, 3),
-    chest("one", 9, 75, 900, 3)
+    chest("one", 3, 350, 3),
+    chest("one", 6, 500, 3),
+    chest("one", 9, 900, 3)
   ],
   // Four chests share evenly what three held before.
   two: [
-    chest("two", 3, 50, 950, 8, 0.75),
-    chest("two", 6, 50, 950, 8, 0.75),
-    chest("two", 9, 50, 950, 8, 0.75),
-    chest("two", 12, 50, 1000, 8, 0.75)
+    chest("two", 3, 950, 8, 0.75),
+    chest("two", 6, 950, 8, 0.75),
+    chest("two", 9, 950, 8, 0.75),
+    chest("two", 12, 1000, 8, 0.75)
   ],
   three: [
-    chest("three", 3, 50, 1900, 13, 0.75),
-    chest("three", 6, 50, 1900, 13, 0.75),
-    chest("three", 9, 50, 1900, 13, 0.75),
-    chest("three", 12, 50, 2000, 13, 0.75)
+    chest("three", 3, 1900, 13, 0.75),
+    chest("three", 6, 1900, 13, 0.75),
+    chest("three", 9, 1900, 13, 0.75),
+    chest("three", 12, 2000, 13, 0.75)
   ],
   four: [
-    chest("four", 3, 70, 2800, 19, 0.75),
-    chest("four", 6, 70, 2800, 19, 0.75),
-    chest("four", 9, 70, 2800, 19, 0.75),
-    chest("four", 12, 70, 2800, 19, 0.75)
+    chest("four", 3, 2800, 19, 0.75),
+    chest("four", 6, 2800, 19, 0.75),
+    chest("four", 9, 2800, 19, 0.75),
+    chest("four", 12, 2800, 19, 0.75)
   ],
   five: [
-    chest("five", 3, 70, 4100, 25, 0.75),
-    chest("five", 6, 70, 4100, 25, 0.75),
-    chest("five", 9, 70, 4100, 25, 0.75),
-    chest("five", 12, 70, 4150, 25, 0.75)
+    chest("five", 3, 4100, 25, 0.75),
+    chest("five", 6, 4100, 25, 0.75),
+    chest("five", 9, 4100, 25, 0.75),
+    chest("five", 12, 4150, 25, 0.75)
   ],
   six: [
-    chest("six", 3, 70, 5400, 31, 0.75),
-    chest("six", 6, 70, 5400, 31, 0.75),
-    chest("six", 9, 70, 5400, 31, 0.75),
-    chest("six", 12, 70, 5500, 31, 0.75)
+    chest("six", 3, 5400, 31, 0.75),
+    chest("six", 6, 5400, 31, 0.75),
+    chest("six", 9, 5400, 31, 0.75),
+    chest("six", 12, 5500, 31, 0.75)
   ],
-  // The side quests' chests hold dust too, and a little less gold (dust is off the main line's). One every
+  // The side quests' chests hold a little less gold. One every
   // 6 stars: the first three each hold what two did when they came every 3 stars, the last (all eight side
   // quests at three stars) what the 21-star one did; accounts count theirs the same way (migration 0007).
   secondary: [
-    chest("secondary", 6, 40, 850, 15, 3 / 4, 60),
-    chest("secondary", 12, 50, 2000, 15, 3 / 4, 80),
-    chest("secondary", 18, 60, 3000, 15, 3 / 4, 80),
-    chest("secondary", 24, 40, 1750, 15, 3 / 4, 50)
+    chest("secondary", 6, 850, 15, 3 / 4),
+    chest("secondary", 12, 2000, 15, 3 / 4),
+    chest("secondary", 18, 3000, 15, 3 / 4),
+    chest("secondary", 24, 1750, 15, 3 / 4)
   ]
 }
 

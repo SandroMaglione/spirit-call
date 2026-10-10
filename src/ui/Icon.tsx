@@ -1,7 +1,7 @@
 import { CurrencyIcon } from "./CurrencyIcon.tsx"
 import { EmblemIcon } from "./EmblemIcon.tsx"
 import type { EmblemKind } from "./EmblemIcon.tsx"
-import type { CurrencyId } from "../content/currencies.ts"
+import type { CurrencyArt } from "./CurrencyIcon.tsx"
 
 /** Menu symbols share a fixed box, independent of the device's text font. */
 const paths = {
@@ -43,10 +43,10 @@ const paths = {
   look: "M7 21c-2 0-3-1.5-3-3 0-3 3-3 3-6 1.5 0 3 1.5 3 3.5S9 21 7 21z M11 12l8-8 2 2-8 8"
 } as const
 
-export type IconName = keyof typeof paths | CurrencyId | EmblemKind
+export type IconName = keyof typeof paths | CurrencyArt | EmblemKind
 
 export const Icon = ({ name }: { readonly name: IconName }) => {
-  if (name === "gold" || name === "crystals" || name === "dust" || name === "sigils") return <CurrencyIcon currency={name} />
-  if (name === "xp" || name === "call" || name === "wind" || name === "water" || name === "fire" || name === "thunder" || name === "rock") return <EmblemIcon kind={name} />
+  if (name === "gold" || name === "refined" || name === "core") return <CurrencyIcon currency={name} />
+  if (name === "xp" || name === "collection" || name === "wind" || name === "water" || name === "fire" || name === "thunder" || name === "rock") return <EmblemIcon kind={name} />
   return <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={name === "more" ? 4 : 1.8} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>
 }

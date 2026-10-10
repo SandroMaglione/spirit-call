@@ -6,7 +6,6 @@ import * as Schema from "effect/Schema"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createAccount, recordRun, withEarnedChests } from "../src/account/account.ts"
-import { activeBanner } from "../src/account/calls.ts"
 import type { Account as AccountValue, Play } from "../src/account/account.ts"
 import { fromRecord, toRecord } from "../src/account/convert.ts"
 import { Account, Earned } from "../src/api/schemas.ts"
@@ -266,18 +265,32 @@ describe("accounts", () => {
     database.close()
   })
 
-  it("makes calls and keeps them made", async () => {
-    const handler = server({ devTools: true, secureCookies: true })
-    const player = await signUp(handler)
-    await player.send("POST", "/api/dev/open-calls")
-    // The banner running now: the others cannot be called.
-    const banner = activeBanner(defaultTuning, Date.now()).banner
-    const called = await player.send("POST", `/api/banners/${banner}/calls`, { count: 10 })
-    expect(called.status).toBe(200)
-    expect(called.body.results).toHaveLength(10)
+  it("saves a team to load in a tap, refusing a slot there is not or a team it does not own", async () => {
+    const player = await signUp(server())
+    const team = { team: ["swordsman"], aspects: {}, relics: {} }
+    const saved = await player.send("PUT", "/api/account/teams/2", { team })
+    expect(saved.status).toBe(200)
+    expect((await player.send("GET", "/api/account")).body.saved).toEqual({ 2: team })
+    expect(await player.send("PUT", "/api/account/teams/4", { team })).toMatchObject({ status: 409, body: { kind: "badSlot" } })
+    expect(await player.send("PUT", "/api/account/teams/1", { team: { ...team, team: ["gunner"] } })).toMatchObject({ status: 409, body: { kind: "notOwned" } })
+    expect((await player.send("PUT", "/api/account/teams/2", { team: null })).body.saved).toEqual({})
+  })
+
+  it("plays an audition: its character lent alone, and the account's once its last part is cleared", async () => {
+    const player = await signUp(server())
+    const audition = defaultTuning.tracks.gunnerAudition
+    // Its parts open after the end of chapter two: clear the main line up to it, then the three parts, in order.
+    const main = (Object.keys(defaultTuning.quests) as Array<QuestId>).filter((quest) => defaultTuning.quests[quest].line === "main")
+    const upTo = main.slice(0, main.indexOf(audition.tiers[0]!.opens) + 1)
+    const runs = [
+      ...upTo.map((quest) => played({ kind: "quest", quest })),
+      ...[1, 2, 3].map((tier) => played({ kind: "tier", track: "gunnerAudition", tier }, { ...run, team: ["gunner"], challenge: audition.tiers[tier - 1]!.challenge }))
+    ]
+    const answers = await runs.reduce<Promise<Array<number>>>((before, body) => before.then(async (statuses) => [...statuses, (await player.send("POST", "/api/runs", body)).status]), Promise.resolve([]))
+    expect(answers.every((status) => status === 200)).toBe(true)
     const account = (await player.send("GET", "/api/account")).body
-    expect(account.calls).toEqual(called.body.account.calls)
-    expect(account.calls.history).toHaveLength(10)
+    expect(account.owned.characters.gunner).toBeDefined()
+    expect(account.owned.aspects.marksman).toBeDefined()
   })
 
   it("answers the dev tools only where they are on", async () => {
@@ -329,18 +342,16 @@ describe("logs", () => {
 })
 
 describe("relics and looks on the server", () => {
-  it("buys a relic's next tier and a look with dust, wears the look, and equips relics in the team", async () => {
+  it("wears a look, and equips relics in the team", async () => {
     const handler = server({ devTools: true, secureCookies: true })
     const player = await signUp(handler)
-    // Nothing to buy yet: relics open with the Spirit Call.
-    expect(await player.send("POST", "/api/shop/looks/starfall")).toMatchObject({ status: 409, body: { kind: "relicsLocked" } })
     await player.send("POST", "/api/dev/unlock-everything")
     const account = (await player.send("GET", "/api/account")).body
     expect(account.owned.relics.echo).toMatchObject({ tier: 3 })
-    await player.send("POST", "/api/dev/open-calls")
-    expect(await player.send("POST", "/api/shop/relics/echo")).toMatchObject({ status: 409, body: { kind: "maxTier" } })
-    const bought = await player.send("POST", "/api/shop/looks/starfall")
-    expect(bought).toMatchObject({ status: 409, body: { kind: "notForSale" } })
+    // There is no shop: nothing is sold.
+    expect((await player.send("POST", "/api/shop/looks/starfall")).status).toBe(404)
+    // Relics open after chapter one.
+    await (["firstBlood", "crossfire", "packLeader"] as const).reduce<Promise<unknown>>((before, quest) => before.then(() => player.send("POST", "/api/runs", played({ kind: "quest", quest }))), Promise.resolve())
     const worn = await player.send("PUT", "/api/characters/gunner/looks/tint", { cosmetic: "blueFlame" })
     expect(worn.status).toBe(200)
     expect(worn.body.worn).toEqual({ gunner: { tint: "blueFlame" } })
@@ -352,7 +363,7 @@ describe("relics and looks on the server", () => {
     expect(twice).toMatchObject({ status: 409, body: { kind: "badRelics" } })
     // A run keeps who played it with what relics, at their tier.
     await player.send("POST", "/api/runs", played({ kind: "quest", quest: "firstBlood" }, { ...run, team: ["gunner", "swordsman"] }))
-    const [kept] = (await player.send("GET", "/api/runs")).body
+    const kept = (await player.send("GET", "/api/runs")).body.at(-1)
     expect(kept.team[0].relics).toEqual([{ slot: "strike", id: "echo", tier: 3 }, { slot: "element", id: "emberHeart", tier: 3 }])
     expect(kept.team[1].relics).toEqual([{ slot: "dash", id: "repel", tier: 3 }])
   })
@@ -362,12 +373,11 @@ describe("account rows", () => {
   const account = fromRecord(defaultTuning, newAccount, toRecord(fromRecord(defaultTuning, newAccount, {
     id: "player",
     createdAt: 5,
-    experience: 120,
     totals: { runs: 3, clears: 2, kills: 90, secondsPlayed: 410.5 },
-    wallet: { gold: 300, crystals: 20, fireEssence: 2 },
+    wallet: { gold: 300, fireEssence: 2, refinedEssence: 4 },
     owned: {
       characters: { swordsman: { unlockedAt: 5, experience: 40, ascension: 0 }, gunner: { unlockedAt: 6, experience: 0, ascension: 0 } },
-      aspects: { marksman: { unlockedAt: 7, copies: 2 } },
+      aspects: { marksman: { unlockedAt: 7 } },
       relics: { echo: { unlockedAt: 7, tier: 2 }, emberHeart: { unlockedAt: 8, tier: 1 } },
       cosmetics: { starfall: { unlockedAt: 8 }, blueFlame: { unlockedAt: 9 } }
     },
@@ -375,38 +385,23 @@ describe("account rows", () => {
       firstBlood: { "1": { attempts: 2, clears: 1, firstClearedAt: 9, stars: [0, 2] }, "2": { attempts: 1, clears: 1, firstClearedAt: 12, stars: [0, 1, 2], perfectAt: 12 } },
       packLeader: { "1": { attempts: 1, clears: 1, firstClearedAt: 10, stars: [0] } }
     },
-    hardcore: { gauntlet: { "1": { attempts: 2, clears: 1, firstClearedAt: 5, rewardedPeriod: 3, bestWave: 7 } } },
+    hardcore: { gauntlet: { "1": { attempts: 2, clears: 1, firstClearedAt: 5, bestWave: 7 } } },
     discoveries: { flare: { madeAt: 5 } },
     chests: { one: { "1": 1, "2": 0 } },
-    calls: {
-      seed: 42,
-      sinceCharacter: 3,
-      sinceRare: 1,
-      firstCharacter: false,
-      focus: {},
-      history: [
-        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "sigils", amount: 1 } },
-        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "aspect", id: "arc" } },
-        { at: 8, banner: Object.keys(defaultTuning.banners)[0]!, result: { kind: "cosmetic", id: "blueFlame" } }
-      ]
-    },
     selection: { team: ["gunner", "swordsman"], aspects: { gunner: "marksman" }, relics: { gunner: { strike: "echo", element: "emberHeart" } }, play: { kind: "tier", track: "gauntlet", tier: 1 } },
-    worn: { gunner: { trail: "starfall", tint: "blueFlame" } }
+    worn: { gunner: { trail: "starfall", tint: "blueFlame" } },
+    saved: { "1": { team: ["swordsman", "gunner"], aspects: { gunner: "marksman" }, relics: { swordsman: { strike: "echo" } } } }
   }, 10).account), 10).account
 
   it("turns an account into rows and back, unchanged", () => {
     expect(fromRecord(defaultTuning, newAccount, fromRows(toRows("player", toRecord(account)))!, 10).account).toEqual(account)
   })
 
-  it("keeps relics at their tier, the team's relics, the looks worn, and the Call's results", () => {
+  it("keeps relics at their tier, the team's relics, the looks worn, and the saved teams", () => {
     expect(account.owned.relics).toEqual({ echo: { unlockedAt: 7, tier: 2 }, emberHeart: { unlockedAt: 8, tier: 1 } })
     expect(account.selection.relics).toEqual({ gunner: { strike: "echo", element: "emberHeart" } })
     expect(account.worn).toEqual({ gunner: { trail: "starfall", tint: "blueFlame" } })
-    expect(account.calls.history.map((record) => record.result)).toEqual([
-      { kind: "sigils", amount: 1 },
-      { kind: "aspect", id: "arc" },
-      { kind: "cosmetic", id: "blueFlame" }
-    ])
+    expect(account.saved).toEqual({ 1: { team: ["swordsman", "gunner"], aspects: { gunner: "marksman" }, relics: { swordsman: { strike: "echo" } } } })
   })
 
   it("drops rows naming content that no longer exists, and repairs what depended on it", () => {

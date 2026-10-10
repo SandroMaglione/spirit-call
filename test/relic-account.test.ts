@@ -1,17 +1,14 @@
 /**
- * Relics, looks, and dust on the account (see docs/relics.md): relics open
- * with the Spirit Call, each is one quest's at one rank (its perfect
- * clear unlocks it; every other perfect clear pays dust), they sit once in
- * a team in open slots that fit, and the shop sells a relic's next tier
- * and its own looks for dust; looks are worn per character; the main line gives the first
- * relic, side quests, ranks, and hardcore tiers give dust, and a few hard
- * tiers give a look once.
+ * Relics and looks on the account (see docs/relics.md, docs/collection.md):
+ * relics open after chapter one, each is one quest's at one rank (its
+ * perfect clear unlocks it) and grows with its quest (the perfect clears
+ * one and two ranks up give its tiers), they sit once in a team in open
+ * slots that fit; looks are worn per character; the main line gives the
+ * first relic, and hardcore tiers give looks and late tiers once.
  */
 import { describe, expect, it } from "vitest"
 
-import { buildOf, buyCosmetic, buyRelic, createAccount, earn, earnedResources, questRewards, raiseRelic, recordRun, relicsOpen, select, slotOpen, unlock, wear } from "../src/account/account.ts"
-import { perfectDustAt } from "../src/content/relics.ts"
-import { rankLevel } from "../src/content/ranks.ts"
+import { buildOf, createAccount, raiseRelic, recordRun, relicsOpen, select, slotOpen, unlock, wear } from "../src/account/account.ts"
 import type { Account, Play } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -20,7 +17,7 @@ import { noTally, tallyMeeting } from "../src/content/stars.ts"
 const tuning = defaultTuning
 const now = 5000
 const cleared = (quest: string) => ({ [quest]: { 1: { attempts: 1, clears: 1, firstClearedAt: 1500, stars: [0] } } })
-/** A new account that cleared the end of chapter one (calls and relics open), owning the Gunner too. */
+/** A new account that cleared the end of chapter one (relics open), owning the Gunner too. */
 const opened = (id = "relics-1"): Account => {
   const fresh = createAccount(tuning, newAccount, id, 1000)
   return unlock(tuning, { ...fresh, quests: { ...fresh.quests, ...cleared(tuning.relicRules.opensAfter) } }, { kind: "character", id: "gunner" }, 1000)
@@ -31,7 +28,7 @@ const quest = (id: string): Play => ({ kind: "quest", quest: id as "firstBlood" 
 const clear = { cleared: true, progress: 1, reactions: [], tally: noTally, wave: 6, kills: 10, time: 120 } as const
 
 describe("owning relics", () => {
-  it("open with the Spirit Call, Survival not yet (it has no relics)", () => {
+  it("open after chapter one, Survival not yet", () => {
     expect(relicsOpen(tuning, createAccount(tuning, newAccount, "a", 1))).toBe(false)
     expect(relicsOpen(tuning, opened())).toBe(true)
     expect(slotOpen(tuning, opened(), "strike")).toBe(true)
@@ -72,30 +69,6 @@ describe("relics in a team", () => {
   })
 })
 
-describe("the shop", () => {
-  it("sells a relic owned one tier up for dust, never past the last", () => {
-    const rich = earn(relic(opened(), "echo"), { dust: 1000 })
-    expect(buyRelic(tuning, rich, "repel", now)).toMatchObject({ ok: false, refusal: { kind: "notOwned" } })
-    const second = buyRelic(tuning, rich, "echo", now)
-    expect(second.ok && second.value.owned.relics.echo?.tier).toBe(2)
-    expect(second.ok && second.value.wallet.dust).toBe(1000 - tuning.relicRules.prices[2])
-    // No stock to wait on: the next tier at once, as far as the dust goes.
-    const third = second.ok ? buyRelic(tuning, earn(second.value, { dust: tuning.relicRules.prices[3] }), "echo", now) : second
-    expect(third.ok && third.value.owned.relics.echo?.tier).toBe(3)
-    expect(third.ok && buyRelic(tuning, third.value, "echo", now)).toMatchObject({ ok: false, refusal: { kind: "maxTier" } })
-    expect(buyRelic(tuning, relic(opened(), "echo"), "echo", now)).toMatchObject({ ok: false, refusal: { kind: "notEnough", currency: "dust" } })
-  })
-
-  it("sells its own looks once, for dust; the Call's and rewards' are not for sale", () => {
-    const rich = earn(opened(), { dust: 1000 })
-    const bought = buyCosmetic(tuning, rich, "starfall", now)
-    expect(bought.ok && bought.value.owned.cosmetics.starfall).toBeDefined()
-    expect(bought.ok && buyCosmetic(tuning, bought.value, "starfall", now)).toMatchObject({ ok: false, refusal: { kind: "notForSale" } })
-    expect(buyCosmetic(tuning, rich, "aurora", now)).toMatchObject({ ok: false, refusal: { kind: "notForSale" } })
-    expect(buyCosmetic(tuning, rich, "lastLight", now)).toMatchObject({ ok: false, refusal: { kind: "notForSale" } })
-  })
-})
-
 describe("looks", () => {
   const account = unlock(tuning, unlock(tuning, opened(), { kind: "cosmetic", id: "starfall" }, 1), { kind: "cosmetic", id: "blueFlame" }, 1)
 
@@ -113,7 +86,7 @@ describe("looks", () => {
 
 describe("rewards", () => {
   it("give the first relic in chapter two at tier I, and nothing more when owned already", () => {
-    const account = { ...opened(), experience: 1e6 }
+    const account = opened()
     const first = recordRun(tuning, account, quest("theSwarm"), { ...clear, challenge: "swarm", team: ["swordsman"] }, now)
     expect(first.earned.rewards?.unlocks).toEqual([{ kind: "relic", id: "echo" }])
     expect(first.account.owned.relics.echo?.tier).toBe(1)
@@ -121,41 +94,34 @@ describe("rewards", () => {
     expect(owned.account.owned.relics.echo?.tier).toBe(2)
   })
 
-  it("unlock a quest's relic at tier I on the perfect clear (every star in one run) of the rank it is on, and pay dust for every other perfect clear, once", () => {
+  it("unlock a quest's relic on the perfect clear (every star in one run) of its rank, and its tiers on the perfect clears above it, once", () => {
     // Iron Guard unlocks Repel at rank I.
     expect(tuning.quests.ironGuard.relic).toEqual({ id: "repel", rank: 1 })
-    const account = { ...opened(), experience: 1e6, quests: { ...opened().quests, ...cleared("theSwarm"), ...cleared("emberKiln") } }
+    const account = { ...opened(), quests: { ...opened().quests, ...cleared("theSwarm"), ...cleared("emberKiln") } }
     const perfect = { ...clear, challenge: tuning.quests.ironGuard.challenge, team: ["swordsman" as const], tally: tallyMeeting(tuning.quests.ironGuard.stars) }
     const first = recordRun(tuning, account, quest("ironGuard"), perfect, now)
     expect(first.earned.stars).toEqual([0, 1, 2])
-    expect(first.earned.perfect).toEqual({ relic: "repel", dust: 0 })
+    expect(first.earned.perfect).toEqual({ unlock: { kind: "relic", id: "repel" } })
     expect(first.account.owned.relics.repel?.tier).toBe(1)
     expect(first.account.quests.ironGuard?.[1]?.perfectAt).toBe(now)
     // Again: nothing new (the perfect clear is had).
     const again = recordRun(tuning, first.account, quest("ironGuard"), perfect, now + 1)
     expect(again.earned.perfect).toBeNull()
-    expect(again.account.quests.ironGuard?.[1]?.perfectAt).toBe(now)
     // Two stars in one run and the third in another never make a perfect clear.
     const twoThenOne = recordRun(tuning, account, quest("ironGuard"), { ...perfect, tally: { ...perfect.tally, hitsTaken: 999 } }, now)
     expect(twoThenOne.earned.perfect).toBeNull()
     expect(recordRun(tuning, twoThenOne.account, quest("ironGuard"), { ...perfect, tally: { ...perfect.tally, perfectDodges: 0, longestChain: 0, breaks: 0, ultimates: 0 } }, now).earned.perfect).toBeNull()
-    // Rank II of the same quest: dust by its enemies' level, never a tier (tiers are bought).
-    const atTwo = recordRun(tuning, { ...first.account, quests: { ...first.account.quests, ironGuard: { ...first.account.quests.ironGuard, 2: { attempts: 0, clears: 0, firstClearedAt: null, stars: [] } } } }, { kind: "quest", quest: "ironGuard", rank: 2 }, perfect, now)
-    const dust = perfectDustAt(tuning.relicRules, rankLevel(tuning, "ironGuard", 2))
-    expect(atTwo.earned.perfect).toEqual({ relic: null, dust })
-    expect(atTwo.account.owned.relics.repel?.tier).toBe(1)
-    // Paid into the wallet, and counted in what the run earned (with the rank's first-clear and chest dust).
-    const earnedDust = earnedResources(tuning, atTwo.earned).find((each) => each.id === "dust")?.total ?? 0
-    expect((atTwo.account.wallet.dust ?? 0) - (first.account.wallet.dust ?? 0)).toBe(earnedDust)
-    expect(earnedDust).toBeGreaterThanOrEqual(dust)
-    // A quest with no relic pays dust; more for stronger enemies.
+    // Rank II of the same quest: the relic's tier II.
+    const atTwo = recordRun(tuning, first.account, { kind: "quest", quest: "ironGuard", rank: 2 }, perfect, now)
+    expect(atTwo.earned.perfect).toEqual({ unlock: { kind: "relicTier", id: "repel", tier: 2 } })
+    expect(atTwo.account.owned.relics.repel?.tier).toBe(2)
+    // A quest with no relic: its perfect clear is its own goal.
     const none = recordRun(tuning, account, quest("emberKiln"), { ...perfect, challenge: tuning.quests.emberKiln.challenge, tally: tallyMeeting(tuning.quests.emberKiln.stars) }, now)
-    expect(none.earned.perfect).toEqual({ relic: null, dust: perfectDustAt(tuning.relicRules, tuning.quests.emberKiln.enemyLevel) })
-    expect(perfectDustAt(tuning.relicRules, 1)).toBeLessThan(perfectDustAt(tuning.relicRules, 58))
-    // The Swarm gives Echo on its first clear (its slot's introduction): its perfect clear pays dust, one relic card, not two.
-    const swarm = recordRun(tuning, { ...opened(), experience: 1e6 }, quest("theSwarm"), { ...perfect, challenge: "swarm", tally: tallyMeeting(tuning.quests.theSwarm.stars) }, now)
+    expect(none.earned.perfect).toEqual({ unlock: null })
+    // The Swarm gives Echo on its first clear (its slot's introduction): its perfect clear at rank I gives nothing more.
+    const swarm = recordRun(tuning, opened(), quest("theSwarm"), { ...perfect, challenge: "swarm", tally: tallyMeeting(tuning.quests.theSwarm.stars) }, now)
     expect(swarm.earned.rewards?.unlocks).toEqual([{ kind: "relic", id: "echo" }])
-    expect(swarm.earned.perfect).toEqual({ relic: null, dust: perfectDustAt(tuning.relicRules, tuning.quests.theSwarm.enemyLevel) })
+    expect(swarm.earned.perfect).toEqual({ unlock: null })
     expect(swarm.account.owned.relics.echo?.tier).toBe(1)
   })
 
@@ -163,26 +129,19 @@ describe("rewards", () => {
     const ranks = Object.values(tuning.quests).flatMap((spec) => spec.relic === null ? [] : [spec.relic.rank])
     expect(ranks.length).toBe(Object.keys(tuning.relics).length)
     for (const rank of [1, 2, 3]) expect(ranks.filter((each) => each === rank).length).toBeGreaterThan(0)
-    // Night of Packs unlocks Counterpoint at rank II: its rank I perfect clear pays dust.
     expect(tuning.quests.nightOfPacks.relic).toEqual({ id: "counterpoint", rank: 2 })
   })
 
-  it("pay dust off the main line: side quests and ranks, never a main quest's first clear", () => {
-    expect(tuning.quests.theSwarm.rewards.currencies.dust).toBeUndefined()
-    expect(tuning.quests.holdTheLine.rewards.currencies.dust).toBeGreaterThan(0)
-    expect(questRewards(tuning, "theSwarm", 2).currencies.dust).toBe(tuning.ranks.dust)
-  })
-
-  it("give a hard tier's look the first time its rewards come, never twice", () => {
-    const track = tuning.tracks.untilFall, index = track.tiers.findIndex((tier) => (tier.rewards.cosmetics ?? []).length > 0)
+  it("give a tier's look and relic tiers on its first clear, never twice", () => {
+    const track = tuning.tracks.untilFall, index = track.tiers.findIndex((tier) => tier.rewards.unlocks.some((item) => item.kind === "cosmetic"))
     const spec = track.tiers[index]!
-    const account = { ...opened(), experience: 1e6, quests: { ...opened().quests, ...cleared(spec.opens) } }
+    const account = { ...opened(), quests: { ...opened().quests, ...cleared(spec.opens) } }
     const play: Play = { kind: "tier", track: "untilFall", tier: index + 1 }
     const first = recordRun(tuning, account, play, { ...clear, challenge: spec.challenge, team: ["swordsman"] }, now)
-    expect(first.earned.rewards?.unlocks).toEqual(spec.rewards.cosmetics!.map((id) => ({ kind: "cosmetic", id })))
-    const week = tuning.reset.days * 24 * 60 * 60 * 1000
-    const again = recordRun(tuning, first.account, play, { ...clear, challenge: spec.challenge, team: ["swordsman"] }, now + week)
-    expect(again.earned.rewards?.unlocks).toEqual([])
-    expect(again.earned.rewards?.currencies.dust).toBeGreaterThan(0)
+    expect(first.earned.rewards?.unlocks).toEqual(spec.rewards.unlocks)
+    // (with what the quest that opens it gives, met now too)
+    expect(first.earned.granted).toEqual(expect.arrayContaining([...spec.rewards.unlocks]))
+    const again = recordRun(tuning, first.account, play, { ...clear, challenge: spec.challenge, team: ["swordsman"] }, now + 1)
+    expect(again.earned.rewards).toBeNull()
   })
 })

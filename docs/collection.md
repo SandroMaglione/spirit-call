@@ -119,6 +119,13 @@ Two things are earned, and both only level characters:
   player has reached: the top trial ranks pay Core Essence on every
   clear, the one place to farm the last levels, and they open last.
 
+- **Catching up.** The account's three highest characters set the pace: a
+  level below the third of them costs a fifth of its gold
+  (`progression.character.catchUp`). A character who joins late (from an
+  audition, at its level) catches up quickly, while the team that leads
+  pays in full, so the main team reaches the top with the collection and
+  the other seven follow in the hours after.
+
 There is no account level, no shop, and no reset: a hardcore tier pays
 once, on its first clear, like a quest.
 
@@ -129,4 +136,16 @@ once, on its first clear, like a quest.
 trials to farm), at a number of runs an hour, and reports the hour each
 character, aspect, and relic arrives, when the collection is complete,
 when the main team reaches 60, and when all ten do. Run it after changing
-rewards, costs, or what opens when.
+rewards, costs, or what opens when. Measured on October 10, 2026, at 15
+runs an hour:
+
+| Player | Everything owned | All ten at 60 |
+|---|---|---|
+| Skilled (no run lost) | 46 h | 87 h |
+| The one the pace is for (a quarter of runs lost) | 56 h | 107 h |
+| Struggling (two runs in five lost) | 65 h | 125 h |
+
+The model plays an audition's part twice (the second a clear) and a
+perfect clear that gives something three times; a player who needs more
+takes longer, which the hours above do not count. `test/new-account.test.ts`
+keeps the middle row near its targets.
