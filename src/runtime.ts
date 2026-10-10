@@ -30,6 +30,7 @@ export const initialResources = (
   Team: team,
   TeamSwitch: { cooldown: 0 },
   Guard: noGuard,
+  Rebrace: { remaining: 0 },
   Challenge: challenge,
   EnemyLevel: enemyLevel,
   Twist: twist,

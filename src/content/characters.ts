@@ -225,6 +225,44 @@ export const characters = {
     impact: 0.9,
     weight: 0.8,
     skills: { special: "sparkStep", ultimate: "stormFlurry" }
+  }),
+  /**
+   * Water, Blade, guardian (a working name): steady in close, a guardian
+   * who times blows rather than outlasting them. The Brace takes one blow
+   * whole and answers it, disarming the attacker; the Floodgate soaks the
+   * crowd and, for a while, readies every brace that takes a blow at once.
+   */
+  tidewarden: character({
+    name: "Tidewarden",
+    stats: { hp: 82, atk: 78, def: 26, speed: 285 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "water",
+    class: "blade",
+    role: "guardian",
+    dash: {},
+    impact: 1.15,
+    weight: 1.25,
+    skills: { special: "brace", ultimate: "floodgate" }
+  }),
+  /**
+   * Rock, Hammer, attacker (a working name): the slow, heavy hitter, frail
+   * for her strength and slow on her feet, her dash short. The Fault Line
+   * splits the ground along her aim; the Landslide shakes it ever wider
+   * around her.
+   */
+  quarry: character({
+    name: "Quarry",
+    stats: { hp: 74, atk: 110, def: 12, speed: 260 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "rock",
+    class: "hammer",
+    role: "attacker",
+    dash: { distance: 150, cooldown: 1.25 },
+    impact: 1.4,
+    weight: 1.5,
+    skills: { special: "faultLine", ultimate: "landslide" }
   })
 }
 

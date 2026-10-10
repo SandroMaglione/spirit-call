@@ -6,7 +6,9 @@
     "stormcaller",
     "stonekeeper",
     "bastion",
-    "sparkfist"
+    "sparkfist",
+    "tidewarden",
+    "quarry"
   ],
   "weapons": [
     "trainingBlade",
@@ -35,7 +37,11 @@
     "stoneGuard",
     "stoneRise",
     "sparkStep",
-    "stormFlurry"
+    "stormFlurry",
+    "brace",
+    "floodgate",
+    "faultLine",
+    "landslide"
   ],
   "challenges": [
     "swarm",
@@ -203,14 +209,17 @@
     "withStonekeeper",
     "withBastion",
     "shatter",
-    "withSparkfist"
+    "withSparkfist",
+    "withTidewarden",
+    "withQuarry"
   ],
   "classes": [
     "blade",
     "gun",
     "disc",
     "staff",
-    "gauntlets"
+    "gauntlets",
+    "hammer"
   ],
   "aspects": [
     "duelist",
@@ -222,7 +231,9 @@
     "whirlpool",
     "lightningRod",
     "flurry",
-    "grapple"
+    "grapple",
+    "furrow",
+    "tremor"
   ],
   "relics": [
     "opportunist",
@@ -288,7 +299,8 @@
   "banners": [
     "stormAndStone",
     "emberAndStorm",
-    "sparkAndFrost"
+    "sparkAndFrost",
+    "forgeAndGale"
   ],
   "retired": {
     "skills": [

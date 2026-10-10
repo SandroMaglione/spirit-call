@@ -13,6 +13,7 @@ const shapes = {
   disc: "M16 3A13 13 0 1 1 3 16 13 13 0 0 1 16 3ZM16 8A8 8 0 1 0 24 16 8 8 0 0 0 16 8ZM16 12l4 4-4 4-4-4Z",
   staff: "M25 2 30 7 27 12 22 14 18 10 20 5Z M20 12l-3 8-13 9 8-14Z M12 9 4 14l5-7Z",
   gauntlets: "M6 13V9a3 3 0 0 1 6 0V8a3 3 0 0 1 6 0v1a3 3 0 0 1 6 0v4h1a3 3 0 0 1 3 3v4a8 8 0 0 1-8 8h-6a8 8 0 0 1-8-8Z M10 21h10v2H10Z",
+  hammer: "M3 9 13 2 21 10 14 20Z M15 18l2-2 13 13-2 2Z",
   dash: "M29 4C25 18 19 25 7 29 14 23 18 16 20 10L9 16Z M3 9h11l-3 3H1Z M2 18h8l-3 3H1Z",
   bladeWave: "M3 9C11 9 14 2 23 3 31 4 29 13 22 12 28 9 25 6 22 7 16 9 10 14 3 12Z M2 17C14 19 22 12 28 16 35 22 25 29 20 23 27 25 28 21 24 20 17 22 9 22 2 20Z M4 26h10l-4 3H4Z",
   flareJump: "M18 2 18 11 24 6 28 17 27 24 20 29 11 29 5 24 4 17 10 9 10 19 15 14Z M3 5h9L8 9H1Z M1 12h6l-3 3H1Z",
@@ -23,7 +24,11 @@ const shapes = {
   sparkTotem: "M13 10h6v16l5 4H8l5-4Z M16 3l7 7-7 5-7-5Z M7 2 2 11h4l-2 7 7-10H7Z M27 3l-4 8h4l-2 6 6-9h-4Z",
   thunderclap: "M16 1 7 12h7l-2 10 12-14h-8Z M3 14l4 3-2 5 5 5-6-1-3-6Z M29 14l-4 3 2 5-5 5 6-1 3-6Z M13 25h6v2h-6Z M15 23h2v6h-2Z",
   sparkStep: "M19 2 11 15h6l-4 15 13-18h-7l5-10Z M1 10h9l-2 3H1Z M1 17h7l-2 3H1Z M1 24h6l-2 3H1Z",
-  stormFlurry: "M5 22a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M16 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M27 21a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M7 21l4-8h3l2-4 1 1-1 4h-3l-4 8Z M18 10l3 7h-3l6 5-1 1-7-5h3l-2-7Z"
+  stormFlurry: "M5 22a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M16 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M27 21a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M7 21l4-8h3l2-4 1 1-1 4h-3l-4 8Z M18 10l3 7h-3l6 5-1 1-7-5h3l-2-7Z",
+  brace: "M27 2h3v3L8 27l-3-3Z M3 22l7 7-2 2-7-7Z M20 20l9 9-2 2-9-9Z M24 15l6-3 1 2-6 3Z M15 24l-3 6 2 1 3-6Z",
+  faultLine: "M1 27l8-6 4 3 6-9 4 3 8-14 1 2-8 15-4-3-6 9-4-3-8 6Z M8 18l2-5 3 2-2 3Z M17 12l2-5 3 2-2 3Z M24 6l2-5 3 2-2 3Z",
+  landslide: "M16 15a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M7 19a9 9 0 0 1 18 0h-3a6 6 0 0 0-12 0Z M2 19a14 14 0 0 1 28 0h-3a11 11 0 0 0-22 0Z M1 26h30v3H1Z",
+  floodgate: "M16 1A15 15 0 1 1 1 16 15 15 0 0 1 16 1ZM16 5A11 11 0 1 0 27 16 11 11 0 0 0 16 5Z M6 18c3 0 4-4 7-4s4 4 6 4 4-4 7-4v5c-3 0-4 4-7 4s-4-4-6-4-4 4-7 4Z"
 } satisfies Record<AbilityKind, string>
 
 export const AbilityIcon = ({ kind, charged = false }: { readonly kind: AbilityKind; readonly charged?: boolean }) => {

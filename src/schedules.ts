@@ -30,7 +30,8 @@ import { BuildPoise } from "./features/poise.ts"
 import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
-import { CastEarthrise, UpdateRocks } from "./features/earthrise.ts"
+import { CastBraces, CounterBraces, TickBraces } from "./features/brace.ts"
+import { CastEarthrise, CastFaults, CastQuakes, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { RecordRunLog } from "./features/run-log.ts"
@@ -98,6 +99,7 @@ const gameplay = Game.Schedule.when(
   TickBench,
   // A guard raised (or lost), and a body landing, before she moves: rooted meanwhile; what lands is cast this step.
   RaiseGuards,
+  TickBraces,
   LandAirborne,
   ControlPlayer,
   // Casts (from skills, and from passives queued last step) are carried out
@@ -117,7 +119,10 @@ const gameplay = Game.Schedule.when(
   CastThunderclaps,
   CastFlurries,
   CastGuards,
+  CastBraces,
   CastEarthrise,
+  CastFaults,
+  CastQuakes,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
@@ -148,6 +153,7 @@ const gameplay = Game.Schedule.when(
   ApplyStateBursts,
   ArcCharges,
   ShatterPlates,
+  CounterBraces,
   ApplyDamage,
   MendInTraining,
   ProcessPendingSpawns,

@@ -28,7 +28,9 @@ export const classIcons: { readonly [Class in ClassId]: string } = {
   // A staff and its orb.
   staff: icon(`<path d="M5 21L15.5 8.5"/><circle cx="17.5" cy="6.5" r="3" fill="currentColor" fill-opacity="0.35"/><path d="M21 2l-1 1M14 3l1 1M21 10l-1-1"/>`),
   // A fist: three knuckles over the palm.
-  gauntlets: icon(`<path d="M5 11h13a2.5 2.5 0 0 1 2.5 2.5V16a6 6 0 0 1-6 6H10a5 5 0 0 1-5-5z" fill="currentColor" fill-opacity="0.35"/><path d="M5 11V8a2 2 0 0 1 4 0v3M9 11V7a2 2 0 0 1 4 0v4M13 11V8a2 2 0 0 1 4 0v3M9 16h6"/>`)
+  gauntlets: icon(`<path d="M5 11h13a2.5 2.5 0 0 1 2.5 2.5V16a6 6 0 0 1-6 6H10a5 5 0 0 1-5-5z" fill="currentColor" fill-opacity="0.35"/><path d="M5 11V8a2 2 0 0 1 4 0v3M9 11V7a2 2 0 0 1 4 0v4M13 11V8a2 2 0 0 1 4 0v3M9 16h6"/>`),
+  // A hammer: a heavy head on a long haft.
+  hammer: icon(`<path d="M4 6l7-3 4 4-3 7-4-4z" fill="currentColor" fill-opacity="0.35"/><path d="M10 10l10 10"/>`)
 }
 
 /** The dash: speed lines into an arrow. */
@@ -57,7 +59,15 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   // Spark Step: a bolt darting forward, speed lines behind it.
   sparkStep: icon(`<path d="M2 9h5M2 13h4M2 17h5"/><path d="M13 3l-4 9h5l-3 9 9-12h-5l3-6z" fill="currentColor" fill-opacity="0.35"/>`),
   // Storm Flurry: a bolt hopping between three points.
-  stormFlurry: icon(`<circle cx="4.5" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19.5" cy="17" r="2"/><path d="M6 16l2.5-5h2l1-3M13.5 8l1.5 4h-2l4 3.5"/>`)
+  stormFlurry: icon(`<circle cx="4.5" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19.5" cy="17" r="2"/><path d="M6 16l2.5-5h2l1-3M13.5 8l1.5 4h-2l4 3.5"/>`),
+  // Brace: a blade held across, a blow breaking on it.
+  brace: icon(`<path d="M4 18L18 4M15 4h3v3M5 15l4 4"/><path d="M15 15l5 5M19 13l2-1M13 19l-1 2M20 17h2" />`),
+  // Fault Line: a crack running ahead, rocks along it.
+  faultLine: icon(`<path d="M2 20l5-4 3 2 4-6 3 2 5-9"/><path d="M6 14l1-3 2 1M13 10l1-3 2 1M18 6l1-3 2 1"/>`),
+  // Landslide: three rings shaking out from a slam.
+  landslide: icon(`<circle cx="12" cy="14" r="2.5" fill="currentColor" fill-opacity="0.35"/><path d="M6.5 14a5.5 5.5 0 0 1 11 0M3.5 14a8.5 8.5 0 0 1 17 0M1 18h22"/>`),
+  // Floodgate: a wave breaking out of a ring.
+  floodgate: icon(`<circle cx="12" cy="12" r="9"/><path d="M5 14c2 0 2-2 3.5-2s1.5 2 3.5 2 2-2 3.5-2 1.5 2 3.5 2"/><path d="M12 3v4M12 17v4"/>`)
 }
 
 /** The state the one on the field is in, over her health bar. */

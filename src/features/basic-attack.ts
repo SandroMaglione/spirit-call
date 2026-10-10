@@ -19,12 +19,13 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"
 import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
+import type { Shockwave } from "../content/classes.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim, Airborne, Arrival,
-  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
+  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, Bracing, RunScope, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
 import { attackOf, damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
@@ -69,6 +70,25 @@ export const moveArea = (move: MeleeMove, position: Vec2, aim: Vec2): Pick<Hitbo
       return { area: { kind: "lane", origin: position, direction: aim, length: move.reach, halfWidth: move.width / 2 }, pushAlong: aim }
     case "spin":
       return { area: { kind: "circle", center: position, radius: move.reach } }
+  }
+}
+
+/**
+ * The ways a swing's shockwaves run (see `Shockwave`): a thrust's straight
+ * ahead, an arc's spread evenly over it, a spin's evenly all around.
+ */
+export const shockwaveDirections = (move: MeleeMove, wave: Shockwave, aim: Vec2): ReadonlyArray<Vec2> => {
+  const base = Math.atan2(aim.y, aim.x)
+  const along = (angle: number): Vec2 => ({ x: Math.cos(angle), y: Math.sin(angle) })
+  switch (move.shape) {
+    case "thrust":
+      return [aim]
+    case "arc": {
+      const spread = (move.arcDegrees * Math.PI) / 180
+      return Array.from({ length: wave.fan }, (_, index) => along(base + (wave.fan === 1 ? 0 : (index / (wave.fan - 1) - 0.5) * spread)))
+    }
+    case "spin":
+      return Array.from({ length: wave.ring }, (_, index) => along(base + (index / wave.ring) * Math.PI * 2))
   }
 }
 
@@ -119,6 +139,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         dash: Game.Query.read(Dash),
         member: Game.Query.read(Member),
         raising: Game.Query.optional(Raising),
+        bracing: Game.Query.optional(Bracing),
         airborne: Game.Query.optional(Airborne)
       },
       with: [Player]
@@ -157,8 +178,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     // An empty magazine reloads before she fires again (a press meanwhile stays buffered).
     const reloading = Math.max(0, current.reloading - dt)
     const spent = current.reloading > 0 && reloading <= 0 ? 0 : current.spent
-    // Raising a guard (see `Raising`), she does not attack.
-    const ready = cooldown <= 0 && reloading <= 0 && !data.raising.present && grounded
+    // Raising a guard (see `Raising`) or bracing (see `Bracing`), she does not attack.
+    const ready = cooldown <= 0 && reloading <= 0 && !data.raising.present && !data.bracing.present && grounded
     // A press during a dash, or just after it, is the dash strike: once per dash, cutting a recovery short.
     const dash = data.dash.get()
     const sinceDashStrike = current.sinceDashStrike + dt
@@ -263,6 +284,27 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
           remaining: spec.active,
           hit: []
         }]))
+        // Her class's shockwaves, on from the end of the swing (not out of a dash).
+        if (spec.shockwave !== null && !striking) {
+          const wave = spec.shockwave
+          const boxes = wallBoxes(queries.walls.each())
+          const blow = { ...struck, damage: struck.damage * wave.share, hitStop: 0 }
+          for (const direction of shockwaveDirections(move, wave, aim)) {
+            const start = scale(direction, Math.max(0, move.reach - wave.radius))
+            const blocked = sweepCircleBoxes(position, start, wave.radius, boxes)
+            // A swing against a wall sends nothing through it.
+            if (blocked !== undefined) continue
+            commands.spawnIn(RunScope, makeProjectile({ x: position.x + start.x, y: position.y + start.y }, scale(direction, wave.speed), {
+              faction: "player",
+              style: "wave",
+              radius: wave.radius,
+              blow,
+              range: move.reach * wave.reach,
+              pierce: Number.MAX_SAFE_INTEGER,
+              hit: []
+            }))
+          }
+        }
       }
       // The lunge: an impulse that carries the player `lungeDistance` along the aim
       // (knockback travels its speed / decay before it dies out).

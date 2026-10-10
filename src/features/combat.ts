@@ -15,6 +15,8 @@ import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
   Arc,
+  BraceCounter,
+  Bracing,
   Challenge,
   CombatStats,
   Damage,
@@ -67,6 +69,7 @@ import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
+import { braceTakes } from "./brace.ts"
 import { plateTakes } from "./guard.ts"
 import { damageBonusPercent, damageTakenPercent, PassiveHolders, secondWindPercent } from "./passives.ts"
 import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
@@ -234,7 +237,8 @@ const Damageable = Game.Query({
     stunned: Game.Query.optional(Stunned),
     immortal: Game.Query.optional(Immortal),
     member: Game.Query.optional(Member),
-    passives: Game.Query.optional(Passives)
+    passives: Game.Query.optional(Passives),
+    bracing: Game.Query.optional(Bracing)
   }
 })
 
@@ -263,6 +267,8 @@ const Benched = Game.Query({
  *
  * A stone plate (see `GuardEffect`) takes an enemy's blow on the one on the
  * field whole: nothing of it lands, and the plate shatters (`PlateShatter`).
+ * A brace (see `BraceEffect`) takes the first one on her while she braces,
+ * and she answers it (`BraceCounter`).
  *
  * A team member who falls stays in the team, fallen (`SwitchCharacter`
  * brings in the next one); an enemy that dies is gone. Energy from damage
@@ -332,6 +338,14 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
       hitStop = Math.max(hitStop, guard.effect.hitStop)
       commands.spawnIn(RunScope, Game.Command.spawn([PlateShatter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, effect: guard.effect, atk: guard.atk, charges: guard.charges }]))
+      continue
+    }
+    if (data.bracing.present && braceTakes(true, data.player.present, damage.faction, blow.periodic)) {
+      const { effect, blow: answer, slot } = data.bracing.get()
+      commands.remove(entity.id, Bracing)
+      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+      hitStop = Math.max(hitStop, effect.hitStop)
+      commands.spawnIn(RunScope, Game.Command.spawn([BraceCounter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, bracer: Game.Entity.handle(entity.id, Position), effect, blow: answer, slot }]))
       continue
     }
 

@@ -195,20 +195,27 @@ const thunderSpirit: BodyLook = {
   drops: { rate: 26, colors: [0xffe66d, 0xc9b8ff, 0x7a6bff], size: 1.8, kind: "ember" }
 }
 
+/** Bastion's rock spirit: it walks the ground, shedding grit and gold. */
+const rockSpirit: BodyLook = {
+  kind: "model", model: "rockSpirit", widthFactor: 1.5,
+  heightFactor: view.bodyHeightFactor, grounded: true,
+  moments: { ...spiritMoments(3, "stoneRise", "stoneGuard"), run: { clip: "Run", distance: 115 } },
+  eyes: spiritEyes,
+  drops: { rate: 12, colors: [0xbfa181, 0x8e7660, 0xffd17e], size: 1.5, kind: "wisp" }
+}
+
 export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
-  bastion: {
-    kind: "model", model: "rockSpirit", widthFactor: 1.5,
-    heightFactor: view.bodyHeightFactor, grounded: true,
-    moments: { ...spiritMoments(3, "stoneRise", "stoneGuard"), run: { clip: "Run", distance: 115 } },
-    eyes: spiritEyes,
-    drops: { rate: 12, colors: [0xbfa181, 0x8e7660, 0xffd17e], size: 1.5, kind: "wisp" }
-  },
+  bastion: rockSpirit,
   swordsman: windSpirit,
   gunner: fireSpirit,
   tidecaller: waterSpirit,
   stormcaller: thunderSpirit,
   // A placeholder until her own spirit: the thunder spirit, turned an electric blue.
-  sparkfist: { ...thunderSpirit, moments: spiritMoments(4, "sparkStep", "stormFlurry"), tint: { hue: -80, saturation: 1.3, lightness: 1.05 } }
+  sparkfist: { ...thunderSpirit, moments: spiritMoments(4, "sparkStep", "stormFlurry"), tint: { hue: -80, saturation: 1.3, lightness: 1.05 } },
+  // A placeholder until her own spirit: the water spirit, a deeper sea green.
+  tidewarden: { ...waterSpirit, moments: spiritMoments(4, "brace", "floodgate"), tint: { hue: -30, saturation: 0.85, lightness: 0.8 } },
+  // A placeholder until her own spirit: the rock spirit, a darker, redder stone.
+  quarry: { ...rockSpirit, moments: { ...spiritMoments(3, "faultLine", "landslide"), run: { clip: "Run", distance: 115 } }, tint: { hue: -15, saturation: 1.2, lightness: 0.8 } }
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({

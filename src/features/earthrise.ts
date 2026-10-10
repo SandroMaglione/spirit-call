@@ -5,13 +5,18 @@
  * ring around her. Each rock's crack follows its target for a moment (`Rock`),
  * then the rock erupts where the crack is: its blow on every body of the
  * other side it catches, thrown away from it, stunned, and its break bar
- * filled (a full one breaks, see `BuildPoise`).
+ * filled (a full one breaks, see `BuildPoise`). A fault (see `FaultEffect`)
+ * raises its rocks down a line toward the aim; a quake (see `QuakeEffect`)
+ * slams around the caster, each slam a rock under her, wider than the last.
  */
-import type { EarthriseEffect } from "../content/skills.ts"
+import { earthrise } from "../content/skills.ts"
+import type { EarthriseEffect, FaultEffect, QuakeEffect } from "../content/skills.ts"
 import { normalizeOr, rotate, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { Cast, Damage, Elite, Enemy, Explosion, Game, Health, Hurtbox, Invulnerable, Poise, Position, Rock, RunScope, Stunned, Time, Tuning } from "../schema.ts"
 import type { Faction } from "../schema.ts"
+import { sweepCircleBoxes } from "../physics/collide.ts"
+import { Walls, wallBoxes } from "./motion.ts"
 import { poiseOf } from "./poise.ts"
 import { castBlow } from "./skills.ts"
 
@@ -155,5 +160,47 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
       }
     }
     events.explosion.emit({ at, radius: effect.size, faction: rock.faction, kind: "eruption", heavy: effect.heavy, element: effect.element })
+  }
+})
+
+/** The rock a fault or a slam raises: an Earthrise's, of `size`, holding what it catches as `stun` and `breakFill` say. */
+const rockOf = (effect: FaultEffect | QuakeEffect, size: number, warning: number, stun: number, breakFill: number): EarthriseEffect =>
+  earthrise({ radius: 0, rocks: 1, warning, interval: 0, size, ring: 0, stun, breakFill, power: effect.power, element: effect.element, knockback: effect.knockback, hitStop: effect.hitStop, heavy: effect.heavy })
+
+/** Where the rocks of a fault `length` long (already shortened by walls) rise: evenly down it, the last at its end. */
+export const faultPoints = (effect: FaultEffect, from: Vec2, direction: Vec2, length: number): ReadonlyArray<Vec2> =>
+  Array.from({ length: effect.rocks }, (_, index) => scale(direction, (length * (index + 1)) / effect.rocks)).map((along) => ({ x: from.x + along.x, y: from.y + along.y }))
+
+/** Faults cast: their rocks down a line toward the aim, shortened by walls, one after the other. */
+export const CastFaults = Game.System("Shooter/CastFaults", {
+  queries: { walls: Walls },
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ queries, events, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "fault") continue
+    const blocked = sweepCircleBoxes(cast.from, scale(cast.direction, effect.length), effect.size / 4, wallBoxes(queries.walls.each()))
+    const length = effect.length * (blocked?.time ?? 1)
+    const rock = rockOf(effect, effect.size, effect.warning, effect.stun, effect.breakFill)
+    const blow = castBlow(cast, effect)
+    faultPoints(effect, cast.from, cast.direction, length).forEach((at, index) => {
+      commands.spawnIn(RunScope, Game.Command.spawn([Rock, { at, target: null, remaining: effect.warning + index * effect.interval, effect: rock, faction: cast.faction, blow }]))
+    })
+  }
+})
+
+/** Quakes cast: a slam under her for each, following her, wider each time; the last holds what it catches. */
+export const CastQuakes = Game.System("Shooter/CastQuakes", {
+  events: { cast: Game.System.readEvent(Cast) }
+}, ({ events, commands }) => {
+  for (const cast of events.cast.all()) {
+    const effect = cast.effect
+    if (effect.kind !== "quake") continue
+    const blow = castBlow(cast, effect)
+    for (let slam = 0; slam < effect.slams; slam++) {
+      const last = slam === effect.slams - 1
+      const rock = rockOf(effect, effect.first + slam * effect.growth, effect.interval, last ? effect.stun : 0, last ? effect.breakFill : 0)
+      commands.spawnIn(RunScope, Game.Command.spawn([Rock, { at: cast.from, target: cast.caster, remaining: slam * effect.interval, effect: rock, faction: cast.faction, blow }]))
+    }
   }
 })

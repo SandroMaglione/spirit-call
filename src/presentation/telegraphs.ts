@@ -7,7 +7,7 @@ import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Burst, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
+import { AttackPhase, Attacker, Body, Bracing, Burst, Projectile, Velocity, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Player, Rebrace, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
@@ -28,6 +28,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     elites: Game.Query({ selection: { elite: Game.Query.read(Elite), enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
     discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
+    waves: Game.Query({ selection: { projectile: Game.Query.read(Projectile), velocity: Game.Query.read(Velocity), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     attackers: Game.Query({
       selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), position: Game.Query.read(Position), body: Game.Query.read(Body) }
     }),
@@ -247,6 +248,17 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       }
     }
   }
+  // Shockwaves: a crescent of the floor heaving up, bowed the way it runs.
+  for (const { data } of queries.waves.each()) {
+    const projectile = data.projectile.get()
+    if (projectile.style !== "wave") continue
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const velocity = data.velocity.get()
+    const heading = Math.atan2(velocity.y, velocity.x)
+    const radius = projectile.radius * view.shockwave.crescent
+    const color = projectile.blow.element === null ? view.shockwave.color : view.elements[projectile.blow.element.id]
+    g.strokeArc(at.x - Math.cos(heading) * radius, at.y - Math.sin(heading) * radius, radius * 2, heading - 0.7, heading + 0.7, view.shockwave.width, color, view.shockwave.alpha)
+  }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
   for (const { data } of queries.discs.each()) {
     const disc = data.disc.get()
@@ -288,5 +300,33 @@ export const DrawMarks = Game.System("Shooter/DrawMarks", {
     const radius = data.body.get().radius + view.marks.gap
     g.strokeCircle(at.x, at.y, radius, view.marks.width, view.marks.color, view.marks.outline * fade * pulse)
     g.strokeCircle(at.x, at.y, radius - view.marks.inner, view.marks.width - 1, view.marks.color, view.marks.outline * fade * pulse * 0.6)
+  }
+})
+
+/**
+ * A brace held (see `Bracing`): a bright ring of water at her feet where
+ * her answer would reach, filling in as the moment passes; while a
+ * Floodgate readies her braces (see `Rebrace`), a faint ring stays.
+ */
+export const DrawBraces = Game.System("Shooter/DrawBraces", {
+  queries: {
+    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), bracing: Game.Query.optional(Bracing) }, with: [Player] })
+  },
+  resources: { rebrace: Game.System.readResource(Rebrace) },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ queries, resources, services }) => {
+  const g = services.host.telegraphs
+  const [player] = queries.player.each()
+  if (player === undefined) return
+  const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
+  const color = view.elements.water
+  if (player.data.bracing.present) {
+    const { remaining, effect } = player.data.bracing.get()
+    const left = Math.max(0, Math.min(1, remaining / effect.window))
+    g.fillCircle(at.x, at.y, effect.radius, color, view.braces.fill * (1 - left))
+    g.strokeCircle(at.x, at.y, effect.radius, view.braces.width, color, view.braces.outline)
+  } else if (resources.rebrace.get().remaining > 0) {
+    const pulse = 0.7 + 0.3 * Math.sin((performance.now() / 1000) * Math.PI * 2 / view.braces.pulse)
+    g.strokeCircle(at.x, at.y, view.braces.ready, view.braces.width - 1, color, view.braces.outline * 0.4 * pulse)
   }
 })

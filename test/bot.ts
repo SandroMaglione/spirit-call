@@ -71,6 +71,7 @@ import {
   Projectile,
   RunScope,
   RunResult,
+  Skills,
   Tuning as TuningResource,
   Velocity,
   Wall,
@@ -104,6 +105,8 @@ export interface Battlefield {
     /** Her own dash: how far, how fast, how long untouchable (see `dashOf`). */
     readonly dash: { readonly distance: number; readonly duration: number; readonly invulnerability: number }
     readonly invulnerable: number
+    /** Her skills off cooldown (energy aside). */
+    readonly skillReady: { readonly special: boolean; readonly ultimate: boolean }
   } | undefined
   readonly enemies: ReadonlyArray<{ readonly id: number; readonly at: Vec2 }>
   readonly threats: ReadonlyArray<Threat>
@@ -125,7 +128,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
         dash: Game.Query.read(Dash),
         invulnerable: Game.Query.read(Invulnerable),
         member: Game.Query.read(Member),
-        passives: Game.Query.optional(Passives)
+        passives: Game.Query.optional(Passives),
+        skills: Game.Query.read(Skills)
       },
       with: [Player]
     }),
@@ -236,7 +240,8 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       charges: player.data.dash.get().charges,
       maxCharges: dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)).charges,
       dash: dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)),
-      invulnerable: player.data.invulnerable.get().remaining
+      invulnerable: player.data.invulnerable.get().remaining,
+      skillReady: { special: player.data.skills.get().special.cooldown <= 0, ultimate: player.data.skills.get().ultimate.cooldown <= 0 }
     },
     enemies: queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, at: data.position.get() })),
     threats,
@@ -492,7 +497,10 @@ export const skillReach = (effect: SkillEffect): number => {
   const more = 40
   switch (effect.kind) {
     case "cut":
+    case "fault":
       return effect.length + more
+    case "quake":
+      return effect.first + more
     case "blast":
     case "leap":
     case "nova":
@@ -511,6 +519,9 @@ export const skillReach = (effect: SkillEffect): number => {
       return effect.offset + effect.radius + more
     case "guard":
       return Infinity
+    // A brace waits for a blow on its way instead (see `braceDue`).
+    case "brace":
+      return -Infinity
   }
 }
 
@@ -565,7 +576,7 @@ export interface BotReport {
   readonly healing: number
   /** Health restored, as a share of the team's whole health (a healer's measure, see docs/roster.md). */
   readonly restored: number
-  /** Enemy blows stopped before they landed: stone plates shattered (a guardian's measure). */
+  /** Enemy blows stopped before they landed: stone plates shattered, blows braced (a guardian's measure). */
   readonly blocked: number
   /** What dodging needed: dashes used to dodge (not those closing in). */
   readonly dashes: number
@@ -624,7 +635,7 @@ export const runBot = (run: BotRun): BotReport => {
   const Measure = Game.System("Bot/Measure", {
     events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal), guarded: Game.System.readEvent(Guarded) }
   }, ({ events }) => {
-    blocked += events.guarded.all().filter((guarded) => guarded.kind === "shattered").length
+    blocked += events.guarded.all().filter((guarded) => guarded.kind === "shattered" || guarded.kind === "braced").length
     for (const cast of events.cast.all()) {
       // A landing is part of a skill already used (see `Airborne`).
       if (cast.faction !== "player" || cast.skill === null || cast.landing === true) continue
@@ -703,8 +714,14 @@ export const runBot = (run: BotRun): BotReport => {
       }
       // A skill waits for an enemy it can reach (a totem also for when she is hurt, to heal by it).
       const hurt = active !== undefined && active.health.current < active.health.max * 0.8
-      const lands = (slot: "special" | "ultimate") => (distance <= skillReach(effectOf(slot)) && distance >= skillClearance(effectOf(slot))) || (effectOf(slot).kind === "totem" && hurt)
-      move = { ...move, special: lands("special"), ultimate: lands("ultimate"), skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
+      // A brace waits for a blow about to land (and is not wasted under a dash).
+      const braces = (slot: "special" | "ultimate") => {
+        const effect = effectOf(slot)
+        return effect.kind === "brace" && field.player !== undefined && field.player.skillReady[slot] && field.player.invulnerable <= 0 && playOut(field, tuning, { x: 0, y: 0 }, false).danger <= effect.window * 0.7
+      }
+      const lands = (slot: "special" | "ultimate") => (distance <= skillReach(effectOf(slot)) && distance >= skillClearance(effectOf(slot))) || (effectOf(slot).kind === "totem" && hurt) || braces(slot)
+      const bracing = braces("special") || braces("ultimate")
+      move = { ...move, ...(bracing ? { dash: false } : {}), special: lands("special"), ultimate: lands("ultimate"), skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
     }
     // Charging: pressed once, held through the charge, let go once full; a threat lets go early (the charge is lost).
     if (style.chargeEvery !== undefined && !(run.still === true)) {

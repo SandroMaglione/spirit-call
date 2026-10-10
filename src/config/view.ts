@@ -105,7 +105,7 @@ export const view = {
   /** Quiet facet rim and authored luminous eyes, gems and lava. */
   enemyRim: { color: 0xb3cad8, strength: 0.075, power: 3, emission: 1.05 },
   /** Each character's body color, so a switch is seen at once (and her switch button matches). */
-  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a, bastion: 0xc8a575, sparkfist: 0x5fd8ff } satisfies Record<CharacterId, number>,
+  characters: { swordsman: 0x4ecdc4, gunner: 0xa8e05f, tidecaller: 0x4a7dff, stormcaller: 0xffd84a, bastion: 0xc8a575, sparkfist: 0x5fd8ff, tidewarden: 0x2f9fb8, quarry: 0xb8875a } satisfies Record<CharacterId, number>,
   playerDashing: 0xd9fffb,
   shadow: 0x000000,
   /** Body height of actors relative to their radius. */
@@ -272,6 +272,8 @@ export const view = {
    * water, so they read apart from a puddle under the same enemy.
    */
   marks: { color: 0xbfeeff, gap: 12, inner: 7, width: 3, outline: 0.95, pulse: 0.8, fadeSeconds: 1 },
+  /** A brace held: its reach ring, filling in as the moment passes; `ready`: the faint ring while a Floodgate readies braces. */
+  braces: { width: 4, outline: 0.9, fill: 0.22, ready: 46, pulse: 0.7 },
   /**
    * Arena hazards as part of the floor (see `presentation/hazards.ts`): a
    * pool level with the floor's top (`level` world units over it), its flat
@@ -294,6 +296,8 @@ export const view = {
    * the floor, with a spinning ring around them (out to where they hit while
    * they hover).
    */
+  /** A Hammer's shockwave: its color (with no element), its hump's size (radii) and height, and its crescent on the floor. */
+  shockwave: { color: 0xe6d3a8, size: 0.7, height: 3, crescent: 1.1, width: 5, alpha: 0.75 },
   disc: { color: 0x9fe8ff, ring: 0x4aa8ff, turnsPerSecond: 3, size: 1, height: 8 },
   /** Flames in an arena's scenery (see `ArenaLook.fires`): their two colors, flame motes and embers per second each, and how near the camera (world units) one must be to burn. */
   arenaFires: { flame: 0xffc04a, ember: 0xff7a2e, flames: 14, embers: 2.5, reach: 1100 },

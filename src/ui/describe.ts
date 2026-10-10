@@ -136,7 +136,13 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "lob":
       return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":
-      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, healing the whole team ${effect.heals.base}% of max HP, ${effect.heals.perSoaked}% more for each soaked enemy it reaches (${effect.heals.most}% at most)`}`
+      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, healing the whole team ${effect.heals.base}% of max HP, ${effect.heals.perSoaked}% more for each soaked enemy it reaches (${effect.heals.most}% at most)`}${effect.readies > 0 ? `; for ${effect.readies}s after, a brace that takes a blow is ready again at once` : ""}`
+    case "fault":
+      return `the ground splitting ahead of you, ${effect.rocks} ${elementWord(effect.element)}rocks erupting down the line one after the other (${effect.power}% ATK each), holding what they catch a moment`
+    case "quake":
+      return `${effect.slams} ${elementWord(effect.element)}slams around you, each wider than the last (${effect.power}% ATK each), the last stunning what it catches for ${effect.stun}s`
+    case "brace":
+      return `a ${effect.window}s brace, standing still: the first blow on you is taken whole, and you answer with a ${elementWord(effect.element)}slash around you (${effect.power}% ATK) that disarms the attacker for ${effect.disarm}s; if nothing comes, it is ready again ${effect.whiff}s later`
     case "vortex":
       return `a ${elementWord(effect.element)}whirl${effect.maxRange > 0 ? "" : " at your feet"} that pulls enemies in for ${effect.seconds}s${effect.power > 0 ? ` (${effect.power}% ATK every ${effect.tick}s)` : ", hurting nobody"}`
     case "totem":

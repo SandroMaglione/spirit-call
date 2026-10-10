@@ -248,6 +248,23 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       return
     case "nova":
       positive(problems, where, { radius: effect.radius, active: effect.active })
+      if (!(effect.readies >= 0)) problems.push(`${where}: readies must not be negative (is ${effect.readies})`)
+      return
+    case "fault":
+      positive(problems, where, { length: effect.length, rocks: effect.rocks, size: effect.size })
+      if (!Number.isInteger(effect.rocks)) problems.push(`${where}: rocks must be a whole number (is ${effect.rocks})`)
+      if (!(effect.warning >= 0 && effect.interval >= 0 && effect.stun >= 0)) problems.push(`${where}: warning, interval, and stun must not be negative`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
+      return
+    case "quake":
+      positive(problems, where, { slams: effect.slams, first: effect.first })
+      if (!Number.isInteger(effect.slams)) problems.push(`${where}: slams must be a whole number (is ${effect.slams})`)
+      if (!(effect.interval >= 0 && effect.growth >= 0 && effect.stun >= 0)) problems.push(`${where}: interval, growth, and stun must not be negative`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
+      return
+    case "brace":
+      positive(problems, where, { window: effect.window, radius: effect.radius })
+      if (!(effect.whiff >= 0 && effect.disarm >= 0)) problems.push(`${where}: whiff and disarm must not be negative`)
       return
     case "vortex":
       positive(problems, where, { radius: effect.radius, seconds: effect.seconds, tick: effect.tick })
