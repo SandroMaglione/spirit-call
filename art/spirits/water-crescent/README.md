@@ -24,6 +24,13 @@ over treating the sheet's note about three shell pieces literally. The rear
 and shell thickness remain an interpretation; the static viewer exposes
 that choice from every direction.
 
+A second review found the arrangement too heavy on the left. The upper and
+tail fins now float on the right, mirroring their original outlines with a
+small outward offset to leave space around the smaller crescent. Their
+points still sweep inward and down; the small lower fin remains on the left
+to continue the curve beneath the large crescent. The core and shells retain
+their shapes.
+
 No dimension is supplied. Overall mesh height is provisionally 0.60 m,
 comparable to the compact existing Water Spirit. All pixel landmarks use
 one uniform scale. The sphere and blade sections contain depth; the asset
@@ -39,11 +46,12 @@ in meters, with a ground reference at world origin.
 
 ![Same-scale reference and silhouette overlay](renders/review-reference.png)
 
-The front silhouette overlap is 90.6%, with fixed traced coordinates and
+The front silhouette overlap is 71.4%, with fixed traced coordinates and
 one pixel scale. The overlay includes the core, shells and fins. It measures
 the mask, not color accuracy, depth or consistency across the generated
 views. Yellow is reference only; red is model only. This is a useful outline
-check, not a claim that every supplied view can describe the same solid.
+comparison, not a quality gate: the fins intentionally depart from the
+sheet's positions following the balance review.
 
 ![Eight cameras](renders/review-angles.png)
 
@@ -62,7 +70,7 @@ viewport evidence, not physical-phone performance evidence.
   objects and individual pivots. No skeleton or keyframes.
 - `water-crescent.glb` has 1,798 triangles, two materials, eight primitives,
   vertex colors, cyan eye emission and no textures. Its native-facing
-  dimensions are approximately 0.629 x 0.304 x 0.600 m.
+  dimensions are approximately 0.696 x 0.298 x 0.600 m.
 - `export.json` records bounds, pivots, triangle counts and the file hash.
 - `verification.json` audits closed manifold meshes, outward normals,
   triangulation, degenerate faces, flat shading, export contents and a

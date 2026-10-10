@@ -24,7 +24,7 @@ try {
   let current='hero';
   function resize(){
     const {width,height}=view.getBoundingClientRect();renderer.setSize(width,height);
-    const span=$('#small').checked?.6*height/32:Math.max(.85,.80*height/width);
+    const span=$('#small').checked?.6*height/32:Math.max(.85,.95*height/width);
     camera.top=span/2;camera.bottom=-span/2;camera.left=-span*width/height/2;camera.right=-camera.left;
     camera.updateProjectionMatrix();renderer.render(scene,camera);
   }

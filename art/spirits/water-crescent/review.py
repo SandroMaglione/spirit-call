@@ -43,7 +43,7 @@ rgb[a&b]=(57,113,147);rgb[a&~b]=(242,203,88);rgb[b&~a]=(234,98,112)
 overlay=Image.fromarray(rgb);overlay.save(OUT/"overlay-front.png")
 (HERE/"reference-review.json").write_text(json.dumps({
     "front_silhouette_iou":score,"alignment":"Fixed traced coordinates, one uniform pixel scale; native camera turn 16 deg, elevation 0 deg.",
-    "limitations":"Mask overlap only. Does not measure color, depth or view consistency. Oblique side/rear images are qualitative references.",
+    "limitations":"Mask overlap only. Fins intentionally moved right following user balance review. Does not measure color, depth or view consistency. Oblique side/rear images are qualitative references.",
     "asset_sha256":info["sha256"]},indent=2)+"\n")
 
 canvas=card((1350,600));d=ImageDraw.Draw(canvas)
@@ -55,7 +55,7 @@ reference_display.paste(crop.resize(size,Image.Resampling.LANCZOS),pos)
 canvas.paste(reference_display.resize((423,423),Image.Resampling.LANCZOS),(15,104))
 paste_fit(canvas,OUT/"reference.png",(450,104,873,540))
 paste_fit(canvas,OUT/"overlay-front.png",(885,104,1308,540))
-d.text((28,558),f"Front silhouette overlap {score:.1%}. Yellow: sheet only. Red: model only. Rear depth is interpreted.",font=small,fill="#9db7d2")
+d.text((28,558),f"Fins moved right after review; mask overlap {score:.1%}. Yellow: sheet only. Red: model only. Rear depth interpreted.",font=small,fill="#9db7d2")
 canvas.save(OUT/"review-reference.png")
 
 canvas=card((1280,760));d=ImageDraw.Draw(canvas)

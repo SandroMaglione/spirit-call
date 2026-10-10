@@ -1,5 +1,5 @@
 {
-  "url": "http://192.168.0.45:5219/art/spirits/water-crescent/?review=soft-head-highlight",
+  "url": "http://192.168.0.45:5219/art/spirits/water-crescent/?review=balanced-fins",
   "phone": {
     "animations": 0,
     "cameraPositions": {
@@ -53,7 +53,8 @@
     "horizontalOverflow": false,
     "meshes": 8,
     "minimumButtonHeight": 44,
-    "sha256": "51c4098470805b87f0a49a6514e7a4631d6d9260408abe13a42a101e669faf9b",
+    "completeModelVisible": ["hero", "front", "reference", "game"],
+    "sha256": "ce94454b539be0344ed2961138ef57dd1e2d9e726c63d2f26c3fc783ef902631",
     "syntheticTouchDrag": true,
     "triangles": 1798,
     "viewport": [
@@ -68,8 +69,6 @@
     ],
     "assetDrawCalls": 8,
     "gridDrawCalls": 1,
-    "wireframeToggle": true,
-    "smallRestHeightPx": 32,
     "error": ""
   },
   "physicalDeviceTested": false,

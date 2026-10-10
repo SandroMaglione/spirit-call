@@ -24,6 +24,7 @@ data = {
         "shape": "Front and isometric views establish the silhouette, palette, exposed core, tall eyes, and swept crescents.",
         "cameras": "The labelled front and sides are oblique stylized views, not mutually consistent orthographic projections.",
         "depth": "Closed lenticular crescent volumes flank a spherical core. User review clarified that the pale head sweep was overread as a solid third shell; it is now a soft color transition across core facets. Rear shell thickness is interpreted from back/top views.",
+        "balance": "User review moved the upper and tail fins from the left to the right to counterbalance the large left crescent. Their outlines are mirrored with a small outward offset, preserving the inward sweep and separation; the lower fin stays left.",
         "scale": "No dimension is supplied. Provisional 0.60 m overall mesh height, matching the existing compact Water Spirit scale. Single uniform pixel scale.",
         "scope": "Independent static study. No replacement of the shipped Water Spirit, clips, gameplay registration, or kit decisions."
     },
@@ -40,8 +41,8 @@ data = {
         [208,228,232], [204,226,240], [202,221,254], [198,214,264], [197,197,281]
     ],
     "fins": {
-        "Fin.Upper": [[80,153],[65,160],[55,174],[53,181],[57,193],[69,212],[69,184]],
-        "Fin.Tail": [[32,201],[62,217],[76,237],[93,264],[60,260],[41,244],[34,221]],
+        "Fin.Upper": [[227,153],[242,160],[252,174],[254,181],[250,193],[238,212],[238,184]],
+        "Fin.Tail": [[280,201],[250,217],[236,237],[219,264],[252,260],[271,244],[278,221]],
         "Fin.Lower": [[103,269],[87,283],[80,300],[98,292],[111,278]]
     },
     "eye_centers_px": [[160,239],[185,237]], "eye_radii_px": [5.0,12.6],
