@@ -1,0 +1,193 @@
+{
+  "name": "Windwall",
+  "status": "animated model for review",
+  "height_m": 0.6600000262260437,
+  "height_basis": "ground origin to highest rest mesh vertex, including crest",
+  "silhouette_height_m": 0.6200000196695328,
+  "hover_m": 0.040000006556510925,
+  "width_m": 0.8115447163581848,
+  "depth_m": 0.2801341488957405,
+  "depth_factor_from_initial_model": 0.65,
+  "chest_crystal_gap_m": 0.016382120549678802,
+  "bounds_blender": {
+    "min": [
+      -0.4057723581790924,
+      -0.12450406700372696,
+      0.040000006556510925
+    ],
+    "max": [
+      0.4057723581790924,
+      0.15563008189201355,
+      0.6600000262260437
+    ]
+  },
+  "triangles": 416,
+  "materials": [
+    "Windwall.Palette",
+    "Windwall.Face",
+    "Windwall.Eyes"
+  ],
+  "objects": [
+    {
+      "name": "Body",
+      "triangles": 32,
+      "closed": true
+    },
+    {
+      "name": "Cape.Lower.L",
+      "triangles": 20,
+      "closed": true
+    },
+    {
+      "name": "Cape.Lower.R",
+      "triangles": 20,
+      "closed": true
+    },
+    {
+      "name": "Cape.Upper.L",
+      "triangles": 20,
+      "closed": true
+    },
+    {
+      "name": "Cape.Upper.R",
+      "triangles": 20,
+      "closed": true
+    },
+    {
+      "name": "Crest.Side",
+      "triangles": 16,
+      "closed": true
+    },
+    {
+      "name": "Crest.Tall",
+      "triangles": 16,
+      "closed": true
+    },
+    {
+      "name": "Eye.L",
+      "triangles": 48,
+      "closed": true
+    },
+    {
+      "name": "Eye.R",
+      "triangles": 48,
+      "closed": true
+    },
+    {
+      "name": "Gem",
+      "triangles": 8,
+      "closed": true
+    },
+    {
+      "name": "Hood",
+      "triangles": 144,
+      "closed": true
+    },
+    {
+      "name": "Mantle.Back",
+      "triangles": 24,
+      "closed": true
+    }
+  ],
+  "animations": 10,
+  "armatures": 0,
+  "textures": 0,
+  "cameras": 0,
+  "lights": 0,
+  "bytes": 112752,
+  "reference_sha256": "040bd7bce01d1b866b51fed3c7adf8cdc61f8d266ed4b900d56c24a1ee4a17c2",
+  "source_sha256": "77bf8125c61850f1af3db677340a73fbe07da680163c527023f08bf5eb420de0",
+  "glb_sha256": "23eb458a4b155831196b88d04d09db4a7f8f2d995dc5db88293094122942e354",
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2.0
+    },
+    "Run": {
+      "lastKeySeconds": 0.5,
+      "loopSeconds": 0.5333333333333333
+    },
+    "AttackA": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null,
+      "contactSeconds": 0.13333333333333333
+    },
+    "AttackB": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null,
+      "contactSeconds": 0.13333333333333333
+    },
+    "AttackC": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null,
+      "contactSeconds": 0.2
+    },
+    "Power": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null,
+      "contactSeconds": 0.2
+    },
+    "Dash": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Cast": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Ultimate": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": null
+    }
+  },
+  "sampled_frame_envelopes": {
+    "Idle": {
+      "min_height_m": 0.04025750607252121,
+      "min_crystal_gap_m": 0.014617271721363068
+    },
+    "Run": {
+      "min_height_m": 0.0414261631667614,
+      "min_crystal_gap_m": 0.014618806540966034
+    },
+    "AttackA": {
+      "min_height_m": 0.033065687865018845,
+      "min_crystal_gap_m": 0.016382120549678802
+    },
+    "AttackB": {
+      "min_height_m": 0.033065687865018845,
+      "min_crystal_gap_m": 0.016382120549678802
+    },
+    "AttackC": {
+      "min_height_m": 0.030133455991744995,
+      "min_crystal_gap_m": 0.016382113099098206
+    },
+    "Power": {
+      "min_height_m": 0.027131423354148865,
+      "min_crystal_gap_m": 0.016382113099098206
+    },
+    "Dash": {
+      "min_height_m": 0.03875010088086128,
+      "min_crystal_gap_m": 0.016382120549678802
+    },
+    "Hurt": {
+      "min_height_m": 0.023097267374396324,
+      "min_crystal_gap_m": 0.016382120549678802
+    },
+    "Cast": {
+      "min_height_m": 0.040000006556510925,
+      "min_crystal_gap_m": 0.016382120549678802
+    },
+    "Ultimate": {
+      "min_height_m": 0.030400007963180542,
+      "min_crystal_gap_m": 0.016382120549678802
+    }
+  },
+  "root_motion": false,
+  "fps": 30,
+  "static_glb_sha256": "3a5695c9e59cf825046df84e88446881a2d52e1b981142fcde1a6df3ca362f36",
+  "static_source_sha256": "32eff838e2e650b76f84b1cf281dfed632c05423b1e9889717edbfa5e14d6571"
+}

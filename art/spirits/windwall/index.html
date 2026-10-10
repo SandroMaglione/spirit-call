@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a202c">
-  <title>Windwall · Static model review</title>
+  <title>Windwall · Animation review</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; color: #f6f8e7; background: #0a202c; font: 14px/1.5 system-ui,sans-serif; }
@@ -23,6 +23,9 @@
     button:hover, button[aria-pressed="true"] { background: #a7e3c0; color: #092432; border-color: #a7e3c0; }
     label { display: block; margin: 10px 0; cursor: pointer; }
     input { accent-color: #5ee6c4; }
+    select { background: #18343f; color: #ecf6ed; padding: 7px; border: 1px solid #3b5b65; border-radius: 5px; }
+    #scrub { display: block; width: 100%; }
+    #time { color: #a1bbc4; font-size: 12px; font-variant-numeric: tabular-nums; }
     a { color: #93e5cf; text-underline-offset: 3px; }
     .download { display: inline-block; text-decoration: none; margin: 6px 3px 0 0; }
     .reference { display: block; width: 100%; border: 1px solid #294551; margin-top: 12px; }
@@ -40,14 +43,27 @@
 </head>
 <body>
 <main>
-  <div id="view" aria-label="Interactive Windwall static 3D model">
-    <div id="badge">WIND DEFENDER / STATIC MODEL</div>
+  <div id="view" aria-label="Interactive Windwall animated 3D model">
+    <div id="badge">WIND DEFENDER / ANIMATION REVIEW</div>
     <div id="hint">Drag to orbit · pinch or scroll to zoom</div>
   </div>
   <aside>
     <h1>Windwall</h1>
     <p>Cream hood, glowing eyes, crystal leaves, a slim cape profile, and a floating chest crystal.</p>
     <div id="status" role="status">Loading model…</div>
+    <h2>ANIMATION</h2>
+    <div class="buttons">
+      <button data-clip="">Rest pose</button><button data-clip="Idle">Idle</button><button data-clip="Run">Move</button>
+      <button data-clip="AttackA">Attack A</button><button data-clip="AttackB">Attack B</button><button data-clip="AttackC">Attack C</button>
+      <button data-clip="Power">Power</button><button data-clip="Dash">Dash</button><button data-clip="Hurt">Hurt</button>
+      <button data-clip="Cast">Cast</button><button data-clip="Ultimate">Ultimate</button>
+    </div>
+    <label><input id="animate" type="checkbox" checked> Play animation</label>
+    <div class="buttons"><button id="replay">Replay</button>
+      <select id="speed" aria-label="Playback speed"><option value=".25">¼ speed</option><option value=".5">½ speed</option><option value="1" selected>Normal speed</option></select>
+    </div>
+    <label>Animation position <input id="scrub" type="range" min="0" max="1" step=".001" value="0"></label>
+    <div id="time"></div>
     <h2>VIEW</h2>
     <div class="buttons">
       <button data-view="hero" aria-pressed="true">Hero</button><button data-view="front">Front</button>
@@ -64,10 +80,11 @@
     <label><input id="floor" type="checkbox" checked> Ground &amp; shadow</label>
     <h2>REFERENCE &amp; FILES</h2>
     <p class="note"><a href="./renders/revision.png" target="_blank" rel="noopener">Before / after revision</a> · <a href="./reference/sheet.png" target="_blank" rel="noopener">Full character sheet</a> · <a href="./renders/review.png" target="_blank" rel="noopener">Reference comparison</a> · <a href="./renders/overlay-all.png" target="_blank" rel="noopener">Silhouette overlays</a></p>
-    <a class="download" href="./windwall.glb" download>Download GLB</a>
-    <a class="download" href="./windwall.blend" download>Blender source</a>
+    <a class="download" href="./windwall-animated.glb" download>Animated GLB</a>
+    <a class="download" href="./windwall-animated.blend" download>Animated Blender source</a>
+    <p class="note"><a href="./windwall.glb" download>Static GLB</a> · <a href="./windwall.blend" download>Static Blender source</a></p>
     <img class="reference" src="./reference/hero.png" alt="Windwall isometric view from the supplied model sheet">
-    <p class="note">Static source and export. Camera controls only move the view.</p>
+    <p class="note">Gentle hover and cape sway, floating crystal, and combat clips. Attacks and skills play once; Idle and Move loop.</p>
     <pre id="error" role="alert"></pre>
   </aside>
 </main>

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { closeLoop } from '/src/presentation/models.ts';
 
 const $ = selector => document.querySelector(selector);
 try {
@@ -27,14 +28,37 @@ try {
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({opacity:.18}));
   floor.rotation.x=-Math.PI/2; floor.position.y=-.001;floor.receiveShadow=true;scene.add(floor);
   const [gltf,info] = await Promise.all([
-    new GLTFLoader().loadAsync('./windwall.glb'),
-    fetch('./export.json').then(r=>{if(!r.ok)throw Error('Metadata unavailable');return r.json();})
+    new GLTFLoader().loadAsync('./windwall-animated.glb'),
+    fetch('./animation-export.json').then(r=>{if(!r.ok)throw Error('Metadata unavailable');return r.json();})
   ]);
   scene.add(gltf.scene);
+  gltf.animations=gltf.animations.map(clip=>closeLoop(clip,info.clips[clip.name]));
+  const mixer=new THREE.AnimationMixer(gltf.scene);
+  let action=null,currentClip='';
+  function play(name){
+    mixer.stopAllAction();action=null;currentClip=name;
+    const clip=gltf.animations.find(c=>c.name===name);
+    if(clip){
+      action=mixer.clipAction(clip).reset();
+      action.setLoop(info.clips[name].loopSeconds===null?THREE.LoopOnce:THREE.LoopRepeat,Infinity);
+      action.clampWhenFinished=true;action.play();mixer.update(0);
+    }
+    $('#animate').checked=Boolean(clip);$('#scrub').value=0;
+    document.querySelectorAll('[data-clip]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.clip===name)));
+  }
+  function seek(seconds){
+    if(!action)return;
+    action.paused=false;action.enabled=true;action.time=seconds;mixer.update(0);
+    $('#animate').checked=false;
+  }
+  for(const button of document.querySelectorAll('[data-clip]'))button.onclick=()=>play(button.dataset.clip);
+  $('#replay').onclick=()=>play(currentClip);
+  $('#scrub').oninput=()=>seek(Number($('#scrub').value)*(action?.getClip().duration??0));
+  $('#animate').onchange=()=>{if(action?.paused&&$('#animate').checked)play(currentClip);};
   const meshes=[];
   gltf.scene.traverse(o=>{if(o.isMesh){o.castShadow=!o.name.startsWith('Eye');o.receiveShadow=!o.name.startsWith('Eye');meshes.push(o);}});
-  const center=new THREE.Vector3(0,.35,0);
-  let span=.94,currentView='hero';
+  const center=new THREE.Vector3(0,.46,0);
+  let span=1.28,currentView='game';
   function direction(turn,elevation){
     const t=THREE.MathUtils.degToRad(turn),e=THREE.MathUtils.degToRad(elevation);
     return new THREE.Vector3(Math.sin(t)*Math.cos(e),Math.sin(e),Math.cos(t)*Math.cos(e));
@@ -60,7 +84,7 @@ try {
     $('#small').checked=false;
     const spec={face:{target:[0,.36,.125],span:.38,view:'front'},crest:{target:[-.055,.58,-.03],span:.26,view:'hero'},
       cape:{target:[0,.28,0],span:.94,view:'hero'},gem:{target:[0,.2,.13],span:.23,view:'front'},
-      all:{target:[0,.35,0],span:.94,view:'hero'}}[name];
+      all:{target:[0,.46,0],span:1.28,view:'game'}}[name];
     center.set(...spec.target);span=spec.span;
     document.querySelectorAll('[data-detail]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.detail===name)));
     choose(spec.view);
@@ -70,8 +94,17 @@ try {
   $('#wireframe').onchange=()=>meshes.forEach(o=>(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.wireframe=$('#wireframe').checked;}));
   $('#floor').onchange=()=>{floor.visible=$('#floor').checked&&currentView!=='bottom';};
   $('#small').onchange=()=>{camera.zoom=1;resize();};
-  new ResizeObserver(resize).observe(view);choose('hero');
-  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});
-  $('#status').textContent=`${info.triangles} triangles · ${info.materials.length} materials · static GLB`;
-  window.windwallPreview={scene,camera,renderer,controls,gltf,info,meshes,choose,detail};
+  new ResizeObserver(resize).observe(view);choose('game');play('Idle');
+  let last=performance.now();
+  renderer.setAnimationLoop(now=>{
+    const dt=Math.min(.05,(now-last)/1000);last=now;
+    if($('#animate').checked)mixer.update(dt*Number($('#speed').value));
+    if(action){
+      $('#scrub').value=action.time/action.getClip().duration;
+      $('#time').textContent=`${currentClip} · ${action.time.toFixed(2)} / ${action.getClip().duration.toFixed(2)} s`;
+    }else $('#time').textContent='Approved rest pose';
+    controls.update();renderer.render(scene,camera);
+  });
+  $('#status').textContent=`${info.triangles} triangles · ${info.animations} clips · ${info.materials.length} materials`;
+  window.windwallPreview={scene,camera,renderer,controls,gltf,info,meshes,choose,detail,mixer,play,seek};
 } catch(error){$('#error').textContent=String(error);$('#status').textContent='Model could not load';throw error;}

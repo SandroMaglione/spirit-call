@@ -1,4 +1,4 @@
-# Windwall — static model
+# Windwall model and animation
 
 Windwall's model follows the supplied Wind Spirit sheet: a cream and mint
 faceted hood, a recessed dark face with two pale yellow eyes, two crystal
@@ -36,9 +36,10 @@ are no runtime glow helpers in the model.
 
 From this worktree, run `pnpm dev --host --port 5204 --strictPort` and open
 `/art/spirits/windwall/index.html` on the server's printed network address.
-The inspector loads the actual GLB. It supports orbit, pinch and zoom,
-eight camera presets, detail views, wireframe, a 40 px gameplay-size view,
-the reference, comparisons, and source downloads.
+The inspector loads `windwall-animated.glb`. It supports clip buttons,
+pause, replay, slow motion, scrubbing, orbit, pinch and zoom, eight camera
+presets, detail views, wireframe, a 40 px gameplay-size view, the reference,
+comparisons, and static and animated source downloads.
 
 `renders/review.png` compares the front, back and hero with the original
 sheet and shows the game's 30 degree camera. `renders/overlay-*.png` and
@@ -99,5 +100,34 @@ The revision keeps before renders in `renders/before-*.png` and compares
 the side and game camera at identical scale in `renders/revision.png`.
 The camera fits and reference overlays were regenerated for the revision.
 
-This folder is the complete static model deliverable. It adds no content
-ids, animation clips, game assets registration, or gameplay changes.
+## Animation
+
+The approved static `.blend` and `.glb` remain unchanged. `export.py` opens
+that source, adds object animation, and saves `windwall-animated.blend`
+and `windwall-animated.glb`. The animated export keeps the same 416
+triangles, three materials, and twelve mesh parts, without a skeleton.
+
+Idle is a two-second hover with a blink, cape sway, crest flutter and
+independent crystal bob. Run is a 16-frame forward lean with trailing
+leaves. AttackA, AttackB, AttackC, Power, Dash, Hurt, Cast and Ultimate
+use the shared spirit combat channels and contact frames. Windwall has
+restrained strikes, opens its cape to cast, and rises into a spinning
+ultimate. Skills rise by frame two, with no preparatory crouch.
+The top-level Windwall transform stays fixed; a child carries temporary
+leans and squash. One-shots begin and end at rest. The simulation owns
+travel, contacts, timing and hitboxes.
+
+`animation-export.json` records clip and loop times, attack contact times,
+rest height, envelopes and hashes. The inspector uses the game's
+`closeLoop` to append each loop's first pose at its full loop duration.
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/windwall/export.py
+uv run --with numpy art/spirits/windwall/verify-animation.py
+```
+
+`verify-animation.py` reads the delivered binary independently of Blender.
+It compares all mesh attributes, materials and rest-world positions with
+the static export, checks all ten clips and their times, then samples
+world-space poses at 120 Hz to check floor clearance, crystal separation,
+fixed root, in-place loops, early casting rise and one-shot rest return.
