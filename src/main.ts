@@ -2,7 +2,7 @@ import { effect } from "@preact/signals"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchLayout } from "./config/input.ts"
-import { engine } from "./config/tuning.ts"
+import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
@@ -49,26 +49,35 @@ const cueBuzz: Record<keyof typeof cueSounds, number | Array<number>> = {
   aspect: [20, 40, 20], character: [30, 50, 30, 50, 60], victory: 0, defeat: 0, star: 10, reward: 0
 }
 
+/**
+ * Whether this is a dev build (`pnpm dev`): only there do the dev tools
+ * answer (the URL's quick starts and tools, the tuning panel and its saved
+ * numbers, the monitor). A player's game always plays the shipped numbers.
+ */
+const dev = import.meta.env.DEV
+/** The URL's dev parameters: none outside a dev build. */
+const devQuery = dev ? window.location.search : ""
+
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
-  const stressLoad = parseStress(window.location.search)
+  const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
-  const tuning = waveFromQuery(arenaFromQuery(stressLoad === undefined ? loadSavedTuning() : stressTuning(), window.location.search), window.location.search)
+  const tuning = waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
   // The player logs in (or signs up) first; her account comes from the server, and the menu starts from its last selection.
   const username = (await currentPlayer()) ?? (await showLogin(mount, signIn))
   const shell = await startApp(username)
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
-  const quickStart = new URLSearchParams(window.location.search).has("play") || stressLoad !== undefined
+  const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
   // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
-  const team = withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, window.location.search, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
+  const team = withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, devQuery, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
   const selected = encounterOf(tuning, account.selection.play)
-  const challenge = quickStart ? challengeFromQuery(tuning, window.location.search, selected.challenge) : selected.challenge
-  const enemyLevel = quickStart ? enemyLevelFromQuery(window.location.search, selected.enemyLevel) : selected.enemyLevel
-  const practice = quickStart && challenge === "practice" ? practiceFromQuery(tuning, window.location.search) : undefined
+  const challenge = quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
+  const enemyLevel = quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
+  const practice = quickStart && challenge === "practice" ? practiceFromQuery(tuning, devQuery) : undefined
   /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
   let playing: Play | null = null
   /** Whether the run going on is recorded on the account: not an Extra's (training, practice). */
@@ -268,16 +277,18 @@ const start = async (mount: HTMLElement) => {
   })
   // The menu's models and portraits, over the UI.
   const showcase = createShowcase(mount, browser.models)
-  createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })
+  if (dev) createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, the (usually empty) stress top-up, and `?charged`'s full energy.
-  const step = chargedFromQuery(window.location.search)
+  const step = chargedFromQuery(devQuery)
     ? Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, KeepCharged, Game.Schedule.applyDeferred())
     : Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
   // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
-  const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, browser.host, browser.nodes)
-  // Dev handle for inspecting the running game from the console.
-  Object.assign(window, { __game: { runtime, pointer, keyboard, touch, sounds, host: browser.host, monitor } })
+  // The monitor, and a handle for inspecting the running game from the console: dev builds only.
+  if (dev) {
+    const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, browser.host, browser.nodes)
+    Object.assign(window, { __game: { runtime, pointer, keyboard, touch, sounds, host: browser.host, monitor } })
+  }
 
   const stats = browser.host.stats
   let simMs = 0

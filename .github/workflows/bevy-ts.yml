@@ -1,12 +1,11 @@
-# Follows bevy-ts releases: when npm has a version newer than package.json
-# `bevyTsRelease`, checks the game against it, commits the bump to main, and
-# deploys prod. A release that breaks the game fails this run (GitHub emails
-# about it) and changes nothing.
+# Moves to a newer bevy-ts release, by hand only (the game is a finished
+# release: it keeps the version in package.json `bevyTsRelease` until its
+# developer decides): when npm has a newer version, checks the game against
+# it, commits the bump to main, and deploys prod. A release that breaks the
+# game fails this run and changes nothing.
 name: Follow bevy-ts
 
 on:
-  schedule:
-    - cron: "17 * * * *"
   workflow_dispatch:
 
 concurrency:

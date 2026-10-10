@@ -90,20 +90,33 @@ export const currentPlayer = (): Promise<string | undefined> =>
     Effect.orElseSucceed(() => undefined)
   ))
 
-/** Signs up a new player, or logs one in: her username, or what went wrong. */
-export const signIn = (mode: "signUp" | "logIn", username: string, password: string): Promise<{ readonly ok: true; readonly username: string } | { readonly ok: false; readonly problem: SignInProblem }> =>
+/**
+ * Signs up a new player, logs one in, or sets a new password with her
+ * recovery code (`code`): her username (and, signing up or recovering, her
+ * recovery code to keep), or what went wrong.
+ */
+export const signIn = (mode: "signUp" | "logIn" | "recover", username: string, password: string, code = ""): Promise<{ readonly ok: true; readonly username: string; readonly recoveryCode?: string } | { readonly ok: false; readonly problem: SignInProblem }> =>
   Effect.runPromise(Effect.gen(function*() {
     // The API's own rules, checked here first so the player sees which one.
     if (!Schema.is(Username)(username)) return { ok: false as const, problem: "A username is 3 to 20 letters, digits, _ or -." }
     if (!Schema.is(Password)(password)) return { ok: false as const, problem: "A password is at least 8 characters." }
     const api = yield* client
     const payload = { username, password }
-    const player = mode === "signUp" ? yield* api.players.signUp({ payload }) : yield* api.players.logIn({ payload })
+    if (mode === "recover") {
+      const player = yield* api.players.recover({ payload: { ...payload, code } })
+      return { ok: true as const, username: player.username, recoveryCode: player.recoveryCode }
+    }
+    if (mode === "signUp") {
+      const player = yield* api.players.signUp({ payload })
+      return { ok: true as const, username: player.username, recoveryCode: player.recoveryCode }
+    }
+    const player = yield* api.players.logIn({ payload })
     return { ok: true as const, username: player.username }
   }).pipe(
     Effect.catchTags({
       UsernameTaken: () => Effect.succeed({ ok: false as const, problem: "That username is taken." }),
-      WrongCredentials: () => Effect.succeed({ ok: false as const, problem: "Wrong username or password." })
+      WrongCredentials: () => Effect.succeed({ ok: false as const, problem: mode === "recover" ? "Wrong username or recovery code." : "Wrong username or password." }),
+      TooManyAttempts: () => Effect.succeed({ ok: false as const, problem: "Too many tries from here: wait a few minutes, then try again." })
     }),
     Effect.catch((error) => Effect.logWarning("Signing in failed", error).pipe(Effect.as({ ok: false as const, problem: "That did not work: check the connection and try again." })))
   ))
