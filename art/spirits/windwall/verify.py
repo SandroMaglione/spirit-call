@@ -9,7 +9,7 @@ expected=json.loads((HERE/'export.json').read_text())
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 bpy.ops.import_scene.gltf(filepath=str(HERE/'windwall.glb'))
 objects=[o for o in bpy.data.objects if o.type=='MESH']
-assert len(objects)==15
+assert len(objects)==12
 assert not [o for o in bpy.context.scene.objects if o.type in ('CAMERA','LIGHT','ARMATURE')]
 assert not bpy.data.actions
 bpy.context.view_layer.update()
@@ -27,8 +27,14 @@ for o in objects:
     closed.append(o.name);bm.free()
 assert triangles==expected['triangles']
 assert abs(low[2]-.04)<1e-6
+body=next(o for o in objects if o.name=='Body')
+crystal=next(o for o in objects if o.name=='Gem')
+gap=min((body.matrix_world@v.co).y for v in body.data.vertices)-max((crystal.matrix_world@v.co).y for v in crystal.data.vertices)
+assert gap>.015
+assert abs(gap-expected['chest_crystal_gap_m'])<1e-6
 info={'passed':True,'blender_round_trip':True,'closed_after_welding_color_seams':closed,
       'triangles':triangles,'bounds_blender':{'min':low,'max':high},'hover_m':low[2],
+      'chest_crystal_gap_m':gap,
       'animations':0,'armatures':0,'cameras':0,'lights':0}
 (HERE/'verification.json').write_text(json.dumps(info,indent=2)+'\n')
 print(json.dumps(info,indent=2))

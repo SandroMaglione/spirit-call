@@ -7,31 +7,29 @@
     "Cape.Lower.R",
     "Cape.Upper.L",
     "Cape.Upper.R",
-    "Collar.Back",
-    "Collar.Front",
     "Crest.Side",
     "Crest.Tall",
     "Eye.L",
     "Eye.R",
     "Gem",
-    "Gem.Frame",
     "Hood",
     "Mantle.Back"
   ],
-  "triangles": 1024,
+  "triangles": 416,
   "bounds_blender": {
     "min": [
       -0.4057723581790924,
-      -0.16886179149150848,
+      -0.12450406700372696,
       0.040000006556510925
     ],
     "max": [
       0.4057723581790924,
-      0.23943088948726654,
+      0.15563008189201355,
       0.6600000262260437
     ]
   },
   "hover_m": 0.040000006556510925,
+  "chest_crystal_gap_m": 0.016382120549678802,
   "animations": 0,
   "armatures": 0,
   "cameras": 0,

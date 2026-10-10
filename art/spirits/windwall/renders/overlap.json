@@ -1,12 +1,12 @@
 {
   "method": "uniform height normalization; full filled silhouette intersection over union; no width warp",
   "strict_camera_scores": {
-    "front": 0.8642048120099189,
-    "back": 0.8453174891879875,
-    "left": 0.5445975587294677,
-    "right": 0.5667073383301378,
-    "top": 0.6485110859937586,
-    "bottom": 0.6432530401365711,
-    "hero": 0.8267606893291943
+    "front": 0.8641761835826497,
+    "back": 0.8453154051359435,
+    "left": 0.4150712235083292,
+    "right": 0.45289195366675705,
+    "top": 0.772710314583172,
+    "bottom": 0.725805400945274,
+    "hero": 0.8258225260333483
   }
 }

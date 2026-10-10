@@ -6,20 +6,22 @@
   "silhouette_height_m": 0.6200000196695328,
   "hover_m": 0.040000006556510925,
   "width_m": 0.8115447163581848,
-  "depth_m": 0.408292680978775,
+  "depth_m": 0.2801341488957405,
+  "depth_factor_from_initial_model": 0.65,
+  "chest_crystal_gap_m": 0.016382120549678802,
   "bounds_blender": {
     "min": [
       -0.4057723581790924,
-      -0.16886179149150848,
+      -0.12450406700372696,
       0.040000006556510925
     ],
     "max": [
       0.4057723581790924,
-      0.23943088948726654,
+      0.15563008189201355,
       0.6600000262260437
     ]
   },
-  "triangles": 1024,
+  "triangles": 416,
   "materials": [
     "Windwall.Palette",
     "Windwall.Face",
@@ -52,16 +54,6 @@
       "closed": true
     },
     {
-      "name": "Collar.Back",
-      "triangles": 260,
-      "closed": true
-    },
-    {
-      "name": "Collar.Front",
-      "triangles": 324,
-      "closed": true
-    },
-    {
       "name": "Crest.Side",
       "triangles": 16,
       "closed": true
@@ -83,12 +75,7 @@
     },
     {
       "name": "Gem",
-      "triangles": 16,
-      "closed": true
-    },
-    {
-      "name": "Gem.Frame",
-      "triangles": 16,
+      "triangles": 8,
       "closed": true
     },
     {
@@ -107,8 +94,8 @@
   "textures": 0,
   "cameras": 0,
   "lights": 0,
-  "bytes": 129488,
+  "bytes": 57864,
   "reference_sha256": "040bd7bce01d1b866b51fed3c7adf8cdc61f8d266ed4b900d56c24a1ee4a17c2",
-  "source_sha256": "4919710f51a1792e2e23ca993d73c8e5868b1b838653e718ed85ddcde6e265fb",
-  "glb_sha256": "cb4db159ac71537d0085f1e34b0acf98cd0e24dd737fa84778ba0685b2a45805"
+  "source_sha256": "32eff838e2e650b76f84b1cf281dfed632c05423b1e9889717edbfa5e14d6571",
+  "glb_sha256": "3a5695c9e59cf825046df84e88446881a2d52e1b981142fcde1a6df3ca362f36"
 }

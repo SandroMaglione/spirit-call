@@ -18,7 +18,10 @@ assert not doc.get('images') and not doc.get('textures')
 assert 'KHR_lights_punctual' not in doc.get('extensionsUsed',[])
 assert 'KHR_draco_mesh_compression' not in doc.get('extensionsUsed',[])
 assert len(doc['materials'])==3
-assert len(doc['meshes'])==15
+assert len(doc['meshes'])==12
+names={m['name'] for m in doc['meshes']}
+assert 'Gem' in names and 'Gem.Frame' not in names
+assert not any(name.startswith('Collar.') for name in names)
 types={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4}
 dtypes={5126:'<f4',5125:'<u4',5123:'<u2',5121:'u1'}
 def accessor(index):

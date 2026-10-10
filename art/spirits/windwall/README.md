@@ -2,11 +2,11 @@
 
 Windwall's model follows the supplied Wind Spirit sheet: a cream and mint
 faceted hood, a recessed dark face with two pale yellow eyes, two crystal
-leaves, a pointed floating body with a framed teal gem, and a broad cape
+leaves, a pointed floating body with a separate teal crystal, and a broad cape
 with pale upper blades and teal lower leaves.
 
 `windwall.blend` is the editable static source. `windwall.glb` is the
-inspection export: 1,024 triangles, three materials, fifteen closed mesh
+inspection export: 416 triangles, three materials, twelve closed mesh
 parts, no textures, skeleton, animation, cameras, or lights. The scene root
 is a transform at the ground origin. Blender is Z up, facing -Y; glTF is
 Y up, facing +Z. The lowest point floats 0.04 m above the origin. The
@@ -19,8 +19,12 @@ inside the same mesh. Eyes are separate thin, closed ellipses named
 `Eye.L` and `Eye.R`, mirrored from the sheet's measured 10–11 px width,
 25–26 px height, and 28.6 px center spacing. The paired cape parts are
 mirrored; the two crest leaves keep the reference's asymmetric shape.
-Cream collar ribbons are sampled against the cape surface so they follow
-its facets. The body has actual depth and a pointed underside, with no legs.
+The cream collar ribbons and gem frame were removed following review.
+The hood, body, cape and crest retain 65% of their initial depth; the full
+side profile is now 0.280 m deep instead of 0.408 m. Front width and total
+height remain the same. The eight-facet chest crystal floats at least
+0.016 m clear of the body, independently verified after GLB re-import.
+The body has actual depth and a pointed underside, with no legs.
 
 Facet colors use the sheet's palette. The palette and socket export with
 `KHR_materials_unlit` to retain their painted color from all angles,
@@ -45,8 +49,9 @@ using uniform height normalization and no independent width stretching.
 
 The sheet's views do not describe one exact orthographic volume. Its
 side drawings show a visible face and a long cape depth, while its top
-and bottom drawings make the cape much shallower. The upright drawings
-drive this model's cape depth, following `docs/spirits.md`. The inspector
+and bottom drawings make the cape much shallower. The initial model
+followed the upright drawings; the revised depth follows the user's
+request for a slimmer side profile. The inspector
 keeps strict orthographic views as well as the reference comparisons;
 the scores document differences and do not imply designer approval.
 
@@ -89,6 +94,10 @@ stubbed for synthetic events. This is browser review, not a physical
 phone performance check. `renders/browser-desktop.png` and
 `renders/browser-phone.png` preserve the review. `browser-review.json`
 records the scope of those checks.
+
+The revision keeps before renders in `renders/before-*.png` and compares
+the side and game camera at identical scale in `renders/revision.png`.
+The camera fits and reference overlays were regenerated for the revision.
 
 This folder is the complete static model deliverable. It adds no content
 ids, animation clips, game assets registration, or gameplay changes.

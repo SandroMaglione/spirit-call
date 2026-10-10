@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "triangles": 1024,
+  "triangles": 416,
   "materials": 3,
   "meshes": [
     {
@@ -29,16 +29,6 @@
       "vertex_colors": true
     },
     {
-      "name": "Collar.Back",
-      "triangles": 260,
-      "vertex_colors": true
-    },
-    {
-      "name": "Collar.Front",
-      "triangles": 324,
-      "vertex_colors": true
-    },
-    {
       "name": "Crest.Side",
       "triangles": 16,
       "vertex_colors": true
@@ -60,12 +50,7 @@
     },
     {
       "name": "Gem",
-      "triangles": 16,
-      "vertex_colors": true
-    },
-    {
-      "name": "Gem.Frame",
-      "triangles": 16,
+      "triangles": 8,
       "vertex_colors": true
     },
     {
@@ -86,5 +71,5 @@
   "textures": 0,
   "embedded_buffer": true,
   "compression": false,
-  "glb_sha256": "cb4db159ac71537d0085f1e34b0acf98cd0e24dd737fa84778ba0685b2a45805"
+  "glb_sha256": "3a5695c9e59cf825046df84e88446881a2d52e1b981142fcde1a6df3ca362f36"
 }

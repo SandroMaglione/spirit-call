@@ -12,12 +12,12 @@ from pathlib import Path
 import bmesh
 import bpy
 from mathutils import Vector
-from mathutils.bvhtree import BVHTree
 
 HERE = Path(__file__).resolve().parent
 SHEET = json.loads((HERE/'sheet.json').read_text())
 SCALE = SHEET['meters_per_pixel']
 HOVER = SHEET['hover_m']
+DEPTH_FACTOR = .65  # Review feedback: slim the side profile, retain front proportions.
 COLORS = SHEET['palette'] | {'dark':'#081F29', 'socket':'#0A2630', 'deep_teal':'#087E78'}
 RNG = random.Random(713)
 
@@ -29,7 +29,7 @@ def mix(a,b,t):
     return [x+(y-x)*t for x,y in zip(a,b)]
 
 def p(x,d,z):
-    return Vector((x*SCALE,d*SCALE,z*SCALE+HOVER))
+    return Vector((x*SCALE,d*SCALE*DEPTH_FACTOR,z*SCALE+HOVER))
 
 def material(name, emission=0, flat=False):
     m=bpy.data.materials.new(name); m.use_nodes=True
@@ -87,8 +87,6 @@ def paint(poly, kind):
         return mix(linear(COLORS['teal']),linear(COLORS['mint']),RNG.uniform(.15,.85))
     if kind=='gem':
         return mix(linear(COLORS['deep_teal']),linear(COLORS['teal']),RNG.uniform(.28,.95))
-    if kind=='collar':
-        return mix(linear(COLORS['cream']),linear(COLORS['pale_green']),RNG.uniform(0,.28))
     return linear(COLORS[kind])
 
 def mesh(name, vertices, faces, kind, mat=FACET, origin=None):
@@ -128,7 +126,7 @@ inner=[p(x,-59-(1-abs(x)/40)*6,z) for x,z in opening]
 n=len(outer); verts=list(outer)
 middle=[]
 for i,(a,b) in enumerate(zip(outer,inner)):
-    v=a.lerp(b,.52); v.y-=4*SCALE
+    v=a.lerp(b,.52); v.y-=4*SCALE*DEPTH_FACTOR
     v.z+=RNG.uniform(-2,2)*SCALE; middle.append(v)
 verts+=middle+inner
 faces=[]; connect(faces,0,n,n); connect(faces,n,2*n,n,1)
@@ -160,12 +158,12 @@ def blade(name, boundary, kind, ridge=7, origin=None):
     verts=boundary[:]
     for i,v in enumerate(boundary):
         q=center.lerp(v,.52)
-        q.y-=ridge*SCALE*.6; q.z+=(ridge*SCALE*.25)
+        q.y-=ridge*SCALE*.6*DEPTH_FACTOR; q.z+=(ridge*SCALE*.25)
         verts.append(q)
-    crest=center+Vector((0,-ridge*SCALE,ridge*SCALE*.4)); verts.append(crest)
+    crest=center+Vector((0,-ridge*SCALE*DEPTH_FACTOR,ridge*SCALE*.4)); verts.append(crest)
     faces=[]; connect(faces,0,n,n)
     for i in range(n): faces.append((n+i,n+(i+1)%n,2*n))
-    underside=len(verts); verts.append(center+Vector((0,ridge*SCALE*.8,-ridge*SCALE*.4)))
+    underside=len(verts); verts.append(center+Vector((0,ridge*SCALE*.8*DEPTH_FACTOR,-ridge*SCALE*.4)))
     for i in range(n): faces.append((i,(i+1)%n,underside))
     return mesh(name,verts,faces,kind,origin=origin or center)
 
@@ -191,78 +189,29 @@ for sign,label in ((-1,'L'),(1,'R')):
 blade('Mantle.Back',[p(-48,28,114),p(0,60,119),p(48,28,114),p(32,65,85),
                     p(0,72,78),p(-32,65,85)],'lower',-6,p(0,49,108))
 
-# The narrow cream edge is a curved ribbon, continuous under the face.
-bpy.context.view_layer.update()
-surface_vertices=[];surface_faces=[]
-for obj in bpy.data.objects:
-    if obj.type!='MESH' or not (obj.name.startswith('Cape.') or obj.name=='Mantle.Back'): continue
-    start=len(surface_vertices)
-    surface_vertices += [obj.matrix_world@v.co for v in obj.data.vertices]
-    surface_faces += [tuple(start+i for i in poly.vertices) for poly in obj.data.polygons]
-surface=BVHTree.FromPolygons(surface_vertices,surface_faces)
-def ribbon_point(x,d,z,rear=False):
-    point=p(x,d,z)
-    hit,_,_,_=surface.ray_cast(p(x,500 if rear else -500,z),Vector((0,-1 if rear else 1,0)))
-    if hit is not None: point.y=hit.y+(.6 if rear else -.6)*SCALE
-    return point
-
-def densify(path):
-    # Sample across facet boundaries so long ribbon segments cannot sink
-    # behind the cape between their otherwise correctly placed endpoints.
-    return [tuple(a+(b-a)*j/4 for a,b in zip(path[i],path[i+1]))
-            for i in range(len(path)-1) for j in range(4)]+[path[-1]]
-
-path=[(-140,80,101),(-111,41,96),(-79,0,89),(-46,-39,84),(-20,-63,82),
-      (0,-70,81),(20,-63,82),(46,-39,84),(79,0,89),(111,41,96),(140,80,101)]
-path=densify(path)
-verts=[]
-for x,d,z in path:
-    width=2.0+abs(x)/136*3.2
-    a=ribbon_point(x,d-1,z+width);b=ribbon_point(x,d-1,z)
-    verts += [a,b,a+Vector((0,SCALE,0)),b+Vector((0,SCALE,0))]
-faces=[]
-for i in range(len(path)-1):
-    a=i*4;b=(i+1)*4
-    for j,k in ((0,1),(2,3),(0,2),(1,3)):
-        faces.extend([(a+j,a+k,b+k),(a+j,b+k,b+j)])
-end=len(verts)-4
-faces += [(0,2,3),(0,3,1),(end,end+1,end+3),(end,end+3,end+2)]
-mesh('Collar.Front',verts,faces,'collar',origin=p(0,-40,85))
-back_path=[(-140,80,101),(-105,86,95),(-70,87,88),(-35,83,84),(0,78,83),
-           (35,83,84),(70,87,88),(105,86,95),(140,80,101)]
-back_path=densify(back_path)
-verts=[];faces=[]
-for x,d,z in back_path:
-    a=ribbon_point(x,d,z+3,True);b=ribbon_point(x,d,z,True)
-    verts += [a,b,a-Vector((0,SCALE,0)),b-Vector((0,SCALE,0))]
-for i in range(len(back_path)-1):
-    a=i*4;b=(i+1)*4
-    for j,k in ((0,1),(2,3),(0,2),(1,3)):
-        faces.extend([(a+j,a+k,b+k),(a+j,b+k,b+j)])
-end=len(verts)-4
-faces += [(0,2,3),(0,3,1),(end,end+1,end+3),(end,end+3,end+2)]
-mesh('Collar.Back',verts,faces,'collar',origin=p(0,60,85))
-
 blade('Crest.Tall',[p(-3,10,187),p(16,13,217),p(5,17,246),p(-13,14,217)],'crest',16,p(0,12,189))
 blade('Crest.Side',[p(-3,12,189),p(-18,38,223),p(-51,65,225),p(-41,48,199)],'leaf_teal',11,p(-3,14,190))
 
-# The chest crystal follows the front-facing panel, framed by a dark rim.
-center=p(0,-47,63)
-gem_boundary=[p(0,-44,81),p(11,-47,63),p(0,-36,45),p(-11,-47,63)]
-blade('Gem.Frame',gem_boundary,'dark',1.7,center)
-gem_boundary=[p(0,-45.5,77.5),p(8,-49,63),p(0,-38,48.5),p(-8,-49,63)]
-blade('Gem',gem_boundary,'gem',5,center)
+# A simple eight-facet crystal floats clear of the chest, with no frame.
+center=p(0,-67,63)
+vertices=[p(0,-67,81),p(0,-67,45),p(10,-67,63),
+          p(0,-76,63),p(-10,-67,63),p(0,-58,63)]
+faces=[]
+for i in range(4):
+    a=2+i; b=2+(i+1)%4
+    faces.extend([(0,a,b),(1,b,a)])
+crystal=mesh('Gem',vertices,faces,'gem',origin=center)
 
 eye_width=sum(e['width'] for e in SHEET['front_eyes'])/2
 eye_height=sum(e['height'] for e in SHEET['front_eyes'])/2
 eye_gap=(SHEET['front_eyes'][1]['center'][0]-SHEET['front_eyes'][0]['center'][0])/2
 eye_z=473-sum(e['center'][1] for e in SHEET['front_eyes'])/2
 for sign,label in ((-1,'L'),(1,'R')):
-    c=p(sign*eye_gap,-59.6,eye_z); verts=[c+Vector((0,-.35*SCALE,0))]
+    c=p(sign*eye_gap,-59.6,eye_z); verts=[c+Vector((0,-.35*SCALE*DEPTH_FACTOR,0))]
     for i in range(24):
         angle=2*math.pi*i/24
         verts.append(c+Vector((math.cos(angle)*eye_width*SCALE/2,0,math.sin(angle)*eye_height*SCALE/2)))
-    verts.append(c+Vector((0,.25*SCALE,0)))
+    verts.append(c+Vector((0,.25*SCALE*DEPTH_FACTOR,0)))
     faces=[]
     for i in range(24):
         j=(i+1)%24
@@ -282,6 +231,10 @@ bpy.context.view_layer.update()
 points=[obj.matrix_world@v.co for obj in bpy.data.objects if obj.type=='MESH' for v in obj.data.vertices]
 low=[min(v[i] for v in points) for i in range(3)]
 high=[max(v[i] for v in points) for i in range(3)]
+body_front=min((body.matrix_world@v.co).y for v in body.data.vertices)
+crystal_back=max((crystal.matrix_world@v.co).y for v in crystal.data.vertices)
+crystal_gap=body_front-crystal_back
+assert crystal_gap>.015, 'Crystal must float clear of the chest'
 scene=bpy.context.scene; scene.view_settings.view_transform='Standard'
 scene.render.engine='BLENDER_EEVEE_NEXT'
 bpy.ops.wm.save_as_mainfile(filepath=str(HERE/'windwall.blend'))
@@ -292,6 +245,7 @@ info={'name':'Windwall','status':'static model for review','height_m':high[2],
       'height_basis':'ground origin to highest rest mesh vertex, including crest',
       'silhouette_height_m':high[2]-low[2], 'hover_m':low[2],
       'width_m':high[0]-low[0],'depth_m':high[1]-low[1],
+      'depth_factor_from_initial_model':DEPTH_FACTOR,'chest_crystal_gap_m':crystal_gap,
       'bounds_blender':{'min':low,'max':high}, 'triangles':sum(x['triangles'] for x in audit),
       'materials':[m.name for m in (FACET,FACE,GLOW)],'objects':audit,
       'animations':0,'armatures':0,'textures':0,'cameras':0,'lights':0,

@@ -2,26 +2,26 @@
   "front": {
     "turn": -5,
     "elevation": 0,
-    "silhouette_iou": 0.8952731886405356
+    "silhouette_iou": 0.894657871259023
   },
   "back": {
     "turn": 180,
     "elevation": 10,
-    "silhouette_iou": 0.8699153608752666
+    "silhouette_iou": 0.8932276928881343
   },
   "left": {
     "turn": -60,
     "elevation": 10,
-    "silhouette_iou": 0.6538049303322615
+    "silhouette_iou": 0.7179590196866211
   },
   "right": {
-    "turn": 80,
+    "turn": 60,
     "elevation": 10,
-    "silhouette_iou": 0.6599938246191849
+    "silhouette_iou": 0.6875175525640785
   },
   "hero": {
     "turn": 5,
     "elevation": 0,
-    "silhouette_iou": 0.8334373447788377
+    "silhouette_iou": 0.8326836849077754
   }
 }

@@ -88,3 +88,16 @@ d.text((22,20),'GAME CAMERA / 40 x 40 PX RENDER + 8X ENLARGEMENT',font=FONT,fill
 small_board.paste(small,(75,190));small_board.paste(small.resize((320,320),Image.Resampling.NEAREST),(270,80))
 small_board.save(HERE/'renders/review-game-size.png')
 print(json.dumps(scores,indent=2))
+
+# Compare the revision at the same camera and scale as the initial model.
+revision=Image.new('RGB',(1504,1300),(8,25,35));d=ImageDraw.Draw(revision)
+d.text((24,18),'WINDWALL / BEFORE AND AFTER',font=TITLE,fill=(192,246,224))
+d.text((24,60),'Slimmer depth, removed cream trim, separate floating crystal',font=FONT,fill=(158,194,201))
+for row,view in enumerate(('right','game')):
+    y=100+row*600
+    for column,prefix in enumerate(('before-','')):
+        x=column*752
+        d.text((x+24,y),view.upper()+' / '+('BEFORE' if prefix else 'AFTER'),font=FONT,fill=(192,246,224))
+        im=Image.open(HERE/'renders'/f'{prefix}{view}.png').convert('RGB')
+        revision.paste(im.resize((526,560)),(x+113,y+30))
+revision.save(HERE/'renders/revision.png')
