@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "triangles": 1194,
+  "materials": 3,
+  "named_meshes": 8,
+  "primitives": 9,
+  "dimensions_m": {
+    "width": 0.5499999821186066,
+    "depth": 0.3499999940395355,
+    "height": 0.800000011920929
+  },
+  "grounded": true,
+  "native_topology": [
+    {
+      "name": "IceSpirit",
+      "triangles": 738,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Crown",
+      "triangles": 104,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Shard.Upper.L",
+      "triangles": 32,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Shard.Upper.R",
+      "triangles": 32,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Shard.Lower.L",
+      "triangles": 32,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Shard.Lower.R",
+      "triangles": 32,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Eye.L",
+      "triangles": 112,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    },
+    {
+      "name": "Eye.R",
+      "triangles": 112,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_vertices": 0,
+      "smooth_faces": 0
+    }
+  ],
+  "round_trip_bounds_native_z_up": {
+    "min": [
+      -0.2770676612854004,
+      -0.15241937339305878,
+      0.0
+    ],
+    "max": [
+      0.2729323208332062,
+      0.19758063554763794,
+      0.800000011920929
+    ]
+  },
+  "animations": 0,
+  "skins": 0,
+  "textures": 0,
+  "helpers": 0,
+  "face_recess_depth_m": 0.057580649852752686,
+  "glb_faces_positive_z": true,
+  "sha256": "cd088f4dce1dcaba7cfb6dd4560eaa566e96a509742f57f228cae9363db17ac8"
+}

@@ -1,0 +1,193 @@
+{
+  "image_size": [
+    2400,
+    1792
+  ],
+  "landmark_coordinate_size": [
+    1824,
+    1361
+  ],
+  "height_m": 0.8,
+  "width_m": 0.55,
+  "depth_m": 0.35,
+  "center_px": 222,
+  "ground_px": 596,
+  "top_px": 252,
+  "meters_per_pixel_x": 0.002067669172932331,
+  "meters_per_pixel_z": 0.002325581395348837,
+  "body_outline": [
+    [
+      222,
+      252
+    ],
+    [
+      302,
+      411
+    ],
+    [
+      286,
+      463
+    ],
+    [
+      222,
+      596
+    ],
+    [
+      154,
+      463
+    ],
+    [
+      138,
+      411
+    ]
+  ],
+  "body_shoulders": {
+    "left": [
+      174,
+      330
+    ],
+    "right": [
+      267,
+      330
+    ]
+  },
+  "body_lower_corners": {
+    "left": [
+      187,
+      509
+    ],
+    "right": [
+      255,
+      509
+    ]
+  },
+  "face_outline": [
+    [
+      222,
+      367
+    ],
+    [
+      269,
+      432
+    ],
+    [
+      266,
+      470
+    ],
+    [
+      222,
+      504
+    ],
+    [
+      176,
+      470
+    ],
+    [
+      174,
+      432
+    ]
+  ],
+  "shards": {
+    "Shard.Upper.L": [
+      [
+        106,
+        359
+      ],
+      [
+        128,
+        409
+      ],
+      [
+        111,
+        462
+      ],
+      [
+        88,
+        410
+      ]
+    ],
+    "Shard.Upper.R": [
+      [
+        334,
+        359
+      ],
+      [
+        354,
+        409
+      ],
+      [
+        332,
+        462
+      ],
+      [
+        312,
+        410
+      ]
+    ],
+    "Shard.Lower.L": [
+      [
+        126,
+        470
+      ],
+      [
+        175,
+        512
+      ],
+      [
+        190,
+        571
+      ],
+      [
+        138,
+        529
+      ]
+    ],
+    "Shard.Lower.R": [
+      [
+        314,
+        471
+      ],
+      [
+        304,
+        530
+      ],
+      [
+        255,
+        570
+      ],
+      [
+        270,
+        512
+      ]
+    ]
+  },
+  "eyes_px": {
+    "centers": [
+      [
+        204,
+        446
+      ],
+      [
+        240,
+        446
+      ]
+    ],
+    "width": 15,
+    "height": 39
+  },
+  "swatches": {
+    "white": "#ffffff",
+    "ice": "#90d1fb",
+    "blue": "#4188dd",
+    "indigo": "#202b4b",
+    "eyes": "#00fefe"
+  },
+  "reference_policy": [
+    "Front silhouette and face landmarks control the shape.",
+    "Overall labels control height, width and depth; X and Z pixel scales differ.",
+    "The side drawing is oblique; do not call it an orthographic side benchmark.",
+    "No back view is supplied; rear facets continue the crystal volume.",
+    "The crown joins the body as drawn; its own origin is at Z=0.73 m.",
+    "The lower shards are slanted blades, not upright copies of the upper shards."
+  ]
+}

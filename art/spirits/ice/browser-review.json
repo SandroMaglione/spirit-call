@@ -1,0 +1,42 @@
+{
+  "animations": 0,
+  "asset": "Ice Spirit static",
+  "error": "",
+  "horizontalOverflow": false,
+  "materials": 3,
+  "physicalDeviceTested": false,
+  "screenshotCapture": "Preview snapshot failed. Browser canvas inspected separately.",
+  "sha": "cd088f4dce1dcaba7cfb6dd4560eaa566e96a509742f57f228cae9363db17ac8",
+  "simulatedTouch": {
+    "after": [
+      -0.49450602035352825,
+      0.6449307098707402,
+      3.961751221770031
+    ],
+    "before": [
+      0,
+      0.40000000000000024,
+      4
+    ],
+    "method": "Synthetic touch PointerEvents; pointer capture temporarily stubbed",
+    "orbitMoved": true
+  },
+  "triangles": 1194,
+  "viewport": [
+    390,
+    844
+  ],
+  "desktop": {
+    "error": "",
+    "horizontalOverflow": false,
+    "sha": "cd088f4dce1dcaba7cfb6dd4560eaa566e96a509742f57f228cae9363db17ac8",
+    "status": "1,194 triangles · 3 materials · 8 objects",
+    "viewport": [
+      1280,
+      800
+    ]
+  },
+  "cameraPresetsPassed": 8,
+  "wireframePassed": true,
+  "gameplayFrameMeasuredPixels": 31.9948
+}

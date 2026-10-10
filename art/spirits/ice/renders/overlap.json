@@ -1,0 +1,13 @@
+{
+  "front_dimension_normalized_iou": 0.947825460829493,
+  "basis": "Overall width/height labels applied with separate X and Z pixel scales. Original side drawing is oblique; no side/back score claimed.",
+  "reference_mask_components": 7,
+  "scored_components": 5,
+  "reference_pixels": 69190,
+  "model_pixels": 66067,
+  "legend": {
+    "pale": "intersection",
+    "orange": "reference only",
+    "mint": "model only"
+  }
+}
