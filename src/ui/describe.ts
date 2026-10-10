@@ -149,6 +149,10 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `${effect.shape.kind === "wall" ? `a ${elementWord(effect.element)}wall across your aim` : `a ${elementWord(effect.element)}ring around you, its gust throwing what is inside out,`} for ${effect.seconds}s: shots break on it, and enemies that touch it are struck (${effect.power}% ATK) and thrown back${effect.shape.kind === "wall" ? "" : " out"}`
     case "fault":
       return `the ground splitting ahead of you, ${effect.rocks} ${elementWord(effect.element)}rocks erupting down the line one after the other (${effect.power}% ATK each), holding what they catch a moment`
+    case "splinters":
+      return effect.seconds > 0
+        ? `for ${effect.seconds}s, every blow of your attack that lands throws ${effect.count} ${elementWord(effect.element)}splinters every way, each bursting a moment later (${effect.power}% ATK each)`
+        : `${effect.count} ${elementWord(effect.element)}splinters bursting out all around you, each bursting a moment after it lands (${effect.power}% ATK each)`
     case "quake":
       return `${effect.slams} ${elementWord(effect.element)}slams around you, each wider than the last (${effect.power}% ATK each), the last stunning what it catches for ${effect.stun}s`
     case "brace":

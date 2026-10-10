@@ -504,6 +504,9 @@ export const skillReach = (effect: SkillEffect): number => {
     // A wall goes up between her and what comes; a ring around her, once enemies close in.
     case "barrier":
       return effect.shape.kind === "wall" ? effect.shape.ahead + effect.shape.length + more : effect.shape.radius + more
+    // Splinters taken up go with her blows; burst out, they land around her.
+    case "splinters":
+      return (effect.seconds > 0 ? 200 : effect.far) + more
     case "blast":
     case "leap":
     case "nova":

@@ -329,6 +329,27 @@ export interface QuakeEffect extends EffectBase {
 }
 
 /**
+ * Rock splinters thrown out in random directions, each landing between
+ * `near` and `far` away after `flight` seconds, lying there, and bursting
+ * after its own fuse (drawn between `fuse.first` and `fuse.last`): each
+ * burst strikes the bodies of the other side within `radius` (its blow,
+ * its element). With `seconds` above 0, the caster takes them up for that
+ * long: every blow of her basic attack that lands throws `count` of them
+ * from where it lands (lost if she leaves the field). With `seconds` 0,
+ * `count` of them burst out around her at once.
+ */
+export interface SplintersEffect extends EffectBase {
+  readonly kind: "splinters"
+  readonly seconds: number
+  readonly count: number
+  readonly near: number
+  readonly far: number
+  readonly flight: number
+  readonly fuse: { readonly first: number; readonly last: number }
+  readonly radius: number
+}
+
+/**
  * A barrier of the caster's element for `seconds`, `thickness` thick: a
  * wall across her aim, `ahead` in front of her and `length` long, or a ring
  * of `radius` around where she stands. The other side's shots that meet it
@@ -426,7 +447,7 @@ export interface OverdriveEffect extends EffectBase {
   readonly blast: { readonly radius: number; readonly power: number }
 }
 
-export type SkillEffect = OverdriveEffect | MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+export type SkillEffect = SplintersEffect | OverdriveEffect | MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -461,6 +482,7 @@ export const mantle = (spec: Omit<MantleEffect, "kind">): MantleEffect => ({ kin
 export const overdrive = (spec: Omit<OverdriveEffect, "kind">): OverdriveEffect => ({ kind: "overdrive", ...spec })
 export const lift = (spec: Omit<LiftEffect, "kind">): LiftEffect => ({ kind: "lift", ...spec })
 export const fault = (spec: Omit<FaultEffect, "kind">): FaultEffect => ({ kind: "fault", ...spec })
+export const splinters = (spec: Omit<SplintersEffect, "kind">): SplintersEffect => ({ kind: "splinters", ...spec })
 export const quake = (spec: Omit<QuakeEffect, "kind">): QuakeEffect => ({ kind: "quake", ...spec })
 export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
@@ -678,27 +700,30 @@ export const skills = {
     effect: nova({ radius: 260, power: 40, element: "water", knockback: 1000, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, readies: 6 })
   }),
   /**
-   * Quarry's special: she drives her hammer down and the ground splits
-   * along her aim, rocks erupting one after the other down the line,
-   * striking, cracking, and holding what they catch a moment.
+   * Quarry's special (id `faultLine`, from when it split the ground): for a
+   * while, every blow of her hammer that lands throws rock splinters out
+   * from where it lands, every way, each bursting a moment later, after
+   * its own fuse, cracking what is near.
    */
   faultLine: skill({
-    name: "Fault Line",
-    cooldown: 7,
+    name: "Splinters",
+    cooldown: 10,
     energy: 0,
     invulnerability: 0,
-    effect: fault({ length: 380, rocks: 5, warning: 0.25, interval: 0.07, size: 55, stun: 0.5, breakFill: 0.2, power: 26, element: "rock", knockback: 420, hitStop: 0.05, heavy: false })
+    effect: splinters({ seconds: 8, count: 3, near: 50, far: 120, flight: 0.22, fuse: { first: 0.3, last: 0.8 }, radius: 38, power: 9, element: "rock", knockback: 220, hitStop: 0.02, heavy: false })
   }),
   /**
-   * Quarry's ultimate: three slams of her hammer, each shaking the ground
-   * wider around her, the last stunning what it catches. No aim.
+   * Quarry's ultimate (id `landslide`, from when it was three slams): she
+   * smashes the ground and splinters burst out all around where she
+   * stands, every way, each bursting a moment after it lands, one after
+   * the other, cracking what is near.
    */
   landslide: skill({
-    name: "Landslide",
+    name: "Rockburst",
     cooldown: 10,
     energy: 90,
     invulnerability: 0.8,
-    effect: quake({ slams: 3, interval: 0.35, first: 150, growth: 60, stun: 1.2, breakFill: 0.4, power: 45, element: "rock", knockback: 700, hitStop: 0.08, heavy: true })
+    effect: splinters({ seconds: 0, count: 16, near: 60, far: 240, flight: 0.35, fuse: { first: 0.35, last: 1.4 }, radius: 55, power: 32, element: "rock", knockback: 500, hitStop: 0.04, heavy: true })
   }),
   /**
    * Hearth's special: she brings her hammer down and the fires around her

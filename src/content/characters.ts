@@ -248,9 +248,9 @@ export const characters = {
   }),
   /**
    * Rock, Hammer, attacker (a working name): the slow, heavy hitter, frail
-   * for her strength and slow on her feet, her dash short. The Fault Line
-   * splits the ground along her aim; the Landslide shakes it ever wider
-   * around her.
+   * for her strength and slow on her feet, her dash short. With Splinters
+   * her blows throw rock splinters that burst a moment later; the
+   * Rockburst bursts them out all around her.
    */
   quarry: character({
     name: "Quarry",

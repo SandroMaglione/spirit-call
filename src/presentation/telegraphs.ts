@@ -189,6 +189,18 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     }
     const flight = Math.min(1, elapsed / spec.flightTime)
     const fuse = spec.fuse > 0 ? Math.max(0, Math.min(1, (elapsed - spec.flightTime) / spec.fuse)) : flight >= 1 ? 1 : 0
+    // A rock splinter, once down: the circle its burst will strike, filling as its fuse burns.
+    if (lobbed.splinter === true) {
+      if (flight >= 1) {
+        g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.12 + 0.12 * fuse)
+        g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 1.5, color, 0.3 + 0.5 * fuse)
+        continue
+      }
+      // In flight, its shadow (the shard itself is in the 3D scene, see `ShowSplinters`).
+      const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
+      g.fillCircle(ground.x, ground.y, 4, view.shadow, 0.3)
+      continue
+    }
     g.strokeCircle(lobbed.to.x, lobbed.to.y, spec.radius, 2, color, flight < 1 ? 0.35 : 0.9)
     // A bomb's fuse shows burning only for the team's own (an enemy's is read from it landing, never counted down).
     if (fuse > 0 && lobbed.faction === "player") g.fillCircle(lobbed.to.x, lobbed.to.y, spec.radius * fuse, color, 0.25)

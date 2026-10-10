@@ -1,7 +1,7 @@
 /**
  * The Hammer (see the `slam` move and docs/aspects.md) and Quarry's kit:
- * every blow winds up, then comes down on a circle ahead of her; the Fault Line splits the ground along her aim; the
- * Landslide slams ever wider around her.
+ * every blow winds up, then comes down on a circle ahead of her; Splinters makes her blows throw rock splinters that
+ * burst a moment later; the Rockburst bursts them out all around her.
  */
 import { describe, expect, it } from "vitest"
 
@@ -70,30 +70,42 @@ describe("the Hammer", () => {
 })
 
 describe("Quarry's kit", () => {
-  const faultLine = defaultTuning.skills.faultLine.effect
-  const landslide = defaultTuning.skills.landslide.effect
+  const special = defaultTuning.skills.faultLine.effect
+  const ultimate = defaultTuning.skills.landslide.effect
+  const opener = plain.combo[0]!
+  if (opener.shape !== "slam") throw new Error("the Hammer opens with a slam")
+  // Where her opener comes down, and dummies in a ring around it, out of its own reach but within the splinters'.
+  const lands = { x: opener.reach - opener.radius, y: 0 }
+  const ring = (center: { readonly x: number; readonly y: number }, radius: number, count: number) =>
+    Array.from({ length: count }, (_, index) => ({ x: center.x + Math.cos((index / count) * Math.PI * 2) * radius, y: center.y + Math.sin((index / count) * Math.PI * 2) * radius }))
 
-  it("the Fault Line raises rocks down her aim, cracking and holding what they catch, and none aside", () => {
-    expect(faultLine.kind).toBe("fault")
-    const run = arena(tuningWith(sturdy), { character: "quarry" }, [{ x: 150, y: 0 }, { x: 330, y: 0 }, { x: 0, y: 250 }], { keys: [{ frame: 2, press: ["special"], release: ["special"] }] })
-    run.step(steps(1))
-    const [near, far, aside] = run.world()
-    expect(near!.hurt > 0 && far!.hurt > 0).toBe(true)
-    expect(near!.state).toBe("cracked")
-    expect(aside!.hurt).toBe(0)
+  it("Splinters, taken up: every blow that lands throws splinters around where it lands, each bursting and cracking what is near", () => {
+    expect(special.kind).toBe("splinters")
+    if (special.kind !== "splinters") return
+    const dummies = ring(lands, (special.near + special.far) / 2 + 10, 8)
+    const blow = (withSplinters: boolean) => {
+      const run = arena(tuningWith(sturdy), { character: "quarry" }, dummies, {
+        keys: withSplinters ? [{ frame: 2, press: ["special"], release: ["special"] }] : [],
+        pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...swing(10)]
+      })
+      run.step(steps(opener.windup + special.flight + special.fuse.last + 0.5))
+      return run.world()
+    }
+    expect(blow(false).every((dummy) => dummy.hurt === 0)).toBe(true)
+    const struck = blow(true).filter((dummy) => dummy.hurt > 0)
+    expect(struck.length).toBeGreaterThan(0)
+    expect(struck.some((dummy) => dummy.state === "cracked")).toBe(true)
   })
 
-  it("the Landslide slams ever wider around her: the last reaches farthest and stuns", () => {
-    expect(landslide.kind).toBe("quake")
-    if (landslide.kind !== "quake") return
-    const widest = landslide.first + (landslide.slams - 1) * landslide.growth
-    const run = arena(tuningWith(sturdy), { character: "quarry" }, [{ x: landslide.first - 30, y: 0 }, { x: -(widest - 20), y: 0 }, { x: widest + 120, y: 0 }], { keys: [{ frame: 2, press: ["ultimate"], release: ["ultimate"] }] })
-    run.step(steps(defaultTuning.ultimate.moment + landslide.slams * landslide.interval + 0.1))
-    const [close, wide, beyond] = run.world()
-    // The close one is caught by every slam; the far one only by the last, which stuns it.
-    expect(close!.hurt).toBeGreaterThan(wide!.hurt * (landslide.slams - 0.5))
-    expect(wide!.hurt).toBeGreaterThan(0)
-    expect(wide!.stunned).toBeGreaterThan(0)
-    expect(beyond!.hurt).toBe(0)
+  it("Rockburst: splinters burst out all around her, and none beyond their reach", () => {
+    expect(ultimate.kind).toBe("splinters")
+    if (ultimate.kind !== "splinters") return
+    const around = ring({ x: 0, y: 0 }, (ultimate.near + ultimate.far) / 2, 8)
+    const beyond = { x: ultimate.far + ultimate.radius + 150, y: 0 }
+    const run = arena(tuningWith(sturdy), { character: "quarry" }, [...around, beyond], { keys: [{ frame: 2, press: ["ultimate"], release: ["ultimate"] }] })
+    run.step(steps(defaultTuning.ultimate.moment + ultimate.flight + ultimate.fuse.last + 0.5))
+    const world = run.world()
+    expect(world.slice(0, around.length).filter((dummy) => dummy.hurt > 0).length).toBeGreaterThanOrEqual(4)
+    expect(world.at(-1)!.hurt).toBe(0)
   })
 })

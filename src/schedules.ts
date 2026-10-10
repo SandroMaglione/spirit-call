@@ -35,6 +35,7 @@ import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
 import { CastBraces, CounterBraces, TickBraces } from "./features/brace.ts"
 import { CastOvercharges, TickOvercharges } from "./features/sparkfist.ts"
 import { CastOverdrives, TickOverdrives } from "./features/gunner.ts"
+import { CastSplinters, ThrowSplinters } from "./features/splinters.ts"
 import { CastBarriers, UpdateBarriers } from "./features/barriers.ts"
 import { CastEarthrise, CastFaults, CastQuakes, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
@@ -136,6 +137,7 @@ const gameplay = Game.Schedule.when(
   CastEarthrise,
   CastFaults,
   CastQuakes,
+  CastSplinters,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
@@ -159,6 +161,8 @@ const gameplay = Game.Schedule.when(
   MoveProjectiles,
   MoveDiscs,
   ResolveHitboxes,
+  // A blow that landed this step throws its splinters (see `ThrowSplinters`).
+  ThrowSplinters,
   UpdateVortices,
   UpdateBarriers,
   UpdateTotems,

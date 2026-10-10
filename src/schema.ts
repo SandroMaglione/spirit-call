@@ -18,7 +18,7 @@ import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { BarrierEffect, BraceEffect, CompanionsEffect, MantleEffect, OverchargeEffect, OverdriveEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { BarrierEffect, BraceEffect, CompanionsEffect, MantleEffect, OverchargeEffect, OverdriveEffect, SplintersEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
@@ -121,6 +121,10 @@ export interface LobbedValue {
   readonly blow: Blow
   /** Time since it was thrown. */
   readonly elapsed: number
+  /** A rock splinter (see `SplintersEffect`): drawn as a shard, not a bomb. */
+  readonly splinter?: boolean
+  /** The skill it is from, if any, named on its explosion. */
+  readonly skill?: SkillId | null
 }
 export const Lobbed = Descriptor.Component<LobbedValue>()("Shooter/Lobbed")
 
@@ -194,6 +198,19 @@ export interface CompanionValue {
   readonly facing: Vec2
 }
 export const Companion = Descriptor.Component<CompanionValue>()("Shooter/Companion")
+
+/**
+ * A hammer throwing splinters (see `SplintersEffect`), on the member who
+ * took them up, for `remaining` more seconds: each blow of hers that lands
+ * throws the effect's `count` of them, each bursting with `blow`; `skill`
+ * names it on what it strikes.
+ */
+export const Splintering = Descriptor.Component<{
+  readonly remaining: number
+  readonly effect: SplintersEffect
+  readonly blow: Blow
+  readonly skill: SkillId | null
+}>()("Shooter/Splintering")
 
 /**
  * A body taken over by an element (see `OverchargeEffect`), on the member
@@ -1306,6 +1323,7 @@ export const Game = Schema.bind(
       Companion,
       Lifted,
       Overcharged,
+      Splintering,
       Overdriven,
       Raising,
       Bracing,

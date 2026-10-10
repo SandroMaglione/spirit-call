@@ -62,7 +62,7 @@ marked * are working names.
 | Water | Tidewarden* | Guardian | Blade | the Brace takes one blow whole and disarms the attacker; the Floodgate soaks the crowd and readies a brace that takes a blow at once |
 | Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: the Spark Step darts her through a line of enemies, charging them; the Overcharge turns her to lightning for a while, every dash a Spark Step of its own and all but endless |
 | Thunder | Stormcaller | Healer | Staff | a totem to fight by, and a thunderclap that heals by what it strikes |
-| Rock | Quarry* | Attacker | Hammer | the slow heavy hitter: the Fault Line splits the ground along her aim, the Landslide slams ever wider around her |
+| Rock | Quarry* | Attacker | Hammer | the slow heavy hitter: Splinters makes her blows throw rock splinters that burst a moment later; Rockburst bursts them out all around her |
 | Rock | Bastion | Guardian | Disc | the slow defender: stone plates |
 
 Four attackers (wind, fire, thunder, rock), three healers (water, thunder,

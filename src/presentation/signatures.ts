@@ -49,10 +49,10 @@ import type { CompanionNode, FeedbackState } from "./host-types.ts"
 import type { Shapes } from "./shapes.ts"
 
 /** Skills drawn here alone: the shared looks (a nova's ring, a cut's streaks, a zap's bolt) leave them out. */
-export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "thunderclap", "sparkStep", "stormFlurry"])
+export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "thunderclap", "sparkStep", "stormFlurry", "faultLine", "landslide"])
 
 /** Skills whose hits are seen in their own look alone: the flat shape of what they strike is not drawn too (see `presentation/telegraphs.ts`). */
-export const unmarkedHits: ReadonlySet<SkillId> = new Set<SkillId>(["sparkStep", "stormFlurry"])
+export const unmarkedHits: ReadonlySet<SkillId> = new Set<SkillId>(["sparkStep", "stormFlurry", "faultLine", "landslide"])
 
 const water = view.elements.water
 const foam = 0xe8f6ff
@@ -523,6 +523,7 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   const moment = tuning.ultimate.moment
   for (const called of events.called.all()) {
     if (called.skill === "thunderclap") riseAndSlam(feedback, moment, 45)
+    if (called.skill === "landslide") riseAndSlam(feedback, moment, 60)
   }
 
   const zaps = events.zap.all()

@@ -5,6 +5,27 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## Quarry's Splinters, and the Hammer's reach (2026-10-10)
+
+Quarry's kit became Splinters (her blows throw rock splinters for 8 s) and
+Rockburst (splinters burst out all around her); see `docs/roster.md`. Read
+solo on the matrix's 8 quests (seed 1337), beside the Quarry measured
+before the Hammer's blows:
+
+| Quarry | Clears (skilled / learning) | Hits a run (skilled) |
+|---|---|---|
+| Before the Hammer's blows (waves) | 8 / 3 of 8 | 1 |
+| Hammer's blows, old kit | 6 / 0 | 6 |
+| Hammer's blows, Splinters | 6 / 0 | 4.6 |
+| Quake's blows nearer, Splinters | 8 / 0 | 2.1 |
+
+What cost her was the Hammer, not the kit: Quake's blows came down with
+their near edge 65 ahead, so an enemy hugging her was never struck. Its
+circles now reach back to her feet (centers 78 to 90 ahead, radii 72 to
+110). Stronger splinters moved the learning bot by one clear at most: she
+falls to blows as the other frail attackers do (Sparkfist 1, the Gunner 0),
+for a playtest to settle.
+
 ## The rest of the roster (2026-10-10)
 
 Tidewarden, the Hammer with Quarry, Hearth (and the Thunderclap's heal by
@@ -515,14 +536,6 @@ top of a champion's health kept matched teams from clearing in time, so it
 was swapped for the Stalker. Fire champions leave no trail: in the lab a
 long-lived fire trail did most of the damage the dodging bot took. The
 baseline was recorded again with them.
-
-## Hammer blows (October 2026)
-
-The Hammer's swings stopped sending shockwaves: each blow winds up and
-comes down on a circle ahead of her (the `slam` move, see
-`docs/aspects.md`). With fewer, slower blows, Quarry's single-target energy
-probe builds three ultimates in its window instead of two; Hearth's
-cadence held. The baseline was recorded again from CI's report.
 
 ## Implemented tuning
 

@@ -62,10 +62,10 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   stormFlurry: icon(`<circle cx="12" cy="12" r="9" stroke-dasharray="3 2"/><path d="M13 5l-4 7h4l-2 7 6-9h-4l2-5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Brace: a blade held across, a blow breaking on it.
   brace: icon(`<path d="M4 18L18 4M15 4h3v3M5 15l4 4"/><path d="M15 15l5 5M19 13l2-1M13 19l-1 2M20 17h2" />`),
-  // Fault Line: a crack running ahead, rocks along it.
-  faultLine: icon(`<path d="M2 20l5-4 3 2 4-6 3 2 5-9"/><path d="M6 14l1-3 2 1M13 10l1-3 2 1M18 6l1-3 2 1"/>`),
-  // Landslide: three rings shaking out from a slam.
-  landslide: icon(`<circle cx="12" cy="14" r="2.5" fill="currentColor" fill-opacity="0.35"/><path d="M6.5 14a5.5 5.5 0 0 1 11 0M3.5 14a8.5 8.5 0 0 1 17 0M1 18h22"/>`),
+  // Splinters: a hammer's head striking, three shards flying off it.
+  faultLine: icon(`<path d="M3 13l5-5 3 3-5 5z" fill="currentColor" fill-opacity="0.35"/><path d="M5.5 15.5L2 19"/><path d="M14 6l3-2.5-.5 3.5zM15.5 12l4 .5-3 2.5zM12 16.5l1.5 4-3.5-1.5z" fill="currentColor" fill-opacity="0.35"/>`),
+  // Rockburst: shards bursting out all around a crack.
+  landslide: icon(`<path d="M12 12l-2 3M12 12l3 1M12 12l-1-3" /><path d="M12 2l1.5 3.5h-3zM21 9l-3 2.5-.5-3zM18.5 20l-3.5-1.5 2.5-2zM5.5 20l1-3.5 2.5 2zM3 9l3.5-.5L6 11.5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Kindle: a flame over a cross of healing.
   kindle: icon(`<path d="M12 2c3 3 5 5.5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3.5 0-3 .5-5.5 1-8z" fill="currentColor" fill-opacity="0.35"/><path d="M12 17v5M9.5 19.5h5"/>`),
   // Wildfire: flames all around a ring.

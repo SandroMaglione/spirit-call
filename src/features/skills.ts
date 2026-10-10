@@ -115,6 +115,8 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     // A brace waits for its targets: nothing to aim.
     case "brace":
     case "quake":
+    // Splinters fly every way, from her or from her blows.
+    case "splinters":
     // Thunder goes through her, her gun runs hot: nothing to aim.
     case "overcharge":
     case "overdrive":
@@ -585,7 +587,7 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
       hit: []
     }]))
     if (effect.leaves !== null) commands.spawnIn(RunScope, makeGround(effect.leaves, lobbed.to, lobbed.blow.element?.atk ?? 0, lobbed.faction === "player"))
-    events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast", heavy: effect.heavy, element: effect.element })
+    events.explosion.emit({ at: lobbed.to, radius: effect.radius, faction: lobbed.faction, kind: "blast", heavy: effect.heavy, element: effect.element, ...(lobbed.skill == null ? {} : { skill: lobbed.skill }) })
   }
 })
 

@@ -267,6 +267,13 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       if (!(effect.warning >= 0 && effect.interval >= 0 && effect.stun >= 0)) problems.push(`${where}: warning, interval, and stun must not be negative`)
       if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
       return
+    case "splinters":
+      positive(problems, where, { count: effect.count, near: effect.near, flight: effect.flight, radius: effect.radius })
+      if (!Number.isInteger(effect.count)) problems.push(`${where}: count must be a whole number (is ${effect.count})`)
+      if (!(effect.seconds >= 0)) problems.push(`${where}: seconds must not be negative (is ${effect.seconds})`)
+      if (!(effect.far >= effect.near)) problems.push(`${where}: far must not be under near`)
+      if (!(effect.fuse.first >= 0 && effect.fuse.last >= effect.fuse.first)) problems.push(`${where}: fuse must run from first to a later last, both not negative`)
+      return
     case "quake":
       positive(problems, where, { slams: effect.slams, first: effect.first })
       if (!Number.isInteger(effect.slams)) problems.push(`${where}: slams must be a whole number (is ${effect.slams})`)
