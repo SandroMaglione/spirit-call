@@ -104,6 +104,34 @@ describe("players", () => {
     expect((await player.send("GET", "/api/account")).status).toBe(401)
   })
 
+  it("gives a recovery code once at sign-up, which sets a new password, closes every session, and is replaced", async () => {
+    const handler = server()
+    const stella = browser(handler)
+    const made = await stella.send("POST", "/api/users", { username: "stella", password: "correct horse" })
+    const code: string = made.body.recoveryCode
+    expect(code).toMatch(/^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/)
+    // A wrong code changes nothing.
+    expect(await browser(handler).send("POST", "/api/recovery", { username: "stella", code: "AAAA-BBBB-CCCC-DDDD", password: "new password" })).toMatchObject({ status: 401, body: { _tag: "WrongCredentials" } })
+    // The code as typed: lower case and spaced is the same code.
+    const recovered = await browser(handler).send("POST", "/api/recovery", { username: "stella", code: code.toLowerCase().replaceAll("-", " "), password: "new password" })
+    expect(recovered.status).toBe(200)
+    expect(recovered.body.recoveryCode).not.toBe(code)
+    // The old session is closed, the old password and code no longer work, the new password does.
+    expect((await stella.send("GET", "/api/account")).status).toBe(401)
+    expect((await browser(handler).send("POST", "/api/sessions", { username: "stella", password: "correct horse" })).status).toBe(401)
+    expect((await browser(handler).send("POST", "/api/recovery", { username: "stella", code, password: "another one" })).status).toBe(401)
+    expect((await browser(handler).send("POST", "/api/sessions", { username: "stella", password: "new password" })).status).toBe(200)
+  })
+
+  it("refuses too many attempts from one address in a while", async () => {
+    const handler = server()
+    await signUp(handler)
+    const tries = Array.from({ length: 21 }, () => () => browser(handler).send("POST", "/api/sessions", { username: "stella", password: "wrong password" }))
+    const statuses = await tries.reduce<Promise<Array<number>>>((before, next) => before.then(async (all) => [...all, (await next()).status]), Promise.resolve([]))
+    expect(statuses.slice(0, 20).every((status) => status === 401)).toBe(true)
+    expect(statuses[20]).toBe(429)
+  })
+
   it("answers the account only to a session", async () => {
     const handler = server()
     expect((await browser(handler).send("GET", "/api/account")).status).toBe(401)

@@ -1,6 +1,8 @@
 // The game on Cloudflare: one Worker serving the Vite build as static assets
-// and the game's server under `/api/` (src/server/worker.ts), over the shared
-// database (deploy/stacks/database.ts).
+// and the game's server under `/api/` (src/server/worker.ts). Prod uses the
+// players' database (deploy/stacks/database.ts); every other stage (a pull
+// request's preview, a laptop's) has a database of its own, made and
+// destroyed with it, so nothing but prod ever touches the players' accounts.
 // `pnpm alchemy deploy` (from this folder) builds and deploys a stage; CI
 // deploys `prod` from main and a `pr-<n>` preview for every pull request
 // (.github/workflows/deploy.yml).
@@ -28,8 +30,13 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const stage = yield* Alchemy.Stage
-    // The one database every stage shares (deploy/stacks/database.ts)
-    const database = yield* Cloudflare.D1.Database.ref("Accounts", { stack: "top-down-team-shooter-database", stage: "shared" })
+    // Prod: the players' database (deploy/stacks/database.ts); any other stage: its own, with the same migrations
+    const database = stage === "prod"
+      ? yield* Cloudflare.D1.Database.ref("Accounts", { stack: "top-down-team-shooter-database", stage: "shared" })
+      : yield* Cloudflare.D1.Database("Accounts", {
+        name: `top-down-team-shooter-${stage}`,
+        migrations: fileURLToPath(new URL("../src/server/migrations", import.meta.url))
+      })
     const game = yield* Cloudflare.Website.Vite("Game", {
       rootDir,
       // The server (src/server/worker.ts) answers `/api/`; the rest is the game's files
@@ -37,7 +44,7 @@ export default Alchemy.Stack(
       assets: { runWorkerFirst: ["/api/*"] },
       env: {
         DB: database,
-        // The dev tools (unlock everything, open the Spirit Call) answer everywhere but prod
+        // The dev tool (unlock everything) answers everywhere but prod
         DEV_TOOLS: stage === "prod" ? "off" : "on"
       },
       memo: {

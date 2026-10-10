@@ -40,12 +40,29 @@ PBKDF2 hashes. Signing up or logging in opens a session: a random token in
 an HTTP-only cookie (`session`, path `/api`, 90 days), kept in the database
 only as its SHA-256 hash. Logging out deletes it.
 
+The game runs with nobody looking after it (`vision.md`), so a player
+looks after her own account:
+
+- **A recovery code.** Signing up answers with a recovery code (four
+  groups of four letters and digits), shown once on the login screen to
+  write down, and kept only as a salted PBKDF2 hash (`users.recovery_hash`).
+  With it, `POST /api/recovery` sets a new password: every session of the
+  player closes, a new code replaces the old one (shown once again), and a
+  new session opens. There is no email and no one to ask.
+- **Too many attempts are refused.** Signing up, logging in, and
+  recovering are counted per address (Cloudflare's `CF-Connecting-IP`) in
+  windows of 15 minutes (`attemptLimits`: 5 sign-ups, 20 logins, 10
+  recoveries); one more answers `429 TooManyAttempts`. The counts live in
+  `attempts`, swept of old windows as it goes.
+- **Expired sessions are swept**, anyone's, whenever a session opens.
+
 ## The endpoints
 
 | | |
 | --- | --- |
 | `POST /api/users` | Sign up (and log in). |
 | `POST /api/sessions` | Log in. |
+| `POST /api/recovery` | Set a new password with the recovery code (and log in). |
 | `GET /api/sessions/current` | Who is logged in. |
 | `DELETE /api/sessions/current` | Log out. |
 | `GET /api/account` | The account. |
@@ -59,16 +76,18 @@ only as its SHA-256 hash. Logging out deletes it.
 | `GET /api/account/events?since=` | The changes to the player's account. |
 | `POST /api/dev/unlock-everything` | Dev tool: everywhere but prod. |
 
-Every endpoint but the first two needs the session. A rule that refuses
+Every endpoint but the first three needs the session. A rule that refuses
 (not owned, not enough, locked) answers `409 Refused` with its kind, and
 changes nothing. The server's own clock is the time.
 
 ## The database
 
-One D1 database, shared by every stage: prod, pull request previews, and
-each laptop's deployed stage. It is its own Alchemy stack
-(`deploy/stacks/database.ts`, stage `shared`) that the game's stages bind
-to by reference, so destroying a preview never touches it.
+The players' D1 database is prod's alone. It is its own Alchemy stack
+(`deploy/stacks/database.ts`, stage `shared`) that prod binds to by
+reference. Every other stage (a pull request's preview, a laptop's deployed
+stage) makes a database of its own with the same migrations, destroyed with
+it (`deploy/alchemy.run.ts`), so nothing but prod touches a player's
+account. (Until October 2026 every stage shared the one database.)
 
 - **Content ids are `TEXT`.** Content lives in code; the server checks
   every id it reads against it. Content that no longer exists is dropped as
@@ -92,8 +111,9 @@ to by reference, so destroying a preview never touches it.
   dust, the shop, the account level, and the weekly reset gone; the Call's
   tables are left empty and unused, and the account's own row keeps its
   Call and experience columns, written as zero); it also added the saved
-  teams' tables. Main's CI applies new ones before deploying prod. Previews and
-  laptops share the database, so they run against what main has applied.
+  teams' tables. `0012` added recovery codes, the attempts' counts, and an
+  index for sweeping sessions. Deploying prod (by hand, see "Releasing")
+  applies new ones first.
 - **No players yet: reset, do not migrate.** Until the game opens to
   players (decided by the developer, and written here when it happens),
   the only accounts are the developer's test accounts, with nothing to
@@ -104,6 +124,10 @@ to by reference, so destroying a preview never touches it.
   accounts again. A renamed id then moves to `retired` in
   `test/content-ids.json`, with no save migration of its own. From the
   opening on, migrations only add, and shipped ids are permanent.
+- **Logs stop growing.** Each player's last 200 runs keep their whole
+  log (`keptLogs`); older runs keep their row and who played them, and lose
+  their waves, hurts, skills, and falls, written away as each new run is
+  kept.
 - **Two round trips an action.** An action reads the whole account in one
   batch and writes everything it changed (its rows, its log lines) in
   another: a D1 `batch`, one round trip, all or none (`server/batch.ts`;
@@ -177,6 +201,25 @@ with a read-only key (see `scripts/db.ts`):
   `sandroN`) are left out unless `--tests`.
 - **Login secrets are never read:** no command selects password hashes or
   sessions, and `sql` refuses queries naming them.
+
+## Releasing
+
+The game is a finished release (`vision.md`): it changes only when its
+developer decides, and nothing changes it on its own.
+
+- **Prod deploys by hand**: Actions, "Deploy", run from main (it applies
+  the players' database's new migrations, then deploys). Merging to main
+  deploys nothing; pull requests still get their previews.
+- **bevy-ts stays at `bevyTsRelease`**; `.github/workflows/bevy-ts.yml`
+  moves it to a newer release only when started by hand.
+- **Dev tools are a dev build's** (`pnpm dev`): the tuning panel and its
+  saved numbers, the URL's quick starts and tools, and the monitor are not
+  in a built game; the server's dev route answers everywhere but prod.
+- **Opening to players** (the day is written here when it comes): the
+  rule "No players yet: reset, do not migrate" ends, and from then on
+  migrations only add and shipped ids are permanent; the test accounts'
+  write key (`deploy/stacks/writer.ts`) is destroyed, and the test
+  accounts with it if wanted.
 
 ## Test accounts
 
