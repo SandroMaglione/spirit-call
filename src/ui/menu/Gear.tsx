@@ -39,7 +39,7 @@ import type { UiActions, UiStore } from "../store.ts"
 import { ids, describeSource, lookSource } from "./parts.tsx"
 import type { GearFocus, GearTab, Nav } from "./screens.ts"
 
-const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", shot: "Shot", disc: "Disc", lob: "Lob" } as const
+const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", slam: "Slam", shot: "Shot", disc: "Disc", lob: "Lob" } as const
 const tierNames = { 1: "I", 2: "II", 3: "III" } as const
 export const slotNames: { readonly [Slot in RelicSlot]: string } = { strike: "Strike", dash: "Dash", element: "Element", survival: "Survival" }
 const slotAbout: { readonly [Slot in RelicSlot]: string } = {

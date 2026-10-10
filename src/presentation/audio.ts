@@ -13,7 +13,7 @@ import type { ReactionKind } from "../schema.ts"
 import type { SoundName } from "./sound.ts"
 
 /** The sound of each kind of move. It climbs in pitch through the combo (`comboPitchStep` per move); a power move goes deeper. */
-const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrust: "thrust", spin: "spin", shot: "shot", disc: "disc", lob: "throw" }
+const moveSounds: Record<AttackMove["shape"], SoundName> = { arc: "slash", thrust: "thrust", spin: "spin", slam: "thrust", shot: "shot", disc: "disc", lob: "throw" }
 const comboPitchStep = 0.067
 const powerPitch = 0.85
 
@@ -115,6 +115,8 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     const light = explosion.element === "water" ? "splash" : explosion.element === "thunder" ? "zap" : "boom"
     // A rock erupting: a deep quake and gravel.
     if (explosion.kind === "eruption" || explosion.kind === "upheaval") sounds.play("quake", { pan: pan(explosion.at) })
+    // A hammer coming down: a thud, deep as a quake for a heavy one.
+    else if (explosion.kind === "blow") sounds.play(explosion.heavy ? "quake" : "slam", { pan: pan(explosion.at) })
     else sounds.play(explosion.kind === "nova" && explosion.heavy ? "nova" : light, { pan: pan(explosion.at) })
   }
 })

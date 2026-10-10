@@ -60,11 +60,17 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     }
     if (cue.alpha > 0) {
       // The opening move's reach and arc (the combo's other moves differ).
+      // A hammer's blow: the circle it comes down on.
       const halfAngle = first.shape === "arc" ? (first.arcDegrees * Math.PI) / 360 : Math.PI
-      drawArea(g, { kind: "cone", origin: at, direction: player.data.aim.get(), radius: first.reach, halfAngle }, 0, {
+      const area = first.shape === "slam"
+        ? moveArea(first, at, player.data.aim.get()).area
+        : { kind: "cone" as const, origin: at, direction: player.data.aim.get(), radius: first.reach, halfAngle }
+      // (A hammer's circle fainter: its blow's own look marks it as it falls.)
+      const faint = first.shape === "slam" ? 0.6 : 1
+      drawArea(g, area, 0, {
         color: view.playerArea,
-        fill: (recharging ? 0.1 : 0.05) * cue.alpha,
-        outline: (recharging ? 0.5 : 0.3) * cue.alpha
+        fill: (recharging ? 0.1 : 0.05) * cue.alpha * faint,
+        outline: (recharging ? 0.5 : 0.3) * cue.alpha * faint
       })
     }
   }

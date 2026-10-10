@@ -34,7 +34,7 @@ import type { CharacterTab, GearFocus, GearTab, Nav } from "./screens.ts"
 
 const statLabels = { hp: "Max HP", atk: "ATK", def: "DEF", speed: "Speed" } as const
 const statIcons: { readonly [Stat in keyof typeof statLabels]: IconName } = { hp: "hp", atk: "atk", def: "def", speed: "speed" }
-const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", shot: "Shot", disc: "Disc", lob: "Lob" } as const
+const moveNames = { arc: "Slash", thrust: "Thrust", spin: "Spin", slam: "Slam", shot: "Shot", disc: "Disc", lob: "Lob" } as const
 
 /** Where something not owned comes from (see docs/collection.md). */
 const sourceNote = (store: UiStore, item: Item): string => {

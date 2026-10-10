@@ -516,6 +516,14 @@ was swapped for the Stalker. Fire champions leave no trail: in the lab a
 long-lived fire trail did most of the damage the dodging bot took. The
 baseline was recorded again with them.
 
+## Hammer blows (October 2026)
+
+The Hammer's swings stopped sending shockwaves: each blow winds up and
+comes down on a circle ahead of her (the `slam` move, see
+`docs/aspects.md`). With fewer, slower blows, Quarry's single-target energy
+probe builds three ultimates in its window instead of two; Hearth's
+cadence held. The baseline was recorded again from CI's report.
+
 ## Implemented tuning
 
 The audit below records the original problems. The playable update now uses:

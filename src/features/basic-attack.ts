@@ -70,8 +70,16 @@ export const moveArea = (move: MeleeMove, position: Vec2, aim: Vec2): Pick<Hitbo
       return { area: { kind: "lane", origin: position, direction: aim, length: move.reach, halfWidth: move.width / 2 }, pushAlong: aim }
     case "spin":
       return { area: { kind: "circle", center: position, radius: move.reach } }
+    case "slam":
+      return { area: { kind: "circle", center: slamCenter(move, position, aim), radius: move.radius } }
   }
 }
+
+/** Where a slam comes down: its circle's far edge `reach` ahead of her along `aim`. */
+export const slamCenter = (move: Extract<MeleeMove, { shape: "slam" }>, position: Vec2, aim: Vec2): Vec2 => ({
+  x: position.x + aim.x * (move.reach - move.radius),
+  y: position.y + aim.y * (move.reach - move.radius)
+})
 
 /**
  * The ways a swing's shockwaves run (see `Shockwave`): a thrust's straight
@@ -82,6 +90,7 @@ export const shockwaveDirections = (move: MeleeMove, wave: Shockwave, aim: Vec2)
   const along = (angle: number): Vec2 => ({ x: Math.cos(angle), y: Math.sin(angle) })
   switch (move.shape) {
     case "thrust":
+    case "slam":
       return [aim]
     case "arc": {
       const spread = (move.arcDegrees * Math.PI) / 180
@@ -282,7 +291,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
           faction: "player",
           blow: struck,
           remaining: spec.active,
-          hit: []
+          hit: [],
+          ...(move.shape === "slam" ? { delay: move.windup } : {})
         }]))
         // Her class's shockwaves, on from the end of the swing (not out of a dash).
         if (spec.shockwave !== null && !striking) {
