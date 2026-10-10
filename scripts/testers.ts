@@ -1,11 +1,11 @@
 /**
  * Test accounts on prod: a new account, as a new player starts, with plenty
- * of everything to spend (crystals for about 500 calls, gold and materials
+ * of gold and essence (enough
  * to take every character to the top), to try anything without playing up
  * to it. Named `sandro1`, `sandro2`, ..., all with one password.
  *
  *   pnpm testers new [--chapter1]  signs up the next `sandroN` and fills its wallet
- *   pnpm testers chapter1 <name>   clears chapter 1 (the Spirit Call opens) and fills the wallet again
+ *   pnpm testers chapter1 <name>   clears chapter 1 (relics open) and fills the wallet again
  *   pnpm testers refill <name>     fills a test account's wallet again
  *   pnpm testers list              the test accounts and what they hold
  *
@@ -36,12 +36,10 @@ import type { RunResultValue } from "../src/schema.ts"
 const { values, positionals } = parseArgs({ allowPositionals: true, options: { chapter1: { type: "boolean", default: false } } })
 const [command, argument] = positionals
 
-/** What a test account holds: everything maxed for all five characters takes about 2.9M gold and 13.5k of each material. */
+/** What a test account holds: enough gold and essence to take every character to the top level. */
 const fill: Record<ResourceId, number> = {
   ...Object.fromEntries(Object.keys(materials).map((id) => [id, 99_999])) as Record<ResourceId, number>,
-  crystals: 99_999,
-  gold: 9_999_999,
-  dust: 99_999
+  gold: 9_999_999
 }
 const prefix = "sandro"
 const pattern = `${prefix}[0-9]*`

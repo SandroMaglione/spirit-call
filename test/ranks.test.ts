@@ -21,13 +21,11 @@ const Field = Game.Inspector("Test/RankField", {
 
 /** The ranks: every quest played again, harder, opening along the main line and their own replay (see docs/quests.md, "Ranks"). */
 describe("ranks", () => {
-  it("open a chapter's replay a few chapters on, and past the main line's end in their own order", () => {
-    const ahead = defaultTuning.ranks.chaptersAhead
-    expect(ahead).toBe(2)
-    // Chapter one's rank 2 with chapter three's end; its next quest after it at rank 2.
-    expect(rankGates(defaultTuning, "firstBlood", 2)).toEqual([{ quest: "bruteKing", rank: 1 }])
-    expect(rankGates(defaultTuning, "crossfire", 2)).toEqual([{ quest: "firstBlood", rank: 2 }, { quest: "bruteKing", rank: 1 }])
-    // Chapter five has no chapter seven: its rank 2 follows chapter four's at rank 2.
+  it("open once the main line is done at the rank below, each quest after the one before it", () => {
+    // Rank 2 opens with the main line's finale; rank 3 with its finale at rank 2.
+    expect(rankGates(defaultTuning, "firstBlood", 2)).toEqual([{ quest: "colossus", rank: 1 }])
+    expect(rankGates(defaultTuning, "firstBlood", 3)).toEqual([{ quest: "colossus", rank: 2 }])
+    expect(rankGates(defaultTuning, "crossfire", 2)).toEqual([{ quest: "firstBlood", rank: 2 }])
     expect(rankGates(defaultTuning, "sandstorm", 2)).toEqual([{ quest: "swarmMother", rank: 2 }])
     // A side quest at a rank comes after its main quest at that rank.
     expect(rankGates(defaultTuning, "holdTheLine", 3)).toEqual([{ quest: "packLeader", rank: 3 }])

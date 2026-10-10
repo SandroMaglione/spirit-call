@@ -32,8 +32,6 @@ export interface Skill {
 
 /** Play options rather than numbers of the game: the main line's player, and the two edges of the range around it. */
 export interface PlayOptions extends Skill {
-  readonly runsPerWeek: number
-  readonly calls: boolean
   /** A run's length with its menus, in minutes (docs/vision.md: runs of about four minutes). */
   readonly minutesPerRun: number
   readonly skilled: Skill
@@ -41,13 +39,11 @@ export interface PlayOptions extends Skill {
 }
 
 export const defaultPlay: PlayOptions = {
-  runsPerWeek: 40,
-  calls: true,
   minutesPerRun: 4,
   levelsAhead: 0,
-  lost: 0,
+  lost: 0.25,
   skilled: { levelsAhead: 4, lost: 0.05 },
-  struggling: { levelsAhead: -2, lost: 0.25 }
+  struggling: { levelsAhead: -2, lost: 0.4 }
 }
 
 /** `play` as the player `skill` describes. */
@@ -81,20 +77,15 @@ export const knobs: ReadonlyArray<Knob> = [
   number("Run pay", "Gold per enemy level", "Added to a run's gold for each enemy level.", ["progression", "gold", "perLevel"], 1),
   multiplier("questGold", "Rewards", "First-clear gold ×", "Scales every quest's first-clear gold (rank 1).", (by) =>
     ({ quests: Object.fromEntries(questIds.map((id) => [id, { rewards: { currencies: { gold: scaled(defaultTuning.quests[id].rewards.currencies.gold, by) } } }])) })),
-  multiplier("questCrystals", "Rewards", "First-clear crystals ×", "Scales every quest's first-clear crystals (rank 1; higher ranks take their share).", (by) =>
-    ({ quests: Object.fromEntries(questIds.map((id) => [id, { rewards: { currencies: { crystals: scaled(defaultTuning.quests[id].rewards.currencies.crystals, by) } } }])) })),
   multiplier("chestGold", "Rewards", "Star chest gold ×", "Scales the gold in every chest stars open.", (by, current) =>
     ({ chests: Object.fromEntries(groups.map((group) => [group, current.chests[group].map((chest) => ({ ...chest, rewards: { ...chest.rewards, gold: scaled(chest.rewards.gold, by) } }))])) })),
-  multiplier("chestCrystals", "Rewards", "Star chest crystals ×", "Scales the crystals in every chest stars open.", (by, current) =>
-    ({ chests: Object.fromEntries(groups.map((group) => [group, current.chests[group].map((chest) => ({ ...chest, rewards: { ...chest.rewards, crystals: scaled(chest.rewards.crystals, by) } }))])) })),
-  number("Rewards", "Crystals per account level", "Paid for each account level gained.", ["progression", "account", "levelUp", "crystals"], 5),
   number("Ranks", "Levels per rank", "Enemy levels each rank adds over the one below.", ["ranks", "offset"]),
   number("Ranks", "Rank gold (runs' worth)", "A higher rank's first clear pays this many runs' gold at its level.", ["ranks", "goldRuns"], 0.5),
-  number("Ranks", "Rank crystals share", "A higher rank pays this share of rank 1's crystals.", ["ranks", "crystals"], 0.05),
   number("Character levels", "Level cap", "The highest character level.", ["progression", "character", "curve", "maxLevel"], 1, 2),
   number("Character levels", "Gold per level (base)", "Gold to go from level 1 to 2.", ["progression", "character", "curve", "base"], 5),
   number("Character levels", "Growth per level", "Gold each level adds to the next one's cost.", ["progression", "character", "curve", "growth"], 5),
   number("Character levels", "Square growth", "Gold × (level − 1)² added to each level: makes the top cost more.", ["progression", "character", "curve", "square"], 1),
+  number("Character levels", "Catch-up share", "What a level costs a character below the account's third-highest one.", ["progression", "character", "catchUp", "share"], 0.05),
   number("Character levels", "Strength band", "How many times stronger the reference level is than level 1.", ["progression", "stats", "band"], 0.25, 1),
   number("Character levels", "Band reached at level", "The level where strength is band × level 1's.", ["progression", "stats", "at"], 1, 2),
   multiplier("ascensionGold", "Ascension", "Ascension gold ×", "Scales the gold every ascension step costs.", (by, current) =>
@@ -104,9 +95,7 @@ export const knobs: ReadonlyArray<Knob> = [
   number("Ascension", "Essences per clear at level 1", "What one trial clear at enemy level 1 is worth.", ["materialRules", "worth", "atFirst"], 1),
   number("Ascension", "Worth doubles every", "Enemy levels for a clear's essences to double.", ["materialRules", "worth", "doublesEvery"], 1, 1),
   number("Ascension", "First clear (clears' worth)", "A quest's first clear pays this many trial clears' essences.", ["materialRules", "firstClear"], 1),
-  number("Account", "Account XP per level (base)", "Account experience from level 1 to 2.", ["progression", "account", "curve", "base"], 10),
-  number("Account", "Account XP growth", "Experience each account level adds to the next.", ["progression", "account", "curve", "growth"], 5),
-  number("Spirit Call", "Crystals per call", "What one call costs.", ["calls", "price", "crystals"], 10, 1)
+  number("Ascension", "Track tier (clears' worth)", "A hardcore tier's first clear pays this many trial clears' essences.", ["materialRules", "tierClear"], 1)
 ]
 
 /** Merges `patch` into `base`: objects key by key, anything else (arrays too) replaced. */
