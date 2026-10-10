@@ -131,3 +131,29 @@ It compares all mesh attributes, materials and rest-world positions with
 the static export, checks all ten clips and their times, then samples
 world-space poses at 120 Hz to check floor clearance, crystal separation,
 fixed root, in-place loops, early casting rise and one-shot rest return.
+
+## Game integration
+
+`export.py` also writes `src/presentation/assets/windwall-spirit.ts`, so
+runtime height and clip timing come from the export. `looks.ts` connects
+the model to the existing Windwall character: its Staff combo, Gale Wall
+and Eye of the Storm use the shared spirit moments. The cape keeps its
+sheet colors, with a restrained teal halo, yellow eye glow and mint wisps.
+The simulation scales clips to its own timing.
+
+Windwall's unlit palette uses `MeshBasicMaterial`. `Puppet` now owns these
+materials per copy and applies tint, hit flash and opacity to them, so
+invulnerability and falling affect the entire model. Standard materials
+keep their existing emissive flash. Tests check copy isolation and
+restoration, and load the actual GLB to check arena height, blink,
+independent crystal motion and a fixed facing root through every clip.
+
+The integration passed `pnpm check` (703 tests, one existing skip) and
+`pnpm build`. The binary animation audit passed on the exported asset.
+On the network address above, the T3 browser loaded all ten clips in the
+arena, checked movement, dash opacity, both skills, and the generated
+Windwall portrait. The 844 × 390 landscape review used synthetic touch
+stick movement, three attack taps, a held attack and dash; pointer capture
+was stubbed for synthetic events. `renders/game-desktop.png` and
+`renders/game-phone-touch.png` retain screenshots. This checks browser
+behavior and layout, not physical-device performance.
