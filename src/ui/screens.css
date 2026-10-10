@@ -117,8 +117,8 @@
 .roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); overflow-x: auto; scrollbar-width: none; }
 .roster::-webkit-scrollbar { display: none; }
 /* The roster takes a fixed share of the bar and scrolls within it as the cast grows; the name and the close button keep their places. */
-/* The roster stays put whoever is shown: both sides keep a fixed room for their widest (the title, the gold and close), and it takes all the middle, scrolling beyond. */
-.character .topbar { grid-template-columns: 190px minmax(0, 1fr) 190px; }
+/* The roster stays put whoever is shown: the title is the same on every character, the end keeps room for the gold and close whether the gold shows or not, and the roster takes everything between, scrolling beyond. */
+.character .topbar { grid-template-columns: auto minmax(0, 1fr) minmax(140px, max-content); }
 .character .topbar__fill { justify-content: safe center; }
 .character .roster { -webkit-mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); }
 /* The roster stands in the middle of the bar whatever sits beside it (a longer name, the gold shown only for one owned), so the faces never shift. */
