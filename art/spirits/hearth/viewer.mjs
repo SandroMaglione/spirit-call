@@ -67,7 +67,7 @@ try {
   const directions = {front:[0,10],back:[180,10],left:[72,10],right:[-72,10],
     top:[0,90],bottom:[0,-90],hero:[-20,16],game:[-20,30],'true-front':[0,0],'true-left':[-90,0],'true-right':[90,0],face:[0,7]};
   let currentView = 'hero';
-  let frame = animated ? 1.4 : 1.08;
+  let frame = animated ? 1.65 : 1.08;
   function render() { composer.render(); }
   function resize() {
     const {width,height} = view.getBoundingClientRect();
@@ -86,13 +86,13 @@ try {
     currentView = name;
     const [turn,elevation] = directions[name];
     const t = THREE.MathUtils.degToRad(turn),e = THREE.MathUtils.degToRad(elevation);
-    const target = name==='face' ? new THREE.Vector3(0,.326,.16) : new THREE.Vector3(0,animated ? .55 : .475,0);
+    const target = name==='face' ? new THREE.Vector3(0,.326,.16) : new THREE.Vector3(0,animated ? .63 : .475,0);
     camera.position.copy(target).add(new THREE.Vector3(Math.sin(t)*Math.cos(e),Math.sin(e),Math.cos(t)*Math.cos(e)).multiplyScalar(4));
     camera.up.set(0,1,0);
     if(name==='top') camera.up.set(0,0,-1);
     if(name==='bottom') camera.up.set(0,0,1);
     camera.zoom = 1;
-    frame = name==='face' ? .48 : animated ? 1.4 : 1.08;
+    frame = name==='face' ? .48 : animated ? 1.65 : 1.08;
     controls.target.copy(target);
     controls.update();
     controls.enableDamping = true;

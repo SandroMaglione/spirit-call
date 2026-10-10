@@ -18,6 +18,7 @@ speed, a sequence of all clips, camera controls and a 32 px view.
 - [Editable animation source](hearth-animated.blend)
 - [Animation contact poses](renders/animation-poses.png)
 - [All clips in motion](renders/hearth-animation-preview.mp4)
+- [Revised attacks, cast and ultimate](renders/hearth-impact-preview.mp4)
 - [32 px and 64 px samples](renders/animation-game-size.png)
 - [Clip metadata](animation.json) and [animation audit](animation-verification.json)
 
@@ -25,13 +26,22 @@ speed, a sequence of all clips, camera controls and a 32 px view.
 | --- | --- | --- | --- |
 | Idle | 2.967 s | 3 s | Calm hover, flicker, stone drift, blink |
 | Run | 0.767 s | 0.8 s | Hover lean, trailing flame and stones |
-| AttackA / AttackB | 0.367 s | One-shot | Mirrored recoil and flame pulse |
-| AttackC | 0.533 s | One-shot | Finishing recoil and flare |
-| Power | 0.533 s | One-shot | Strong charged flare |
+| AttackA / AttackB | 0.367 s | One-shot | Mirrored coil, forward strike and rebound |
+| AttackC | 0.533 s | One-shot | Heavy finishing twist and flame strike |
+| Power | 0.533 s | One-shot | Tight charge, strong forward release |
 | Dash | 0.367 s | One-shot | Forward lean and a soft brake |
 | Hurt | 0.3 s | One-shot | Recoil, narrowed eyes, flame dip |
-| Cast | 0.367 s | One-shot | Warm healing pulse |
-| Ultimate | 0.567 s | One-shot | Gather, rise, beacon flare, settle |
+| Cast | 0.367 s | One-shot | Gather, broad healing burst and recoil |
+| Ultimate | 0.567 s | One-shot | Hold, erupt into a beacon, rebound and settle |
+
+Attacks hold their counter-pose until the frame before contact, snap
+forward in one frame and hold the impact for another frame. The bowl then
+rebounds through the opposite tilt before settling. Its stones follow one
+frame behind. Cast releases on frame 4 after a tight gather; Ultimate
+holds its compressed charge through frame 7, then erupts on frame 8.
+These are visual release poses; simulation still decides when a skill
+takes effect. Larger flame volume and stone separation make the release
+read at phone scale. The inspector uses a wider frame to contain the flare.
 
 The attack contact poses use the existing spirit convention at 30 fps,
 frame 4 for AttackA/B and frame 6 for AttackC/Power. Simulation owns
@@ -133,6 +143,10 @@ Open `/art/spirits/hearth/index.html` on the printed network address.
 The animated inspector is `/art/spirits/hearth/animation.html`.
 `render.py -- front,hero` renders only those named views for iteration.
 The scripts are self-contained and do not change the shared spirit tools.
+To compare the impact revision with the initial animation export, run
+`verify_animation.py -- 0b282d3` through Blender. The optional comparison
+reads that local commit and checks the unchanged clip channels, clip
+lengths and increased flame volume in all six revised actions.
 
 ## Validation
 
@@ -144,6 +158,11 @@ root translation, rigid bowl scale, attached eyes, finite transforms,
 ground clearance and rest recovery. Minimum clearance is 0.0478 m. Both
 loops close exactly after restoring the first key. The source audit checks
 the mesh hierarchy and all 70 editable NLA tracks.
+The impact revision also preserves Idle, Run, Dash and Hurt channel values
+exactly. Its six revised actions retain their clip lengths and attack
+contact frames. Peak flame volume is 1.64 to 2.35 times the previous
+animation's peak, depending on the action. The charge-to-release transition
+now takes one frame rather than easing through the whole windup.
 
 The native static geometry audit checks closed solid parts, flat triangular
 faces, no degenerate faces or loose vertices, symmetric eyes on the
@@ -169,7 +188,8 @@ the model stays visible. Some desktop snapshot requests failed in the
 preview tool; browser evaluation, later captures and recording worked.
 
 `pnpm check --maxWorkers=2` passed typecheck, lint and 565 tests, with one
-existing skipped test. `pnpm build` passed with the existing bundle-size
-warning. These checks passed again after adding animation. The main game
-build does not include Hearth until it is registered for a character.
+existing skipped test. The impact revision passed these checks again.
+`pnpm build` passed at the initial animation stage with the existing
+bundle-size warning. The main game build does not include Hearth until
+it is registered for a character.
 Only files under `art/spirits/hearth/` belong to this change.

@@ -30,9 +30,9 @@
       "lastKeySeconds": 0.36666666666666664,
       "loopSeconds": null,
       "sampled_at_hz": 120,
-      "minimum_clearance_m": 0.06621192010944103,
-      "maximum_height_m": 1.0091836838924266,
-      "closing_error_m": 2.0214665497064743e-09,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.0937413775662583,
+      "closing_error_m": 5.090620147640834e-09,
       "rigid_bowl": true,
       "no_horizontal_root_motion": true,
       "eyes_attached": true,
@@ -43,9 +43,9 @@
       "lastKeySeconds": 0.36666666666666664,
       "loopSeconds": null,
       "sampled_at_hz": 120,
-      "minimum_clearance_m": 0.06585483011979366,
-      "maximum_height_m": 1.0086150405065792,
-      "closing_error_m": 2.0214665497064743e-09,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.0932794418967835,
+      "closing_error_m": 5.090620147640834e-09,
       "rigid_bowl": true,
       "no_horizontal_root_motion": true,
       "eyes_attached": true,
@@ -56,9 +56,9 @@
       "lastKeySeconds": 0.5333333333333333,
       "loopSeconds": null,
       "sampled_at_hz": 120,
-      "minimum_clearance_m": 0.05990515786550127,
-      "maximum_height_m": 1.0473550144101038,
-      "closing_error_m": 2.508295349201717e-09,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.1580448586023482,
+      "closing_error_m": 1.7817154862598272e-08,
       "rigid_bowl": true,
       "no_horizontal_root_motion": true,
       "eyes_attached": true,
@@ -69,9 +69,9 @@
       "lastKeySeconds": 0.5333333333333333,
       "loopSeconds": null,
       "sampled_at_hz": 120,
-      "minimum_clearance_m": 0.05126106354121576,
-      "maximum_height_m": 1.0971545674112742,
-      "closing_error_m": 2.508295349201717e-09,
+      "minimum_clearance_m": 0.08000001311302185,
+      "maximum_height_m": 1.193572391570966,
+      "closing_error_m": 1.7817154862598272e-08,
       "rigid_bowl": true,
       "no_horizontal_root_motion": true,
       "eyes_attached": true,
@@ -104,9 +104,9 @@
       "lastKeySeconds": 0.36666666666666664,
       "loopSeconds": null,
       "sampled_at_hz": 120,
-      "minimum_clearance_m": 0.08000001311302185,
-      "maximum_height_m": 1.1094284430563603,
-      "closing_error_m": 2.6462473323718427e-09,
+      "minimum_clearance_m": 0.061754414953190284,
+      "maximum_height_m": 1.2595133389859494,
+      "closing_error_m": 6.940692576229424e-09,
       "rigid_bowl": true,
       "no_horizontal_root_motion": true,
       "eyes_attached": true
@@ -115,8 +115,8 @@
       "lastKeySeconds": 0.5666666666666667,
       "loopSeconds": null,
       "sampled_at_hz": 120,
-      "minimum_clearance_m": 0.08000001311302185,
-      "maximum_height_m": 1.2502499710981532,
+      "minimum_clearance_m": 0.0577076462424686,
+      "maximum_height_m": 1.3982716378739917,
       "closing_error_m": 0.0,
       "rigid_bowl": true,
       "no_horizontal_root_motion": true,
@@ -136,5 +136,47 @@
   "preserved_vertex_colors_and_materials": true,
   "maximum_rest_vertex_error_m": 1.4901161193847656e-08,
   "static_sha256": "0c26ed80097107c60a16d4b4edb205191486a70ab184d16d0e21f57393b2e254",
-  "sha256": "862ad4192a3fca4940686584bed0e10de5718f2138c9285faf15ccfb57b2168e"
+  "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2",
+  "revision_comparison": {
+    "baseline_commit": "0b282d3",
+    "unchanged_clip_channels": [
+      "Idle",
+      "Run",
+      "Dash",
+      "Hurt"
+    ],
+    "clip_lengths_preserved": true,
+    "impact": {
+      "AttackA": {
+        "previous_peak_flame_volume_factor": 1.2421316989128446,
+        "revised_peak_flame_volume_factor": 2.0353086581006363,
+        "ratio": 1.6385610800223573
+      },
+      "AttackB": {
+        "previous_peak_flame_volume_factor": 1.2421316989128446,
+        "revised_peak_flame_volume_factor": 2.0353086581006363,
+        "ratio": 1.6385610800223573
+      },
+      "AttackC": {
+        "previous_peak_flame_volume_factor": 1.3098266430707552,
+        "revised_peak_flame_volume_factor": 2.5609602309999158,
+        "ratio": 1.9551902112755968
+      },
+      "Power": {
+        "previous_peak_flame_volume_factor": 1.3966058287161276,
+        "revised_peak_flame_volume_factor": 2.924603090479234,
+        "ratio": 2.0940791097569487
+      },
+      "Cast": {
+        "previous_peak_flame_volume_factor": 1.375281318472301,
+        "revised_peak_flame_volume_factor": 2.9000449091323834,
+        "ratio": 2.108692141876711
+      },
+      "Ultimate": {
+        "previous_peak_flame_volume_factor": 1.492889487143881,
+        "revised_peak_flame_volume_factor": 3.5027334222582343,
+        "ratio": 2.3462777736880462
+      }
+    }
+  }
 }

@@ -3,6 +3,8 @@ import hashlib
 import json
 import math
 import struct
+import subprocess
+import sys
 from pathlib import Path
 
 import bpy
@@ -185,6 +187,43 @@ result = dict(passed=True, triangles=triangles, meshes=7, materials=4, clips=res
     preserved_static_geometry=True, preserved_vertex_colors_and_materials=True,
     maximum_rest_vertex_error_m=max_rest_error, static_sha256=info['static_reference_sha256'],
     sha256=info['sha256'])
+if '--' in sys.argv:
+    # Optional comparison against the reviewed animation commit. Compare decoded
+    # channel values, since accessor offsets change when other clips are revised.
+    commit = sys.argv[-1]
+    old_raw = subprocess.check_output(['git','show',f'{commit}:art/spirits/hearth/hearth-animated.glb'], cwd=HERE)
+    old_length = struct.unpack_from('<I',old_raw,12)[0]
+    old = json.loads(old_raw[20:20+old_length])
+    old_binary = old_raw[28+old_length:]
+    def channels(doc, buffer, clip):
+        result = {}
+        for channel in clip['channels']:
+            sampler = clip['samplers'][channel['sampler']]
+            key = (doc['nodes'][channel['target']['node']]['name'],channel['target']['path'])
+            result[key] = (accessor(doc,buffer,sampler['input']),accessor(doc,buffer,sampler['output']))
+        return result
+    unchanged = ['Idle','Run','Dash','Hurt']
+    for name in unchanged:
+        a = channels(gltf,binary,next(c for c in gltf['animations'] if c['name']==name))
+        b = channels(old,old_binary,next(c for c in old['animations'] if c['name']==name))
+        assert a.keys()==b.keys(), name
+        assert all(np.array_equal(a[k][j],b[k][j]) for k in a for j in (0,1)), name
+    impact = {}
+    old_flame = next(i for i,n in enumerate(old['nodes']) if n['name']=='FlameCore')
+    for name in ['AttackA','AttackB','AttackC','Power','Cast','Ultimate']:
+        current = next(c for c in gltf['animations'] if c['name']==name)
+        previous = next(c for c in old['animations'] if c['name']==name)
+        frames = round(info['clips'][name]['lastKeySeconds']*30)
+        def peak(doc, buffer, clip, index):
+            return max(float(np.prod(sample(doc,buffer,clip,f/30)[0][index]['scale'])) for f in range(frames+1))
+        before = peak(old,old_binary,previous,old_flame)
+        after = peak(gltf,binary,current,flame_index)
+        assert after > before*1.25, name
+        impact[name] = dict(previous_peak_flame_volume_factor=before,
+            revised_peak_flame_volume_factor=after,ratio=after/before)
+        assert all(abs(accessor(gltf,binary,s['input'])[-1,0]-info['clips'][name]['lastKeySeconds'])<1e-6 for s in current['samplers'])
+    result['revision_comparison'] = dict(baseline_commit=commit,
+        unchanged_clip_channels=unchanged,clip_lengths_preserved=True,impact=impact)
 (HERE/'animation-verification.json').write_text(json.dumps(result, indent=2)+'\n')
 print('PASS: ten clips; rest geometry and palette preserved; rigid bowl; in place; sampled at 120 Hz')
 print(json.dumps({k:round(v['minimum_clearance_m'], 4) for k, v in results.items()}))

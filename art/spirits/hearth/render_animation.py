@@ -35,15 +35,15 @@ for name, location, energy, size, color in (
     scene.collection.objects.link(light)
 camera = bpy.data.objects.new('Animation review camera',bpy.data.cameras.new('Animation review camera'))
 camera.data.type = 'ORTHO'
-camera.data.ortho_scale = 1.4
+camera.data.ortho_scale = 1.65
 scene.collection.objects.link(camera)
 scene.camera = camera
 turn, elevation = math.radians(-20), math.radians(30)
 direction = Vector((math.sin(turn)*math.cos(elevation), -math.cos(turn)*math.cos(elevation), math.sin(elevation)))
-camera.location = Vector((0,0,.56))+direction*4
+camera.location = Vector((0,0,.63))+direction*4
 camera.rotation_euler = (-direction).to_track_quat('-Z','Y').to_euler()
 samples = dict(Idle=22, Run=6, AttackA=4, AttackB=4, AttackC=6,
-               Power=6, Dash=3, Hurt=1, Cast=2, Ultimate=8, Blink=62)
+               Power=6, Dash=3, Hurt=1, Cast=4, Ultimate=8, Blink=62)
 for name, frame in samples.items():
     clip = 'Idle' if name == 'Blink' else name
     for obj in scene.objects:

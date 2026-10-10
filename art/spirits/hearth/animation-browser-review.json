@@ -1,180 +1,146 @@
 {
   "passed": true,
   "url": "http://192.168.0.45:5208/art/spirits/hearth/animation.html",
-  "sha256": "862ad4192a3fca4940686584bed0e10de5718f2138c9285faf15ccfb57b2168e",
+  "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2",
+  "revision": "Stronger anticipation, one-frame releases, impact holds, rebounds and delayed stones for attacks, Power, Cast and Ultimate",
   "desktop": {
-    "closedLoops": [
-      {
-        "closes": true,
-        "duration": 3,
-        "name": "Idle",
-        "tracks": 12
-      },
-      {
-        "closes": true,
-        "duration": 0.8,
-        "name": "Run",
-        "tracks": 10
-      }
-    ],
     "error": "",
-    "overflow": false,
     "results": [
       {
         "camera": "hero",
         "clip": "Idle",
         "contained": true,
-        "maximumScreenCoordinate": 0.7607279084652722
+        "maximumScreenCoordinate": 0.7386793595160679
       },
       {
         "camera": "hero",
         "clip": "Run",
         "contained": true,
-        "maximumScreenCoordinate": 0.7884497227767351
+        "maximumScreenCoordinate": 0.7622983012584329
       },
       {
         "camera": "hero",
         "clip": "AttackA",
         "contained": true,
-        "maximumScreenCoordinate": 0.7817983094578355
+        "maximumScreenCoordinate": 0.7389898514958011
       },
       {
         "camera": "hero",
         "clip": "AttackB",
         "contained": true,
-        "maximumScreenCoordinate": 0.7801468544885175
+        "maximumScreenCoordinate": 0.738857146564141
       },
       {
         "camera": "hero",
         "clip": "AttackC",
         "contained": true,
-        "maximumScreenCoordinate": 0.7913485735276259
+        "maximumScreenCoordinate": 0.7386793595160679
       },
       {
         "camera": "hero",
         "clip": "Power",
         "contained": true,
-        "maximumScreenCoordinate": 0.7986729450552967
+        "maximumScreenCoordinate": 0.7386793595160679
       },
       {
         "camera": "hero",
         "clip": "Dash",
         "contained": true,
-        "maximumScreenCoordinate": 0.7802723308240662
+        "maximumScreenCoordinate": 0.7553143426803003
       },
       {
         "camera": "hero",
         "clip": "Hurt",
         "contained": true,
-        "maximumScreenCoordinate": 0.7607279084652722
+        "maximumScreenCoordinate": 0.7386793595160679
       },
       {
         "camera": "hero",
         "clip": "Cast",
         "contained": true,
-        "maximumScreenCoordinate": 0.7607279084652722
+        "maximumScreenCoordinate": 0.7805650880778446
       },
       {
         "camera": "hero",
         "clip": "Ultimate",
         "contained": true,
-        "maximumScreenCoordinate": 0.9362758503496967
+        "maximumScreenCoordinate": 0.9316362453737821
       },
       {
         "camera": "game",
         "clip": "Idle",
         "contained": true,
-        "maximumScreenCoordinate": 0.8031810823777056
+        "maximumScreenCoordinate": 0.7654651999601804
       },
       {
         "camera": "game",
         "clip": "Run",
         "contained": true,
-        "maximumScreenCoordinate": 0.8062786978446481
+        "maximumScreenCoordinate": 0.7682811777375717
       },
       {
         "camera": "game",
         "clip": "AttackA",
         "contained": true,
-        "maximumScreenCoordinate": 0.8148982806221055
+        "maximumScreenCoordinate": 0.7684728757530592
       },
       {
         "camera": "game",
         "clip": "AttackB",
         "contained": true,
-        "maximumScreenCoordinate": 0.8114884730610042
+        "maximumScreenCoordinate": 0.76830451543172
       },
       {
         "camera": "game",
         "clip": "AttackC",
         "contained": true,
-        "maximumScreenCoordinate": 0.8209936400050268
+        "maximumScreenCoordinate": 0.7659120094912719
       },
       {
         "camera": "game",
         "clip": "Power",
         "contained": true,
-        "maximumScreenCoordinate": 0.8234404340055952
+        "maximumScreenCoordinate": 0.7658930870143227
       },
       {
         "camera": "game",
         "clip": "Dash",
         "contained": true,
-        "maximumScreenCoordinate": 0.8031810823777056
+        "maximumScreenCoordinate": 0.7659286962140126
       },
       {
         "camera": "game",
         "clip": "Hurt",
         "contained": true,
-        "maximumScreenCoordinate": 0.8031810823777056
+        "maximumScreenCoordinate": 0.7654651999601804
       },
       {
         "camera": "game",
         "clip": "Cast",
         "contained": true,
-        "maximumScreenCoordinate": 0.8031810823777056
+        "maximumScreenCoordinate": 0.7900892855886047
       },
       {
         "camera": "game",
         "clip": "Ultimate",
         "contained": true,
-        "maximumScreenCoordinate": 0.8432501519474876
+        "maximumScreenCoordinate": 0.8731646006470019
       }
-    ]
+    ],
+    "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2"
   },
   "portrait": {
-    "after": [
-      -1.6640051743766497,
-      1.6948387572214907,
-      3.42681779294261
-    ],
-    "before": [
-      -1.3150834520731969,
-      1.5775494232679965,
-      3.6131620892695437
-    ],
-    "clip": "Idle",
+    "clip": "Power",
     "error": "",
     "overflow": false,
     "small": true,
-    "syntheticTouchOrbitMoved": true,
     "viewport": [
       390,
       844
     ]
   },
   "landscape": {
-    "active": "Ultimate",
-    "canvas": {
-      "bottom": 336.796875,
-      "height": 285,
-      "left": 0,
-      "right": 554,
-      "top": 51.796875,
-      "width": 554,
-      "x": 0,
-      "y": 51.796875
-    },
+    "clip": "Ultimate",
     "error": "",
     "overflow": false,
     "viewport": [
@@ -182,31 +148,21 @@
       390
     ]
   },
-  "controls": {
-    "active": "Cast",
-    "glowDisabled": true,
-    "paused": true,
-    "speed": ".5",
-    "time": "0.08",
-    "wireframe": true
-  },
-  "resume_button_state": {
-    "playing": true,
-    "time": "0.08"
-  },
-  "touch_test": "Synthetic touch PointerEvents; pointer capture stubbed during probe; no physical-device evidence",
   "captures": {
     "desktop": "renders/animation-browser-desktop.png",
     "portrait": "renders/animation-browser-portrait.png",
     "landscape": "renders/animation-browser-landscape.png",
-    "playback": "renders/hearth-animation-preview.mp4"
+    "all_clips": "renders/hearth-animation-preview.mp4",
+    "revised_actions": "renders/hearth-impact-preview.mp4"
   },
-  "playback": "Actual animated GLB in the network browser, all ten clips, 28 s, 1280 x 900 at 30 fps",
-  "snapshot_tool": "Some desktop snapshots failed; phone captures and browser recording succeeded. Desktop image is a recording frame.",
+  "playback": "Actual animated GLB in the network browser. All ten clips, 28 seconds, 1280 x 900 at 30 fps. Impact cut excludes locomotion, dash and hurt.",
+  "prior_touch_review": "Synthetic touch orbit passed in the initial animation review at 0b282d3. The orbit controls are unchanged. No physical-device evidence.",
+  "snapshot_tool": "Desktop snapshot failed; phone screenshots and recording succeeded. Desktop image is a recording frame.",
   "checks": [
-    "Blender export audit at 120 Hz",
-    "node --check viewer.mjs",
-    "pnpm check --maxWorkers=2: 565 passed, 1 skipped",
-    "pnpm build: passed, existing bundle-size warning"
+    "Blender export sampled at 120 Hz",
+    "Compared Idle, Run, Dash, Hurt against 0b282d3: decoded channels identical",
+    "Rest geometry, colors, rigid bowl and contact frames preserved",
+    "All six revised actions have larger peak flame volume",
+    "pnpm check --maxWorkers=2: 565 passed, 1 skipped"
   ]
 }

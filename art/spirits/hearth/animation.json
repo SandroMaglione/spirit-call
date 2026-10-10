@@ -106,8 +106,8 @@
     }
   },
   "reference": "reference/sheet.png",
-  "bytes": 339464,
-  "sha256": "862ad4192a3fca4940686584bed0e10de5718f2138c9285faf15ccfb57b2168e",
+  "bytes": 339772,
+  "sha256": "c75452e8a667ae0c8e33ef904cecd97f033fd074fd7359fb66623cd6cd23ddf2",
   "fps": 30,
   "root_motion": false,
   "contact_frames": {
@@ -119,14 +119,14 @@
   "descriptions": {
     "Idle": "Slow hover, flame flicker, loose stone drift and one warm blink.",
     "Run": "Forward hover lean, flame streaming back and stones trailing.",
-    "AttackA": "Left recoil and small flame pulse.",
-    "AttackB": "Mirrored right recoil and small flame pulse.",
-    "AttackC": "Stronger finishing recoil and flare.",
-    "Power": "Charged recoil with a broad flame flare.",
+    "AttackA": "Coil left, snap forward into a flame strike, then rebound.",
+    "AttackB": "Mirrored coil and forward flame strike, then rebound.",
+    "AttackC": "Deep twist into a heavy finishing strike and stone follow-through.",
+    "Power": "Tight charge, forceful forward release and a heavy recovery.",
     "Dash": "Compact forward lean, trailing flame and stones, then a soft brake.",
     "Hurt": "Rigid bowl recoil, narrowed eyes and a flame dip, then recovery.",
-    "Cast": "Warm healing pulse, opening stones and taller flame.",
-    "Ultimate": "Gather inward, rise into a beacon flare, then settle."
+    "Cast": "Gather heat, snap into a broad healing burst, recoil and settle.",
+    "Ultimate": "Hold a compressed charge, erupt into a wide beacon, then rebound and settle."
   },
   "static_reference_sha256": "0c26ed80097107c60a16d4b4edb205191486a70ab184d16d0e21f57393b2e254"
 }
