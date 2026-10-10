@@ -8,7 +8,7 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { auditionSlot, characterLevel, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, lentFor, levelsUnder, materialPay, owns, perfectPay, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress } from "../../account/account.ts"
+import { auditionSlot, characterLevel, isAuditionPart, chestRewards, chestsOpened, clearPay, encounterOf, groupStars, lentFor, levelsUnder, materialPay, owns, perfectPay, playLock, questCleared, questProgress, questRewards, questsOf, rankOf, samePlay, tierProgress } from "../../account/account.ts"
 import type { ChestRef, Play } from "../../account/account.ts"
 import { perfectUnlock } from "../../content/collection.ts"
 import { gradeOfRank } from "../../content/materials.ts"
@@ -300,6 +300,9 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
     {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} />}
     {quest !== null && rank > 1 && <RankTwist store={store} title={`Rank ${rankNames[rank - 1] ?? rank}`} twist={encounter.twist} />}
     {track?.kind === "hardcore" && (encounter.twist.leader !== null || encounter.twist.elites !== null || encounter.twist.shields) && <RankTwist store={store} title="Ruleset" twist={encounter.twist} />}
+    {track?.kind === "audition" && track.character !== null && (encounter.twist.leader !== null || encounter.twist.elites !== null || encounter.twist.shields) && (
+      <RankTwist store={store} title={selected.kind === "tier" && isAuditionPart(tuning, selected.track, selected.tier) ? `${capitalised(ordinalOf(placeOf(store, track.character)))} audition` : "Mastery"} twist={encounter.twist} />
+    )}
     {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"}>
       <Label>{selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"}</Label>
       {steps.map((step) => {
@@ -339,14 +342,23 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
   </Panel>
 }
 
+/** The place `character`'s audition has among those opened: the one it was opened at, or the next. */
+const placeOf = (store: UiStore, character: CharacterId): number => {
+  const account = store.account.value
+  return account.auditions[character]?.slot ?? Object.keys(account.auditions).length + 1
+}
+
+const ordinalOf = (place: number): string => ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"][place - 1] ?? `${place}th`
+
+const capitalised = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
+
 /** What opening an audition takes, and where it would stand: the next slot's level (see `invitationSlots`). */
 const inviteNote = (store: UiStore, character: CharacterId): string => {
   const tuning = store.tuning.value, account = store.account.value
-  const held = account.wallet.invitations ?? 0, place = Object.keys(account.auditions).length + 1
+  const held = account.wallet.invitations ?? 0
   const slot = auditionSlot(tuning, account, character)
-  const ordinal = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"][place - 1] ?? `${place}th`
   return held > 0
-    ? `Invite ${tuning.characters[character].name} with an invitation (you hold ${held}): as your ${ordinal} audition, it plays from level ${slot.level}.`
+    ? `Invite ${tuning.characters[character].name} with an invitation (you hold ${held}): as your ${ordinalOf(placeOf(store, character))} audition, it plays from level ${slot.level}.`
     : `Invitations come with milestones of the main line and the ranks: one opens the audition of the character you choose.`
 }
 
