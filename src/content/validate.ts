@@ -39,7 +39,7 @@ import { bodyRules, bodyScore } from "./characters.ts"
 import type { CosmeticId, CosmeticSpec } from "./cosmetics.ts"
 import type { RelicId, RelicSpec } from "./relics.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
-import type { SkillEffect } from "./skills.ts"
+import type { SkillEffect, StateHeal } from "./skills.ts"
 
 const has = (record: object, id: string): boolean => Object.hasOwn(record, id)
 
@@ -221,6 +221,15 @@ const checkMoveset = (problems: Array<string>, where: string, attacks: ReadonlyA
   }
 }
 
+/** What a skill heals: shares from nothing up, its most at least its base, a state that is one. */
+const checkHeals = (problems: Array<string>, where: string, heals: StateHeal | null): void => {
+  if (heals === null) return
+  if (!(heals.base >= 0 && heals.per >= 0 && heals.most >= heals.base)) problems.push(`${where}: heals base and per must not be negative, and most must be at least base`)
+  if (!Object.values(elements).some((element) => element.state === heals.state)) problems.push(`${where}: heals counts an unknown state ${heals.state}`)
+  // Only a burn has something left to deal when it is taken off.
+  if (heals.consumes && heals.state !== "burning") problems.push(`${where}: only burning can be consumed (is ${heals.state})`)
+}
+
 const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect): void => {
   if (effect.element !== null && !has(elements, effect.element)) problems.push(`${where}: unknown element ${effect.element}`)
   switch (effect.kind) {
@@ -248,6 +257,28 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       return
     case "nova":
       positive(problems, where, { radius: effect.radius, active: effect.active })
+      checkHeals(problems, where, effect.heals)
+      if (!(effect.readies >= 0)) problems.push(`${where}: readies must not be negative (is ${effect.readies})`)
+      return
+    case "barrier":
+      positive(problems, where, { seconds: effect.seconds, thickness: effect.thickness, tick: effect.tick, ...(effect.shape.kind === "wall" ? { length: effect.shape.length } : { radius: effect.shape.radius }) })
+      if (effect.shape.kind === "wall" && !(effect.shape.ahead >= 0)) problems.push(`${where}: ahead must not be negative (is ${effect.shape.ahead})`)
+      return
+    case "fault":
+      positive(problems, where, { length: effect.length, rocks: effect.rocks, size: effect.size })
+      if (!Number.isInteger(effect.rocks)) problems.push(`${where}: rocks must be a whole number (is ${effect.rocks})`)
+      if (!(effect.warning >= 0 && effect.interval >= 0 && effect.stun >= 0)) problems.push(`${where}: warning, interval, and stun must not be negative`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
+      return
+    case "quake":
+      positive(problems, where, { slams: effect.slams, first: effect.first })
+      if (!Number.isInteger(effect.slams)) problems.push(`${where}: slams must be a whole number (is ${effect.slams})`)
+      if (!(effect.interval >= 0 && effect.growth >= 0 && effect.stun >= 0)) problems.push(`${where}: interval, growth, and stun must not be negative`)
+      if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
+      return
+    case "brace":
+      positive(problems, where, { window: effect.window, radius: effect.radius })
+      if (!(effect.whiff >= 0 && effect.disarm >= 0)) problems.push(`${where}: whiff and disarm must not be negative`)
       return
     case "vortex":
       positive(problems, where, { radius: effect.radius, seconds: effect.seconds, tick: effect.tick })
@@ -264,7 +295,7 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
     case "thunderclap":
       positive(problems, where, { radius: effect.radius, strikes: effect.strikes })
       // A clap may heal nobody (a relic's discharge: relics outside the Survival slot never heal).
-      if (!(effect.heal >= 0)) problems.push(`${where}: heal must not be negative (is ${effect.heal})`)
+      checkHeals(problems, where, effect.heals)
       if (!(Number.isInteger(effect.jumps) && effect.jumps >= 0)) problems.push(`${where}: jumps must be a whole number from 0 (is ${effect.jumps})`)
       return
     case "earthrise":

@@ -45,6 +45,11 @@ a look comes from the shop, the Call, or a hardcore tier.
   (crystals are never spent for nothing).
 - Adding a banner is adding an entry to `banners`; the order of entries is
   the order they run. Characters on a banner come from no quest.
+- Three run now, holding the roster's seven Call characters (`roster.md`):
+  Ember & Storm (the Gunner, the Stormcaller), Spark & Frost (Sparkfist,
+  Tidewarden), and Forge & Gale (Quarry, Hearth, Windwall). Which
+  characters share a banner, and how often a character comes, is decided
+  with the Call's pace (below).
 
 ## A call
 
@@ -155,6 +160,9 @@ about 5 pulled and 2–3 bought, 4 of the 12 left.
 - Character and aspect duplicates and what they turn into (skins, look
   variants), once there is something to turn them into; sigils are the
   natural currency for those.
-- More banners as characters come; the rotation's length.
+- The banners' pairings and the rotation's length, with the pace: how
+  often a character comes to a player who keeps playing (about one every
+  two banners, as Genshin's), what pays crystals again and again, and
+  whether calls are bought (a change to the vision's non-goals).
 - The pace, once played: the price, what quests and chests pay, and the
   exchange's prices.

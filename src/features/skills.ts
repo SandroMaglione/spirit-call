@@ -86,7 +86,11 @@ export type SkillAim =
 export const skillAim = (effect: SkillEffect): SkillAim => {
   switch (effect.kind) {
     case "cut":
+    case "fault":
       return { kind: "direction", reach: effect.length }
+    case "barrier":
+      // A wall goes up across her aim, ahead of her; a ring around her, with nothing to aim.
+      return effect.shape.kind === "wall" ? { kind: "direction", reach: effect.shape.ahead } : { kind: "self" }
     case "blast":
       return { kind: "direction", reach: effect.radius }
     case "plunge":
@@ -104,8 +108,10 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "thunderclap":
     case "guard":
     case "earthrise":
-    // A flurry finds its targets: nothing to aim.
+    // A flurry finds its targets, a brace waits for them: nothing to aim.
     case "flurry":
+    case "brace":
+    case "quake":
       return { kind: "self" }
   }
 }

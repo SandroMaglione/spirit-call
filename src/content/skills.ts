@@ -3,7 +3,7 @@
  * live-tunable: they are part of the `Tuning` resource.
  */
 
-import type { ElementId, GroundSpec } from "./elements.ts"
+import type { ElementId, GroundSpec, StateId } from "./elements.ts"
 
 // ── Skill shapes ──────────────────────────────────────────────────────────
 //
@@ -109,15 +109,20 @@ export interface LobEffect extends EffectBase {
 }
 
 /**
- * What a blast heals as it goes off: every member of the caster's team still
- * standing (on the field or on the bench) heals `base` percent of her health,
- * and `perSoaked` more for each enemy within its radius already soaked when
- * it goes off, `most` at most. Soaking enemies first is its set-up.
+ * What a skill heals the team as it goes off: every member of the caster's
+ * team still standing (on the field or on the bench) heals `base` percent
+ * of her health, and `per` more for each enemy in `state` it reaches as it
+ * goes off (a blast: within its radius; a clap: among those it strikes),
+ * `most` at most. Putting enemies in that state first is its set-up
+ * (docs/roster.md, "Support is set up"). `consumes` (burning only): the
+ * burns are put out as it heals, the rest of each dealt at once.
  */
-export interface SoakedHeal {
+export interface StateHeal {
+  readonly state: StateId
   readonly base: number
-  readonly perSoaked: number
+  readonly per: number
   readonly most: number
+  readonly consumes: boolean
 }
 
 /** A blast around the caster that knocks everything back. */
@@ -129,7 +134,12 @@ export interface NovaEffect extends EffectBase {
   /** Destroy enemy projectiles inside the radius. */
   readonly clearsProjectiles: boolean
   /** What it heals the team, or `null`. */
-  readonly heals: SoakedHeal | null
+  readonly heals: StateHeal | null
+  /**
+   * For this many seconds after it goes off, a brace of the caster's team
+   * that takes a blow is ready again at once (see `BraceEffect`); 0: none.
+   */
+  readonly readies: number
 }
 
 /**
@@ -193,16 +203,16 @@ export interface TotemEffect extends EffectBase {
 
 /**
  * A clap around the caster: the `strikes` nearest bodies of the other side
- * within `radius` are struck, each strike jumping on `jumps` times, and
- * every member of the caster's team still standing (on the field or on the
- * bench) heals `heal` percent of her maximum health.
+ * within `radius` are struck, each strike jumping on `jumps` times, and it
+ * heals the team as `heals` says, by the enemies it strikes (`null`: it
+ * heals nobody).
  */
 export interface ThunderclapEffect extends EffectBase {
   readonly kind: "thunderclap"
   readonly radius: number
   readonly strikes: number
   readonly jumps: number
-  readonly heal: number
+  readonly heals: StateHeal | null
   /** Seconds every struck enemy is stunned, and the share of its break bar the strike fills. */
   readonly stun: number
   readonly breakFill: number
@@ -251,6 +261,77 @@ export interface EarthriseEffect extends EffectBase {
 }
 
 /**
+ * A fault opening toward the aim: `rocks` rocks erupting one after the
+ * other along a line `length` long (shortened by walls), the first
+ * `warning` seconds after the cast, each next `interval` later. Each
+ * strikes the bodies of the other side within `size` of it (its blow,
+ * thrown away from it), stuns them `stun` seconds, and fills `breakFill`
+ * of their break bars (an Earthrise's rocks, in a line).
+ */
+export interface FaultEffect extends EffectBase {
+  readonly kind: "fault"
+  readonly length: number
+  readonly rocks: number
+  readonly warning: number
+  readonly interval: number
+  readonly size: number
+  readonly stun: number
+  readonly breakFill: number
+}
+
+/**
+ * Slams around the caster, one after the other, each where she stands as
+ * it lands: `slams` of them, `interval` apart (the first at once), the
+ * first striking the bodies of the other side within `first` of her, each
+ * next `growth` wider. The last stuns what it strikes `stun` seconds and
+ * fills `breakFill` of their break bars.
+ */
+export interface QuakeEffect extends EffectBase {
+  readonly kind: "quake"
+  readonly slams: number
+  readonly interval: number
+  readonly first: number
+  readonly growth: number
+  readonly stun: number
+  readonly breakFill: number
+}
+
+/**
+ * A barrier of the caster's element for `seconds`, `thickness` thick: a
+ * wall across her aim, `ahead` in front of her and `length` long, or a ring
+ * of `radius` around where she stands. The other side's shots that meet it
+ * stop there. A body of the other side touching it is struck (its blow) and
+ * thrown back, at most once every `tick` seconds: off a wall to the side it
+ * came from, out of a ring. A ring goes up with a gust that throws what is
+ * inside it out to it.
+ */
+export interface BarrierEffect extends EffectBase {
+  readonly kind: "barrier"
+  readonly shape: { readonly kind: "wall"; readonly ahead: number; readonly length: number } | { readonly kind: "ring"; readonly radius: number }
+  readonly seconds: number
+  readonly thickness: number
+  readonly tick: number
+}
+
+/**
+ * A brace: the caster sets herself for `window` seconds, rooted (she cannot
+ * run, attack, or dash; switched out, it is lost). The first enemy blow on
+ * her meanwhile (a shot too; burns and bursts pass through) is taken whole,
+ * and she answers: its blow (`power`, its element, `knockback`) on the
+ * other side within `radius` of her, and the attacker, if it is within that
+ * reach, disarmed for `disarm` seconds. A brace that takes nothing is ready
+ * again `whiff` seconds after it ends (a missed moment costs little);
+ * one that takes a blow waits out the skill's whole cooldown.
+ */
+export interface BraceEffect extends EffectBase {
+  readonly kind: "brace"
+  readonly window: number
+  readonly whiff: number
+  readonly radius: number
+  readonly disarm: number
+}
+
+/**
  * Lightning hopping between enemies: the nearest body of the other side
  * within `radius` of the caster is struck, then the nearest not struck yet
  * within `hop` of the last, up to `strikes` bodies, and the caster lands
@@ -263,7 +344,7 @@ export interface FlurryEffect extends EffectBase {
   readonly hop: number
 }
 
-export type SkillEffect = FlurryEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+export type SkillEffect = BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | FlurryEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -291,7 +372,11 @@ export const blast = (spec: Omit<BlastEffect, "kind">): BlastEffect => ({ kind: 
 export const plunge = (spec: Omit<PlungeEffect, "kind">): PlungeEffect => ({ kind: "plunge", ...spec })
 export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "leap", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
-export const nova = (spec: Omit<NovaEffect, "kind" | "heals"> & Partial<Pick<NovaEffect, "heals">>): NovaEffect => ({ kind: "nova", heals: null, ...spec })
+export const nova = (spec: Omit<NovaEffect, "kind" | "heals" | "readies"> & Partial<Pick<NovaEffect, "heals" | "readies">>): NovaEffect => ({ kind: "nova", heals: null, readies: 0, ...spec })
+export const brace = (spec: Omit<BraceEffect, "kind">): BraceEffect => ({ kind: "brace", ...spec })
+export const barrier = (spec: Omit<BarrierEffect, "kind">): BarrierEffect => ({ kind: "barrier", ...spec })
+export const fault = (spec: Omit<FaultEffect, "kind">): FaultEffect => ({ kind: "fault", ...spec })
+export const quake = (spec: Omit<QuakeEffect, "kind">): QuakeEffect => ({ kind: "quake", ...spec })
 export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
 export const totem = (spec: Omit<TotemEffect, "kind">): TotemEffect => ({ kind: "totem", ...spec })
@@ -392,7 +477,7 @@ export const skills = {
     cooldown: 10,
     energy: 85,
     invulnerability: 0.5,
-    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { base: 4, perSoaked: 3, most: 16 } })
+    effect: nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "soaked", base: 4, per: 3, most: 16, consumes: false } })
   }),
   /**
    * The Stormcaller's special: a totem planted at her feet that zaps
@@ -411,14 +496,15 @@ export const skills = {
   /**
    * The Stormcaller's ultimate: thunder striking the enemies around her,
    * jumping between them, stunning them and filling their break bars, and
-   * healing the whole team, the bench too.
+   * healing the whole team, the bench too: more for each enemy it strikes
+   * already charged (her totem's zaps charge them).
    */
   thunderclap: skill({
     name: "Thunderclap",
     cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
-    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heal: 8, stun: 1, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
+    effect: thunderclap({ radius: 300, strikes: 4, jumps: 2, heals: { state: "charged", base: 4, per: 2, most: 14, consumes: false }, stun: 1, breakFill: 0.5, power: 45, element: "thunder", knockback: 200, hitStop: 0.04, heavy: true })
   }),
   /**
    * Bastion's ultimate (id `stoneGuard`, from her first kit's special): a ring of stone bursts out around her, throwing
@@ -480,6 +566,104 @@ export const skills = {
     energy: 0,
     invulnerability: 0,
     effect: earthrise({ radius: 300, rocks: 3, warning: 0.35, interval: 0.1, size: 58, ring: 120, stun: 0.9, breakFill: 0.25, power: 30, element: "rock", knockback: 380, hitStop: 0.05, heavy: false })
+  }),
+  /**
+   * Tidewarden's special: she sets her blade a moment. The first blow on
+   * her meanwhile is taken whole, and she answers with a slash of water
+   * around her that disarms the attacker. Nothing comes: it is soon ready
+   * again; a blow taken: its whole cooldown.
+   */
+  brace: skill({
+    name: "Brace",
+    cooldown: 8,
+    energy: 0,
+    invulnerability: 0,
+    effect: brace({ window: 0.6, whiff: 2.5, radius: 130, disarm: 1.5, power: 45, element: "water", knockback: 700, hitStop: 0.08, heavy: true })
+  }),
+  /**
+   * Tidewarden's ultimate: a wave breaking out around her that soaks the
+   * crowd and drives it back (splashing what was already soaked), and for a
+   * while after, every brace that takes a blow is ready again at once.
+   */
+  floodgate: skill({
+    name: "Floodgate",
+    cooldown: 10,
+    energy: 90,
+    invulnerability: 0.5,
+    effect: nova({ radius: 260, power: 40, element: "water", knockback: 1000, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, readies: 6 })
+  }),
+  /**
+   * Quarry's special: she drives her hammer down and the ground splits
+   * along her aim, rocks erupting one after the other down the line,
+   * striking, cracking, and holding what they catch a moment.
+   */
+  faultLine: skill({
+    name: "Fault Line",
+    cooldown: 7,
+    energy: 0,
+    invulnerability: 0,
+    effect: fault({ length: 380, rocks: 5, warning: 0.25, interval: 0.07, size: 55, stun: 0.5, breakFill: 0.2, power: 26, element: "rock", knockback: 420, hitStop: 0.05, heavy: false })
+  }),
+  /**
+   * Quarry's ultimate: three slams of her hammer, each shaking the ground
+   * wider around her, the last stunning what it catches. No aim.
+   */
+  landslide: skill({
+    name: "Landslide",
+    cooldown: 10,
+    energy: 90,
+    invulnerability: 0.8,
+    effect: quake({ slams: 3, interval: 0.35, first: 150, growth: 60, stun: 1.2, breakFill: 0.4, power: 45, element: "rock", knockback: 700, hitStop: 0.08, heavy: true })
+  }),
+  /**
+   * Hearth's special: she brings her hammer down and the fires around her
+   * flare up into the team's health: every burning enemy near her is put
+   * out, the rest of its burn dealt at once, and the team heals more for
+   * each. Her own fire then catches what it struck (keep them burning, and
+   * the next one heals again).
+   */
+  kindle: skill({
+    name: "Kindle",
+    cooldown: 6,
+    energy: 0,
+    invulnerability: 0,
+    effect: nova({ radius: 210, power: 24, element: "fire", knockback: 320, active: 0.1, clearsProjectiles: false, hitStop: 0.05, heavy: false, heals: { state: "burning", base: 2, per: 3, most: 14, consumes: true } })
+  }),
+  /**
+   * Hearth's ultimate: a ring of fire bursting out around her, setting
+   * everything far around burning and throwing it back, and warming the
+   * whole team a little: what the next Kindle feeds on.
+   */
+  wildfire: skill({
+    name: "Wildfire",
+    cooldown: 10,
+    energy: 90,
+    invulnerability: 0.5,
+    effect: nova({ radius: 300, power: 40, element: "fire", knockback: 700, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, heals: { state: "burning", base: 5, per: 0, most: 5, consumes: false } })
+  }),
+  /**
+   * Windwall's special: a wall of wind raised across her aim, a little
+   * ahead of her, for a while. Shots break on it; whoever walks into it is
+   * thrown back to the side it came from, swept.
+   */
+  galeWall: skill({
+    name: "Gale Wall",
+    cooldown: 7,
+    energy: 0,
+    invulnerability: 0,
+    effect: barrier({ shape: { kind: "wall", ahead: 110, length: 300 }, seconds: 7, thickness: 18, tick: 0.35, power: 20, element: "wind", knockback: 650, hitStop: 0, heavy: false })
+  }),
+  /**
+   * Windwall's ultimate: a ring of wind around where she stands, a gust
+   * throwing what is inside out to it. For a while shots break on it, and
+   * whoever comes through is thrown back out. No aim.
+   */
+  eyeOfTheStorm: skill({
+    name: "Eye of the Storm",
+    cooldown: 10,
+    energy: 70,
+    invulnerability: 0.5,
+    effect: barrier({ shape: { kind: "ring", radius: 190 }, seconds: 6, thickness: 18, tick: 0.35, power: 28, element: "wind", knockback: 800, hitStop: 0, heavy: true })
   })
 }
 

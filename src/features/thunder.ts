@@ -17,6 +17,7 @@ import type { Vec2 } from "../math/vec.ts"
 import {
   Cast,
   Damage,
+  ElementState,
   Enemy,
   Explosion,
   Game,
@@ -38,6 +39,7 @@ import {
   Zap
 } from "../schema.ts"
 import type { Blow, DamageValue, Faction } from "../schema.ts"
+import { healTeam, stateHealPercent } from "./mending.ts"
 import { knockbackTaken } from "./motion.ts"
 import { poiseOf } from "./poise.ts"
 import { castBlow } from "./skills.ts"
@@ -226,13 +228,15 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
 /**
  * Thunderclaps: the nearest bodies of the other side around the caster are
  * struck (each strike jumping on to bodies not struck yet), and every team
- * member still standing heals, on the field or on the bench.
+ * member still standing heals, on the field or on the bench, more for each
+ * enemy struck in its state (see `StateHeal`).
  */
 export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
   queries: {
     bodies: Strikeable,
     members: Game.Query({ selection: { health: Game.Query.write(Health), player: Game.Query.optional(Player) }, with: [Member] }),
-    stunnable: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise), stunned: Game.Query.write(Stunned) } })
+    stunnable: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise), stunned: Game.Query.write(Stunned) } }),
+    states: Game.Query({ selection: { state: Game.Query.read(ElementState) }, with: [Enemy] })
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: {
@@ -271,13 +275,11 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
         data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
       }
     }
-    // A clap that heals nobody (a relic's discharge) shows no healing either.
-    for (const { data } of effect.heal > 0 ? queries.members.each() : []) {
-      const health = data.health.get()
-      if (health.current <= 0 || health.current >= health.max) continue
-      const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)
-      data.health.set({ current: health.current + amount, max: health.max })
-      if (data.player.present) events.heal.emit({ at, amount })
+    // It heals by what it struck in its state, read before its own thunder lands (a clap that heals nobody, a relic's discharge, shows no healing either).
+    if (effect.heals !== null) {
+      const state = effect.heals.state
+      const held = queries.states.each().filter(({ entity, data }) => struck.has(entity.id.value) && data.state.get().current?.id === state).length
+      healTeam(queries.members.each(), stateHealPercent(effect.heals, held), (amount) => events.heal.emit({ at, amount }))
     }
     events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element })
   }

@@ -15,7 +15,7 @@ import { PlayFalls, ReactToHits, ShedArenaEmbers, ShedSpiritDrops, ShedStateMote
 import { SyncDamageMeter, SyncHud, SyncTeam, SyncTouchPad } from "./hud.ts"
 import { ApplyCamera, FadeOccluders, InterpolateActors, OrientBolts, SyncArena, SyncNodes } from "./scene.ts"
 import { DrawOffscreenEnemies } from "./offscreen.ts"
-import { DrawMarks, DrawTelegraphs } from "./telegraphs.ts"
+import { DrawBarriers, DrawBraces, DrawMarks, DrawTelegraphs } from "./telegraphs.ts"
 import { ShowAirborne, ShowChampions, ShowUltimateMoments } from "./flourish.ts"
 import { ShowHazards } from "./hazards.ts"
 
@@ -32,6 +32,8 @@ export const frame = Game.Schedule(
   ShowHazards,
   DrawTelegraphs,
   DrawMarks,
+  DrawBraces,
+  DrawBarriers,
   DrawTouchAim,
   PlaySounds,
   SpawnFx,

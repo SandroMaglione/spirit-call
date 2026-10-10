@@ -5,6 +5,42 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The rest of the roster (2026-10-10)
+
+Tidewarden, the Hammer with Quarry, Hearth (and the Thunderclap's heal by
+charged enemies), and Windwall went in together (`docs/roster.md`, steps 6
+to 9), measured once with all of them in. The quest team is unchanged, so
+the lab, `pnpm expected`, and `pnpm progression` read exactly as before;
+the Call's rare pool gains the two Hammer aspects. The matrix, after one
+balance pass:
+
+| | Clears (skilled / learning) | Healed / blocked a minute (learning) |
+|---|---|---|
+| Swordsman (reference) | 47 / 24 of 48 | |
+| Quarry | 46 / 21 | |
+| Stormcaller (healer) | 45 / 22 | 45% healed |
+| Hearth (healer) | 48 / 26 | 36% healed |
+| Tidecaller (healer) | 47 / 17 | 59% healed |
+| Bastion (guardian) | 48 / 33 | 3.5 blocked |
+| Tidewarden (guardian) | 47 / 33 | 5.9 blocked |
+| Windwall (guardian) | 45 / 3 | 15 blocked (shots) |
+
+- **The Hammer** first measured the strongest class: Quarry the quickest
+  of anyone, Hearth clearing more than any attacker for the learning bot.
+  Its waves went from half a swing's blow to 35%; both now sit with the
+  Swordsman and the Stormcaller.
+- **Tidewarden** clears as Bastion does. She stops more blows (the bot
+  braces each blow perfectly, a player will not); her Brace went from 6 s
+  to 8 s.
+- **Windwall** first cleared 27 of 48 skilled: her barriers struck too
+  lightly. They now strike harder (20% ATK, 28% for the ring), the wall is
+  longer and stands 7 s, every 7 s, and the Eye of the Storm costs 70
+  energy. Skilled she holds her own; learning she falls, as the Gunner
+  does: her guard stops shots, and a learning player falls to blows. Her
+  "blocked" counts shots, so it is not comparable with the others'. For
+  playtests, before more numbers: whether she needs to stop blows too (a
+  barrier weakening blows struck through it).
+
 ## The Gauntlets and Sparkfist (2026-10-10)
 
 The roster's fifth class and first new character (`docs/roster.md`).

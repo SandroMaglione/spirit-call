@@ -18,7 +18,7 @@ import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { BarrierEffect, BraceEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
@@ -141,6 +141,23 @@ export interface VortexValue {
 export const Vortex = Descriptor.Component<VortexValue>()("Shooter/Vortex")
 
 /**
+ * A barrier standing (see `BarrierEffect`): a wall from `from` to `to`, or a
+ * ring of `radius` around `center`, `thickness` thick, for `remaining` more
+ * seconds of `seconds`. The other side's shots meeting it stop; its bodies
+ * touching it take `blow` and are thrown back, every `tick` (`nextTick`:
+ * time to the next).
+ */
+export interface BarrierValue {
+  readonly shape: { readonly kind: "wall"; readonly from: Vec2; readonly to: Vec2 } | { readonly kind: "ring"; readonly center: Vec2; readonly radius: number }
+  readonly effect: BarrierEffect
+  readonly faction: Faction
+  readonly blow: Blow
+  readonly remaining: number
+  readonly nextTick: number
+}
+export const Barrier = Descriptor.Component<BarrierValue>()("Shooter/Barrier")
+
+/**
  * A totem planted by a skill (see `TotemEffect`), standing at its
  * `Position`: it zaps every tick until it runs out. Its strikes come from
  * the caster's ATK when planted.
@@ -208,6 +225,29 @@ export const PlateShatter = Descriptor.Component<{
   readonly atk: number
   readonly charges: boolean
 }>()("Shooter/PlateShatter")
+
+/**
+ * A brace held (see `BraceEffect`), on the member bracing: rooted for
+ * `remaining` more seconds, the first enemy blow on her meanwhile taken
+ * whole (see `ApplyDamage`) and answered with `blow` (`BraceCounter`). Its
+ * skill is in `slot`: a brace that takes nothing is ready again soon after.
+ */
+export const Bracing = Descriptor.Component<{ readonly remaining: number; readonly effect: BraceEffect; readonly blow: Blow; readonly slot: SkillSlot }>()("Shooter/Bracing")
+
+/**
+ * A brace taking a blow, waiting to answer it (an entity, like
+ * `PlateShatter`): its blow around `at`, the attacker (when known) disarmed
+ * if it is within reach; `bracer` gets her brace back at once while a
+ * Floodgate's moment lasts (see `Rebrace`).
+ */
+export const BraceCounter = Descriptor.Component<{
+  readonly at: Vec2
+  readonly attacker: DamageSource["attacker"] | null
+  readonly bracer: DamageSource["attacker"]
+  readonly effect: BraceEffect
+  readonly blow: Blow
+  readonly slot: SkillSlot
+}>()("Shooter/BraceCounter")
 
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
@@ -421,7 +461,7 @@ export interface BasicAttackValue {
 }
 export const BasicAttack = Descriptor.Component<BasicAttackValue>()("Shooter/BasicAttack")
 
-export type ProjectileStyle = "bolt" | "disc"
+export type ProjectileStyle = "bolt" | "disc" | "wave"
 
 export interface ProjectileValue {
   readonly faction: Faction
@@ -772,7 +812,7 @@ export const Explosion = Descriptor.Event<{
 }>()("Shooter/Explosion")
 
 /** The team's guard changed (see `GuardEffect`): its plates raised around the one on the field at `at`, or one shattered there, for effects. */
-export const Guarded = Descriptor.Event<{ readonly at: Vec2; readonly kind: "raised" | "shattered" }>()("Shooter/Guarded")
+export const Guarded = Descriptor.Event<{ readonly at: Vec2; readonly kind: "raised" | "shattered" | "braced" | "barred" }>()("Shooter/Guarded")
 
 /** Health restored to an entity at `at` (an aspect's passive, a totem, a thunderclap), for effects. */
 export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: number }>()("Shooter/Heal")
@@ -885,6 +925,9 @@ export interface GuardValue {
   readonly charges: boolean
 }
 export const Guard = Descriptor.Resource<GuardValue>()("Shooter/Guard")
+
+/** For `remaining` more seconds, a brace that takes a blow is ready again at once (see `NovaEffect.readies`). */
+export const Rebrace = Descriptor.Resource<{ readonly remaining: number }>()("Shooter/Rebrace")
 
 /** The challenge being played (see `content/challenges.ts`). */
 export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
@@ -1182,8 +1225,11 @@ export const Game = Schema.bind(
       Marked,
       Lobbed,
       Vortex,
+      Barrier,
       Totem,
       Raising,
+      Bracing,
+      BraceCounter,
       Airborne,
       PlateShatter,
       Rock,
@@ -1219,6 +1265,7 @@ export const Game = Schema.bind(
       UltimateMoment,
       Arrival,
       Guard,
+      Rebrace,
       Challenge,
       EnemyLevel,
       Twist,

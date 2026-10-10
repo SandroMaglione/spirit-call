@@ -16,7 +16,7 @@ import { ResolveHitboxes, UpdateAttacks } from "./features/attacks.ts"
 import { CallSupport, LeavePools, PressChampions, ReleaseShockwaves } from "./features/patterns.ts"
 import { FollowCamera, SnapCamera } from "./features/camera.ts"
 import { ApplyDamage, DecayKnockback, MoveProjectiles, TickCombatTimers, TickHitStop } from "./features/combat.ts"
-import { HealFromTides, MendFromMarks } from "./features/mending.ts"
+import { HealFromStates, MendFromMarks } from "./features/mending.ts"
 import { MoveDiscs } from "./features/discs.ts"
 import { ApplyStateBursts, ArcCharges, TickStates } from "./features/elements.ts"
 import { UpdateGround } from "./features/ground.ts"
@@ -30,7 +30,9 @@ import { BuildPoise } from "./features/poise.ts"
 import { SlamSwept } from "./features/wind.ts"
 import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.ts"
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
-import { CastEarthrise, UpdateRocks } from "./features/earthrise.ts"
+import { CastBraces, CounterBraces, TickBraces } from "./features/brace.ts"
+import { CastBarriers, UpdateBarriers } from "./features/barriers.ts"
+import { CastEarthrise, CastFaults, CastQuakes, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { RecordRunLog } from "./features/run-log.ts"
@@ -98,6 +100,7 @@ const gameplay = Game.Schedule.when(
   TickBench,
   // A guard raised (or lost), and a body landing, before she moves: rooted meanwhile; what lands is cast this step.
   RaiseGuards,
+  TickBraces,
   LandAirborne,
   ControlPlayer,
   // Casts (from skills, and from passives queued last step) are carried out
@@ -110,14 +113,18 @@ const gameplay = Game.Schedule.when(
   CastLeaps,
   CastLobs,
   CastNovas,
-  HealFromTides,
+  HealFromStates,
   CastBarrages,
   CastVortices,
   CastTotems,
   CastThunderclaps,
   CastFlurries,
   CastGuards,
+  CastBraces,
+  CastBarriers,
   CastEarthrise,
+  CastFaults,
+  CastQuakes,
   UseBasicAttack,
   UpdateLobbed,
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
@@ -141,6 +148,7 @@ const gameplay = Game.Schedule.when(
   MoveDiscs,
   ResolveHitboxes,
   UpdateVortices,
+  UpdateBarriers,
   UpdateTotems,
   UpdateRocks,
   UpdateGround,
@@ -148,6 +156,7 @@ const gameplay = Game.Schedule.when(
   ApplyStateBursts,
   ArcCharges,
   ShatterPlates,
+  CounterBraces,
   ApplyDamage,
   MendInTraining,
   ProcessPendingSpawns,

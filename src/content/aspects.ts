@@ -276,6 +276,52 @@ export const aspects = {
     chain: null,
     effects: [],
     infuse: finisher()
+  }),
+  /**
+   * Furrow (Hammer): long, narrow blows straight ahead, so each wave runs
+   * far down a line, carrying her element on the last; charged, a great
+   * blow whose wave runs farthest. For a line of enemies, or one far off.
+   */
+  furrow: aspect({
+    name: "Furrow",
+    description: "Long, narrow blows straight ahead, their waves running far down a line. Charged: a great blow whose wave runs farthest.",
+    against: "A line of enemies, or one kept at a distance.",
+    class: "hammer",
+    combo: [
+      thrust({ reach: 140, width: 56, power: 22, knockback: 460, recovery: 0.34, hitStop: 0.07, heavy: false, lunge: 12 }),
+      thrust({ reach: 140, width: 56, power: 26, knockback: 500, recovery: 0.4, hitStop: 0.08, heavy: false, lunge: 12 }),
+      thrust({ reach: 160, width: 72, power: 50, knockback: 1000, recovery: 0.75, hitStop: 0.13, heavy: true, lunge: 16 })
+    ],
+    charged: { chargeTime: 0.7, move: thrust({ reach: 175, width: 72, power: 85, knockback: 1200, recovery: 0.7, hitStop: 0.15, heavy: true, lunge: 20 }) },
+    /** A shoulder charge out of the dash. */
+    dash: thrust({ reach: 110, width: 70, power: 10, knockback: 700, recovery: 0.3, hitStop: 0.07, heavy: false, lunge: 90 }),
+    magazine: null,
+    chain: null,
+    effects: [],
+    infuse: finisher()
+  }),
+  /**
+   * Tremor (Hammer): three slams where she stands, each sending a ring of
+   * short waves all around, carrying her element on the last; charged, a
+   * wider slam. For a crowd closing in from every side.
+   */
+  tremor: aspect({
+    name: "Tremor",
+    description: "Three slams where you stand, each sending a ring of short waves all around. Charged: a wider slam.",
+    against: "A crowd closing in from every side.",
+    class: "hammer",
+    combo: [
+      spin({ reach: 105, power: 22, knockback: 480, recovery: 0.36, hitStop: 0.07, heavy: false, lunge: 0 }),
+      spin({ reach: 105, power: 28, knockback: 520, recovery: 0.45, hitStop: 0.08, heavy: false, lunge: 0 }),
+      spin({ reach: 125, power: 50, knockback: 1050, recovery: 0.75, hitStop: 0.13, heavy: true, lunge: 0 })
+    ],
+    charged: { chargeTime: 0.7, move: spin({ reach: 145, power: 80, knockback: 1150, recovery: 0.7, hitStop: 0.15, heavy: true, lunge: 0 }) },
+    /** A spinning swing out of the dash. */
+    dash: spin({ reach: 100, power: 10, knockback: 600, recovery: 0.3, hitStop: 0.07, heavy: false, lunge: 40 }),
+    magazine: null,
+    chain: null,
+    effects: [],
+    infuse: finisher()
   })
 } satisfies { readonly [id: string]: AspectSpec }
 
@@ -302,6 +348,7 @@ export const basicAttack = (spec: ClassSpec, aspect: AspectSpec | null): BasicAt
     chain: moves.chain,
     infuse: aspect?.infuse ?? null,
     dashFeed: handling.dashFeed,
-    weave: handling.weave
+    weave: handling.weave,
+    shockwave: handling.shockwave
   }
 }

@@ -96,7 +96,7 @@ describe("the Tidecaller's healing asks for blows", () => {
     run.runtime.tick(Game.Schedule(Fill))
     const before = run.world().health
     run.step(4)
-    const percent = Math.min(heals.most, heals.base + heals.perSoaked * near.length)
+    const percent = Math.min(heals.most, heals.base + heals.per * near.length)
     expect(run.world().health.current - before.current).toBeCloseTo((before.max * percent) / 100, 6)
   })
 })

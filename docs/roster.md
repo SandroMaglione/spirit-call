@@ -41,7 +41,7 @@ differ in what their healing asks, guardians in what they stop:
 | Healer by standing (the Stormcaller) | fighting by her totem | |
 | Healer by burning (Hearth) | enemies kept burning, then her special | |
 | Guardian by plates (Bastion) | raising them in a quiet moment | any blow, a few times |
-| Guardian by bracing (Tidewarden) | the moment of a blow | one heavy blow |
+| Guardian by bracing (Tidewarden) | the moment of a blow | the first blow in that moment |
 | Guardian by barriers (Windwall) | where her wall stands | shots |
 
 Health restored a minute is held about equal across healers, and blows
@@ -55,14 +55,14 @@ marked * are working names.
 | Element | Character | Role | Class | How she plays |
 |---|---|---|---|---|
 | Wind | Swordsman | Attacker | Blade | a steady bruiser; the Gust throws a crowd off, the Cyclone draws it in |
-| Wind | Windwall* | Guardian | Staff | wind walls that stop shots and push back what comes through |
+| Wind | Windwall* | Guardian | Staff | wind barriers that stop shots and throw back what touches them: the Gale Wall across her aim, the Eye of the Storm around her |
 | Fire | Gunner | Attacker | Gun | a glass cannon who kites |
-| Fire | Hearth* | Healer | Hammer | keeps enemies burning, then turns their burns into the team's health |
+| Fire | Hearth* | Healer | Hammer | keeps enemies burning (the Wildfire), then turns their burns into the team's health (the Kindle) |
 | Water | Tidecaller | Healer | Disc | marks enemies, and heals by hitting them; her ultimate heals more for each one soaked |
-| Water | Tidewarden* | Guardian | Blade | a brace that takes one blow whole and splashes the attacker |
+| Water | Tidewarden* | Guardian | Blade | the Brace takes one blow whole and disarms the attacker; the Floodgate soaks the crowd and readies a brace that takes a blow at once |
 | Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: the Spark Step darts her through a line of enemies, charging them; the Storm Flurry hops her from one to the next |
 | Thunder | Stormcaller | Healer | Staff | a totem to fight by, and a thunderclap that heals by what it strikes |
-| Rock | Quarry* | Attacker | Hammer | the slow heavy hitter |
+| Rock | Quarry* | Attacker | Hammer | the slow heavy hitter: the Fault Line splits the ground along her aim, the Landslide slams ever wider around her |
 | Rock | Bastion | Guardian | Disc | the slow defender: stone plates |
 
 Four attackers (wind, fire, thunder, rock), three healers (water, thunder,
@@ -105,3 +105,6 @@ models come separately (`models.md`, `spirits.md`).
 7. **Hammer and Quarry.**
 8. **Hearth** (burns into health), and the Thunderclap reworked with her.
 9. **Windwall** (barriers).
+
+All nine are in (October 2026; steps 6 to 9 in one pull request, measured
+together). Next: the Spirit Call's pace and banners (`calls.md`, "Open").

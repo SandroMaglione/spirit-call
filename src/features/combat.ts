@@ -15,6 +15,9 @@ import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
 import { SpatialGrid } from "../physics/grid.ts"
 import {
   Arc,
+  Barrier,
+  BraceCounter,
+  Bracing,
   Challenge,
   CombatStats,
   Damage,
@@ -27,6 +30,7 @@ import {
   EnergyLedger,
   Game,
   Guard,
+  Guarded,
   Heal,
   Health,
   Hit,
@@ -67,6 +71,8 @@ import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
 import { respawnOf } from "./enemies.ts"
+import { barrierMeets } from "./barriers.ts"
+import { braceTakes } from "./brace.ts"
 import { plateTakes } from "./guard.ts"
 import { damageBonusPercent, damageTakenPercent, PassiveHolders, secondWindPercent } from "./passives.ts"
 import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./targets.ts"
@@ -100,10 +106,11 @@ export const MoveProjectiles = (() => {
         selection: { position: Game.Query.write(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.write(Projectile) }
       }),
       targets: Targets,
-      walls: Walls
+      walls: Walls,
+      barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } })
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap) }
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded) }
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
     const window = resources.tuning.get().perfectDodge.window
@@ -118,6 +125,7 @@ export const MoveProjectiles = (() => {
     }
     // Bodies that just dashed: a shot through where they stood dodged them, wherever they are now.
     const dashers = targets.filter((target) => target.dashed !== undefined && target.dashed.since <= window)
+    const barriers = queries.barriers.each().map(({ data }) => data.barrier.get())
 
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()
@@ -142,6 +150,21 @@ export const MoveProjectiles = (() => {
         (index) => void nearby.push(targets[index]!)
       )
       const contacts = sweepTargets(origin, delta, r, nearby, projectile.faction, projectile.hit, wall?.time ?? Infinity)
+
+      // A barrier of the other side met before any body or wall: the shot breaks on it.
+      let barred = Infinity
+      for (const barrier of barriers) {
+        if (barrier.faction === projectile.faction) continue
+        barred = Math.min(barred, barrierMeets(barrier, origin, delta, r) ?? Infinity)
+      }
+      if (barred < (wall?.time ?? Infinity) && barred <= (contacts[0]?.time ?? Infinity)) {
+        const at = { x: origin.x + delta.x * barred, y: origin.y + delta.y * barred }
+        data.position.set(at)
+        events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: true })
+        events.guarded.emit({ at, kind: "barred" })
+        commands.despawn(entity.id)
+        continue
+      }
 
       const direction = speed > 0 ? scale(velocity, 1 / speed) : { x: 0, y: 0 }
       let pierce = projectile.pierce
@@ -234,7 +257,8 @@ const Damageable = Game.Query({
     stunned: Game.Query.optional(Stunned),
     immortal: Game.Query.optional(Immortal),
     member: Game.Query.optional(Member),
-    passives: Game.Query.optional(Passives)
+    passives: Game.Query.optional(Passives),
+    bracing: Game.Query.optional(Bracing)
   }
 })
 
@@ -263,6 +287,8 @@ const Benched = Game.Query({
  *
  * A stone plate (see `GuardEffect`) takes an enemy's blow on the one on the
  * field whole: nothing of it lands, and the plate shatters (`PlateShatter`).
+ * A brace (see `BraceEffect`) takes the first one on her while she braces,
+ * and she answers it (`BraceCounter`).
  *
  * A team member who falls stays in the team, fallen (`SwitchCharacter`
  * brings in the next one); an enemy that dies is gone. Energy from damage
@@ -332,6 +358,14 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
       hitStop = Math.max(hitStop, guard.effect.hitStop)
       commands.spawnIn(RunScope, Game.Command.spawn([PlateShatter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, effect: guard.effect, atk: guard.atk, charges: guard.charges }]))
+      continue
+    }
+    if (data.bracing.present && braceTakes(true, data.player.present, damage.faction, blow.periodic)) {
+      const { effect, blow: answer, slot } = data.bracing.get()
+      commands.remove(entity.id, Bracing)
+      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+      hitStop = Math.max(hitStop, effect.hitStop)
+      commands.spawnIn(RunScope, Game.Command.spawn([BraceCounter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, bracer: Game.Entity.handle(entity.id, Position), effect, blow: answer, slot }]))
       continue
     }
 

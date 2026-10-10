@@ -225,6 +225,81 @@ export const characters = {
     impact: 0.9,
     weight: 0.8,
     skills: { special: "sparkStep", ultimate: "stormFlurry" }
+  }),
+  /**
+   * Water, Blade, guardian (a working name): steady in close, a guardian
+   * who times blows rather than outlasting them. The Brace takes one blow
+   * whole and answers it, disarming the attacker; the Floodgate soaks the
+   * crowd and, for a while, readies every brace that takes a blow at once.
+   */
+  tidewarden: character({
+    name: "Tidewarden",
+    stats: { hp: 82, atk: 78, def: 26, speed: 285 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "water",
+    class: "blade",
+    role: "guardian",
+    dash: {},
+    impact: 1.15,
+    weight: 1.25,
+    skills: { special: "brace", ultimate: "floodgate" }
+  }),
+  /**
+   * Rock, Hammer, attacker (a working name): the slow, heavy hitter, frail
+   * for her strength and slow on her feet, her dash short. The Fault Line
+   * splits the ground along her aim; the Landslide shakes it ever wider
+   * around her.
+   */
+  quarry: character({
+    name: "Quarry",
+    stats: { hp: 74, atk: 110, def: 12, speed: 260 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "rock",
+    class: "hammer",
+    role: "attacker",
+    dash: { distance: 150, cooldown: 1.25 },
+    impact: 1.4,
+    weight: 1.5,
+    skills: { special: "faultLine", ultimate: "landslide" }
+  }),
+  /**
+   * Fire, Hammer, healer (a working name): close and sturdy for a healer,
+   * her strength in her kit. Her healing asks for fire: the Kindle turns
+   * the burns around her into the team's health, more for each enemy kept
+   * burning; the Wildfire sets the crowd alight for it.
+   */
+  hearth: character({
+    name: "Hearth",
+    stats: { hp: 78, atk: 80, def: 18, speed: 280 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "fire",
+    class: "hammer",
+    role: "healer",
+    dash: { distance: 160, cooldown: 1.2 },
+    impact: 1.2,
+    weight: 1.3,
+    skills: { special: "kindle", ultimate: "wildfire" }
+  }),
+  /**
+   * Wind, Staff, guardian (a working name): quick at middle range, a
+   * guardian who stops shots by where she puts her walls. The Gale Wall
+   * stands across her aim; the Eye of the Storm rings her round.
+   */
+  windwall: character({
+    name: "Windwall",
+    stats: { hp: 78, atk: 84, def: 22, speed: 300 },
+    radius: 16,
+    hurtboxRadius: 11,
+    element: "wind",
+    class: "staff",
+    role: "guardian",
+    dash: { distance: 180 },
+    impact: 1,
+    weight: 0.95,
+    skills: { special: "galeWall", ultimate: "eyeOfTheStorm" }
   })
 }
 

@@ -40,7 +40,7 @@ export const enemyColor = (enemy: EnemyKind): number => view.enemies[enemy].colo
 
 /** A projectile's color: a disc's, an enemy's bolt in its element's color (water that will soak you looks like water), or its side's. */
 export const projectileColor = (faction: Faction, style: ProjectileStyle = "bolt", element: ElementId | null = null): number =>
-  style === "disc" ? view.disc.color : faction === "enemy" && element !== null ? view.elements[element] : faction === "player" ? view.playerProjectile : view.enemyProjectile
+  style === "disc" ? view.disc.color : style === "wave" ? (element === null ? view.shockwave.color : view.elements[element]) : faction === "enemy" && element !== null ? view.elements[element] : faction === "player" ? view.playerProjectile : view.enemyProjectile
 
 const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, faction: Faction, style: ProjectileStyle, radius: number, element: ElementId | null): ProjectileNode => {
   const node = pool.pop() ?? (() => {
@@ -62,7 +62,12 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
   const orb = node.orb
   const color = projectileColor(faction, style, element)
   orb.color.setHex(color)
-  if (style === "disc") {
+  if (style === "wave") {
+    // A shockwave: a low hump of the floor running along it (its crescent is drawn on the floor, see `DrawTelegraphs`).
+    orb.batch = assets.pucks
+    orb.object.scale.setScalar(radius * view.shockwave.size)
+    orb.object.position.y = worldHeight(projection, view.shockwave.height)
+  } else if (style === "disc") {
     // A flat disc skimming low over the floor.
     orb.batch = assets.pucks
     orb.object.scale.setScalar(radius * view.disc.size)

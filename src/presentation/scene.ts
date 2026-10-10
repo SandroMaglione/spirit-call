@@ -96,7 +96,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
   const now = performance.now() / 1000
   for (const { entity, data } of queries.bolts.each()) {
     const node = services.nodes.get(entity.id)
-    if (node?.kind !== "projectile" || node.style === "disc") continue
+    if (node?.kind !== "projectile" || node.style !== "bolt") continue
     const velocity = data.velocity.get()
     const speed = Math.hypot(velocity.x, velocity.y)
     // The floor's y is the scene's z: a turn about the vertical axis.

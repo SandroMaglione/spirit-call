@@ -30,11 +30,17 @@ export const banners = {
     theme: "An attacker who rains fire, and a healer who calls lightning.",
     characters: ["gunner", "stormcaller"]
   }),
-  /** The roster's second banner (see docs/roster.md); its guardian joins it with step 6. Pairings are revisited with the Call's pace. */
+  /** The roster's second banner (see docs/roster.md). Pairings are revisited with the Call's pace. */
   sparkAndFrost: banner({
     name: "Spark & Frost",
-    theme: "An attacker who darts through a crowd in a flash.",
-    characters: ["sparkfist"]
+    theme: "An attacker who darts through a crowd in a flash, and a guardian who meets each blow.",
+    characters: ["sparkfist", "tidewarden"]
+  }),
+  /** The roster's third banner (see docs/roster.md), holding the rest of it for now. Pairings are revisited with the Call's pace. */
+  forgeAndGale: banner({
+    name: "Forge & Gale",
+    theme: "An attacker who splits the ground, a healer who turns fire into health, and a guardian who walls off the wind.",
+    characters: ["quarry", "hearth", "windwall"]
   })
 }
 

@@ -7,7 +7,7 @@ import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
-import { AttackPhase, Attacker, Body, Burst, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
+import { AttackPhase, Attacker, Barrier, Body, Bracing, Burst, Projectile, Velocity, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Player, Rebrace, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { drawArea } from "./draw.ts"
@@ -28,6 +28,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     elites: Game.Query({ selection: { elite: Game.Query.read(Elite), enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), body: Game.Query.read(Body) } }),
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }),
     discs: Game.Query({ selection: { disc: Game.Query.read(Disc), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
+    waves: Game.Query({ selection: { projectile: Game.Query.read(Projectile), velocity: Game.Query.read(Velocity), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     attackers: Game.Query({
       selection: { enemy: Game.Query.read(Enemy), attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), position: Game.Query.read(Position), body: Game.Query.read(Body) }
     }),
@@ -247,6 +248,17 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       }
     }
   }
+  // Shockwaves: a crescent of the floor heaving up, bowed the way it runs.
+  for (const { data } of queries.waves.each()) {
+    const projectile = data.projectile.get()
+    if (projectile.style !== "wave") continue
+    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const velocity = data.velocity.get()
+    const heading = Math.atan2(velocity.y, velocity.x)
+    const radius = projectile.radius * view.shockwave.crescent
+    const color = projectile.blow.element === null ? view.shockwave.color : view.elements[projectile.blow.element.id]
+    g.strokeArc(at.x - Math.cos(heading) * radius, at.y - Math.sin(heading) * radius, radius * 2, heading - 0.7, heading + 0.7, view.shockwave.width, color, view.shockwave.alpha)
+  }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
   for (const { data } of queries.discs.each()) {
     const disc = data.disc.get()
@@ -288,5 +300,77 @@ export const DrawMarks = Game.System("Shooter/DrawMarks", {
     const radius = data.body.get().radius + view.marks.gap
     g.strokeCircle(at.x, at.y, radius, view.marks.width, view.marks.color, view.marks.outline * fade * pulse)
     g.strokeCircle(at.x, at.y, radius - view.marks.inner, view.marks.width - 1, view.marks.color, view.marks.outline * fade * pulse * 0.6)
+  }
+})
+
+/**
+ * A brace held (see `Bracing`): a bright ring of water at her feet where
+ * her answer would reach, filling in as the moment passes; while a
+ * Floodgate readies her braces (see `Rebrace`), a faint ring stays.
+ */
+export const DrawBraces = Game.System("Shooter/DrawBraces", {
+  queries: {
+    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), bracing: Game.Query.optional(Bracing) }, with: [Player] })
+  },
+  resources: { rebrace: Game.System.readResource(Rebrace) },
+  services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
+}, ({ queries, resources, services }) => {
+  const g = services.host.telegraphs
+  const [player] = queries.player.each()
+  if (player === undefined) return
+  const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
+  const color = view.elements.water
+  if (player.data.bracing.present) {
+    const { remaining, effect } = player.data.bracing.get()
+    const left = Math.max(0, Math.min(1, remaining / effect.window))
+    g.fillCircle(at.x, at.y, effect.radius, color, view.braces.fill * (1 - left))
+    g.strokeCircle(at.x, at.y, effect.radius, view.braces.width, color, view.braces.outline)
+  } else if (resources.rebrace.get().remaining > 0) {
+    const pulse = 0.7 + 0.3 * Math.sin((performance.now() / 1000) * Math.PI * 2 / view.braces.pulse)
+    g.strokeCircle(at.x, at.y, view.braces.ready, view.braces.width - 1, color, view.braces.outline * 0.4 * pulse)
+  }
+})
+
+/**
+ * Barriers standing (see `Barrier`): a band of wind on the floor (a wall's
+ * strip, a ring's circle) with streaks running along it, fading out as its
+ * time runs out.
+ */
+export const DrawBarriers = Game.System("Shooter/DrawBarriers", {
+  queries: { barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } }) },
+  services: { host: Game.System.service(RenderHost) }
+}, ({ queries, services }) => {
+  const g = services.host.telegraphs
+  const now = performance.now() / 1000
+  const spec = view.barriers
+  for (const { data } of queries.barriers.each()) {
+    const { shape, effect, remaining } = data.barrier.get()
+    const color = effect.element === null ? view.playerArea : view.elements[effect.element]
+    const fade = Math.min(1, remaining / spec.fadeSeconds)
+    const half = effect.thickness / 2
+    if (shape.kind === "wall") {
+      const along = { x: shape.to.x - shape.from.x, y: shape.to.y - shape.from.y }
+      const length = Math.hypot(along.x, along.y)
+      const unit = { x: along.x / length, y: along.y / length }
+      const across = { x: -unit.y * half, y: unit.x * half }
+      g.fillPoly([shape.from.x + across.x, shape.from.y + across.y, shape.to.x + across.x, shape.to.y + across.y, shape.to.x - across.x, shape.to.y - across.y, shape.from.x - across.x, shape.from.y - across.y], color, spec.fill * fade)
+      g.line(shape.from.x + across.x, shape.from.y + across.y, shape.to.x + across.x, shape.to.y + across.y, spec.width, color, spec.edge * fade)
+      g.line(shape.from.x - across.x, shape.from.y - across.y, shape.to.x - across.x, shape.to.y - across.y, spec.width, color, spec.edge * fade)
+      // Streaks of wind running along it.
+      for (let streak = 0; streak < spec.streaks; streak++) {
+        const t = (now * 0.9 + streak / spec.streaks) % 1
+        const start = { x: shape.from.x + along.x * t, y: shape.from.y + along.y * t }
+        const end = Math.min(length, length * t + spec.streakLength)
+        g.line(start.x, start.y, shape.from.x + unit.x * end, shape.from.y + unit.y * end, spec.width - 1, view.hitFlash, spec.edge * fade * 0.6)
+      }
+      continue
+    }
+    g.strokeCircle(shape.center.x, shape.center.y, shape.radius, effect.thickness, color, spec.fill * 1.5 * fade)
+    g.strokeCircle(shape.center.x, shape.center.y, shape.radius + half, spec.width, color, spec.edge * fade)
+    g.strokeCircle(shape.center.x, shape.center.y, shape.radius - half, spec.width, color, spec.edge * fade)
+    for (let streak = 0; streak < spec.streaks; streak++) {
+      const turn = now * 1.6 + (streak / spec.streaks) * Math.PI * 2
+      g.strokeArc(shape.center.x, shape.center.y, shape.radius, turn, turn + spec.streakLength / shape.radius, spec.width - 1, view.hitFlash, spec.edge * fade * 0.6)
+    }
   }
 })

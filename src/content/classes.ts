@@ -9,7 +9,7 @@
 import { arc, disc, lob, shot, spin, thrust } from "./attacks.ts"
 import type { AttackMove } from "./attacks.ts"
 
-export type ClassId = "blade" | "gun" | "disc" | "staff" | "gauntlets"
+export type ClassId = "blade" | "gun" | "disc" | "staff" | "gauntlets" | "hammer"
 
 /** How a class handles: the same for every character of it, whatever her aspect (see `BasicAttackSpec`). */
 export interface Handling {
@@ -39,6 +39,25 @@ export interface Handling {
    * (the Gauntlets': dash out of a blow, dash back in, finish the string).
    */
   readonly weave: boolean
+  /** Every swing sends shockwaves along the ground (the Hammer's, see `Shockwave`); `null`: none. */
+  readonly shockwave: Shockwave | null
+}
+
+/**
+ * The Hammer's shockwaves: every swing of the combo or the charged attack
+ * (not the dash strike) sends waves along the ground the way it swings,
+ * from the end of its reach, through every enemy in their way and stopped
+ * by walls: a thrust one ahead, an arc `fan` spread over it, a spin `ring`
+ * all around. Each runs `reach` times the swing's reach, dealing `share` of
+ * its blow (its element too, when the swing carries one).
+ */
+export interface Shockwave {
+  readonly share: number
+  readonly reach: number
+  readonly speed: number
+  readonly radius: number
+  readonly fan: number
+  readonly ring: number
 }
 
 /** What an aspect sets: its moves (see `BasicAttackSpec` for each). */
@@ -82,7 +101,7 @@ export const classes = {
     description: "A combo that lunges in close; its finisher launches, and it breaks enemies soonest.",
     shapes: ["arc", "thrust", "spin"],
     magazine: false,
-    handling: { comboWindow: 0.8, inputBuffer: 0.15, active: 0.08, lungeStop: 12, attackingSpeed: 0.5, holdDelay: 0.2, chargingSpeed: 0.55, dashFeed: 0, weave: false },
+    handling: { comboWindow: 0.8, inputBuffer: 0.15, active: 0.08, lungeStop: 12, attackingSpeed: 0.5, holdDelay: 0.2, chargingSpeed: 0.55, dashFeed: 0, weave: false, shockwave: null },
     /**
      * Edge: a side slash, the backhand, a thrust, and a spin that launches
      * enemies away. Early moves push lightly, so enemies stay in reach for
@@ -111,7 +130,7 @@ export const classes = {
     description: "Quick shots from a magazine; the charged attack spends what is left, then reloads.",
     shapes: ["shot", "lob"],
     magazine: true,
-    handling: { comboWindow: 0.5, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false },
+    handling: { comboWindow: 0.5, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false, shockwave: null },
     /** Sidearm: two quick shots and a spread; charged, a grenade lobbed over walls to the cursor. */
     plain: {
       name: "Sidearm",
@@ -138,7 +157,7 @@ export const classes = {
     description: "Discs that cut there and back, hitting on the way out and again on the way back.",
     shapes: ["disc"],
     magazine: false,
-    handling: { comboWindow: 0.6, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.6, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false },
+    handling: { comboWindow: 0.6, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.6, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false, shockwave: null },
     /** Ring: two throws through a line of enemies, then a pair in a V; charged, a disc that hovers where it is aimed. */
     plain: {
       name: "Ring",
@@ -165,7 +184,7 @@ export const classes = {
     description: "Slower bolts that pierce a line of enemies; the charged bolt goes through many.",
     shapes: ["shot"],
     magazine: false,
-    handling: { comboWindow: 0.55, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.65, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false },
+    handling: { comboWindow: 0.55, inputBuffer: 0.12, active: 0.08, lungeStop: 12, attackingSpeed: 0.65, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0, weave: false, shockwave: null },
     /** Spark: two sparks through the first enemy, then a pair in a V; charged, a slow orb through a line of enemies. */
     plain: {
       name: "Spark",
@@ -196,7 +215,7 @@ export const classes = {
     description: "Fast strings of blows up close; hits bring the dash back sooner, and a dash strike keeps the string going.",
     shapes: ["thrust", "arc", "spin"],
     magazine: false,
-    handling: { comboWindow: 0.6, inputBuffer: 0.15, active: 0.07, lungeStop: 10, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0.1, weave: true },
+    handling: { comboWindow: 0.6, inputBuffer: 0.15, active: 0.07, lungeStop: 10, attackingSpeed: 0.7, holdDelay: 0.2, chargingSpeed: 0.6, dashFeed: 0.1, weave: true, shockwave: null },
     /**
      * Jab: a jab, another, a cross, and an uppercut that pops enemies away.
      * Charged: a rushing straight.
@@ -213,6 +232,40 @@ export const classes = {
       charged: { chargeTime: 0.45, move: thrust({ reach: 150, width: 64, power: 50, knockback: 1000, recovery: 0.45, hitStop: 0.12, heavy: true, lunge: 140 }) },
       /** A straight out of the dash. */
       dash: thrust({ reach: 120, width: 60, power: 10, knockback: 480, recovery: 0.22, hitStop: 0.06, heavy: false, lunge: 80 }),
+      magazine: null,
+      chain: null
+    }
+  }),
+  /**
+   * Close, reaching to middle: slow, heavy swings, each sending shockwaves
+   * along the ground the way it swings (see `Shockwave`), so a crowd beyond
+   * the swing feels it too.
+   */
+  hammer: classSpec({
+    name: "Hammer",
+    range: "close",
+    description: "Slow, heavy swings; each sends a shockwave along the ground the way it swings, stopped by walls.",
+    shapes: ["thrust", "arc", "spin"],
+    magazine: false,
+    handling: {
+      comboWindow: 0.7, inputBuffer: 0.18, active: 0.1, lungeStop: 14, attackingSpeed: 0.45, holdDelay: 0.22, chargingSpeed: 0.5, dashFeed: 0, weave: false,
+      shockwave: { share: 0.35, reach: 1.6, speed: 720, radius: 20, fan: 3, ring: 6 }
+    },
+    /**
+     * Quake: an overhead blow, a sweep, and a slam all around; charged, a
+     * great blow straight down, its wave running far.
+     */
+    plain: {
+      name: "Quake",
+      description: "An overhead blow, a sweep, and a slam all around, each sending a shockwave on. Charged: a great blow, its wave running far.",
+      combo: [
+        thrust({ reach: 120, width: 70, power: 22, knockback: 480, recovery: 0.34, hitStop: 0.07, heavy: false, lunge: 16 }),
+        arc({ reach: 125, arcDegrees: 150, power: 30, knockback: 620, recovery: 0.45, hitStop: 0.08, heavy: false, lunge: 10 }),
+        spin({ reach: 115, power: 52, knockback: 1050, recovery: 0.75, hitStop: 0.13, heavy: true, lunge: 0 })
+      ],
+      charged: { chargeTime: 0.7, move: thrust({ reach: 145, width: 90, power: 90, knockback: 1200, recovery: 0.7, hitStop: 0.15, heavy: true, lunge: 30 }) },
+      /** A shoulder charge out of the dash. */
+      dash: thrust({ reach: 110, width: 70, power: 10, knockback: 700, recovery: 0.3, hitStop: 0.07, heavy: false, lunge: 90 }),
       magazine: null,
       chain: null
     }

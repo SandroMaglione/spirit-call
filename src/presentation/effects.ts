@@ -282,6 +282,17 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   // A guard: its plates rising around her in a puff of dust; a plate breaking, its chunks thrown out.
   for (const guarded of events.guarded.all()) {
     const at = toScreen(projection, guarded.at)
+    // A brace taking a blow: a flash of water where it struck (its answer is drawn as an explosion).
+    if (guarded.kind === "braced") {
+      fx.flash({ x: at.x, y: at.y - impact.height * projection.zoom }, 52, view.elements.water, 0.16)
+      services.host.feedback.shake = Math.max(services.host.feedback.shake, view.impact.heavyShake)
+      continue
+    }
+    // A shot breaking on a barrier: a puff of wind where it met it.
+    if (guarded.kind === "barred") {
+      fx.burst(at, { color: view.elements.wind, count: 8, speed: 220, size: 4, life: 0.35 })
+      continue
+    }
     if (guarded.kind === "raised") {
       fx.ring(at, 60 * projection.zoom, view.stone.glow, 0.3)
       fx.burst(at, { color: view.stone.light, count: 14, speed: 160, size: 6, life: 0.6, gravity: -80, drag: 3, alpha: 0.5 })

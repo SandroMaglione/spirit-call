@@ -3,7 +3,7 @@
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
 import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
-import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, Facing, Game, Invulnerable, Member, Passives, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, Facing, Game, Invulnerable, Member, Passives, Player, Position, Raising, Bracing, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { charging } from "./basic-attack.ts"
 import { attackOf, dashOf, traitsIn } from "./build.ts"
 
@@ -33,6 +33,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
         basicAttack: Game.Query.read(BasicAttack),
         stats: Game.Query.read(CombatStats),
         raising: Game.Query.optional(Raising),
+        bracing: Game.Query.optional(Bracing),
         airborne: Game.Query.optional(Airborne),
         member: Game.Query.read(Member),
         passives: Game.Query.optional(Passives)
@@ -73,8 +74,8 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       charges += 1
       cooldown = charges < own.charges ? cooldown + own.cooldown : 0
     }
-    // Raising a guard, in the air, or held coming in after a fall, she stands: a dash under way stops, and a press is dropped.
-    const rooted = data.raising.present || data.airborne.present || resources.arrival.get().remaining > 0
+    // Raising a guard, bracing, in the air, or held coming in after a fall, she stands: a dash under way stops, and a press is dropped.
+    const rooted = data.raising.present || data.bracing.present || data.airborne.present || resources.arrival.get().remaining > 0
     if (rooted) remaining = 0
     let buffered = rooted ? 0 : controls.dashPressed ? own.inputBuffer : Math.max(0, dash.buffered - dt)
     let since = dash.since + dt

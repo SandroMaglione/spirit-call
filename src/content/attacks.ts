@@ -5,6 +5,7 @@
  */
 
 import type { ElementId, GroundSpec } from "./elements.ts"
+import type { Shockwave } from "./classes.ts"
 import type { MoveFilter } from "./passives.ts"
 
 // ── Basic attacks ─────────────────────────────────────────────────────────
@@ -176,6 +177,8 @@ export interface BasicAttackSpec {
   readonly dashFeed: number
   /** Her dash strike keeps the combo's place (its class's, see `Handling.weave`). */
   readonly weave: boolean
+  /** Her swings send shockwaves along the ground (its class's, see `Handling.shockwave`); `null`: none. */
+  readonly shockwave: Shockwave | null
 }
 
 export const arc = (spec: Omit<Extract<MeleeMove, { shape: "arc" }>, "shape">): AttackMove => ({ shape: "arc", ...spec })
