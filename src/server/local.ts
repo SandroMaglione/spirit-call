@@ -1,7 +1,8 @@
 /**
  * The server on a laptop: the same handler as on Cloudflare over a SQLite
  * file (Node's own `node:sqlite`), migrated as it opens. The dev server
- * mounts it on `/api` (see `dev.ts`); tests open it in memory.
+ * mounts it on `/api` (see `dev.ts`), so a dev build's runs are kept on the
+ * laptop; tests open it in memory.
  */
 import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient"
 import * as Layer from "effect/Layer"

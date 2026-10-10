@@ -6,10 +6,11 @@ import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
-import { currentPlayer, signIn, startApp } from "./app/app.ts"
+import { holdAccount, openAccounts, startApp } from "./app/app.ts"
+import type { Accounts } from "./app/app.ts"
+import { showAccounts } from "./ui/Accounts.tsx"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
-import { showLogin } from "./ui/Login.tsx"
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
 import type { UiActions } from "./ui/store.ts"
@@ -58,18 +59,29 @@ const dev = import.meta.env.DEV
 /** The URL's dev parameters: none outside a dev build. */
 const devQuery = dev ? window.location.search : ""
 
+/** A dev quick start's account: the last played, or a new one. */
+const devAccount = async (accounts: Accounts) => {
+  const last = (await accounts.list())[0]
+  if (last !== undefined) return last
+  const made = await accounts.create("Dev")
+  if (!made.ok) throw new Error(made.problem)
+  return made
+}
+
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
   const tuning = waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
-  // The player logs in (or signs up) first; her account comes from the server, and the menu starts from its last selection.
-  const username = (await currentPlayer()) ?? (await showLogin(mount, signIn))
-  const shell = await startApp(username)
+  // The game opens on this device's accounts: the one picked is played, by one tab at a time.
+  // A dev quick start (`?play`, below) plays the last played account, or a new one.
+  const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
+  const accounts = openAccounts()
+  const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount)
+  const shell = await startApp(picked.id, picked.name)
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
-  const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
   // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
@@ -84,22 +96,15 @@ const start = async (mount: HTMLElement) => {
   let recording = true
   const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, player: shell.username, notices: shell.notes, sound: shell.settings })
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: shell.settings })
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
   wearLooks(account.worn)
   shell.onAccount((next) => {
     uiStore.account.value = next
     wearLooks(next.worn)
   })
-  shell.onSaves((state) => {
-    uiStore.saves.value = state
-  })
-  // A change on its way (a run's rewards) is lost if the page goes: the browser asks first.
-  window.addEventListener("beforeunload", (event) => {
-    if (shell.saves().pending > 0) event.preventDefault()
-  })
   // Every run that ends is reported to the account once, as its result appears (the arena records it, see `RunResult`):
-  // what it earned shows at once, worked out by the account's rules; the server's answer replaces it if it differs.
+  // what it earned shows at once, worked out by the account's rules.
   let reported: RunResultValue | null = null
   effect(() => {
     const result = uiStore.result.value
@@ -110,11 +115,7 @@ const start = async (mount: HTMLElement) => {
     if (result === reported) return
     reported = result
     if (!recording) return
-    const recorded = shell.recordRun(playing, result, uiStore.runLog.peek())
-    uiStore.earned.value = recorded.earned
-    void recorded.saved.then((earned) => {
-      if (uiStore.result.peek() === result && JSON.stringify(earned) !== JSON.stringify(uiStore.earned.peek())) uiStore.earned.value = earned
-    })
+    uiStore.earned.value = shell.recordRun(playing, result, uiStore.runLog.peek(), uiStore.team.peek())
   })
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined
   const notify = (message: string, error = false, title?: string) => {
@@ -123,26 +124,22 @@ const start = async (mount: HTMLElement) => {
     sounds.play(error ? "uiError" : "uiSuccess")
     if (!error) feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), 1200)
   }
-  const change = (action: () => Promise<unknown>, message: string | null) => {
-    if (uiStore.busy.peek()) return
-    uiStore.busy.value = true
-    void action().then((saved) => { if (saved === undefined) notify("Could not save. Please try again.", true); else if (message !== null) notify(message) })
-      .catch(() => notify("Could not save. Please try again.", true))
-      .finally(() => (uiStore.busy.value = false))
+  // A change that could not be written to this device still shows; the player is told once, as it happens.
+  shell.onSaveFailed(() => notify("Your progress could not be saved on this device. Check that the browser allows this site to store data.", true, "Not saved"))
+  /** Runs an account change: what to say when it is made, or that the rules refused it. */
+  const change = (action: () => unknown, message: string | null) => {
+    if (action() === undefined) notify("That cannot be done right now.", true, "Not allowed")
+    else if (message !== null) notify(message)
   }
-  const notSaved = "Your last run is not saved yet: try saving it again first (the mark at the top)."
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
     // Kept as it is set up: nothing to tell the player unless it fails.
     saveTeam: (team, aspects, relics) => {
       const selected = shell.select(team, uiStore.account.peek().selection.play, aspects, relics)
       if (!selected.ok) notify("Your party could not be saved.", true)
-      else void selected.saved.then((saved) => { if (saved === "refused") notify("Your party could not be saved.", true) })
     },
     enter: (team, aspects, play, relics) => {
-      // Nothing new starts while a run waits to be saved: it would be played on an account the server does not have.
-      if (shell.saves().failed) { notify(notSaved, true, "Not saved yet"); return }
-      // The account's rules allow it here, so the run starts at once; the server, sent the selection, nearly always agrees.
+      // The account's rules decide whether it can be entered.
       const selected = shell.select(team, play, aspects, relics)
       if (!selected.ok) { notify("This challenge is locked or your party cannot enter it.", true, "Cannot enter"); return }
       playing = play
@@ -150,16 +147,7 @@ const start = async (mount: HTMLElement) => {
       uiStore.play.value = play
       uiStore.extra.value = null
       // An audition lends its character alone, at its level (see `entryTeam`).
-      uiRequests.pending.push({ kind: "start", team: entryTeam(tuning, selected.account, play, team), ...encounterOf(tuning, play, selected.account) })
-      void selected.saved.then((saved) => {
-        if (saved !== "refused") return
-        // The server refused what this page allowed (the account changed elsewhere): the run stops, unrecorded.
-        if (playing === play && uiStore.result.peek() === null) {
-          recording = false
-          uiRequests.pending.push({ kind: "pause" }, { kind: "menu" })
-        }
-        notify("The server refused this challenge: it is locked, or your party changed.", true, "Run stopped")
-      })
+      uiRequests.pending.push({ kind: "start", team: entryTeam(tuning, selected.value, play, team), ...encounterOf(tuning, play, selected.value) })
     },
     enterExtra: (team, aspects, extra, relics = uiStore.account.peek().selection.relics) => {
       const account = uiStore.account.value
@@ -188,11 +176,7 @@ const start = async (mount: HTMLElement) => {
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
-    retrySaves: () => shell.retrySaves(),
-    retry: () => {
-      if (shell.saves().failed && recording) { notify(notSaved, true, "Not saved yet"); return }
-      uiRequests.pending.push({ kind: "retry" })
-    },
+    retry: () => uiRequests.pending.push({ kind: "retry" }),
     menu: () => uiRequests.pending.push({ kind: "menu" }),
     pause: () => uiRequests.pending.push({ kind: "pause" }),
     resume: () => uiRequests.pending.push({ kind: "resume" }),
@@ -201,17 +185,15 @@ const start = async (mount: HTMLElement) => {
       shell.setMuted(muted)
       uiStore.sound.value = { ...uiStore.sound.value, muted }
     },
-    logOut: () => {
-      // Starting over shows the login: nothing of this player stays in the page.
-      void shell.logOut().finally(() => window.location.reload())
-    },
     setVolume: (volume) => {
       sounds.setVolume(volume)
       shell.setVolume(sounds.volume())
       // Turning the volume up turns the sound on.
       if (sounds.volume() > 0 && sounds.muted()) uiActions.setMuted(false)
       uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
-    }
+    },
+    // Everything is saved as it happens: the page starts over on the list of accounts.
+    switchAccount: () => window.location.reload()
   }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
@@ -278,7 +260,7 @@ const start = async (mount: HTMLElement) => {
   })
   // The menu's models and portraits, over the UI.
   const showcase = createShowcase(mount, browser.models)
-  if (dev) createTuningPanel(mount, tuning, devCommands, { unlockEverything: shell.unlockEverything })
+  if (dev) createTuningPanel(mount, tuning, devCommands)
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, the (usually empty) stress top-up, and `?charged`'s full energy.
   const step = chargedFromQuery(devQuery)

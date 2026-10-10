@@ -75,13 +75,15 @@ character taken to the top level in about 100.
   still stays clean and well built.
 - **No live service.** No gacha, no banners, no events, no temporary
   content, no updates to wait for: the game is finished when it is
-  released, and it runs on its own afterwards (see `server.md`).
-- **The account lives on a light server.** A player logs in (a username and
-  a password) and her account comes from the server, the same on every
-  device; the server runs the account's rules and keeps what is played, so
-  play can be measured. Light means one Worker and one database
-  (Cloudflare), nothing distributed (see `server.md`). The arena itself runs
-  on the device, as before.
+  released, and it runs on its own afterwards (see `playtest.md`,
+  "Releasing").
+- **The game runs on the device.** The account is a save on the player's
+  device (see `saves.md`): no login, no account on a server, and nothing
+  that needs a network, on the web and in a phone app alike. Until the
+  release, playtest builds send what is played to one small Worker and
+  database (Cloudflare), so play can be measured (see `playtest.md`); a
+  release build sends nothing. (Until October 2026 the account lived on
+  that server, behind a login.)
 
 ## Platform and controls
 

@@ -1,15 +1,16 @@
 /**
- * What travels between the game and the server, as Schemas: the account, a
- * run's result, and what a run earned. Every content id is checked against
- * the content (an id the game does not know fails to decode), so both sides
- * hold the exact types the account's rules use (`account/account.ts`); the
- * checks at the bottom keep these Schemas and those types the same.
+ * What a playtest build sends the server, as Schemas: a run that ended, with
+ * who played it and with what, its result and log, and what it earned. Every
+ * content id is checked against the content (an id the game does not know
+ * fails to decode), so both sides hold the exact types the account's rules
+ * use (`account/account.ts`); the checks at the bottom keep these Schemas and
+ * those types the same.
  */
 import * as Schema from "effect/Schema"
 
-import type { Account as AccountValue, ChestRef as ChestRefValue, Earned as EarnedValue, Play as PlayValue, SavedTeam as SavedTeamValue } from "../account/account.ts"
+import type { ChestRef as ChestRefValue, Earned as EarnedValue, Play as PlayValue } from "../account/account.ts"
 import { aspects } from "../content/aspects.ts"
-import { cosmeticKinds, cosmetics } from "../content/cosmetics.ts"
+import { cosmetics } from "../content/cosmetics.ts"
 import { relicSlots, relics } from "../content/relics.ts"
 import { challenges } from "../content/challenges.ts"
 import { characters } from "../content/characters.ts"
@@ -33,7 +34,6 @@ export const RelicId = idsOf(relics)
 export const CosmeticId = idsOf(cosmetics)
 export const RelicSlot = Schema.Literals(relicSlots)
 export const RelicTier = Schema.Literals([1, 2, 3])
-export const CosmeticKind = Schema.Literals(cosmeticKinds)
 export const QuestId = idsOf(quests)
 export const TrackId = idsOf(tracks)
 export const DiscoveryId = idsOf(discoveries)
@@ -61,45 +61,6 @@ export const Play = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("quest"), quest: QuestId, rank: Schema.optionalKey(Count) }),
   Schema.Struct({ kind: Schema.Literal("tier"), track: TrackId, tier: Count })
 ])
-
-export const TeamAspects = Schema.Record(CharacterId, Schema.optionalKey(AspectId))
-
-export const TeamRelics = Schema.Record(CharacterId, Schema.optionalKey(Schema.Record(RelicSlot, Schema.optionalKey(RelicId))))
-
-export const Worn = Schema.Record(CharacterId, Schema.optionalKey(Schema.Record(CosmeticKind, Schema.optionalKey(CosmeticId))))
-
-/** A team saved to load in a tap. */
-export const SavedTeam = Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics })
-
-const RunCount = {
-  attempts: Count,
-  clears: Count,
-  firstClearedAt: Schema.NullOr(Schema.Number)
-}
-
-export const Account = Schema.Struct({
-  id: Schema.String,
-  createdAt: Schema.Number,
-  totals: Schema.Struct({ runs: Count, clears: Count, kills: Count, secondsPlayed: Schema.Number }),
-  wallet: Amounts,
-  owned: Schema.Struct({
-    characters: Schema.Record(CharacterId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, experience: Schema.Number, ascension: Count }))),
-    aspects: Schema.Record(AspectId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number }))),
-    relics: Schema.Record(RelicId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number, tier: RelicTier }))),
-    cosmetics: Schema.Record(CosmeticId, Schema.optionalKey(Schema.Struct({ unlockedAt: Schema.Number })))
-  }),
-  quests: Schema.Record(QuestId, Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, stars: Schema.Array(Count), perfectAt: Schema.optionalKey(Schema.Number) })))),
-  hardcore: Schema.Record(
-    TrackId,
-    Schema.optionalKey(Schema.Record(Schema.Int, Schema.Struct({ ...RunCount, bestWave: Schema.optionalKey(Count) })))
-  ),
-  discoveries: Schema.Record(DiscoveryId, Schema.optionalKey(Schema.Struct({ madeAt: Schema.Number }))),
-  chests: Schema.Record(StarGroup, Schema.optionalKey(Schema.Record(Schema.Int, Count))),
-  selection: Schema.Struct({ team: Schema.Array(CharacterId), aspects: TeamAspects, relics: TeamRelics, play: Play }),
-  worn: Worn,
-  saved: Schema.Record(Schema.Int, SavedTeam),
-  auditions: Schema.Record(CharacterId, Schema.optionalKey(Schema.Struct({ slot: Count, openedAt: Schema.Number })))
-})
 
 const ReactionRecord = Schema.Literals(["burning", "soaked", "charged", "swept", "cracked", "slam"])
 
@@ -131,26 +92,6 @@ export const RunLog = Schema.Struct({
 /** A relic a member played with: its slot, and the tier it was at. */
 export const PlayedRelic = Schema.Struct({ slot: RelicSlot, id: RelicId, tier: RelicTier })
 
-/** A run as the server keeps it: what was played and against what, who played it (her level, aspect, and relics then), how it went, and its log. */
-export const StoredRun = Schema.Struct({
-  id: Schema.String,
-  at: Schema.Number,
-  play: Schema.NullOr(Play),
-  challenge: ChallengeId,
-  enemyLevel: Count,
-  team: Schema.Array(Schema.Struct({ character: CharacterId, level: Count, aspect: Schema.NullOr(AspectId), relics: Schema.Array(PlayedRelic) })),
-  cleared: Schema.Boolean,
-  progress: Schema.Number,
-  wave: Count,
-  kills: Count,
-  seconds: Schema.Number,
-  tally: RunResult.fields.tally,
-  log: RunLog
-})
-
-/** A change to an account: which action, on what, and what it gained (positive) or spent (negative) of each resource. */
-export const AccountEvent = Schema.Struct({ id: Schema.String, at: Schema.Number, action: Schema.String, subject: Schema.NullOr(Schema.String), amounts: Amounts })
-
 const ChestRef = Schema.Struct({ group: StarGroup, index: Count, rank: Count })
 
 export const Earned = Schema.Struct({
@@ -164,12 +105,31 @@ export const Earned = Schema.Struct({
   granted: Schema.Array(Item)
 })
 
+/**
+ * A run a playtest build sends: its own id (sent again, it is kept once),
+ * when it ended, which build played it, on which device and by which
+ * tester; what was played and against what enemy level, who played it (her
+ * level, aspect, and relics then), how it went, its log, and what it earned.
+ */
+export const PlaytestRun = Schema.Struct({
+  id: Schema.String.check(Schema.isMaxLength(64)),
+  at: Schema.Number,
+  build: Schema.String.check(Schema.isMaxLength(64)),
+  device: Schema.String.check(Schema.isMaxLength(64)),
+  tester: Schema.String.check(Schema.isMaxLength(40)),
+  play: Schema.NullOr(Play),
+  enemyLevel: Count,
+  team: Schema.Array(Schema.Struct({ character: CharacterId, level: Count, aspect: Schema.NullOr(AspectId), relics: Schema.Array(PlayedRelic) })),
+  result: RunResult,
+  log: RunLog,
+  earned: Earned
+})
+export type PlaytestRunValue = typeof PlaytestRun.Type
+
 // The Schemas describe exactly the types the account's rules use, both ways.
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
 const same = <_ extends true>() => undefined
-same<Same<typeof Account.Type, AccountValue>>()
 same<Same<typeof Play.Type, PlayValue>>()
-same<Same<typeof SavedTeam.Type, SavedTeamValue>>()
 same<Same<typeof RunResult.Type, RunResultValue>>()
 same<Same<typeof Earned.Type, EarnedValue>>()
 same<Same<typeof ChestRef.Type, ChestRefValue>>()

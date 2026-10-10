@@ -1,7 +1,7 @@
 /**
- * Between the account as stored (`AccountRecord`: ids as strings, as the
- * server's tables hold them) and the account the game uses (`account.ts`,
- * typed ids that name existing content).
+ * Between the account as stored (`AccountRecord`: ids as strings, as a
+ * save holds them, see `stored.ts`) and the account the game uses
+ * (`account.ts`, typed ids that name existing content).
  */
 import type { Tuning } from "../config/tuning.ts"
 import type { StarterSet } from "../content/account.ts"

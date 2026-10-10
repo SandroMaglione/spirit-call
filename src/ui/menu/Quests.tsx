@@ -440,10 +440,10 @@ export const Quests = ({ store, actions, nav, tab, play, leader, enter }: {
         : <Face of={{ character: lentFor(tuning, selected)!.character }} tint={elementOf(tuning, lentFor(tuning, selected)!.character)} size={38} selected />}
       {/* An audition not opened yet is opened here, with an invitation: the player's choice of who auditions next. */}
       {inviting !== null
-        ? <Pill icon="invitations" disabled={store.busy.value || (store.account.value.wallet.invitations ?? 0) < 1} onClick={() => actions.openAudition(inviting)}>
+        ? <Pill icon="invitations" disabled={(store.account.value.wallet.invitations ?? 0) < 1} onClick={() => actions.openAudition(inviting)}>
           <span class="prize__button">Invite<small>{store.account.value.wallet.invitations ?? 0} held</small></span>
         </Pill>
-        : <Pill icon="play" disabled={playLock(tuning, store.account.value, selected) !== null || store.busy.value} onClick={enter}>Enter</Pill>}
+        : <Pill icon="play" disabled={playLock(tuning, store.account.value, selected) !== null} onClick={enter}>Enter</Pill>}
     </Actions>
   </Screen>
 }

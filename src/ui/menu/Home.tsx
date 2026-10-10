@@ -75,7 +75,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
       </button>
       <div class="home__play">
         <Pill tone="dark" size="small" icon="practice" onClick={() => nav.go(places["practice"]!)}>Practice</Pill>
-        <Pill icon="play" size="large" disabled={store.busy.value} onClick={enter}>Play</Pill>
+        <Pill icon="play" size="large" onClick={enter}>Play</Pill>
       </div>
     </div>
   </Screen>

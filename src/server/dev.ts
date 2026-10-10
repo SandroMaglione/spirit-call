@@ -1,8 +1,9 @@
 /**
  * The server inside the dev server (`pnpm dev`): `/api` is answered by the
- * same handler as on Cloudflare, over a SQLite file (`.data/dev.sqlite`,
- * gitignored) instead of D1, with the dev tools on. Its code is loaded
- * through Vite, so editing it takes effect on the next request.
+ * same handler as on Cloudflare, over a SQLite file (`.data/playtest.sqlite`,
+ * gitignored) instead of D1, so a dev build's runs are kept on the laptop
+ * (read them with `pnpm db --local`). Its code is loaded through Vite, so
+ * editing it takes effect on the next request.
  */
 import { mkdirSync } from "node:fs"
 import type { IncomingMessage, ServerResponse } from "node:http"
@@ -11,7 +12,10 @@ import type { Plugin } from "vitest/config"
 
 import type * as Local from "./local.ts"
 
-const database = ".data/dev.sqlite"
+const database = ".data/playtest.sqlite"
+
+/** The key a dev build sends (see vite.config.ts): the laptop's server is nobody else's. */
+export const devPlaytestKey = "dev"
 
 /** A web `Request` from a Node one. */
 const toRequest = async (request: IncomingMessage): Promise<Request> => {
@@ -28,11 +32,7 @@ const toRequest = async (request: IncomingMessage): Promise<Request> => {
 /** Writes a web `Response` to a Node one. */
 const send = async (response: Response, out: ServerResponse) => {
   out.statusCode = response.status
-  response.headers.forEach((value, name) => {
-    if (name !== "set-cookie") out.setHeader(name, value)
-  })
-  const cookies = response.headers.getSetCookie()
-  if (cookies.length > 0) out.setHeader("set-cookie", cookies)
+  response.headers.forEach((value, name) => out.setHeader(name, value))
   out.end(Buffer.from(await response.arrayBuffer()))
 }
 
@@ -47,7 +47,7 @@ export const devServer = (): Plugin => ({
       void (async () => {
         const local = (await server.ssrLoadModule("/src/server/local.ts")) as typeof Local
         // A new handler (and database connection) when the server's code changed.
-        if (handler?.module !== local) handler = { module: local, handle: local.localHandler(database, { devTools: true, secureCookies: false }).handler }
+        if (handler?.module !== local) handler = { module: local, handle: local.localHandler(database, { playtestKey: devPlaytestKey }).handler }
         await send(await handler.handle(await toRequest(request)), response)
       })().catch(next)
     })

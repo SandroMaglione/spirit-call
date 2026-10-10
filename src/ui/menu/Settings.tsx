@@ -1,4 +1,4 @@
-/** This device's settings: sound, and how the game is controlled; who is playing (and logging out); and the way to the discoveries. */
+/** This device's settings: sound, and how the game is controlled; who is playing (and switching account); and the way to the discoveries. */
 import { useSignal } from "@preact/signals"
 import { Pill, Slider, Toggle } from "../kit/controls.tsx"
 import { Fact } from "../kit/panel.tsx"
@@ -25,8 +25,8 @@ export const Settings = ({ store, actions, nav }: { readonly store: UiStore; rea
     <SideTabs label="Settings" current={tab.value} onChange={(id) => (id === "discoveries" ? nav.go({ kind: "discoveries" }) : (tab.value = id))}
       tabs={[{ id: "sound", label: "Sound" }, { id: "controls", label: "Controls" }, { id: "account", label: "Account" }, { id: "discoveries", label: "Discoveries" }]} />
     <div class="settings__content in-right" key={tab.value}>{tab.value === "sound" ? <SoundSettings store={store} actions={actions} /> : tab.value === "account" ? <div class="settings__rows">
-      <Fact tall label="Playing as" value={store.player} />
-      <Fact tall label="On this device" value={<Pill tone="dark" size="small" onClick={actions.logOut}>Log out</Pill>} />
+      <Fact tall label="Playing as" value={store.accountName} />
+      <Fact tall label="On this device" value={<Pill tone="dark" size="small" onClick={actions.switchAccount}>Switch account</Pill>} />
     </div> : <div class="settings__rows">
       {(store.device.value === "touch" ? touchControls : desktopControls).map(([what, how]) => <Fact tall key={what} label={what} value={how} />)}
       <Fact tall label="In the menu" value="Drag a spirit to turn it" />

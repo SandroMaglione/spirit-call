@@ -26,12 +26,6 @@ export type Extra =
   | { readonly kind: "practice"; readonly picks: PracticeValue }
   | { readonly kind: "trial"; readonly character: CharacterId }
 
-/** The account's changes on their way to the server: how many must not be lost (a run, a selection), and whether one could not be saved and waits for the player to try again (nothing new starts meanwhile). */
-export interface Saves {
-  readonly pending: number
-  readonly failed: boolean
-}
-
 /**
  * Moments that sound (and, on a phone, buzz): a run's results coming in
  * (victory or defeat, each star, the rewards), and something new made the
@@ -40,9 +34,7 @@ export interface Saves {
 export type Cue = "aspect" | "character" | "victory" | "defeat" | "star" | "reward"
 
 export interface UiStore {
-  readonly busy: Signal<boolean>
   readonly feedback: Signal<{ readonly message: string; readonly error: boolean; readonly title?: string } | null>
-  readonly saves: Signal<Saves>
   readonly menuPlay: Signal<Play>
   /** The spirit on the lobby stage; selecting one never reorders party slots. */
   readonly menuCharacter: Signal<CharacterId>
@@ -60,8 +52,6 @@ export interface UiStore {
   readonly challenge: Signal<ChallengeId>
   /** The player's account: what it owns, and the last selection with its aspects (the menu starts from it). */
   readonly account: Signal<Account>
-  /** Who is playing (her username). */
-  readonly player: string
   /** The quest or tier being played, or last played; `null` for a run of nothing (a dev quick start). */
   readonly play: Signal<Play | null>
   /** How the last run ended; `null` while one is going on (see `RunResult`). */
@@ -70,7 +60,9 @@ export interface UiStore {
   readonly runLog: Signal<RunLogValue>
   /** What the last run earned the account, once recorded; `null` until then. */
   readonly earned: Signal<Earned | null>
-  /** Messages for the player (what loading the profile had to fix), until dismissed. */
+  /** The name of the account being played (one of this device's). */
+  readonly accountName: string
+  /** Messages for the player (what loading the save had to fix), until dismissed. */
   readonly notices: Signal<ReadonlyArray<string>>
   /** This device's sound: on or off, and how loud (0..1). */
   readonly sound: Signal<Sound>
@@ -95,13 +87,11 @@ export const createUiStore = (initial: {
   readonly challenge: ChallengeId
   readonly flow: FlowState
   readonly account: Account
-  readonly player: string
+  readonly accountName: string
   readonly notices: ReadonlyArray<string>
   readonly sound: Sound
 }): UiStore => ({
-  busy: signal(false),
   feedback: signal(null),
-  saves: signal({ pending: 0, failed: false }),
   menuPlay: signal(initial.account.selection.play),
   menuCharacter: signal(initial.account.selection.team[0]!),
   menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects, relics: initial.account.selection.relics }),
@@ -113,11 +103,11 @@ export const createUiStore = (initial: {
   team: signal(initial.team),
   challenge: signal(initial.challenge),
   account: signal(initial.account),
-  player: initial.player,
   play: signal(null),
   result: signal(null),
   runLog: signal(emptyRunLog),
   earned: signal(null),
+  accountName: initial.accountName,
   notices: signal(initial.notices),
   sound: signal(initial.sound),
   extra: signal(null),
@@ -148,8 +138,6 @@ export interface UiActions {
   readonly ascend: (character: CharacterId) => void
   /** Sound (and buzz, on a phone) a moment of the results. */
   readonly cue: (cue: Cue) => void
-  /** Try again to save the change that could not be saved (see `Saves`). */
-  readonly retrySaves: () => void
   /** From the results or the in-game menu: the same challenge again, from the start. */
   readonly retry: () => void
   /** From the results or the in-game menu: back to the menu. */
@@ -159,8 +147,8 @@ export interface UiActions {
   /** Close the in-game menu: back to the run. */
   readonly resume: () => void
   /** Sound on or off, and how loud (0..1); saved on this device. */
-  /** Logs out, back to the login. */
-  readonly logOut: () => void
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
+  /** Leave this account for the list of this device's accounts (what it did is already saved). */
+  readonly switchAccount: () => void
 }

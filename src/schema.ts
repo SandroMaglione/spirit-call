@@ -1289,8 +1289,9 @@ export interface RunLogSource {
 }
 
 /**
- * What a run did, for measuring play (see `RecordRunLog`, docs/server.md):
- * sent with the run's result, and kept on the server. Seconds are the run's.
+ * What a run did, for measuring play (see `RecordRunLog`, docs/playtest.md):
+ * handed to the shell with the run's result, and sent by a playtest build.
+ * Seconds are the run's.
  */
 export interface RunLogValue {
   /** Each wave reached, from 1: when it began, and the blows and damage the team took during it. */

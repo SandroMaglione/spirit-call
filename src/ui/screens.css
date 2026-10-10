@@ -407,12 +407,6 @@
 @keyframes entrance-out { to { opacity: 0; } }
 @keyframes entrance-card { from { opacity: 0; transform: scale(.92); } 25% { opacity: 1; transform: none; } 70% { transform: scale(1.02); } }
 
-/* ---------- saves not done (see SaveNotice.tsx) ---------- */
-/* "Saving" shows only when it takes long (a few seconds of tries); "Not saved" at once. */
-.save-mark { position: absolute; left: 50%; top: var(--top); translate: -50% 0; z-index: 30; display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--dim); background: var(--panel); pointer-events: none; animation: fade .3s 3s backwards; }
-.ui:has(.save-mark.is-failed) .results__content { padding-top: 30px; }
-.save-mark.is-failed { color: var(--ink); background: #ffc9b8; box-shadow: 0 0 0 2px #ff8a6b, 0 2px 10px #0008; pointer-events: auto; animation: fade .2s; }
-
 /* ---------- results ---------- */
 .results { display: grid; place-items: center; }
 .results__content { width: min(540px, 92%); display: grid; justify-items: center; gap: 8px; text-align: center; text-shadow: 0 1px 3px #0008; }
@@ -458,14 +452,9 @@
 .results__newcomer .model { position: absolute; inset: 0; }
 .results.has-newcomer .results__content { margin-left: 32%; width: min(480px, 64%); }
 
-/* ---------- login ---------- */
-.login { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 340px; padding: 22px 24px 20px; gap: 12px; }
-.login__title { font-size: 26px; font-weight: 800; }
-.login__field { display: grid; gap: 4px; }
-.login__label { color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.login__problem { color: var(--red); font-size: 14px; font-weight: 700; }
-.login__link { justify-self: start; margin-top: -4px; padding: 0; border: 0; background: none; color: var(--gold-hi); font: inherit; font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-.login__note { font-size: 13.5px; color: var(--dim); max-width: 340px; }
-.login__code { font-family: ui-monospace, monospace; font-size: 20px; font-weight: 800; letter-spacing: 1px; white-space: nowrap; text-align: center; padding: 10px 12px; border-radius: 8px; background: var(--cream); color: var(--ink); user-select: all; }
-.login__actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
-.login__actions > .pill:last-child { min-width: 120px; justify-content: center; padding: 0 24px; }
+/* The accounts on this device, before the game loads (Accounts.tsx). */
+.accounts { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 400px; max-height: calc(100% - 40px); }
+.accounts__row { display: flex; align-items: center; gap: 8px; }
+.accounts__new { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.accounts__new > .pill { min-width: 96px; justify-content: center; padding: 0 20px; }
+.accounts__problem { color: var(--red); font-size: 14px; font-weight: 700; }

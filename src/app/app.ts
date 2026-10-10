@@ -1,206 +1,178 @@
 /**
- * The app shell: the Effect side of the game. The account lives on the
- * server (see docs/server.md): the shell signs the player up or logs her in,
- * loads her account, and gives the rest of the game plain functions that
- * call the server's API (through a client derived from its definition,
- * `api/api.ts`); each answers with the account after it. The device keeps
- * only its own settings. The ECS and the UI never see Effect; they call
- * these functions. Every change goes through `saves.ts`, in order: a run's
- * rewards and a selection show at once (worked out here by the account's
- * rules, the same code the server runs, over the same content), and the
- * server's answer replaces them. A refused action or one the server could
- * not be reached for is logged, and the game goes on; a run or a selection
- * not saved waits for the player to try again, holding what comes after it.
+ * The app shell: the Effect side of the game. The accounts live on this
+ * device (see docs/saves.md): the shell lists them for the player to pick
+ * one (`openAccounts`), loads the one picked (`startApp`), runs every change through
+ * the account's rules (`account/account.ts`), and saves the account after
+ * it, through the stores the runtime is given (`storage.ts` decides where
+ * they keep things). The ECS and the UI never see Effect; they call these
+ * plain functions, each answering at once with what the rules decided.
  */
-import * as BrowserKeyValueStore from "@effect/platform-browser/BrowserKeyValueStore"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
-import * as Schema from "effect/Schema"
-import * as FetchHttpClient from "effect/http/FetchHttpClient"
-import * as HttpApiClient from "effect/http-api/HttpApiClient"
 
-import { recordRun, select } from "../account/account.ts"
-import type { Account, Earned, Play, Refusal, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
+import { ascend, encounterOf, openAudition, recordRun, saveTeam, select, train, wear } from "../account/account.ts"
+import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
+import { AccountList, layer as accountListLayer } from "../account/account-list.ts"
+import type { AccountSummary } from "../account/account-list.ts"
+import { AccountStore, layer as accountLayer } from "../account/account-store.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
-import { Api, Password, Username } from "../api/api.ts"
 import { defaultTuning } from "../config/tuning.ts"
+import { newAccount } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
-import type { RunLogValue, RunResultValue } from "../schema.ts"
-import { makeSaves } from "./saves.ts"
-import type { SavesState } from "./saves.ts"
-
-export type { SavesState } from "./saves.ts"
-
-/** A selection: refused at once by the account's rules, or shown, with how saving it ended. */
-export type Selected =
-  | { readonly ok: false; readonly refusal: Refusal }
-  | { readonly ok: true; readonly account: Account; readonly saved: Promise<"saved" | "refused" | "failed"> }
+import type { BuildValue, RunLogValue, RunResultValue } from "../schema.ts"
+import { randomId } from "./ids.ts"
+import { Playtest, reportOf } from "./playtest.ts"
+import { storageLayer } from "./storage.ts"
 
 export interface App {
-  /** Who is playing. */
-  readonly username: string
   /** The account as loaded when the game started. */
   readonly account: Account
   readonly settings: Settings
-  /** What loading had to do, for a notice. */
+  /** What loading the save had to do, for a notice. */
   readonly notes: ReadonlyArray<string>
-  /** Calls `listener` with the account after every change (shown at once for a run or a selection, then as the server answered). */
+  /** Calls `listener` with the account after every change. */
   readonly onAccount: (listener: (account: Account) => void) => void
-  /** Calls `listener` when the changes on their way to the server change: how many must not be lost, and whether one waits for the player. */
-  readonly onSaves: (listener: (state: SavesState) => void) => void
-  /** Where the changes on their way stand now. */
-  readonly saves: () => SavesState
-  /** Tries again the change that waits for the player (and so every change behind it). */
-  readonly retrySaves: () => void
-  /** Takes a character to its next level with gold (refused without enough, or at the maximum). */
-  readonly train: (character: CharacterId) => Promise<Account | undefined>
+  /** Calls `listener` when a change could not be saved on this device (it still shows, and the next change saves it with everything else). */
+  readonly onSaveFailed: (listener: () => void) => void
+  /** Takes a character to its next level with gold: the account after it, or `undefined` when refused (without enough, or at the maximum). */
+  readonly train: (character: CharacterId) => Account | undefined
   /** Takes a character past the ascension step she stands at (refused without the gold or the material). */
-  readonly ascend: (character: CharacterId) => Promise<Account | undefined>
-  /** Selects the team to enter the arena with (and the aspects and relics equipped in it) and what for: refused at once (not owned, aspects or relics breaking the rules, or not open), or the account after it, saved on its way. */
-  readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects, relics?: TeamRelics) => Selected
+  readonly ascend: (character: CharacterId) => Account | undefined
+  /** Selects the team to enter the arena with (and the aspects and relics equipped in it) and what for: refused (not owned, aspects or relics breaking the rules, or not open), or the account after it. */
+  readonly select: (team: ReadonlyArray<CharacterId>, play: Play, aspects?: TeamAspects, relics?: TeamRelics) => Checked<Account>
   /** Puts a look of `kind` on `character` (`null`: her own look). */
-  readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => Promise<Account | undefined>
+  readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => Account | undefined
   /** Opens `character`'s audition with an invitation (refused without one, or when she has none to open). */
-  readonly openAudition: (character: CharacterId) => Promise<Account | undefined>
+  readonly openAudition: (character: CharacterId) => Account | undefined
   /** Saves a team in `slot` to load in a tap, or empties the slot (`null`; refused when it breaks the rules). */
-  readonly saveTeam: (slot: number, team: SavedTeam | null) => Promise<Account | undefined>
-  /** Owns every character, aspect, relic (at its last tier), and look, and adds plenty of gold and essence (a dev tool). */
-  readonly unlockEverything: () => void
-  /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, and its log: what it earned, at once, and what the server says it earned once saved. */
-  readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue) => { readonly earned: Earned; readonly saved: Promise<Earned> }
-  /** Logs out (the page then starts over, at the login). */
-  readonly logOut: () => Promise<void>
+  readonly saveTeam: (slot: number, team: SavedTeam | null) => Account | undefined
+  /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, played by `team` (as it entered the arena), and its log: what it earned. A playtest build also sends it. */
+  readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue, team: ReadonlyArray<BuildValue>) => Earned
   /** Saves the sound settings (the sound board applies them itself). */
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
 }
 
-/** The server's API, called from the page (the session cookie goes with every call). */
-const client = HttpApiClient.make(Api).pipe(Effect.provide(FetchHttpClient.layer))
+/** The accounts on this device, to pick one to play, make one, or delete one. */
+export interface Accounts {
+  /** Every account, the last played first. */
+  readonly list: () => Promise<ReadonlyArray<AccountSummary>>
+  /** Makes an account: its id, or why the name cannot be given (or that it could not be saved), in words. */
+  readonly create: (name: string) => Promise<{ readonly ok: true; readonly id: string; readonly name: string } | { readonly ok: false; readonly problem: string }>
+  /** Deletes an account and its progress, for good: whether it was. */
+  readonly remove: (id: string) => Promise<boolean>
+}
 
-/** Why signing up or logging in did not work, in words for the player. */
-export type SignInProblem = string
-
-/** Who is logged in on this device, or `undefined` when nobody is (or the server cannot be reached: the login says so when tried). */
-export const currentPlayer = (): Promise<string | undefined> =>
-  Effect.runPromise(client.pipe(
-    Effect.flatMap((api) => api.session.current()),
-    Effect.map((player) => player.username),
-    Effect.orElseSucceed(() => undefined)
-  ))
+/** The accounts on this device, over its storage. */
+export const openAccounts = (): Accounts => {
+  const runtime = ManagedRuntime.make(accountListLayer().pipe(Layer.provide(storageLayer)))
+  const list = Effect.gen(function*() {
+    return yield* AccountList
+  })
+  return {
+    list: () => runtime.runPromise(list.pipe(Effect.flatMap((accounts) => accounts.list))),
+    create: (name) =>
+      runtime.runPromise(list.pipe(
+        Effect.flatMap((accounts) => accounts.create(name)),
+        Effect.map((entry) => ({ ok: true as const, id: entry.id, name: entry.name })),
+        Effect.catchTag("AccountNameError", (error) => Effect.succeed({ ok: false as const, problem: error.problem })),
+        Effect.catchTag("AccountListSaveError", (error) =>
+          Effect.logWarning("The account could not be made", error.cause).pipe(Effect.as({ ok: false as const, problem: "The account could not be saved on this device." })))
+      )),
+    remove: (id) =>
+      runtime.runPromise(list.pipe(
+        Effect.flatMap((accounts) => accounts.remove(id)),
+        Effect.as(true),
+        Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account could not be deleted", error.cause).pipe(Effect.as(false)))
+      ))
+  }
+}
 
 /**
- * Signs up a new player, logs one in, or sets a new password with her
- * recovery code (`code`): her username (and, signing up or recovering, her
- * recovery code to keep), or what went wrong.
+ * Holds the account `id` for this page as long as it is open, so no two tabs
+ * play the same account (they would save over each other's progress):
+ * `false` when another tab already holds it. Where the browser cannot tell
+ * (no Web Locks, as over a local network's plain HTTP), every tab plays.
  */
-export const signIn = (mode: "signUp" | "logIn" | "recover", username: string, password: string, code = ""): Promise<{ readonly ok: true; readonly username: string; readonly recoveryCode?: string } | { readonly ok: false; readonly problem: SignInProblem }> =>
-  Effect.runPromise(Effect.gen(function*() {
-    // The API's own rules, checked here first so the player sees which one.
-    if (!Schema.is(Username)(username)) return { ok: false as const, problem: "A username is 3 to 20 letters, digits, _ or -." }
-    if (!Schema.is(Password)(password)) return { ok: false as const, problem: "A password is at least 8 characters." }
-    const api = yield* client
-    const payload = { username, password }
-    if (mode === "recover") {
-      const player = yield* api.players.recover({ payload: { ...payload, code } })
-      return { ok: true as const, username: player.username, recoveryCode: player.recoveryCode }
-    }
-    if (mode === "signUp") {
-      const player = yield* api.players.signUp({ payload })
-      return { ok: true as const, username: player.username, recoveryCode: player.recoveryCode }
-    }
-    const player = yield* api.players.logIn({ payload })
-    return { ok: true as const, username: player.username }
-  }).pipe(
-    Effect.catchTags({
-      UsernameTaken: () => Effect.succeed({ ok: false as const, problem: "That username is taken." }),
-      WrongCredentials: () => Effect.succeed({ ok: false as const, problem: mode === "recover" ? "Wrong username or recovery code." : "Wrong username or password." }),
-      TooManyAttempts: () => Effect.succeed({ ok: false as const, problem: "Too many tries from here: wait a few minutes, then try again." })
-    }),
-    Effect.catch((error) => Effect.logWarning("Signing in failed", error).pipe(Effect.as({ ok: false as const, problem: "That did not work: check the connection and try again." })))
-  ))
+export const holdAccount = (id: string): Promise<boolean> =>
+  typeof navigator === "undefined" || navigator.locks === undefined
+    ? Promise.resolve(true)
+    : new Promise((held) => {
+      void navigator.locks.request(`shooter.account.${id}`, { ifAvailable: true }, (lock) => {
+        held(lock !== null)
+        // Kept until the page goes.
+        return lock === null ? undefined : new Promise<void>(() => {})
+      })
+    })
 
-/** Starts the app runtime (the device's settings) and loads the logged-in player's account. */
-export const startApp = async (username: string): Promise<App> => {
-  const runtime = ManagedRuntime.make(settingsLayer.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)))
-  const settings = await runtime.runPromise(Effect.gen(function*() {
-    return yield* SettingsStore
-  }))
-  const api = await Effect.runPromise(client)
+/**
+ * Starts the app runtime over this device's storage, and loads the account
+ * `id`, named `name` (picked from `openAccounts`; a new one by that id when it was never
+ * played).
+ * A playtest build loads its sender here; in a release build `SHOOTER_PLAYTEST`
+ * is `null` as it is built, so the import is left out of the bundle.
+ */
+export const startApp = async (id: string, name: string): Promise<App> => {
   const tuning = defaultTuning
+  const playtest = SHOOTER_PLAYTEST === null ? Playtest.off : (await import("./playtest-send.ts")).layer(SHOOTER_PLAYTEST)
+  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
+  const { settings, accounts, sender } = await runtime.runPromise(Effect.gen(function*() {
+    // The list shows the last played first.
+    yield* (yield* AccountList).played(id).pipe(Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account list could not be saved", error.cause)))
+    return { settings: yield* SettingsStore, accounts: yield* AccountStore, sender: yield* Playtest }
+  }))
+  let account = accounts.account
   const listeners: Array<(account: Account) => void> = []
-  const watchers: Array<(state: SavesState) => void> = []
-  const saves = makeSaves({
-    account: await Effect.runPromise(api.account.get()),
-    read: api.account.get(),
-    changed: (account, state) => {
-      for (const listener of listeners) listener(account)
-      for (const watcher of watchers) watcher(state)
-    }
-  })
-  /** An action only the server works out (a level, a saved team): sent once (tried once more if it can be found made); refused or not saved gives `undefined`. */
-  const once = <A>(send: Effect.Effect<A, unknown>, accountOf: (value: A) => Account, landed?: (before: Account, now: Account) => A | undefined) =>
-    saves.submit({ send, accountOf, keep: false, again: landed !== undefined, tries: 1, ...(landed === undefined ? {} : { landed }) }).then((outcome) => ("saved" in outcome ? outcome.saved : undefined))
-  const run = (send: Effect.Effect<Account, unknown>) => once(send, (account) => account)
+  const failures: Array<() => void> = []
+  /** Shows `next` and saves it; a failed save is logged and said, and the game goes on. */
+  const changed = (next: Account) => {
+    account = next
+    for (const listener of listeners) listener(next)
+    runtime.runFork(accounts.save(next).pipe(
+      Effect.tapError((error) => Effect.logWarning("The account could not be saved", error.cause).pipe(Effect.andThen(Effect.sync(() => failures.forEach((failed) => failed()))))),
+      Effect.ignore
+    ))
+    return next
+  }
+  /** Runs a rule on the account: the account after it, saved, or `undefined` when the rule refused. */
+  const apply = (checked: Checked<Account>) => (checked.ok ? changed(checked.value) : undefined)
   const saveSettings = (change: (current: Settings) => Settings) =>
     runtime.runFork(settings.update(change).pipe(
       Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),
       Effect.ignore
     ))
   return {
-    username,
-    account: saves.account(),
+    account,
     settings: await runtime.runPromise(settings.get),
-    notes: [],
+    notes: accounts.notes,
     onAccount: (listener) => {
       listeners.push(listener)
     },
-    onSaves: (watcher) => {
-      watchers.push(watcher)
+    onSaveFailed: (listener) => {
+      failures.push(listener)
     },
-    saves: saves.state,
-    retrySaves: saves.retry,
-    train: (character) => run(api.account.train({ params: { character } })),
-    ascend: (character) => run(api.account.ascend({ params: { character } })),
+    train: (character) => apply(train(tuning, account, character)),
+    ascend: (character) => apply(ascend(tuning, account, character)),
     select: (team, play, aspects, relics) => {
-      const checked = select(tuning, saves.account(), team, play, aspects, relics)
-      if (!checked.ok) return checked
-      const saved = saves.submit({
-        send: api.account.select({ payload: { team, play, ...(aspects === undefined ? {} : { aspects }), ...(relics === undefined ? {} : { relics }) } }),
-        accountOf: (account) => account,
-        apply: (account) => {
-          const again = select(tuning, account, team, play, aspects, relics)
-          return again.ok ? again.value : account
-        },
-        keep: true,
-        // Selecting twice is selecting once.
-        again: true
-      }).then((outcome) => ("saved" in outcome ? "saved" as const : "refused" in outcome ? "refused" as const : "failed" as const))
-      return { ok: true, account: checked.value, saved }
+      const checked = select(tuning, account, team, play, aspects, relics)
+      if (checked.ok) changed(checked.value)
+      return checked
     },
-    wear: (character, kind, cosmetic) => run(api.account.wear({ params: { character, kind }, payload: { cosmetic } })),
-    openAudition: (character) => run(api.account.openAudition({ params: { character } })),
-    saveTeam: (slot, team) => run(api.account.saveTeam({ params: { slot }, payload: { team } })),
-    unlockEverything: () => void run(api.dev.unlockEverything()),
-    recordRun: (play, result, log) => {
-      // Worked out here as the server will (the same rules, at nearly the same time), shown at once.
-      const now = Date.now()
-      const { earned } = recordRun(tuning, saves.account(), play, result, now)
-      const saved = saves.submit({
-        send: api.account.recordRun({ payload: { play, result, log } }),
-        accountOf: (recorded) => recorded.account,
-        apply: (account) => recordRun(tuning, account, play, result, now).account,
-        keep: true,
-        again: true,
-        // Made when the account counts one more run than before it was sent.
-        landed: (before, after) => (after.totals.runs > before.totals.runs ? { account: after, earned } : undefined)
-      }).then((outcome) => ("saved" in outcome ? outcome.saved.earned : earned))
-      return { earned, saved }
+    wear: (character, kind, cosmetic) => apply(wear(tuning, account, character, kind, cosmetic)),
+    openAudition: (character) => apply(openAudition(tuning, account, character, Date.now())),
+    saveTeam: (slot, team) => apply(saveTeam(tuning, account, slot, team)),
+    recordRun: (play, result, log, team) => {
+      const before = account
+      const at = Date.now()
+      const recorded = recordRun(tuning, before, play, result, at)
+      changed(recorded.account)
+      const enemyLevel = play === null ? 0 : encounterOf(tuning, play, before).enemyLevel
+      runtime.runFork(sender.recordRun(reportOf({ id: randomId(), at, build: SHOOTER_BUILD, play, enemyLevel, team, result, log, earned: recorded.earned }), name))
+      return recorded.earned
     },
-    logOut: () => runtime.runPromise(api.session.logOut().pipe(Effect.ignore)),
     setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),
     setVolume: (volume) => saveSettings((current) => ({ ...current, volume }))
   }

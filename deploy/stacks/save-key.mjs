@@ -1,6 +1,6 @@
-// Saves a database key (see reader.ts, writer.ts) to the file in ENV_FILE,
+// Saves a database key (see reader.ts) to the file in ENV_FILE,
 // readable by its owner only: the account id, and the token as KEY_NAME,
-// keeping the file's other lines (the other key, settings).
+// keeping the file's other lines (settings).
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 
 const { ENV_FILE, ACCOUNT_ID, KEY_NAME, KEY } = process.env

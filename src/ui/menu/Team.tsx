@@ -91,6 +91,6 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
         <Pill size="small" tone="dark" onClick={() => (picking.value = false)}>Done</Pill>
       </div>
     </>}
-    <Actions><Pill icon="play" disabled={store.busy.value || playLock(tuning, account, play) !== null} onClick={enter}>Play</Pill></Actions>
+    <Actions><Pill icon="play" disabled={playLock(tuning, account, play) !== null} onClick={enter}>Play</Pill></Actions>
   </Screen>
 }

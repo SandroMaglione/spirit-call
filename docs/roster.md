@@ -99,7 +99,7 @@ models come separately (`models.md`, `spirits.md`).
    hits (`elements.md`, "The map").
 4. **The quest team**: the Tidecaller a healer, Bastion from the quests
    and the Gunner from the Call, the quests' rewards to match, and every
-   account reset (`server.md`).
+   account reset (when accounts lived on the server).
 5. **Gauntlets and Sparkfist.**
 6. **Tidewarden** (a brace).
 7. **Hammer and Quarry.**

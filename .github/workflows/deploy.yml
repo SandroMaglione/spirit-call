@@ -1,10 +1,13 @@
-# Checks and deploys the game to Cloudflare (deploy/alchemy.run.ts): every
-# pull request deploys a `pr-<n>` preview with a database of its own (its
-# address is commented on the PR), and closing the PR destroys both. Prod is
-# deployed only by hand (Actions, "Deploy", run from main): the game is a
-# finished release and changes only when its developer decides (see
-# docs/server.md, "Releasing"); that run also applies the players'
-# database's new migrations (deploy/stacks/database.ts) first.
+# Checks and deploys the game to Cloudflare (deploy/alchemy.run.ts). Every
+# pull request deploys a `pr-<n>` preview, a playtest build with a database
+# of its own for its runs (its address is commented on the PR), and closing
+# the PR destroys both. From main, only by hand (Actions, "Deploy", run from
+# main, picking the stage): `prod`, the release, sending nothing, or
+# `playtest`, the testers' game, sending their runs. The game changes only
+# when its developer decides (see docs/playtest.md, "Releasing"); those runs
+# also apply the playtest database's new migrations
+# (deploy/stacks/database.ts) first. `pnpm check`
+# also builds a release build and fails if it carries any playtest code.
 # Builds use the published bevy-ts release in package.json `bevyTsRelease`.
 # The Cloudflare secrets come from deploy/stacks/github.ts.
 name: Deploy
@@ -13,17 +16,23 @@ on:
   pull_request:
     types: [opened, reopened, synchronize, closed]
   workflow_dispatch:
+    inputs:
+      stage:
+        description: "What to deploy from main: the release (prod, sends nothing) or the testers' game (playtest, sends runs)"
+        type: choice
+        options: [playtest, prod]
+        default: playtest
 
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 env:
-  STAGE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'prod' }}
+  STAGE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || inputs.stage }}
 
 jobs:
   deploy:
-    # Started by hand, it only deploys from main (it deploys prod)
+    # Started by hand, it only deploys from main (prod or the testers' game)
     if: github.event.action != 'closed' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
@@ -56,8 +65,8 @@ jobs:
       - name: Check deploy tooling
         run: pnpm --dir deploy typecheck
       - name: Deploy the database
-        # Only main changes the database every stage shares (its migrations
-        # only ever add; see deploy/stacks/database.ts)
+        # Only main changes the playtest database (its migrations only ever
+        # add; see deploy/stacks/database.ts)
         if: github.ref == 'refs/heads/main'
         working-directory: deploy
         env:

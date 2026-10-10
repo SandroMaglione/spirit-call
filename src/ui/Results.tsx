@@ -9,8 +9,8 @@
  * quests, a track): played at once as the main button, or opened in the
  * menu beside it, with home, party, and retry.
  *
- * What it earned is worked out at once by the account's rules (see
- * `app/saves.ts`); the server saves it meanwhile.
+ * What it earned is worked out by the account's rules as the run ends (see
+ * `app/app.ts`), and saved on this device.
  */
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"

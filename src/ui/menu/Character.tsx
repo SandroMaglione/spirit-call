@@ -59,7 +59,7 @@ const Attributes = ({ store, actions, character }: { readonly store: UiStore; re
     </section>
     {owned && <Actions>{step !== null ? <Ascension store={store} actions={actions} character={character} /> : cost === null ? <span class="dim">Maximum level</span> : <>
       <span class="cost" aria-label={describeAmounts(tuning, cost)}><Icon name="gold" />{(cost.gold ?? 0).toLocaleString("en-US")}</span>
-      <Pill icon="plus" disabled={!train(tuning, account, character).ok || store.busy.value} onClick={() => actions.train(character)}>Level Up</Pill>
+      <Pill icon="plus" disabled={!train(tuning, account, character).ok} onClick={() => actions.train(character)}>Level Up</Pill>
     </>}</Actions>}
   </>
 }
@@ -97,7 +97,7 @@ const Ascension = ({ store, actions, character }: { readonly store: UiStore; rea
       <MaterialIcon store={store} material={material} /><span class={held < step.count ? "cost__short" : undefined}>{held}</span>/{step.count}
     </span>
     {held < step.count && trial !== undefined && <span class="dim">Earned in the {trial.name}</span>}
-    <Pill icon="next" disabled={!ascend(tuning, account, character).ok || store.busy.value} onClick={() => actions.ascend(character)}>Ascend</Pill>
+    <Pill icon="next" disabled={!ascend(tuning, account, character).ok} onClick={() => actions.ascend(character)}>Ascend</Pill>
   </>
 }
 
