@@ -25,8 +25,9 @@ brought up to it, with enemies at most `aheadOfLine` (4) levels above it.
 
 The main line is written for the team a new account has by then: chapter 1
 for the Swordsman alone (three quests, so the second character comes
-soon), then a character more at the end of chapters 1 and 3. Auditions
-(see `collection.md`) open after chapters 2, 4, 5, and 6, but the line
+soon), then a character more at the end of chapters 1 and 3. The ends of
+chapters 2, 4, 5, and 6 each give an invitation, opening the audition of
+the character the player chooses (see `collection.md`), but the line
 never counts on them: chapter 3 is written for two, and every chapter
 after for the three the quests give. Each chapter ends with a champion, a
 different kind each time, and unlocks one thing at most: a character at
@@ -37,11 +38,11 @@ open after chapter one), and one with the first side quest (Momentum).
 | Chapter | Team | Enemy levels | Each quest's new thing | At its end |
 |---|---|---|---|---|
 | 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Tidecaller; relics open |
-| 2 · Embers | + Tidecaller | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist); the Gunner's audition |
+| 2 · Embers | + Tidecaller | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist); an invitation |
 | 3 · Gathering Storm | 2 | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | Bastion |
-| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Whirlpool); the Stormcaller's audition |
-| 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | Sparkfist's audition |
-| 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | an aspect (Riptide); Tidewarden's audition; rank II |
+| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Whirlpool); an invitation |
+| 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | an invitation |
+| 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | an aspect (Riptide); an invitation; rank II |
 
 A quest's material is an element the team owns by then (wind in chapter 1),
 so early clears pay for the characters the player has.

@@ -24,32 +24,46 @@ the reasoning they follow.
 
 | Act | Hours | What is played | What comes |
 |---|---|---|---|
-| The main line | 0–12 | chapters 1–6, side quests, the first trials and hardcore tiers | 3 quest characters, 4 auditions, the first relics, element essence (cap 40) |
-| Rank II | 12–25 | every quest again, harder | 2 auditions, tier II relics, Refined essence (cap 50) |
-| Rank III | 25–40 | every quest at its hardest | the last audition, mastery auditions, Core essence (cap 60) |
+| The main line | 0–12 | chapters 1–6, side quests, the first trials and hardcore tiers | 3 quest characters, 4 invitations, the first relics, element essence (cap 40) |
+| Rank II | 12–25 | every quest again, harder | 2 invitations, tier II relics, Refined essence (cap 50) |
+| Rank III | 25–40 | every quest at its hardest | the last invitation, mastery auditions, Core essence (cap 60) |
 | Hardcore | 40–55 | the rulesets, Until Fall | trails, the last relic tiers |
 | Mastery | 55–100 | anything | levels, up to 60 for everyone |
 
 ## Characters
 
-Three come from the main line, and seven from **auditions**.
+Three come from the main line, and seven from **auditions**, in the
+order the player chooses.
 
-| Character | How | Opens after |
-|---|---|---|
-| Swordsman | a new account | |
-| Tidecaller | the main line | chapter 1's finale (the Pack Leader) |
-| Gunner | audition | chapter 2's finale (the Bulwark) |
-| Bastion | the main line | chapter 3's finale (the Brute King) |
-| Stormcaller | audition | chapter 4's finale (the Swarm Mother) |
-| Sparkfist | audition | chapter 5's finale (the Warlord) |
-| Tidewarden | audition | chapter 6's finale (the Colossus) |
-| Hearth | audition | the Brute King at rank II |
-| Windwall | audition | the Warlord at rank II |
-| Quarry | audition | the Bulwark at rank III |
+| Character | How |
+|---|---|
+| Swordsman | a new account |
+| Tidecaller | the main line: chapter 1's finale (the Pack Leader) |
+| Bastion | the main line: chapter 3's finale (the Brute King) |
+| Gunner, Stormcaller, Sparkfist, Tidewarden, Hearth, Windwall, Quarry | an audition, opened with an invitation |
+
+**Invitations** are a currency, one for each audition, from milestones
+(`content/quests.ts`, written on their cards): the finales of chapters 2,
+4, 5, and 6, then the Brute King and the Warlord at rank II, and the
+Bulwark at rank III. Spending one opens the audition of the character
+the player gives it to (the Auditions tab, from the Bulwark on, lists all
+seven); an invitation is never lost, and can be kept for later.
+
+**The order sets the difficulty, not the character.** An audition plays
+at the level and twist of its **slot**, the place it was opened in
+(`invitationSlots`, `content/auditions.ts`): the first opened plays at
+level 10, plainly, and each next one higher, adding elite leaders of her
+element, shielded leaders, or a kind of enemy leading every wave, up to
+the seventh at level 46 with all of them. So the parts' own fights use
+only what chapter two has brought, and what comes later arrives through
+the slot; `validateContent` checks that every part, at every slot, shows
+only what the main line has brought once that many invitations are in
+hand, and sits at most a few levels above it. A character taken up late
+arrives at a higher level, as before.
 
 **An audition is three quests** played as that character alone: no team,
 no aspect but her class's plain one, no relics, at a fixed level (the
-enemies' own, so no gap either way). The first two are written around
+enemies' own, so no gap either way: its slot's). The first two are written around
 her kit (what she is good at, then what she must answer), and the third
 ends on a champion, fought as a boss. The quests open in order, and
 clearing the third makes her the account's, at the audition's level (her
@@ -127,8 +141,9 @@ once, on its first clear, like a quest.
 ## Measuring it
 
 `pnpm progression` plays a new account through the game on its own rules
-(the main line, auditions, ranks II and III, the hardcore tiers, and the
-trials to farm), at a number of runs an hour, and reports the hour each
+(the main line, auditions opened in the order they are written as
+invitations come, ranks II and III, the hardcore tiers, and the trials to
+farm), at a number of runs an hour, and reports the hour each
 character, aspect, and relic arrives, when the collection is complete,
 when the main team reaches 60, and when all ten do. Run it after changing
 rewards, costs, or what opens when. Measured on October 10, 2026, at 15
@@ -136,9 +151,9 @@ runs an hour:
 
 | Player | Everything owned | All ten at 60 |
 |---|---|---|
-| Skilled (no run lost) | 44 h | 75 h |
-| The one the pace is for (a quarter of runs lost) | 55 h | 92 h |
-| Struggling (two runs in five lost) | 62 h | 105 h |
+| Skilled (no run lost) | 45 h | 72 h |
+| The one the pace is for (a quarter of runs lost) | 55 h | 88 h |
+| Struggling (two runs in five lost) | 65 h | 103 h |
 
 Every character's level costs the same gold, whoever she is. What keeps
 the last characters from taking as long as the first is the gold a run
@@ -149,4 +164,6 @@ taken up last are taken up at the endgame's pace.
 The model plays an audition's part twice (the second a clear) and a
 perfect clear that gives something three times; a player who needs more
 takes longer, which the hours above do not count. `test/new-account.test.ts`
-keeps the middle row near its targets.
+keeps the middle row near its targets. `pnpm expected --only auditions`
+has the bot fight every audition at the slot the model opens it at, or
+all at one slot with `--slot`.

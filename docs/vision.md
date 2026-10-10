@@ -13,9 +13,9 @@ You pick a team of characters, each with her own kit and effects, and face a
 known set of enemies: part of the challenge is preparing the right strategy
 (which characters, which effects, against which enemies), and part is
 executing it well (dodging out of a bad spot and striking back with a chain of
-moves). You earn characters one at a time, each in an audition that teaches
-her kit, and skill is always enough: nothing requires the newest character
-or the best aspect. It is a personal project, not a commercial one, and it
+moves). You earn characters one at a time, in the order you choose, each
+in an audition that teaches her kit, and skill is always enough: nothing
+requires the newest character or the best aspect. It is a personal project, not a commercial one, and it
 ships **complete**: every character, element, and challenge is in the
 release, free, with nothing bought, nothing random, and nothing added
 later. Everything can be owned in about 55 hours of play, and every
@@ -237,8 +237,9 @@ The game has two areas, and Extras for practice.
   clears the tier, and how far the team got is kept as its best.
 - **Auditions**: how a character joins. Three quests played as her alone,
   at a fixed level, the last against a champion; winning makes her the
-  account's (see `docs/collection.md`). A harder fourth, her mastery,
-  gives her tint.
+  account's (see `docs/collection.md`). The player chooses who comes
+  next: milestones give invitations, and each opens the audition of the
+  character it is given to. A harder fourth, her mastery, gives her tint.
 - **Extras**, for practice: a Training Ground (dummies that never fall,
   one that breaks, one that swings to dodge, fire to push them into) and
   Enemy Practice (the enemies picked, all on the field together and coming

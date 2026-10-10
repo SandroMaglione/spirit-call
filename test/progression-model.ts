@@ -18,12 +18,13 @@
  * account farms: a trial for a member stuck at a step (her element's at
  * grade 1, the highest rank of the grade otherwise), else the highest
  * quest cleared, for gold. Hardcore tiers are cleared once each, as soon
- * as their enemies are at most a few levels above the team; an audition's
+ * as their enemies are at most a few levels above the team; invitations are
+ * spent as they come, on the auditions in the order written; an audition's
  * part takes `auditionTries` runs, the last a clear. Once nothing is left
  * to clear, it farms until all ten characters are at the top level (or
  * `maxRuns` runs).
  */
-import { ascend, ascensionStep, characterLevel, createAccount, encounterOf, lentFor, owns, playLock, questCleared, questLevel, questLock, recordRun, sourcesOf, tierProgress, train } from "../src/account/account.ts"
+import { ascend, ascensionStep, characterLevel, createAccount, encounterOf, lentFor, openAudition, owns, playLock, questCleared, questLevel, questLock, recordRun, sourcesOf, tierProgress, train } from "../src/account/account.ts"
 import type { Account, Earned, Item, Play } from "../src/account/account.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -134,8 +135,8 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
   let owed = 0
 
   const record = (target: Play, tally: Tally, won: boolean) => {
-    const lent = lentFor(tuning, target)
-    const result = { cleared: won, progress: won ? 1 : 0.5, team: lent === null ? team() : [lent.character], reactions: [], tally, challenge: encounterOf(tuning, target).challenge, wave: won ? 8 : 4, kills: 30, time: 200 } as RunResultValue
+    const lent = lentFor(tuning, target, account)
+    const result = { cleared: won, progress: won ? 1 : 0.5, team: lent === null ? team() : [lent.character], reactions: [], tally, challenge: encounterOf(tuning, target, account).challenge, wave: won ? 8 : 4, kills: 30, time: 200 } as RunResultValue
     const recorded = recordRun(tuning, account, target, result, runs)
     account = recorded.account
     runs += 1
@@ -208,11 +209,22 @@ export const simulateProgression = (tuning: Tuning, options: ProgressionOptions 
     })
   })
 
+  /** Spends every invitation held, on the auditions in the order the tracks are written (a player chooses their own). */
+  const invite = () => {
+    for (const track of tracks) {
+      const character = tuning.tracks[track].character
+      if (character === null || (account.wallet.invitations ?? 0) < 1 || playLock(tuning, account, { kind: "tier", track, tier: 1 })?.kind !== "invite") continue
+      const opened = openAudition(tuning, account, character, runs)
+      if (opened.ok) account = opened.value
+    }
+  }
+
   /** Clears the tiers open now: an audition's part after `auditionTries - 1` losses. */
   const clearTiers = () => {
+    invite()
     for (let open = tiersOpen(); open.length > 0; open = tiersOpen()) {
       const target = open[0]!
-      if (lentFor(tuning, target) !== null) for (let tries = 1; tries < auditionTries; tries++) record(target, noTally, false)
+      if (lentFor(tuning, target, account) !== null) for (let tries = 1; tries < auditionTries; tries++) record(target, noTally, false)
       play(target)
       spend()
     }

@@ -8,18 +8,22 @@
  *   pnpm expected                     everything, two seeds
  *   pnpm expected --only main         main | side | ranks | hardcore | trials | auditions
  *   pnpm expected --seeds 1,2,3
+ *   pnpm expected --only auditions --slot 7   every audition at one invitation slot
  *
  * The team is the one entering a main quest, or the one leaving the quest
  * that opens a side quest, rank, or tier. The bot (see `test/bot.ts`)
  * plays its first member's way, uses specials and ultimates, and switches
  * member every few seconds. A bot is not a player: it reads differently
  * (better at dodging what it notices, worse at choosing targets), so read
- * the numbers side by side, not one by one. Nothing here fails.
+ * the numbers side by side, not one by one. Nothing here fails. An
+ * audition is fought at the invitation slot the model opens it at (the
+ * order the tracks are written), or every one at `--slot`.
  * P beside the outcome: the run met every star of the quest at once.
  */
 import { parseArgs } from "node:util"
 import type { Play } from "../src/account/account.ts"
-import { encounterOf, lentFor } from "../src/account/account.ts"
+import { createAccount, encounterOf, isAuditionPart, lentFor } from "../src/account/account.ts"
+import { newAccount } from "../src/content/account.ts"
 import { meets } from "../src/content/stars.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
@@ -29,11 +33,17 @@ import { runBot } from "../test/bot.ts"
 import type { Member } from "../test/progression-model.ts"
 import { simulateProgression } from "../test/progression-model.ts"
 
-const { values } = parseArgs({ options: { only: { type: "string" }, seeds: { type: "string", default: "1337,42" }, seconds: { type: "string", default: "360" } } })
+const { values } = parseArgs({ options: { only: { type: "string" }, slot: { type: "string" }, seeds: { type: "string", default: "1337,42" }, seconds: { type: "string", default: "360" } } })
 const tuning = defaultTuning
 const seeds = values.seeds.split(",").map(Number)
 const seconds = Number(values.seconds)
 const { rows } = simulateProgression(tuning)
+// The auditions opened, each at its slot: the order the tracks are written, or all at `--slot`.
+const invited = (Object.keys(tuning.tracks) as Array<TrackId>).filter((id) => isAuditionPart(tuning, id, 1))
+const opened = {
+  ...createAccount(tuning, newAccount, "expected", 0),
+  auditions: Object.fromEntries(invited.map((id, index) => [tuning.tracks[id].character!, { slot: values.slot === undefined ? index + 1 : Number(values.slot), openedAt: 0 }]))
+}
 const entering = (quest: QuestId, rank: number) => rows.find((row) => row.quest === quest && row.rank === rank)?.team
 const leaving = (quest: QuestId, rank: number) => rows.find((row) => row.quest === quest && row.rank === rank)?.after
 
@@ -65,7 +75,7 @@ for (const [id, track] of Object.entries(tuning.tracks) as Array<[TrackId, (type
   track.tiers.forEach((tier, index) => {
     const play: Play = { kind: "tier", track: id, tier: index + 1 }
     // An audition is fought by the character it lends, alone, at its level.
-    const lent = lentFor(tuning, play)
+    const lent = lentFor(tuning, play, opened)
     cases.push({ kind: track.kind === "trial" ? "trials" : track.kind === "audition" ? "auditions" : "hardcore", name: `${track.name} ${index + 1}`, play, team: lent === null ? leaving(tier.opens, tier.opensRank) : [lent], budget: null })
   })
 }
@@ -74,7 +84,7 @@ console.log(`Each fought by the team that has it open, at its levels; ${seeds.le
 const table: Array<Record<string, string | number>> = []
 for (const each of cases.filter((candidate) => values.only === undefined || candidate.kind === values.only)) {
   if (each.team === undefined) continue
-  const { challenge, enemyLevel, twist } = encounterOf(tuning, each.play)
+  const { challenge, enemyLevel, twist } = encounterOf(tuning, each.play, opened)
   const reports = seeds.map((seed) => runBot({
     tuning, challenge, enemyLevel, twist, seconds, seed, mortal: true, measurePressure: false, abilities: true, ...(each.team!.length > 1 ? { rotateEvery: 3 } : {}),
     team: each.team!.map((member) => ({ character: member.character, level: member.level })), style: styleFor(tuning, each.team![0]!)
