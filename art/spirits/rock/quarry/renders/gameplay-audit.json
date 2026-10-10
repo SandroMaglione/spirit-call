@@ -1,0 +1,299 @@
+{
+  "reviewedOn": "2026-10-10",
+  "url": "http://192.168.0.45:5201/?play&team=quarry,tidecaller,gunner&charged&challenge=trainingGround&touch",
+  "viewport": [
+    844,
+    390
+  ],
+  "syntheticTouch": true,
+  "pointerCaptureStubbed": true,
+  "observations": [
+    {
+      "attack": {
+        "attack": {
+          "aspect": null,
+          "class": "hammer"
+        },
+        "buffered": 0,
+        "comboTimer": 21.9666666666667,
+        "cooldown": 0,
+        "fed": -1,
+        "held": 0,
+        "powerQueued": false,
+        "recovery": 0,
+        "reloading": 0,
+        "sinceDashStrike": null,
+        "slowed": 1,
+        "spent": 0,
+        "step": -1
+      },
+      "label": "run-right",
+      "model": "Quarry",
+      "position": {
+        "x": 1191.2494264287272,
+        "y": 608.750573571279
+      },
+      "skills": {
+        "special": {
+          "cooldown": 0,
+          "skill": "faultLine"
+        },
+        "ultimate": {
+          "cooldown": 0,
+          "skill": "landslide"
+        }
+      },
+      "torso": [
+        -0.0034110448499149564,
+        0.30333528915696567,
+        0
+      ]
+    },
+    {
+      "attack": {
+        "attack": {
+          "aspect": null,
+          "class": "hammer"
+        },
+        "buffered": 0,
+        "comboTimer": 0,
+        "cooldown": 0.6166666666666664,
+        "fed": -1,
+        "held": 0,
+        "powerQueued": false,
+        "recovery": 0.7,
+        "reloading": 0,
+        "sinceDashStrike": null,
+        "slowed": 0,
+        "spent": 0,
+        "step": -1
+      },
+      "label": "charged-blow",
+      "model": "Quarry",
+      "position": {
+        "x": 1030.5426862958016,
+        "y": 492.67726602648236
+      },
+      "skills": {
+        "special": {
+          "cooldown": 0,
+          "skill": "faultLine"
+        },
+        "ultimate": {
+          "cooldown": 0,
+          "skill": "landslide"
+        }
+      },
+      "torso": [
+        0,
+        0.4089963927011048,
+        0.17924819360873875
+      ]
+    },
+    {
+      "attack": {
+        "attack": {
+          "aspect": null,
+          "class": "hammer"
+        },
+        "buffered": 0,
+        "comboTimer": 0,
+        "cooldown": 0.19000000000000006,
+        "fed": -1,
+        "held": 0,
+        "powerQueued": false,
+        "recovery": 0.34,
+        "reloading": 0,
+        "sinceDashStrike": null,
+        "slowed": 0.45,
+        "spent": 0,
+        "step": 0
+      },
+      "label": "full-combo-0",
+      "model": "Quarry",
+      "position": {
+        "x": 1013.2802116508667,
+        "y": 508.4560563075001
+      },
+      "skills": {
+        "special": {
+          "cooldown": 0,
+          "skill": "faultLine"
+        },
+        "ultimate": {
+          "cooldown": 0,
+          "skill": "landslide"
+        }
+      },
+      "torso": [
+        0,
+        0.2800000011920929,
+        0
+      ]
+    },
+    {
+      "attack": {
+        "attack": {
+          "aspect": null,
+          "class": "hammer"
+        },
+        "buffered": 0,
+        "comboTimer": 0,
+        "cooldown": 0.30000000000000004,
+        "fed": -1,
+        "held": 0,
+        "powerQueued": false,
+        "recovery": 0.45,
+        "reloading": 0,
+        "sinceDashStrike": null,
+        "slowed": 0.45,
+        "spent": 0,
+        "step": 1
+      },
+      "label": "full-combo-1",
+      "model": "Quarry",
+      "position": {
+        "x": 1005.2021389995391,
+        "y": 515.8398304686125
+      },
+      "skills": {
+        "special": {
+          "cooldown": 0,
+          "skill": "faultLine"
+        },
+        "ultimate": {
+          "cooldown": 0,
+          "skill": "landslide"
+        }
+      },
+      "torso": [
+        0,
+        0.2800000011920929,
+        0.00030104146923524245
+      ]
+    },
+    {
+      "attack": {
+        "attack": {
+          "aspect": null,
+          "class": "hammer"
+        },
+        "buffered": 0,
+        "comboTimer": 0,
+        "cooldown": 0.5999999999999995,
+        "fed": -1,
+        "held": 0,
+        "powerQueued": false,
+        "recovery": 0.75,
+        "reloading": 0,
+        "sinceDashStrike": null,
+        "slowed": 0,
+        "spent": 0,
+        "step": 2
+      },
+      "label": "full-combo-2",
+      "model": "Quarry",
+      "position": {
+        "x": 1004.0413582299899,
+        "y": 516.9008438344065
+      },
+      "skills": {
+        "special": {
+          "cooldown": 0,
+          "skill": "faultLine"
+        },
+        "ultimate": {
+          "cooldown": 0,
+          "skill": "landslide"
+        }
+      },
+      "torso": [
+        0,
+        0.34628418354438617,
+        0.11418945191847016
+      ]
+    },
+    {
+      "attack": {
+        "attack": {
+          "aspect": null,
+          "class": "hammer"
+        },
+        "buffered": 0,
+        "comboTimer": 0.55,
+        "cooldown": 0,
+        "fed": -1,
+        "held": 0,
+        "powerQueued": false,
+        "recovery": 0.75,
+        "reloading": 0,
+        "sinceDashStrike": null,
+        "slowed": 0,
+        "spent": 0,
+        "step": -1
+      },
+      "label": "fault-line",
+      "model": "Quarry",
+      "position": {
+        "x": 1004.0413582299899,
+        "y": 516.9008438344065
+      },
+      "skills": {
+        "special": {
+          "cooldown": 6.7666666666666675,
+          "skill": "faultLine"
+        },
+        "ultimate": {
+          "cooldown": 0,
+          "skill": "landslide"
+        }
+      },
+      "torso": [
+        0,
+        0.2800000011920929,
+        0
+      ]
+    },
+    {
+      "attack": {
+        "attack": {
+          "aspect": null,
+          "class": "hammer"
+        },
+        "buffered": 0,
+        "comboTimer": 1.183333333333334,
+        "cooldown": 0,
+        "fed": -1,
+        "held": 0,
+        "powerQueued": false,
+        "recovery": 0.75,
+        "reloading": 0,
+        "sinceDashStrike": null,
+        "slowed": 0,
+        "spent": 0,
+        "step": -1
+      },
+      "label": "landslide",
+      "model": "Quarry",
+      "position": {
+        "x": 1004.0413582299899,
+        "y": 516.9008438344065
+      },
+      "skills": {
+        "special": {
+          "cooldown": 6.11666666666667,
+          "skill": "faultLine"
+        },
+        "ultimate": {
+          "cooldown": 10,
+          "skill": "landslide"
+        }
+      },
+      "torso": [
+        0,
+        0.2800000011920929,
+        0
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "triangles": 1424,
+  "materials": 2,
+  "parts": 13,
+  "bytes": 144352,
+  "bounds_gltf_m": [
+    [
+      -0.4740253686904907,
+      0.0,
+      -0.3764633238315582
+    ],
+    [
+      0.47272801399230957,
+      0.7720000147819519,
+      0.45385944843292236
+    ]
+  ],
+  "four_supports_grounded": true,
+  "forward": "+Z",
+  "floating_rock_gap_m": 0.07077914476394653,
+  "animations": 0,
+  "skeletons": 0,
+  "textures": 0,
+  "external_buffers": 0,
+  "cameras": 0,
+  "lights": 0
+}

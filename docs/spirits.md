@@ -192,6 +192,7 @@ includes deliberate changes for personality and readable facing.
 | Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
 | Sparkfist, thunder | [Sparkfist](../art/spirits/sparkfist/README.md) | Approved Ice silhouette and motion, violet body, gold floating shards, warm eyes and rear lightning mark; original node names and pivots retained for animation reuse |
 | Bastion, rock | [Rock](../art/spirits/rock/README.md) | Broad grounded boulder, round optimistic eyes, weight-bearing feet, short rear heel, floating ornaments, planted Disc recoil and ground slam |
+| Quarry, rock | [Quarry](../art/spirits/rock/quarry/README.md) | Moss mantle, rounded recessed face, floating cap stone, four connected legs, planted diagonal run, leg-driven Hammer blows and head-first jumping finishers |
 | Ice, animation asset | [Ice](../art/spirits/ice/README.md) | Approved crystal silhouette, joined crown, recessed face, four floating shards, ten object clips; character kit not yet defined |
 
 Each folder keeps `reference/sheet.png`, cropped views, measurements,

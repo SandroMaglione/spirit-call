@@ -1,0 +1,80 @@
+{
+  "status": "revised static model, awaiting visual review",
+  "triangles": 1424,
+  "part_triangles": {
+    "BodyCore": 188,
+    "Cheek.L": 32,
+    "Cheek.R": 32,
+    "Eye.L": 32,
+    "Eye.R": 32,
+    "FloatRock": 60,
+    "Head": 472,
+    "MossCap": 156,
+    "RearStone": 116,
+    "Stone.Front.L": 76,
+    "Stone.Front.R": 76,
+    "Stone.Rear.L": 76,
+    "Stone.Rear.R": 76
+  },
+  "floating_rock_gap_m": 0.07077914476394653,
+  "socket_bevel_m": 0.009,
+  "socket_bevel_segments": 2,
+  "materials": [
+    "Amber eyes",
+    "Quarry facets"
+  ],
+  "objects": [
+    "BodyCore",
+    "Cheek.L",
+    "Cheek.R",
+    "Eye.L",
+    "Eye.R",
+    "FloatRock",
+    "Head",
+    "MossCap",
+    "RearStone",
+    "Stone.Front.L",
+    "Stone.Front.R",
+    "Stone.Rear.L",
+    "Stone.Rear.R"
+  ],
+  "bounds_blender_m": [
+    [
+      -0.4740253686904907,
+      0.47272801399230957
+    ],
+    [
+      -0.45385944843292236,
+      0.3764633238315582
+    ],
+    [
+      0.0,
+      0.7720000147819519
+    ]
+  ],
+  "height_m": 0.7720000147819519,
+  "width_m": 0.9467533826828003,
+  "depth_m": 0.8303227722644806,
+  "closed_meshes": {
+    "BodyCore": true,
+    "Cheek.L": true,
+    "Cheek.R": true,
+    "Eye.L": false,
+    "Eye.R": false,
+    "FloatRock": true,
+    "Head": true,
+    "MossCap": true,
+    "RearStone": true,
+    "Stone.Front.L": true,
+    "Stone.Front.R": true,
+    "Stone.Rear.L": true,
+    "Stone.Rear.R": true
+  },
+  "animations": 0,
+  "skeletons": 0,
+  "height_basis": "ground origin to highest static mesh vertex",
+  "coordinates": "GLB +Y up, +Z forward; Blender +Z up, -Y forward",
+  "quarry.blend_sha256": "8fa0a98856781d8378aa222792f78f450fb53a8ae4b233821a1daea7231cca25",
+  "quarry.glb_sha256": "50d9c698ff1fddbc353080e6c841fd5d80ada2171754ddb7b8036d8fb4dbeabb",
+  "reference/sheet.png_sha256": "e8b6bdb477a43188e368a607dcc38d16068c03df2033ef497ae6264f39bc5c92"
+}

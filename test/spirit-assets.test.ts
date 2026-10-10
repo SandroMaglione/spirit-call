@@ -7,9 +7,10 @@ import { describe, expect, it } from "vitest"
 
 import { closeLoop, models } from "../src/presentation/models.ts"
 import type { ModelId } from "../src/presentation/models.ts"
+import { characterLooks } from "../src/presentation/looks.ts"
 import { Puppet } from "../src/presentation/puppet.ts"
 
-const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit" | "rockSpirit") => {
+const loadSpirit = async (id: "waterSpirit" | "fireSpirit" | "thunderSpirit" | "rockSpirit" | "quarrySpirit") => {
   const bytes = readFileSync(path.join(import.meta.dirname, "..", models[id].url))
   return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), "")
 }
@@ -68,6 +69,55 @@ describe("thunder spirit export", () => {
     expect(gltf.scene.getObjectByName("LightningCrest")).toBeDefined()
     expect(gltf.scene.getObjectByName("LightningWingL")).toBeDefined()
     expect(gltf.scene.getObjectByName("LightningWingR")).toBeDefined()
+  })
+})
+
+describe("Quarry's approved spirit", () => {
+  it("loads its own untinted model at the existing spirits' requested height", async () => {
+    const look = characterLooks.quarry
+    if (look.kind !== "model") throw new Error("Quarry needs her approved model")
+    expect(look.model).toBe("quarrySpirit")
+    expect(look.tint).toBeUndefined()
+    expect(look.grounded).toBe(true)
+    const ids = ["quarrySpirit", "waterSpirit", "fireSpirit"] as const
+    const gltfs = await Promise.all(ids.map(loadSpirit))
+    const sizes = gltfs.map((gltf, index) => {
+      const id = ids[index]!
+      const puppet = new Puppet({ id, spec: models[id], scene: gltf.scene, clips: new Map() }, 1, null)
+      const box = new Box3().setFromObject(puppet.object, true)
+      puppet.dispose()
+      return box
+    })
+    expect(sizes[0]!.getSize(new Vector3()).y).toBeCloseTo(1, 5)
+    // Water floats above the pivot; compare their tops from the common ground line.
+    expect(sizes[0]!.max.y).toBeCloseTo(sizes[1]!.max.y, 3)
+    // Her four legs widen the silhouette; the central boulder stays near Water's body width.
+    const core = new Box3().setFromObject(gltfs[0]!.scene.getObjectByName("BodyCore")!, true).getSize(new Vector3()).x / models.quarrySpirit.height
+    const water = new Box3().setFromObject(gltfs[1]!.scene.getObjectByName("WaterSpirit")!, true).getSize(new Vector3()).x / models.waterSpirit.height
+    expect(core).toBeLessThan(water * 1.5)
+    expect(sizes[0]!.max.y).toBeLessThan(sizes[2]!.max.y)
+  })
+
+  it("keeps two supports through the run seam and launches the head-first heavy blow", async () => {
+    const spec = models.quarrySpirit
+    const gltf = await loadSpirit("quarrySpirit")
+    const mixer = new AnimationMixer(gltf.scene)
+    const feet = ["StoneFrontL", "StoneFrontR", "StoneRearL", "StoneRearR"].map(name => gltf.scene.getObjectByName(name)!)
+    for (const name of ["JointFrontL", "JointFrontR", "JointRearL", "JointRearR"]) expect(gltf.scene.getObjectByName(name), name).toBeDefined()
+    for (const clip of gltf.animations) expect(clip.tracks.some(track => track.name.startsWith("Quarry.")), `${clip.name}: root motion`).toBe(false)
+    const run = closeLoop(gltf.animations.find(clip => clip.name === "Run")!, spec.clips.Run)
+    mixer.clipAction(run).play()
+    for (let frame = 0; frame <= 192; frame++) {
+      mixer.setTime(frame / 240)
+      const soles = feet.map(foot => new Box3().setFromObject(foot, true).min.y)
+      expect(soles.filter(y => Math.abs(y) < .001).length, `supports at ${frame}/240`).toBeGreaterThanOrEqual(2)
+      expect(Math.min(...soles)).toBeGreaterThan(-.001)
+    }
+    mixer.stopAllAction()
+    mixer.clipAction(gltf.animations.find(clip => clip.name === "Power")!).setLoop(LoopOnce, 1).play()
+    mixer.setTime(6 / 30)
+    expect(Math.min(...feet.map(foot => new Box3().setFromObject(foot, true).min.y))).toBeGreaterThan(.1)
+    expect(gltf.scene.getObjectByName("Torso")!.position.z).toBeGreaterThan(.2)
   })
 })
 
