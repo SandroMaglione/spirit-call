@@ -19,7 +19,7 @@ kept on the device; only its own settings (sound) are.
     (`Request` in, `Response` out) over any database.
   - `players.ts`: sign up, log in, sessions.
   - `accounts.ts`: the account's actions, each running a rule from
-    `account/account.ts` or `account/calls.ts`.
+    `account/account.ts`.
   - `rows.ts`, `store.ts`: the account as table rows, read whole and
     written back by difference.
   - `migrations/`: the database's tables, as SQL files.
@@ -51,17 +51,13 @@ only as its SHA-256 hash. Logging out deletes it.
 | `GET /api/account` | The account. |
 | `PUT /api/account/selection` | The team, its aspects and relics, and what to play. |
 | `PUT /api/characters/{id}/looks/{kind}` | Wear a look (a tint or a trail), or none. |
-| `POST /api/shop/relics/{id}` | Buy a relic owned one tier up, with dust. |
-| `POST /api/shop/looks/{id}` | Buy a look the shop sells, with dust. |
+| `PUT /api/account/teams/{slot}` | Save a team (with its aspects and relics) in a slot, 1 to 3, or empty it. |
 | `POST /api/characters/{id}/training` | Level a character with gold. |
 | `POST /api/characters/{id}/ascension` | Ascend a character. |
-| `POST /api/exchange` | Buy an aspect or a look of the Call's from its exchange, with sigils. |
-| `POST /api/banners/{id}/calls` | Make calls on a banner. |
-| `PUT /api/banners/{id}/focus` | Focus a character on a banner. |
 | `POST /api/runs` | Record a run that ended, with its log: the account after it, and what it earned. |
 | `GET /api/runs?since=` | The player's runs, with their logs. |
 | `GET /api/account/events?since=` | The changes to the player's account. |
-| `POST /api/dev/unlock-everything`, `POST /api/dev/open-calls` | Dev tools: everywhere but prod. |
+| `POST /api/dev/unlock-everything` | Dev tool: everywhere but prod. |
 
 Every endpoint but the first two needs the session. A rule that refuses
 (not owned, not enough, locked) answers `409 Refused` with its kind, and
@@ -91,7 +87,12 @@ to by reference, so destroying a preview never touches it.
   shop's weekly stock to the account (`shop_period`, `shop_bought`; the
   stock was dropped soon after, and the columns are left unused). `0010`
   reset every account once more, for the release roster (where characters
-  come from changed; see "No players yet" below). Main's CI applies new ones before deploying prod. Previews and
+  come from changed; see "No players yet" below), and `0011` once more for
+  the complete release (`collection.md`: the Spirit Call, crystals, sigils,
+  dust, the shop, the account level, and the weekly reset gone; the Call's
+  tables are left empty and unused, and the account's own row keeps its
+  Call and experience columns, written as zero); it also added the saved
+  teams' tables. Main's CI applies new ones before deploying prod. Previews and
   laptops share the database, so they run against what main has applied.
 - **No players yet: reset, do not migrate.** Until the game opens to
   players (decided by the developer, and written here when it happens),
@@ -129,11 +130,9 @@ work out (`app/saves.ts`):
   saved (a tap tries again), and nothing new starts meanwhile. The page
   asks before closing while anything is on its way.
 - **Never made twice.** Before trying again, the account is read back: a
-  run counted, or a call made (its seed moved), was saved and only its
-  answer lost.
-- **What only the server knows** (a call's results, a level, a focus) is
-  waited for. A call shows its seal at once, cracking while the answer is
-  on its way (see docs/calls.md).
+  run counted was saved and only its answer lost.
+- **What only the server answers** (a level, an ascension, a saved team)
+  is waited for.
 
 ## Measuring play
 
@@ -152,9 +151,8 @@ guesses (`src/server/logs.ts`, migration `0002_logs.sql`):
 
   A killing blow counts its whole damage.
 - **Account events.** Each change to an account is kept with what it
-  gained and spent of every resource: training, ascending,
-  calls, the exchange, focus, selection, a run's pay and rewards, and the
-  dev tools.
+  gained and spent of every resource: training, ascending, a saved team,
+  selection, a run's pay and rewards, and the dev tools.
   A refused action leaves nothing.
 
 `pnpm runs` reads them as the player (see `scripts/runs.ts`):
@@ -184,10 +182,10 @@ with a read-only key (see `scripts/db.ts`):
 
 `pnpm testers new` makes the next test account on prod (`sandro1`,
 `sandro2`, ...): a new player's account, signed up through the API, with a
-wallet full enough to try anything (crystals for about 500 calls, gold and
-every material to take every character to the top). `new --chapter1`
-(or `chapter1 <name>` on one already made) clears chapter 1 first, so the
-Spirit Call is open: each quest is selected and a cleared run recorded
+wallet full enough to try anything (gold and every essence to take every
+character to the top). `new --chapter1`
+(or `chapter1 <name>` on one already made) clears chapter 1 first, so
+relics are open: each quest is selected and a cleared run recorded
 through the API, earning no star, so the server pays what a
 player would get. `refill <name>` fills one again, `list` shows them (see
 `scripts/testers.ts`).
