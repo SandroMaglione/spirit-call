@@ -4,6 +4,7 @@
  */
 export { fireSpiritModel } from "./fire-spirit.ts"
 export { iceSpiritModel } from "./ice-spirit.ts"
+export { waterCrescentModel } from "./water-crescent.ts"
 export { rockSpiritModel } from "./rock-spirit.ts"
 export { sparkfistSpiritModel } from "./sparkfist-spirit.ts"
 export { thunderSpiritModel } from "./thunder-spirit.ts"

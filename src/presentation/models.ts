@@ -21,7 +21,7 @@ import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { arenaPropModels } from "./assets/arena-props.ts"
 import { enemyModels } from "./assets/enemies.ts"
-import { fireSpiritModel, iceSpiritModel, rockSpiritModel, sparkfistSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
+import { fireSpiritModel, iceSpiritModel, rockSpiritModel, sparkfistSpiritModel, thunderSpiritModel, waterCrescentModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
 import { addGlow } from "./glow.ts"
 import type { GlowSpec } from "./glow.ts"
 
@@ -101,6 +101,15 @@ export const models = {
     }
   },
   waterSpirit: { ...waterSpiritModel, glow: waterGlow },
+  waterCrescent: {
+    ...waterCrescentModel,
+    // Pale shell facets need a restrained rim; the dark core keeps the eyes clear.
+    glow: {
+      rim: { color: 0x4aaeff, strength: .25, power: 2.8 },
+      halo: { color: 0x2e7bff, opacity: .18, size: 1.45 },
+      eyes: { nodes: ["Eye.L", "Eye.R"], color: 0x99f4ff, opacity: .35, size: .20 }
+    }
+  },
   fireSpirit: { ...fireSpiritModel, glow: fireGlow },
   windSpirit: { ...windSpiritModel, glow: windGlow },
   thunderSpirit: { ...thunderSpiritModel, glow: thunderGlow },

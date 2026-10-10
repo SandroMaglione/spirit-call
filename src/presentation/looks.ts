@@ -215,8 +215,8 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
     moments: spiritMoments(4, "sparkStep", "stormFlurry"), eyes: spiritEyes,
     drops: { rate: 20, colors: [0xffe476, 0xc8a8fa, 0x7953c5], size: 1.8, kind: "ember" }
   },
-  // A placeholder until her own spirit: the water spirit, a deeper sea green.
-  tidewarden: { ...waterSpirit, moments: spiritMoments(4, "brace", "floodgate"), tint: { hue: -30, saturation: 0.85, lightness: 0.8 } },
+  // Opposing crescents frame Tidewarden's dark core; keep the sheet's own colors.
+  tidewarden: { ...waterSpirit, model: "waterCrescent", moments: spiritMoments(4, "brace", "floodgate") },
   // A placeholder until her own spirit: the rock spirit, a darker, redder stone.
   // A placeholder until her own spirit: the wind spirit, a paler, cooler air.
   windwall: { ...windSpirit, moments: spiritMoments(3, "galeWall", "eyeOfTheStorm"), tint: { hue: 25, saturation: 0.75, lightness: 1.1 } },

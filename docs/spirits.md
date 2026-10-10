@@ -186,6 +186,7 @@ includes deliberate changes for personality and readable facing.
 | Character | Source and review notes | What to copy |
 | --- | --- | --- |
 | Tidecaller, water | [Water](../art/spirits/water/README.md) | Measured loft, glowing surface eyes, winding throws, tail fin and offset nub for rear facing |
+| Tidewarden, water | [Crescent Water](../art/spirits/water-crescent/README.md) | Dark core between opposing crescents, soft head highlight, balanced floating fins, restrained blue glow, four-hit Blade combo and guard casts |
 | Gunner, fire | [Fire](../art/spirits/fire/README.md) | Flame and separate shards, dark slanted eyes, recoil on shots, warm core and ember trail |
 | Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
 | Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
