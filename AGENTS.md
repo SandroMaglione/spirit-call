@@ -11,6 +11,8 @@ tiers; `docs/enemies.md`: enemy movesets, behaviors,
 fairness, and measuring difficulty; `docs/models.md`: 3D models and looks;
 `docs/spirits.md`: characters' spirits, from a character sheet to the game;
 `docs/quests.md`: quests, stars, ranks, materials, and ascension;
+`docs/collection.md`: how every character, aspect, relic, and look is
+owned, auditions, and the game's pace;
 `docs/roster.md`: who the characters are (element, class, role), and how
 support is set up;
 `docs/server.md`: the server, the API, players, and the database).

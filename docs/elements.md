@@ -82,37 +82,25 @@ any other element shatters them.
 ## The map
 
 Each state changes **one part of a fight**, and no two elements change the
-same part. The map lists the parts: those the game's elements hold, and
-those kept for elements to come, so what is built now never takes the
-place of what comes later (a water that slows would leave ice nothing of
-its own).
+same part. The release has five elements, each holding its own part:
 
-| Part of a fight | Element | State | Burst | When |
-|---|---|---|---|---|
-| Health over time | **Fire** | Burning | Flare | now |
-| Links between enemies | **Thunder** | Charged | Discharge | now |
-| Position | **Wind** | Swept | Gale | now |
-| Toughness | **Rock** | Cracked | Shatter | now |
-| How hard it hits | **Water** | Soaked: its blows are weaker | Splash: it and the bodies around are disarmed a moment (they move, but start no attack) | now (see below) |
-| Speed, moving and attacking | **Ice** | Chilled: slower in everything (its telegraphs only ever get longer) | Freeze: held where it stands, doing nothing | later |
-| Moving only | **Nature** (a candidate) | Rooted: it cannot move, but still attacks | to design | later |
-| Where it aims | **Light** (a candidate) | Dazzled: it aims where the player was, not where she is | Flash: it and the bodies around lose their target | later |
-| Damage that comes later | **Shadow** (a candidate) | Marked: part of every blow on it is stored | Echo: what was stored, at once | later |
+| Part of a fight | Element | State | Burst |
+|---|---|---|---|
+| Health over time | **Fire** | Burning | Flare |
+| Links between enemies | **Thunder** | Charged | Discharge |
+| Position | **Wind** | Swept | Gale |
+| Toughness | **Rock** | Cracked | Shatter |
+| How hard it hits | **Water** | Soaked: its blows are weaker | Splash: it and the bodies around are disarmed a moment (they move, but start no attack) |
 
 Water's job is **heavy hitters** (enemies whose blows hurt most), rock
-keeping **tanky** ones; fast enemies have no element of their own until
-ice. On the player, Soaked makes her blows weaker, and a water pool does so
+keeping **tanky** ones; fast enemies have no element of their own. On the player, Soaked makes her blows weaker, and a water pool does so
 to whoever stands in it. (Until October 2026 water slowed, and its burst
-stopped bodies a moment: the map gave speed to ice, so water moved.)
+stopped bodies a moment; the map kept speed apart, so water moved.)
 
-Two rules keep the map:
-
-1. **A new element takes a part no element holds**, or adds a new part to
-   the map; it never shares one. The candidates are reserved, not promised:
-   each is designed when its time comes.
-2. **Ruled out**: poison (fire's health over time), metal or magnetism
-   (thunder's links, wind's pulls), and any state that heals or shields
-   (that is a kit's).
+No other element comes: speed, movement, and aim stay nobody's part
+(the game is complete, see `vision.md`). Ruled out from the start were
+poison (fire's health over time), metal or magnetism (thunder's links,
+wind's pulls), and any state that heals or shields (that is a kit's).
 
 ### Adding an element
 
@@ -279,9 +267,9 @@ Windwall guards by placing:
   requirement.
 - Everything is live-tunable in `src/content/`.
 
-## Open questions
+## Settled for the release
 
-1. **Tough enemies.** Whether elites and champions take a few elemental blows
-   before a state holds (shown on the break bar's ring), rather than one.
-2. **Reach.** How far fire spreads between bodies, and how far a charge
-   arcs.
+1. **Tough enemies.** A state holds on elites and champions from one
+   elemental blow, as on anyone.
+2. **Reach.** Fire's spread and a charge's arc keep the numbers in
+   `content/elements.ts`, tuned by play.
