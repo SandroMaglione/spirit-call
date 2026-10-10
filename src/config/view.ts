@@ -125,6 +125,8 @@ export const view = {
    * healing zaps.
    */
   totem: { height: 46, radius: 8, orb: 9, heal: 0x7ee08a },
+  /** An enemy turned to her side (see `Turned`): its body tinted and glowing with water, its health bar in her side's color. */
+  turned: { tint: 0x9fd4ff, glow: 0x3fa8ff, bar: 0x5cc8ff },
   /** A skill's companion, an echo of its caster: her body this much her size, washed toward `color` by `wash` (0..1), see-through at `opacity`. */
   companion: { size: 0.82, color: 0xeaf6ff, wash: 0.75, opacity: 0.5 },
   /** Faint ring at a nova's radius while it is ready. */
@@ -276,8 +278,6 @@ export const view = {
   marks: { color: 0xbfeeff, gap: 12, inner: 7, width: 3, outline: 0.95, pulse: 0.8, fadeSeconds: 1 },
   /** A barrier standing: its band's fill and edge, the streaks of wind running along it, and how long it fades out. */
   barriers: { fill: 0.18, edge: 0.75, width: 3, streaks: 5, streakLength: 26, fadeSeconds: 0.6 },
-  /** A brace held: its reach ring, filling in as the moment passes; `ready`: the faint ring while a Floodgate readies braces. */
-  braces: { width: 4, outline: 0.9, fill: 0.22, ready: 46, pulse: 0.7 },
   /**
    * Arena hazards as part of the floor (see `presentation/hazards.ts`): a
    * pool level with the floor's top (`level` world units over it), its flat

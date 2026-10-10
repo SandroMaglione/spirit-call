@@ -61,7 +61,8 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   // Overcharge: a bolt inside a crackling ring.
   stormFlurry: icon(`<circle cx="12" cy="12" r="9" stroke-dasharray="3 2"/><path d="M13 5l-4 7h4l-2 7 6-9h-4l2-5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Brace: a blade held across, a blow breaking on it.
-  brace: icon(`<path d="M4 18L18 4M15 4h3v3M5 15l4 4"/><path d="M15 15l5 5M19 13l2-1M13 19l-1 2M20 17h2" />`),
+  // A dome of water over the floor, a glint on it.
+  brace: icon(`<path d="M3 18a9 9 0 0 1 18 0z" fill="currentColor" fill-opacity="0.35"/><path d="M2 18h20"/><path d="M8 13.5a4.5 4.5 0 0 1 3.5-3"/>`),
   // Splinters: a hammer's head striking, three shards flying off it.
   faultLine: icon(`<path d="M3 13l5-5 3 3-5 5z" fill="currentColor" fill-opacity="0.35"/><path d="M5.5 15.5L2 19"/><path d="M14 6l3-2.5-.5 3.5zM15.5 12l4 .5-3 2.5zM12 16.5l1.5 4-3.5-1.5z" fill="currentColor" fill-opacity="0.35"/>`),
   // Rockburst: shards bursting out all around a crack.
@@ -75,7 +76,8 @@ export const skillIcons: { readonly [Id in SkillId]: string } = {
   // Eye of the Storm: a ring of wind around a still center.
   eyeOfTheStorm: icon(`<circle cx="12" cy="12" r="2" fill="currentColor" fill-opacity="0.35"/><path d="M12 3a9 9 0 0 1 9 9M21 12a9 9 0 0 1-9 9M12 21a9 9 0 0 1-9-9M3 12a9 9 0 0 1 9-9"/><path d="M19 3l2 2-2 1M5 21l-2-2 2-1"/>`),
   // Floodgate: a wave breaking out of a ring.
-  floodgate: icon(`<circle cx="12" cy="12" r="9"/><path d="M5 14c2 0 2-2 3.5-2s1.5 2 3.5 2 2-2 3.5-2 1.5 2 3.5 2"/><path d="M12 3v4M12 17v4"/>`)
+  // A chain of three links, reaching out.
+  floodgate: icon(`<rect x="2.5" y="15.5" width="7" height="4" rx="2" transform="rotate(-45 6 17.5)"/><rect x="8.5" y="9.5" width="7" height="4" rx="2" transform="rotate(-45 12 11.5)"/><rect x="14.5" y="3.5" width="7" height="4" rx="2" transform="rotate(-45 18 5.5)"/>`)
 }
 
 /** The state the one on the field is in, over her health bar. */

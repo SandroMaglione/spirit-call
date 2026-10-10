@@ -12,7 +12,7 @@ import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import { attackOf, dashOf, traitsIn } from "../features/build.ts"
-import { Action, Aim, Airborne, Overcharged, Overdriven, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Overcharged, Overdriven, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Turned, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -281,7 +281,8 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
         state: Game.Query.read(ElementState),
         stunned: Game.Query.read(Stunned),
         poise: Game.Query.read(Poise),
-        elite: Game.Query.optional(Elite)
+        elite: Game.Query.optional(Elite),
+        turned: Game.Query.optional(Turned)
       }
     })
   },
@@ -307,6 +308,14 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     // Broken: it glows in the break color, pulsing, until it recovers.
     else if (poise.broken > 0) node.body.paint(tint, view.breaking.glow, 0.35 + 0.25 * Math.sin(performance.now() / 1000 * view.breaking.pulseHz * Math.PI * 2), 1)
     else if (stunned) node.body.paint(tint, view.stun, 0.35, 1)
+    // Turned to her side (see `Turned`): water through its body, swelling and ebbing (stronger through a windup),
+    // flickering as its time runs out.
+    else if (data.turned.present) {
+      const left = data.turned.get().remaining
+      const now = performance.now() / 1000
+      const ebb = left < 1.2 && Math.sin(now * 30) < 0 ? 0.3 : 1
+      node.body.paint(stateTint(view.turned.tint, data.state.get().current), view.turned.glow, (0.4 + 0.18 * Math.sin(now * 5) + windup * 0.35) * ebb, 1)
+    }
     // An elite glows in its element's color (brighter through a windup); a champion brighter still, pulsing.
     else if (data.elite.present && windup === 0) {
       const champion = data.enemy.get().champion
@@ -330,13 +339,15 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     const bar = poiseOf(tuning, kind, health.max, champion)
     const breaking = bar > 0 && (poise.current > 0 || poise.broken > 0)
     // A champion's bar is always shown, wider, edged in its element's color.
-    if (health.current >= health.max && !breaking && !champion) continue
+    const turned = data.turned.present
+    if (health.current >= health.max && !breaking && !champion && !turned) continue
     const width = champion ? view.champion.bar : 34
     const x = feet.x - width / 2
     const y = head - 12
     if (champion && data.elite.present) overlay.fillRect(x - 2, y - 2, width + 4, breaking ? 12 : 8, view.elements[data.elite.get().element], 0.9)
     overlay.fillRect(x - 1, y - 1, width + 2, breaking ? 10 : 6, view.healthBack, 0.85)
-    overlay.fillRect(x, y, width * (health.current / health.max), 4, view.healthFill, 1)
+    // A turned one's health in her side's color: whose side it is on.
+    overlay.fillRect(x, y, width * (health.current / health.max), 4, turned ? view.turned.bar : view.healthFill, 1)
     // A champion fighting in phases: a mark where each begins, bright ahead of it, dim once past.
     if (champion) {
       const mark = view.champion.phaseMark

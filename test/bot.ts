@@ -512,6 +512,8 @@ export const skillReach = (effect: SkillEffect): number => {
     case "nova":
     case "thunderclap":
     case "earthrise":
+    case "dome":
+    case "turn":
     // Her gun runs hot: worth it once enemies are in her shots' reach.
     case "overdrive":
       return 520
@@ -535,9 +537,6 @@ export const skillReach = (effect: SkillEffect): number => {
       return 220
     case "lift":
       return effect.radius
-    // A brace waits for a blow on its way instead (see `braceDue`).
-    case "brace":
-      return -Infinity
   }
 }
 
@@ -592,7 +591,7 @@ export interface BotReport {
   readonly healing: number
   /** Health restored, as a share of the team's whole health (a healer's measure, see docs/roster.md). */
   readonly restored: number
-  /** Enemy blows stopped before they landed: stone plates shattered, blows braced, shots broken on barriers (a guardian's measure). */
+  /** Enemy blows stopped before they landed: stone plates shattered, shots broken on barriers (a guardian's measure). */
   readonly blocked: number
   /** What dodging needed: dashes used to dodge (not those closing in). */
   readonly dashes: number
@@ -651,7 +650,7 @@ export const runBot = (run: BotRun): BotReport => {
   const Measure = Game.System("Bot/Measure", {
     events: { cast: Game.System.readEvent(Cast), hit: Game.System.readEvent(Hit), broke: Game.System.readEvent(Broke), heal: Game.System.readEvent(Heal), guarded: Game.System.readEvent(Guarded) }
   }, ({ events }) => {
-    blocked += events.guarded.all().filter((guarded) => guarded.kind === "shattered" || guarded.kind === "braced" || guarded.kind === "barred").length
+    blocked += events.guarded.all().filter((guarded) => guarded.kind === "shattered" || guarded.kind === "barred").length
     for (const cast of events.cast.all()) {
       // A landing is part of a skill already used (see `Airborne`).
       if (cast.faction !== "player" || cast.skill === null || cast.landing === true) continue
@@ -730,14 +729,8 @@ export const runBot = (run: BotRun): BotReport => {
       }
       // A skill waits for an enemy it can reach (a totem also for when she is hurt, to heal by it).
       const hurt = active !== undefined && active.health.current < active.health.max * 0.8
-      // A brace waits for a blow about to land (and is not wasted under a dash).
-      const braces = (slot: "special" | "ultimate") => {
-        const effect = effectOf(slot)
-        return effect.kind === "brace" && field.player !== undefined && field.player.skillReady[slot] && field.player.invulnerable <= 0 && playOut(field, tuning, { x: 0, y: 0 }, false).danger <= effect.window * 0.7
-      }
-      const lands = (slot: "special" | "ultimate") => (distance <= skillReach(effectOf(slot)) && distance >= skillClearance(effectOf(slot))) || (effectOf(slot).kind === "totem" && hurt) || braces(slot)
-      const bracing = braces("special") || braces("ultimate")
-      move = { ...move, ...(bracing ? { dash: false } : {}), special: lands("special"), ultimate: lands("ultimate"), skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
+      const lands = (slot: "special" | "ultimate") => (distance <= skillReach(effectOf(slot)) && distance >= skillClearance(effectOf(slot))) || (effectOf(slot).kind === "totem" && hurt)
+      move = { ...move, special: lands("special"), ultimate: lands("ultimate"), skillAim: aimed("special"), ultimateAim: aimed("ultimate") }
     }
     // Charging: pressed once, held through the charge, let go once full; a threat lets go early (the charge is lost).
     if (style.chargeEvery !== undefined && !(run.still === true)) {

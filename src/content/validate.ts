@@ -255,7 +255,6 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
     case "nova":
       positive(problems, where, { radius: effect.radius, active: effect.active })
       checkHeals(problems, where, effect.heals)
-      if (!(effect.readies >= 0)) problems.push(`${where}: readies must not be negative (is ${effect.readies})`)
       return
     case "barrier":
       positive(problems, where, { seconds: effect.seconds, thickness: effect.thickness, tick: effect.tick, ...(effect.shape.kind === "wall" ? { length: effect.shape.length } : { radius: effect.shape.radius }) })
@@ -280,9 +279,12 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       if (!(effect.interval >= 0 && effect.growth >= 0 && effect.stun >= 0)) problems.push(`${where}: interval, growth, and stun must not be negative`)
       if (!(effect.breakFill >= 0 && effect.breakFill <= 1)) problems.push(`${where}: breakFill must be a share in [0, 1] (is ${effect.breakFill})`)
       return
-    case "brace":
-      positive(problems, where, { window: effect.window, radius: effect.radius })
-      if (!(effect.whiff >= 0 && effect.disarm >= 0)) problems.push(`${where}: whiff and disarm must not be negative`)
+    case "dome":
+      positive(problems, where, { radius: effect.radius, seconds: effect.seconds })
+      return
+    case "turn":
+      positive(problems, where, { radius: effect.radius, seconds: effect.seconds, snapPower: effect.snap.power })
+      if (!(effect.snap.stun >= 0)) problems.push(`${where}: snap stun must not be negative (is ${effect.snap.stun})`)
       return
     case "vortex":
       positive(problems, where, { radius: effect.radius, seconds: effect.seconds, tick: effect.tick })

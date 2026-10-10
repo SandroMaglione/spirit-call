@@ -19,6 +19,12 @@
  * - Tidal Echo: her echo standing up out of a splash behind her,
  *   pale and see-through, walking after her and throwing as she does; a
  *   stream of drops to her as it heals, foam rising as it goes.
+ * - Tide Dome: water welling up and closing over her; a dome of water
+ *   standing over whoever is on the field, bands of light running up it.
+ * - Riptide Bond: a chain of water whipping out to the toughest enemy and
+ *   locking on; while it fights for her, water runs through its body (see
+ *   `DrawEnemies`) and a thin chain holds it to the one on the field; the
+ *   chain snapping as it goes back, a heavy splash on it.
  * - Spark Totem: lightning out of the sky planting it.
  * - Thunderclap: she rises, charging; a bolt strikes her as it goes off,
  *   then each enemy struck in turn, and a ring of crackling thunder.
@@ -42,14 +48,14 @@ import { companionStart } from "../features/companions.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Barrier, Cast, Companion, Overcharged, Overdriven, Explosion, Game, RenderNodes, Player, Position, PrevPosition, RenderClock, RenderHost, Tuning, UltimateCalled, Zap } from "../schema.ts"
+import { Action, Barrier, Cast, Companion, Dome, Overcharged, Overdriven, Explosion, Game, RenderNodes, Player, Position, Turned, PrevPosition, RenderClock, RenderHost, Tuning, UltimateCalled, Zap } from "../schema.ts"
 import type { CastValue } from "../schema.ts"
 import type { Fx } from "./fx.ts"
 import type { CompanionNode, FeedbackState } from "./host-types.ts"
 import type { Shapes } from "./shapes.ts"
 
 /** Skills drawn here alone: the shared looks (a nova's ring, a cut's streaks, a zap's bolt) leave them out. */
-export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "thunderclap", "sparkStep", "stormFlurry", "faultLine", "landslide"])
+export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "brace", "floodgate", "thunderclap", "sparkStep", "stormFlurry", "faultLine", "landslide"])
 
 /** Skills whose hits are seen in their own look alone: the flat shape of what they strike is not drawn too (see `presentation/telegraphs.ts`). */
 export const unmarkedHits: ReadonlySet<SkillId> = new Set<SkillId>(["sparkStep", "stormFlurry", "faultLine", "landslide"])
@@ -72,6 +78,7 @@ const z = (pixels: number): number => pixels * projection.zoom
 const add = (a: Vec2, b: Vec2, k = 1): Vec2 => ({ x: a.x + b.x * k, y: a.y + b.y * k })
 const around = (center: Vec2, radius: number, angle: number): Vec2 => ({ x: center.x + Math.cos(angle) * radius, y: center.y + Math.sin(angle) * radius })
 const easeOut = (t: number): number => 1 - (1 - t) ** 3
+const clamp01 = (t: number): number => Math.max(0, Math.min(1, t))
 /** The same small wobble every frame for the same seed (cracks that hold still). */
 const wobble = (seed: number): number => Math.sin(seed * 12.9898) * 0.5 + Math.sin(seed * 4.1414) * 0.5
 
@@ -364,6 +371,171 @@ const moveCompanion = (node: CompanionNode, facing: Vec2, threw: boolean, age: n
 /** Companions seen last frame (by entity): where, and what they had dealt (a throw since shows), to see the ones gone off. */
 const companionsSeen = new Map<number, { readonly at: Vec2; readonly dealt: number }>()
 
+/**
+ * Tide Dome rising: water welling up out of the floor around her and closing
+ * over her in a beat, a ring of spray where it meets the floor.
+ */
+const tideDomeRise = (fx: Fx, cast: CastValue, radius: number): void => {
+  const foot = at(cast.from)
+  fx.burst(foot, { color: water, count: 26, speed: 420, size: 4, life: 0.5, gravity: 900 })
+  fx.burst(foot, { color: foam, count: 14, speed: 300, size: 3, life: 0.4, gravity: 900 })
+  // Spray thrown up all along its rim as it closes.
+  for (let index = 0; index < 18; index++) {
+    const rim = at(around(cast.from, radius, (index / 18) * Math.PI * 2))
+    fx.mote(rim, (Math.random() - 0.5) * 80, -260 - Math.random() * 160, { color: Math.random() < 0.5 ? foam : water, size: 3 + Math.random() * 2, life: 0.55, gravity: 900, drag: 0.5 })
+  }
+  fx.ring(foot, z(radius), foam, 0.45)
+}
+
+/** How tall a dome stands over its rim, as a share of its radius (pixels at zoom 1, before the floor's squash). */
+const domeRise = 0.62
+
+/**
+ * A dome of water standing over `center` (world), `radius` around it: its
+ * shell (see-through, brighter toward the rim, as water is), its rim on the
+ * floor, bands running up it, and a glint gliding over it. `grow`: 0 to 1
+ * as it rises; `fade`: 1 to 0 as it goes.
+ */
+const dome = (g: Shapes, glow: Shapes, center: Vec2, radius: number, grow: number, fade: number, now: number): void => {
+  if (grow <= 0 || fade <= 0) return
+  const foot = at(center)
+  const rx = z(radius) * (0.4 + 0.6 * grow)
+  const ry = rx * projection.squash
+  const height = z(radius * domeRise) * grow
+  // A ring of the shell at `k` of its height (0: its rim; 1: its top): a flat ellipse, narrowing upward.
+  const latitude = (k: number) => ({ y: foot.y - height * Math.sin(k * Math.PI / 2), rx: rx * Math.cos(k * Math.PI / 2), ry: ry * Math.cos(k * Math.PI / 2) })
+  // The shell, layered from the rim in: thicker water toward its edge (where the eye looks through more of it).
+  const steps = 32
+  for (let layer = 0; layer < 3; layer++) {
+    const shrink = 1 - layer * 0.16
+    const shell: Array<number> = []
+    for (let step = 0; step <= steps; step++) {
+      const angle = Math.PI + (step / steps) * Math.PI
+      shell.push(foot.x + Math.cos(angle) * rx * shrink, foot.y + Math.sin(angle) * height * (1 - layer * 0.08))
+    }
+    for (let step = 0; step <= steps; step++) {
+      const angle = (step / steps) * Math.PI
+      shell.push(foot.x + Math.cos(angle) * rx * shrink, foot.y + Math.sin(angle) * ry * shrink)
+    }
+    g.fillPoly(shell, layer === 0 ? water : 0x9fd8ff, (layer === 0 ? 0.2 : 0.07) * fade)
+  }
+  // The floor under it, and its rim: a band of foam, lapping.
+  g.fillEllipse(foot.x, foot.y, rx, ry, water, 0.12 * fade)
+  g.strokeEllipse(foot.x, foot.y, rx, ry, z(5), foam, 0.7 * fade)
+  g.strokeEllipse(foot.x, foot.y, rx * (0.96 + 0.02 * Math.sin(now * 5)), ry * (0.96 + 0.02 * Math.sin(now * 5)), z(2), water, 0.6 * fade)
+  // Rings of light running up the shell, the near half brighter.
+  for (let band = 0; band < 4; band++) {
+    const rise = (now * 0.22 + band / 4) % 1
+    const ring = latitude(rise * 0.92)
+    const alpha = fade * Math.sin(rise * Math.PI) * 0.55
+    const points = (from: number, to: number): Array<number> => {
+      const out: Array<number> = []
+      for (let step = 0; step <= 20; step++) {
+        const angle = from + (to - from) * (step / 20)
+        out.push(foot.x + Math.cos(angle) * ring.rx, ring.y + Math.sin(angle) * ring.ry)
+      }
+      return out
+    }
+    const near = points(0, Math.PI)
+    const far = points(Math.PI, Math.PI * 2)
+    for (let index = 2; index < near.length; index += 2) glow.line(near[index - 2]!, near[index - 1]!, near[index]!, near[index + 1]!, z(2.5), foam, alpha)
+    for (let index = 2; index < far.length; index += 2) g.line(far[index - 2]!, far[index - 1]!, far[index]!, far[index + 1]!, z(1.5), foam, alpha * 0.4)
+  }
+  // Its outline over the top: the edge of the water, bright where it is seen edge-on.
+  for (let step = 1; step <= steps; step++) {
+    const a0 = Math.PI + ((step - 1) / steps) * Math.PI
+    const a1 = Math.PI + (step / steps) * Math.PI
+    const edge = 0.45 + 0.55 * Math.abs(Math.cos((a0 + a1) / 2))
+    g.line(foot.x + Math.cos(a0) * rx, foot.y + Math.sin(a0) * height, foot.x + Math.cos(a1) * rx, foot.y + Math.sin(a1) * height, z(4), foam, 0.75 * edge * fade)
+  }
+  // A highlight up on its left shoulder, and a glint gliding over it.
+  glow.fillEllipse(foot.x - rx * 0.45, foot.y - height * 0.7, z(radius * 0.18), z(radius * 0.07), white, 0.3 * fade, -0.5)
+  const glint = now * 0.5 % 1
+  const ga = Math.PI * (1.15 + 0.7 * glint)
+  glow.fillEllipse(foot.x + Math.cos(ga) * rx * 0.8, foot.y + Math.sin(ga) * height * 0.85, z(10), z(5), white, 0.5 * fade * Math.sin(glint * Math.PI))
+  // Drips running down it now and then.
+  for (let drip = 0; drip < 5; drip++) {
+    const phase = (now * 0.7 + drip * 0.37) % 1
+    const side = wobble(drip * 7 + Math.floor(now * 0.7 + drip * 0.37)) * 0.9
+    const k = 1 - phase
+    const ring = latitude(k * 0.9)
+    g.fillCircle(foot.x + side * ring.rx, ring.y + Math.sqrt(Math.max(0, 1 - side * side)) * ring.ry, z(3), foam, 0.7 * fade * Math.sin(phase * Math.PI))
+  }
+}
+
+/**
+ * Riptide Bond lashing out: a chain of water whipping from her to the enemy
+ * it turns, link by link, snapping tight around it with a splash.
+ */
+const riptideLash = (fx: Fx, feedback: FeedbackState, from: Vec2, to: Vec2): void => {
+  const links = 12
+  fx.animate(0.32, (t, g, glow) => {
+    const out = easeOut(clamp01(t / 0.55))
+    const along = { x: to.x - from.x, y: to.y - from.y }
+    const side = normalizeOr({ x: -along.y, y: along.x }, { x: 0, y: 1 })
+    for (let link = 0; link < links; link++) {
+      const share = link / (links - 1)
+      if (share > out) break
+      // It whips: a wave along it that settles as it goes tight.
+      const sway = Math.sin(share * Math.PI * 2 + t * 18) * 24 * (1 - t) * Math.sin(share * Math.PI)
+      const where = at(add(add(from, along, share), side, sway), 24 + 6 * Math.sin(share * Math.PI))
+      const turn = link % 2 === 0
+      g.strokeEllipse(where.x, where.y, z(turn ? 7 : 4), z(turn ? 4 : 7), z(3), water, 0.9)
+      glow.fillCircle(where.x, where.y, z(2), foam, 0.8)
+    }
+  })
+  fx.later(0.18, () => {
+    const body = at(to, 22)
+    fx.flash(body, z(60), foam, 0.16)
+    fx.burst(body, { color: water, count: 24, speed: 420, size: 4, life: 0.45, gravity: 700 })
+    fx.ring(at(to), z(60), water, 0.4)
+    feedback.punch = Math.max(feedback.punch, 1.1)
+  })
+}
+
+/**
+ * A turned enemy held: a thin chain of water from the one on the field to
+ * it, sagging a little, drops running along it toward the enemy; it pulls
+ * taut and flickers as its time runs out.
+ */
+const riptideChain = (g: Shapes, glow: Shapes, from: Vec2, to: Vec2, left: number, now: number): void => {
+  const ending = left < 1.2
+  const fade = Math.min(1, left / 0.3) * (ending && Math.sin(now * 28) < 0 ? 0.45 : 1)
+  const span = Math.hypot(to.x - from.x, to.y - from.y)
+  const links = Math.max(6, Math.round(span / 22))
+  const sag = ending ? 3 : 10
+  for (let link = 1; link < links; link++) {
+    const share = link / links
+    const height = 22 - Math.sin(share * Math.PI) * sag + Math.sin(now * 2.5 + link * 0.7) * 1.5
+    const point = at(lerp(from, to, share), height)
+    const turn = link % 2 === 0
+    g.strokeEllipse(point.x, point.y, z(turn ? 3.5 : 2), z(turn ? 2 : 3.5), z(1.6), water, 0.45 * fade)
+  }
+  // Drops running along it, toward what it holds.
+  for (let drop = 0; drop < 3; drop++) {
+    const share = (now * 0.8 + drop / 3) % 1
+    const point = at(lerp(from, to, share), 22 - Math.sin(share * Math.PI) * sag)
+    glow.fillCircle(point.x, point.y, z(2.2), foam, 0.6 * fade * Math.sin(share * Math.PI))
+  }
+}
+
+/** The chain snapping as a turned enemy goes back: links flung off, a heavy splash on it, a jolt. */
+const riptideSnap = (fx: Fx, feedback: FeedbackState, from: Vec2, to: Vec2): void => {
+  const body = at(to, 22)
+  const links = 10
+  for (let link = 1; link < links; link++) {
+    const point = at(lerp(from, to, link / links), 22)
+    fx.mote(point, (Math.random() - 0.5) * 260, -120 - Math.random() * 200, { color: Math.random() < 0.5 ? foam : water, size: 3 + Math.random() * 2, life: 0.5, gravity: 900, drag: 1 })
+  }
+  fx.flash(body, z(90), foam, 0.18)
+  fx.flash(body, z(130), water, 0.3)
+  fx.burst(body, { color: water, count: 40, speed: 620, size: 4.5, life: 0.55, gravity: 800 })
+  fx.ring(at(to), z(90), water, 0.45)
+  fx.ring(at(to), z(55), foam, 0.3)
+  feedback.shake = Math.max(feedback.shake, view.ultimateShake * 0.6)
+  feedback.punch = Math.max(feedback.punch, 1.2)
+}
+
 const sparkTotem = (fx: Fx, cast: CastValue, offset: number): void => {
   const where = add(cast.from, cast.direction, offset)
   skyBolt(fx, where, thunder, 0.3)
@@ -499,6 +671,8 @@ const overchargeBlow = (fx: Fx, from: Vec2, direction: Vec2, reach: number): voi
 export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   queries: {
     player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), overcharged: Game.Query.optional(Overcharged), overdriven: Game.Query.optional(Overdriven) }, with: [Player] }),
+    domes: Game.Query({ selection: { dome: Game.Query.read(Dome), position: Game.Query.read(Position) } }),
+    turned: Game.Query({ selection: { turned: Game.Query.read(Turned), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } }),
     barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } }),
     companions: Game.Query({ selection: { companion: Game.Query.read(Companion), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } })
   },
@@ -544,6 +718,13 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
         break
       case "tide":
         if (effect.kind === "companions") tidalEcho(fx, cast, effect)
+        break
+      case "brace":
+        if (effect.kind === "dome") tideDomeRise(fx, cast, effect.radius)
+        break
+      case "floodgate":
+        // Its lash: the zap from where she cast it.
+        if (effect.kind === "turn") for (const zap of zaps) if (zap.skill === "floodgate" && zap.path[0] === cast.from && zap.path[1] !== undefined) riptideLash(fx, feedback, cast.from, zap.path[1])
         break
       case "sparkTotem":
         if (effect.kind === "totem") sparkTotem(fx, cast, effect.offset)
@@ -618,6 +799,23 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
       const high = at(around(shape.center, shape.radius, angle + 0.25), Math.min(height, rise * height + 10))
       g.line(low.x, low.y, high.x, high.y, z(2.5), white, 0.65 * fade * (1 - rise))
     }
+  }
+  // Riptide Bond: a thin chain from the one on the field to each enemy it holds; the snap as one goes back.
+  for (const { data } of queries.turned.each()) {
+    if (player === undefined) continue
+    riptideChain(g, g, tracked.at, lerp(data.previous.get(), data.position.get(), services.clock.alpha), data.turned.get().remaining, now)
+  }
+  for (const zap of zaps) {
+    if (zap.skill !== "floodgate" || zap.path.length < 2) continue
+    const lash = events.cast.all().some((cast) => cast.skill === "floodgate" && cast.from === zap.path[0])
+    if (!lash) riptideSnap(fx, feedback, zap.path[0]!, zap.path[1]!)
+  }
+  // Tide Domes over the one on the field (following her smoothly), rising as cast and fading as they go.
+  for (const { data } of queries.domes.each()) {
+    const { effect, remaining, faction } = data.dome.get()
+    const center = faction === "player" && player !== undefined ? tracked.at : data.position.get()
+    const age = effect.seconds - remaining
+    dome(g, g, center, effect.radius, easeOut(clamp01(age / 0.25)), Math.min(1, remaining / 0.4), now)
   }
   // Tidal Echo: her echo walking after her, throwing; foam as it goes.
   const shown = new Set<number>()

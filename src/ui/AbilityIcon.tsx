@@ -25,14 +25,14 @@ const shapes = {
   thunderclap: "M16 1 7 12h7l-2 10 12-14h-8Z M3 14l4 3-2 5 5 5-6-1-3-6Z M29 14l-4 3 2 5-5 5 6-1 3-6Z M13 25h6v2h-6Z M15 23h2v6h-2Z",
   sparkStep: "M19 2 11 15h6l-4 15 13-18h-7l5-10Z M1 10h9l-2 3H1Z M1 17h7l-2 3H1Z M1 24h6l-2 3H1Z",
   stormFlurry: "M16 1a15 15 0 1 1 0 30 15 15 0 0 1 0-30Z M16 4a12 12 0 1 0 0 24 12 12 0 0 0 0-24Z M18 6 10 17h5l-3 9 10-12h-5l3-8Z",
-  brace: "M27 2h3v3L8 27l-3-3Z M3 22l7 7-2 2-7-7Z M20 20l9 9-2 2-9-9Z M24 15l6-3 1 2-6 3Z M15 24l-3 6 2 1 3-6Z",
+  brace: "M2 25A14 14 0 0 1 30 25Z M1 26h30v3H1Z",
   faultLine: "M1 27l8-6 4 3 6-9 4 3 8-14 1 2-8 15-4-3-6 9-4-3-8 6Z M8 18l2-5 3 2-2 3Z M17 12l2-5 3 2-2 3Z M24 6l2-5 3 2-2 3Z",
   landslide: "M16 15a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M7 19a9 9 0 0 1 18 0h-3a6 6 0 0 0-12 0Z M2 19a14 14 0 0 1 28 0h-3a11 11 0 0 0-22 0Z M1 26h30v3H1Z",
   kindle: "M16 1c5 5 8 9 8 14a8 8 0 0 1-16 0c0-3 1.5-5.5 3-7 0 3 1.5 4.5 3 5 0-4 1-8 2-12Z M14 24h4v7h-4Z M12 26h8v3h-8Z",
   wildfire: "M16 10a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z M16 1l3 6h-6Z M16 31l3-6h-6Z M1 16l6-3v6Z M31 16l-6-3v6Z M5 5l6 2-4 4Z M27 27l-6-2 4-4Z M27 5l-2 6-4-4Z M5 27l2-6 4 4Z",
   galeWall: "M15 1h4v30h-4Z M21 6c3 0 4 3 8 3v3c-4 0-5-3-8-3Z M21 14c3 0 4 3 8 3v3c-4 0-5-3-8-3Z M21 22c3 0 4 3 8 3v3c-4 0-5-3-8-3Z M1 14h8v-3l5 5-5 5v-3H1Z",
   eyeOfTheStorm: "M16 13a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z M16 2a14 14 0 0 1 14 14h-4A10 10 0 0 0 16 6Z M30 16a14 14 0 0 1-14 14v-4a10 10 0 0 0 10-10Z M16 30A14 14 0 0 1 2 16h4a10 10 0 0 0 10 10Z M2 16A14 14 0 0 1 16 2v4A10 10 0 0 0 6 16Z",
-  floodgate: "M16 1A15 15 0 1 1 1 16 15 15 0 0 1 16 1ZM16 5A11 11 0 1 0 27 16 11 11 0 0 0 16 5Z M6 18c3 0 4-4 7-4s4 4 6 4 4-4 7-4v5c-3 0-4 4-7 4s-4-4-6-4-4 4-7 4Z"
+  floodgate: "M7 19 13 25 7 31 1 25Z M7 22 4 25 7 28 10 25Z M16 10 22 16 16 22 10 16Z M16 13 13 16 16 19 19 16Z M25 1 31 7 25 13 19 7Z M25 4 22 7 25 10 28 7Z"
 } satisfies Record<AbilityKind, string>
 
 export const AbilityIcon = ({ kind, charged = false }: { readonly kind: AbilityKind; readonly charged?: boolean }) => {

@@ -144,7 +144,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "lob":
       return `a lobbed ${elementWord(effect.element)}blast (${effect.power}% ATK)${effect.leaves === null ? "" : ` leaving ${poolNames[effect.leaves.element]}`}`
     case "nova":
-      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, ${describeHeals(effect.heals, "it reaches")}`}${effect.readies > 0 ? `; for ${effect.readies}s after, a brace that takes a blow is ready again at once` : ""}`
+      return `a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.heals === null ? "" : `, ${describeHeals(effect.heals, "it reaches")}`}`
     case "barrier":
       return `${effect.shape.kind === "wall" ? `a ${elementWord(effect.element)}wall across your aim` : `a ${elementWord(effect.element)}ring around you, its gust throwing what is inside out,`} for ${effect.seconds}s: shots break on it, and enemies that touch it are struck (${effect.power}% ATK) and thrown back${effect.shape.kind === "wall" ? "" : " out"}`
     case "fault":
@@ -155,8 +155,10 @@ export const describeEffect = (effect: SkillEffect): string => {
         : `${effect.count} ${elementWord(effect.element)}splinters bursting out all around you, each bursting a moment after it lands (${effect.power}% ATK each)`
     case "quake":
       return `${effect.slams} ${elementWord(effect.element)}slams around you, each wider than the last (${effect.power}% ATK each), the last stunning what it catches for ${effect.stun}s`
-    case "brace":
-      return `a ${effect.window}s brace, standing still: the first blow on you is taken whole, and you answer with a ${elementWord(effect.element)}slash around you (${effect.power}% ATK) that disarms the attacker for ${effect.disarm}s; if nothing comes, it is ready again ${effect.whiff}s later`
+    case "dome":
+      return `a ${elementWord(effect.element)}dome over you for ${effect.seconds}s, going with whoever is on the field: it strikes the enemies in it as it rises (${effect.power}% ATK)${effect.element === null ? "" : `; after, enemies inside it stay ${elements[effect.element].state}`}`
+    case "turn":
+      return `a ${elementWord(effect.element)}chain lashing the enemy with the most health near you (${effect.power}% ATK) and turning it to your side for ${effect.seconds}s: it fights its own with its own attacks, and they turn on it; then the chain snaps (${effect.snap.power}% ATK), stunning it ${effect.snap.stun}s (never a champion)`
     case "overdrive":
       return `your gun runs hot for ${effect.seconds}s, after a ${elementWord(effect.element)}burst around you (${effect.power}% ATK): ${Math.round((1 / effect.fireRate - 1) * 100)}% quicker shots, no reloading, and every shot sets what it hits alight and bursts where it stops (${effect.blast.power}% ATK around)`
     case "overcharge":

@@ -112,8 +112,9 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     case "mantle":
     case "lift":
     case "earthrise":
-    // A brace waits for its targets: nothing to aim.
-    case "brace":
+    // A dome goes over her, a turn finds the toughest: nothing to aim.
+    case "dome":
+    case "turn":
     case "quake":
     // Splinters fly every way, from her or from her blows.
     case "splinters":

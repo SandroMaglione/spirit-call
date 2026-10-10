@@ -41,7 +41,7 @@ differ in what their healing asks, guardians in what they stop:
 | Healer by standing (the Stormcaller) | fighting by her totem | |
 | Healer by burning (Hearth) | enemies kept burning, then her special | |
 | Guardian by plates (Bastion) | raising them in a quiet moment | any blow, a few times |
-| Guardian by bracing (Tidewarden) | the moment of a blow | the first blow in that moment |
+| Guardian by soaking (Tidewarden) | keeping the fight under her dome; whom to turn | part of every blow (soaked enemies hit softer) |
 | Guardian by wind (Windwall) | when her mantle goes up; when to lift the crowd | shots, part of every blow |
 
 Health restored a minute is held about equal across healers, and blows
@@ -59,7 +59,7 @@ marked * are working names.
 | Fire | Gunner | Attacker | Gun | a glass cannon who kites |
 | Fire | Hearth* | Healer | Hammer | keeps enemies burning (the Wildfire), then turns their burns into the team's health (the Kindle) |
 | Water | Tidecaller | Healer | Disc | the Tidefall bounces her in place, its water healing the team more for each enemy soaked; the Tidal Echo, a ghost of her, keeps them soaked and heals whoever stays close |
-| Water | Tidewarden* | Guardian | Blade | the Brace takes one blow whole and disarms the attacker; the Floodgate soaks the crowd and readies a brace that takes a blow at once |
+| Water | Tidewarden* | Guardian | Blade | the Tide Dome soaks what comes in around whoever is on the field; the Riptide Bond turns the toughest enemy to her side a while, then snaps, stunning it |
 | Thunder | Sparkfist* | Attacker | Gauntlets | the fast one: the Spark Step darts her through a line of enemies, charging them; the Overcharge turns her to lightning for a while, every dash a Spark Step of its own and all but endless |
 | Thunder | Stormcaller | Healer | Staff | a totem to fight by, and a thunderclap that heals by what it strikes |
 | Rock | Quarry* | Attacker | Hammer | the slow heavy hitter: Splinters makes her blows throw rock splinters that burst a moment later; Rockburst bursts them out all around her |

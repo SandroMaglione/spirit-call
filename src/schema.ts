@@ -18,7 +18,7 @@ import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { BarrierEffect, BraceEffect, CompanionsEffect, MantleEffect, OverchargeEffect, OverdriveEffect, SplintersEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { BarrierEffect, CompanionsEffect, MantleEffect, OverchargeEffect, OverdriveEffect, SplintersEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect, DomeEffect, TurnEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
@@ -200,6 +200,39 @@ export interface CompanionValue {
 export const Companion = Descriptor.Component<CompanionValue>()("Shooter/Companion")
 
 /**
+ * A dome cast by a skill (see `DomeEffect`), over whoever is on the field
+ * (at her `Position`, kept there), for `remaining` more seconds. `inside`:
+ * the bodies of the other side within it last step (one coming in takes its
+ * blow).
+ */
+export interface DomeValue {
+  readonly faction: Faction
+  readonly effect: DomeEffect
+  readonly blow: Blow
+  readonly skill: SkillId | null
+  readonly remaining: number
+  readonly inside: ReadonlyArray<number>
+}
+export const Dome = Descriptor.Component<DomeValue>()("Shooter/Dome")
+
+/**
+ * An enemy turned by a skill (see `TurnEffect`), fighting for `faction` for
+ * `remaining` more seconds: its hurtbox is that side's meanwhile, its
+ * attacks strike for it (see `UpdateAttacks`), and it and its old side go
+ * for each other (see `SteerEnemies`).
+ */
+export interface TurnedValue {
+  readonly faction: Faction
+  readonly effect: TurnEffect
+  readonly remaining: number
+  /** The blow it takes as the chain snaps (from her ATK when it was turned). */
+  readonly snap: Blow
+  /** The skill that turned it (the snap is seen as that skill's). */
+  readonly skill: SkillId | null
+}
+export const Turned = Descriptor.Component<TurnedValue>()("Shooter/Turned")
+
+/**
  * A hammer throwing splinters (see `SplintersEffect`), on the member who
  * took them up, for `remaining` more seconds: each blow of hers that lands
  * throws the effect's `count` of them, each bursting with `blow`; `skill`
@@ -287,29 +320,6 @@ export const PlateShatter = Descriptor.Component<{
   readonly atk: number
   readonly charges: boolean
 }>()("Shooter/PlateShatter")
-
-/**
- * A brace held (see `BraceEffect`), on the member bracing: rooted for
- * `remaining` more seconds, the first enemy blow on her meanwhile taken
- * whole (see `ApplyDamage`) and answered with `blow` (`BraceCounter`). Its
- * skill is in `slot`: a brace that takes nothing is ready again soon after.
- */
-export const Bracing = Descriptor.Component<{ readonly remaining: number; readonly effect: BraceEffect; readonly blow: Blow; readonly slot: SkillSlot }>()("Shooter/Bracing")
-
-/**
- * A brace taking a blow, waiting to answer it (an entity, like
- * `PlateShatter`): its blow around `at`, the attacker (when known) disarmed
- * if it is within reach; `bracer` gets her brace back at once while a
- * Floodgate's moment lasts (see `Rebrace`).
- */
-export const BraceCounter = Descriptor.Component<{
-  readonly at: Vec2
-  readonly attacker: DamageSource["attacker"] | null
-  readonly bracer: DamageSource["attacker"]
-  readonly effect: BraceEffect
-  readonly blow: Blow
-  readonly slot: SkillSlot
-}>()("Shooter/BraceCounter")
 
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
@@ -862,7 +872,15 @@ export const Broke = Descriptor.Event<{ readonly at: Vec2; readonly enemy: Enemy
  * for help) is let go by its own system reading this (see
  * features/patterns.ts): a new kind of attack is its content and a system.
  */
-export const AttackReleased = Descriptor.Event<{ readonly attacker: number; readonly at: Vec2; readonly attack: AttackSpec; readonly area: Area; readonly blow: Blow }>()("Shooter/AttackReleased")
+export const AttackReleased = Descriptor.Event<{
+  readonly attacker: number
+  readonly at: Vec2
+  readonly attack: AttackSpec
+  readonly area: Area
+  readonly blow: Blow
+  /** The side it strikes for: the enemies' (unless turned, see `Turned`). */
+  readonly faction?: Faction
+}>()("Shooter/AttackReleased")
 
 /** A champion entered its `phase` (see `Rampage`): it roars. */
 export const Roused = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind; readonly phase: number; readonly element: ElementId | null }>()("Shooter/Roused")
@@ -882,7 +900,7 @@ export const Explosion = Descriptor.Event<{
 }>()("Shooter/Explosion")
 
 /** The team's guard changed (see `GuardEffect`): its plates raised around the one on the field at `at`, or one shattered there, for effects. */
-export const Guarded = Descriptor.Event<{ readonly at: Vec2; readonly kind: "raised" | "shattered" | "braced" | "barred" }>()("Shooter/Guarded")
+export const Guarded = Descriptor.Event<{ readonly at: Vec2; readonly kind: "raised" | "shattered" | "barred" }>()("Shooter/Guarded")
 
 /** Health restored to an entity at `at` (an aspect's passive, a totem, a thunderclap), for effects. */
 export const Heal = Descriptor.Event<{ readonly at: Vec2; readonly amount: number }>()("Shooter/Heal")
@@ -1018,9 +1036,6 @@ export const noMantle: MantleValue = { remaining: 0, effect: null, at: { x: 0, y
  * as it falls, `blow` lands on it.
  */
 export const Lifted = Descriptor.Component<{ readonly remaining: number; readonly seconds: number; readonly rise: number; readonly blow: Blow }>()("Shooter/Lifted")
-
-/** For `remaining` more seconds, a brace that takes a blow is ready again at once (see `NovaEffect.readies`). */
-export const Rebrace = Descriptor.Resource<{ readonly remaining: number }>()("Shooter/Rebrace")
 
 /** The challenge being played (see `content/challenges.ts`). */
 export const Challenge = Descriptor.Resource<ChallengeId>()("Shooter/Challenge")
@@ -1322,12 +1337,12 @@ export const Game = Schema.bind(
       Totem,
       Companion,
       Lifted,
+      Dome,
+      Turned,
       Overcharged,
       Splintering,
       Overdriven,
       Raising,
-      Bracing,
-      BraceCounter,
       Airborne,
       PlateShatter,
       Rock,
@@ -1363,7 +1378,6 @@ export const Game = Schema.bind(
       UltimateMoment,
       Arrival,
       Guard,
-      Rebrace,
       Mantle,
       Challenge,
       EnemyLevel,

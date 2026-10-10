@@ -32,7 +32,7 @@ import { CastThunderclaps, CastTotems, UpdateTotems } from "./features/thunder.t
 import { CastCompanions, UpdateCompanions } from "./features/companions.ts"
 import { CastLifts, CastMantles, KeepMantle, UpdateLifted } from "./features/windwall.ts"
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
-import { CastBraces, CounterBraces, TickBraces } from "./features/brace.ts"
+import { CastTidewarden, UpdateDomes, UpdateTurned } from "./features/tidewarden.ts"
 import { CastOvercharges, TickOvercharges } from "./features/sparkfist.ts"
 import { CastOverdrives, TickOverdrives } from "./features/gunner.ts"
 import { CastSplinters, ThrowSplinters } from "./features/splinters.ts"
@@ -105,7 +105,6 @@ const gameplay = Game.Schedule.when(
   TickBench,
   // A guard raised (or lost), and a body landing, before she moves: rooted meanwhile; what lands is cast this step.
   RaiseGuards,
-  TickBraces,
   LandAirborne,
   ControlPlayer,
   TickOvercharges,
@@ -132,7 +131,7 @@ const gameplay = Game.Schedule.when(
   CastOvercharges,
   CastOverdrives,
   CastGuards,
-  CastBraces,
+  CastTidewarden,
   CastBarriers,
   CastEarthrise,
   CastFaults,
@@ -143,6 +142,8 @@ const gameplay = Game.Schedule.when(
   // Movement: enemies decide (stunned ones stand still), bodies move with their push.
   SteerEnemies,
   UpdateAttacks,
+  // Turned enemies walk and strike for her side (over what their steering wanted).
+  UpdateTurned,
   // What attacks let go beyond a hitbox (see `AttackReleased`).
   ReleaseShockwaves,
   CallSupport,
@@ -168,13 +169,13 @@ const gameplay = Game.Schedule.when(
   UpdateTotems,
   UpdateCompanions,
   UpdateLifted,
+  UpdateDomes,
   UpdateRocks,
   UpdateGround,
   TickStates,
   ApplyStateBursts,
   ArcCharges,
   ShatterPlates,
-  CounterBraces,
   ApplyDamage,
   MendInTraining,
   ProcessPendingSpawns,

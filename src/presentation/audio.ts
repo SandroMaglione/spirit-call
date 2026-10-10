@@ -7,7 +7,7 @@ import type { SkillEffect } from "../content/skills.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Broke, Camera, PerfectDodged, Cast, Death, Explosion, Game, Guarded, Hit, Impact, Reaction, RenderHost, Sounds, Zap } from "../schema.ts"
+import { Action, Broke, Camera, PerfectDodged, Cast, Death, Explosion, Game, Hit, Impact, Reaction, RenderHost, Sounds, Zap } from "../schema.ts"
 import type { StateId } from "../content/elements.ts"
 import type { ReactionKind } from "../schema.ts"
 import type { SoundName } from "./sound.ts"
@@ -18,7 +18,7 @@ const comboPitchStep = 0.067
 const powerPitch = 0.85
 
 /** The sound of using a skill, by its effect (a nova sounds as it goes off: see `Explosion`; a volley as its shells land). */
-const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", blast: "wave", plunge: "dash", leap: "boom", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", companions: "splash", mantle: "spin", lift: "spin", thunderclap: null, guard: "crack", earthrise: "crack", brace: "slash", overcharge: "zap", overdrive: "boom", fault: "crack", quake: null, splinters: "crack", barrier: "spin" }
+const castSounds: Record<SkillEffect["kind"], SoundName | null> = { cut: "wave", blast: "wave", plunge: "dash", leap: "boom", lob: "throw", nova: null, vortex: "spin", barrage: "throw", totem: "throw", companions: "splash", mantle: "spin", lift: "spin", thunderclap: null, guard: "crack", earthrise: "crack", dome: "splash", turn: "splash", overcharge: "zap", overdrive: "boom", fault: "crack", quake: null, splinters: "crack", barrier: "spin" }
 
 /** The sound of a state taking hold (a charge and a sweep are heard in their blow), and of each state bursting. */
 const applySounds: Record<StateId, SoundName | null> = { burning: "ignite", soaked: "splash", charged: null, swept: null, cracked: "crack" }
@@ -58,8 +58,7 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
     impact: Game.System.readEvent(Impact),
     explosion: Game.System.readEvent(Explosion),
     reaction: Game.System.readEvent(Reaction),
-    zap: Game.System.readEvent(Zap),
-    guarded: Game.System.readEvent(Guarded)
+    zap: Game.System.readEvent(Zap)
   },
   resources: { camera: Game.System.readResource(Camera) },
   services: { sounds: Game.System.service(Sounds), host: Game.System.service(RenderHost) }
@@ -106,10 +105,6 @@ export const PlaySounds = Game.System("Shooter/PlaySounds", {
   for (const perfect of events.perfect.all()) sounds.play("charged", { pan: pan(perfect.at) })
   for (const impact of events.impact.all()) {
     if (impact.shielded) sounds.play("block", { pan: pan(impact.at) })
-  }
-  // A brace taking a blow rings like a parry (its answer splashes, as an explosion).
-  for (const guarded of events.guarded.all()) {
-    if (guarded.kind === "braced") sounds.play("block", { pan: pan(guarded.at) })
   }
   // An ultimate's deep boom; lighter blasts (a grenade, an aspect's shockwave) a shorter one; water bursts with a splash, thunder crackles.
   for (const explosion of events.explosion.all()) {

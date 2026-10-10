@@ -184,16 +184,16 @@ something. Bastion guards by plates:
   pays off in the fight: an enemy hitting the team cracks itself for the
   next blow of any element.
 
-Tidewarden guards by timing:
+Tidewarden guards by softening and turning the crowd:
 
-- **Her Brace** sets her a moment, rooted (she cannot run, attack, or
-  dash). The first enemy blow on her meanwhile (a shot too) is taken whole,
-  and she answers with a slash of water around her that disarms the
-  attacker. A brace that takes nothing is soon ready again; one that takes
-  a blow waits out its whole cooldown.
-- **Her Floodgate** soaks the crowd around her and drives it back, and for
-  a while after, a brace that takes a blow is ready again at once: a run
-  of parries, each timed.
+- **Her Tide Dome** rises over whoever is on the field and goes with her
+  (switched out, it stays over the one switched in), small enough for
+  close fighting. It strikes what is in it as it rises; after, it only
+  wets: what comes in is soaked (its blows weaker) and stays so inside.
+- **Her Riptide Bond** lashes a chain of water onto the toughest enemy
+  near her (never a champion) and turns it to her side a while: it fights
+  its old side with its own attacks, and they turn on it. Then the chain
+  snaps, striking it hard and leaving it stunned.
 
 Windwall guards by placing:
 
@@ -204,7 +204,7 @@ Windwall guards by placing:
 - **Her Eye of the Storm** rings where she stands: its gust throws what is
   inside out to it, then shots break on it and whoever comes through is
   thrown back out. Blows struck through neither are stopped: a barrier
-  stops shots, a brace or a plate stops blows.
+  stops shots, a plate stops blows.
 
 ## Ground
 

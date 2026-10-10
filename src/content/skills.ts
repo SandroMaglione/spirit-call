@@ -141,11 +141,6 @@ export interface NovaEffect extends EffectBase {
   readonly clearsProjectiles: boolean
   /** What it heals the team, or `null`. */
   readonly heals: StateHeal | null
-  /**
-   * For this many seconds after it goes off, a brace of the caster's team
-   * that takes a blow is ready again at once (see `BraceEffect`); 0: none.
-   */
-  readonly readies: number
 }
 
 /**
@@ -367,21 +362,34 @@ export interface BarrierEffect extends EffectBase {
 }
 
 /**
- * A brace: the caster sets herself for `window` seconds, rooted (she cannot
- * run, attack, or dash; switched out, it is lost). The first enemy blow on
- * her meanwhile (a shot too; burns and bursts pass through) is taken whole,
- * and she answers: its blow (`power`, its element, `knockback`) on the
- * other side within `radius` of her, and the attacker, if it is within that
- * reach, disarmed for `disarm` seconds. A brace that takes nothing is ready
- * again `whiff` seconds after it ends (a missed moment costs little);
- * one that takes a blow waits out the skill's whole cooldown.
+ * A dome of the caster's element over whoever is on the field, for
+ * `seconds`: it goes with her (switched out, it stays over the one switched
+ * in), `radius` around her. As it goes up, its blow lands on the other side
+ * within it; after, it only wets: a body of the other side inside it is
+ * held in its element's state, like a pool (given to one in none, kept on
+ * one in it, never bursting another). Casting again starts it over.
  */
-export interface BraceEffect extends EffectBase {
-  readonly kind: "brace"
-  readonly window: number
-  readonly whiff: number
+export interface DomeEffect extends EffectBase {
+  readonly kind: "dome"
   readonly radius: number
-  readonly disarm: number
+  readonly seconds: number
+}
+
+/**
+ * An enemy turned for a while: of the other side's bodies within `radius`
+ * of the caster, the one with the most health is lashed by a chain of her
+ * element (the effect's blow) and fights for her side for `seconds`
+ * (`Turned`): it goes for the nearest of its old side with its own
+ * attacks, and they go for it as they would for her; her side's blows pass
+ * through it. Then the chain snaps: it goes back, taking `snap`'s blow
+ * (`power` percent of her ATK, the effect's element) and stunned `stun`
+ * seconds. No aim: it finds the toughest; never a champion.
+ */
+export interface TurnEffect extends EffectBase {
+  readonly kind: "turn"
+  readonly radius: number
+  readonly seconds: number
+  readonly snap: { readonly power: number; readonly stun: number; readonly knockback: number }
 }
 
 /**
@@ -447,7 +455,7 @@ export interface OverdriveEffect extends EffectBase {
   readonly blast: { readonly radius: number; readonly power: number }
 }
 
-export type SkillEffect = SplintersEffect | OverdriveEffect | MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+export type SkillEffect = SplintersEffect | OverdriveEffect | MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | DomeEffect | TurnEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -474,9 +482,10 @@ export const blast = (spec: Omit<BlastEffect, "kind">): BlastEffect => ({ kind: 
 export const plunge = (spec: Omit<PlungeEffect, "kind" | "lands"> & Partial<Pick<PlungeEffect, "lands">>): PlungeEffect => ({ kind: "plunge", lands: null, ...spec })
 export const leap = (spec: Omit<LeapEffect, "kind">): LeapEffect => ({ kind: "leap", ...spec })
 export const lob = (spec: Omit<LobEffect, "kind">): LobEffect => ({ kind: "lob", ...spec })
-export const nova = (spec: Omit<NovaEffect, "kind" | "heals" | "readies"> & Partial<Pick<NovaEffect, "heals" | "readies">>): NovaEffect => ({ kind: "nova", heals: null, readies: 0, ...spec })
+export const nova = (spec: Omit<NovaEffect, "kind" | "heals"> & Partial<Pick<NovaEffect, "heals">>): NovaEffect => ({ kind: "nova", heals: null, ...spec })
+export const dome = (spec: Omit<DomeEffect, "kind">): DomeEffect => ({ kind: "dome", ...spec })
+export const turn = (spec: Omit<TurnEffect, "kind">): TurnEffect => ({ kind: "turn", ...spec })
 export const overcharge = (spec: Omit<OverchargeEffect, "kind">): OverchargeEffect => ({ kind: "overcharge", ...spec })
-export const brace = (spec: Omit<BraceEffect, "kind">): BraceEffect => ({ kind: "brace", ...spec })
 export const barrier = (spec: Omit<BarrierEffect, "kind">): BarrierEffect => ({ kind: "barrier", ...spec })
 export const mantle = (spec: Omit<MantleEffect, "kind">): MantleEffect => ({ kind: "mantle", ...spec })
 export const overdrive = (spec: Omit<OverdriveEffect, "kind">): OverdriveEffect => ({ kind: "overdrive", ...spec })
@@ -675,29 +684,32 @@ export const skills = {
     effect: earthrise({ radius: 300, rocks: 3, warning: 0.35, interval: 0.1, size: 58, ring: 120, stun: 0.9, breakFill: 0.25, power: 30, element: "rock", knockback: 380, hitStop: 0.05, heavy: false })
   }),
   /**
-   * Tidewarden's special: she sets her blade a moment. The first blow on
-   * her meanwhile is taken whole, and she answers with a slash of water
-   * around her that disarms the attacker. Nothing comes: it is soon ready
-   * again; a blow taken: its whole cooldown.
+   * Tidewarden's special (id `brace`, from when it was a parry): a dome of
+   * water over whoever is on the field, going with her. It strikes what is
+   * in it as it goes up; after, what comes into it is soaked (its blows
+   * weaker) and stays so while inside: the team fights under it, against a
+   * crowd that hits softer.
    */
   brace: skill({
-    name: "Brace",
-    cooldown: 8,
+    name: "Tide Dome",
+    cooldown: 14,
     energy: 0,
     invulnerability: 0,
-    effect: brace({ window: 0.6, whiff: 2.5, radius: 130, disarm: 1.5, power: 45, element: "water", knockback: 700, hitStop: 0.08, heavy: true })
+    effect: dome({ radius: 115, seconds: 7, power: 35, element: "water", knockback: 500, hitStop: 0.05, heavy: false })
   }),
   /**
-   * Tidewarden's ultimate: a wave breaking out around her that soaks the
-   * crowd and drives it back (splashing what was already soaked), and for a
-   * while after, every brace that takes a blow is ready again at once.
+   * Tidewarden's ultimate (id `floodgate`, from when it was a wave around
+   * her): a chain of water lashes the toughest enemy near her and binds it
+   * to her side a while: it turns on its own with its own attacks, and
+   * they on it. Then the chain snaps, striking it hard and leaving it
+   * stunned.
    */
   floodgate: skill({
-    name: "Floodgate",
+    name: "Riptide Bond",
     cooldown: 10,
     energy: 90,
     invulnerability: 0.5,
-    effect: nova({ radius: 260, power: 40, element: "water", knockback: 1000, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true, readies: 6 })
+    effect: turn({ radius: 420, seconds: 11, snap: { power: 160, stun: 2.5, knockback: 600 }, power: 60, element: "water", knockback: 0, hitStop: 0.1, heavy: true })
   }),
   /**
    * Quarry's special (id `faultLine`, from when it split the ground): for a

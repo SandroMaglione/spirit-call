@@ -5,7 +5,7 @@
  */
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
-import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, Rebrace, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -144,7 +144,6 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
     arrival: Game.System.writeResource(Arrival),
     teamSwitch: Game.System.writeResource(TeamSwitch),
     guard: Game.System.writeResource(Guard),
-    rebrace: Game.System.writeResource(Rebrace),
     mantle: Game.System.writeResource(Mantle),
     passiveCooldowns: Game.System.writeResource(PassiveCooldowns),
     mending: Game.System.writeResource(Mending),
@@ -167,7 +166,6 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.arrival.set({ remaining: 0 })
   resources.teamSwitch.set({ cooldown: 0 })
   resources.guard.set(noGuard)
-  resources.rebrace.set({ remaining: 0 })
   resources.mantle.set(noMantle)
   resources.passiveCooldowns.set({})
   resources.mending.set({ ready: 0 })

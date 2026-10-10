@@ -50,9 +50,12 @@ balance pass:
   of anyone, Hearth clearing more than any attacker for the learning bot.
   Its waves went from half a swing's blow to 35%; both now sit with the
   Swordsman and the Stormcaller.
-- **Tidewarden** clears as Bastion does. She stops more blows (the bot
-  braces each blow perfectly, a player will not); her Brace went from 6 s
-  to 8 s.
+- **Tidewarden** (Tide Dome and Riptide Bond, October 2026) clears 7 of 8
+  skilled and 2 of 8 learning, a little slower than most, inside the
+  roster's range. Each half of her kit counts: without the Bond she takes
+  twice the hits, without the Dome she clears 5 of 8. A shorter Dome
+  cooldown or a cheaper Bond moved nothing beyond noise, so her numbers
+  stay for the playtest to decide.
 - **Windwall** first cleared 27 of 48 skilled: her barriers struck too
   lightly. They now strike harder (20% ATK, 28% for the ring), the wall is
   longer and stands 7 s, every 7 s, and the Eye of the Storm costs 70

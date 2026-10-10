@@ -38,7 +38,7 @@ export const ReleaseShockwaves = Game.System("Shooter/ReleaseShockwaves", {
     const spec = released.attack
     if (spec.kind !== "wave") continue
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
-      area: { kind: "ring", center: released.at, radius: 0, width: spec.width }, faction: "enemy", blow: released.blow, remaining: Math.max(spec.active, 1e-6), hit: [], grows: spec.speed
+      area: { kind: "ring", center: released.at, radius: 0, width: spec.width }, faction: released.faction ?? "enemy", blow: released.blow, remaining: Math.max(spec.active, 1e-6), hit: [], grows: spec.speed
     }]))
   }
 })
