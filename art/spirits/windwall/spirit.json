@@ -1,0 +1,11 @@
+{
+  "blend": "windwall.blend",
+  "mask": "mint",
+  "eyes": "light",
+  "background": "#092432",
+  "ambient": 0.2,
+  "lights": { "sun": [2.3, [1.0, 1.0, 0.96]], "fill": [0.8, [0.7, 1.0, 0.9]], "rim": [1.0, [0.65, 1.0, 0.88]] },
+  "ortho": 0.94,
+  "resolution": [752, 800],
+  "sweep": { "turns": [-30, 30, 5], "elevations": [0, 10, 20, 30] }
+}

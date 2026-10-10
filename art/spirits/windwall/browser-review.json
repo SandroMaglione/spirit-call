@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-10",
+  "url": "http://192.168.0.45:5204/art/spirits/windwall/index.html",
+  "actual_glb_loaded": true,
+  "served_glb_sha256_verified": "cb4db159ac71537d0085f1e34b0acf98cd0e24dd737fa84778ba0685b2a45805",
+  "clips": 0,
+  "viewports_css_pixels": [[1280, 800], [390, 844]],
+  "camera_presets_checked": ["front", "back", "left", "right", "top", "bottom", "game", "hero"],
+  "detail_presets_checked": ["face", "crest", "cape", "gem", "all"],
+  "wireframe_checked": true,
+  "gameplay_size_checked": true,
+  "synthetic_touch_orbit_changed_camera": true,
+  "synthetic_touch_pinch_zoom": [1, 1.5],
+  "pointer_capture_stubbed_for_synthetic_touch": true,
+  "physical_device_checked": false,
+  "inspector_error": ""
+}

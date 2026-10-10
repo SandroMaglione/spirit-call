@@ -1,0 +1,27 @@
+{
+  "front": {
+    "turn": -5,
+    "elevation": 0,
+    "silhouette_iou": 0.8952731886405356
+  },
+  "back": {
+    "turn": 180,
+    "elevation": 10,
+    "silhouette_iou": 0.8699153608752666
+  },
+  "left": {
+    "turn": -60,
+    "elevation": 10,
+    "silhouette_iou": 0.6538049303322615
+  },
+  "right": {
+    "turn": 80,
+    "elevation": 10,
+    "silhouette_iou": 0.6599938246191849
+  },
+  "hero": {
+    "turn": 5,
+    "elevation": 0,
+    "silhouette_iou": 0.8334373447788377
+  }
+}
