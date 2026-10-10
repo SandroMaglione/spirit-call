@@ -1,9 +1,90 @@
 # Ice Spirit
 
-Static character model built from the supplied Ice Spirit production sheet.
-Editable source: [ice-spirit.blend](ice-spirit.blend). Export:
-[ice-spirit.glb](ice-spirit.glb). Open [index.html](index.html) through Vite to
-orbit the model, choose cameras, inspect wireframe, or view it at 32 px high.
+Ice Spirit built from the supplied production sheet, with the ten clips
+used by the game's spirit player. Animated source:
+[ice-spirit-animated.blend](ice-spirit-animated.blend). Game export:
+[ice-spirit-animated.glb](ice-spirit-animated.glb).
+
+Open [index.html](index.html) through Vite to play each clip, scrub a pose,
+change speed, preview the sequence, or enable the actual game's blending.
+It also has camera presets, wireframe, and a 32 px view.
+
+## Animation delivery
+
+| Clip | Motion |
+| --- | --- |
+| Idle | Gentle hover, independent shard bobs, mirrored blink; 2 s loop |
+| Run | Forward lean, narrow stretch, shards trailing; 0.533 s loop |
+| AttackA / AttackB | Mirrored windup and crystal strike; contact at frame 4 |
+| AttackC | Larger combo finisher; contact at frame 6 |
+| Power | Stronger charged strike; contact at frame 6 |
+| Dash | Forward stretch with trailing shards and narrowed eyes |
+| Hurt | Knockback, squash, and eye recovery |
+| Cast | Immediate lift and shard spread |
+| Ultimate | Immediate leap, full turn, shard expansion, and landing |
+
+![Animation poses](renders/animation-poses.png)
+
+[Animation reel](renders/animation-preview.mp4) records the exported GLB
+through the game's `Puppet` player. The crown stays joined to the body;
+eyes follow the recessed face; all four detached shards have local motion.
+The approved static files and their geometry remain unchanged.
+
+Clips are object animation at 30 fps, with linear sampled keys and no
+skeleton. Every combat clip returns to rest. Body lean is bounded to the
+character's footprint; travel, action duration, contact timing, and
+hitboxes belong to the simulation. Entrance, switching, and falling use
+the existing presentation effects. The animated Blender scene uses +Z up,
+-Y forward; its GLB uses +Y up, +Z forward. Children have local transforms
+relative to the body's pivot. Constant channels are retained so Run's
+stretch exports and a prior blink cannot leave the eyes shut.
+
+`src/presentation/assets/ice-spirit.ts` contains generated timing and
+height. `models.iceSpirit` registers the GLB and pale blue glow. This is a
+ready animation asset; no Ice character kit or content entry is introduced.
+Assign it to a character in `looks.ts` when that character's kit is defined.
+
+The runtime contact test exposed a quaternion aliasing bug in `Puppet`:
+blending copied the outgoing rotation over the target before reading it.
+The player now blends toward its separately saved target quaternion.
+
+### Rebuild animations
+
+After the approved static source exists, run from the repository root:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/ice/export-animated.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/ice/verify-animated.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/ice/render-animation.py
+uv run --with pillow art/spirits/ice/review-animation.py
+pnpm dev --host --port 5218 --strictPort
+```
+
+`animate.py` defines Ice's hover and shard motion and uses the shared spirit
+combat poses. `animation.json` records timing, contacts, rest transforms,
+dimensions, and source/export hashes. `verification-animated.json` audits
+all ten clips, hierarchy, topology, palette, and unchanged static files.
+Record the viewer's **Preview all** with **Game blending** enabled to
+refresh the animation reel after edits.
+
+### Animation verification
+
+`pnpm check --maxWorkers=2` passes: 69 files, 569 tests passed, one skipped.
+`pnpm build` passes. The focused GLB tests check rest dimensions and
+parenting, floor clearance, loop closure, no horizontal loop travel,
+blink recovery, Run stretch, immediate skill lift, attack contact poses
+through `Puppet`, and freeze behavior.
+
+The live viewer was reviewed at 1280×800 and 390×844 on Vite's network
+address. Phone controls have 44 px targets and no horizontal overflow;
+scrubbing and synthetic touch orbit work. The reel is browser evidence,
+not physical-device performance or a gameplay review of an Ice kit.
+
+## Approved static model
+
+Editable source: [ice-spirit.blend](ice-spirit.blend). Static export:
+[ice-spirit.glb](ice-spirit.glb). The following measurements and reviews
+document that approved pass.
 
 ![Static model](renders/preview.png)
 
@@ -44,7 +125,7 @@ every camera. See [the comparison](renders/review-reference.png),
 
 | Property | Value |
 | --- | --- |
-| Stage | Static geometry only |
+| Stage | Approved static geometry |
 | Dimensions | 0.80 m high × 0.55 m wide × 0.35 m deep |
 | Triangles | 1,194 |
 | Objects | 8 independently positioned meshes |
@@ -69,7 +150,7 @@ The `.blend` preserves the sheet's native +Y-facing convention. Export
 temporarily rotates the objects 180° about native Z before Blender's glTF
 axis conversion, producing a +Z-facing GLB. The saved source stays +Y
 facing. `export.json` records exact bounds, pivots, triangle counts, and
-the GLB hash. There is no runtime registration or animation in this pass.
+the static GLB hash. The static export contains no animation.
 
 ## Rebuild
 

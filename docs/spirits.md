@@ -187,6 +187,7 @@ includes deliberate changes for personality and readable facing.
 | Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
 | Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
 | Bastion, rock | [Rock](../art/spirits/rock/README.md) | Broad grounded boulder, round optimistic eyes, weight-bearing feet, short rear heel, floating ornaments, planted Disc recoil and ground slam |
+| Ice, animation asset | [Ice](../art/spirits/ice/README.md) | Approved crystal silhouette, joined crown, recessed face, four floating shards, ten object clips; character kit not yet defined |
 
 Each folder keeps `reference/sheet.png`, cropped views, measurements,
 `build.py`, an editable `.blend`, `animate.py`, `export.py`, and its GLB.
