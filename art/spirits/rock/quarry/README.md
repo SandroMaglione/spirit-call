@@ -5,7 +5,9 @@ kept separately from Bastion's existing Rock Spirit. The designer approved
 the revised static model and requested animation. `quarry.blend` and
 `quarry.glb` preserve that approved rest model. `quarry-animated.blend` and
 `quarry-animated.glb` add ten object animation clips and articulated leg joints.
-Quarry has not been registered as a playable character.
+The animated asset is the approved game model for the existing Rock/Hammer
+character `quarry`; its connected-leg rest pose replaces the original static
+archive in play and in model portraits. Bastion keeps her own Rock Spirit.
 
 The approved static model has 1,424 triangles, two materials and 13 named mesh parts.
 Its height including the floating rock is 0.772 m, width 0.947 m and depth
@@ -100,7 +102,9 @@ The attack contacts use the existing spirit convention: frames 4, 4, 6
 and 6 at 30 fps. Poses are baked at 120 Hz to keep the connecting necks
 attached during fast rotations. Cast starts its rear-up immediately;
 Ultimate starts its push-off immediately. The simulation will own
-movement, hits and timing when this character is integrated.
+movement, hits and timing in the game. The existing three-hit Hammer combo
+uses AttackA/B/C; its charged blow uses Power, Fault Line uses Cast and
+Landslide uses Ultimate. Dash, Hurt and the loops use their matching clips.
 
 `animation.json` contains the generated clip timings, contact times and
 gait dimensions. As with the other spirits, Idle and Run omit the repeated
@@ -131,9 +135,9 @@ moss gap is 50 mm across the clips. The run's maximum stance velocity error
 is below 0.004 mm/s. The maximum connecting-neck endpoint error between
 keys is 0.861 mm. `verify-joints.py` checks triangle intersections between
 each leg and the core, moss, head and rear stone at 240 Hz in the editable
-animation; no intersections were found. The asset audits and lint pass;
-`pnpm check --maxWorkers=2` still stops at the existing Effect SQL module
-and type errors described below.
+animation; no intersections were found. The asset audits pass. The
+integration's fresh dependency install resolved the earlier Effect SQL
+module failures described below.
 
 `renders/quarry.png` is the studio image. `renders/review-reference.png`
 compares all seven sheet views with the reconstructed object and includes
@@ -146,7 +150,8 @@ top 81.6%, bottom 70.8% and hero 82.8%. The revised whole-figure scores
 are in `overlap.json`; height normalization now includes the floating rock
 absent from the sheet, so upright scores fall. The designer's requested
 changes take precedence over fitting the original sheet. No exact match
-or approval of the revision is implied.
+is implied by the silhouette scores; the designer approved the final model
+and connected-leg animation before game integration.
 
 The browser review used `http://192.168.0.45:5201` at 1280 by 800 and
 390 by 844 CSS pixels on 2026-10-10. The loaded GLB bounds exactly matched
@@ -154,6 +159,38 @@ the audit. Camera and detail controls, wireframe and gameplay size were
 checked. Synthetic touch pointer events changed orbit and pinch zoom;
 pointer capture was temporarily stubbed for those synthetic events. This
 was a browser viewport review, not a physical-phone test.
+
+## Game integration
+
+`export.py` generates `assets/quarry-spirit.ts` from `animation.json` and
+is also called by `animate.py`. `models.ts` registers `quarrySpirit` with
+restrained amber eye glow, and `characterLooks.quarry` selects it without
+the former placeholder tint. The existing run distance of 115 world units
+per cycle keeps the Hammer character's gameplay cadence. Attack contacts
+remain aligned by the runtime's simulation-driven clip timing.
+
+The network browser review on 2026-10-10 exercised movement, the three-hit
+combo, charged head-first blow, Fault Line, Landslide, touch dash, switching
+away and back, and the loaded model portraits. `renders/gameplay-review.mp4`
+records the training arena at 844 × 390; `gameplay-audit.json` records the
+simulation state beside the loaded model poses. `gameplay-phone.png` and
+`gameplay-portrait.png` cover landscape and portrait phone viewports.
+Synthetic touch used stubbed pointer capture; this is not a physical-device
+performance measurement.
+
+`compare.html` loads the real models through `makeBody` at radius 16, equal
+look factors, facing and Idle phase, under the same camera and ground line.
+Water/Quarry/Fire full heights are 40.76/40.71/50.77 world units; central
+body widths are 32.28/31.66/26.24. Quarry's legs widen the full silhouette
+to 53.51 while its core is 2% narrower than Water. Runtime glow sprites are
+excluded from these bounds. `renders/gameplay-scale.json` and
+`gameplay-scale.png` preserve the measurements and view.
+
+`pnpm check --maxWorkers=2` passes 698 tests with one skipped, both with
+the linked engine and the published bevy-ts 0.3.0 used by CI. `pnpm build`
+passes and bundles the 495,980-byte animated GLB. The asset audit passes
+at 240 Hz; the game asset tests cover its scale, two-support run seam and
+airborne heavy contact. No character IDs, stats, skills or hitboxes change.
 
 ## Rebuild and verify
 

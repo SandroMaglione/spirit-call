@@ -9,6 +9,7 @@ import bpy
 from mathutils import Euler, Matrix, Vector
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / "tools"))
 import moves
 
@@ -316,6 +317,8 @@ def build():
         "animated_glb_sha256":hashlib.sha256(out.read_bytes()).hexdigest(),
         "bytes":out.stat().st_size}
     (HERE/"animation.json").write_text(json.dumps(metadata,indent=2)+"\n")
+    import export
+    export.write_spec()
     print(json.dumps({"clips":timing,"gait":metadata["gait"],"bytes":metadata["bytes"]}))
 
 
