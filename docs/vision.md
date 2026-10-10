@@ -13,9 +13,13 @@ You pick a team of characters, each with her own kit and effects, and face a
 known set of enemies: part of the challenge is preparing the right strategy
 (which characters, which effects, against which enemies), and part is
 executing it well (dodging out of a bad spot and striking back with a chain of
-moves). You collect characters with the excitement of a gacha game, but skill
-is always enough: nothing requires the newest character or the best aspect.
-It is a personal project, not a commercial one.
+moves). You earn characters one at a time, each in an audition that teaches
+her kit, and skill is always enough: nothing requires the newest character
+or the best aspect. It is a personal project, not a commercial one, and it
+ships **complete**: every character, element, and challenge is in the
+release, free, with nothing bought, nothing random, and nothing added
+later. Everything can be owned in about 55 hours of play, and every
+character taken to the top level in about 100.
 
 ## Pillars
 
@@ -61,8 +65,7 @@ It is a personal project, not a commercial one.
   requires fighting, rather than escaping until time runs out.
 - **No story focus.** The game is about dungeons, swarms of enemies, and
   beating challenges. Attachment to characters comes from how they play,
-  look, and feel (the excitement of getting one, as in gacha games), not
-  from narrative.
+  look, and feel (the excitement of earning one), not from narrative.
 - **No collection for its own sake.** Little emphasis on equipment, items,
   and extras that do not directly change the strategy or how a fight plays.
   If it does not change a decision you make or how you play, it probably
@@ -70,6 +73,9 @@ It is a personal project, not a commercial one.
 - **No commercial goals.** No monetization, no pressure mechanics, no large
   server infrastructure. It is an exploration for its own enjoyment; the code
   still stays clean and well built.
+- **No live service.** No gacha, no banners, no events, no temporary
+  content, no updates to wait for: the game is finished when it is
+  released, and it runs on its own afterwards (see `server.md`).
 - **The account lives on a light server.** A player logs in (a username and
   a password) and her account comes from the server, the same on every
   device; the server runs the account's rules and keeps what is played, so
@@ -122,7 +128,7 @@ It is a personal project, not a commercial one.
   Characters appear as spirits that hold nothing, so an aspect is how she
   fights, not an item in her hands.
 - **Relics add to how she plays** (the rules are in `docs/relics.md`): one
-  per slot (Strike, Dash, Element, and later Survival), each a reaction to
+  per slot (Strike, Dash, Element, and Survival), each a reaction to
   something she does (a kill, a dash, a perfect dodge, a break) rather than
   a stat, in three tiers that each add something to see. An aspect is the
   pattern; a relic, a twist on it. Each relic is on one member per team.
@@ -141,10 +147,9 @@ The rules are in `docs/elements.md`; in short:
   enemy situation (fire for packs, water for heavy hitters, thunder for
   spread-out groups, wind to scatter or group, rock for tanky enemies), and
   each state changes a different part of a fight. **A map** of those parts
-  (`docs/elements.md`) holds the elements there are and keeps parts for
-  those to come (ice for speed, and candidates), so nothing built now
-  takes the place of what comes later: water, which slowed, now weakens
-  what it soaks, leaving speed to ice.
+  (`docs/elements.md`) holds the five elements, each on its own part:
+  water, which slowed, now weakens what it soaks. The release has these
+  five and no more.
 - **An element belongs to a character**, applied through her skills and one
   moment of her aspect.
 - **Ground effects** (fire pools, puddles) affect everyone standing in them,
@@ -182,18 +187,18 @@ The rules are in `docs/elements.md`; in short:
   enemies crawl) and darkens at its edges, she comes apart into her
   element's light, and the next one stands held until she steps in; her protection
   counts from then. The run is lost when the whole team has fallen.
-  Reviving is for later.
-- **One team is saved**, set up in the menu (its order is the 1, 2, 3 and
-  who starts); several saved teams may come later.
+  There is no reviving.
+- **The team is set up in the menu** (its order is the 1, 2, 3 and who
+  starts), and **three more can be saved** and loaded in a tap, each with
+  its aspects and relics.
 
 ## Structure
 
 The game has two areas, and Extras for practice.
 
 - **Quests**: where you gather resources and improve your kit, preparing for
-  what is harder. A **main quest** line, plus **secondary quests** that can
-  be temporary and take various formats, while keeping the quest shape
-  (chapters, a clear end). Each chapter ends with a **champion**: one of the
+  what is harder. A **main quest** line, plus **secondary quests** that mix
+  what the main line has brought. Each chapter ends with a **champion**: one of the
   game's own enemies, much tougher, that stays through several waves (see
   "Champions" below). The rules are in `docs/quests.md`; in
   short:
@@ -212,20 +217,28 @@ The game has two areas, and Extras for practice.
     and never for bringing a character, an element, or a class (any team
     can earn every star). Every 3 stars open a **chest**.
   - **Ranks.** The main line and the side quests are replayed at higher
-    ranks once the main line is further on: higher enemy levels and a
-    twist on the waves, with their own first clears, stars, and chests, so
-    the game is played again, harder, for rewards again.
+    ranks once the main line is done (rank II after its finale, rank III
+    after rank II's): higher enemy levels and a twist on the waves, with
+    their own first clears, stars, and chests, so the game is played
+    again, harder, for rewards again. They are the game's second and third
+    acts (see `docs/collection.md`).
   - The main line opens in order; nothing else gates it.
 - **Hardcore**: combat waves, champions, and the more grinding challenges. These are the goals you
   are aiming to beat, where preparation and skill are tested fully. It is
   organized in **tiers** of mostly the same kind of content, each harder in
   every way (enemy levels, modifiers, and attack patterns), so lower tiers
   are within reach of a low-level team. Each tier opens along the main
-  line, a few levels above the quest that opens it. A tier's resources are given the
-  first time it is cleared; a **periodic reset** makes them available again,
-  possibly in a different format. One track, **Until Fall**, never ends:
-  every wave is stronger than the last, a goal wave clears the tier, and
-  how far the team got is kept as its best.
+  line, a few levels above the quest that opens it. **Every tier is a
+  ruleset**: its own waves, a set of enemies, and a twist (burning floors,
+  rock elites, Gunners leading every wave), so each is a new preparation
+  puzzle rather than the tier below at a higher level. A tier's rewards
+  are given once, the first time it is cleared. One track, **Until
+  Fall**, never ends: every wave is stronger than the last, a goal wave
+  clears the tier, and how far the team got is kept as its best.
+- **Auditions**: how a character joins. Three quests played as her alone,
+  at a fixed level, the last against a champion; winning makes her the
+  account's (see `docs/collection.md`). A harder fourth, her mastery,
+  gives her tint.
 - **Extras**, for practice: a Training Ground (dummies that never fall,
   one that breaks, one that swings to dodge, fire to push them into) and
   Enemy Practice (the enemies picked, all on the field together and coming
@@ -246,9 +259,9 @@ The game has two areas, and Extras for practice.
   its own), and the challenge is cleared only once it has fallen too. Nothing about it is timed, and every hit stays
   avoidable. (Until October 2026 champions had no phases and fought as
   their kind did; the playtest found a focused fight more fun.)
-- **Nothing is missable.** Temporary content rotates back later, and
-  periodic resets only restock rewards: anything skipped can be had another
-  time, so there is never pressure to log in.
+- **Nothing is missable or timed.** There is no temporary content and no
+  reset: everything stays where it is until it is played, so there is
+  never pressure to log in.
 - **Replay value comes from rising difficulty**: lasting longer, or enemies
   hitting harder and coming in greater numbers. It never comes from
   mechanics that push toward power creep.
@@ -268,19 +281,15 @@ The game has two areas, and Extras for practice.
 
 ## Progression
 
-Decided so far (the rest is in the open questions):
+How everything is owned is in `docs/collection.md`; in short:
 
-- **Two kinds of level.** The **account level** rises by playing, in every
-  mode, and is a reward track (crystals at each level); it gates nothing.
-  Each **character has her own level**, which gives stats.
+- **Each character has her own level**, which gives stats. There is no
+  account level.
 - **Characters grow by resources spent on them**, not by fighting with
   them (as in Genshin): nobody falls behind for sitting on the bench, and a
-  new character catches up the same way. Playing earns the resources, and
-  account experience.
+  new character catches up the same way.
 - **The stat band**: 4x between level 1 and level 40, going on the same
   way to the cap of 60 (about 5.5x), the levels the ranks' replays reach.
-  The cap is not sacred: it rises only if content needs it; later chapters
-  can grow harder through twists rather than levels.
 - **Levels matter: the level gap.** On top of the stat band, a team below
   the enemies' level deals less and takes more for each level it is under
   (`progression.gap`, within bounds): ten levels under, every enemy takes
@@ -288,8 +297,6 @@ Decided so far (the rest is in the open questions):
   is a real struggle, never a wall: nothing is timed and every hit stays
   avoidable, so a skilled player still clears it, long and tense. Over the
   enemies' level gives only a little (no power creep, no trivial clears).
-  (October 2026: a playtest cleared chapter three's finale with levels 1
-  to 4 against 16.)
 - **Fewer, tougher enemies.** Enemies have more health and hit harder than
   their kinds' numbers (`progression.enemies`), and only a few stand on
   the field at once (`waves.most`): pressure comes from harder enemies and
@@ -299,81 +306,21 @@ Decided so far (the rest is in the open questions):
   Aspects change how she plays and have no levels. Relics (a closed set,
   slot by slot) add small reactions, not stats; their tiers add behavior,
   with a little power at most, held to one budget.
-- **Four currencies and the materials,** each from one clear place:
-  crystals for pulls, gold for leveling characters, **dust** for the shop
-  (a relic's next tier, and looks), **sigils** for the Call's exchange,
-  and **ascension materials** for the steps between a character's level
-  phases.
-- **Dust comes from milestones off the main line**: side quests, ranks,
-  and their chests on a first clear, hardcore tiers and trials once a
-  period. Never from a main quest's first clear, and never per run, so
-  every relic tier can be had by playing (perfect clears unlock relics and
-  pay dust, and dust buys their tiers, see `docs/relics.md`). **Sigils**
-  are the Call's own (see "The gacha"), from calls and nowhere else.
-- **Ascension.** A character's levels come in phases (1–10, 10–20, 20–30,
-  30–40); gold buys the levels within a phase, and crossing into the next
-  costs gold and **her element's material**. Each element has one
-  material, its amounts on a curve like gold's (a clear against stronger
-  enemies is worth more). Quests pay it once, on their first clear, and
-  hardcore tiers with their weekly rewards; the place to farm it is its
-  element's **trial**, which pays on every clear, at the ranks the main
-  line has opened, so pre-farming for a character to come is possible but
-  only up to where the player is. Replaying old content with a strong team
-  pays almost nothing. Amounts are fixed (never random). They gate levels;
-  they never give stats of their own.
-- **Gold comes from every run.** A clear pays by its enemies' level, so
-  the best place to earn is at the edge of what you can beat: rising
-  difficulty is the reason to replay, and a skilled player taking a
-  weaker team into harder content earns more. A loss pays its share of the
-  progress made (waves cleared), up to half of a clear, so
-  trying is never wasted. Nothing pays for kills or for speed. No stamina,
-  no daily tasks, no weekly caps: play as much or as little as you like.
-- **Crystals come from milestones only**, never from repeating content: a
-  quest's first clear, its stars' chests, a hardcore tier once per period, account levels, a
-  short list of **discoveries** (the first clear with each character, with
-  a full team, the first burst of each element's state), and later
-  duplicates. New characters come at the pace of progress, not of grinding.
-  Discoveries stay few, and each one points at something worth trying.
-- First clears and hardcore tiers also give gold worth several runs: goals
-  on top of the steady income.
-- **Pacing is slow, as in Genshin, but every step shows.** Maxing one
-  character takes on the order of 200 runs (about 15 hours)
-  at content of her level, and a whole team several times that. The first
-  levels take a run or less each, the last ones several runs; every level
+- **Two resources, both for levels.** **Gold** buys levels, from every run:
+  a clear pays by its enemies' level, so the best place to earn is at the
+  edge of what you can beat, and a loss pays its share of the progress
+  (up to half a clear), so trying is never wasted. **Essence** pays the
+  ascension steps between phases of ten levels, in three grades that
+  follow the acts (her element's, then Refined, then Core), so a character
+  goes only as far as the part of the game the player has reached. Nothing
+  pays for kills or for speed. No stamina, no daily tasks, no weekly caps.
+- **Everything else is a reward written on a card**: a character on an
+  audition's last quest, an aspect on a first clear, a relic and its tiers
+  on perfect clears, a look on a mastery audition or a hardcore tier. Each
+  comes from one place, shown before it is played, and never at random.
+- **Pacing.** About 55 hours to own everything, about 100 to take all ten
+  characters to 60; something new every three to five hours. Every level
   adds stats, so each run moves something forward.
-
-## The gacha
-
-The rules are in `docs/calls.md` (the Spirit Call); in short:
-
-- **A character is the prize, and feels like one.** Genshin's 5★: rare,
-  guaranteed within a known number of pulls, and the only thing that
-  reaches the gold light. Everything else is quieter, so that it stays
-  loud.
-- **Three tiers, rarest first:** characters (gold), rare things (purple:
-  an aspect or a look not owned yet, from one pool, a few per banner:
-  one in ten pulls if lucky, two if very lucky), and sigils (white: the
-  Call's own token). No character, aspect, or look owned comes twice
-  while one is left to get. Relics are not pulled: they are played for
-  (Genshin's artifacts, see `docs/relics.md`).
-- **Every pull leaves something.** A white pull leaves a sigil; sigils
-  buy any aspect or look of the Call's in its exchange, never a
-  character. The sure road to the purple tier, and the slower one.
-- **Banners, in turn.** A banner is a pool of characters that runs for a
-  while, then the next one; each comes back later (nothing is missable).
-  The player chooses which of its characters to call for: a
-  character that comes is always that one.
-- **Bad luck is capped and shown**: a character within a known number of
-  pulls, a rare thing within fewer, and the counts are on screen and carry
-  across banners. Relics are unlocked by perfect clears (all three stars
-  in one run), spread over the ranks, and dust buys their tiers: unlocking
-  is the struggle, levelling up the spending, and the two never meet.
-- **Duplicates never add raw power.** A relic's tier adds behavior, with a
-  little power at most (see `docs/relics.md`), and the shop reaches every
-  tier too. Direction for the rest (details to settle): a duplicate
-  character unlocks a skin, a duplicate aspect a variant of its look.
-- It sits inside the stat band like everything else: pulls help reach the
-  cap sooner and bring new playstyles, never a higher ceiling.
 
 ## Rules of thumb for design and implementation
 
@@ -388,26 +335,16 @@ The rules are in `docs/calls.md` (the Spirit Call); in short:
   objectives are small additions to the shared vocabulary, which is kept
   small and readable.
 
-## Open questions
+## Settled for the release
 
-Decided directions are above; these are not decided yet.
+What was open or "for later" before the game became a finished release,
+and where it went:
 
-1. **Progression details**, to settle while building: the stat band (about
-   4x), the pace of pulls (measured, see `docs/calls.md`), the exact
-   duplicate rewards, the formats of secondary quests, and how pulls stay
-   meaningful once a player owns most things. Quest rewards show crystals as pulls once a pull has a price.
-2. **Element details**: the open questions at the end of `docs/elements.md`.
-3. **Team details**, for later: reviving a fallen character, several saved
-   teams, and whether off-field characters contribute more than energy.
-
-## Later
-
-Agreed, waiting for their time:
-
-- **Weekly hardcore rulesets.** Each period, the hardcore tiers come with a
-  ruleset (a set of enemies and a twist: burning floors, rock elites,
-  Gunners leading every wave), so every week is a new preparation puzzle.
-  The period is computed from the time (as the reset is), and its ruleset
-  picked from a list in content by its number.
-- **Character trials**, with the gacha: a short quest built around each
-  character's kit, teaching her, with sideways rewards at harder levels.
+| | |
+|---|---|
+| Hardcore rulesets | in the release: fixed, one per tier |
+| Character trials | in the release, as auditions |
+| Several saved teams | in the release: three |
+| Reviving, temporary side quests, new elements, duplicates, off-field power beyond energy | never |
+| The pace of pulls, gacha banners, duplicate rewards | gone with the gacha |
+| Element details | as `docs/elements.md` has them |

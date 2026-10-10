@@ -25,31 +25,30 @@ brought up to it, with enemies at most `aheadOfLine` (4) levels above it.
 
 The main line is written for the team a new account has by then: chapter 1
 for the Swordsman alone (three quests, so the second character comes
-soon), then a character more at the end of chapters 1 and 3; the Spirit
-Call (open from the end of chapter 1) brings its first character around
-chapter 5 (see `calls.md`), so chapter 3 is written for two. Each chapter ends with a
-champion, a different kind each time, and unlocks one thing at most: a
-character at the end of chapters 1 and 3, an aspect at the end of 2, 4,
-and 6. Relics are smaller: the first comes with chapter 2's first quest
-(Echo, as relics open with the Call), and one with the first side quest
-(Momentum).
+soon), then a character more at the end of chapters 1 and 3. Auditions
+(see `collection.md`) open after chapters 2, 4, 5, and 6, but the line
+never counts on them: chapter 3 is written for two, and every chapter
+after for the three the quests give. Each chapter ends with a champion, a
+different kind each time, and unlocks one thing at most: a character at
+the end of chapters 1 and 3, an aspect at the end of 2, 4, and 6. Relics
+are smaller: the first comes with chapter 2's first quest (Echo, as relics
+open after chapter one), and one with the first side quest (Momentum).
 
 | Chapter | Team | Enemy levels | Each quest's new thing | At its end |
 |---|---|---|---|---|
-| 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Tidecaller; the Spirit Call opens |
-| 2 · Embers | + Tidecaller | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist) |
+| 1 · First Blood | Swordsman | 1–5 | Chasers · Shooters · champion Chaser | the Tidecaller; relics open |
+| 2 · Embers | + Tidecaller | 6–10 | Swarmers · fire floors · Guardians · champion Guardian | an aspect (Duelist); the Gunner's audition |
 | 3 · Gathering Storm | 2 | 11–16 | fire and water elites · Snipers · Brutes · champion Brute | Bastion |
-| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Whirlpool) |
-| 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | |
-| 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | an aspect (Riptide) |
+| 4 · Rising Tide | 3 | 17–22 | water floors · Firebombers · shields · champion Swarmer | an aspect (Whirlpool); the Stormcaller's audition |
+| 5 · The Long Night | 3 | 23–28 | Stalkers · Wardens · thunder elites · champion Stalker | Sparkfist's audition |
+| 6 · Iron and Stone | 3 | 29–34 | Juggernauts · Volatiles · Gale Casters · champion Juggernaut | an aspect (Riptide); Tidewarden's audition; rank II |
 
 A quest's material is an element the team owns by then (wind in chapter 1),
 so early clears pay for the characters the player has.
 
 **Side quests** bring nothing new: each opens after a chapter's last quest
 and mixes what the main line has brought, at most a few levels above it.
-Their first clears pay dust on top (and a little less gold than a main
-quest's); a main quest's first clear pays none.
+Their first clears pay a little less gold than a main quest's.
 **Hardcore tiers** open the same way: each tier after a main quest (and the
 tier before it), with its own waves, so a track's first tier is an early
 mix and its last the whole roster.
@@ -74,9 +73,9 @@ counted toward it.
 **A perfect clear** is all three stars in one run. It is kept per quest
 and rank (`perfectAt`), shown on the results screen and as a glow around
 the quest's stars in the list. It pays once per quest and rank: the
-quest's relic on the rank that unlocks it, dust everywhere else, more at
-higher enemy levels (see `relics.md`). Stars earned across runs never add
-up to one.
+quest's relic on the rank that unlocks it, and that relic's next tiers on
+the ranks above it (see `collection.md`); a perfect clear with nothing
+written is its own goal. Stars earned across runs never add up to one.
 
 **The numbers come from measured runs** (the bot, in `test/bot.ts`, on two
 seeds, with the team a new account has, from `pnpm progression`): the
@@ -111,12 +110,11 @@ is a new tally: one system that counts it in the run, and an entry here.
 9, and 12 in a chapter of four quests, its rewards spread evenly over
 them), and in the side quests **one every 6** (6 to 24 for eight), so their
 row stays short as side quests are added; the last is the reward for every
-side quest at three stars. Chests give crystals, gold, and the material of
-their quests' elements (a chapter's, or the side quests'): the milestone
-rewards that pay for playing well. Other elements' material comes from
-their own quests and trials, where it is farmed. The side quests' chests
-also hold **dust** (see `relics.md`), with a little less gold: dust comes
-from off the main line. The side quests' chests came every 6 stars, then
+side quest at three stars. Chests give gold and essence: at rank I the
+essence of their quests' elements (a chapter's, or the side quests'), at
+rank II Refined Essence, at rank III Core Essence. They are the milestone
+rewards that pay for playing well. Other elements' essence comes from
+their own quests and trials, where it is farmed. The side quests' chests came every 6 stars, then
 every 3, then every 6 again, holding the same in all; migrations 0006 and
 0007 kept each account's count in step, so none is paid twice.
 
@@ -125,21 +123,20 @@ every 3, then every 6 again, holding the same in all; migrations 0006 and
 Every quest is played again at higher **ranks** (`rankRules` in
 `content/quests.ts`): the main line and the side quests replayed, harder,
 each rank a pass with its **own first clears, stars, and chests**. The
-quest list has a rank switcher above the chapters.
+quest list has a rank switcher above the chapters. They are the game's
+second and third acts (`collection.md`).
 
 | | Rank I | Rank II | Rank III |
 |---|---|---|---|
 | Enemy levels | the quest's own (1–34) | +12 (13–46) | +24 (25–58) |
 | Twist | none | elite leaders | elite leaders and shields |
-| First clear | as written | 40% of the crystals, gold worth 2 runs at its level, a clear's worth of material, 30 dust | same |
-| Chests | as written | 40% of the crystals, 90% of the gold at its level, no material, 40 dust | same |
+| First clear | as written | gold worth 2 runs at its level, a clear's worth of Refined Essence, what is written for the rank | the same in Core Essence |
+| Chests | as written | 90% of the gold at its level, Refined Essence | the same, Core Essence |
 
-- **When a rank opens.** A chapter's rank r opens once the main line is
-  `(r − 1) × 2` chapters further on (rank II of chapter 1 with the end of
-  chapter 3), and each quest after the one before it at that rank. Where
-  the main line has no such chapter yet, the replay goes on in its own
-  order once the main line is done. Side quests open after their main
-  quest at the same rank.
+- **When a rank opens.** Rank II opens once the main line is done (its
+  finale, the Colossus, cleared), and rank III once rank II's is. Within a
+  rank, each main quest opens after the one before it at that rank, and
+  side quests open after their main quest at the same rank.
 - **Twists** are written once and apply to every quest of a rank: from
   the second wave, each wave's first enemy leads it as an elite of the
   quest's element (wind and rock, which make no elites, stand in as water
@@ -148,30 +145,35 @@ quest list has a rank switcher above the chapters.
   `validateContent` follows the gates.
 - **Stars** are the same goals at every rank: harder at the higher level
   with the twist.
+- **What a rank gives.** Its first clears and chests pay gold and its
+  grade of essence; some first clears carry an aspect (rank II's chapter
+  finales, two of rank III's), and perfect clears carry relics and their
+  tiers, written on the quest (`collection.md`).
 - Ranks are where the late levels come from: characters go to level 60,
   and enemy stats follow the same curve past 40 (see `StatCurve`).
 
 ## Materials and ascension
 
-- **One material per element** (Fire Essence, Water Essence, ...), its
-  amounts on one curve: what a clear at enemy level n is worth
+- **Three grades of essence.** Each element has its own (Fire Essence,
+  Water Essence, ...), for a character's first three steps; **Refined
+  Essence** and **Core Essence** are anyone's, for the steps at 40 and 50.
+  Amounts follow one curve: what a clear at enemy level n is worth
   (`worthAt`) doubles every six levels.
 - **Where it comes from**, and nowhere else:
-  - a quest's **first clear**, once: a few clears' worth of its element
-    at its level (a quest's element is one the team owns by then);
-  - a **hardcore tier's** weekly reward: a couple of clears' worth;
-  - its element's **trial**, on every clear (see below);
-  - a Spirit Call supply, for the focused character's element.
+  - a quest's **first clear**, once: a few clears' worth of its element at
+    rank I, one clear's worth of the rank's grade above;
+  - **chests**, by their rank's grade;
+  - a **hardcore tier's** first clear, of the grade its gate's rank opens;
+  - the **trials**, on every clear (see below).
 
-  A higher rank's first clear pays one clear's worth. Replaying a quest
-  pays gold only: an old quest beaten again by a strong team pays no
-  materials.
+  Replaying a quest pays gold only: an old quest beaten again by a strong
+  team pays no essence.
 - **Ascension.** A character's levels come in phases of ten, up to 60.
-  Gold buys levels within a phase; crossing to the next costs gold and her
-  element's material: about six clears of the trial rank of its time for
-  the first steps (36 at level 10, 120 at 20, 384 at 30), more for the
-  last two, which the ranks' replays reach (3,000 at 40, 10,000 at 50).
-  Ascending gives no stats: it opens the next ten levels.
+  Gold buys levels within a phase; crossing to the next costs gold and
+  essence: her element's at 10, 20, and 30, Refined at 40, Core at 50.
+  Because each grade comes from its own act, a character's cap follows
+  the part of the game the player has reached. Ascending gives no stats:
+  it opens the next ten levels.
 
 ## Trials
 
@@ -186,11 +188,12 @@ A trial is as long as a quest; playing well and fast is how to farm more.
   for only once her element's chapter is behind the player.
 - **Ranks** at fixed enemy levels (11, 17, 23, 29, 35, then 41 to 59 with
   the main line's own ranks), each opening with a chapter's last quest and showing only what the main line has brought by
-  then. Every rank pays, on the same curve: the top rank open takes about
-  six clears for a step, the one below about twice as many, the first rank
-  of a late step dozens. So farming means the edge of what the player can
-  beat, with no cap and no timer.
-- `pnpm progression` plays a new account through the main line on the
+  then. A rank pays the grade of the rank that opens it: its element's
+  essence with the main line, Refined Essence from 41 and 47 (opened by
+  rank II), Core Essence from 53 and 59 (opened by rank III). Every rank
+  pays on the same curve, so farming means the edge of what the player
+  can beat, with no cap and no timer.
+- `pnpm progression` plays a new account through the whole game on the
   account's own rules: where the team stands at each quest, how much it had
-  to farm (for gold, or in a trial for a step's material), and how many
-  clears of each trial rank a step takes.
+  to farm (for gold, or in a trial for a step's essence), and the hour
+  each thing arrives (see `collection.md`, "Measuring it").

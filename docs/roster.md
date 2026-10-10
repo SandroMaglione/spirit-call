@@ -79,11 +79,11 @@ The quests give one of each role, in an order that teaches the game:
 | End of chapter one (`packLeader`) | Tidecaller (healer) | chapter two teaches switching; healing softens fire floors and the Bulwark |
 | End of chapter three (`bruteKing`) | Bastion (guardian) | chapter four brings Firebombers and shields |
 
-The Spirit Call gives the other seven, the Gunner and the Stormcaller
-among them. The quests' other rewards follow this team: their aspects are
-Blade's and Disc's, and the trials open with its elements (wind, water,
-rock), the others after. How the banners pair them, and how often a
-character comes, is decided after the roster is in (see `calls.md`).
+The other seven come from **auditions** (`collection.md`): three quests
+played as her alone, the last against a champion, opening one by one from
+chapter 2's finale to rank III. The quests' other rewards follow this
+team: their aspects are Blade's and Disc's, and the trials open with its
+elements (wind, water, rock), the others after.
 
 ## Building it
 
@@ -107,4 +107,5 @@ models come separately (`models.md`, `spirits.md`).
 9. **Windwall** (barriers).
 
 All nine are in (October 2026; steps 6 to 9 in one pull request, measured
-together). Next: the Spirit Call's pace and banners (`calls.md`, "Open").
+together). With the game a finished release (`vision.md`), the seven not
+from quests come from auditions, not the Spirit Call.

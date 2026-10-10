@@ -108,14 +108,15 @@ teammates' states count too.
   the numbers, within 15%; what changes is range, rhythm, risk, and what it
   is good against. The plain aspect clears everything.
 - **No levels.** A character's level gives all her stats; an aspect has
-  none to raise, and a duplicate never adds power.
+  none to raise, and comes once.
 - **No bonuses.** What a move sets off is part of its pattern; a bonus is a
   relic's.
 
 ## Owning and equipping
 
-- The account **owns** aspects, one of each: quests unlock a few, and the
-  Spirit Call the rest (see `calls.md`). Owning one is enough for every character of its class.
+- The account **owns** aspects, one of each, each a first-clear reward:
+  the main line's, an audition's, or a rank's finale (see
+  `collection.md`). Owning one is enough for every character of its class.
 - **In a team, an aspect is on one character only**: no fight has the same
   aspect twice. It is equipped in the team (each build holds its own), so
   saved teams never compete for one.
