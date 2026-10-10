@@ -17,7 +17,6 @@ import { fitToScreen } from "./kit/scale.ts"
 import { Menu } from "./Menu.tsx"
 import { Pause } from "./Pause.tsx"
 import { Results } from "./Results.tsx"
-import { SaveNotice } from "./SaveNotice.tsx"
 import type { UiActions, UiStore } from "./store.ts"
 import "./kit/kit.css"
 import "./screens.css"
@@ -37,7 +36,6 @@ const Screen = ({ store, actions }: { readonly store: UiStore; readonly actions:
 
 const App = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => <>
   <div class="ui-screen" data-flow={store.flow.value}><Screen store={store} actions={actions} /></div>
-  <SaveNotice store={store} actions={actions} />
   {store.feedback.value !== null && (store.feedback.value.error
     ? <Confirm title={store.feedback.value.title ?? "Could not save"} close={() => (store.feedback.value = null)}><p role="alert">{store.feedback.value.message}</p></Confirm>
     : <div class="pulse" aria-hidden="true" />)}

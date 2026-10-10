@@ -208,7 +208,7 @@ const Looks = ({ store, actions, character, first }: { readonly store: UiStore; 
       <p class="dim">Looks change how a character shows, never how it fights.</p>
     </Panel>
     <Actions>
-      <Pill icon="check" disabled={!mine || !has || picked.value === worn || store.busy.value} onClick={() => actions.wear(character, kind.value, picked.value)}>{picked.value === null ? "Wear default" : "Wear"}</Pill>
+      <Pill icon="check" disabled={!mine || !has || picked.value === worn} onClick={() => actions.wear(character, kind.value, picked.value)}>{picked.value === null ? "Wear default" : "Wear"}</Pill>
     </Actions>
   </>
 }
